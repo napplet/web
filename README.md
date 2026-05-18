@@ -1,3 +1,5 @@
+> @napplet/nappllet **alpha**. The specification is experimental and a moving target. There will **most certainly be drift** between packages and the specification. Things will most **certainly change**. For adventurers only. 
+
 # napplet
 
 Monorepo for the **napplet** SDK -- libraries for building NIP-5D Nostr Web Applets - "napplets"
