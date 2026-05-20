@@ -1,6 +1,6 @@
 {
   "name": "@napplet/core",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Shared protocol types, constants, and message definitions for the napplet protocol",
   "type": "module",
   "main": "./dist/index.js",

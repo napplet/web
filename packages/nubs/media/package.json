@@ -1,6 +1,6 @@
 {
   "name": "@napplet/nub-media",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "[DEPRECATED] Use @napplet/nub/media instead. NUB-MEDIA message types for media session control and playback",
   "type": "module",
   "main": "./dist/index.js",

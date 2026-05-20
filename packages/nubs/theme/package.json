@@ -1,6 +1,6 @@
 {
   "name": "@napplet/nub-theme",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "[DEPRECATED] Use @napplet/nub/theme instead. NUB-THEME message types for shell-provided theming",
   "type": "module",
   "main": "./dist/index.js",

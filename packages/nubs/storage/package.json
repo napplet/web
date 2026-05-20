@@ -1,6 +1,6 @@
 {
   "name": "@napplet/nub-storage",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "[DEPRECATED] Use @napplet/nub/storage instead. NUB-STORAGE message types and shim methods for scoped storage",
   "type": "module",
   "main": "./dist/index.js",

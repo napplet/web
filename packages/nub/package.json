@@ -1,6 +1,6 @@
 {
   "name": "@napplet/nub",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "All 10 napplet NUB domains (relay, storage, ifc, keys, theme, media, notify, identity, config, resource) as layered subpath exports",
   "type": "module",
   "exports": {
