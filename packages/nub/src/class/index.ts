@@ -1,5 +1,5 @@
 /**
- * @napplet/nub-class -- Class NUB module barrel.
+ * @napplet/nub/class -- Class NUB module barrel.
  *
  * Exposes the `class.assigned` wire type, the installer, the dispatcher
  * handler, and the readonly SDK getter. Importing this barrel registers

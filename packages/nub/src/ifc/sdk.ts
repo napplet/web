@@ -1,5 +1,5 @@
 /**
- * @napplet/nub-ifc -- SDK helpers wrapping window.napplet.ifc.
+ * @napplet/nub/ifc -- SDK helpers wrapping window.napplet.ifc.
  *
  * These convenience functions delegate to `window.napplet.ifc.*` at call time.
  * The shim must be imported somewhere to install the global.
@@ -28,7 +28,7 @@ function requireIfc(): NappletGlobal['ifc'] {
  *
  * @example
  * ```ts
- * import { ifcEmit } from '@napplet/nub-ifc';
+ * import { ifcEmit } from '@napplet/nub/ifc';
  *
  * ifcEmit('profile:open', [], JSON.stringify({ pubkey: '...' }));
  * ```
@@ -46,7 +46,7 @@ export function ifcEmit(topic: string, extraTags?: string[][], content?: string)
  *
  * @example
  * ```ts
- * import { ifcOn } from '@napplet/nub-ifc';
+ * import { ifcOn } from '@napplet/nub/ifc';
  *
  * const sub = ifcOn('profile:open', (payload) => {
  *   console.log('Profile requested:', payload);

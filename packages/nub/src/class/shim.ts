@@ -1,4 +1,4 @@
-// @napplet/nub-class -- Class NUB shim (wire handler for class.assigned envelope).
+// @napplet/nub/class -- Class NUB shim (wire handler for class.assigned envelope).
 //
 // Registers a central-dispatcher-compatible handler that consumes shell->napplet
 // `class.assigned` envelopes and writes the integer into module-local state,

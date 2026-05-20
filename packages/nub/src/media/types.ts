@@ -1,5 +1,5 @@
 /**
- * @napplet/nub-media -- Media session control message types
+ * @napplet/nub/media -- Media session control message types
  * for the JSON envelope wire protocol.
  *
  * Defines 8 message types for media session management:

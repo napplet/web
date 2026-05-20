@@ -1,5 +1,5 @@
 /**
- * @napplet/nub-class -- SDK helper wrapping window.napplet.class.
+ * @napplet/nub/class -- SDK helper wrapping window.napplet.class.
  *
  * Thin readonly getter for bundler consumers. Unlike other SDK getters in
  * this repo, getClass() does NOT throw on `undefined` -- the undefined state

@@ -1,4 +1,4 @@
-// @napplet/nub-connect -- Connect NUB shim (pure meta-tag reader; NO wire protocol).
+// @napplet/nub/connect -- Connect NUB shim (pure meta-tag reader; NO wire protocol).
 //
 // Reads <meta name="napplet-connect-granted" content="origin1 origin2 ..."> injected
 // by the shell at serve time and mounts window.napplet.connect as readonly state.

@@ -1,5 +1,5 @@
 /**
- * @napplet/nub-keys -- SDK helpers wrapping window.napplet.keys.
+ * @napplet/nub/keys -- SDK helpers wrapping window.napplet.keys.
  *
  * These convenience functions delegate to `window.napplet.keys.*` at call time.
  * The shim must be imported somewhere to install the global.
@@ -27,7 +27,7 @@ function requireKeys(): NappletGlobal['keys'] {
  *
  * @example
  * ```ts
- * import { keysRegisterAction } from '@napplet/nub-keys';
+ * import { keysRegisterAction } from '@napplet/nub/keys';
  *
  * const result = await keysRegisterAction({
  *   id: 'editor.save',
@@ -51,7 +51,7 @@ export function keysRegisterAction(action: {
  *
  * @example
  * ```ts
- * import { keysUnregisterAction } from '@napplet/nub-keys';
+ * import { keysUnregisterAction } from '@napplet/nub/keys';
  *
  * keysUnregisterAction('editor.save');
  * ```
@@ -69,7 +69,7 @@ export function keysUnregisterAction(actionId: string): void {
  *
  * @example
  * ```ts
- * import { keysOnAction } from '@napplet/nub-keys';
+ * import { keysOnAction } from '@napplet/nub/keys';
  *
  * const sub = keysOnAction('editor.save', () => {
  *   console.log('Save triggered!');
@@ -92,7 +92,7 @@ export function keysOnAction(actionId: string, callback: () => void): Subscripti
  *
  * @example
  * ```ts
- * import { keysRegister } from '@napplet/nub-keys';
+ * import { keysRegister } from '@napplet/nub/keys';
  *
  * const handle = await keysRegister(
  *   { id: 'editor.save', label: 'Save', defaultKey: 'Ctrl+S' },

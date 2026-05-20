@@ -57,14 +57,14 @@ interface RelaySubscribe extends NappletMessage {
 }
 ```
 
-The `type` field domain prefix (`relay`, `identity`, `storage`, `ifc`, `theme`, `keys`, `media`, `notify`, `config`) routes messages to the correct NUB handler via `dispatch()`.
+The `type` field domain prefix (`relay`, `identity`, `storage`, `ifc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `connect`, `class`) routes messages to the correct NUB handler via `dispatch()`.
 
 #### `NubDomain`
 
-String literal union of the nine NUB capability domains.
+String literal union of the twelve NUB capability domains.
 
 ```ts
-type NubDomain = 'relay' | 'identity' | 'storage' | 'ifc' | 'theme' | 'keys' | 'media' | 'notify' | 'config';
+type NubDomain = 'relay' | 'identity' | 'storage' | 'ifc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'connect' | 'class';
 ```
 
 | Domain    | Scope                                    |
@@ -78,13 +78,16 @@ type NubDomain = 'relay' | 'identity' | 'storage' | 'ifc' | 'theme' | 'keys' | '
 | `media`   | Media session control and playback        |
 | `notify`  | Shell-rendered notifications              |
 | `config`  | Per-napplet declarative configuration (JSON Schema-driven) |
+| `resource` | Byte-fetching primitive (URL to Blob) |
+| `connect` | User-gated direct network access |
+| `class`   | Shell-assigned napplet class / security posture |
 
 #### `NUB_DOMAINS`
 
 Runtime constant array of all NUB domain strings. Useful for iteration and validation.
 
 ```ts
-const NUB_DOMAINS: readonly NubDomain[] = ['relay', 'identity', 'storage', 'ifc', 'theme', 'keys', 'media', 'notify', 'config'];
+const NUB_DOMAINS: readonly NubDomain[] = ['relay', 'identity', 'storage', 'ifc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'connect', 'class'];
 
 for (const domain of NUB_DOMAINS) {
   console.log(`Checking support for: ${domain}`);
@@ -333,7 +336,7 @@ import type {
 | Type | Description |
 |------|-------------|
 | `NappletMessage` | Base interface for all JSON envelope messages |
-| `NubDomain` | Union of the nine NUB domain strings |
+| `NubDomain` | Union of the twelve NUB domain strings |
 | `NamespacedCapability` | Union of `NubDomain \| nub:* \| perm:*` for `supports()` |
 | `ShellSupports` | Interface with `supports()` capability query method |
 | `NappletGlobalShell` | Type for `window.napplet.shell` (extends `ShellSupports`) |

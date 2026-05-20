@@ -1,4 +1,4 @@
-// @napplet/nub-media -- Media NUB shim (session management + command handlers)
+// @napplet/nub/media -- Media NUB shim (session management + command handlers)
 // Manages media sessions, reports state/capabilities, handles shell commands and controls.
 
 import type {

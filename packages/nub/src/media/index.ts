@@ -1,13 +1,13 @@
 /**
- * @napplet/nub-media -- Media NUB module.
+ * @napplet/nub/media -- Media NUB module.
  *
  * Exports typed message definitions for the media domain, shim installer,
  * SDK helpers, and registers the 'media' domain with core dispatch on import.
  *
  * @example
  * ```ts
- * import type { MediaSessionCreateMessage, MediaNubMessage, MediaMetadata } from '@napplet/nub-media';
- * import { DOMAIN, installMediaShim, mediaCreateSession } from '@napplet/nub-media';
+ * import type { MediaSessionCreateMessage, MediaNubMessage, MediaMetadata } from '@napplet/nub/media';
+ * import { DOMAIN, installMediaShim, mediaCreateSession } from '@napplet/nub/media';
  * ```
  *
  * @packageDocumentation

@@ -1,5 +1,5 @@
 /**
- * @napplet/nub-relay -- Relay proxy message types for the JSON envelope wire protocol.
+ * @napplet/nub/relay -- Relay proxy message types for the JSON envelope wire protocol.
  *
  * Defines the 11 message types exchanged between napplet and shell for relay operations:
  * - Napplet -> Shell: subscribe, close, publish, publishEncrypted, query

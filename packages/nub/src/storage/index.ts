@@ -1,13 +1,13 @@
 /**
- * @napplet/nub-storage -- Storage NUB module.
+ * @napplet/nub/storage -- Storage NUB module.
  *
  * Exports typed message definitions for the storage domain, shim installer,
  * SDK helpers, and registers the 'storage' domain with core dispatch on import.
  *
  * @example
  * ```ts
- * import type { StorageGetMessage, StorageNubMessage } from '@napplet/nub-storage';
- * import { DOMAIN, installStorageShim, storageGetItem } from '@napplet/nub-storage';
+ * import type { StorageGetMessage, StorageNubMessage } from '@napplet/nub/storage';
+ * import { DOMAIN, installStorageShim, storageGetItem } from '@napplet/nub/storage';
  * ```
  *
  * @packageDocumentation

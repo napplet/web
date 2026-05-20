@@ -1,5 +1,5 @@
 /**
- * @napplet/nub-storage -- Scoped storage message types for the JSON envelope wire protocol.
+ * @napplet/nub/storage -- Scoped storage message types for the JSON envelope wire protocol.
  *
  * Defines 8 message types for key-value storage proxied through the shell:
  * - Napplet -> Shell: get, set, remove, keys

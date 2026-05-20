@@ -1,4 +1,4 @@
-// @napplet/nub-relay -- Relay NUB shim
+// @napplet/nub/relay -- Relay NUB shim
 // JSON envelope wire format over postMessage to the shell.
 
 import type { NostrEvent, NostrFilter, Subscription, EventTemplate } from '@napplet/core';

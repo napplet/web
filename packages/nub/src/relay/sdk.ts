@@ -1,5 +1,5 @@
 /**
- * @napplet/nub-relay -- SDK helpers wrapping window.napplet.relay.
+ * @napplet/nub/relay -- SDK helpers wrapping window.napplet.relay.
  *
  * These convenience functions delegate to `window.napplet.relay.*` at call time.
  * The shim must be imported somewhere to install the global.
@@ -36,7 +36,7 @@ function requireRelay(): NappletGlobal['relay'] {
  *
  * @example
  * ```ts
- * import { relaySubscribe } from '@napplet/nub-relay';
+ * import { relaySubscribe } from '@napplet/nub/relay';
  *
  * const sub = relaySubscribe(
  *   { kinds: [1], limit: 10 },
@@ -63,7 +63,7 @@ export function relaySubscribe(
  *
  * @example
  * ```ts
- * import { relayPublish } from '@napplet/nub-relay';
+ * import { relayPublish } from '@napplet/nub/relay';
  *
  * const signed = await relayPublish({
  *   kind: 1, content: 'Hello!', tags: [],
@@ -86,7 +86,7 @@ export function relayPublish(
  *
  * @example
  * ```ts
- * import { relayQuery } from '@napplet/nub-relay';
+ * import { relayQuery } from '@napplet/nub/relay';
  *
  * const profiles = await relayQuery({ kinds: [0], authors: [pubkey] });
  * ```
@@ -105,7 +105,7 @@ export function relayQuery(filters: NostrFilter | NostrFilter[]): Promise<NostrE
  *
  * @example
  * ```ts
- * import { relayPublishEncrypted } from '@napplet/nub-relay';
+ * import { relayPublishEncrypted } from '@napplet/nub/relay';
  *
  * const signed = await relayPublishEncrypted(
  *   { kind: 4, content: 'secret', tags: [], created_at: now },

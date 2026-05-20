@@ -1,5 +1,5 @@
 /**
- * @napplet/nub-notify -- Notification message types
+ * @napplet/nub/notify -- Notification message types
  * for the JSON envelope wire protocol.
  *
  * Defines 11 message types for shell-rendered notifications:

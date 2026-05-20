@@ -240,27 +240,16 @@ The class integer is an identifier into the `NUB-CLASS-$N` sub-track (1 = strict
 
 See [NUB-CONNECT](https://github.com/napplet/nubs) and [NUB-CLASS](https://github.com/napplet/nubs) for the normative specs, the canonical `connect:origins` aggregateHash fold, the origin format rules, the consent-flow MUSTs, and the at-most-one-terminal-envelope-per-lifecycle constraint.
 
-## Migration
+## Package Surface
 
-Every deprecated `@napplet/nub-<domain>` package is now a 1-line re-export shim of the corresponding `@napplet/nub/<domain>` subpath. Pinned consumers keep working; new code SHOULD use the new path.
+`@napplet/nub` is the canonical package for every NUB domain. Import each domain through the package subpath:
 
-| Deprecated | Replacement |
-|---|---|
-| `@napplet/nub-relay` | `@napplet/nub/relay` (barrel) or `@napplet/nub/relay/{types,shim,sdk}` (granular) |
-| `@napplet/nub-storage` | `@napplet/nub/storage` (barrel) or `@napplet/nub/storage/{types,shim,sdk}` (granular) |
-| `@napplet/nub-ifc` | `@napplet/nub/ifc` (barrel) or `@napplet/nub/ifc/{types,shim,sdk}` (granular) |
-| `@napplet/nub-keys` | `@napplet/nub/keys` (barrel) or `@napplet/nub/keys/{types,shim,sdk}` (granular) |
-| `@napplet/nub-theme` | `@napplet/nub/theme` (barrel) or `@napplet/nub/theme/types` (types-only; see Theme Exception) |
-| `@napplet/nub-media` | `@napplet/nub/media` (barrel) or `@napplet/nub/media/{types,shim,sdk}` (granular) |
-| `@napplet/nub-notify` | `@napplet/nub/notify` (barrel) or `@napplet/nub/notify/{types,shim,sdk}` (granular) |
-| `@napplet/nub-identity` | `@napplet/nub/identity` (barrel) or `@napplet/nub/identity/{types,shim,sdk}` (granular) |
-| `@napplet/nub-config` | `@napplet/nub/config` (barrel) or `@napplet/nub/config/{types,shim,sdk}` (granular) |
+```ts
+import { mediaCreateSession } from '@napplet/nub/media/sdk';
+import type { MediaNubMessage } from '@napplet/nub/media/types';
+```
 
-The 9 deprecated packages ship as re-export shims for one release cycle. Removal is tracked as REMOVE-01..03 in a future milestone.
-
-*Note: the `resource` domain (v0.28.0) shipped only via `@napplet/nub/resource`. There is no deprecated `@napplet/nub-resource` package.*
-
-*Note: the `connect` and `class` domains (v0.29.0) shipped only via `@napplet/nub/connect` and `@napplet/nub/class`. There are no deprecated `@napplet/nub-connect` or `@napplet/nub-class` packages.*
+Domain barrels are also available at `@napplet/nub/relay`, `@napplet/nub/storage`, `@napplet/nub/ifc`, `@napplet/nub/keys`, `@napplet/nub/theme`, `@napplet/nub/media`, `@napplet/nub/notify`, `@napplet/nub/identity`, `@napplet/nub/config`, `@napplet/nub/resource`, `@napplet/nub/connect`, and `@napplet/nub/class`.
 
 ## Optional Peer Dependency
 
