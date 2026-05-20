@@ -1,5 +1,5 @@
 /**
- * @napplet/nub-resource -- Resource NUB message types for the JSON envelope wire protocol.
+ * @napplet/nub/resource -- Resource NUB message types for the JSON envelope wire protocol.
  *
  * Defines 4 message types for byte-fetching:
  * - Napplet -> Shell: bytes (request), cancel (in-flight cancellation)

@@ -1,5 +1,5 @@
 /**
- * @napplet/nub-keys -- Keyboard forwarding and action keybinding message types
+ * @napplet/nub/keys -- Keyboard forwarding and action keybinding message types
  * for the JSON envelope wire protocol.
  *
  * Defines 6 message types for keyboard interaction:

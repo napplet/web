@@ -1,5 +1,5 @@
 /**
- * @napplet/nub-storage -- SDK helpers wrapping window.napplet.storage.
+ * @napplet/nub/storage -- SDK helpers wrapping window.napplet.storage.
  *
  * These convenience functions delegate to `window.napplet.storage.*` at call time.
  * The shim must be imported somewhere to install the global.
@@ -27,7 +27,7 @@ function requireStorage(): NappletGlobal['storage'] {
  *
  * @example
  * ```ts
- * import { storageGetItem } from '@napplet/nub-storage';
+ * import { storageGetItem } from '@napplet/nub/storage';
  *
  * const theme = await storageGetItem('theme');
  * ```
@@ -44,7 +44,7 @@ export function storageGetItem(key: string): Promise<string | null> {
  *
  * @example
  * ```ts
- * import { storageSetItem } from '@napplet/nub-storage';
+ * import { storageSetItem } from '@napplet/nub/storage';
  *
  * await storageSetItem('theme', 'dark');
  * ```
@@ -60,7 +60,7 @@ export function storageSetItem(key: string, value: string): Promise<void> {
  *
  * @example
  * ```ts
- * import { storageRemoveItem } from '@napplet/nub-storage';
+ * import { storageRemoveItem } from '@napplet/nub/storage';
  *
  * await storageRemoveItem('theme');
  * ```
@@ -76,7 +76,7 @@ export function storageRemoveItem(key: string): Promise<void> {
  *
  * @example
  * ```ts
- * import { storageKeys } from '@napplet/nub-storage';
+ * import { storageKeys } from '@napplet/nub/storage';
  *
  * const allKeys = await storageKeys();
  * ```

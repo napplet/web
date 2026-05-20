@@ -1,13 +1,13 @@
 /**
- * @napplet/nub-ifc -- IFC NUB module.
+ * @napplet/nub/ifc -- IFC NUB module.
  *
  * Exports typed message definitions for the ifc domain, shim installer,
  * SDK helpers, and registers the 'ifc' domain with core dispatch on import.
  *
  * @example
  * ```ts
- * import type { IfcEmitMessage, IfcChannelMessage, IfcNubMessage } from '@napplet/nub-ifc';
- * import { DOMAIN, installIfcShim, ifcEmit, ifcOn } from '@napplet/nub-ifc';
+ * import type { IfcEmitMessage, IfcChannelMessage, IfcNubMessage } from '@napplet/nub/ifc';
+ * import { DOMAIN, installIfcShim, ifcEmit, ifcOn } from '@napplet/nub/ifc';
  * ```
  *
  * @packageDocumentation

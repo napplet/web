@@ -1,4 +1,4 @@
-// @napplet/nub-config -- Config NUB shim (schema-driven per-napplet configuration)
+// @napplet/nub/config -- Config NUB shim (schema-driven per-napplet configuration)
 // Reads manifest-declared schema at install time, ref-counts local subscribers so
 // the wire-level config.subscribe/unsubscribe fire only on Set 0->1 / 1->0
 // transitions, correlates config.get + config.registerSchema via id, and fans out

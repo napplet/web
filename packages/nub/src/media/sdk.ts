@@ -1,5 +1,5 @@
 /**
- * @napplet/nub-media -- SDK helpers wrapping window.napplet.media.
+ * @napplet/nub/media -- SDK helpers wrapping window.napplet.media.
  *
  * These convenience functions delegate to `window.napplet.media.*` at call time.
  * The shim must be imported somewhere to install the global.
@@ -40,7 +40,7 @@ function requireMedia(): MediaApi {
  *
  * @example
  * ```ts
- * import { mediaCreateSession } from '@napplet/nub-media';
+ * import { mediaCreateSession } from '@napplet/nub/media';
  *
  * const { sessionId } = await mediaCreateSession({
  *   title: 'My Song',
@@ -60,7 +60,7 @@ export function mediaCreateSession(metadata?: MediaMetadata): Promise<{ sessionI
  *
  * @example
  * ```ts
- * import { mediaUpdateSession } from '@napplet/nub-media';
+ * import { mediaUpdateSession } from '@napplet/nub/media';
  *
  * mediaUpdateSession('s1', { title: 'Updated Title' });
  * ```
@@ -76,7 +76,7 @@ export function mediaUpdateSession(sessionId: string, metadata: Partial<MediaMet
  *
  * @example
  * ```ts
- * import { mediaDestroySession } from '@napplet/nub-media';
+ * import { mediaDestroySession } from '@napplet/nub/media';
  *
  * mediaDestroySession('s1');
  * ```
@@ -93,7 +93,7 @@ export function mediaDestroySession(sessionId: string): void {
  *
  * @example
  * ```ts
- * import { mediaReportState } from '@napplet/nub-media';
+ * import { mediaReportState } from '@napplet/nub/media';
  *
  * mediaReportState('s1', {
  *   status: 'playing',
@@ -118,7 +118,7 @@ export function mediaReportState(
  *
  * @example
  * ```ts
- * import { mediaReportCapabilities } from '@napplet/nub-media';
+ * import { mediaReportCapabilities } from '@napplet/nub/media';
  *
  * mediaReportCapabilities('s1', ['play', 'pause', 'seek', 'volume']);
  * ```
@@ -136,7 +136,7 @@ export function mediaReportCapabilities(sessionId: string, actions: MediaAction[
  *
  * @example
  * ```ts
- * import { mediaOnCommand } from '@napplet/nub-media';
+ * import { mediaOnCommand } from '@napplet/nub/media';
  *
  * const sub = mediaOnCommand('s1', (action, value) => {
  *   if (action === 'seek') player.seekTo(value);
@@ -161,7 +161,7 @@ export function mediaOnCommand(
  *
  * @example
  * ```ts
- * import { mediaOnControls } from '@napplet/nub-media';
+ * import { mediaOnControls } from '@napplet/nub/media';
  *
  * const sub = mediaOnControls('s1', (controls) => {
  *   showNextButton = controls.includes('next');

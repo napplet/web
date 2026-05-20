@@ -1,5 +1,5 @@
 /**
- * @napplet/nub-config -- NUB-CONFIG message types for per-napplet declarative
+ * @napplet/nub/config -- NUB-CONFIG message types for per-napplet declarative
  * configuration in the JSON envelope wire protocol.
  *
  * Defines 8 message types:

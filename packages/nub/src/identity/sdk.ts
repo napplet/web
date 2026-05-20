@@ -1,5 +1,5 @@
 /**
- * @napplet/nub-identity -- SDK helpers wrapping window.napplet.identity.
+ * @napplet/nub/identity -- SDK helpers wrapping window.napplet.identity.
  *
  * These convenience functions delegate to `window.napplet.identity.*` at call time.
  * The shim must be imported somewhere to install the global.
@@ -27,7 +27,7 @@ function requireIdentity(): NappletGlobal['identity'] {
  *
  * @example
  * ```ts
- * import { identityGetPublicKey } from '@napplet/nub-identity';
+ * import { identityGetPublicKey } from '@napplet/nub/identity';
  *
  * const pubkey = await identityGetPublicKey();
  * ```
@@ -43,7 +43,7 @@ export function identityGetPublicKey(): Promise<string> {
  *
  * @example
  * ```ts
- * import { identityGetRelays } from '@napplet/nub-identity';
+ * import { identityGetRelays } from '@napplet/nub/identity';
  *
  * const relays = await identityGetRelays();
  * ```
@@ -59,7 +59,7 @@ export function identityGetRelays(): Promise<Record<string, RelayPermission>> {
  *
  * @example
  * ```ts
- * import { identityGetProfile } from '@napplet/nub-identity';
+ * import { identityGetProfile } from '@napplet/nub/identity';
  *
  * const profile = await identityGetProfile();
  * if (profile) console.log(profile.name);
@@ -76,7 +76,7 @@ export function identityGetProfile(): Promise<ProfileData | null> {
  *
  * @example
  * ```ts
- * import { identityGetFollows } from '@napplet/nub-identity';
+ * import { identityGetFollows } from '@napplet/nub/identity';
  *
  * const follows = await identityGetFollows();
  * ```
@@ -93,7 +93,7 @@ export function identityGetFollows(): Promise<string[]> {
  *
  * @example
  * ```ts
- * import { identityGetList } from '@napplet/nub-identity';
+ * import { identityGetList } from '@napplet/nub/identity';
  *
  * const bookmarks = await identityGetList('bookmarks');
  * ```
@@ -109,7 +109,7 @@ export function identityGetList(listType: string): Promise<string[]> {
  *
  * @example
  * ```ts
- * import { identityGetZaps } from '@napplet/nub-identity';
+ * import { identityGetZaps } from '@napplet/nub/identity';
  *
  * const zaps = await identityGetZaps();
  * ```
@@ -125,7 +125,7 @@ export function identityGetZaps(): Promise<ZapReceipt[]> {
  *
  * @example
  * ```ts
- * import { identityGetMutes } from '@napplet/nub-identity';
+ * import { identityGetMutes } from '@napplet/nub/identity';
  *
  * const mutes = await identityGetMutes();
  * ```
@@ -141,7 +141,7 @@ export function identityGetMutes(): Promise<string[]> {
  *
  * @example
  * ```ts
- * import { identityGetBlocked } from '@napplet/nub-identity';
+ * import { identityGetBlocked } from '@napplet/nub/identity';
  *
  * const blocked = await identityGetBlocked();
  * ```
@@ -157,7 +157,7 @@ export function identityGetBlocked(): Promise<string[]> {
  *
  * @example
  * ```ts
- * import { identityGetBadges } from '@napplet/nub-identity';
+ * import { identityGetBadges } from '@napplet/nub/identity';
  *
  * const badges = await identityGetBadges();
  * ```
@@ -178,7 +178,7 @@ export function identityGetBadges(): Promise<Badge[]> {
  *
  * @example
  * ```ts
- * import { identityDecrypt } from '@napplet/nub-identity';
+ * import { identityDecrypt } from '@napplet/nub/identity';
  *
  * const { rumor, sender } = await identityDecrypt(wrappedEvent);
  * console.log(`Message from ${sender}: ${rumor.content}`);

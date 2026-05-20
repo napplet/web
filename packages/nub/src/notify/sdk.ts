@@ -1,5 +1,5 @@
 /**
- * @napplet/nub-notify -- SDK helpers wrapping window.napplet.notify.
+ * @napplet/nub/notify -- SDK helpers wrapping window.napplet.notify.
  *
  * These convenience functions delegate to `window.napplet.notify.*` at call time.
  * The shim must be imported somewhere to install the global.
@@ -54,7 +54,7 @@ function requireNotify(): NotifyApi {
  *
  * @example
  * ```ts
- * import { notifySend } from '@napplet/nub-notify';
+ * import { notifySend } from '@napplet/nub/notify';
  *
  * const { notificationId } = await notifySend({
  *   title: 'New message',
@@ -81,7 +81,7 @@ export function notifySend(notification: {
  *
  * @example
  * ```ts
- * import { notifyDismiss } from '@napplet/nub-notify';
+ * import { notifyDismiss } from '@napplet/nub/notify';
  *
  * notifyDismiss('shell-42');
  * ```
@@ -97,7 +97,7 @@ export function notifyDismiss(notificationId: string): void {
  *
  * @example
  * ```ts
- * import { notifyBadge } from '@napplet/nub-notify';
+ * import { notifyBadge } from '@napplet/nub/notify';
  *
  * notifyBadge(3);   // set badge to 3
  * notifyBadge(0);   // clear badge
@@ -114,7 +114,7 @@ export function notifyBadge(count: number): void {
  *
  * @example
  * ```ts
- * import { notifyRegisterChannel } from '@napplet/nub-notify';
+ * import { notifyRegisterChannel } from '@napplet/nub/notify';
  *
  * notifyRegisterChannel({
  *   channelId: 'messages',
@@ -140,7 +140,7 @@ export function notifyRegisterChannel(channel: {
  *
  * @example
  * ```ts
- * import { notifyRequestPermission } from '@napplet/nub-notify';
+ * import { notifyRequestPermission } from '@napplet/nub/notify';
  *
  * const { granted } = await notifyRequestPermission('messages');
  * if (granted) {
@@ -160,7 +160,7 @@ export function notifyRequestPermission(channel?: string): Promise<{ granted: bo
  *
  * @example
  * ```ts
- * import { notifyOnAction } from '@napplet/nub-notify';
+ * import { notifyOnAction } from '@napplet/nub/notify';
  *
  * const sub = notifyOnAction((notificationId, actionId) => {
  *   if (actionId === 'reply') openReplyDialog(notificationId);
@@ -182,7 +182,7 @@ export function notifyOnAction(
  *
  * @example
  * ```ts
- * import { notifyOnClicked } from '@napplet/nub-notify';
+ * import { notifyOnClicked } from '@napplet/nub/notify';
  *
  * const sub = notifyOnClicked((notificationId) => {
  *   focusConversation(notificationId);
@@ -204,7 +204,7 @@ export function notifyOnClicked(
  *
  * @example
  * ```ts
- * import { notifyOnDismissed } from '@napplet/nub-notify';
+ * import { notifyOnDismissed } from '@napplet/nub/notify';
  *
  * const sub = notifyOnDismissed((notificationId, reason) => {
  *   if (reason === 'user') markAsRead(notificationId);
@@ -226,7 +226,7 @@ export function notifyOnDismissed(
  *
  * @example
  * ```ts
- * import { notifyOnControls } from '@napplet/nub-notify';
+ * import { notifyOnControls } from '@napplet/nub/notify';
  *
  * const sub = notifyOnControls((controls) => {
  *   canUseBadges = controls.includes('badges');

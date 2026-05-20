@@ -1,5 +1,5 @@
 /**
- * @napplet/nub-connect -- SDK helpers wrapping window.napplet.connect.
+ * @napplet/nub/connect -- SDK helpers wrapping window.napplet.connect.
  *
  * Thin readonly getters for bundler consumers who prefer named imports over
  * reaching into window.napplet.connect directly. The shim must be imported

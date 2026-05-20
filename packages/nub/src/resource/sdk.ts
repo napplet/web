@@ -1,5 +1,5 @@
 /**
- * @napplet/nub-resource -- SDK helpers wrapping window.napplet.resource.
+ * @napplet/nub/resource -- SDK helpers wrapping window.napplet.resource.
  *
  * These convenience functions delegate to `window.napplet.resource.*` at call time.
  * The shim must be imported somewhere to install the global.
@@ -28,7 +28,7 @@ function requireResource(): NappletGlobal['resource'] {
  *
  * @example
  * ```ts
- * import { resourceBytes } from '@napplet/nub-resource';
+ * import { resourceBytes } from '@napplet/nub/resource';
  *
  * const blob = await resourceBytes('https://example.com/avatar.png');
  * const url = URL.createObjectURL(blob);
@@ -49,7 +49,7 @@ export function resourceBytes(url: string): Promise<Blob> {
  *
  * @example
  * ```ts
- * import { resourceBytesAsObjectURL } from '@napplet/nub-resource';
+ * import { resourceBytesAsObjectURL } from '@napplet/nub/resource';
  *
  * const handle = resourceBytesAsObjectURL('blossom:abc123...');
  * imgEl.src = handle.url;

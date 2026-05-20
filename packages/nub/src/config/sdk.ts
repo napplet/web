@@ -1,5 +1,5 @@
 /**
- * @napplet/nub-config -- SDK helpers wrapping window.napplet.config.
+ * @napplet/nub/config -- SDK helpers wrapping window.napplet.config.
  *
  * These convenience functions delegate to `window.napplet.config.*` at call time.
  * The shim must be imported somewhere first (typically via `@napplet/shim`) to
@@ -60,7 +60,7 @@ function requireNapplet(): ConfigNamespace {
  *
  * @example
  * ```ts
- * import { get } from '@napplet/nub-config';
+ * import { get } from '@napplet/nub/config';
  *
  * const values = await get();
  * console.log(values.theme);
@@ -79,7 +79,7 @@ export function get(): Promise<ConfigValues> {
  *
  * @example
  * ```ts
- * import { subscribe } from '@napplet/nub-config';
+ * import { subscribe } from '@napplet/nub/config';
  *
  * const sub = subscribe((values) => { applyTheme(values.theme); });
  * // later:
@@ -100,7 +100,7 @@ export function subscribe(
  *
  * @example
  * ```ts
- * import { openSettings } from '@napplet/nub-config';
+ * import { openSettings } from '@napplet/nub/config';
  *
  * openSettings({ section: 'credentials' });
  * ```
@@ -119,7 +119,7 @@ export function openSettings(options?: { section?: string }): void {
  *
  * @example
  * ```ts
- * import { registerSchema } from '@napplet/nub-config';
+ * import { registerSchema } from '@napplet/nub/config';
  *
  * await registerSchema({
  *   type: 'object',
@@ -143,7 +143,7 @@ export function registerSchema(
  *
  * @example
  * ```ts
- * import { onSchemaError } from '@napplet/nub-config';
+ * import { onSchemaError } from '@napplet/nub/config';
  *
  * const off = onSchemaError((err) => console.error(err.code, err.error));
  * // later:

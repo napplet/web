@@ -1,4 +1,4 @@
-// @napplet/nub-keys -- Keys NUB shim (keyboard forwarding + action keybindings)
+// @napplet/nub/keys -- Keys NUB shim (keyboard forwarding + action keybindings)
 // Full NUB-KEYS smart forwarding, suppress list, action handlers, and shell-push binding updates.
 
 import type {

@@ -1,4 +1,4 @@
-// @napplet/nub-resource -- Resource NUB shim (byte-fetching primitive: bytes, bytesAsObjectURL)
+// @napplet/nub/resource -- Resource NUB shim (byte-fetching primitive: bytes, bytesAsObjectURL)
 // Single-flight cache, AbortSignal cancellation, data: scheme decoded inline (zero shell round-trip).
 
 import type {

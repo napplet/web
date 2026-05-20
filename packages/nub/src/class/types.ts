@@ -1,5 +1,5 @@
 /**
- * @napplet/nub-class -- Class NUB message types for the JSON envelope wire protocol.
+ * @napplet/nub/class -- Class NUB message types for the JSON envelope wire protocol.
  *
  * NUB-CLASS establishes the abstract napplet-class concept: shell assigns an
  * integer class at iframe-ready time, delivers it over the wire via the

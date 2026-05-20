@@ -1,5 +1,5 @@
 /**
- * @napplet/nub-resource -- Resource NUB module.
+ * @napplet/nub/resource -- Resource NUB module.
  *
  * Browser-enforced byte-fetching primitive. Napplets request bytes by URL,
  * shell fetches and returns a Blob. URL space is scheme-pluggable;
@@ -11,8 +11,8 @@
  *
  * @example
  * ```ts
- * import type { ResourceBytesMessage, ResourceErrorCode } from '@napplet/nub-resource';
- * import { DOMAIN, installResourceShim, resourceBytes } from '@napplet/nub-resource';
+ * import type { ResourceBytesMessage, ResourceErrorCode } from '@napplet/nub/resource';
+ * import { DOMAIN, installResourceShim, resourceBytes } from '@napplet/nub/resource';
  * ```
  *
  * @packageDocumentation

@@ -1,5 +1,5 @@
 /**
- * @napplet/nub-connect -- Connect NUB module barrel.
+ * @napplet/nub/connect -- Connect NUB module barrel.
  *
  * User-gated direct network access surface. Napplets declare desired origins
  * in their manifest `connect` tags (via @napplet/vite-plugin); the shell

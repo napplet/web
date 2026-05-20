@@ -1,5 +1,5 @@
 /**
- * @napplet/nub-config -- NUB-CONFIG message types, shim installer, and SDK
+ * @napplet/nub/config -- NUB-CONFIG message types, shim installer, and SDK
  * helpers for per-napplet declarative configuration.
  *
  * Per-napplet declarative configuration: napplet declares a JSON Schema
@@ -11,7 +11,7 @@
  * @example
  * ```ts
  * // Cherry-picked import:
- * import { installConfigShim, subscribe, registerSchema, DOMAIN } from '@napplet/nub-config';
+ * import { installConfigShim, subscribe, registerSchema, DOMAIN } from '@napplet/nub/config';
  *
  * installConfigShim();
  *

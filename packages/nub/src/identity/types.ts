@@ -1,5 +1,5 @@
 /**
- * @napplet/nub-identity -- Read-only user identity query message types
+ * @napplet/nub/identity -- Read-only user identity query message types
  * for the JSON envelope wire protocol.
  *
  * Defines 18 message types for identity queries:

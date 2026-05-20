@@ -1,13 +1,13 @@
 /**
- * @napplet/nub-notify -- Notify NUB module.
+ * @napplet/nub/notify -- Notify NUB module.
  *
  * Exports typed message definitions for the notify domain, shim installer,
  * SDK helpers, and registers the 'notify' domain with core dispatch on import.
  *
  * @example
  * ```ts
- * import type { NotifySendMessage, NotifyNubMessage, NotificationAction } from '@napplet/nub-notify';
- * import { DOMAIN, installNotifyShim, notifySend } from '@napplet/nub-notify';
+ * import type { NotifySendMessage, NotifyNubMessage, NotificationAction } from '@napplet/nub/notify';
+ * import { DOMAIN, installNotifyShim, notifySend } from '@napplet/nub/notify';
  * ```
  *
  * @packageDocumentation

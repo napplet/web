@@ -1,5 +1,5 @@
 /**
- * @napplet/nub-connect -- Connect NUB types + shared origin normalizer.
+ * @napplet/nub/connect -- Connect NUB types + shared origin normalizer.
  *
  * NUB-CONNECT has NO postMessage wire protocol. Grants flow through the
  * runtime CSP emitted by the shell in the HTTP response for the napplet

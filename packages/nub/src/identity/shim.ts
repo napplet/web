@@ -1,4 +1,4 @@
-// @napplet/nub-identity -- Identity NUB shim (read-only user identity queries)
+// @napplet/nub/identity -- Identity NUB shim (read-only user identity queries)
 // All queries are request/response pairs over postMessage to the shell.
 
 import type {

@@ -1,5 +1,5 @@
 /**
- * @napplet/nub-ifc -- Inter-frame communication message types for the JSON envelope wire protocol.
+ * @napplet/nub/ifc -- Inter-frame communication message types for the JSON envelope wire protocol.
  *
  * Defines 14 message types for two IFC modes:
  *

@@ -1,4 +1,4 @@
-// @napplet/nub-notify -- Notify NUB shim (notification sending + interaction handlers)
+// @napplet/nub/notify -- Notify NUB shim (notification sending + interaction handlers)
 // Manages notification sending, permission flow, badge counts, and shell interaction callbacks.
 
 import type {

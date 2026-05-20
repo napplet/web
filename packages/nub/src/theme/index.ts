@@ -1,13 +1,13 @@
 /**
- * @napplet/nub-theme -- Theme NUB module.
+ * @napplet/nub/theme -- Theme NUB module.
  *
  * Exports typed message definitions for the theme domain and registers
  * the 'theme' domain with the core dispatch infrastructure on import.
  *
  * @example
  * ```ts
- * import type { ThemeGetMessage, ThemeNubMessage, Theme } from '@napplet/nub-theme';
- * import { DOMAIN } from '@napplet/nub-theme';
+ * import type { ThemeGetMessage, ThemeNubMessage, Theme } from '@napplet/nub/theme';
+ * import { DOMAIN } from '@napplet/nub/theme';
  * ```
  *
  * @packageDocumentation

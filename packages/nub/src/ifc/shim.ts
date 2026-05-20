@@ -1,4 +1,4 @@
-// @napplet/nub-ifc -- IFC NUB shim
+// @napplet/nub/ifc -- IFC NUB shim
 // Inter-frame communication via topic pub/sub over postMessage.
 
 import type { NostrEvent } from '@napplet/core';

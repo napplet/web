@@ -1,13 +1,13 @@
 /**
- * @napplet/nub-identity -- Identity NUB module.
+ * @napplet/nub/identity -- Identity NUB module.
  *
  * Exports typed message definitions for the identity domain, shim installer,
  * SDK helpers, and registers the 'identity' domain with core dispatch on import.
  *
  * @example
  * ```ts
- * import type { IdentityGetPublicKeyMessage, IdentityNubMessage } from '@napplet/nub-identity';
- * import { DOMAIN, installIdentityShim, identityGetPublicKey } from '@napplet/nub-identity';
+ * import type { IdentityGetPublicKeyMessage, IdentityNubMessage } from '@napplet/nub/identity';
+ * import { DOMAIN, installIdentityShim, identityGetPublicKey } from '@napplet/nub/identity';
  * ```
  *
  * @packageDocumentation
