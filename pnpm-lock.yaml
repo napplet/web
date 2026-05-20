@@ -39,7 +39,7 @@ importers:
   packages/nub:
     dependencies:
       '@napplet/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../core
       json-schema-to-ts:
         specifier: ^3.1.1

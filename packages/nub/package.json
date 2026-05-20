@@ -197,7 +197,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@napplet/core": "workspace:*"
+    "@napplet/core": "workspace:^"
   },
   "devDependencies": {
     "@types/json-schema": "^7.0.15",
@@ -215,7 +215,8 @@
   },
   "scripts": {
     "build": "tsup",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "test:unit": "vitest run"
   },
   "license": "MIT",
   "repository": {
