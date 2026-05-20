@@ -1,6 +1,6 @@
 {
   "name": "@napplet/shim",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Napplet SDK — subscribe, publish, query, emit, on, nappStorage for Nostr-native iframe applications",
   "type": "module",
   "main": "./dist/index.js",

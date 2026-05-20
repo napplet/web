@@ -1,6 +1,6 @@
 {
   "name": "@napplet/nub-keys",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "[DEPRECATED] Use @napplet/nub/keys instead. NUB-KEYS message types for keyboard forwarding and action keybindings",
   "type": "module",
   "main": "./dist/index.js",

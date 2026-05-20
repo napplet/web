@@ -1,6 +1,6 @@
 {
   "name": "@napplet/nub-config",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "[DEPRECATED] Use @napplet/nub/config instead. NUB-CONFIG message types and shim methods for per-napplet declarative configuration",
   "type": "module",
   "main": "./dist/index.js",

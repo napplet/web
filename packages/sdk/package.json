@@ -1,6 +1,6 @@
 {
   "name": "@napplet/sdk",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Typed named exports wrapping window.napplet for bundler-consuming napplet developers",
   "type": "module",
   "main": "./dist/index.js",
