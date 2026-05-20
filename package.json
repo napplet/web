@@ -9,7 +9,7 @@
     "lint": "turbo run lint",
     "type-check": "turbo run type-check",
     "version-packages": "changeset version",
-    "publish-packages": "turbo run build && changeset publish"
+    "publish-packages": "turbo run build && pnpm publish -r --access public --no-git-checks"
   },
   "devDependencies": {
     "@changesets/cli": "^2.30.0",
