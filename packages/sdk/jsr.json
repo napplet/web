@@ -1,0 +1,14 @@
+{
+  "name": "@napplet/sdk",
+  "version": "0.3.0",
+  "license": "MIT",
+  "exports": "./src/index.ts",
+  "imports": {
+    "@napplet/core": "jsr:@napplet/core@^0.3.0",
+    "@napplet/nub": "jsr:@napplet/nub@^0.3.0"
+  },
+  "publish": {
+    "include": ["src/**/*.ts", "README.md", "jsr.json"],
+    "exclude": ["src/**/*.test.ts", "src/**/*.spec.ts"]
+  }
+}

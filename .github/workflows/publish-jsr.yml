@@ -1,0 +1,60 @@
+name: Publish to JSR
+
+# JSR publish runs INDEPENDENTLY of the npm Publish workflow so a broken
+# npm token or scope-permission issue does not block JSR releases. JSR uses
+# OIDC (id-token: write) for auth — no secret required once napplet/napplet
+# is linked under the @napplet scope on jsr.io.
+#
+# Trigger model:
+# - Fires on push to main (every Version Packages PR merge lands here, plus
+#   any direct main push). JSR's own version-already-published check makes
+#   re-runs a no-op when no new version is staged.
+# - Manual workflow_dispatch is also wired for one-off bootstrap publishes
+#   (e.g. the first @napplet/core@0.3.0 push after the scope was created).
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish-jsr:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # id-token: write enables JSR's OIDC-based publish. Once napplet/napplet
+      # is linked under the @napplet scope at jsr.io/@napplet/settings, this
+      # is the only auth needed — no JSR_TOKEN secret required.
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      # Idempotent — copies each packages/*/package.json#version into the
+      # sibling jsr.json#version. Catches the case where someone bumped
+      # package.json by hand without re-running `pnpm version-packages`.
+      - name: Sync jsr.json versions
+        run: node scripts/sync-jsr-versions.mjs
+
+      # `pnpm -r exec` runs in topological order (respects workspace deps),
+      # so @napplet/core publishes before @napplet/nub, which publishes before
+      # @napplet/sdk + @napplet/shim, which publish before @napplet/vite-plugin.
+      # Each package's `npx jsr publish` resolves prior packages from JSR's
+      # newly-populated registry. Do NOT use --parallel here — JSR will reject
+      # dependents whose dependencies aren't yet on the registry.
+      #
+      # --allow-slow-types: relaxes JSR's strict type-inference checks until
+      # we tighten public type exports later (tracked separately).
+      # --allow-dirty: tolerates the sync step's jsr.json edits without
+      # requiring a follow-up commit.
+      - name: Publish to JSR (topologically ordered)
+        run: pnpm -r --filter='./packages/*' exec npx jsr publish --allow-slow-types --allow-dirty
