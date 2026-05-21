@@ -8,8 +8,9 @@
     "test:unit": "turbo run test:unit",
     "lint": "turbo run lint",
     "type-check": "turbo run type-check",
-    "version-packages": "changeset version",
-    "publish-packages": "turbo run build && pnpm publish -r --access public --no-git-checks"
+    "version-packages": "changeset version && node scripts/sync-jsr-versions.mjs",
+    "publish-packages": "turbo run build && pnpm publish -r --access public --no-git-checks",
+    "publish-jsr": "node scripts/sync-jsr-versions.mjs && pnpm -r --filter='./packages/*' exec npx jsr publish --allow-slow-types --allow-dirty"
   },
   "devDependencies": {
     "@changesets/cli": "^2.30.0",
