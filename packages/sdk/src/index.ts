@@ -30,17 +30,6 @@ import type {
   EventTemplate,
 } from '@napplet/core';
 
-// ─── Global type augmentation ────────────────────────────────────────────────
-// Provides window.napplet autocompletion for TypeScript consumers who import
-// only the SDK (not the shim). Both shim and SDK reference NappletGlobal from
-// @napplet/core -- no duplication.
-
-declare global {
-  interface Window {
-    napplet: NappletGlobal;
-  }
-}
-
 // ─── Runtime guard ──────────────────────────────────────────────────────────
 
 /**

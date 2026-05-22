@@ -9,10 +9,10 @@ updated: 2026-05-22
 
 ## Current Focus
 
-hypothesis: CONFIRMED - `@napplet/nub` published source had a docs-generation-only type edge to `json-schema`, and `@napplet/vite-plugin` had a later invalid JSR npm import range for `vite`.
-test: Remove the `json-schema` published-source edge, keep the Vite plugin on the exported napplet schema type, and use a valid JSR npm import mapping.
-expecting: `@napplet/nub` dry-run/docs checks pass, workspace checks stay green, and a real GitHub Actions rerun can publish `nub` before dependent packages resolve it from JSR.
-next_action: Push the fix and rerun `Publish to JSR`; JSR docs say already-published versions are skipped, so `@napplet/core@0.3.0` should not block the rerun.
+hypothesis: CONFIRMED - `@napplet/nub` published source had a docs-generation-only type edge to `json-schema`; `@napplet/vite-plugin` had a later invalid JSR npm import range for `vite`; `@napplet/sdk` and `@napplet/shim` had JSR-forbidden global `Window` type augmentations.
+test: Remove the `json-schema` published-source edge, keep the Vite plugin on the exported napplet schema type, use a valid JSR npm import mapping, and stop JSR-published sources from declaring global TypeScript mutations.
+expecting: `@napplet/nub`, `@napplet/sdk`, and `@napplet/shim` dry-run checks pass, full workspace JSR dry-run completes, and a real GitHub Actions rerun can skip already-published versions and publish the remaining packages.
+next_action: Push the global-type follow-up and rerun `Publish to JSR`.
 
 ## Symptoms
 
@@ -76,14 +76,33 @@ reproduction: `publish-jsr` workflow step `pnpm -r --filter='./packages/*' exec 
   found: `@napplet/core` and `@napplet/nub` dry-runs completed, then the command stopped at `@napplet/vite-plugin` because `@napplet/nub` is not yet present on the live JSR registry.
   implication: This is an expected local limitation before the real workflow publishes `@napplet/nub`; it is not the original `json-schema` docs failure.
 
+- timestamp: 2026-05-22
+  checked: GitHub Actions run `26281401112`, job `77358205519`
+  found: The first fix worked for the original failure: `@napplet/core@0.3.0` was skipped as already published, `@napplet/nub@0.3.0` published successfully, and `@napplet/vite-plugin@0.3.0` also published before the job failed on `@napplet/shim@0.3.0` with `modifying global types is not allowed file:///src/index.ts:64:1`.
+  implication: The workflow had advanced to the next JSR package rule; `@napplet/sdk` had the same global `Window` augmentation pattern and was still unpublished.
+
+- timestamp: 2026-05-22
+  checked: `cd packages/shim && npx jsr publish --dry-run --allow-slow-types --allow-dirty` and `cd packages/sdk && npx jsr publish --dry-run --allow-slow-types --allow-dirty`
+  found: Both focused dry-runs completed after removing global `Window` augmentation from published source.
+  implication: The package-rule failure for the remaining unpublished packages is resolved locally.
+
+- timestamp: 2026-05-22
+  checked: `pnpm -r --filter='./packages/*' exec npx jsr publish --dry-run --allow-slow-types --allow-dirty`
+  found: Full workspace JSR dry-run completed for `@napplet/core`, `@napplet/nub`, `@napplet/vite-plugin`, `@napplet/sdk`, and `@napplet/shim`.
+  implication: Local JSR verification no longer finds a package-analysis blocker across the workspace graph.
+
 ## Resolution
 
-root_cause: `@napplet/nub` published TypeScript source imported `JSONSchema7` from the npm-only `json-schema` type package. Local dry-run could see `node_modules`, but registry-side documentation generation analyzed the uploaded source without that local type package and failed resolving it. A second latent blocker existed in `@napplet/vite-plugin/jsr.json`: `npm:vite@>=5.0.0` is not a valid Deno/JSR npm specifier.
-fix: Made `NappletConfigSchema` self-contained in `packages/nub/src/config/types.ts`; changed the Vite plugin to consume that exported type; removed direct `@types/json-schema` dependencies/imports from publishable packages; changed the Vite plugin JSR import mapping to `npm:vite@^6.3.0`; updated Vite plugin docs.
-verification: `pnpm -r type-check`; `pnpm -r build`; `pnpm -r test:unit`; `deno check packages/nub/src/config/types.ts`; `deno doc packages/nub/src/config/types.ts`; `cd packages/nub && npx jsr publish --dry-run --allow-slow-types --allow-dirty`; `cd packages/vite-plugin && deno check --config jsr.json src/index.ts` now advances past the Vite specifier to the expected registry-missing `@napplet/nub`; grep confirms no remaining `json-schema` import in published package sources.
+root_cause: `@napplet/nub` published TypeScript source imported `JSONSchema7` from the npm-only `json-schema` type package. Local dry-run could see `node_modules`, but registry-side documentation generation analyzed the uploaded source without that local type package and failed resolving it. A second latent blocker existed in `@napplet/vite-plugin/jsr.json`: `npm:vite@>=5.0.0` is not a valid Deno/JSR npm specifier. After those were fixed, the rerun reached a third JSR package rule: `@napplet/shim` modified global `Window` types in published source; `@napplet/sdk` had the same pattern and was still unpublished.
+fix: Made `NappletConfigSchema` self-contained in `packages/nub/src/config/types.ts`; changed the Vite plugin to consume that exported type; removed direct `@types/json-schema` dependencies/imports from publishable packages; changed the Vite plugin JSR import mapping to `npm:vite@^6.3.0`; removed global `Window` augmentation from JSR-published `@napplet/sdk` and `@napplet/shim` source; documented the local `NappletGlobal` cast pattern.
+verification: `pnpm -r type-check`; `pnpm -r build`; `pnpm -r test:unit`; `pnpm -r lint`; `deno check packages/nub/src/config/types.ts`; `deno doc packages/nub/src/config/types.ts`; `cd packages/nub && npx jsr publish --dry-run --allow-slow-types --allow-dirty`; `cd packages/shim && npx jsr publish --dry-run --allow-slow-types --allow-dirty`; `cd packages/sdk && npx jsr publish --dry-run --allow-slow-types --allow-dirty`; full workspace `pnpm -r --filter='./packages/*' exec npx jsr publish --dry-run --allow-slow-types --allow-dirty`; grep confirms no remaining `json-schema` import or global type augmentation in published package sources.
 files_changed:
+- packages/core/src/types.ts
 - packages/nub/src/config/types.ts
 - packages/nub/package.json
+- packages/sdk/src/index.ts
+- packages/shim/src/index.ts
+- packages/shim/README.md
 - packages/vite-plugin/src/index.ts
 - packages/vite-plugin/package.json
 - packages/vite-plugin/tsconfig.json

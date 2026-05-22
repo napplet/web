@@ -499,21 +499,26 @@ Currently returns `false` until the shell populates it at iframe creation time. 
 
 ## TypeScript Support
 
-Importing `@napplet/shim` activates a global Window type augmentation:
+Importing `@napplet/shim` installs `window.napplet` at runtime. The package does
+not modify global `Window` types in its published source so it can be accepted by
+JSR. For direct `window.napplet` access, use `NappletGlobal` from
+`@napplet/core` in a local cast or ambient declaration:
 
 ```ts
-// This side-effect import gives TypeScript full autocompletion for window.napplet.*
+import type { NappletGlobal } from '@napplet/core';
 import '@napplet/shim';
 
-// TypeScript knows about window.napplet.relay, .ifc, .storage, .keys, .media, .notify, .identity, .resource, .connect, .class, .shell
-window.napplet.relay.subscribe({ kinds: [1] }, (event) => {
+const napplet = (window as Window & { napplet: NappletGlobal }).napplet;
+
+napplet.relay.subscribe({ kinds: [1] }, (event) => {
   // event is typed as NostrEvent
 });
 
-window.napplet.shell.supports('identity'); // typed as (capability: string) => boolean
+napplet.shell.supports('identity'); // typed as (capability: string) => boolean
 ```
 
-The `NappletGlobal` interface is defined in `@napplet/core` and augmented onto `Window` by the shim's type declarations.
+For named typed helpers, prefer `@napplet/sdk`; it wraps `window.napplet` without
+requiring global type augmentation.
 
 **Note:** `@napplet/shim` has zero named exports -- `import { anything } from '@napplet/shim'` is a TypeScript error. For named imports, use `@napplet/sdk`.
 

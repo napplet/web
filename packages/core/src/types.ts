@@ -150,12 +150,16 @@ export interface Rumor extends UnsignedEvent {
 }
 
 /**
- * The window.napplet global installed by @napplet/shim.
+ * The window.napplet global installed at runtime by @napplet/shim.
  *
- * Activated by a side-effect import:
+ * The published packages avoid global `Window` type mutation for JSR
+ * compatibility. Consumers that access `window.napplet` directly can use this
+ * interface in a local ambient declaration or cast:
  * ```ts
+ * import type { NappletGlobal } from '@napplet/core';
  * import '@napplet/shim';
- * // Now window.napplet is available with full TypeScript types.
+ *
+ * const napplet = (window as Window & { napplet: NappletGlobal }).napplet;
  * ```
  */
 export interface NappletGlobal {

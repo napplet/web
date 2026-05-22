@@ -58,15 +58,6 @@ import { NUB_DOMAINS } from '@napplet/core';
 import type { NappletGlobal, NamespacedCapability } from '@napplet/core';
 import type { IfcEventMessage } from '@napplet/nub/ifc/types';
 
-// ─── Global type augmentation ────────────────────────────────────────────────
-// Activates window.napplet TypeScript types on `import '@napplet/shim'`.
-
-declare global {
-  interface Window {
-    napplet: NappletGlobal;
-  }
-}
-
 // ─── Central envelope message handler ───────────────────────────────────────
 
 /**
