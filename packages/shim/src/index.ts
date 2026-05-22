@@ -58,6 +58,14 @@ import { NUB_DOMAINS } from '@napplet/core';
 import type { NappletGlobal, NamespacedCapability } from '@napplet/core';
 import type { IfcEventMessage } from '@napplet/nub/ifc/types';
 
+interface ShellInitMessage {
+  type: 'shell.init';
+  capabilities?: {
+    nubs?: unknown;
+    sandbox?: unknown;
+  };
+}
+
 // ─── Central envelope message handler ───────────────────────────────────────
 
 /**
@@ -70,6 +78,11 @@ function handleEnvelopeMessage(event: MessageEvent): void {
   if (typeof msg !== 'object' || msg === null || typeof msg.type !== 'string') return;
 
   const type = msg.type as string;
+
+  if (type === 'shell.init') {
+    installShellCapabilities(msg as ShellInitMessage);
+    return;
+  }
 
   // Route keys.* messages to keys shim
   if (type.startsWith('keys.')) {
@@ -145,6 +158,32 @@ function defaultShellSupports(capability: NamespacedCapability): boolean {
 
   // Bare NUB shorthand (e.g. 'relay').
   return (NUB_DOMAINS as readonly string[]).includes(capability);
+}
+
+function createShellSupports(capabilities: ShellInitMessage['capabilities']): (capability: NamespacedCapability) => boolean {
+  const nubs = new Set(
+    Array.isArray(capabilities?.nubs)
+      ? capabilities.nubs.filter((capability): capability is string => typeof capability === 'string')
+      : [],
+  );
+  const sandbox = new Set(
+    Array.isArray(capabilities?.sandbox)
+      ? capabilities.sandbox.filter((capability): capability is string => typeof capability === 'string')
+      : [],
+  );
+
+  return (capability: NamespacedCapability): boolean => {
+    if (typeof capability !== 'string') return false;
+    if (capability.startsWith('perm:')) return sandbox.has(capability);
+    if (capability.startsWith('nub:')) return nubs.has(capability.slice(4));
+    return nubs.has(capability);
+  };
+}
+
+function installShellCapabilities(msg: ShellInitMessage): void {
+  const napplet = (window as unknown as { napplet?: NappletGlobal }).napplet;
+  if (!napplet) return;
+  napplet.shell.supports = createShellSupports(msg.capabilities);
 }
 
 // ─── window.napplet global installation ──────────────────────────────────────
@@ -228,6 +267,7 @@ function defaultShellSupports(capability: NamespacedCapability): boolean {
 
 // Install central envelope message listener
 window.addEventListener('message', handleEnvelopeMessage);
+window.parent.postMessage({ type: 'shell.ready' }, '*');
 
 // Install window.nostrdb NIP-DB proxy
 installNostrDb();
