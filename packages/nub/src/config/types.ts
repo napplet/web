@@ -16,7 +16,6 @@
  */
 
 import type { NappletMessage } from '@napplet/core';
-import type { JSONSchema7 } from 'json-schema';
 
 // ─── Domain Constants ──────────────────────────────────────────────────────
 
@@ -25,17 +24,61 @@ export const DOMAIN = 'config' as const;
 
 // ─── Schema + Values Types ─────────────────────────────────────────────────
 
+export type JsonSchemaPrimitive = string | number | boolean | null;
+export type JsonSchemaValue =
+  | JsonSchemaPrimitive
+  | { readonly [key: string]: JsonSchemaValue | undefined }
+  | readonly JsonSchemaValue[];
+
+export type JsonSchemaTypeName =
+  | 'array'
+  | 'boolean'
+  | 'integer'
+  | 'null'
+  | 'number'
+  | 'object'
+  | 'string';
+
 /**
  * JSON Schema (draft-07+) describing a napplet's configuration surface.
  *
- * Structurally a `JSONSchema7` from the `json-schema` module, but NUB-CONFIG
- * restricts usage to the Core Subset defined in the spec (no `$ref`, no
- * `pattern`, no `oneOf`/`anyOf`/`allOf`/`not`, no `if`/`then`/`else`, no
- * tuple-typed arrays, max nesting depth 4). Subset enforcement is shell-side.
+ * NUB-CONFIG restricts usage to the Core Subset defined in the spec (no
+ * `$ref`, no `pattern`, no `oneOf`/`anyOf`/`allOf`/`not`, no `if`/`then`/`else`,
+ * no tuple-typed arrays, max nesting depth 4). Subset enforcement is
+ * shell-side.
  *
  * @see NUB-CONFIG Schema Contract section
  */
-export type NappletConfigSchema = JSONSchema7;
+export interface NappletConfigSchema {
+  $id?: string;
+  id?: string;
+  $schema?: string;
+  title?: string;
+  description?: string;
+  type?: JsonSchemaTypeName | readonly JsonSchemaTypeName[];
+  properties?: Readonly<Record<string, NappletConfigSchema>>;
+  required?: readonly string[];
+  items?: NappletConfigSchema | readonly NappletConfigSchema[];
+  additionalProperties?: boolean | NappletConfigSchema;
+  enum?: readonly JsonSchemaValue[];
+  const?: JsonSchemaValue;
+  default?: JsonSchemaValue;
+  examples?: readonly JsonSchemaValue[];
+  minimum?: number;
+  maximum?: number;
+  exclusiveMinimum?: number | boolean;
+  exclusiveMaximum?: number | boolean;
+  multipleOf?: number;
+  minLength?: number;
+  maxLength?: number;
+  minItems?: number;
+  maxItems?: number;
+  uniqueItems?: boolean;
+  minProperties?: number;
+  maxProperties?: number;
+  format?: string;
+  [keyword: string]: unknown;
+}
 
 /**
  * Spec-name alias for {@link NappletConfigSchema}.

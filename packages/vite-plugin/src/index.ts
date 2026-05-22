@@ -12,7 +12,7 @@
  */
 
 import type { Plugin, IndexHtmlTransformResult } from 'vite';
-import type { JSONSchema7 } from 'json-schema';
+import type { NappletConfigSchema } from '@napplet/nub/config/types';
 import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -60,7 +60,7 @@ export interface Nip5aManifestOptions {
    *
    * @see NUB-CONFIG spec (napplet/nubs#13)
    */
-  configSchema?: JSONSchema7 | string;
+  configSchema?: NappletConfigSchema | string;
 
   /**
    * @deprecated v0.29.0 — the shell is now the sole CSP authority. This option has NO effect
@@ -173,7 +173,7 @@ function computeAggregateHash(xTags: Array<[string, string]>): string {
 async function discoverConfigSchema(
   options: Nip5aManifestOptions,
   root: string,
-): Promise<{ schema: JSONSchema7 | null; source: string | null }> {
+): Promise<{ schema: NappletConfigSchema | null; source: string | null }> {
   // Step 1 + 2: inline option
   if (options.configSchema !== undefined) {
     if (typeof options.configSchema === 'object') {
@@ -190,7 +190,7 @@ async function discoverConfigSchema(
       }
       try {
         const raw = fs.readFileSync(p, 'utf-8');
-        return { schema: JSON.parse(raw) as JSONSchema7, source: `inline option: ${p}` };
+        return { schema: JSON.parse(raw) as NappletConfigSchema, source: `inline option: ${p}` };
       } catch (err) {
         throw new Error(
           `[nip5a-manifest] failed to parse configSchema file ${p}: ${(err as Error).message}`,
@@ -204,7 +204,7 @@ async function discoverConfigSchema(
   if (fs.existsSync(conventionPath)) {
     try {
       const raw = fs.readFileSync(conventionPath, 'utf-8');
-      return { schema: JSON.parse(raw) as JSONSchema7, source: 'config.schema.json' };
+      return { schema: JSON.parse(raw) as NappletConfigSchema, source: 'config.schema.json' };
     } catch (err) {
       throw new Error(
         `[nip5a-manifest] failed to parse config.schema.json at ${conventionPath}: ${(err as Error).message}`,
@@ -220,7 +220,7 @@ async function discoverConfigSchema(
       // Convert to file:// URL for ESM dynamic import on Windows + Linux
       const url = new URL(`file://${cfgPath}`).href;
       const mod = await import(url);
-      const schema = (mod.configSchema ?? mod.default?.configSchema) as JSONSchema7 | undefined;
+      const schema = (mod.configSchema ?? mod.default?.configSchema) as NappletConfigSchema | undefined;
       if (schema === undefined) {
         throw new Error(
           `[nip5a-manifest] napplet.config.${ext} at ${cfgPath} does not export \`configSchema\` (neither as a named export nor on the default export)`,
@@ -550,7 +550,7 @@ assertConnectFoldMatchesSpecFixture();
 export function nip5aManifest(options: Nip5aManifestOptions): Plugin {
   let outDir = 'dist';
   let projectRoot: string = process.cwd();
-  let resolvedSchema: JSONSchema7 | null = null;
+  let resolvedSchema: NappletConfigSchema | null = null;
   let resolvedSchemaSource: string | null = null;
   let normalizedConnect: string[] = [];
 

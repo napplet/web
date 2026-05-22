@@ -87,7 +87,7 @@ If the shell does not support all required capabilities, the napplet can detect 
 
 #### configSchema (optional)
 
-**Type:** `JSONSchema7 | string | undefined`
+**Type:** `NappletConfigSchema | string | undefined`
 
 Declares a JSON Schema (draft-07+) describing the napplet's per-napplet configuration surface (NUB-CONFIG). At build time, the plugin:
 
@@ -100,7 +100,7 @@ Declares a JSON Schema (draft-07+) describing the napplet's per-napplet configur
 
 | Value | Behaviour |
 |-------|-----------|
-| `JSONSchema7` object | Used directly |
+| `NappletConfigSchema` object | Used directly |
 | `string` (path) | Resolved relative to the Vite project root; read + parsed as JSON |
 | `undefined` (omitted) | Falls through to convention-file discovery |
 
@@ -158,9 +158,9 @@ nip5aManifest({ nappletType: 'my-napp' });
 
 ```ts
 // napplet.config.ts (at project root)
-import type { JSONSchema7 } from 'json-schema';
+import type { NappletConfigSchema } from '@napplet/nub/config/types';
 
-export const configSchema: JSONSchema7 = {
+export const configSchema: NappletConfigSchema = {
   type: 'object',
   properties: {
     theme: { type: 'string', enum: ['light', 'dark'], default: 'dark' },
@@ -432,7 +432,7 @@ interface Nip5aManifestOptions {
    * project root). Falls through to `config.schema.json` then `napplet.config.*`
    * discovery when omitted.
    */
-  configSchema?: JSONSchema7 | string;
+  configSchema?: NappletConfigSchema | string;
 
   /**
    * Origins the napplet needs direct browser-level network access to (v0.29.0+).
