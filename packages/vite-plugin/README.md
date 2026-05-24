@@ -17,14 +17,15 @@ During **dev mode**, the plugin injects empty meta tags into your HTML so the na
 
 At **build time** (with `VITE_DEV_PRIVKEY_HEX` set), the plugin:
 
-1. Walks the `dist/` directory and computes SHA-256 of each file
-2. Computes the aggregate hash per the NIP-5A algorithm
-3. Creates a kind 35128 manifest event and signs it
-4. Writes `.nip5a-manifest.json` to `dist/`
-5. Updates the meta tag in `dist/index.html` with the computed hash
-6. Injects `<meta name="napplet-config-schema">` into `dist/index.html` if a `configSchema` is declared or discovered
-7. Embeds the schema as a `['config', ...]` tag on the kind 35128 manifest
-8. Includes the schema bytes in `aggregateHash` via a synthetic `config:schema` path prefix
+1. Optionally rewrites local JS/CSS build assets into `index.html` when `artifactMode: 'single-file'` is enabled
+2. Walks the final `dist/` artifact set and computes SHA-256 of each file
+3. Computes the aggregate hash per the NIP-5A algorithm
+4. Creates a kind 35128 manifest event and signs it
+5. Writes `.nip5a-manifest.json` to `dist/`
+6. Updates the meta tag in `dist/index.html` with the computed hash
+7. Injects `<meta name="napplet-config-schema">` into `dist/index.html` if a `configSchema` is declared or discovered
+8. Embeds the schema as a `['config', ...]` tag on the kind 35128 manifest
+9. Includes the schema bytes in `aggregateHash` via a synthetic `config:schema` path prefix
 
 The build-time manifest is for verifying the hash computation workflow locally, not for deploying to relays.
 
@@ -111,6 +112,45 @@ Declares a JSON Schema (draft-07+) describing the napplet's per-napplet configur
 3. `napplet.config.ts` / `napplet.config.js` / `napplet.config.mjs` at the project root, exporting a `configSchema` named export (or on the default export) -- dynamic import fallback
 
 If none of the three paths resolve a schema, manifest/meta emission for the config tag is skipped silently -- build produces bytes identical to a pre-phase-114 napplet.
+
+#### artifactMode (optional, v1.11+)
+
+**Type:** `'external-assets' | 'single-file'`
+**Default:** `'external-assets'`
+
+Controls the build artifact shape the plugin validates and hashes.
+
+| Value | Behaviour |
+|-------|-----------|
+| `'external-assets'` | Preserve Vite's default `index.html` + JS/CSS asset graph. Inline executable scripts are rejected. |
+| `'single-file'` | Force Vite toward a single emitted artifact, inline local JS/CSS build asset references into `index.html`, and fail if local external assets remain before aggregate-hash and manifest generation. |
+
+Use `single-file` when the napplet is meant to be served as a production-equivalent NIP-5A gateway artifact: a gateway-portable `index.html` loaded in an opaque-origin NIP-5D iframe without relying on separate local JS/CSS bundle routes.
+
+```ts
+// vite.config.ts
+import { defineConfig } from 'vite';
+import { nip5aManifest } from '@napplet/vite-plugin';
+
+export default defineConfig({
+  plugins: [
+    nip5aManifest({
+      nappletType: 'my-napp',
+      artifactMode: 'single-file',
+    }),
+  ],
+});
+```
+
+In single-file mode:
+
+- The plugin first rejects any inline executable scripts already present in the built HTML.
+- It asks Vite/Rollup for a single-entry artifact shape (`inlineDynamicImports`, no CSS code-split, inline static assets) so ordinary static and dynamic imports are bundled before the close-bundle rewrite.
+- It then rewrites local stylesheet links and local script `src` tags to inline `<style>` / `<script>` blocks and removes those inlined JS/CSS files from `dist/`.
+- It fails the build if any local stylesheet, modulepreload, script `src`, or extra emitted file remains after rewriting.
+- The resulting `index.html` artifact bytes are used for the real `['x', <sha256>, 'index.html']` manifest tag and aggregateHash input.
+- The aggregate hash is computed after inlining and before the self-referential aggregate-hash meta stamp is replaced.
+- `config:schema` and `connect:origins` synthetic inputs continue to participate in aggregateHash and remain excluded from public `['x', ...]` manifest tags.
 
 **Example (inline):**
 
@@ -337,7 +377,7 @@ if (!window.napplet.shell.supports('media')) {
 
 v0.29.0 adds two build-time safeguards and one informational warning, all enforced in `closeBundle` or `configResolved` so misconfiguration fails loud before `dist/` reaches a shell.
 
-### Inline-script fail-loud (new in v0.29.0)
+### Inline-script fail-loud (new in v0.29.0; mode-aware in v1.11)
 
 The plugin scans `dist/index.html` after build for any `<script>` element without a non-empty `src` attribute. Such elements are hard-errors — the build throws and exits non-zero with a diagnostic referencing the shell's baseline `script-src 'self'` posture.
 
@@ -354,6 +394,8 @@ Rejected:
 - `<script type="module">/* inline */</script>` — inline module
 
 **Why:** The shell is now the sole runtime CSP authority. Every conformant shell serves napplet HTML with a CSP that includes `script-src 'self'` (or tighter, via `'nonce-…'`). Inline `<script>` without `src` violates that policy, so shipping inline JS guarantees the napplet will be partially non-functional at runtime. Surfacing this at build time converts a silent runtime failure into a loud build failure.
+
+Exception: when `artifactMode: 'single-file'` is set, the plugin validates the pre-inline HTML first, then creates the inline module scripts itself from local build assets. Those build-produced inline scripts are intentional and are accepted as part of the explicit single-file NIP-5A artifact contract.
 
 **Fixing:** Move inline JS into a `.js` module under `src/` and import it. For build-time state that needs to reach runtime code (feature flags, config defaults), use a `<script type="application/json" id="data">…</script>` data island and read it at runtime via `document.getElementById('data').textContent`.
 
@@ -393,14 +435,15 @@ The empty aggregate hash tells the shell this is a development build. The shell 
 
 Only runs if `VITE_DEV_PRIVKEY_HEX` is set:
 
-1. Walks `dist/` directory recursively
-2. Computes SHA-256 hash of each file's contents
-3. Creates sorted hash lines: `<sha256hex> <relativePath>\n`
-4. Computes aggregate hash (SHA-256 of sorted concatenation)
-5. Creates kind 35128 manifest event with `x` tags for each file and `requires` tags if configured
-6. Signs with the test private key
-7. Writes `.nip5a-manifest.json` to `dist/`
-8. Updates the `napplet-aggregate-hash` meta tag in `dist/index.html`
+1. If `artifactMode: 'single-file'` is set, rewrites local JS/CSS references into `index.html` before hashing
+2. Walks `dist/` directory recursively
+3. Computes SHA-256 hash of each file's contents
+4. Creates sorted hash lines: `<sha256hex> <relativePath>\n`
+5. Computes aggregate hash (SHA-256 of sorted concatenation)
+6. Creates kind 35128 manifest event with `x` tags for each file and `requires` tags if configured
+7. Signs with the test private key
+8. Writes `.nip5a-manifest.json` to `dist/`
+9. Updates the `napplet-aggregate-hash` meta tag in `dist/index.html`
 
 ## API Reference
 
@@ -425,6 +468,13 @@ interface Nip5aManifestOptions {
 
   /** Service dependencies this napplet requires (e.g., ['audio', 'notifications']). Optional. */
   requires?: string[];
+
+  /**
+   * Artifact output contract. Defaults to 'external-assets'. Set to
+   * 'single-file' to inline local JS/CSS build assets into index.html before
+   * NIP-5A aggregateHash and manifest generation.
+   */
+  artifactMode?: 'external-assets' | 'single-file';
 
   /**
    * JSON Schema (draft-07+) describing the napplet's config surface (NUB-CONFIG).
