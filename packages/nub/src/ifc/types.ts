@@ -17,12 +17,8 @@
 
 import type { NappletMessage } from '@napplet/core';
 
-// ─── Domain Constants ──────────────────────────────────────────────────────
-
 /** The NUB domain name for inter-frame communication messages. */
 export const DOMAIN = 'ifc' as const;
-
-// ─── Base Message Type ─────────────────────────────────────────────────────
 
 /**
  * Base interface for all IFC NUB messages.
@@ -32,8 +28,6 @@ export interface IfcMessage extends NappletMessage {
   /** Message type in "ifc.<action>" format. */
   type: `ifc.${string}`;
 }
-
-// ─── Topic Pub/Sub Messages ────────────────────────────────────────────────
 
 /**
  * Emit a fire-and-forget message on a topic.
@@ -101,8 +95,6 @@ export interface IfcEventMessage extends IfcMessage {
   /** Optional payload data. */
   payload?: unknown;
 }
-
-// ─── Channel Messages ──────────────────────────────────────────────────────
 
 /**
  * Open a point-to-point channel with a target napplet.
@@ -204,8 +196,6 @@ export interface IfcChannelClosedMessage extends IfcMessage {
   /** Optional reason for closure. */
   reason?: string;
 }
-
-// ─── Discriminated Unions ──────────────────────────────────────────────────
 
 /** Topic pub/sub messages (dispatch mode). */
 export type IfcTopicMessage =

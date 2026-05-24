@@ -9,8 +9,6 @@
 
 import type { NappletGlobal } from '@napplet/core';
 
-// ─── SDK functions ──────────────────────────────────────────────────────────
-
 /**
  * Return the shell-assigned class number, or `undefined` if not yet assigned.
  *

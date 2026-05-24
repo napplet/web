@@ -14,8 +14,6 @@
  * @packageDocumentation
  */
 
-// ─── Envelope Base Types ───────────────────────────────────────────────────
-
 /**
  * Base interface for all JSON envelope messages exchanged between
  * napplet and shell. The `type` field is a string discriminant
@@ -38,8 +36,6 @@ export interface NappletMessage {
   /** Message type discriminant in "domain.action" format (e.g., "relay.subscribe", "storage.get") */
   type: string;
 }
-
-// ─── NUB Domain Types ──────────────────────────────────────────────────────
 
 /**
  * String literal union of the twelve NUB (Napplet Unified Blueprint) domains.
@@ -81,8 +77,6 @@ export type NubDomain = 'relay' | 'identity' | 'storage' | 'ifc' | 'theme' | 'ke
  */
 export const NUB_DOMAINS: readonly NubDomain[] = ['relay', 'identity', 'storage', 'ifc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'connect', 'class'] as const;
 
-// ─── Namespaced Capability Type ───────────────────────────────────────────
-
 /**
  * Namespaced capability string for {@link ShellSupports.supports}.
  *
@@ -114,8 +108,6 @@ export type NamespacedCapability =
   | `nub:${NubDomain}`
   | `perm:${string}`;
 
-// ─── Shell Capability Query ────────────────────────────────────────────────
-
 /**
  * Interface for the shell capability query API.
  * Allows napplets to check whether the shell supports a NUB domain
@@ -135,8 +127,6 @@ export interface ShellSupports {
   /** Check whether the shell supports a NUB capability or permission. */
   supports(capability: NamespacedCapability): boolean;
 }
-
-// ─── Shell Global Type ─────────────────────────────────────────────────────
 
 /**
  * Type for the `window.napplet.shell` namespace.

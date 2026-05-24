@@ -1,10 +1,5 @@
-// @napplet/shim -- NIP-DB window.nostrdb proxy
-// Proxies query, add, event, replaceable, count, supports, subscribe through postMessage
-// to the ShellBridge, which dispatches to WorkerRelayService (OPFS cache).
 
 import type { NostrEvent, NostrFilter } from '@napplet/core';
-
-// ─── Local envelope types (nostrdb is not a NUB domain) ──────────────────────
 
 interface NostrDbRequestMessage {
   type: 'nostrdb.request';
@@ -27,8 +22,6 @@ interface NostrDbEventPushMessage {
   content: string;
 }
 
-// ─── Module-level state ────────────────────────────────────────────────────────
-
 /** Pending NIPDB requests: correlationId -> { resolve, reject } */
 const nipdbPending = new Map<string, {
   resolve: (value: unknown) => void;
@@ -44,8 +37,6 @@ const nipdbSubscribeHandlers = new Map<string, (event: NostrEvent) => void>();
  * Subscribe cancellers: subId -> function that unblocks the waiting generator.
  */
 const nipdbSubscribeCancellers = new Map<string, () => void>();
-
-// ─── Outbound helper ──────────────────────────────────────────────────────────
 
 function sendNipdbRequestRaw(
   method: string,
@@ -84,8 +75,6 @@ function sendNipdbRequest(
   });
 }
 
-// ─── Inbound response handler ─────────────────────────────────────────────────
-
 function handleNipdbResult(msg: NostrDbResultMessage): void {
   const pending = nipdbPending.get(msg.id);
   if (!pending) return;
@@ -111,8 +100,6 @@ function handleNipdbEventPush(msg: NostrDbEventPushMessage): void {
     }
   }
 }
-
-// ─── NIP-DB spec interface ────────────────────────────────────────────────────
 
 const SUPPORTED_METHODS = ['query', 'add', 'event', 'replaceable', 'count', 'subscribe'] as const;
 

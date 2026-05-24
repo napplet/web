@@ -15,8 +15,6 @@
 
 export { DOMAIN } from './types.js';
 
-// ─── Type Exports ──────────────────────────────────────────────────────────
-
 export type {
   RelayMessage,
   RelaySubscribeMessage,
@@ -35,15 +33,9 @@ export type {
   RelayNubMessage,
 } from './types.js';
 
-// ─── Shim Exports ─────────────────────────────────────────────────────────
-
 export { installRelayShim, subscribe, publish, publishEncrypted, query } from './shim.js';
 
-// ─── SDK Exports ──────────────────────────────────────────────────────────
-
 export { relaySubscribe, relayPublish, relayPublishEncrypted, relayQuery } from './sdk.js';
-
-// ─── Domain Registration ───────────────────────────────────────────────────
 
 import { registerNub } from '@napplet/core';
 import { DOMAIN } from './types.js';

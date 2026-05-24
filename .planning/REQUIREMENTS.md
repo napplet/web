@@ -16,16 +16,16 @@ Requirements for v0.31.0. Each maps to roadmap phases after roadmapping.
 
 ### Lint and Fixable Cleanup
 
-- [ ] **LINT-01**: Maintainer can verify duplicate `@napplet/core` imports are merged in `packages/nub/src/relay/types.ts` and `packages/shim/src/index.ts`.
-- [ ] **LINT-02**: Maintainer can verify unused type imports are removed from `packages/nub/src/storage/shim.ts`, `packages/nub/src/identity/shim.ts`, and `packages/nub/src/keys/shim.ts`.
-- [ ] **LINT-03**: Maintainer can verify production source no longer contains leftover `console.log`, `console.debug`, or `console.info` calls reported by the quality gate.
-- [ ] **LINT-04**: Maintainer can verify the duplicated block in `packages/shim/src/index.ts` is collapsed into a single local helper or deleted path without changing global shim installation behavior.
+- [x] **LINT-01**: Maintainer can verify duplicate `@napplet/core` imports are merged in `packages/nub/src/relay/types.ts` and `packages/shim/src/index.ts`.
+- [x] **LINT-02**: Maintainer can verify unused type imports are removed from `packages/nub/src/storage/shim.ts`, `packages/nub/src/identity/shim.ts`, and `packages/nub/src/keys/shim.ts`.
+- [x] **LINT-03**: Maintainer can verify production source no longer contains leftover `console.log`, `console.debug`, or `console.info` calls reported by the quality gate.
+- [x] **LINT-04**: Maintainer can verify the duplicated block in `packages/shim/src/index.ts` is collapsed into a single local helper or deleted path without changing global shim installation behavior.
 
 ### Comment and AI-Slop Hygiene
 
-- [ ] **SLOP-01**: Maintainer can verify decorative section separators and narrative comment blocks reported by the quality gate are removed from source files while preserving useful public API documentation.
-- [ ] **SLOP-02**: Maintainer can verify trivial comments that restate obvious assignments or calls are removed from NUB shim source.
-- [ ] **SLOP-03**: Maintainer can verify the scanner's fixable AI-slop categories from the v0.31.0 kickoff report are either zeroed or reduced to explicitly reviewed false positives.
+- [x] **SLOP-01**: Maintainer can verify decorative section separators and narrative comment blocks reported by the quality gate are removed from source files while preserving useful public API documentation.
+- [x] **SLOP-02**: Maintainer can verify trivial comments that restate obvious assignments or calls are removed from NUB shim source.
+- [x] **SLOP-03**: Maintainer can verify the scanner's fixable AI-slop categories from the v0.31.0 kickoff report are either zeroed or reduced to explicitly reviewed false positives.
 
 ### Type Safety
 
@@ -77,13 +77,13 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SEC-02 | Phase 143 | Complete |
 | SEC-03 | Phase 143 | Complete |
 | SEC-04 | Phase 143 | Complete |
-| LINT-01 | Phase 144 | Pending |
-| LINT-02 | Phase 144 | Pending |
-| LINT-03 | Phase 144 | Pending |
-| LINT-04 | Phase 144 | Pending |
-| SLOP-01 | Phase 144 | Pending |
-| SLOP-02 | Phase 144 | Pending |
-| SLOP-03 | Phase 144 | Pending |
+| LINT-01 | Phase 144 | Complete |
+| LINT-02 | Phase 144 | Complete |
+| LINT-03 | Phase 144 | Complete |
+| LINT-04 | Phase 144 | Complete |
+| SLOP-01 | Phase 144 | Complete |
+| SLOP-02 | Phase 144 | Complete |
+| SLOP-03 | Phase 144 | Complete |
 | TYPE-01 | Phase 145 | Pending |
 | TYPE-02 | Phase 145 | Pending |
 | TYPE-03 | Phase 145 | Pending |
@@ -104,4 +104,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-05-24*
-*Last updated: 2026-05-24 after Phase 143 verification*
+*Last updated: 2026-05-24 after Phase 144 verification*

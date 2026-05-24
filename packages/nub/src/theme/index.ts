@@ -15,8 +15,6 @@
 
 export { DOMAIN } from './types.js';
 
-// ─── Type Exports ──────────────────────────────────────────────────────────
-
 export type {
   ThemeColors,
   ThemeFont,
@@ -30,8 +28,6 @@ export type {
   ThemeResultMessage,
   ThemeNubMessage,
 } from './types.js';
-
-// ─── Domain Registration ───────────────────────────────────────────────────
 
 import { registerNub } from '@napplet/core';
 import { DOMAIN } from './types.js';

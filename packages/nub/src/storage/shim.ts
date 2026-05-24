@@ -19,26 +19,18 @@ import type {
   StorageRemoveMessage,
   StorageKeysMessage,
   StorageGetResultMessage,
-  StorageSetResultMessage,
-  StorageRemoveResultMessage,
   StorageKeysResultMessage,
 } from './types.js';
-
-// ─── Types ──────────────────────────────────────────────────────────────────
 
 interface PendingRequest {
   resolve: (value: unknown) => void;
   reject: (reason: Error) => void;
 }
 
-// ─── Internal state ─────────────────────────────────────────────────────────
-
 const pendingResponses = new Map<string, PendingRequest>();
 
 /** Timeout for state requests (5 seconds). */
 const REQUEST_TIMEOUT_MS = 5000;
-
-// ─── Response listener ──────────────────────────────────────────────────────
 
 function handleStateResponse(event: MessageEvent): void {
   if (event.source !== window.parent) return;
@@ -53,7 +45,6 @@ function handleStateResponse(event: MessageEvent): void {
   if (!pending) return;
   pendingResponses.delete(id);
 
-  // Check for error on all result types
   if (msg.error) {
     pending.reject(new Error(msg.error as string));
     return;
@@ -62,8 +53,6 @@ function handleStateResponse(event: MessageEvent): void {
   // Return the full result message (caller extracts what they need)
   pending.resolve(msg);
 }
-
-// ─── Request helpers ────────────────────────────────────────────────────────
 
 function sendStorageRequest(
   message: StorageGetMessage | StorageSetMessage | StorageRemoveMessage | StorageKeysMessage,
@@ -81,8 +70,6 @@ function sendStorageRequest(
     }, REQUEST_TIMEOUT_MS);
   });
 }
-
-// ─── Public API ─────────────────────────────────────────────────────────────
 
 /**
  * Async localStorage-like state API for sandboxed napplets.
@@ -154,8 +141,6 @@ export const nappletStorage = {
     return result.keys;
   },
 };
-
-// ─── Install ────────────────────────────────────────────────────────────────
 
 /**
  * Install the storage response listener.

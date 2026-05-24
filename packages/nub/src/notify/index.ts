@@ -15,8 +15,6 @@
 
 export { DOMAIN } from './types.js';
 
-// ─── Type Exports ──────────────────────────────────────────────────────────
-
 export type {
   NotificationPriority,
   NotificationAction,
@@ -39,8 +37,6 @@ export type {
   NotifyNubMessage,
 } from './types.js';
 
-// ─── Shim Exports ─────────────────────────────────────────────────────────
-
 export {
   installNotifyShim,
   handleNotifyMessage,
@@ -55,8 +51,6 @@ export {
   onControls,
 } from './shim.js';
 
-// ─── SDK Exports ──────────────────────────────────────────────────────────
-
 export {
   notifySend,
   notifyDismiss,
@@ -68,8 +62,6 @@ export {
   notifyOnDismissed,
   notifyOnControls,
 } from './sdk.js';
-
-// ─── Domain Registration ───────────────────────────────────────────────────
 
 import { registerNub } from '@napplet/core';
 import { DOMAIN } from './types.js';

@@ -7,8 +7,6 @@
 
 import type { NappletGlobal, Subscription } from '@napplet/core';
 
-// ─── Runtime guard ──────────────────────────────────────────────────────────
-
 function requireKeys(): NappletGlobal['keys'] {
   const w = window as Window & { napplet?: NappletGlobal };
   if (!w.napplet?.keys) {
@@ -16,8 +14,6 @@ function requireKeys(): NappletGlobal['keys'] {
   }
   return w.napplet.keys;
 }
-
-// ─── SDK functions ──────────────────────────────────────────────────────────
 
 /**
  * Declare a named action that the shell can bind to a key.

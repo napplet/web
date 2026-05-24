@@ -23,8 +23,6 @@
 
 export { DOMAIN } from './types.js';
 
-// ─── Type Exports ──────────────────────────────────────────────────────────
-
 export type {
   ClassMessage,
   ClassAssignedMessage,
@@ -32,18 +30,12 @@ export type {
   ClassNubMessage,
 } from './types.js';
 
-// ─── Shim Exports ─────────────────────────────────────────────────────────
-
 export {
   installClassShim,
   handleClassMessage,
 } from './shim.js';
 
-// ─── SDK Exports ──────────────────────────────────────────────────────────
-
 export { getClass } from './sdk.js';
-
-// ─── Domain Registration ───────────────────────────────────────────────────
 
 import { registerNub, type NubHandler } from '@napplet/core';
 import { DOMAIN } from './types.js';

@@ -22,23 +22,13 @@
 
 export { DOMAIN } from './types.js';
 
-// ─── Type Exports ──────────────────────────────────────────────────────────
-
 export type { NappletConnect } from './types.js';
-
-// ─── Function Exports ──────────────────────────────────────────────────────
 
 export { normalizeConnectOrigin } from './types.js';
 
-// ─── Shim Exports ─────────────────────────────────────────────────────────
-
 export { installConnectShim } from './shim.js';
 
-// ─── SDK Exports ──────────────────────────────────────────────────────────
-
 export { connectGranted, connectOrigins } from './sdk.js';
-
-// ─── Domain Registration ───────────────────────────────────────────────────
 
 import { registerNub } from '@napplet/core';
 import { DOMAIN } from './types.js';

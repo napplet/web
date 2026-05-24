@@ -16,12 +16,8 @@
  *   Single source of truth per NUB-CONNECT spec.
  */
 
-// ─── Domain Constants ──────────────────────────────────────────────────────
-
 /** The NUB domain name for connect messages (no wire protocol — informational). */
 export const DOMAIN = 'connect' as const;
-
-// ─── Runtime State Shape ───────────────────────────────────────────────────
 
 /**
  * Readonly runtime state mounted at `window.napplet.connect`.
@@ -40,8 +36,6 @@ export interface NappletConnect {
   readonly granted: boolean;
   readonly origins: readonly string[];
 }
-
-// ─── Origin Normalizer (shared build-side + shell-side) ────────────────────
 
 const ERR_PREFIX = '[@napplet/nub/connect]';
 const ACCEPTED_SCHEMES = new Set(['https', 'wss', 'http', 'ws']);

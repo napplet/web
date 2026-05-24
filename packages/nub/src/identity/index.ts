@@ -15,8 +15,6 @@
 
 export { DOMAIN } from './types.js';
 
-// ─── Type Exports ──────────────────────────────────────────────────────────
-
 export type {
   ProfileData,
   ZapReceipt,
@@ -50,14 +48,10 @@ export type {
   IdentityDecryptErrorCode,
 } from './types.js';
 
-// ─── Cross-Package Type Re-Exports (from @napplet/core) ────────────────────
-
 export type {
   Rumor,
   UnsignedEvent,
 } from '@napplet/core';
-
-// ─── Shim Exports ─────────────────────────────────────────────────────────
 
 export {
   installIdentityShim,
@@ -74,8 +68,6 @@ export {
   decrypt,
 } from './shim.js';
 
-// ─── SDK Exports ──────────────────────────────────────────────────────────
-
 export {
   identityGetPublicKey,
   identityGetRelays,
@@ -88,8 +80,6 @@ export {
   identityGetBadges,
   identityDecrypt,
 } from './sdk.js';
-
-// ─── Domain Registration ───────────────────────────────────────────────────
 
 import { registerNub } from '@napplet/core';
 import { DOMAIN } from './types.js';

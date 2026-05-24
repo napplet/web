@@ -1,9 +1,3 @@
-// @napplet/nub/config -- Config NUB shim (schema-driven per-napplet configuration)
-// Reads manifest-declared schema at install time, ref-counts local subscribers so
-// the wire-level config.subscribe/unsubscribe fire only on Set 0->1 / 1->0
-// transitions, correlates config.get + config.registerSchema via id, and fans out
-// config.values pushes (without id) to every local subscriber plus caches the
-// latest snapshot for late-subscribers.
 
 import type {
   NappletConfigSchema,
@@ -20,15 +14,11 @@ import type {
 } from './types.js';
 import type { Subscription } from '@napplet/core';
 
-// ─── Constants ─────────────────────────────────────────────────────────────
-
 /** Default timeout for correlated requests (30 seconds). */
 const REQUEST_TIMEOUT_MS = 30_000;
 
 /** Meta tag name carrying the manifest-declared JSON-escaped schema. */
 const SCHEMA_META_NAME = 'napplet-config-schema';
-
-// ─── State ─────────────────────────────────────────────────────────────────
 
 /** Currently-registered schema (from manifest meta tag or config.registerSchema). null until set. */
 let currentSchema: NappletConfigSchema | null = null;
@@ -58,8 +48,6 @@ const pendingRegistrations = new Map<string, {
 /** Double-install guard. */
 let installed = false;
 
-// ─── Shell message router ───────────────────────────────────────────────────
-
 /**
  * Handle config.* messages from the shell. Called by the central shim dispatcher.
  *
@@ -80,8 +68,6 @@ export function handleConfigMessage(msg: { type: string; [key: string]: unknown 
     handleSchemaError(msg as unknown as ConfigSchemaErrorMessage);
   }
 }
-
-// ─── Message handlers (shell -> napplet) ────────────────────────────────────
 
 /**
  * Handle config.registerSchema.result: resolve or reject the pending registration
@@ -148,8 +134,6 @@ function handleSchemaError(msg: ConfigSchemaErrorMessage): void {
   }
 }
 
-// ─── Helpers ────────────────────────────────────────────────────────────────
-
 /**
  * Read the manifest-declared schema from <meta name="napplet-config-schema"> if present.
  * Silent on any failure (missing tag, missing content, invalid JSON) -- schema remains null.
@@ -166,8 +150,6 @@ function readManifestSchema(): NappletConfigSchema | null {
     return null;
   }
 }
-
-// ─── Public API (installed on window.napplet.config) ───────────────────────
 
 /**
  * Register a napplet configuration schema at runtime.
@@ -316,8 +298,6 @@ export function onSchemaError(
     schemaErrorHandlers.delete(callback);
   };
 }
-
-// ─── Install / cleanup ──────────────────────────────────────────────────────
 
 /**
  * Install the config shim: read the manifest-declared schema (if any) from

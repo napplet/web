@@ -7,8 +7,6 @@
 
 import type { NappletGlobal, NostrEvent, Subscription } from '@napplet/core';
 
-// ─── Runtime guard ──────────────────────────────────────────────────────────
-
 function requireIfc(): NappletGlobal['ifc'] {
   const w = window as Window & { napplet?: NappletGlobal };
   if (!w.napplet?.ifc) {
@@ -16,8 +14,6 @@ function requireIfc(): NappletGlobal['ifc'] {
   }
   return w.napplet.ifc;
 }
-
-// ─── SDK functions ──────────────────────────────────────────────────────────
 
 /**
  * Broadcast an IFC-PEER event to other napplets via the shell.

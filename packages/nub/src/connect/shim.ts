@@ -11,12 +11,8 @@
 
 import type { NappletConnect } from './types.js';
 
-// ─── Constants ─────────────────────────────────────────────────────────────
-
 /** Meta tag name carrying the shell-injected whitespace-separated origin list. */
 const GRANTED_META_NAME = 'napplet-connect-granted';
-
-// ─── State ─────────────────────────────────────────────────────────────────
 
 /** Parsed grant state (updated at installConnectShim call time only). */
 let currentGranted = false;
@@ -24,8 +20,6 @@ let currentOrigins: readonly string[] = Object.freeze([]);
 
 /** Double-install guard. */
 let installed = false;
-
-// ─── Helpers ───────────────────────────────────────────────────────────────
 
 /**
  * Read the shell-injected <meta name="napplet-connect-granted"> content.
@@ -48,8 +42,6 @@ function parseOrigins(content: string | null): readonly string[] {
   const parts = content.split(/\s+/).filter((s) => s.length > 0);
   return Object.freeze(parts);
 }
-
-// ─── Install / cleanup ──────────────────────────────────────────────────────
 
 /**
  * Install the connect shim: read the shell-injected grant meta tag (if any)

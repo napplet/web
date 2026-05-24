@@ -7,8 +7,6 @@
 
 import type { NappletGlobal } from '@napplet/core';
 
-// ─── Runtime guard ──────────────────────────────────────────────────────────
-
 function requireResource(): NappletGlobal['resource'] {
   const w = window as Window & { napplet?: NappletGlobal };
   if (!w.napplet?.resource) {
@@ -16,8 +14,6 @@ function requireResource(): NappletGlobal['resource'] {
   }
   return w.napplet.resource;
 }
-
-// ─── SDK functions ──────────────────────────────────────────────────────────
 
 /**
  * Fetch bytes for a URL through the shell's resource pipeline.

@@ -17,8 +17,6 @@ import type {
 } from './types.js';
 import { hydrateResourceCache } from '../resource/shim.js';
 
-// ─── Public API ─────────────────────────────────────────────────────────────
-
 /**
  * Open a live relay subscription through the shell's relay pool.
  *
@@ -62,12 +60,6 @@ export function subscribe(
 
     if (msg.type === 'relay.event') {
       const eventMsg = msg as RelayEventMessage;
-      // Pre-populate the resource single-flight cache from any sidecar entries
-      // BEFORE delivering the event, so a synchronous bytes(url) call inside
-      // onEvent for a sidecar-pre-populated URL resolves from cache without a
-      // postMessage round-trip. hydrateResourceCache is null-safe (undefined
-      // or empty entries is a no-op), so no guard is needed for shells that
-      // don't opt in to the sidecar (default-OFF per NUB-RELAY spec).
       hydrateResourceCache(eventMsg.resources);
       onEvent(eventMsg.event);
     } else if (msg.type === 'relay.eose') {
@@ -264,8 +256,6 @@ export function query(filters: NostrFilter | NostrFilter[]): Promise<NostrEvent[
     window.parent.postMessage(queryMsg, '*');
   });
 }
-
-// ─── Shim installer ────────────────────────────────────────────────────────
 
 /**
  * Install the relay shim on window.napplet.relay.

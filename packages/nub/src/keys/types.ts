@@ -13,12 +13,8 @@
 
 import type { NappletMessage } from '@napplet/core';
 
-// ─── Domain Constants ──────────────────────────────────────────────────────
-
 /** The NUB domain name for keys messages. */
 export const DOMAIN = 'keys' as const;
-
-// ─── Supporting Types ──────────────────────────────────────────────────────
 
 /**
  * A napplet-declared named action that the shell can bind to a key.
@@ -77,8 +73,6 @@ export interface KeyBinding {
   key: string;
 }
 
-// ─── Base Message Type ─────────────────────────────────────────────────────
-
 /**
  * Base interface for all keys NUB messages.
  * Concrete message types narrow the `type` field to specific literals.
@@ -87,8 +81,6 @@ export interface KeysMessage extends NappletMessage {
   /** Message type in "keys.<action>" format. */
   type: `keys.${string}`;
 }
-
-// ─── Napplet -> Shell Request Messages ─────────────────────────────────────
 
 /**
  * Forward a keystroke from the napplet to the shell.
@@ -162,8 +154,6 @@ export interface KeysUnregisterActionMessage extends KeysMessage {
   actionId: string;
 }
 
-// ─── Shell -> Napplet Result/Push Messages ────────────────────────────────
-
 /**
  * Result of a keys.registerAction request.
  * Carries the same correlation `id` as the request.
@@ -229,8 +219,6 @@ export interface KeysActionMessage extends KeysMessage {
   /** The action to trigger. */
   actionId: string;
 }
-
-// ─── Discriminated Unions ──────────────────────────────────────────────────
 
 /** Napplet -> Shell keys request messages. */
 export type KeysRequestMessage =

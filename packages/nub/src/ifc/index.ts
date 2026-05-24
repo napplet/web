@@ -15,8 +15,6 @@
 
 export { DOMAIN } from './types.js';
 
-// ─── Type Exports ──────────────────────────────────────────────────────────
-
 export type {
   IfcMessage,
   IfcEmitMessage,
@@ -40,15 +38,9 @@ export type {
   IfcNubMessage,
 } from './types.js';
 
-// ─── Shim Exports ─────────────────────────────────────────────────────────
-
 export { installIfcShim, emit, on, handleIfcEvent } from './shim.js';
 
-// ─── SDK Exports ──────────────────────────────────────────────────────────
-
 export { ifcEmit, ifcOn } from './sdk.js';
-
-// ─── Domain Registration ───────────────────────────────────────────────────
 
 import { registerNub } from '@napplet/core';
 import { DOMAIN } from './types.js';

@@ -31,15 +31,12 @@
  * `wm:*`, `keybinds:*`, `chat:*`, `audio:*`.
  */
 export const TOPICS = {
-  // ─── Stream and Content ─────────────────────────────────────────────────
   STREAM_CHANNEL_SWITCH: 'stream:channel-switch',
   STREAM_CURRENT_CONTEXT_GET: 'stream:current-context-get',
   STREAM_CURRENT_CONTEXT: 'stream:current-context',
 
-  // ─── Profile ────────────────────────────────────────────────────────────
   PROFILE_OPEN: 'profile:open',
 
-  // ─── Keybinds ───────────────────────────────────────────────────────────
   KEYBINDS_GET: 'keybinds:get-all',
   KEYBINDS_ALL: 'keybinds:all',
   KEYBINDS_UPDATE: 'keybinds:update',
@@ -47,10 +44,8 @@ export const TOPICS = {
   KEYBINDS_CAPTURE_START: 'keybinds:capture-start',
   KEYBINDS_CAPTURE_END: 'keybinds:capture-end',
 
-  // ─── Window Manager ─────────────────────────────────────────────────────
   WM_FOCUSED_WINDOW_CHANGED: 'wm:focused-window-changed',
 
-  // ─── Chat ───────────────────────────────────────────────────────────────
   CHAT_OPEN_DM: 'chat:open-dm',
 
 } as const;

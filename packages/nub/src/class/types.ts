@@ -18,12 +18,8 @@
 
 import type { NappletMessage } from '@napplet/core';
 
-// ─── Domain Constants ──────────────────────────────────────────────────────
-
 /** The NUB domain name for class messages. */
 export const DOMAIN = 'class' as const;
-
-// ─── Base Message Type ─────────────────────────────────────────────────────
 
 /**
  * Base interface for all class NUB messages.
@@ -33,8 +29,6 @@ export interface ClassMessage extends NappletMessage {
   /** Message type in "class.<action>" format. */
   type: `class.${string}`;
 }
-
-// ─── Shell -> Napplet Wire Messages ────────────────────────────────────────
 
 /**
  * Terminal assignment envelope sent by the shell at iframe-ready time.
@@ -68,8 +62,6 @@ export interface ClassAssignedMessage extends ClassMessage {
   class: number;
 }
 
-// ─── Runtime State Shape ───────────────────────────────────────────────────
-
 /**
  * Optional runtime state shape reflected at `window.napplet.class`.
  *
@@ -86,8 +78,6 @@ export interface NappletClass {
   /** Shell-assigned class number. Undefined until `class.assigned` arrives. */
   readonly class: number | undefined;
 }
-
-// ─── Discriminated Unions ──────────────────────────────────────────────────
 
 /** All class NUB message types (v1: single terminal assignment envelope). */
 export type ClassNubMessage = ClassAssignedMessage;

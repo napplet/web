@@ -11,12 +11,8 @@
 
 import type { NappletMessage } from '@napplet/core';
 
-// ─── Domain Constants ──────────────────────────────────────────────────────
-
 /** The NUB domain name for theme messages. */
 export const DOMAIN = 'theme' as const;
-
-// ─── Theme Payload Types ──────────────────────────────────────────────────
 
 /** Required color fields for a theme. */
 export interface ThemeColors {
@@ -61,8 +57,6 @@ export interface Theme {
   title?: string;
 }
 
-// ─── Base Message Type ─────────────────────────────────────────────────────
-
 /**
  * Base interface for all theme NUB messages.
  * Concrete message types narrow the `type` field to specific literals.
@@ -71,8 +65,6 @@ export interface ThemeMessage extends NappletMessage {
   /** Message type in "theme.<action>" format. */
   type: `theme.${string}`;
 }
-
-// ─── Napplet -> Shell Request Messages ─────────────────────────────────────
 
 /**
  * Request the current active theme from the shell.
@@ -90,8 +82,6 @@ export interface ThemeGetMessage extends ThemeMessage {
   /** Correlation ID. */
   id: string;
 }
-
-// ─── Shell -> Napplet Result/Push Messages ────────────────────────────────
 
 /**
  * Result of a theme.get request.
@@ -115,8 +105,6 @@ export interface ThemeChangedMessage extends ThemeMessage {
   /** The updated theme payload. */
   theme: Theme;
 }
-
-// ─── Discriminated Unions ──────────────────────────────────────────────────
 
 /** Napplet -> Shell theme request messages. */
 export type ThemeRequestMessage = ThemeGetMessage;

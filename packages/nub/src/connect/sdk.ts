@@ -8,8 +8,6 @@
 
 import type { NappletGlobal } from '@napplet/core';
 
-// ─── Runtime guard ──────────────────────────────────────────────────────────
-
 function requireConnect(): NappletGlobal['connect'] {
   const w = window as Window & { napplet?: NappletGlobal };
   if (!w.napplet?.connect) {
@@ -17,8 +15,6 @@ function requireConnect(): NappletGlobal['connect'] {
   }
   return w.napplet.connect;
 }
-
-// ─── SDK functions ──────────────────────────────────────────────────────────
 
 /**
  * Return the current connect-grant state.

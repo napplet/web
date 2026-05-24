@@ -8,8 +8,6 @@
 import type { Subscription } from '@napplet/core';
 import type { MediaMetadata, MediaAction } from './types.js';
 
-// ─── Media API shape (structural, avoids circular dep on NappletGlobal) ────
-
 interface MediaApi {
   createSession(metadata?: MediaMetadata): Promise<{ sessionId: string }>;
   updateSession(sessionId: string, metadata: Partial<MediaMetadata>): void;
@@ -20,8 +18,6 @@ interface MediaApi {
   onControls(sessionId: string, callback: (controls: MediaAction[]) => void): Subscription;
 }
 
-// ─── Runtime guard ──────────────────────────────────────────────────────────
-
 function requireMedia(): MediaApi {
   const w = window as Window & { napplet?: { media?: MediaApi } };
   if (!w.napplet?.media) {
@@ -29,8 +25,6 @@ function requireMedia(): MediaApi {
   }
   return w.napplet.media;
 }
-
-// ─── SDK functions ──────────────────────────────────────────────────────────
 
 /**
  * Create a new media session.

@@ -15,8 +15,6 @@ import type {
 } from './types.js';
 import type { Subscription } from '@napplet/core';
 
-// ─── State ──────────────────────────────────────────────────────────────────
-
 /** Pending session create requests: correlation id -> { resolve, reject }. */
 const pendingCreates = new Map<string, {
   resolve: (value: { sessionId: string }) => void;
@@ -31,8 +29,6 @@ const controlsHandlers = new Map<string, Set<(controls: MediaAction[]) => void>>
 
 /** Guard against double-install. */
 let installed = false;
-
-// ─── Message handlers (shell -> napplet) ────────────────────────────────────
 
 /**
  * Handle media.session.create.result from the shell.
@@ -76,8 +72,6 @@ function handleControls(msg: MediaControlsMessage): void {
   }
 }
 
-// ─── Shell message router ────────────────────────────────────────────────────
-
 /**
  * Handle media.* messages from the shell via the central message listener.
  */
@@ -92,8 +86,6 @@ export function handleMediaMessage(msg: { type: string; [key: string]: unknown }
     handleControls(msg as unknown as MediaControlsMessage);
   }
 }
-
-// ─── Public API (installed on window.napplet.media) ──────────────────────────
 
 /**
  * Create a new media session with the shell.
@@ -154,7 +146,6 @@ export function destroySession(sessionId: string): void {
   };
   window.parent.postMessage(msg, '*');
 
-  // Clean up local handlers for this session
   commandHandlers.delete(sessionId);
   controlsHandlers.delete(sessionId);
 }
@@ -249,8 +240,6 @@ export function onControls(
     },
   };
 }
-
-// ─── Install / cleanup ──────────────────────────────────────────────────────
 
 /**
  * Install the media shim. Currently a no-op placeholder --

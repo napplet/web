@@ -19,12 +19,8 @@ import type {
 } from './types.js';
 import type { Subscription } from '@napplet/core';
 
-// ─── Constants ─────────────────────────────────────────────────────────────
-
 /** Default timeout for correlated requests (30 seconds). */
 const REQUEST_TIMEOUT_MS = 30_000;
-
-// ─── State ──────────────────────────────────────────────────────────────────
 
 /** Pending send requests: correlation id -> { resolve, reject }. */
 const pendingSends = new Map<string, {
@@ -52,8 +48,6 @@ const controlsHandlers = new Set<(controls: NotifyControl[]) => void>();
 
 /** Guard against double-install. */
 let installed = false;
-
-// ─── Message handlers (shell -> napplet) ────────────────────────────────────
 
 /**
  * Handle notify.send.result from the shell.
@@ -128,8 +122,6 @@ function handleControls(msg: NotifyControlsMessage): void {
   }
 }
 
-// ─── Shell message router ────────────────────────────────────────────────────
-
 /**
  * Handle notify.* messages from the shell via the central message listener.
  */
@@ -150,8 +142,6 @@ export function handleNotifyMessage(msg: { type: string; [key: string]: unknown 
     handleControls(msg as unknown as NotifyControlsMessage);
   }
 }
-
-// ─── Public API (installed on window.napplet.notify) ─────────────────────────
 
 /**
  * Send a notification to the shell.
@@ -337,8 +327,6 @@ export function onControls(
     },
   };
 }
-
-// ─── Install / cleanup ──────────────────────────────────────────────────────
 
 /**
  * Install the notify shim. Currently a no-op placeholder --

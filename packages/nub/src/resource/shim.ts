@@ -9,12 +9,8 @@ import type {
   ResourceSidecarEntry,
 } from './types.js';
 
-// ─── Constants ─────────────────────────────────────────────────────────────
-
 /** Default timeout for resource fetch requests (30 seconds; aligns with other NUBs). */
 const REQUEST_TIMEOUT_MS = 30_000;
-
-// ─── State ──────────────────────────────────────────────────────────────────
 
 /**
  * Single-flight cache: canonical URL string -> in-flight Promise<Blob>.
@@ -33,8 +29,6 @@ const pending = new Map<string, {
 
 /** Guard against double-install. */
 let installed = false;
-
-// ─── Shell message router ──────────────────────────────────────────────────
 
 /**
  * Handle resource.* result messages from the shell via the central message listener.
@@ -56,8 +50,6 @@ export function handleResourceMessage(msg: { type: string; [key: string]: unknow
     p.reject(new Error(err.message ? `${err.error}: ${err.message}` : err.error));
   }
 }
-
-// ─── Internal helpers ──────────────────────────────────────────────────────
 
 /**
  * Send a resource.bytes request envelope to the parent and return a Promise<Blob>.
@@ -135,8 +127,6 @@ function wireSignal(
     );
   });
 }
-
-// ─── Public API (installed on window.napplet.resource) ─────────────────────
 
 /**
  * Fetch bytes for a URL through the shell's resource pipeline.
@@ -287,8 +277,6 @@ export function hydrateResourceCache(entries?: ResourceSidecarEntry[]): void {
     inflight.set(entry.url, Promise.resolve(entry.blob));
   }
 }
-
-// ─── Install / cleanup ──────────────────────────────────────────────────────
 
 /**
  * Install the resource shim. Currently a registration-only entry point --

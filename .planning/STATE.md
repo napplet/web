@@ -4,13 +4,14 @@ milestone: v0.31.0
 milestone_name: Cleanup Quality Gate
 status: executing
 stopped_at: Completed 138-02-PLAN.md (parallel wave 1)
-last_updated: "2026-05-24T13:10:00.000Z"
-last_activity: 2026-05-24 -- Phase 143 verified complete
+last_updated: "2026-05-24T13:14:20+02:00"
+last_activity: 2026-05-24 -- Phase 144 verified complete
 progress:
   total_phases: 5
-  completed_phases: 1
-  total_plans: 1
-  completed_plans: 1
+  completed_phases: 2
+  total_plans: 2
+  completed_plans: 2
+  percent: 40
 ---
 
 # Project State
@@ -21,16 +22,16 @@ See: .planning/PROJECT.md (updated 2026-05-24 for v0.31.0 cleanup milestone)
 
 **Core value:** Prove that sandboxed Nostr apps can securely delegate to a host shell over a simple, standardized protocol — and ship the spec + SDK so others can build on it.
 
-**Current focus:** Phase 144 — Fixable Lint and Slop Cleanup
+**Current focus:** Phase 145 — Type Safety Boundary Repair
 
 > **Provenance note:** The "Accumulated Context" section below preserves bullet records from BOTH branches' STATE.md histories. Records tagged "v0.29.0" from main's lineage refer to the milestone NOW renumbered as v0.30.0 (Class-Gated Decrypt — Phases 135-138). Records tagged "v0.29.0" from feat/strict-model refer to NUB-CONNECT (Phases 135-142). Phase number alone is not a unique identifier across the two; cross-reference the topic (decrypt/identity/NIP-07 → v0.30.0; connect/class/CSP-authority → v0.29.0).
 
 ## Current Position
 
-Phase: 144 — Fixable Lint and Slop Cleanup
+Phase: 145 — Type Safety Boundary Repair
 Plan: —
-Status: Ready to plan phase 144
-Last activity: 2026-05-24 -- Phase 143 verified complete
+Status: Ready to plan phase 145
+Last activity: 2026-05-24 -- Phase 144 verified complete
 
 ## Accumulated Context
 
@@ -39,6 +40,7 @@ Last activity: 2026-05-24 -- Phase 143 verified complete
 Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting current work:
 
 - [Phase 143]: Dependency graph security upgrade complete. `vite` resolves to 6.4.2, `postcss` resolves to 8.5.10 via root pnpm override, and `turbo` resolves to 2.9.14. `pnpm dlx aislop scan --json .` reports `security.issues = 0`; `pnpm -r type-check`, `pnpm -r build`, and `pnpm -r test:unit` all exit 0.
+- [Phase 144]: Fixable lint/slop cleanup complete. `pnpm dlx aislop fix .` removed 269 issues; manual cleanup removed remaining unused imports, empty block, and central shim duplicate block. `/tmp/napplet-144-aislop.json` has zero diagnostics for unused vars, duplicate imports, console leftovers, trivial/narrative comments, empty blocks, and duplicate blocks. `pnpm -r type-check`, `pnpm -r build`, and `pnpm -r test:unit` all exit 0.
 - PRINCIPLE: NUBs define protocol surface + potentialities; implementation UX is a shell concern
 - PRINCIPLE: NUB packages own ALL logic (types, shim installers, SDK helpers); central shim/sdk are thin hosts
 - PRINCIPLE: `@napplet/*` is private; never listed as implementations in public specs/docs

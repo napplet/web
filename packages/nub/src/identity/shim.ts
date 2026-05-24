@@ -15,27 +15,13 @@ import type {
   IdentityGetMutesMessage,
   IdentityGetBlockedMessage,
   IdentityGetBadgesMessage,
-  IdentityGetPublicKeyResultMessage,
-  IdentityGetRelaysResultMessage,
-  IdentityGetProfileResultMessage,
-  IdentityGetFollowsResultMessage,
-  IdentityGetListResultMessage,
-  IdentityGetZapsResultMessage,
-  IdentityGetMutesResultMessage,
-  IdentityGetBlockedResultMessage,
   IdentityDecryptMessage,
-  IdentityDecryptResultMessage,
-  IdentityGetBadgesResultMessage,
   IdentityNubMessage,
 } from './types.js';
 import type { NostrEvent, Rumor } from '@napplet/core';
 
-// ─── Constants ─────────────────────────────────────────────────────────────
-
 /** Default timeout for identity queries (30 seconds). */
 const REQUEST_TIMEOUT_MS = 30_000;
-
-// ─── State ──────────────────────────────────────────────────────────────────
 
 /** Pending identity requests: correlation id -> { resolve, reject }. */
 const pendingRequests = new Map<string, {
@@ -45,8 +31,6 @@ const pendingRequests = new Map<string, {
 
 /** Guard against double-install. */
 let installed = false;
-
-// ─── Shell message router ────────────────────────────────────────────────────
 
 /**
  * Handle identity.* result messages from the shell via the central message listener.
@@ -58,7 +42,6 @@ export function handleIdentityMessage(msg: { type: string; [key: string]: unknow
   const narrowed = msg as unknown as IdentityNubMessage;
 
   switch (narrowed.type) {
-    // ─── Shell → Napplet result messages (processed) ────────────────────
     case 'identity.getPublicKey.result':
       resolvePending(narrowed.id, narrowed.pubkey);
       return;
@@ -116,8 +99,6 @@ export function handleIdentityMessage(msg: { type: string; [key: string]: unknow
   }
 }
 
-// ─── Helpers ────────────────────────────────────────────────────────────────
-
 function resolvePending(id: string, value: unknown): void {
   const pending = pendingRequests.get(id);
   if (!pending) return;
@@ -173,8 +154,6 @@ function sendRequest<T>(msg: { type: string; id: string }): Promise<T> {
 function assertNever(_msg: never): void {
   /* compile-time only — unreachable at runtime if the switch is exhaustive */
 }
-
-// ─── Public API (installed on window.napplet.identity) ─────────────────────
 
 /**
  * Get the user's hex-encoded public key.
@@ -329,8 +308,6 @@ export function decrypt(event: NostrEvent): Promise<{ rumor: Rumor; sender: stri
   };
   return sendRequest<{ rumor: Rumor; sender: string }>(msg);
 }
-
-// ─── Install / cleanup ──────────────────────────────────────────────────────
 
 /**
  * Install the identity shim.

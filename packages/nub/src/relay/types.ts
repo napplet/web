@@ -8,16 +8,11 @@
  * All types form a discriminated union on the `type` field.
  */
 
-import type { NappletMessage } from '@napplet/core';
-import type { NostrEvent, NostrFilter, EventTemplate } from '@napplet/core';
+import type { NappletMessage, NostrEvent, NostrFilter, EventTemplate } from "@napplet/core";
 import type { ResourceSidecarEntry } from '../resource/types.js';
-
-// ─── Domain Constants ──────────────────────────────────────────────────────
 
 /** The NUB domain name for relay messages. */
 export const DOMAIN = 'relay' as const;
-
-// ─── Base Message Type ─────────────────────────────────────────────────────
 
 /**
  * Base interface for all relay NUB messages.
@@ -27,8 +22,6 @@ export interface RelayMessage extends NappletMessage {
   /** Message type in "relay.<action>" format. */
   type: `relay.${string}`;
 }
-
-// ─── Napplet -> Shell Messages ─────────────────────────────────────────────
 
 /**
  * Open a relay subscription with one or more NIP-01 filters.
@@ -173,8 +166,6 @@ export interface RelayPublishEncryptedResultMessage extends RelayMessage {
   error?: string;
 }
 
-// ─── Shell -> Napplet Messages ─────────────────────────────────────────────
-
 /**
  * A matching event delivered to an active subscription.
  *
@@ -255,8 +246,6 @@ export interface RelayQueryResultMessage extends RelayMessage {
   /** Error message if query failed. */
   error?: string;
 }
-
-// ─── Discriminated Union ───────────────────────────────────────────────────
 
 /** Napplet -> Shell relay messages. */
 export type RelayOutboundMessage =

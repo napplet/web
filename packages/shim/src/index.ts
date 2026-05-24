@@ -1,8 +1,3 @@
-// @napplet/shim -- Napplet window installer
-// Side-effect-only module: importing this file installs window.napplet global.
-// No named exports. No allow-same-origin required. No window.nostr.
-//
-// Domain logic lives in NUB packages. This file orchestrates installation.
 
 import { installKeysShim, handleKeysMessage, registerAction, unregisterAction, onAction } from '@napplet/nub/keys/shim';
 import { installMediaShim, handleMediaMessage, createSession, updateSession, destroySession, reportState, reportCapabilities, onCommand, onControls } from '@napplet/nub/media/shim';
@@ -22,20 +17,7 @@ import {
 import { installNostrDb } from './nipdb-shim.js';
 import { installStorageShim, nappletStorage } from '@napplet/nub/storage/shim';
 import { subscribe, publish, publishEncrypted, query } from '@napplet/nub/relay/shim';
-import {
-  installIdentityShim,
-  handleIdentityMessage,
-  getPublicKey,
-  getRelays,
-  getProfile,
-  getFollows,
-  getList,
-  getZaps,
-  getMutes,
-  getBlocked,
-  getBadges,
-  decrypt,
-} from '@napplet/nub/identity/shim';
+import * as identityShim from '@napplet/nub/identity/shim';
 import { installIfcShim, emit, on, handleIfcEvent } from '@napplet/nub/ifc/shim';
 import {
   installConfigShim,
@@ -54,11 +36,8 @@ import {
 } from '@napplet/nub/resource/shim';
 import { installConnectShim } from '@napplet/nub/connect/shim';
 import { installClassShim, handleClassMessage } from '@napplet/nub/class/shim';
-import { NUB_DOMAINS } from '@napplet/core';
-import type { NappletGlobal, NamespacedCapability } from '@napplet/core';
+import { NUB_DOMAINS, type NappletGlobal, type NamespacedCapability } from "@napplet/core";
 import type { IfcEventMessage } from '@napplet/nub/ifc/types';
-
-// ─── Central envelope message handler ───────────────────────────────────────
 
 /**
  * Central message handler for JSON envelope messages from the shell.
@@ -103,7 +82,7 @@ function handleEnvelopeMessage(event: MessageEvent): void {
 
   // Route identity.* result and error messages to identity shim
   if (type.startsWith('identity.') && (type.endsWith('.result') || type.endsWith('.error'))) {
-    handleIdentityMessage(msg as { type: string; [key: string]: unknown });
+    identityShim.handleIdentityMessage(msg as { type: string; [key: string]: unknown });
     return;
   }
 
@@ -121,17 +100,7 @@ function handleEnvelopeMessage(event: MessageEvent): void {
   }
 }
 
-// ─── Install NUB shims ────────────────────────────────────────────────────────
-
-// Install IFC shim
 installIfcShim();
-
-// ─── Default shell.supports() ────────────────────────────────────────────────
-// Fallback for napplets running without a shell parent (or before a shell has
-// overwritten window.napplet.shell). Reports `true` for every NUB domain the
-// shim itself installs (bare shorthand or `nub:`-prefixed) and `false` for
-// permissions and unknown strings — the shim cannot grant permissions.
-// A shell is free to replace window.napplet.shell.supports at runtime.
 
 function defaultShellSupports(capability: NamespacedCapability): boolean {
   // perm:* — shell-granted only; nothing for the shim to assert.
@@ -146,8 +115,6 @@ function defaultShellSupports(capability: NamespacedCapability): boolean {
   // Bare NUB shorthand (e.g. 'relay').
   return (NUB_DOMAINS as readonly string[]).includes(capability);
 }
-
-// ─── window.napplet global installation ──────────────────────────────────────
 
 (window as unknown as { napplet: NappletGlobal }).napplet = {
   relay: {
@@ -192,16 +159,16 @@ function defaultShellSupports(capability: NamespacedCapability): boolean {
     onControls: notifyOnControls,
   },
   identity: {
-    getPublicKey,
-    getRelays,
-    getProfile,
-    getFollows,
-    getList,
-    getZaps,
-    getMutes,
-    getBlocked,
-    getBadges,
-    decrypt,
+    getPublicKey: identityShim.getPublicKey,
+    getRelays: identityShim.getRelays,
+    getProfile: identityShim.getProfile,
+    getFollows: identityShim.getFollows,
+    getList: identityShim.getList,
+    getZaps: identityShim.getZaps,
+    getMutes: identityShim.getMutes,
+    getBlocked: identityShim.getBlocked,
+    getBadges: identityShim.getBadges,
+    decrypt: identityShim.decrypt,
   },
   config: {
     registerSchema: configRegisterSchema,
@@ -224,8 +191,6 @@ function defaultShellSupports(capability: NamespacedCapability): boolean {
   },
 };
 
-// ─── Initialize ───────────────────────────────────────────────────────────────
-
 // Install central envelope message listener
 window.addEventListener('message', handleEnvelopeMessage);
 
@@ -245,7 +210,7 @@ installNotifyShim();
 installStorageShim();
 
 // Install identity shim (read-only user identity queries)
-installIdentityShim();
+identityShim.installIdentityShim();
 
 // Install config shim (manifest-meta schema read + window.napplet.config mount with readonly `schema` getter)
 installConfigShim();

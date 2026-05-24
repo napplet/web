@@ -199,7 +199,6 @@ async function discoverConfigSchema(
     }
   }
 
-  // Step 3: convention file
   const conventionPath = path.resolve(root, 'config.schema.json');
   if (fs.existsSync(conventionPath)) {
     try {
@@ -212,7 +211,6 @@ async function discoverConfigSchema(
     }
   }
 
-  // Step 4: napplet.config.* dynamic import (ts -> js -> mjs precedence)
   for (const ext of ['ts', 'js', 'mjs'] as const) {
     const cfgPath = path.resolve(root, `napplet.config.${ext}`);
     if (!fs.existsSync(cfgPath)) continue;
@@ -234,7 +232,6 @@ async function discoverConfigSchema(
     }
   }
 
-  // Step 5: nothing found — silent, backward compatible
   return { schema: null, source: null };
 }
 
@@ -576,9 +573,6 @@ export function nip5aManifest(options: Nip5aManifestOptions): Plugin {
           const body = validation.errors.map((e) => `  - ${e}`).join('\n');
           throw new Error(`${header}\n${body}`);
         }
-        console.log(
-          `[nip5a-manifest] ${options.nappletType}: config schema discovered via ${resolvedSchemaSource} — validated`,
-        );
       }
 
       // v0.29.0 deprecation shim: `strictCsp` option is @deprecated and has no effect.
@@ -706,7 +700,6 @@ export function nip5aManifest(options: Nip5aManifestOptions): Plugin {
 
       const privkeyHex = process.env.VITE_DEV_PRIVKEY_HEX;
       if (!privkeyHex) {
-        console.log('[nip5a-manifest] VITE_DEV_PRIVKEY_HEX not set — skipping manifest generation');
         return;
       }
 
@@ -771,7 +764,6 @@ export function nip5aManifest(options: Nip5aManifestOptions): Plugin {
       // connect:origins entries when present)
       const aggregateHash = computeAggregateHash(xTags);
 
-      // Build requires tags from plugin options
       const requiresTags = (options.requires ?? []).map((name) => ['requires', name]);
 
       // Filter synthetic xTag entries out of the ['x', ...] tag projection —
@@ -836,24 +828,20 @@ export function nip5aManifest(options: Nip5aManifestOptions): Plugin {
           content: manifest.content,
         }, privkeyBytes);
 
-        // Write signed manifest
         const manifestWithMeta = { ...signedEvent, aggregateHash, pubkey };
         fs.writeFileSync(
           path.join(distPath, '.nip5a-manifest.json'),
           JSON.stringify(manifestWithMeta, null, 2),
         );
 
-        console.log(`[nip5a-manifest] ${options.nappletType}: manifest signed by ${pubkey.slice(0, 8)}...`);
       } catch {
         // nostr-tools not available at build time — write unsigned manifest
         fs.writeFileSync(
           path.join(distPath, '.nip5a-manifest.json'),
           JSON.stringify(manifest, null, 2),
         );
-        console.log(`[nip5a-manifest] ${options.nappletType}: unsigned manifest written (nostr-tools not available at build)`);
       }
 
-      // Update index.html meta tag with aggregate hash
       const indexPath = path.join(distPath, 'index.html');
       if (fs.existsSync(indexPath)) {
         let html = fs.readFileSync(indexPath, 'utf-8');
@@ -862,11 +850,6 @@ export function nip5aManifest(options: Nip5aManifestOptions): Plugin {
           `<meta name="napplet-aggregate-hash" content="${aggregateHash}">`,
         );
         fs.writeFileSync(indexPath, html);
-        console.log(`[nip5a-manifest] ${options.nappletType}: hash ${aggregateHash.slice(0, 12)}... injected into index.html`);
-      }
-
-      if (requiresTags.length > 0) {
-        console.log(`[nip5a-manifest] ${options.nappletType}: requires [${(options.requires ?? []).join(', ')}]`);
       }
     },
   };

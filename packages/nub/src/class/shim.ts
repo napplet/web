@@ -15,15 +15,11 @@
 
 import type { ClassAssignedMessage } from './types.js';
 
-// ─── State ─────────────────────────────────────────────────────────────────
-
 /** Current assigned class. Undefined until first valid class.assigned arrives. */
 let currentClass: number | undefined = undefined;
 
 /** Double-install guard. */
 let installed = false;
-
-// ─── Shell message router ──────────────────────────────────────────────────
 
 /**
  * Handle class.* messages from the shell. Called by the central shim dispatcher
@@ -42,13 +38,8 @@ export function handleClassMessage(msg: { type: string; [key: string]: unknown }
   if (typeof value !== 'number' || !Number.isInteger(value) || value < 0) {
     return;
   }
-  // Idempotent re-assignment (last write wins). V1 shell MUST send at most one
-  // envelope; a second is a protocol violation but the shim accepts it silently
-  // to match the graceful-degradation contract.
   currentClass = value;
 }
-
-// ─── Install / cleanup ──────────────────────────────────────────────────────
 
 /**
  * Install the class shim: mount `window.napplet.class` as a readonly getter

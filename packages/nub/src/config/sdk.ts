@@ -18,8 +18,6 @@ import type {
 } from './types.js';
 import type { Subscription } from '@napplet/core';
 
-// ─── Structural type for the mounted API ────────────────────────────────────
-
 /**
  * Shape of `window.napplet.config` as installed by `installConfigShim()`.
  *
@@ -39,8 +37,6 @@ interface ConfigNamespace {
   readonly schema: NappletConfigSchema | null;
 }
 
-// ─── Runtime guard ──────────────────────────────────────────────────────────
-
 function requireNapplet(): ConfigNamespace {
   const w = window as Window & { napplet?: { config?: ConfigNamespace } };
   if (!w.napplet?.config) {
@@ -50,8 +46,6 @@ function requireNapplet(): ConfigNamespace {
   }
   return w.napplet.config;
 }
-
-// ─── SDK functions ──────────────────────────────────────────────────────────
 
 /**
  * Snapshot current validated + defaulted config values.
