@@ -4,8 +4,8 @@ milestone: v0.31.0
 milestone_name: Cleanup Quality Gate
 status: Awaiting next milestone
 stopped_at: Milestone v0.31.0 archived
-last_updated: "2026-05-24T13:03:56.508Z"
-last_activity: 2026-05-24 — Completed quick task 260524-kxa: please add badges to the README for github workflows, as well as badges for both npm and jsr
+last_updated: "2026-05-24T15:14:55+02:00"
+last_activity: 2026-05-24 — Completed quick task 260524-l1t: please add a workflow that runs the ai slop scan and produces a badge for the readme that shows the score
 progress:
   total_phases: 5
   completed_phases: 5
@@ -31,7 +31,7 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 Phase: Milestone v0.31.0 complete
 Plan: —
 Status: Awaiting next milestone
-Last activity: 2026-05-24 — Completed quick task 260524-kxa: please add badges to the README for github workflows, as well as badges for both npm and jsr
+Last activity: 2026-05-24 — Completed quick task 260524-l1t: please add a workflow that runs the ai slop scan and produces a badge for the readme that shows the score
 
 ## Accumulated Context
 
@@ -210,6 +210,7 @@ Surfaced by research (informational — each belongs to a specific phase plan):
 | 260421-u87 | Create cross-repo PRs in napplet/nubs from the 4 v0.29.0 drafts | 2026-04-21 | c28d8e4 | [260421-u87-create-cross-repo-prs-in-napplet-nubs-fr](./quick/260421-u87-create-cross-repo-prs-in-napplet-nubs-fr/) |
 | 260424-o1k | Implement default shell.supports() in shim so napplets can be tested without a shell | 2026-04-24 | 5ad9cdb | [260424-o1k-implement-default-shell-supports-in-shim](./quick/260424-o1k-implement-default-shell-supports-in-shim/) |
 | 260524-kxa | please add badges to the README for github workflows, as well as badges for both npm and jsr | 2026-05-24 | 8f4662b | [260524-kxa-please-add-badges-to-the-readme-for-gith](./quick/260524-kxa-please-add-badges-to-the-readme-for-gith/) |
+| 260524-l1t | please add a workflow that runs the ai slop scan and produces a badge for the readme that shows the score | 2026-05-24 | 2835356 | [260524-l1t-please-add-a-workflow-that-runs-the-ai-s](./quick/260524-l1t-please-add-a-workflow-that-runs-the-ai-s/) |
 
 Last session: 2026-04-21T20:46:00.000Z
 Stopped at: Completed 142-03-PLAN.md (Phase 142 TERMINAL-COMPLETE)
