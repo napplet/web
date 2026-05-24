@@ -1,0 +1,84 @@
+# Requirements: Napplet Protocol SDK v0.31.0 Cleanup Quality Gate
+
+**Defined:** 2026-05-24
+**Core Value:** Prove that sandboxed Nostr apps can securely delegate to a host shell over a simple, standardized protocol — and ship the spec + SDK so others can build on it.
+
+## v1 Requirements
+
+Requirements for v0.31.0. Each maps to roadmap phases after roadmapping.
+
+### Security and Dependencies
+
+- [ ] **SEC-01**: Maintainer can upgrade the root dependency graph so `vite` resolves to `6.4.2` or later without forcing a major Vite migration unless implementation evidence proves it is required.
+- [ ] **SEC-02**: Maintainer can upgrade the dependency graph so `postcss` resolves to `8.5.10` or later and `turbo` resolves to `2.9.14` or later.
+- [ ] **SEC-03**: Maintainer can run the security quality gate and see no remaining vulnerable-dependency findings for `vite`, `postcss`, or `turbo`.
+- [ ] **SEC-04**: Maintainer can run the workspace build, type-check, and unit-test commands after dependency upgrades with no regressions.
+
+### Lint and Fixable Cleanup
+
+- [ ] **LINT-01**: Maintainer can verify duplicate `@napplet/core` imports are merged in `packages/nub/src/relay/types.ts` and `packages/shim/src/index.ts`.
+- [ ] **LINT-02**: Maintainer can verify unused type imports are removed from `packages/nub/src/storage/shim.ts`, `packages/nub/src/identity/shim.ts`, and `packages/nub/src/keys/shim.ts`.
+- [ ] **LINT-03**: Maintainer can verify production source no longer contains leftover `console.log`, `console.debug`, or `console.info` calls reported by the quality gate.
+- [ ] **LINT-04**: Maintainer can verify the duplicated block in `packages/shim/src/index.ts` is collapsed into a single local helper or deleted path without changing global shim installation behavior.
+
+### Comment and AI-Slop Hygiene
+
+- [ ] **SLOP-01**: Maintainer can verify decorative section separators and narrative comment blocks reported by the quality gate are removed from source files while preserving useful public API documentation.
+- [ ] **SLOP-02**: Maintainer can verify trivial comments that restate obvious assignments or calls are removed from NUB shim source.
+- [ ] **SLOP-03**: Maintainer can verify the scanner's fixable AI-slop categories from the v0.31.0 kickoff report are either zeroed or reduced to explicitly reviewed false positives.
+
+### Type Safety
+
+- [ ] **TYPE-01**: Maintainer can verify production `as any` assertions around `window.napplet` and global mounts are replaced with typed local helpers or more specific structural types.
+- [ ] **TYPE-02**: Maintainer can verify double assertions in production message handlers are replaced with discriminated-union narrowing, typed dispatcher boundaries, or small runtime guards.
+- [ ] **TYPE-03**: Maintainer can verify any remaining unavoidable assertions are isolated at an integration boundary and covered by tests or an explicit verification note.
+- [ ] **TYPE-04**: Maintainer can run invalid-message or mount-behavior tests for every shim touched during type-safety cleanup.
+
+### Complexity and Structure
+
+- [ ] **QUAL-01**: Maintainer can verify `normalizeConnectOrigin` is split into focused helpers while preserving the 28-case normalizer smoke coverage and canonical aggregate-hash fixture behavior.
+- [ ] **QUAL-02**: Maintainer can verify long functions reported in `packages/shim/src/nipdb-shim.ts` and `packages/vite-plugin/src/index.ts` are split or narrowed without changing public behavior.
+- [ ] **QUAL-03**: Maintainer can verify oversized type/barrel files are reduced where low-risk module boundaries already exist, and any remaining file-size warnings have exact deferral notes.
+- [ ] **QUAL-04**: Maintainer can run the code-quality gate and see no unreviewed warnings from the kickoff report's function-length, duplicate-code, or file-size findings.
+
+### Final Gate
+
+- [ ] **GATE-01**: Maintainer can run the same quality scanner class used in the kickoff report and see zero security errors.
+- [ ] **GATE-02**: Maintainer can run formatting, linting, code-quality, and AI-slop checks and see the kickoff findings closed or explicitly deferred with rationale.
+- [ ] **GATE-03**: Maintainer can run `pnpm -r type-check`, `pnpm -r build`, and `pnpm -r test:unit` successfully after all cleanup edits.
+- [ ] **GATE-04**: Maintainer can review a concise cleanup summary listing simplifications made, deleted code/comments, remaining risks, and exact verification evidence.
+
+## v2 Requirements
+
+Deferred to future release. Tracked but not in the current roadmap.
+
+### Structural Cleanup
+
+- **STRUCT-01**: Maintainer can repartition the largest public type surfaces into smaller authored modules if v0.31.0 finds that doing so requires public API compatibility planning.
+- **STRUCT-02**: Maintainer can remove deprecated `@napplet/nub-<domain>` packages after the planned deprecation window, separate from this scanner cleanup.
+
+## Out of Scope
+
+| Feature | Reason |
+|---------|--------|
+| NUB protocol or wire-shape changes | This milestone is behavior-preserving cleanup. |
+| New runtime dependencies | The kickoff scope is cleanup and security remediation; reuse existing helpers and toolchain. |
+| npm, JSR, or GitHub Actions publication repair | Publish workflow blockers are separate operator/release work. |
+| Deprecated NUB package removal | Already tracked as REMOVE-01..03 and not required to close the current scanner report. |
+| Broad formatting churn outside scanner findings | Keep diffs reviewable and tied to the quality gate. |
+
+## Traceability
+
+Which phases cover which requirements. Updated during roadmap creation.
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+
+**Coverage:**
+- v1 requirements: 23 total
+- Mapped to phases: 0
+- Unmapped: 23
+
+---
+*Requirements defined: 2026-05-24*
+*Last updated: 2026-05-24 after milestone requirements definition*
