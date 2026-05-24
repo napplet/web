@@ -43,10 +43,10 @@ Requirements for v0.31.0. Each maps to roadmap phases after roadmapping.
 
 ### Final Gate
 
-- [ ] **GATE-01**: Maintainer can run the same quality scanner class used in the kickoff report and see zero security errors.
-- [ ] **GATE-02**: Maintainer can run formatting, linting, code-quality, and AI-slop checks and see the kickoff findings closed or explicitly deferred with rationale.
-- [ ] **GATE-03**: Maintainer can run `pnpm -r type-check`, `pnpm -r build`, and `pnpm -r test:unit` successfully after all cleanup edits.
-- [ ] **GATE-04**: Maintainer can review a concise cleanup summary listing simplifications made, deleted code/comments, remaining risks, and exact verification evidence.
+- [x] **GATE-01**: Maintainer can run the same quality scanner class used in the kickoff report and see zero security errors.
+- [x] **GATE-02**: Maintainer can run formatting, linting, code-quality, and AI-slop checks and see the kickoff findings closed or explicitly deferred with rationale.
+- [x] **GATE-03**: Maintainer can run `pnpm -r type-check`, `pnpm -r build`, and `pnpm -r test:unit` successfully after all cleanup edits.
+- [x] **GATE-04**: Maintainer can review a concise cleanup summary listing simplifications made, deleted code/comments, remaining risks, and exact verification evidence.
 
 ## v2 Requirements
 
@@ -92,10 +92,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | QUAL-02 | Phase 146 | Complete |
 | QUAL-03 | Phase 146 | Complete |
 | QUAL-04 | Phase 146 | Complete |
-| GATE-01 | Phase 147 | Pending |
-| GATE-02 | Phase 147 | Pending |
-| GATE-03 | Phase 147 | Pending |
-| GATE-04 | Phase 147 | Pending |
+| GATE-01 | Phase 147 | Complete |
+| GATE-02 | Phase 147 | Complete |
+| GATE-03 | Phase 147 | Complete |
+| GATE-04 | Phase 147 | Complete |
 
 **Coverage:**
 - v1 requirements: 23 total
@@ -104,4 +104,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-05-24*
-*Last updated: 2026-05-24 after Phase 146 verification*
+*Last updated: 2026-05-24 after Phase 147 verification*

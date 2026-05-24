@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v0.31.0
 milestone_name: Cleanup Quality Gate
-status: executing
-stopped_at: Completed Phase 146 complexity hotspot split
-last_updated: "2026-05-24T11:40:32.430Z"
-last_activity: 2026-05-24 -- Phase 146 verification complete
+status: ready-for-audit
+stopped_at: Completed Phase 147 final quality gate
+last_updated: "2026-05-24T11:42:58.886Z"
+last_activity: 2026-05-24 -- Phase 147 verification complete
 progress:
   total_phases: 5
-  completed_phases: 4
-  total_plans: 4
-  completed_plans: 4
-  percent: 80
+  completed_phases: 5
+  total_plans: 5
+  completed_plans: 5
+  percent: 100
 ---
 
 # Project State
@@ -22,16 +22,16 @@ See: .planning/PROJECT.md (updated 2026-05-24 for v0.31.0 cleanup milestone)
 
 **Core value:** Prove that sandboxed Nostr apps can securely delegate to a host shell over a simple, standardized protocol — and ship the spec + SDK so others can build on it.
 
-**Current focus:** Phase 147 - Final Quality Gate and Closeout
+**Current focus:** v0.31.0 milestone audit
 
 > **Provenance note:** The "Accumulated Context" section below preserves bullet records from BOTH branches' STATE.md histories. Records tagged "v0.29.0" from main's lineage refer to the milestone NOW renumbered as v0.30.0 (Class-Gated Decrypt — Phases 135-138). Records tagged "v0.29.0" from feat/strict-model refer to NUB-CONNECT (Phases 135-142). Phase number alone is not a unique identifier across the two; cross-reference the topic (decrypt/identity/NIP-07 → v0.30.0; connect/class/CSP-authority → v0.29.0).
 
 ## Current Position
 
-Phase: 147 (Final Quality Gate and Closeout) - READY
-Plan: 0 of 1
-Status: Phase 146 complete; ready for final quality gate
-Last activity: 2026-05-24 -- Phase 146 verification complete
+Phase: v0.31.0 Cleanup Quality Gate - READY FOR AUDIT
+Plan: 5 of 5
+Status: All v0.31.0 phases complete; ready for milestone audit
+Last activity: 2026-05-24 -- Phase 147 verification complete
 
 ## Accumulated Context
 
@@ -43,6 +43,7 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 - [Phase 144]: Fixable lint/slop cleanup complete. `pnpm dlx aislop fix .` removed 269 issues; manual cleanup removed remaining unused imports, empty block, and central shim duplicate block. `/tmp/napplet-144-aislop.json` has zero diagnostics for unused vars, duplicate imports, console leftovers, trivial/narrative comments, empty blocks, and duplicate blocks. `pnpm -r type-check`, `pnpm -r build`, and `pnpm -r test:unit` all exit 0.
 - [Phase 145]: Type-safety boundary repair complete. Production `as any` and `as unknown as` scanner categories are zero in `/tmp/napplet-145-aislop.json`; NUB boundary smoke tests added; `pnpm -r type-check`, `pnpm -r build`, and `pnpm -r test:unit` all exit 0.
 - [Phase 146]: Complexity hotspot split complete. `normalizeConnectOrigin`, vite-plugin schema walking, and vite-plugin hook bodies were split into private helpers; `/tmp/napplet-146-aislop.json` has no function-length, duplicate-code, lint, security, or AI-slop diagnostics. Four remaining file-size warnings are explicit deferrals for public or package-entry surfaces: `packages/core/src/types.ts`, `packages/nub/src/identity/types.ts`, `packages/sdk/src/index.ts`, and `packages/vite-plugin/src/index.ts`. `pnpm -r type-check`, `pnpm -r build`, `pnpm -r test:unit`, and `git diff --check` all exit 0.
+- [Phase 147]: Final quality gate complete. `/tmp/napplet-147-aislop.json` reports score 89 / Healthy, 0 errors, 0 fixable issues, and engine counts format 0, lint 0, code-quality 4, ai-slop 0, security 0. The four code-quality warnings are the Phase 146 file-size deferrals only. `pnpm -r type-check`, `pnpm -r build`, `pnpm -r test:unit`, and `git diff --check` all exit 0.
 - PRINCIPLE: NUBs define protocol surface + potentialities; implementation UX is a shell concern
 - PRINCIPLE: NUB packages own ALL logic (types, shim installers, SDK helpers); central shim/sdk are thin hosts
 - PRINCIPLE: `@napplet/*` is private; never listed as implementations in public specs/docs

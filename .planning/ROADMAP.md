@@ -50,7 +50,7 @@ Note: Phase 45 (IPC terminology cleanup) was completed as a quick task during v0
 - [x] **Phase 144: Fixable Lint and Slop Cleanup** — Remove duplicate imports, unused imports, leftover console diagnostics, duplicated shim logic, decorative narrative comments, and trivial comments without changing public behavior. Requirements: LINT-01, LINT-02, LINT-03, LINT-04, SLOP-01, SLOP-02, SLOP-03. (completed 2026-05-24)
 - [x] **Phase 145: Type Safety Boundary Repair** — Replace production `as any` and double assertions with typed helpers, guards, or narrowed dispatcher boundaries, and add invalid-message/mount behavior coverage for touched shims. Requirements: TYPE-01, TYPE-02, TYPE-03, TYPE-04. (completed 2026-05-24)
 - [x] **Phase 146: Complexity Hotspot Split** — Split the reported long functions and reduce oversized-file warnings where low-risk module boundaries exist; preserve normalizer fixtures, vite-plugin behavior, and NIPDB shim behavior. Requirements: QUAL-01, QUAL-02, QUAL-03, QUAL-04. (completed 2026-05-24)
-- [ ] **Phase 147: Final Quality Gate and Closeout** — Run the final scanner, workspace build, type-check, unit tests, and cleanup summary; record remaining risks or explicit deferrals. Requirements: GATE-01, GATE-02, GATE-03, GATE-04.
+- [x] **Phase 147: Final Quality Gate and Closeout** — Run the final scanner, workspace build, type-check, unit tests, and cleanup summary; record remaining risks or explicit deferrals. Requirements: GATE-01, GATE-02, GATE-03, GATE-04. (completed 2026-05-24)
 
 ## Phase Details
 
@@ -123,7 +123,7 @@ Note: Phase 45 (IPC terminology cleanup) was completed as a quick task during v0
   3. `pnpm -r type-check`, `pnpm -r build`, and `pnpm -r test:unit` exit 0 after all cleanup edits.
   4. The final phase summary lists changed files, simplifications made, deleted code/comments, remaining risks, and verification evidence.
 
-**Plans:** 0/? plans
+**Plans:** 1/1 plans
 
 <details>
 <summary>✅ v0.30.0 Class-Gated Decrypt Surface (Phases 135-138) — SHIPPED 2026-04-23</summary>
