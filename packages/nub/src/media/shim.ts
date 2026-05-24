@@ -15,8 +15,6 @@ import type {
 } from './types.js';
 import type { Subscription } from '@napplet/core';
 
-// ─── State ──────────────────────────────────────────────────────────────────
-
 /** Pending session create requests: correlation id -> { resolve, reject }. */
 const pendingCreates = new Map<string, {
   resolve: (value: { sessionId: string }) => void;
@@ -32,7 +30,12 @@ const controlsHandlers = new Map<string, Set<(controls: MediaAction[]) => void>>
 /** Guard against double-install. */
 let installed = false;
 
-// ─── Message handlers (shell -> napplet) ────────────────────────────────────
+function isMessageType<T extends { type: string }>(
+  msg: { type: string },
+  type: T['type'],
+): msg is T {
+  return msg.type === type;
+}
 
 /**
  * Handle media.session.create.result from the shell.
@@ -76,24 +79,18 @@ function handleControls(msg: MediaControlsMessage): void {
   }
 }
 
-// ─── Shell message router ────────────────────────────────────────────────────
-
 /**
  * Handle media.* messages from the shell via the central message listener.
  */
 export function handleMediaMessage(msg: { type: string; [key: string]: unknown }): void {
-  const type = msg.type;
-
-  if (type === 'media.session.create.result') {
-    handleCreateResult(msg as unknown as MediaSessionCreateResultMessage);
-  } else if (type === 'media.command') {
-    handleCommand(msg as unknown as MediaCommandMessage);
-  } else if (type === 'media.controls') {
-    handleControls(msg as unknown as MediaControlsMessage);
+  if (isMessageType<MediaSessionCreateResultMessage>(msg, 'media.session.create.result')) {
+    handleCreateResult(msg);
+  } else if (isMessageType<MediaCommandMessage>(msg, 'media.command')) {
+    handleCommand(msg);
+  } else if (isMessageType<MediaControlsMessage>(msg, 'media.controls')) {
+    handleControls(msg);
   }
 }
-
-// ─── Public API (installed on window.napplet.media) ──────────────────────────
 
 /**
  * Create a new media session with the shell.
@@ -154,7 +151,6 @@ export function destroySession(sessionId: string): void {
   };
   window.parent.postMessage(msg, '*');
 
-  // Clean up local handlers for this session
   commandHandlers.delete(sessionId);
   controlsHandlers.delete(sessionId);
 }
@@ -249,8 +245,6 @@ export function onControls(
     },
   };
 }
-
-// ─── Install / cleanup ──────────────────────────────────────────────────────
 
 /**
  * Install the media shim. Currently a no-op placeholder --

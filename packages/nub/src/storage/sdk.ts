@@ -7,8 +7,6 @@
 
 import type { NappletGlobal } from '@napplet/core';
 
-// ─── Runtime guard ──────────────────────────────────────────────────────────
-
 function requireStorage(): NappletGlobal['storage'] {
   const w = window as Window & { napplet?: NappletGlobal };
   if (!w.napplet?.storage) {
@@ -16,8 +14,6 @@ function requireStorage(): NappletGlobal['storage'] {
   }
   return w.napplet.storage;
 }
-
-// ─── SDK functions ──────────────────────────────────────────────────────────
 
 /**
  * Retrieve a stored value by key. Returns null if the key does not exist.

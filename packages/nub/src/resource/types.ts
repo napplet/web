@@ -11,12 +11,8 @@
 
 import type { NappletMessage } from '@napplet/core';
 
-// ─── Domain Constants ──────────────────────────────────────────────────────
-
 /** The NUB domain name for resource messages. */
 export const DOMAIN = 'resource' as const;
-
-// ─── Supporting Types ──────────────────────────────────────────────────────
 
 /**
  * Typed error vocabulary for resource fetch failures.
@@ -72,8 +68,6 @@ export interface ResourceSidecarEntry {
   mime: string;
 }
 
-// ─── Base Message Type ─────────────────────────────────────────────────────
-
 /**
  * Base interface for all resource NUB messages.
  * Concrete message types narrow the `type` field to specific literals.
@@ -82,8 +76,6 @@ export interface ResourceMessage extends NappletMessage {
   /** Message type in "resource.<action>" format. */
   type: `resource.${string}`;
 }
-
-// ─── Napplet -> Shell Request Messages ─────────────────────────────────────
 
 /**
  * Request bytes for a URL. The shell selects a scheme handler, applies
@@ -128,8 +120,6 @@ export interface ResourceCancelMessage extends ResourceMessage {
   /** Correlation ID of the request to cancel. */
   id: string;
 }
-
-// ─── Shell -> Napplet Result Messages ────────────────────────────────────
 
 /**
  * Successful result for a `resource.bytes` request. Carries the
@@ -183,8 +173,6 @@ export interface ResourceBytesErrorMessage extends ResourceMessage {
   /** Optional human-readable error detail. */
   message?: string;
 }
-
-// ─── Discriminated Unions ──────────────────────────────────────────────────
 
 /** Napplet -> Shell resource messages. */
 export type ResourceRequestMessage =

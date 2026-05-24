@@ -9,12 +9,8 @@ import type {
   IfcEventMessage,
 } from './types.js';
 
-// ─── IFC topic subscription registry ────────────────────────────────────────
-
 /** Map of topic -> array of callbacks for IFC event dispatch. */
 const ifcTopicHandlers = new Map<string, Array<(payload: unknown, sender: string) => void>>();
-
-// ─── Public API ─────────────────────────────────────────────────────────────
 
 /**
  * Broadcast an IFC event to other napplets via the shell.
@@ -103,7 +99,6 @@ export function on(
 
   return {
     close(): void {
-      // Remove local handler
       const handlers = ifcTopicHandlers.get(topic);
       if (handlers) {
         const idx = handlers.indexOf(handler);
@@ -121,8 +116,6 @@ export function on(
   };
 }
 
-// ─── IFC event handler (shell -> napplet) ──────────────────────────────────
-
 /**
  * Handle ifc.event messages from the shell.
  * Dispatches to registered topic handlers.
@@ -137,8 +130,6 @@ export function handleIfcEvent(msg: IfcEventMessage): void {
     }
   }
 }
-
-// ─── Shim installer ────────────────────────────────────────────────────────
 
 /**
  * Install the IFC shim.

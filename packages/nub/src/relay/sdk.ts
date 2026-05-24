@@ -13,8 +13,6 @@ import type {
   EventTemplate,
 } from '@napplet/core';
 
-// ─── Runtime guard ──────────────────────────────────────────────────────────
-
 function requireRelay(): NappletGlobal['relay'] {
   const w = window as Window & { napplet?: NappletGlobal };
   if (!w.napplet?.relay) {
@@ -22,8 +20,6 @@ function requireRelay(): NappletGlobal['relay'] {
   }
   return w.napplet.relay;
 }
-
-// ─── SDK functions ──────────────────────────────────────────────────────────
 
 /**
  * Open a live NIP-01 subscription through the shell's relay pool.

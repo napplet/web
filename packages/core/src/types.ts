@@ -1,13 +1,5 @@
-/**
- * @napplet/core — Protocol type definitions shared across all napplet packages.
- *
- * These types define the NIP-01 wire format structures and capability system
- * used by the napplet-shell communication protocol.
- */
 
 import type { NappletGlobalShell } from './envelope.js';
-
-// ─── NIP-01 Types ─────────────────────────────────────────────────────────────
 
 /**
  * Standard NIP-01 nostr event.
@@ -45,8 +37,6 @@ export interface NostrFilter {
   limit?: number;
   [key: `#${string}`]: string[] | undefined;
 }
-
-// ─── Shim API Types ──────────────────────────────────────────────────────────
 
 /**
  * Subscription handle returned by relay.subscribe() and ifc.on().

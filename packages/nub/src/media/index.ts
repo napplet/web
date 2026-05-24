@@ -15,8 +15,6 @@
 
 export { DOMAIN } from './types.js';
 
-// ─── Type Exports ──────────────────────────────────────────────────────────
-
 export type {
   MediaMetadata,
   MediaArtwork,
@@ -36,8 +34,6 @@ export type {
   MediaNubMessage,
 } from './types.js';
 
-// ─── Shim Exports ─────────────────────────────────────────────────────────
-
 export {
   installMediaShim,
   handleMediaMessage,
@@ -50,8 +46,6 @@ export {
   onControls,
 } from './shim.js';
 
-// ─── SDK Exports ──────────────────────────────────────────────────────────
-
 export {
   mediaCreateSession,
   mediaUpdateSession,
@@ -61,8 +55,6 @@ export {
   mediaOnCommand,
   mediaOnControls,
 } from './sdk.js';
-
-// ─── Domain Registration ───────────────────────────────────────────────────
 
 import { registerNub } from '@napplet/core';
 import { DOMAIN } from './types.js';

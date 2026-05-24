@@ -32,6 +32,7 @@
 - ✅ **v0.28.0 Browser-Enforced Resource Isolation** — Phases 125-134 (shipped 2026-04-23) — [Archive](milestones/v0.28.0-ROADMAP.md)
 - ✅ **v0.29.0 NUB-CONNECT + Shell as CSP Authority** — Phases 135-142 (shipped 2026-04-21) — [Archive](milestones/v0.29.0-ROADMAP.md)
 - ✅ **v0.30.0 Class-Gated Decrypt Surface** — Phases 135-138 (shipped 2026-04-23) — [Archive](milestones/v0.30.0-ROADMAP.md)
+- ✅ **v0.31.0 Cleanup Quality Gate** — Phases 143-147 (shipped 2026-05-24) — [Archive](milestones/v0.31.0-ROADMAP.md)
 
 ## Phases
 
@@ -41,11 +42,93 @@
 
 Note: Phase 45 (IPC terminology cleanup) was completed as a quick task during v0.8.0 and is not part of the v0.9.0 roadmap. Phases 57–60 were deprecated after v0.11.0 and archived under `milestones/v0.12.0-phases/deprecated/`.
 
-### 📋 Next Milestone (Planned)
+<details>
+<summary>✅ v0.31.0 Cleanup Quality Gate (Phases 143-147) — SHIPPED 2026-05-24</summary>
 
-Run `/gsd:new-milestone` to define v0.31.0.
+### ✅ v0.31.0 Cleanup Quality Gate
 
-_All shipped milestones are collapsed below. Next milestone entries will be added here when planning begins._
+**Milestone Goal:** Turn the current `aislop` security, lint, type-safety, and code-quality findings into a green, behavior-preserving quality gate. Security dependency upgrades land first; low-risk fixable cleanup follows; type-safety and structural work are protected by regression tests and existing workspace verification.
+
+- [x] **Phase 143: Dependency Security Upgrade** — Upgrade the root dependency graph so `vite`, transitive `postcss`, and `turbo` resolve to patched versions; prove build, type-check, tests, and the security scanner still pass. Requirements: SEC-01, SEC-02, SEC-03, SEC-04. (completed 2026-05-24)
+- [x] **Phase 144: Fixable Lint and Slop Cleanup** — Remove duplicate imports, unused imports, leftover console diagnostics, duplicated shim logic, decorative narrative comments, and trivial comments without changing public behavior. Requirements: LINT-01, LINT-02, LINT-03, LINT-04, SLOP-01, SLOP-02, SLOP-03. (completed 2026-05-24)
+- [x] **Phase 145: Type Safety Boundary Repair** — Replace production `as any` and double assertions with typed helpers, guards, or narrowed dispatcher boundaries, and add invalid-message/mount behavior coverage for touched shims. Requirements: TYPE-01, TYPE-02, TYPE-03, TYPE-04. (completed 2026-05-24)
+- [x] **Phase 146: Complexity Hotspot Split** — Split the reported long functions and reduce oversized-file warnings where low-risk module boundaries exist; preserve normalizer fixtures, vite-plugin behavior, and NIPDB shim behavior. Requirements: QUAL-01, QUAL-02, QUAL-03, QUAL-04. (completed 2026-05-24)
+- [x] **Phase 147: Final Quality Gate and Closeout** — Run the final scanner, workspace build, type-check, unit tests, and cleanup summary; record remaining risks or explicit deferrals. Requirements: GATE-01, GATE-02, GATE-03, GATE-04. (completed 2026-05-24)
+
+## Phase Details
+
+### Phase 143: Dependency Security Upgrade
+
+**Goal**: The root dependency graph resolves to patched versions for the reported vulnerable tooling dependencies while preserving the current Vite 6 compatibility path unless implementation evidence requires a major migration.
+**Depends on**: Nothing.
+**Requirements**: SEC-01, SEC-02, SEC-03, SEC-04
+
+**Success Criteria** (what must be TRUE):
+  1. `pnpm why vite`, `pnpm why postcss`, and `pnpm why turbo` show `vite >=6.4.2`, `postcss >=8.5.10`, and `turbo >=2.9.14`.
+  2. `package.json` and `pnpm-lock.yaml` are the only required dependency graph edits unless a verification failure proves package-local changes are needed.
+  3. The security scanner reports no vulnerable-dependency findings for `vite`, `postcss`, or `turbo`.
+  4. `pnpm -r type-check`, `pnpm -r build`, and `pnpm -r test:unit` exit 0 after the dependency upgrade.
+
+**Plans:** 1/1 plans
+
+### Phase 144: Fixable Lint and Slop Cleanup
+
+**Goal**: The scanner's fixable lint and AI-slop findings are removed with small mechanical edits: import hygiene, unused type removals, console diagnostic cleanup, duplicated shim logic collapse, and removal of decorative/trivial comments.
+**Depends on**: Phase 143.
+**Requirements**: LINT-01, LINT-02, LINT-03, LINT-04, SLOP-01, SLOP-02, SLOP-03
+
+**Success Criteria** (what must be TRUE):
+  1. Duplicate `@napplet/core` imports in `packages/nub/src/relay/types.ts` and `packages/shim/src/index.ts` are merged.
+  2. The unused type imports named in the kickoff report are gone, with workspace type-check still green.
+  3. Production source has no reported `console.log`, `console.debug`, or `console.info` leftovers; vite-plugin user-facing diagnostics are removed, converted to warnings/errors, or routed through an existing Vite hook surface.
+  4. `packages/shim/src/index.ts` no longer has the duplicated logic block reported by the scanner.
+  5. Decorative narrative comment blocks and trivial comments reported by the scanner are removed while preserving useful public API documentation and security rationale.
+
+**Plans:** 1/1 plans
+
+### Phase 145: Type Safety Boundary Repair
+
+**Goal**: Production shim and NUB code no longer depends on broad `as any` or double assertions where a local type guard, structural helper, or discriminated-union branch can express the boundary safely.
+**Depends on**: Phase 144.
+**Requirements**: TYPE-01, TYPE-02, TYPE-03, TYPE-04
+
+**Success Criteria** (what must be TRUE):
+  1. `window.napplet` and global mount code in production uses typed helpers or explicit structural types instead of broad `as any`.
+  2. Message-handler double assertions are replaced by discriminated-union narrowing, small runtime guards, or a single isolated dispatcher-boundary adapter with verification evidence.
+  3. Touched shims have invalid-message or mount-behavior tests proving rejected inputs stay rejected and valid inputs still update the same public surface.
+  4. `pnpm -r type-check` exits 0 and the type-safety scanner categories from the kickoff report are closed or explicitly justified.
+
+**Plans:** 1/1 plans
+
+### Phase 146: Complexity Hotspot Split
+
+**Goal**: Reported complexity hotspots are split where doing so reduces real maintenance risk without public API drift, and any high-risk structural warning left behind receives an exact deferral note.
+**Depends on**: Phase 145.
+**Requirements**: QUAL-01, QUAL-02, QUAL-03, QUAL-04
+
+**Success Criteria** (what must be TRUE):
+  1. `normalizeConnectOrigin` is factored into focused helpers while preserving its 28-case smoke coverage and the canonical `connect:origins` aggregateHash fixture behavior.
+  2. Long functions in `packages/shim/src/nipdb-shim.ts` and `packages/vite-plugin/src/index.ts` are split or narrowed with tests/build checks proving behavior preservation.
+  3. Oversized type/barrel files are reduced where existing internal boundaries make the split low risk; public import paths remain compatible.
+  4. Remaining file-size or function-length warnings, if any, are listed with exact reasons, owner files, and follow-up requirements instead of being left as silent debt.
+
+**Plans:** 1/1 plans
+
+### Phase 147: Final Quality Gate and Closeout
+
+**Goal**: The milestone finishes only after the scanner and workspace verification prove the cleanup, with a concise record of simplifications made and residual risk.
+**Depends on**: Phases 143, 144, 145, 146.
+**Requirements**: GATE-01, GATE-02, GATE-03, GATE-04
+
+**Success Criteria** (what must be TRUE):
+  1. The same scanner class used in the kickoff report reports zero security errors.
+  2. Formatting, linting, code-quality, and AI-slop findings from the kickoff report are closed or explicitly deferred with rationale.
+  3. `pnpm -r type-check`, `pnpm -r build`, and `pnpm -r test:unit` exit 0 after all cleanup edits.
+  4. The final phase summary lists changed files, simplifications made, deleted code/comments, remaining risks, and verification evidence.
+
+**Plans:** 1/1 plans
+
+</details>
 
 <details>
 <summary>✅ v0.30.0 Class-Gated Decrypt Surface (Phases 135-138) — SHIPPED 2026-04-23</summary>

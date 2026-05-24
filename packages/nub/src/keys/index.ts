@@ -15,8 +15,6 @@
 
 export { DOMAIN } from './types.js';
 
-// ─── Type Exports ──────────────────────────────────────────────────────────
-
 export type {
   Action,
   RegisterResult,
@@ -33,8 +31,6 @@ export type {
   KeysNubMessage,
 } from './types.js';
 
-// ─── Shim Exports ─────────────────────────────────────────────────────────
-
 export {
   installKeysShim,
   handleKeysMessage,
@@ -43,16 +39,12 @@ export {
   onAction,
 } from './shim.js';
 
-// ─── SDK Exports ──────────────────────────────────────────────────────────
-
 export {
   keysRegisterAction,
   keysUnregisterAction,
   keysOnAction,
   keysRegister,
 } from './sdk.js';
-
-// ─── Domain Registration ───────────────────────────────────────────────────
 
 import { registerNub } from '@napplet/core';
 import { DOMAIN } from './types.js';

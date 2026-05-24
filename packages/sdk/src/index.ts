@@ -30,8 +30,6 @@ import type {
   EventTemplate,
 } from '@napplet/core';
 
-// ─── Runtime guard ──────────────────────────────────────────────────────────
-
 /**
  * Retrieve the `window.napplet` global, throwing a clear error if it is absent.
  *
@@ -45,8 +43,6 @@ function requireNapplet(): NappletGlobal {
   }
   return w.napplet;
 }
-
-// ─── Relay namespace ────────────────────────────────────────────────────────
 
 /**
  * NIP-01 relay operations: subscribe to events, publish events, one-shot queries.
@@ -121,8 +117,6 @@ export const relay = {
   },
 };
 
-// ─── IFC namespace ──────────────────────────────────────────────────────────
-
 /**
  * Inter-frame pubsub: broadcast and receive IFC-PEER events through the shell.
  *
@@ -161,10 +155,6 @@ export const ifc = {
     return requireNapplet().ifc.on(topic, callback);
   },
 };
-
-// ─── Services namespace ─────────────────────────────────────────────────────
-
-// ─── Storage namespace ──────────────────────────────────────────────────────
 
 /**
  * Napplet-scoped storage: async localStorage-like API proxied through the shell.
@@ -213,8 +203,6 @@ export const storage = {
     return requireNapplet().storage.keys();
   },
 };
-
-// ─── Media namespace ───────────────────────────────────────────────────────
 
 /**
  * Media session control: create sessions, report state and metadata,
@@ -321,8 +309,6 @@ export const media = {
     return requireNapplet().media.onControls(sessionId, callback);
   },
 };
-
-// ─── Notify namespace ──────────────────────────────────────────────────────
 
 /**
  * Shell-rendered notifications: send notifications, set badge counts,
@@ -439,8 +425,6 @@ export const notify = {
   },
 };
 
-// ─── Keys namespace ────────────────────────────────────────────────────────
-
 /**
  * Keyboard forwarding and action keybindings: register named actions the shell
  * can bind to keys, listen for shell-triggered actions locally.
@@ -530,8 +514,6 @@ export const keys = {
     };
   },
 };
-
-// ─── Identity namespace ───────────────────────────────────────────────────
 
 /**
  * Read-only user identity queries: public key, profile, follows, relays,
@@ -655,8 +637,6 @@ export const identity = {
   },
 };
 
-// ─── Config namespace ──────────────────────────────────────────────────────
-
 /**
  * Per-napplet declarative configuration (NUB-CONFIG): register a schema,
  * read current values, subscribe to live updates, deep-link into the
@@ -741,8 +721,6 @@ export const config = {
   },
 };
 
-// ─── Resource namespace ────────────────────────────────────────────────────
-
 /**
  * Browser-enforced byte-fetching primitive: napplets request bytes by URL,
  * shell fetches and returns a Blob. URL space is scheme-pluggable
@@ -779,8 +757,6 @@ export const resource = {
   },
 };
 
-// ─── Type re-exports from @napplet/core ─────────────────────────────────────
-
 export type { NostrEvent } from '@napplet/core';
 export type { NostrFilter } from '@napplet/core';
 export type { Subscription } from '@napplet/core';
@@ -788,14 +764,8 @@ export type { EventTemplate } from '@napplet/core';
 export type { Rumor } from '@napplet/core';
 export type { UnsignedEvent } from '@napplet/core';
 
-// ─── Core envelope types ───────────────────────────────────────────────────
-
 export type { NappletMessage, NubDomain, NamespacedCapability, ShellSupports } from '@napplet/core';
 export { NUB_DOMAINS } from '@napplet/core';
-
-// ─── NUB Message Type Re-exports ───────────────────────────────────────────
-// These types let SDK consumers work with typed envelope messages directly.
-// Import from '@napplet/sdk' instead of individual NUB packages.
 
 // Relay NUB
 export type {
@@ -1014,8 +984,6 @@ export type {
   ClassNubMessage,
 } from '@napplet/nub/class';
 
-// ─── NUB Domain Constants ──────────────────────────────────────────────────
-
 export { DOMAIN as RELAY_DOMAIN } from '@napplet/nub/relay';
 export { DOMAIN as IDENTITY_DOMAIN } from '@napplet/nub/identity';
 export { DOMAIN as STORAGE_DOMAIN } from '@napplet/nub/storage';
@@ -1029,9 +997,6 @@ export { DOMAIN as RESOURCE_DOMAIN } from '@napplet/nub/resource';
 export { DOMAIN as CONNECT_DOMAIN } from '@napplet/nub/connect';
 export { DOMAIN as CLASS_DOMAIN } from '@napplet/nub/class';
 
-// ─── NUB Shim Installer Re-exports ─────────────────────────────────────────
-// Allow consumers to cherry-pick shim installers per domain.
-
 export { installRelayShim } from '@napplet/nub/relay';
 export { installIdentityShim } from '@napplet/nub/identity';
 export { installStorageShim } from '@napplet/nub/storage';
@@ -1043,9 +1008,6 @@ export { installConfigShim } from '@napplet/nub/config';
 export { installResourceShim } from '@napplet/nub/resource';
 export { installConnectShim } from '@napplet/nub/connect';
 export { installClassShim } from '@napplet/nub/class';
-
-// ─── NUB SDK Helper Re-exports ──────────────────────────────────────────────
-// Allow consumers to use domain-specific SDK functions from @napplet/sdk.
 
 export { relaySubscribe, relayPublish, relayPublishEncrypted, relayQuery } from '@napplet/nub/relay';
 export { identityGetPublicKey, identityGetRelays, identityGetProfile, identityGetFollows, identityGetList, identityGetZaps, identityGetMutes, identityGetBlocked, identityGetBadges, identityDecrypt } from '@napplet/nub/identity';

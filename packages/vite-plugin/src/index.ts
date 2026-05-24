@@ -212,7 +212,6 @@ async function discoverConfigSchema(
     }
   }
 
-  // Step 3: convention file
   const conventionPath = path.resolve(root, 'config.schema.json');
   if (fs.existsSync(conventionPath)) {
     try {
@@ -225,7 +224,6 @@ async function discoverConfigSchema(
     }
   }
 
-  // Step 4: napplet.config.* dynamic import (ts -> js -> mjs precedence)
   for (const ext of ['ts', 'js', 'mjs'] as const) {
     const cfgPath = path.resolve(root, `napplet.config.${ext}`);
     if (!fs.existsSync(cfgPath)) continue;
@@ -247,7 +245,6 @@ async function discoverConfigSchema(
     }
   }
 
-  // Step 5: nothing found — silent, backward compatible
   return { schema: null, source: null };
 }
 
@@ -334,15 +331,21 @@ function walk(node: unknown, path: string, errors: string[]): void {
   }
 
   const obj = node as Record<string, unknown>;
+  collectSchemaKeywordErrors(obj, path, errors);
+  walkSchemaChildren(obj, path, errors);
+}
 
-  // Rule 2: pattern keyword forbidden anywhere.
+function collectSchemaKeywordErrors(
+  obj: Record<string, unknown>,
+  path: string,
+  errors: string[],
+): void {
   if ('pattern' in obj) {
     errors.push(
       `pattern-not-allowed: \`pattern\` keyword found at ${path} — the Core Subset excludes \`pattern\` due to ReDoS risk (CVE-2025-69873 class). Use \`enum\`, \`minLength\`, or \`maxLength\` for constrained strings.`,
     );
   }
 
-  // Rule 3: external $ref forbidden.
   if ('$ref' in obj) {
     const ref = obj.$ref;
     if (typeof ref !== 'string' || !ref.startsWith('#/')) {
@@ -352,22 +355,14 @@ function walk(node: unknown, path: string, errors: string[]): void {
     }
   }
 
-  // Rule 4: x-napplet-secret:true + default coexistence forbidden.
   if (obj['x-napplet-secret'] === true && 'default' in obj) {
     errors.push(
       `secret-with-default: property at ${path} declares both \`x-napplet-secret: true\` and a \`default\` value. A secret with a hardcoded default is not a secret.`,
     );
   }
+}
 
-  // Recurse into child schemas. JSON Schema child-carrying keys we care about:
-  //   properties          — map of name -> schema
-  //   items               — schema OR array of schemas (tuple form, walked too)
-  //   additionalProperties — schema or boolean (schema form walked)
-  //   patternProperties   — map (child schemas walked; a `pattern` inside any
-  //                         child is still caught by rule 2)
-  //   oneOf / anyOf / allOf — arrays of schemas (walked)
-  //   not                 — schema (walked)
-  //   definitions / $defs — maps of name -> schema (walked)
+function walkSchemaChildren(obj: Record<string, unknown>, path: string, errors: string[]): void {
   if (
     typeof obj.properties === 'object' &&
     obj.properties !== null &&
@@ -757,348 +752,277 @@ function assertConnectFoldMatchesSpecFixture(): void {
 // Throws at module load if the fold has drifted from NUB-CONNECT.md spec.
 assertConnectFoldMatchesSpecFixture();
 
-/**
- * Vite plugin for NIP-5A manifest generation.
- *
- * Computes per-file SHA-256 hashes, an aggregate hash, and optionally signs
- * a kind 35128 manifest event at build time. The aggregate hash is injected
- * into index.html via a meta tag for the napplet shim to read at runtime.
- *
- * @param options - Plugin configuration (nappletType is required)
- * @returns Vite Plugin instance
- */
+interface ManifestPluginState {
+  outDir: string;
+  projectRoot: string;
+  base: string;
+  artifactMode: Nip5aArtifactMode;
+  resolvedSchema: NappletConfigSchema | null;
+  resolvedSchemaSource: string | null;
+  normalizedConnect: string[];
+}
+
+interface ManifestTemplate {
+  kind: 35128;
+  created_at: number;
+  tags: string[][];
+  content: '';
+  aggregateHash: string;
+}
+
+async function resolvePluginConfig(
+  options: Nip5aManifestOptions,
+  state: ManifestPluginState,
+  config: { build?: { outDir?: string }; root: string; base?: string },
+): Promise<void> {
+  state.outDir = config.build?.outDir ?? 'dist';
+  state.projectRoot = config.root;
+  state.base = config.base ?? '/';
+  const result = await discoverConfigSchema(options, state.projectRoot);
+  state.resolvedSchema = result.schema;
+  state.resolvedSchemaSource = result.source;
+  validateResolvedSchema(state.resolvedSchema, state.resolvedSchemaSource);
+  warnDeprecatedStrictCsp(options);
+  state.normalizedConnect = normalizeConnectOptions(options);
+}
+
+function validateResolvedSchema(schema: NappletConfigSchema | null, source: string | null): void {
+  if (schema === null) return;
+
+  const validation = validateConfigSchema(schema);
+  if (!validation.ok) {
+    const header = `[nip5a-manifest] configSchema validation failed (source: ${source ?? 'unknown'})`;
+    const body = validation.errors.map((e) => `  - ${e}`).join('\n');
+    throw new Error(`${header}\n${body}`);
+  }
+}
+
+function warnDeprecatedStrictCsp(options: Nip5aManifestOptions): void {
+  if (options.strictCsp !== undefined) {
+    console.warn(
+      '[nip5a-manifest] strictCsp is deprecated in v0.29.0 and has no effect — the shell is now the sole CSP authority. Remove this option from your vite.config.ts. See v0.29.0 changelog for migration. (REMOVE-STRICTCSP tracks hard removal in a future milestone.)',
+    );
+  }
+}
+
+function normalizeConnectOptions(options: Nip5aManifestOptions): string[] {
+  if (options.connect === undefined) return [];
+  if (!Array.isArray(options.connect)) {
+    throw new Error('[nip5a-manifest] connect option must be an array of origin strings');
+  }
+
+  const normalized = options.connect.map((origin) => {
+    try {
+      return normalizeConnectOrigin(origin);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      throw new Error(`[nip5a-manifest] invalid connect origin: ${msg}`);
+    }
+  });
+
+  const cleartext = normalized.filter((o) => o.startsWith('http://') || o.startsWith('ws://'));
+  if (cleartext.length > 0) {
+    console.warn(
+      `[@napplet/vite-plugin] connect includes cleartext origin(s): ${cleartext.join(', ')} — browser mixed-content rules will silently block http:/ws: fetches from HTTPS shells unless the origin is http://localhost or http://127.0.0.1. Some shells refuse cleartext entirely (check \`shell.supports('connect:scheme:http')\`). See NUB-CONNECT for details.`,
+    );
+  }
+
+  return normalized;
+}
+
+function buildIndexHtmlTags(
+  options: Nip5aManifestOptions,
+  state: ManifestPluginState,
+  isDev: boolean,
+): IndexHtmlTransformResult {
+  const tags: IndexHtmlTransformResult = [
+    {
+      tag: 'meta',
+      attrs: { name: 'napplet-aggregate-hash', content: '' },
+      injectTo: 'head' as const,
+    },
+    {
+      tag: 'meta',
+      attrs: { name: 'napplet-type', content: options.nappletType },
+      injectTo: 'head' as const,
+    },
+  ];
+
+  if (options.requires && options.requires.length > 0) {
+    tags.push({
+      tag: 'meta',
+      attrs: { name: 'napplet-requires', content: options.requires.join(',') },
+      injectTo: 'head' as const,
+    });
+  }
+
+  if (state.resolvedSchema !== null) {
+    tags.push({
+      tag: 'meta',
+      attrs: { name: 'napplet-config-schema', content: JSON.stringify(state.resolvedSchema) },
+      injectTo: 'head' as const,
+    });
+  }
+
+  if (isDev && state.normalizedConnect.length > 0) {
+    tags.push({
+      tag: 'meta',
+      attrs: {
+        name: 'napplet-connect-requires',
+        content: state.normalizedConnect.join(' '),
+      },
+      injectTo: 'head' as const,
+    });
+  }
+
+  return tags;
+}
+
+async function writeBundleManifest(options: Nip5aManifestOptions, state: ManifestPluginState): Promise<void> {
+  const distPath = path.resolve(state.outDir);
+  if (!fs.existsSync(distPath)) {
+    console.error(`[nip5a-manifest] dist directory not found: ${distPath}`);
+    return;
+  }
+
+  prepareDistIndexHtml(distPath, state);
+
+  const privkeyHex = process.env.VITE_DEV_PRIVKEY_HEX;
+  if (!privkeyHex) return;
+
+  const manifest = buildManifestTemplate(options, distPath, state);
+  await writeManifestFile(distPath, manifest, privkeyHex);
+  injectAggregateHash(distPath, manifest.aggregateHash);
+}
+
+function prepareDistIndexHtml(distPath: string, state: ManifestPluginState): void {
+  const indexPath = path.join(distPath, 'index.html');
+  if (!fs.existsSync(indexPath)) return;
+
+  let html = fs.readFileSync(indexPath, 'utf-8');
+  assertNoInlineScripts(html);
+  if (state.artifactMode === 'single-file') {
+    html = inlineSingleFileBuildAssets(html, distPath, state.base);
+    fs.writeFileSync(indexPath, html);
+  }
+}
+
+function buildManifestTemplate(
+  options: Nip5aManifestOptions,
+  distPath: string,
+  state: ManifestPluginState,
+): ManifestTemplate {
+  const xTags = buildAggregateInputs(distPath, state);
+  const aggregateHash = computeAggregateHash(xTags);
+  const manifestXTags = xTags
+    .filter(([, p]) => !SYNTHETIC_XTAG_PATHS.has(p))
+    .map(([hash, p]) => ['x', hash, p]);
+  const connectTags = state.normalizedConnect.map((origin) => ['connect', origin]);
+  const configTags =
+    state.resolvedSchema !== null ? [['config', JSON.stringify(state.resolvedSchema)]] : [];
+  const requiresTags = (options.requires ?? []).map((name) => ['requires', name]);
+
+  return {
+    kind: 35128,
+    created_at: Math.floor(Date.now() / 1000),
+    tags: [
+      ['d', options.nappletType],
+      ...manifestXTags,
+      ...connectTags,
+      ...configTags,
+      ...requiresTags,
+    ],
+    content: '',
+    aggregateHash,
+  };
+}
+
+function buildAggregateInputs(distPath: string, state: ManifestPluginState): Array<[string, string]> {
+  const xTags: Array<[string, string]> = [];
+  for (const relativePath of walkDir(distPath)) {
+    if (relativePath === '.nip5a-manifest.json') continue;
+    xTags.push([sha256File(path.join(distPath, relativePath)), relativePath]);
+  }
+
+  if (state.resolvedSchema !== null) {
+    const schemaHash = crypto.createHash('sha256').update(JSON.stringify(state.resolvedSchema)).digest('hex');
+    xTags.push([schemaHash, 'config:schema']);
+  }
+  if (state.normalizedConnect.length > 0) {
+    const canonical = [...state.normalizedConnect].sort().join('\n');
+    const originsHash = crypto.createHash('sha256').update(canonical, 'utf8').digest('hex');
+    xTags.push([originsHash, 'connect:origins']);
+  }
+
+  return xTags;
+}
+
+async function writeManifestFile(
+  distPath: string,
+  manifest: ManifestTemplate,
+  privkeyHex: string,
+): Promise<void> {
+  try {
+    const { finalizeEvent, getPublicKey } = await import('nostr-tools/pure');
+    const { hexToBytes } = await import('nostr-tools/utils');
+    const privkeyBytes = hexToBytes(privkeyHex);
+    const pubkey = getPublicKey(privkeyBytes);
+    const signedEvent = finalizeEvent({
+      kind: 35128,
+      created_at: manifest.created_at,
+      tags: manifest.tags,
+      content: manifest.content,
+    }, privkeyBytes);
+
+    const manifestWithMeta = { ...signedEvent, aggregateHash: manifest.aggregateHash, pubkey };
+    fs.writeFileSync(path.join(distPath, '.nip5a-manifest.json'), JSON.stringify(manifestWithMeta, null, 2));
+  } catch {
+    fs.writeFileSync(path.join(distPath, '.nip5a-manifest.json'), JSON.stringify(manifest, null, 2));
+  }
+}
+
+function injectAggregateHash(distPath: string, aggregateHash: string): void {
+  const indexPath = path.join(distPath, 'index.html');
+  if (!fs.existsSync(indexPath)) return;
+
+  const html = fs
+    .readFileSync(indexPath, 'utf-8')
+    .replace(
+      /<meta name="napplet-aggregate-hash" content="">/,
+      `<meta name="napplet-aggregate-hash" content="${aggregateHash}">`,
+    );
+  fs.writeFileSync(indexPath, html);
+}
+
 export function nip5aManifest(options: Nip5aManifestOptions): Plugin {
-  let outDir = 'dist';
-  let projectRoot: string = process.cwd();
-  let base = '/';
-  let resolvedSchema: NappletConfigSchema | null = null;
-  let resolvedSchemaSource: string | null = null;
-  let normalizedConnect: string[] = [];
-  const artifactMode: Nip5aArtifactMode = options.artifactMode ?? 'external-assets';
+  const state: ManifestPluginState = {
+    outDir: 'dist',
+    projectRoot: process.cwd(),
+    base: '/',
+    artifactMode: options.artifactMode ?? 'external-assets',
+    resolvedSchema: null,
+    resolvedSchemaSource: null,
+    normalizedConnect: [],
+  };
 
   return {
     name: 'vite-plugin-nip5a-manifest',
 
     config(config) {
-      if (artifactMode !== 'single-file') return undefined;
+      if (state.artifactMode !== 'single-file') return undefined;
       return singleFileBuildConfig(config);
     },
 
     async configResolved(config) {
-      outDir = config.build?.outDir ?? 'dist';
-      projectRoot = config.root;
-      base = config.base ?? '/';
-      const result = await discoverConfigSchema(options, projectRoot);
-      resolvedSchema = result.schema;
-      resolvedSchemaSource = result.source;
-      if (resolvedSchema !== null) {
-        // Structural guard: four NUB-CONFIG rejection rules must pass before
-        // any downstream consumer (manifest tag in closeBundle, meta injection
-        // in transformIndexHtml) sees the schema. Malformed schemas abort the
-        // build — they MUST NOT silently propagate to the shell as runtime
-        // `config.schemaError` pushes when the error is structurally
-        // detectable at build time.
-        const validation = validateConfigSchema(resolvedSchema);
-        if (!validation.ok) {
-          const header = `[nip5a-manifest] configSchema validation failed (source: ${resolvedSchemaSource ?? 'unknown'})`;
-          const body = validation.errors.map((e) => `  - ${e}`).join('\n');
-          throw new Error(`${header}\n${body}`);
-        }
-        console.log(
-          `[nip5a-manifest] ${options.nappletType}: config schema discovered via ${resolvedSchemaSource} — validated`,
-        );
-      }
-
-      // v0.29.0 deprecation shim: `strictCsp` option is @deprecated and has no effect.
-      // Shell is now the sole CSP authority. Warn once per build so upgrading consumers
-      // discover the deprecation without their v0.28.0 vite.config.ts breaking on type-check
-      // or build. Hard removal tracked as REMOVE-STRICTCSP in REQUIREMENTS.md for a future milestone (originally scheduled v0.30.0, deferred when v0.30.0 shipped Class-Gated Decrypt).
-      // configResolved is called exactly once per plugin invocation by Vite, so this
-      // is effectively once-per-build with no external guard variable needed.
-      if (options.strictCsp !== undefined) {
-        console.warn(
-          '[nip5a-manifest] strictCsp is deprecated in v0.29.0 and has no effect — the shell is now the sole CSP authority. Remove this option from your vite.config.ts. See v0.29.0 changelog for migration. (REMOVE-STRICTCSP tracks hard removal in a future milestone.)',
-        );
-      }
-
-      // VITE-03 / VITE-04 / VITE-09: NUB-CONNECT origin declaration.
-      //
-      // Validate each origin through the shared `normalizeConnectOrigin()` from
-      // `@napplet/nub/connect/types` — this is the single source of truth used
-      // on BOTH the build side (here) and the shell side (at manifest-load
-      // time) per NUB-CONNECT §Origin Format. Chaining the nub's diagnostic
-      // into a `[nip5a-manifest]`-prefixed error keeps the plugin's namespace
-      // visible to authors while preserving the specific reason.
-      //
-      // Cleartext origins (http:/ws:) are legal for localhost dev but warrant
-      // an informational warning because browser mixed-content rules silently
-      // block them from HTTPS shells unless they're localhost/127.0.0.1 (the
-      // secure-context exception). Non-blocking per RUNTIME-P2 mitigation.
-      if (options.connect !== undefined) {
-        if (!Array.isArray(options.connect)) {
-          throw new Error(
-            '[nip5a-manifest] connect option must be an array of origin strings',
-          );
-        }
-        const normalized: string[] = [];
-        for (const origin of options.connect) {
-          try {
-            normalized.push(normalizeConnectOrigin(origin));
-          } catch (err) {
-            const msg = err instanceof Error ? err.message : String(err);
-            throw new Error(`[nip5a-manifest] invalid connect origin: ${msg}`);
-          }
-        }
-        normalizedConnect = normalized;
-
-        const cleartext = normalizedConnect.filter(
-          (o) => o.startsWith('http://') || o.startsWith('ws://'),
-        );
-        if (cleartext.length > 0) {
-          console.warn(
-            `[@napplet/vite-plugin] connect includes cleartext origin(s): ${cleartext.join(', ')} — browser mixed-content rules will silently block http:/ws: fetches from HTTPS shells unless the origin is http://localhost or http://127.0.0.1. Some shells refuse cleartext entirely (check \`shell.supports('connect:scheme:http')\`). See NUB-CONNECT for details.`,
-          );
-        }
-      }
+      await resolvePluginConfig(options, state, config);
     },
 
     transformIndexHtml(_html: string, ctx?: { server?: unknown }): IndexHtmlTransformResult {
-      const tags: IndexHtmlTransformResult = [];
-      const isDev = !!ctx?.server;
-
-      // Existing meta tags — preserve byte-identical output for backward
-      // compat with pre-v0.29.0 consumers (minus the now-removed CSP meta).
-      tags.push({
-        tag: 'meta',
-        attrs: { name: 'napplet-aggregate-hash', content: '' },
-        injectTo: 'head' as const,
-      });
-      tags.push({
-        tag: 'meta',
-        attrs: { name: 'napplet-type', content: options.nappletType },
-        injectTo: 'head' as const,
-      });
-
-      if (options.requires && options.requires.length > 0) {
-        tags.push({
-          tag: 'meta',
-          attrs: { name: 'napplet-requires', content: options.requires.join(',') },
-          injectTo: 'head' as const,
-        });
-      }
-
-      if (resolvedSchema !== null) {
-        tags.push({
-          tag: 'meta',
-          attrs: { name: 'napplet-config-schema', content: JSON.stringify(resolvedSchema) },
-          injectTo: 'head' as const,
-        });
-      }
-
-      // VITE-10: dev-mode-only `napplet-connect-requires` meta for shell-less
-      // `vite serve` preview. Distinct from the shell-authoritative
-      // `...-granted` name defined in NUB-CONNECT §Runtime API — the plugin
-      // MUST NEVER emit the `granted` variant; the shell is the sole writer
-      // of that name. This `requires` name signals build-time intent ONLY
-      // and is stripped from production output (the guard below is `isDev`
-      // strict).
-      if (isDev && normalizedConnect.length > 0) {
-        tags.push({
-          tag: 'meta',
-          attrs: {
-            name: 'napplet-connect-requires',
-            content: normalizedConnect.join(' '),
-          },
-          injectTo: 'head' as const,
-        });
-      }
-
-      return tags;
+      return buildIndexHtmlTags(options, state, !!ctx?.server);
     },
 
     async closeBundle() {
-      const distPath = path.resolve(outDir);
-      if (!fs.existsSync(distPath)) {
-        console.error(`[nip5a-manifest] dist directory not found: ${distPath}`);
-        return;
-      }
-
-      // VITE-08 / BUILD-P1: fail-loud inline-script diagnostic.
-      //
-      // Scan dist/index.html BEFORE any signing / manifest-generation work so
-      // the build aborts on an inline-script violation regardless of whether
-      // a signing privkey is configured. Inline scripts are a hard-fail per
-      // locked decision Q4 — the shell emits `script-src 'self'` at runtime
-      // and silent CSP blocks would be harder to diagnose than a build error.
-      const indexPathForInlineScan = path.join(distPath, 'index.html');
-      if (fs.existsSync(indexPathForInlineScan)) {
-        let html = fs.readFileSync(indexPathForInlineScan, 'utf-8');
-        assertNoInlineScripts(html);
-        if (artifactMode === 'single-file') {
-          html = inlineSingleFileBuildAssets(html, distPath, base);
-          fs.writeFileSync(indexPathForInlineScan, html);
-        }
-      }
-
-      const privkeyHex = process.env.VITE_DEV_PRIVKEY_HEX;
-      if (!privkeyHex) {
-        console.log('[nip5a-manifest] VITE_DEV_PRIVKEY_HEX not set — skipping manifest generation');
-        return;
-      }
-
-      // Walk dist/ and compute per-file SHA-256
-      const files = walkDir(distPath);
-      const xTags: Array<[string, string]> = [];
-      for (const relativePath of files) {
-        // Skip the manifest file itself if it exists from a previous build
-        if (relativePath === '.nip5a-manifest.json') continue;
-        const fullPath = path.join(distPath, relativePath);
-        const hash = sha256File(fullPath);
-        xTags.push([hash, relativePath]);
-      }
-
-      // NUB-CONFIG: include the config schema bytes in aggregateHash via a
-      // synthetic path. The colon in 'config:schema' ensures no collision with
-      // any real file path (dist/-relative paths use platform separators, not
-      // colons). Any schema change flips the schema-bytes sha and therefore
-      // flips aggregateHash — which in turn re-scopes the napplet's storage
-      // per NIP-5D (dTag, aggregateHash) keying. Schemas thus implicitly
-      // version their own storage without requiring `$version` cooperation.
-      // The synthetic entry is excluded from the manifest's ['x', ...] tag
-      // projection below so only real files surface as x-tags.
-      if (resolvedSchema !== null) {
-        const schemaHash = crypto.createHash('sha256').update(JSON.stringify(resolvedSchema)).digest('hex');
-        xTags.push([schemaHash, 'config:schema']);
-      }
-
-      // VITE-06: NUB-CONNECT aggregateHash fold. Canonical procedure per
-      // NUB-CONNECT.md §Canonical `connect:origins` aggregateHash Fold:
-      //   1. lowercase (idempotent after normalizeConnectOrigin)
-      //   2. ASCII-ascending sort (JS default .sort() is code-unit order,
-      //      byte-equivalent for ASCII origins — all conformant origins are
-      //      ASCII post-Punycode; no comparator needed)
-      //   3. LF-join with NO trailing newline
-      //   4. UTF-8 encode
-      //   5. SHA-256 → lowercase hex
-      //
-      // Independently verifiable against the NUB-CONNECT conformance fixture:
-      //   input origins: https://api.example.com, https://xn--caf-dma.example.com, wss://events.example.com
-      //   expected hash: cc7c1b1903fb23ecb909d2427e1dccd7d398a5c63dd65160edb0bb8b231aa742
-      // Plan 138-03 asserts this equivalence at build time.
-      //
-      // The synthetic xTag participates in aggregateHash so origin-list drift
-      // invalidates prior grants on the (dTag, aggregateHash) composite key.
-      // The projection filter (`!SYNTHETIC_XTAG_PATHS.has(p)`) keeps it out of
-      // the manifest's ['x', ...] tag list — origins surface as their own
-      // ['connect', origin] tags below.
-      if (normalizedConnect.length > 0) {
-        const sortedOrigins = [...normalizedConnect].sort();
-        const canonical = sortedOrigins.join('\n');
-        const originsHash = crypto.createHash('sha256').update(canonical, 'utf8').digest('hex');
-        xTags.push([originsHash, 'connect:origins']);
-      }
-
-      // Compute aggregate hash (includes synthetic config:schema and
-      // connect:origins entries when present)
-      const aggregateHash = computeAggregateHash(xTags);
-
-      // Build requires tags from plugin options
-      const requiresTags = (options.requires ?? []).map((name) => ['requires', name]);
-
-      // Filter synthetic xTag entries out of the ['x', ...] tag projection —
-      // these entries participate in aggregateHash but are NOT real dist/
-      // files, so emitting them as x-tags would leak misleading file-hash
-      // records. Synthetic paths live in SYNTHETIC_XTAG_PATHS (module scope)
-      // so adding a new NUB fold doesn't require patching the filter twice.
-      // (VITE-07 / BUILD-P3 mitigation.)
-      //
-      // Each synthetic entry surfaces on the manifest via its own dedicated
-      // tag: `config:schema` → `['config', ...]`, `connect:origins` →
-      // `['connect', ...]` (one per origin).
-      const manifestXTags = xTags
-        .filter(([, p]) => !SYNTHETIC_XTAG_PATHS.has(p))
-        .map(([hash, p]) => ['x', hash, p]);
-
-      // VITE-05: connect manifest tags. One ['connect', <normalized-origin>]
-      // per origin. Author's declared array order is preserved (not the sorted
-      // order used for the aggregate-hash fold above) — matches NUB-CONNECT
-      // §Manifest Tag Shape which emits tags in declaration order for human
-      // readability. The hash is order-insensitive via sort; the manifest
-      // tags are author-ordered.
-      const connectTags: string[][] = normalizedConnect.map((origin) => ['connect', origin]);
-
-      // NUB-CONFIG: dedicated ['config', JSON.stringify(schema)] manifest tag.
-      // Placed between x-tags and requires-tags per phase 114 context
-      // decisions block. Only emitted when a schema is declared — napplets
-      // without a config surface produce a manifest byte-identical to the
-      // pre-phase-114 shape.
-      const configTags: string[][] =
-        resolvedSchema !== null ? [['config', JSON.stringify(resolvedSchema)]] : [];
-
-      // Build kind 35128 manifest event (unsigned template).
-      // Tag order (VITE-05 normative per ARCHITECTURE.md data flow):
-      //   d → x-tags (real files) → connect-tags → config-tag → requires-tags
-      const manifest = {
-        kind: 35128,
-        created_at: Math.floor(Date.now() / 1000),
-        tags: [
-          ['d', options.nappletType],
-          ...manifestXTags,
-          ...connectTags,
-          ...configTags,
-          ...requiresTags,
-        ],
-        content: '',
-        aggregateHash,
-      };
-
-      // Try to sign with nostr-tools if available
-      try {
-        // Dynamic import to avoid requiring nostr-tools as a build dependency
-        const { finalizeEvent, getPublicKey } = await import('nostr-tools/pure');
-        const { hexToBytes } = await import('nostr-tools/utils');
-        const privkeyBytes = hexToBytes(privkeyHex);
-        const pubkey = getPublicKey(privkeyBytes);
-
-        const signedEvent = finalizeEvent({
-          kind: 35128,
-          created_at: manifest.created_at,
-          tags: manifest.tags,
-          content: manifest.content,
-        }, privkeyBytes);
-
-        // Write signed manifest
-        const manifestWithMeta = { ...signedEvent, aggregateHash, pubkey };
-        fs.writeFileSync(
-          path.join(distPath, '.nip5a-manifest.json'),
-          JSON.stringify(manifestWithMeta, null, 2),
-        );
-
-        console.log(`[nip5a-manifest] ${options.nappletType}: manifest signed by ${pubkey.slice(0, 8)}...`);
-      } catch {
-        // nostr-tools not available at build time — write unsigned manifest
-        fs.writeFileSync(
-          path.join(distPath, '.nip5a-manifest.json'),
-          JSON.stringify(manifest, null, 2),
-        );
-        console.log(`[nip5a-manifest] ${options.nappletType}: unsigned manifest written (nostr-tools not available at build)`);
-      }
-
-      // Update index.html meta tag with aggregate hash
-      const indexPath = path.join(distPath, 'index.html');
-      if (fs.existsSync(indexPath)) {
-        let html = fs.readFileSync(indexPath, 'utf-8');
-        html = html.replace(
-          /<meta name="napplet-aggregate-hash" content="">/,
-          `<meta name="napplet-aggregate-hash" content="${aggregateHash}">`,
-        );
-        fs.writeFileSync(indexPath, html);
-        console.log(`[nip5a-manifest] ${options.nappletType}: hash ${aggregateHash.slice(0, 12)}... injected into index.html`);
-      }
-
-      if (requiresTags.length > 0) {
-        console.log(`[nip5a-manifest] ${options.nappletType}: requires [${(options.requires ?? []).join(', ')}]`);
-      }
+      await writeBundleManifest(options, state);
     },
   };
 }

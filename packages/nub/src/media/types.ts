@@ -12,12 +12,8 @@
 
 import type { NappletMessage } from '@napplet/core';
 
-// ─── Domain Constants ──────────────────────────────────────────────────────
-
 /** The NUB domain name for media messages. */
 export const DOMAIN = 'media' as const;
-
-// ─── Supporting Types ──────────────────────────────────────────────────────
 
 /**
  * Media session metadata. All fields are optional -- a session can be
@@ -97,8 +93,6 @@ export interface MediaState {
  */
 export type MediaAction = 'play' | 'pause' | 'stop' | 'next' | 'prev' | 'seek' | 'volume';
 
-// ─── Base Message Type ─────────────────────────────────────────────────────
-
 /**
  * Base interface for all media NUB messages.
  * Concrete message types narrow the `type` field to specific literals.
@@ -107,8 +101,6 @@ export interface MediaMessage extends NappletMessage {
   /** Message type in "media.<action>" format. */
   type: `media.${string}`;
 }
-
-// ─── Napplet -> Shell Request Messages ─────────────────────────────────────
 
 /**
  * Create a new media session. The napplet provides a client-generated
@@ -223,8 +215,6 @@ export interface MediaCapabilitiesMessage extends MediaMessage {
   actions: MediaAction[];
 }
 
-// ─── Shell -> Napplet Result/Push Messages ────────────────────────────────
-
 /**
  * Result of a media.session.create request.
  * Carries the same correlation `id` as the request.
@@ -289,8 +279,6 @@ export interface MediaControlsMessage extends MediaMessage {
   /** Media actions the shell supports. */
   controls: MediaAction[];
 }
-
-// ─── Discriminated Unions ──────────────────────────────────────────────────
 
 /** Napplet -> Shell media request messages. */
 export type MediaRequestMessage =

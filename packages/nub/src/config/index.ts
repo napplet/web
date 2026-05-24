@@ -28,8 +28,6 @@
 
 export { DOMAIN } from './types.js';
 
-// ─── Type Exports ──────────────────────────────────────────────────────────
-
 export type {
   // Schema + values aliases
   NappletConfigSchema,
@@ -38,7 +36,6 @@ export type {
   ConfigSchemaErrorCode,
   // Schema extension potentialities
   NappletConfigSchemaExtensions,
-  // Base message type
   ConfigMessage,
   // Napplet -> Shell request messages
   ConfigRegisterSchemaMessage,
@@ -50,20 +47,15 @@ export type {
   ConfigRegisterSchemaResultMessage,
   ConfigValuesMessage,
   ConfigSchemaErrorMessage,
-  // Discriminated unions
   ConfigRequestMessage,
   ConfigResultMessage,
   ConfigNubMessage,
 } from './types.js';
 
-// ─── Shim Exports ─────────────────────────────────────────────────────────
-
 export {
   installConfigShim,
   handleConfigMessage,
 } from './shim.js';
-
-// ─── SDK Exports ──────────────────────────────────────────────────────────
 
 export {
   get,

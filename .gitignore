@@ -2,6 +2,7 @@ node_modules/
 dist/
 *.tsbuildinfo
 .turbo/
+.omx/
 test-results/
 playwright-report/
 .claude/

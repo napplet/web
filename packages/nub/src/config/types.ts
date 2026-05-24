@@ -17,12 +17,8 @@
 
 import type { NappletMessage } from '@napplet/core';
 
-// ─── Domain Constants ──────────────────────────────────────────────────────
-
 /** The NUB domain name for config messages. */
 export const DOMAIN = 'config' as const;
-
-// ─── Schema + Values Types ─────────────────────────────────────────────────
 
 export type JsonSchemaPrimitive = string | number | boolean | null;
 export type JsonSchemaValue =
@@ -110,8 +106,6 @@ export type ConfigSchemaErrorCode =
   | 'version-conflict'
   | 'no-schema';
 
-// ─── Schema Extension Potentialities ───────────────────────────────────────
-
 /**
  * Standardized `x-napplet-*` extension keys recognized by conformant shells.
  * Napplets MAY declare these on any property of their schema; shells MAY act
@@ -157,8 +151,6 @@ export interface NappletConfigSchemaExtensions {
   'x-napplet-order'?: number;
 }
 
-// ─── Base Message Type ─────────────────────────────────────────────────────
-
 /**
  * Base interface for all config NUB messages.
  * Concrete message types narrow the `type` field to specific literals.
@@ -167,8 +159,6 @@ export interface ConfigMessage extends NappletMessage {
   /** Message type in "config.<action>" format (possibly with a `.result` suffix). */
   type: `config.${string}`;
 }
-
-// ─── Napplet -> Shell Request Messages ─────────────────────────────────────
 
 /**
  * Register a napplet config schema at runtime (escape hatch; prefer manifest-declared).
@@ -254,8 +244,6 @@ export interface ConfigOpenSettingsMessage extends ConfigMessage {
   /** Optional section name; MUST correspond to an `x-napplet-section` declared in the current schema. */
   section?: string;
 }
-
-// ─── Shell -> Napplet Result Messages ──────────────────────────────────────
 
 /**
  * Positive-ACK result for `config.registerSchema`.
@@ -343,8 +331,6 @@ export interface ConfigSchemaErrorMessage extends ConfigMessage {
   /** Machine-readable error code (see {@link ConfigSchemaErrorCode}). */
   code: ConfigSchemaErrorCode;
 }
-
-// ─── Discriminated Unions ──────────────────────────────────────────────────
 
 /** Napplet -> Shell config request messages. */
 export type ConfigRequestMessage =

@@ -20,8 +20,6 @@
 
 export { DOMAIN } from './types.js';
 
-// ─── Type Exports ──────────────────────────────────────────────────────────
-
 export type {
   ResourceErrorCode,
   ResourceScheme,
@@ -36,8 +34,6 @@ export type {
   ResourceNubMessage,
 } from './types.js';
 
-// ─── Shim Exports ─────────────────────────────────────────────────────────
-
 export {
   installResourceShim,
   handleResourceMessage,
@@ -46,14 +42,10 @@ export {
   hydrateResourceCache,
 } from './shim.js';
 
-// ─── SDK Exports ──────────────────────────────────────────────────────────
-
 export {
   resourceBytes,
   resourceBytesAsObjectURL,
 } from './sdk.js';
-
-// ─── Domain Registration ───────────────────────────────────────────────────
 
 import { registerNub } from '@napplet/core';
 import { DOMAIN } from './types.js';

@@ -1,27 +1,37 @@
 ---
 gsd_state_version: 1.0
-milestone: <none>
-milestone_name: <none>
-status: Shipped — planning next milestone
-stopped_at: Merged feat/strict-model (v0.29.0 NUB-CONNECT, shipped 2026-04-21) into main; main's Class-Gated Decrypt Surface (originally self-labeled v0.29.0, shipped 2026-04-23) was renumbered to v0.30.0 during a post-merge version split.
-last_updated: "2026-04-24T15:18:41.118Z"
-last_activity: 2026-04-24 - Completed quick task 260424-o1k: Implement default shell.supports() in shim so napplets can be tested without a shell
+milestone: v0.31.0
+milestone_name: Cleanup Quality Gate
+status: Awaiting next milestone
+stopped_at: Milestone v0.31.0 archived
+last_updated: "2026-05-24T11:55:14.509Z"
+last_activity: 2026-05-24 — Milestone v0.31.0 completed and archived
 progress:
+  total_phases: 5
+  completed_phases: 5
+  total_plans: 5
+  completed_plans: 5
+  percent: 100
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-04-24 post-merge)
+See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 
 **Core value:** Prove that sandboxed Nostr apps can securely delegate to a host shell over a simple, standardized protocol — and ship the spec + SDK so others can build on it.
 
-**Current focus:** None. Both v0.29.0 NUB-CONNECT (feat/strict-model, shipped 2026-04-21) and v0.30.0 Class-Gated Decrypt Surface (originally self-labeled v0.29.0 on main, shipped 2026-04-23, renumbered to v0.30.0 during the post-merge version split) are now in main. Run `/gsd:new-milestone` to define v0.31.0.
+**Current focus:** Planning next milestone
 
 > **Provenance note:** The "Accumulated Context" section below preserves bullet records from BOTH branches' STATE.md histories. Records tagged "v0.29.0" from main's lineage refer to the milestone NOW renumbered as v0.30.0 (Class-Gated Decrypt — Phases 135-138). Records tagged "v0.29.0" from feat/strict-model refer to NUB-CONNECT (Phases 135-142). Phase number alone is not a unique identifier across the two; cross-reference the topic (decrypt/identity/NIP-07 → v0.30.0; connect/class/CSP-authority → v0.29.0).
 
 ## Current Position
+
+Phase: Milestone v0.31.0 complete
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-05-24 — Milestone v0.31.0 completed and archived
 
 ## Accumulated Context
 
@@ -29,6 +39,12 @@ See: .planning/PROJECT.md (updated 2026-04-24 post-merge)
 
 Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting current work:
 
+- [Phase 143]: Dependency graph security upgrade complete. `vite` resolves to 6.4.2, `postcss` resolves to 8.5.10 via root pnpm override, and `turbo` resolves to 2.9.14. `pnpm dlx aislop scan --json .` reports `security.issues = 0`; `pnpm -r type-check`, `pnpm -r build`, and `pnpm -r test:unit` all exit 0.
+- [Phase 144]: Fixable lint/slop cleanup complete. `pnpm dlx aislop fix .` removed 269 issues; manual cleanup removed remaining unused imports, empty block, and central shim duplicate block. `/tmp/napplet-144-aislop.json` has zero diagnostics for unused vars, duplicate imports, console leftovers, trivial/narrative comments, empty blocks, and duplicate blocks. `pnpm -r type-check`, `pnpm -r build`, and `pnpm -r test:unit` all exit 0.
+- [Phase 145]: Type-safety boundary repair complete. Production `as any` and `as unknown as` scanner categories are zero in `/tmp/napplet-145-aislop.json`; NUB boundary smoke tests added; `pnpm -r type-check`, `pnpm -r build`, and `pnpm -r test:unit` all exit 0.
+- [Phase 146]: Complexity hotspot split complete. `normalizeConnectOrigin`, vite-plugin schema walking, and vite-plugin hook bodies were split into private helpers; `/tmp/napplet-146-aislop.json` has no function-length, duplicate-code, lint, security, or AI-slop diagnostics. Four remaining file-size warnings are explicit deferrals for public or package-entry surfaces: `packages/core/src/types.ts`, `packages/nub/src/identity/types.ts`, `packages/sdk/src/index.ts`, and `packages/vite-plugin/src/index.ts`. `pnpm -r type-check`, `pnpm -r build`, `pnpm -r test:unit`, and `git diff --check` all exit 0.
+- [Phase 147]: Final quality gate complete. `/tmp/napplet-147-aislop.json` reports score 89 / Healthy, 0 errors, 0 fixable issues, and engine counts format 0, lint 0, code-quality 4, ai-slop 0, security 0. The four code-quality warnings are the Phase 146 file-size deferrals only. `pnpm -r type-check`, `pnpm -r build`, `pnpm -r test:unit`, and `git diff --check` all exit 0.
+- [Milestone v0.31.0]: Archive complete. Roadmap, requirements, and audit are archived under `.planning/milestones/`; active `.planning/REQUIREMENTS.md` removed for the next milestone cycle. Known residual debt is limited to four documented public-surface file-size warnings.
 - PRINCIPLE: NUBs define protocol surface + potentialities; implementation UX is a shell concern
 - PRINCIPLE: NUB packages own ALL logic (types, shim installers, SDK helpers); central shim/sdk are thin hosts
 - PRINCIPLE: `@napplet/*` is private; never listed as implementations in public specs/docs
@@ -112,11 +128,42 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 - INFO: Local `specs/NIP-5D.md` may be stale vs napplet/nubs master post-PR-15 (`window.nostr` removal merged 2026-04-21). Phase 138 NIP5D-01 syncs before layering v0.29.0 amendment
 - INFO: `world: 'MAIN'` extension-API bypass acknowledged as residual — no page-side blocking mechanism exists. NUB-CLASS-1 `connect-src 'none'` is the structural mitigation. Phase 136 artifact MUST document this honestly; Phase 137 amendment + Phase 138 NIP-5D amendment MUST NOT claim a fix
 
+## Deferred Items
+
+Items acknowledged and deferred at v0.31.0 milestone close on 2026-05-24:
+
+| Category | Item | Status |
+|----------|------|--------|
+| debug_session | auth-handshake-regression | awaiting_human_verify |
+| debug_session | demo-v060-correctness-issues | diagnosed |
+| debug_session | knowledge-base | unknown |
+| debug_session | leader-line-import-error | unknown |
+| debug_session | phase-32-amber-red-classification | unknown |
+| debug_session | service-button-inspector-issue | investigating |
+| debug_session | socket-gravity-approach-angles | awaiting_human_verify |
+| quick_task | 260401-obm-fix-double-lines-and-increase-node-spaci | missing |
+| quick_task | 260401-p5s-make-topology-lines-symmetrical | missing |
+| quick_task | 260401-w49-fix-kinds-inter-pane-regression-and-napp | missing |
+| quick_task | 260402-krp-replace-inter-pane-with-ipc-in-demo-ui-l | missing |
+| quick_task | 260403-fyj-close-v0-9-0-audit-gaps-adapthooks-persi | missing |
+| quick_task | 260403-lck-fix-phase-51-split-border-node-implement | missing |
+| quick_task | 260403-mc5-update-planning-artifacts-for-out-of-wor | missing |
+| quick_task | 260407-0i8-remove-stale-root-files-from-napplet | missing |
+| quick_task | 260407-o9g-update-all-documentation-for-current-v0- | missing |
+| quick_task | 260409-gkz-reformat-napplet-nubs-pr-9-body-to-match | missing |
+| quick_task | 260419-i6c-republish-napplet-packages-as-0-2-1-with | missing |
+| quick_task | 260421-u87-create-cross-repo-prs-in-napplet-nubs-fr | missing |
+| quick_task | 260424-o1k-implement-default-shell-supports-in-shim | missing |
+| seed | SEED-001-deterministic-napplet-keypair | dormant |
+| seed | SEED-002-receive-side-decrypt-surface | dormant |
+| seed | SEED-003-nip5d-error-envelope | dormant |
+
 ## Session Continuity
 
 Last session: 2026-04-23T15:19:18.662Z
 Stopped at: Completed 138-02-PLAN.md (parallel wave 1)
 Resume: `/gsd:plan-phase 135` to plan first-party types + SDK plumbing. Phase 136 may be planned in parallel.
+
 - v0.26.0: Consolidated `@napplet/nub-*` packages into single `@napplet/nub` with 34 subpath exports; deprecated packages ship as 1-line re-export shims for one release cycle
 - v0.27.0: Runtime API surface uses IFC terminology (`window.napplet.ifc`, `@napplet/sdk` `ifc` export); hard break, no backward-compat alias
 - v0.28.0: Browser-enforced isolation via strict CSP; single `resource.bytes(url)` primitive with scheme-pluggable URL space; `data:` decoded inline; sidecar pre-resolution opt-in default OFF for privacy; shell-side SVG rasterization MUST; `perm:strict-csp` capability orthogonal to `nub:resource`; demos delegated to downstream shell repo (Option B)
@@ -147,12 +194,10 @@ Surfaced by research (informational — each belongs to a specific phase plan):
 7. NIP-5D amendment: one-line pointer vs richer section (design leans one-line) — Phase 135
 8. IPv6 literal / bare IPv4 acceptance in origin format — Phase 137/138
 
-
 - Orchestrator verify_phase_goal pass for Phase 136, Phase 137, Phase 138, Phase 139, Phase 142 (spawned by `/gsd:execute-phase`, not by this executor)
 - `/gsd:audit-milestone v0.29.0` — next lifecycle step; runs after Phase 142 TERMINAL-COMPLETE
 - `/gsd:complete-milestone v0.29.0` — follows audit; archives v0.29.0 ROADMAP + cleanup
 - Manual `feat/strict-model` → `main` branch merge after audit clears
-
 
 - CARRIED: npm publish blocked on human npm auth (PUB-04 from prior milestones)
 - CARRIED: NIP number conflict with Scrolls PR#2281 (RES-01 from v0.12.0 era)
@@ -165,7 +210,10 @@ Surfaced by research (informational — each belongs to a specific phase plan):
 | 260421-u87 | Create cross-repo PRs in napplet/nubs from the 4 v0.29.0 drafts | 2026-04-21 | c28d8e4 | [260421-u87-create-cross-repo-prs-in-napplet-nubs-fr](./quick/260421-u87-create-cross-repo-prs-in-napplet-nubs-fr/) |
 | 260424-o1k | Implement default shell.supports() in shim so napplets can be tested without a shell | 2026-04-24 | 5ad9cdb | [260424-o1k-implement-default-shell-supports-in-shim](./quick/260424-o1k-implement-default-shell-supports-in-shim/) |
 
-
 Last session: 2026-04-21T20:46:00.000Z
 Stopped at: Completed 142-03-PLAN.md (Phase 142 TERMINAL-COMPLETE)
 Resume: Phase 142 TERMINAL-COMPLETE — all 13 VER-IDs (VER-01..13) verified PASS across 3 plans; `142-VERIFICATION.md` authored; STATE/PROJECT/REQUIREMENTS/ROADMAP flipped for milestone audit. Milestone v0.29.0 is READY-FOR-AUDIT. Next step: `/gsd:audit-milestone v0.29.0` (autonomous lifecycle), then `/gsd:complete-milestone v0.29.0`, then cleanup. Manual `feat/strict-model` → `main` merge follows audit clearance.
+
+## Operator Next Steps
+
+- Start the next milestone with /gsd-new-milestone

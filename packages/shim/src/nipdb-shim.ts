@@ -1,10 +1,5 @@
-// @napplet/shim -- NIP-DB window.nostrdb proxy
-// Proxies query, add, event, replaceable, count, supports, subscribe through postMessage
-// to the ShellBridge, which dispatches to WorkerRelayService (OPFS cache).
 
 import type { NostrEvent, NostrFilter } from '@napplet/core';
-
-// ─── Local envelope types (nostrdb is not a NUB domain) ──────────────────────
 
 interface NostrDbRequestMessage {
   type: 'nostrdb.request';
@@ -27,7 +22,19 @@ interface NostrDbEventPushMessage {
   content: string;
 }
 
-// ─── Module-level state ────────────────────────────────────────────────────────
+interface NostrDbApi {
+  query(filters: NostrFilter | NostrFilter[]): Promise<NostrEvent[]>;
+  add(event: NostrEvent): Promise<boolean>;
+  event(id: string): Promise<NostrEvent | undefined>;
+  replaceable(kind: number, author: string, identifier?: string): Promise<NostrEvent | undefined>;
+  count(filters: NostrFilter | NostrFilter[]): Promise<number>;
+  supports(): Promise<string[]>;
+  subscribe(filters: NostrFilter | NostrFilter[]): AsyncGenerator<NostrEvent>;
+}
+
+type NostrDbWindow = Window & typeof globalThis & {
+  nostrdb?: NostrDbApi;
+};
 
 /** Pending NIPDB requests: correlationId -> { resolve, reject } */
 const nipdbPending = new Map<string, {
@@ -44,8 +51,6 @@ const nipdbSubscribeHandlers = new Map<string, (event: NostrEvent) => void>();
  * Subscribe cancellers: subId -> function that unblocks the waiting generator.
  */
 const nipdbSubscribeCancellers = new Map<string, () => void>();
-
-// ─── Outbound helper ──────────────────────────────────────────────────────────
 
 function sendNipdbRequestRaw(
   method: string,
@@ -84,8 +89,6 @@ function sendNipdbRequest(
   });
 }
 
-// ─── Inbound response handler ─────────────────────────────────────────────────
-
 function handleNipdbResult(msg: NostrDbResultMessage): void {
   const pending = nipdbPending.get(msg.id);
   if (!pending) return;
@@ -112,8 +115,6 @@ function handleNipdbEventPush(msg: NostrDbEventPushMessage): void {
   }
 }
 
-// ─── NIP-DB spec interface ────────────────────────────────────────────────────
-
 const SUPPORTED_METHODS = ['query', 'add', 'event', 'replaceable', 'count', 'subscribe'] as const;
 
 function handleNipdbMessage(msgEvent: MessageEvent): void {
@@ -136,8 +137,7 @@ function handleNipdbMessage(msgEvent: MessageEvent): void {
 export function installNostrDb(): () => void {
   window.addEventListener('message', handleNipdbMessage);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (window as any).nostrdb = {
+  (window as NostrDbWindow).nostrdb = {
     async query(filters: NostrFilter | NostrFilter[]): Promise<NostrEvent[]> {
       const normalizedFilters = Array.isArray(filters) ? filters : [filters];
       const result = await sendNipdbRequest('query', JSON.stringify(normalizedFilters));
@@ -216,8 +216,7 @@ export function installNostrDb(): () => void {
 
   return () => {
     window.removeEventListener('message', handleNipdbMessage);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    delete (window as any).nostrdb;
+    delete (window as NostrDbWindow).nostrdb;
     nipdbPending.clear();
     nipdbSubscribeHandlers.clear();
   };

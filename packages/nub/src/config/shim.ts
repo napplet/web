@@ -1,9 +1,3 @@
-// @napplet/nub/config -- Config NUB shim (schema-driven per-napplet configuration)
-// Reads manifest-declared schema at install time, ref-counts local subscribers so
-// the wire-level config.subscribe/unsubscribe fire only on Set 0->1 / 1->0
-// transitions, correlates config.get + config.registerSchema via id, and fans out
-// config.values pushes (without id) to every local subscriber plus caches the
-// latest snapshot for late-subscribers.
 
 import type {
   NappletConfigSchema,
@@ -20,15 +14,22 @@ import type {
 } from './types.js';
 import type { Subscription } from '@napplet/core';
 
-// ─── Constants ─────────────────────────────────────────────────────────────
+type ConfigWindow = Window & typeof globalThis & {
+  napplet?: Record<string, unknown> & { config?: Record<string, unknown> };
+};
+
+function isMessageType<T extends { type: string }>(
+  msg: { type: string },
+  type: T['type'],
+): msg is T {
+  return msg.type === type;
+}
 
 /** Default timeout for correlated requests (30 seconds). */
 const REQUEST_TIMEOUT_MS = 30_000;
 
 /** Meta tag name carrying the manifest-declared JSON-escaped schema. */
 const SCHEMA_META_NAME = 'napplet-config-schema';
-
-// ─── State ─────────────────────────────────────────────────────────────────
 
 /** Currently-registered schema (from manifest meta tag or config.registerSchema). null until set. */
 let currentSchema: NappletConfigSchema | null = null;
@@ -58,8 +59,6 @@ const pendingRegistrations = new Map<string, {
 /** Double-install guard. */
 let installed = false;
 
-// ─── Shell message router ───────────────────────────────────────────────────
-
 /**
  * Handle config.* messages from the shell. Called by the central shim dispatcher.
  *
@@ -71,17 +70,14 @@ let installed = false;
  * @param msg  A parsed envelope object with at least a `type` string field
  */
 export function handleConfigMessage(msg: { type: string; [key: string]: unknown }): void {
-  const type = msg.type;
-  if (type === 'config.registerSchema.result') {
-    handleRegisterSchemaResult(msg as unknown as ConfigRegisterSchemaResultMessage);
-  } else if (type === 'config.values') {
-    handleValues(msg as unknown as ConfigValuesMessage);
-  } else if (type === 'config.schemaError') {
-    handleSchemaError(msg as unknown as ConfigSchemaErrorMessage);
+  if (isMessageType<ConfigRegisterSchemaResultMessage>(msg, 'config.registerSchema.result')) {
+    handleRegisterSchemaResult(msg);
+  } else if (isMessageType<ConfigValuesMessage>(msg, 'config.values')) {
+    handleValues(msg);
+  } else if (isMessageType<ConfigSchemaErrorMessage>(msg, 'config.schemaError')) {
+    handleSchemaError(msg);
   }
 }
-
-// ─── Message handlers (shell -> napplet) ────────────────────────────────────
 
 /**
  * Handle config.registerSchema.result: resolve or reject the pending registration
@@ -148,8 +144,6 @@ function handleSchemaError(msg: ConfigSchemaErrorMessage): void {
   }
 }
 
-// ─── Helpers ────────────────────────────────────────────────────────────────
-
 /**
  * Read the manifest-declared schema from <meta name="napplet-config-schema"> if present.
  * Silent on any failure (missing tag, missing content, invalid JSON) -- schema remains null.
@@ -166,8 +160,6 @@ function readManifestSchema(): NappletConfigSchema | null {
     return null;
   }
 }
-
-// ─── Public API (installed on window.napplet.config) ───────────────────────
 
 /**
  * Register a napplet configuration schema at runtime.
@@ -317,8 +309,6 @@ export function onSchemaError(
   };
 }
 
-// ─── Install / cleanup ──────────────────────────────────────────────────────
-
 /**
  * Install the config shim: read the manifest-declared schema (if any) from
  * `<meta name="napplet-config-schema">` and mount `window.napplet.config`.
@@ -340,8 +330,8 @@ export function installConfigShim(): () => void {
   //    `schema` accessor so authors reading window.napplet.config.schema at any
   //    point in time get the current cached value (updated by successful
   //    registerSchema responses).
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const napplet = (window as any).napplet ?? ((window as any).napplet = {});
+  const configWindow = window as ConfigWindow;
+  const napplet = configWindow.napplet ?? (configWindow.napplet = {});
   const api: Record<string, unknown> = {
     registerSchema,
     get,

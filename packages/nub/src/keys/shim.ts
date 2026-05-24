@@ -8,11 +8,8 @@ import type {
   KeysRegisterActionResultMessage,
   KeysBindingsMessage,
   KeysActionMessage,
-  KeyBinding,
 } from './types.js';
 import type { Subscription } from '@napplet/core';
-
-// ─── State ──────────────────────────────────────────────────────────────────
 
 /** Suppress list: key combo string -> actionId. Derived from keys.bindings pushes. */
 const suppressMap = new Map<string, string>();
@@ -30,11 +27,14 @@ const pendingRegistrations = new Map<string, {
 let installed = false;
 let activeCleanup: (() => void) | null = null;
 
-// ─── Reserved keys that MUST NOT be suppressed ────────────────────────────
-
 const RESERVED_KEYS = new Set(['Tab', 'Shift+Tab', 'Escape']);
 
-// ─── Helpers ────────────────────────────────────────────────────────────────
+function isMessageType<T extends { type: string }>(
+  msg: { type: string },
+  type: T['type'],
+): msg is T {
+  return msg.type === type;
+}
 
 /**
  * Returns true if the given event target is a text-entry input element.
@@ -79,12 +79,6 @@ function normalizeCombo(event: KeyboardEvent): string {
   return parts.join('+');
 }
 
-// ─── Message handlers (shell -> napplet) ────────────────────────────────────
-
-/**
- * Handle keys.bindings push from the shell.
- * Replaces the entire suppress map with the new binding list.
- */
 function handleBindings(msg: KeysBindingsMessage): void {
   suppressMap.clear();
   for (const binding of msg.bindings) {
@@ -123,8 +117,6 @@ function handleAction(msg: KeysActionMessage): void {
     cb();
   }
 }
-
-// ─── Keydown handler (smart forwarding) ─────────────────────────────────────
 
 /**
  * Capture-phase keydown handler implementing NUB-KEYS smart forwarding:
@@ -176,24 +168,18 @@ function handleKeydown(event: KeyboardEvent): void {
   window.parent.postMessage(msg, '*');
 }
 
-// ─── Shell message router ────────────────────────────────────────────────────
-
 /**
  * Handle keys.* messages from the shell via the central message listener.
  */
 export function handleKeysMessage(msg: { type: string; [key: string]: unknown }): void {
-  const type = msg.type;
-
-  if (type === 'keys.bindings') {
-    handleBindings(msg as unknown as KeysBindingsMessage);
-  } else if (type === 'keys.registerAction.result') {
-    handleRegisterResult(msg as unknown as KeysRegisterActionResultMessage);
-  } else if (type === 'keys.action') {
-    handleAction(msg as unknown as KeysActionMessage);
+  if (isMessageType<KeysBindingsMessage>(msg, 'keys.bindings')) {
+    handleBindings(msg);
+  } else if (isMessageType<KeysRegisterActionResultMessage>(msg, 'keys.registerAction.result')) {
+    handleRegisterResult(msg);
+  } else if (isMessageType<KeysActionMessage>(msg, 'keys.action')) {
+    handleAction(msg);
   }
 }
-
-// ─── Public API (installed on window.napplet.keys) ──────────────────────────
 
 /**
  * Register a named action with the shell.
@@ -256,8 +242,6 @@ export function onAction(actionId: string, callback: () => void): Subscription {
     },
   };
 }
-
-// ─── Install / cleanup ──────────────────────────────────────────────────────
 
 /**
  * Install the keys shim: capture-phase keydown listener for smart forwarding.

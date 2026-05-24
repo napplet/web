@@ -29,8 +29,6 @@
 
 import type { NappletMessage } from './envelope.js';
 
-// ─── Types ────────────────────────────────────────────────────────────────
-
 /**
  * Callback that a NUB module provides to handle messages in its domain.
  *
@@ -44,8 +42,6 @@ import type { NappletMessage } from './envelope.js';
  * ```
  */
 export type NubHandler = (message: NappletMessage) => void;
-
-// ─── Dispatch Instance ────────────────────────────────────────────────────
 
 /**
  * Shape returned by {@link createDispatch}. Contains the three dispatch
@@ -145,8 +141,6 @@ export function createDispatch(): NubDispatch {
 
   return { registerNub, dispatch, getRegisteredDomains };
 }
-
-// ─── Module-level Singleton ───────────────────────────────────────────────
 
 const _default = createDispatch();
 

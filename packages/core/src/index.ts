@@ -21,17 +21,11 @@
  * @packageDocumentation
  */
 
-// ─── Envelope Types ────────────────────────────────────────────────────────
-
 export type { NappletMessage, NubDomain, NamespacedCapability, ShellSupports, NappletGlobalShell } from './envelope.js';
 export { NUB_DOMAINS } from './envelope.js';
 
-// ─── Dispatch Infrastructure ───────────────────────────────────────────────
-
 export type { NubHandler, NubDispatch } from './dispatch.js';
 export { createDispatch, registerNub, dispatch, getRegisteredDomains } from './dispatch.js';
-
-// ─── Protocol Types ─────────────────────────────────────────────────────────
 
 export type {
   NostrEvent,
@@ -42,8 +36,6 @@ export type {
   Rumor,
   NappletGlobal,
 } from './types.js';
-
-// ─── Topic Constants ────────────────────────────────────────────────────────
 
 export { TOPICS } from './topics.js';
 export type { TopicKey, TopicValue } from './topics.js';

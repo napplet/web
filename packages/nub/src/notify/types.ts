@@ -12,12 +12,8 @@
 
 import type { NappletMessage } from '@napplet/core';
 
-// ─── Domain Constants ──────────────────────────────────────────────────────
-
 /** The NUB domain name for notify messages. */
 export const DOMAIN = 'notify' as const;
-
-// ─── Supporting Types ──────────────────────────────────────────────────────
 
 /**
  * Notification priority levels. The shell maps these to its own
@@ -79,8 +75,6 @@ export interface NotificationChannel {
  */
 export type NotifyControl = 'toasts' | 'badges' | 'actions' | 'channels' | 'system';
 
-// ─── Base Message Type ─────────────────────────────────────────────────────
-
 /**
  * Base interface for all notify NUB messages.
  * Concrete message types narrow the `type` field to specific literals.
@@ -89,8 +83,6 @@ export interface NotifyMessage extends NappletMessage {
   /** Message type in "notify.<action>" format. */
   type: `notify.${string}`;
 }
-
-// ─── Napplet -> Shell Request Messages ─────────────────────────────────────
 
 /**
  * Send a notification to the shell. Uses `id` for correlation
@@ -207,8 +199,6 @@ export interface NotifyPermissionRequestMessage extends NotifyMessage {
   /** Optional channel to request permission for. Omit for general permission. */
   channel?: string;
 }
-
-// ─── Shell -> Napplet Result/Push Messages ────────────────────────────────
 
 /**
  * Result of a notify.send request. Carries the same correlation `id`.
@@ -327,8 +317,6 @@ export interface NotifyControlsMessage extends NotifyMessage {
   /** Notification capabilities the shell supports. */
   controls: NotifyControl[];
 }
-
-// ─── Discriminated Unions ──────────────────────────────────────────────────
 
 /** Napplet -> Shell notify request messages. */
 export type NotifyRequestMessage =

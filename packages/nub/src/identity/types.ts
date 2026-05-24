@@ -13,12 +13,8 @@
 
 import type { NappletMessage, NostrEvent, Rumor } from '@napplet/core';
 
-// ─── Domain Constants ──────────────────────────────────────────────────────
-
 /** The NUB domain name for identity messages. */
 export const DOMAIN = 'identity' as const;
-
-// ─── Supporting Types ──────────────────────────────────────────────────────
 
 /**
  * User profile metadata from kind 0 events.
@@ -108,8 +104,6 @@ export interface RelayPermission {
   write: boolean;
 }
 
-// ─── Base Message Type ─────────────────────────────────────────────────────
-
 /**
  * Base interface for all identity NUB messages.
  * Concrete message types narrow the `type` field to specific literals.
@@ -118,8 +112,6 @@ export interface IdentityMessage extends NappletMessage {
   /** Message type in "identity.<action>" format. */
   type: `identity.${string}`;
 }
-
-// ─── Napplet -> Shell Request Messages ─────────────────────────────────────
 
 /**
  * Request the user's hex-encoded public key.
@@ -276,8 +268,6 @@ export interface IdentityGetBadgesMessage extends IdentityMessage {
   /** Correlation ID. */
   id: string;
 }
-
-// ─── Shell -> Napplet Result Messages ────────────────────────────────────
 
 /**
  * Result of identity.getPublicKey. Always succeeds.
@@ -475,8 +465,6 @@ export interface IdentityGetBadgesResultMessage extends IdentityMessage {
   error?: string;
 }
 
-// ─── Decrypt Surface (NIP-04 / NIP-44 / NIP-17 gift-wrap) ──────────────────
-
 /**
  * Error code vocabulary for identity.decrypt.error envelopes.
  *
@@ -587,8 +575,6 @@ export interface IdentityDecryptErrorMessage extends IdentityMessage {
   /** Optional debug message; MUST NOT leak napplet-internal details. */
   message?: string;
 }
-
-// ─── Discriminated Unions ──────────────────────────────────────────────────
 
 /** Napplet -> Shell identity request messages. */
 export type IdentityRequestMessage =

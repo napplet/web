@@ -8,8 +8,6 @@
 import type { Subscription } from '@napplet/core';
 import type { NotificationAction, NotificationPriority, NotifyControl } from './types.js';
 
-// ─── Notify API shape (structural, avoids circular dep on NappletGlobal) ───
-
 interface NotifyApi {
   send(notification: {
     title: string;
@@ -34,8 +32,6 @@ interface NotifyApi {
   onControls(callback: (controls: NotifyControl[]) => void): Subscription;
 }
 
-// ─── Runtime guard ──────────────────────────────────────────────────────────
-
 function requireNotify(): NotifyApi {
   const w = window as Window & { napplet?: { notify?: NotifyApi } };
   if (!w.napplet?.notify) {
@@ -43,8 +39,6 @@ function requireNotify(): NotifyApi {
   }
   return w.napplet.notify;
 }
-
-// ─── SDK functions ──────────────────────────────────────────────────────────
 
 /**
  * Send a notification to the shell.

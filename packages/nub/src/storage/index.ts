@@ -15,8 +15,6 @@
 
 export { DOMAIN } from './types.js';
 
-// ─── Type Exports ──────────────────────────────────────────────────────────
-
 export type {
   StorageMessage,
   StorageGetMessage,
@@ -32,15 +30,9 @@ export type {
   StorageNubMessage,
 } from './types.js';
 
-// ─── Shim Exports ─────────────────────────────────────────────────────────
-
 export { installStorageShim, nappletStorage } from './shim.js';
 
-// ─── SDK Exports ──────────────────────────────────────────────────────────
-
 export { storageGetItem, storageSetItem, storageRemoveItem, storageKeys } from './sdk.js';
-
-// ─── Domain Registration ───────────────────────────────────────────────────
 
 import { registerNub } from '@napplet/core';
 import { DOMAIN } from './types.js';

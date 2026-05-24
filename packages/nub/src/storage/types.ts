@@ -12,12 +12,8 @@
 
 import type { NappletMessage } from '@napplet/core';
 
-// ─── Domain Constants ──────────────────────────────────────────────────────
-
 /** The NUB domain name for storage messages. */
 export const DOMAIN = 'storage' as const;
-
-// ─── Base Message Type ─────────────────────────────────────────────────────
 
 /**
  * Base interface for all storage NUB messages.
@@ -27,8 +23,6 @@ export interface StorageMessage extends NappletMessage {
   /** Message type in "storage.<action>" format. */
   type: `storage.${string}`;
 }
-
-// ─── Napplet -> Shell Request Messages ─────────────────────────────────────
 
 /**
  * Retrieve a stored value by key.
@@ -93,8 +87,6 @@ export interface StorageKeysMessage extends StorageMessage {
   id: string;
 }
 
-// ─── Shell -> Napplet Result Messages ──────────────────────────────────────
-
 /**
  * Result of a storage.get request.
  */
@@ -142,8 +134,6 @@ export interface StorageKeysResultMessage extends StorageMessage {
   /** Error message if request failed. */
   error?: string;
 }
-
-// ─── Discriminated Unions ──────────────────────────────────────────────────
 
 /** Napplet -> Shell storage request messages. */
 export type StorageRequestMessage =

@@ -1,6 +1,6 @@
 {
   "name": "@napplet/vite-plugin",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "license": "MIT",
   "exports": "./src/index.ts",
   "imports": {
@@ -9,7 +9,14 @@
     "vite": "npm:vite@^6.3.0"
   },
   "publish": {
-    "include": ["src/**/*.ts", "README.md", "jsr.json"],
-    "exclude": ["src/**/*.test.ts", "src/**/*.spec.ts"]
+    "include": [
+      "src/**/*.ts",
+      "README.md",
+      "jsr.json"
+    ],
+    "exclude": [
+      "src/**/*.test.ts",
+      "src/**/*.spec.ts"
+    ]
   }
 }

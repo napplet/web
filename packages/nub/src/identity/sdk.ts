@@ -8,8 +8,6 @@
 import type { NappletGlobal, NostrEvent, Rumor } from '@napplet/core';
 import type { ProfileData, ZapReceipt, Badge, RelayPermission } from './types.js';
 
-// ─── Runtime guard ──────────────────────────────────────────────────────────
-
 function requireIdentity(): NappletGlobal['identity'] {
   const w = window as Window & { napplet?: NappletGlobal };
   if (!w.napplet?.identity) {
@@ -17,8 +15,6 @@ function requireIdentity(): NappletGlobal['identity'] {
   }
   return w.napplet.identity;
 }
-
-// ─── SDK functions ──────────────────────────────────────────────────────────
 
 /**
  * Get the user's hex-encoded public key.

@@ -19,12 +19,8 @@ import type {
 } from './types.js';
 import type { Subscription } from '@napplet/core';
 
-// ─── Constants ─────────────────────────────────────────────────────────────
-
 /** Default timeout for correlated requests (30 seconds). */
 const REQUEST_TIMEOUT_MS = 30_000;
-
-// ─── State ──────────────────────────────────────────────────────────────────
 
 /** Pending send requests: correlation id -> { resolve, reject }. */
 const pendingSends = new Map<string, {
@@ -53,7 +49,12 @@ const controlsHandlers = new Set<(controls: NotifyControl[]) => void>();
 /** Guard against double-install. */
 let installed = false;
 
-// ─── Message handlers (shell -> napplet) ────────────────────────────────────
+function isMessageType<T extends { type: string }>(
+  msg: { type: string },
+  type: T['type'],
+): msg is T {
+  return msg.type === type;
+}
 
 /**
  * Handle notify.send.result from the shell.
@@ -128,30 +129,24 @@ function handleControls(msg: NotifyControlsMessage): void {
   }
 }
 
-// ─── Shell message router ────────────────────────────────────────────────────
-
 /**
  * Handle notify.* messages from the shell via the central message listener.
  */
 export function handleNotifyMessage(msg: { type: string; [key: string]: unknown }): void {
-  const type = msg.type;
-
-  if (type === 'notify.send.result') {
-    handleSendResult(msg as unknown as NotifySendResultMessage);
-  } else if (type === 'notify.permission.result') {
-    handlePermissionResult(msg as unknown as NotifyPermissionResultMessage);
-  } else if (type === 'notify.action') {
-    handleAction(msg as unknown as NotifyActionMessage);
-  } else if (type === 'notify.clicked') {
-    handleClicked(msg as unknown as NotifyClickedMessage);
-  } else if (type === 'notify.dismissed') {
-    handleDismissed(msg as unknown as NotifyDismissedMessage);
-  } else if (type === 'notify.controls') {
-    handleControls(msg as unknown as NotifyControlsMessage);
+  if (isMessageType<NotifySendResultMessage>(msg, 'notify.send.result')) {
+    handleSendResult(msg);
+  } else if (isMessageType<NotifyPermissionResultMessage>(msg, 'notify.permission.result')) {
+    handlePermissionResult(msg);
+  } else if (isMessageType<NotifyActionMessage>(msg, 'notify.action')) {
+    handleAction(msg);
+  } else if (isMessageType<NotifyClickedMessage>(msg, 'notify.clicked')) {
+    handleClicked(msg);
+  } else if (isMessageType<NotifyDismissedMessage>(msg, 'notify.dismissed')) {
+    handleDismissed(msg);
+  } else if (isMessageType<NotifyControlsMessage>(msg, 'notify.controls')) {
+    handleControls(msg);
   }
 }
-
-// ─── Public API (installed on window.napplet.notify) ─────────────────────────
 
 /**
  * Send a notification to the shell.
@@ -337,8 +332,6 @@ export function onControls(
     },
   };
 }
-
-// ─── Install / cleanup ──────────────────────────────────────────────────────
 
 /**
  * Install the notify shim. Currently a no-op placeholder --
