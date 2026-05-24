@@ -4,6 +4,8 @@
 
 **Phases completed:** 5 phases, 5 plans, 0 tasks
 
+**Known deferred items at close:** 23 historical open artifacts acknowledged (see STATE.md Deferred Items)
+
 **Key accomplishments:**
 
 - Upgraded the vulnerable tooling dependency graph while preserving the Vite 6 compatibility path.

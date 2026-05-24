@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v0.31.0
 milestone_name: Cleanup Quality Gate
 status: Awaiting next milestone
-stopped_at: Completed 138-02-PLAN.md (parallel wave 1)
+stopped_at: Milestone v0.31.0 archived
 last_updated: "2026-05-24T11:55:14.509Z"
 last_activity: 2026-05-24 — Milestone v0.31.0 completed and archived
 progress:
@@ -18,11 +18,11 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-05-24 for v0.31.0 cleanup milestone)
+See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 
 **Core value:** Prove that sandboxed Nostr apps can securely delegate to a host shell over a simple, standardized protocol — and ship the spec + SDK so others can build on it.
 
-**Current focus:** v0.31.0 milestone audit
+**Current focus:** Planning next milestone
 
 > **Provenance note:** The "Accumulated Context" section below preserves bullet records from BOTH branches' STATE.md histories. Records tagged "v0.29.0" from main's lineage refer to the milestone NOW renumbered as v0.30.0 (Class-Gated Decrypt — Phases 135-138). Records tagged "v0.29.0" from feat/strict-model refer to NUB-CONNECT (Phases 135-142). Phase number alone is not a unique identifier across the two; cross-reference the topic (decrypt/identity/NIP-07 → v0.30.0; connect/class/CSP-authority → v0.29.0).
 
@@ -44,6 +44,7 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 - [Phase 145]: Type-safety boundary repair complete. Production `as any` and `as unknown as` scanner categories are zero in `/tmp/napplet-145-aislop.json`; NUB boundary smoke tests added; `pnpm -r type-check`, `pnpm -r build`, and `pnpm -r test:unit` all exit 0.
 - [Phase 146]: Complexity hotspot split complete. `normalizeConnectOrigin`, vite-plugin schema walking, and vite-plugin hook bodies were split into private helpers; `/tmp/napplet-146-aislop.json` has no function-length, duplicate-code, lint, security, or AI-slop diagnostics. Four remaining file-size warnings are explicit deferrals for public or package-entry surfaces: `packages/core/src/types.ts`, `packages/nub/src/identity/types.ts`, `packages/sdk/src/index.ts`, and `packages/vite-plugin/src/index.ts`. `pnpm -r type-check`, `pnpm -r build`, `pnpm -r test:unit`, and `git diff --check` all exit 0.
 - [Phase 147]: Final quality gate complete. `/tmp/napplet-147-aislop.json` reports score 89 / Healthy, 0 errors, 0 fixable issues, and engine counts format 0, lint 0, code-quality 4, ai-slop 0, security 0. The four code-quality warnings are the Phase 146 file-size deferrals only. `pnpm -r type-check`, `pnpm -r build`, `pnpm -r test:unit`, and `git diff --check` all exit 0.
+- [Milestone v0.31.0]: Archive complete. Roadmap, requirements, and audit are archived under `.planning/milestones/`; active `.planning/REQUIREMENTS.md` removed for the next milestone cycle. Known residual debt is limited to four documented public-surface file-size warnings.
 - PRINCIPLE: NUBs define protocol surface + potentialities; implementation UX is a shell concern
 - PRINCIPLE: NUB packages own ALL logic (types, shim installers, SDK helpers); central shim/sdk are thin hosts
 - PRINCIPLE: `@napplet/*` is private; never listed as implementations in public specs/docs
@@ -126,6 +127,36 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 - CARRIED: npm publish blocked on human npm auth (PUB-04)
 - INFO: Local `specs/NIP-5D.md` may be stale vs napplet/nubs master post-PR-15 (`window.nostr` removal merged 2026-04-21). Phase 138 NIP5D-01 syncs before layering v0.29.0 amendment
 - INFO: `world: 'MAIN'` extension-API bypass acknowledged as residual — no page-side blocking mechanism exists. NUB-CLASS-1 `connect-src 'none'` is the structural mitigation. Phase 136 artifact MUST document this honestly; Phase 137 amendment + Phase 138 NIP-5D amendment MUST NOT claim a fix
+
+## Deferred Items
+
+Items acknowledged and deferred at v0.31.0 milestone close on 2026-05-24:
+
+| Category | Item | Status |
+|----------|------|--------|
+| debug_session | auth-handshake-regression | awaiting_human_verify |
+| debug_session | demo-v060-correctness-issues | diagnosed |
+| debug_session | knowledge-base | unknown |
+| debug_session | leader-line-import-error | unknown |
+| debug_session | phase-32-amber-red-classification | unknown |
+| debug_session | service-button-inspector-issue | investigating |
+| debug_session | socket-gravity-approach-angles | awaiting_human_verify |
+| quick_task | 260401-obm-fix-double-lines-and-increase-node-spaci | missing |
+| quick_task | 260401-p5s-make-topology-lines-symmetrical | missing |
+| quick_task | 260401-w49-fix-kinds-inter-pane-regression-and-napp | missing |
+| quick_task | 260402-krp-replace-inter-pane-with-ipc-in-demo-ui-l | missing |
+| quick_task | 260403-fyj-close-v0-9-0-audit-gaps-adapthooks-persi | missing |
+| quick_task | 260403-lck-fix-phase-51-split-border-node-implement | missing |
+| quick_task | 260403-mc5-update-planning-artifacts-for-out-of-wor | missing |
+| quick_task | 260407-0i8-remove-stale-root-files-from-napplet | missing |
+| quick_task | 260407-o9g-update-all-documentation-for-current-v0- | missing |
+| quick_task | 260409-gkz-reformat-napplet-nubs-pr-9-body-to-match | missing |
+| quick_task | 260419-i6c-republish-napplet-packages-as-0-2-1-with | missing |
+| quick_task | 260421-u87-create-cross-repo-prs-in-napplet-nubs-fr | missing |
+| quick_task | 260424-o1k-implement-default-shell-supports-in-shim | missing |
+| seed | SEED-001-deterministic-napplet-keypair | dormant |
+| seed | SEED-002-receive-side-decrypt-surface | dormant |
+| seed | SEED-003-nip5d-error-envelope | dormant |
 
 ## Session Continuity
 

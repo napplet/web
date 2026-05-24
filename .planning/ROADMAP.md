@@ -32,7 +32,7 @@
 - ✅ **v0.28.0 Browser-Enforced Resource Isolation** — Phases 125-134 (shipped 2026-04-23) — [Archive](milestones/v0.28.0-ROADMAP.md)
 - ✅ **v0.29.0 NUB-CONNECT + Shell as CSP Authority** — Phases 135-142 (shipped 2026-04-21) — [Archive](milestones/v0.29.0-ROADMAP.md)
 - ✅ **v0.30.0 Class-Gated Decrypt Surface** — Phases 135-138 (shipped 2026-04-23) — [Archive](milestones/v0.30.0-ROADMAP.md)
-- 🚧 **v0.31.0 Cleanup Quality Gate** — Phases 143-147 (in progress)
+- ✅ **v0.31.0 Cleanup Quality Gate** — Phases 143-147 (shipped 2026-05-24) — [Archive](milestones/v0.31.0-ROADMAP.md)
 
 ## Phases
 
@@ -42,7 +42,10 @@
 
 Note: Phase 45 (IPC terminology cleanup) was completed as a quick task during v0.8.0 and is not part of the v0.9.0 roadmap. Phases 57–60 were deprecated after v0.11.0 and archived under `milestones/v0.12.0-phases/deprecated/`.
 
-### 🚧 v0.31.0 Cleanup Quality Gate (In Progress)
+<details>
+<summary>✅ v0.31.0 Cleanup Quality Gate (Phases 143-147) — SHIPPED 2026-05-24</summary>
+
+### ✅ v0.31.0 Cleanup Quality Gate
 
 **Milestone Goal:** Turn the current `aislop` security, lint, type-safety, and code-quality findings into a green, behavior-preserving quality gate. Security dependency upgrades land first; low-risk fixable cleanup follows; type-safety and structural work are protected by regression tests and existing workspace verification.
 
@@ -124,6 +127,8 @@ Note: Phase 45 (IPC terminology cleanup) was completed as a quick task during v0
   4. The final phase summary lists changed files, simplifications made, deleted code/comments, remaining risks, and verification evidence.
 
 **Plans:** 1/1 plans
+
+</details>
 
 <details>
 <summary>✅ v0.30.0 Class-Gated Decrypt Surface (Phases 135-138) — SHIPPED 2026-04-23</summary>

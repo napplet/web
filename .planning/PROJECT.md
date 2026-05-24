@@ -1,5 +1,9 @@
 # Napplet Protocol SDK
 
+## Shipped: v0.31.0 Cleanup Quality Gate
+
+Closed the current quality-gate cleanup milestone without protocol or runtime behavior changes. Vulnerable tooling dependencies now resolve to patched versions (`vite 6.4.2`, `postcss 8.5.10`, `turbo 2.9.14`); fixable lint and AI-slop scanner categories are cleared; production unsafe type assertions and double assertions are removed or replaced with typed boundaries; NUB boundary smoke tests cover malformed/unknown handler inputs; `normalizeConnectOrigin` and vite-plugin long functions are split into private helpers. Final scanner result: score 89 / Healthy, 0 errors, 0 fixable issues, format 0, lint 0, ai-slop 0, security 0. Remaining debt is limited to four documented public-surface `complexity/file-too-large` deferrals in `packages/core/src/types.ts`, `packages/nub/src/identity/types.ts`, `packages/sdk/src/index.ts`, and `packages/vite-plugin/src/index.ts`. 5 phases shipped 2026-05-24. See [archive](milestones/v0.31.0-ROADMAP.md).
+
 ## Shipped: v0.29.0 NUB-CONNECT + Shell as CSP Authority
 
 Shifted strict CSP emission from the vite-plugin (build time) to the host shell (runtime) for every napplet, and introduced two new NUBs: NUB-CLASS (shell-authoritative abstract security posture via `class.assigned` wire, `window.napplet.class: number | undefined`, sub-track of `NUB-CLASS-$N` documents) and NUB-CONNECT (user-gated direct network access declared via `["connect", "<origin>"]` manifest tags, no postMessage wire protocol — grants flow through the runtime CSP the shell serves in the HTTP response plus a `<meta name="napplet-connect-granted">` tag read synchronously at shim install time, `window.napplet.connect.{granted, origins}`). Shared `normalizeConnectOrigin()` validator (21 rule violations enumerated, 28/28 smoke tests pass) is single source of truth for build-side and shell-side origin validation; canonical `connect:origins` aggregateHash fold (lowercase → ASCII-sort → LF-join → UTF-8 → SHA-256 → lowercase hex) is byte-locked to a 3-origin conformance fixture with independently verified digest `cc7c1b1903fb23ecb909d2427e1dccd7d398a5c63dd65160edb0bb8b231aa742`. `@napplet/vite-plugin` strict-CSP production path removed (accept-but-warn `strictCsp` shim retained for one release cycle; hard-removal tracked as REMOVE-STRICTCSP for a future milestone (originally scheduled v0.30.0, but v0.30.0 shipped Class-Gated Decrypt instead — see milestones/v0.30.0-ROADMAP.md)); `connect?: string[]` option added with manifest tag emission + aggregateHash fold + fail-loud inline-script diagnostic + dev-mode-only `napplet-connect-requires` meta; module-load self-check binds the plugin's fold to the spec conformance fixture at ESM-init. `@napplet/shim` + `@napplet/sdk` mount both NUB surfaces with graceful-degradation defaults (`connect` → `{granted: false, origins: []}`, `class` → `undefined`) and the central dispatcher routes `class.*` envelopes. 4 draft specs authored in `napplet/nubs` public repo (NUB-CONNECT, NUB-CLASS, NUB-CLASS-1, NUB-CLASS-2); NIP-5D amended to become NUB-neutral transport-only; `specs/SHELL-CONNECT-POLICY.md` + `specs/SHELL-CLASS-POLICY.md` shell-deployer checklists authored. Acceptance gates (13 VER-IDs total): `pnpm -r build` + `pnpm -r type-check` green across 14 packages; tree-shake harness extended with connect + class types-only consumer cases (zero forbidden symbols, within 500 B budget); 4 in-repo vitest suites (connect+class shim, aggregateHash conformance fixture, cross-NUB invariant table-driven across 7 SHELL-CLASS-POLICY scenarios); 3 documented Playwright fixtures exportable to downstream shell repo (approved-grant positive path, denied-grant negative path, residual-meta-CSP refusal contrast); cross-repo zero-grep clean across 4 drafts; changeset authored; downstream-shell tracking doc-check passed. Demo napplets delegated to downstream shell repo (Option B carried forward from v0.28.0). 8 phases, 19 plans shipped 2026-04-21. See [archive](milestones/v0.29.0-ROADMAP.md).
@@ -28,14 +32,11 @@ A portable SDK for the napplet protocol — sandboxed Nostr mini-apps that run i
 
 Prove that sandboxed Nostr apps can securely delegate to a host shell over a simple, standardized protocol — and ship the spec + SDK so others can build on it.
 
-## Current Milestone: v0.31.0 Cleanup Quality Gate
+## Current State
 
-**Goal:** Turn the current `aislop` security, lint, type-safety, and code-quality findings into a green, behavior-preserving quality gate.
+v0.31.0 is shipped and archived. The active workspace is ready for the next milestone cycle.
 
-**Target features:**
-- Upgrade vulnerable tooling dependencies (`vite`, transitive `postcss`, `turbo`) without changing package runtime behavior.
-- Remove fixable lint and AI-slop findings: duplicate imports, unused imports, decorative/trivial comments, leftover `console.log` diagnostics, and duplicated shim logic.
-- Reduce unsafe type assertions and oversized hotspots with tests or existing behavior checks protecting public NUB, shim, SDK, and vite-plugin surfaces.
+**Current quality gate:** `aislop` reports 0 security errors, 0 format issues, 0 lint issues, 0 AI-slop issues, and 4 reviewed file-size deferrals.
 
 ## Shipped: v0.25.0 Config NUB
 
@@ -425,7 +426,7 @@ The demo is now an architecture-accurate teaching and testing surface. 7 phases,
 | Filename citation discipline (NUB-CLASS §Citation) | NUB-CLASS document renames / retirements would break "Class 1" phrase references; filename citations are stable | ✓ Good — `NUB-CLASS-1.md` cited 7× in NUB-IDENTITY amendment; zero "Class 1" primary references |
 | `Rumor = UnsignedEvent & { id: string }` (no `sig` field) | nostr-tools canonical shape; forbidding `sig` at type level prevents accidental signed-event handling; `sender` field shell-authenticated separately | ✓ Good — type-level guard against attacker-controlled `rumor.pubkey` confusion |
 | GATE-04 shim-side short-circuit deferred | `NappletGlobal.class` slot does not exist yet (NUB-CLASS is PR #16 on napplet/nubs, draft); "MAY short-circuit when window.napplet.class !== 1" is forward-looking spec prose | ✓ Good — shell enforcement authoritative; shim adds observability when `.class` slot lands |
-| v0.31.0 cleanup is behavior-preserving | Scanner remediation should improve security and maintainability without changing the NUB protocol or shell trust boundary | — Pending |
+| v0.31.0 cleanup is behavior-preserving | Scanner remediation improved security and maintainability without changing the NUB protocol or shell trust boundary | ✓ Good — final scanner/build/type/test gate passed; only public-surface file-size deferrals remain |
 
 ## Evolution
 
@@ -458,4 +459,4 @@ Likely next candidates (ordered by current signal strength):
 - Automated e2e tests for REGISTER/IDENTITY handshake step
 
 ---
-*Last updated: 2026-05-24 — started v0.31.0 Cleanup Quality Gate from current `aislop` security and quality findings.*
+*Last updated: 2026-05-24 — archived v0.31.0 Cleanup Quality Gate.*
