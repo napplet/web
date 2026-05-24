@@ -9,10 +9,10 @@ Requirements for v0.31.0. Each maps to roadmap phases after roadmapping.
 
 ### Security and Dependencies
 
-- [ ] **SEC-01**: Maintainer can upgrade the root dependency graph so `vite` resolves to `6.4.2` or later without forcing a major Vite migration unless implementation evidence proves it is required.
-- [ ] **SEC-02**: Maintainer can upgrade the dependency graph so `postcss` resolves to `8.5.10` or later and `turbo` resolves to `2.9.14` or later.
-- [ ] **SEC-03**: Maintainer can run the security quality gate and see no remaining vulnerable-dependency findings for `vite`, `postcss`, or `turbo`.
-- [ ] **SEC-04**: Maintainer can run the workspace build, type-check, and unit-test commands after dependency upgrades with no regressions.
+- [x] **SEC-01**: Maintainer can upgrade the root dependency graph so `vite` resolves to `6.4.2` or later without forcing a major Vite migration unless implementation evidence proves it is required.
+- [x] **SEC-02**: Maintainer can upgrade the dependency graph so `postcss` resolves to `8.5.10` or later and `turbo` resolves to `2.9.14` or later.
+- [x] **SEC-03**: Maintainer can run the security quality gate and see no remaining vulnerable-dependency findings for `vite`, `postcss`, or `turbo`.
+- [x] **SEC-04**: Maintainer can run the workspace build, type-check, and unit-test commands after dependency upgrades with no regressions.
 
 ### Lint and Fixable Cleanup
 
@@ -73,10 +73,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SEC-01 | Phase 143 | Pending |
-| SEC-02 | Phase 143 | Pending |
-| SEC-03 | Phase 143 | Pending |
-| SEC-04 | Phase 143 | Pending |
+| SEC-01 | Phase 143 | Complete |
+| SEC-02 | Phase 143 | Complete |
+| SEC-03 | Phase 143 | Complete |
+| SEC-04 | Phase 143 | Complete |
 | LINT-01 | Phase 144 | Pending |
 | LINT-02 | Phase 144 | Pending |
 | LINT-03 | Phase 144 | Pending |
@@ -104,4 +104,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-05-24*
-*Last updated: 2026-05-24 after roadmap traceability mapping*
+*Last updated: 2026-05-24 after Phase 143 verification*

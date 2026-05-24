@@ -46,7 +46,7 @@ Note: Phase 45 (IPC terminology cleanup) was completed as a quick task during v0
 
 **Milestone Goal:** Turn the current `aislop` security, lint, type-safety, and code-quality findings into a green, behavior-preserving quality gate. Security dependency upgrades land first; low-risk fixable cleanup follows; type-safety and structural work are protected by regression tests and existing workspace verification.
 
-- [ ] **Phase 143: Dependency Security Upgrade** — Upgrade the root dependency graph so `vite`, transitive `postcss`, and `turbo` resolve to patched versions; prove build, type-check, tests, and the security scanner still pass. Requirements: SEC-01, SEC-02, SEC-03, SEC-04.
+- [x] **Phase 143: Dependency Security Upgrade** — Upgrade the root dependency graph so `vite`, transitive `postcss`, and `turbo` resolve to patched versions; prove build, type-check, tests, and the security scanner still pass. Requirements: SEC-01, SEC-02, SEC-03, SEC-04. (completed 2026-05-24)
 - [ ] **Phase 144: Fixable Lint and Slop Cleanup** — Remove duplicate imports, unused imports, leftover console diagnostics, duplicated shim logic, decorative narrative comments, and trivial comments without changing public behavior. Requirements: LINT-01, LINT-02, LINT-03, LINT-04, SLOP-01, SLOP-02, SLOP-03.
 - [ ] **Phase 145: Type Safety Boundary Repair** — Replace production `as any` and double assertions with typed helpers, guards, or narrowed dispatcher boundaries, and add invalid-message/mount behavior coverage for touched shims. Requirements: TYPE-01, TYPE-02, TYPE-03, TYPE-04.
 - [ ] **Phase 146: Complexity Hotspot Split** — Split the reported long functions and reduce oversized-file warnings where low-risk module boundaries exist; preserve normalizer fixtures, vite-plugin behavior, and NIPDB shim behavior. Requirements: QUAL-01, QUAL-02, QUAL-03, QUAL-04.
@@ -66,7 +66,7 @@ Note: Phase 45 (IPC terminology cleanup) was completed as a quick task during v0
   3. The security scanner reports no vulnerable-dependency findings for `vite`, `postcss`, or `turbo`.
   4. `pnpm -r type-check`, `pnpm -r build`, and `pnpm -r test:unit` exit 0 after the dependency upgrade.
 
-**Plans:** 0/? plans
+**Plans:** 1/1 plans
 
 ### Phase 144: Fixable Lint and Slop Cleanup
 
