@@ -1,10 +1,17 @@
 {
   "name": "@napplet/core",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "license": "MIT",
   "exports": "./src/index.ts",
   "publish": {
-    "include": ["src/**/*.ts", "README.md", "jsr.json"],
-    "exclude": ["src/**/*.test.ts", "src/**/*.spec.ts"]
+    "include": [
+      "src/**/*.ts",
+      "README.md",
+      "jsr.json"
+    ],
+    "exclude": [
+      "src/**/*.test.ts",
+      "src/**/*.spec.ts"
+    ]
   }
 }

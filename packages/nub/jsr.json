@@ -1,6 +1,6 @@
 {
   "name": "@napplet/nub",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "license": "MIT",
   "exports": {
     "./class": "./src/class/index.ts",
@@ -54,7 +54,14 @@
     "@napplet/core": "jsr:@napplet/core@^0.3.0"
   },
   "publish": {
-    "include": ["src/**/*.ts", "README.md", "jsr.json"],
-    "exclude": ["src/**/*.test.ts", "src/**/*.spec.ts"]
+    "include": [
+      "src/**/*.ts",
+      "README.md",
+      "jsr.json"
+    ],
+    "exclude": [
+      "src/**/*.test.ts",
+      "src/**/*.spec.ts"
+    ]
   }
 }

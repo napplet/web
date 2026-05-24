@@ -1,5 +1,11 @@
 # @napplet/core
 
+## 0.3.1
+
+### Patch Changes
+
+- Ship the cleanup milestone's scanner, type-boundary, and dependency hygiene changes across the changed runtime packages.
+
 ## 0.3.0
 
 ### Minor Changes
