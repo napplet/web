@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v0.31.0
 milestone_name: Cleanup Quality Gate
-status: ready-for-audit
-stopped_at: Completed Phase 147 final quality gate
-last_updated: "2026-05-24T11:42:58.886Z"
-last_activity: 2026-05-24 -- Phase 147 verification complete
+status: Awaiting next milestone
+stopped_at: Completed 138-02-PLAN.md (parallel wave 1)
+last_updated: "2026-05-24T11:55:14.509Z"
+last_activity: 2026-05-24 — Milestone v0.31.0 completed and archived
 progress:
   total_phases: 5
   completed_phases: 5
@@ -28,10 +28,10 @@ See: .planning/PROJECT.md (updated 2026-05-24 for v0.31.0 cleanup milestone)
 
 ## Current Position
 
-Phase: v0.31.0 Cleanup Quality Gate - READY FOR AUDIT
-Plan: 5 of 5
-Status: All v0.31.0 phases complete; ready for milestone audit
-Last activity: 2026-05-24 -- Phase 147 verification complete
+Phase: Milestone v0.31.0 complete
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-05-24 — Milestone v0.31.0 completed and archived
 
 ## Accumulated Context
 
@@ -182,3 +182,7 @@ Surfaced by research (informational — each belongs to a specific phase plan):
 Last session: 2026-04-21T20:46:00.000Z
 Stopped at: Completed 142-03-PLAN.md (Phase 142 TERMINAL-COMPLETE)
 Resume: Phase 142 TERMINAL-COMPLETE — all 13 VER-IDs (VER-01..13) verified PASS across 3 plans; `142-VERIFICATION.md` authored; STATE/PROJECT/REQUIREMENTS/ROADMAP flipped for milestone audit. Milestone v0.29.0 is READY-FOR-AUDIT. Next step: `/gsd:audit-milestone v0.29.0` (autonomous lifecycle), then `/gsd:complete-milestone v0.29.0`, then cleanup. Manual `feat/strict-model` → `main` merge follows audit clearance.
+
+## Operator Next Steps
+
+- Start the next milestone with /gsd-new-milestone

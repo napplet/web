@@ -1,5 +1,19 @@
 # Milestones
 
+## v0.31.0 Cleanup Quality Gate (Shipped: 2026-05-24)
+
+**Phases completed:** 5 phases, 5 plans, 0 tasks
+
+**Key accomplishments:**
+
+- Upgraded the vulnerable tooling dependency graph while preserving the Vite 6 compatibility path.
+- Removed all Phase 144 scanner categories without behavior changes.
+- Removed all production double-assertion and unsafe-assertion scanner findings.
+- Removed the scanner's function-length warnings and documented the remaining file-size warnings as reviewed structural deferrals.
+- v0.31.0 cleanup has passed the final scanner and workspace verification gate.
+
+---
+
 ## v0.29.0 NUB-CONNECT + Shell as CSP Authority (Shipped: 2026-04-21)
 
 **Phases completed:** 8 phases, 19 plans, 47 tasks
