@@ -46,6 +46,115 @@ const DEFAULT_PORTS: Record<string, string> = {
   ws: '80',
 };
 
+interface OriginParts {
+  scheme: string;
+  rest: string;
+}
+
+function splitOriginScheme(origin: string): OriginParts {
+  const schemeIdx = origin.indexOf('://');
+  if (schemeIdx < 0) {
+    throw new Error(`${ERR_PREFIX} origin missing scheme separator '://': ${origin}`);
+  }
+
+  const scheme = origin.slice(0, schemeIdx);
+  if (scheme !== scheme.toLowerCase()) {
+    throw new Error(`${ERR_PREFIX} scheme must be lowercase: ${origin}`);
+  }
+  if (!ACCEPTED_SCHEMES.has(scheme)) {
+    throw new Error(`${ERR_PREFIX} scheme must be one of https|wss|http|ws: ${origin}`);
+  }
+
+  return { scheme, rest: origin.slice(schemeIdx + 3) };
+}
+
+function assertOriginRest(rest: string, origin: string): void {
+  if (rest.includes('/')) {
+    throw new Error(`${ERR_PREFIX} origin MUST NOT contain a path: ${origin}`);
+  }
+  if (rest.includes('?')) {
+    throw new Error(`${ERR_PREFIX} origin MUST NOT contain a query: ${origin}`);
+  }
+  if (rest.includes('#')) {
+    throw new Error(`${ERR_PREFIX} origin MUST NOT contain a fragment: ${origin}`);
+  }
+  if (rest.includes('*')) {
+    throw new Error(`${ERR_PREFIX} wildcard origins are not permitted: ${origin}`);
+  }
+  if (rest.startsWith('[')) {
+    throw new Error(`${ERR_PREFIX} IPv6 literal origins are out of v1 scope: ${origin}`);
+  }
+}
+
+function parseHost(scheme: string, rest: string, origin: string): string {
+  let host = rest;
+  const portColonIdx = rest.lastIndexOf(':');
+
+  if (portColonIdx >= 0) {
+    host = rest.slice(0, portColonIdx);
+    const port = rest.slice(portColonIdx + 1);
+    if (!/^[0-9]+$/.test(port)) {
+      throw new Error(`${ERR_PREFIX} port must be decimal digits: ${origin}`);
+    }
+    const portNum = Number(port);
+    if (portNum < 1 || portNum > 65535) {
+      throw new Error(`${ERR_PREFIX} port out of range 1-65535: ${origin}`);
+    }
+    if (DEFAULT_PORTS[scheme] === port) {
+      throw new Error(`${ERR_PREFIX} default port ${port} MUST be omitted for scheme ${scheme}: ${origin}`);
+    }
+  }
+
+  validateHostBase(host, origin);
+  return host;
+}
+
+function validateHostBase(host: string, origin: string): void {
+  if (host.includes(':')) {
+    throw new Error(`${ERR_PREFIX} IPv6 literal origins are out of v1 scope: ${origin}`);
+  }
+  if (host.length === 0) {
+    throw new Error(`${ERR_PREFIX} host is empty: ${origin}`);
+  }
+  if (host !== host.toLowerCase()) {
+    throw new Error(`${ERR_PREFIX} host MUST be lowercase: ${origin}`);
+  }
+  // eslint-disable-next-line no-control-regex
+  if (!/^[\x00-\x7F]+$/.test(host)) {
+    throw new Error(`${ERR_PREFIX} non-ASCII host MUST be Punycode-encoded (xn--...) before calling: ${origin}`);
+  }
+}
+
+function validateIpv4Host(host: string, origin: string): boolean {
+  if (!/^[0-9]+(\.[0-9]+){3}$/.test(host)) return false;
+
+  for (const oct of host.split('.')) {
+    if (oct.length > 1 && oct.startsWith('0')) {
+      throw new Error(`${ERR_PREFIX} IPv4 octet MUST NOT have leading zeros: ${origin}`);
+    }
+    const n = Number(oct);
+    if (!Number.isInteger(n) || n < 0 || n > 255) {
+      throw new Error(`${ERR_PREFIX} IPv4 octet out of range 0-255: ${origin}`);
+    }
+  }
+
+  return true;
+}
+
+function validateDnsHost(host: string, origin: string): void {
+  for (const label of host.split('.')) {
+    if (label.length === 0 || label.length > 63) {
+      throw new Error(`${ERR_PREFIX} invalid host label length: ${origin}`);
+    }
+    if (!/^[a-z0-9-]+$/.test(label)) {
+      throw new Error(`${ERR_PREFIX} host label contains invalid characters: ${origin}`);
+    }
+    if (label.startsWith('-') || label.endsWith('-')) {
+      throw new Error(`${ERR_PREFIX} host label MUST NOT start or end with hyphen: ${origin}`);
+    }
+  }
+}
+
 /**
  * Validate a connect origin against the NUB-CONNECT origin format rules and
  * return the byte-identical input on success. Throws on any rule violation
@@ -80,112 +189,11 @@ export function normalizeConnectOrigin(origin: string): string {
     throw new Error(`${ERR_PREFIX} origin must be a non-empty string`);
   }
 
-  // Early scheme split — must contain '://' exactly once in scheme boundary
-  const schemeIdx = origin.indexOf('://');
-  if (schemeIdx < 0) {
-    throw new Error(`${ERR_PREFIX} origin missing scheme separator '://': ${origin}`);
-  }
-  const scheme = origin.slice(0, schemeIdx);
-  const rest = origin.slice(schemeIdx + 3);
-
-  // Scheme: must be lowercase, in accepted set
-  if (scheme !== scheme.toLowerCase()) {
-    throw new Error(`${ERR_PREFIX} scheme must be lowercase: ${origin}`);
-  }
-  if (!ACCEPTED_SCHEMES.has(scheme)) {
-    throw new Error(`${ERR_PREFIX} scheme must be one of https|wss|http|ws: ${origin}`);
-  }
-
-  // Reject path / query / fragment — any '/', '?', '#' after scheme is a violation
-  if (rest.includes('/')) {
-    throw new Error(`${ERR_PREFIX} origin MUST NOT contain a path: ${origin}`);
-  }
-  if (rest.includes('?')) {
-    throw new Error(`${ERR_PREFIX} origin MUST NOT contain a query: ${origin}`);
-  }
-  if (rest.includes('#')) {
-    throw new Error(`${ERR_PREFIX} origin MUST NOT contain a fragment: ${origin}`);
-  }
-
-  // Reject wildcard
-  if (rest.includes('*')) {
-    throw new Error(`${ERR_PREFIX} wildcard origins are not permitted: ${origin}`);
-  }
-
-  // Host / port split. IPv6 brackets are rejected outright (v1 scope).
-  if (rest.startsWith('[')) {
-    throw new Error(`${ERR_PREFIX} IPv6 literal origins are out of v1 scope: ${origin}`);
-  }
-
-  // Split on last ':' to separate host from optional port.
-  let host = rest;
-  let port: string | null = null;
-  const portColonIdx = rest.lastIndexOf(':');
-  if (portColonIdx >= 0) {
-    host = rest.slice(0, portColonIdx);
-    port = rest.slice(portColonIdx + 1);
-    if (!/^[0-9]+$/.test(port)) {
-      throw new Error(`${ERR_PREFIX} port must be decimal digits: ${origin}`);
-    }
-    const portNum = Number(port);
-    if (portNum < 1 || portNum > 65535) {
-      throw new Error(`${ERR_PREFIX} port out of range 1-65535: ${origin}`);
-    }
-    if (DEFAULT_PORTS[scheme] === port) {
-      throw new Error(`${ERR_PREFIX} default port ${port} MUST be omitted for scheme ${scheme}: ${origin}`);
-    }
-  }
-
-  // After port strip, host must not contain ':' (would indicate IPv6 without brackets)
-  if (host.includes(':')) {
-    throw new Error(`${ERR_PREFIX} IPv6 literal origins are out of v1 scope: ${origin}`);
-  }
-
-  if (host.length === 0) {
-    throw new Error(`${ERR_PREFIX} host is empty: ${origin}`);
-  }
-
-  // Host must be all-lowercase
-  if (host !== host.toLowerCase()) {
-    throw new Error(`${ERR_PREFIX} host MUST be lowercase: ${origin}`);
-  }
-
-  // Host must be ASCII (non-ASCII = must be Punycode'd before call)
-  // eslint-disable-next-line no-control-regex
-  if (!/^[\x00-\x7F]+$/.test(host)) {
-    throw new Error(`${ERR_PREFIX} non-ASCII host MUST be Punycode-encoded (xn--...) before calling: ${origin}`);
-  }
-
-  // IPv4 literal acceptance: 4 dotted-decimal octets 0-255
-  const isIPv4 = /^[0-9]+(\.[0-9]+){3}$/.test(host);
-  if (isIPv4) {
-    const octets = host.split('.');
-    for (const oct of octets) {
-      if (oct.length > 1 && oct.startsWith('0')) {
-        throw new Error(`${ERR_PREFIX} IPv4 octet MUST NOT have leading zeros: ${origin}`);
-      }
-      const n = Number(oct);
-      if (!Number.isInteger(n) || n < 0 || n > 255) {
-        throw new Error(`${ERR_PREFIX} IPv4 octet out of range 0-255: ${origin}`);
-      }
-    }
-    return origin;
-  }
-
-  // DNS hostname validation: RFC 1123 labels separated by '.'
-  // Each label: 1-63 chars, alphanumeric + hyphen, no leading/trailing hyphen.
-  // Punycode labels (xn--...) pass this check since '-' is permitted mid-label.
-  const labels = host.split('.');
-  for (const label of labels) {
-    if (label.length === 0 || label.length > 63) {
-      throw new Error(`${ERR_PREFIX} invalid host label length: ${origin}`);
-    }
-    if (!/^[a-z0-9-]+$/.test(label)) {
-      throw new Error(`${ERR_PREFIX} host label contains invalid characters: ${origin}`);
-    }
-    if (label.startsWith('-') || label.endsWith('-')) {
-      throw new Error(`${ERR_PREFIX} host label MUST NOT start or end with hyphen: ${origin}`);
-    }
+  const { scheme, rest } = splitOriginScheme(origin);
+  assertOriginRest(rest, origin);
+  const host = parseHost(scheme, rest, origin);
+  if (!validateIpv4Host(host, origin)) {
+    validateDnsHost(host, origin);
   }
 
   return origin;

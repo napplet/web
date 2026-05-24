@@ -36,10 +36,10 @@ Requirements for v0.31.0. Each maps to roadmap phases after roadmapping.
 
 ### Complexity and Structure
 
-- [ ] **QUAL-01**: Maintainer can verify `normalizeConnectOrigin` is split into focused helpers while preserving the 28-case normalizer smoke coverage and canonical aggregate-hash fixture behavior.
-- [ ] **QUAL-02**: Maintainer can verify long functions reported in `packages/shim/src/nipdb-shim.ts` and `packages/vite-plugin/src/index.ts` are split or narrowed without changing public behavior.
-- [ ] **QUAL-03**: Maintainer can verify oversized type/barrel files are reduced where low-risk module boundaries already exist, and any remaining file-size warnings have exact deferral notes.
-- [ ] **QUAL-04**: Maintainer can run the code-quality gate and see no unreviewed warnings from the kickoff report's function-length, duplicate-code, or file-size findings.
+- [x] **QUAL-01**: Maintainer can verify `normalizeConnectOrigin` is split into focused helpers while preserving the 28-case normalizer smoke coverage and canonical aggregate-hash fixture behavior.
+- [x] **QUAL-02**: Maintainer can verify long functions reported in `packages/shim/src/nipdb-shim.ts` and `packages/vite-plugin/src/index.ts` are split or narrowed without changing public behavior.
+- [x] **QUAL-03**: Maintainer can verify oversized type/barrel files are reduced where low-risk module boundaries already exist, and any remaining file-size warnings have exact deferral notes.
+- [x] **QUAL-04**: Maintainer can run the code-quality gate and see no unreviewed warnings from the kickoff report's function-length, duplicate-code, or file-size findings.
 
 ### Final Gate
 
@@ -88,10 +88,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | TYPE-02 | Phase 145 | Complete |
 | TYPE-03 | Phase 145 | Complete |
 | TYPE-04 | Phase 145 | Complete |
-| QUAL-01 | Phase 146 | Pending |
-| QUAL-02 | Phase 146 | Pending |
-| QUAL-03 | Phase 146 | Pending |
-| QUAL-04 | Phase 146 | Pending |
+| QUAL-01 | Phase 146 | Complete |
+| QUAL-02 | Phase 146 | Complete |
+| QUAL-03 | Phase 146 | Complete |
+| QUAL-04 | Phase 146 | Complete |
 | GATE-01 | Phase 147 | Pending |
 | GATE-02 | Phase 147 | Pending |
 | GATE-03 | Phase 147 | Pending |
@@ -104,4 +104,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-05-24*
-*Last updated: 2026-05-24 after Phase 145 verification*
+*Last updated: 2026-05-24 after Phase 146 verification*
