@@ -73,12 +73,35 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
+| SEC-01 | Phase 143 | Pending |
+| SEC-02 | Phase 143 | Pending |
+| SEC-03 | Phase 143 | Pending |
+| SEC-04 | Phase 143 | Pending |
+| LINT-01 | Phase 144 | Pending |
+| LINT-02 | Phase 144 | Pending |
+| LINT-03 | Phase 144 | Pending |
+| LINT-04 | Phase 144 | Pending |
+| SLOP-01 | Phase 144 | Pending |
+| SLOP-02 | Phase 144 | Pending |
+| SLOP-03 | Phase 144 | Pending |
+| TYPE-01 | Phase 145 | Pending |
+| TYPE-02 | Phase 145 | Pending |
+| TYPE-03 | Phase 145 | Pending |
+| TYPE-04 | Phase 145 | Pending |
+| QUAL-01 | Phase 146 | Pending |
+| QUAL-02 | Phase 146 | Pending |
+| QUAL-03 | Phase 146 | Pending |
+| QUAL-04 | Phase 146 | Pending |
+| GATE-01 | Phase 147 | Pending |
+| GATE-02 | Phase 147 | Pending |
+| GATE-03 | Phase 147 | Pending |
+| GATE-04 | Phase 147 | Pending |
 
 **Coverage:**
 - v1 requirements: 23 total
-- Mapped to phases: 0
-- Unmapped: 23
+- Mapped to phases: 23
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-05-24*
-*Last updated: 2026-05-24 after milestone requirements definition*
+*Last updated: 2026-05-24 after roadmap traceability mapping*
