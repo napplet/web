@@ -28,6 +28,15 @@ A portable SDK for the napplet protocol — sandboxed Nostr mini-apps that run i
 
 Prove that sandboxed Nostr apps can securely delegate to a host shell over a simple, standardized protocol — and ship the spec + SDK so others can build on it.
 
+## Current Milestone: v0.31.0 Cleanup Quality Gate
+
+**Goal:** Turn the current `aislop` security, lint, type-safety, and code-quality findings into a green, behavior-preserving quality gate.
+
+**Target features:**
+- Upgrade vulnerable tooling dependencies (`vite`, transitive `postcss`, `turbo`) without changing package runtime behavior.
+- Remove fixable lint and AI-slop findings: duplicate imports, unused imports, decorative/trivial comments, leftover `console.log` diagnostics, and duplicated shim logic.
+- Reduce unsafe type assertions and oversized hotspots with tests or existing behavior checks protecting public NUB, shim, SDK, and vite-plugin surfaces.
+
 ## Shipped: v0.25.0 Config NUB
 
 NUB-CONFIG spec (napplet/nubs#13) for per-napplet declarative configuration. `@napplet/nub-config` (9th NUB, 13th package) with 8 wire message types (registerSchema, get, subscribe, unsubscribe, openSettings, values, registerSchema.result, schemaError). JSON Schema draft-07 Core Subset (`pattern` excluded per CVE-2025-69873). Shell is sole writer; subscribe-live value delivery with ref-counted subscribers. Vite-plugin extension: `configSchema` option with 3-path discovery (inline / config.schema.json / napplet.config.ts), `['config', ...]` manifest tag, `config:schema` synthetic aggregateHash prefix, `<meta name="napplet-config-schema">` injection, build-time structural guards. `x-napplet-secret`/`-section`/`-order` + `deprecationMessage` + `markdownDescription` as potentialities. FromSchema type inference via json-schema-to-ts optional peer. All docs updated. 6 phases shipped 2026-04-17. See [archive](milestones/v0.25.0-ROADMAP.md).
@@ -306,7 +315,9 @@ The demo is now an architecture-accurate teaching and testing surface. 7 phases,
 
 ### Active
 
-No active milestone. v0.29.0 NUB-CONNECT + Shell as CSP Authority shipped 2026-04-21; v0.30.0 Class-Gated Decrypt Surface (Shipped: 2026-04-23) ships once the version split is finalized. Run `/gsd:new-milestone` to define the next milestone.
+- [ ] v0.31.0 Cleanup Quality Gate: vulnerable dev-tool dependencies are upgraded to patched versions and the lockfile proves `vite >=6.4.2`, `postcss >=8.5.10`, and `turbo >=2.9.14`.
+- [ ] v0.31.0 Cleanup Quality Gate: fixable scanner warnings are removed without broad rewrites or new dependencies.
+- [ ] v0.31.0 Cleanup Quality Gate: unsafe casts and complexity hotspots are reduced behind regression coverage, with any intentionally deferred structural work documented.
 
 ### Future Requirements (deferred from v0.26.0)
 
@@ -331,6 +342,7 @@ No active milestone. v0.29.0 NUB-CONNECT + Shell as CSP Authority shipped 2026-0
 
 - **Current state**: v0.29.0 Class-Gated Decrypt Surface shipped 2026-04-23. 14 packages: 4 core SDK (core, shim, sdk, vite-plugin) + consolidated `@napplet/nub` with 38 subpath entry points + 9 deprecated `@napplet/nub-<domain>` re-export shims. Runtime API adds `window.napplet.identity.decrypt(event): Promise<{ rumor, sender }>` — shell-mediated NIP-04 / NIP-44 / NIP-17 auto-detect decrypt gated to napplets assigned `class: 1` per NUB-CLASS-1. Resource NUB (v0.28.0) remains canonical byte primitive. Local `specs/NIP-5D.md` carries both v0.28.0 Browser-Enforced Resource Isolation and v0.29.0 NIP-07 Extension Injection Residual Security Considerations subsections. 29 milestones shipped.
 - **Current state**: v0.29.0 shipped (NUB-CONNECT + Shell as CSP Authority). 14 packages: 4 core SDK (core, shim, sdk, vite-plugin) + consolidated `@napplet/nub` with 46 subpath entry points (adds `/connect/{index,types,shim,sdk}` + `/class/{index,types,shim,sdk}`) + 9 deprecated `@napplet/nub-<domain>` re-export shims (slated for removal in a future milestone). Runtime API surface adds `window.napplet.connect` (`{granted, origins}`) + `window.napplet.class` (`number | undefined`); `nub:connect`/`nub:class` + `connect:scheme:<http|ws>` capability identifiers; `perm:strict-csp` `@deprecated`; `strictCsp` vite-plugin option accept-but-warn for one release cycle (hard-removal tracked as REMOVE-STRICTCSP for a future milestone (originally scheduled v0.30.0, but v0.30.0 shipped Class-Gated Decrypt instead — see milestones/v0.30.0-ROADMAP.md)). Canonical `connect:origins` aggregateHash fold byte-locked to fixture `cc7c1b1903fb23ecb909d2427e1dccd7d398a5c63dd65160edb0bb8b231aa742`. 29 milestones shipped.
+- **Current quality gate**: The v0.31.0 cleanup milestone starts from the 2026-05-24 `aislop 0.9.3` report: 1 high security error (`vite`), 2 moderate dependency warnings (`postcss`, `turbo`), 14 lint warnings, 9 code-quality warnings, and 301 AI-slop warnings. The work is behavior-preserving cleanup, not a protocol expansion.
 - **Package architecture**: @napplet: core(0 deps) | nub(core) | shim(core+nub) | sdk(core+nub) | vite-plugin. Deprecated `@napplet/nub-<domain>` (×9) re-export `@napplet/nub/<domain>` and are kept for one release cycle. Shell runtime packages in a separate repo.
 - **Spec status**: NIP-5D v2 at 199 lines covers AUTH handshake, relay proxy, capability discovery, and NUB extension reference. Ready for PR submission to nostr-protocol/nips.
 - **NUB specs**: 6 interface specs drafted in `specs/nubs/` (RELAY, STORAGE, SIGNER, NOSTRDB, IPC, PIPES). Governance framework defined but not formalized (NUB-01/02/03 deferred).
@@ -413,6 +425,7 @@ No active milestone. v0.29.0 NUB-CONNECT + Shell as CSP Authority shipped 2026-0
 | Filename citation discipline (NUB-CLASS §Citation) | NUB-CLASS document renames / retirements would break "Class 1" phrase references; filename citations are stable | ✓ Good — `NUB-CLASS-1.md` cited 7× in NUB-IDENTITY amendment; zero "Class 1" primary references |
 | `Rumor = UnsignedEvent & { id: string }` (no `sig` field) | nostr-tools canonical shape; forbidding `sig` at type level prevents accidental signed-event handling; `sender` field shell-authenticated separately | ✓ Good — type-level guard against attacker-controlled `rumor.pubkey` confusion |
 | GATE-04 shim-side short-circuit deferred | `NappletGlobal.class` slot does not exist yet (NUB-CLASS is PR #16 on napplet/nubs, draft); "MAY short-circuit when window.napplet.class !== 1" is forward-looking spec prose | ✓ Good — shell enforcement authoritative; shim adds observability when `.class` slot lands |
+| v0.31.0 cleanup is behavior-preserving | Scanner remediation should improve security and maintainability without changing the NUB protocol or shell trust boundary | — Pending |
 
 ## Evolution
 
@@ -445,4 +458,4 @@ Likely next candidates (ordered by current signal strength):
 - Automated e2e tests for REGISTER/IDENTITY handshake step
 
 ---
-*Last updated: 2026-04-23 — merged v0.29.0 NUB-CONNECT + Shell as CSP Authority (feat/strict-model, 2026-04-21) with v0.30.0 Class-Gated Decrypt Surface placeholder (originally written as v0.29.0 on main, 2026-04-23).*
+*Last updated: 2026-05-24 — started v0.31.0 Cleanup Quality Gate from current `aislop` security and quality findings.*

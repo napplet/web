@@ -1,27 +1,36 @@
 ---
 gsd_state_version: 1.0
-milestone: <none>
-milestone_name: <none>
-status: Shipped — planning next milestone
-stopped_at: Merged feat/strict-model (v0.29.0 NUB-CONNECT, shipped 2026-04-21) into main; main's Class-Gated Decrypt Surface (originally self-labeled v0.29.0, shipped 2026-04-23) was renumbered to v0.30.0 during a post-merge version split.
-last_updated: "2026-04-24T15:18:41.118Z"
-last_activity: 2026-04-24 - Completed quick task 260424-o1k: Implement default shell.supports() in shim so napplets can be tested without a shell
+milestone: v0.31.0
+milestone_name: Cleanup Quality Gate
+status: planning
+last_updated: "2026-05-24T10:38:32.365Z"
+last_activity: 2026-05-24
 progress:
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-04-24 post-merge)
+See: .planning/PROJECT.md (updated 2026-05-24 for v0.31.0 cleanup milestone)
 
 **Core value:** Prove that sandboxed Nostr apps can securely delegate to a host shell over a simple, standardized protocol — and ship the spec + SDK so others can build on it.
 
-**Current focus:** None. Both v0.29.0 NUB-CONNECT (feat/strict-model, shipped 2026-04-21) and v0.30.0 Class-Gated Decrypt Surface (originally self-labeled v0.29.0 on main, shipped 2026-04-23, renumbered to v0.30.0 during the post-merge version split) are now in main. Run `/gsd:new-milestone` to define v0.31.0.
+**Current focus:** v0.31.0 Cleanup Quality Gate — remediate the current `aislop` security, lint, type-safety, and code-quality findings without changing the NUB protocol or shell trust boundary.
 
 > **Provenance note:** The "Accumulated Context" section below preserves bullet records from BOTH branches' STATE.md histories. Records tagged "v0.29.0" from main's lineage refer to the milestone NOW renumbered as v0.30.0 (Class-Gated Decrypt — Phases 135-138). Records tagged "v0.29.0" from feat/strict-model refer to NUB-CONNECT (Phases 135-142). Phase number alone is not a unique identifier across the two; cross-reference the topic (decrypt/identity/NIP-07 → v0.30.0; connect/class/CSP-authority → v0.29.0).
 
 ## Current Position
+
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-05-24 — Milestone v0.31.0 started
 
 ## Accumulated Context
 
@@ -117,6 +126,7 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 Last session: 2026-04-23T15:19:18.662Z
 Stopped at: Completed 138-02-PLAN.md (parallel wave 1)
 Resume: `/gsd:plan-phase 135` to plan first-party types + SDK plumbing. Phase 136 may be planned in parallel.
+
 - v0.26.0: Consolidated `@napplet/nub-*` packages into single `@napplet/nub` with 34 subpath exports; deprecated packages ship as 1-line re-export shims for one release cycle
 - v0.27.0: Runtime API surface uses IFC terminology (`window.napplet.ifc`, `@napplet/sdk` `ifc` export); hard break, no backward-compat alias
 - v0.28.0: Browser-enforced isolation via strict CSP; single `resource.bytes(url)` primitive with scheme-pluggable URL space; `data:` decoded inline; sidecar pre-resolution opt-in default OFF for privacy; shell-side SVG rasterization MUST; `perm:strict-csp` capability orthogonal to `nub:resource`; demos delegated to downstream shell repo (Option B)
@@ -147,12 +157,10 @@ Surfaced by research (informational — each belongs to a specific phase plan):
 7. NIP-5D amendment: one-line pointer vs richer section (design leans one-line) — Phase 135
 8. IPv6 literal / bare IPv4 acceptance in origin format — Phase 137/138
 
-
 - Orchestrator verify_phase_goal pass for Phase 136, Phase 137, Phase 138, Phase 139, Phase 142 (spawned by `/gsd:execute-phase`, not by this executor)
 - `/gsd:audit-milestone v0.29.0` — next lifecycle step; runs after Phase 142 TERMINAL-COMPLETE
 - `/gsd:complete-milestone v0.29.0` — follows audit; archives v0.29.0 ROADMAP + cleanup
 - Manual `feat/strict-model` → `main` branch merge after audit clears
-
 
 - CARRIED: npm publish blocked on human npm auth (PUB-04 from prior milestones)
 - CARRIED: NIP number conflict with Scrolls PR#2281 (RES-01 from v0.12.0 era)
@@ -164,7 +172,6 @@ Surfaced by research (informational — each belongs to a specific phase plan):
 |---|-------------|------|--------|-----------|
 | 260421-u87 | Create cross-repo PRs in napplet/nubs from the 4 v0.29.0 drafts | 2026-04-21 | c28d8e4 | [260421-u87-create-cross-repo-prs-in-napplet-nubs-fr](./quick/260421-u87-create-cross-repo-prs-in-napplet-nubs-fr/) |
 | 260424-o1k | Implement default shell.supports() in shim so napplets can be tested without a shell | 2026-04-24 | 5ad9cdb | [260424-o1k-implement-default-shell-supports-in-shim](./quick/260424-o1k-implement-default-shell-supports-in-shim/) |
-
 
 Last session: 2026-04-21T20:46:00.000Z
 Stopped at: Completed 142-03-PLAN.md (Phase 142 TERMINAL-COMPLETE)
