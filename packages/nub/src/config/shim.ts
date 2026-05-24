@@ -14,6 +14,17 @@ import type {
 } from './types.js';
 import type { Subscription } from '@napplet/core';
 
+type ConfigWindow = Window & typeof globalThis & {
+  napplet?: Record<string, unknown> & { config?: Record<string, unknown> };
+};
+
+function isMessageType<T extends { type: string }>(
+  msg: { type: string },
+  type: T['type'],
+): msg is T {
+  return msg.type === type;
+}
+
 /** Default timeout for correlated requests (30 seconds). */
 const REQUEST_TIMEOUT_MS = 30_000;
 
@@ -59,13 +70,12 @@ let installed = false;
  * @param msg  A parsed envelope object with at least a `type` string field
  */
 export function handleConfigMessage(msg: { type: string; [key: string]: unknown }): void {
-  const type = msg.type;
-  if (type === 'config.registerSchema.result') {
-    handleRegisterSchemaResult(msg as unknown as ConfigRegisterSchemaResultMessage);
-  } else if (type === 'config.values') {
-    handleValues(msg as unknown as ConfigValuesMessage);
-  } else if (type === 'config.schemaError') {
-    handleSchemaError(msg as unknown as ConfigSchemaErrorMessage);
+  if (isMessageType<ConfigRegisterSchemaResultMessage>(msg, 'config.registerSchema.result')) {
+    handleRegisterSchemaResult(msg);
+  } else if (isMessageType<ConfigValuesMessage>(msg, 'config.values')) {
+    handleValues(msg);
+  } else if (isMessageType<ConfigSchemaErrorMessage>(msg, 'config.schemaError')) {
+    handleSchemaError(msg);
   }
 }
 
@@ -320,8 +330,8 @@ export function installConfigShim(): () => void {
   //    `schema` accessor so authors reading window.napplet.config.schema at any
   //    point in time get the current cached value (updated by successful
   //    registerSchema responses).
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const napplet = (window as any).napplet ?? ((window as any).napplet = {});
+  const configWindow = window as ConfigWindow;
+  const napplet = configWindow.napplet ?? (configWindow.napplet = {});
   const api: Record<string, unknown> = {
     registerSchema,
     get,

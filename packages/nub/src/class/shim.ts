@@ -13,7 +13,11 @@
 // - Invalid shapes (non-integer class, negative class, missing field) are
 //   silently dropped per graceful-degradation.
 
-import type { ClassAssignedMessage } from './types.js';
+type ClassWindow = Window & typeof globalThis & {
+  napplet?: Record<string, unknown> & { class?: number };
+};
+
+type ClassMessageInput = { type: string; id?: unknown; class?: unknown };
 
 /** Current assigned class. Undefined until first valid class.assigned arrives. */
 let currentClass: number | undefined = undefined;
@@ -30,10 +34,9 @@ let installed = false;
  *
  * @param msg  A parsed envelope object with at least a `type` string field
  */
-export function handleClassMessage(msg: { type: string; [key: string]: unknown }): void {
+export function handleClassMessage(msg: ClassMessageInput): void {
   if (msg.type !== 'class.assigned') return;
-  const assigned = msg as unknown as ClassAssignedMessage;
-  const value = assigned.class;
+  const value = msg.class;
   // Defensive validation -- spec says non-negative integer, silently drop invalid.
   if (typeof value !== 'number' || !Number.isInteger(value) || value < 0) {
     return;
@@ -73,8 +76,8 @@ export function installClassShim(): () => void {
     return () => { /* already installed */ };
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const napplet = (window as any).napplet ?? ((window as any).napplet = {});
+  const classWindow = window as ClassWindow;
+  const napplet = classWindow.napplet ?? (classWindow.napplet = {});
   Object.defineProperty(napplet, 'class', {
     get: () => currentClass,
     enumerable: true,
@@ -85,8 +88,7 @@ export function installClassShim(): () => void {
 
   return () => {
     currentClass = undefined;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const n = (window as any).napplet;
+    const n = (window as ClassWindow).napplet;
     if (n) {
       try {
         delete n.class;

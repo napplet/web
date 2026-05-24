@@ -48,7 +48,7 @@ Note: Phase 45 (IPC terminology cleanup) was completed as a quick task during v0
 
 - [x] **Phase 143: Dependency Security Upgrade** — Upgrade the root dependency graph so `vite`, transitive `postcss`, and `turbo` resolve to patched versions; prove build, type-check, tests, and the security scanner still pass. Requirements: SEC-01, SEC-02, SEC-03, SEC-04. (completed 2026-05-24)
 - [x] **Phase 144: Fixable Lint and Slop Cleanup** — Remove duplicate imports, unused imports, leftover console diagnostics, duplicated shim logic, decorative narrative comments, and trivial comments without changing public behavior. Requirements: LINT-01, LINT-02, LINT-03, LINT-04, SLOP-01, SLOP-02, SLOP-03. (completed 2026-05-24)
-- [ ] **Phase 145: Type Safety Boundary Repair** — Replace production `as any` and double assertions with typed helpers, guards, or narrowed dispatcher boundaries, and add invalid-message/mount behavior coverage for touched shims. Requirements: TYPE-01, TYPE-02, TYPE-03, TYPE-04.
+- [x] **Phase 145: Type Safety Boundary Repair** — Replace production `as any` and double assertions with typed helpers, guards, or narrowed dispatcher boundaries, and add invalid-message/mount behavior coverage for touched shims. Requirements: TYPE-01, TYPE-02, TYPE-03, TYPE-04. (completed 2026-05-24)
 - [ ] **Phase 146: Complexity Hotspot Split** — Split the reported long functions and reduce oversized-file warnings where low-risk module boundaries exist; preserve normalizer fixtures, vite-plugin behavior, and NIPDB shim behavior. Requirements: QUAL-01, QUAL-02, QUAL-03, QUAL-04.
 - [ ] **Phase 147: Final Quality Gate and Closeout** — Run the final scanner, workspace build, type-check, unit tests, and cleanup summary; record remaining risks or explicit deferrals. Requirements: GATE-01, GATE-02, GATE-03, GATE-04.
 
@@ -95,7 +95,7 @@ Note: Phase 45 (IPC terminology cleanup) was completed as a quick task during v0
   3. Touched shims have invalid-message or mount-behavior tests proving rejected inputs stay rejected and valid inputs still update the same public surface.
   4. `pnpm -r type-check` exits 0 and the type-safety scanner categories from the kickoff report are closed or explicitly justified.
 
-**Plans:** 0/? plans
+**Plans:** 1/1 plans
 
 ### Phase 146: Complexity Hotspot Split
 

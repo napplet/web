@@ -22,6 +22,20 @@ interface NostrDbEventPushMessage {
   content: string;
 }
 
+interface NostrDbApi {
+  query(filters: NostrFilter | NostrFilter[]): Promise<NostrEvent[]>;
+  add(event: NostrEvent): Promise<boolean>;
+  event(id: string): Promise<NostrEvent | undefined>;
+  replaceable(kind: number, author: string, identifier?: string): Promise<NostrEvent | undefined>;
+  count(filters: NostrFilter | NostrFilter[]): Promise<number>;
+  supports(): Promise<string[]>;
+  subscribe(filters: NostrFilter | NostrFilter[]): AsyncGenerator<NostrEvent>;
+}
+
+type NostrDbWindow = Window & typeof globalThis & {
+  nostrdb?: NostrDbApi;
+};
+
 /** Pending NIPDB requests: correlationId -> { resolve, reject } */
 const nipdbPending = new Map<string, {
   resolve: (value: unknown) => void;
@@ -123,8 +137,7 @@ function handleNipdbMessage(msgEvent: MessageEvent): void {
 export function installNostrDb(): () => void {
   window.addEventListener('message', handleNipdbMessage);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (window as any).nostrdb = {
+  (window as NostrDbWindow).nostrdb = {
     async query(filters: NostrFilter | NostrFilter[]): Promise<NostrEvent[]> {
       const normalizedFilters = Array.isArray(filters) ? filters : [filters];
       const result = await sendNipdbRequest('query', JSON.stringify(normalizedFilters));
@@ -203,8 +216,7 @@ export function installNostrDb(): () => void {
 
   return () => {
     window.removeEventListener('message', handleNipdbMessage);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    delete (window as any).nostrdb;
+    delete (window as NostrDbWindow).nostrdb;
     nipdbPending.clear();
     nipdbSubscribeHandlers.clear();
   };

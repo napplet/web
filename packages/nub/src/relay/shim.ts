@@ -135,8 +135,10 @@ export function publish(
       window.removeEventListener('message', handleMessage);
       if (result.error || msg.type === 'relay.publish.error') {
         reject(new Error(result.error || 'relay:write denied'));
+      } else if (!result.event) {
+        reject(new Error('relay.publish.result missing event'));
       } else {
-        resolve(result.event as unknown as NostrEvent);
+        resolve(result.event);
       }
     }
 
@@ -145,7 +147,7 @@ export function publish(
     const publishMsg: RelayPublishMessage = {
       type: 'relay.publish',
       id: publishId,
-      event: template as unknown as NostrEvent,
+      event: template as NostrEvent,
     };
     window.parent.postMessage(publishMsg, '*');
   });
@@ -192,8 +194,10 @@ export function publishEncrypted(
       window.removeEventListener('message', handleMessage);
       if (result.error) {
         reject(new Error(result.error));
+      } else if (!result.event) {
+        reject(new Error('relay.publishEncrypted.result missing event'));
       } else {
-        resolve(result.event as unknown as NostrEvent);
+        resolve(result.event);
       }
     }
 

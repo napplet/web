@@ -30,6 +30,13 @@ const controlsHandlers = new Map<string, Set<(controls: MediaAction[]) => void>>
 /** Guard against double-install. */
 let installed = false;
 
+function isMessageType<T extends { type: string }>(
+  msg: { type: string },
+  type: T['type'],
+): msg is T {
+  return msg.type === type;
+}
+
 /**
  * Handle media.session.create.result from the shell.
  * Resolves the pending creation promise.
@@ -76,14 +83,12 @@ function handleControls(msg: MediaControlsMessage): void {
  * Handle media.* messages from the shell via the central message listener.
  */
 export function handleMediaMessage(msg: { type: string; [key: string]: unknown }): void {
-  const type = msg.type;
-
-  if (type === 'media.session.create.result') {
-    handleCreateResult(msg as unknown as MediaSessionCreateResultMessage);
-  } else if (type === 'media.command') {
-    handleCommand(msg as unknown as MediaCommandMessage);
-  } else if (type === 'media.controls') {
-    handleControls(msg as unknown as MediaControlsMessage);
+  if (isMessageType<MediaSessionCreateResultMessage>(msg, 'media.session.create.result')) {
+    handleCreateResult(msg);
+  } else if (isMessageType<MediaCommandMessage>(msg, 'media.command')) {
+    handleCommand(msg);
+  } else if (isMessageType<MediaControlsMessage>(msg, 'media.controls')) {
+    handleControls(msg);
   }
 }
 

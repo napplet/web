@@ -11,6 +11,10 @@
 
 import type { NappletConnect } from './types.js';
 
+type ConnectWindow = Window & typeof globalThis & {
+  napplet?: Record<string, unknown> & { connect?: NappletConnect };
+};
+
 /** Meta tag name carrying the shell-injected whitespace-separated origin list. */
 const GRANTED_META_NAME = 'napplet-connect-granted';
 
@@ -77,8 +81,8 @@ export function installConnectShim(): () => void {
   // 2. Mount window.napplet.connect. Use defineProperty with getters so the
   //    two fields track currentGranted/currentOrigins if they are ever
   //    updated (future extension -- v1 is read-once at install).
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const napplet = (window as any).napplet ?? ((window as any).napplet = {});
+  const connectWindow = window as ConnectWindow;
+  const napplet = connectWindow.napplet ?? (connectWindow.napplet = {});
   const api: NappletConnect = Object.defineProperties({} as NappletConnect, {
     granted: {
       get: () => currentGranted,
@@ -91,16 +95,14 @@ export function installConnectShim(): () => void {
       configurable: false,
     },
   });
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (napplet as any).connect = api;
+  napplet.connect = api;
 
   installed = true;
 
   return () => {
     currentGranted = false;
     currentOrigins = Object.freeze([]);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const n = (window as any).napplet;
+    const n = (window as ConnectWindow).napplet;
     if (n && n.connect === api) delete n.connect;
     installed = false;
   };

@@ -32,48 +32,73 @@ const pendingRequests = new Map<string, {
 /** Guard against double-install. */
 let installed = false;
 
+const IDENTITY_MESSAGE_TYPES = new Set<string>([
+  'identity.getPublicKey.result',
+  'identity.getRelays.result',
+  'identity.getProfile.result',
+  'identity.getFollows.result',
+  'identity.getList.result',
+  'identity.getZaps.result',
+  'identity.getMutes.result',
+  'identity.getBlocked.result',
+  'identity.getBadges.result',
+  'identity.decrypt.result',
+  'identity.decrypt.error',
+  'identity.getPublicKey',
+  'identity.getRelays',
+  'identity.getProfile',
+  'identity.getFollows',
+  'identity.getList',
+  'identity.getZaps',
+  'identity.getMutes',
+  'identity.getBlocked',
+  'identity.getBadges',
+  'identity.decrypt',
+]);
+
+function isIdentityNubMessage(msg: { type: string }): msg is IdentityNubMessage {
+  return IDENTITY_MESSAGE_TYPES.has(msg.type);
+}
+
 /**
  * Handle identity.* result messages from the shell via the central message listener.
  */
 export function handleIdentityMessage(msg: { type: string; [key: string]: unknown }): void {
-  // Narrow to the full discriminated union for compile-time exhaustiveness (TYPES-05).
-  // The central shim's generic `identity.*` routing passes anything matching the prefix;
-  // narrowing here lets the switch below use a `never`-fallback via assertNever.
-  const narrowed = msg as unknown as IdentityNubMessage;
+  if (!isIdentityNubMessage(msg)) return;
 
-  switch (narrowed.type) {
+  switch (msg.type) {
     case 'identity.getPublicKey.result':
-      resolvePending(narrowed.id, narrowed.pubkey);
+      resolvePending(msg.id, msg.pubkey);
       return;
     case 'identity.getRelays.result':
-      resolveOrReject(narrowed.id, narrowed.relays, narrowed.error);
+      resolveOrReject(msg.id, msg.relays, msg.error);
       return;
     case 'identity.getProfile.result':
-      resolveOrReject(narrowed.id, narrowed.profile, narrowed.error);
+      resolveOrReject(msg.id, msg.profile, msg.error);
       return;
     case 'identity.getFollows.result':
-      resolveOrReject(narrowed.id, narrowed.pubkeys, narrowed.error);
+      resolveOrReject(msg.id, msg.pubkeys, msg.error);
       return;
     case 'identity.getList.result':
-      resolveOrReject(narrowed.id, narrowed.entries, narrowed.error);
+      resolveOrReject(msg.id, msg.entries, msg.error);
       return;
     case 'identity.getZaps.result':
-      resolveOrReject(narrowed.id, narrowed.zaps, narrowed.error);
+      resolveOrReject(msg.id, msg.zaps, msg.error);
       return;
     case 'identity.getMutes.result':
-      resolveOrReject(narrowed.id, narrowed.pubkeys, narrowed.error);
+      resolveOrReject(msg.id, msg.pubkeys, msg.error);
       return;
     case 'identity.getBlocked.result':
-      resolveOrReject(narrowed.id, narrowed.pubkeys, narrowed.error);
+      resolveOrReject(msg.id, msg.pubkeys, msg.error);
       return;
     case 'identity.getBadges.result':
-      resolveOrReject(narrowed.id, narrowed.badges, narrowed.error);
+      resolveOrReject(msg.id, msg.badges, msg.error);
       return;
     case 'identity.decrypt.result':
-      resolvePending(narrowed.id, { rumor: narrowed.rumor, sender: narrowed.sender });
+      resolvePending(msg.id, { rumor: msg.rumor, sender: msg.sender });
       return;
     case 'identity.decrypt.error':
-      rejectPending(narrowed.id, new Error(narrowed.error));
+      rejectPending(msg.id, new Error(msg.error));
       return;
 
     // ─── Napplet → Shell request messages (defensive — never received here) ──
@@ -94,7 +119,7 @@ export function handleIdentityMessage(msg: { type: string; [key: string]: unknow
     default:
       // Compile-time exhaustiveness assertion (TYPES-05).
       // Adding a new member to IdentityNubMessage without a case here fails type-check.
-      assertNever(narrowed);
+      assertNever(msg);
       return;
   }
 }

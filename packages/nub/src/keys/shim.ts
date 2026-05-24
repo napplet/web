@@ -29,6 +29,13 @@ let activeCleanup: (() => void) | null = null;
 
 const RESERVED_KEYS = new Set(['Tab', 'Shift+Tab', 'Escape']);
 
+function isMessageType<T extends { type: string }>(
+  msg: { type: string },
+  type: T['type'],
+): msg is T {
+  return msg.type === type;
+}
+
 /**
  * Returns true if the given event target is a text-entry input element.
  * Text inputs should not forward keystrokes to avoid credential leakage.
@@ -165,14 +172,12 @@ function handleKeydown(event: KeyboardEvent): void {
  * Handle keys.* messages from the shell via the central message listener.
  */
 export function handleKeysMessage(msg: { type: string; [key: string]: unknown }): void {
-  const type = msg.type;
-
-  if (type === 'keys.bindings') {
-    handleBindings(msg as unknown as KeysBindingsMessage);
-  } else if (type === 'keys.registerAction.result') {
-    handleRegisterResult(msg as unknown as KeysRegisterActionResultMessage);
-  } else if (type === 'keys.action') {
-    handleAction(msg as unknown as KeysActionMessage);
+  if (isMessageType<KeysBindingsMessage>(msg, 'keys.bindings')) {
+    handleBindings(msg);
+  } else if (isMessageType<KeysRegisterActionResultMessage>(msg, 'keys.registerAction.result')) {
+    handleRegisterResult(msg);
+  } else if (isMessageType<KeysActionMessage>(msg, 'keys.action')) {
+    handleAction(msg);
   }
 }
 

@@ -29,10 +29,10 @@ Requirements for v0.31.0. Each maps to roadmap phases after roadmapping.
 
 ### Type Safety
 
-- [ ] **TYPE-01**: Maintainer can verify production `as any` assertions around `window.napplet` and global mounts are replaced with typed local helpers or more specific structural types.
-- [ ] **TYPE-02**: Maintainer can verify double assertions in production message handlers are replaced with discriminated-union narrowing, typed dispatcher boundaries, or small runtime guards.
-- [ ] **TYPE-03**: Maintainer can verify any remaining unavoidable assertions are isolated at an integration boundary and covered by tests or an explicit verification note.
-- [ ] **TYPE-04**: Maintainer can run invalid-message or mount-behavior tests for every shim touched during type-safety cleanup.
+- [x] **TYPE-01**: Maintainer can verify production `as any` assertions around `window.napplet` and global mounts are replaced with typed local helpers or more specific structural types.
+- [x] **TYPE-02**: Maintainer can verify double assertions in production message handlers are replaced with discriminated-union narrowing, typed dispatcher boundaries, or small runtime guards.
+- [x] **TYPE-03**: Maintainer can verify any remaining unavoidable assertions are isolated at an integration boundary and covered by tests or an explicit verification note.
+- [x] **TYPE-04**: Maintainer can run invalid-message or mount-behavior tests for every shim touched during type-safety cleanup.
 
 ### Complexity and Structure
 
@@ -84,10 +84,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SLOP-01 | Phase 144 | Complete |
 | SLOP-02 | Phase 144 | Complete |
 | SLOP-03 | Phase 144 | Complete |
-| TYPE-01 | Phase 145 | Pending |
-| TYPE-02 | Phase 145 | Pending |
-| TYPE-03 | Phase 145 | Pending |
-| TYPE-04 | Phase 145 | Pending |
+| TYPE-01 | Phase 145 | Complete |
+| TYPE-02 | Phase 145 | Complete |
+| TYPE-03 | Phase 145 | Complete |
+| TYPE-04 | Phase 145 | Complete |
 | QUAL-01 | Phase 146 | Pending |
 | QUAL-02 | Phase 146 | Pending |
 | QUAL-03 | Phase 146 | Pending |
@@ -104,4 +104,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-05-24*
-*Last updated: 2026-05-24 after Phase 144 verification*
+*Last updated: 2026-05-24 after Phase 145 verification*

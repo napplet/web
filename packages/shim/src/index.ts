@@ -116,7 +116,7 @@ function defaultShellSupports(capability: NamespacedCapability): boolean {
   return (NUB_DOMAINS as readonly string[]).includes(capability);
 }
 
-(window as unknown as { napplet: NappletGlobal }).napplet = {
+(window as Window & typeof globalThis & { napplet: NappletGlobal }).napplet = {
   relay: {
     subscribe,
     publish,
