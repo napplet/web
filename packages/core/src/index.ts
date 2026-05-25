@@ -21,7 +21,7 @@
  * @packageDocumentation
  */
 
-export type { NappletMessage, NubDomain, NamespacedCapability, ShellSupports, NappletGlobalShell } from './envelope.js';
+export type { NappletMessage, NubDomain, NamespacedCapability, NubProtocolId, ShellSupports, NappletGlobalShell } from './envelope.js';
 export { NUB_DOMAINS } from './envelope.js';
 
 export type { NubHandler, NubDispatch } from './dispatch.js';

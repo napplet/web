@@ -764,7 +764,7 @@ export type { EventTemplate } from '@napplet/core';
 export type { Rumor } from '@napplet/core';
 export type { UnsignedEvent } from '@napplet/core';
 
-export type { NappletMessage, NubDomain, NamespacedCapability, ShellSupports } from '@napplet/core';
+export type { NappletMessage, NubDomain, NamespacedCapability, NubProtocolId, ShellSupports } from '@napplet/core';
 export { NUB_DOMAINS } from '@napplet/core';
 
 // Relay NUB

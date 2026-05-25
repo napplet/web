@@ -20,7 +20,7 @@ npm install @napplet/core
 
 ```ts
 import {
-  type NappletMessage, type NubDomain, type ShellSupports,
+  type NappletMessage, type NubDomain, type NubProtocolId, type ShellSupports,
   type NubHandler, type NubDispatch,
   NUB_DOMAINS, SHELL_BRIDGE_URI, PROTOCOL_VERSION,
   createDispatch, registerNub, dispatch, getRegisteredDomains,
@@ -100,11 +100,18 @@ Interface for the shell capability query API.
 
 ```ts
 interface ShellSupports {
-  supports(capability: NubDomain | string): boolean;
+  supports(capability: NubDomain | string, protocol?: `NUB-${number}`): boolean;
 }
 ```
 
-Napplets call `window.napplet.shell.supports(domain)` to check whether the shell declared support for a NUB domain before using that domain's API.
+Napplets call `window.napplet.shell.supports(domain)` to check whether the shell
+declared support for a NUB domain before using that domain's API. For numbered
+NUB-NN message protocols, pass the protocol identifier as the optional second
+argument:
+
+```ts
+window.napplet.shell.supports('ifc', 'NUB-01');
+```
 
 #### `NappletGlobalShell`
 
@@ -326,7 +333,7 @@ TOPICS.WM_FOCUSED_WINDOW_CHANGED // 'wm:focused-window-changed'
 
 ```ts
 import type {
-  NappletMessage, NubDomain, NamespacedCapability, ShellSupports, NappletGlobalShell,
+  NappletMessage, NubDomain, NamespacedCapability, NubProtocolId, ShellSupports, NappletGlobalShell,
   NubHandler, NubDispatch,
   NostrEvent, NostrFilter, Capability,
   Subscription, EventTemplate, NappletGlobal,
@@ -338,6 +345,7 @@ import type {
 | `NappletMessage` | Base interface for all JSON envelope messages |
 | `NubDomain` | Union of the twelve NUB domain strings |
 | `NamespacedCapability` | Union of `NubDomain \| nub:* \| perm:*` for `supports()` |
+| `NubProtocolId` | Numbered NUB protocol id such as `NUB-01` for the optional second `supports()` argument |
 | `ShellSupports` | Interface with `supports()` capability query method |
 | `NappletGlobalShell` | Type for `window.napplet.shell` (extends `ShellSupports`) |
 | `NubHandler` | Callback type for NUB domain handlers |

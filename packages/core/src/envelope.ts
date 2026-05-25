@@ -7,7 +7,7 @@
  *
  * @example
  * ```ts
- * import type { NappletMessage, NubDomain, ShellSupports } from '@napplet/core';
+ * import type { NappletMessage, NubDomain, NubProtocolId, ShellSupports } from '@napplet/core';
  * import { NUB_DOMAINS } from '@napplet/core';
  * ```
  *
@@ -109,9 +109,23 @@ export type NamespacedCapability =
   | `perm:${string}`;
 
 /**
+ * Numbered NUB protocol identifier for napplet-to-napplet message semantics.
+ *
+ * NUB-WORD interfaces are discovered with the first `supports()` argument.
+ * NUB-NN message protocols are negotiated with the optional second argument.
+ *
+ * @example
+ * ```ts
+ * const protocol: NubProtocolId = 'NUB-01';
+ * window.napplet.shell.supports('ifc', protocol);
+ * ```
+ */
+export type NubProtocolId = `NUB-${number}`;
+
+/**
  * Interface for the shell capability query API.
- * Allows napplets to check whether the shell supports a NUB domain
- * or a permission at runtime.
+ * Allows napplets to check whether the shell supports a NUB domain,
+ * a permission, or a numbered NUB protocol at runtime.
  *
  * @example
  * ```ts
@@ -121,11 +135,14 @@ export type NamespacedCapability =
  *
  * // Permission queries:
  * shell.supports('perm:popups'); // popup permission
+ *
+ * // Numbered protocol queries over an interface:
+ * shell.supports('ifc', 'NUB-01');
  * ```
  */
 export interface ShellSupports {
-  /** Check whether the shell supports a NUB capability or permission. */
-  supports(capability: NamespacedCapability): boolean;
+  /** Check whether the shell supports a NUB capability, permission, or numbered protocol. */
+  supports(capability: NamespacedCapability, protocol?: NubProtocolId): boolean;
 }
 
 /**
@@ -144,6 +161,9 @@ export interface ShellSupports {
  *
  * // Permission queries:
  * window.napplet.shell.supports('perm:popups');
+ *
+ * // NUB-NN protocol queries:
+ * window.napplet.shell.supports('ifc', 'NUB-01');
  * ```
  */
 export interface NappletGlobalShell extends ShellSupports {}

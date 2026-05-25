@@ -731,8 +731,8 @@ export interface NappletGlobal {
    */
   class?: number;
   /**
-   * Shell capability queries. Check whether the shell supports a NUB
-   * or permission.
+   * Shell capability queries. Check whether the shell supports a NUB,
+   * permission, or numbered NUB protocol.
    *
    * @example
    * ```ts
@@ -742,6 +742,9 @@ export interface NappletGlobal {
    *
    * // Permission:
    * if (window.napplet.shell.supports('perm:popups')) { ... }
+   *
+   * // Numbered NUB protocol over an interface:
+   * if (window.napplet.shell.supports('ifc', 'NUB-01')) { ... }
    * ```
    */
   shell: NappletGlobalShell;

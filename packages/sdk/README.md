@@ -339,7 +339,7 @@ Namespaced capability query. Access via `window.napplet.shell.supports()` after 
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| `supports(capability)` | `boolean` | Check shell support for a NUB (`nub:relay`) or permission (`perm:popups`). Bare NUB names also accepted (`relay`). |
+| `supports(capability, protocol?)` | `boolean` | Check shell support for a NUB (`nub:relay`), permission (`perm:popups`), or numbered NUB-NN protocol over an interface (`ifc`, `NUB-01`). Bare NUB names also accepted (`relay`). |
 
 **Example:**
 
@@ -352,6 +352,9 @@ if (window.napplet.shell.supports('nub:identity')) { /* ... */ }
 
 // Permissions
 if (window.napplet.shell.supports('perm:popups')) { /* ... */ }
+
+// Numbered NUB-NN message protocols
+if (window.napplet.shell.supports('ifc', 'NUB-01')) { /* ... */ }
 ```
 
 ### Namespace Import
@@ -380,6 +383,7 @@ import type {
   NappletMessage,
   NubDomain,
   NamespacedCapability,
+  NubProtocolId,
   ShellSupports,
   // NUB message types (re-exported from NUB packages)
   RelayNubMessage,
@@ -402,6 +406,7 @@ import type {
 | `NappletMessage` | Base JSON envelope type for all protocol messages |
 | `NubDomain` | String literal union of NUB domain names |
 | `NamespacedCapability` | Union of `NubDomain \| nub:* \| perm:*` for `supports()` |
+| `NubProtocolId` | Numbered NUB protocol id such as `NUB-01` for the optional second `supports()` argument |
 | `ShellSupports` | Interface for the shell capability query API |
 
 ### NUB Message Types

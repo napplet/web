@@ -4,7 +4,7 @@ import {
 } from './index.js';
 
 // Type-level imports (compile check — if this file compiles, types are exported)
-import type { NostrEvent, NostrFilter, TopicKey, TopicValue, NamespacedCapability, ShellSupports } from './index.js';
+import type { NostrEvent, NostrFilter, TopicKey, TopicValue, NamespacedCapability, NubProtocolId, ShellSupports } from './index.js';
 
 describe('@napplet/core exports', () => {
   describe('TOPICS', () => {
@@ -65,6 +65,13 @@ describe('@napplet/core exports', () => {
       expect(shell.supports('relay')).toBe(false);
       expect(shell.supports('nub:relay')).toBe(false);
       expect(shell.supports('perm:sign')).toBe(false);
+    });
+
+    it('ShellSupports.supports() accepts optional numbered NUB protocol ids', () => {
+      const protocol: NubProtocolId = 'NUB-01';
+      const shell: ShellSupports = { supports: () => true };
+      expect(shell.supports('ifc', protocol)).toBe(true);
+      expect(shell.supports('nub:ifc', 'NUB-02')).toBe(true);
     });
   });
 });

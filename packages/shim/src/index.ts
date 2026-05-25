@@ -36,7 +36,7 @@ import {
 } from '@napplet/nub/resource/shim';
 import { installConnectShim } from '@napplet/nub/connect/shim';
 import { installClassShim, handleClassMessage } from '@napplet/nub/class/shim';
-import { NUB_DOMAINS, type NappletGlobal, type NamespacedCapability } from '@napplet/core';
+import { NUB_DOMAINS, type NappletGlobal, type NamespacedCapability, type NubProtocolId } from '@napplet/core';
 import type { IfcEventMessage } from '@napplet/nub/ifc/types';
 
 interface ShellInitMessage {
@@ -115,7 +115,9 @@ function handleEnvelopeMessage(event: MessageEvent): void {
 
 installIfcShim();
 
-function defaultShellSupports(capability: NamespacedCapability): boolean {
+function defaultShellSupports(capability: NamespacedCapability, protocol?: NubProtocolId): boolean {
+  if (protocol !== undefined) return false;
+
   // perm:* — shell-granted only; nothing for the shim to assert.
   if (typeof capability === 'string' && capability.startsWith('perm:')) return false;
 
@@ -129,20 +131,42 @@ function defaultShellSupports(capability: NamespacedCapability): boolean {
   return (NUB_DOMAINS as readonly string[]).includes(capability);
 }
 
-function createShellSupports(capabilities: ShellInitMessage['capabilities']): (capability: NamespacedCapability) => boolean {
+function normalizeProtocol(protocol: NubProtocolId | undefined): string | undefined {
+  return protocol?.toUpperCase();
+}
+
+function createShellSupports(capabilities: ShellInitMessage['capabilities']): (capability: NamespacedCapability, protocol?: NubProtocolId) => boolean {
   const nubs = new Set(
     Array.isArray(capabilities?.nubs)
-      ? capabilities.nubs.filter((capability): capability is string => typeof capability === 'string')
+      ? capabilities.nubs
+        .filter((capability): capability is string => typeof capability === 'string')
+        .map((capability) => capability.startsWith('nub:') ? capability.slice(4) : capability)
       : [],
   );
+  const protocols = new Set<string>();
+
+  for (const capability of nubs) {
+    const match = /^([^:]+):(NUB-\d+)$/i.exec(capability);
+    if (!match) continue;
+    const [, domain, protocol] = match;
+    protocols.add(`${domain}:${protocol.toUpperCase()}`);
+    nubs.add(domain);
+  }
+
   const sandbox = new Set(
     Array.isArray(capabilities?.sandbox)
       ? capabilities.sandbox.filter((capability): capability is string => typeof capability === 'string')
       : [],
   );
 
-  return (capability: NamespacedCapability): boolean => {
+  return (capability: NamespacedCapability, protocol?: NubProtocolId): boolean => {
     if (typeof capability !== 'string') return false;
+    if (protocol !== undefined) {
+      const normalizedProtocol = normalizeProtocol(protocol);
+      if (capability.startsWith('perm:') || !normalizedProtocol) return false;
+      const domain = capability.startsWith('nub:') ? capability.slice(4) : capability;
+      return protocols.has(`${domain}:${normalizedProtocol}`);
+    }
     if (capability.startsWith('perm:')) return sandbox.has(capability);
     if (capability.startsWith('nub:')) return nubs.has(capability.slice(4));
     return nubs.has(capability);

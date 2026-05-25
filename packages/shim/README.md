@@ -322,7 +322,7 @@ window.napplet = {
   },
   class?: number,   // shell-assigned via class.assigned envelope; undefined on shells without nub:class
   shell: {
-    supports(capability: NamespacedCapability): boolean;
+    supports(capability: NamespacedCapability, protocol?: NubProtocolId): boolean;
   },
 };
 ```
@@ -484,7 +484,8 @@ The class integer is informational to the napplet; the shell enforces the postur
 
 ### `window.napplet.shell`
 
-Namespaced capability query. `supports()` checks whether the shell declared support for a NUB domain or permission.
+Namespaced capability query. `supports()` checks whether the shell declared
+support for a NUB domain, permission, or numbered NUB-NN message protocol.
 
 ```ts
 // NUB domains (bare shorthand or nub: prefix)
@@ -493,9 +494,16 @@ window.napplet.shell.supports('nub:identity');  // explicit prefix
 
 // Permissions
 window.napplet.shell.supports('perm:popups');
+
+// Numbered NUB-NN message protocols over an interface
+window.napplet.shell.supports('ifc', 'NUB-01');
 ```
 
-Currently returns `false` until the shell populates it at iframe creation time. Use as a feature gate before calling APIs that depend on a specific capability.
+Currently returns `false` for shell-granted permissions and numbered protocols
+until the shell populates it at iframe creation time. A shell can advertise a
+numbered protocol by including an interface/protocol entry such as `ifc:NUB-01`
+in its NUB capability list. Use this as a feature gate before calling APIs that
+depend on a specific capability or message protocol.
 
 ## TypeScript Support
 
