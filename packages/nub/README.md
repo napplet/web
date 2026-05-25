@@ -91,6 +91,36 @@ Each domain exposes up to three patterns (four including the barrel). Pick the s
 - **Shim** (`@napplet/nub/<domain>/shim`): installer + message handlers. For shell/host code mounting a NUB into the napplet window.
 - **SDK** (`@napplet/nub/<domain>/sdk`): named-function helpers (e.g., `relaySubscribe`, `storageGet`). For napplet consumer code that wants a typed wrapper over `window.napplet`.
 
+## IFC Topic Payloads
+
+`@napplet/nub/ifc` owns the generic NUB-IFC transport messages:
+`ifc.emit`, `ifc.subscribe`, `ifc.unsubscribe`, and `ifc.event`.
+
+Public semantics for a specific topic string are defined by separate NUB-NN
+topic payload protocols. The draft topic-payload protocol uses the existing IFC
+transport for these topics:
+
+- `profile:open`
+- `chat:open-dm`
+- `livestream:channel-switch`
+- `stream:current-context-get`
+- `stream:current-context`
+
+Use the existing IFC SDK helper to emit those payloads:
+
+```ts
+import { ifcEmit, ifcOn } from '@napplet/nub/ifc';
+
+ifcEmit('stream:current-context-get', [], JSON.stringify({ requestId }));
+
+const sub = ifcOn('stream:current-context', (payload) => {
+  console.log('stream context', payload);
+});
+```
+
+Shell-local topics such as `wm:*` and `shell:*`, deprecated auth topics, and
+media playback handoff are not part of the public topic payload protocol.
+
 ## Tree-Shaking Contract
 
 - `@napplet/nub` publishes with `sideEffects: false`

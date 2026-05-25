@@ -347,6 +347,26 @@ Inter-frame communication between napplets via the shell.
 | `emit(topic, extraTags?, content?)` | `void` | Send an `ifc.emit` JSON envelope to the shell for delivery to matching topic subscribers. |
 | `on(topic, callback)` | `{ close(): void }` | Subscribe to `ifc.event` JSON envelopes on a topic. Callback receives `(payload, event)`. |
 
+#### Topic payload protocols
+
+The shim only installs the generic NUB-IFC transport. Shared meaning for a
+topic is defined by a separate topic payload protocol layered on top of IFC.
+
+Current draft topics include `profile:open`, `chat:open-dm`,
+`livestream:channel-switch`, `stream:current-context-get`, and
+`stream:current-context`.
+
+```ts
+window.napplet.ifc.emit(
+  'chat:open-dm',
+  [],
+  JSON.stringify({ pubkey, displayName }),
+);
+```
+
+Shell-local topics such as `wm:*` and `shell:*`, deprecated auth topics, and
+media playback handoff are outside the public IFC topic payload protocol.
+
 ### `window.napplet.storage`
 
 Sandboxed key-value storage proxied through the shell. Scoped by napplet identity -- napplets cannot read each other's data. 512 KB quota per napplet.

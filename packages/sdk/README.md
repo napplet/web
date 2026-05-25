@@ -138,6 +138,40 @@ Messages are sent as JSON envelope objects (`{ type: 'ifc.emit', topic, payload 
 | `emit(topic, extraTags?, content?)` | `void` | Broadcast an IFC event to other napplets via the shell |
 | `on(topic, callback)` | `{ close(): void }` | Subscribe to IFC events on a topic |
 
+#### Topic payload protocols
+
+`ifc.emit` and `ifc.on` are generic transport helpers. Public meaning for a
+specific `topic` belongs in a NUB-NN topic payload protocol layered on top of
+NUB-IFC, not in the transport API itself.
+
+Draft topic semantics currently cover:
+
+| Topic | Payload |
+|-------|---------|
+| `profile:open` | `{ pubkey: string }` |
+| `chat:open-dm` | `{ pubkey: string; displayName?: string }` |
+| `livestream:channel-switch` | `{ streamId: string; streamUrl?: string; metadata?: { title?: string; chatRelays?: string[]; image?: string; hostPubkey?: string } }` |
+| `stream:current-context-get` | `{ requestId?: string }` |
+| `stream:current-context` | `{ streamAddr: string \| null; title?: string \| null; chatRelays: string[]; requestId?: string }` |
+
+```ts
+ifc.emit('profile:open', [], JSON.stringify({ pubkey }));
+
+const sub = ifc.on('profile:open', (payload) => {
+  if (
+    payload &&
+    typeof payload === 'object' &&
+    typeof (payload as { pubkey?: unknown }).pubkey === 'string'
+  ) {
+    openProfile((payload as { pubkey: string }).pubkey);
+  }
+});
+```
+
+Shell-local topics such as `wm:*` and `shell:*`, and deprecated topics such as
+`auth:identity-changed`, are not public napplet-to-napplet payload protocols.
+Media playback handoff is also separate from IFC topic payloads.
+
 ### `storage`
 
 Sandboxed key-value storage. Mirrors `window.napplet.storage`. 512 KB quota per napplet.
