@@ -79,6 +79,68 @@ export interface EventTemplate {
   created_at: number;
 }
 
+/** The side that fetches/decodes media and emits authoritative playback state. */
+export type MediaPlaybackOwner = 'shell' | 'napplet';
+
+/** Source reference for shell-owned media playback or advisory source metadata. */
+export interface MediaSourceRef {
+  url?: string;
+  blossomHash?: string;
+  nostr?: {
+    eventId?: string;
+    address?: string;
+    relays?: string[];
+  };
+  mimeType?: string;
+}
+
+/** Media session metadata. */
+export interface MediaMetadata {
+  title?: string;
+  artist?: string;
+  album?: string;
+  artwork?: { url?: string; hash?: string };
+  duration?: number;
+  mediaType?: 'audio' | 'video';
+}
+
+/** Media playback state. */
+export interface MediaState {
+  status: 'playing' | 'paused' | 'stopped' | 'buffering';
+  position?: number;
+  duration?: number;
+  volume?: number;
+}
+
+/** Media action supported by a session or requested by a controller. */
+export type MediaAction = 'play' | 'pause' | 'stop' | 'next' | 'prev' | 'seek' | 'volume';
+
+interface MediaSessionCreateBase {
+  sessionId?: string;
+  metadata?: MediaMetadata;
+  capabilities?: MediaAction[];
+  autoplay?: boolean;
+  live?: boolean;
+}
+
+/** Ownership-aware media session creation options. */
+export type MediaSessionCreate =
+  | (MediaSessionCreateBase & {
+      owner: 'shell';
+      source: MediaSourceRef;
+    })
+  | (MediaSessionCreateBase & {
+      owner: 'napplet';
+      source?: MediaSourceRef;
+    });
+
+/** Result of a media session creation request. */
+export interface MediaSessionResult {
+  sessionId?: string;
+  owner?: MediaPlaybackOwner;
+  error?: string;
+}
+
 /**
  * The window.napplet global installed at runtime by @napplet/shim.
  *
@@ -240,7 +302,8 @@ export interface NappletGlobal {
    * ```ts
    * // Create a media session:
    * const { sessionId } = await window.napplet.media.createSession({
-   *   title: 'My Song', artist: 'The Artist',
+   *   owner: 'napplet',
+   *   metadata: { title: 'My Song', artist: 'The Artist' },
    * });
    *
    * // Report playback state:
@@ -257,30 +320,16 @@ export interface NappletGlobal {
   media: {
     /**
      * Create a new media session with the shell.
-     * @param metadata  Optional initial metadata (title, artist, album, artwork, duration, mediaType)
-     * @returns The confirmed session result with sessionId
+     * @param options  Ownership-aware session options.
+     * @returns The shell result with canonical sessionId and owner, or error.
      */
-    createSession(metadata?: {
-      title?: string;
-      artist?: string;
-      album?: string;
-      artwork?: { url?: string; hash?: string };
-      duration?: number;
-      mediaType?: 'audio' | 'video';
-    }): Promise<{ sessionId: string }>;
+    createSession(options: MediaSessionCreate): Promise<MediaSessionResult>;
     /**
      * Update metadata for an existing session. Partial updates supported.
      * @param sessionId  The session to update
      * @param metadata   Partial metadata fields to update
      */
-    updateSession(sessionId: string, metadata: {
-      title?: string;
-      artist?: string;
-      album?: string;
-      artwork?: { url?: string; hash?: string };
-      duration?: number;
-      mediaType?: 'audio' | 'video';
-    }): void;
+    updateSession(sessionId: string, metadata: Partial<MediaMetadata>): void;
     /**
      * Destroy a media session.
      * @param sessionId  The session to destroy
@@ -291,32 +340,48 @@ export interface NappletGlobal {
      * @param sessionId  The session to report state for
      * @param state      Current playback state
      */
-    reportState(sessionId: string, state: {
-      status: 'playing' | 'paused' | 'stopped' | 'buffering';
-      position?: number;
-      duration?: number;
-      volume?: number;
-    }): void;
+    reportState(sessionId: string, state: MediaState): void;
     /**
      * Declare which media actions the session currently supports.
      * @param sessionId  The session to update capabilities for
      * @param actions    Currently supported actions
      */
-    reportCapabilities(sessionId: string, actions: ('play' | 'pause' | 'stop' | 'next' | 'prev' | 'seek' | 'volume')[]): void;
+    reportCapabilities(sessionId: string, actions: MediaAction[]): void;
+    /**
+     * Send a command to the current playback owner.
+     * @param sessionId  The session to control
+     * @param action     The media action to request
+     * @param value      Optional value for seek/volume
+     */
+    sendCommand(sessionId: string, action: MediaAction, value?: number): void;
     /**
      * Listen for media commands from the shell.
      * @param sessionId  The session to listen for commands on
      * @param callback   Called with (action, value?) when a command is received
      * @returns A Subscription with `close()` to stop listening
      */
-    onCommand(sessionId: string, callback: (action: 'play' | 'pause' | 'stop' | 'next' | 'prev' | 'seek' | 'volume', value?: number) => void): Subscription;
+    onCommand(sessionId: string, callback: (action: MediaAction, value?: number) => void): Subscription;
+    /**
+     * Listen for shell-reported playback state for shell-owned sessions.
+     * @param sessionId  The session to listen for state on
+     * @param callback   Called with playback state
+     * @returns A Subscription with `close()` to stop listening
+     */
+    onState(sessionId: string, callback: (state: MediaState) => void): Subscription;
+    /**
+     * Listen for shell-reported capabilities for shell-owned sessions.
+     * @param sessionId  The session to listen for capabilities on
+     * @param callback   Called with available actions
+     * @returns A Subscription with `close()` to stop listening
+     */
+    onCapabilities(sessionId: string, callback: (actions: MediaAction[]) => void): Subscription;
     /**
      * Listen for the shell's media control list.
      * @param sessionId  The session to associate controls with
      * @param callback   Called with the shell's supported controls
      * @returns A Subscription with `close()` to stop listening
      */
-    onControls(sessionId: string, callback: (controls: ('play' | 'pause' | 'stop' | 'next' | 'prev' | 'seek' | 'volume')[]) => void): Subscription;
+    onControls(sessionId: string, callback: (controls: MediaAction[]) => void): Subscription;
   };
   /**
    * Shell-rendered notifications: send notifications, set badge counts,

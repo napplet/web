@@ -74,7 +74,7 @@ Each domain is an independent subpath. Barrel imports bundle types + shim instal
 | ifc | `@napplet/nub/ifc` | `@napplet/nub/ifc/types` | `@napplet/nub/ifc/shim` | `@napplet/nub/ifc/sdk` | Inter-frame communication (topic pub/sub) |
 | keys | `@napplet/nub/keys` | `@napplet/nub/keys/types` | `@napplet/nub/keys/shim` | `@napplet/nub/keys/sdk` | Keyboard bindings + action registration |
 | theme | `@napplet/nub/theme` | `@napplet/nub/theme/types` | — | — | Read-only shell theme access (types-only today) |
-| media | `@napplet/nub/media` | `@napplet/nub/media/types` | `@napplet/nub/media/shim` | `@napplet/nub/media/sdk` | Media sessions + playback |
+| media | `@napplet/nub/media` | `@napplet/nub/media/types` | `@napplet/nub/media/shim` | `@napplet/nub/media/sdk` | Ownership-aware media sessions + playback |
 | notify | `@napplet/nub/notify` | `@napplet/nub/notify/types` | `@napplet/nub/notify/shim` | `@napplet/nub/notify/sdk` | Shell-rendered notifications |
 | identity | `@napplet/nub/identity` | `@napplet/nub/identity/types` | `@napplet/nub/identity/shim` | `@napplet/nub/identity/sdk` | Read-only user queries (pubkey, metadata) |
 | config | `@napplet/nub/config` | `@napplet/nub/config/types` | `@napplet/nub/config/shim` | `@napplet/nub/config/sdk` | Declarative per-napplet config (schema-driven) |
@@ -221,7 +221,7 @@ See [NAP-CONNECT](https://github.com/napplet/naps) and [NAP-CLASS](https://githu
 
 ```ts
 import { mediaCreateSession } from '@napplet/nub/media/sdk';
-import type { MediaNubMessage } from '@napplet/nub/media/types';
+import type { MediaNapMessage } from '@napplet/nub/media/types';
 ```
 
 Domain barrels are also available at `@napplet/nub/relay`, `@napplet/nub/storage`, `@napplet/nub/ifc`, `@napplet/nub/keys`, `@napplet/nub/theme`, `@napplet/nub/media`, `@napplet/nub/notify`, `@napplet/nub/identity`, `@napplet/nub/config`, `@napplet/nub/resource`, `@napplet/nub/connect`, and `@napplet/nub/class`.

@@ -1,5 +1,16 @@
 # @napplet/nub
 
+## 0.5.0
+
+### Minor Changes
+
+- Align media APIs with ownership-aware NAP-MEDIA sessions.
+
+### Patch Changes
+
+- Updated dependencies
+  - @napplet/core@0.5.0
+
 ## 0.4.0
 
 ### Minor Changes

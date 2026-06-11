@@ -65,7 +65,8 @@ const keySub = keys.onAction('editor.save', () => {
 
 // Create a media session
 const { sessionId } = await media.createSession({
-  title: 'My Song', artist: 'The Artist',
+  owner: 'napplet',
+  metadata: { title: 'My Song', artist: 'The Artist' },
 });
 media.reportState(sessionId, { status: 'playing', position: 42.5, duration: 240 });
 
@@ -151,16 +152,19 @@ Sandboxed key-value storage. Mirrors `window.napplet.storage`. 512 KB quota per 
 
 ### `media`
 
-Media session control. Mirrors `window.napplet.media`.
+Ownership-aware media sessions. Napplet-owned sessions let your app play media and report state to the shell; shell-owned sessions provide a `source` so the shell fetches, plays, and reports state back.
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| `createSession(metadata?)` | `Promise<{ sessionId }>` | Create a new media session with optional metadata |
+| `createSession(options)` | `Promise<{ sessionId?, owner?, error? }>` | Create a napplet- or shell-owned media session |
 | `updateSession(sessionId, metadata)` | `void` | Update metadata for an existing session |
 | `destroySession(sessionId)` | `void` | Destroy a session |
 | `reportState(sessionId, state)` | `void` | Report playback state |
 | `reportCapabilities(sessionId, actions)` | `void` | Declare supported media actions |
+| `sendCommand(sessionId, action, value?)` | `void` | Request a control action from the current playback owner |
 | `onCommand(sessionId, callback)` | `{ close(): void }` | Listen for shell media commands |
+| `onState(sessionId, callback)` | `{ close(): void }` | Listen for shell-reported state on shell-owned sessions |
+| `onCapabilities(sessionId, callback)` | `{ close(): void }` | Listen for shell-reported capabilities on shell-owned sessions |
 | `onControls(sessionId, callback)` | `{ close(): void }` | Listen for the shell's supported control list |
 
 ### `notify`
@@ -423,7 +427,7 @@ handlers in shell implementations or protocol-aware code.
 | `StorageNubMessage` | `@napplet/nub/storage` | Discriminated union of all storage domain messages |
 | `IfcNubMessage` | `@napplet/nub/ifc` | Discriminated union of all IFC domain messages |
 | `KeysNubMessage` | `@napplet/nub/keys` | Discriminated union of all keys domain messages |
-| `MediaNubMessage` | `@napplet/nub/media` | Discriminated union of all media domain messages |
+| `MediaNapMessage` | `@napplet/nub/media` | Discriminated union of all media domain messages |
 | `NotifyNubMessage` | `@napplet/nub/notify` | Discriminated union of all notify domain messages |
 | `ConfigNubMessage` | `@napplet/nub/config` | Discriminated union of all config domain messages |
 | `ResourceNubMessage` | `@napplet/nub/resource` | Discriminated union of all resource domain messages |

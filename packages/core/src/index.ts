@@ -42,6 +42,13 @@ export type {
   NostrFilter,
   Subscription,
   EventTemplate,
+  MediaPlaybackOwner,
+  MediaSourceRef,
+  MediaMetadata,
+  MediaState,
+  MediaAction,
+  MediaSessionCreate,
+  MediaSessionResult,
   NappletGlobal,
 } from './types.js';
 

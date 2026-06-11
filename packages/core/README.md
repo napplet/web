@@ -75,7 +75,7 @@ type NapDomain = 'relay' | 'identity' | 'storage' | 'ifc' | 'theme' | 'keys' | '
 | `ifc`     | Inter-frame communication (dispatch + channel) |
 | `theme`   | Theme tokens and appearance settings      |
 | `keys`    | Keyboard forwarding and action keybindings|
-| `media`   | Media session control and playback        |
+| `media`   | Ownership-aware media session control     |
 | `notify`  | Shell-rendered notifications              |
 | `config`  | Per-napplet declarative configuration (JSON Schema-driven) |
 | `resource` | Byte-fetching primitive (URL to Blob) |

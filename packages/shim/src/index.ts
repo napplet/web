@@ -1,6 +1,19 @@
 
 import { installKeysShim, handleKeysMessage, registerAction, unregisterAction, onAction } from '@napplet/nub/keys/shim';
-import { installMediaShim, handleMediaMessage, createSession, updateSession, destroySession, reportState, reportCapabilities, onCommand, onControls } from '@napplet/nub/media/shim';
+import {
+  installMediaShim,
+  handleMediaMessage,
+  createSession,
+  updateSession,
+  destroySession,
+  reportState,
+  reportCapabilities,
+  sendCommand,
+  onCommand,
+  onState,
+  onCapabilities,
+  onControls,
+} from '@napplet/nub/media/shim';
 import {
   installNotifyShim,
   handleNotifyMessage,
@@ -216,7 +229,10 @@ function installShellCapabilities(msg: ShellInitMessage): void {
     destroySession,
     reportState,
     reportCapabilities,
+    sendCommand,
     onCommand,
+    onState,
+    onCapabilities,
     onControls,
   },
   notify: {

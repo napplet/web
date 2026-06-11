@@ -369,7 +369,7 @@ The host shell reads `<meta name="napplet-requires">` during napplet initializat
 import '@napplet/shim';
 
 if (!window.napplet.shell.supports('media')) {
-  console.warn('Media NUB not available — some features disabled');
+  console.warn('Media NAP not available — some features disabled');
 }
 ```
 

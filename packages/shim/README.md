@@ -63,7 +63,8 @@ const keySub = window.napplet.keys.onAction('editor.save', () => {
 
 // Create a media session
 const { sessionId } = await window.napplet.media.createSession({
-  title: 'My Song', artist: 'The Artist',
+  owner: 'napplet',
+  metadata: { title: 'My Song', artist: 'The Artist' },
 });
 
 // Report playback state
@@ -172,11 +173,12 @@ Messages sent via `window.parent.postMessage(msg, '*')`:
 { type: 'keys.registerAction', id: string, action: { id: string, label: string, defaultKey?: string } }
 { type: 'keys.unregisterAction', actionId: string }
 
-{ type: 'media.session.create', id: string, sessionId: string, metadata?: object }
+{ type: 'media.session.create', id: string, owner: 'shell' | 'napplet', sessionId?: string, source?: object, metadata?: object, capabilities?: string[], autoplay?: boolean, live?: boolean }
 { type: 'media.session.update', sessionId: string, metadata: object }
 { type: 'media.session.destroy', sessionId: string }
 { type: 'media.state', sessionId: string, status: string, position?: number, duration?: number, volume?: number }
 { type: 'media.capabilities', sessionId: string, actions: string[] }
+{ type: 'media.command', sessionId: string, action: string, value?: number }
 
 { type: 'notify.send', id: string, title: string, body?: string, icon?: string, actions?: object[], channel?: string, priority?: string }
 { type: 'notify.dismiss', notificationId: string }
@@ -228,9 +230,11 @@ Messages received via `window.addEventListener('message', ...)`:
 { type: 'keys.bindings', bindings: Array<{ actionId: string, key: string }> }
 { type: 'keys.action', actionId: string }
 
-{ type: 'media.session.create.result', id: string, sessionId: string, error?: string }
+{ type: 'media.session.create.result', id: string, sessionId?: string, owner?: 'shell' | 'napplet', error?: string }
+{ type: 'media.state', sessionId: string, status: string, position?: number, duration?: number, volume?: number }
+{ type: 'media.capabilities', sessionId: string, actions: string[] }
 { type: 'media.command', sessionId: string, action: string, value?: number }
-{ type: 'media.controls', controls: string[] }
+{ type: 'media.controls', sessionId: string, controls: string[] }
 
 { type: 'notify.send.result', id: string, notificationId?: string, error?: string }
 { type: 'notify.permission.result', id: string, granted: boolean }
@@ -279,12 +283,15 @@ window.napplet = {
     onAction(actionId, callback): { close(): void };
   },
   media: {
-    createSession(metadata?): Promise<{ sessionId: string }>;
+    createSession(options): Promise<{ sessionId?: string; owner?: 'shell' | 'napplet'; error?: string }>;
     updateSession(sessionId, metadata): void;
     destroySession(sessionId): void;
     reportState(sessionId, state): void;
     reportCapabilities(sessionId, actions): void;
+    sendCommand(sessionId, action, value?): void;
     onCommand(sessionId, callback): { close(): void };
+    onState(sessionId, callback): { close(): void };
+    onCapabilities(sessionId, callback): { close(): void };
     onControls(sessionId, callback): { close(): void };
   },
   notify: {
@@ -384,17 +391,20 @@ Smart forwarding rules:
 
 ### `window.napplet.media`
 
-Media session control. Create sessions, report playback state and metadata, declare capabilities, and receive commands from the shell.
+Ownership-aware media session control. Napplet-owned sessions report playback state and receive shell commands; shell-owned sessions provide a source and receive shell-reported state/capabilities.
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| `createSession(metadata?)` | `Promise<{ sessionId }>` | Create a new media session with optional metadata. |
+| `createSession(options)` | `Promise<{ sessionId?, owner?, error? }>` | Create a napplet- or shell-owned media session. |
 | `updateSession(sessionId, metadata)` | `void` | Update metadata for an existing session. Fire-and-forget. |
 | `destroySession(sessionId)` | `void` | Destroy a session. Fire-and-forget. |
 | `reportState(sessionId, state)` | `void` | Report playback state (status, position, duration, volume). |
 | `reportCapabilities(sessionId, actions)` | `void` | Declare supported media actions (dynamic). |
+| `sendCommand(sessionId, action, value?)` | `void` | Request a control action from the current playback owner. |
 | `onCommand(sessionId, callback)` | `{ close(): void }` | Listen for shell media commands (play, pause, seek, volume, etc.). |
-| `onControls(sessionId, callback)` | `{ close(): void }` | Listen for the shell's supported control list. |
+| `onState(sessionId, callback)` | `{ close(): void }` | Listen for shell-reported state on shell-owned sessions. |
+| `onCapabilities(sessionId, callback)` | `{ close(): void }` | Listen for shell-reported capabilities on shell-owned sessions. |
+| `onControls(sessionId, callback)` | `{ close(): void }` | Listen for the shell's session-scoped supported control list. |
 
 ### `window.napplet.notify`
 
