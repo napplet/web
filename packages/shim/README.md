@@ -92,6 +92,9 @@ const notifySub = window.napplet.notify.onAction((notifId, actionId) => {
 // Get user identity (read-only)
 const pubkey = await window.napplet.identity.getPublicKey();
 const profile = await window.napplet.identity.getProfile();
+const identitySub = window.napplet.identity.onChanged((nextPubkey) => {
+  console.log(nextPubkey || 'signed out');
+});
 
 // Read per-napplet config (validated + defaulted by the shell)
 const config = await window.napplet.config.get();
@@ -108,8 +111,8 @@ const handle = window.napplet.resource.bytesAsObjectURL('blossom:sha256:e3b0c442
 imgEl.src = handle.url;
 // later: handle.revoke();
 
-// Check the shell-assigned class (undefined if shell doesn't implement nub:class)
-if (window.napplet.shell.supports('nub:class')) {
+// Check the shell-assigned class (undefined if shell doesn't implement nap:class)
+if (window.napplet.shell.supports('nap:class')) {
   const cls = window.napplet.class;
   if (cls === 2) { /* user-approved explicit-origin posture */ }
 }
@@ -123,6 +126,7 @@ if (window.napplet.connect.granted) {
 // Clean up
 sub.close();
 ifcSub.close();
+identitySub.close();
 keySub.close();
 mediaSub.close();
 notifySub.close();
@@ -145,6 +149,7 @@ Messages sent via `window.parent.postMessage(msg, '*')`:
 { type: 'relay.unsubscribe', subId: string }
 
 { type: 'identity.getPublicKey', id: string }
+{ type: 'identity.changed', pubkey: string }
 { type: 'identity.getRelays', id: string }
 { type: 'identity.getProfile', id: string }
 { type: 'identity.getFollows', id: string }
@@ -188,7 +193,7 @@ Messages sent via `window.parent.postMessage(msg, '*')`:
 { type: 'resource.bytes', id: string, url: string }
 { type: 'resource.cancel', id: string }
 
-// (NUB-CONNECT has no postMessage wire — grants flow via CSP header + <meta name="napplet-connect-granted">)
+// (NAP-CONNECT has no postMessage wire — grants flow via CSP header + <meta name="napplet-connect-granted">)
 ```
 
 ### Inbound (shell → napplet)
@@ -295,6 +300,7 @@ window.napplet = {
   },
   identity: {
     getPublicKey(): Promise<string>;
+    onChanged(handler): { close(): void };
     getRelays(): Promise<Record<string, { read: boolean; write: boolean }>>;
     getProfile(): Promise<object | null>;
     getFollows(): Promise<string[]>;
@@ -320,9 +326,9 @@ window.napplet = {
     readonly granted: boolean;
     readonly origins: readonly string[];
   },
-  class?: number,   // shell-assigned via class.assigned envelope; undefined on shells without nub:class
+  class?: number,   // shell-assigned via class.assigned envelope; undefined on shells without nap:class
   shell: {
-    supports(capability: NamespacedCapability, protocol?: NubProtocolId): boolean;
+    supports(capability: NamespacedCapability, protocol?: ProtocolId): boolean;
   },
 };
 ```
@@ -408,7 +414,7 @@ Shell-rendered notifications. Send notifications, set badge counts, register cha
 
 ### `window.napplet.config`
 
-Per-napplet declarative configuration (NUB-CONFIG). The shell is the sole writer; napplets subscribe to live values, request snapshots, register runtime schemas, and deep-link the shell's settings UI.
+Per-napplet declarative configuration (NAP-CONFIG). The shell is the sole writer; napplets subscribe to live values, request snapshots, register runtime schemas, and deep-link the shell's settings UI.
 
 | Method | Returns | Description |
 |--------|---------|-------------|
@@ -435,24 +441,24 @@ Errors reject the Promise with one of 8 codes: `not-found`, `blocked-by-policy`,
 Capability detection:
 
 ```ts
-if (window.napplet.shell.supports('nub:resource')) { /* ... */ }
+if (window.napplet.shell.supports('nap:resource')) { /* ... */ }
 if (window.napplet.shell.supports('resource:scheme:blossom')) { /* ... */ }
 if (window.napplet.shell.supports('perm:strict-csp')) { /* shell enforces strict CSP */ }
 ```
 
 ### `window.napplet.connect`
 
-User-gated direct network access (NUB-CONNECT). NO postMessage wire — the shim reads `<meta name="napplet-connect-granted" content="<space-separated-origins>">` synchronously at install time. Napplets declare required origins at build time via `@napplet/vite-plugin`'s `connect: string[]` option; the user is prompted by the shell at first load per `(dTag, aggregateHash)`; on approval the shell emits a runtime CSP whose `connect-src` contains the approved origins AND injects the discovery meta tag.
+User-gated direct network access (NAP-CONNECT). NO postMessage wire — the shim reads `<meta name="napplet-connect-granted" content="<space-separated-origins>">` synchronously at install time. Napplets declare required origins at build time via `@napplet/vite-plugin`'s `connect: string[]` option; the user is prompted by the shell at first load per `(dTag, aggregateHash)`; on approval the shell emits a runtime CSP whose `connect-src` contains the approved origins AND injects the discovery meta tag.
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `granted` | `boolean` | `true` when the user approved all declared origins for this `(dTag, aggregateHash)`. `false` on denial, on shells without `nub:connect`, or pre-injection. |
+| `granted` | `boolean` | `true` when the user approved all declared origins for this `(dTag, aggregateHash)`. `false` on denial, on shells without `nap:connect`, or pre-injection. |
 | `origins` | `readonly string[]` | The user-approved origins (already normalized per the shared `normalizeConnectOrigin` validator). Empty on denial. |
 
-**Graceful-degradation default:** `window.napplet.connect === { granted: false, origins: [] }` on shells that do not advertise `nub:connect` or have not injected the meta tag. The property is NEVER `undefined`.
+**Graceful-degradation default:** `window.napplet.connect === { granted: false, origins: [] }` on shells that do not advertise `nap:connect` or have not injected the meta tag. The property is NEVER `undefined`.
 
 ```ts
-if (window.napplet.shell.supports('nub:connect') && window.napplet.connect.granted) {
+if (window.napplet.shell.supports('nap:connect') && window.napplet.connect.granted) {
   // Direct fetch / WebSocket to window.napplet.connect.origins is permitted.
 } else {
   // Fall back to window.napplet.resource.bytes(url) for read-only byte fetches.
@@ -468,41 +474,41 @@ if (window.napplet.shell.supports('connect:scheme:ws'))   { /* cleartext ws: ori
 
 ### `window.napplet.class`
 
-Shell-assigned integer class (NUB-CLASS). The shell sends exactly one `class.assigned` envelope per napplet lifecycle at iframe-ready time; the shim writes the integer to `window.napplet.class` via a `defineProperty` getter.
+Shell-assigned integer class (NAP-CLASS). The shell sends exactly one `class.assigned` envelope per napplet lifecycle at iframe-ready time; the shim writes the integer to `window.napplet.class` via a `defineProperty` getter.
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `class` | `number \| undefined` | The class integer from the `class.assigned` envelope. `undefined` until the envelope arrives, or permanently `undefined` on shells that do not implement `nub:class`. |
+| `class` | `number \| undefined` | The class integer from the `class.assigned` envelope. `undefined` until the envelope arrives, or permanently `undefined` on shells that do not implement `nap:class`. |
 
-**Graceful-degradation default:** `window.napplet.class === undefined` on shells without `nub:class`, or before the wire envelope arrives. Never `0`, never `null`. Napplets SHOULD check `shell.supports('nub:class')` before branching on the value to distinguish "shell doesn't implement" from "envelope hasn't arrived yet".
+**Graceful-degradation default:** `window.napplet.class === undefined` on shells without `nap:class`, or before the wire envelope arrives. Never `0`, never `null`. Napplets SHOULD check `shell.supports('nap:class')` before branching on the value to distinguish "shell doesn't implement" from "envelope hasn't arrived yet".
 
 v0.29.0 ships two track members:
-- `class: 1` → NUB-CLASS-1 (strict baseline; `connect-src 'none'`)
-- `class: 2` → NUB-CLASS-2 (user-approved explicit-origin; `connect-src <granted-origins>`)
+- `class: 1` -> NAP-CLASS-1 (strict baseline; `connect-src 'none'`)
+- `class: 2` -> NAP-CLASS-2 (user-approved explicit-origin; `connect-src <granted-origins>`)
 
 The class integer is informational to the napplet; the shell enforces the posture via the CSP it serves with the HTML. Napplet code MUST NOT attempt to infer its own class from observed CSP or other signals — only `class.assigned` is authoritative.
 
 ### `window.napplet.shell`
 
 Namespaced capability query. `supports()` checks whether the shell declared
-support for a NUB domain, permission, or numbered NUB-NN message protocol.
+support for a NAP domain, permission, or numbered NAP-NN message protocol.
 
 ```ts
-// NUB domains (bare shorthand or nub: prefix)
+// NAP domains (bare shorthand or nap: prefix)
 window.napplet.shell.supports('relay');         // bare shorthand
-window.napplet.shell.supports('nub:identity');  // explicit prefix
+window.napplet.shell.supports('nap:identity');  // explicit prefix
 
 // Permissions
 window.napplet.shell.supports('perm:popups');
 
-// Numbered NUB-NN message protocols over an interface
-window.napplet.shell.supports('ifc', 'NUB-01');
+// Numbered NAP-NN message protocols over an interface
+window.napplet.shell.supports('ifc', 'NAP-01');
 ```
 
 Currently returns `false` for shell-granted permissions and numbered protocols
 until the shell populates it at iframe creation time. A shell can advertise a
-numbered protocol by including an interface/protocol entry such as `ifc:NUB-01`
-in its NUB capability list. Use this as a feature gate before calling APIs that
+numbered protocol by including an interface/protocol entry such as `ifc:NAP-01`
+in its NAP capability list. Use this as a feature gate before calling APIs that
 depend on a specific capability or message protocol.
 
 ## TypeScript Support

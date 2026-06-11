@@ -1,5 +1,17 @@
 # @napplet/shim
 
+## 0.4.0
+
+### Minor Changes
+
+- Align the package APIs with read-only NAP-IDENTITY: add `identity.changed` / `identity.onChanged`, make `getPublicKey()` represent signed-out state with `""`, remove the old identity decrypt surface and rumor types, and accept canonical `nap:` / `NAP-NN` support names with deprecated `nub:` / `NUB-NN` compatibility aliases.
+
+### Patch Changes
+
+- Updated dependencies
+  - @napplet/core@0.4.0
+  - @napplet/nub@0.4.0
+
 ## 0.3.1
 
 ### Patch Changes

@@ -1,10 +1,23 @@
 import { describe, it, expect } from 'vitest';
 import {
+  NAP_DOMAINS,
+  NUB_DOMAINS,
   TOPICS,
 } from './index.js';
 
 // Type-level imports (compile check — if this file compiles, types are exported)
-import type { NostrEvent, NostrFilter, TopicKey, TopicValue, NamespacedCapability, NubProtocolId, ShellSupports } from './index.js';
+import type {
+  NapDomain,
+  NostrEvent,
+  NostrFilter,
+  TopicKey,
+  TopicValue,
+  NamespacedCapability,
+  NapProtocolId,
+  NubDomain,
+  NubProtocolId,
+  ShellSupports,
+} from './index.js';
 
 describe('@napplet/core exports', () => {
   describe('TOPICS', () => {
@@ -32,8 +45,16 @@ describe('@napplet/core exports', () => {
   });
 
   describe('namespaced capability types', () => {
-    it('NamespacedCapability accepts bare NUB domain shorthand', () => {
-      // Compile check: bare NUB domain strings are valid (per D-02)
+    it('exports NAP domain names while preserving deprecated NUB aliases', () => {
+      const napDomain: NapDomain = 'identity';
+      const nubDomain: NubDomain = napDomain;
+      expect(NAP_DOMAINS).toContain(napDomain);
+      expect(NUB_DOMAINS).toBe(NAP_DOMAINS);
+      expect(nubDomain).toBe('identity');
+    });
+
+    it('NamespacedCapability accepts bare NAP domain shorthand', () => {
+      // Compile check: bare NAP domain strings are valid.
       const _relay: NamespacedCapability = 'relay';
       const _storage: NamespacedCapability = 'storage';
       const _ifc: NamespacedCapability = 'ifc';
@@ -42,13 +63,19 @@ describe('@napplet/core exports', () => {
       expect(true).toBe(true);
     });
 
-    it('NamespacedCapability accepts nub: prefixed domains', () => {
-      // Compile check: explicit NUB prefix
-      const _nubRelay: NamespacedCapability = 'nub:relay';
-      const _nubStorage: NamespacedCapability = 'nub:storage';
-      const _nubIfc: NamespacedCapability = 'nub:ifc';
-      const _nubTheme: NamespacedCapability = 'nub:theme';
-      const _nubMedia: NamespacedCapability = 'nub:media';
+    it('NamespacedCapability accepts nap: prefixed domains', () => {
+      // Compile check: explicit NAP prefix
+      const _napRelay: NamespacedCapability = 'nap:relay';
+      const _napStorage: NamespacedCapability = 'nap:storage';
+      const _napIfc: NamespacedCapability = 'nap:ifc';
+      const _napTheme: NamespacedCapability = 'nap:theme';
+      const _napMedia: NamespacedCapability = 'nap:media';
+      expect(true).toBe(true);
+    });
+
+    it('NamespacedCapability still accepts deprecated nub: prefixed domains', () => {
+      const _legacyRelay: NamespacedCapability = 'nub:relay';
+      const _legacyIdentity: NamespacedCapability = 'nub:identity';
       expect(true).toBe(true);
     });
 
@@ -63,15 +90,22 @@ describe('@napplet/core exports', () => {
       // Compile check: the interface method accepts all forms
       const shell: ShellSupports = { supports: () => false };
       expect(shell.supports('relay')).toBe(false);
+      expect(shell.supports('nap:relay')).toBe(false);
       expect(shell.supports('nub:relay')).toBe(false);
       expect(shell.supports('perm:sign')).toBe(false);
     });
 
-    it('ShellSupports.supports() accepts optional numbered NUB protocol ids', () => {
+    it('ShellSupports.supports() accepts optional numbered NAP protocol ids', () => {
+      const protocol: NapProtocolId = 'NAP-01';
+      const shell: ShellSupports = { supports: () => true };
+      expect(shell.supports('ifc', protocol)).toBe(true);
+      expect(shell.supports('nap:ifc', 'NAP-02')).toBe(true);
+    });
+
+    it('ShellSupports.supports() still accepts deprecated numbered NUB protocol ids', () => {
       const protocol: NubProtocolId = 'NUB-01';
       const shell: ShellSupports = { supports: () => true };
       expect(shell.supports('ifc', protocol)).toBe(true);
-      expect(shell.supports('nub:ifc', 'NUB-02')).toBe(true);
     });
   });
 });

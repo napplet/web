@@ -80,66 +80,6 @@ export interface EventTemplate {
 }
 
 /**
- * Unsigned Nostr event — the canonical "rumor" shape from nostr-tools.
- *
- * Extends EventTemplate-like fields (kind/content/tags/created_at) with `pubkey` — the author
- * whose key signs the wrapping seal/wrap in NIP-17 / NIP-59 flows. NO `sig` field:
- * this shape is intentionally unsigned. Attempting to treat it as signed is a bug.
- *
- * @example
- * ```ts
- * const unsigned: UnsignedEvent = {
- *   kind: 14,
- *   pubkey: 'ab12...',
- *   content: 'hello',
- *   tags: [['p', 'cd34...']],
- *   created_at: 1234567890,
- * };
- * ```
- */
-export interface UnsignedEvent {
-  /** Nostr event kind number */
-  kind: number;
-  /** Hex-encoded public key of the author */
-  pubkey: string;
-  /** Event content (plaintext after decrypt in NIP-17 flows) */
-  content: string;
-  /** Event tags (NIP-01 tag arrays) */
-  tags: string[][];
-  /** Unix timestamp (seconds since epoch) — NOT the outer gift-wrap randomized value */
-  created_at: number;
-}
-
-/**
- * A NIP-17 / NIP-59 rumor — an unsigned event decrypted from a gift-wrap seal
- * with a deterministic `id` derived from its NIP-01 serialization.
- *
- * Shape: UnsignedEvent & { id: string } — the nostr-tools canonical rumor type.
- * Intentionally has NO `sig` field: the rumor is never signed; only the outer
- * wrap and seal carry signatures. Treating a rumor as a signed event is a bug.
- *
- * The `sender` returned alongside a rumor by `identity.decrypt` is shell-authenticated
- * from the seal pubkey post-validation — never derived by the napplet from `rumor.pubkey`
- * (unsigned → attacker-controlled impersonation surface).
- *
- * @example
- * ```ts
- * const rumor: Rumor = {
- *   id: 'abc123...',
- *   kind: 14,
- *   pubkey: 'ab12...',
- *   content: 'hello',
- *   tags: [['p', 'cd34...']],
- *   created_at: 1234567890,
- * };
- * ```
- */
-export interface Rumor extends UnsignedEvent {
-  /** Deterministic event id (NIP-01 serialization hash of the unsigned event) */
-  id: string;
-}
-
-/**
  * The window.napplet global installed at runtime by @napplet/shim.
  *
  * The published packages avoid global `Window` type mutation for JSR
@@ -484,6 +424,11 @@ export interface NappletGlobal {
   identity: {
     /** Get the user's hex-encoded public key. Always succeeds. */
     getPublicKey(): Promise<string>;
+    /**
+     * Listen for shell-pushed user identity changes.
+     * The callback receives a hex pubkey, or "" when no user/signer is connected.
+     */
+    onChanged(handler: (pubkey: string) => void): Subscription;
     /** Get the user's relay list (NIP-65). */
     getRelays(): Promise<Record<string, { read: boolean; write: boolean }>>;
     /** Get the user's profile metadata (kind 0). Returns null if not found. */
@@ -521,23 +466,9 @@ export interface NappletGlobal {
       thumbs?: string[];
       awardedBy: string;
     }[]>;
-    /**
-     * Decrypt a received Nostr event (NIP-04 / direct NIP-44 / NIP-17 gift-wrap).
-     *
-     * Shape is auto-detected by the shell; napplets do NOT select the encryption mode.
-     * Only legal for napplets assigned `class: 1` per NUB-CLASS-1; shell rejects
-     * from any other class with `class-forbidden`.
-     *
-     * @param event  The received event (outer wrap for NIP-17, kind-4 for NIP-04, etc.)
-     * @returns Promise resolving to { rumor, sender } where `sender` is the
-     *   shell-authenticated seal-pubkey (NOT derived from rumor.pubkey). Outer
-     *   `created_at` is NOT surfaced (NIP-59 randomizes it ±2 days).
-     *   Rejects with a typed `IdentityDecryptErrorCode` on failure.
-     */
-    decrypt(event: NostrEvent): Promise<{ rumor: Rumor; sender: string }>;
   };
   /**
-   * Per-napplet declarative configuration (NUB-CONFIG).
+   * Per-napplet declarative configuration (NAP-CONFIG).
    *
    * Napplet declares a JSON Schema (typically at build time via
    * @napplet/vite-plugin's `configSchema` option, or at runtime via
@@ -665,7 +596,7 @@ export interface NappletGlobal {
    * `<meta name="napplet-connect-granted">` tag injected by the shell.
    *
    * Graceful degradation: `{ granted: false, origins: [] }` when shell does not
-   * advertise `nub:connect`, does not inject the meta tag, or denies the grant.
+   * advertise `nap:connect`, does not inject the meta tag, or denies the grant.
    * This object is NEVER `undefined`.
    *
    * @example
@@ -678,42 +609,42 @@ export interface NappletGlobal {
    *   const resp = await fetch('https://api.example.com/me');
    * }
    *
-   * // Capability-check the shell for the NUB itself:
-   * if (window.napplet.shell.supports('nub:connect')) { ... }
+   * // Capability-check the shell for the NAP itself:
+   * if (window.napplet.shell.supports('nap:connect')) { ... }
    * ```
    */
   connect: {
     /**
      * True when the shell has granted the napplet direct network access to at
      * least one origin declared in its manifest `connect` tags. False when
-     * denied, ungranted, or when the shell does not implement `nub:connect`.
+     * denied, ungranted, or when the shell does not implement `nap:connect`.
      */
     readonly granted: boolean;
     /**
      * Readonly list of origins for which the shell emitted `connect-src` entries.
      * Empty when `granted` is false. Origin format matches CSP source-expression
      * rules: scheme + host + optional non-default port, no path/query/fragment,
-     * lowercase host, Punycode for IDN. See NUB-CONNECT spec for normalization.
+     * lowercase host, Punycode for IDN. See NAP-CONNECT spec for normalization.
      */
     readonly origins: readonly string[];
   };
   /**
    * Shell-assigned napplet class (abstract security-posture identifier).
    *
-   * Populated by the NUB-CLASS wire message `class.assigned` (shell → napplet,
+   * Populated by the NAP-CLASS wire message `class.assigned` (shell -> napplet,
    * one terminal envelope per lifecycle) after iframe ready. The runtime value
    * is a plain `number`, not a literal union — the class space is extensible
-   * as new NUB-CLASS-$N sub-track members are defined. Current canonical
-   * classes (defined in the NUB-CLASS track): `1` (strict baseline, no
+   * as new NAP-CLASS-$N sub-track members are defined. Current canonical
+   * classes (defined in the NAP-CLASS track): `1` (strict baseline, no
    * user-declared origins) and `2` (user-approved explicit-origin CSP).
    *
    * `undefined` in three distinct states, all of which napplets MUST handle
    * gracefully:
    * 1. Before the shell has sent `class.assigned` (early bootstrap).
-   * 2. When the shell does not implement `nub:class` (capability missing).
+   * 2. When the shell does not implement `nap:class` (capability missing).
    * 3. When the shell implements the NUB but intentionally withholds assignment.
    *
-   * Cross-NUB invariant (in shells implementing both NUB-CONNECT and NUB-CLASS):
+   * Cross-NAP invariant (in shells implementing both NAP-CONNECT and NAP-CLASS):
    * `class === 2` iff `window.napplet.connect.granted === true`. See
    * `specs/SHELL-CLASS-POLICY.md` (Phase 140) for the full shell-responsibility
    * matrix.
@@ -721,30 +652,30 @@ export interface NappletGlobal {
    * @example
    * ```ts
    * // Capability-check before branching on class:
-   * if (window.napplet.shell.supports('nub:class') && window.napplet.class !== undefined) {
+   * if (window.napplet.shell.supports('nap:class') && window.napplet.class !== undefined) {
    *   console.log(`napplet running as class ${window.napplet.class}`);
    * } else {
-   *   // Shell does not implement nub:class or assignment has not arrived;
+   *   // Shell does not implement nap:class or assignment has not arrived;
    *   // fall back to feature detection (e.g., window.napplet.connect.granted).
    * }
    * ```
    */
   class?: number;
   /**
-   * Shell capability queries. Check whether the shell supports a NUB,
-   * permission, or numbered NUB protocol.
+   * Shell capability queries. Check whether the shell supports a NAP,
+   * permission, or numbered NAP protocol.
    *
    * @example
    * ```ts
-   * // NUB domain (bare shorthand or prefixed):
+   * // NAP domain (bare shorthand or prefixed):
    * if (window.napplet.shell.supports('relay')) { ... }
-   * if (window.napplet.shell.supports('nub:relay')) { ... }
+   * if (window.napplet.shell.supports('nap:relay')) { ... }
    *
    * // Permission:
    * if (window.napplet.shell.supports('perm:popups')) { ... }
    *
-   * // Numbered NUB protocol over an interface:
-   * if (window.napplet.shell.supports('ifc', 'NUB-01')) { ... }
+   * // Numbered NAP protocol over an interface:
+   * if (window.napplet.shell.supports('ifc', 'NAP-01')) { ... }
    * ```
    */
   shell: NappletGlobalShell;

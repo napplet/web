@@ -22,6 +22,7 @@ describe('shim message boundary guards', () => {
 
   it('treats malformed known message types as boundary no-ops when no request is pending', () => {
     expect(() => handleConfigMessage({ type: 'config.values' })).not.toThrow();
+    expect(() => handleIdentityMessage({ type: 'identity.changed' })).not.toThrow();
     expect(() => handleKeysMessage({ type: 'keys.registerAction.result' })).not.toThrow();
     expect(() => handleMediaMessage({ type: 'media.session.create.result' })).not.toThrow();
     expect(() => handleNotifyMessage({ type: 'notify.send.result' })).not.toThrow();

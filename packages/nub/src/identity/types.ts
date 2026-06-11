@@ -2,18 +2,19 @@
  * @napplet/nub/identity -- Read-only user identity query message types
  * for the JSON envelope wire protocol.
  *
- * Defines 18 message types for identity queries:
+ * Defines identity query and push message types:
  * - Napplet -> Shell: getPublicKey, getRelays, getProfile, getFollows,
  *   getList, getZaps, getMutes, getBlocked, getBadges
  * - Shell -> Napplet: corresponding .result for each query
+ * - Shell -> Napplet: identity.changed push notifications
  *
  * All types form a discriminated union on the `type` field.
  * All queries are strictly read-only -- no signing, encryption, or decryption.
  */
 
-import type { NappletMessage, NostrEvent, Rumor } from '@napplet/core';
+import type { NappletMessage } from '@napplet/core';
 
-/** The NUB domain name for identity messages. */
+/** The NAP domain name for identity messages. */
 export const DOMAIN = 'identity' as const;
 
 /**
@@ -285,7 +286,20 @@ export interface IdentityGetPublicKeyResultMessage extends IdentityMessage {
   type: 'identity.getPublicKey.result';
   /** Correlation ID matching the original request. */
   id: string;
-  /** Hex-encoded public key. */
+  /** Hex-encoded public key, or "" when no user/signer is connected. */
+  pubkey: string;
+}
+
+/**
+ * Shell-pushed user identity change notification.
+ *
+ * This message is not correlated with a request and therefore has no `id`.
+ * The pubkey shape matches identity.getPublicKey.result: hex pubkey when a
+ * user/signer is connected, or "" when the identity is cleared.
+ */
+export interface IdentityChangedMessage extends IdentityMessage {
+  type: 'identity.changed';
+  /** Hex-encoded public key, or "" when no user/signer is connected. */
   pubkey: string;
 }
 
@@ -465,117 +479,6 @@ export interface IdentityGetBadgesResultMessage extends IdentityMessage {
   error?: string;
 }
 
-/**
- * Error code vocabulary for identity.decrypt.error envelopes.
- *
- * 8-code string-literal union:
- * - `class-forbidden`: napplet is not assigned `class: 1` per NUB-CLASS-1 (shell rejects at boundary)
- * - `signer-denied`: user explicitly refused the decrypt via shell consent UI
- * - `signer-unavailable`: signer is not connected or not reachable
- * - `decrypt-failed`: crypto operation failed (bad key, malformed ciphertext, etc.)
- * - `malformed-wrap`: outer event signature invalid or event shape unparseable
- * - `impersonation`: NIP-17 seal.pubkey does NOT match rumor.pubkey (spoofed author)
- * - `unsupported-encryption`: encryption scheme not supported by the shell
- * - `policy-denied`: shell-side policy rejected the request (e.g., rate-limit)
- *
- * All error codes are stable wire values; spec guarantees enumeration.
- */
-export type IdentityDecryptErrorCode =
-  | 'class-forbidden'
-  | 'signer-denied'
-  | 'signer-unavailable'
-  | 'decrypt-failed'
-  | 'malformed-wrap'
-  | 'impersonation'
-  | 'unsupported-encryption'
-  | 'policy-denied';
-
-/**
- * Request the shell to decrypt a received Nostr event.
- *
- * Shape auto-detection: shell inspects the event (kind, tags, content shape)
- * and dispatches to NIP-04 / direct NIP-44 / NIP-17 gift-wrap handlers.
- * Napplet does NOT select the encryption mode.
- *
- * One-shot request/result — mirrors relay.publishEncrypted shape (NOT a subscription).
- *
- * Only legal for napplets assigned class: 1 per NUB-CLASS-1 (shell-enforced).
- *
- * @example
- * ```ts
- * const msg: IdentityDecryptMessage = {
- *   type: 'identity.decrypt',
- *   id: crypto.randomUUID(),
- *   event: receivedGiftWrapEvent,
- * };
- * ```
- */
-export interface IdentityDecryptMessage extends IdentityMessage {
-  type: 'identity.decrypt';
-  /** Correlation ID. */
-  id: string;
-  /** The received event (outer wrap for NIP-17; kind-4 for NIP-04; etc.). */
-  event: NostrEvent;
-}
-
-/**
- * Successful result of identity.decrypt.
- *
- * Rumor carries its own real `created_at`; outer gift-wrap `created_at`
- * (randomized ±2 days per NIP-59 for sender-anonymity) is INTENTIONALLY
- * not surfaced. Exposing it would undo the privacy floor.
- *
- * `sender` is shell-authenticated from the validated seal signature
- * (for NIP-17 flows) — NOT derived by the napplet from rumor.pubkey
- * (unsigned → attacker-controlled impersonation surface).
- *
- * @example
- * ```ts
- * const msg: IdentityDecryptResultMessage = {
- *   type: 'identity.decrypt.result',
- *   id: 'req-1',
- *   rumor: { id: '...', pubkey: '...', kind: 14, content: 'hi', tags: [], created_at: 123 },
- *   sender: 'ab12...',
- * };
- * ```
- */
-export interface IdentityDecryptResultMessage extends IdentityMessage {
-  type: 'identity.decrypt.result';
-  /** Correlation ID matching the original request. */
-  id: string;
-  /** The decrypted rumor (UnsignedEvent & { id: string }). */
-  rumor: Rumor;
-  /** Shell-authenticated sender pubkey (from seal signature, not rumor.pubkey). */
-  sender: string;
-}
-
-/**
- * Error result of identity.decrypt.
- *
- * Typed discriminator via IdentityDecryptErrorCode — never throws a generic Error.
- * Optional free-form `message?` is for debugging only; MUST NOT leak napplet-internal
- * details or other napplets' identities (per spec shell responsibility).
- *
- * @example
- * ```ts
- * const msg: IdentityDecryptErrorMessage = {
- *   type: 'identity.decrypt.error',
- *   id: 'req-1',
- *   error: 'class-forbidden',
- *   message: 'current class: 2',
- * };
- * ```
- */
-export interface IdentityDecryptErrorMessage extends IdentityMessage {
-  type: 'identity.decrypt.error';
-  /** Correlation ID matching the original request. */
-  id: string;
-  /** Typed error code from IdentityDecryptErrorCode (8-value union). */
-  error: IdentityDecryptErrorCode;
-  /** Optional debug message; MUST NOT leak napplet-internal details. */
-  message?: string;
-}
-
 /** Napplet -> Shell identity request messages. */
 export type IdentityRequestMessage =
   | IdentityGetPublicKeyMessage
@@ -586,12 +489,12 @@ export type IdentityRequestMessage =
   | IdentityGetZapsMessage
   | IdentityGetMutesMessage
   | IdentityGetBlockedMessage
-  | IdentityGetBadgesMessage
-  | IdentityDecryptMessage;
+  | IdentityGetBadgesMessage;
 
-/** Shell -> Napplet identity result messages. */
+/** Shell -> Napplet identity result and push messages. */
 export type IdentityResultMessage =
   | IdentityGetPublicKeyResultMessage
+  | IdentityChangedMessage
   | IdentityGetRelaysResultMessage
   | IdentityGetProfileResultMessage
   | IdentityGetFollowsResultMessage
@@ -599,9 +502,13 @@ export type IdentityResultMessage =
   | IdentityGetZapsResultMessage
   | IdentityGetMutesResultMessage
   | IdentityGetBlockedResultMessage
-  | IdentityGetBadgesResultMessage
-  | IdentityDecryptResultMessage
-  | IdentityDecryptErrorMessage;
+  | IdentityGetBadgesResultMessage;
 
-/** All identity NUB message types (discriminated union on `type` field). */
-export type IdentityNubMessage = IdentityRequestMessage | IdentityResultMessage;
+/** All identity NAP message types (discriminated union on `type` field). */
+export type IdentityNapMessage = IdentityRequestMessage | IdentityResultMessage;
+
+/**
+ * @deprecated Use {@link IdentityNapMessage}. The public proposal system was
+ * renamed from NUB to NAP.
+ */
+export type IdentityNubMessage = IdentityNapMessage;
