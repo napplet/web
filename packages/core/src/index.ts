@@ -11,9 +11,9 @@
  * ```ts
  * import {
  *   type NostrEvent, type NostrFilter,
- *   type NappletMessage, type NubDomain, type ShellSupports,
+ *   type NappletMessage, type NapDomain, type ShellSupports,
  *   type NubHandler, type NubDispatch,
- *   NUB_DOMAINS, TOPICS,
+ *   NAP_DOMAINS, TOPICS,
  *   createDispatch, registerNub, dispatch, getRegisteredDomains,
  * } from '@napplet/core';
  * ```
@@ -21,8 +21,18 @@
  * @packageDocumentation
  */
 
-export type { NappletMessage, NubDomain, NamespacedCapability, ShellSupports, NappletGlobalShell } from './envelope.js';
-export { NUB_DOMAINS } from './envelope.js';
+export type {
+  NappletMessage,
+  NapDomain,
+  NubDomain,
+  NamespacedCapability,
+  NapProtocolId,
+  NubProtocolId,
+  ProtocolId,
+  ShellSupports,
+  NappletGlobalShell,
+} from './envelope.js';
+export { NAP_DOMAINS, NUB_DOMAINS } from './envelope.js';
 
 export type { NubHandler, NubDispatch } from './dispatch.js';
 export { createDispatch, registerNub, dispatch, getRegisteredDomains } from './dispatch.js';
@@ -32,8 +42,13 @@ export type {
   NostrFilter,
   Subscription,
   EventTemplate,
-  UnsignedEvent,
-  Rumor,
+  MediaPlaybackOwner,
+  MediaSourceRef,
+  MediaMetadata,
+  MediaState,
+  MediaAction,
+  MediaSessionCreate,
+  MediaSessionResult,
   NappletGlobal,
 } from './types.js';
 

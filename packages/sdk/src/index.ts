@@ -25,10 +25,16 @@ import type {
   NappletGlobal,
   NostrEvent,
   NostrFilter,
-  Rumor,
   Subscription,
   EventTemplate,
 } from '@napplet/core';
+import type {
+  MediaSessionCreate,
+  MediaSessionResult,
+  MediaMetadata,
+  MediaState,
+  MediaAction,
+} from '@napplet/nub/media';
 
 /**
  * Retrieve the `window.napplet` global, throwing a clear error if it is absent.
@@ -213,7 +219,8 @@ export const storage = {
  * import { media } from '@napplet/sdk';
  *
  * const { sessionId } = await media.createSession({
- *   title: 'My Song', artist: 'The Artist',
+ *   owner: 'napplet',
+ *   metadata: { title: 'My Song', artist: 'The Artist' },
  * });
  *
  * media.reportState(sessionId, { status: 'playing', position: 42.5 });
@@ -222,18 +229,11 @@ export const storage = {
 export const media = {
   /**
    * Create a new media session with the shell.
-   * @param metadata  Optional initial metadata
-   * @returns The confirmed session result with sessionId
+   * @param options  Ownership-aware session options
+   * @returns The shell result with canonical sessionId and owner, or error
    */
-  createSession(metadata?: {
-    title?: string;
-    artist?: string;
-    album?: string;
-    artwork?: { url?: string; hash?: string };
-    duration?: number;
-    mediaType?: 'audio' | 'video';
-  }): Promise<{ sessionId: string }> {
-    return requireNapplet().media.createSession(metadata);
+  createSession(options: MediaSessionCreate): Promise<MediaSessionResult> {
+    return requireNapplet().media.createSession(options);
   },
 
   /**
@@ -241,14 +241,7 @@ export const media = {
    * @param sessionId  The session to update
    * @param metadata   Partial metadata fields to update
    */
-  updateSession(sessionId: string, metadata: {
-    title?: string;
-    artist?: string;
-    album?: string;
-    artwork?: { url?: string; hash?: string };
-    duration?: number;
-    mediaType?: 'audio' | 'video';
-  }): void {
+  updateSession(sessionId: string, metadata: Partial<MediaMetadata>): void {
     requireNapplet().media.updateSession(sessionId, metadata);
   },
 
@@ -265,12 +258,7 @@ export const media = {
    * @param sessionId  The session to report state for
    * @param state      Current playback state
    */
-  reportState(sessionId: string, state: {
-    status: 'playing' | 'paused' | 'stopped' | 'buffering';
-    position?: number;
-    duration?: number;
-    volume?: number;
-  }): void {
+  reportState(sessionId: string, state: MediaState): void {
     requireNapplet().media.reportState(sessionId, state);
   },
 
@@ -279,8 +267,18 @@ export const media = {
    * @param sessionId  The session to update capabilities for
    * @param actions    Currently supported actions
    */
-  reportCapabilities(sessionId: string, actions: ('play' | 'pause' | 'stop' | 'next' | 'prev' | 'seek' | 'volume')[]): void {
+  reportCapabilities(sessionId: string, actions: MediaAction[]): void {
     requireNapplet().media.reportCapabilities(sessionId, actions);
+  },
+
+  /**
+   * Send a command to the current playback owner.
+   * @param sessionId  The session to control
+   * @param action     The media action to request
+   * @param value      Optional value for seek/volume
+   */
+  sendCommand(sessionId: string, action: MediaAction, value?: number): void {
+    requireNapplet().media.sendCommand(sessionId, action, value);
   },
 
   /**
@@ -291,9 +289,35 @@ export const media = {
    */
   onCommand(
     sessionId: string,
-    callback: (action: 'play' | 'pause' | 'stop' | 'next' | 'prev' | 'seek' | 'volume', value?: number) => void,
+    callback: (action: MediaAction, value?: number) => void,
   ): Subscription {
     return requireNapplet().media.onCommand(sessionId, callback);
+  },
+
+  /**
+   * Listen for shell-reported playback state for shell-owned sessions.
+   * @param sessionId  The session to listen for state on
+   * @param callback   Called with playback state
+   * @returns A Subscription with `close()` to stop listening
+   */
+  onState(
+    sessionId: string,
+    callback: (state: MediaState) => void,
+  ): Subscription {
+    return requireNapplet().media.onState(sessionId, callback);
+  },
+
+  /**
+   * Listen for shell-reported capabilities for shell-owned sessions.
+   * @param sessionId  The session to listen for capabilities on
+   * @param callback   Called with available actions
+   * @returns A Subscription with `close()` to stop listening
+   */
+  onCapabilities(
+    sessionId: string,
+    callback: (actions: MediaAction[]) => void,
+  ): Subscription {
+    return requireNapplet().media.onCapabilities(sessionId, callback);
   },
 
   /**
@@ -304,7 +328,7 @@ export const media = {
    */
   onControls(
     sessionId: string,
-    callback: (controls: ('play' | 'pause' | 'stop' | 'next' | 'prev' | 'seek' | 'volume')[]) => void,
+    callback: (controls: MediaAction[]) => void,
   ): Subscription {
     return requireNapplet().media.onControls(sessionId, callback);
   },
@@ -538,6 +562,15 @@ export const identity = {
   },
 
   /**
+   * Listen for shell-pushed user identity changes.
+   * @param handler  Called with a hex pubkey, or "" when no user/signer is connected
+   * @returns Subscription with close() to detach the handler
+   */
+  onChanged(handler: (pubkey: string) => void): Subscription {
+    return requireNapplet().identity.onChanged(handler);
+  },
+
+  /**
    * Get the user's relay list (NIP-65).
    * @returns Record mapping relay URLs to read/write permissions
    */
@@ -622,23 +655,10 @@ export const identity = {
   }[]> {
     return requireNapplet().identity.getBadges();
   },
-
-  /**
-   * Decrypt a received Nostr event (NIP-04 / direct NIP-44 / NIP-17 gift-wrap).
-   *
-   * Shape is auto-detected by the shell; napplets do NOT select encryption mode.
-   * Only legal for napplets assigned class: 1 per NUB-CLASS-1 (shell-enforced).
-   *
-   * @param event  The received event (outer wrap for NIP-17, kind-4 for NIP-04, etc.)
-   * @returns Promise resolving to { rumor, sender }; rejects with Error on failure.
-   */
-  decrypt(event: NostrEvent): Promise<{ rumor: Rumor; sender: string }> {
-    return requireNapplet().identity.decrypt(event);
-  },
 };
 
 /**
- * Per-napplet declarative configuration (NUB-CONFIG): register a schema,
+ * Per-napplet declarative configuration (NAP-CONFIG): register a schema,
  * read current values, subscribe to live updates, deep-link into the
  * shell-owned settings UI, and listen for schema errors.
  *
@@ -761,11 +781,18 @@ export type { NostrEvent } from '@napplet/core';
 export type { NostrFilter } from '@napplet/core';
 export type { Subscription } from '@napplet/core';
 export type { EventTemplate } from '@napplet/core';
-export type { Rumor } from '@napplet/core';
-export type { UnsignedEvent } from '@napplet/core';
 
-export type { NappletMessage, NubDomain, NamespacedCapability, ShellSupports } from '@napplet/core';
-export { NUB_DOMAINS } from '@napplet/core';
+export type {
+  NappletMessage,
+  NapDomain,
+  NubDomain,
+  NamespacedCapability,
+  NapProtocolId,
+  NubProtocolId,
+  ProtocolId,
+  ShellSupports,
+} from '@napplet/core';
+export { NAP_DOMAINS, NUB_DOMAINS } from '@napplet/core';
 
 // Relay NUB
 export type {
@@ -811,13 +838,11 @@ export type {
   IdentityGetMutesResultMessage,
   IdentityGetBlockedResultMessage,
   IdentityGetBadgesResultMessage,
+  IdentityChangedMessage,
   IdentityRequestMessage,
   IdentityResultMessage,
+  IdentityNapMessage,
   IdentityNubMessage,
-  IdentityDecryptMessage,
-  IdentityDecryptResultMessage,
-  IdentityDecryptErrorMessage,
-  IdentityDecryptErrorCode,
 } from '@napplet/nub/identity';
 
 // Storage NUB
@@ -892,10 +917,14 @@ export type {
   KeysNubMessage,
 } from '@napplet/nub/keys';
 
-// Media NUB
+// Media NAP
 export type {
   MediaMetadata,
   MediaArtwork,
+  MediaPlaybackOwner,
+  MediaSourceRef,
+  MediaSessionCreate,
+  MediaSessionResult,
   MediaState,
   MediaAction,
   MediaMessage,
@@ -909,6 +938,7 @@ export type {
   MediaControlsMessage,
   MediaRequestMessage,
   MediaResultMessage,
+  MediaNapMessage,
   MediaNubMessage,
 } from '@napplet/nub/media';
 
@@ -1010,11 +1040,22 @@ export { installConnectShim } from '@napplet/nub/connect';
 export { installClassShim } from '@napplet/nub/class';
 
 export { relaySubscribe, relayPublish, relayPublishEncrypted, relayQuery } from '@napplet/nub/relay';
-export { identityGetPublicKey, identityGetRelays, identityGetProfile, identityGetFollows, identityGetList, identityGetZaps, identityGetMutes, identityGetBlocked, identityGetBadges, identityDecrypt } from '@napplet/nub/identity';
+export {
+  identityGetPublicKey,
+  identityOnChanged,
+  identityGetRelays,
+  identityGetProfile,
+  identityGetFollows,
+  identityGetList,
+  identityGetZaps,
+  identityGetMutes,
+  identityGetBlocked,
+  identityGetBadges,
+} from '@napplet/nub/identity';
 export { storageGetItem, storageSetItem, storageRemoveItem, storageKeys } from '@napplet/nub/storage';
 export { ifcEmit, ifcOn } from '@napplet/nub/ifc';
 export { keysRegisterAction, keysUnregisterAction, keysOnAction, keysRegister } from '@napplet/nub/keys';
-export { mediaCreateSession, mediaUpdateSession, mediaDestroySession, mediaReportState, mediaReportCapabilities, mediaOnCommand, mediaOnControls } from '@napplet/nub/media';
+export { mediaCreateSession, mediaUpdateSession, mediaDestroySession, mediaReportState, mediaReportCapabilities, mediaSendCommand, mediaOnCommand, mediaOnState, mediaOnCapabilities, mediaOnControls } from '@napplet/nub/media';
 export { notifySend, notifyDismiss, notifyBadge, notifyRegisterChannel, notifyRequestPermission, notifyOnAction, notifyOnClicked, notifyOnDismissed, notifyOnControls } from '@napplet/nub/notify';
 export { resourceBytes, resourceBytesAsObjectURL } from '@napplet/nub/resource';
 export { connectGranted, connectOrigins, normalizeConnectOrigin } from '@napplet/nub/connect';

@@ -1,6 +1,19 @@
 
 import { installKeysShim, handleKeysMessage, registerAction, unregisterAction, onAction } from '@napplet/nub/keys/shim';
-import { installMediaShim, handleMediaMessage, createSession, updateSession, destroySession, reportState, reportCapabilities, onCommand, onControls } from '@napplet/nub/media/shim';
+import {
+  installMediaShim,
+  handleMediaMessage,
+  createSession,
+  updateSession,
+  destroySession,
+  reportState,
+  reportCapabilities,
+  sendCommand,
+  onCommand,
+  onState,
+  onCapabilities,
+  onControls,
+} from '@napplet/nub/media/shim';
 import {
   installNotifyShim,
   handleNotifyMessage,
@@ -36,12 +49,13 @@ import {
 } from '@napplet/nub/resource/shim';
 import { installConnectShim } from '@napplet/nub/connect/shim';
 import { installClassShim, handleClassMessage } from '@napplet/nub/class/shim';
-import { NUB_DOMAINS, type NappletGlobal, type NamespacedCapability } from '@napplet/core';
+import { NAP_DOMAINS, type NappletGlobal, type NamespacedCapability, type ProtocolId } from '@napplet/core';
 import type { IfcEventMessage } from '@napplet/nub/ifc/types';
 
 interface ShellInitMessage {
   type: 'shell.init';
   capabilities?: {
+    naps?: unknown;
     nubs?: unknown;
     sandbox?: unknown;
   };
@@ -93,8 +107,8 @@ function handleEnvelopeMessage(event: MessageEvent): void {
     return;
   }
 
-  // Route identity.* result and error messages to identity shim
-  if (type.startsWith('identity.') && (type.endsWith('.result') || type.endsWith('.error'))) {
+  // Route identity.* result and push messages to identity shim
+  if (type.startsWith('identity.')) {
     identityShim.handleIdentityMessage(msg as { type: string; [key: string]: unknown });
     return;
   }
@@ -115,37 +129,69 @@ function handleEnvelopeMessage(event: MessageEvent): void {
 
 installIfcShim();
 
-function defaultShellSupports(capability: NamespacedCapability): boolean {
+function defaultShellSupports(capability: NamespacedCapability, protocol?: ProtocolId): boolean {
+  if (protocol !== undefined) return false;
+
   // perm:* — shell-granted only; nothing for the shim to assert.
   if (typeof capability === 'string' && capability.startsWith('perm:')) return false;
 
-  // 'nub:<domain>' — strip the prefix and check the domain list.
-  if (typeof capability === 'string' && capability.startsWith('nub:')) {
-    const domain = capability.slice(4);
-    return (NUB_DOMAINS as readonly string[]).includes(domain);
-  }
+  const domain = normalizeCapabilityDomain(capability);
 
-  // Bare NUB shorthand (e.g. 'relay').
-  return (NUB_DOMAINS as readonly string[]).includes(capability);
+  // Bare NAP shorthand (e.g. 'relay') or prefixed nap:/nub: aliases.
+  return (NAP_DOMAINS as readonly string[]).includes(domain);
 }
 
-function createShellSupports(capabilities: ShellInitMessage['capabilities']): (capability: NamespacedCapability) => boolean {
-  const nubs = new Set(
-    Array.isArray(capabilities?.nubs)
-      ? capabilities.nubs.filter((capability): capability is string => typeof capability === 'string')
-      : [],
+function normalizeCapabilityDomain(capability: string): string {
+  if (capability.startsWith('nap:') || capability.startsWith('nub:')) {
+    return capability.slice(4);
+  }
+  return capability;
+}
+
+function normalizeProtocol(protocol: ProtocolId | undefined): string | undefined {
+  const upper = protocol?.toUpperCase();
+  if (!upper) return undefined;
+  return upper.startsWith('NUB-') ? `NAP-${upper.slice(4)}` : upper;
+}
+
+function listCapabilityNames(capabilities: ShellInitMessage['capabilities']): string[] {
+  return [
+    ...(Array.isArray(capabilities?.naps) ? capabilities.naps : []),
+    ...(Array.isArray(capabilities?.nubs) ? capabilities.nubs : []),
+  ].filter((capability): capability is string => typeof capability === 'string');
+}
+
+function createShellSupports(capabilities: ShellInitMessage['capabilities']): (capability: NamespacedCapability, protocol?: ProtocolId) => boolean {
+  const naps = new Set(
+    listCapabilityNames(capabilities)
+      .map(normalizeCapabilityDomain),
   );
+  const protocols = new Set<string>();
+
+  for (const capability of naps) {
+    const match = /^([^:]+):(N(?:AP|UB)-\d+)$/i.exec(capability);
+    if (!match) continue;
+    const [, domain, protocol] = match;
+    protocols.add(`${domain}:${normalizeProtocol(protocol as ProtocolId)}`);
+    naps.add(domain);
+  }
+
   const sandbox = new Set(
     Array.isArray(capabilities?.sandbox)
       ? capabilities.sandbox.filter((capability): capability is string => typeof capability === 'string')
       : [],
   );
 
-  return (capability: NamespacedCapability): boolean => {
+  return (capability: NamespacedCapability, protocol?: ProtocolId): boolean => {
     if (typeof capability !== 'string') return false;
+    if (protocol !== undefined) {
+      const normalizedProtocol = normalizeProtocol(protocol);
+      if (capability.startsWith('perm:') || !normalizedProtocol) return false;
+      const domain = normalizeCapabilityDomain(capability);
+      return protocols.has(`${domain}:${normalizedProtocol}`);
+    }
     if (capability.startsWith('perm:')) return sandbox.has(capability);
-    if (capability.startsWith('nub:')) return nubs.has(capability.slice(4));
-    return nubs.has(capability);
+    return naps.has(normalizeCapabilityDomain(capability));
   };
 }
 
@@ -183,7 +229,10 @@ function installShellCapabilities(msg: ShellInitMessage): void {
     destroySession,
     reportState,
     reportCapabilities,
+    sendCommand,
     onCommand,
+    onState,
+    onCapabilities,
     onControls,
   },
   notify: {
@@ -199,6 +248,7 @@ function installShellCapabilities(msg: ShellInitMessage): void {
   },
   identity: {
     getPublicKey: identityShim.getPublicKey,
+    onChanged: identityShim.onChanged,
     getRelays: identityShim.getRelays,
     getProfile: identityShim.getProfile,
     getFollows: identityShim.getFollows,
@@ -207,7 +257,6 @@ function installShellCapabilities(msg: ShellInitMessage): void {
     getMutes: identityShim.getMutes,
     getBlocked: identityShim.getBlocked,
     getBadges: identityShim.getBadges,
-    decrypt: identityShim.decrypt,
   },
   config: {
     registerSchema: configRegisterSchema,

@@ -1,6 +1,7 @@
 // @napplet/nub/identity -- Identity NUB shim (read-only user identity queries)
 // All queries are request/response pairs over postMessage to the shell.
 
+import type { Subscription } from '@napplet/core';
 import type {
   ProfileData,
   ZapReceipt,
@@ -15,10 +16,8 @@ import type {
   IdentityGetMutesMessage,
   IdentityGetBlockedMessage,
   IdentityGetBadgesMessage,
-  IdentityDecryptMessage,
-  IdentityNubMessage,
+  IdentityNapMessage,
 } from './types.js';
-import type { NostrEvent, Rumor } from '@napplet/core';
 
 /** Default timeout for identity queries (30 seconds). */
 const REQUEST_TIMEOUT_MS = 30_000;
@@ -27,7 +26,11 @@ const REQUEST_TIMEOUT_MS = 30_000;
 const pendingRequests = new Map<string, {
   resolve: (value: unknown) => void;
   reject: (reason: Error) => void;
+  timeout: ReturnType<typeof setTimeout>;
 }>();
+
+/** identity.changed subscribers. */
+const changeHandlers = new Set<(pubkey: string) => void>();
 
 /** Guard against double-install. */
 let installed = false;
@@ -42,8 +45,7 @@ const IDENTITY_MESSAGE_TYPES = new Set<string>([
   'identity.getMutes.result',
   'identity.getBlocked.result',
   'identity.getBadges.result',
-  'identity.decrypt.result',
-  'identity.decrypt.error',
+  'identity.changed',
   'identity.getPublicKey',
   'identity.getRelays',
   'identity.getProfile',
@@ -53,10 +55,9 @@ const IDENTITY_MESSAGE_TYPES = new Set<string>([
   'identity.getMutes',
   'identity.getBlocked',
   'identity.getBadges',
-  'identity.decrypt',
 ]);
 
-function isIdentityNubMessage(msg: { type: string }): msg is IdentityNubMessage {
+function isIdentityNapMessage(msg: { type: string }): msg is IdentityNapMessage {
   return IDENTITY_MESSAGE_TYPES.has(msg.type);
 }
 
@@ -64,11 +65,14 @@ function isIdentityNubMessage(msg: { type: string }): msg is IdentityNubMessage 
  * Handle identity.* result messages from the shell via the central message listener.
  */
 export function handleIdentityMessage(msg: { type: string; [key: string]: unknown }): void {
-  if (!isIdentityNubMessage(msg)) return;
+  if (!isIdentityNapMessage(msg)) return;
 
   switch (msg.type) {
     case 'identity.getPublicKey.result':
       resolvePending(msg.id, msg.pubkey);
+      return;
+    case 'identity.changed':
+      notifyChanged(msg.pubkey);
       return;
     case 'identity.getRelays.result':
       resolveOrReject(msg.id, msg.relays, msg.error);
@@ -94,12 +98,6 @@ export function handleIdentityMessage(msg: { type: string; [key: string]: unknow
     case 'identity.getBadges.result':
       resolveOrReject(msg.id, msg.badges, msg.error);
       return;
-    case 'identity.decrypt.result':
-      resolvePending(msg.id, { rumor: msg.rumor, sender: msg.sender });
-      return;
-    case 'identity.decrypt.error':
-      rejectPending(msg.id, new Error(msg.error));
-      return;
 
     // ─── Napplet → Shell request messages (defensive — never received here) ──
     case 'identity.getPublicKey':
@@ -111,7 +109,6 @@ export function handleIdentityMessage(msg: { type: string; [key: string]: unknow
     case 'identity.getMutes':
     case 'identity.getBlocked':
     case 'identity.getBadges':
-    case 'identity.decrypt':
       // Request-side envelopes are sent napplet → shell; the handler should
       // never receive one. Exhaustiveness requires coverage; defensive no-op.
       return;
@@ -128,6 +125,7 @@ function resolvePending(id: string, value: unknown): void {
   const pending = pendingRequests.get(id);
   if (!pending) return;
   pendingRequests.delete(id);
+  clearTimeout(pending.timeout);
   pending.resolve(value);
 }
 
@@ -135,6 +133,7 @@ function rejectPending(id: string, reason: Error): void {
   const pending = pendingRequests.get(id);
   if (!pending) return;
   pendingRequests.delete(id);
+  clearTimeout(pending.timeout);
   pending.reject(reason);
 }
 
@@ -142,6 +141,7 @@ function resolveOrReject(id: string, value: unknown, error?: string): void {
   const pending = pendingRequests.get(id);
   if (!pending) return;
   pendingRequests.delete(id);
+  clearTimeout(pending.timeout);
   if (error) {
     pending.reject(new Error(error));
   } else {
@@ -149,20 +149,28 @@ function resolveOrReject(id: string, value: unknown, error?: string): void {
   }
 }
 
+function notifyChanged(pubkey: string): void {
+  if (typeof pubkey !== 'string') return;
+  for (const handler of changeHandlers) {
+    handler(pubkey);
+  }
+}
+
 function sendRequest<T>(msg: { type: string; id: string }): Promise<T> {
   return new Promise((resolve, reject) => {
-    pendingRequests.set(msg.id, {
-      resolve: resolve as (value: unknown) => void,
-      reject,
-    });
-
-    window.parent.postMessage(msg, '*');
-
-    setTimeout(() => {
+    const timeout = setTimeout(() => {
       if (pendingRequests.delete(msg.id)) {
         reject(new Error(`${msg.type} timed out`));
       }
     }, REQUEST_TIMEOUT_MS);
+
+    pendingRequests.set(msg.id, {
+      resolve: resolve as (value: unknown) => void,
+      reject,
+      timeout,
+    });
+
+    window.parent.postMessage(msg, '*');
   });
 }
 
@@ -182,9 +190,9 @@ function assertNever(_msg: never): void {
 
 /**
  * Get the user's hex-encoded public key.
- * Always succeeds -- the shell always knows the user's pubkey.
+ * Always succeeds. Resolves to "" when no user/signer is connected.
  *
- * @returns Hex-encoded public key string
+ * @returns Hex-encoded public key string, or ""
  */
 export function getPublicKey(): Promise<string> {
   const msg: IdentityGetPublicKeyMessage = {
@@ -192,6 +200,24 @@ export function getPublicKey(): Promise<string> {
     id: crypto.randomUUID(),
   };
   return sendRequest<string>(msg);
+}
+
+/**
+ * Listen for shell-pushed user identity changes.
+ *
+ * @param handler  Called with a hex pubkey, or "" when no user/signer is connected
+ * @returns Subscription with close() to detach the handler
+ */
+export function onChanged(handler: (pubkey: string) => void): Subscription {
+  changeHandlers.add(handler);
+  let closed = false;
+  return {
+    close() {
+      if (closed) return;
+      closed = true;
+      changeHandlers.delete(handler);
+    },
+  };
 }
 
 /**
@@ -301,44 +327,10 @@ export function getBadges(): Promise<Badge[]> {
 }
 
 /**
- * Decrypt a received Nostr event (NIP-04 / direct NIP-44 / NIP-17 gift-wrap).
- *
- * The shell auto-detects encryption shape and routes to the correct handler;
- * napplets do NOT select the encryption mode. Only legal for napplets assigned
- * `class: 1` per NUB-CLASS-1 — the shell rejects from any other class with
- * error code `class-forbidden`.
- *
- * `sender` is shell-authenticated from the seal pubkey (NIP-17 flows) — never
- * derived from rumor.pubkey. Outer gift-wrap `created_at` is intentionally not
- * surfaced (NIP-59 randomizes it ±2 days for sender-anonymity).
- *
- * GATE-04 note: shim-side class-short-circuit deferred — window.napplet.class slot
- * is not yet part of NappletGlobal in this milestone. Shell enforcement is authoritative.
- *
- * @param event  The received event (outer wrap for NIP-17, kind-4 for NIP-04, etc.)
- * @returns Promise resolving to { rumor, sender }; rejects with Error carrying
- *   an IdentityDecryptErrorCode as message on failure.
- *
- * @example
- * ```ts
- * const { rumor, sender } = await window.napplet.identity.decrypt(wrappedEvent);
- * console.log(`Message from ${sender}: ${rumor.content}`);
- * ```
- */
-export function decrypt(event: NostrEvent): Promise<{ rumor: Rumor; sender: string }> {
-  const msg: IdentityDecryptMessage = {
-    type: 'identity.decrypt',
-    id: crypto.randomUUID(),
-    event,
-  };
-  return sendRequest<{ rumor: Rumor; sender: string }>(msg);
-}
-
-/**
  * Install the identity shim.
- * Identity has no persistent listeners -- each request manages its own lifecycle.
+ * Identity change subscriptions are local fan-out over shell-pushed messages.
  *
- * @returns cleanup function that clears pending requests
+ * @returns cleanup function that clears pending requests and change handlers
  */
 export function installIdentityShim(): () => void {
   if (installed) {
@@ -348,7 +340,11 @@ export function installIdentityShim(): () => void {
   installed = true;
 
   return () => {
+    for (const pending of pendingRequests.values()) {
+      clearTimeout(pending.timeout);
+    }
     pendingRequests.clear();
+    changeHandlers.clear();
     installed = false;
   };
 }

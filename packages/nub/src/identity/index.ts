@@ -1,5 +1,5 @@
 /**
- * @napplet/nub/identity -- Identity NUB module.
+ * @napplet/nub/identity -- Identity NAP module.
  *
  * Exports typed message definitions for the identity domain, shim installer,
  * SDK helpers, and registers the 'identity' domain with core dispatch on import.
@@ -39,24 +39,18 @@ export type {
   IdentityGetMutesResultMessage,
   IdentityGetBlockedResultMessage,
   IdentityGetBadgesResultMessage,
+  IdentityChangedMessage,
   IdentityRequestMessage,
   IdentityResultMessage,
+  IdentityNapMessage,
   IdentityNubMessage,
-  IdentityDecryptMessage,
-  IdentityDecryptResultMessage,
-  IdentityDecryptErrorMessage,
-  IdentityDecryptErrorCode,
 } from './types.js';
-
-export type {
-  Rumor,
-  UnsignedEvent,
-} from '@napplet/core';
 
 export {
   installIdentityShim,
   handleIdentityMessage,
   getPublicKey,
+  onChanged,
   getRelays,
   getProfile,
   getFollows,
@@ -65,11 +59,11 @@ export {
   getMutes,
   getBlocked,
   getBadges,
-  decrypt,
 } from './shim.js';
 
 export {
   identityGetPublicKey,
+  identityOnChanged,
   identityGetRelays,
   identityGetProfile,
   identityGetFollows,
@@ -78,7 +72,6 @@ export {
   identityGetMutes,
   identityGetBlocked,
   identityGetBadges,
-  identityDecrypt,
 } from './sdk.js';
 
 import { registerNub } from '@napplet/core';

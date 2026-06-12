@@ -1,6 +1,6 @@
 {
   "name": "@napplet/nub",
-  "version": "0.3.1",
+  "version": "0.5.0",
   "license": "MIT",
   "exports": {
     "./class": "./src/class/index.ts",

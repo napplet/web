@@ -1,6 +1,6 @@
 # @napplet/nub
 
-> All 12 napplet NUB domains (relay, storage, ifc, keys, theme, media, notify, identity, config, resource, connect, class) as layered subpath exports.
+> All 12 napplet NAP domains (relay, storage, ifc, keys, theme, media, notify, identity, config, resource, connect, class) as layered subpath exports. The package name remains `@napplet/nub` for compatibility.
 
 ## Install
 
@@ -74,7 +74,7 @@ Each domain is an independent subpath. Barrel imports bundle types + shim instal
 | ifc | `@napplet/nub/ifc` | `@napplet/nub/ifc/types` | `@napplet/nub/ifc/shim` | `@napplet/nub/ifc/sdk` | Inter-frame communication (topic pub/sub) |
 | keys | `@napplet/nub/keys` | `@napplet/nub/keys/types` | `@napplet/nub/keys/shim` | `@napplet/nub/keys/sdk` | Keyboard bindings + action registration |
 | theme | `@napplet/nub/theme` | `@napplet/nub/theme/types` | — | — | Read-only shell theme access (types-only today) |
-| media | `@napplet/nub/media` | `@napplet/nub/media/types` | `@napplet/nub/media/shim` | `@napplet/nub/media/sdk` | Media sessions + playback |
+| media | `@napplet/nub/media` | `@napplet/nub/media/types` | `@napplet/nub/media/shim` | `@napplet/nub/media/sdk` | Ownership-aware media sessions + playback |
 | notify | `@napplet/nub/notify` | `@napplet/nub/notify/types` | `@napplet/nub/notify/shim` | `@napplet/nub/notify/sdk` | Shell-rendered notifications |
 | identity | `@napplet/nub/identity` | `@napplet/nub/identity/types` | `@napplet/nub/identity/shim` | `@napplet/nub/identity/sdk` | Read-only user queries (pubkey, metadata) |
 | config | `@napplet/nub/config` | `@napplet/nub/config/types` | `@napplet/nub/config/shim` | `@napplet/nub/config/sdk` | Declarative per-napplet config (schema-driven) |
@@ -138,62 +138,37 @@ Four canonical schemes are defined in the spec:
 Errors arrive as one of 8 typed codes: `not-found`, `blocked-by-policy`, `timeout`,
 `too-large`, `unsupported-scheme`, `decode-failed`, `network-error`, `quota-exceeded`.
 
-See [NUB-RESOURCE](https://github.com/napplet/nubs) for the normative spec, the
+See [NAP-RESOURCE](https://github.com/napplet/naps) for the normative spec, the
 default shell resource policy, and the SVG rasterization MUSTs.
 
-## Identity NUB (v0.29.0)
+## Identity NAP
 
-The `identity` domain gains a class-gated receive-side decrypt primitive in v0.29.0 —
-`identity.decrypt(event)` — closing the NIP-17 / NIP-59 gift-wrap gap. The shell
-owns NIP-04 / direct NIP-44 / NIP-17 gift-wrap unwrap logic; napplets receive a
-validated `{ rumor, sender }` shape where `sender` is shell-authenticated from the
-seal signature (not napplet-derived from `rumor.pubkey`).
+The `identity` domain is read-only. It exposes the shell-user pubkey and public
+identity data, but it does not sign, encrypt, or decrypt. Startup code should
+take one snapshot with `getPublicKey()` and then subscribe to shell-pushed
+`identity.changed` updates instead of polling while a signer connects.
 
 ```ts
 import '@napplet/shim';
-import type { Rumor } from '@napplet/nub/identity';
 
-// Given an incoming NIP-17 kind-1059 gift-wrap, NIP-44 ciphertext, or NIP-04 event:
-const { rumor, sender } = await window.napplet.identity.decrypt(giftWrapEvent);
+const pubkey = await window.napplet.identity.getPublicKey(); // "" when signed out
 
-// `rumor` is UnsignedEvent & { id: string } — nostr-tools canonical type, no sig field
-// `sender` is the shell-authenticated pubkey from the seal signature
-console.log(`${sender} says: ${rumor.content}`);
+const sub = window.napplet.identity.onChanged((nextPubkey) => {
+  if (nextPubkey === '') {
+    // signed out or signer disconnected
+    return;
+  }
+  // identity-dependent work can refresh here
+});
 ```
 
-**Shape auto-detection.** The shell accepts NIP-04 (kind-4 content), direct NIP-44
-(kind-44 or other with NIP-44 payload shape), and NIP-17 / NIP-59 gift-wrap (kind-1059
-→ kind-13 seal → rumor). Napplets do NOT select the encryption mode — a single entry
-point serves all three.
+The wire surface includes `identity.changed` as a shell-to-napplet push message
+with `{ pubkey }` and no correlation `id`. The public key shape matches
+`identity.getPublicKey.result`: a hex pubkey when connected, or `""` when no
+user/signer is connected.
 
-**Class gating (shell-enforced).** `identity.decrypt` is legal only for napplets
-assigned `class: 1` per `NUB-CLASS-1.md` (strict baseline posture: `connect-src 'none'`,
-zero direct network egress, so plaintext is trapped in the frame). Napplets of other
-classes — including undefined-class napplets and NUB-CLASS-2 napplets with approved
-direct-origin access — are refused at the shell boundary with a `class-forbidden`
-error. Enforcement runs shell-side; shim-side class observability is defense-in-depth
-only, never the trust boundary.
-
-**Errors** (typed `IdentityDecryptErrorCode` discriminator, 8 values):
-
-| Code | Meaning |
-|------|---------|
-| `class-forbidden` | Calling napplet is not assigned class: 1 per NUB-CLASS-1 |
-| `signer-denied` | User declined the decrypt operation at the shell prompt |
-| `signer-unavailable` | Shell signer is not available (no signed-in identity) |
-| `decrypt-failed` | Cryptographic decrypt failed (wrong key, corrupted payload) |
-| `malformed-wrap` | Outer wrap signature failed validation or payload shape is invalid |
-| `impersonation` | NIP-17 seal.pubkey !== rumor.pubkey (spec MUST per NUB-IDENTITY) |
-| `unsupported-encryption` | Event's encryption shape is not NIP-04 / NIP-44 / NIP-17 |
-| `policy-denied` | Shell policy rejects this napplet's subsequent decrypt requests |
-
-Napplets MUST NOT attempt to call `window.nostr.*` for decrypt — even if a NIP-07
-browser extension injects `window.nostr` into the iframe (see NIP-5D §Security
-Considerations), that path is architecturally forbidden and the shell enforces the
-ban at the `identity.decrypt` boundary.
-
-See the [NUB-IDENTITY](https://github.com/napplet/nubs) draft spec on `napplet/nubs`
-for the full envelope + conformance table + shell MUSTs.
+See the [NAP-IDENTITY](https://github.com/napplet/naps/pull/12) draft spec for
+the current read-only contract.
 
 ## Connect + Class NUBs (v0.29.0)
 
@@ -217,11 +192,11 @@ if (window.napplet.connect.granted) {
 const o = normalizeConnectOrigin('https://api.example.com');   // 'https://api.example.com'
 ```
 
-`NappletConnect` is `{ readonly granted: boolean; readonly origins: readonly string[] }`. Default on shells that do not implement `nub:connect`, on denied prompts, or pre-injection: `{ granted: false, origins: [] }` (never `undefined`).
+`NappletConnect` is `{ readonly granted: boolean; readonly origins: readonly string[] }`. Default on shells that do not implement `nap:connect`, on denied prompts, or pre-injection: `{ granted: false, origins: [] }` (never `undefined`).
 
 ### `@napplet/nub/class`
 
-Wire-driven NUB with a single shell → napplet envelope `class.assigned` (`{ type: 'class.assigned'; id: string; class: number }`). Sent at iframe-ready time, exactly once per napplet lifecycle. The napplet shim writes the received integer to `window.napplet.class` via a `defineProperty` getter.
+Wire-driven NAP with a single shell -> napplet envelope `class.assigned` (`{ type: 'class.assigned'; id: string; class: number }`). Sent at iframe-ready time, exactly once per napplet lifecycle. The napplet shim writes the received integer to `window.napplet.class` via a `defineProperty` getter.
 
 ```ts
 import type { ClassAssignedMessage, NappletClass } from '@napplet/nub/class/types';
@@ -229,24 +204,24 @@ import { installClassShim, getClass } from '@napplet/nub/class';
 
 // Napplet-side (runs inside the sandboxed iframe)
 // installClassShim() registers the class.assigned dispatcher handler via registerNub.
-// Before the envelope arrives, or if the shell does not implement nub:class:
+// Before the envelope arrives, or if the shell does not implement nap:class:
 // window.napplet.class === undefined (never 0, never null).
-if (window.napplet.shell.supports('nub:class') && getClass() === 2) {
-  // NUB-CLASS-2 posture — user approved direct network access.
+if (window.napplet.shell.supports('nap:class') && getClass() === 2) {
+  // NAP-CLASS-2 posture -- user approved direct network access.
 }
 ```
 
-The class integer is an identifier into the `NUB-CLASS-$N` sub-track (1 = strict baseline, 2 = user-approved explicit-origin). See the NUB-CLASS specs at `napplet/nubs` for posture semantics.
+The class integer is an identifier into the `NAP-CLASS-$N` sub-track (1 = strict baseline, 2 = user-approved explicit-origin). See the NAP-CLASS specs at `napplet/naps` for posture semantics.
 
-See [NUB-CONNECT](https://github.com/napplet/nubs) and [NUB-CLASS](https://github.com/napplet/nubs) for the normative specs, the canonical `connect:origins` aggregateHash fold, the origin format rules, the consent-flow MUSTs, and the at-most-one-terminal-envelope-per-lifecycle constraint.
+See [NAP-CONNECT](https://github.com/napplet/naps) and [NAP-CLASS](https://github.com/napplet/naps) for the normative specs, the canonical `connect:origins` aggregateHash fold, the origin format rules, the consent-flow MUSTs, and the at-most-one-terminal-envelope-per-lifecycle constraint.
 
 ## Package Surface
 
-`@napplet/nub` is the canonical package for every NUB domain. Import each domain through the package subpath:
+`@napplet/nub` is the compatibility package for every NAP domain. Import each domain through the package subpath:
 
 ```ts
 import { mediaCreateSession } from '@napplet/nub/media/sdk';
-import type { MediaNubMessage } from '@napplet/nub/media/types';
+import type { MediaNapMessage } from '@napplet/nub/media/types';
 ```
 
 Domain barrels are also available at `@napplet/nub/relay`, `@napplet/nub/storage`, `@napplet/nub/ifc`, `@napplet/nub/keys`, `@napplet/nub/theme`, `@napplet/nub/media`, `@napplet/nub/notify`, `@napplet/nub/identity`, `@napplet/nub/config`, `@napplet/nub/resource`, `@napplet/nub/connect`, and `@napplet/nub/class`.

@@ -5,7 +5,7 @@
  * The shim must be imported somewhere to install the global.
  */
 
-import type { NappletGlobal, NostrEvent, Rumor } from '@napplet/core';
+import type { NappletGlobal, Subscription } from '@napplet/core';
 import type { ProfileData, ZapReceipt, Badge, RelayPermission } from './types.js';
 
 function requireIdentity(): NappletGlobal['identity'] {
@@ -30,6 +30,24 @@ function requireIdentity(): NappletGlobal['identity'] {
  */
 export function identityGetPublicKey(): Promise<string> {
   return requireIdentity().getPublicKey();
+}
+
+/**
+ * Listen for shell-pushed user identity changes.
+ *
+ * @returns Subscription with close() to detach the handler
+ *
+ * @example
+ * ```ts
+ * import { identityOnChanged } from '@napplet/nub/identity';
+ *
+ * const sub = identityOnChanged((pubkey) => {
+ *   console.log(pubkey || 'signed out');
+ * });
+ * ```
+ */
+export function identityOnChanged(handler: (pubkey: string) => void): Subscription {
+  return requireIdentity().onChanged(handler);
 }
 
 /**
@@ -160,26 +178,4 @@ export function identityGetBlocked(): Promise<string[]> {
  */
 export function identityGetBadges(): Promise<Badge[]> {
   return requireIdentity().getBadges();
-}
-
-/**
- * Decrypt a received Nostr event (NIP-04 / direct NIP-44 / NIP-17 gift-wrap).
- *
- * Shape auto-detected by the shell; napplets do NOT select encryption mode.
- * Only legal for napplets assigned class: 1 per NUB-CLASS-1 (shell-enforced).
- *
- * @param event  The received event (outer wrap for NIP-17, kind-4 for NIP-04, etc.)
- * @returns Promise resolving to { rumor, sender }; rejects with Error carrying
- *   an IdentityDecryptErrorCode as message on failure.
- *
- * @example
- * ```ts
- * import { identityDecrypt } from '@napplet/nub/identity';
- *
- * const { rumor, sender } = await identityDecrypt(wrappedEvent);
- * console.log(`Message from ${sender}: ${rumor.content}`);
- * ```
- */
-export function identityDecrypt(event: NostrEvent): Promise<{ rumor: Rumor; sender: string }> {
-  return requireIdentity().decrypt(event);
 }

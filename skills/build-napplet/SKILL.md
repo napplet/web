@@ -1,6 +1,6 @@
 ---
 name: build-napplet
-description: Use when writing a napplet (sandboxed Nostr iframe app) using @napplet/shim — covers Vite project setup, NIP-5A manifest plugin, subscribe/publish/query relay API, scoped storage, inter-frame events, the v0.28.0 resource NUB for sandboxed byte fetching (replaces direct fetch / <img src=externalUrl>, both of which the iframe CSP blocks), and the v0.29.0 NUB-CLASS + NUB-CONNECT surfaces for shell-assigned security class and user-gated direct network access
+description: Use when writing a napplet (sandboxed Nostr iframe app) using @napplet/shim — covers Vite project setup, NIP-5A manifest plugin, subscribe/publish/query relay API, scoped storage, inter-frame events, the resource NAP for sandboxed byte fetching (replaces direct fetch / <img src=externalUrl>, both of which the iframe CSP blocks), NAP-CLASS + NAP-CONNECT for shell-assigned security class and user-gated direct network access, and read-only NAP-IDENTITY public-key tracking
 ---
 
 # Building a Napplet with @napplet/shim
@@ -51,7 +51,7 @@ Import `subscribe` from `@napplet/shim`. The subscription is a live stream; use 
 import { subscribe } from '@napplet/shim';
 import type { NostrEvent } from '@napplet/shim';
 
-const myPubkey = await window.nostr.getPublicKey();
+const myPubkey = await window.napplet.identity.getPublicKey();
 
 const sub = subscribe(
   { kinds: [1], authors: [myPubkey], limit: 20 },
@@ -122,32 +122,29 @@ Additional methods: `nappletState.clear()` (removes all keys for this napplet), 
 
 > **Deprecated aliases:** `nappStorage` and `nappState` are deprecated aliases for `nappletState`. They will be removed in v0.9.0.
 
-## Step 7 — Use window.nostr (NIP-07 proxy)
-
-`@napplet/shim` installs `window.nostr` automatically on import — no additional setup required. The private key never leaves the shell; all signing calls are proxied over postMessage.
+## Step 7 — Use read-only identity (NAP-IDENTITY)
 
 ```ts
-// window.nostr is available immediately after importing @napplet/shim
+import '@napplet/shim';
 
-// Get the user's public key
-const pubkey: string = await window.nostr.getPublicKey();
+// Snapshot the current shell user. Returns "" when no user/signer is connected.
+const pubkey: string = await window.napplet.identity.getPublicKey();
 
-// Sign an event (returns the signed NostrEvent)
-const signed = await window.nostr.signEvent({
-  kind: 1,
-  content: 'Hello Nostr!',
-  tags: [],
-  created_at: Math.floor(Date.now() / 1000),
+// Track shell-pushed identity changes instead of polling.
+const identitySub = window.napplet.identity.onChanged((nextPubkey) => {
+  if (nextPubkey === '') {
+    showSignedOutState();
+    return;
+  }
+
+  loadProfile(nextPubkey);
 });
 
-// NIP-04 encrypted DMs
-const ciphertext = await window.nostr.nip04.encrypt(recipientPubkey, 'secret message');
-const plaintext = await window.nostr.nip04.decrypt(senderPubkey, ciphertext);
-
-// NIP-44 encryption
-const encrypted = await window.nostr.nip44.encrypt(recipientPubkey, 'payload');
-const decrypted = await window.nostr.nip44.decrypt(senderPubkey, encrypted);
+// Later, when the component is destroyed:
+identitySub.close();
 ```
+
+`window.napplet.identity` is strictly read-only. It does not sign, encrypt, or decrypt. Publish signed events through `window.napplet.relay.publish(...)`; use relay-level encrypted publish helpers where available. Received ciphertext is not decrypted through identity.
 
 ## Step 8 — Inter-frame events (emit / on)
 
@@ -242,7 +239,7 @@ Always branch on `code`, never on the `error` string.
 **Capability detection:**
 
 ```ts
-if (window.napplet.shell.supports('nub:resource')) {
+if (window.napplet.shell.supports('nap:resource')) {
   // resource.bytes(url) is available
 }
 if (window.napplet.shell.supports('resource:scheme:blossom')) {
@@ -255,18 +252,18 @@ if (window.napplet.shell.supports('perm:strict-csp')) {
 
 SVG inputs are silently rasterized server-side to PNG/WebP — napplets never receive `image/svg+xml` bytes (the shell rasterizes in a sandboxed Worker with no network access). The `mime` returned to the napplet is shell-classified via byte-sniffing, never the upstream `Content-Type` header.
 
-## Step 11 — Two-class posture + user-gated direct network access (NUB-CLASS + NUB-CONNECT, v0.29.0+)
+## Step 11 — Two-class posture + user-gated direct network access (NAP-CLASS + NAP-CONNECT)
 
-v0.29.0 makes the shell the sole runtime CSP authority and introduces two NUBs that together let a napplet explicitly request direct browser-level network access:
+The shell is the sole runtime CSP authority and exposes two NAPs that together let a napplet explicitly request direct browser-level network access:
 
-- **NUB-CLASS** — the shell sends a single `class.assigned` wire envelope at iframe-ready time. Napplets read the integer at `window.napplet.class` (`number | undefined`). v0.29.0 ships two track members: `class: 1` = **NUB-CLASS-1** (strict baseline; `connect-src 'none'`); `class: 2` = **NUB-CLASS-2** (user-approved explicit-origin; `connect-src <granted-origins>`).
-- **NUB-CONNECT** — the napplet declares required origins at build time. The shell prompts the user at first load; on approval, the shell serves the napplet HTML with a runtime CSP whose `connect-src` contains the approved origins PLUS injects `<meta name="napplet-connect-granted">` for the shim to read synchronously. Napplets then read `window.napplet.connect` (`{ granted, origins }`).
+- **NAP-CLASS** — the shell sends a single `class.assigned` wire envelope at iframe-ready time. Napplets read the integer at `window.napplet.class` (`number | undefined`). Current track members: `class: 1` = **NAP-CLASS-1** (strict baseline; `connect-src 'none'`); `class: 2` = **NAP-CLASS-2** (user-approved explicit-origin; `connect-src <granted-origins>`).
+- **NAP-CONNECT** — the napplet declares required origins at build time. The shell prompts the user at first load; on approval, the shell serves the napplet HTML with a runtime CSP whose `connect-src` contains the approved origins PLUS injects `<meta name="napplet-connect-granted">` for the shim to read synchronously. Napplets then read `window.napplet.connect` (`{ granted, origins }`).
 
-### Default to NUB-RESOURCE; reach for NUB-CONNECT only when necessary
+### Default to NAP-RESOURCE; reach for NAP-CONNECT only when necessary
 
-Default to NUB-RESOURCE for avatars, static assets, one-shot byte fetches, and bech32 resolution. Reach for NUB-CONNECT only when you need: POST/PUT/PATCH methods, WebSocket/SSE, custom headers, long-lived connections, streaming responses, or third-party libraries that call `fetch()` directly and aren't reasonable to refactor.
+Default to NAP-RESOURCE for avatars, static assets, one-shot byte fetches, and bech32 resolution. Reach for NAP-CONNECT only when you need: POST/PUT/PATCH methods, WebSocket/SSE, custom headers, long-lived connections, streaming responses, or third-party libraries that call `fetch()` directly and aren't reasonable to refactor.
 
-Declaring a `connect` origin is a tax (user-facing prompt, full trust vote) — earn it by needing what NUB-RESOURCE can't give you. The shell has zero browser-level hook to observe, filter, or rate-limit post-grant traffic between a napplet and an approved origin.
+Declaring a `connect` origin is a tax (user-facing prompt, full trust vote) — earn it by needing what NAP-RESOURCE can't give you. The shell has zero browser-level hook to observe, filter, or rate-limit post-grant traffic between a napplet and an approved origin.
 
 ### Declaring origins at build time
 
@@ -298,11 +295,11 @@ Supply origins as human-readable strings; the plugin Punycodes IDN and validates
 ```ts
 import '@napplet/shim';
 
-// Class — check shell.supports('nub:class') before branching on the integer.
-if (window.napplet.shell.supports('nub:class')) {
+// Class — check shell.supports('nap:class') before branching on the integer.
+if (window.napplet.shell.supports('nap:class')) {
   const cls = window.napplet.class;   // number | undefined
   if (cls === 2) {
-    // NUB-CLASS-2 — user approved at least one connect origin this load.
+    // NAP-CLASS-2 — user approved at least one connect origin this load.
   }
 }
 
@@ -311,11 +308,11 @@ if (window.napplet.connect.granted) {
   const origins = window.napplet.connect.origins;   // readonly string[]
   const res = await fetch(`${origins[0]}/items`, { method: 'POST', body: '{}' });
 } else {
-  // Fall back to window.napplet.resource.bytes(url) for what the resource NUB can express.
+  // Fall back to window.napplet.resource.bytes(url) for what the resource NAP can express.
 }
 ```
 
-`window.napplet.connect` MUST NEVER be `undefined` — it defaults to `{ granted: false, origins: [] }` on shells without `nub:connect`, on denied prompts, and pre-injection. This is the graceful-degradation guarantee.
+`window.napplet.connect` MUST NEVER be `undefined` — it defaults to `{ granted: false, origins: [] }` on shells without `nap:connect`, on denied prompts, and pre-injection. This is the graceful-degradation guarantee.
 
 ### Cleartext / mixed-content warning
 
@@ -333,75 +330,40 @@ Prefer `https:` and `wss:` origins end-to-end. Cleartext scheme declarations are
 
 Napplets SHOULD branch on four states, in priority order:
 
-1. `shell.supports('nub:connect') === true` AND `window.napplet.connect.granted === true` → use direct `fetch` / `WebSocket` / `EventSource` against `window.napplet.connect.origins`.
-2. `shell.supports('nub:connect') === true` AND `window.napplet.connect.granted === false` → user denied, prompt hasn't run, or shell chose not to grant. Fall back to NUB-RESOURCE; degrade affected features gracefully.
-3. `shell.supports('nub:connect') === false` AND `shell.supports('nub:resource') === true` → shell doesn't implement NUB-CONNECT at all. POST / WebSocket / SSE features are unavailable; MUST degrade gracefully.
-4. Neither `nub:connect` nor `nub:resource` advertised → napplet cannot reach the network at all. Display offline / read-only UX; no silent failures.
+1. `shell.supports('nap:connect') === true` AND `window.napplet.connect.granted === true` -> use direct `fetch` / `WebSocket` / `EventSource` against `window.napplet.connect.origins`.
+2. `shell.supports('nap:connect') === true` AND `window.napplet.connect.granted === false` -> user denied, prompt hasn't run, or shell chose not to grant. Fall back to NAP-RESOURCE; degrade affected features gracefully.
+3. `shell.supports('nap:connect') === false` AND `shell.supports('nap:resource') === true` -> shell doesn't implement NAP-CONNECT at all. POST / WebSocket / SSE features are unavailable; MUST degrade gracefully.
+4. Neither `nap:connect` nor `nap:resource` advertised -> napplet cannot reach the network at all. Display offline / read-only UX; no silent failures.
 
-See [NUB-CONNECT](https://github.com/napplet/nubs) and [NUB-CLASS](https://github.com/napplet/nubs) for the normative specs.
+See [NAP-CONNECT](https://github.com/napplet/naps) and [NAP-CLASS](https://github.com/napplet/naps) for the normative specs.
 
-## Step 12 — Decrypt NIP-17 / NIP-44 / NIP-04 events (NUB-IDENTITY, v0.29.0+)
+## Step 12 — Track shell-user identity changes (NAP-IDENTITY)
 
-Napplets receive NIP-17 gift-wrap events (`kind: 1059`) and direct NIP-44 / NIP-04
-ciphertext via `window.napplet.relay.subscribe`. To decrypt to plaintext, call
-`await window.napplet.identity.decrypt(event)` — the shell auto-detects the
-encryption shape and returns `{ rumor, sender }` where `sender` is
-shell-authenticated (from the seal signature for NIP-17, or from the event pubkey
-for NIP-44 / NIP-04). Napplets do NOT choose the encryption mode; a single entry
-point serves all three.
+Napplets can read the shell user's public key and subscribe to shell-pushed user changes. `getPublicKey()` always resolves: it returns a hex pubkey when a user/signer is connected, and `""` when no user is connected. Do not poll; shells push `identity.changed` whenever the value changes.
 
 ```ts
 import '@napplet/shim';
 
-const sub = window.napplet.relay.subscribe(
-  [{ kinds: [1059], '#p': [myPubkey], limit: 20 }],
-  async (giftWrap) => {
-    try {
-      const { rumor, sender } = await window.napplet.identity.decrypt(giftWrap);
-      console.log(`${sender} says: ${rumor.content}`);
-    } catch (err) {
-      // err.code is one of: class-forbidden | signer-denied | signer-unavailable |
-      //                      decrypt-failed | malformed-wrap | impersonation |
-      //                      unsupported-encryption | policy-denied
-      console.warn('decrypt failed:', (err as { code?: string }).code);
-    }
-  },
-);
+const initialPubkey = await window.napplet.identity.getPublicKey();
+setCurrentUser(initialPubkey);
+
+const identitySub = window.napplet.identity.onChanged((pubkey) => {
+  setCurrentUser(pubkey);
+});
+
+// Later:
+identitySub.close();
 ```
 
-**Class gating.** `identity.decrypt` is available ONLY to napplets assigned
-`class: 1` per `NUB-CLASS-1` (strict baseline posture: `default-src 'none'`,
-`connect-src 'none'`, nonce-based `script-src`, zero direct network egress).
-Napplets of any other class — including napplets with no class assignment and
-NUB-CLASS-2 napplets that hold user-granted direct-origin access — receive a
-`class-forbidden` error at the shell boundary. The class is a deployment-time
-shell decision keyed on your manifest's `(dTag, aggregateHash)`; napplets can
-observe it at runtime via `window.napplet.class` where implemented.
-
-**Do NOT attempt `window.nostr.*` for decrypt.** Even if a NIP-07 browser
-extension injects `window.nostr` into the iframe via a content script (see
-NIP-5D §Security Considerations for the injection vector), that path is
-forbidden by spec. Per NIP-5D §Transport, shells MUST NOT *provide*
-`window.nostr` to napplet iframes — signing and encryption are shell-mediated
-exclusively via the napplet API surface (`window.napplet.*`). A shell is of
-course free to use its own NIP-07 extension internally to fulfill those
-operations; what is forbidden is exposing `window.nostr` *to the napplet*.
-If you observe `window.nostr` inside your napplet, treat it as an extension
-residual and ignore it. The `connect-src 'none'` directive ensures any
-plaintext obtained via either path is trapped inside the frame regardless
-of origin.
-
-**Capability detection.** Check for both NUB support and the strict-CSP posture
-before depending on class-1 features:
+**Capability detection.** Check for the identity NAP before depending on the identity namespace:
 
 ```ts
-if (!window.napplet.shell.supports('nub:identity')) { /* no identity NUB */ }
-if (!window.napplet.shell.supports('perm:strict-csp')) { /* not NUB-CLASS-1 */ }
+if (!window.napplet.shell.supports('nap:identity')) { /* no identity NAP */ }
 ```
 
 ## Common pitfalls
 
-- Do not call `window.nostr` before `@napplet/shim` is imported — it is installed synchronously at module load, but all signer calls are async and require the AUTH handshake to complete first.
+- Do not call `window.nostr` from napplet code. Use `window.napplet.*` APIs; NAP-IDENTITY is read-only and does not expose decrypt, encrypt, or signing operations.
 - `nappletState` is scoped by version hash — clearing storage in one build version does not affect another build's stored data.
 - Do not use `localStorage` directly — without `allow-same-origin` it will throw `SecurityError`. Use `nappletState` instead.
 - `publish()` returns `Promise<NostrEvent>` — always `await` it. Errors surface as promise rejections (e.g., signer timeout, ACL denial).
@@ -412,5 +374,5 @@ if (!window.napplet.shell.supports('perm:strict-csp')) { /* not NUB-CLASS-1 */ }
 - **Do not call `fetch()`, `<img src="https://...">`, `<link href="https://...">`, `XMLHttpRequest`, or `new WebSocket(...)` from a napplet.** The iframe sandbox + strict CSP (`connect-src 'none'`, `img-src blob: data:`) block all of them at the browser level. Use `window.napplet.resource.bytes(url)` instead — it returns a `Blob` you can pass to `URL.createObjectURL()` for `<img src>` use.
 - **Do not use the upstream `Content-Type` for resource MIME decisions.** The shell byte-sniffs the response and delivers a classified `mime` field on the result; the upstream `Content-Type` header is attacker-controlled and never reaches the napplet.
 - **Inline scripts are forbidden.** `@napplet/vite-plugin` fails the build on any `<script>` element without a `src` attribute because the shell's baseline CSP is `script-src 'self'`. Move inline JS into a `.js` module and import it; inject state via `<script type="application/json">…</script>` data islands if you need build-time state passed to runtime code.
-- **Do not assume `window.napplet.class` has a value at module top-level.** The shell sends `class.assigned` at iframe-ready time; the shim writes the integer after the envelope arrives. If your code runs before the dispatcher processes the envelope, `window.napplet.class` is `undefined`. Either gate on `shell.supports('nub:class')` AND defer (e.g., onto `requestAnimationFrame` / `queueMicrotask`), or treat `undefined` as "assume the most restrictive defaults the napplet can function under."
+- **Do not assume `window.napplet.class` has a value at module top-level.** The shell sends `class.assigned` at iframe-ready time; the shim writes the integer after the envelope arrives. If your code runs before the dispatcher processes the envelope, `window.napplet.class` is `undefined`. Either gate on `shell.supports('nap:class')` AND defer (e.g., onto `requestAnimationFrame` / `queueMicrotask`), or treat `undefined` as "assume the most restrictive defaults the napplet can function under."
 - **Cleartext `http:` / `ws:` origins silently fail from HTTPS shells.** Browsers enforce mixed-content below the CSP layer. A user-approved `http://api.example.com` grant from a napplet loaded via `https://shell.example.com` will produce no traffic, with no CSP violation event — the browser drops the request transparently. Prefer `https:` / `wss:`. Use cleartext only for localhost / `127.0.0.1` development or when the shell explicitly advertises `shell.supports('connect:scheme:http') === true`.

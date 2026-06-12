@@ -3,17 +3,44 @@
  * for the JSON envelope wire protocol.
  *
  * Defines 8 message types for media session management:
- * - Napplet -> Shell: session.create, session.update, session.destroy, state, capabilities
- * - Shell -> Napplet: session.create.result, command, controls
+ * - Napplet -> Shell: session.create, session.update, session.destroy
+ * - Owner -> Peer: state, capabilities
+ * - Controller -> Owner: command
+ * - Shell -> Napplet: session.create.result, controls
  *
  * All types form a discriminated union on the `type` field.
- * Media sessions enable shell-level playback controls for sandboxed napplets.
+ * Media sessions support napplet-owned and shell-owned playback.
  */
 
 import type { NappletMessage } from '@napplet/core';
 
-/** The NUB domain name for media messages. */
+/** The NAP domain name for media messages. */
 export const DOMAIN = 'media' as const;
+
+/** The side that fetches/decodes media and emits authoritative playback state. */
+export type MediaPlaybackOwner = 'shell' | 'napplet';
+
+/**
+ * Source reference for shell-owned playback, or advisory source metadata for
+ * napplet-owned playback.
+ */
+export interface MediaSourceRef {
+  /** Direct URL to media bytes. Shells fetch through shell-controlled policy. */
+  url?: string;
+  /** Blossom content hash reference. */
+  blossomHash?: string;
+  /** Nostr event/address reference. */
+  nostr?: {
+    /** Event id containing or referencing media. */
+    eventId?: string;
+    /** Address coordinate containing or referencing media. */
+    address?: string;
+    /** Relay hints for resolving the Nostr reference. */
+    relays?: string[];
+  };
+  /** Optional MIME type hint. */
+  mimeType?: string;
+}
 
 /**
  * Media session metadata. All fields are optional -- a session can be
@@ -93,8 +120,45 @@ export interface MediaState {
  */
 export type MediaAction = 'play' | 'pause' | 'stop' | 'next' | 'prev' | 'seek' | 'volume';
 
+interface MediaSessionCreateBase {
+  /** Preferred client session id hint. Shell returns the canonical id. */
+  sessionId?: string;
+  /** Optional initial metadata. */
+  metadata?: MediaMetadata;
+  /** Initial supported actions. */
+  capabilities?: MediaAction[];
+  /** Request autoplay for shell-owned playback when policy allows it. */
+  autoplay?: boolean;
+  /** Whether the media is a live source. */
+  live?: boolean;
+}
+
 /**
- * Base interface for all media NUB messages.
+ * Public create-session options.
+ * Shell-owned sessions require a source because the shell owns fetching/playback.
+ */
+export type MediaSessionCreate =
+  | (MediaSessionCreateBase & {
+      owner: 'shell';
+      source: MediaSourceRef;
+    })
+  | (MediaSessionCreateBase & {
+      owner: 'napplet';
+      source?: MediaSourceRef;
+    });
+
+/** Result of a create-session request. */
+export interface MediaSessionResult {
+  /** Shell-canonical session id. Present on success. */
+  sessionId?: string;
+  /** Shell-confirmed playback owner. Present on success. */
+  owner?: MediaPlaybackOwner;
+  /** Creation error. When present, the session was not created. */
+  error?: string;
+}
+
+/**
+ * Base interface for all media NAP messages.
  * Concrete message types narrow the `type` field to specific literals.
  */
 export interface MediaMessage extends NappletMessage {
@@ -103,14 +167,16 @@ export interface MediaMessage extends NappletMessage {
 }
 
 /**
- * Create a new media session. The napplet provides a client-generated
- * sessionId and optional metadata. Uses `id` for correlation with the result.
+ * Create a new media session. Uses `id` for correlation with the result.
+ * The napplet MUST set `owner`; `sessionId` is a preferred hint and the shell
+ * returns the canonical session id.
  *
  * @example
  * ```ts
  * const msg: MediaSessionCreateMessage = {
  *   type: 'media.session.create',
  *   id: 'm1',
+ *   owner: 'napplet',
  *   sessionId: 's1',
  *   metadata: { title: 'My Song', artist: 'The Artist' },
  * };
@@ -120,10 +186,20 @@ export interface MediaSessionCreateMessage extends MediaMessage {
   type: 'media.session.create';
   /** Correlation ID for the request/result pair. */
   id: string;
-  /** Client-generated session identifier. */
-  sessionId: string;
+  /** Playback owner for this session. */
+  owner: MediaPlaybackOwner;
+  /** Preferred client session identifier. Shell returns the canonical id. */
+  sessionId?: string;
+  /** Source reference. Required by shells for shell-owned sessions. */
+  source?: MediaSourceRef;
   /** Optional initial metadata. */
   metadata?: MediaMetadata;
+  /** Initial supported actions. */
+  capabilities?: MediaAction[];
+  /** Request autoplay when policy allows it. */
+  autoplay?: boolean;
+  /** Whether the media is a live source. */
+  live?: boolean;
 }
 
 /**
@@ -217,7 +293,8 @@ export interface MediaCapabilitiesMessage extends MediaMessage {
 
 /**
  * Result of a media.session.create request.
- * Carries the same correlation `id` as the request.
+ * Carries the same correlation `id` as the request and the shell-canonical
+ * session id on success.
  *
  * @example
  * ```ts
@@ -225,6 +302,7 @@ export interface MediaCapabilitiesMessage extends MediaMessage {
  *   type: 'media.session.create.result',
  *   id: 'm1',
  *   sessionId: 's1',
+ *   owner: 'napplet',
  * };
  * ```
  */
@@ -232,8 +310,10 @@ export interface MediaSessionCreateResultMessage extends MediaMessage {
   type: 'media.session.create.result';
   /** Correlation ID matching the original request. */
   id: string;
-  /** The session identifier. */
-  sessionId: string;
+  /** The shell-canonical session identifier. */
+  sessionId?: string;
+  /** The shell-confirmed playback owner. */
+  owner?: MediaPlaybackOwner;
   /** Error message on failure (e.g., "session limit exceeded"). */
   error?: string;
 }
@@ -270,12 +350,15 @@ export interface MediaCommandMessage extends MediaMessage {
  * ```ts
  * const msg: MediaControlsMessage = {
  *   type: 'media.controls',
+ *   sessionId: 's1',
  *   controls: ['play', 'pause', 'stop', 'next', 'prev', 'seek', 'volume'],
  * };
  * ```
  */
 export interface MediaControlsMessage extends MediaMessage {
   type: 'media.controls';
+  /** The session this control list applies to. */
+  sessionId: string;
   /** Media actions the shell supports. */
   controls: MediaAction[];
 }
@@ -286,13 +369,19 @@ export type MediaRequestMessage =
   | MediaSessionUpdateMessage
   | MediaSessionDestroyMessage
   | MediaStateMessage
-  | MediaCapabilitiesMessage;
+  | MediaCapabilitiesMessage
+  | MediaCommandMessage;
 
 /** Shell -> Napplet media result/push messages. */
 export type MediaResultMessage =
   | MediaSessionCreateResultMessage
+  | MediaStateMessage
+  | MediaCapabilitiesMessage
   | MediaCommandMessage
   | MediaControlsMessage;
 
-/** All media NUB message types (discriminated union on `type` field). */
-export type MediaNubMessage = MediaRequestMessage | MediaResultMessage;
+/** All media NAP message types (discriminated union on `type` field). */
+export type MediaNapMessage = MediaRequestMessage | MediaResultMessage;
+
+/** @deprecated Use {@link MediaNapMessage}. */
+export type MediaNubMessage = MediaNapMessage;

@@ -7,8 +7,8 @@
  *
  * @example
  * ```ts
- * import type { NappletMessage, NubDomain, ShellSupports } from '@napplet/core';
- * import { NUB_DOMAINS } from '@napplet/core';
+ * import type { NappletMessage, NapDomain, NapProtocolId, ShellSupports } from '@napplet/core';
+ * import { NAP_DOMAINS } from '@napplet/core';
  * ```
  *
  * @packageDocumentation
@@ -38,7 +38,7 @@ export interface NappletMessage {
 }
 
 /**
- * String literal union of the twelve NUB (Napplet Unified Blueprint) domains.
+ * String literal union of the twelve NAP (Nostr Applet Protocol) domains.
  * Each domain corresponds to a capability namespace that a shell may support.
  *
  * | Domain     | Scope                                              |
@@ -58,74 +58,114 @@ export interface NappletMessage {
  *
  * @example
  * ```ts
- * const domain: NubDomain = 'relay';
- * const isValid = NUB_DOMAINS.includes(domain); // true
+ * const domain: NapDomain = 'relay';
+ * const isValid = NAP_DOMAINS.includes(domain); // true
  * ```
  */
-export type NubDomain = 'relay' | 'identity' | 'storage' | 'ifc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'connect' | 'class';
+export type NapDomain = 'relay' | 'identity' | 'storage' | 'ifc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'connect' | 'class';
 
 /**
- * Runtime-accessible constant array of all NUB domain names.
+ * @deprecated Use {@link NapDomain}. The public proposal system was renamed
+ * from NUB to NAP.
+ */
+export type NubDomain = NapDomain;
+
+/**
+ * Runtime-accessible constant array of all NAP domain names.
  * Useful for iteration, validation, and capability enumeration.
  *
  * @example
  * ```ts
- * for (const domain of NUB_DOMAINS) {
+ * for (const domain of NAP_DOMAINS) {
  *   console.log(`Checking support for: ${domain}`);
  * }
  * ```
  */
-export const NUB_DOMAINS: readonly NubDomain[] = ['relay', 'identity', 'storage', 'ifc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'connect', 'class'] as const;
+export const NAP_DOMAINS: readonly NapDomain[] = ['relay', 'identity', 'storage', 'ifc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'connect', 'class'] as const;
+
+/**
+ * @deprecated Use {@link NAP_DOMAINS}. The public proposal system was renamed
+ * from NUB to NAP.
+ */
+export const NUB_DOMAINS = NAP_DOMAINS;
 
 /**
  * Namespaced capability string for {@link ShellSupports.supports}.
  *
- * Accepts two prefix namespaces plus bare NUB domain shorthand:
+ * Accepts NAP capability prefixes plus bare domain shorthand:
  *
  * | Prefix  | Example             | Meaning                        |
  * |---------|---------------------|--------------------------------|
- * | `nub:`  | `'nub:relay'`       | Shell implements the relay NUB |
+ * | `nap:`  | `'nap:relay'`       | Shell implements the relay NAP |
  * | `perm:` | `'perm:popups'`     | Shell grants popup permission  |
- * | `perm:` | `'perm:strict-csp'` | **@deprecated (v0.29.0)** — superseded by `nub:connect` + `nub:class`. Shell enforces strict CSP posture (v0.28.0). |
- * | *(bare)*| `'relay'`           | Shorthand for `'nub:relay'`    |
+ * | `perm:` | `'perm:strict-csp'` | **@deprecated (v0.29.0)** — superseded by `nap:connect` + `nap:class`. Shell enforces strict CSP posture (v0.28.0). |
+ * | *(bare)*| `'relay'`           | Shorthand for `'nap:relay'`    |
  *
- * Bare strings are valid only for NUB domains.
+ * Bare strings are valid only for NAP domains.
+ * The legacy `nub:` prefix remains accepted as a deprecated compatibility alias.
  * Permissions MUST use the `perm:` prefix.
  *
  * @example
  * ```ts
- * const cap: NamespacedCapability = 'nub:relay';
+ * const cap: NamespacedCapability = 'nap:relay';
  * const bare: NamespacedCapability = 'relay'; // shorthand OK
  * const perm: NamespacedCapability = 'perm:popups';
  * const csp: NamespacedCapability = 'perm:strict-csp';
  * ```
  *
- * @deprecated `perm:strict-csp` — superseded in v0.29.0 by `nub:connect` + `nub:class`.
- * Shells implementing NUB-CONNECT and NUB-CLASS replace the v0.28.0 `perm:strict-csp` model.
+ * @deprecated `perm:strict-csp` — superseded in v0.29.0 by `nap:connect` + `nap:class`.
+ * Shells implementing NAP-CONNECT and NAP-CLASS replace the v0.28.0 `perm:strict-csp` model.
  */
 export type NamespacedCapability =
-  | NubDomain
-  | `nub:${NubDomain}`
+  | NapDomain
+  | `nap:${NapDomain}`
+  | `nub:${NapDomain}`
   | `perm:${string}`;
 
 /**
- * Interface for the shell capability query API.
- * Allows napplets to check whether the shell supports a NUB domain
- * or a permission at runtime.
+ * Numbered NAP protocol identifier for napplet-to-napplet message semantics.
+ *
+ * NAP-WORD interfaces are discovered with the first `supports()` argument.
+ * NAP-NN message protocols are negotiated with the optional second argument.
  *
  * @example
  * ```ts
- * // NUB domain queries (bare shorthand or prefixed):
- * shell.supports('relay');       // shorthand for 'nub:relay'
- * shell.supports('nub:storage'); // explicit NUB prefix
+ * const protocol: NapProtocolId = 'NAP-01';
+ * window.napplet.shell.supports('ifc', protocol);
+ * ```
+ */
+export type NapProtocolId = `NAP-${number}`;
+
+/**
+ * @deprecated Use {@link NapProtocolId}. Legacy `NUB-NN` identifiers remain
+ * accepted by package shims as compatibility aliases during the NAP rename.
+ */
+export type NubProtocolId = `NUB-${number}`;
+
+/** Numbered protocol identifier accepted by shell.supports(). */
+export type ProtocolId = NapProtocolId | NubProtocolId;
+
+/**
+ * Interface for the shell capability query API.
+ * Allows napplets to check whether the shell supports a NAP domain,
+ * a permission, or a numbered NAP protocol at runtime.
+ *
+ * @example
+ * ```ts
+ * // NAP domain queries (bare shorthand or prefixed):
+ * shell.supports('relay');       // shorthand for 'nap:relay'
+ * shell.supports('nap:storage'); // explicit NAP prefix
  *
  * // Permission queries:
  * shell.supports('perm:popups'); // popup permission
+ *
+ * // Numbered protocol queries over an interface:
+ * shell.supports('ifc', 'NAP-01');
  * ```
  */
 export interface ShellSupports {
-  /** Check whether the shell supports a NUB capability or permission. */
-  supports(capability: NamespacedCapability): boolean;
+  /** Check whether the shell supports a NAP capability, permission, or numbered protocol. */
+  supports(capability: NamespacedCapability, protocol?: ProtocolId): boolean;
 }
 
 /**
@@ -135,15 +175,18 @@ export interface ShellSupports {
  * @example
  * ```ts
  * // In a napplet iframe:
- * if (window.napplet.shell.supports('nub:relay')) {
+ * if (window.napplet.shell.supports('nap:relay')) {
  *   const signed = await window.napplet.relay.publish(template);
  * }
  *
- * // Bare NUB domain shorthand also works:
+ * // Bare NAP domain shorthand also works:
  * if (window.napplet.shell.supports('relay')) { ... }
  *
  * // Permission queries:
  * window.napplet.shell.supports('perm:popups');
+ *
+ * // NAP-NN protocol queries:
+ * window.napplet.shell.supports('ifc', 'NAP-01');
  * ```
  */
 export interface NappletGlobalShell extends ShellSupports {}
