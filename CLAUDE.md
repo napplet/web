@@ -24,7 +24,7 @@ This is the **napplet** monorepo — npm packages for the napplet protocol. Napp
 ## Key Concepts
 
 - **JSON Envelope**: All messages use `{ type: "domain.action", ...payload }` format via postMessage. NIP-5D defines the envelope; NAP specs define message types per domain.
-- **NAPs**: Napplet Unified Blueprints — modular interface specs (relay, identity, storage, ifc, theme, keys, media, notify). Each NAP owns a message domain. Shells implement the NAPs they support.
+- **NAPs**: Napplet Unified Blueprints — modular interface specs (relay, identity, storage, inc, theme, keys, media, notify). Each NAP owns a message domain. Shells implement the NAPs they support.
 - **Identity**: Shell identifies napplets via unforgeable `MessageEvent.source` at iframe creation. No handshake needed.
 - **ACL**: Capabilities keyed on `(dTag, aggregateHash)`. Controls signing, storage, relay access.
 - **Storage scoping**: Keys scoped by `dTag:aggregateHash` so different napplet types and versions have isolated storage.
@@ -41,10 +41,12 @@ pnpm type-check     # TypeScript validation
 
 ## Publishing
 
-Packages are at v0.2.0 with changesets ready. To publish:
+Publishing runs from GitHub Actions, not from local `pnpm publish-*` commands.
+Prepare release metadata locally, then push and let the npm + JSR workflows
+publish from `main`:
+
 ```bash
 pnpm version-packages
-pnpm publish-packages
 ```
 
 ## Code Conventions
@@ -168,7 +170,7 @@ A portable SDK for the napplet protocol — sandboxed Nostr mini-apps that run i
 - Framework-agnostic (no Svelte, React, Vue dependencies)
 - JSON envelope wire format: `{ type: "domain.action", ...payload }` via postMessage
 - Identity via unforgeable `MessageEvent.source` at iframe creation — no handshake
-- Modular NAP architecture: each NAP owns a message domain (relay, identity, storage, ifc, theme, keys, media, notify)
+- Modular NAP architecture: each NAP owns a message domain (relay, identity, storage, inc, theme, keys, media, notify)
 - Core dispatch: `registerNap(domain, handler)` routes messages by domain prefix
 - ACL keyed on `(dTag, aggregateHash)` for per-napplet capability enforcement
 - Storage scoped by `dTag:aggregateHash` — cross-napplet isolation enforced by shell

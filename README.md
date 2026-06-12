@@ -17,8 +17,8 @@ A **napplet** is a sandboxed web app that runs inside a **shell**. The shell and
 |---------|-----|-----|-------------|
 | [@napplet/core](packages/core) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fcore?label=npm)](https://www.npmjs.com/package/@napplet/core) | [![JSR](https://jsr.io/badges/@napplet/core)](https://jsr.io/@napplet/core) | JSON envelope types (`NappletMessage`, `NapDomain`), NAP dispatch infrastructure (`registerNap`, `dispatch`), protocol constants and Nostr types. Imported by all other packages. |
 | [@napplet/shim](packages/shim) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fshim?label=npm)](https://www.npmjs.com/package/@napplet/shim) | [![JSR](https://jsr.io/badges/@napplet/shim)](https://jsr.io/@napplet/shim) | Side-effect-only window installer for napplet iframes. Importing `@napplet/shim` installs the `window.napplet` global and registers with the shell. Sends JSON envelope messages via postMessage. Zero named exports. |
-| [@napplet/sdk](packages/sdk) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fsdk?label=npm)](https://www.npmjs.com/package/@napplet/sdk) | [![JSR](https://jsr.io/badges/@napplet/sdk)](https://jsr.io/@napplet/sdk) | Named TypeScript exports wrapping `window.napplet` for bundler consumers. Provides `relay`, `ifc`, `services`, `storage` objects plus NAP message type re-exports. |
-| [@napplet/nap](packages/nap) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fnap?label=npm)](https://www.npmjs.com/package/@napplet/nap) | [![JSR](https://jsr.io/badges/@napplet/nap)](https://jsr.io/@napplet/nap) | Compatibility package for 12 NAP domain subpaths (relay, storage, ifc, keys, theme, media, notify, identity, config, resource, connect, class) with barrel + granular (types/shim/sdk) exports. Tree-shakable (`sideEffects: false`). Includes ownership-aware `media`, `resource`, `connect`, `class`, and read-only `identity` helpers. See [packages/nap/README.md](packages/nap/README.md) for the full subpath reference. |
+| [@napplet/sdk](packages/sdk) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fsdk?label=npm)](https://www.npmjs.com/package/@napplet/sdk) | [![JSR](https://jsr.io/badges/@napplet/sdk)](https://jsr.io/@napplet/sdk) | Named TypeScript exports wrapping `window.napplet` for bundler consumers. Provides `relay`, `inc`, `services`, `storage` objects plus NAP message type re-exports. |
+| [@napplet/nap](packages/nap) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fnap?label=npm)](https://www.npmjs.com/package/@napplet/nap) | [![JSR](https://jsr.io/badges/@napplet/nap)](https://jsr.io/@napplet/nap) | Compatibility package for 12 NAP domain subpaths (relay, storage, inc, keys, theme, media, notify, identity, config, resource, connect, class) with barrel + granular (types/shim/sdk) exports. Tree-shakable (`sideEffects: false`). Includes ownership-aware `media`, `resource`, `connect`, `class`, and read-only `identity` helpers. See [packages/nap/README.md](packages/nap/README.md) for the full subpath reference. |
 | [@napplet/vite-plugin](packages/vite-plugin) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fvite-plugin?label=npm)](https://www.npmjs.com/package/@napplet/vite-plugin) | [![JSR](https://jsr.io/badges/@napplet/vite-plugin)](https://jsr.io/@napplet/vite-plugin) | Vite plugin for NIP-5D manifest generation. Computes per-file SHA-256 hashes, signs a kind 35128 manifest event at build time, and injects `requires` meta tags. v0.29.0 ships a `connect?: string[]` option for user-gated direct-network origin declaration and a fail-loud inline-script diagnostic; the `strictCsp` option from v0.28.0 is `@deprecated` (accepts-but-warns) since the shell is now the sole runtime CSP authority. |
 
 ## Changelog
@@ -43,13 +43,13 @@ A **napplet** is a sandboxed web app that runs inside a **shell**. The shell and
 ```
 Shell (any compatible shell)                @napplet/shim
   ShellBridge                                window.napplet.relay (subscribe/publish/query)
-  ├── JSON envelope message routing          window.napplet.ifc   (emit/on)
+  ├── JSON envelope message routing          window.napplet.inc   (emit/on)
   ├── Identity via message.source            window.napplet.storage (get/set/remove)
   ├── ACL enforcement                        window.napplet.resource (bytes/bytesAsObjectURL)
   ├── Class assignment (class.assigned)      window.napplet.connect  (granted/origins)
   ├── Connect grant injection (CSP + meta)   window.napplet.class    (shell-assigned integer)
   ├── NAP dispatch (relay/signer/storage)    window.napplet.shell.supports(domain)
-  └── IFC routing
+  └── INC routing
 
 ◄────────── postMessage: { type: 'relay.subscribe', id, filters } ──────────►
 ◄────────── postMessage: { type: 'relay.event', subId, event }    ──────────►
@@ -74,11 +74,11 @@ pnpm type-check   # TypeScript validation
 
 ### Publishing
 
-Uses [changesets](https://github.com/changesets/changesets) for versioning:
+Publishing runs from GitHub Actions. Prepare release metadata locally, then push
+the branch/tag and let the npm + JSR workflows publish from `main`.
 
 ```bash
 pnpm version-packages   # Apply changesets, bump versions
-pnpm publish-packages   # Build + publish to npm
 ```
 
 ## Related

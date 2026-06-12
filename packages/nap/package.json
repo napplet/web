@@ -1,7 +1,7 @@
 {
   "name": "@napplet/nap",
-  "version": "0.6.0",
-  "description": "All 12 napplet NAP domains (relay, storage, ifc, keys, theme, media, notify, identity, config, resource, connect, class) as layered subpath exports",
+  "version": "0.7.0",
+  "description": "All 12 napplet NAP domains (relay, storage, inc, keys, theme, media, notify, identity, config, resource, connect, class) as layered subpath exports",
   "type": "module",
   "exports": {
     "./relay": {
@@ -35,6 +35,22 @@
     "./storage/sdk": {
       "types": "./dist/storage/sdk.d.ts",
       "import": "./dist/storage/sdk.js"
+    },
+    "./inc": {
+      "types": "./dist/inc/index.d.ts",
+      "import": "./dist/inc/index.js"
+    },
+    "./inc/types": {
+      "types": "./dist/inc/types.d.ts",
+      "import": "./dist/inc/types.js"
+    },
+    "./inc/shim": {
+      "types": "./dist/inc/shim.d.ts",
+      "import": "./dist/inc/shim.js"
+    },
+    "./inc/sdk": {
+      "types": "./dist/inc/sdk.d.ts",
+      "import": "./dist/inc/sdk.js"
     },
     "./ifc": {
       "types": "./dist/ifc/index.d.ts",

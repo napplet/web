@@ -57,14 +57,14 @@ interface RelaySubscribe extends NappletMessage {
 }
 ```
 
-The `type` field domain prefix (`relay`, `identity`, `storage`, `ifc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `connect`, `class`) routes messages to the correct NAP handler via `dispatch()`.
+The `type` field domain prefix (`relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `connect`, `class`) routes messages to the correct NAP handler via `dispatch()`.
 
 #### `NapDomain`
 
 String literal union of the twelve NAP capability domains.
 
 ```ts
-type NapDomain = 'relay' | 'identity' | 'storage' | 'ifc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'connect' | 'class';
+type NapDomain = 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'connect' | 'class';
 ```
 
 | Domain    | Scope                                    |
@@ -72,7 +72,7 @@ type NapDomain = 'relay' | 'identity' | 'storage' | 'ifc' | 'theme' | 'keys' | '
 | `relay`    | Relay proxy (subscribe, publish, query)   |
 | `identity` | Read-only user identity queries           |
 | `storage`  | Scoped key-value storage proxy            |
-| `ifc`     | Inter-frame communication (dispatch + channel) |
+| `inc`     | Inter-napplet communication (dispatch + channel) |
 | `theme`   | Theme tokens and appearance settings      |
 | `keys`    | Keyboard forwarding and action keybindings|
 | `media`   | Ownership-aware media session control     |
@@ -87,7 +87,7 @@ type NapDomain = 'relay' | 'identity' | 'storage' | 'ifc' | 'theme' | 'keys' | '
 Runtime constant array of all NAP domain strings. Useful for iteration and validation.
 
 ```ts
-const NAP_DOMAINS: readonly NapDomain[] = ['relay', 'identity', 'storage', 'ifc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'connect', 'class'];
+const NAP_DOMAINS: readonly NapDomain[] = ['relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'connect', 'class'];
 
 for (const domain of NAP_DOMAINS) {
   console.log(`Checking support for: ${domain}`);
@@ -110,7 +110,7 @@ NAP-NN message protocols, pass the protocol identifier as the optional second
 argument:
 
 ```ts
-window.napplet.shell.supports('ifc', 'NAP-01');
+window.napplet.shell.supports('inc', 'NAP-01');
 ```
 
 #### `NappletGlobalShell`
@@ -279,7 +279,7 @@ for (const cap of ALL_CAPABILITIES) {
 
 #### `Subscription`
 
-Handle returned by `relay.subscribe()` and `ifc.on()`.
+Handle returned by `relay.subscribe()` and `inc.on()`.
 
 ```ts
 interface Subscription {
@@ -314,7 +314,7 @@ interface EventTemplate {
 
 ### Topic Constants
 
-The `TOPICS` object contains string constants for IFC topic-based routing. These are legacy constants from the pre-envelope era — with JSON envelope messages, topic strings are passed directly in `ifc.emit` and `ifc.subscribe` payloads.
+The `TOPICS` object contains string constants for INC topic-based routing. These are legacy constants from the pre-envelope era — with JSON envelope messages, topic strings are passed directly in `inc.emit` and `inc.subscribe` payloads.
 
 ```ts
 import { TOPICS } from '@napplet/core';
@@ -325,7 +325,7 @@ TOPICS.WM_FOCUSED_WINDOW_CHANGED // 'wm:focused-window-changed'
 // ... see source for full list
 ```
 
-> **Note:** With JSON envelope wire format (v0.16.0+), state operations use `storage.*` messages directly rather than IFC topic routing. These constants are retained for backward compatibility with shell runtime implementations.
+> **Note:** With JSON envelope wire format (v0.16.0+), state operations use `storage.*` messages directly rather than INC topic routing. These constants are retained for backward compatibility with shell runtime implementations.
 
 ---
 
@@ -361,7 +361,7 @@ import type {
 `@napplet/core` is consumed by all packages in the napplet ecosystem for envelope types and NAP dispatch.
 
 - **In this repo:** `@napplet/shim`, `@napplet/sdk`, and `@napplet/vite-plugin` import `NappletMessage`, `NapDomain`, `ShellSupports`, and all shared protocol types from `@napplet/core`.
-- **`@napplet/nap` domain modules** (`@napplet/nap/relay`, `@napplet/nap/identity`, `@napplet/nap/storage`, `@napplet/nap/ifc`, `@napplet/nap/keys`, `@napplet/nap/media`, `@napplet/nap/notify`, `@napplet/nap/config`): extend `NappletMessage` for their domain-specific message types and call `registerNap` at import time. (The `@napplet/nap/theme` barrel is types-only — no `registerNap` side effect.)
+- **`@napplet/nap` domain modules** (`@napplet/nap/relay`, `@napplet/nap/identity`, `@napplet/nap/storage`, `@napplet/nap/inc`, `@napplet/nap/keys`, `@napplet/nap/media`, `@napplet/nap/notify`, `@napplet/nap/config`): extend `NappletMessage` for their domain-specific message types and call `registerNap` at import time. (The `@napplet/nap/theme` barrel is types-only — no `registerNap` side effect.)
 
 ## Protocol Reference
 

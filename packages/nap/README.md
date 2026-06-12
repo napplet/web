@@ -1,6 +1,6 @@
 # @napplet/nap
 
-> All 12 napplet NAP domains (relay, storage, ifc, keys, theme, media, notify, identity, config, resource, connect, class) as layered subpath exports. The package name remains `@napplet/nap` for compatibility.
+> All 12 napplet NAP domains (relay, storage, inc, keys, theme, media, notify, identity, config, resource, connect, class) as layered subpath exports. The package name remains `@napplet/nap` for compatibility.
 
 ## Install
 
@@ -19,7 +19,7 @@ import { installRelayShim, relaySubscribe, RelaySubscribeMessage } from '@napple
 
 ```ts
 // Granular — types only (zero runtime cost)
-import type { IfcEventMessage } from '@napplet/nap/ifc/types';
+import type { IncEventMessage } from '@napplet/nap/inc/types';
 ```
 
 Shells that only need to mount a NAP import the shim subpath directly:
@@ -71,7 +71,7 @@ Each domain is an independent subpath. Barrel imports bundle types + shim instal
 |--------|--------|-------|------|-----|---------|
 | relay | `@napplet/nap/relay` | `@napplet/nap/relay/types` | `@napplet/nap/relay/shim` | `@napplet/nap/relay/sdk` | Nostr relay proxy (subscribe/publish/query) |
 | storage | `@napplet/nap/storage` | `@napplet/nap/storage/types` | `@napplet/nap/storage/shim` | `@napplet/nap/storage/sdk` | Scoped key-value storage |
-| ifc | `@napplet/nap/ifc` | `@napplet/nap/ifc/types` | `@napplet/nap/ifc/shim` | `@napplet/nap/ifc/sdk` | Inter-frame communication (topic pub/sub) |
+| inc | `@napplet/nap/inc` | `@napplet/nap/inc/types` | `@napplet/nap/inc/shim` | `@napplet/nap/inc/sdk` | Inter-napplet communication (topic pub/sub) |
 | keys | `@napplet/nap/keys` | `@napplet/nap/keys/types` | `@napplet/nap/keys/shim` | `@napplet/nap/keys/sdk` | Keyboard bindings + action registration |
 | theme | `@napplet/nap/theme` | `@napplet/nap/theme/types` | — | — | Read-only shell theme access (types-only today) |
 | media | `@napplet/nap/media` | `@napplet/nap/media/types` | `@napplet/nap/media/shim` | `@napplet/nap/media/sdk` | Ownership-aware media sessions + playback |
@@ -81,6 +81,12 @@ Each domain is an independent subpath. Barrel imports bundle types + shim instal
 | resource | `@napplet/nap/resource` | `@napplet/nap/resource/types` | `@napplet/nap/resource/shim` | `@napplet/nap/resource/sdk` | Sandboxed byte fetching (https/blossom/nostr/data) via `bytes(url) → Blob` |
 | connect | `@napplet/nap/connect` | `@napplet/nap/connect/types` | `@napplet/nap/connect/shim` | `@napplet/nap/connect/sdk` | User-gated direct network access (state-only; no wire — grants flow via CSP + discovery meta tag) |
 | class | `@napplet/nap/class` | `@napplet/nap/class/types` | `@napplet/nap/class/shim` | `@napplet/nap/class/sdk` | Shell-assigned integer class via `class.assigned` wire envelope; exposes `window.napplet.class` |
+
+### Deprecated IFC Compatibility
+
+NAP-IFC was renamed to NAP-INC because the surface is inter-napplet communication, not generic inter-frame communication. New code must use `@napplet/nap/inc`, `window.napplet.inc`, the `inc.*` wire messages, and the `Inc*` TypeScript names.
+
+The old `@napplet/nap/ifc`, `@napplet/nap/ifc/types`, `@napplet/nap/ifc/shim`, and `@napplet/nap/ifc/sdk` subpaths remain as deprecated thin wrappers. They re-export the INC implementation and aliases only; they do not define a separate `ifc` domain or `ifc.*` wire protocol.
 
 ## Subpath Patterns
 
@@ -224,7 +230,7 @@ import { mediaCreateSession } from '@napplet/nap/media/sdk';
 import type { MediaNapMessage } from '@napplet/nap/media/types';
 ```
 
-Domain barrels are also available at `@napplet/nap/relay`, `@napplet/nap/storage`, `@napplet/nap/ifc`, `@napplet/nap/keys`, `@napplet/nap/theme`, `@napplet/nap/media`, `@napplet/nap/notify`, `@napplet/nap/identity`, `@napplet/nap/config`, `@napplet/nap/resource`, `@napplet/nap/connect`, and `@napplet/nap/class`.
+Domain barrels are also available at `@napplet/nap/relay`, `@napplet/nap/storage`, `@napplet/nap/inc`, `@napplet/nap/keys`, `@napplet/nap/theme`, `@napplet/nap/media`, `@napplet/nap/notify`, `@napplet/nap/identity`, `@napplet/nap/config`, `@napplet/nap/resource`, `@napplet/nap/connect`, and `@napplet/nap/class`.
 
 ## Optional Peer Dependency
 

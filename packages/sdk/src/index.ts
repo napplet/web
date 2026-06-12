@@ -1,12 +1,12 @@
 /**
  * @napplet/sdk -- Typed named exports wrapping window.napplet.
  *
- * Provides `relay`, `ifc`, `storage`, and `keys` objects that delegate
+ * Provides `relay`, `inc`, `storage`, and `keys` objects that delegate
  * to `window.napplet.*` at call time. Developers using a bundler can import
  * individual namespaces without depending on the shim's side-effect install:
  *
  * ```ts
- * import { relay, ifc } from '@napplet/sdk';
+ * import { relay, inc } from '@napplet/sdk';
  * ```
  *
  * The shim must still be imported somewhere in the application to install
@@ -124,32 +124,32 @@ export const relay = {
 };
 
 /**
- * Inter-frame pubsub: broadcast and receive IFC-PEER events through the shell.
+ * Inter-napplet pubsub: broadcast and receive INC-PEER events through the shell.
  *
  * @example
  * ```ts
- * import { ifc } from '@napplet/sdk';
+ * import { inc } from '@napplet/sdk';
  *
- * ifc.emit('profile:open', [], JSON.stringify({ pubkey: '...' }));
+ * inc.emit('profile:open', [], JSON.stringify({ pubkey: '...' }));
  *
- * const sub = ifc.on('profile:open', (payload) => {
+ * const sub = inc.on('profile:open', (payload) => {
  *   console.log('Profile requested:', payload);
  * });
  * ```
  */
-export const ifc = {
+export const inc = {
   /**
-   * Broadcast an IFC-PEER event to other napplets via the shell.
+   * Broadcast an INC-PEER event to other napplets via the shell.
    * @param topic      The 't' tag value (e.g., 'profile:open')
    * @param extraTags  Additional NIP-01 tags beyond the 't' tag (default: [])
    * @param content    Event content (default: empty string)
    */
   emit(topic: string, extraTags?: string[][], content?: string): void {
-    requireNapplet().ifc.emit(topic, extraTags, content);
+    requireNapplet().inc.emit(topic, extraTags, content);
   },
 
   /**
-   * Subscribe to IFC-PEER events on a specific topic.
+   * Subscribe to INC-PEER events on a specific topic.
    * @param topic     The 't' tag value to listen for
    * @param callback  Called with `(payload, event)` for each matching event
    * @returns A Subscription handle with a `close()` method
@@ -158,9 +158,15 @@ export const ifc = {
     topic: string,
     callback: (payload: unknown, event: NostrEvent) => void,
   ): Subscription {
-    return requireNapplet().ifc.on(topic, callback);
+    return requireNapplet().inc.on(topic, callback);
   },
 };
+
+/**
+ * @deprecated Use {@link inc}. NAP-IFC was renamed to NAP-INC; this package
+ * alias is kept only to ease downstream migration.
+ */
+export const ifc = inc;
 
 /**
  * Napplet-scoped storage: async localStorage-like API proxied through the shell.
@@ -858,7 +864,31 @@ export type {
   StorageNapMessage,
 } from '@napplet/nap/storage';
 
-// IFC NAP
+// INC NAP
+export type {
+  IncMessage,
+  IncEmitMessage,
+  IncSubscribeMessage,
+  IncSubscribeResultMessage,
+  IncUnsubscribeMessage,
+  IncEventMessage,
+  IncChannelOpenMessage,
+  IncChannelOpenResultMessage,
+  IncChannelEmitMessage,
+  IncChannelEventMessage,
+  IncChannelBroadcastMessage,
+  IncChannelListMessage,
+  IncChannelListResultMessage,
+  IncChannelCloseMessage,
+  IncChannelClosedMessage,
+  IncTopicMessage,
+  IncChannelMessage,
+  IncOutboundMessage,
+  IncInboundMessage,
+  IncNapMessage,
+} from '@napplet/nap/inc';
+
+// Deprecated IFC compatibility aliases
 export type {
   IfcMessage,
   IfcEmitMessage,
@@ -1013,6 +1043,11 @@ export type {
 export { DOMAIN as RELAY_DOMAIN } from '@napplet/nap/relay';
 export { DOMAIN as IDENTITY_DOMAIN } from '@napplet/nap/identity';
 export { DOMAIN as STORAGE_DOMAIN } from '@napplet/nap/storage';
+export { DOMAIN as INC_DOMAIN } from '@napplet/nap/inc';
+/**
+ * @deprecated Use {@link INC_DOMAIN}. This compatibility export resolves to
+ * the canonical `inc` domain string.
+ */
 export { DOMAIN as IFC_DOMAIN } from '@napplet/nap/ifc';
 export { DOMAIN as THEME_DOMAIN } from '@napplet/nap/theme';
 export { DOMAIN as KEYS_DOMAIN } from '@napplet/nap/keys';
@@ -1026,6 +1061,10 @@ export { DOMAIN as CLASS_DOMAIN } from '@napplet/nap/class';
 export { installRelayShim } from '@napplet/nap/relay';
 export { installIdentityShim } from '@napplet/nap/identity';
 export { installStorageShim } from '@napplet/nap/storage';
+export { installIncShim } from '@napplet/nap/inc';
+/**
+ * @deprecated Use {@link installIncShim}.
+ */
 export { installIfcShim } from '@napplet/nap/ifc';
 export { installKeysShim } from '@napplet/nap/keys';
 export { installMediaShim } from '@napplet/nap/media';
@@ -1049,6 +1088,10 @@ export {
   identityGetBadges,
 } from '@napplet/nap/identity';
 export { storageGetItem, storageSetItem, storageRemoveItem, storageKeys } from '@napplet/nap/storage';
+export { incEmit, incOn } from '@napplet/nap/inc';
+/**
+ * @deprecated Use {@link incEmit} and {@link incOn}.
+ */
 export { ifcEmit, ifcOn } from '@napplet/nap/ifc';
 export { keysRegisterAction, keysUnregisterAction, keysOnAction, keysRegister } from '@napplet/nap/keys';
 export { mediaCreateSession, mediaUpdateSession, mediaDestroySession, mediaReportState, mediaReportCapabilities, mediaSendCommand, mediaOnCommand, mediaOnState, mediaOnCapabilities, mediaOnControls } from '@napplet/nap/media';

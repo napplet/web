@@ -1,5 +1,19 @@
 # @napplet/sdk
 
+## 0.7.0
+
+### Minor Changes
+
+- Rename the inter-napplet communication surface from NAP-IFC to NAP-INC.
+
+  The canonical domain, capability, runtime namespace, wire messages, and TypeScript names are now `inc`, `nap:inc`, `window.napplet.inc`, `inc.*`, and `Inc*`. `@napplet/nap` keeps deprecated `ifc` subpaths as thin wrappers over the INC implementation, and `@napplet/sdk` keeps deprecated `ifc` aliases for downstream migration.
+
+### Patch Changes
+
+- Updated dependencies
+  - @napplet/core@0.7.0
+  - @napplet/nap@0.7.0
+
 ## 0.6.0
 
 ### Minor Changes
@@ -125,7 +139,7 @@
   - @napplet/core@0.2.1
   - @napplet/nap-config@0.2.1
   - @napplet/nap-identity@0.2.1
-  - @napplet/nap-ifc@0.2.1
+  - @napplet/nap-inc@0.2.1
   - @napplet/nap-keys@0.2.1
   - @napplet/nap-media@0.2.1
   - @napplet/nap-notify@0.2.1

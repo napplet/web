@@ -52,7 +52,7 @@ describe('@napplet/core exports', () => {
       // Compile check: bare NAP domain strings are valid.
       const _relay: NamespacedCapability = 'relay';
       const _storage: NamespacedCapability = 'storage';
-      const _ifc: NamespacedCapability = 'ifc';
+      const _inc: NamespacedCapability = 'inc';
       const _theme: NamespacedCapability = 'theme';
       const _media: NamespacedCapability = 'media';
       expect(true).toBe(true);
@@ -62,7 +62,7 @@ describe('@napplet/core exports', () => {
       // Compile check: explicit NAP prefix
       const _napRelay: NamespacedCapability = 'nap:relay';
       const _napStorage: NamespacedCapability = 'nap:storage';
-      const _napIfc: NamespacedCapability = 'nap:ifc';
+      const _napInc: NamespacedCapability = 'nap:inc';
       const _napTheme: NamespacedCapability = 'nap:theme';
       const _napMedia: NamespacedCapability = 'nap:media';
       expect(true).toBe(true);
@@ -86,8 +86,8 @@ describe('@napplet/core exports', () => {
     it('ShellSupports.supports() accepts optional numbered NAP protocol ids', () => {
       const protocol: NapProtocolId = 'NAP-01';
       const shell: ShellSupports = { supports: () => true };
-      expect(shell.supports('ifc', protocol)).toBe(true);
-      expect(shell.supports('nap:ifc', 'NAP-02')).toBe(true);
+      expect(shell.supports('inc', protocol)).toBe(true);
+      expect(shell.supports('nap:inc', 'NAP-02')).toBe(true);
     });
   });
 });

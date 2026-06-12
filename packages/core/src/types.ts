@@ -39,7 +39,7 @@ export interface NostrFilter {
 }
 
 /**
- * Subscription handle returned by relay.subscribe() and ifc.on().
+ * Subscription handle returned by relay.subscribe() and inc.on().
  * Call close() to unsubscribe and stop receiving events.
  *
  * @example
@@ -198,18 +198,18 @@ export interface NappletGlobal {
     query(filters: NostrFilter | NostrFilter[]): Promise<NostrEvent[]>;
   };
   /**
-   * Inter-frame pubsub: broadcast and receive IFC-PEER events through the shell.
+   * Inter-napplet pubsub: broadcast and receive INC-PEER events through the shell.
    */
-  ifc: {
+  inc: {
     /**
-     * Broadcast an IFC-PEER event to other napplets via the shell.
+     * Broadcast an INC-PEER event to other napplets via the shell.
      * @param topic      The 't' tag value (e.g., 'profile:open')
      * @param extraTags  Additional NIP-01 tags beyond the 't' tag (default: [])
      * @param content    Event content (default: empty string)
      */
     emit(topic: string, extraTags?: string[][], content?: string): void;
     /**
-     * Subscribe to IFC-PEER events on a specific topic.
+     * Subscribe to INC-PEER events on a specific topic.
      * @param topic     The 't' tag value to listen for
      * @param callback  Called with `(payload, event)` for each matching event
      * @returns A Subscription handle with a `close()` method
@@ -740,7 +740,7 @@ export interface NappletGlobal {
    * if (window.napplet.shell.supports('perm:popups')) { ... }
    *
    * // Numbered NAP protocol over an interface:
-   * if (window.napplet.shell.supports('ifc', 'NAP-01')) { ... }
+   * if (window.napplet.shell.supports('inc', 'NAP-01')) { ... }
    * ```
    */
   shell: NappletGlobalShell;
