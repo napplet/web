@@ -31,7 +31,7 @@ import { installNostrDb } from './nipdb-shim.js';
 import { installStorageShim, nappletStorage } from '@napplet/nap/storage/shim';
 import { subscribe, publish, publishEncrypted, query } from '@napplet/nap/relay/shim';
 import * as identityShim from '@napplet/nap/identity/shim';
-import { installIfcShim, emit, on, handleIfcEvent } from '@napplet/nap/ifc/shim';
+import { installIncShim, emit, on, handleIncEvent } from '@napplet/nap/inc/shim';
 import {
   installConfigShim,
   handleConfigMessage,
@@ -50,7 +50,7 @@ import {
 import { installConnectShim } from '@napplet/nap/connect/shim';
 import { installClassShim, handleClassMessage } from '@napplet/nap/class/shim';
 import { NAP_DOMAINS, type NappletGlobal, type NamespacedCapability, type ProtocolId } from '@napplet/core';
-import type { IfcEventMessage } from '@napplet/nap/ifc/types';
+import type { IncEventMessage } from '@napplet/nap/inc/types';
 
 interface ShellInitMessage {
   type: 'shell.init';
@@ -119,14 +119,14 @@ function handleEnvelopeMessage(event: MessageEvent): void {
     return;
   }
 
-  // Route IFC event messages to topic handlers
-  if (type === 'ifc.event') {
-    handleIfcEvent(msg as IfcEventMessage);
+  // Route INC event messages to topic handlers
+  if (type === 'inc.event') {
+    handleIncEvent(msg as IncEventMessage);
     return;
   }
 }
 
-installIfcShim();
+installIncShim();
 
 function defaultShellSupports(capability: NamespacedCapability, protocol?: ProtocolId): boolean {
   if (protocol !== undefined) return false;
@@ -206,7 +206,7 @@ function installShellCapabilities(msg: ShellInitMessage): void {
     publishEncrypted,
     query,
   },
-  ifc: {
+  inc: {
     emit,
     on,
   },

@@ -12,7 +12,7 @@
 
 1. Import `@napplet/shim` in your napplet's entry point (side-effect only -- no named exports)
 2. The shim registers with the shell via postMessage -- the shell assigns identity based on the iframe's `message.source` Window reference
-3. Once registered, `window.napplet` is populated with relay, ifc, storage, keys, media, notify, identity, config, resource, connect, class, and shell sub-objects
+3. Once registered, `window.napplet` is populated with relay, inc, storage, keys, media, notify, identity, config, resource, connect, class, and shell sub-objects
 4. No `window.nostr` is installed -- signing and encryption are mediated by the shell via `relay.publish()` and `relay.publishEncrypted()`
 
 ### Installation
@@ -42,8 +42,8 @@ const signed = await window.napplet.relay.publish({
   created_at: Math.floor(Date.now() / 1000),
 });
 
-// Listen for inter-frame events from other napplets
-const ifcSub = window.napplet.ifc.on('profile:open', (payload) => {
+// Listen for inter-napplet events from other napplets
+const incSub = window.napplet.inc.on('profile:open', (payload) => {
   console.log('Profile requested:', payload);
 });
 
@@ -126,7 +126,7 @@ if (window.napplet.connect.granted) {
 
 // Clean up
 sub.close();
-ifcSub.close();
+incSub.close();
 identitySub.close();
 keySub.close();
 mediaSub.close();
@@ -160,9 +160,9 @@ Messages sent via `window.parent.postMessage(msg, '*')`:
 { type: 'identity.getBlocked', id: string }
 { type: 'identity.getBadges', id: string }
 
-{ type: 'ifc.emit', topic: string, payload?: unknown }
-{ type: 'ifc.subscribe', id: string, topic: string }
-{ type: 'ifc.unsubscribe', topic: string }
+{ type: 'inc.emit', topic: string, payload?: unknown }
+{ type: 'inc.subscribe', id: string, topic: string }
+{ type: 'inc.unsubscribe', topic: string }
 
 { type: 'storage.get', id: string, key: string }
 { type: 'storage.set', id: string, key: string, value: string }
@@ -219,7 +219,7 @@ Messages received via `window.addEventListener('message', ...)`:
 { type: 'identity.getBlocked.result', id: string, pubkeys: string[], error?: string }
 { type: 'identity.getBadges.result', id: string, badges: object[], error?: string }
 
-{ type: 'ifc.event', topic: string, payload?: unknown, sender: string }
+{ type: 'inc.event', topic: string, payload?: unknown, sender: string }
 
 { type: 'storage.get.result', id: string, value?: string | null, error?: string }
 { type: 'storage.set.result', id: string, error?: string }
@@ -267,7 +267,7 @@ window.napplet = {
     publishEncrypted(template, recipient, encryption?): Promise<NostrEvent>;
     query(filters): Promise<NostrEvent[]>;
   },
-  ifc: {
+  inc: {
     emit(topic, extraTags?, content?): void;
     on(topic, callback): { close(): void };
   },
@@ -351,14 +351,14 @@ Relay operations through the shell's relay pool via JSON envelope (relay.subscri
 | `publishEncrypted(template, recipient, encryption?)` | `Promise<NostrEvent>` | Send an event template to the shell for encryption, signing, and broadcast. NIP-44 default. |
 | `query(filters)` | `Promise<NostrEvent[]>` | One-shot query: sends a relay.query envelope, resolves when results arrive. |
 
-### `window.napplet.ifc`
+### `window.napplet.inc`
 
-Inter-frame communication between napplets via the shell.
+Inter-napplet communication between napplets via the shell.
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| `emit(topic, extraTags?, content?)` | `void` | Send an `ifc.emit` JSON envelope to the shell for delivery to matching topic subscribers. |
-| `on(topic, callback)` | `{ close(): void }` | Subscribe to `ifc.event` JSON envelopes on a topic. Callback receives `(payload, event)`. |
+| `emit(topic, extraTags?, content?)` | `void` | Send an `inc.emit` JSON envelope to the shell for delivery to matching topic subscribers. |
+| `on(topic, callback)` | `{ close(): void }` | Subscribe to `inc.event` JSON envelopes on a topic. Callback receives `(payload, event)`. |
 
 ### `window.napplet.storage`
 
@@ -512,12 +512,12 @@ window.napplet.shell.supports('nap:identity');  // explicit prefix
 window.napplet.shell.supports('perm:popups');
 
 // Numbered NAP-NN message protocols over an interface
-window.napplet.shell.supports('ifc', 'NAP-01');
+window.napplet.shell.supports('inc', 'NAP-01');
 ```
 
 Currently returns `false` for shell-granted permissions and numbered protocols
 until the shell populates it at iframe creation time. A shell can advertise a
-numbered protocol by including an interface/protocol entry such as `ifc:NAP-01`
+numbered protocol by including an interface/protocol entry such as `inc:NAP-01`
 in its NAP capability list. Use this as a feature gate before calling APIs that
 depend on a specific capability or message protocol.
 
@@ -550,17 +550,17 @@ requiring global type augmentation.
 
 | | `@napplet/shim` | `@napplet/sdk` |
 |---|---|---|
-| **Import style** | `import '@napplet/shim'` (side-effect) | `import { relay, ifc } from '@napplet/sdk'` |
+| **Import style** | `import '@napplet/shim'` (side-effect) | `import { relay, inc } from '@napplet/sdk'` |
 | **What it does** | Installs `window.napplet` global + shell registration | Named exports wrapping `window.napplet` |
 | **Dependencies** | `@napplet/nap` (uses `@napplet/nap/<domain>/shim` subpaths internally) | `@napplet/core` (types only) |
 | **When to use** | Always -- required to install the runtime | When you want typed imports in a bundler |
-| **Named exports** | None | `relay`, `ifc`, `storage`, `keys`, `identity`, plus types |
+| **Named exports** | None | `relay`, `inc`, `storage`, `keys`, `identity`, plus types |
 
 **Typical usage:** Import both -- shim for window installation, SDK for typed API access:
 
 ```ts
 import '@napplet/shim';
-import { relay, ifc, storage, keys, identity } from '@napplet/sdk';
+import { relay, inc, storage, keys, identity } from '@napplet/sdk';
 ```
 
 ## Protocol Reference

@@ -12,7 +12,7 @@
 ### How It Works
 
 1. Import `@napplet/shim` in your entry point to install the `window.napplet` global
-2. Import named exports from `@napplet/sdk` -- `relay`, `ifc`, `storage`, `keys`
+2. Import named exports from `@napplet/sdk` -- `relay`, `inc`, `storage`, `keys`
 3. Each SDK method delegates to its `window.napplet.*` counterpart at call time
 4. If `window.napplet` is not installed when a method is called, a descriptive error is thrown
 
@@ -26,7 +26,7 @@ npm install @napplet/sdk @napplet/shim
 
 ```ts
 import '@napplet/shim';
-import { relay, ifc, storage, keys, media, notify, config, resource, type NappletConnect, type NostrEvent } from '@napplet/sdk';
+import { relay, inc, storage, keys, media, notify, config, resource, type NappletConnect, type NostrEvent } from '@napplet/sdk';
 
 // Subscribe to kind 1 notes
 const sub = relay.subscribe(
@@ -43,9 +43,9 @@ const signed = await relay.publish({
   created_at: Math.floor(Date.now() / 1000),
 });
 
-// Inter-frame messaging
-ifc.emit('chat:message', [], JSON.stringify({ text: 'hi' }));
-const ifcSub = ifc.on('bot:response', (payload) => {
+// Inter-napplet messaging
+inc.emit('chat:message', [], JSON.stringify({ text: 'hi' }));
+const incSub = inc.on('bot:response', (payload) => {
   console.log('Bot says:', payload);
 });
 
@@ -109,7 +109,7 @@ if (connectGranted()) {
 
 // Clean up
 sub.close();
-ifcSub.close();
+incSub.close();
 keySub.close();
 configSub.close();
 ```
@@ -127,17 +127,23 @@ Relay operations through the shell's relay pool. Mirrors `window.napplet.relay`.
 | `publishEncrypted(template, recipient, encryption?)` | `Promise<NostrEvent>` | Send event template for encryption, signing, and broadcast |
 | `query(filters)` | `Promise<NostrEvent[]>` | One-shot query: subscribe, collect until EOSE, resolve |
 
-### `ifc`
+### `inc`
 
-Inter-frame communication between napplets. Mirrors `window.napplet.ifc`.
+Inter-napplet communication between napplets. Mirrors `window.napplet.inc`.
 
-Messages are sent as JSON envelope objects (`{ type: 'ifc.emit', topic, payload }`) and received as
-(`{ type: 'ifc.event', topic, payload, sender }`).
+Messages are sent as JSON envelope objects (`{ type: 'inc.emit', topic, payload }`) and received as
+(`{ type: 'inc.event', topic, payload, sender }`).
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| `emit(topic, extraTags?, content?)` | `void` | Broadcast an IFC event to other napplets via the shell |
-| `on(topic, callback)` | `{ close(): void }` | Subscribe to IFC events on a topic |
+| `emit(topic, extraTags?, content?)` | `void` | Broadcast an INC event to other napplets via the shell |
+| `on(topic, callback)` | `{ close(): void }` | Subscribe to INC events on a topic |
+
+Deprecated IFC compatibility exports are available as migration aliases:
+`ifc`, `ifcEmit`, `ifcOn`, `IFC_DOMAIN`, `installIfcShim`, and the `Ifc*`
+message types. They forward to the INC implementation and resolve to the
+canonical `inc` domain; new code should use `inc`, `incEmit`, `incOn`,
+`INC_DOMAIN`, `installIncShim`, and `Inc*` names.
 
 ### `storage`
 
@@ -342,7 +348,7 @@ Namespaced capability query. Access via `window.napplet.shell.supports()` after 
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| `supports(capability, protocol?)` | `boolean` | Check shell support for a NAP (`nap:relay`), permission (`perm:popups`), or numbered NAP-NN protocol over an interface (`ifc`, `NAP-01`). Bare NAP names are also accepted (`relay`). |
+| `supports(capability, protocol?)` | `boolean` | Check shell support for a NAP (`nap:relay`), permission (`perm:popups`), or numbered NAP-NN protocol over an interface (`inc`, `NAP-01`). Bare NAP names are also accepted (`relay`). |
 
 **Example:**
 
@@ -357,7 +363,7 @@ if (window.napplet.shell.supports('nap:identity')) { /* ... */ }
 if (window.napplet.shell.supports('perm:popups')) { /* ... */ }
 
 // Numbered NAP-NN message protocols
-if (window.napplet.shell.supports('ifc', 'NAP-01')) { /* ... */ }
+if (window.napplet.shell.supports('inc', 'NAP-01')) { /* ... */ }
 ```
 
 ### Namespace Import
@@ -394,7 +400,7 @@ import type {
   RelayNapMessage,
   IdentityNapMessage,
   StorageNapMessage,
-  IfcNapMessage,
+  IncNapMessage,
   KeysNapMessage,
   Action,
 } from '@napplet/sdk';
@@ -424,7 +430,7 @@ handlers in shell implementations or protocol-aware code.
 | `RelayNapMessage` | `@napplet/nap/relay` | Discriminated union of all relay domain messages |
 | `IdentityNapMessage` | `@napplet/nap/identity` | Discriminated union of all identity domain messages |
 | `StorageNapMessage` | `@napplet/nap/storage` | Discriminated union of all storage domain messages |
-| `IfcNapMessage` | `@napplet/nap/ifc` | Discriminated union of all IFC domain messages |
+| `IncNapMessage` | `@napplet/nap/inc` | Discriminated union of all INC domain messages |
 | `KeysNapMessage` | `@napplet/nap/keys` | Discriminated union of all keys domain messages |
 | `MediaNapMessage` | `@napplet/nap/media` | Discriminated union of all media domain messages |
 | `NotifyNapMessage` | `@napplet/nap/notify` | Discriminated union of all notify domain messages |
@@ -443,8 +449,8 @@ Individual message types (e.g., `RelaySubscribeMessage`, `IdentityGetPublicKeyMe
 Each NAP domain has a string constant re-exported from its package:
 
 ```ts
-import { RELAY_DOMAIN, IDENTITY_DOMAIN, STORAGE_DOMAIN, IFC_DOMAIN, THEME_DOMAIN, KEYS_DOMAIN, MEDIA_DOMAIN, NOTIFY_DOMAIN, CONFIG_DOMAIN, RESOURCE_DOMAIN, CONNECT_DOMAIN, CLASS_DOMAIN } from '@napplet/sdk';
-// Values: 'relay', 'identity', 'storage', 'ifc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'connect', 'class'
+import { RELAY_DOMAIN, IDENTITY_DOMAIN, STORAGE_DOMAIN, INC_DOMAIN, THEME_DOMAIN, KEYS_DOMAIN, MEDIA_DOMAIN, NOTIFY_DOMAIN, CONFIG_DOMAIN, RESOURCE_DOMAIN, CONNECT_DOMAIN, CLASS_DOMAIN } from '@napplet/sdk';
+// Values: 'relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'connect', 'class'
 ```
 
 These constants are re-exported from the individual domain packages. Use them with the shell capability query
@@ -504,7 +510,7 @@ This protects against importing `@napplet/sdk` without the side-effect shim impo
 
 ```ts
 import '@napplet/shim';                                                  // required: installs window.napplet
-import { relay, ifc, storage, keys, media, notify } from '@napplet/sdk';  // optional: typed API
+import { relay, inc, storage, keys, media, notify } from '@napplet/sdk';  // optional: typed API
 ```
 
 If you are writing a vanilla napplet with no build step, use `window.napplet.*` directly after importing the shim -- the SDK is not required.

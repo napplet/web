@@ -1,6 +1,6 @@
 {
   "name": "@napplet/nap",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "license": "MIT",
   "exports": {
     "./class": "./src/class/index.ts",
@@ -19,6 +19,10 @@
     "./identity/sdk": "./src/identity/sdk.ts",
     "./identity/shim": "./src/identity/shim.ts",
     "./identity/types": "./src/identity/types.ts",
+    "./inc": "./src/inc/index.ts",
+    "./inc/sdk": "./src/inc/sdk.ts",
+    "./inc/shim": "./src/inc/shim.ts",
+    "./inc/types": "./src/inc/types.ts",
     "./ifc": "./src/ifc/index.ts",
     "./ifc/sdk": "./src/ifc/sdk.ts",
     "./ifc/shim": "./src/ifc/shim.ts",
@@ -51,7 +55,7 @@
     "./theme/types": "./src/theme/types.ts"
   },
   "imports": {
-    "@napplet/core": "jsr:@napplet/core@^0.6.0"
+    "@napplet/core": "jsr:@napplet/core@^0.7.0"
   },
   "publish": {
     "include": [

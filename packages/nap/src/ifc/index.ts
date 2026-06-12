@@ -1,55 +1,44 @@
 /**
- * @napplet/nap/ifc -- IFC NAP module.
+ * @napplet/nap/ifc -- deprecated compatibility barrel for NAP-INC.
  *
- * Exports typed message definitions for the ifc domain, shim installer,
- * SDK helpers, and registers the 'ifc' domain with core dispatch on import.
- *
- * @example
- * ```ts
- * import type { IfcEmitMessage, IfcChannelMessage, IfcNapMessage } from '@napplet/nap/ifc';
- * import { DOMAIN, installIfcShim, ifcEmit, ifcOn } from '@napplet/nap/ifc';
- * ```
- *
- * @packageDocumentation
+ * @deprecated Use `@napplet/nap/inc`. The canonical domain, wire messages, and
+ * runtime namespace are `inc`.
  */
 
-export { DOMAIN } from './types.js';
+export { DOMAIN } from '../inc/types.js';
 
 export type {
-  IfcMessage,
-  IfcEmitMessage,
-  IfcSubscribeMessage,
-  IfcSubscribeResultMessage,
-  IfcUnsubscribeMessage,
-  IfcEventMessage,
-  IfcChannelOpenMessage,
-  IfcChannelOpenResultMessage,
-  IfcChannelEmitMessage,
-  IfcChannelEventMessage,
-  IfcChannelBroadcastMessage,
-  IfcChannelListMessage,
-  IfcChannelListResultMessage,
-  IfcChannelCloseMessage,
-  IfcChannelClosedMessage,
-  IfcTopicMessage,
-  IfcChannelMessage,
-  IfcOutboundMessage,
-  IfcInboundMessage,
-  IfcNapMessage,
-} from './types.js';
+  IncMessage as IfcMessage,
+  IncEmitMessage as IfcEmitMessage,
+  IncSubscribeMessage as IfcSubscribeMessage,
+  IncSubscribeResultMessage as IfcSubscribeResultMessage,
+  IncUnsubscribeMessage as IfcUnsubscribeMessage,
+  IncEventMessage as IfcEventMessage,
+  IncChannelOpenMessage as IfcChannelOpenMessage,
+  IncChannelOpenResultMessage as IfcChannelOpenResultMessage,
+  IncChannelEmitMessage as IfcChannelEmitMessage,
+  IncChannelEventMessage as IfcChannelEventMessage,
+  IncChannelBroadcastMessage as IfcChannelBroadcastMessage,
+  IncChannelListMessage as IfcChannelListMessage,
+  IncChannelListResultMessage as IfcChannelListResultMessage,
+  IncChannelCloseMessage as IfcChannelCloseMessage,
+  IncChannelClosedMessage as IfcChannelClosedMessage,
+  IncTopicMessage as IfcTopicMessage,
+  IncChannelMessage as IfcChannelMessage,
+  IncOutboundMessage as IfcOutboundMessage,
+  IncInboundMessage as IfcInboundMessage,
+  IncNapMessage as IfcNapMessage,
+} from '../inc/types.js';
 
-export { installIfcShim, emit, on, handleIfcEvent } from './shim.js';
+export {
+  installIncShim as installIfcShim,
+  handleIncEvent as handleIfcEvent,
+  emit,
+  on,
+} from '../inc/shim.js';
 
-export { ifcEmit, ifcOn } from './sdk.js';
+export {
+  incEmit as ifcEmit,
+  incOn as ifcOn,
+} from '../inc/sdk.js';
 
-import { registerNap } from '@napplet/core';
-import { DOMAIN } from './types.js';
-
-/**
- * Register the ifc domain with the core dispatch singleton.
- * Handler is a no-op placeholder -- the shell/shim provide real handlers.
- * Registration ensures dispatch.getRegisteredDomains() includes 'ifc'.
- */
-registerNap(DOMAIN, (_msg) => {
-  /* Shell or shim replaces this handler at runtime */
-});

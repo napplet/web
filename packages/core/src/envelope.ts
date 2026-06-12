@@ -46,7 +46,7 @@ export interface NappletMessage {
  * | `relay`    | NIP-01 relay proxy (subscribe, publish)            |
  * | `identity` | Read-only user identity queries                    |
  * | `storage`  | Scoped key-value storage proxy                     |
- * | `ifc`      | Inter-frame communication (IFC peer bus)           |
+ * | `inc`      | Inter-napplet communication (INC peer bus)           |
  * | `theme`    | Theme tokens and appearance settings               |
  * | `keys`     | Keyboard forwarding and action keybindings         |
  * | `media`    | Media session control and playback                 |
@@ -62,7 +62,7 @@ export interface NappletMessage {
  * const isValid = NAP_DOMAINS.includes(domain); // true
  * ```
  */
-export type NapDomain = 'relay' | 'identity' | 'storage' | 'ifc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'connect' | 'class';
+export type NapDomain = 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'connect' | 'class';
 
 /**
  * Runtime-accessible constant array of all NAP domain names.
@@ -75,7 +75,7 @@ export type NapDomain = 'relay' | 'identity' | 'storage' | 'ifc' | 'theme' | 'ke
  * }
  * ```
  */
-export const NAP_DOMAINS: readonly NapDomain[] = ['relay', 'identity', 'storage', 'ifc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'connect', 'class'] as const;
+export const NAP_DOMAINS: readonly NapDomain[] = ['relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'connect', 'class'] as const;
 
 /**
  * Namespaced capability string for {@link ShellSupports.supports}.
@@ -117,7 +117,7 @@ export type NamespacedCapability =
  * @example
  * ```ts
  * const protocol: NapProtocolId = 'NAP-01';
- * window.napplet.shell.supports('ifc', protocol);
+ * window.napplet.shell.supports('inc', protocol);
  * ```
  */
 export type NapProtocolId = `NAP-${number}`;
@@ -140,7 +140,7 @@ export type ProtocolId = NapProtocolId;
  * shell.supports('perm:popups'); // popup permission
  *
  * // Numbered protocol queries over an interface:
- * shell.supports('ifc', 'NAP-01');
+ * shell.supports('inc', 'NAP-01');
  * ```
  */
 export interface ShellSupports {
@@ -166,7 +166,7 @@ export interface ShellSupports {
  * window.napplet.shell.supports('perm:popups');
  *
  * // NAP-NN protocol queries:
- * window.napplet.shell.supports('ifc', 'NAP-01');
+ * window.napplet.shell.supports('inc', 'NAP-01');
  * ```
  */
 export interface NappletGlobalShell extends ShellSupports {}

@@ -1,13 +1,13 @@
 ---
 name: build-napplet
-description: Use when writing a napplet (sandboxed Nostr iframe app) using @napplet/shim — covers Vite project setup, NIP-5A manifest plugin, subscribe/publish/query relay API, scoped storage, inter-frame events, the resource NAP for sandboxed byte fetching (replaces direct fetch / <img src=externalUrl>, both of which the iframe CSP blocks), NAP-CLASS + NAP-CONNECT for shell-assigned security class and user-gated direct network access, and read-only NAP-IDENTITY public-key tracking
+description: Use when writing a napplet (sandboxed Nostr iframe app) using @napplet/shim — covers Vite project setup, NIP-5A manifest plugin, subscribe/publish/query relay API, scoped storage, inter-napplet events, the resource NAP for sandboxed byte fetching (replaces direct fetch / <img src=externalUrl>, both of which the iframe CSP blocks), NAP-CLASS + NAP-CONNECT for shell-assigned security class and user-gated direct network access, and read-only NAP-IDENTITY public-key tracking
 ---
 
 # Building a Napplet with @napplet/shim
 
 ## Overview
 
-A napplet is a sandboxed iframe app that communicates with a host shell via postMessage using NIP-01 wire format. The shim (`@napplet/shim`) provides the full client-side API — relay subscriptions, event signing proxy, scoped storage, and inter-frame messaging. The iframe runs without `allow-same-origin`; all host access is proxied over postMessage. The napplet never holds private keys — signing is delegated to the shell signer.
+A napplet is a sandboxed iframe app that communicates with a host shell via postMessage using NIP-01 wire format. The shim (`@napplet/shim`) provides the full client-side API — relay subscriptions, event signing proxy, scoped storage, and inter-napplet messaging. The iframe runs without `allow-same-origin`; all host access is proxied over postMessage. The napplet never holds private keys — signing is delegated to the shell signer.
 
 ## Prerequisites
 
@@ -146,19 +146,19 @@ identitySub.close();
 
 `window.napplet.identity` is strictly read-only. It does not sign, encrypt, or decrypt. Publish signed events through `window.napplet.relay.publish(...)`; use relay-level encrypted publish helpers where available. Received ciphertext is not decrypted through identity.
 
-## Step 8 — Inter-frame events (emit / on)
+## Step 8 — Inter-napplet events (emit / on)
 
-Inter-frame events let napplets communicate with each other through the shell. `window.napplet.ifc.emit()` broadcasts to all topic subscribers; `window.napplet.ifc.on()` subscribes to a specific topic.
+Inter-napplet events let napplets communicate with each other through the shell. `window.napplet.inc.emit()` broadcasts to all topic subscribers; `window.napplet.inc.on()` subscribes to a specific topic.
 
 ```ts
 import '@napplet/shim';
-// or: import { ifc } from '@napplet/sdk';
+// or: import { inc } from '@napplet/sdk';
 
 // Broadcast an event to all napplets subscribed to 'profile:open'
-window.napplet.ifc.emit('profile:open', [], JSON.stringify({ pubkey: '3bf0c63...' }));
+window.napplet.inc.emit('profile:open', [], JSON.stringify({ pubkey: '3bf0c63...' }));
 
-// Subscribe to inter-frame events on a topic
-const sub = window.napplet.ifc.on('profile:open', (payload: unknown) => {
+// Subscribe to inter-napplet events on a topic
+const sub = window.napplet.inc.on('profile:open', (payload: unknown) => {
   const { pubkey } = payload as { pubkey: string };
   console.log('Profile open requested for:', pubkey);
 });
@@ -369,7 +369,7 @@ if (!window.napplet.shell.supports('nap:identity')) { /* no identity NAP */ }
 - `publish()` returns `Promise<NostrEvent>` — always `await` it. Errors surface as promise rejections (e.g., signer timeout, ACL denial).
 - `query()` resolves after EOSE — it is a one-shot snapshot, not a live stream. Use `subscribe()` for live updates.
 - `discoverServices()` results are session-cached. To refresh, the page must reload.
-- `window.napplet.ifc.emit()` does not return a value and does not confirm delivery. Use inter-frame `window.napplet.ifc.on()` subscriptions for acknowledgment patterns.
+- `window.napplet.inc.emit()` does not return a value and does not confirm delivery. Use inter-napplet `window.napplet.inc.on()` subscriptions for acknowledgment patterns.
 - The `on()` callback receives `(payload: unknown, event: NostrEvent)` — always type-check `payload` before accessing properties.
 - **Do not call `fetch()`, `<img src="https://...">`, `<link href="https://...">`, `XMLHttpRequest`, or `new WebSocket(...)` from a napplet.** The iframe sandbox + strict CSP (`connect-src 'none'`, `img-src blob: data:`) block all of them at the browser level. Use `window.napplet.resource.bytes(url)` instead — it returns a `Blob` you can pass to `URL.createObjectURL()` for `<img src>` use.
 - **Do not use the upstream `Content-Type` for resource MIME decisions.** The shell byte-sniffs the response and delivers a classified `mime` field on the result; the upstream `Content-Type` header is attacker-controlled and never reaches the napplet.

@@ -1,7 +1,7 @@
 /**
  * @napplet/core -- NAP registration and message dispatch infrastructure.
  *
- * Provides a NAP-agnostic mechanism for NAP modules (relay, identity, storage, ifc)
+ * Provides a NAP-agnostic mechanism for NAP modules (relay, identity, storage, inc)
  * to register their domain string and a message handler function. Inbound messages
  * are dispatched to the correct NAP handler based on the domain prefix extracted
  * from `message.type` (the part before the first `.`).
