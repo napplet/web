@@ -90,9 +90,9 @@ If the shell does not support all required capabilities, the napplet can detect 
 
 **Type:** `NappletConfigSchema | string | undefined`
 
-Declares a JSON Schema (draft-07+) describing the napplet's per-napplet configuration surface (NUB-CONFIG). At build time, the plugin:
+Declares a JSON Schema (draft-07+) describing the napplet's per-napplet configuration surface (NAP-CONFIG). At build time, the plugin:
 
-- Validates the schema against the NUB-CONFIG Core Subset (see Build-Time Guards below)
+- Validates the schema against the NAP-CONFIG Core Subset (see Build-Time Guards below)
 - Embeds the schema as a `['config', JSON.stringify(schema)]` tag on the kind 35128 manifest event
 - Includes the schema bytes in `aggregateHash` via a synthetic `config:schema` path prefix (any schema edit bumps the hash)
 - Injects `<meta name="napplet-config-schema" content="{json}">` into `dist/index.html` so the napplet's shim can read it synchronously at install time
@@ -198,7 +198,7 @@ nip5aManifest({ nappletType: 'my-napp' });
 
 ```ts
 // napplet.config.ts (at project root)
-import type { NappletConfigSchema } from '@napplet/nub/config/types';
+import type { NappletConfigSchema } from '@napplet/nap/config/types';
 
 export const configSchema: NappletConfigSchema = {
   type: 'object',
@@ -211,7 +211,7 @@ export const configSchema: NappletConfigSchema = {
 
 #### Build-Time Guards
 
-The plugin validates the resolved schema against the NUB-CONFIG Core Subset at `configResolved` and throws a multi-line error (aborting the Vite build) on any of these rule violations:
+The plugin validates the resolved schema against the NAP-CONFIG Core Subset at `configResolved` and throws a multi-line error (aborting the Vite build) on any of these rule violations:
 
 | Error code | Trigger |
 |------------|---------|
@@ -240,13 +240,13 @@ Migration:
 - If your napplet ships inline `<script>` elements (without `src`), fix them before v0.30.0 — the build now hard-fails on inline scripts to mirror the shell's baseline `script-src 'self'` posture. See [Build-Time Diagnostics](#build-time-diagnostics) below.
 - If your napplet needs direct network access (previously implicit under a permissive dev CSP, now explicit), declare the origins via the new [`connect`](#connect-optional-v0290) option and let the shell prompt the user.
 
-See [NUB-CLASS-2.md](https://github.com/napplet/nubs) for the shell-side posture that replaces the old in-page strict-CSP baseline, and [`specs/SHELL-CONNECT-POLICY.md`](../../specs/SHELL-CONNECT-POLICY.md) for the deployer-side checklist covering HTTP-responder precondition, residual meta-CSP refusal, and grant-persistence key.
+See [NAP-CLASS-2.md](https://github.com/napplet/naps) for the shell-side posture that replaces the old in-page strict-CSP baseline, and [`specs/SHELL-CONNECT-POLICY.md`](../../specs/SHELL-CONNECT-POLICY.md) for the deployer-side checklist covering HTTP-responder precondition, residual meta-CSP refusal, and grant-persistence key.
 
 #### connect (optional, v0.29.0+)
 
 **Type:** `string[]`
 
-Declares the origins the napplet needs direct browser-level network access to (`fetch`, `WebSocket`, `SSE`, `EventSource`). Each origin is validated by the shared `normalizeConnectOrigin` function from `@napplet/nub/connect/types` (the single source of truth used by both the build tool and shell implementations), emitted as a `["connect", "<origin>"]` tag in the signed NIP-5A manifest, and folded into `aggregateHash` via a synthetic `connect:origins` xTag so any origin-list change auto-invalidates prior user grants keyed on `(dTag, aggregateHash)`.
+Declares the origins the napplet needs direct browser-level network access to (`fetch`, `WebSocket`, `SSE`, `EventSource`). Each origin is validated by the shared `normalizeConnectOrigin` function from `@napplet/nap/connect/types` (the single source of truth used by both the build tool and shell implementations), emitted as a `["connect", "<origin>"]` tag in the signed NIP-5A manifest, and folded into `aggregateHash` via a synthetic `connect:origins` xTag so any origin-list change auto-invalidates prior user grants keyed on `(dTag, aggregateHash)`.
 
 **Quick start:**
 
@@ -296,12 +296,12 @@ Any addition, removal, or reorder-after-normalization of the origin set produces
 
 **Module-load conformance guardrail:**
 
-At ESM import time, the plugin self-checks its fold procedure against the normative NUB-CONNECT conformance fixture (3 origins → SHA-256 `cc7c1b1903fb23ecb909d2427e1dccd7d398a5c63dd65160edb0bb8b231aa742`). A drift in the fold procedure (even a one-byte change to the sort or separator) fires a fatal at plugin-import time, preventing the build from shipping a hash incompatible with shells.
+At ESM import time, the plugin self-checks its fold procedure against the normative NAP-CONNECT conformance fixture (3 origins → SHA-256 `cc7c1b1903fb23ecb909d2427e1dccd7d398a5c63dd65160edb0bb8b231aa742`). A drift in the fold procedure (even a one-byte change to the sort or separator) fires a fatal at plugin-import time, preventing the build from shipping a hash incompatible with shells.
 
 **See also:**
-- [NUB-CONNECT](https://github.com/napplet/nubs) — normative spec (origin format, aggregateHash fold, conformance fixture)
+- [NAP-CONNECT](https://github.com/napplet/naps) — normative spec (origin format, aggregateHash fold, conformance fixture)
 - [`specs/SHELL-CONNECT-POLICY.md`](../../specs/SHELL-CONNECT-POLICY.md) — shell-deployer checklist (HTTP-responder precondition, residual meta-CSP refusal, grant persistence, consent prompt MUSTs, revocation UX)
-- [NUB-CLASS-2.md](https://github.com/napplet/nubs) — posture triggered by presence of `connect` tags (CSP shape, shell responsibilities at serve time)
+- [NAP-CLASS-2.md](https://github.com/napplet/naps) — posture triggered by presence of `connect` tags (CSP shape, shell responsibilities at serve time)
 
 ### Environment Variables
 
@@ -477,7 +477,7 @@ interface Nip5aManifestOptions {
   artifactMode?: 'external-assets' | 'single-file';
 
   /**
-   * JSON Schema (draft-07+) describing the napplet's config surface (NUB-CONFIG).
+   * JSON Schema (draft-07+) describing the napplet's config surface (NAP-CONFIG).
    * May be an inline object or a path string (resolved relative to the Vite
    * project root). Falls through to `config.schema.json` then `napplet.config.*`
    * discovery when omitted.
@@ -487,10 +487,10 @@ interface Nip5aManifestOptions {
   /**
    * Origins the napplet needs direct browser-level network access to (v0.29.0+).
    * Each origin validated via `normalizeConnectOrigin` from
-   * `@napplet/nub/connect/types`, emitted as `["connect", "<origin>"]`
+   * `@napplet/nap/connect/types`, emitted as `["connect", "<origin>"]`
    * manifest tags, folded into `aggregateHash` via a synthetic `connect:origins`
    * xTag so any origin change auto-invalidates prior grants.
-   * See NUB-CONNECT for the authoritative origin format.
+   * See NAP-CONNECT for the authoritative origin format.
    */
   connect?: string[];
 
@@ -506,10 +506,10 @@ interface Nip5aManifestOptions {
 
 ## Protocol Reference
 
-- [NUB-CONFIG spec (PR #13)](https://github.com/napplet/nubs/pull/13) -- per-napplet declarative configuration
-- [NUB-RESOURCE (drafts)](https://github.com/napplet/nubs) — sandboxed byte fetching primitive that strict CSP enforces against
-- [NUB-CONNECT (drafts)](https://github.com/napplet/nubs) -- user-gated direct network access: origin format, manifest tag shape, canonical `connect:origins` aggregateHash fold, runtime API
-- [NUB-CLASS (drafts)](https://github.com/napplet/nubs) + [`NUB-CLASS-1.md`](https://github.com/napplet/nubs) + [`NUB-CLASS-2.md`](https://github.com/napplet/nubs) -- napplet class track and the two v0.29.0 posture members (strict baseline + user-approved explicit-origin)
+- [NAP-CONFIG spec (PR #13)](https://github.com/napplet/naps/pull/13) -- per-napplet declarative configuration
+- [NAP-RESOURCE (drafts)](https://github.com/napplet/naps) — sandboxed byte fetching primitive that strict CSP enforces against
+- [NAP-CONNECT (drafts)](https://github.com/napplet/naps) -- user-gated direct network access: origin format, manifest tag shape, canonical `connect:origins` aggregateHash fold, runtime API
+- [NAP-CLASS (drafts)](https://github.com/napplet/naps) + [`NAP-CLASS-1.md`](https://github.com/napplet/naps) + [`NAP-CLASS-2.md`](https://github.com/napplet/naps) -- napplet class track and the two v0.29.0 posture members (strict baseline + user-approved explicit-origin)
 - [`specs/SHELL-CONNECT-POLICY.md`](../../specs/SHELL-CONNECT-POLICY.md) + [`specs/SHELL-CLASS-POLICY.md`](../../specs/SHELL-CLASS-POLICY.md) -- shell-deployer checklists
 - [NIP-5D](../../specs/NIP-5D.md) -- Napplet-shell protocol specification
 - [NIP-5A](https://github.com/nostr-protocol/nips/blob/master/5A.md) -- Nsite specification

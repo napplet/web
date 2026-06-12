@@ -552,7 +552,7 @@ requiring global type augmentation.
 |---|---|---|
 | **Import style** | `import '@napplet/shim'` (side-effect) | `import { relay, ifc } from '@napplet/sdk'` |
 | **What it does** | Installs `window.napplet` global + shell registration | Named exports wrapping `window.napplet` |
-| **Dependencies** | `@napplet/nub` (uses `@napplet/nub/<domain>/shim` subpaths internally) | `@napplet/core` (types only) |
+| **Dependencies** | `@napplet/nap` (uses `@napplet/nap/<domain>/shim` subpaths internally) | `@napplet/core` (types only) |
 | **When to use** | Always -- required to install the runtime | When you want typed imports in a bundler |
 | **Named exports** | None | `relay`, `ifc`, `storage`, `keys`, `identity`, plus types |
 

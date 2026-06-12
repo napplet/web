@@ -12,9 +12,9 @@
  * import {
  *   type NostrEvent, type NostrFilter,
  *   type NappletMessage, type NapDomain, type ShellSupports,
- *   type NubHandler, type NubDispatch,
+ *   type NapHandler, type NapDispatch,
  *   NAP_DOMAINS, TOPICS,
- *   createDispatch, registerNub, dispatch, getRegisteredDomains,
+ *   createDispatch, registerNap, dispatch, getRegisteredDomains,
  * } from '@napplet/core';
  * ```
  *
@@ -24,18 +24,16 @@
 export type {
   NappletMessage,
   NapDomain,
-  NubDomain,
   NamespacedCapability,
   NapProtocolId,
-  NubProtocolId,
   ProtocolId,
   ShellSupports,
   NappletGlobalShell,
 } from './envelope.js';
-export { NAP_DOMAINS, NUB_DOMAINS } from './envelope.js';
+export { NAP_DOMAINS } from './envelope.js';
 
-export type { NubHandler, NubDispatch } from './dispatch.js';
-export { createDispatch, registerNub, dispatch, getRegisteredDomains } from './dispatch.js';
+export type { NapHandler, NapDispatch } from './dispatch.js';
+export { createDispatch, registerNap, dispatch, getRegisteredDomains } from './dispatch.js';
 
 export type {
   NostrEvent,

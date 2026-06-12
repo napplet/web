@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
   NAP_DOMAINS,
-  NUB_DOMAINS,
   TOPICS,
 } from './index.js';
 
@@ -14,8 +13,6 @@ import type {
   TopicValue,
   NamespacedCapability,
   NapProtocolId,
-  NubDomain,
-  NubProtocolId,
   ShellSupports,
 } from './index.js';
 
@@ -45,12 +42,10 @@ describe('@napplet/core exports', () => {
   });
 
   describe('namespaced capability types', () => {
-    it('exports NAP domain names while preserving deprecated NUB aliases', () => {
+    it('exports NAP domain names', () => {
       const napDomain: NapDomain = 'identity';
-      const nubDomain: NubDomain = napDomain;
       expect(NAP_DOMAINS).toContain(napDomain);
-      expect(NUB_DOMAINS).toBe(NAP_DOMAINS);
-      expect(nubDomain).toBe('identity');
+      expect(napDomain).toBe('identity');
     });
 
     it('NamespacedCapability accepts bare NAP domain shorthand', () => {
@@ -73,12 +68,6 @@ describe('@napplet/core exports', () => {
       expect(true).toBe(true);
     });
 
-    it('NamespacedCapability still accepts deprecated nub: prefixed domains', () => {
-      const _legacyRelay: NamespacedCapability = 'nub:relay';
-      const _legacyIdentity: NamespacedCapability = 'nub:identity';
-      expect(true).toBe(true);
-    });
-
     it('NamespacedCapability accepts perm: prefixed strings', () => {
       // Compile check: permission prefix (per D-03)
       const _permSign: NamespacedCapability = 'perm:sign';
@@ -91,7 +80,6 @@ describe('@napplet/core exports', () => {
       const shell: ShellSupports = { supports: () => false };
       expect(shell.supports('relay')).toBe(false);
       expect(shell.supports('nap:relay')).toBe(false);
-      expect(shell.supports('nub:relay')).toBe(false);
       expect(shell.supports('perm:sign')).toBe(false);
     });
 
@@ -100,12 +88,6 @@ describe('@napplet/core exports', () => {
       const shell: ShellSupports = { supports: () => true };
       expect(shell.supports('ifc', protocol)).toBe(true);
       expect(shell.supports('nap:ifc', 'NAP-02')).toBe(true);
-    });
-
-    it('ShellSupports.supports() still accepts deprecated numbered NUB protocol ids', () => {
-      const protocol: NubProtocolId = 'NUB-01';
-      const shell: ShellSupports = { supports: () => true };
-      expect(shell.supports('ifc', protocol)).toBe(true);
     });
   });
 });

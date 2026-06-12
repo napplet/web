@@ -8,8 +8,8 @@
     "baseUrl": ".",
     "paths": {
       "@napplet/core": ["../core/src/index.ts"],
-      "@napplet/nub/config/types": ["../nub/src/config/types.ts"],
-      "@napplet/nub/connect/types": ["../nub/src/connect/types.ts"]
+      "@napplet/nap/config/types": ["../nap/src/config/types.ts"],
+      "@napplet/nap/connect/types": ["../nap/src/connect/types.ts"]
     }
   },
   "include": ["src", "vitest.config.ts"]

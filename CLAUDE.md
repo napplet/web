@@ -6,16 +6,11 @@ This is the **napplet** monorepo — npm packages for the napplet protocol. Napp
 
 ## Packages
 
-- `packages/core` — **@napplet/core** — JSON envelope types, NUB dispatch, protocol constants
+- `packages/core` — **@napplet/core** — JSON envelope types, NAP dispatch, protocol constants
 - `packages/shim` — **@napplet/shim** — Side-effect window installer (window.napplet)
 - `packages/sdk` — **@napplet/sdk** — Named exports wrapping window.napplet for bundler consumers
 - `packages/vite-plugin` — **@napplet/vite-plugin** — NIP-5A manifest generation at build time
-- `packages/nubs/relay` — **@napplet/nub-relay** — Relay NUB message types
-- `packages/nubs/identity` — **@napplet/nub-identity** — Identity NUB message types (read-only user queries)
-- `packages/nubs/storage` — **@napplet/nub-storage** — Storage NUB message types
-- `packages/nubs/ifc` — **@napplet/nub-ifc** — IFC NUB message types
-- `packages/nubs/theme` — **@napplet/nub-theme** — Theme NUB message types
-- `packages/nubs/notify` — **@napplet/nub-notify** — Notify NUB message types
+- `packages/nap` — **@napplet/nap** — NAP domain subpaths (`@napplet/nap/relay`, `@napplet/nap/identity`, etc.)
 
 ## Tech Stack
 
@@ -28,13 +23,13 @@ This is the **napplet** monorepo — npm packages for the napplet protocol. Napp
 
 ## Key Concepts
 
-- **JSON Envelope**: All messages use `{ type: "domain.action", ...payload }` format via postMessage. NIP-5D defines the envelope; NUB specs define message types per domain.
-- **NUBs**: Napplet Unified Blueprints — modular interface specs (relay, identity, storage, ifc, theme, keys, media, notify). Each NUB owns a message domain. Shells implement the NUBs they support.
+- **JSON Envelope**: All messages use `{ type: "domain.action", ...payload }` format via postMessage. NIP-5D defines the envelope; NAP specs define message types per domain.
+- **NAPs**: Napplet Unified Blueprints — modular interface specs (relay, identity, storage, ifc, theme, keys, media, notify). Each NAP owns a message domain. Shells implement the NAPs they support.
 - **Identity**: Shell identifies napplets via unforgeable `MessageEvent.source` at iframe creation. No handshake needed.
 - **ACL**: Capabilities keyed on `(dTag, aggregateHash)`. Controls signing, storage, relay access.
 - **Storage scoping**: Keys scoped by `dTag:aggregateHash` so different napplet types and versions have isolated storage.
 - **Sandbox**: `allow-scripts` only — no `allow-same-origin`. Everything is proxied via the shell.
-- **shell.supports()**: Napplets query `window.napplet.shell.supports('relay')` to check NUB availability.
+- **shell.supports()**: Napplets query `window.napplet.shell.supports('relay')` to check NAP availability.
 
 ## Build & Test
 
@@ -84,7 +79,7 @@ A portable SDK for the napplet protocol — sandboxed Nostr mini-apps that run i
 - pnpm 10.8.0 workspaces
 - changesets 2.30.0 for versioning/publishing
 - nostr-tools 2.23.3 (direct dependency for vite-plugin only)
-- 13 packages at v0.2.0 (4 core + 9 NUB modules)
+- 13 packages at v0.2.0 (4 core + 9 NAP modules)
 <!-- GSD:stack-end -->
 
 <!-- GSD:conventions-start source:CONVENTIONS.md -->
@@ -94,7 +89,7 @@ A portable SDK for the napplet protocol — sandboxed Nostr mini-apps that run i
 - TypeScript source files use lowercase with hyphens: `relay-shim.ts`, `envelope.ts`, `dispatch.ts`, `types.ts`, `keyboard-shim.ts`
 - Type-specific suffix: `types.ts` for interface/type definitions
 - Configuration files: `tsup.config.ts`, `turbo.json`, `tsconfig.json`
-- Exported functions use camelCase: `subscribe()`, `publish()`, `query()`, `emit()`, `on()`, `registerNub()`, `dispatch()`
+- Exported functions use camelCase: `subscribe()`, `publish()`, `query()`, `emit()`, `on()`, `registerNap()`, `dispatch()`
 - Internal/private helper functions use camelCase with leading underscore when unexported: `sendEvent()`, `handleRelayMessage()`
 - Initialization functions: `installStorageShim()`, `installKeyboardShim()`, `installNostrDb()`
 - Getter functions: `getPublicKey()`, `getPublicKey()`, `getUserPubkey()`
@@ -103,7 +98,7 @@ A portable SDK for the napplet protocol — sandboxed Nostr mini-apps that run i
 - UPPER_SNAKE_CASE for constants: `REQUEST_TIMEOUT_MS`, `RING_BUFFER_SIZE`, `DEFAULT_STORAGE_QUOTA`, `SIGNER_SUB_ID`
 - Map/Set names: descriptive nouns without prefix, e.g., `subscriptions`, `pendingChallenges`, `sources`
 - Private state uses underscore prefix if exported: `_setInterPaneEventSender()`, `_resolveKeypairReady`
-- PascalCase for interfaces and types: `NostrEvent`, `NostrFilter`, `NappletMessage`, `NubDomain`, `ShellSupports`, `ThemeColors`
+- PascalCase for interfaces and types: `NostrEvent`, `NostrFilter`, `NappletMessage`, `NapDomain`, `ShellSupports`, `ThemeColors`
 - Suffix conventions: `*Message` for envelope message types (e.g., `RelaySubscribeMessage`, `StorageGetMessage`)
 ## Code Style
 - No explicit linter/formatter configured in package (ESLint/Prettier)
@@ -117,7 +112,7 @@ A portable SDK for the napplet protocol — sandboxed Nostr mini-apps that run i
 - Comments in code disallow implicit `any`: `// eslint-disable-next-line @typescript-eslint/no-explicit-any`
 ## Import Organization
 - No path aliases configured; all imports are explicit relative paths
-- Monorepo packages imported via `@napplet/core`, `@napplet/shim`, `@napplet/sdk`, `@napplet/nub-*` in package.json
+- Monorepo packages imported via `@napplet/core`, `@napplet/shim`, `@napplet/sdk`, and `@napplet/nap` subpaths
 - ESM-only: `verbatimModuleSyntax: true` in tsconfig enforces explicit `import type` for types
 ## Error Handling
 - Silent catches for non-critical errors: `catch { /* intentional */ }` or `catch { /* best-effort */ }`
@@ -150,7 +145,7 @@ A portable SDK for the napplet protocol — sandboxed Nostr mini-apps that run i
 - Callback-based API: `onEvent`, `onEose`, `callback` patterns for subscription
 - Functions return Promise for async operations: `Promise<NostrEvent>`, `Promise<unknown>`
 - Subscription functions return objects with teardown methods: `{ close(): void }`
-- Factory functions return interface types: `createDispatch(): NubDispatch`
+- Factory functions return interface types: `createDispatch(): NapDispatch`
 - Early returns for validation failures: `if (!condition) return;`
 ## Module Design
 - Prefer named exports: `export function subscribe()`, `export const audioManager = { ... }`
@@ -159,7 +154,7 @@ A portable SDK for the napplet protocol — sandboxed Nostr mini-apps that run i
 - Type exports with `export type` when appropriate
 - `packages/core/src/index.ts` acts as main barrel export
 - Re-exports all public interfaces, dispatch infrastructure, and protocol constants
-- NUB packages each have their own barrel export at `packages/nubs/*/src/index.ts`
+- NAP domains each have their own barrel export at `packages/nap/src/*/index.ts`
 ## Module-Level State
 - Local state managed within IIFE closures in factory functions
 - Module-level Maps for registries: `const registry = new Map<Window, string>()`
@@ -173,8 +168,8 @@ A portable SDK for the napplet protocol — sandboxed Nostr mini-apps that run i
 - Framework-agnostic (no Svelte, React, Vue dependencies)
 - JSON envelope wire format: `{ type: "domain.action", ...payload }` via postMessage
 - Identity via unforgeable `MessageEvent.source` at iframe creation — no handshake
-- Modular NUB architecture: each NUB owns a message domain (relay, identity, storage, ifc, theme, keys, media, notify)
-- Core dispatch: `registerNub(domain, handler)` routes messages by domain prefix
+- Modular NAP architecture: each NAP owns a message domain (relay, identity, storage, ifc, theme, keys, media, notify)
+- Core dispatch: `registerNap(domain, handler)` routes messages by domain prefix
 - ACL keyed on `(dTag, aggregateHash)` for per-napplet capability enforcement
 - Storage scoped by `dTag:aggregateHash` — cross-napplet isolation enforced by shell
 - iframe sandbox: `allow-scripts` only, no `allow-same-origin`

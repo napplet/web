@@ -12,10 +12,10 @@
  * The shim must still be imported somewhere in the application to install
  * the `window.napplet` global. The SDK only wraps it -- it does not install it.
  *
- * Domain-specific SDK helpers are also available directly from NUB packages:
+ * Domain-specific SDK helpers are also available directly from NAP packages:
  * ```ts
- * import { relaySubscribe } from '@napplet/nub/relay';
- * import { storageGetItem } from '@napplet/nub/storage';
+ * import { relaySubscribe } from '@napplet/nap/relay';
+ * import { storageGetItem } from '@napplet/nap/storage';
  * ```
  *
  * @packageDocumentation
@@ -34,7 +34,7 @@ import type {
   MediaMetadata,
   MediaState,
   MediaAction,
-} from '@napplet/nub/media';
+} from '@napplet/nap/media';
 
 /**
  * Retrieve the `window.napplet` global, throwing a clear error if it is absent.
@@ -785,16 +785,14 @@ export type { EventTemplate } from '@napplet/core';
 export type {
   NappletMessage,
   NapDomain,
-  NubDomain,
   NamespacedCapability,
   NapProtocolId,
-  NubProtocolId,
   ProtocolId,
   ShellSupports,
 } from '@napplet/core';
-export { NAP_DOMAINS, NUB_DOMAINS } from '@napplet/core';
+export { NAP_DOMAINS } from '@napplet/core';
 
-// Relay NUB
+// Relay NAP
 export type {
   RelayMessage,
   RelaySubscribeMessage,
@@ -810,10 +808,10 @@ export type {
   RelayQueryResultMessage,
   RelayOutboundMessage,
   RelayInboundMessage,
-  RelayNubMessage,
-} from '@napplet/nub/relay';
+  RelayNapMessage,
+} from '@napplet/nap/relay';
 
-// Identity NUB
+// Identity NAP
 export type {
   ProfileData,
   ZapReceipt,
@@ -842,10 +840,9 @@ export type {
   IdentityRequestMessage,
   IdentityResultMessage,
   IdentityNapMessage,
-  IdentityNubMessage,
-} from '@napplet/nub/identity';
+} from '@napplet/nap/identity';
 
-// Storage NUB
+// Storage NAP
 export type {
   StorageMessage,
   StorageGetMessage,
@@ -858,10 +855,10 @@ export type {
   StorageKeysResultMessage,
   StorageRequestMessage,
   StorageResultMessage,
-  StorageNubMessage,
-} from '@napplet/nub/storage';
+  StorageNapMessage,
+} from '@napplet/nap/storage';
 
-// IFC NUB
+// IFC NAP
 export type {
   IfcMessage,
   IfcEmitMessage,
@@ -882,10 +879,10 @@ export type {
   IfcChannelMessage,
   IfcOutboundMessage,
   IfcInboundMessage,
-  IfcNubMessage,
-} from '@napplet/nub/ifc';
+  IfcNapMessage,
+} from '@napplet/nap/ifc';
 
-// Theme NUB
+// Theme NAP
 export type {
   ThemeColors,
   ThemeFont,
@@ -897,10 +894,10 @@ export type {
   ThemeChangedMessage,
   ThemeRequestMessage,
   ThemeResultMessage,
-  ThemeNubMessage,
-} from '@napplet/nub/theme';
+  ThemeNapMessage,
+} from '@napplet/nap/theme';
 
-// Keys NUB
+// Keys NAP
 export type {
   Action,
   RegisterResult,
@@ -914,8 +911,8 @@ export type {
   KeysActionMessage,
   KeysRequestMessage,
   KeysResultMessage,
-  KeysNubMessage,
-} from '@napplet/nub/keys';
+  KeysNapMessage,
+} from '@napplet/nap/keys';
 
 // Media NAP
 export type {
@@ -939,10 +936,9 @@ export type {
   MediaRequestMessage,
   MediaResultMessage,
   MediaNapMessage,
-  MediaNubMessage,
-} from '@napplet/nub/media';
+} from '@napplet/nap/media';
 
-// Notify NUB
+// Notify NAP
 export type {
   NotificationPriority,
   NotificationAction,
@@ -962,10 +958,10 @@ export type {
   NotifyControlsMessage,
   NotifyRequestMessage,
   NotifyResultMessage,
-  NotifyNubMessage,
-} from '@napplet/nub/notify';
+  NotifyNapMessage,
+} from '@napplet/nap/notify';
 
-// Config NUB
+// Config NAP
 export type {
   NappletConfigSchema,
   ConfigSchema,
@@ -983,10 +979,10 @@ export type {
   ConfigSchemaErrorMessage,
   ConfigRequestMessage,
   ConfigResultMessage,
-  ConfigNubMessage,
-} from '@napplet/nub/config';
+  ConfigNapMessage,
+} from '@napplet/nap/config';
 
-// Resource NUB
+// Resource NAP
 export type {
   ResourceErrorCode,
   ResourceScheme,
@@ -998,48 +994,48 @@ export type {
   ResourceSidecarEntry,
   ResourceRequestMessage,
   ResourceResultMessage,
-  ResourceNubMessage,
-} from '@napplet/nub/resource';
+  ResourceNapMessage,
+} from '@napplet/nap/resource';
 
-// Connect NUB
+// Connect NAP
 export type {
   NappletConnect,
-} from '@napplet/nub/connect';
+} from '@napplet/nap/connect';
 
-// Class NUB
+// Class NAP
 export type {
   ClassMessage,
   ClassAssignedMessage,
   NappletClass,
-  ClassNubMessage,
-} from '@napplet/nub/class';
+  ClassNapMessage,
+} from '@napplet/nap/class';
 
-export { DOMAIN as RELAY_DOMAIN } from '@napplet/nub/relay';
-export { DOMAIN as IDENTITY_DOMAIN } from '@napplet/nub/identity';
-export { DOMAIN as STORAGE_DOMAIN } from '@napplet/nub/storage';
-export { DOMAIN as IFC_DOMAIN } from '@napplet/nub/ifc';
-export { DOMAIN as THEME_DOMAIN } from '@napplet/nub/theme';
-export { DOMAIN as KEYS_DOMAIN } from '@napplet/nub/keys';
-export { DOMAIN as MEDIA_DOMAIN } from '@napplet/nub/media';
-export { DOMAIN as NOTIFY_DOMAIN } from '@napplet/nub/notify';
-export { DOMAIN as CONFIG_DOMAIN } from '@napplet/nub/config';
-export { DOMAIN as RESOURCE_DOMAIN } from '@napplet/nub/resource';
-export { DOMAIN as CONNECT_DOMAIN } from '@napplet/nub/connect';
-export { DOMAIN as CLASS_DOMAIN } from '@napplet/nub/class';
+export { DOMAIN as RELAY_DOMAIN } from '@napplet/nap/relay';
+export { DOMAIN as IDENTITY_DOMAIN } from '@napplet/nap/identity';
+export { DOMAIN as STORAGE_DOMAIN } from '@napplet/nap/storage';
+export { DOMAIN as IFC_DOMAIN } from '@napplet/nap/ifc';
+export { DOMAIN as THEME_DOMAIN } from '@napplet/nap/theme';
+export { DOMAIN as KEYS_DOMAIN } from '@napplet/nap/keys';
+export { DOMAIN as MEDIA_DOMAIN } from '@napplet/nap/media';
+export { DOMAIN as NOTIFY_DOMAIN } from '@napplet/nap/notify';
+export { DOMAIN as CONFIG_DOMAIN } from '@napplet/nap/config';
+export { DOMAIN as RESOURCE_DOMAIN } from '@napplet/nap/resource';
+export { DOMAIN as CONNECT_DOMAIN } from '@napplet/nap/connect';
+export { DOMAIN as CLASS_DOMAIN } from '@napplet/nap/class';
 
-export { installRelayShim } from '@napplet/nub/relay';
-export { installIdentityShim } from '@napplet/nub/identity';
-export { installStorageShim } from '@napplet/nub/storage';
-export { installIfcShim } from '@napplet/nub/ifc';
-export { installKeysShim } from '@napplet/nub/keys';
-export { installMediaShim } from '@napplet/nub/media';
-export { installNotifyShim } from '@napplet/nub/notify';
-export { installConfigShim } from '@napplet/nub/config';
-export { installResourceShim } from '@napplet/nub/resource';
-export { installConnectShim } from '@napplet/nub/connect';
-export { installClassShim } from '@napplet/nub/class';
+export { installRelayShim } from '@napplet/nap/relay';
+export { installIdentityShim } from '@napplet/nap/identity';
+export { installStorageShim } from '@napplet/nap/storage';
+export { installIfcShim } from '@napplet/nap/ifc';
+export { installKeysShim } from '@napplet/nap/keys';
+export { installMediaShim } from '@napplet/nap/media';
+export { installNotifyShim } from '@napplet/nap/notify';
+export { installConfigShim } from '@napplet/nap/config';
+export { installResourceShim } from '@napplet/nap/resource';
+export { installConnectShim } from '@napplet/nap/connect';
+export { installClassShim } from '@napplet/nap/class';
 
-export { relaySubscribe, relayPublish, relayPublishEncrypted, relayQuery } from '@napplet/nub/relay';
+export { relaySubscribe, relayPublish, relayPublishEncrypted, relayQuery } from '@napplet/nap/relay';
 export {
   identityGetPublicKey,
   identityOnChanged,
@@ -1051,12 +1047,12 @@ export {
   identityGetMutes,
   identityGetBlocked,
   identityGetBadges,
-} from '@napplet/nub/identity';
-export { storageGetItem, storageSetItem, storageRemoveItem, storageKeys } from '@napplet/nub/storage';
-export { ifcEmit, ifcOn } from '@napplet/nub/ifc';
-export { keysRegisterAction, keysUnregisterAction, keysOnAction, keysRegister } from '@napplet/nub/keys';
-export { mediaCreateSession, mediaUpdateSession, mediaDestroySession, mediaReportState, mediaReportCapabilities, mediaSendCommand, mediaOnCommand, mediaOnState, mediaOnCapabilities, mediaOnControls } from '@napplet/nub/media';
-export { notifySend, notifyDismiss, notifyBadge, notifyRegisterChannel, notifyRequestPermission, notifyOnAction, notifyOnClicked, notifyOnDismissed, notifyOnControls } from '@napplet/nub/notify';
-export { resourceBytes, resourceBytesAsObjectURL } from '@napplet/nub/resource';
-export { connectGranted, connectOrigins, normalizeConnectOrigin } from '@napplet/nub/connect';
-export { getClass } from '@napplet/nub/class';
+} from '@napplet/nap/identity';
+export { storageGetItem, storageSetItem, storageRemoveItem, storageKeys } from '@napplet/nap/storage';
+export { ifcEmit, ifcOn } from '@napplet/nap/ifc';
+export { keysRegisterAction, keysUnregisterAction, keysOnAction, keysRegister } from '@napplet/nap/keys';
+export { mediaCreateSession, mediaUpdateSession, mediaDestroySession, mediaReportState, mediaReportCapabilities, mediaSendCommand, mediaOnCommand, mediaOnState, mediaOnCapabilities, mediaOnControls } from '@napplet/nap/media';
+export { notifySend, notifyDismiss, notifyBadge, notifyRegisterChannel, notifyRequestPermission, notifyOnAction, notifyOnClicked, notifyOnDismissed, notifyOnControls } from '@napplet/nap/notify';
+export { resourceBytes, resourceBytesAsObjectURL } from '@napplet/nap/resource';
+export { connectGranted, connectOrigins, normalizeConnectOrigin } from '@napplet/nap/connect';
+export { getClass } from '@napplet/nap/class';
