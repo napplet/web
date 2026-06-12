@@ -46,7 +46,7 @@ jobs:
         run: node scripts/sync-jsr-versions.mjs
 
       # `pnpm -r exec` runs in topological order (respects workspace deps),
-      # so @napplet/core publishes before @napplet/nub, which publishes before
+      # so @napplet/core publishes before @napplet/nap, which publishes before
       # @napplet/sdk + @napplet/shim, which publish before @napplet/vite-plugin.
       # Each package's `npx jsr publish` resolves prior packages from JSR's
       # newly-populated registry. Do NOT use --parallel here — JSR will reject

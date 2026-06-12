@@ -1,5 +1,5 @@
 
-import { installKeysShim, handleKeysMessage, registerAction, unregisterAction, onAction } from '@napplet/nub/keys/shim';
+import { installKeysShim, handleKeysMessage, registerAction, unregisterAction, onAction } from '@napplet/nap/keys/shim';
 import {
   installMediaShim,
   handleMediaMessage,
@@ -13,7 +13,7 @@ import {
   onState,
   onCapabilities,
   onControls,
-} from '@napplet/nub/media/shim';
+} from '@napplet/nap/media/shim';
 import {
   installNotifyShim,
   handleNotifyMessage,
@@ -26,12 +26,12 @@ import {
   onClicked as notifyOnClicked,
   onDismissed as notifyOnDismissed,
   onControls as notifyOnControls,
-} from '@napplet/nub/notify/shim';
+} from '@napplet/nap/notify/shim';
 import { installNostrDb } from './nipdb-shim.js';
-import { installStorageShim, nappletStorage } from '@napplet/nub/storage/shim';
-import { subscribe, publish, publishEncrypted, query } from '@napplet/nub/relay/shim';
-import * as identityShim from '@napplet/nub/identity/shim';
-import { installIfcShim, emit, on, handleIfcEvent } from '@napplet/nub/ifc/shim';
+import { installStorageShim, nappletStorage } from '@napplet/nap/storage/shim';
+import { subscribe, publish, publishEncrypted, query } from '@napplet/nap/relay/shim';
+import * as identityShim from '@napplet/nap/identity/shim';
+import { installIfcShim, emit, on, handleIfcEvent } from '@napplet/nap/ifc/shim';
 import {
   installConfigShim,
   handleConfigMessage,
@@ -40,23 +40,22 @@ import {
   subscribe as configSubscribe,
   openSettings as configOpenSettings,
   onSchemaError as configOnSchemaError,
-} from '@napplet/nub/config/shim';
+} from '@napplet/nap/config/shim';
 import {
   installResourceShim,
   handleResourceMessage,
   bytes as resourceBytes,
   bytesAsObjectURL as resourceBytesAsObjectURL,
-} from '@napplet/nub/resource/shim';
-import { installConnectShim } from '@napplet/nub/connect/shim';
-import { installClassShim, handleClassMessage } from '@napplet/nub/class/shim';
+} from '@napplet/nap/resource/shim';
+import { installConnectShim } from '@napplet/nap/connect/shim';
+import { installClassShim, handleClassMessage } from '@napplet/nap/class/shim';
 import { NAP_DOMAINS, type NappletGlobal, type NamespacedCapability, type ProtocolId } from '@napplet/core';
-import type { IfcEventMessage } from '@napplet/nub/ifc/types';
+import type { IfcEventMessage } from '@napplet/nap/ifc/types';
 
 interface ShellInitMessage {
   type: 'shell.init';
   capabilities?: {
     naps?: unknown;
-    nubs?: unknown;
     sandbox?: unknown;
   };
 }
@@ -137,12 +136,12 @@ function defaultShellSupports(capability: NamespacedCapability, protocol?: Proto
 
   const domain = normalizeCapabilityDomain(capability);
 
-  // Bare NAP shorthand (e.g. 'relay') or prefixed nap:/nub: aliases.
+  // Bare NAP shorthand (e.g. 'relay') or prefixed nap: capabilities.
   return (NAP_DOMAINS as readonly string[]).includes(domain);
 }
 
 function normalizeCapabilityDomain(capability: string): string {
-  if (capability.startsWith('nap:') || capability.startsWith('nub:')) {
+  if (capability.startsWith('nap:')) {
     return capability.slice(4);
   }
   return capability;
@@ -151,13 +150,12 @@ function normalizeCapabilityDomain(capability: string): string {
 function normalizeProtocol(protocol: ProtocolId | undefined): string | undefined {
   const upper = protocol?.toUpperCase();
   if (!upper) return undefined;
-  return upper.startsWith('NUB-') ? `NAP-${upper.slice(4)}` : upper;
+  return upper.startsWith('NAP-') ? `NAP-${upper.slice(4)}` : upper;
 }
 
 function listCapabilityNames(capabilities: ShellInitMessage['capabilities']): string[] {
   return [
     ...(Array.isArray(capabilities?.naps) ? capabilities.naps : []),
-    ...(Array.isArray(capabilities?.nubs) ? capabilities.nubs : []),
   ].filter((capability): capability is string => typeof capability === 'string');
 }
 
@@ -169,7 +167,7 @@ function createShellSupports(capabilities: ShellInitMessage['capabilities']): (c
   const protocols = new Set<string>();
 
   for (const capability of naps) {
-    const match = /^([^:]+):(N(?:AP|UB)-\d+)$/i.exec(capability);
+    const match = /^([^:]+):(NAP-\d+)$/i.exec(capability);
     if (!match) continue;
     const [, domain, protocol] = match;
     protocols.add(`${domain}:${normalizeProtocol(protocol as ProtocolId)}`);

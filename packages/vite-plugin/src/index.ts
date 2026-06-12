@@ -13,20 +13,20 @@
  */
 
 import type { Plugin, IndexHtmlTransformResult, UserConfig } from 'vite';
-import type { NappletConfigSchema } from '@napplet/nub/config/types';
+import type { NappletConfigSchema } from '@napplet/nap/config/types';
 import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
-import { normalizeConnectOrigin } from '@napplet/nub/connect/types';
+import { normalizeConnectOrigin } from '@napplet/nap/connect/types';
 
 /**
  * Synthetic xTag paths — folded into `aggregateHash` but excluded from the
  * `['x', ...]` tag projection on the signed manifest. Each entry is a pseudo
- * path in `<nub>:<kind>` format; the colon prevents collision with real
+ * path in `<nap>:<kind>` format; the colon prevents collision with real
  * dist-relative file paths on all platforms.
  *
  * Exported for testability and as the single extension point: future synthetic
- * xTags (new NUBs folding bytes into aggregateHash) MUST add their pseudo-path
+ * xTags (new NAPs folding bytes into aggregateHash) MUST add their pseudo-path
  * here rather than adding a sibling hardcoded filter. (Mitigates BUILD-P3 drift.)
  */
 export const SYNTHETIC_XTAG_PATHS: ReadonlySet<string> = new Set([
@@ -53,7 +53,7 @@ export interface Nip5aManifestOptions {
    */
   artifactMode?: Nip5aArtifactMode;
   /**
-   * Napplet config schema (NUB-CONFIG). Either an inline JSON Schema (draft-07+)
+   * Napplet config schema (NAP-CONFIG). Either an inline JSON Schema (draft-07+)
    * object describing the napplet's settings surface, or a string path (relative
    * to the Vite project root) pointing to a JSON file to load.
    *
@@ -66,12 +66,12 @@ export interface Nip5aManifestOptions {
    * in index.html — fully backward compatible with napplets that declare no
    * config surface.
    *
-   * Schemas are structurally validated at build time against the NUB-CONFIG
+   * Schemas are structurally validated at build time against the NAP-CONFIG
    * Core Subset; root must be `{ type: "object" }`; external `$ref` is forbidden;
    * `pattern` is forbidden (CVE-2025-69873 class / ReDoS); `x-napplet-secret: true`
    * combined with `default` is forbidden. Violating schemas fail the build.
    *
-   * @see NUB-CONFIG spec (napplet/nubs#13)
+   * @see NAP-CONFIG spec (napplet/naps#13)
    */
   configSchema?: NappletConfigSchema | string;
 
@@ -88,13 +88,13 @@ export interface Nip5aManifestOptions {
 
   /**
    * Direct-network-access origins this napplet intends to reach from the sandbox
-   * (NUB-CONNECT). Each entry is an **origin** — scheme + host + optional
-   * non-default port — validated against the NUB-CONNECT Origin Format rules
+   * (NAP-CONNECT). Each entry is an **origin** — scheme + host + optional
+   * non-default port — validated against the NAP-CONNECT Origin Format rules
    * and emitted as one `['connect', <origin>]` tag per origin on the signed
    * NIP-5A manifest.
    *
    * **Origin format rules** (delegated to the shared
-   * {@link normalizeConnectOrigin} validator from `@napplet/nub/connect/types`):
+   * {@link normalizeConnectOrigin} validator from `@napplet/nap/connect/types`):
    * - Scheme MUST be one of `https:` / `wss:` / `http:` / `ws:` (lowercase).
    * - Host MUST be lowercase. Wildcards (`*`) are not permitted.
    * - Default ports MUST be omitted (`:443` on `https:`/`wss:`, `:80` on `http:`/`ws:`).
@@ -105,8 +105,8 @@ export interface Nip5aManifestOptions {
    * **Build-time behaviors:**
    * 1. Each origin is normalized through the shared validator in `configResolved`;
    *    violations throw a `[nip5a-manifest]`-prefixed error that chains the
-   *    nub's diagnostic so authors see exactly which origin failed and why.
-   * 2. Normalized origins are folded into `aggregateHash` via the NUB-CONNECT
+   *    nap's diagnostic so authors see exactly which origin failed and why.
+   * 2. Normalized origins are folded into `aggregateHash` via the NAP-CONNECT
    *    canonical fold (lowercase → ASCII-ascending sort → LF-join → UTF-8 →
    *    SHA-256 → lowercase hex) and pushed as the synthetic xTag entry
    *    `[<hash>, 'connect:origins']`. Any origin-list change flips
@@ -120,15 +120,15 @@ export interface Nip5aManifestOptions {
    * 5. When Vite is running in dev mode (`vite serve`), an optional
    *    `<meta name="napplet-connect-requires" content="...">` tag is injected
    *    for shell-less local preview. This `requires` name is **distinct**
-   *    from the shell-authoritative `...-granted` meta defined in NUB-CONNECT
+   *    from the shell-authoritative `...-granted` meta defined in NAP-CONNECT
    *    §Runtime API — the plugin MUST NEVER emit the `granted` variant; the
    *    shell is the sole writer of that name.
    *
    * When omitted or empty, the plugin emits no `connect` tags, performs no
-   * fold, and the napplet is treated as NUB-CLASS-1 (strict / no-user-declared-
+   * fold, and the napplet is treated as NAP-CLASS-1 (strict / no-user-declared-
    * origins) by conformant shells.
    *
-   * @see NUB-CONNECT spec — napplet/nubs#NUB-CONNECT
+   * @see NAP-CONNECT spec — napplet/naps#NAP-CONNECT
    */
   connect?: string[];
 }
@@ -253,7 +253,7 @@ async function discoverConfigSchema(
  *
  * NOT a full JSON Schema validator. Only checks the four rejection rules that
  * MUST fail the build early — full Core Subset enforcement lives in the shell
- * at `config.registerSchema` time. See NUB-CONFIG Schema Contract / Exclusions.
+ * at `config.registerSchema` time. See NAP-CONFIG Schema Contract / Exclusions.
  *
  * Rejection rules:
  * 1. Root MUST be `{ type: "object", ... }`. Anything else -> 'invalid-schema'.
@@ -350,7 +350,7 @@ function collectSchemaKeywordErrors(
     const ref = obj.$ref;
     if (typeof ref !== 'string' || !ref.startsWith('#/')) {
       errors.push(
-        `ref-not-allowed: \`$ref\` at ${path} must start with \`#/\` (got ${JSON.stringify(ref)}). External $ref is forbidden per NUB-CONFIG Security Considerations.`,
+        `ref-not-allowed: \`$ref\` at ${path} must start with \`#/\` (got ${JSON.stringify(ref)}). External $ref is forbidden per NAP-CONFIG Security Considerations.`,
       );
     }
   }
@@ -694,12 +694,12 @@ function singleFileBuildConfig(config: UserConfig): UserConfig {
 }
 
 /**
- * Build-time conformance self-check for the NUB-CONNECT `connect:origins`
+ * Build-time conformance self-check for the NAP-CONNECT `connect:origins`
  * aggregateHash fold.
  *
  * Re-invokes the fold logic (lowercase → ASCII sort → LF-join no trailing →
  * UTF-8 → SHA-256 → lowercase hex) on the three-origin normative fixture from
- * NUB-CONNECT.md §Conformance Fixture and asserts the output equals the spec's
+ * NAP-CONNECT.md §Conformance Fixture and asserts the output equals the spec's
  * expected digest. Any drift in the plugin's fold implementation (join
  * delimiter, sort order, encoding, hash algorithm) throws at module load,
  * giving napplet authors an immediate loud failure instead of a silent
@@ -710,12 +710,12 @@ function singleFileBuildConfig(config: UserConfig): UserConfig {
  * Runs module-top-level so even plugins that never invoke the fold at runtime
  * (e.g. napplets with zero `connect` origins) still benefit from the guardrail.
  *
- * @see NUB-CONNECT.md §Canonical `connect:origins` aggregateHash Fold
- * @see NUB-CONNECT.md §Conformance Fixture
+ * @see NAP-CONNECT.md §Canonical `connect:origins` aggregateHash Fold
+ * @see NAP-CONNECT.md §Conformance Fixture
  * @see .planning/research/PITFALLS.md SPEC-P1 (hash-determinism drift)
  */
 function assertConnectFoldMatchesSpecFixture(): void {
-  // Fixture from NUB-CONNECT.md §Conformance Fixture — order intentionally
+  // Fixture from NAP-CONNECT.md §Conformance Fixture — order intentionally
   // scrambled to exercise the sort step (api < xn-- < wss happens to be the
   // already-sorted form, but passing scrambled guards against someone removing
   // the sort).
@@ -738,18 +738,18 @@ function assertConnectFoldMatchesSpecFixture(): void {
   if (actual !== EXPECTED) {
     throw new Error(
       `[nip5a-manifest] FATAL: connect:origins fold implementation drift detected. ` +
-      `The plugin's fold on the NUB-CONNECT.md §Conformance Fixture inputs produced ` +
+      `The plugin's fold on the NAP-CONNECT.md §Conformance Fixture inputs produced ` +
       `hash ${actual} but the spec requires ${EXPECTED}. This means a build-time ` +
       `change broke fold-determinism with shells — any napplet built with this plugin ` +
       `would produce grant-invalidation mismatches. Restore the canonical fold ` +
       `(lowercase → ASCII sort → LF-join no trailing → UTF-8 → SHA-256 → lowercase hex) ` +
-      `or update NUB-CONNECT.md + all shell implementations in lockstep.`,
+      `or update NAP-CONNECT.md + all shell implementations in lockstep.`,
     );
   }
 }
 
 // Module-load self-check: fires once per process that imports this plugin.
-// Throws at module load if the fold has drifted from NUB-CONNECT.md spec.
+// Throws at module load if the fold has drifted from NAP-CONNECT.md spec.
 assertConnectFoldMatchesSpecFixture();
 
 interface ManifestPluginState {
@@ -823,7 +823,7 @@ function normalizeConnectOptions(options: Nip5aManifestOptions): string[] {
   const cleartext = normalized.filter((o) => o.startsWith('http://') || o.startsWith('ws://'));
   if (cleartext.length > 0) {
     console.warn(
-      `[@napplet/vite-plugin] connect includes cleartext origin(s): ${cleartext.join(', ')} — browser mixed-content rules will silently block http:/ws: fetches from HTTPS shells unless the origin is http://localhost or http://127.0.0.1. Some shells refuse cleartext entirely (check \`shell.supports('connect:scheme:http')\`). See NUB-CONNECT for details.`,
+      `[@napplet/vite-plugin] connect includes cleartext origin(s): ${cleartext.join(', ')} — browser mixed-content rules will silently block http:/ws: fetches from HTTPS shells unless the origin is http://localhost or http://127.0.0.1. Some shells refuse cleartext entirely (check \`shell.supports('connect:scheme:http')\`). See NAP-CONNECT for details.`,
     );
   }
 

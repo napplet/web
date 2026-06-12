@@ -198,7 +198,7 @@ Per-napplet declarative configuration (NAP-CONFIG). Mirrors `window.napplet.conf
 
 ### FromSchema type inference (NAP-CONFIG)
 
-`json-schema-to-ts` is declared as an optional `peerDependency` of `@napplet/nub` (scoped to the `@napplet/nub/config` domain's `FromSchema` typing). Install it in your napplet to get `FromSchema<typeof schema>` typing for your `config.subscribe` callback -- the `values` parameter is inferred directly from your schema (enums, required fields, defaults all flow through). Authors who skip `json-schema-to-ts` pay no install cost and `config.subscribe` still works with the default `Record<string, unknown>` typing.
+`json-schema-to-ts` is declared as an optional `peerDependency` of `@napplet/nap` (scoped to the `@napplet/nap/config` domain's `FromSchema` typing). Install it in your napplet to get `FromSchema<typeof schema>` typing for your `config.subscribe` callback -- the `values` parameter is inferred directly from your schema (enums, required fields, defaults all flow through). Authors who skip `json-schema-to-ts` pay no install cost and `config.subscribe` still works with the default `Record<string, unknown>` typing.
 
 ```ts
 import '@napplet/shim';
@@ -266,19 +266,19 @@ const normalized = normalizeConnectOrigin('https://api.example.com');   // retur
 
 | Export | Kind | Source | Description |
 |--------|------|--------|-------------|
-| `NappletConnect` | type | `@napplet/nub/connect` | `{ readonly granted: boolean; readonly origins: readonly string[] }` |
-| `CONNECT_DOMAIN` | const | `@napplet/nub/connect` | The domain identifier string `'connect'` |
-| `installConnectShim` | function | `@napplet/nub/connect` | Side-effect installer — reads the discovery meta tag and mounts `window.napplet.connect` |
-| `connectGranted()` | function | `@napplet/nub/connect` | `() => boolean` — readonly helper; safer than direct `window.napplet.connect.granted` access |
-| `connectOrigins()` | function | `@napplet/nub/connect` | `() => readonly string[]` — readonly helper |
-| `normalizeConnectOrigin(origin)` | function | `@napplet/nub/connect` | Shared origin validator (used by vite-plugin AND shell implementations); throws on invalid input with `[@napplet/nub/connect]`-prefixed messages |
+| `NappletConnect` | type | `@napplet/nap/connect` | `{ readonly granted: boolean; readonly origins: readonly string[] }` |
+| `CONNECT_DOMAIN` | const | `@napplet/nap/connect` | The domain identifier string `'connect'` |
+| `installConnectShim` | function | `@napplet/nap/connect` | Side-effect installer — reads the discovery meta tag and mounts `window.napplet.connect` |
+| `connectGranted()` | function | `@napplet/nap/connect` | `() => boolean` — readonly helper; safer than direct `window.napplet.connect.granted` access |
+| `connectOrigins()` | function | `@napplet/nap/connect` | `() => readonly string[]` — readonly helper |
+| `normalizeConnectOrigin(origin)` | function | `@napplet/nap/connect` | Shared origin validator (used by vite-plugin AND shell implementations); throws on invalid input with `[@napplet/nap/connect]`-prefixed messages |
 
 ### `class` (v0.29.0)
 
 Shell-assigned integer class (NAP-CLASS). Wire-only — the shell sends exactly one `class.assigned` envelope per napplet lifecycle; the shim writes the integer to `window.napplet.class`. The SDK re-exports the wire type, the domain constant, the installer, and a `getClass()` helper.
 
 ```ts
-import type { ClassAssignedMessage, NappletClass, ClassNubMessage } from '@napplet/sdk';
+import type { ClassAssignedMessage, NappletClass, ClassNapMessage } from '@napplet/sdk';
 import { CLASS_DOMAIN, installClassShim, getClass } from '@napplet/sdk';
 
 if (window.napplet.shell.supports(`nap:${CLASS_DOMAIN}`)) {
@@ -291,12 +291,12 @@ if (window.napplet.shell.supports(`nap:${CLASS_DOMAIN}`)) {
 
 | Export | Kind | Source | Description |
 |--------|------|--------|-------------|
-| `ClassAssignedMessage` | type | `@napplet/nub/class` | `{ type: 'class.assigned'; id: string; class: number }` |
-| `NappletClass` | type | `@napplet/nub/class` | `{ readonly class: number \| undefined }` |
-| `ClassMessage` / `ClassNubMessage` | type | `@napplet/nub/class` | Discriminated union alias (class.assigned is the only member in v1) |
-| `CLASS_DOMAIN` | const | `@napplet/nub/class` | The domain identifier string `'class'` |
-| `installClassShim` | function | `@napplet/nub/class` | Side-effect installer — registers the `class.assigned` dispatcher handler and mounts `window.napplet.class` |
-| `getClass()` | function | `@napplet/nub/class` | `() => number \| undefined` — readonly helper |
+| `ClassAssignedMessage` | type | `@napplet/nap/class` | `{ type: 'class.assigned'; id: string; class: number }` |
+| `NappletClass` | type | `@napplet/nap/class` | `{ readonly class: number \| undefined }` |
+| `ClassMessage` / `ClassNapMessage` | type | `@napplet/nap/class` | Discriminated union alias (class.assigned is the only member in v1) |
+| `CLASS_DOMAIN` | const | `@napplet/nap/class` | The domain identifier string `'class'` |
+| `installClassShim` | function | `@napplet/nap/class` | Side-effect installer — registers the `class.assigned` dispatcher handler and mounts `window.napplet.class` |
+| `getClass()` | function | `@napplet/nap/class` | `() => number \| undefined` — readonly helper |
 
 ### `keys`
 
@@ -342,7 +342,7 @@ Namespaced capability query. Access via `window.napplet.shell.supports()` after 
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| `supports(capability, protocol?)` | `boolean` | Check shell support for a NAP (`nap:relay`), permission (`perm:popups`), or numbered NAP-NN protocol over an interface (`ifc`, `NAP-01`). Bare NAP names also accepted (`relay`); `nub:`/`NUB-*` remain deprecated aliases. |
+| `supports(capability, protocol?)` | `boolean` | Check shell support for a NAP (`nap:relay`), permission (`perm:popups`), or numbered NAP-NN protocol over an interface (`ifc`, `NAP-01`). Bare NAP names are also accepted (`relay`). |
 
 **Example:**
 
@@ -374,7 +374,7 @@ napplet.config.subscribe((v) => console.log(v));
 
 ## Types
 
-All protocol types are re-exported from `@napplet/core` and the NUB packages:
+All protocol types are re-exported from `@napplet/core` and the NAP packages:
 
 ```ts
 import type {
@@ -385,17 +385,17 @@ import type {
   EventTemplate,
   NappletMessage,
   NapDomain,
-  NubDomain,
+  NapDomain,
   NamespacedCapability,
   NapProtocolId,
-  NubProtocolId,
+  NapProtocolId,
   ShellSupports,
-  // NUB message types (re-exported from NUB packages)
-  RelayNubMessage,
-  IdentityNubMessage,
-  StorageNubMessage,
-  IfcNubMessage,
-  KeysNubMessage,
+  // NAP message types (re-exported from NAP packages)
+  RelayNapMessage,
+  IdentityNapMessage,
+  StorageNapMessage,
+  IfcNapMessage,
+  KeysNapMessage,
   Action,
 } from '@napplet/sdk';
 ```
@@ -410,36 +410,35 @@ import type {
 | `EventTemplate` | Unsigned event for `relay.publish()` |
 | `NappletMessage` | Base JSON envelope type for all protocol messages |
 | `NapDomain` | String literal union of NAP domain names |
-| `NamespacedCapability` | Union of `NapDomain \| nap:* \| nub:* \| perm:*` for `supports()` |
+| `NamespacedCapability` | Union of `NapDomain \| nap:* \| perm:*` for `supports()` |
 | `NapProtocolId` | Numbered NAP protocol id such as `NAP-01` for the optional second `supports()` argument |
-| `NubDomain` / `NubProtocolId` | Deprecated aliases retained during the NAP rename |
 | `ShellSupports` | Interface for the shell capability query API |
 
-### NUB Message Types
+### NAP Message Types
 
 These are discriminated union types covering all messages in each NAP domain. Useful for writing typed message
 handlers in shell implementations or protocol-aware code.
 
-| Type | NUB Package | Description |
+| Type | NAP Package | Description |
 |------|-------------|-------------|
-| `RelayNubMessage` | `@napplet/nub/relay` | Discriminated union of all relay domain messages |
-| `IdentityNubMessage` | `@napplet/nub/identity` | Discriminated union of all identity domain messages |
-| `StorageNubMessage` | `@napplet/nub/storage` | Discriminated union of all storage domain messages |
-| `IfcNubMessage` | `@napplet/nub/ifc` | Discriminated union of all IFC domain messages |
-| `KeysNubMessage` | `@napplet/nub/keys` | Discriminated union of all keys domain messages |
-| `MediaNapMessage` | `@napplet/nub/media` | Discriminated union of all media domain messages |
-| `NotifyNubMessage` | `@napplet/nub/notify` | Discriminated union of all notify domain messages |
-| `ConfigNubMessage` | `@napplet/nub/config` | Discriminated union of all config domain messages |
-| `ResourceNubMessage` | `@napplet/nub/resource` | Discriminated union of all resource domain messages |
-| `ConnectNubMessage` * | `@napplet/nub/connect` | State-only NUB — no wire messages. The `NappletConnect` runtime state type is the consumer-facing import. |
-| `ClassNubMessage`   | `@napplet/nub/class`   | Discriminated union of all class domain messages (v1: only `ClassAssignedMessage`) |
+| `RelayNapMessage` | `@napplet/nap/relay` | Discriminated union of all relay domain messages |
+| `IdentityNapMessage` | `@napplet/nap/identity` | Discriminated union of all identity domain messages |
+| `StorageNapMessage` | `@napplet/nap/storage` | Discriminated union of all storage domain messages |
+| `IfcNapMessage` | `@napplet/nap/ifc` | Discriminated union of all IFC domain messages |
+| `KeysNapMessage` | `@napplet/nap/keys` | Discriminated union of all keys domain messages |
+| `MediaNapMessage` | `@napplet/nap/media` | Discriminated union of all media domain messages |
+| `NotifyNapMessage` | `@napplet/nap/notify` | Discriminated union of all notify domain messages |
+| `ConfigNapMessage` | `@napplet/nap/config` | Discriminated union of all config domain messages |
+| `ResourceNapMessage` | `@napplet/nap/resource` | Discriminated union of all resource domain messages |
+| `ConnectNapMessage` * | `@napplet/nap/connect` | State-only NAP — no wire messages. The `NappletConnect` runtime state type is the consumer-facing import. |
+| `ClassNapMessage`   | `@napplet/nap/class`   | Discriminated union of all class domain messages (v1: only `ClassAssignedMessage`) |
 
-\* There is no `ConnectNubMessage` type; NAP-CONNECT has no postMessage wire. The consumer-facing import is the `NappletConnect` runtime state interface.
+\* There is no `ConnectNapMessage` type; NAP-CONNECT has no postMessage wire. The consumer-facing import is the `NappletConnect` runtime state interface.
 
 Individual message types (e.g., `RelaySubscribeMessage`, `IdentityGetPublicKeyMessage`) are also re-exported from
 `@napplet/sdk` for fine-grained typing.
 
-## NUB Domain Constants
+## NAP Domain Constants
 
 Each NAP domain has a string constant re-exported from its package:
 

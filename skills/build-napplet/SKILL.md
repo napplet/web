@@ -194,9 +194,9 @@ if (await hasServiceVersion('audio', '1.0.0')) {
 
 `discoverServices()` results are session-cached — subsequent calls return the same array without a network round-trip. Cache is cleared on page reload.
 
-## Step 10 — Fetch external bytes (resource NUB, v0.28.0+)
+## Step 10 — Fetch external bytes (resource NAP, v0.28.0+)
 
-The iframe sandbox (no `allow-same-origin`) plus strict CSP (`connect-src 'none'`) means `fetch()`, `<img src="https://...">`, `XMLHttpRequest`, and `new WebSocket(...)` are all blocked by the browser. Any external bytes — avatars, blossom-served images, NIP-19 resource resolution — flow through the shell via the resource NUB.
+The iframe sandbox (no `allow-same-origin`) plus strict CSP (`connect-src 'none'`) means `fetch()`, `<img src="https://...">`, `XMLHttpRequest`, and `new WebSocket(...)` are all blocked by the browser. Any external bytes — avatars, blossom-served images, NIP-19 resource resolution — flow through the shell via the resource NAP.
 
 ```ts
 import '@napplet/shim';

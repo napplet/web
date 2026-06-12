@@ -707,7 +707,7 @@ export interface NappletGlobal {
    * gracefully:
    * 1. Before the shell has sent `class.assigned` (early bootstrap).
    * 2. When the shell does not implement `nap:class` (capability missing).
-   * 3. When the shell implements the NUB but intentionally withholds assignment.
+   * 3. When the shell implements the NAP but intentionally withholds assignment.
    *
    * Cross-NAP invariant (in shells implementing both NAP-CONNECT and NAP-CLASS):
    * `class === 2` iff `window.napplet.connect.granted === true`. See

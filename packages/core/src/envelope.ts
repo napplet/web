@@ -65,12 +65,6 @@ export interface NappletMessage {
 export type NapDomain = 'relay' | 'identity' | 'storage' | 'ifc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'connect' | 'class';
 
 /**
- * @deprecated Use {@link NapDomain}. The public proposal system was renamed
- * from NUB to NAP.
- */
-export type NubDomain = NapDomain;
-
-/**
  * Runtime-accessible constant array of all NAP domain names.
  * Useful for iteration, validation, and capability enumeration.
  *
@@ -84,12 +78,6 @@ export type NubDomain = NapDomain;
 export const NAP_DOMAINS: readonly NapDomain[] = ['relay', 'identity', 'storage', 'ifc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'connect', 'class'] as const;
 
 /**
- * @deprecated Use {@link NAP_DOMAINS}. The public proposal system was renamed
- * from NUB to NAP.
- */
-export const NUB_DOMAINS = NAP_DOMAINS;
-
-/**
  * Namespaced capability string for {@link ShellSupports.supports}.
  *
  * Accepts NAP capability prefixes plus bare domain shorthand:
@@ -101,9 +89,8 @@ export const NUB_DOMAINS = NAP_DOMAINS;
  * | `perm:` | `'perm:strict-csp'` | **@deprecated (v0.29.0)** — superseded by `nap:connect` + `nap:class`. Shell enforces strict CSP posture (v0.28.0). |
  * | *(bare)*| `'relay'`           | Shorthand for `'nap:relay'`    |
  *
- * Bare strings are valid only for NAP domains.
- * The legacy `nub:` prefix remains accepted as a deprecated compatibility alias.
- * Permissions MUST use the `perm:` prefix.
+ * Bare strings are valid only for NAP domains. Permissions MUST use the
+ * `perm:` prefix.
  *
  * @example
  * ```ts
@@ -119,7 +106,6 @@ export const NUB_DOMAINS = NAP_DOMAINS;
 export type NamespacedCapability =
   | NapDomain
   | `nap:${NapDomain}`
-  | `nub:${NapDomain}`
   | `perm:${string}`;
 
 /**
@@ -136,14 +122,8 @@ export type NamespacedCapability =
  */
 export type NapProtocolId = `NAP-${number}`;
 
-/**
- * @deprecated Use {@link NapProtocolId}. Legacy `NUB-NN` identifiers remain
- * accepted by package shims as compatibility aliases during the NAP rename.
- */
-export type NubProtocolId = `NUB-${number}`;
-
 /** Numbered protocol identifier accepted by shell.supports(). */
-export type ProtocolId = NapProtocolId | NubProtocolId;
+export type ProtocolId = NapProtocolId;
 
 /**
  * Interface for the shell capability query API.

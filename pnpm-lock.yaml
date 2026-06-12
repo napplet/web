@@ -39,7 +39,7 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
 
-  packages/nub:
+  packages/nap:
     dependencies:
       '@napplet/core':
         specifier: workspace:^
@@ -63,9 +63,9 @@ importers:
       '@napplet/core':
         specifier: workspace:*
         version: link:../core
-      '@napplet/nub':
+      '@napplet/nap':
         specifier: workspace:*
-        version: link:../nub
+        version: link:../nap
     devDependencies:
       tsup:
         specifier: ^8.5.0
@@ -79,9 +79,9 @@ importers:
       '@napplet/core':
         specifier: workspace:*
         version: link:../core
-      '@napplet/nub':
+      '@napplet/nap':
         specifier: workspace:*
-        version: link:../nub
+        version: link:../nap
     devDependencies:
       tsup:
         specifier: ^8.5.0
@@ -96,9 +96,9 @@ importers:
         specifier: ^2.23.3
         version: 2.23.3(typescript@5.9.3)
     devDependencies:
-      '@napplet/nub':
+      '@napplet/nap':
         specifier: workspace:*
-        version: link:../nub
+        version: link:../nap
       '@types/node':
         specifier: ^22.15.0
         version: 22.19.15
