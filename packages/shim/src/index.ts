@@ -61,6 +61,14 @@ import {
   close as cvmClose,
   onEvent as cvmOnEvent,
 } from '@napplet/nap/cvm/shim';
+import {
+  installOutboxShim,
+  handleOutboxMessage,
+  query as outboxQuery,
+  subscribe as outboxSubscribe,
+  publish as outboxPublish,
+  resolveRelays as outboxResolveRelays,
+} from '@napplet/nap/outbox/shim';
 import { NAP_DOMAINS, type NappletGlobal, type NamespacedCapability, type ProtocolId } from '@napplet/core';
 import type { IncEventMessage } from '@napplet/nap/inc/types';
 
@@ -121,6 +129,12 @@ function handleEnvelopeMessage(event: MessageEvent): void {
   // Route cvm.* messages to ContextVM shim (discover/request/close results + cvm.event)
   if (type.startsWith('cvm.')) {
     handleCvmMessage(msg as { type: string; [key: string]: unknown });
+    return;
+  }
+
+  // Route outbox.* messages to outbox shim (query/publish/resolveRelays results + event/eose/closed)
+  if (type.startsWith('outbox.')) {
+    handleOutboxMessage(msg as { type: string; [key: string]: unknown });
     return;
   }
 
@@ -296,6 +310,12 @@ function installShellCapabilities(msg: ShellInitMessage): void {
     close: cvmClose,
     onEvent: cvmOnEvent,
   },
+  outbox: {
+    query: outboxQuery,
+    subscribe: outboxSubscribe,
+    publish: outboxPublish,
+    resolveRelays: outboxResolveRelays,
+  },
   connect: {
     granted: false,
     origins: [],
@@ -335,6 +355,9 @@ installResourceShim();
 
 // Install ContextVM shim (cvm.* request/response correlation + cvm.event listeners; no install-time work)
 installCvmShim();
+
+// Install outbox shim (outbox.* request/response correlation + subscription event streaming; no install-time work)
+installOutboxShim();
 
 // Install class shim (mounts window.napplet.class readonly getter; undefined until class.assigned arrives)
 installClassShim();

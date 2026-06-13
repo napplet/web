@@ -1,7 +1,7 @@
 {
   "name": "@napplet/nap",
   "version": "0.7.0",
-  "description": "All 13 napplet NAP domains (relay, storage, inc, keys, theme, media, notify, identity, config, resource, connect, class, cvm) as layered subpath exports",
+  "description": "All 14 napplet NAP domains (relay, storage, inc, keys, theme, media, notify, identity, config, resource, connect, class, cvm, outbox) as layered subpath exports",
   "type": "module",
   "exports": {
     "./relay": {
@@ -219,6 +219,22 @@
     "./cvm/sdk": {
       "types": "./dist/cvm/sdk.d.ts",
       "import": "./dist/cvm/sdk.js"
+    },
+    "./outbox": {
+      "types": "./dist/outbox/index.d.ts",
+      "import": "./dist/outbox/index.js"
+    },
+    "./outbox/types": {
+      "types": "./dist/outbox/types.d.ts",
+      "import": "./dist/outbox/types.js"
+    },
+    "./outbox/shim": {
+      "types": "./dist/outbox/shim.d.ts",
+      "import": "./dist/outbox/shim.js"
+    },
+    "./outbox/sdk": {
+      "types": "./dist/outbox/sdk.d.ts",
+      "import": "./dist/outbox/sdk.js"
     }
   },
   "files": [

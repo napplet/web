@@ -36,6 +36,14 @@ import type {
   McpToolResult,
   McpResource,
   McpResourceContent,
+  OutboxQueryOptions,
+  OutboxSubscribeOptions,
+  OutboxPublishOptions,
+  OutboxTarget,
+  OutboxRelayPlan,
+  OutboxResult,
+  OutboxPublishResult,
+  OutboxSubscription,
 } from '@napplet/core';
 import type {
   MediaSessionCreate,
@@ -899,6 +907,72 @@ export const cvm = {
   },
 };
 
+/**
+ * Outbox-aware relay routing (NAP-OUTBOX): supply Nostr filters and intent and
+ * let the shell discover the correct relays (NIP-65 write/read relays, fallbacks,
+ * relay intelligence), query/deduplicate, validate signatures, and stream updates.
+ * The shell owns relay discovery, routing, fallback, deduplication, signing, and
+ * publish fanout.
+ *
+ * @example
+ * ```ts
+ * import { outbox } from '@napplet/sdk';
+ *
+ * const { events } = await outbox.query([{ authors: ['ab12...'], kinds: [1] }], { strategy: 'outbox' });
+ * const sub = outbox.subscribe([{ kinds: [1] }], { live: true });
+ * sub.on('event', (event, relay) => render(event, relay));
+ * ```
+ */
+export const outbox = {
+  /**
+   * Perform a one-shot outbox-aware query.
+   * @param filters  NIP-01 filter or filters
+   * @param options  Optional query options
+   * @returns Promise resolving to the outbox result
+   */
+  query(
+    filters: NostrFilter | NostrFilter[],
+    options?: OutboxQueryOptions,
+  ): Promise<OutboxResult> {
+    return requireNapplet().outbox.query(filters, options);
+  },
+
+  /**
+   * Open a live outbox-aware subscription.
+   * @param filters  NIP-01 filter or filters
+   * @param options  Optional subscribe options
+   * @returns An OutboxSubscription handle with `on(...)` and `close()`
+   */
+  subscribe(
+    filters: NostrFilter | NostrFilter[],
+    options?: OutboxSubscribeOptions,
+  ): OutboxSubscription {
+    return requireNapplet().outbox.subscribe(filters, options);
+  },
+
+  /**
+   * Publish a shell-signed event using outbox-aware relay fanout.
+   * @param template  Unsigned event template
+   * @param options   Optional publish options
+   * @returns Promise resolving to the outbox publish result
+   */
+  publish(
+    template: EventTemplate,
+    options?: OutboxPublishOptions,
+  ): Promise<OutboxPublishResult> {
+    return requireNapplet().outbox.publish(template, options);
+  },
+
+  /**
+   * Resolve the relay plan the shell would use for a read/write target.
+   * @param target  The read/write target
+   * @returns Promise resolving to the relay plan
+   */
+  resolveRelays(target: OutboxTarget): Promise<OutboxRelayPlan> {
+    return requireNapplet().outbox.resolveRelays(target);
+  },
+};
+
 export type { NostrEvent } from '@napplet/core';
 export type { NostrFilter } from '@napplet/core';
 export type { Subscription } from '@napplet/core';
@@ -1183,6 +1257,34 @@ export type {
   CvmNapMessage,
 } from '@napplet/nap/cvm';
 
+// OUTBOX NAP (outbox-aware relay routing)
+export type {
+  OutboxStrategy,
+  OutboxQueryOptions,
+  OutboxSubscribeOptions,
+  OutboxPublishOptions,
+  OutboxTarget,
+  OutboxRelayPlan,
+  OutboxResult,
+  OutboxPublishResult,
+  OutboxSubscription,
+  OutboxMessage,
+  OutboxQueryMessage,
+  OutboxQueryResultMessage,
+  OutboxSubscribeMessage,
+  OutboxEventMessage,
+  OutboxEoseMessage,
+  OutboxClosedMessage,
+  OutboxCloseMessage,
+  OutboxPublishMessage,
+  OutboxPublishResultMessage,
+  OutboxResolveRelaysMessage,
+  OutboxResolveRelaysResultMessage,
+  OutboxOutboundMessage,
+  OutboxInboundMessage,
+  OutboxNapMessage,
+} from '@napplet/nap/outbox';
+
 export { DOMAIN as RELAY_DOMAIN } from '@napplet/nap/relay';
 export { DOMAIN as IDENTITY_DOMAIN } from '@napplet/nap/identity';
 export { DOMAIN as STORAGE_DOMAIN } from '@napplet/nap/storage';
@@ -1201,6 +1303,7 @@ export { DOMAIN as RESOURCE_DOMAIN } from '@napplet/nap/resource';
 export { DOMAIN as CONNECT_DOMAIN } from '@napplet/nap/connect';
 export { DOMAIN as CLASS_DOMAIN } from '@napplet/nap/class';
 export { DOMAIN as CVM_DOMAIN } from '@napplet/nap/cvm';
+export { DOMAIN as OUTBOX_DOMAIN } from '@napplet/nap/outbox';
 
 export { installRelayShim } from '@napplet/nap/relay';
 export { installIdentityShim } from '@napplet/nap/identity';
@@ -1218,6 +1321,7 @@ export { installResourceShim } from '@napplet/nap/resource';
 export { installConnectShim } from '@napplet/nap/connect';
 export { installClassShim } from '@napplet/nap/class';
 export { installCvmShim } from '@napplet/nap/cvm';
+export { installOutboxShim } from '@napplet/nap/outbox';
 
 export { relaySubscribe, relayPublish, relayPublishEncrypted, relayQuery } from '@napplet/nap/relay';
 export {
@@ -1254,3 +1358,9 @@ export {
   cvmClose,
   cvmOnEvent,
 } from '@napplet/nap/cvm';
+export {
+  outboxQuery,
+  outboxSubscribe,
+  outboxPublish,
+  outboxResolveRelays,
+} from '@napplet/nap/outbox';

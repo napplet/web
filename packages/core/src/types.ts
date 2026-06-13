@@ -236,6 +236,70 @@ export interface CvmRequestOptions {
   payment?: 'deny' | 'prompt' | 'allow';
 }
 
+/** Relay-selection strategy for outbox-model routing (NAP-OUTBOX). */
+export type OutboxStrategy = 'outbox' | 'inbox' | 'auto';
+
+/** Options for a one-shot outbox query. */
+export interface OutboxQueryOptions {
+  authors?: string[];
+  relays?: string[];
+  strategy?: OutboxStrategy;
+  limit?: number;
+  timeoutMs?: number;
+}
+
+/** Options for a live outbox subscription. */
+export interface OutboxSubscribeOptions extends OutboxQueryOptions {
+  live?: boolean;
+}
+
+/** Options for an outbox publish. */
+export interface OutboxPublishOptions {
+  relays?: string[];
+  targetAuthors?: string[];
+  strategy?: OutboxStrategy;
+}
+
+/** A read/write target for outbox relay-plan resolution. */
+export interface OutboxTarget {
+  authors?: string[];
+  pubkey?: string;
+  direction?: 'read' | 'write';
+  strategy?: OutboxStrategy;
+}
+
+/** The relay plan the shell would use for an outbox target. */
+export interface OutboxRelayPlan {
+  relays: string[];
+  source: 'nip65' | 'cache' | 'policy' | 'fallback';
+  missingAuthors?: string[];
+}
+
+/** The result of an outbox query. */
+export interface OutboxResult {
+  events: NostrEvent[];
+  relays: Record<string, string[]>;
+  incomplete?: boolean;
+  error?: string;
+}
+
+/** The result of an outbox publish. */
+export interface OutboxPublishResult {
+  ok: boolean;
+  event?: NostrEvent;
+  eventId?: string;
+  relays?: Record<string, boolean>;
+  error?: string;
+}
+
+/** Handle for a live outbox subscription. */
+export interface OutboxSubscription {
+  on(event: 'event', cb: (event: NostrEvent, relay?: string) => void): void;
+  on(event: 'eose', cb: () => void): void;
+  on(event: 'closed', cb: (reason?: string) => void): void;
+  close(): void;
+}
+
 /**
  * The window.napplet global installed at runtime by @napplet/shim.
  *
@@ -898,6 +962,60 @@ export interface NappletGlobal {
      * @returns A Subscription with `close()` to stop listening
      */
     onEvent(callback: (server: CvmServerRef, message: McpMessage) => void): Subscription;
+  };
+  /**
+   * Outbox-aware relay routing (NAP-OUTBOX): the napplet supplies Nostr filters
+   * and intent; the shell discovers the correct relays (NIP-65 write/read relays,
+   * fallbacks, relay intelligence), queries them, deduplicates events by id,
+   * validates signatures, and streams updates. The shell owns relay discovery,
+   * routing, fallback, deduplication, signing, and publish fanout policy.
+   *
+   * Use this instead of NAP-RELAY when relay selection is part of result
+   * correctness (reading an author's notes from their write relays, publishing to
+   * the user's write relays, fanning a directed event to recipient inbox relays).
+   *
+   * @example
+   * ```ts
+   * if (window.napplet.shell.supports('outbox')) {
+   *   const { events } = await window.napplet.outbox.query(
+   *     [{ authors: ['ab12...'], kinds: [1], limit: 20 }],
+   *     { strategy: 'outbox' },
+   *   );
+   * }
+   * ```
+   */
+  outbox: {
+    /**
+     * Perform a one-shot outbox-aware query. The shell resolves relays, queries
+     * them, deduplicates by event id, and validates signatures. Partial results
+     * carry `incomplete: true`; a query-level failure arrives as inline `error`.
+     * @param filters  NIP-01 filter or filters
+     * @param options  Optional query options (authors, relays, strategy, limit, timeoutMs)
+     * @returns Promise resolving to the outbox result
+     */
+    query(filters: NostrFilter | NostrFilter[], options?: OutboxQueryOptions): Promise<OutboxResult>;
+    /**
+     * Open a live outbox-aware subscription. The shell may add/remove relay
+     * connections as NIP-65 relay lists change.
+     * @param filters  NIP-01 filter or filters
+     * @param options  Optional subscribe options (adds `live`)
+     * @returns An OutboxSubscription handle with `on(...)` and `close()`
+     */
+    subscribe(filters: NostrFilter | NostrFilter[], options?: OutboxSubscribeOptions): OutboxSubscription;
+    /**
+     * Publish a shell-signed event using outbox-aware relay fanout.
+     * @param template  Unsigned event template; the shell signs before fanout
+     * @param options   Optional publish options (relays, targetAuthors, strategy)
+     * @returns Promise resolving to the outbox publish result
+     */
+    publish(template: EventTemplate, options?: OutboxPublishOptions): Promise<OutboxPublishResult>;
+    /**
+     * Resolve the relay plan the shell would use for a read/write target.
+     * Useful for diagnostics/UI; prefer query/subscribe/publish for access.
+     * @param target  The read/write target (authors/pubkey, direction, strategy)
+     * @returns Promise resolving to the relay plan
+     */
+    resolveRelays(target: OutboxTarget): Promise<OutboxRelayPlan>;
   };
   /**
    * Shell capability queries. Check whether the shell supports a NAP,

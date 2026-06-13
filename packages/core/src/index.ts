@@ -59,6 +59,15 @@ export type {
   CvmDiscoverQuery,
   CvmServer,
   CvmRequestOptions,
+  OutboxStrategy,
+  OutboxQueryOptions,
+  OutboxSubscribeOptions,
+  OutboxPublishOptions,
+  OutboxTarget,
+  OutboxRelayPlan,
+  OutboxResult,
+  OutboxPublishResult,
+  OutboxSubscription,
   NappletGlobal,
 } from './types.js';
 

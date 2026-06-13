@@ -1,0 +1,349 @@
+// @napplet/nap/outbox -- Outbox-aware relay routing shim (query / subscribe / publish / resolveRelays).
+// Correlates outbox.* request/result envelopes; streams outbox.event/eose/closed to subscription listeners.
+// The shell owns relay discovery, routing, fallback, deduplication, signing, and publish fanout.
+
+import type {
+  NostrEvent,
+  NostrFilter,
+  EventTemplate,
+} from '@napplet/core';
+import type {
+  OutboxQueryOptions,
+  OutboxSubscribeOptions,
+  OutboxPublishOptions,
+  OutboxTarget,
+  OutboxRelayPlan,
+  OutboxResult,
+  OutboxPublishResult,
+  OutboxSubscription,
+  OutboxQueryMessage,
+  OutboxSubscribeMessage,
+  OutboxCloseMessage,
+  OutboxPublishMessage,
+  OutboxResolveRelaysMessage,
+  OutboxQueryResultMessage,
+  OutboxEventMessage,
+  OutboxEoseMessage,
+  OutboxClosedMessage,
+  OutboxPublishResultMessage,
+  OutboxResolveRelaysResultMessage,
+} from './types.js';
+
+/** Default timeout for outbox requests (30 seconds; aligns with other NAPs). */
+const REQUEST_TIMEOUT_MS = 30_000;
+
+/** Pending query requests: correlation id -> resolver record. */
+const pendingQuery = new Map<string, {
+  resolve: (result: OutboxResult) => void;
+  reject: (reason: Error) => void;
+  timeout: ReturnType<typeof setTimeout>;
+}>();
+
+/** Pending publish requests: correlation id -> resolver record. */
+const pendingPublish = new Map<string, {
+  resolve: (result: OutboxPublishResult) => void;
+  reject: (reason: Error) => void;
+  timeout: ReturnType<typeof setTimeout>;
+}>();
+
+/** Pending resolveRelays requests: correlation id -> resolver record. */
+const pendingResolve = new Map<string, {
+  resolve: (plan: OutboxRelayPlan) => void;
+  reject: (reason: Error) => void;
+  timeout: ReturnType<typeof setTimeout>;
+}>();
+
+/** Per-subscription listener sets. */
+interface SubListeners {
+  event: Set<(event: NostrEvent, relay?: string) => void>;
+  eose: Set<() => void>;
+  closed: Set<(reason?: string) => void>;
+}
+
+/** Active subscriptions: subId -> listener sets. */
+const subscriptions = new Map<string, SubListeners>();
+
+/** Guard against double-install. */
+let installed = false;
+
+function isMessageType<T extends { type: string }>(
+  msg: { type: string },
+  type: T['type'],
+): msg is T {
+  return msg.type === type;
+}
+
+// ─── Inbound message handling ───────────────────────────────────────────────
+
+function handleQueryResult(msg: OutboxQueryResultMessage): void {
+  const p = pendingQuery.get(msg.id);
+  if (!p) return;
+  pendingQuery.delete(msg.id);
+  clearTimeout(p.timeout);
+  const result: OutboxResult = {
+    events: Array.isArray(msg.events) ? msg.events : [],
+    relays: msg.relays ?? {},
+  };
+  if (msg.incomplete !== undefined) result.incomplete = msg.incomplete;
+  if (msg.error !== undefined) result.error = msg.error;
+  p.resolve(result);
+}
+
+function handlePublishResult(msg: OutboxPublishResultMessage): void {
+  const p = pendingPublish.get(msg.id);
+  if (!p) return;
+  pendingPublish.delete(msg.id);
+  clearTimeout(p.timeout);
+  const result: OutboxPublishResult = { ok: msg.ok };
+  if (msg.event !== undefined) result.event = msg.event;
+  if (msg.eventId !== undefined) result.eventId = msg.eventId;
+  if (msg.relays !== undefined) result.relays = msg.relays;
+  if (msg.error !== undefined) result.error = msg.error;
+  p.resolve(result);
+}
+
+function handleResolveResult(msg: OutboxResolveRelaysResultMessage): void {
+  const p = pendingResolve.get(msg.id);
+  if (!p) return;
+  pendingResolve.delete(msg.id);
+  clearTimeout(p.timeout);
+  if (msg.error !== undefined) {
+    p.reject(new Error(msg.error));
+    return;
+  }
+  if (!msg.plan) {
+    p.reject(new Error('outbox.resolveRelays.result missing plan'));
+    return;
+  }
+  p.resolve(msg.plan);
+}
+
+function handleSubEvent(msg: OutboxEventMessage): void {
+  const sub = subscriptions.get(msg.subId);
+  if (!sub) return;
+  for (const cb of sub.event) cb(msg.event, msg.relay);
+}
+
+function handleSubEose(msg: OutboxEoseMessage): void {
+  const sub = subscriptions.get(msg.subId);
+  if (!sub) return;
+  for (const cb of sub.eose) cb();
+}
+
+function handleSubClosed(msg: OutboxClosedMessage): void {
+  const sub = subscriptions.get(msg.subId);
+  if (!sub) return;
+  for (const cb of sub.closed) cb(msg.reason);
+  // Upstream/shell closed the subscription: drop local listener state.
+  subscriptions.delete(msg.subId);
+}
+
+/**
+ * Handle outbox.* messages from the shell via the central message listener.
+ * Covers query/publish/resolveRelays results plus event/eose/closed lifecycle.
+ */
+export function handleOutboxMessage(msg: { type: string; [key: string]: unknown }): void {
+  if (isMessageType<OutboxQueryResultMessage>(msg, 'outbox.query.result')) {
+    handleQueryResult(msg);
+  } else if (isMessageType<OutboxPublishResultMessage>(msg, 'outbox.publish.result')) {
+    handlePublishResult(msg);
+  } else if (isMessageType<OutboxResolveRelaysResultMessage>(msg, 'outbox.resolveRelays.result')) {
+    handleResolveResult(msg);
+  } else if (isMessageType<OutboxEventMessage>(msg, 'outbox.event')) {
+    handleSubEvent(msg);
+  } else if (isMessageType<OutboxEoseMessage>(msg, 'outbox.eose')) {
+    handleSubEose(msg);
+  } else if (isMessageType<OutboxClosedMessage>(msg, 'outbox.closed')) {
+    handleSubClosed(msg);
+  }
+}
+
+// ─── Public API ─────────────────────────────────────────────────────────────
+
+/**
+ * Perform a one-shot outbox-aware query. The shell resolves the relevant relays,
+ * queries them, deduplicates events by id, validates signatures, and returns the
+ * collected events. Partial results arrive with `incomplete: true`; an inline
+ * `error` field describes a query-level failure (the promise still resolves).
+ *
+ * @param filters  NIP-01 filter or filters
+ * @param options  Optional query options (authors, relays, strategy, limit, timeoutMs)
+ * @returns Promise resolving to the outbox result
+ *
+ * @example
+ * ```ts
+ * const { events } = await query(
+ *   [{ authors: ['ab12...'], kinds: [1], limit: 20 }],
+ *   { strategy: 'outbox', timeoutMs: 3000 },
+ * );
+ * ```
+ */
+export function query(
+  filters: NostrFilter | NostrFilter[],
+  options?: OutboxQueryOptions,
+): Promise<OutboxResult> {
+  const id = crypto.randomUUID();
+  const timeoutMs = options?.timeoutMs ?? REQUEST_TIMEOUT_MS;
+  return new Promise<OutboxResult>((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      if (pendingQuery.delete(id)) reject(new Error('outbox.query timed out'));
+    }, timeoutMs);
+    pendingQuery.set(id, { resolve, reject, timeout });
+
+    const msg: OutboxQueryMessage = {
+      type: 'outbox.query',
+      id,
+      filters,
+      ...(options === undefined ? {} : { options }),
+    };
+    window.parent.postMessage(msg, '*');
+  });
+}
+
+/**
+ * Open a live outbox-aware subscription. Returns a handle with an event-emitter
+ * `on(...)` API and `close()`. The shell may add/remove relay connections as
+ * NIP-65 relay lists change.
+ *
+ * @param filters  NIP-01 filter or filters
+ * @param options  Optional subscribe options (adds `live`)
+ * @returns An OutboxSubscription handle
+ *
+ * @example
+ * ```ts
+ * const sub = subscribe([{ authors: ['ab12...'], kinds: [1] }], { strategy: 'outbox', live: true });
+ * sub.on('event', (event, relay) => render(event, relay));
+ * sub.on('eose', () => markCaughtUp());
+ * // later: sub.close();
+ * ```
+ */
+export function subscribe(
+  filters: NostrFilter | NostrFilter[],
+  options?: OutboxSubscribeOptions,
+): OutboxSubscription {
+  const id = crypto.randomUUID();
+  const subId = crypto.randomUUID();
+
+  const listeners: SubListeners = {
+    event: new Set(),
+    eose: new Set(),
+    closed: new Set(),
+  };
+  subscriptions.set(subId, listeners);
+
+  const msg: OutboxSubscribeMessage = {
+    type: 'outbox.subscribe',
+    id,
+    subId,
+    filters,
+    ...(options === undefined ? {} : { options }),
+  };
+  window.parent.postMessage(msg, '*');
+
+  function on(event: 'event', cb: (event: NostrEvent, relay?: string) => void): void;
+  function on(event: 'eose', cb: () => void): void;
+  function on(event: 'closed', cb: (reason?: string) => void): void;
+  function on(event: 'event' | 'eose' | 'closed', cb: (...args: never[]) => void): void {
+    if (event === 'event') listeners.event.add(cb as (event: NostrEvent, relay?: string) => void);
+    else if (event === 'eose') listeners.eose.add(cb as () => void);
+    else if (event === 'closed') listeners.closed.add(cb as (reason?: string) => void);
+  }
+
+  return {
+    on,
+    close(): void {
+      if (!subscriptions.delete(subId)) return;
+      const closeMsg: OutboxCloseMessage = {
+        type: 'outbox.close',
+        id: crypto.randomUUID(),
+        subId,
+      };
+      window.parent.postMessage(closeMsg, '*');
+    },
+  };
+}
+
+/**
+ * Publish a shell-signed event using outbox-aware relay fanout. The promise
+ * resolves with the full result (including inline `ok`/`error`); it rejects only
+ * if the shell never responds.
+ *
+ * @param template  Unsigned event template; the shell signs before fanout
+ * @param options   Optional publish options (relays, targetAuthors, strategy)
+ * @returns Promise resolving to the outbox publish result
+ *
+ * @example
+ * ```ts
+ * const res = await publish(
+ *   { kind: 1, content: 'hello', tags: [], created_at: Math.floor(Date.now() / 1000) },
+ *   { strategy: 'outbox' },
+ * );
+ * ```
+ */
+export function publish(
+  template: EventTemplate,
+  options?: OutboxPublishOptions,
+): Promise<OutboxPublishResult> {
+  const id = crypto.randomUUID();
+  return new Promise<OutboxPublishResult>((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      if (pendingPublish.delete(id)) reject(new Error('outbox.publish timed out'));
+    }, REQUEST_TIMEOUT_MS);
+    pendingPublish.set(id, { resolve, reject, timeout });
+
+    const msg: OutboxPublishMessage = {
+      type: 'outbox.publish',
+      id,
+      event: template,
+      ...(options === undefined ? {} : { options }),
+    };
+    window.parent.postMessage(msg, '*');
+  });
+}
+
+/**
+ * Resolve the relay plan the shell would use for a read/write target. Useful for
+ * diagnostics and UI; prefer `query`/`subscribe`/`publish` for actual access.
+ *
+ * @param target  The read/write target (authors/pubkey, direction, strategy)
+ * @returns Promise resolving to the relay plan
+ */
+export function resolveRelays(target: OutboxTarget): Promise<OutboxRelayPlan> {
+  const id = crypto.randomUUID();
+  return new Promise<OutboxRelayPlan>((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      if (pendingResolve.delete(id)) reject(new Error('outbox.resolveRelays timed out'));
+    }, REQUEST_TIMEOUT_MS);
+    pendingResolve.set(id, { resolve, reject, timeout });
+
+    const msg: OutboxResolveRelaysMessage = {
+      type: 'outbox.resolveRelays',
+      id,
+      target,
+    };
+    window.parent.postMessage(msg, '*');
+  });
+}
+
+/**
+ * Install the outbox shim. Registration-only -- outbox operations are issued on
+ * demand, not at install time.
+ *
+ * @returns cleanup function that rejects pending requests and clears all state
+ */
+export function installOutboxShim(): () => void {
+  if (installed) {
+    return () => { /* already installed */ };
+  }
+  installed = true;
+  return () => {
+    for (const p of pendingQuery.values()) clearTimeout(p.timeout);
+    for (const p of pendingPublish.values()) clearTimeout(p.timeout);
+    for (const p of pendingResolve.values()) clearTimeout(p.timeout);
+    pendingQuery.clear();
+    pendingPublish.clear();
+    pendingResolve.clear();
+    subscriptions.clear();
+    installed = false;
+  };
+}
