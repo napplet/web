@@ -11,6 +11,7 @@ This is the **napplet** monorepo — npm packages for the napplet protocol. Napp
 - `packages/sdk` — **@napplet/sdk** — Named exports wrapping window.napplet for bundler consumers
 - `packages/vite-plugin` — **@napplet/vite-plugin** — NIP-5A manifest generation at build time
 - `packages/nap` — **@napplet/nap** — NAP domain subpaths (`@napplet/nap/relay`, `@napplet/nap/identity`, etc.)
+- `packages/boilerplate` — **@napplet/boilerplate** — Interactive `npx` generator for the `github.com/napplet/boilerplate` template
 
 ## Tech Stack
 
