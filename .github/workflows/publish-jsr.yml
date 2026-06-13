@@ -49,12 +49,18 @@ jobs:
       # so @napplet/core publishes before @napplet/nap, which publishes before
       # @napplet/sdk + @napplet/shim, which publish before @napplet/vite-plugin.
       # Each package's `npx jsr publish` resolves prior packages from JSR's
-      # newly-populated registry. Do NOT use --parallel here — JSR will reject
-      # dependents whose dependencies aren't yet on the registry.
+      # newly-populated registry.
+      #
+      # --workspace-concurrency=1 is REQUIRED: pnpm's default recursive
+      # concurrency runs the `npx jsr` invocations in parallel, which both
+      # (a) lets JSR reject dependents whose dependencies aren't on the registry
+      # yet, and (b) makes concurrent `npx jsr` processes race on the shared npx
+      # binary-download cache (ENOENT renaming the deno .zip.part). Serializing
+      # to concurrency 1 runs packages strictly in topological order and fixes both.
       #
       # --allow-slow-types: relaxes JSR's strict type-inference checks until
       # we tighten public type exports later (tracked separately).
       # --allow-dirty: tolerates the sync step's jsr.json edits without
       # requiring a follow-up commit.
       - name: Publish to JSR (topologically ordered)
-        run: pnpm -r --filter='./packages/*' exec npx jsr publish --allow-slow-types --allow-dirty
+        run: pnpm -r --workspace-concurrency=1 --filter='./packages/*' exec npx jsr publish --allow-slow-types --allow-dirty
