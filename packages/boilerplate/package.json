@@ -1,0 +1,50 @@
+{
+  "name": "@napplet/boilerplate",
+  "version": "0.1.0",
+  "description": "Interactive generator for the napplet boilerplate template",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "napplet-boilerplate": "./dist/index.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "sideEffects": false,
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.3"
+  },
+  "scripts": {
+    "build": "tsup",
+    "type-check": "tsc --noEmit",
+    "test:unit": "node dist/index.js --help >/dev/null"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/napplet/napplet.git",
+    "directory": "packages/boilerplate"
+  },
+  "keywords": [
+    "nostr",
+    "napplet",
+    "boilerplate",
+    "generator",
+    "nip-5d"
+  ]
+}
+
