@@ -47,6 +47,18 @@ export type {
   MediaAction,
   MediaSessionCreate,
   MediaSessionResult,
+  McpMessage,
+  McpTool,
+  McpContentBlock,
+  McpToolResult,
+  McpResource,
+  McpTextResourceContents,
+  McpBlobResourceContents,
+  McpResourceContent,
+  CvmServerRef,
+  CvmDiscoverQuery,
+  CvmServer,
+  CvmRequestOptions,
   NappletGlobal,
 } from './types.js';
 

@@ -142,6 +142,101 @@ export interface MediaSessionResult {
 }
 
 /**
+ * A single MCP JSON-RPC message exchanged with a ContextVM server (NAP-CVM).
+ * The embedded `id` is the JSON-RPC correlation id, independent of the NIP-5D
+ * envelope id used to correlate `cvm.request` with `cvm.request.result`.
+ */
+export interface McpMessage {
+  jsonrpc: '2.0';
+  id?: string | number;
+  method?: string;
+  params?: unknown;
+  result?: unknown;
+  error?: unknown;
+}
+
+/** An MCP tool definition, as returned by `tools/list`. */
+export interface McpTool {
+  name: string;
+  description?: string;
+  inputSchema: {
+    type: 'object';
+    properties?: Record<string, unknown>;
+    required?: string[];
+  };
+}
+
+/** A content block inside an MCP tool result (text, image, resource, ...). */
+export interface McpContentBlock {
+  type: string;
+  text?: string;
+  [key: string]: unknown;
+}
+
+/** The result of an MCP `tools/call`. */
+export interface McpToolResult {
+  content: McpContentBlock[];
+  isError?: boolean;
+  [key: string]: unknown;
+}
+
+/** An MCP resource descriptor, as returned by `resources/list`. */
+export interface McpResource {
+  uri: string;
+  name: string;
+  title?: string;
+  description?: string;
+  mimeType?: string;
+  size?: number;
+}
+
+/** Text contents of an MCP resource (`resources/read`). */
+export interface McpTextResourceContents {
+  uri: string;
+  mimeType?: string;
+  text: string;
+}
+
+/** Binary contents of an MCP resource (`resources/read`); `blob` is base64-encoded. */
+export interface McpBlobResourceContents {
+  uri: string;
+  mimeType?: string;
+  blob: string;
+}
+
+/** A single MCP resource content entry: either text or base64 blob. */
+export type McpResourceContent = McpTextResourceContents | McpBlobResourceContents;
+
+/** Identifies a ContextVM server by Nostr public key, with optional relay hints. */
+export interface CvmServerRef {
+  pubkey: string;
+  relays?: string[];
+}
+
+/** Filter for ContextVM server discovery. */
+export interface CvmDiscoverQuery {
+  search?: string;
+  kinds?: number[];
+  relays?: string[];
+  limit?: number;
+}
+
+/** A discovered ContextVM server announcement. */
+export interface CvmServer extends CvmServerRef {
+  name?: string;
+  description?: string;
+  capabilities?: string[];
+  paymentRequired?: boolean;
+}
+
+/** Per-request options for ContextVM operations. */
+export interface CvmRequestOptions {
+  timeoutMs?: number;
+  initialize?: boolean;
+  payment?: 'deny' | 'prompt' | 'allow';
+}
+
+/**
  * The window.napplet global installed at runtime by @napplet/shim.
  *
  * The published packages avoid global `Window` type mutation for JSR
@@ -726,6 +821,84 @@ export interface NappletGlobal {
    * ```
    */
   class?: number;
+  /**
+   * Native ContextVM bridge (NAP-CVM): MCP-over-Nostr access mediated by the shell.
+   *
+   * ContextVM transports Model Context Protocol JSON-RPC over Nostr relays using
+   * public-key server addressing and encrypted relay events. The shell owns all
+   * transport details -- relay routing, signing, encryption, JSON-RPC correlation,
+   * MCP initialization, per-napplet policy, and optional payment prompts. Napplets
+   * supply a server identity (`pubkey` + optional relay hints) and the MCP
+   * operation they want; they receive MCP results, never ContextVM private keys,
+   * relay credentials, or direct socket access.
+   *
+   * @example
+   * ```ts
+   * if (window.napplet.shell.supports('cvm')) {
+   *   const servers = await window.napplet.cvm.discover({ search: 'relay' });
+   *   const tools = await window.napplet.cvm.listTools(servers[0]);
+   *   const result = await window.napplet.cvm.callTool(servers[0], tools[0].name, {});
+   * }
+   * ```
+   */
+  cvm: {
+    /**
+     * Discover public ContextVM servers known to the shell.
+     * @param query  Optional discovery filter (search, kinds, relays, limit)
+     * @returns Promise resolving to the discovered servers
+     */
+    discover(query?: CvmDiscoverQuery): Promise<CvmServer[]>;
+    /**
+     * Send a raw MCP JSON-RPC message to a ContextVM server and resolve with the
+     * matching MCP response. The shell wraps the message in ContextVM transport.
+     * @param server   Target ContextVM server
+     * @param message  MCP JSON-RPC message to deliver
+     * @param options  Optional per-request options
+     * @returns Promise resolving to the MCP response message
+     */
+    request(server: CvmServerRef, message: McpMessage, options?: CvmRequestOptions): Promise<McpMessage>;
+    /**
+     * List the tools exposed by a ContextVM server (MCP `tools/list`).
+     * @param server   Target ContextVM server
+     * @param options  Optional per-request options
+     */
+    listTools(server: CvmServerRef, options?: CvmRequestOptions): Promise<McpTool[]>;
+    /**
+     * Call a tool on a ContextVM server (MCP `tools/call`).
+     * @param server   Target ContextVM server
+     * @param name     Tool name
+     * @param args     Tool arguments
+     * @param options  Optional per-request options
+     */
+    callTool(server: CvmServerRef, name: string, args?: Record<string, unknown>, options?: CvmRequestOptions): Promise<McpToolResult>;
+    /**
+     * List the resources exposed by a ContextVM server (MCP `resources/list`).
+     * @param server   Target ContextVM server
+     * @param options  Optional per-request options
+     */
+    listResources(server: CvmServerRef, options?: CvmRequestOptions): Promise<McpResource[]>;
+    /**
+     * Read a resource from a ContextVM server (MCP `resources/read`).
+     * Resolves with the first content entry per the NAP-CVM API surface.
+     * @param server   Target ContextVM server
+     * @param uri      Resource URI
+     * @param options  Optional per-request options
+     */
+    readResource(server: CvmServerRef, uri: string, options?: CvmRequestOptions): Promise<McpResourceContent>;
+    /**
+     * Close shell-maintained session state for a server (subscriptions, cached
+     * initialization state, pending correlation records).
+     * @param server  Server whose session should be torn down
+     */
+    close(server: CvmServerRef): Promise<void>;
+    /**
+     * Listen for server-pushed MCP messages (`cvm.event`) -- notifications and
+     * unsolicited server messages not correlated to a single request.
+     * @param callback  Called with `(server, message)` for each server event
+     * @returns A Subscription with `close()` to stop listening
+     */
+    onEvent(callback: (server: CvmServerRef, message: McpMessage) => void): Subscription;
+  };
   /**
    * Shell capability queries. Check whether the shell supports a NAP,
    * permission, or numbered NAP protocol.

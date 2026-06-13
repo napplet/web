@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { handleClassMessage } from './class/shim.js';
 import { handleConfigMessage } from './config/shim.js';
+import { handleCvmMessage } from './cvm/shim.js';
 import { handleIdentityMessage } from './identity/shim.js';
 import { handleKeysMessage } from './keys/shim.js';
 import { handleMediaMessage } from './media/shim.js';
@@ -13,6 +14,7 @@ describe('shim message boundary guards', () => {
 
     expect(() => handleClassMessage(message)).not.toThrow();
     expect(() => handleConfigMessage(message)).not.toThrow();
+    expect(() => handleCvmMessage(message)).not.toThrow();
     expect(() => handleIdentityMessage(message)).not.toThrow();
     expect(() => handleKeysMessage(message)).not.toThrow();
     expect(() => handleMediaMessage(message)).not.toThrow();
@@ -22,6 +24,7 @@ describe('shim message boundary guards', () => {
 
   it('treats malformed known message types as boundary no-ops when no request is pending', () => {
     expect(() => handleConfigMessage({ type: 'config.values' })).not.toThrow();
+    expect(() => handleCvmMessage({ type: 'cvm.request.result' })).not.toThrow();
     expect(() => handleIdentityMessage({ type: 'identity.changed' })).not.toThrow();
     expect(() => handleKeysMessage({ type: 'keys.registerAction.result' })).not.toThrow();
     expect(() => handleMediaMessage({ type: 'media.session.create.result' })).not.toThrow();

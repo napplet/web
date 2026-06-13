@@ -1,6 +1,6 @@
 # @napplet/nap
 
-> All 12 napplet NAP domains (relay, storage, inc, keys, theme, media, notify, identity, config, resource, connect, class) as layered subpath exports. The package name remains `@napplet/nap` for compatibility.
+> All 13 napplet NAP domains (relay, storage, inc, keys, theme, media, notify, identity, config, resource, connect, class, cvm) as layered subpath exports. The package name remains `@napplet/nap` for compatibility.
 
 ## Install
 
@@ -63,7 +63,7 @@ installRelayShim(nappletWindow, {
 });
 ```
 
-## 12 Domains
+## 13 Domains
 
 Each domain is an independent subpath. Barrel imports bundle types + shim installer + SDK helpers; granular subpaths isolate each surface.
 
@@ -81,6 +81,7 @@ Each domain is an independent subpath. Barrel imports bundle types + shim instal
 | resource | `@napplet/nap/resource` | `@napplet/nap/resource/types` | `@napplet/nap/resource/shim` | `@napplet/nap/resource/sdk` | Sandboxed byte fetching (https/blossom/nostr/data) via `bytes(url) → Blob` |
 | connect | `@napplet/nap/connect` | `@napplet/nap/connect/types` | `@napplet/nap/connect/shim` | `@napplet/nap/connect/sdk` | User-gated direct network access (state-only; no wire — grants flow via CSP + discovery meta tag) |
 | class | `@napplet/nap/class` | `@napplet/nap/class/types` | `@napplet/nap/class/shim` | `@napplet/nap/class/sdk` | Shell-assigned integer class via `class.assigned` wire envelope; exposes `window.napplet.class` |
+| cvm | `@napplet/nap/cvm` | `@napplet/nap/cvm/types` | `@napplet/nap/cvm/shim` | `@napplet/nap/cvm/sdk` | Native ContextVM bridge — MCP-over-Nostr (`discover`/`listTools`/`callTool`/`listResources`/`readResource`); shell owns all transport |
 
 ### Deprecated IFC Compatibility
 
@@ -103,12 +104,12 @@ Each domain exposes up to three patterns (four including the barrel). Pick the s
 - Every subpath in the `exports` map is a discrete entry point; a bundler importing only `@napplet/nap/relay/types` produces zero bytes from the other 8 domains
 - Verified end-to-end in Phase 121 with a minimal-consumer smoke test
 
-The `exports` map in `package.json` declares 46 entry points:
+The `exports` map in `package.json` declares 50 entry points:
 
-- 12 domain barrels (`@napplet/nap/<domain>`)
-- 12 granular types entries (`@napplet/nap/<domain>/types`)
-- 11 granular shim entries (theme omitted — see [Theme Exception](#theme-exception))
-- 11 granular sdk entries (theme omitted — see [Theme Exception](#theme-exception))
+- 13 domain barrels (`@napplet/nap/<domain>`)
+- 13 granular types entries (`@napplet/nap/<domain>/types`)
+- 12 granular shim entries (theme omitted — see [Theme Exception](#theme-exception))
+- 12 granular sdk entries (theme omitted — see [Theme Exception](#theme-exception))
 
 Each entry maps to its own pre-built `.js` + `.d.ts` pair under `dist/<domain>/<surface>.{js,d.ts}`. No root `.` key exists, and there is no top-level `main`/`module`/`types` field — attempting `import '@napplet/nap'` fails with `ERR_PACKAGE_PATH_NOT_EXPORTED` by design.
 

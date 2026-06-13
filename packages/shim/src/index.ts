@@ -49,6 +49,18 @@ import {
 } from '@napplet/nap/resource/shim';
 import { installConnectShim } from '@napplet/nap/connect/shim';
 import { installClassShim, handleClassMessage } from '@napplet/nap/class/shim';
+import {
+  installCvmShim,
+  handleCvmMessage,
+  discover as cvmDiscover,
+  request as cvmRequest,
+  listTools as cvmListTools,
+  callTool as cvmCallTool,
+  listResources as cvmListResources,
+  readResource as cvmReadResource,
+  close as cvmClose,
+  onEvent as cvmOnEvent,
+} from '@napplet/nap/cvm/shim';
 import { NAP_DOMAINS, type NappletGlobal, type NamespacedCapability, type ProtocolId } from '@napplet/core';
 import type { IncEventMessage } from '@napplet/nap/inc/types';
 
@@ -103,6 +115,12 @@ function handleEnvelopeMessage(event: MessageEvent): void {
   // Route class.* messages to class shim (covers class.assigned)
   if (type.startsWith('class.')) {
     handleClassMessage(msg as { type: string; [key: string]: unknown });
+    return;
+  }
+
+  // Route cvm.* messages to ContextVM shim (discover/request/close results + cvm.event)
+  if (type.startsWith('cvm.')) {
+    handleCvmMessage(msg as { type: string; [key: string]: unknown });
     return;
   }
 
@@ -268,6 +286,16 @@ function installShellCapabilities(msg: ShellInitMessage): void {
     bytes: resourceBytes,
     bytesAsObjectURL: resourceBytesAsObjectURL,
   },
+  cvm: {
+    discover: cvmDiscover,
+    request: cvmRequest,
+    listTools: cvmListTools,
+    callTool: cvmCallTool,
+    listResources: cvmListResources,
+    readResource: cvmReadResource,
+    close: cvmClose,
+    onEvent: cvmOnEvent,
+  },
   connect: {
     granted: false,
     origins: [],
@@ -304,6 +332,9 @@ installConfigShim();
 
 // Install resource shim (single-flight cache for byte fetches; no install-time work)
 installResourceShim();
+
+// Install ContextVM shim (cvm.* request/response correlation + cvm.event listeners; no install-time work)
+installCvmShim();
 
 // Install class shim (mounts window.napplet.class readonly getter; undefined until class.assigned arrives)
 installClassShim();

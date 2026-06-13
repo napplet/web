@@ -27,6 +27,15 @@ import type {
   NostrFilter,
   Subscription,
   EventTemplate,
+  CvmServerRef,
+  CvmServer,
+  CvmDiscoverQuery,
+  CvmRequestOptions,
+  McpMessage,
+  McpTool,
+  McpToolResult,
+  McpResource,
+  McpResourceContent,
 } from '@napplet/core';
 import type {
   MediaSessionCreate,
@@ -783,6 +792,113 @@ export const resource = {
   },
 };
 
+/**
+ * Native ContextVM bridge (NAP-CVM): MCP-over-Nostr access mediated by the shell.
+ * The shell owns ContextVM transport, signing, encryption, correlation, policy,
+ * and payment; napplets supply a server identity and the MCP operation they want.
+ *
+ * @example
+ * ```ts
+ * import { cvm } from '@napplet/sdk';
+ *
+ * const servers = await cvm.discover({ search: 'relay' });
+ * const tools = await cvm.listTools(servers[0]);
+ * const result = await cvm.callTool(servers[0], tools[0].name, {});
+ * ```
+ */
+export const cvm = {
+  /**
+   * Discover public ContextVM servers known to the shell.
+   * @param query  Optional discovery filter
+   * @returns Promise resolving to the discovered servers
+   */
+  discover(query?: CvmDiscoverQuery): Promise<CvmServer[]> {
+    return requireNapplet().cvm.discover(query);
+  },
+
+  /**
+   * Send a raw MCP JSON-RPC message to a ContextVM server.
+   * @param server   Target ContextVM server
+   * @param message  MCP JSON-RPC message
+   * @param options  Optional per-request options
+   * @returns Promise resolving to the MCP response message
+   */
+  request(
+    server: CvmServerRef,
+    message: McpMessage,
+    options?: CvmRequestOptions,
+  ): Promise<McpMessage> {
+    return requireNapplet().cvm.request(server, message, options);
+  },
+
+  /**
+   * List the tools exposed by a ContextVM server (MCP `tools/list`).
+   * @param server   Target ContextVM server
+   * @param options  Optional per-request options
+   */
+  listTools(server: CvmServerRef, options?: CvmRequestOptions): Promise<McpTool[]> {
+    return requireNapplet().cvm.listTools(server, options);
+  },
+
+  /**
+   * Call a tool on a ContextVM server (MCP `tools/call`).
+   * @param server   Target ContextVM server
+   * @param name     Tool name
+   * @param args     Tool arguments
+   * @param options  Optional per-request options
+   */
+  callTool(
+    server: CvmServerRef,
+    name: string,
+    args?: Record<string, unknown>,
+    options?: CvmRequestOptions,
+  ): Promise<McpToolResult> {
+    return requireNapplet().cvm.callTool(server, name, args, options);
+  },
+
+  /**
+   * List the resources exposed by a ContextVM server (MCP `resources/list`).
+   * @param server   Target ContextVM server
+   * @param options  Optional per-request options
+   */
+  listResources(server: CvmServerRef, options?: CvmRequestOptions): Promise<McpResource[]> {
+    return requireNapplet().cvm.listResources(server, options);
+  },
+
+  /**
+   * Read a resource from a ContextVM server (MCP `resources/read`).
+   * @param server   Target ContextVM server
+   * @param uri      Resource URI
+   * @param options  Optional per-request options
+   */
+  readResource(
+    server: CvmServerRef,
+    uri: string,
+    options?: CvmRequestOptions,
+  ): Promise<McpResourceContent> {
+    return requireNapplet().cvm.readResource(server, uri, options);
+  },
+
+  /**
+   * Close shell-maintained session state for a server.
+   * @param server  Server whose session should be torn down
+   */
+  close(server: CvmServerRef): Promise<void> {
+    return requireNapplet().cvm.close(server);
+  },
+
+  /**
+   * Listen for server-pushed MCP messages (`cvm.event`).
+   * @param callback  Called with `(server, message)` for each server event
+   * @returns A Subscription with `close()` to stop listening
+   */
+  onEvent(
+    callback: (server: CvmServerRef, message: McpMessage) => void,
+  ): Subscription {
+    return requireNapplet().cvm.onEvent(callback);
+  },
+};
+
 export type { NostrEvent } from '@napplet/core';
 export type { NostrFilter } from '@napplet/core';
 export type { Subscription } from '@napplet/core';
@@ -1040,6 +1156,33 @@ export type {
   ClassNapMessage,
 } from '@napplet/nap/class';
 
+// CVM NAP (ContextVM bridge)
+export type {
+  McpMessage,
+  McpTool,
+  McpContentBlock,
+  McpToolResult,
+  McpResource,
+  McpTextResourceContents,
+  McpBlobResourceContents,
+  McpResourceContent,
+  CvmServerRef,
+  CvmDiscoverQuery,
+  CvmServer,
+  CvmRequestOptions,
+  CvmMessage,
+  CvmDiscoverMessage,
+  CvmDiscoverResultMessage,
+  CvmRequestMessage,
+  CvmRequestResultMessage,
+  CvmCloseMessage,
+  CvmCloseResultMessage,
+  CvmEventMessage,
+  CvmOutboundMessage,
+  CvmInboundMessage,
+  CvmNapMessage,
+} from '@napplet/nap/cvm';
+
 export { DOMAIN as RELAY_DOMAIN } from '@napplet/nap/relay';
 export { DOMAIN as IDENTITY_DOMAIN } from '@napplet/nap/identity';
 export { DOMAIN as STORAGE_DOMAIN } from '@napplet/nap/storage';
@@ -1057,6 +1200,7 @@ export { DOMAIN as CONFIG_DOMAIN } from '@napplet/nap/config';
 export { DOMAIN as RESOURCE_DOMAIN } from '@napplet/nap/resource';
 export { DOMAIN as CONNECT_DOMAIN } from '@napplet/nap/connect';
 export { DOMAIN as CLASS_DOMAIN } from '@napplet/nap/class';
+export { DOMAIN as CVM_DOMAIN } from '@napplet/nap/cvm';
 
 export { installRelayShim } from '@napplet/nap/relay';
 export { installIdentityShim } from '@napplet/nap/identity';
@@ -1073,6 +1217,7 @@ export { installConfigShim } from '@napplet/nap/config';
 export { installResourceShim } from '@napplet/nap/resource';
 export { installConnectShim } from '@napplet/nap/connect';
 export { installClassShim } from '@napplet/nap/class';
+export { installCvmShim } from '@napplet/nap/cvm';
 
 export { relaySubscribe, relayPublish, relayPublishEncrypted, relayQuery } from '@napplet/nap/relay';
 export {
@@ -1099,3 +1244,13 @@ export { notifySend, notifyDismiss, notifyBadge, notifyRegisterChannel, notifyRe
 export { resourceBytes, resourceBytesAsObjectURL } from '@napplet/nap/resource';
 export { connectGranted, connectOrigins, normalizeConnectOrigin } from '@napplet/nap/connect';
 export { getClass } from '@napplet/nap/class';
+export {
+  cvmDiscover,
+  cvmRequest,
+  cvmListTools,
+  cvmCallTool,
+  cvmListResources,
+  cvmReadResource,
+  cvmClose,
+  cvmOnEvent,
+} from '@napplet/nap/cvm';
