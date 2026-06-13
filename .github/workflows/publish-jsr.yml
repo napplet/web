@@ -62,5 +62,7 @@ jobs:
       # we tighten public type exports later (tracked separately).
       # --allow-dirty: tolerates the sync step's jsr.json edits without
       # requiring a follow-up commit.
+      # @napplet/boilerplate is an npx CLI generator published to npm only
+      # (no jsr.json), so it is excluded from the JSR publish set.
       - name: Publish to JSR (topologically ordered)
-        run: pnpm -r --workspace-concurrency=1 --filter='./packages/*' exec npx jsr publish --allow-slow-types --allow-dirty
+        run: pnpm -r --workspace-concurrency=1 --filter='./packages/*' --filter='!@napplet/boilerplate' exec npx jsr publish --allow-slow-types --allow-dirty
