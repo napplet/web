@@ -1,5 +1,40 @@
 # @napplet/shim
 
+## 0.8.0
+
+### Minor Changes
+
+- 026a8d3: Add NAP-CVM, the native ContextVM bridge. Napplets can now discover ContextVM
+  servers and run MCP operations (`tools/list`, `tools/call`, `resources/list`,
+  `resources/read`) over Nostr through the shell via `window.napplet.cvm`, while
+  the runtime owns all ContextVM transport — relay routing, signing, encryption,
+  JSON-RPC correlation, initialization, policy, and optional payment prompts.
+
+  - `@napplet/core`: `cvm` domain added to `NapDomain`/`NAP_DOMAINS`, `cvm`
+    surface added to `NappletGlobal`, plus MCP and ContextVM value types.
+  - `@napplet/nap`: new `@napplet/nap/cvm` domain (types/shim/sdk subpaths).
+  - `@napplet/shim`: mounts `window.napplet.cvm` and routes `cvm.*` envelopes.
+  - `@napplet/sdk`: `cvm` namespace, `cvm*` helpers, and CVM type re-exports.
+
+- f371581: Add NAP-OUTBOX, outbox-aware relay routing. Napplets can now query, subscribe,
+  publish, and resolve relay plans through `window.napplet.outbox` while the
+  runtime owns relay discovery, NIP-65 routing, fallback, deduplication, signature
+  validation, and publish fanout.
+
+  - `@napplet/core`: `outbox` domain added to `NapDomain`/`NAP_DOMAINS`, `outbox`
+    surface added to `NappletGlobal`, plus the outbox value types.
+  - `@napplet/nap`: new `@napplet/nap/outbox` domain (types/shim/sdk subpaths) with
+    request/response correlation and an event-emitter subscription handle.
+  - `@napplet/shim`: mounts `window.napplet.outbox` and routes `outbox.*` envelopes.
+  - `@napplet/sdk`: `outbox` namespace, `outbox*` helpers, and OUTBOX type re-exports.
+
+### Patch Changes
+
+- Updated dependencies [026a8d3]
+- Updated dependencies [f371581]
+  - @napplet/core@0.8.0
+  - @napplet/nap@0.8.0
+
 ## 0.7.0
 
 ### Minor Changes
