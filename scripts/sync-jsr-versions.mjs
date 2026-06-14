@@ -50,6 +50,22 @@ for (const entry of readdirSync(PACKAGES_DIR, { withFileTypes: true })) {
 
   jsr.version = pkg.version;
 
+  // Regenerate the subpath exports map from package.json so jsr.json can never
+  // drift when a new domain/subpath is added (only the package.json + tsup
+  // entry get updated by hand). Only applies to packages whose jsr.json uses an
+  // object exports map (e.g. @napplet/nap); single-string exports are left as-is.
+  // Each package.json export points at built dist/*.js; JSR publishes source, so
+  // map dist/<p>/<f>.js → src/<p>/<f>.ts.
+  if (jsr.exports && typeof jsr.exports === 'object' && pkg.exports && typeof pkg.exports === 'object') {
+    const regenerated = {};
+    for (const [subpath, target] of Object.entries(pkg.exports)) {
+      const jsEntry = typeof target === 'string' ? target : (target.import || target.default);
+      if (!jsEntry) continue;
+      regenerated[subpath] = jsEntry.replace('/dist/', '/src/').replace(/\.js$/, '.ts');
+    }
+    jsr.exports = regenerated;
+  }
+
   // Rewrite internal @napplet/* import constraints to the dependency's
   // current version. Leave npm:/external specifiers alone.
   if (jsr.imports && typeof jsr.imports === 'object') {
