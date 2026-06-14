@@ -1,6 +1,6 @@
 {
   "name": "@napplet/nap",
-  "version": "0.8.1",
+  "version": "0.9.0",
   "description": "All 15 napplet NAP domains (relay, storage, inc, keys, theme, media, notify, identity, config, resource, connect, class, cvm, outbox, upload) as layered subpath exports",
   "type": "module",
   "exports": {

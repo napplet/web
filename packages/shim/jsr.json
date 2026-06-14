@@ -1,11 +1,11 @@
 {
   "name": "@napplet/shim",
-  "version": "0.8.1",
+  "version": "0.9.0",
   "license": "MIT",
   "exports": "./src/index.ts",
   "imports": {
-    "@napplet/core": "jsr:@napplet/core@^0.8.0",
-    "@napplet/nap": "jsr:@napplet/nap@^0.8.1"
+    "@napplet/core": "jsr:@napplet/core@^0.9.0",
+    "@napplet/nap": "jsr:@napplet/nap@^0.9.0"
   },
   "publish": {
     "include": [
