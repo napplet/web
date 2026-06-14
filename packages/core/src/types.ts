@@ -345,6 +345,55 @@ export interface UploadStatus extends UploadResult {
   updatedAt: number;
 }
 
+/** How the shell should pick the handling napplet for an intent (NAP-INTENT). */
+export type IntentHandlerPreference = 'default' | 'choose' | (string & {});
+
+/** Window behavior hints for an intent invoke. */
+export interface IntentBehavior {
+  focus?: boolean;
+  newWindow?: boolean;
+  reuse?: boolean;
+}
+
+/** A request to dispatch an action to a napplet of a given archetype. */
+export interface IntentRequest {
+  archetype: string;
+  action?: string;
+  protocol?: string;
+  payload?: unknown;
+  handler?: IntentHandlerPreference;
+  behavior?: IntentBehavior;
+}
+
+/** A napplet that can fulfill an archetype (from the manifest catalog). */
+export interface IntentCandidate {
+  dTag: string;
+  title?: string;
+  actions: string[];
+  protocols: string[];
+  isDefault?: boolean;
+}
+
+/** Availability of an archetype, sourced from the installed-napplet catalog. */
+export interface IntentAvailability {
+  archetype: string;
+  available: boolean;
+  candidates: IntentCandidate[];
+  hasDefault: boolean;
+}
+
+/** The result of an intent invocation. */
+export interface IntentResult {
+  ok: boolean;
+  archetype: string;
+  action: string;
+  handled: boolean;
+  handler?: string;
+  windowId?: string;
+  protocol?: string;
+  error?: string;
+}
+
 /**
  * The window.napplet global installed at runtime by @napplet/shim.
  *
@@ -1101,6 +1150,60 @@ export interface NappletGlobal {
      * @returns A Subscription with `close()` to stop listening
      */
     onStatus(handler: (status: UploadStatus) => void): Subscription;
+  };
+  /**
+   * Archetype intent dispatch (NAP-INTENT): invoke another napplet by its role
+   * (archetype) without addressing it directly. The napplet names a role +
+   * action + payload; the shell resolves the role to an installed napplet
+   * (honoring the user's default-handler preference), creates or focuses the
+   * window, and delivers the payload using the named NAP-N protocol. Routing
+   * (`archetype`) and payload format (`protocol`) are orthogonal. The shell owns
+   * resolution, default handling, window lifecycle, and the trust boundary —
+   * napplets never learn or address other napplets except through this resolution.
+   *
+   * @example
+   * ```ts
+   * if (window.napplet.shell.supports('intent')) {
+   *   const { available } = await window.napplet.intent.available('note');
+   *   if (available) await window.napplet.intent.open('note', { target: { type: 'event', id } });
+   * }
+   * ```
+   */
+  intent: {
+    /**
+     * Dispatch an action (default `open`) to a napplet of `request.archetype`.
+     * Resolves with the structured result (including `ok: false`/`handled: false`
+     * on failure); rejects only on a top-level error.
+     * @param request  The intent request (archetype + action + payload + routing)
+     * @returns Promise resolving to the invocation result
+     */
+    invoke(request: IntentRequest): Promise<IntentResult>;
+    /**
+     * Convenience sugar for `invoke({ archetype, action: 'open', payload, ...opts })`.
+     * @param archetype  Role slug to open
+     * @param payload    Opaque payload (typed by the resolved protocol)
+     * @param opts       Extra request fields (protocol, handler, behavior)
+     * @returns Promise resolving to the invocation result
+     */
+    open(archetype: string, payload?: unknown, opts?: Omit<IntentRequest, 'archetype' | 'action' | 'payload'>): Promise<IntentResult>;
+    /**
+     * Whether the runtime can currently satisfy `archetype`, with candidates and
+     * the actions/protocols each supports. Sourced from the installed catalog.
+     * @param archetype  Role slug to check
+     * @returns Promise resolving to the archetype availability
+     */
+    available(archetype: string): Promise<IntentAvailability>;
+    /**
+     * Availability for every archetype the runtime can currently satisfy.
+     * @returns Promise resolving to availability for each satisfiable archetype
+     */
+    handlers(): Promise<IntentAvailability[]>;
+    /**
+     * Register for shell-pushed availability updates (install/remove/default change).
+     * @param handler  Called with each updated IntentAvailability
+     * @returns A Subscription with `close()` to stop listening
+     */
+    onChanged(handler: (availability: IntentAvailability) => void): Subscription;
   };
   /**
    * Shell capability queries. Check whether the shell supports a NAP,

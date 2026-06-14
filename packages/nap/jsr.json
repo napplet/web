@@ -64,7 +64,11 @@
     "./upload": "./src/upload/index.ts",
     "./upload/types": "./src/upload/types.ts",
     "./upload/shim": "./src/upload/shim.ts",
-    "./upload/sdk": "./src/upload/sdk.ts"
+    "./upload/sdk": "./src/upload/sdk.ts",
+    "./intent": "./src/intent/index.ts",
+    "./intent/types": "./src/intent/types.ts",
+    "./intent/shim": "./src/intent/shim.ts",
+    "./intent/sdk": "./src/intent/sdk.ts"
   },
   "imports": {
     "@napplet/core": "jsr:@napplet/core@^0.9.0"

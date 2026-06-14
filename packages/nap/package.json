@@ -1,7 +1,7 @@
 {
   "name": "@napplet/nap",
   "version": "0.9.0",
-  "description": "All 15 napplet NAP domains (relay, storage, inc, keys, theme, media, notify, identity, config, resource, connect, class, cvm, outbox, upload) as layered subpath exports",
+  "description": "All 16 napplet NAP domains (relay, storage, inc, keys, theme, media, notify, identity, config, resource, connect, class, cvm, outbox, upload, intent) as layered subpath exports",
   "type": "module",
   "exports": {
     "./relay": {
@@ -251,6 +251,22 @@
     "./upload/sdk": {
       "types": "./dist/upload/sdk.d.ts",
       "import": "./dist/upload/sdk.js"
+    },
+    "./intent": {
+      "types": "./dist/intent/index.d.ts",
+      "import": "./dist/intent/index.js"
+    },
+    "./intent/types": {
+      "types": "./dist/intent/types.d.ts",
+      "import": "./dist/intent/types.js"
+    },
+    "./intent/shim": {
+      "types": "./dist/intent/shim.d.ts",
+      "import": "./dist/intent/shim.js"
+    },
+    "./intent/sdk": {
+      "types": "./dist/intent/sdk.d.ts",
+      "import": "./dist/intent/sdk.js"
     }
   },
   "files": [

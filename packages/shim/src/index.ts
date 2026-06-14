@@ -76,6 +76,15 @@ import {
   status as uploadStatusFn,
   onStatus as uploadOnStatus,
 } from '@napplet/nap/upload/shim';
+import {
+  installIntentShim,
+  handleIntentMessage,
+  invoke as intentInvoke,
+  open as intentOpen,
+  available as intentAvailable,
+  handlers as intentHandlers,
+  onChanged as intentOnChanged,
+} from '@napplet/nap/intent/shim';
 import { NAP_DOMAINS, type NappletGlobal, type NamespacedCapability, type ProtocolId } from '@napplet/core';
 import type { IncEventMessage } from '@napplet/nap/inc/types';
 
@@ -148,6 +157,12 @@ function handleEnvelopeMessage(event: MessageEvent): void {
   // Route upload.* messages to upload shim (upload/status results + status.changed pushes)
   if (type.startsWith('upload.')) {
     handleUploadMessage(msg as { type: string; [key: string]: unknown });
+    return;
+  }
+
+  // Route intent.* messages to intent shim (invoke/available/handlers results + intent.changed pushes)
+  if (type.startsWith('intent.')) {
+    handleIntentMessage(msg as { type: string; [key: string]: unknown });
     return;
   }
 
@@ -334,6 +349,13 @@ function installShellCapabilities(msg: ShellInitMessage): void {
     status: uploadStatusFn,
     onStatus: uploadOnStatus,
   },
+  intent: {
+    invoke: intentInvoke,
+    open: intentOpen,
+    available: intentAvailable,
+    handlers: intentHandlers,
+    onChanged: intentOnChanged,
+  },
   connect: {
     granted: false,
     origins: [],
@@ -379,6 +401,9 @@ installOutboxShim();
 
 // Install upload shim (upload.* request/response correlation + status.changed listeners; no install-time work)
 installUploadShim();
+
+// Install intent shim (intent.* request/response correlation + intent.changed listeners; no install-time work)
+installIntentShim();
 
 // Install class shim (mounts window.napplet.class readonly getter; undefined until class.assigned arrives)
 installClassShim();

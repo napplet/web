@@ -74,6 +74,12 @@ export type {
   UploadRequest,
   UploadResult,
   UploadStatus,
+  IntentHandlerPreference,
+  IntentBehavior,
+  IntentRequest,
+  IntentCandidate,
+  IntentAvailability,
+  IntentResult,
   NappletGlobal,
 } from './types.js';
 

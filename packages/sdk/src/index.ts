@@ -47,6 +47,9 @@ import type {
   UploadRequest,
   UploadResult,
   UploadStatus,
+  IntentRequest,
+  IntentResult,
+  IntentAvailability,
 } from '@napplet/core';
 import type {
   MediaSessionCreate,
@@ -1020,6 +1023,74 @@ export const upload = {
   },
 };
 
+/**
+ * Archetype intent dispatch (NAP-INTENT): invoke another napplet by its role
+ * without addressing it directly. The shell resolves the role to an installed
+ * napplet (honoring the user's default), opens/focuses its window, and delivers
+ * the payload using the named NAP-N protocol. The shell owns resolution, default
+ * handling, window lifecycle, and the cross-napplet trust boundary.
+ *
+ * @example
+ * ```ts
+ * import { intent } from '@napplet/sdk';
+ *
+ * if ((await intent.available('note')).available) {
+ *   await intent.open('note', { target: { type: 'event', id } });
+ * }
+ * ```
+ */
+export const intent = {
+  /**
+   * Invoke a napplet by archetype.
+   * @param request  The intent request (archetype + action + payload + routing)
+   * @returns Promise resolving to the invocation result
+   */
+  invoke(request: IntentRequest): Promise<IntentResult> {
+    return requireNapplet().intent.invoke(request);
+  },
+
+  /**
+   * Open a napplet by archetype (sugar for `action: "open"`).
+   * @param archetype  Role slug to open
+   * @param payload    Opaque payload (typed by the resolved protocol)
+   * @param opts       Extra request fields (protocol, handler, behavior)
+   * @returns Promise resolving to the invocation result
+   */
+  open(
+    archetype: string,
+    payload?: unknown,
+    opts?: Omit<IntentRequest, 'archetype' | 'action' | 'payload'>,
+  ): Promise<IntentResult> {
+    return requireNapplet().intent.open(archetype, payload, opts);
+  },
+
+  /**
+   * Check whether the runtime can currently satisfy an archetype.
+   * @param archetype  Role slug to check
+   * @returns Promise resolving to the archetype availability
+   */
+  available(archetype: string): Promise<IntentAvailability> {
+    return requireNapplet().intent.available(archetype);
+  },
+
+  /**
+   * Get availability for every archetype the runtime can satisfy.
+   * @returns Promise resolving to availability for each satisfiable archetype
+   */
+  handlers(): Promise<IntentAvailability[]> {
+    return requireNapplet().intent.handlers();
+  },
+
+  /**
+   * Register for shell-pushed availability updates.
+   * @param handler  Called with each updated IntentAvailability
+   * @returns A Subscription with `close()` to stop listening
+   */
+  onChanged(handler: (availability: IntentAvailability) => void): Subscription {
+    return requireNapplet().intent.onChanged(handler);
+  },
+};
+
 export type { NostrEvent } from '@napplet/core';
 export type { NostrFilter } from '@napplet/core';
 export type { Subscription } from '@napplet/core';
@@ -1352,6 +1423,27 @@ export type {
   UploadNapMessage,
 } from '@napplet/nap/upload';
 
+// INTENT NAP (archetype intent dispatcher)
+export type {
+  IntentHandlerPreference,
+  IntentBehavior,
+  IntentRequest,
+  IntentCandidate,
+  IntentAvailability,
+  IntentResult,
+  IntentMessage,
+  IntentInvokeMessage,
+  IntentInvokeResultMessage,
+  IntentAvailableMessage,
+  IntentAvailableResultMessage,
+  IntentHandlersMessage,
+  IntentHandlersResultMessage,
+  IntentChangedMessage,
+  IntentOutboundMessage,
+  IntentInboundMessage,
+  IntentNapMessage,
+} from '@napplet/nap/intent';
+
 export { DOMAIN as RELAY_DOMAIN } from '@napplet/nap/relay';
 export { DOMAIN as IDENTITY_DOMAIN } from '@napplet/nap/identity';
 export { DOMAIN as STORAGE_DOMAIN } from '@napplet/nap/storage';
@@ -1372,6 +1464,7 @@ export { DOMAIN as CLASS_DOMAIN } from '@napplet/nap/class';
 export { DOMAIN as CVM_DOMAIN } from '@napplet/nap/cvm';
 export { DOMAIN as OUTBOX_DOMAIN } from '@napplet/nap/outbox';
 export { DOMAIN as UPLOAD_DOMAIN } from '@napplet/nap/upload';
+export { DOMAIN as INTENT_DOMAIN } from '@napplet/nap/intent';
 
 export { installRelayShim } from '@napplet/nap/relay';
 export { installIdentityShim } from '@napplet/nap/identity';
@@ -1391,6 +1484,7 @@ export { installClassShim } from '@napplet/nap/class';
 export { installCvmShim } from '@napplet/nap/cvm';
 export { installOutboxShim } from '@napplet/nap/outbox';
 export { installUploadShim } from '@napplet/nap/upload';
+export { installIntentShim } from '@napplet/nap/intent';
 
 export { relaySubscribe, relayPublish, relayPublishEncrypted, relayQuery } from '@napplet/nap/relay';
 export {
@@ -1438,3 +1532,10 @@ export {
   uploadStatus,
   uploadOnStatus,
 } from '@napplet/nap/upload';
+export {
+  intentInvoke,
+  intentOpen,
+  intentAvailable,
+  intentHandlers,
+  intentOnChanged,
+} from '@napplet/nap/intent';

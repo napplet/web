@@ -3,6 +3,7 @@ import { handleClassMessage } from './class/shim.js';
 import { handleConfigMessage } from './config/shim.js';
 import { handleCvmMessage } from './cvm/shim.js';
 import { handleIdentityMessage } from './identity/shim.js';
+import { handleIntentMessage } from './intent/shim.js';
 import { handleKeysMessage } from './keys/shim.js';
 import { handleMediaMessage } from './media/shim.js';
 import { handleNotifyMessage } from './notify/shim.js';
@@ -18,6 +19,7 @@ describe('shim message boundary guards', () => {
     expect(() => handleConfigMessage(message)).not.toThrow();
     expect(() => handleCvmMessage(message)).not.toThrow();
     expect(() => handleIdentityMessage(message)).not.toThrow();
+    expect(() => handleIntentMessage(message)).not.toThrow();
     expect(() => handleKeysMessage(message)).not.toThrow();
     expect(() => handleMediaMessage(message)).not.toThrow();
     expect(() => handleNotifyMessage(message)).not.toThrow();
@@ -30,6 +32,7 @@ describe('shim message boundary guards', () => {
     expect(() => handleConfigMessage({ type: 'config.values' })).not.toThrow();
     expect(() => handleCvmMessage({ type: 'cvm.request.result' })).not.toThrow();
     expect(() => handleIdentityMessage({ type: 'identity.changed' })).not.toThrow();
+    expect(() => handleIntentMessage({ type: 'intent.invoke.result' })).not.toThrow();
     expect(() => handleKeysMessage({ type: 'keys.registerAction.result' })).not.toThrow();
     expect(() => handleMediaMessage({ type: 'media.session.create.result' })).not.toThrow();
     expect(() => handleNotifyMessage({ type: 'notify.send.result' })).not.toThrow();
