@@ -8,6 +8,7 @@ import { handleMediaMessage } from './media/shim.js';
 import { handleNotifyMessage } from './notify/shim.js';
 import { handleOutboxMessage } from './outbox/shim.js';
 import { handleResourceMessage } from './resource/shim.js';
+import { handleUploadMessage } from './upload/shim.js';
 
 describe('shim message boundary guards', () => {
   it('ignores unknown message types without throwing', () => {
@@ -22,6 +23,7 @@ describe('shim message boundary guards', () => {
     expect(() => handleNotifyMessage(message)).not.toThrow();
     expect(() => handleOutboxMessage(message)).not.toThrow();
     expect(() => handleResourceMessage(message)).not.toThrow();
+    expect(() => handleUploadMessage(message)).not.toThrow();
   });
 
   it('treats malformed known message types as boundary no-ops when no request is pending', () => {
@@ -33,5 +35,6 @@ describe('shim message boundary guards', () => {
     expect(() => handleNotifyMessage({ type: 'notify.send.result' })).not.toThrow();
     expect(() => handleOutboxMessage({ type: 'outbox.query.result' })).not.toThrow();
     expect(() => handleResourceMessage({ type: 'resource.bytes.error' })).not.toThrow();
+    expect(() => handleUploadMessage({ type: 'upload.upload.result' })).not.toThrow();
   });
 });

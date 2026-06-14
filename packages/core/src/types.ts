@@ -300,6 +300,51 @@ export interface OutboxSubscription {
   close(): void;
 }
 
+/** A single Nostr tag (NIP-94 / imeta entries are arrays of strings). */
+export type NostrTag = string[];
+
+/** Storage rail for shell-mediated uploads (NAP-UPLOAD). */
+export type UploadRail = 'nip96' | 'blossom' | (string & {});
+
+/** Lifecycle state of an upload. */
+export type UploadState = 'pending' | 'uploading' | 'complete' | 'failed' | 'cancelled';
+
+/** A napplet's upload request; `data` crosses the boundary by structured clone. */
+export interface UploadRequest {
+  rail?: UploadRail;
+  data: Blob | ArrayBuffer;
+  mimeType?: string;
+  filename?: string;
+  caption?: string;
+  noTransform?: boolean;
+  metadata?: Record<string, unknown>;
+}
+
+/** The result of an upload. */
+export interface UploadResult {
+  ok: boolean;
+  uploadId: string;
+  status: UploadState;
+  rail: UploadRail;
+  url?: string;
+  fallbackUrls?: string[];
+  sha256?: string;
+  originalSha256?: string;
+  size?: number;
+  mimeType?: string;
+  dimensions?: { width: number; height: number };
+  blurhash?: string;
+  nip94?: NostrTag[];
+  error?: string;
+}
+
+/** A status snapshot for an upload, including progress counters. */
+export interface UploadStatus extends UploadResult {
+  bytesSent?: number;
+  bytesTotal?: number;
+  updatedAt: number;
+}
+
 /**
  * The window.napplet global installed at runtime by @napplet/shim.
  *
@@ -1016,6 +1061,46 @@ export interface NappletGlobal {
      * @returns Promise resolving to the relay plan
      */
     resolveRelays(target: OutboxTarget): Promise<OutboxRelayPlan>;
+  };
+  /**
+   * Shell-mediated file/blob upload (NAP-UPLOAD): the napplet hands the shell raw
+   * bytes plus upload intent; the shell selects a storage server, signs the rail
+   * authorization (NIP-98 for NIP-96, kind 24242 for Blossom), performs the HTTP
+   * upload, and returns a stable URL plus NIP-94 integrity metadata. The shell is
+   * the policy and consent boundary; napplets never receive signing keys, server
+   * credentials, or direct network access.
+   *
+   * @example
+   * ```ts
+   * if (window.napplet.shell.supports('upload')) {
+   *   const result = await window.napplet.upload.upload({ data: blob, filename: 'pic.png' });
+   *   if (result.status === 'complete') attach(result.url, result.nip94);
+   * }
+   * ```
+   */
+  upload: {
+    /**
+     * Upload bytes. The shell handles consent, server selection, rail auth
+     * signing, and the HTTP upload, then resolves with the initial result.
+     * Large/async uploads resolve with `status: "uploading"` and report progress
+     * via `onStatus`. Resolves with the result even on `ok: false`
+     * (created-then-failed/cancelled); rejects only on a top-level error.
+     * @param request  The upload request (Blob/ArrayBuffer bytes + intent)
+     * @returns Promise resolving to the initial upload result
+     */
+    upload(request: UploadRequest): Promise<UploadResult>;
+    /**
+     * Get the latest known status for a prior upload, including progress counters.
+     * @param uploadId  The shell-generated id from a prior upload
+     * @returns Promise resolving to the latest status
+     */
+    status(uploadId: string): Promise<UploadStatus>;
+    /**
+     * Register for shell-pushed status updates (progress, complete/failed).
+     * @param handler  Called with each new UploadStatus
+     * @returns A Subscription with `close()` to stop listening
+     */
+    onStatus(handler: (status: UploadStatus) => void): Subscription;
   };
   /**
    * Shell capability queries. Check whether the shell supports a NAP,

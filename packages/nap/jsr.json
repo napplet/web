@@ -60,7 +60,11 @@
     "./outbox": "./src/outbox/index.ts",
     "./outbox/types": "./src/outbox/types.ts",
     "./outbox/shim": "./src/outbox/shim.ts",
-    "./outbox/sdk": "./src/outbox/sdk.ts"
+    "./outbox/sdk": "./src/outbox/sdk.ts",
+    "./upload": "./src/upload/index.ts",
+    "./upload/types": "./src/upload/types.ts",
+    "./upload/shim": "./src/upload/shim.ts",
+    "./upload/sdk": "./src/upload/sdk.ts"
   },
   "imports": {
     "@napplet/core": "jsr:@napplet/core@^0.8.0"

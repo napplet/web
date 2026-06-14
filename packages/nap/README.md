@@ -1,6 +1,6 @@
 # @napplet/nap
 
-> All 14 napplet NAP domains (relay, storage, inc, keys, theme, media, notify, identity, config, resource, connect, class, cvm, outbox) as layered subpath exports. The package name remains `@napplet/nap` for compatibility.
+> All 15 napplet NAP domains (relay, storage, inc, keys, theme, media, notify, identity, config, resource, connect, class, cvm, outbox, upload) as layered subpath exports. The package name remains `@napplet/nap` for compatibility.
 
 ## Install
 
@@ -63,7 +63,7 @@ installRelayShim(nappletWindow, {
 });
 ```
 
-## 14 Domains
+## 15 Domains
 
 Each domain is an independent subpath. Barrel imports bundle types + shim installer + SDK helpers; granular subpaths isolate each surface.
 
@@ -83,6 +83,7 @@ Each domain is an independent subpath. Barrel imports bundle types + shim instal
 | class | `@napplet/nap/class` | `@napplet/nap/class/types` | `@napplet/nap/class/shim` | `@napplet/nap/class/sdk` | Shell-assigned integer class via `class.assigned` wire envelope; exposes `window.napplet.class` |
 | cvm | `@napplet/nap/cvm` | `@napplet/nap/cvm/types` | `@napplet/nap/cvm/shim` | `@napplet/nap/cvm/sdk` | Native ContextVM bridge — MCP-over-Nostr (`discover`/`listTools`/`callTool`/`listResources`/`readResource`); shell owns all transport |
 | outbox | `@napplet/nap/outbox` | `@napplet/nap/outbox/types` | `@napplet/nap/outbox/shim` | `@napplet/nap/outbox/sdk` | Outbox-aware relay routing — `query`/`subscribe`/`publish`/`resolveRelays`; shell owns NIP-65 relay discovery, dedup, and fanout |
+| upload | `@napplet/nap/upload` | `@napplet/nap/upload/types` | `@napplet/nap/upload/shim` | `@napplet/nap/upload/sdk` | Shell-mediated file/blob upload — `upload`/`status`/`onStatus` over NIP-96 + Blossom rails; shell signs auth, returns NIP-94 metadata |
 
 ### Deprecated IFC Compatibility
 
@@ -105,12 +106,12 @@ Each domain exposes up to three patterns (four including the barrel). Pick the s
 - Every subpath in the `exports` map is a discrete entry point; a bundler importing only `@napplet/nap/relay/types` produces zero bytes from the other 8 domains
 - Verified end-to-end in Phase 121 with a minimal-consumer smoke test
 
-The `exports` map in `package.json` declares 54 entry points:
+The `exports` map in `package.json` declares 58 entry points:
 
-- 14 domain barrels (`@napplet/nap/<domain>`)
-- 14 granular types entries (`@napplet/nap/<domain>/types`)
-- 13 granular shim entries (theme omitted — see [Theme Exception](#theme-exception))
-- 13 granular sdk entries (theme omitted — see [Theme Exception](#theme-exception))
+- 15 domain barrels (`@napplet/nap/<domain>`)
+- 15 granular types entries (`@napplet/nap/<domain>/types`)
+- 14 granular shim entries (theme omitted — see [Theme Exception](#theme-exception))
+- 14 granular sdk entries (theme omitted — see [Theme Exception](#theme-exception))
 
 Each entry maps to its own pre-built `.js` + `.d.ts` pair under `dist/<domain>/<surface>.{js,d.ts}`. No root `.` key exists, and there is no top-level `main`/`module`/`types` field — attempting `import '@napplet/nap'` fails with `ERR_PACKAGE_PATH_NOT_EXPORTED` by design.
 

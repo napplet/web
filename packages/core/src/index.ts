@@ -68,6 +68,12 @@ export type {
   OutboxResult,
   OutboxPublishResult,
   OutboxSubscription,
+  NostrTag,
+  UploadRail,
+  UploadState,
+  UploadRequest,
+  UploadResult,
+  UploadStatus,
   NappletGlobal,
 } from './types.js';
 

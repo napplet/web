@@ -69,6 +69,13 @@ import {
   publish as outboxPublish,
   resolveRelays as outboxResolveRelays,
 } from '@napplet/nap/outbox/shim';
+import {
+  installUploadShim,
+  handleUploadMessage,
+  upload as uploadUpload,
+  status as uploadStatusFn,
+  onStatus as uploadOnStatus,
+} from '@napplet/nap/upload/shim';
 import { NAP_DOMAINS, type NappletGlobal, type NamespacedCapability, type ProtocolId } from '@napplet/core';
 import type { IncEventMessage } from '@napplet/nap/inc/types';
 
@@ -135,6 +142,12 @@ function handleEnvelopeMessage(event: MessageEvent): void {
   // Route outbox.* messages to outbox shim (query/publish/resolveRelays results + event/eose/closed)
   if (type.startsWith('outbox.')) {
     handleOutboxMessage(msg as { type: string; [key: string]: unknown });
+    return;
+  }
+
+  // Route upload.* messages to upload shim (upload/status results + status.changed pushes)
+  if (type.startsWith('upload.')) {
+    handleUploadMessage(msg as { type: string; [key: string]: unknown });
     return;
   }
 
@@ -316,6 +329,11 @@ function installShellCapabilities(msg: ShellInitMessage): void {
     publish: outboxPublish,
     resolveRelays: outboxResolveRelays,
   },
+  upload: {
+    upload: uploadUpload,
+    status: uploadStatusFn,
+    onStatus: uploadOnStatus,
+  },
   connect: {
     granted: false,
     origins: [],
@@ -358,6 +376,9 @@ installCvmShim();
 
 // Install outbox shim (outbox.* request/response correlation + subscription event streaming; no install-time work)
 installOutboxShim();
+
+// Install upload shim (upload.* request/response correlation + status.changed listeners; no install-time work)
+installUploadShim();
 
 // Install class shim (mounts window.napplet.class readonly getter; undefined until class.assigned arrives)
 installClassShim();

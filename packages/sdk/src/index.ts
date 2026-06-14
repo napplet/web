@@ -44,6 +44,9 @@ import type {
   OutboxResult,
   OutboxPublishResult,
   OutboxSubscription,
+  UploadRequest,
+  UploadResult,
+  UploadStatus,
 } from '@napplet/core';
 import type {
   MediaSessionCreate,
@@ -973,6 +976,50 @@ export const outbox = {
   },
 };
 
+/**
+ * Shell-mediated file/blob upload (NAP-UPLOAD): hand the shell raw bytes plus
+ * upload intent; the shell selects a server, signs the rail authorization
+ * (NIP-98 for NIP-96, kind 24242 for Blossom), performs the HTTP upload, and
+ * returns a stable URL plus NIP-94 integrity metadata. The shell owns consent,
+ * policy, server selection, and signing.
+ *
+ * @example
+ * ```ts
+ * import { upload } from '@napplet/sdk';
+ *
+ * const result = await upload.upload({ data: blob, filename: 'pic.png' });
+ * if (result.status === 'complete') attach(result.url, result.nip94);
+ * ```
+ */
+export const upload = {
+  /**
+   * Upload bytes through the shell's storage pipeline.
+   * @param request  The upload request (Blob/ArrayBuffer bytes + intent)
+   * @returns Promise resolving to the initial upload result
+   */
+  upload(request: UploadRequest): Promise<UploadResult> {
+    return requireNapplet().upload.upload(request);
+  },
+
+  /**
+   * Get the latest known status for a prior upload.
+   * @param uploadId  The shell-generated upload id
+   * @returns Promise resolving to the latest status
+   */
+  status(uploadId: string): Promise<UploadStatus> {
+    return requireNapplet().upload.status(uploadId);
+  },
+
+  /**
+   * Register for shell-pushed upload status updates.
+   * @param handler  Called with each new UploadStatus
+   * @returns A Subscription with `close()` to stop listening
+   */
+  onStatus(handler: (status: UploadStatus) => void): Subscription {
+    return requireNapplet().upload.onStatus(handler);
+  },
+};
+
 export type { NostrEvent } from '@napplet/core';
 export type { NostrFilter } from '@napplet/core';
 export type { Subscription } from '@napplet/core';
@@ -1285,6 +1332,26 @@ export type {
   OutboxNapMessage,
 } from '@napplet/nap/outbox';
 
+// UPLOAD NAP (shell-mediated file/blob upload)
+export type {
+  NostrTag,
+  UploadRail,
+  UploadState,
+  UploadDimensions,
+  UploadRequest,
+  UploadResult,
+  UploadStatus,
+  UploadMessage,
+  UploadUploadMessage,
+  UploadUploadResultMessage,
+  UploadStatusMessage,
+  UploadStatusResultMessage,
+  UploadStatusChangedMessage,
+  UploadOutboundMessage,
+  UploadInboundMessage,
+  UploadNapMessage,
+} from '@napplet/nap/upload';
+
 export { DOMAIN as RELAY_DOMAIN } from '@napplet/nap/relay';
 export { DOMAIN as IDENTITY_DOMAIN } from '@napplet/nap/identity';
 export { DOMAIN as STORAGE_DOMAIN } from '@napplet/nap/storage';
@@ -1304,6 +1371,7 @@ export { DOMAIN as CONNECT_DOMAIN } from '@napplet/nap/connect';
 export { DOMAIN as CLASS_DOMAIN } from '@napplet/nap/class';
 export { DOMAIN as CVM_DOMAIN } from '@napplet/nap/cvm';
 export { DOMAIN as OUTBOX_DOMAIN } from '@napplet/nap/outbox';
+export { DOMAIN as UPLOAD_DOMAIN } from '@napplet/nap/upload';
 
 export { installRelayShim } from '@napplet/nap/relay';
 export { installIdentityShim } from '@napplet/nap/identity';
@@ -1322,6 +1390,7 @@ export { installConnectShim } from '@napplet/nap/connect';
 export { installClassShim } from '@napplet/nap/class';
 export { installCvmShim } from '@napplet/nap/cvm';
 export { installOutboxShim } from '@napplet/nap/outbox';
+export { installUploadShim } from '@napplet/nap/upload';
 
 export { relaySubscribe, relayPublish, relayPublishEncrypted, relayQuery } from '@napplet/nap/relay';
 export {
@@ -1364,3 +1433,8 @@ export {
   outboxPublish,
   outboxResolveRelays,
 } from '@napplet/nap/outbox';
+export {
+  uploadFile,
+  uploadStatus,
+  uploadOnStatus,
+} from '@napplet/nap/upload';
