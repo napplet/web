@@ -73,7 +73,7 @@ export function handleClassMessage(msg: ClassMessageInput): void {
  */
 export function installClassShim(): () => void {
   if (installed) {
-    return () => { /* already installed */ };
+    return () => undefined; // already installed: no-op cleanup
   }
 
   const classWindow = window as ClassWindow;

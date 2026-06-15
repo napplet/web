@@ -369,7 +369,7 @@ export function onControls(
  */
 export function installMediaShim(): () => void {
   if (installed) {
-    return () => { /* already installed */ };
+    return () => undefined; // already installed: no-op cleanup
   }
 
   installed = true;

@@ -129,14 +129,6 @@ function resolvePending(id: string, value: unknown): void {
   pending.resolve(value);
 }
 
-function rejectPending(id: string, reason: Error): void {
-  const pending = pendingRequests.get(id);
-  if (!pending) return;
-  pendingRequests.delete(id);
-  clearTimeout(pending.timeout);
-  pending.reject(reason);
-}
-
 function resolveOrReject(id: string, value: unknown, error?: string): void {
   const pending = pendingRequests.get(id);
   if (!pending) return;
@@ -334,7 +326,7 @@ export function getBadges(): Promise<Badge[]> {
  */
 export function installIdentityShim(): () => void {
   if (installed) {
-    return () => { /* already installed */ };
+    return () => undefined; // already installed: no-op cleanup
   }
 
   installed = true;

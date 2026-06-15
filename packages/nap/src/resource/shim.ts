@@ -292,7 +292,7 @@ export function hydrateResourceCache(entries?: ResourceSidecarEntry[]): void {
  */
 export function installResourceShim(): () => void {
   if (installed) {
-    return () => { /* already installed */ };
+    return () => undefined; // already installed: no-op cleanup
   }
   installed = true;
   return () => {

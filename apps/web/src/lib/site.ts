@@ -1,6 +1,3 @@
-// ─── Site-wide constants ────────────────────────────────────────────────────
-// Single source of truth for external links and package metadata. Change
-// SITE_URL in one place to re-point canonical/meta references.
 
 export const SITE_URL = 'https://napplet.dev';
 

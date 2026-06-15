@@ -44,8 +44,6 @@ function isMessageType<T extends { type: string }>(
   return msg.type === type;
 }
 
-// ─── Inbound message handling ───────────────────────────────────────────────
-
 function handleUploadResult(msg: UploadUploadResultMessage): void {
   const p = pendingUpload.get(msg.id);
   if (!p) return;
@@ -88,8 +86,6 @@ export function handleUploadMessage(msg: { type: string; [key: string]: unknown 
     handleStatusChanged(msg);
   }
 }
-
-// ─── Public API ─────────────────────────────────────────────────────────────
 
 /**
  * Upload bytes through the shell. The shell handles consent, server selection,
@@ -183,7 +179,7 @@ export function onStatus(handler: (status: UploadStatus) => void): Subscription 
  */
 export function installUploadShim(): () => void {
   if (installed) {
-    return () => { /* already installed */ };
+    return () => undefined; // already installed: no-op cleanup
   }
   installed = true;
   return () => {

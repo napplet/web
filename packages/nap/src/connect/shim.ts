@@ -70,7 +70,7 @@ function parseOrigins(content: string | null): readonly string[] {
  */
 export function installConnectShim(): () => void {
   if (installed) {
-    return () => { /* already installed */ };
+    return () => undefined; // already installed: no-op cleanup
   }
 
   // 1. Read meta tag synchronously and populate state.

@@ -4,3 +4,14 @@ packages:
   - apps/demo/napplets/*
   - tests/fixtures/napplets/*
   - tests/e2e/harness
+
+# Dependency overrides. pnpm 10 no longer reads the `pnpm.overrides` field in
+# package.json, so they live here. esbuild/vite are pinned to patched releases
+# to clear the security advisories surfaced by the AI-slop scan.
+overrides:
+  postcss: 8.5.10
+  # esbuild 0.28.1 clears the dev-server advisories; capped to 0.28.x.
+  esbuild: ^0.28.1
+  # Pin to vite 6.x — clears the advisory on the vitepress-bundled vite 5 while
+  # staying compatible (vitepress builds under vite 6 with an esnext target).
+  vite: ^6.4.2

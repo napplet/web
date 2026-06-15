@@ -102,8 +102,6 @@ export interface UploadStatus extends UploadResult {
   updatedAt: number;
 }
 
-// ─── Wire messages ──────────────────────────────────────────────────────────
-
 /**
  * Base interface for all upload NAP messages.
  * Concrete message types narrow the `type` field to specific literals.

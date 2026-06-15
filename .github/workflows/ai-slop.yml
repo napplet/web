@@ -41,7 +41,7 @@ jobs:
         shell: bash
         run: |
           set +e
-          pnpm dlx aislop@0.9.3 scan --json . > aislop-report.json
+          pnpm dlx aislop@0.10.2 scan --json . > aislop-report.json
           status=$?
           set -e
           echo "exit_code=$status" >> "$GITHUB_OUTPUT"

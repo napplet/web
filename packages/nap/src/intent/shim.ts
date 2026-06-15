@@ -53,8 +53,6 @@ function isMessageType<T extends { type: string }>(
   return msg.type === type;
 }
 
-// ─── Inbound message handling ───────────────────────────────────────────────
-
 function handleInvokeResult(msg: IntentInvokeResultMessage): void {
   const p = pendingInvoke.get(msg.id);
   if (!p) return;
@@ -111,8 +109,6 @@ export function handleIntentMessage(msg: { type: string; [key: string]: unknown 
     handleChanged(msg);
   }
 }
-
-// ─── Public API ─────────────────────────────────────────────────────────────
 
 /**
  * Invoke a napplet by archetype. The shell resolves the archetype to a handler
@@ -243,7 +239,7 @@ export function onChanged(handler: (availability: IntentAvailability) => void): 
  */
 export function installIntentShim(): () => void {
   if (installed) {
-    return () => { /* already installed */ };
+    return () => undefined; // already installed: no-op cleanup
   }
   installed = true;
   return () => {
