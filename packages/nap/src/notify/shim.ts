@@ -341,7 +341,7 @@ export function onControls(
  */
 export function installNotifyShim(): () => void {
   if (installed) {
-    return () => { /* already installed */ };
+    return () => undefined; // already installed: no-op cleanup
   }
 
   installed = true;

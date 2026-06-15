@@ -59,8 +59,6 @@ function isMessageType<T extends { type: string }>(
   return msg.type === type;
 }
 
-// ─── Inbound message handling ───────────────────────────────────────────────
-
 function handleDiscoverResult(msg: CvmDiscoverResultMessage): void {
   const p = pendingDiscover.get(msg.id);
   if (!p) return;
@@ -123,8 +121,6 @@ export function handleCvmMessage(msg: { type: string; [key: string]: unknown }):
     handleEvent(msg);
   }
 }
-
-// ─── Public API ─────────────────────────────────────────────────────────────
 
 /**
  * Discover public ContextVM servers known to the shell.
@@ -374,7 +370,7 @@ export function onEvent(
  */
 export function installCvmShim(): () => void {
   if (installed) {
-    return () => { /* already installed */ };
+    return () => undefined; // already installed: no-op cleanup
   }
   installed = true;
   return () => {

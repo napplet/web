@@ -20,11 +20,6 @@ import type { NappletMessage } from '@napplet/core';
 /** The NAP domain name for ContextVM messages. */
 export const DOMAIN = 'cvm' as const;
 
-// ─── MCP value shapes ───────────────────────────────────────────────────────
-// Minimal structural mirrors of the Model Context Protocol schema. Napplets
-// receive these MCP results; the shell never exposes ContextVM keys, relay
-// credentials, or socket access.
-
 /**
  * A single MCP JSON-RPC message. ContextVM stringifies this into the `content`
  * field of a Nostr event; the shell wraps and unwraps the transport for the napplet.
@@ -118,8 +113,6 @@ export interface McpBlobResourceContents {
 /** A single MCP resource content entry: either text or base64 blob. */
 export type McpResourceContent = McpTextResourceContents | McpBlobResourceContents;
 
-// ─── ContextVM server references ────────────────────────────────────────────
-
 /**
  * Identifies a ContextVM server by its Nostr public key, with optional relay hints.
  * The shell decides which relays to actually route through per its relay policy.
@@ -176,8 +169,6 @@ export interface CvmRequestOptions {
    */
   payment?: 'deny' | 'prompt' | 'allow';
 }
-
-// ─── Wire messages ──────────────────────────────────────────────────────────
 
 /**
  * Base interface for all ContextVM NAP messages.

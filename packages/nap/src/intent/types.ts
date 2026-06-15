@@ -22,8 +22,6 @@ import type { NappletMessage } from '@napplet/core';
 /** The NAP domain name for intent messages. */
 export const DOMAIN = 'intent' as const;
 
-// ─── Value shapes ───────────────────────────────────────────────────────────
-
 /**
  * How the shell should pick the handling napplet:
  * - `default` -- the user's default handler for the archetype (the implicit case)
@@ -100,8 +98,6 @@ export interface IntentResult {
   /** Error reason when the invoke failed. */
   error?: string;
 }
-
-// ─── Wire messages ──────────────────────────────────────────────────────────
 
 /**
  * Base interface for all intent NAP messages.

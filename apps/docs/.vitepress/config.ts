@@ -6,6 +6,12 @@ const SITE_URL = 'https://napplet.dev';
 export default defineConfig({
   base: '/docs/',
   lang: 'en-US',
+  // Build to a modern target so esbuild (pinned to a patched release) doesn't
+  // need to lower modern syntax to a legacy target. Fine for a docs site.
+  vite: {
+    build: { target: 'esnext' },
+    esbuild: { target: 'esnext' },
+  },
   title: 'napplet',
   description:
     'Documentation for the napplet protocol SDK — composable, sandboxed Nostr web applets that delegate to a host shell over the NIP-5D JSON envelope wire format.',

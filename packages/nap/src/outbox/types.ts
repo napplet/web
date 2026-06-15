@@ -19,8 +19,6 @@ import type { NappletMessage, NostrEvent, NostrFilter, EventTemplate } from '@na
 /** The NAP domain name for outbox messages. */
 export const DOMAIN = 'outbox' as const;
 
-// ─── Value shapes ───────────────────────────────────────────────────────────
-
 /**
  * Relay-selection strategy:
  * - `outbox` -- query/publish via author write relays (the outbox model)
@@ -121,8 +119,6 @@ export interface OutboxSubscription {
   /** Close the subscription and stop receiving events. */
   close(): void;
 }
-
-// ─── Wire messages ──────────────────────────────────────────────────────────
 
 /**
  * Base interface for all outbox NAP messages.

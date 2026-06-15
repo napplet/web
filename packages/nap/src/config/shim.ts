@@ -319,7 +319,7 @@ export function onSchemaError(
  */
 export function installConfigShim(): () => void {
   if (installed) {
-    return () => { /* already installed */ };
+    return () => undefined; // already installed: no-op cleanup
   }
 
   // 1. Read manifest-declared schema synchronously so the `schema` accessor

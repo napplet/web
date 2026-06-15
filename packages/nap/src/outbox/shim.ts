@@ -73,8 +73,6 @@ function isMessageType<T extends { type: string }>(
   return msg.type === type;
 }
 
-// ─── Inbound message handling ───────────────────────────────────────────────
-
 function handleQueryResult(msg: OutboxQueryResultMessage): void {
   const p = pendingQuery.get(msg.id);
   if (!p) return;
@@ -157,8 +155,6 @@ export function handleOutboxMessage(msg: { type: string; [key: string]: unknown 
     handleSubClosed(msg);
   }
 }
-
-// ─── Public API ─────────────────────────────────────────────────────────────
 
 /**
  * Perform a one-shot outbox-aware query. The shell resolves the relevant relays,
@@ -333,7 +329,7 @@ export function resolveRelays(target: OutboxTarget): Promise<OutboxRelayPlan> {
  */
 export function installOutboxShim(): () => void {
   if (installed) {
-    return () => { /* already installed */ };
+    return () => undefined; // already installed: no-op cleanup
   }
   installed = true;
   return () => {
