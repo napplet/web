@@ -97,5 +97,5 @@ stamps the real aggregate hash into the meta tag:
 
 ## See also
 
-- [NIP-5D explained](/guide/nip-5d) — manifest & NUB negotiation
+- [NIP-5D explained](/guide/nip-5d) — manifest & NAP negotiation
 - [Core concepts](/guide/concepts#acl-capabilities) — how the aggregate hash keys ACL

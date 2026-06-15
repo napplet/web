@@ -1,5 +1,6 @@
 <script lang="ts">
   import { reveal } from '../lib/reveal';
+  import { LINKS } from '../lib/site';
 
   // An early, deliberately light touch: plant the flag that web is the FIRST
   // target (not the only one) with the rationale, before the main narrative —
@@ -17,7 +18,7 @@
       <span class="pulse" aria-hidden="true"></span>
       <div class="flag-text">
         <strong>Web first — not web only</strong>
-        <span>napplet proves the protocol on the web by choice</span>
+        <span>web napplets prove the protocol on the web by choice</span>
       </div>
     </div>
 
@@ -28,8 +29,9 @@
     </ul>
 
     <p class="agnostic">
-      The napplet &amp; <strong>NAP</strong> model is transport-agnostic by design — room to
-      grow beyond the browser.
+      The napplet &amp;
+      <a href={LINKS.naps} target="_blank" rel="noopener"><strong>NAP</strong></a>
+      model is transport-agnostic by design — room to grow beyond the browser.
     </p>
   </div>
 </div>
@@ -108,6 +110,11 @@
   .agnostic strong {
     color: var(--accent-bright);
     font-weight: 600;
+  }
+  .agnostic a {
+    text-decoration: underline;
+    text-decoration-color: var(--accent-deep);
+    text-underline-offset: 3px;
   }
 
   @keyframes pulse {

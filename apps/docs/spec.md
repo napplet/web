@@ -14,7 +14,7 @@ wins:
 - **Pinned commit:** `d80d7b25f9c4331acbeb40dbeb3b077caa80e885`
 
 It covers: Philosophy, Terminology, Transport, Wire Format, Identity, Manifest and
-NUB Negotiation, the NUB Extension Framework, Security Considerations, and
+NAP Negotiation, the NAP Extension Framework, Security Considerations, and
 References.
 
 ## In-repo reference note
