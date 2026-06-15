@@ -83,6 +83,6 @@ export const NAV: NavItem[] = [
   { href: '#problem', label: 'The problem' },
   { href: '#shift', label: 'The shift' },
   { href: '#how', label: 'How it works' },
-  { href: '#benefits', label: 'Benefits' },
+  { href: '#runtimes', label: 'Runtimes' },
   { href: '#packages', label: 'Packages' },
 ];

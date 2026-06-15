@@ -2,19 +2,36 @@
   import { reveal } from '../lib/reveal';
   import { LINKS } from '../lib/site';
   import LayerStack from '../components/diagrams/LayerStack.svelte';
+
+  // Two doors into the same section, so neither audience bounces:
+  // existing client authors (become a shell) and protocol developers
+  // (build a runtime / shape the NAPs).
+  const audiences = [
+    {
+      tag: 'For client developers',
+      title: 'Already built a Nostr client?',
+      body: 'You’ve solved the hard parts — relay pools, signer flows, storage, key handling. Expose them through NAP interfaces and your client becomes a shell. Host third-party napplets without rewriting your app, and turn your client into a platform.',
+      points: ['Reuse your existing relay & signer plumbing', 'Host an ecosystem instead of shipping every feature', 'Compete on trust & UX, not feature count'],
+    },
+    {
+      tag: 'For protocol developers',
+      title: 'Want to shape the protocol?',
+      body: 'NIP-5D is small and the surface is well-defined. Stand up a runtime, implement the NAP capability domains, and help decide what the protocol becomes. Conformance work and new NAPs are where the design is still being written.',
+      points: ['Implement NIP-5D — transport, identity, dispatch', 'Define & extend NAP / NUB capability domains', 'Drive conformance against the reference runtime'],
+    },
+  ];
 </script>
 
-<section id="runtime" class="section">
+<section id="runtimes" class="section runtimes">
   <div class="container">
     <div class="head" use:reveal>
-      <span class="eyebrow">Where the runtime fits</span>
-      <h2 class="section-title">You write the napplet. A shell runs it.</h2>
+      <span class="eyebrow">Runtimes &amp; shells</span>
+      <h2 class="section-title">Any shell can be a runtime</h2>
       <p class="section-lead">
-        Your code targets the <code>@napplet</code> packages and the NIP-5D envelope. The
-        shell — the <strong>runtime</strong> — is what brokers your requests to a signer,
-        extension or relay and talks to the network.
-        <a href={LINKS.kehto} target="_blank" rel="noopener">Kehto</a> is the reference
-        runtime you can build against today.
+        A <strong>runtime</strong> is any app that honors NIP-5D and hosts napplets. There
+        can be many — and that’s the point. The napplet you write targets the
+        <code>@napplet</code> packages and the envelope; the runtime brokers your requests
+        to a signer, extension or relay and talks to the network.
       </p>
     </div>
 
@@ -22,20 +39,45 @@
       <LayerStack />
     </div>
 
-    <div class="cta-card card" use:reveal={{ delay: 120 }}>
-      <div>
-        <h3>Need a shell to test against?</h3>
-        <p>Kehto implements NIP-5D as the reference runtime — host your napplet, watch the envelopes flow.</p>
+    <div class="audiences">
+      {#each audiences as a, i}
+        <div class="card aud" use:reveal={{ delay: i * 80 }}>
+          <span class="aud-tag">{a.tag}</span>
+          <h3>{a.title}</h3>
+          <p>{a.body}</p>
+          <ul>
+            {#each a.points as pt}
+              <li>{pt}</li>
+            {/each}
+          </ul>
+        </div>
+      {/each}
+    </div>
+
+    <!-- The reference implementation: full nod to Kehto -->
+    <div class="kehto card" use:reveal={{ delay: 80 }}>
+      <div class="kehto-glow" aria-hidden="true"></div>
+      <div class="kehto-body">
+        <span class="ref-tag">Reference runtime</span>
+        <h3>Kehto implements NIP-5D end-to-end</h3>
+        <p>
+          The reference shell where the protocol runs for real — host a napplet, watch the
+          envelopes flow, and use it as the conformance target while you build a runtime of
+          your own.
+        </p>
+        <div class="kehto-actions">
+          <a class="btn btn-primary" href={LINKS.kehto} target="_blank" rel="noopener">
+            Explore Kehto ↗
+          </a>
+          <a class="btn btn-ghost" href={LINKS.docs}>How shells work</a>
+        </div>
       </div>
-      <a class="btn btn-primary" href={LINKS.kehto} target="_blank" rel="noopener">
-        Explore Kehto ↗
-      </a>
     </div>
   </div>
 </section>
 
 <style>
-  .head { margin-bottom: 44px; max-width: 720px; }
+  .head { margin-bottom: 44px; max-width: 760px; }
   .head code {
     color: var(--accent-bright);
     background: rgba(176, 107, 255, 0.1);
@@ -43,6 +85,7 @@
     border-radius: 5px;
   }
   .head strong { color: var(--text); }
+
   .stage {
     border: 1px solid var(--border-soft);
     border-radius: 22px;
@@ -50,18 +93,92 @@
     background: rgba(18, 8, 32, 0.5);
     box-shadow: var(--shadow-card);
   }
-  .cta-card {
+
+  .audiences {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
     margin-top: 28px;
-    padding: 26px 30px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 24px;
-    border-color: var(--accent-deep);
   }
-  .cta-card h3 { font-size: 1.18rem; margin-bottom: 6px; }
-  .cta-card p { color: var(--text-muted); font-size: 0.95rem; max-width: 48ch; }
-  @media (max-width: 680px) {
-    .cta-card { flex-direction: column; align-items: flex-start; }
+  .aud { padding: 30px; }
+  .aud-tag {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent-bright);
+    padding: 4px 10px;
+    border: 1px solid var(--accent-deep);
+    border-radius: 999px;
+    background: rgba(176, 107, 255, 0.06);
+    margin-bottom: 16px;
+  }
+  .aud h3 { font-size: 1.3rem; margin-bottom: 12px; }
+  .aud > p { color: var(--text-muted); font-size: 0.96rem; }
+  .aud ul {
+    margin: 18px 0 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+  }
+  .aud li {
+    position: relative;
+    padding-left: 22px;
+    font-size: 0.9rem;
+    color: var(--text);
+  }
+  .aud li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.55em;
+    width: 7px;
+    height: 7px;
+    border-radius: 2px;
+    background: var(--grad-accent);
+  }
+
+  .kehto {
+    position: relative;
+    margin-top: 18px;
+    padding: clamp(28px, 4vw, 44px);
+    border-color: var(--accent-deep);
+    overflow: hidden;
+  }
+  .kehto-glow {
+    position: absolute;
+    inset: -40% 40% auto -10%;
+    height: 200%;
+    background: radial-gradient(50% 50% at 30% 50%, rgba(123, 47, 247, 0.28), transparent 70%);
+    pointer-events: none;
+  }
+  .kehto-body { position: relative; max-width: 60ch; }
+  .ref-tag {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--cyan);
+    padding: 4px 11px;
+    border: 1px solid var(--cyan);
+    border-radius: 999px;
+    background: rgba(79, 214, 224, 0.06);
+    margin-bottom: 16px;
+  }
+  .kehto h3 { font-size: clamp(1.3rem, 2.4vw, 1.7rem); margin-bottom: 12px; }
+  .kehto p { color: var(--text-muted); }
+  .kehto-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 24px;
+  }
+
+  @media (max-width: 760px) {
+    .audiences { grid-template-columns: 1fr; }
   }
 </style>

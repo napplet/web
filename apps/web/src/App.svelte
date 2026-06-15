@@ -4,8 +4,8 @@
   import Hero from './sections/Hero.svelte';
   import Problem from './sections/Problem.svelte';
   import Shift from './sections/Shift.svelte';
+  import WebFirstRail from './sections/WebFirstRail.svelte';
   import HowItWorks from './sections/HowItWorks.svelte';
-  import PlatformNote from './sections/PlatformNote.svelte';
   import Benefits from './sections/Benefits.svelte';
   import Paradigm from './sections/Paradigm.svelte';
   import Runtime from './sections/Runtime.svelte';
@@ -16,10 +16,10 @@
 <Nav />
 <main>
   <Hero />
+  <WebFirstRail />
   <Problem />
   <Shift />
   <HowItWorks />
-  <PlatformNote />
   <Benefits />
   <Paradigm />
   <Runtime />

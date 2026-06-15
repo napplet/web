@@ -18,8 +18,8 @@
       <p class="lede" use:reveal={{ delay: 120 }}>
         A <strong>napplet</strong> is a small, sandboxed app that does one thing well.
         It runs inside a host <strong>shell</strong> and delegates signing, storage and
-        relay access over a simple <code>postMessage</code> protocol — so apps stop
-        rebuilding the same client, and every sensitive request is brokered by the shell.
+        relay access over a simple, typed message protocol — so apps stop rebuilding the
+        same client, and every sensitive request is brokered by the shell.
       </p>
 
       <div class="actions" use:reveal={{ delay: 180 }}>
@@ -31,7 +31,7 @@
       </div>
 
       <div class="trust-row" use:reveal={{ delay: 240 }}>
-        <span><code>allow-scripts</code> only — no <code>allow-same-origin</code></span>
+        <span>sandboxed &amp; isolated by the host</span>
         <span class="sep">·</span>
         <span>every request via the shell</span>
         <span class="sep">·</span>
@@ -102,13 +102,6 @@
     max-width: 54ch;
   }
   .lede strong { color: var(--text); font-weight: 650; }
-  .lede code,
-  .trust-row code {
-    color: var(--accent-bright);
-    background: rgba(176, 107, 255, 0.1);
-    padding: 1px 6px;
-    border-radius: 5px;
-  }
   .actions {
     display: flex;
     flex-wrap: wrap;

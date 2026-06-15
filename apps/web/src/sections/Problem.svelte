@@ -8,7 +8,7 @@
     },
     {
       t: 'Your key is everywhere',
-      d: 'Each app wants signing access. The more apps you trust with window.nostr, the larger your exposure.',
+      d: 'Each app you install asks for direct signing access. The more apps that hold that power, the larger your exposure.',
     },
     {
       t: 'No real composition',
