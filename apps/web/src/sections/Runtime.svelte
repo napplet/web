@@ -28,10 +28,10 @@
       <span class="eyebrow">Runtimes &amp; shells</span>
       <h2 class="section-title">Any shell can be a runtime</h2>
       <p class="section-lead">
-        A <strong>runtime</strong> is any app that honors NIP-5D and hosts napplets. There
-        can be many — and that’s the point. The napplet you write targets the
-        <code>@napplet</code> packages and the envelope; the runtime brokers your requests
-        to a signer, extension or relay and talks to the network.
+        A <strong>runtime</strong> is the host that actually runs your napplet — it brokers
+        your requests to a signer, extension or relay and talks to the network. On the web,
+        a runtime is any app that honors <strong>NIP-5D</strong> — the security posture and
+        transport for napplets — and there can be many. That’s the point.
       </p>
     </div>
 
@@ -78,12 +78,6 @@
 
 <style>
   .head { margin-bottom: 44px; max-width: 760px; }
-  .head code {
-    color: var(--accent-bright);
-    background: rgba(176, 107, 255, 0.1);
-    padding: 1px 6px;
-    border-radius: 5px;
-  }
   .head strong { color: var(--text); }
 
   .stage {

@@ -64,16 +64,21 @@ entry and widens the ecosystem **without** putting users at risk.
 
 ## Web first, not web only
 
-NIP-5D is being proven on the web first, and for good reasons: the iframe is a
-real, browser-enforced sandbox you can demonstrate today; the web has the largest
-developer ecosystem to draw from; and a napplet is just static files, so it
-distributes as a [NIP-5A](https://github.com/nostr-protocol/nips) static site (an
-**nsite**) over Nostr + Blossom with no servers.
+The napplet model is being proven on the web first, and for good reasons: the
+iframe is a real, browser-enforced sandbox you can demonstrate today; the web has
+the largest developer ecosystem to draw from; and a napplet is just static files,
+so it distributes as a [NIP-5A](https://github.com/nostr-protocol/nips) static
+site (an **nsite**) over Nostr + Blossom with no servers.
 
-The napplet and **NAP** capability model is deliberately transport-agnostic,
-though — the envelope is just messages. The web is the starting point, not the
-ceiling: the same pattern leaves room to extend beyond the browser as the protocol
-matures.
+**NIP-5D is specifically that web realization** — it defines the security posture
+and transport (`postMessage` across an `iframe` boundary) for napplets in the
+NIP-5A context. It is a web-context spec, not a cross-platform one.
+
+The broader **napplet** and **NAP** capability model, however, is deliberately
+transport-agnostic — capability domains and intent, not browser plumbing. The web
+is the starting point, not the ceiling: the same model leaves room to be carried on
+other platforms later, each of which would define its own transport and security
+posture (its own analogue to NIP-5D) rather than reusing the web one.
 
 ## Who it's for
 
