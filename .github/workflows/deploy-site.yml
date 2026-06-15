@@ -56,18 +56,18 @@ jobs:
 
       # TEMP DEBUG: probe Bunny from CI using the secret directly, to isolate
       # whether a 401 is the secret value or the action. Remove after diagnosis.
-      - name: Debug — probe Bunny with the secret
+      - name: Debug — secret byte lengths (1 == broken literal dash)
         env:
-          P: ${{ secrets.BUNNY_STORAGE_PASSWORD }}
+          PW: ${{ secrets.BUNNY_STORAGE_PASSWORD }}
+          AK: ${{ secrets.BUNNY_API_KEY }}
+          PZ: ${{ secrets.BUNNY_PULLZONE_ID }}
+          SZ: ${{ secrets.BUNNY_STORAGE_ZONE }}
+          SE: ${{ secrets.BUNNY_STORAGE_ENDPOINT }}
+          NB: ${{ secrets.NBUNK_SECRET }}
         run: |
-          echo "secret byte length: $(printf '%s' "$P" | wc -c)"
-          printf 'secret sha256: '; printf '%s' "$P" | sha256sum
-          code=$(curl -s -o /dev/null -w '%{http_code}' -X PUT \
-            -H "AccessKey: $P" --data 'ci-probe' \
-            "https://storage.bunnycdn.com/napplet/_ci_probe_ci.txt")
-          echo "CI curl PUT status: $code"
-          curl -s -o /dev/null -X DELETE -H "AccessKey: $P" \
-            "https://storage.bunnycdn.com/napplet/_ci_probe_ci.txt" || true
+          for n in PW AK PZ SZ SE NB; do
+            printf '%-3s byte length: %s\n' "$n" "$(printf '%s' "${!n}" | wc -c)"
+          done
 
       # ─── Bunny: upload to storage zone, then purge the pull zone ───────────
       # storageEndpoint + storageZoneName are literals from the Bunny dashboard
