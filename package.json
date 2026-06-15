@@ -9,6 +9,7 @@
     "test:unit": "turbo run test:unit",
     "lint": "turbo run lint",
     "type-check": "turbo run type-check",
+    "check:links": "node scripts/check-links.mjs",
     "version-packages": "changeset version && node scripts/sync-jsr-versions.mjs",
     "publish-packages": "turbo run build && pnpm publish -r --access public --no-git-checks",
     "publish-jsr": "node scripts/sync-jsr-versions.mjs && pnpm -r --filter='./packages/*' exec npx jsr publish --allow-slow-types --allow-dirty"
@@ -16,6 +17,7 @@
   "devDependencies": {
     "@changesets/cli": "^2.30.0",
     "nostr-tools": "^2.23.3",
+    "playwright": "^1.59.1",
     "turbo": "^2.9.14",
     "typescript": "^5.9.3",
     "vite": "^6.4.2",
