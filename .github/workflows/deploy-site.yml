@@ -74,11 +74,30 @@ jobs:
           remove: 'false'
           purgePullZone: 'true'
 
+      # nsite-action splits relays/servers on NEWLINES, but NSITE_RELAYS /
+      # NSITE_SERVERS are stored space-separated. Normalize any whitespace
+      # (spaces or newlines) into one-per-line so the action parses each URL.
+      - name: Prepare nsite targets
+        id: nsite
+        env:
+          RAW_RELAYS: ${{ vars.NSITE_RELAYS || 'wss://relay.nsite.lol' }}
+          RAW_SERVERS: ${{ vars.NSITE_SERVERS || 'https://cdn.hzrd149.com' }}
+        run: |
+          set -f  # no globbing while we word-split the URL lists
+          {
+            echo 'relays<<NSITE_EOF'
+            printf '%s\n' $RAW_RELAYS
+            echo 'NSITE_EOF'
+            echo 'servers<<NSITE_EOF'
+            printf '%s\n' $RAW_SERVERS
+            echo 'NSITE_EOF'
+          } >> "$GITHUB_OUTPUT"
+
       # ─── nsite: publish to Nostr + Blossom ─────────────────────────────────
       - name: Deploy to nsite
         uses: sandwichfarm/nsite-action@v0.5.1
         with:
           directory: site
           nbunksec: ${{ secrets.NBUNK_SECRET }}
-          relays: ${{ vars.NSITE_RELAYS || 'wss://relay.nsite.lol' }}
-          servers: ${{ vars.NSITE_SERVERS || 'https://cdn.hzrd149.com' }}
+          relays: ${{ steps.nsite.outputs.relays }}
+          servers: ${{ steps.nsite.outputs.servers }}
