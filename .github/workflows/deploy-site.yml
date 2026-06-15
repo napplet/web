@@ -81,7 +81,7 @@ jobs:
           accessKey: ${{ secrets.BUNNY_API_KEY }}
           pullZoneId: ${{ secrets.BUNNY_PULLZONE_ID }}
           upload: 'true'
-          remove: 'true'
+          remove: 'false'
           purgePullZone: 'true'
 
       # ─── nsite: publish to Nostr + Blossom ─────────────────────────────────
