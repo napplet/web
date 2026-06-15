@@ -15,6 +15,7 @@ import {
   onControls as notifyOnControls,
 } from '@napplet/nap/notify/shim';
 import { installNostrDb } from './nipdb-shim.js';
+import { installRuntimeGuard, markRuntimePresent } from './runtime-guard.js';
 import { installStorageShim, nappletStorage } from '@napplet/nap/storage/shim';
 import { subscribe, publish, publishEncrypted, query } from '@napplet/nap/relay/shim';
 import * as identityShim from '@napplet/nap/identity/shim';
@@ -111,6 +112,10 @@ function handleEnvelopeMessage(event: MessageEvent): void {
   if (event.source !== window.parent) return;
   const msg = event.data;
   if (typeof msg !== 'object' || msg === null || typeof msg.type !== 'string') return;
+
+  // A valid envelope from the parent proves a runtime is on the other side;
+  // cancel the runtime guard so it never fires for an embedded napplet.
+  markRuntimePresent();
 
   const type = msg.type as string;
 
@@ -320,6 +325,11 @@ function installShellCapabilities(msg: ShellInitMessage): void {
 // Install central envelope message listener
 window.addEventListener('message', handleEnvelopeMessage);
 window.parent.postMessage({ type: 'shell.ready' }, '*');
+
+// Arm the runtime guard: if no runtime answers the handshake (e.g. this napplet
+// was opened directly from a NIP-5A nsite gateway), surface a clear error modal
+// instead of silently failing. Must run after shell.ready is posted above.
+installRuntimeGuard();
 
 // Install window.nostrdb NIP-DB proxy
 installNostrDb();
