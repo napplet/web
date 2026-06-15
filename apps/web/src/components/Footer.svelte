@@ -24,7 +24,7 @@
       <div class="col">
         <h4>Protocol</h4>
         <a href={LINKS.spec} target="_blank" rel="noopener">NIP-5D spec</a>
-        <a href="/docs/guide/nip-5d">Envelope format</a>
+        <a href="/docs/guide/nip-5d.html">Envelope format</a>
         <a href="/docs/naps/">NAP domains</a>
       </div>
       <div class="col">

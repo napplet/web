@@ -62,7 +62,9 @@ export const PACKAGES: PackageInfo[] = PACKAGE_SOURCES.map((p) => ({
   blurb: p.blurb,
   npm: `https://www.npmjs.com/package/${p.name}`,
   jsr: p.jsr ? `https://jsr.io/${p.name}` : '',
-  docs: `/docs/packages/${p.name.slice('@napplet/'.length)}`,
+  // .html suffix: the static host (Bunny/nsite) does not rewrite extensionless
+  // paths, so a clean URL would 404 on a cold load. Matches VitePress cleanUrls:false.
+  docs: `/docs/packages/${p.name.slice('@napplet/'.length)}.html`,
 }));
 
 export interface NavItem {

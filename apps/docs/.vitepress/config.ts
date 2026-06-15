@@ -15,7 +15,10 @@ export default defineConfig({
   title: 'napplet',
   description:
     'Documentation for the napplet protocol SDK — composable, sandboxed Nostr web applets that delegate to a host shell over the NIP-5D JSON envelope wire format.',
-  cleanUrls: true,
+  // Keep .html in URLs: napplet.run is served from Bunny CDN storage + nsite,
+  // neither of which rewrites extensionless paths (/foo → foo.html). cleanUrls
+  // would emit extensionless links that 404 on a cold load. See site.ts links.
+  cleanUrls: false,
   appearance: 'dark',
   sitemap: {
     hostname: SITE_URL,
