@@ -85,6 +85,22 @@ the branch/tag and let the npm + JSR workflows publish from `main`.
 pnpm version-packages   # Apply changesets, bump versions
 ```
 
+## Website
+
+The informational site and package documentation live in `apps/`:
+
+- `apps/web` -- Svelte + Vite marketing/education SPA explaining NIP-5D and the paradigm.
+- `apps/docs` -- VitePress documentation, served under `/docs`.
+
+```bash
+pnpm --filter @napplet/web dev     # marketing SPA
+pnpm --filter @napplet/docs dev    # documentation
+```
+
+`.github/workflows/deploy-site.yml` builds both, stitches docs under `/docs`, and
+deploys to Bunny + nsite. Configure deploy secrets with
+`scripts/setup-site-secrets.sh`.
+
 ## Related
 
 - **[NIP-5D](specs/NIP-5D.md)** -- Protocol specification for the napplet-shell protocol

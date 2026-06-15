@@ -1,0 +1,266 @@
+/* ─── napplet.dev design tokens ────────────────────────────────────────────
+   Purple Nostr-native: deep aubergine canvas, ostrich-purple accents, soft glow.
+   These tokens are intentionally shared in spirit with the VitePress docs theme
+   so the SPA and /docs feel like one surface. */
+
+:root {
+  /* Canvas */
+  --bg: #120820;
+  --bg-soft: #190d2b;
+  --surface: #1d1031;
+  --surface-2: #251440;
+  --border: #34225a;
+  --border-soft: #2a1a47;
+
+  /* Ostrich purple accent ramp */
+  --accent: #b06bff;
+  --accent-bright: #c98bff;
+  --accent-deep: #7b2ff7;
+  --accent-ink: #4d1d9e;
+
+  /* Supporting hues for diagrams */
+  --cyan: #4fd6e0;
+  --magenta: #ff6bc7;
+  --amber: #ffce6b;
+
+  /* Text */
+  --text: #f1ecfb;
+  --text-muted: #b4a8cf;
+  --text-dim: #82749e;
+
+  /* Effects */
+  --glow: 0 0 0.5px var(--accent), 0 0 24px rgba(176, 107, 255, 0.35);
+  --glow-soft: 0 0 40px rgba(123, 47, 247, 0.18);
+  --ring: 0 0 0 1px var(--border);
+  --shadow-card: 0 18px 50px -24px rgba(8, 2, 20, 0.9);
+
+  --grad-accent: linear-gradient(135deg, var(--accent-bright), var(--accent-deep));
+  --grad-text: linear-gradient(120deg, #ffffff 0%, var(--accent-bright) 60%, var(--accent) 100%);
+
+  /* Type */
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
+    Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, 'JetBrains Mono', 'SFMono-Regular', 'Menlo', monospace;
+
+  /* Layout */
+  --maxw: 1120px;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --nav-h: 64px;
+
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: calc(var(--nav-h) + 16px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  color: var(--text);
+  background: var(--bg);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+/* Ambient background: aurora glow + faint grid, fixed behind content */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background:
+    radial-gradient(60% 50% at 18% 0%, rgba(123, 47, 247, 0.28), transparent 60%),
+    radial-gradient(50% 45% at 88% 8%, rgba(255, 107, 199, 0.16), transparent 60%),
+    radial-gradient(60% 60% at 50% 100%, rgba(79, 214, 224, 0.1), transparent 70%);
+  pointer-events: none;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background-image:
+    linear-gradient(rgba(176, 107, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(176, 107, 255, 0.05) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(circle at 50% 30%, black, transparent 75%);
+  pointer-events: none;
+}
+
+a {
+  color: var(--accent-bright);
+  text-decoration: none;
+  transition: color 0.18s ease;
+}
+a:hover {
+  color: #fff;
+}
+
+h1,
+h2,
+h3 {
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  margin: 0;
+  font-weight: 700;
+}
+
+p {
+  margin: 0;
+}
+
+code {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+}
+
+::selection {
+  background: rgba(176, 107, 255, 0.35);
+  color: #fff;
+}
+
+/* ─── Reusable layout primitives ─────────────────────────────────────────── */
+
+.container {
+  width: 100%;
+  max-width: var(--maxw);
+  margin-inline: auto;
+  padding-inline: 24px;
+}
+
+.section {
+  padding-block: clamp(64px, 9vw, 128px);
+  position: relative;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent-bright);
+  margin-bottom: 18px;
+}
+.eyebrow::before {
+  content: '';
+  width: 22px;
+  height: 1px;
+  background: var(--accent);
+  opacity: 0.7;
+}
+
+.section-title {
+  font-size: clamp(1.9rem, 4.2vw, 3rem);
+  max-width: 18ch;
+}
+
+.section-lead {
+  margin-top: 18px;
+  font-size: clamp(1.02rem, 1.4vw, 1.2rem);
+  color: var(--text-muted);
+  max-width: 60ch;
+}
+
+.gradient-text {
+  background: var(--grad-text);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.96rem;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition:
+    transform 0.16s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease;
+  white-space: nowrap;
+}
+.btn:hover {
+  transform: translateY(-2px);
+}
+.btn-primary {
+  background: var(--grad-accent);
+  color: #fff;
+  box-shadow: 0 10px 30px -10px rgba(123, 47, 247, 0.8);
+}
+.btn-primary:hover {
+  box-shadow: 0 16px 40px -12px rgba(123, 47, 247, 0.95);
+  color: #fff;
+}
+.btn-ghost {
+  background: rgba(176, 107, 255, 0.06);
+  border-color: var(--border);
+  color: var(--text);
+}
+.btn-ghost:hover {
+  border-color: var(--accent);
+  background: rgba(176, 107, 255, 0.12);
+  color: #fff;
+}
+
+/* Cards */
+.card {
+  background: linear-gradient(180deg, var(--surface), var(--bg-soft));
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+}
+
+/* Reveal-on-scroll utility (toggled by an IntersectionObserver action) */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+.reveal.in {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
+}

@@ -1,0 +1,79 @@
+name: Deploy site
+
+# Builds the marketing SPA (apps/web) + the VitePress docs (apps/docs), stitches
+# them into a single directory (docs under /docs), then publishes to Bunny (CDN)
+# and nsite (Nostr/Blossom). Configure secrets with scripts/setup-site-secrets.sh.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/web/**'
+      - 'apps/docs/**'
+      - 'packages/**'
+      - '.github/workflows/deploy-site.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-site-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # Build workspace package deps the apps may import, then each app.
+      - name: Build packages
+        run: pnpm build
+
+      - name: Build marketing SPA
+        run: pnpm --filter @napplet/web build
+
+      - name: Build docs (base /docs/)
+        run: pnpm --filter @napplet/docs build
+
+      # Assemble one artifact: SPA at root, docs at /docs.
+      - name: Assemble site
+        run: |
+          set -euo pipefail
+          rm -rf site
+          mkdir -p site
+          cp -r apps/web/dist/. site/
+          mkdir -p site/docs
+          cp -r apps/docs/.vitepress/dist/. site/docs/
+          echo "Assembled $(find site -type f | wc -l) files into ./site"
+
+      # ─── Bunny: upload to storage zone, then purge the pull zone ───────────
+      - name: Deploy to Bunny CDN
+        uses: ayeressian/bunnycdn-storage-deploy@v2.4.6
+        with:
+          source: site
+          destination: '/'
+          storageZoneName: ${{ secrets.BUNNY_STORAGE_ZONE }}
+          storagePassword: ${{ secrets.BUNNY_STORAGE_PASSWORD }}
+          storageEndpoint: ${{ secrets.BUNNY_STORAGE_ENDPOINT }}
+          accessKey: ${{ secrets.BUNNY_API_KEY }}
+          pullZoneId: ${{ secrets.BUNNY_PULLZONE_ID }}
+          upload: 'true'
+          remove: 'true'
+          purgePullZone: 'true'
+
+      # ─── nsite: publish to Nostr + Blossom ─────────────────────────────────
+      - name: Deploy to nsite
+        uses: sandwichfarm/nsite-action@v0.5.1
+        with:
+          directory: site
+          nbunksec: ${{ secrets.NBUNK_SECRET }}
+          relays: ${{ vars.NSITE_RELAYS || 'wss://relay.nsite.lol' }}
+          servers: ${{ vars.NSITE_SERVERS || 'https://cdn.hzrd149.com' }}
