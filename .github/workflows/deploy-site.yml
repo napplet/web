@@ -55,25 +55,24 @@ jobs:
           echo "Assembled $(find site -type f | wc -l) files into ./site"
 
       # ─── Bunny: upload to storage zone, then purge the pull zone ───────────
-      # Uses R-J-dev/bunny-deploy — the same action as the nsyte site, which has
-      # never given us trouble. storage-endpoint + zone name are literals taken
-      # straight from the Bunny dashboard (Storage → napplet → FTP & API Access:
-      # Hostname + Username), so there's no scheme-normalization or secret-
-      # whitespace foot-gun. Upload auth = storage-zone-password (read/write);
-      # purge auth = access-key (account API key).
+      # storageEndpoint + storageZoneName are literals from the Bunny dashboard
+      # (Storage → napplet → FTP & API Access: Hostname + Username). Upload auth
+      # is BUNNY_STORAGE_PASSWORD (the zone read/write password — verified to
+      # return 201 on a PUT). This action only PUTs files (no remote LIST), so
+      # it needs nothing beyond write access. purgePullZone uses BUNNY_API_KEY.
       - name: Deploy to Bunny CDN
-        uses: R-J-dev/bunny-deploy@v2.0.3
+        uses: ayeressian/bunnycdn-storage-deploy@v2.4.5
         with:
-          access-key: ${{ secrets.BUNNY_API_KEY }}
-          directory-to-upload: './site'
-          storage-endpoint: 'https://storage.bunnycdn.com'
-          storage-zone-name: 'napplet'
-          storage-zone-password: ${{ secrets.BUNNY_STORAGE_PASSWORD }}
-          concurrency: '50'
-          enable-delete-action: true
-          enable-purge-pull-zone: true
-          pull-zone-id: ${{ secrets.BUNNY_PULLZONE_ID }}
-          replication-timeout: '15000'
+          source: site
+          destination: ''
+          storageZoneName: napplet
+          storagePassword: ${{ secrets.BUNNY_STORAGE_PASSWORD }}
+          storageEndpoint: storage.bunnycdn.com
+          accessKey: ${{ secrets.BUNNY_API_KEY }}
+          pullZoneId: ${{ secrets.BUNNY_PULLZONE_ID }}
+          upload: 'true'
+          remove: 'false'
+          purgePullZone: 'true'
 
       # ─── nsite: publish to Nostr + Blossom ─────────────────────────────────
       - name: Deploy to nsite
