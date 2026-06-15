@@ -54,35 +54,26 @@ jobs:
           cp -r apps/docs/.vitepress/dist/. site/docs/
           echo "Assembled $(find site -type f | wc -l) files into ./site"
 
-      # The Bunny action builds request URLs as `https://${storageEndpoint}/...`,
-      # so storageEndpoint must be a BARE HOSTNAME. Normalize defensively (strip
-      # any scheme + trailing slash) so a value like "https://storage.bunnycdn.com"
-      # doesn't become "https://https://..." and fail with a network error.
-      - name: Normalize Bunny storage endpoint
-        id: bunny
-        env:
-          RAW_ENDPOINT: ${{ secrets.BUNNY_STORAGE_ENDPOINT }}
-        run: |
-          host="${RAW_ENDPOINT#http://}"
-          host="${host#https://}"
-          host="${host%/}"
-          echo "::add-mask::$host"
-          echo "host=$host" >> "$GITHUB_OUTPUT"
-
       # ─── Bunny: upload to storage zone, then purge the pull zone ───────────
+      # Uses R-J-dev/bunny-deploy — the same action as the nsyte site, which has
+      # never given us trouble. storage-endpoint + zone name are literals taken
+      # straight from the Bunny dashboard (Storage → napplet → FTP & API Access:
+      # Hostname + Username), so there's no scheme-normalization or secret-
+      # whitespace foot-gun. Upload auth = storage-zone-password (read/write);
+      # purge auth = access-key (account API key).
       - name: Deploy to Bunny CDN
-        uses: ayeressian/bunnycdn-storage-deploy@v2.4.5
+        uses: R-J-dev/bunny-deploy@v2.0.3
         with:
-          source: site
-          destination: '/'
-          storageZoneName: ${{ secrets.BUNNY_STORAGE_ZONE }}
-          storagePassword: ${{ secrets.BUNNY_STORAGE_PASSWORD }}
-          storageEndpoint: ${{ steps.bunny.outputs.host }}
-          accessKey: ${{ secrets.BUNNY_API_KEY }}
-          pullZoneId: ${{ secrets.BUNNY_PULLZONE_ID }}
-          upload: 'true'
-          remove: 'false'
-          purgePullZone: 'true'
+          access-key: ${{ secrets.BUNNY_API_KEY }}
+          directory-to-upload: './site'
+          storage-endpoint: 'https://storage.bunnycdn.com'
+          storage-zone-name: 'napplet'
+          storage-zone-password: ${{ secrets.BUNNY_STORAGE_PASSWORD }}
+          concurrency: '50'
+          enable-delete-action: true
+          enable-purge-pull-zone: true
+          pull-zone-id: ${{ secrets.BUNNY_PULLZONE_ID }}
+          replication-timeout: '15000'
 
       # ─── nsite: publish to Nostr + Blossom ─────────────────────────────────
       - name: Deploy to nsite
