@@ -17,7 +17,11 @@
  * All types form a discriminated union on the `type` field.
  */
 
-import type { NappletMessage } from '@napplet/core';
+import type {
+  NappletMessage,
+  IntentHandlerPreference,
+  IntentBehavior,
+} from '@napplet/core';
 
 /** The NAP domain name for intent messages. */
 export const DOMAIN = 'intent' as const;
@@ -28,14 +32,10 @@ export const DOMAIN = 'intent' as const;
  * - `choose`  -- prompt the user with an "open with…" chooser
  * - a specific napplet `dTag` -- target that napplet (subject to user authorization)
  */
-export type IntentHandlerPreference = 'default' | 'choose' | (string & {});
+export type { IntentHandlerPreference };
 
 /** Window behavior hints for an invoke. */
-export interface IntentBehavior {
-  focus?: boolean;
-  newWindow?: boolean;
-  reuse?: boolean;
-}
+export type { IntentBehavior };
 
 /** A request to dispatch an action to a napplet of a given archetype. */
 export interface IntentRequest {

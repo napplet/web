@@ -14,7 +14,13 @@
  * All types form a discriminated union on the `type` field.
  */
 
-import type { NappletMessage, NostrEvent, NostrFilter, EventTemplate } from '@napplet/core';
+import type {
+  NappletMessage,
+  NostrEvent,
+  NostrFilter,
+  EventTemplate,
+  OutboxStrategy,
+} from '@napplet/core';
 
 /** The NAP domain name for outbox messages. */
 export const DOMAIN = 'outbox' as const;
@@ -25,7 +31,7 @@ export const DOMAIN = 'outbox' as const;
  * - `inbox`  -- query/publish via recipient read relays (the inbox model)
  * - `auto`   -- let the shell choose per its policy and relay intelligence
  */
-export type OutboxStrategy = 'outbox' | 'inbox' | 'auto';
+export type { OutboxStrategy };
 
 /** Options for a one-shot outbox query. */
 export interface OutboxQueryOptions {
@@ -255,21 +261,15 @@ export interface OutboxPublishMessage extends OutboxMessage {
   options?: OutboxPublishOptions;
 }
 
-/** Result of an `outbox.publish` request. */
-export interface OutboxPublishResultMessage extends OutboxMessage {
+/**
+ * Result of an `outbox.publish` request. Carries the same publish-outcome
+ * fields as {@link OutboxPublishResult} (`ok`/`event`/`eventId`/`relays`/`error`)
+ * plus the envelope discriminant `type` and the correlation `id`.
+ */
+export interface OutboxPublishResultMessage extends OutboxMessage, OutboxPublishResult {
   type: 'outbox.publish.result';
   /** Correlation ID matching the original request. */
   id: string;
-  /** Whether the publish succeeded. */
-  ok: boolean;
-  /** The signed event returned by the shell. */
-  event?: NostrEvent;
-  /** The published event id. */
-  eventId?: string;
-  /** Map of relay URL -> per-relay publish success. */
-  relays?: Record<string, boolean>;
-  /** Error reason when the publish failed. */
-  error?: string;
 }
 
 /** Resolve the relay plan the shell would use for a read/write target. */

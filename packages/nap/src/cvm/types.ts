@@ -15,7 +15,13 @@
  * All types form a discriminated union on the `type` field.
  */
 
-import type { NappletMessage } from '@napplet/core';
+import type {
+  NappletMessage,
+  McpContentBlock,
+  McpToolResult,
+  McpTextResourceContents,
+  McpResourceContent,
+} from '@napplet/core';
 
 /** The NAP domain name for ContextVM messages. */
 export const DOMAIN = 'cvm' as const;
@@ -61,21 +67,13 @@ export interface McpTool {
  * A content block inside an MCP tool result (text, image, resource, etc.).
  * The `type` discriminates the block; `text` is present for `type: "text"`.
  */
-export interface McpContentBlock {
-  type: string;
-  text?: string;
-  [key: string]: unknown;
-}
+export type { McpContentBlock };
 
 /**
  * The result of an MCP `tools/call`. `isError: true` signals a tool-level
  * failure whose detail lives in `content`, distinct from a JSON-RPC transport error.
  */
-export interface McpToolResult {
-  content: McpContentBlock[];
-  isError?: boolean;
-  [key: string]: unknown;
-}
+export type { McpToolResult };
 
 /**
  * An MCP resource descriptor, as returned by `resources/list`.
@@ -96,11 +94,7 @@ export interface McpResource {
 }
 
 /** Text contents of an MCP resource (`resources/read`). */
-export interface McpTextResourceContents {
-  uri: string;
-  mimeType?: string;
-  text: string;
-}
+export type { McpTextResourceContents };
 
 /** Binary contents of an MCP resource (`resources/read`); `blob` is base64-encoded. */
 export interface McpBlobResourceContents {
@@ -111,7 +105,7 @@ export interface McpBlobResourceContents {
 }
 
 /** A single MCP resource content entry: either text or base64 blob. */
-export type McpResourceContent = McpTextResourceContents | McpBlobResourceContents;
+export type { McpResourceContent };
 
 /**
  * Identifies a ContextVM server by its Nostr public key, with optional relay hints.

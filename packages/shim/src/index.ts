@@ -1,19 +1,6 @@
 
 import { installKeysShim, handleKeysMessage, registerAction, unregisterAction, onAction } from '@napplet/nap/keys/shim';
-import {
-  installMediaShim,
-  handleMediaMessage,
-  createSession,
-  updateSession,
-  destroySession,
-  reportState,
-  reportCapabilities,
-  sendCommand,
-  onCommand,
-  onState,
-  onCapabilities,
-  onControls,
-} from '@napplet/nap/media/shim';
+import * as mediaShim from '@napplet/nap/media/shim';
 import {
   installNotifyShim,
   handleNotifyMessage,
@@ -107,7 +94,7 @@ type DomainHandler = (msg: { type: string; [key: string]: unknown }) => void;
 // and push messages; prefixes are mutually exclusive so order is irrelevant.
 const DOMAIN_ROUTERS: ReadonlyArray<readonly [string, DomainHandler]> = [
   ['keys.', handleKeysMessage],
-  ['media.', handleMediaMessage],
+  ['media.', mediaShim.handleMediaMessage],
   ['notify.', handleNotifyMessage],
   ['resource.', handleResourceMessage],
   ['class.', handleClassMessage],
@@ -243,16 +230,16 @@ function installShellCapabilities(msg: ShellInitMessage): void {
     onAction,
   },
   media: {
-    createSession,
-    updateSession,
-    destroySession,
-    reportState,
-    reportCapabilities,
-    sendCommand,
-    onCommand,
-    onState,
-    onCapabilities,
-    onControls,
+    createSession: mediaShim.createSession,
+    updateSession: mediaShim.updateSession,
+    destroySession: mediaShim.destroySession,
+    reportState: mediaShim.reportState,
+    reportCapabilities: mediaShim.reportCapabilities,
+    sendCommand: mediaShim.sendCommand,
+    onCommand: mediaShim.onCommand,
+    onState: mediaShim.onState,
+    onCapabilities: mediaShim.onCapabilities,
+    onControls: mediaShim.onControls,
   },
   notify: {
     send: notifySend,
@@ -341,7 +328,7 @@ installNostrDb();
 installKeysShim();
 
 // Install media shim (session management + command handlers)
-installMediaShim();
+mediaShim.installMediaShim();
 
 // Install notify shim (notification sending + interaction handlers)
 installNotifyShim();
