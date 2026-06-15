@@ -15,23 +15,28 @@
  * All types form a discriminated union on the `type` field.
  */
 
-import type { NappletMessage } from '@napplet/core';
+import type {
+  NappletMessage,
+  NostrTag,
+  UploadRail,
+  UploadState,
+} from '@napplet/core';
 
 /** The NAP domain name for upload messages. */
 export const DOMAIN = 'upload' as const;
 
 /** A single Nostr tag (NIP-94 / imeta entries are arrays of strings). */
-export type NostrTag = string[];
+export type { NostrTag };
 
 /**
  * Storage rail. `nip96` (NIP-96 HTTP file storage) and `blossom` (Blossom blob
  * storage) are the first concrete backends; the open string keeps the napplet
  * API stable as shells add rails.
  */
-export type UploadRail = 'nip96' | 'blossom' | (string & {});
+export type { UploadRail };
 
 /** Lifecycle state of an upload. */
-export type UploadState = 'pending' | 'uploading' | 'complete' | 'failed' | 'cancelled';
+export type { UploadState };
 
 /** Pixel dimensions of an uploaded image/video. */
 export interface UploadDimensions {

@@ -12,13 +12,18 @@
  * Media sessions support napplet-owned and shell-owned playback.
  */
 
-import type { NappletMessage } from '@napplet/core';
+import type {
+  NappletMessage,
+  MediaPlaybackOwner,
+  MediaAction,
+  MediaSessionCreate,
+} from '@napplet/core';
 
 /** The NAP domain name for media messages. */
 export const DOMAIN = 'media' as const;
 
 /** The side that fetches/decodes media and emits authoritative playback state. */
-export type MediaPlaybackOwner = 'shell' | 'napplet';
+export type { MediaPlaybackOwner };
 
 /**
  * Source reference for shell-owned playback, or advisory source metadata for
@@ -118,34 +123,13 @@ export interface MediaState {
  * Media actions that a session can support or that the shell can send.
  * Capabilities are dynamic -- they can change mid-session.
  */
-export type MediaAction = 'play' | 'pause' | 'stop' | 'next' | 'prev' | 'seek' | 'volume';
-
-interface MediaSessionCreateBase {
-  /** Preferred client session id hint. Shell returns the canonical id. */
-  sessionId?: string;
-  /** Optional initial metadata. */
-  metadata?: MediaMetadata;
-  /** Initial supported actions. */
-  capabilities?: MediaAction[];
-  /** Request autoplay for shell-owned playback when policy allows it. */
-  autoplay?: boolean;
-  /** Whether the media is a live source. */
-  live?: boolean;
-}
+export type { MediaAction };
 
 /**
  * Public create-session options.
  * Shell-owned sessions require a source because the shell owns fetching/playback.
  */
-export type MediaSessionCreate =
-  | (MediaSessionCreateBase & {
-      owner: 'shell';
-      source: MediaSourceRef;
-    })
-  | (MediaSessionCreateBase & {
-      owner: 'napplet';
-      source?: MediaSourceRef;
-    });
+export type { MediaSessionCreate };
 
 /** Result of a create-session request. */
 export interface MediaSessionResult {
