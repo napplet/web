@@ -116,7 +116,7 @@ reference runtime is **Kehto**.
 
 ::: tip
 The reference shell/runtime is **Kehto**:
-[github.com/sandwichfarm/kehto](https://github.com/sandwichfarm/kehto).
+[github.com/kehto/web](https://github.com/kehto/web).
 You can also find napplet projects under the
 [github.com/napplet](https://github.com/napplet) organization.
 :::

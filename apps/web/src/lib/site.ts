@@ -11,8 +11,8 @@ export const LINKS = {
   // Authoritative NIP-5D spec source (pinned commit referenced in specs/NIP-5D.md).
   spec: 'https://github.com/nostr-protocol/nips/pull/2303/files',
   boilerplate: 'https://github.com/napplet/boilerplate',
-  // Kehto — the reference runtime / shell implementation.
-  kehto: 'https://github.com/sandwichfarm/kehto',
+  // Kehto — the reference web runtime / shell implementation.
+  kehto: 'https://github.com/kehto/web',
 } as const;
 
 export interface PackageInfo {

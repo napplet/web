@@ -54,7 +54,7 @@ wherever the capability is handled, and responds. Keys live wherever the shell
 delegates them; the napplet never sees them.
 
 The reference runtime is **Kehto**
-([github.com/sandwichfarm/kehto](https://github.com/sandwichfarm/kehto)). Any
+([github.com/kehto/web](https://github.com/kehto/web)). Any
 compatible shell can host any napplet.
 
 ## The sandbox model
