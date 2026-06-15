@@ -52,16 +52,18 @@ import { notifySend } from '@napplet/nap/notify/sdk';
 ## Tree-shaking contract
 
 - Published with `sideEffects: false`.
-- The `exports` map declares **62 entry points**: 16 domain barrels, 16
-  types entries, and 15 shim + 15 sdk entries (theme is types-only — see below).
+- The `exports` map declares **68 entry points**: 17 domain barrels, 17
+  types entries, and 17 shim + 17 sdk entries.
 - A bundler importing only `@napplet/nap/relay/types` produces zero bytes from
   the other domains.
 
-## Theme exception
+## Theme
 
-Theme is **types-only** today — only `@napplet/nap/theme` (barrel, re-exporting
-`./types`) and `@napplet/nap/theme/types` exist. There is no theme `shim` or
-`sdk` entry; shell-side theme handling stays in the host shell.
+Theme is a **read-only** domain, like `identity`: the shell owns theming and the
+napplet reads it. `@napplet/nap/theme` exposes the full set of entry points —
+`./theme` (barrel), `./theme/types`, `./theme/shim`, and `./theme/sdk`. The shim
+installs `window.napplet.theme` with `get()` (resolves the current `Theme`) and
+`onChanged(handler)` (fires on shell-pushed `theme.changed` updates).
 
 ## Domain notes
 

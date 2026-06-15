@@ -92,6 +92,14 @@
       "types": "./dist/theme/types.d.ts",
       "import": "./dist/theme/types.js"
     },
+    "./theme/shim": {
+      "types": "./dist/theme/shim.d.ts",
+      "import": "./dist/theme/shim.js"
+    },
+    "./theme/sdk": {
+      "types": "./dist/theme/sdk.d.ts",
+      "import": "./dist/theme/sdk.js"
+    },
     "./media": {
       "types": "./dist/media/index.d.ts",
       "import": "./dist/media/index.js"

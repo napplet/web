@@ -31,6 +31,7 @@ import { installNostrDb } from './nipdb-shim.js';
 import { installStorageShim, nappletStorage } from '@napplet/nap/storage/shim';
 import { subscribe, publish, publishEncrypted, query } from '@napplet/nap/relay/shim';
 import * as identityShim from '@napplet/nap/identity/shim';
+import * as themeShim from '@napplet/nap/theme/shim';
 import { installIncShim, emit, on, handleIncEvent } from '@napplet/nap/inc/shim';
 import {
   installConfigShim,
@@ -100,6 +101,25 @@ interface ShellInitMessage {
  * Central message handler for JSON envelope messages from the shell.
  * Routes messages to appropriate handlers based on type prefix.
  */
+type DomainHandler = (msg: { type: string; [key: string]: unknown }) => void;
+
+// Domain prefix -> shim handler. Each NAP routes its own `<domain>.*` result
+// and push messages; prefixes are mutually exclusive so order is irrelevant.
+const DOMAIN_ROUTERS: ReadonlyArray<readonly [string, DomainHandler]> = [
+  ['keys.', handleKeysMessage],
+  ['media.', handleMediaMessage],
+  ['notify.', handleNotifyMessage],
+  ['resource.', handleResourceMessage],
+  ['class.', handleClassMessage],
+  ['cvm.', handleCvmMessage],
+  ['outbox.', handleOutboxMessage],
+  ['upload.', handleUploadMessage],
+  ['intent.', handleIntentMessage],
+  ['identity.', identityShim.handleIdentityMessage],
+  ['theme.', themeShim.handleThemeMessage],
+  ['config.', handleConfigMessage],
+];
+
 function handleEnvelopeMessage(event: MessageEvent): void {
   if (event.source !== window.parent) return;
   const msg = event.data;
@@ -112,77 +132,18 @@ function handleEnvelopeMessage(event: MessageEvent): void {
     return;
   }
 
-  // Route keys.* messages to keys shim
-  if (type.startsWith('keys.')) {
-    handleKeysMessage(msg as { type: string; [key: string]: unknown });
-    return;
-  }
-
-  // Route media.* messages to media shim
-  if (type.startsWith('media.')) {
-    handleMediaMessage(msg as { type: string; [key: string]: unknown });
-    return;
-  }
-
-  // Route notify.* messages to notify shim
-  if (type.startsWith('notify.')) {
-    handleNotifyMessage(msg as { type: string; [key: string]: unknown });
-    return;
-  }
-
-  // Route resource.* messages to resource shim (covers resource.bytes.result + resource.bytes.error)
-  if (type.startsWith('resource.')) {
-    handleResourceMessage(msg as { type: string; [key: string]: unknown });
-    return;
-  }
-
-  // Route class.* messages to class shim (covers class.assigned)
-  if (type.startsWith('class.')) {
-    handleClassMessage(msg as { type: string; [key: string]: unknown });
-    return;
-  }
-
-  // Route cvm.* messages to ContextVM shim (discover/request/close results + cvm.event)
-  if (type.startsWith('cvm.')) {
-    handleCvmMessage(msg as { type: string; [key: string]: unknown });
-    return;
-  }
-
-  // Route outbox.* messages to outbox shim (query/publish/resolveRelays results + event/eose/closed)
-  if (type.startsWith('outbox.')) {
-    handleOutboxMessage(msg as { type: string; [key: string]: unknown });
-    return;
-  }
-
-  // Route upload.* messages to upload shim (upload/status results + status.changed pushes)
-  if (type.startsWith('upload.')) {
-    handleUploadMessage(msg as { type: string; [key: string]: unknown });
-    return;
-  }
-
-  // Route intent.* messages to intent shim (invoke/available/handlers results + intent.changed pushes)
-  if (type.startsWith('intent.')) {
-    handleIntentMessage(msg as { type: string; [key: string]: unknown });
-    return;
-  }
-
-  // Route identity.* result and push messages to identity shim
-  if (type.startsWith('identity.')) {
-    identityShim.handleIdentityMessage(msg as { type: string; [key: string]: unknown });
-    return;
-  }
-
-  // Route config.* messages to config shim
-  //   (handles config.registerSchema.result, config.values, and config.schemaError internally)
-  if (type.startsWith('config.')) {
-    handleConfigMessage(msg as { type: string; [key: string]: unknown });
-    return;
-  }
-
-  // Route INC event messages to topic handlers
+  // INC events fan out to topic handlers (exact match, not a domain prefix).
   if (type === 'inc.event') {
     handleIncEvent(msg as IncEventMessage);
     return;
+  }
+
+  const typed = msg as { type: string; [key: string]: unknown };
+  for (const [prefix, route] of DOMAIN_ROUTERS) {
+    if (type.startsWith(prefix)) {
+      route(typed);
+      return;
+    }
   }
 }
 
@@ -316,6 +277,10 @@ function installShellCapabilities(msg: ShellInitMessage): void {
     getBlocked: identityShim.getBlocked,
     getBadges: identityShim.getBadges,
   },
+  theme: {
+    get: themeShim.get,
+    onChanged: themeShim.onChanged,
+  },
   config: {
     registerSchema: configRegisterSchema,
     get: configGet,
@@ -386,6 +351,9 @@ installStorageShim();
 
 // Install identity shim (read-only user identity queries)
 identityShim.installIdentityShim();
+
+// Install theme shim (read-only shell theme access; theme.get + theme.changed)
+themeShim.installThemeShim();
 
 // Install config shim (manifest-meta schema read + window.napplet.config mount with readonly `schema` getter)
 installConfigShim();

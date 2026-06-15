@@ -1468,6 +1468,7 @@ export { DOMAIN as INTENT_DOMAIN } from '@napplet/nap/intent';
 
 export { installRelayShim } from '@napplet/nap/relay';
 export { installIdentityShim } from '@napplet/nap/identity';
+export { installThemeShim } from '@napplet/nap/theme';
 export { installStorageShim } from '@napplet/nap/storage';
 export { installIncShim } from '@napplet/nap/inc';
 /**
@@ -1499,6 +1500,7 @@ export {
   identityGetBlocked,
   identityGetBadges,
 } from '@napplet/nap/identity';
+export { themeGet, themeOnChanged } from '@napplet/nap/theme';
 export { storageGetItem, storageSetItem, storageRemoveItem, storageKeys } from '@napplet/nap/storage';
 export { incEmit, incOn } from '@napplet/nap/inc';
 /**
