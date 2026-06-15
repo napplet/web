@@ -8,7 +8,7 @@
 #     NBUNK_SECRET            nsite bunker credential from `nsyte ci` (nbunksec1...)
 #     BUNNY_STORAGE_ZONE      Bunny Storage Zone name
 #     BUNNY_STORAGE_PASSWORD  Bunny Storage Zone password (read/write)
-#     BUNNY_STORAGE_ENDPOINT  Bunny storage host, e.g. https://storage.bunnycdn.com
+#     BUNNY_STORAGE_ENDPOINT  Bunny storage host (bare, no scheme), e.g. storage.bunnycdn.com
 #     BUNNY_PULLZONE_ID       Bunny Pull Zone numeric id (for cache purge)
 #     BUNNY_API_KEY           Bunny account API key (for cache purge)
 #   Variables (non-sensitive, optional — Enter to keep defaults):
@@ -114,9 +114,9 @@ bold "2. Bunny — Storage Zone (file upload)"
 dim "   Bunny dashboard → Storage → your zone → FTP & API Access"
 set_secret BUNNY_STORAGE_ZONE "BUNNY_STORAGE_ZONE (zone name)"
 set_secret BUNNY_STORAGE_PASSWORD "BUNNY_STORAGE_PASSWORD (read/write password)"
-dim "   Endpoint matches your zone's main region, e.g. https://storage.bunnycdn.com"
-dim "   or regional: https://ny.storage.bunnycdn.com, https://la.storage.bunnycdn.com ..."
-set_secret BUNNY_STORAGE_ENDPOINT "BUNNY_STORAGE_ENDPOINT (https://...)"
+dim "   BARE HOSTNAME, no https:// — e.g. storage.bunnycdn.com (or a regional host"
+dim "   like ny.storage.bunnycdn.com). The deploy workflow strips a scheme if present."
+set_secret BUNNY_STORAGE_ENDPOINT "BUNNY_STORAGE_ENDPOINT (bare host, e.g. storage.bunnycdn.com)"
 echo
 
 # ─── Bunny pull zone purge ────────────────────────────────────────────────────

@@ -54,6 +54,21 @@ jobs:
           cp -r apps/docs/.vitepress/dist/. site/docs/
           echo "Assembled $(find site -type f | wc -l) files into ./site"
 
+      # The Bunny action builds request URLs as `https://${storageEndpoint}/...`,
+      # so storageEndpoint must be a BARE HOSTNAME. Normalize defensively (strip
+      # any scheme + trailing slash) so a value like "https://storage.bunnycdn.com"
+      # doesn't become "https://https://..." and fail with a network error.
+      - name: Normalize Bunny storage endpoint
+        id: bunny
+        env:
+          RAW_ENDPOINT: ${{ secrets.BUNNY_STORAGE_ENDPOINT }}
+        run: |
+          host="${RAW_ENDPOINT#http://}"
+          host="${host#https://}"
+          host="${host%/}"
+          echo "::add-mask::$host"
+          echo "host=$host" >> "$GITHUB_OUTPUT"
+
       # ─── Bunny: upload to storage zone, then purge the pull zone ───────────
       - name: Deploy to Bunny CDN
         uses: ayeressian/bunnycdn-storage-deploy@v2.4.5
@@ -62,7 +77,7 @@ jobs:
           destination: '/'
           storageZoneName: ${{ secrets.BUNNY_STORAGE_ZONE }}
           storagePassword: ${{ secrets.BUNNY_STORAGE_PASSWORD }}
-          storageEndpoint: ${{ secrets.BUNNY_STORAGE_ENDPOINT }}
+          storageEndpoint: ${{ steps.bunny.outputs.host }}
           accessKey: ${{ secrets.BUNNY_API_KEY }}
           pullZoneId: ${{ secrets.BUNNY_PULLZONE_ID }}
           upload: 'true'
