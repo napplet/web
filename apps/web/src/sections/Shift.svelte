@@ -9,10 +9,10 @@
       <span class="eyebrow">The shift</span>
       <h2 class="section-title">Invert the client</h2>
       <p class="section-lead">
-        NIP-5D splits the monolith in two. A trusted <strong>shell</strong> owns the keys,
-        relays and storage. Focused <strong>napplets</strong> render the UI inside
-        sandboxed iframes and ask the shell to do the sensitive work. Same protocol —
-        completely different shape.
+        NIP-5D splits the monolith in two. A trusted <strong>shell</strong> brokers every
+        sensitive request — signing, relays, storage. Focused <strong>napplets</strong>
+        render the UI and ask the shell to do that work. Same protocol — completely
+        different shape.
       </p>
     </div>
 

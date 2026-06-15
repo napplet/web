@@ -36,7 +36,8 @@ defer to the authoritative source linked below.
 - Napplets have **no access** to `localStorage`, `sessionStorage`, `IndexedDB`,
   direct WebSocket connections, or signing keys.
 - Shells MUST **not** provide `window.nostr` (NIP-07). Signing and encryption are
-  mediated through the relay NAP instead.
+  brokered by the shell instead — to a remote signer, an extension, or the shell's
+  own key management, depending on the shell.
 
 ## Wire format
 

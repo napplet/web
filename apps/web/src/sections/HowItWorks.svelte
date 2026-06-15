@@ -32,8 +32,8 @@
       <span class="eyebrow">How it works</span>
       <h2 class="section-title">A message bus with a trust boundary</h2>
       <p class="section-lead">
-        The shell is the only thing that touches keys, relays and storage. Napplets just
-        send envelopes and get answers back.
+        Every sensitive request goes through the shell, which brokers it to a signer,
+        extension or relay. Napplets just send envelopes and get answers back.
       </p>
     </div>
 

@@ -19,8 +19,8 @@ hero:
 features:
   - title: Single-purpose by design
     details: A napplet does one thing well. The shell composes many sandboxed napplets instead of one monolithic client re-implementing feeds, DMs, profiles, and relay management.
-  - title: Keys never exposed
-    details: Napplets never touch signing keys, localStorage, or relay sockets directly. Everything is proxied through the shell via postMessage. No window.nostr is installed.
+  - title: Every request brokered
+    details: Napplets never call a signer, relay, or store directly. Every request is brokered through the shell over postMessage — to a remote signer, an extension, or the shell's own services. No window.nostr is installed.
   - title: Browser-enforced sandbox
     details: The iframe uses allow-scripts only — no allow-same-origin. Identity is assigned at iframe creation via the unforgeable MessageEvent.source. No handshake required.
   - title: Modular NAP domains

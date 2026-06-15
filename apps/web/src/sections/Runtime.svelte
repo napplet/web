@@ -11,9 +11,10 @@
       <h2 class="section-title">You write the napplet. A shell runs it.</h2>
       <p class="section-lead">
         Your code targets the <code>@napplet</code> packages and the NIP-5D envelope. The
-        shell — the <strong>runtime</strong> — is what actually holds the keys and talks to
-        the network. <a href={LINKS.kehto} target="_blank" rel="noopener">Kehto</a> is the
-        reference runtime you can build against today.
+        shell — the <strong>runtime</strong> — is what brokers your requests to a signer,
+        extension or relay and talks to the network.
+        <a href={LINKS.kehto} target="_blank" rel="noopener">Kehto</a> is the reference
+        runtime you can build against today.
       </p>
     </div>
 

@@ -19,7 +19,7 @@
         A <strong>napplet</strong> is a small, sandboxed app that does one thing well.
         It runs inside a host <strong>shell</strong> and delegates signing, storage and
         relay access over a simple <code>postMessage</code> protocol — so apps stop
-        rebuilding the same client, and your keys never leave the shell.
+        rebuilding the same client, and every sensitive request is brokered by the shell.
       </p>
 
       <div class="actions" use:reveal={{ delay: 180 }}>
@@ -33,7 +33,7 @@
       <div class="trust-row" use:reveal={{ delay: 240 }}>
         <span><code>allow-scripts</code> only — no <code>allow-same-origin</code></span>
         <span class="sep">·</span>
-        <span>keys held by the shell</span>
+        <span>every request via the shell</span>
         <span class="sep">·</span>
         <span>any shell, any napplet</span>
       </div>
@@ -47,8 +47,8 @@
         </div>
         <pre><code><span class="c-key">import</span> <span class="c-pun">&#123;</span> relay <span class="c-pun">&#125;</span> <span class="c-key">from</span> <span class="c-str">'@napplet/sdk'</span>;
 
-<span class="c-com">// the shell proxies the relay — you never</span>
-<span class="c-com">// touch a websocket or a signing key.</span>
+<span class="c-com">// the shell brokers the relay — you never</span>
+<span class="c-com">// touch a socket, signer or relay yourself.</span>
 <span class="c-key">const</span> sub <span class="c-pun">=</span> relay<span class="c-pun">.</span><span class="c-fn">subscribe</span><span class="c-pun">(</span><span class="c-pun">&#123;</span>
   filters<span class="c-pun">:</span> <span class="c-pun">[&#123;</span> kinds<span class="c-pun">:</span> <span class="c-num">[1]</span>, limit<span class="c-pun">:</span> <span class="c-num">20</span> <span class="c-pun">&#125;]</span>,
   onEvent<span class="c-pun">:</span> <span class="c-pun">(</span>e<span class="c-pun">)</span> <span class="c-pun">=&gt;</span> <span class="c-fn">render</span><span class="c-pun">(</span>e<span class="c-pun">)</span>,

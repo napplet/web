@@ -46,7 +46,7 @@
         </div>
       </div>
     </div>
-    <p class="caption">Keys, relays &amp; UI all fused together. Every client re-implements the same surface — and holds your signing key.</p>
+    <p class="caption">Signing, relays &amp; UI all fused together. Every client re-implements the same surface — and wires up your signer and relays itself.</p>
   </div>
 
   <!-- ── The divider ──────────────────────────────────────────────────── -->
@@ -79,7 +79,7 @@
         <span class="med-pill">storage</span>
       </div>
     </div>
-    <p class="caption">Each napplet does one thing, sandboxed. The shell holds the keys and proxies every sensitive call. Swap napplets like apps.</p>
+    <p class="caption">Each napplet does one thing, sandboxed. The shell brokers every sensitive call — to a signer, extension or relay. Swap napplets like apps.</p>
   </div>
 </div>
 

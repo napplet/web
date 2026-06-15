@@ -45,10 +45,13 @@ See the [NAP domain reference](/naps/) for the full list.
 
 ## The shell
 
-The **shell** is the trusted host application. It owns the signing keys, the
-relay pool, and persistent storage, and it hosts napplets in sandboxed iframes.
+The **shell** is the trusted host application. It brokers signing — to a remote
+signer (NIP-46), a browser extension (NIP-07), or its own key management — plus
+relay access and persistent storage, and it hosts napplets in sandboxed iframes.
 Every sensitive operation a napplet wants — publish an event, read storage, fetch
-external bytes — is a request to the shell, which enforces policy and responds.
+external bytes — is a request to the shell, which enforces policy, brokers it to
+wherever the capability is handled, and responds. Keys live wherever the shell
+delegates them; the napplet never sees them.
 
 The reference runtime is **Kehto**
 ([github.com/sandwichfarm/kehto](https://github.com/sandwichfarm/kehto)). Any

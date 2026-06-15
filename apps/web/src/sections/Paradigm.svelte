@@ -13,14 +13,14 @@
       d: 'Mix a feed from one team, a wallet from another, a niche tool from a solo dev. Your client becomes a composition.',
     },
     {
-      from: 'Big teams to ship anything useful',
+      from: 'Deep Nostr expertise to ship anything',
       to: 'One dev ships one great napplet',
-      d: 'The surface to build is tiny: render UI, send envelopes. The shell handles the hard, dangerous parts.',
+      d: 'The hard protocol lives behind the shell. Render UI, send envelopes — no relay pools, NIP-46 signers or event-signing to get right. A far broader pool of builders can contribute.',
     },
     {
-      from: 'Trust the whole client with your key',
+      from: 'Trust the whole client with your signer',
       to: 'Trust the shell, sandbox the rest',
-      d: 'A single audited host holds the keys. Everything else runs contained, asking permission for what it needs.',
+      d: 'A single audited host brokers every sensitive request. Everything else runs contained, asking the shell for what it needs.',
     },
   ];
 </script>

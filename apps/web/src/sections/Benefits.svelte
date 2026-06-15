@@ -3,14 +3,14 @@
 
   const benefits = [
     {
-      icon: 'key',
-      t: 'Keys never leave the shell',
-      d: 'Napplets can’t see your signing key. They request signatures; the shell decides. One trusted place holds the secrets.',
+      icon: 'shield',
+      t: 'Every request goes through the shell',
+      d: 'Napplets never call a signer, relay or store directly. They ask the shell, which brokers each request — to a remote signer, an extension, or its own services — and can say no.',
     },
     {
-      icon: 'shield',
+      icon: 'cube',
       t: 'Real sandbox isolation',
-      d: 'allow-scripts without allow-same-origin means no service workers, no shell localStorage, no cross-origin reach. Contained by the browser itself.',
+      d: 'allow-scripts without allow-same-origin: no service workers, no shell storage, no cross-origin reach. Each napplet does one thing, so its surface and permissions stay small.',
     },
     {
       icon: 'blocks',
@@ -18,14 +18,14 @@
       d: 'Drop a great feed next to a great messenger. Napplets are interchangeable parts, not features welded into one app.',
     },
     {
-      icon: 'scope',
-      t: 'A smaller attack surface',
-      d: 'Each napplet does one thing. Less code, clearer intent, narrower permissions — and an ACL keyed per napplet.',
+      icon: 'users',
+      t: 'A bigger pool of builders',
+      d: 'The hard Nostr protocol lives behind the shell. Developers can ship a useful napplet without deep protocol knowledge — and without putting users at risk.',
     },
     {
       icon: 'user',
       t: 'The user stays in control',
-      d: 'The shell mediates every relay, storage and signing call, and scopes storage per napplet. Consent lives with the host, not the app.',
+      d: 'The shell brokers every relay, storage and signing request, and scopes storage per napplet. Consent lives with the host, not the app.',
     },
     {
       icon: 'swap',
@@ -35,10 +35,10 @@
   ];
 
   const paths: Record<string, string> = {
-    key: 'M14 7a4 4 0 1 0-3.9 5h.9l2 2 2-2 2 2 2-2-2-2a4 4 0 0 0-3-1Zm-6 4a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z',
     shield: 'M12 2 4 5v6c0 5 3.4 8.4 8 11 4.6-2.6 8-6 8-11V5l-8-3Zm0 4.2 4 1.5V11c0 3.1-1.8 5.4-4 7-2.2-1.6-4-3.9-4-7V7.7l4-1.5Z',
+    cube: 'M12 2 3 7v10l9 5 9-5V7l-9-5Zm0 2.3L18.5 8 12 11.7 5.5 8 12 4.3ZM5 9.7l6 3.4v6.7l-6-3.3V9.7Zm14 0v6.8l-6 3.3v-6.7l6-3.4Z',
     blocks: 'M3 3h7v7H3V3Zm11 0h7v7h-7V3ZM3 14h7v7H3v-7Zm11 0h7v7h-7v-7Z',
-    scope: 'M12 4a8 8 0 1 0 0 16 8 8 0 0 0 0-16Zm0 3a5 5 0 1 1 0 10 5 5 0 0 1 0-10Zm0 3a2 2 0 1 0 0 4 2 2 0 0 0 0-4Z',
+    users: 'M16 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm-8 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm0 2c-2.7 0-6 1.3-6 4v2h8v-2c0-1 .3-1.9 .9-2.6A6 6 0 0 0 8 13Zm8 0c-.3 0-.7 0-1 .1 1.2.9 2 2.1 2 3.9v2h6v-2c0-2.7-3.3-4-7-4Z',
     user: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm0 2c-4 0-7 2-7 5v1h14v-1c0-3-3-5-7-5Z',
     swap: 'M7 7h9l-2.5-2.5L15 3l5 5-5 5-1.5-1.5L16 9H7V7Zm10 10H8l2.5 2.5L9 21l-5-5 5-5 1.5 1.5L8 15h9v2Z',
   };

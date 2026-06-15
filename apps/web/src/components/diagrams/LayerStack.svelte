@@ -22,7 +22,7 @@
     },
     {
       name: 'Shell / runtime',
-      sub: 'Holds keys, enforces ACL, mediates every call',
+      sub: 'Brokers every request, enforces ACL, talks to signers & relays',
       tone: 'shell',
       href: LINKS.kehto,
       hrefLabel: 'Kehto — reference runtime',
@@ -35,7 +35,7 @@
   ];
 </script>
 
-<div class="stack" role="img" aria-label="Layer stack from top to bottom: your napplet, the @napplet shim or sdk, the NIP-5D envelope over postMessage, the shell or runtime (Kehto reference runtime) which holds keys and mediates calls, and the Nostr network.">
+<div class="stack" role="img" aria-label="Layer stack from top to bottom: your napplet, the @napplet shim or sdk, the NIP-5D envelope over postMessage, the shell or runtime (Kehto reference runtime) which brokers every request to signers and relays, and the Nostr network.">
   {#each layers as layer, i}
     <div class="layer layer-{layer.tone}" style="--i:{i}">
       <div class="layer-main">
