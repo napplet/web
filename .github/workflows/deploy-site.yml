@@ -56,7 +56,7 @@ jobs:
 
       # ─── Bunny: upload to storage zone, then purge the pull zone ───────────
       - name: Deploy to Bunny CDN
-        uses: ayeressian/bunnycdn-storage-deploy@v2.4.6
+        uses: ayeressian/bunnycdn-storage-deploy@v2.4.5
         with:
           source: site
           destination: '/'
