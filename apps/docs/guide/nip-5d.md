@@ -119,8 +119,8 @@ This is what makes the protocol modular: NAP contracts live in the
 
 This page is a summary. The **authoritative** NIP-5D text lives at:
 
-- [`raw.githubusercontent.com/dskvr/nips/.../5D.md`](https://raw.githubusercontent.com/dskvr/nips/d80d7b25f9c4331acbeb40dbeb3b077caa80e885/5D.md)
-  (pinned commit `d80d7b25f9c4331acbeb40dbeb3b077caa80e885`)
+- [`raw.githubusercontent.com/dskvr/nips/.../5D.md`](https://raw.githubusercontent.com/dskvr/nips/e6ee919ae2be57222d129ee1a8c9b69d34234299/5D.md)
+  (pinned commit `e6ee919ae2be57222d129ee1a8c9b69d34234299`)
 
 See [NIP-5D spec status](/spec) for the in-repo reference note and how drift is
 tracked.

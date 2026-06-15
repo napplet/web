@@ -4,9 +4,9 @@ This file is intentionally non-authoritative for Kehto's v1.12 conformance
 work.
 
 Authoritative source:
-`https://raw.githubusercontent.com/dskvr/nips/d80d7b25f9c4331acbeb40dbeb3b077caa80e885/5D.md`
+`https://raw.githubusercontent.com/dskvr/nips/e6ee919ae2be57222d129ee1a8c9b69d34234299/5D.md`
 
-Pinned source commit: `d80d7b25f9c4331acbeb40dbeb3b077caa80e885`
+Pinned source commit: `e6ee919ae2be57222d129ee1a8c9b69d34234299`
 
 Kehto repo-local working contract:
 `../../specs/NIP-5D.md` from the root repository checkout.
