@@ -1,0 +1,92 @@
+name: Link check
+
+# Builds + assembles the site exactly like deploy-site.yml (marketing SPA at /,
+# VitePress docs at /docs), serves it with python's http.server (literal files +
+# directory index.html, NO extensionless ".html" rewrite — matching Bunny CDN
+# storage + nsite), then crawls it with a headless browser and fails on any
+# broken internal link. Rendering matters: apps/web is a client-rendered SPA, so
+# its /docs/* links only exist after JS runs.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/web/**'
+      - 'apps/docs/**'
+      - 'packages/**'
+      - 'scripts/check-links.mjs'
+      - '.github/workflows/link-check.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'apps/web/**'
+      - 'apps/docs/**'
+      - 'packages/**'
+      - 'scripts/check-links.mjs'
+      - '.github/workflows/link-check.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: link-check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  link-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # Build workspace package deps the apps may import, then each app.
+      - name: Build packages
+        run: pnpm build
+
+      - name: Build marketing SPA
+        run: pnpm --filter @napplet/web build
+
+      - name: Build docs (base /docs/)
+        run: pnpm --filter @napplet/docs build
+
+      # Assemble one artifact: SPA at root, docs at /docs (mirrors deploy-site.yml).
+      - name: Assemble site
+        run: |
+          set -euo pipefail
+          rm -rf site
+          mkdir -p site
+          cp -r apps/web/dist/. site/
+          mkdir -p site/docs
+          cp -r apps/docs/.vitepress/dist/. site/docs/
+          echo "Assembled $(find site -type f | wc -l) files into ./site"
+
+      - name: Install Chromium for Playwright
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Serve site and check links
+        run: |
+          set -euo pipefail
+          python3 -m http.server 8099 --directory site &
+          SRV=$!
+          trap 'kill "$SRV" 2>/dev/null || true' EXIT
+
+          # Poll until the static server answers (bounded retries).
+          for i in $(seq 1 30); do
+            if curl -sf -o /dev/null http://localhost:8099/; then
+              echo "Server is up after ${i} attempt(s)"
+              break
+            fi
+            if [ "$i" -eq 30 ]; then
+              echo "Server did not start in time" >&2
+              exit 1
+            fi
+            sleep 1
+          done
+
+          node scripts/check-links.mjs http://localhost:8099
