@@ -5,7 +5,7 @@ milestone_name: Cleanup Quality Gate
 status: Awaiting next milestone
 stopped_at: Milestone v0.31.0 archived
 last_updated: "2026-05-24T15:14:55+02:00"
-last_activity: 2026-05-24 — Completed quick task 260524-l1t: please add a workflow that runs the ai slop scan and produces a badge for the readme that shows the score
+last_activity: 2026-06-15 — Completed quick task 260615-u78: add CI link checker for SPA + docs
 progress:
   total_phases: 5
   completed_phases: 5
@@ -31,7 +31,7 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 Phase: Milestone v0.31.0 complete
 Plan: —
 Status: Awaiting next milestone
-Last activity: 2026-05-24 — Completed quick task 260524-l1t: please add a workflow that runs the ai slop scan and produces a badge for the readme that shows the score
+Last activity: 2026-06-15 — Completed quick task 260615-u78: add CI link checker for SPA + docs
 
 ## Accumulated Context
 
@@ -212,6 +212,7 @@ Surfaced by research (informational — each belongs to a specific phase plan):
 | 260524-kxa | please add badges to the README for github workflows, as well as badges for both npm and jsr | 2026-05-24 | 8f4662b | [260524-kxa-please-add-badges-to-the-readme-for-gith](./quick/260524-kxa-please-add-badges-to-the-readme-for-gith/) |
 | 260524-l1t | please add a workflow that runs the ai slop scan and produces a badge for the readme that shows the score | 2026-05-24 | 2835356 | [260524-l1t-please-add-a-workflow-that-runs-the-ai-s](./quick/260524-l1t-please-add-a-workflow-that-runs-the-ai-s/) |
 | 260615-fast | fix docs 404s: .html doc URLs (cleanUrls:false + SPA links) so they resolve on Bunny/nsite static hosting | 2026-06-15 | 025d4d9 | — (inline /gsd:fast) |
+| 260615-u78 | add CI link checker for SPA + docs (Playwright crawl over static-host-served assembly) to catch the cleanUrls 404 class | 2026-06-15 | 80586c3 | [260615-u78-add-ci-link-checker-for-spa-docs](./quick/260615-u78-add-ci-link-checker-for-spa-docs/) |
 
 Last session: 2026-04-21T20:46:00.000Z
 Stopped at: Completed 142-03-PLAN.md (Phase 142 TERMINAL-COMPLETE)
