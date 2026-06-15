@@ -57,14 +57,6 @@ import { notifySend } from '@napplet/nap/notify/sdk';
 - A bundler importing only `@napplet/nap/relay/types` produces zero bytes from
   the other domains.
 
-## Theme
-
-Theme is a **read-only** domain, like `identity`: the shell owns theming and the
-napplet reads it. `@napplet/nap/theme` exposes the full set of entry points —
-`./theme` (barrel), `./theme/types`, `./theme/shim`, and `./theme/sdk`. The shim
-installs `window.napplet.theme` with `get()` (resolves the current `Theme`) and
-`onChanged(handler)` (fires on shell-pushed `theme.changed` updates).
-
 ## Domain notes
 
 - **resource** — a single scheme-pluggable byte-fetching primitive,

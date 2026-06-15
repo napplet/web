@@ -6,18 +6,26 @@
   // Two doors into the same section, so neither audience bounces:
   // existing client authors (become a shell) and protocol developers
   // (build a runtime / shape the NAPs).
-  const audiences = [
+  type Audience = {
+    tag: string;
+    title: string;
+    body: string;
+    points: string[];
+    link?: { label: string; href: string };
+  };
+  const audiences: Audience[] = [
     {
       tag: 'For client developers',
       title: 'Already built a Nostr client?',
-      body: 'You’ve solved the hard parts — relay pools, signer flows, storage, key handling. Expose them through NAP interfaces and your client becomes a shell. Host third-party napplets without rewriting your app, and turn your client into a platform.',
+      body: 'You’ve solved the hard parts — relay pools, signer flows, storage, key handling. Expose them through NAP interfaces and your client becomes a shell. Host third-party web napplets without rewriting your app, and turn your client into a platform.',
       points: ['Reuse your existing relay & signer plumbing', 'Host an ecosystem instead of shipping every feature', 'Compete on trust & UX, not feature count'],
     },
     {
       tag: 'For protocol developers',
       title: 'Want to shape the protocol?',
       body: 'NIP-5D is small and the surface is well-defined. Stand up a runtime, implement the NAP capability domains, and help decide what the protocol becomes. Conformance work and new NAPs are where the design is still being written.',
-      points: ['Implement NIP-5D — transport, identity, dispatch', 'Define & extend NAP / NUB capability domains', 'Drive conformance against the reference runtime'],
+      points: ['Implement NIP-5D — transport, identity, dispatch', 'Define & extend NAP capability domains', 'Drive conformance against the reference runtime'],
+      link: { label: 'Browse the NAPs track ↗', href: LINKS.naps },
     },
   ];
 </script>
@@ -28,10 +36,10 @@
       <span class="eyebrow">Runtimes &amp; shells</span>
       <h2 class="section-title">Any shell can be a runtime</h2>
       <p class="section-lead">
-        A <strong>runtime</strong> is the host that actually runs your napplet — it brokers
+        A <strong>runtime</strong> is the host that actually runs your web napplet — it brokers
         your requests to a signer, extension or relay and talks to the network. On the web,
         a runtime is any app that honors <strong>NIP-5D</strong> — the security posture and
-        transport for napplets — and there can be many. That’s the point.
+        transport for web napplets — and there can be many. That’s the point.
       </p>
     </div>
 
@@ -50,6 +58,9 @@
               <li>{pt}</li>
             {/each}
           </ul>
+          {#if a.link}
+            <a class="aud-link" href={a.link.href} target="_blank" rel="noopener">{a.link.label}</a>
+          {/if}
         </div>
       {/each}
     </div>
@@ -134,6 +145,14 @@
     border-radius: 2px;
     background: var(--grad-accent);
   }
+  .aud-link {
+    display: inline-block;
+    margin-top: 18px;
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    letter-spacing: 0.02em;
+  }
+  .aud-link:hover { text-decoration: underline; text-underline-offset: 3px; }
 
   .kehto {
     position: relative;
