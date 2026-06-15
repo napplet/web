@@ -24,6 +24,8 @@ export default defineConfig({
     'keys/sdk': 'src/keys/sdk.ts',
     'theme/index': 'src/theme/index.ts',
     'theme/types': 'src/theme/types.ts',
+    'theme/shim': 'src/theme/shim.ts',
+    'theme/sdk': 'src/theme/sdk.ts',
     'media/index': 'src/media/index.ts',
     'media/types': 'src/media/types.ts',
     'media/shim': 'src/media/shim.ts',

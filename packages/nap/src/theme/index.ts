@@ -1,13 +1,13 @@
 /**
  * @napplet/nap/theme -- Theme NAP module.
  *
- * Exports typed message definitions for the theme domain and registers
- * the 'theme' domain with the core dispatch infrastructure on import.
+ * Exports typed message definitions for the theme domain, the shim installer,
+ * SDK helpers, and registers the 'theme' domain with core dispatch on import.
  *
  * @example
  * ```ts
  * import type { ThemeGetMessage, ThemeNapMessage, Theme } from '@napplet/nap/theme';
- * import { DOMAIN } from '@napplet/nap/theme';
+ * import { DOMAIN, installThemeShim, themeGet } from '@napplet/nap/theme';
  * ```
  *
  * @packageDocumentation
@@ -28,6 +28,18 @@ export type {
   ThemeResultMessage,
   ThemeNapMessage,
 } from './types.js';
+
+export {
+  installThemeShim,
+  handleThemeMessage,
+  get,
+  onChanged,
+} from './shim.js';
+
+export {
+  themeGet,
+  themeOnChanged,
+} from './sdk.js';
 
 import { registerNap } from '@napplet/core';
 import { DOMAIN } from './types.js';

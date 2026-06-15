@@ -786,6 +786,44 @@ export interface NappletGlobal {
     }[]>;
   };
   /**
+   * Read-only access to the shell's active theme (NAP-THEME).
+   *
+   * The shell owns theming; napplets read the current theme and react to
+   * shell-pushed changes. The payload carries required colors plus optional
+   * fonts, background media, and a title.
+   *
+   * @example
+   * ```ts
+   * const theme = await window.napplet.theme.get();
+   * document.body.style.background = theme.colors.background;
+   * const sub = window.napplet.theme.onChanged((t) => applyTheme(t));
+   * ```
+   */
+  theme: {
+    /** Get the shell's current active theme. */
+    get(): Promise<{
+      colors: { background: string; text: string; primary: string };
+      fonts?: {
+        body?: { name: string; url: string };
+        title?: { name: string; url: string };
+      };
+      background?: { url: string; mode: string; mime: string };
+      title?: string;
+    }>;
+    /** Listen for shell-pushed theme changes. */
+    onChanged(
+      handler: (theme: {
+        colors: { background: string; text: string; primary: string };
+        fonts?: {
+          body?: { name: string; url: string };
+          title?: { name: string; url: string };
+        };
+        background?: { url: string; mode: string; mime: string };
+        title?: string;
+      }) => void,
+    ): Subscription;
+  };
+  /**
    * Per-napplet declarative configuration (NAP-CONFIG).
    *
    * Napplet declares a JSON Schema (typically at build time via

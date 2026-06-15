@@ -31,6 +31,7 @@ import { installNostrDb } from './nipdb-shim.js';
 import { installStorageShim, nappletStorage } from '@napplet/nap/storage/shim';
 import { subscribe, publish, publishEncrypted, query } from '@napplet/nap/relay/shim';
 import * as identityShim from '@napplet/nap/identity/shim';
+import * as themeShim from '@napplet/nap/theme/shim';
 import { installIncShim, emit, on, handleIncEvent } from '@napplet/nap/inc/shim';
 import {
   installConfigShim,
@@ -169,6 +170,12 @@ function handleEnvelopeMessage(event: MessageEvent): void {
   // Route identity.* result and push messages to identity shim
   if (type.startsWith('identity.')) {
     identityShim.handleIdentityMessage(msg as { type: string; [key: string]: unknown });
+    return;
+  }
+
+  // Route theme.* result and push messages to theme shim
+  if (type.startsWith('theme.')) {
+    themeShim.handleThemeMessage(msg as { type: string; [key: string]: unknown });
     return;
   }
 
@@ -316,6 +323,10 @@ function installShellCapabilities(msg: ShellInitMessage): void {
     getBlocked: identityShim.getBlocked,
     getBadges: identityShim.getBadges,
   },
+  theme: {
+    get: themeShim.get,
+    onChanged: themeShim.onChanged,
+  },
   config: {
     registerSchema: configRegisterSchema,
     get: configGet,
@@ -386,6 +397,9 @@ installStorageShim();
 
 // Install identity shim (read-only user identity queries)
 identityShim.installIdentityShim();
+
+// Install theme shim (read-only shell theme access; theme.get + theme.changed)
+themeShim.installThemeShim();
 
 // Install config shim (manifest-meta schema read + window.napplet.config mount with readonly `schema` getter)
 installConfigShim();

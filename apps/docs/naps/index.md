@@ -21,7 +21,7 @@ These domains ship as subpaths of [`@napplet/nap`](/packages/nap) (barrel /
 | <a id="storage"></a>**storage** | Scoped key-value storage proxied through the shell. |
 | <a id="inc"></a>**inc** | Inter-napplet communication — topic-based publish/subscribe between napplets. |
 | <a id="keys"></a>**keys** | Keyboard bindings and action registration. |
-| <a id="theme"></a>**theme** | Read-only shell theme access (types-only today). |
+| <a id="theme"></a>**theme** | Read-only shell theme access — `theme.get()` and `theme.onChanged()` (colors, fonts, background, title). |
 | <a id="media"></a>**media** | Ownership-aware media sessions and playback control. |
 | <a id="notify"></a>**notify** | Shell-rendered notifications. |
 | <a id="identity"></a>**identity** | Read-only user queries (pubkey, profile metadata, follows, …). |
