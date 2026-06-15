@@ -54,6 +54,21 @@ jobs:
           cp -r apps/docs/.vitepress/dist/. site/docs/
           echo "Assembled $(find site -type f | wc -l) files into ./site"
 
+      # TEMP DEBUG: probe Bunny from CI using the secret directly, to isolate
+      # whether a 401 is the secret value or the action. Remove after diagnosis.
+      - name: Debug — probe Bunny with the secret
+        env:
+          P: ${{ secrets.BUNNY_STORAGE_PASSWORD }}
+        run: |
+          echo "secret byte length: $(printf '%s' "$P" | wc -c)"
+          printf 'secret sha256: '; printf '%s' "$P" | sha256sum
+          code=$(curl -s -o /dev/null -w '%{http_code}' -X PUT \
+            -H "AccessKey: $P" --data 'ci-probe' \
+            "https://storage.bunnycdn.com/napplet/_ci_probe_ci.txt")
+          echo "CI curl PUT status: $code"
+          curl -s -o /dev/null -X DELETE -H "AccessKey: $P" \
+            "https://storage.bunnycdn.com/napplet/_ci_probe_ci.txt" || true
+
       # ─── Bunny: upload to storage zone, then purge the pull zone ───────────
       # storageEndpoint + storageZoneName are literals from the Bunny dashboard
       # (Storage → napplet → FTP & API Access: Hostname + Username). Upload auth
