@@ -54,35 +54,44 @@ jobs:
           cp -r apps/docs/.vitepress/dist/. site/docs/
           echo "Assembled $(find site -type f | wc -l) files into ./site"
 
-      # The Bunny action builds request URLs as `https://${storageEndpoint}/...`,
-      # so storageEndpoint must be a BARE HOSTNAME. Normalize defensively (strip
-      # any scheme + trailing slash) so a value like "https://storage.bunnycdn.com"
-      # doesn't become "https://https://..." and fail with a network error.
-      - name: Normalize Bunny storage endpoint
-        id: bunny
-        env:
-          RAW_ENDPOINT: ${{ secrets.BUNNY_STORAGE_ENDPOINT }}
-        run: |
-          host="${RAW_ENDPOINT#http://}"
-          host="${host#https://}"
-          host="${host%/}"
-          echo "::add-mask::$host"
-          echo "host=$host" >> "$GITHUB_OUTPUT"
-
       # ─── Bunny: upload to storage zone, then purge the pull zone ───────────
+      # storageEndpoint + storageZoneName are literals from the Bunny dashboard
+      # (Storage → napplet → FTP & API Access: Hostname + Username). Upload auth
+      # is BUNNY_STORAGE_PASSWORD (the zone read/write password — verified to
+      # return 201 on a PUT). This action only PUTs files (no remote LIST), so
+      # it needs nothing beyond write access. purgePullZone uses BUNNY_API_KEY.
       - name: Deploy to Bunny CDN
         uses: ayeressian/bunnycdn-storage-deploy@v2.4.5
         with:
           source: site
-          destination: '/'
-          storageZoneName: ${{ secrets.BUNNY_STORAGE_ZONE }}
+          destination: ''
+          storageZoneName: napplet
           storagePassword: ${{ secrets.BUNNY_STORAGE_PASSWORD }}
-          storageEndpoint: ${{ steps.bunny.outputs.host }}
+          storageEndpoint: storage.bunnycdn.com
           accessKey: ${{ secrets.BUNNY_API_KEY }}
           pullZoneId: ${{ secrets.BUNNY_PULLZONE_ID }}
           upload: 'true'
           remove: 'false'
           purgePullZone: 'true'
+
+      # nsite-action splits relays/servers on NEWLINES, but NSITE_RELAYS /
+      # NSITE_SERVERS are stored space-separated. Normalize any whitespace
+      # (spaces or newlines) into one-per-line so the action parses each URL.
+      - name: Prepare nsite targets
+        id: nsite
+        env:
+          RAW_RELAYS: ${{ vars.NSITE_RELAYS || 'wss://relay.nsite.lol' }}
+          RAW_SERVERS: ${{ vars.NSITE_SERVERS || 'https://cdn.hzrd149.com' }}
+        run: |
+          set -f  # no globbing while we word-split the URL lists
+          {
+            echo 'relays<<NSITE_EOF'
+            printf '%s\n' $RAW_RELAYS
+            echo 'NSITE_EOF'
+            echo 'servers<<NSITE_EOF'
+            printf '%s\n' $RAW_SERVERS
+            echo 'NSITE_EOF'
+          } >> "$GITHUB_OUTPUT"
 
       # ─── nsite: publish to Nostr + Blossom ─────────────────────────────────
       - name: Deploy to nsite
@@ -90,5 +99,5 @@ jobs:
         with:
           directory: site
           nbunksec: ${{ secrets.NBUNK_SECRET }}
-          relays: ${{ vars.NSITE_RELAYS || 'wss://relay.nsite.lol' }}
-          servers: ${{ vars.NSITE_SERVERS || 'https://cdn.hzrd149.com' }}
+          relays: ${{ steps.nsite.outputs.relays }}
+          servers: ${{ steps.nsite.outputs.servers }}

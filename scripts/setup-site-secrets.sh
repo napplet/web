@@ -75,7 +75,11 @@ set_secret() {
   if [[ -n "$validator" ]] && ! "$validator" "$value"; then
     return 0
   fi
-  if printf '%s' "$value" | gh secret set "$name" "${REPO_ARGS[@]}" --body - ; then
+  # NOTE: omit --body so gh reads the value from stdin. `--body -` does NOT mean
+  # "read from stdin" — it stores the literal string "-". Piping into a bare
+  # `gh secret set NAME` is the correct way to set a value with no trailing
+  # newline.
+  if printf '%s' "$value" | gh secret set "$name" "${REPO_ARGS[@]}" ; then
     ok "set secret $name"
   else
     err "failed to set $name"
