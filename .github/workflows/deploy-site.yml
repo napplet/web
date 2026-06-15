@@ -54,21 +54,6 @@ jobs:
           cp -r apps/docs/.vitepress/dist/. site/docs/
           echo "Assembled $(find site -type f | wc -l) files into ./site"
 
-      # TEMP DEBUG: probe Bunny from CI using the secret directly, to isolate
-      # whether a 401 is the secret value or the action. Remove after diagnosis.
-      - name: Debug — secret byte lengths (1 == broken literal dash)
-        env:
-          PW: ${{ secrets.BUNNY_STORAGE_PASSWORD }}
-          AK: ${{ secrets.BUNNY_API_KEY }}
-          PZ: ${{ secrets.BUNNY_PULLZONE_ID }}
-          SZ: ${{ secrets.BUNNY_STORAGE_ZONE }}
-          SE: ${{ secrets.BUNNY_STORAGE_ENDPOINT }}
-          NB: ${{ secrets.NBUNK_SECRET }}
-        run: |
-          for n in PW AK PZ SZ SE NB; do
-            printf '%-3s byte length: %s\n' "$n" "$(printf '%s' "${!n}" | wc -c)"
-          done
-
       # ─── Bunny: upload to storage zone, then purge the pull zone ───────────
       # storageEndpoint + storageZoneName are literals from the Bunny dashboard
       # (Storage → napplet → FTP & API Access: Hostname + Username). Upload auth
