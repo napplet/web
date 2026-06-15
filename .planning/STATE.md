@@ -211,6 +211,7 @@ Surfaced by research (informational — each belongs to a specific phase plan):
 | 260424-o1k | Implement default shell.supports() in shim so napplets can be tested without a shell | 2026-04-24 | 5ad9cdb | [260424-o1k-implement-default-shell-supports-in-shim](./quick/260424-o1k-implement-default-shell-supports-in-shim/) |
 | 260524-kxa | please add badges to the README for github workflows, as well as badges for both npm and jsr | 2026-05-24 | 8f4662b | [260524-kxa-please-add-badges-to-the-readme-for-gith](./quick/260524-kxa-please-add-badges-to-the-readme-for-gith/) |
 | 260524-l1t | please add a workflow that runs the ai slop scan and produces a badge for the readme that shows the score | 2026-05-24 | 2835356 | [260524-l1t-please-add-a-workflow-that-runs-the-ai-s](./quick/260524-l1t-please-add-a-workflow-that-runs-the-ai-s/) |
+| 260615-fast | fix docs 404s: .html doc URLs (cleanUrls:false + SPA links) so they resolve on Bunny/nsite static hosting | 2026-06-15 | 025d4d9 | — (inline /gsd:fast) |
 
 Last session: 2026-04-21T20:46:00.000Z
 Stopped at: Completed 142-03-PLAN.md (Phase 142 TERMINAL-COMPLETE)
