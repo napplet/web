@@ -1,5 +1,17 @@
 # @napplet/vite-plugin
 
+## 0.6.0
+
+### Minor Changes
+
+- Align the generated napplet manifest with NIP-5D and the NIP-5A tag schema it adopts.
+
+  - Emit NIP-5D's own kind `35129` (named napplet) instead of NIP-5A's nsite kind `35128`. New `NAPPLET_KIND_NAMED` / `NAPPLET_KIND_ROOT` / `NAPPLET_KIND_SNAPSHOT` exports replace the removed `SYNTHETIC_XTAG_PATHS` export.
+  - Emit a NIP-5A-conformant manifest: one `["path", "/abs/path", "<sha256>"]` tag per file (absolute paths) plus a single aggregate `["x", "<aggregateHash>", "aggregate"]` tag, replacing the previous per-file `["x", hash, relpath]` projection.
+  - Compute `aggregateHash` from the `path` tags alone (NIP-5D §Identity), so a runtime can recompute and verify it. `config` / `connect` capability tags are still emitted but are no longer folded into the aggregate; grant invalidation on a capability change is keyed on those tags at the shell layer.
+
+  BREAKING: manifest output changes (kind, tag shape, aggregate inputs) and the `SYNTHETIC_XTAG_PATHS` export is removed.
+
 ## 0.5.0
 
 ### Minor Changes
