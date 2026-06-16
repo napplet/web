@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "license": "MIT",
   "exports": "./src/index.ts",
+  "imports": {
+    "@napplet/core": "jsr:@napplet/core@^0.11.0",
+    "@napplet/nap": "jsr:@napplet/nap@^0.11.0"
+  },
   "publish": {
     "include": [
       "src/**/*.ts",
