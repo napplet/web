@@ -100,7 +100,7 @@
   // Pixel loader for the resource domain: a deterministic scatter of reveal
   // delays so the grid fills in pixel-by-pixel like a resource streaming in.
   const PIXEL_COLS = 8;
-  const PIXEL_ROWS = 6;
+  const PIXEL_ROWS = 4;
   const pixels = Array.from({ length: PIXEL_COLS * PIXEL_ROWS }, (_, p) => {
     const col = p % PIXEL_COLS;
     const row = Math.floor(p / PIXEL_COLS);
@@ -370,12 +370,14 @@
 
   /* Resource domain: a pixel loader stands in for the text backend, reading as
      a resource streaming in pixel by pixel. */
+  /* Fixed-size cells (not 1fr) so the grid's height is deterministic and the
+     resource frame fits the same node height as the text frames — no layout
+     shift / page "bump" when the diagram cycles in and out of resource. */
   .pixel-grid {
     display: grid;
-    grid-template-columns: repeat(var(--cols, 8), 1fr);
+    grid-template-columns: repeat(var(--cols, 8), 9px);
     gap: 2px;
-    width: 92px;
-    margin-top: 8px;
+    margin-top: 4px;
   }
   .px {
     aspect-ratio: 1;
