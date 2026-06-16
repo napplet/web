@@ -1,12 +1,14 @@
 /**
  * @napplet/vite-plugin — napplet manifest generation plugin for Vite.
  *
- * - transformIndexHtml: injects <meta name="napplet-aggregate-hash"> into HTML
+ * - transformIndexHtml: injects napplet-type (+ optional requires / config-schema
+ *   / dev connect-requires) meta tags. No aggregate-hash meta — a file cannot
+ *   contain a hash that covers itself.
  * - closeBundle (build only): walks dist/, computes per-file SHA-256 hashes,
  *   computes the NIP-5A aggregate hash, signs a NIP-5D kind 35129 napplet
- *   manifest event (NIP-5A tag schema: `path` tags + one aggregate `x` tag),
- *   writes it to dist/.nip5a-manifest.json, and updates the meta tag in
- *   dist/index.html.
+ *   manifest event (NIP-5A tag schema: `path` tags + one aggregate `x` tag), and
+ *   writes it to dist/.nip5a-manifest.json. The aggregate hash lives only in that
+ *   external manifest, never back in index.html.
  *
  * Config:
  *   VITE_DEV_PRIVKEY_HEX — hex-encoded 32-byte private key for signing manifests.

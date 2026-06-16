@@ -148,7 +148,6 @@ function renderManifest(html: string, fetched: boolean): string {
   return `
     <table class="manifest">
       ${row('napplet-type', m.nappletType)}
-      ${row('aggregate-hash', m.aggregateHash)}
       ${row('requires', m.requires.join(', '))}
       ${row('connect origins', m.connectOrigins.join(', '))}
     </table>

@@ -7,7 +7,6 @@
  * | Meta name                  | Content                                            |
  * |----------------------------|----------------------------------------------------|
  * | `napplet-type`             | the napplet type / `d` tag                          |
- * | `napplet-aggregate-hash`   | 64-char lowercase hex SHA-256, injected at build    |
  * | `napplet-requires`         | comma-joined list of required NAP domains           |
  * | `napplet-config-schema`    | inline `JSON.stringify` of the config schema        |
  * | `napplet-connect-requires` | space-joined connect origins (dev-only)             |
@@ -26,8 +25,6 @@ import { normalizeConnectOrigin } from '@napplet/nap/connect/types';
 
 /** A napplet type/d-tag: lowercase, starts alnum, then alnum or `._:-`. */
 const NAPPLET_TYPE_RE = /^[a-z0-9][a-z0-9._:-]*$/;
-/** A 64-character lowercase hex SHA-256 digest. */
-const AGGREGATE_HASH_RE = /^[0-9a-f]{64}$/;
 /** `<script type="...">` values that are NOT executable inline JS. */
 const NON_EXECUTING_SCRIPT_TYPES = new Set([
   'application/json',
@@ -42,8 +39,6 @@ export interface ManifestError {
   code:
     | 'missing-napplet-type'
     | 'invalid-napplet-type'
-    | 'missing-aggregate-hash'
-    | 'invalid-aggregate-hash'
     | 'unknown-required-nap'
     | 'invalid-config-schema'
     | 'invalid-connect-origin'
@@ -58,8 +53,6 @@ export interface ManifestVerdict {
   ok: boolean;
   /** Parsed `napplet-type`, when present. */
   nappletType?: string;
-  /** Parsed `napplet-aggregate-hash`, when present. */
-  aggregateHash?: string;
   /** Parsed `napplet-requires` (domain names), empty when absent. */
   requires: string[];
   /** Parsed `napplet-connect-requires` origins, empty when absent. */
@@ -70,17 +63,26 @@ export interface ManifestVerdict {
   warnings: ManifestError[];
 }
 
-/** Options for {@link validateManifest}. */
-export interface ValidateManifestOptions {
-  /**
-   * Treat a missing `napplet-aggregate-hash` as an error. Defaults to `true`
-   * because the build plugin injects it — a built napplet without it is broken.
-   * Set `false` when validating un-built author source.
-   */
-  requireAggregateHash?: boolean;
+/** Options for {@link validateManifest}. Reserved for future knobs. */
+export interface ValidateManifestOptions {}
+
+/** Decode the HTML entities a serializer puts in attribute values (notably JSON). */
+function decodeHtmlEntities(value: string): string {
+  return value.replace(/&(#x?[0-9a-fA-F]+|[a-zA-Z]+);/g, (match, entity: string) => {
+    if (entity[0] === '#') {
+      const code = entity[1] === 'x' || entity[1] === 'X' ? parseInt(entity.slice(2), 16) : parseInt(entity.slice(1), 10);
+      return Number.isFinite(code) ? String.fromCodePoint(code) : match;
+    }
+    const named: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'" };
+    return named[entity] ?? match;
+  });
 }
 
-/** Read the `content` of the first `<meta name="...">` in an HTML string. */
+/**
+ * Read the `content` of the first `<meta name="...">` in an HTML string, decoding
+ * HTML entities so escaped attribute values (e.g. a JSON config schema serialized
+ * with `&quot;`) parse the same way a real `getAttribute('content')` would.
+ */
 function readMeta(html: string, name: string): string | undefined {
   // Match <meta ... name="<name>" ... content="..."> in either attribute order.
   const tagRe = /<meta\b[^>]*>/gi;
@@ -91,7 +93,7 @@ function readMeta(html: string, name: string): string | undefined {
     const metaName = (nameMatch?.[1] ?? nameMatch?.[2] ?? '').trim();
     if (metaName !== name) continue;
     const contentMatch = /\bcontent\s*=\s*(?:"([^"]*)"|'([^']*)')/i.exec(block);
-    return (contentMatch?.[1] ?? contentMatch?.[2] ?? '').trim();
+    return decodeHtmlEntities((contentMatch?.[1] ?? contentMatch?.[2] ?? '').trim());
   }
   return undefined;
 }
@@ -148,8 +150,7 @@ function usesPatternKeyword(node: unknown): boolean {
  * if (!verdict.ok) console.error(verdict.errors);
  * ```
  */
-export function validateManifest(html: string, options: ValidateManifestOptions = {}): ManifestVerdict {
-  const requireAggregateHash = options.requireAggregateHash ?? true;
+export function validateManifest(html: string, _options: ValidateManifestOptions = {}): ManifestVerdict {
   const errors: ManifestError[] = [];
   const warnings: ManifestError[] = [];
 
@@ -159,16 +160,6 @@ export function validateManifest(html: string, options: ValidateManifestOptions 
     errors.push({ code: 'missing-napplet-type', message: 'No <meta name="napplet-type"> declared' });
   } else if (!NAPPLET_TYPE_RE.test(nappletType)) {
     errors.push({ code: 'invalid-napplet-type', message: `napplet-type "${nappletType}" must match ${NAPPLET_TYPE_RE}` });
-  }
-
-  // ── napplet-aggregate-hash ─────────────────────────────────────────────────
-  const aggregateHash = readMeta(html, 'napplet-aggregate-hash');
-  if (!aggregateHash) {
-    if (requireAggregateHash) {
-      errors.push({ code: 'missing-aggregate-hash', message: 'No <meta name="napplet-aggregate-hash"> — the build plugin injects it; build before testing' });
-    }
-  } else if (!AGGREGATE_HASH_RE.test(aggregateHash)) {
-    errors.push({ code: 'invalid-aggregate-hash', message: `napplet-aggregate-hash "${aggregateHash}" is not a 64-char lowercase hex digest` });
   }
 
   // ── napplet-requires ───────────────────────────────────────────────────────
@@ -223,7 +214,6 @@ export function validateManifest(html: string, options: ValidateManifestOptions 
   return {
     ok: errors.length === 0,
     nappletType,
-    aggregateHash,
     requires,
     connectOrigins,
     errors,

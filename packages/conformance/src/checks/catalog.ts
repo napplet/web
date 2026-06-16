@@ -47,7 +47,6 @@ function manifestCheck(id: string, title: string, codes: ManifestError['code'][]
 export const CHECKS: Check[] = [
   // ── manifest ───────────────────────────────────────────────────────────────
   manifestCheck('manifest/napplet-type', 'Declares a valid napplet-type', ['missing-napplet-type', 'invalid-napplet-type']),
-  manifestCheck('manifest/aggregate-hash', 'Build injected a valid aggregate hash', ['missing-aggregate-hash', 'invalid-aggregate-hash']),
   manifestCheck('manifest/declared-naps', 'napplet-requires lists only real NAP domains', ['unknown-required-nap'], 'napplet-requires'),
   manifestCheck('manifest/config-schema', 'Config schema is a draft-07 core subset', ['invalid-config-schema'], 'napplet-config-schema'),
   manifestCheck('manifest/connect-origins', 'Declared connect origins are valid', ['invalid-connect-origin'], 'napplet-connect-requires'),

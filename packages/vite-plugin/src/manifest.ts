@@ -63,9 +63,13 @@ function warnDeprecatedStrictCsp(options: Nip5aManifestOptions): void {
 }
 
 /**
- * Build the `transformIndexHtml` tag set: the empty aggregate-hash meta (filled
- * in at build time), the napplet-type meta, and optional requires / config-schema
- * / dev-only connect-requires meta tags.
+ * Build the `transformIndexHtml` tag set: the napplet-type meta and optional
+ * requires / config-schema / dev-only connect-requires meta tags.
+ *
+ * No `napplet-aggregate-hash` meta is emitted: a file cannot contain a hash that
+ * covers itself, so the aggregate hash lives only in the external
+ * `.nip5a-manifest.json` (and the signed kind-35129 event), where the shell /
+ * relay reads it. It is not a NIP-5D/5A index.html artifact.
  *
  * @param options - the plugin options.
  * @param state - resolved plugin state (schema + normalized connect).
@@ -78,11 +82,6 @@ export function buildIndexHtmlTags(
   isDev: boolean,
 ): IndexHtmlTransformResult {
   const tags: IndexHtmlTransformResult = [
-    {
-      tag: 'meta',
-      attrs: { name: 'napplet-aggregate-hash', content: '' },
-      injectTo: 'head' as const,
-    },
     {
       tag: 'meta',
       attrs: { name: 'napplet-type', content: options.nappletType },
@@ -123,8 +122,10 @@ export function buildIndexHtmlTags(
 /**
  * Build-only entry point: rewrite dist artifacts as configured, then (when a
  * signing key is present) compute the NIP-5A aggregateHash, sign the NIP-5D
- * kind `35129` manifest, write `.nip5a-manifest.json`, and inject the
- * aggregateHash meta.
+ * kind `35129` manifest, and write `.nip5a-manifest.json`.
+ *
+ * The aggregate hash is written ONLY to the external manifest file — never back
+ * into index.html (a file cannot advertise a hash that covers itself).
  *
  * @param options - the plugin options.
  * @param state - resolved plugin state (out dir, schema, connect).
@@ -143,7 +144,6 @@ export async function writeBundleManifest(options: Nip5aManifestOptions, state: 
 
   const manifest = buildManifestTemplate(options, distPath, state);
   await writeManifestFile(distPath, manifest, privkeyHex);
-  injectAggregateHash(distPath, manifest.aggregateHash);
 }
 
 function prepareDistIndexHtml(distPath: string, state: ManifestPluginState): void {
@@ -231,15 +231,3 @@ async function writeManifestFile(
   }
 }
 
-function injectAggregateHash(distPath: string, aggregateHash: string): void {
-  const indexPath = path.join(distPath, 'index.html');
-  if (!fs.existsSync(indexPath)) return;
-
-  const html = fs
-    .readFileSync(indexPath, 'utf-8')
-    .replace(
-      /<meta name="napplet-aggregate-hash" content="">/,
-      `<meta name="napplet-aggregate-hash" content="${aggregateHash}">`,
-    );
-  fs.writeFileSync(indexPath, html);
-}
