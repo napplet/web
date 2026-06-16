@@ -17,6 +17,7 @@
 import { readFile, writeFile, stat } from 'node:fs/promises';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { spawn } from 'node:child_process';
 import { chromium } from 'playwright';
 import {
   buildContext,
@@ -26,6 +27,7 @@ import {
   type ReporterFormat,
 } from '@napplet/conformance';
 import { startHarnessServer } from './server.js';
+import { startUiServer } from './ui-server.js';
 import { scanForbiddenGlobals } from './scan.js';
 
 interface CliOptions {
@@ -37,29 +39,40 @@ interface CliOptions {
   settleMs: number;
   runDegraded: boolean;
   allowSameOrigin: boolean;
+  ui: boolean;
+  port?: number;
+  open: boolean;
+  exec?: string;
   help: boolean;
 }
 
 const HELP = `napplet-conformance — run NAP protocol conformance against a napplet
 
 Usage:
-  napplet-conformance [dir] [options]
+  napplet-conformance [dir] [options]            # headless, one-shot, CI exit code
+  napplet-conformance --ui [dir] [options]       # open the live web runtime (like vitest --ui)
   napplet-conformance --url https://my.napplet/ [options]
 
 Arguments:
   dir                      Built napplet directory (looks for ./index.html or ./dist/index.html)
 
 Options:
-  --url <url>              Test a remotely-served napplet instead of a local dir
+  --url <url>              Test a remotely-served napplet instead of a local dir (headless)
   --reporter <fmt>         pretty | json | junit            (default: pretty)
   --out <file>             Write the report to a file instead of stdout
   --ready-timeout <ms>     Boot timeout waiting for shell.ready (default: 5000)
   --settle <ms>            Envelope-collection window after boot (default: 600)
   --no-degraded            Skip the no-capability graceful-degradation pass
   --allow-same-origin      Debug: also grant allow-same-origin (a conformant napplet must not need it)
+
+UI / watch mode (--ui):
+  --port <n>               Port for the UI server (default: random)
+  --no-open                Do not open a browser automatically
+  --exec <cmd>             Run a command (e.g. "vite build --watch") so edits rebuild the served dir;
+                           the watcher then re-runs conformance live on every change
   -h, --help               Show this help
 
-Exit codes: 0 conformant, 1 non-conformant, 2 usage/runtime error.
+Exit codes (headless): 0 conformant, 1 non-conformant, 2 usage/runtime error.
 `;
 
 function parseArgs(argv: string[]): CliOptions {
@@ -69,6 +82,8 @@ function parseArgs(argv: string[]): CliOptions {
     settleMs: 600,
     runDegraded: true,
     allowSameOrigin: false,
+    ui: false,
+    open: true,
     help: false,
   };
   for (let i = 0; i < argv.length; i += 1) {
@@ -107,6 +122,18 @@ function parseArgs(argv: string[]): CliOptions {
         break;
       case '--allow-same-origin':
         opts.allowSameOrigin = true;
+        break;
+      case '--ui':
+        opts.ui = true;
+        break;
+      case '--port':
+        opts.port = Number(value());
+        break;
+      case '--no-open':
+        opts.open = false;
+        break;
+      case '--exec':
+        opts.exec = value();
         break;
       default:
         if (arg.startsWith('--')) throw new Error(`Unknown option: ${arg}`);
@@ -152,6 +179,68 @@ async function collectBoot(hostUrl: string, allowSameOrigin: boolean, totalTimeo
   }
 }
 
+async function isDir(path: string): Promise<boolean> {
+  return (await stat(path).catch(() => null))?.isDirectory() ?? false;
+}
+
+/** Best-effort: open a URL in the default browser. */
+function openBrowser(url: string): void {
+  try {
+    if (process.platform === 'darwin') {
+      spawn('open', [url], { stdio: 'ignore', detached: true }).unref();
+    } else if (process.platform === 'win32') {
+      spawn('cmd', ['/c', 'start', '', url], { stdio: 'ignore', detached: true }).unref();
+    } else {
+      spawn('xdg-open', [url], { stdio: 'ignore', detached: true }).unref();
+    }
+  } catch {
+    /* best-effort — the URL is printed regardless */
+  }
+}
+
+/** `--ui`: serve the live web runtime + the napplet, watch, and re-run on change. */
+async function runUiMode(opts: CliOptions): Promise<number> {
+  if (opts.url) {
+    process.stderr.write('--ui serves a local napplet directory; --url is not supported in UI mode.\n');
+    return 2;
+  }
+  if (!opts.target) {
+    process.stderr.write(`Provide a napplet directory.\n\n${HELP}`);
+    return 2;
+  }
+  const resolved = await resolveNappletDir(opts.target);
+  const here = dirname(fileURLToPath(import.meta.url));
+  const appDir = join(here, 'ui');
+  if (!(await isDir(appDir))) {
+    process.stderr.write(`Conformance UI assets are missing at ${appDir}. Rebuild @napplet/conformance-cli.\n`);
+    return 2;
+  }
+
+  const server = await startUiServer({ appDir, nappletDir: resolved.dir, port: opts.port });
+
+  const child = opts.exec ? spawn(opts.exec, { cwd: resolve(opts.target), shell: true, stdio: 'inherit' }) : null;
+
+  process.stdout.write(
+    `\n  napplet conformance UI  →  ${server.appUrl}\n` +
+      `  watching  ${resolved.dir}${opts.exec ? `  (running: ${opts.exec})` : ''}\n` +
+      `  Ctrl-C to stop\n\n`,
+  );
+  if (opts.open) openBrowser(server.appUrl);
+
+  await new Promise<void>((resolveWait) => {
+    let closing = false;
+    const shutdown = (): void => {
+      if (closing) return;
+      closing = true;
+      child?.kill();
+      void server.close().finally(resolveWait);
+    };
+    process.on('SIGINT', shutdown);
+    process.on('SIGTERM', shutdown);
+  });
+  return 0;
+}
+
 async function main(argv: string[]): Promise<number> {
   let opts: CliOptions;
   try {
@@ -163,6 +252,10 @@ async function main(argv: string[]): Promise<number> {
   if (opts.help) {
     process.stdout.write(HELP);
     return 0;
+  }
+
+  if (opts.ui) {
+    return runUiMode(opts);
   }
 
   // Resolve the subject: local dir or remote URL.

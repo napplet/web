@@ -22,7 +22,8 @@ every future generated napplet then inherits it.
      "preview": "vite preview",
 -    "verify": "tsc --noEmit"
 +    "verify": "tsc --noEmit",
-+    "test:conformance": "napplet-conformance ./dist"
++    "test:conformance": "napplet-conformance ./dist",
++    "test:conformance:ui": "napplet-conformance --ui . --exec \"vite build --watch\""
    },
    "devDependencies": {
 +    "@napplet/conformance-cli": "^0.1.0",
@@ -36,6 +37,14 @@ every future generated napplet then inherits it.
 `napplet-conformance` is package-manager agnostic — `pnpm test:conformance`,
 `npm run test:conformance`, `yarn test:conformance`, and `bun run test:conformance`
 all resolve the bin from `@napplet/conformance-cli`.
+
+Two variants, mirroring `vitest` vs `vitest --ui`:
+
+- **`test:conformance`** — headless, one-shot, sets a CI exit code.
+- **`test:conformance:ui`** — opens the live web runtime in a browser and re-runs
+  conformance every time the napplet rebuilds. The `--exec "vite build --watch"`
+  keeps `./dist` fresh, and the CLI's watcher re-runs on each change (edit, save, see
+  the verdict update).
 
 ### CI workflow (`.github/workflows/ci.yml` in the template)
 

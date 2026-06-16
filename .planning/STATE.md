@@ -27,8 +27,17 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 
 ## Current Position
 
-Phase: ALL COMPLETE (148-152). Milestone v0.32.0 Napplet Conformance ready to ship.
+Phase: 153 (extension) COMPLETE — conformance app UI/watch mode + HMR-style live re-run.
 Plan: —
+
+### Phase 153 record (UI/watch extension, user-requested follow-on) — COMPLETE
+- Goal: start the conformance app via CLI (like `vitest --ui`) + HMR/live re-run, shippable as a boilerplate script; no regression to headless.
+- `napplet-conformance --ui [dir] [--port] [--no-open] [--exec "<cmd>"]`: serves the bundled conformance web app + the napplet (same origin, ACAO, Cache-Control:no-store) + an SSE stream; watches the napplet's served dir; opens the browser; re-runs conformance live on every change. `--exec "vite build --watch"` makes it one turnkey command (edit→rebuild→auto re-run). Headless path untouched (`--ui` additive).
+- One UI codebase: the CLI bundles apps/conformance/dist into dist/ui at build time (scripts/copy-ui.mjs; @napplet/conformance-web added as workspace devDep for build order). Same app served standalone at /conformance.
+- App live mode (`?live=1`): EventSource → re-run on `rerun`, watching badge, run-stamp, manual Re-run button.
+- Shared static.ts (MIME/sendFile/setCors) used by both servers; startUiServer refactored into helpers (handleSse/handleNapplet/handleApp/startWatcher) to clear a function-length finding.
+- Boilerplate doc + READMEs add `test:conformance` (headless) + `test:conformance:ui` (app variant).
+- Verified: live browser loop CONFORMANT → (edit napplet) → auto re-ran → NON-CONFORMANT. cli unit tests 4→8 (ui-server SSE/watch/serve/SPA). Full gate green: build, type-check, test:unit (216), test:e2e (4), test:conformance. aislop 89 (my code clean).
 Status: M1+M2+M3+M4 COMPLETE. Final gate green: build(11), type-check(14), test:unit(212), test:e2e(4), test:conformance(CONFORMANT). aislop 89 (only environmental vite/js-yaml dep advisories remain). Changesets authored; new packages at 0.0.0 → first publish 0.1.0.
 
 ### Phase 152 record (REL-01..05) — COMPLETE

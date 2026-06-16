@@ -34,13 +34,23 @@ scopes that share one engine:
 npx napplet-conformance ./dist
 ```
 
-```jsonc
-// package.json — works with pnpm / npm / yarn / bun:
-{ "scripts": { "test:conformance": "napplet-conformance ./dist" } }
+```bash
+# App variant — opens the live web runtime and re-runs on every change (like vitest --ui):
+npx napplet-conformance --ui . --exec "vite build --watch"
 ```
 
-The standalone web runtime (`apps/conformance`, deployed at `/conformance`) runs the
-same checks live in the browser with a visual report. v1 is zero-config protocol
+```jsonc
+// package.json — works with pnpm / npm / yarn / bun:
+{
+  "scripts": {
+    "test:conformance": "napplet-conformance ./dist",
+    "test:conformance:ui": "napplet-conformance --ui . --exec \"vite build --watch\""
+  }
+}
+```
+
+The same web runtime ships standalone (`apps/conformance`, deployed at `/conformance`)
+and runs the checks live in the browser with a visual report. v1 is zero-config protocol
 conformance: manifest/meta validity, boots under `sandbox="allow-scripts"`, installs
 `window.napplet`, every emitted envelope is well-formed, graceful degradation when
 `shell.supports()` is false, and no forbidden globals.

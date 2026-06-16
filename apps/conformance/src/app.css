@@ -37,6 +37,16 @@ code { background: rgba(157, 123, 255, 0.12); padding: 0.05em 0.35em; border-rad
   background: var(--accent); color: #150a22; font-weight: 600;
 }
 .runbar button:disabled { opacity: 0.6; cursor: progress; }
+.runbar button.secondary { background: transparent; color: var(--accent); border: 1px solid var(--line); }
+
+.live-badge {
+  font-size: 0.7rem; font-weight: 600; vertical-align: middle; margin-left: 0.5rem;
+  padding: 0.1rem 0.5rem; border-radius: 999px; border: 1px solid var(--line); color: var(--warn);
+}
+.live-badge[data-state="connected"] { color: var(--pass); border-color: var(--pass); }
+.live-badge[data-state="disconnected"] { color: var(--fail); border-color: var(--fail); }
+
+.run-stamp { margin-left: auto; color: var(--muted); font-size: 0.78rem; font-variant-numeric: tabular-nums; }
 
 .status { min-height: 1.4rem; color: var(--muted); margin: 0.25rem 0 0; }
 .status[data-kind="error"] { color: var(--fail); }

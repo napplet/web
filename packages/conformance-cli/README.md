@@ -19,7 +19,8 @@ Wire it into any package manager as `test:conformance`:
 ```jsonc
 {
   "scripts": {
-    "test:conformance": "napplet-conformance ./dist"
+    "test:conformance": "napplet-conformance ./dist",
+    "test:conformance:ui": "napplet-conformance --ui . --exec \"vite build --watch\""
   }
 }
 ```
@@ -27,6 +28,19 @@ Wire it into any package manager as `test:conformance`:
 ```bash
 pnpm test:conformance   # npm / yarn / bun all work — the bin is PM-agnostic
 ```
+
+## UI / watch mode (`--ui`) — like `vitest --ui`
+
+```bash
+napplet-conformance --ui . --exec "vite build --watch"
+```
+
+`--ui` serves the standalone conformance web runtime (bundled with this package) plus
+the napplet, opens your browser, and **re-runs conformance live every time the napplet
+changes**. The optional `--exec` runs your build in watch mode so source edits rebuild
+the served `./dist`; the CLI's file watcher then triggers a fresh run — edit, save, see
+the verdict update. Useful flags: `--port <n>`, `--no-open`. (Headless mode is
+unchanged — `--ui` is purely additive.)
 
 ## How it works
 
