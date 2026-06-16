@@ -514,7 +514,7 @@ import { relay, inc, storage, keys, identity } from '@napplet/sdk';
 
 ## Protocol Reference
 
-- [NIP-5D](../../specs/NIP-5D.md) -- Napplet-shell protocol specification
+- [NIP-5D](https://github.com/nostr-protocol/nips/pull/2303) -- Napplet-shell protocol specification
 
 ## License
 
