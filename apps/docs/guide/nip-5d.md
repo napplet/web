@@ -76,8 +76,9 @@ gracefully.
 
 ## Manifest and NAP negotiation
 
-- A napplet's manifest is a NIP-5A **kind 35128** event. It declares the
-  capabilities it needs with `requires` tags: `["requires", "<nap-name>"]`.
+- A napplet's manifest is a NIP-5D **kind 35129** named-napplet event (adopting
+  the NIP-5A `path` + aggregate `x` tag schema). It declares the capabilities it
+  needs with `requires` tags: `["requires", "<nap-name>"]`.
 - The shell checks those `requires` tags against its own capabilities at load
   time and can warn on a mismatch.
 - At runtime, a napplet queries support with

@@ -19,13 +19,12 @@ At **build time** (with `VITE_DEV_PRIVKEY_HEX` set), the plugin:
 
 1. Optionally rewrites local JS/CSS build assets into `index.html` when `artifactMode: 'single-file'` is enabled
 2. Walks the final `dist/` artifact set and computes SHA-256 of each file
-3. Computes the aggregate hash per the NIP-5A algorithm
-4. Creates a kind 35128 manifest event and signs it
+3. Computes the aggregate hash per the NIP-5A algorithm (over the `path` tags alone)
+4. Creates a NIP-5D **kind 35129** named-napplet manifest event — NIP-5A tag schema: one `['path', '/abs/path', '<sha256>']` per file plus one aggregate `['x', '<aggregateHash>', 'aggregate']` tag — and signs it
 5. Writes `.nip5a-manifest.json` to `dist/`
 6. Updates the meta tag in `dist/index.html` with the computed hash
 7. Injects `<meta name="napplet-config-schema">` into `dist/index.html` if a `configSchema` is declared or discovered
-8. Embeds the schema as a `['config', ...]` tag on the kind 35128 manifest
-9. Includes the schema bytes in `aggregateHash` via a synthetic `config:schema` path prefix
+8. Embeds the schema as a `['config', ...]` tag on the manifest (NOT folded into `aggregateHash` — the aggregate is `path` tags only, per NIP-5D §Identity)
 
 The build-time manifest is for verifying the hash computation workflow locally, not for deploying to relays.
 
@@ -73,7 +72,7 @@ export default defineConfig({
 The napp type identifier (e.g., `'feed'`, `'chat'`, `'profile'`). This value is:
 
 - Injected as the `content` of the `<meta name="napplet-napp-type">` tag
-- Used as the `d` tag in the kind 35128 manifest event
+- Used as the `d` tag in the kind 35129 manifest event
 
 #### requires (optional)
 
@@ -82,7 +81,7 @@ The napp type identifier (e.g., `'feed'`, `'chat'`, `'profile'`). This value is:
 An array of service names this napplet requires from its host shell (e.g., `['audio', 'notifications']`). When set:
 
 - Injects a `<meta name="napplet-requires">` tag into HTML (comma-separated service names)
-- Adds `['requires', 'service-name']` tags to the kind 35128 manifest event
+- Adds `['requires', 'service-name']` tags to the kind 35129 manifest event
 
 If the shell does not support all required capabilities, the napplet can detect this at runtime via `window.napplet.shell.supports()` or the shell can show a compatibility warning.
 
@@ -93,9 +92,10 @@ If the shell does not support all required capabilities, the napplet can detect 
 Declares a JSON Schema (draft-07+) describing the napplet's per-napplet configuration surface (NAP-CONFIG). At build time, the plugin:
 
 - Validates the schema against the NAP-CONFIG Core Subset (see Build-Time Guards below)
-- Embeds the schema as a `['config', JSON.stringify(schema)]` tag on the kind 35128 manifest event
-- Includes the schema bytes in `aggregateHash` via a synthetic `config:schema` path prefix (any schema edit bumps the hash)
+- Embeds the schema as a `['config', JSON.stringify(schema)]` tag on the kind 35129 manifest event
 - Injects `<meta name="napplet-config-schema" content="{json}">` into `dist/index.html` so the napplet's shim can read it synchronously at install time
+
+  The schema is **not** folded into `aggregateHash`: per NIP-5D §Identity the aggregate is the NIP-5A hash of the `path` tags alone, so a runtime can recompute and verify it. The `config` tag still carries the schema for a shell to act on.
 
 **Accepted forms:**
 
@@ -148,9 +148,9 @@ In single-file mode:
 - It asks Vite/Rollup for a single-entry artifact shape (`inlineDynamicImports`, no CSS code-split, inline static assets) so ordinary static and dynamic imports are bundled before the close-bundle rewrite.
 - It then rewrites local stylesheet links and local script `src` tags to inline `<style>` / `<script>` blocks and removes those inlined JS/CSS files from `dist/`.
 - It fails the build if any local stylesheet, modulepreload, script `src`, or extra emitted file remains after rewriting.
-- The resulting `index.html` artifact bytes are used for the real `['x', <sha256>, 'index.html']` manifest tag and aggregateHash input.
+- The resulting `index.html` artifact bytes are used for the real `['path', '/index.html', <sha256>]` manifest tag and aggregateHash input.
 - The aggregate hash is computed after inlining and before the self-referential aggregate-hash meta stamp is replaced.
-- `config:schema` and `connect:origins` synthetic inputs continue to participate in aggregateHash and remain excluded from public `['x', ...]` manifest tags.
+- `config` and `connect` are emitted as their own manifest tags but do NOT participate in `aggregateHash` — the aggregate is the NIP-5A hash of the `path` tags alone.
 
 **Example (inline):**
 
@@ -246,7 +246,7 @@ See [NAP-CLASS-2.md](https://github.com/napplet/naps) for the shell-side posture
 
 **Type:** `string[]`
 
-Declares the origins the napplet needs direct browser-level network access to (`fetch`, `WebSocket`, `SSE`, `EventSource`). Each origin is validated by the shared `normalizeConnectOrigin` function from `@napplet/nap/connect/types` (the single source of truth used by both the build tool and shell implementations), emitted as a `["connect", "<origin>"]` tag in the signed NIP-5A manifest, and folded into `aggregateHash` via a synthetic `connect:origins` xTag so any origin-list change auto-invalidates prior user grants keyed on `(dTag, aggregateHash)`.
+Declares the origins the napplet needs direct browser-level network access to (`fetch`, `WebSocket`, `SSE`, `EventSource`). Each origin is validated by the shared `normalizeConnectOrigin` function from `@napplet/nap/connect/types` (the single source of truth used by both the build tool and shell implementations) and emitted as a `["connect", "<origin>"]` tag in the signed manifest. Origins are **not** folded into `aggregateHash` — per NIP-5D §Identity the aggregate is the NIP-5A hash of the `path` tags alone, so a runtime can recompute and verify it. A shell that wants to re-prompt on an origin-set change keys its grants on the emitted `connect` tags.
 
 **Quick start:**
 
@@ -286,17 +286,11 @@ Rejected inputs throw at `configResolved` with a diagnostic prefixed `[nip5a-man
 
 **Manifest tag emission:**
 
-One `["connect", "<origin>"]` tag per origin, emitted in **author-declared order** (as supplied in the config array). Tags are placed between the existing `manifestXTags` (file hashes) and `configTags` (config schema) in the signed kind 35128 manifest event.
+One `["connect", "<origin>"]` tag per origin, emitted in **author-declared order** (as supplied in the config array). Tags are placed after the `path` tags and aggregate `x` tag, before the `config` tag, in the signed kind 35129 manifest event.
 
-**aggregateHash fold:**
+**Relationship to `aggregateHash`:**
 
-Origins are fed through a canonical fold procedure (lowercase → ASCII-ascending sort → LF-join with no trailing newline → UTF-8 → SHA-256 → lowercase hex) and the resulting digest is pushed as a synthetic xTag entry `[<hex-digest>, 'connect:origins']` into the manifest's xTag array BEFORE `computeAggregateHash`. The synthetic entry participates in `aggregateHash` but is filtered out of the public `['x', ...]` tag projection via a shared `SYNTHETIC_XTAG_PATHS` set (which also covers the v0.25.0 `config:schema` fold).
-
-Any addition, removal, or reorder-after-normalization of the origin set produces a different `aggregateHash`, which auto-invalidates any prior user grant keyed on `(dTag, aggregateHash)` — guaranteeing the shell re-prompts on a supply-chain origin change.
-
-**Module-load conformance guardrail:**
-
-At ESM import time, the plugin self-checks its fold procedure against the normative NAP-CONNECT conformance fixture (3 origins → SHA-256 `cc7c1b1903fb23ecb909d2427e1dccd7d398a5c63dd65160edb0bb8b231aa742`). A drift in the fold procedure (even a one-byte change to the sort or separator) fires a fatal at plugin-import time, preventing the build from shipping a hash incompatible with shells.
+Origins do NOT feed `aggregateHash`. Per NIP-5D §Identity the aggregate is the NIP-5A hash of the `path` tags alone, so any runtime can recompute it from the manifest and assert it equals the `x` tag. Grant invalidation on an origin-set change is a shell concern: a shell keys its grants on the emitted `connect` tags (the canonical origin-set fold lives in NAP-CONNECT and is pinned by `@napplet/nap`'s conformance test), so it re-prompts when the declared set changes.
 
 **See also:**
 - [NAP-CONNECT](https://github.com/napplet/naps) — normative spec (origin format, aggregateHash fold, conformance fixture)
@@ -351,10 +345,11 @@ At build time (with `VITE_DEV_PRIVKEY_HEX` set), the manifest event also include
 
 ```json
 {
-  "kind": 35128,
+  "kind": 35129,
   "tags": [
     ["d", "my-music-app"],
-    ["x", "<sha256>", "index.js"],
+    ["path", "/index.html", "<sha256>"],
+    ["x", "<aggregateHash>", "aggregate"],
     ["requires", "audio"],
     ["requires", "notifications"]
   ]
@@ -438,9 +433,9 @@ Only runs if `VITE_DEV_PRIVKEY_HEX` is set:
 1. If `artifactMode: 'single-file'` is set, rewrites local JS/CSS references into `index.html` before hashing
 2. Walks `dist/` directory recursively
 3. Computes SHA-256 hash of each file's contents
-4. Creates sorted hash lines: `<sha256hex> <relativePath>\n`
-5. Computes aggregate hash (SHA-256 of sorted concatenation)
-6. Creates kind 35128 manifest event with `x` tags for each file and `requires` tags if configured
+4. Creates sorted hash lines: `<sha256hex> <absolutePath>\n` (NIP-5A: absolute paths, leading `/`)
+5. Computes aggregate hash (SHA-256 of sorted concatenation of the `path`-tag lines)
+6. Creates a kind 35129 manifest event with one `['path', '/abs/path', <sha256>]` tag per file, one aggregate `['x', <aggregateHash>, 'aggregate']` tag, and `requires` tags if configured
 7. Signs with the test private key
 8. Writes `.nip5a-manifest.json` to `dist/`
 9. Updates the `napplet-aggregate-hash` meta tag in `dist/index.html`
@@ -487,9 +482,10 @@ interface Nip5aManifestOptions {
   /**
    * Origins the napplet needs direct browser-level network access to (v0.29.0+).
    * Each origin validated via `normalizeConnectOrigin` from
-   * `@napplet/nap/connect/types`, emitted as `["connect", "<origin>"]`
-   * manifest tags, folded into `aggregateHash` via a synthetic `connect:origins`
-   * xTag so any origin change auto-invalidates prior grants.
+   * `@napplet/nap/connect/types` and emitted as `["connect", "<origin>"]`
+   * manifest tags. NOT folded into `aggregateHash` — per NIP-5D §Identity the
+   * aggregate is the NIP-5A hash of the `path` tags alone. A shell keys grant
+   * invalidation on the emitted `connect` tags.
    * See NAP-CONNECT for the authoritative origin format.
    */
   connect?: string[];
@@ -508,7 +504,7 @@ interface Nip5aManifestOptions {
 
 - [NAP-CONFIG spec (PR #13)](https://github.com/napplet/naps/pull/13) -- per-napplet declarative configuration
 - [NAP-RESOURCE (drafts)](https://github.com/napplet/naps) — sandboxed byte fetching primitive that strict CSP enforces against
-- [NAP-CONNECT (drafts)](https://github.com/napplet/naps) -- user-gated direct network access: origin format, manifest tag shape, canonical `connect:origins` aggregateHash fold, runtime API
+- [NAP-CONNECT (drafts)](https://github.com/napplet/naps) -- user-gated direct network access: origin format, manifest tag shape, canonical origin-set fold (shell-side grant keying), runtime API
 - [NAP-CLASS (drafts)](https://github.com/napplet/naps) + [`NAP-CLASS-1.md`](https://github.com/napplet/naps) + [`NAP-CLASS-2.md`](https://github.com/napplet/naps) -- napplet class track and the two v0.29.0 posture members (strict baseline + user-approved explicit-origin)
 - [`specs/SHELL-CONNECT-POLICY.md`](../../specs/SHELL-CONNECT-POLICY.md) + [`specs/SHELL-CLASS-POLICY.md`](../../specs/SHELL-CLASS-POLICY.md) -- shell-deployer checklists
 - [NIP-5D](../../specs/NIP-5D.md) -- Napplet-shell protocol specification

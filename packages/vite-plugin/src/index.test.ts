@@ -3,19 +3,14 @@ import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
-import { nip5aManifest, type Nip5aManifestOptions } from './index';
+import { nip5aManifest, NAPPLET_KIND_NAMED, type Nip5aManifestOptions } from './index';
+import { computeAggregateHash } from './hashing';
 
 const TEST_PRIVKEY = '01'.repeat(32);
 const tempRoots: string[] = [];
 
 function sha256(data: string | Buffer): string {
   return crypto.createHash('sha256').update(data).digest('hex');
-}
-
-function computeAggregateHash(xTags: Array<[string, string]>): string {
-  const lines = xTags.map(([hash, p]) => `${hash} ${p}\n`);
-  lines.sort();
-  return sha256(lines.join(''));
 }
 
 function makeFixture(): { root: string; dist: string } {
@@ -50,10 +45,10 @@ async function runCloseBundle(
   }
 }
 
-function readManifest(dist: string): { aggregateHash: string; tags: string[][] } {
+function readManifest(dist: string): { kind: number; aggregateHash: string; tags: string[][] } {
   return JSON.parse(
     fs.readFileSync(path.join(dist, '.nip5a-manifest.json'), 'utf-8'),
-  ) as { aggregateHash: string; tags: string[][] };
+  ) as { kind: number; aggregateHash: string; tags: string[][] };
 }
 
 afterEach(() => {
@@ -61,6 +56,26 @@ afterEach(() => {
   while (tempRoots.length > 0) {
     fs.rmSync(tempRoots.pop()!, { recursive: true, force: true });
   }
+});
+
+describe('NIP-5A aggregate hash', () => {
+  it('matches the NIP-5A §Aggregate Hash worked example digest', () => {
+    // 5A.md §Aggregate Hash worked example: two `path` tags → sorted
+    // `<sha256> <absolute-path>\n` lines → UTF-8 → SHA-256, lowercase hex.
+    const pairs: Array<[string, string]> = [
+      ['186ea5fd14e88fd1ac49351759e7ab906fa94892002b60bf7f5a428f28ca1c99', '/index.html'],
+      ['fedcba0987654321fedcba0987654321fedcba0987654321fedcba0987654321', '/favicon.ico'],
+    ];
+    expect(computeAggregateHash(pairs)).toBe(
+      'c2ff582b672a4c689c5e1753528f03dd31b95ec1fdcc3d82d25e7d91e8769638',
+    );
+  });
+
+  it('ignores path-tag order (sorts lines before hashing)', () => {
+    const a: [string, string] = ['aa'.repeat(32), '/a.html'];
+    const b: [string, string] = ['bb'.repeat(32), '/b.html'];
+    expect(computeAggregateHash([a, b])).toBe(computeAggregateHash([b, a]));
+  });
 });
 
 describe('nip5aManifest artifact modes', () => {
@@ -76,7 +91,7 @@ describe('nip5aManifest artifact modes', () => {
     ).rejects.toThrow('Inline <script> elements are not allowed');
   });
 
-  it('inlines local JS and CSS assets in explicit single-file mode', async () => {
+  it('emits a NIP-5D kind 35129 named manifest with NIP-5A path + aggregate x tags', async () => {
     const fixture = makeFixture();
     fs.writeFileSync(
       path.join(fixture.dist, 'index.html'),
@@ -103,15 +118,24 @@ describe('nip5aManifest artifact modes', () => {
       `<meta name="napplet-aggregate-hash" content="${manifest.aggregateHash}">`,
       '<meta name="napplet-aggregate-hash" content="">',
     );
-    const expected = computeAggregateHash([[sha256(hashInputHtml), 'index.html']]);
+    const indexHash = sha256(hashInputHtml);
+    const expected = computeAggregateHash([[indexHash, '/index.html']]);
 
     expect(html).toContain('<style>.app { color: red; }</style>');
     expect(html).toContain('<script type="module">console.log("single");</script>');
     expect(html).not.toContain('src="./assets/index.js"');
     expect(fs.existsSync(path.join(fixture.dist, 'assets', 'index.js'))).toBe(false);
     expect(fs.existsSync(path.join(fixture.dist, 'assets', 'index.css'))).toBe(false);
+
+    // NIP-5D kind + NIP-5A manifest shape.
+    expect(manifest.kind).toBe(NAPPLET_KIND_NAMED);
+    expect(manifest.kind).toBe(35129);
     expect(manifest.aggregateHash).toBe(expected);
-    expect(manifest.tags).toContainEqual(['x', sha256(hashInputHtml), 'index.html']);
+    // Per-file `path` tags carry ABSOLUTE paths and the file sha256.
+    expect(manifest.tags).toContainEqual(['path', '/index.html', indexHash]);
+    // Exactly one aggregate `x` tag carrying the recomputable aggregate hash.
+    const xTags = manifest.tags.filter((tag) => tag[0] === 'x');
+    expect(xTags).toEqual([['x', manifest.aggregateHash, 'aggregate']]);
   });
 
   it('resolves single-file asset references against Vite base variants', async () => {
@@ -175,7 +199,13 @@ describe('nip5aManifest artifact modes', () => {
     ).rejects.toThrow('local external assets remain');
   });
 
-  it('preserves config and connect synthetic aggregate hash inputs in single-file mode', async () => {
+  it('excludes config and connect from the NIP-5A aggregate but still emits their tags', async () => {
+    // NIP-5D §Identity: the runtime recomputes aggregateHash from the `path`
+    // tags ALONE and asserts it equals the `x` tag. Capability declarations
+    // (`config` / `connect`) are emitted as their own tags but MUST NOT feed the
+    // aggregate — otherwise a conformant runtime would reject the napplet.
+    // (Grant invalidation on a capability change moves to those tags at the
+    // shell layer; it is no longer encoded in the content address.)
     const baseFixture = makeFixture();
     const configFixture = makeFixture();
     const connectFixture = makeFixture();
@@ -214,11 +244,22 @@ describe('nip5aManifest artifact modes', () => {
     const withConfig = readManifest(configFixture.dist);
     const withConnect = readManifest(connectFixture.dist);
 
-    expect(withConfig.aggregateHash).not.toBe(base.aggregateHash);
-    expect(withConnect.aggregateHash).not.toBe(base.aggregateHash);
+    // Identical dist bytes → identical aggregate, regardless of capabilities.
+    expect(withConfig.aggregateHash).toBe(base.aggregateHash);
+    expect(withConnect.aggregateHash).toBe(base.aggregateHash);
+
+    // Capability tags are still present on the manifest.
     expect(withConfig.tags.some((tag) => tag[0] === 'config')).toBe(true);
     expect(withConnect.tags).toContainEqual(['connect', 'https://api.example.com']);
-    expect(withConfig.tags.some((tag) => tag[0] === 'x' && tag[2] === 'config:schema')).toBe(false);
-    expect(withConnect.tags.some((tag) => tag[0] === 'x' && tag[2] === 'connect:origins')).toBe(false);
+
+    // The ONLY `x` tag on each manifest is the path-tags aggregate — no
+    // capability bytes leak into the content address under any disguise.
+    for (const manifest of [base, withConfig, withConnect]) {
+      expect(manifest.tags.filter((tag) => tag[0] === 'x')).toEqual([
+        ['x', manifest.aggregateHash, 'aggregate'],
+      ]);
+      expect(manifest.tags.some((tag) => tag[1] === 'config:schema')).toBe(false);
+      expect(manifest.tags.some((tag) => tag[1] === 'connect:origins')).toBe(false);
+    }
   });
 });

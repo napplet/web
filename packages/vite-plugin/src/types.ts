@@ -1,9 +1,9 @@
 /**
  * @napplet/vite-plugin — shared option, state, and protocol types.
  *
- * Internal-and-public type surface for the NIP-5A manifest plugin. The public
+ * Internal-and-public type surface for the napplet manifest plugin. The public
  * option types (`Nip5aArtifactMode`, `Nip5aManifestOptions`) and the
- * `SYNTHETIC_XTAG_PATHS` constant are re-exported from `index.ts`; the
+ * NIP-5D kind constants are re-exported from `index.ts`; the
  * `ManifestPluginState` / `ManifestTemplate` shapes are internal plumbing
  * shared between the orchestrator and the manifest builder.
  */
@@ -11,19 +11,19 @@
 import type { NappletConfigSchema } from '@napplet/nap/config/types';
 
 /**
- * Synthetic xTag paths — folded into `aggregateHash` but excluded from the
- * `['x', ...]` tag projection on the signed manifest. Each entry is a pseudo
- * path in `<nap>:<kind>` format; the colon prevents collision with real
- * dist-relative file paths on all platforms.
+ * NIP-5D napplet manifest kinds. Deliberately distinct from NIP-5A's nsite
+ * kinds (`5128` / `15128` / `35128`) so napplets stay out of nsite gateway
+ * resolution — a napplet is resolved and verified by the napplet runtime,
+ * never served as an nsite (NIP-5D §Manifest).
  *
- * Exported for testability and as the single extension point: future synthetic
- * xTags (new NAPs folding bytes into aggregateHash) MUST add their pseudo-path
- * here rather than adding a sibling hardcoded filter. (Mitigates BUILD-P3 drift.)
+ * This plugin always emits a `d` tag (`nappletType` is required), so every
+ * build is a **named** napplet (`35129`). The root (`15129`) and snapshot
+ * (`5129`) kinds are declared here for completeness but are not produced by
+ * this typed-build plugin — there is no root-napplet build mode.
  */
-export const SYNTHETIC_XTAG_PATHS: ReadonlySet<string> = new Set([
-  'config:schema',
-  'connect:origins',
-]);
+export const NAPPLET_KIND_SNAPSHOT = 5129;
+export const NAPPLET_KIND_ROOT = 15129;
+export const NAPPLET_KIND_NAMED = 35129;
 
 /** Configuration options for the NIP-5A manifest plugin. */
 export type Nip5aArtifactMode = 'external-assets' | 'single-file';
@@ -137,7 +137,7 @@ export interface ManifestPluginState {
 
 /** Internal: unsigned manifest template carrying the precomputed aggregateHash. */
 export interface ManifestTemplate {
-  kind: 35128;
+  kind: typeof NAPPLET_KIND_NAMED;
   created_at: number;
   tags: string[][];
   content: '';
