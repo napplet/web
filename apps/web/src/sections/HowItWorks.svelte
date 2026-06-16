@@ -33,7 +33,7 @@
       <h2 class="section-title">A message bus with a trust boundary</h2>
       <p class="section-lead">
         Every sensitive request goes through the shell, which brokers it to a signer,
-        extension or relay. Napplets just send envelopes and get answers back. On the
+        extension or relay. Web napplets just send envelopes and get answers back. On the
         web — the first target — that boundary is an <code>iframe</code> and
         <code>postMessage</code>.
       </p>

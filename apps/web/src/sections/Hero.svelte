@@ -16,10 +16,11 @@
       </h1>
 
       <p class="lede" use:reveal={{ delay: 120 }}>
-        A <strong>napplet</strong> is a small, sandboxed app that does one thing well.
-        It runs inside a host <strong>shell</strong> and delegates signing, storage and
-        relay access over a simple, typed message protocol — so apps stop rebuilding the
-        same client, and every sensitive request is brokered by the shell.
+        A <strong>Nostr Web Applet</strong> — a <strong>napplet</strong> — is a small,
+        sandboxed app that does one thing well. It runs inside a host <strong>shell</strong>
+        and delegates signing, storage and relay access over a simple, typed message
+        protocol — so apps stop rebuilding the same client, and every sensitive request is
+        brokered by the shell.
       </p>
 
       <div class="actions" use:reveal={{ delay: 180 }}>

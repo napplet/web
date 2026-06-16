@@ -29,15 +29,16 @@ with its own concrete message types.
 Unrecognized message types are silently ignored, which is what lets a napplet
 talk to an older or smaller shell and degrade gracefully.
 
-## NAPs and NUBs
+## NAPs
 
-A **NUB** (*Napplet Unified Blueprint*) is the spec-level extension unit: it
-defines a message domain, the valid `type` strings within it, the payload shapes,
-and the expected shell behavior. A NUB named `foo` owns all `foo.*` messages.
+A **NAP** (*Nostr Applet Protocol*) is one capability contract between a napplet
+and its runtime: it defines a message domain, the valid `type` strings within it,
+the payload shapes, and the expected shell behavior. A NAP named `foo` owns all
+`foo.*` messages. NAP contracts are proposed and maintained in the
+[NAPs track](https://github.com/napplet/naps).
 
-In this SDK, the runtime surface of a NUB is a **NAP domain**. Each NAP domain
-owns one message domain — `relay`, `storage`, `inc`, `identity`, and so on — and
-is implemented as a subpath of [`@napplet/nap`](/packages/nap). The core
+In this SDK, each NAP is a **domain** — `relay`, `storage`, `inc`, `identity`, and
+so on — implemented as a subpath of [`@napplet/nap`](/packages/nap). The core
 dispatcher routes inbound messages to the right handler by domain prefix via
 `registerNap(domain, handler)` and `dispatch(message)`.
 

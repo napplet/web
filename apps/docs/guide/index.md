@@ -49,7 +49,7 @@ NIP-5D defines the napplet-shell protocol. All messages are JSON objects with a
 sent over `postMessage`. The shell assigns each napplet an identity at iframe
 creation time by mapping the iframe's unforgeable `MessageEvent.source` to a
 `(dTag, aggregateHash)` tuple from the napplet's NIP-5A manifest, so no handshake
-is needed. Capability domains (**NAPs**, built on the **NUB** extension framework)
+is needed. Capability domains (**NAPs** — modular *Nostr Applet Protocol* contracts)
 are negotiated declaratively via manifest `requires` tags and queried at runtime
 with `window.napplet.shell.supports('domain')`. Read the full
 [NIP-5D explanation](./nip-5d).

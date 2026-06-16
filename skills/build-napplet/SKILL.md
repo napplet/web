@@ -361,6 +361,21 @@ identitySub.close();
 if (!window.napplet.shell.supports('nap:identity')) { /* no identity NAP */ }
 ```
 
+## Runtime guard
+
+Importing `@napplet/shim` arms a runtime guard. A napplet only works inside a
+napplet runtime (shell) that proxies Nostr access over postMessage (NIP-5D). If
+the build is opened without a runtime — as a top-level page, or embedded in a
+frame that never answers the `shell.ready` → `shell.init` handshake (e.g. served
+directly from a NIP-5A nsite gateway) — the shim renders an explanatory modal
+and logs an error instead of silently failing. The modal links the visitor to a
+runtime directory (`napplet.run`), the reference runtime (`github.com/kehto/web`),
+and the NIP-5D spec. No setup is required; this ships with every napplet.
+
+For local standalone development (no runtime), opt out before the shim loads with
+either `window.__NAPPLET_ALLOW_STANDALONE__ = true` or a
+`<meta name="napplet-allow-standalone">` tag in the document `<head>`.
+
 ## Common pitfalls
 
 - Do not call `window.nostr` from napplet code. Use `window.napplet.*` APIs; NAP-IDENTITY is read-only and does not expose decrypt, encrypt, or signing operations.

@@ -10,11 +10,11 @@ The **authoritative** NIP-5D text lives at the pinned source below. When the
 packages and any summary on this site drift from it, the authoritative source
 wins:
 
-- **Spec:** [`raw.githubusercontent.com/dskvr/nips/.../5D.md`](https://raw.githubusercontent.com/dskvr/nips/d80d7b25f9c4331acbeb40dbeb3b077caa80e885/5D.md)
-- **Pinned commit:** `d80d7b25f9c4331acbeb40dbeb3b077caa80e885`
+- **Spec:** [`raw.githubusercontent.com/dskvr/nips/.../5D.md`](https://raw.githubusercontent.com/dskvr/nips/e6ee919ae2be57222d129ee1a8c9b69d34234299/5D.md)
+- **Pinned commit:** `e6ee919ae2be57222d129ee1a8c9b69d34234299`
 
 It covers: Philosophy, Terminology, Transport, Wire Format, Identity, Manifest and
-NUB Negotiation, the NUB Extension Framework, Security Considerations, and
+NAP Negotiation, the NAP Extension Framework, Security Considerations, and
 References.
 
 ## In-repo reference note

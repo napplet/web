@@ -22,10 +22,11 @@ defer to the authoritative source linked below.
 | **Napplet** | A sandboxed iframe application that communicates via `postMessage`. |
 | **dTag** | The napplet type identifier from its NIP-5A manifest. |
 | **Aggregate hash** | A SHA-256 over the napplet's build files; identifies an exact build. |
-| **NUB** | *Napplet Unified Blueprint* — an extension spec defining the protocol messages for a capability domain. |
+| **NAP** | *Nostr Applet Protocol* — one capability contract between a napplet and its runtime, defining the protocol messages for a capability domain. |
 
-> In this SDK, a NUB's runtime surface is referred to as a **NAP domain**. Each
-> NAP domain owns one message domain (`relay`, `storage`, `identity`, …).
+> In this SDK, each NAP is a **domain** that owns one message domain (`relay`,
+> `storage`, `identity`, …). NAP contracts live in the
+> [NAPs track](https://github.com/napplet/naps).
 
 ## Transport
 
@@ -73,10 +74,10 @@ gracefully.
   uses `source`, not `event.origin`.
 - Messages from unmapped `Window` references are silently dropped.
 
-## Manifest and NUB negotiation
+## Manifest and NAP negotiation
 
 - A napplet's manifest is a NIP-5A **kind 35128** event. It declares the
-  capabilities it needs with `requires` tags: `["requires", "<nub-name>"]`.
+  capabilities it needs with `requires` tags: `["requires", "<nap-name>"]`.
 - The shell checks those `requires` tags against its own capabilities at load
   time and can warn on a mismatch.
 - At runtime, a napplet queries support with
@@ -87,15 +88,16 @@ The [`@napplet/vite-plugin`](/packages/vite-plugin) generates this manifest at
 build time — computing per-file SHA-256 hashes, the aggregate hash, and the
 `requires` / `connect` / `config` tags.
 
-## NUB extension framework
+## NAP extension framework
 
-- A NUB spec defines a message **domain**, the valid `type` strings within it,
+- A NAP spec defines a message **domain**, the valid `type` strings within it,
   the payload shapes, and the expected shell behavior.
-- A NUB named `foo` owns **all** `foo.*` message types.
-- Each NUB must be **independently implementable**, and shells may support any
-  subset of NUBs.
+- A NAP named `foo` owns **all** `foo.*` message types.
+- Each NAP must be **independently implementable**, and shells may support any
+  subset of NAPs.
 
-This is what makes the protocol modular: see the
+This is what makes the protocol modular: NAP contracts live in the
+[NAPs track](https://github.com/napplet/naps); see the
 [NAP domain reference](/naps/) for the domains this SDK ships.
 
 ## Security model
@@ -117,8 +119,8 @@ This is what makes the protocol modular: see the
 
 This page is a summary. The **authoritative** NIP-5D text lives at:
 
-- [`raw.githubusercontent.com/dskvr/nips/.../5D.md`](https://raw.githubusercontent.com/dskvr/nips/d80d7b25f9c4331acbeb40dbeb3b077caa80e885/5D.md)
-  (pinned commit `d80d7b25f9c4331acbeb40dbeb3b077caa80e885`)
+- [`raw.githubusercontent.com/dskvr/nips/.../5D.md`](https://raw.githubusercontent.com/dskvr/nips/e6ee919ae2be57222d129ee1a8c9b69d34234299/5D.md)
+  (pinned commit `e6ee919ae2be57222d129ee1a8c9b69d34234299`)
 
 See [NIP-5D spec status](/spec) for the in-repo reference note and how drift is
 tracked.
