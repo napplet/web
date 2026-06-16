@@ -2,21 +2,21 @@
  * @napplet/vite-plugin — manifest resolution, dev meta tags, and bundle writing.
  *
  * Wires together schema discovery/validation, connect normalization, dev-mode
- * meta-tag injection, and the build-time NIP-5A manifest pipeline (aggregateHash
- * computation, kind 35128 signing, artifact rewrites, meta-tag injection).
+ * meta-tag injection, and the build-time napplet manifest pipeline (NIP-5A
+ * aggregateHash computation, NIP-5D kind `35129` signing, artifact rewrites,
+ * meta-tag injection).
  */
 
 import type { IndexHtmlTransformResult } from 'vite';
 import type { NappletConfigSchema } from '@napplet/nap/config/types';
-import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
 import type { ManifestPluginState, ManifestTemplate, Nip5aManifestOptions } from './types.js';
-import { SYNTHETIC_XTAG_PATHS } from './types.js';
+import { NAPPLET_KIND_NAMED } from './types.js';
 import { computeAggregateHash, sha256File, walkDir } from './hashing.js';
 import { discoverConfigSchema, validateConfigSchema } from './config-schema.js';
 import { assertNoInlineScripts, inlineSingleFileBuildAssets } from './html.js';
-import { foldConnectOrigins, normalizeConnectOptions } from './connect.js';
+import { normalizeConnectOptions } from './connect.js';
 
 /**
  * Resolve all per-build plugin state in the `configResolved` hook: out dir,
@@ -122,8 +122,9 @@ export function buildIndexHtmlTags(
 
 /**
  * Build-only entry point: rewrite dist artifacts as configured, then (when a
- * signing key is present) compute the aggregateHash, sign the kind 35128
- * manifest, write `.nip5a-manifest.json`, and inject the aggregateHash meta.
+ * signing key is present) compute the NIP-5A aggregateHash, sign the NIP-5D
+ * kind `35129` manifest, write `.nip5a-manifest.json`, and inject the
+ * aggregateHash meta.
  *
  * @param options - the plugin options.
  * @param state - resolved plugin state (out dir, schema, connect).
@@ -162,22 +163,26 @@ function buildManifestTemplate(
   distPath: string,
   state: ManifestPluginState,
 ): ManifestTemplate {
-  const xTags = buildAggregateInputs(distPath, state);
-  const aggregateHash = computeAggregateHash(xTags);
-  const manifestXTags = xTags
-    .filter(([, p]) => !SYNTHETIC_XTAG_PATHS.has(p))
-    .map(([hash, p]) => ['x', hash, p]);
+  // pathPairs are `[sha256hex, absolutePath]`, the sole input to the NIP-5A
+  // aggregate hash (NIP-5D §Identity: the runtime recomputes the aggregate from
+  // the `path` tags alone and asserts it equals the `x` tag). Capabilities
+  // (`config` / `connect`) are emitted as their own tags but MUST NOT feed the
+  // aggregate, or a conformant runtime would reject the napplet.
+  const pathPairs = buildPathPairs(distPath);
+  const aggregateHash = computeAggregateHash(pathPairs);
+  const pathTags = pathPairs.map(([hash, absPath]) => ['path', absPath, hash]);
   const connectTags = state.normalizedConnect.map((origin) => ['connect', origin]);
   const configTags =
     state.resolvedSchema !== null ? [['config', JSON.stringify(state.resolvedSchema)]] : [];
   const requiresTags = (options.requires ?? []).map((name) => ['requires', name]);
 
   return {
-    kind: 35128,
+    kind: NAPPLET_KIND_NAMED,
     created_at: Math.floor(Date.now() / 1000),
     tags: [
       ['d', options.nappletType],
-      ...manifestXTags,
+      ...pathTags,
+      ['x', aggregateHash, 'aggregate'],
       ...connectTags,
       ...configTags,
       ...requiresTags,
@@ -187,22 +192,19 @@ function buildManifestTemplate(
   };
 }
 
-function buildAggregateInputs(distPath: string, state: ManifestPluginState): Array<[string, string]> {
-  const xTags: Array<[string, string]> = [];
+/**
+ * Enumerate dist artifacts as NIP-5A `path`-tag pairs: `[sha256hex, absolutePath]`,
+ * where the path is the dist-relative path made absolute (leading `/`, forward
+ * slashes on every platform). The signed manifest itself is excluded.
+ */
+function buildPathPairs(distPath: string): Array<[string, string]> {
+  const pairs: Array<[string, string]> = [];
   for (const relativePath of walkDir(distPath)) {
     if (relativePath === '.nip5a-manifest.json') continue;
-    xTags.push([sha256File(path.join(distPath, relativePath)), relativePath]);
+    const absPath = '/' + relativePath.split(path.sep).join('/');
+    pairs.push([sha256File(path.join(distPath, relativePath)), absPath]);
   }
-
-  if (state.resolvedSchema !== null) {
-    const schemaHash = crypto.createHash('sha256').update(JSON.stringify(state.resolvedSchema)).digest('hex');
-    xTags.push([schemaHash, 'config:schema']);
-  }
-  if (state.normalizedConnect.length > 0) {
-    xTags.push([foldConnectOrigins(state.normalizedConnect), 'connect:origins']);
-  }
-
-  return xTags;
+  return pairs;
 }
 
 async function writeManifestFile(
@@ -216,7 +218,7 @@ async function writeManifestFile(
     const privkeyBytes = hexToBytes(privkeyHex);
     const pubkey = getPublicKey(privkeyBytes);
     const signedEvent = finalizeEvent({
-      kind: 35128,
+      kind: NAPPLET_KIND_NAMED,
       created_at: manifest.created_at,
       tags: manifest.tags,
       content: manifest.content,

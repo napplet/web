@@ -1,14 +1,19 @@
 /**
- * VER-06 test: aggregateHash content-addressing via connect:origins fold.
+ * NAP-CONNECT canonical origin-set fold conformance test.
  *
- * The NAP-CONNECT canonical fold procedure is implemented here INLINE (not
- * imported from the vite-plugin copy). Both implementations — this one AND
- * packages/vite-plugin/src/index.ts — MUST independently agree on the spec
- * conformance fixture digest. This test pins the digest to
+ * This pins the deterministic digest of a normalized `connect` origin set. The
+ * digest is NOT part of the napplet `aggregateHash`: per NIP-5D §Identity the
+ * aggregate is the NIP-5A hash of the manifest `path` tags ALONE, so a runtime
+ * can recompute and verify it. This fold is instead the canonical way to digest
+ * the emitted `['connect', …]` tags — a shell uses it (or the tags directly) to
+ * key and invalidate grants when a napplet's declared origin set changes.
+ *
+ * The procedure is implemented INLINE here (not imported) so the spec fixture
+ * digest is pinned independently of any producer. The digest is locked to
  * `cc7c1b1903fb23ecb909d2427e1dccd7d398a5c63dd65160edb0bb8b231aa742`
- * (locked in Phase 135-03, independently verified).
+ * (Phase 135-03, independently verified).
  *
- * Fold procedure per NAP-CONNECT §Canonical `connect:origins` aggregateHash Fold:
+ * Fold procedure per NAP-CONNECT §Canonical `connect:origins` Fold:
  *   1. Lowercase each origin
  *   2. ASCII-ascending sort
  *   3. LF-join ('\n'), no trailing newline
@@ -16,10 +21,9 @@
  *   5. SHA-256
  *   6. Lowercase hex
  *
- * VER-06 content-addressing property: changing the connect origin list
- * (add/remove/mutate any origin) while dist files are unchanged MUST flip
- * the aggregateHash, thereby invalidating any grant keyed on the prior
- * (dTag, aggregateHash) pair.
+ * Content-addressing property: changing the connect origin list (add/remove/
+ * mutate any origin) MUST flip this digest, so any grant a shell keyed on the
+ * prior origin set is invalidated.
  */
 
 import { describe, it, expect } from 'vitest';
@@ -28,10 +32,8 @@ import { createHash } from 'node:crypto';
 // ─── Canonical fold ────────────────────────────────────────────────────────
 
 /**
- * Byte-identical to the vite-plugin implementation at
- * packages/vite-plugin/src/index.ts. Both copies MUST agree on the spec
- * conformance fixture digest. If either drifts, this test fires and the
- * vite-plugin's module-load self-check (Phase 138-03) fires independently.
+ * Reference implementation of the NAP-CONNECT canonical origin-set fold. Pins
+ * the spec conformance fixture digest independently of any producer.
  */
 function foldConnectOrigins(origins: readonly string[]): {
   digest: string;
@@ -68,7 +70,7 @@ const EMPTY_SHA256 =
 
 // ─── Tests ─────────────────────────────────────────────────────────────────
 
-describe('connect:origins aggregateHash fold (VER-06)', () => {
+describe('connect origin-set canonical fold', () => {
   it('matches NAP-CONNECT §Conformance Fixture SHA-256 digest', () => {
     const { digest, byteLength } = foldConnectOrigins(FIXTURE_ORIGINS);
     expect(digest).toBe(EXPECTED_DIGEST);
@@ -125,11 +127,10 @@ describe('connect:origins aggregateHash fold (VER-06)', () => {
     expect(digest).toBe(EMPTY_SHA256);
   });
 
-  it('VER-06 end-to-end: same dist + changed connect list → different aggregateHash', () => {
-    // Simulates the build-over-build invalidation scenario: dist files unchanged,
-    // only the connect:origins declaration differs → the `connect:origins`
-    // synthetic entry folded into aggregateHash MUST flip, so any prior grant
-    // keyed on (dTag, aggregateHash) is now stale and the user must re-consent.
+  it('grant invalidation: changing the connect list flips the origin-set digest', () => {
+    // Build-over-build invalidation scenario: only the declared connect origin
+    // set differs → the canonical fold digest MUST flip, so any grant a shell
+    // keyed on the prior origin set is now stale and the user must re-consent.
     const build1 = foldConnectOrigins(['https://api.example.com']);
     const build2 = foldConnectOrigins([
       'https://api.example.com',
@@ -142,7 +143,7 @@ describe('connect:origins aggregateHash fold (VER-06)', () => {
     expect(build2.digest).toMatch(/^[0-9a-f]{64}$/);
   });
 
-  it('VER-06 origin-order invariance: author reordering same set keeps hash stable', () => {
+  it('origin-order invariance: author reordering the same set keeps the digest stable', () => {
     // Complement of the prior test — author-side reordering is NOT a grant-
     // invalidating event. The grant key is the SET of origins, not the order.
     const authorOrderA = ['https://a.com', 'https://b.com', 'https://c.com'];

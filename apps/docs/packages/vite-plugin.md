@@ -6,7 +6,8 @@
 `@napplet/vite-plugin` is a **development tool**. In dev mode it injects the
 discovery meta tags the shim looks for; at build time (with a test private key) it
 walks `dist/`, computes per-file SHA-256 hashes and the NIP-5A aggregate hash,
-signs a **kind 35128** manifest event, and injects the `requires` / `connect` /
+signs a NIP-5D **kind 35129** named-napplet manifest event (NIP-5A tag schema:
+`path` tags + one aggregate `x` tag), and emits the `requires` / `connect` /
 `config` tags. It runs at build/dev time only — it is **not** a runtime
 dependency.
 
@@ -49,7 +50,7 @@ export default defineConfig({
 | `requires` | `string[]` | Service names this napplet needs. Injects a `napplet-requires` meta tag and `["requires", …]` manifest tags. |
 | `configSchema` | `NappletConfigSchema \| string` | A JSON Schema (draft-07+) for the napplet's NAP-CONFIG surface. Inline object or path; falls through to `config.schema.json` then `napplet.config.*` discovery. |
 | `artifactMode` | `'external-assets' \| 'single-file'` | Default `'external-assets'`. `'single-file'` inlines local JS/CSS into `index.html` before hashing — for gateway-portable NIP-5A artifacts. |
-| `connect` | `string[]` | Origins the napplet needs direct network access to. Validated, emitted as `["connect", …]` manifest tags, and folded into the aggregate hash. |
+| `connect` | `string[]` | Origins the napplet needs direct network access to. Validated and emitted as `["connect", …]` manifest tags. Not folded into the aggregate hash (NIP-5D §Identity: the aggregate is the `path` tags alone); a shell keys grant invalidation on the `connect` tags. |
 | `strictCsp` | `unknown` | **Deprecated (v0.29.0).** Accepted-but-warns, no effect — the shell is now the sole runtime CSP authority. |
 
 ## What gets injected
@@ -62,15 +63,16 @@ In **dev mode**, two meta tags so the shim can find them:
 ```
 
 At **build time** (with `VITE_DEV_PRIVKEY_HEX` set), the plugin walks `dist/`,
-computes hashes, signs the kind 35128 event, writes `.nip5a-manifest.json`, and
+computes hashes, signs the kind 35129 event, writes `.nip5a-manifest.json`, and
 stamps the real aggregate hash into the meta tag:
 
 ```json
 {
-  "kind": 35128,
+  "kind": 35129,
   "tags": [
     ["d", "my-music-app"],
-    ["x", "<sha256>", "index.js"],
+    ["path", "/index.html", "<sha256>"],
+    ["x", "<aggregateHash>", "aggregate"],
     ["requires", "audio"],
     ["requires", "notifications"]
   ]

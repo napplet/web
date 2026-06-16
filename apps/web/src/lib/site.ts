@@ -49,7 +49,7 @@ const PACKAGE_SOURCES: ReadonlyArray<{ name: string; blurb: string; jsr: boolean
   {
     name: '@napplet/vite-plugin',
     blurb:
-      'Build-time NIP-5A manifest generation. Hashes each file, signs a kind 35128 manifest event, injects requires meta tags.',
+      'Build-time napplet manifest generation. Hashes each file, signs a kind 35129 manifest event (NIP-5A tag schema), injects requires meta tags.',
     jsr: true,
   },
   {

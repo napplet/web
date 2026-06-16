@@ -1,37 +1,16 @@
 /**
- * @napplet/vite-plugin — NAP-CONNECT origin normalization and aggregateHash fold.
+ * @napplet/vite-plugin — NAP-CONNECT origin normalization.
  *
  * Normalizes author-declared `connect` origins through the shared NAP-CONNECT
- * validator and computes the canonical `connect:origins` aggregateHash fold
- * (lowercase → ASCII-ascending sort → LF-join no trailing → UTF-8 → SHA-256 →
- * lowercase hex). The fold is exported as {@link foldConnectOrigins} so its
- * determinism can be asserted against the NAP-CONNECT.md §Conformance Fixture
- * in tests without shipping example.com URLs in production source.
+ * validator and emits one `['connect', <origin>]` tag per origin on the signed
+ * manifest. Origins are NOT folded into the napplet `aggregateHash`: per NIP-5D
+ * §Identity the aggregate is the NIP-5A hash of the `path` tags alone, so a
+ * conformant runtime can recompute and verify it. Shells that want to invalidate
+ * grants on a capability-list change key on the emitted `connect` tags instead.
  */
 
-import * as crypto from 'crypto';
 import { normalizeConnectOrigin } from '@napplet/nap/connect/types';
 import type { Nip5aManifestOptions } from './types.js';
-
-/**
- * Canonical NAP-CONNECT `connect:origins` aggregateHash fold.
- *
- * Applies the spec fold to a list of already-normalized origins: ASCII-ascending
- * sort → LF-join (no trailing newline) → UTF-8 → SHA-256 → lowercase hex. Any
- * change to delimiter, sort order, encoding, or hash algorithm flips the digest,
- * which auto-invalidates shell grants keyed on `(dTag, aggregateHash)`.
- *
- * @param origins - normalized NAP-CONNECT origins (output of {@link normalizeConnectOptions}).
- * @returns Lowercase hex SHA-256 digest of the canonical fold.
- * @see NAP-CONNECT.md §Canonical `connect:origins` aggregateHash Fold
- * @example
- * foldConnectOrigins(['https://api.example.com', 'wss://events.example.com']);
- */
-export function foldConnectOrigins(origins: string[]): string {
-  const sorted = [...origins].sort();
-  const canonical = sorted.join('\n');
-  return crypto.createHash('sha256').update(canonical, 'utf8').digest('hex');
-}
 
 /**
  * Normalize author-declared `connect` origins for build-time emission.
