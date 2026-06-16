@@ -11,6 +11,16 @@ export default defineConfig({
     outDir: 'dist',
     assetsInlineLimit: 0,
   },
+  // Pre-bundle deps for the same modern target the build uses. Without this the
+  // optimizer falls back to an old browser baseline (chrome87 …) and esbuild
+  // 0.28+ aborts dep optimization with "Transforming destructuring … is not
+  // supported yet" on Svelte's internals — which crashes `vite dev`. es2022
+  // supports destructuring natively, so nothing has to be down-transformed.
+  optimizeDeps: {
+    esbuildOptions: {
+      target: 'es2022',
+    },
+  },
   server: {
     // Serve the VitePress docs under /docs from this single dev server, the
     // same way the deploy workflow stitches them in production. Requires the
