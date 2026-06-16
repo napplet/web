@@ -33,3 +33,56 @@ export type {
   ManifestVerdict,
   ValidateManifestOptions,
 } from './validators/manifest.js';
+
+// ── reference shell ──────────────────────────────────────────────────────────
+export {
+  createReferenceShell,
+  attachReferenceShell,
+  REFERENCE_PUBKEY,
+} from './shell/reference-shell.js';
+export type {
+  ReferenceShell,
+  ReferenceShellOptions,
+  ShellCapabilities,
+  RecordedEnvelope,
+  MessageWindowLike,
+  PostTargetLike,
+  AttachOptions,
+} from './shell/reference-shell.js';
+
+// ── context ──────────────────────────────────────────────────────────────────
+export { makeContext } from './run/context.js';
+export type {
+  ConformanceContext,
+  SandboxState,
+  BootObservation,
+} from './run/context.js';
+
+// ── checks ───────────────────────────────────────────────────────────────────
+export { CHECKS } from './checks/catalog.js';
+export { result as checkResult } from './checks/types.js';
+export type {
+  Check,
+  CheckArea,
+  CheckSeverity,
+  CheckStatus,
+  CheckResult,
+} from './checks/types.js';
+
+// ── runner ───────────────────────────────────────────────────────────────────
+export { runConformance } from './run/runner.js';
+export type {
+  ConformanceRun,
+  CheckOutcome,
+  RunSummary,
+  RunOptions,
+} from './run/runner.js';
+
+// ── reporters ────────────────────────────────────────────────────────────────
+export {
+  toJson,
+  toPretty,
+  toJUnit,
+  report,
+} from './report/reporters.js';
+export type { ReporterFormat } from './report/reporters.js';
