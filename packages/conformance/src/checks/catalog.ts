@@ -24,62 +24,33 @@ function hasMeta(html: string, name: string): boolean {
   return new RegExp(`name\\s*=\\s*["']${name}["']`, 'i').test(html);
 }
 
+/**
+ * Build a manifest check that fails when {@link validateManifest} reports any of
+ * `codes`. When `skipMeta` is given, the check skips (rather than passing) if that
+ * meta tag is absent — so optional features only fail when present-and-invalid.
+ */
+function manifestCheck(id: string, title: string, codes: ManifestError['code'][], skipMeta?: string): Check {
+  return {
+    id,
+    area: 'manifest',
+    severity: 'error',
+    title,
+    run: (ctx) => {
+      if (skipMeta && !hasMeta(ctx.manifestHtml, skipMeta)) return result.skip(`No ${skipMeta} declared`);
+      const errs = manifestErrors(ctx.manifestHtml, codes);
+      return errs.length ? result.fail(errs[0].message, errs) : result.pass();
+    },
+  };
+}
+
 /** The v1 catalog, in display order. */
 export const CHECKS: Check[] = [
   // ── manifest ───────────────────────────────────────────────────────────────
-  {
-    id: 'manifest/napplet-type',
-    area: 'manifest',
-    severity: 'error',
-    title: 'Declares a valid napplet-type',
-    run: (ctx) => {
-      const errs = manifestErrors(ctx.manifestHtml, ['missing-napplet-type', 'invalid-napplet-type']);
-      return errs.length ? result.fail(errs[0].message, errs) : result.pass();
-    },
-  },
-  {
-    id: 'manifest/aggregate-hash',
-    area: 'manifest',
-    severity: 'error',
-    title: 'Build injected a valid aggregate hash',
-    run: (ctx) => {
-      const errs = manifestErrors(ctx.manifestHtml, ['missing-aggregate-hash', 'invalid-aggregate-hash']);
-      return errs.length ? result.fail(errs[0].message, errs) : result.pass();
-    },
-  },
-  {
-    id: 'manifest/declared-naps',
-    area: 'manifest',
-    severity: 'error',
-    title: 'napplet-requires lists only real NAP domains',
-    run: (ctx) => {
-      if (!hasMeta(ctx.manifestHtml, 'napplet-requires')) return result.skip('No napplet-requires declared');
-      const errs = manifestErrors(ctx.manifestHtml, ['unknown-required-nap']);
-      return errs.length ? result.fail(errs[0].message, errs) : result.pass();
-    },
-  },
-  {
-    id: 'manifest/config-schema',
-    area: 'manifest',
-    severity: 'error',
-    title: 'Config schema is a draft-07 core subset',
-    run: (ctx) => {
-      if (!hasMeta(ctx.manifestHtml, 'napplet-config-schema')) return result.skip('No config schema declared');
-      const errs = manifestErrors(ctx.manifestHtml, ['invalid-config-schema']);
-      return errs.length ? result.fail(errs[0].message, errs) : result.pass();
-    },
-  },
-  {
-    id: 'manifest/connect-origins',
-    area: 'manifest',
-    severity: 'error',
-    title: 'Declared connect origins are valid',
-    run: (ctx) => {
-      if (!hasMeta(ctx.manifestHtml, 'napplet-connect-requires')) return result.skip('No connect origins declared');
-      const errs = manifestErrors(ctx.manifestHtml, ['invalid-connect-origin']);
-      return errs.length ? result.fail(errs[0].message, errs) : result.pass();
-    },
-  },
+  manifestCheck('manifest/napplet-type', 'Declares a valid napplet-type', ['missing-napplet-type', 'invalid-napplet-type']),
+  manifestCheck('manifest/aggregate-hash', 'Build injected a valid aggregate hash', ['missing-aggregate-hash', 'invalid-aggregate-hash']),
+  manifestCheck('manifest/declared-naps', 'napplet-requires lists only real NAP domains', ['unknown-required-nap'], 'napplet-requires'),
+  manifestCheck('manifest/config-schema', 'Config schema is a draft-07 core subset', ['invalid-config-schema'], 'napplet-config-schema'),
+  manifestCheck('manifest/connect-origins', 'Declared connect origins are valid', ['invalid-connect-origin'], 'napplet-connect-requires'),
   {
     id: 'manifest/no-inline-scripts',
     area: 'manifest',

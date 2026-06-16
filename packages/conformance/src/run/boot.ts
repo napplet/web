@@ -85,7 +85,7 @@ async function bootOnce(
   iframe.style.height = '1px';
   iframe.style.left = '-9999px';
 
-  let resolveReady: () => void = () => {};
+  let resolveReady!: () => void;
   const readyPromise = new Promise<void>((resolve) => {
     resolveReady = resolve;
   });

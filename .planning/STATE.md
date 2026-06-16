@@ -7,10 +7,10 @@ last_updated: "2026-06-16T17:49:21.028Z"
 last_activity: 2026-06-16
 progress:
   total_phases: 5
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 0
   completed_plans: 0
-  percent: 80
+  percent: 100
 ---
 
 # Project State
@@ -27,9 +27,18 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 
 ## Current Position
 
-Phase: 152 — Boilerplate Integration, Docs, Changesets & Release Prep (FINAL)
+Phase: ALL COMPLETE (148-152). Milestone v0.32.0 Napplet Conformance ready to ship.
 Plan: —
-Status: M1+M2+M3 COMPLETE (Phases 148-151). Engine + CLI + web runtime all done & verified end-to-end. Executing M4 (release).
+Status: M1+M2+M3+M4 COMPLETE. Final gate green: build(11), type-check(14), test:unit(212), test:e2e(4), test:conformance(CONFORMANT). aislop 89 (only environmental vite/js-yaml dep advisories remain). Changesets authored; new packages at 0.0.0 → first publish 0.1.0.
+
+### Phase 152 record (REL-01..05) — COMPLETE
+- REL-01: root `pnpm test:conformance` dogfood green (CLI vs conformant fixture, exit 0).
+- REL-02: boilerplate template change documented at docs/conformance/boilerplate-integration.md (separate napplet/boilerplate repo); also surfaced in PR body.
+- REL-03: root README (packages table + Conformance section + changelog bullet + website list), skills/build-napplet/SKILL.md (Step 13), package READMEs.
+- REL-04: changesets .changeset/napplet-conformance.md + napplet-conformance-cli.md (minor → 0.1.0 first release); engine has jsr.json (npm+JSR), cli npm-only. Versions set to 0.0.0.
+- REL-05: full cross-path gate green; aislop 89/Healthy.
+- NOTE FOR USER: README on main already had a `v0.32.0 — Read-Only NAP-IDENTITY` changelog entry (pre-existing) that collides with this milestone's v0.32.0 label. Left it untouched; added conformance additively. Milestone version label may need reconciliation (this work could be v0.33.0). Surfaced in PR.
+- NOTE: aislop's 1 error = vite (high, upgrade 6.4.3+) + 1 warn = js-yaml — both environmental dependency advisories, not introduced here; out of scope (separate dep-bump like v0.31.0).
 Last activity: 2026-06-16 — Phase 150 (b7a7f7e) CLI+fixtures+e2e+CI; Phase 151 apps/conformance web runtime verified live (CONFORMANT, 2 envelopes, manifest inspector) + deploy wiring at /conformance
 
 ### Phase 150 record (CLI-01..06) — COMPLETE (b7a7f7e)

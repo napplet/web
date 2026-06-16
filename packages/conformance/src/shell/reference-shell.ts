@@ -24,6 +24,9 @@ import { validateEnvelope, type EnvelopeVerdict } from '../validators/envelope.j
 /** A 64-hex reference user pubkey the shell reports for identity queries. */
 export const REFERENCE_PUBKEY = 'f'.repeat(64);
 
+/** A placeholder blob URL for canned upload responses. `.invalid` is reserved (RFC 2606) and never resolves. */
+const REFERENCE_BLOB_URL = 'https://reference.invalid/blob';
+
 /** One recorded inbound envelope from the napplet, with its validation verdict. */
 export interface RecordedEnvelope {
   /** The raw envelope the napplet posted. */
@@ -147,7 +150,7 @@ const RESPONDERS: Record<string, Responder> = {
   'outbox.resolveRelays': (e) => ok({ type: 'outbox.resolveRelays.result', id: e.id, plan: {} }),
 
   // upload
-  'upload.upload': (e) => ok({ type: 'upload.upload.result', id: e.id, result: { url: 'https://reference.invalid/blob' } }),
+  'upload.upload': (e) => ok({ type: 'upload.upload.result', id: e.id, result: { url: REFERENCE_BLOB_URL } }),
   'upload.status': (e) => ok({ type: 'upload.status.result', id: e.id, status: {} }),
 
   // intent
