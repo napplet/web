@@ -64,4 +64,30 @@ four areas: **M1 Engine → M2 CLI+CI → M3 Web runtime → M4 Boilerplate+Rele
 
 ## Traceability
 
-_Filled by the roadmap: REQ-ID → Phase._
+| REQ-ID | Phase |
+|--------|-------|
+| ENGINE-01 | 148 |
+| ENGINE-03 | 148 |
+| ENGINE-04 | 148 |
+| ENGINE-05 | 148 |
+| ENGINE-02 | 149 |
+| ENGINE-06 | 149 |
+| ENGINE-07 | 149 |
+| ENGINE-08 | 149 |
+| ENGINE-09 | 149 |
+| CLI-01 | 150 |
+| CLI-02 | 150 |
+| CLI-03 | 150 |
+| CLI-04 | 150 |
+| CLI-05 | 150 |
+| CLI-06 | 150 |
+| WEB-01 | 151 |
+| WEB-02 | 151 |
+| WEB-03 | 151 |
+| REL-01 | 152 |
+| REL-02 | 152 |
+| REL-03 | 152 |
+| REL-04 | 152 |
+| REL-05 | 152 |
+
+All 23 requirements mapped to exactly one phase. Coverage: 100%.
