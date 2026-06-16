@@ -38,6 +38,19 @@ importers:
         specifier: ^4.1.2
         version: 4.1.2(@types/node@22.19.15)(happy-dom@20.10.3)(vite@6.4.2(@types/node@22.19.15)(jiti@2.6.1))
 
+  apps/conformance:
+    dependencies:
+      '@napplet/conformance':
+        specifier: workspace:^
+        version: link:../../packages/conformance
+    devDependencies:
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vite:
+        specifier: ^6.4.2
+        version: 6.4.2(@types/node@22.19.15)(jiti@2.6.1)
+
   apps/docs:
     devDependencies:
       vitepress:

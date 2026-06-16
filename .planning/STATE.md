@@ -7,10 +7,10 @@ last_updated: "2026-06-16T17:49:21.028Z"
 last_activity: 2026-06-16
 progress:
   total_phases: 5
-  completed_phases: 2
+  completed_phases: 4
   total_plans: 0
   completed_plans: 0
-  percent: 40
+  percent: 80
 ---
 
 # Project State
@@ -27,10 +27,16 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 
 ## Current Position
 
-Phase: 150 — Headless CLI + Fixtures + e2e + CI (next)
+Phase: 152 — Boilerplate Integration, Docs, Changesets & Release Prep (FINAL)
 Plan: —
-Status: M1 COMPLETE (Phases 148+149). Engine done: validators, reference shell, checks, runner, reporters. 65 tests green. Executing M2.
-Last activity: 2026-06-16 — Phase 149 done (ebf49aa): reference shell + 14-check catalog + runConformance + 3 reporters
+Status: M1+M2+M3 COMPLETE (Phases 148-151). Engine + CLI + web runtime all done & verified end-to-end. Executing M4 (release).
+Last activity: 2026-06-16 — Phase 150 (b7a7f7e) CLI+fixtures+e2e+CI; Phase 151 apps/conformance web runtime verified live (CONFORMANT, 2 envelopes, manifest inspector) + deploy wiring at /conformance
+
+### Phase 150 record (CLI-01..06) — COMPLETE (b7a7f7e)
+- @napplet/conformance-cli (npm-only, playwright). bin napplet-conformance. Loopback ACAO:* server + Playwright Chromium + bootAndCollect + node-side checks + reporters + exit codes. Fixtures (conformant/broken) under tests/fixtures/napplets/*. e2e under tests/e2e/harness (test:e2e). conformance.yml CI with browser cache. Verified: conformant->0, broken->1.
+
+### Phase 151 record (WEB-01..03) — COMPLETE
+- apps/conformance (@napplet/conformance-web): vanilla TS + Vite. Loads napplet by ?url= / input, runs engine live (bootAndCollect+runConformance), renders check tree + envelope log + manifest inspector. Reuses @napplet/conformance directly. type-check + build green. Verified live in real browser cross-origin: verdict CONFORMANT, 2 envelopes, manifest-type rendered. Deploy wiring: deploy-site.yml builds with base=/conformance/ and assembles into site/conformance.
 
 ### Phase 150 design decisions (in progress)
 - Sandbox opacity: a napplet in allow-scripts (no same-origin) iframe is opaque to parent. Observable boot signal = shim's `shell.ready` postMessage. Boot failure = no shell.ready within timeout (also how same-origin reliance manifests). Forbidden-global (window.nostr) access is UNOBSERVABLE across the sandbox → detected via static scan of the built bundle (node-side), fed into ConformanceContext.forbiddenGlobals.
