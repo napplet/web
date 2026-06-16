@@ -76,6 +76,18 @@
       destName: 'media host',
     },
     {
+      // Not the most obvious domain, but it fits: the shell fetches a resource
+      // on the napplet's behalf and streams the raw bytes back. Rendered as a
+      // special frame — pixel loader in the backend box, bytes on the return
+      // lane — instead of a text label (see the `resource` branches below).
+      domain: 'resource',
+      call: 'window.napplet.resource<wbr />.fetch()',
+      out: '{ type: "resource.fetch", id, url }',
+      in: '',
+      destKind: 'fetching',
+      destName: '',
+    },
+    {
       domain: 'cvm',
       call: 'window.napplet.cvm<wbr />.call()',
       out: '{ type: "cvm.call", id, tool, args }',
@@ -84,6 +96,25 @@
       destName: 'MCP tools',
     },
   ];
+
+  // Pixel loader for the resource domain: a deterministic scatter of reveal
+  // delays so the grid fills in pixel-by-pixel like a resource streaming in.
+  const PIXEL_COLS = 8;
+  const PIXEL_ROWS = 6;
+  const pixels = Array.from({ length: PIXEL_COLS * PIXEL_ROWS }, (_, p) => {
+    const col = p % PIXEL_COLS;
+    const row = Math.floor(p / PIXEL_COLS);
+    return {
+      delay: ((col * 5 + row * 11) % 18) * 90,
+      accent: (col * 3 + row) % 7 === 0,
+    };
+  });
+
+  // Authentic-looking PNG header bytes "arriving over the wire" for resource —
+  // signature + IHDR for a 64×64 image. Duplicated in the markup so the scroll
+  // loops seamlessly.
+  const RESOURCE_BYTES =
+    '89 50 4E 47 0D 0A 1A 0A 00 00 00 0D 49 48 44 52 00 00 00 40 00 00 00 40 08 06 00 00 00 AA 69 71 DE';
 
   let i = $state(0);
   const nap = $derived(naps[i]);
@@ -106,16 +137,31 @@
 
 <div class="envelope">
   <div class="flow" role="img"
-    aria-label="A napplet sends a JSON envelope over postMessage to the shell. The shell verifies identity from the message source, checks the ACL and dispatches the NAP, then talks to the capability backend over the network and streams results back. The diagram rotates through the relay, storage, media, notify, theme, value, upload and cvm domains.">
+    aria-label="A napplet sends a JSON envelope over postMessage to the shell. The shell verifies identity from the message source, checks the ACL and dispatches the NAP, then talks to the capability backend over the network and streams results back. The diagram rotates through the relay, storage, media, notify, theme, value, upload, resource and cvm domains.">
     <!-- Napplet node -->
     <div class="node node-napplet">
       <span class="node-kind">sandboxed iframe</span>
       <span class="node-name">napplet</span>
-      <div class="call-slot">
-        {#key i}
-          <code class="node-call">{@html nap.call}</code>
-        {/key}
-      </div>
+      {#if nap.domain === 'resource'}
+        <!-- The fetched bytes render inside the napplet — a loader that mirrors
+             the backend's, lagged slightly so it reads as "arriving after". -->
+        <div
+          class="pixel-grid napplet-pixels"
+          role="img"
+          aria-label="fetched bytes rendering inside the napplet"
+          style="--cols: {PIXEL_COLS}"
+        >
+          {#each pixels as px}
+            <span class="px" class:px-accent={px.accent} style="animation-delay: {px.delay + 520}ms"></span>
+          {/each}
+        </div>
+      {:else}
+        <div class="call-slot">
+          {#key i}
+            <code class="node-call">{@html nap.call}</code>
+          {/key}
+        </div>
+      {/if}
     </div>
 
     <!-- Wire: napplet ⇄ shell -->
@@ -132,9 +178,17 @@
         <span class="packet packet-in"></span>
       </div>
       <div class="label-slot">
-        {#key i}
-          <span class="wire-label in">{nap.in}</span>
-        {/key}
+        {#if nap.domain === 'resource'}
+          <span class="wire-label in bytes" aria-label="raw bytes returning over the wire">
+            <span class="bytes-stream">
+              <span>{RESOURCE_BYTES}&nbsp;&nbsp;</span><span>{RESOURCE_BYTES}&nbsp;&nbsp;</span>
+            </span>
+          </span>
+        {:else}
+          {#key i}
+            <span class="wire-label in">{nap.in}</span>
+          {/key}
+        {/if}
       </div>
       <span class="wire-medium">postMessage</span>
     </div>
@@ -160,17 +214,31 @@
 
     <!-- Capability backend node (rotates with the active NAP) -->
     <div class="node node-net">
-      <div class="net-head">
-        {#key i}
-          <div class="net-head-inner">
-            <span class="node-kind">{nap.destKind}</span>
-            <span class="node-name">{nap.destName}</span>
-          </div>
-        {/key}
-      </div>
-      <div class="relay-dots">
-        <span></span><span></span><span></span>
-      </div>
+      {#if nap.domain === 'resource'}
+        <span class="node-kind">{nap.destKind}</span>
+        <div
+          class="pixel-grid"
+          role="img"
+          aria-label="a resource loading in pixel by pixel"
+          style="--cols: {PIXEL_COLS}"
+        >
+          {#each pixels as px}
+            <span class="px" class:px-accent={px.accent} style="animation-delay: {px.delay}ms"></span>
+          {/each}
+        </div>
+      {:else}
+        <div class="net-head">
+          {#key i}
+            <div class="net-head-inner">
+              <span class="node-kind">{nap.destKind}</span>
+              <span class="node-name">{nap.destName}</span>
+            </div>
+          {/key}
+        </div>
+        <div class="relay-dots">
+          <span></span><span></span><span></span>
+        </div>
+      {/if}
     </div>
   </div>
 
@@ -300,6 +368,34 @@
   .relay-dots span:nth-child(2) { animation-delay: 0.3s; }
   .relay-dots span:nth-child(3) { animation-delay: 0.6s; }
 
+  /* Resource domain: a pixel loader stands in for the text backend, reading as
+     a resource streaming in pixel by pixel. */
+  .pixel-grid {
+    display: grid;
+    grid-template-columns: repeat(var(--cols, 8), 1fr);
+    gap: 2px;
+    width: 92px;
+    margin-top: 8px;
+  }
+  .px {
+    aspect-ratio: 1;
+    border-radius: 2px;
+    background: var(--cyan);
+    opacity: 0;
+    animation: px-in 2.6s ease-in-out infinite;
+  }
+  .px-accent {
+    background: var(--accent-bright);
+    box-shadow: 0 0 6px var(--accent);
+  }
+  /* Napplet-side loader mirrors the backend but in the napplet's accent palette,
+     so each box's loader matches its own colour identity. */
+  .napplet-pixels .px { background: var(--accent-bright); }
+  .napplet-pixels .px-accent {
+    background: var(--cyan);
+    box-shadow: 0 0 6px var(--cyan);
+  }
+
   /* Wires */
   .wire {
     position: relative;
@@ -326,6 +422,22 @@
   }
   .wire-label.out { color: var(--accent-bright); }
   .wire-label.in { color: var(--cyan); }
+  /* Resource return lane: raw bytes scrolling over the wire. The two identical
+     copies + translateX(-50%) make the scroll seamless. */
+  .wire-label.bytes {
+    overflow: hidden;
+    text-align: left;
+    white-space: nowrap;
+    animation: none;
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+  }
+  .bytes-stream {
+    display: inline-flex;
+    white-space: nowrap;
+    animation: stream 9s linear infinite;
+  }
+  .bytes-stream > span { padding-right: 0; }
   .wire-medium {
     position: absolute;
     bottom: -6px;
@@ -430,6 +542,16 @@
     from { opacity: 0; transform: translateY(3px); }
     to { opacity: 1; transform: translateY(0); }
   }
+  @keyframes px-in {
+    0% { opacity: 0; transform: scale(0.3); }
+    18% { opacity: 1; transform: scale(1); }
+    72% { opacity: 0.9; transform: scale(1); }
+    100% { opacity: 0; transform: scale(0.3); }
+  }
+  @keyframes stream {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
 
   @media (max-width: 860px) {
     .flow { grid-template-columns: 1fr; }
@@ -455,5 +577,7 @@
     .node-call,
     .wire-label,
     .net-head-inner { animation: none; }
+    .px { animation: none; opacity: 0.85; }
+    .bytes-stream { animation: none; }
   }
 </style>
