@@ -3,6 +3,62 @@
 This file is the source of truth for agents working in this repo. `CLAUDE.md` is a
 symlink to it.
 
+## Protocol fidelity — non-negotiable (READ FIRST)
+
+napplet implements an **interoperable** protocol. The protocol is defined by
+external, **living** documents — NOT by this repo, NOT by any `@napplet/*`
+package, and NOT by what a test or the reference toolchain happens to do. These
+are the only sources of truth. Treat them as canonical over any code, comment,
+doc, or summary — including this repo's own:
+
+- **NIP-5D** — the napplet ⇄ shell protocol:
+  <https://github.com/nostr-protocol/nips/pull/2303>
+- **NAPs track** — every NAP capability domain (`relay`, `storage`, `identity`, …)
+  is proposed and defined here: <https://github.com/napplet/naps>
+- **NIP-5A** — the manifest aggregate-hash tag schema NIP-5D adopts (linked from
+  the NIP-5D text above).
+
+Rules, in priority order. These **cannot be violated** — not to make a check
+green, not to call a task "done", not because a sibling file already does it:
+
+1. **Never invent protocol surface.** Message types, `domain.action` envelopes,
+   `<meta name="napplet-*">` manifest tags, boot/init handshakes, NAP domains,
+   manifest fields, capability names. If it is not defined in canonical NIP-5D or
+   an accepted/proposed NAP, you MUST NOT add it, depend on it, or treat it as
+   real protocol. Wire surface that exists only in our packages (e.g. a shim
+   handshake, a plugin-injected meta) is implementation plumbing, **not** protocol.
+
+2. **A gap in the spec = STOP and FLAG. Never invent to fill it.** If the
+   implementation genuinely needs a message / tag / handshake / domain the spec
+   does not define, that is a gap to surface — it must be proposed as a NAP on the
+   NAPs track **first**, then implemented against the published NAP. Do not invent
+   it in code, do not special-case it past validators, and do not mark the task
+   done by fabricating surface. Inventing surface to "finish" poisons the context
+   and breaks interop for everyone building napplets.
+
+3. **Flag violations wherever they live — downstream, siblings, reference impls.**
+   If you find invented or undocumented protocol surface anywhere — this repo, the
+   `@napplet/*` packages, the conformance engine, the vite-plugin, the boilerplate,
+   or a sibling / reference project such as **kehto** — treat it as a defect to
+   **flag to the user**, not a fact to build on. Do not propagate it, do not
+   rubber-stamp it, and do not copy it into a new file just because it already
+   exists elsewhere.
+
+4. **Conformance tests the spec, not our plumbing.** Every conformance check must
+   map to a NIP-5D / NAP requirement. A check that actually tests a private
+   convention of our toolchain (a shim's `shell.ready` handshake, a plugin's
+   `napplet-type` meta) is a bug: it fails spec-faithful napplets and passes only
+   our stack. Flag it; do not extend it.
+
+5. **Do not keep our own copy of the spec.** This repo must not contain a
+   paraphrase, summary, or pinned-fork snapshot that presents itself as normative.
+   Link to the living documents above. Any in-repo explainer must be explicitly
+   **non-normative** and defer to the canonical source for every "MUST".
+
+6. **Read the source; don't guess.** For any protocol question, open the canonical
+   NIP-5D / NAP text. Do not answer from memory, do not extrapolate a requirement
+   the spec does not state, and do not write your own normative text.
+
 ## Agent SDLC
 
 Follow this lifecycle for **every** task. The goal: cohesive, shippable units of work —
