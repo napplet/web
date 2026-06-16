@@ -1,7 +1,7 @@
 import { defineConfig } from 'vitepress';
 
 // Single source of truth for the deploy domain.
-const SITE_URL = 'https://napplet.dev';
+const SITE_URL = 'https://napplet.run';
 
 export default defineConfig({
   base: '/docs/',

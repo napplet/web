@@ -13,8 +13,8 @@ hero:
       text: What are napplets?
       link: /guide/
     - theme: alt
-      text: napplet.dev
-      link: https://napplet.dev/
+      text: napplet.run
+      link: https://napplet.run/
 
 features:
   - title: Single-purpose by design

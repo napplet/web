@@ -1,4 +1,4 @@
-# napplet.dev — Informational SPA + VitePress Docs
+# napplet.run — Informational SPA + VitePress Docs
 
 **Date:** 2026-06-15
 **Branch:** `feat/napplet-website`
@@ -27,7 +27,7 @@ via `gh`.
 | Layout | **`apps/web`** (SPA) + **`apps/docs`** (VitePress), stitched at deploy |
 | Aesthetic | **Purple Nostr-native** (deep aubergine canvas, ostrich-purple accents, soft glow) |
 | Reference runtime | **Kehto** — named and linked on the site (user-approved 2026-06-15) |
-| Domain | **napplet.dev** (single config constant) |
+| Domain | **napplet.run** (single config constant) |
 | Bunny | Storage zone upload **+ pull-zone cache purge** |
 | nsite | `sandwichfarm/nsite-action` with `nbunksec` secret |
 
@@ -45,7 +45,7 @@ apps/
 `apps/web` builds to `apps/web/dist`. `apps/docs` builds with `base: '/docs/'`.
 At deploy, docs output is copied into `web/dist/docs`, producing a single directory
 that ships unchanged to both Bunny and nsite. The SPA links to `/docs/`; docs links
-back to the SPA. A `SITE_URL` constant (`https://napplet.dev`) drives meta/canonical/sitemap.
+back to the SPA. A `SITE_URL` constant (`https://napplet.run`) drives meta/canonical/sitemap.
 
 ## `apps/web` — the SPA
 
