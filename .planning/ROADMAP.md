@@ -33,6 +33,7 @@
 - ✅ **v0.29.0 NUB-CONNECT + Shell as CSP Authority** — Phases 135-142 (shipped 2026-04-21) — [Archive](milestones/v0.29.0-ROADMAP.md)
 - ✅ **v0.30.0 Class-Gated Decrypt Surface** — Phases 135-138 (shipped 2026-04-23) — [Archive](milestones/v0.30.0-ROADMAP.md)
 - ✅ **v0.31.0 Cleanup Quality Gate** — Phases 143-147 (shipped 2026-05-24) — [Archive](milestones/v0.31.0-ROADMAP.md)
+- 🔨 **v0.32.0 Napplet Conformance** — Phases 148-152 (in progress)
 
 ## Phases
 
@@ -41,6 +42,79 @@
 - Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
 
 Note: Phase 45 (IPC terminology cleanup) was completed as a quick task during v0.8.0 and is not part of the v0.9.0 roadmap. Phases 57–60 were deprecated after v0.11.0 and archived under `milestones/v0.12.0-phases/deprecated/`.
+
+### 🔨 v0.32.0 Napplet Conformance (Phases 148-152) — IN PROGRESS
+
+**Milestone Goal:** Let any napplet self-verify protocol conformance locally, before publishing, via one browser-safe engine (`@napplet/conformance`) consumed by a headless Playwright CLI (CI) and a standalone single-window web runtime (`apps/conformance`). v1 is zero-config protocol conformance: manifest/meta validity, boots under `sandbox="allow-scripts"`, installs `window.napplet`, every emitted postMessage envelope validates against hand-written per-NAP validators, graceful degradation when `shell.supports()` is false, no forbidden globals / no undeclared egress. Approved design: `docs/superpowers/specs/2026-06-16-napplet-conformance-design.md`.
+
+**Phase groups:** M1 Engine (148-149) → M2 CLI+CI (150) → M3 Web runtime (151, parallelizable with 150) → M4 Boilerplate+Release (152). Ships as one coordinated NPM + JSR release PR.
+
+- [ ] **Phase 148: Conformance Package + Validators** — Scaffold `@napplet/conformance` (ESM-only, tsup/type-check/vitest, package.json + jsr.json per workspace conventions). Hand-write a runtime envelope validator for all 16 NAP domains (`validateEnvelope`), a manifest/meta validator (`validateManifest`: napplet-type, aggregateHash, config schema draft-07 core subset, connect origins via `normalizeConnectOrigin`, no-inline-scripts), and a drift test asserting every `NapDomain` + exported `*Message` type has validator coverage. Requirements: ENGINE-01, ENGINE-03, ENGINE-04, ENGINE-05.
+- [ ] **Phase 149: Reference Shell, Check Registry, Runner & Reporters** — Scriptable reference mock shell (`createReferenceShell`) that answers `shell.supports()`, responds to each NAP with spec-valid canned data, and records every inbound envelope with verdict. v1 check registry/catalog (manifest, boot, wire, degradation, lifecycle). Serializable `ConformanceRun` model + `toPretty`/`toJson`/`toJUnit` reporters. `runConformance(ctx)` orchestrator. happy-dom unit tests with fixtures. Requirements: ENGINE-02, ENGINE-06, ENGINE-07, ENGINE-08, ENGINE-09.
+- [ ] **Phase 150: Headless CLI + Fixtures + e2e + CI** — `napplet-conformance` bin: Playwright headless Chromium serves a napplet build + host harness page, runs the engine in-page, extracts the run; `--reporter pretty|json|junit`, `--out`, non-zero exit on error-severity failures. In-repo fixture napplets under `tests/fixtures/napplets/*` (one conformant exercising several NAPs, one deliberately broken). e2e harness under `tests/e2e/harness` asserting pass/fail + exit codes. `conformance` CI workflow with browser caching. Requirements: CLI-01, CLI-02, CLI-03, CLI-04, CLI-05, CLI-06.
+- [ ] **Phase 151: Standalone Web Runtime (apps/conformance)** — New single-window app (vanilla/minimal-Svelte) that accepts a napplet URL/build, runs the engine live in-browser, and renders a per-check pass/fail tree, the recorded envelope log with verdicts, and a manifest inspector. Reuses `@napplet/conformance` directly; builds + type-checks in the monorepo; deploy wiring. Depends only on the M1 engine (148-149) — parallelizable with Phase 150. Requirements: WEB-01, WEB-02, WEB-03.
+- [ ] **Phase 152: Boilerplate Integration, Docs, Changesets & Release Prep** — Document + dogfood a package-manager-agnostic `test:conformance` invocation; author the boilerplate-template change (separate repo) as a documented diff in the PR body; update root README + new package README(s) + relevant skills; author changesets for every package whose shipped output changes and sync `jsr.json`; final cross-path gate (engine unit, CLI headless, web build, fixtures pass/fail, `pnpm build`/`type-check`/`test:unit`, AI-slop). Requirements: REL-01, REL-02, REL-03, REL-04, REL-05.
+
+## Phase Details — v0.32.0 Napplet Conformance
+
+### Phase 148: Conformance Package + Validators
+
+**Goal**: `@napplet/conformance` exists as a buildable, type-checked, testable workspace package, and the runtime validation foundation (per-NAP envelope validators + manifest/meta validator + drift coverage) is in place.
+**Depends on**: Nothing (M1 foundation).
+**Requirements**: ENGINE-01, ENGINE-03, ENGINE-04, ENGINE-05
+
+**Success Criteria** (what must be TRUE):
+  1. `pnpm --filter @napplet/conformance build` and `type-check` exit 0; the package is ESM-only with `package.json` + `jsr.json` matching workspace publish conventions.
+  2. `validateEnvelope(msg)` returns a structured verdict for every one of the 16 NAP domains; valid spec envelopes pass and malformed ones report field-level errors.
+  3. `validateManifest(doc)` validates napplet-type, aggregateHash, config schema (draft-07 core subset), connect origins (via `normalizeConnectOrigin`), and rejects inline `<script>` without `src`.
+  4. A drift test fails if any `NapDomain` or exported `@napplet/nap` `*Message` type lacks validator coverage.
+
+### Phase 149: Reference Shell, Check Registry, Runner & Reporters
+
+**Goal**: The engine can boot a napplet against a recording reference shell, run the v1 check catalog, and emit a serializable run in three reporter formats — all unit-tested under happy-dom.
+**Depends on**: Phase 148.
+**Requirements**: ENGINE-02, ENGINE-06, ENGINE-07, ENGINE-08, ENGINE-09
+
+**Success Criteria** (what must be TRUE):
+  1. `createReferenceShell` answers `shell.supports()`, responds to each NAP domain with spec-valid data, and exposes a recorded log of inbound envelopes each carrying a validation verdict.
+  2. The check registry implements the v1 catalog (manifest, boot, wire, degradation, lifecycle); each check returns pass/fail/skip with diagnostics, and a no-op napplet correctly skips untouched-NAP wire checks.
+  3. `runConformance(ctx)` returns a `ConformanceRun` that round-trips through `toJson` and renders via `toPretty` and `toJUnit`.
+  4. happy-dom unit tests cover validators, reference-shell recording, the registry, and reporters; `pnpm -r test:unit` is green.
+
+### Phase 150: Headless CLI + Fixtures + e2e + CI
+
+**Goal**: `test:conformance` works headlessly end-to-end against real fixture napplets and is enforced in CI.
+**Depends on**: Phase 149.
+**Requirements**: CLI-01, CLI-02, CLI-03, CLI-04, CLI-05, CLI-06
+
+**Success Criteria** (what must be TRUE):
+  1. `napplet-conformance <dir|url>` launches headless Chromium, serves the napplet + host page, runs the engine in-page, and prints the selected reporter (`pretty|json|junit`).
+  2. The CLI exits 0 for the conformant fixture and non-zero for the deliberately broken fixture.
+  3. `tests/fixtures/napplets/*` contains a conformant fixture exercising multiple NAPs and a non-conformant fixture; the `tests/e2e/harness` suite asserts both verdicts and exit codes.
+  4. A `conformance` CI workflow builds the fixtures and runs the CLI headless with the Playwright browser cached.
+
+### Phase 151: Standalone Web Runtime (apps/conformance)
+
+**Goal**: A deployable single-window app runs the same conformance engine live in-browser with a visual report.
+**Depends on**: Phase 149 (engine). Parallelizable with Phase 150.
+**Requirements**: WEB-01, WEB-02, WEB-03
+
+**Success Criteria** (what must be TRUE):
+  1. `apps/conformance` accepts a napplet URL (querystring or field) or local build and runs the engine live in its own window.
+  2. The app renders a per-check pass/fail tree, the recorded envelope log with verdicts, and a manifest inspector.
+  3. The app imports `@napplet/conformance` directly (no duplicated logic) and `pnpm --filter @napplet/conformance-web... build`/`type-check` succeed; deploy wiring is present.
+
+### Phase 152: Boilerplate Integration, Docs, Changesets & Release Prep
+
+**Goal**: The capability is dogfooded, documented, and release-ready across NPM + JSR, with the boilerplate-template change prepared for its separate repo.
+**Depends on**: Phase 150, Phase 151.
+**Requirements**: REL-01, REL-02, REL-03, REL-04, REL-05
+
+**Success Criteria** (what must be TRUE):
+  1. A package-manager-agnostic `test:conformance` invocation is documented and dogfooded green against an in-repo fixture.
+  2. The boilerplate-template change (script + minimal config + CI step) is authored as a documented diff in the PR body for the separate repo.
+  3. Root README, new package README(s), and relevant skills document the conformance capability; changesets exist for every package whose shipped output changed and `jsr.json` versions/exports are synced.
+  4. The final cross-path gate is green: engine unit tests, CLI headless run, web-runtime build, fixtures passing/failing as designed, `pnpm build` + `pnpm type-check` + `pnpm -r test:unit`, and the AI-slop gate.
 
 <details>
 <summary>✅ v0.31.0 Cleanup Quality Gate (Phases 143-147) — SHIPPED 2026-05-24</summary>

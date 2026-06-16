@@ -1,0 +1,92 @@
+:root {
+  --bg: #150a22;
+  --panel: #1e1230;
+  --ink: #ece6f5;
+  --muted: #a896c4;
+  --line: #34244a;
+  --pass: #46c98b;
+  --fail: #ff6b81;
+  --skip: #6b7a90;
+  --warn: #f5b95b;
+  --accent: #9d7bff;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.5;
+}
+
+#app { max-width: 980px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+
+.masthead h1 { margin: 0 0 0.25rem; font-size: 1.6rem; }
+.masthead p { margin: 0; color: var(--muted); }
+code { background: rgba(157, 123, 255, 0.12); padding: 0.05em 0.35em; border-radius: 4px; }
+
+.runbar { display: flex; gap: 0.5rem; margin: 1.5rem 0 0.5rem; }
+.runbar input {
+  flex: 1; padding: 0.65rem 0.8rem; border-radius: 8px;
+  border: 1px solid var(--line); background: var(--panel); color: var(--ink); font-size: 0.95rem;
+}
+.runbar button {
+  padding: 0.65rem 1.1rem; border: none; border-radius: 8px; cursor: pointer;
+  background: var(--accent); color: #150a22; font-weight: 600;
+}
+.runbar button:disabled { opacity: 0.6; cursor: progress; }
+.runbar button.secondary { background: transparent; color: var(--accent); border: 1px solid var(--line); }
+
+.live-badge {
+  font-size: 0.7rem; font-weight: 600; vertical-align: middle; margin-left: 0.5rem;
+  padding: 0.1rem 0.5rem; border-radius: 999px; border: 1px solid var(--line); color: var(--warn);
+}
+.live-badge[data-state="connected"] { color: var(--pass); border-color: var(--pass); }
+.live-badge[data-state="disconnected"] { color: var(--fail); border-color: var(--fail); }
+
+.run-stamp { margin-left: auto; color: var(--muted); font-size: 0.78rem; font-variant-numeric: tabular-nums; }
+
+.status { min-height: 1.4rem; color: var(--muted); margin: 0.25rem 0 0; }
+.status[data-kind="error"] { color: var(--fail); }
+
+.verdict {
+  display: flex; align-items: center; gap: 1rem; margin: 1.5rem 0 1rem;
+  padding: 0.85rem 1rem; border-radius: 10px; border: 1px solid var(--line);
+}
+.verdict.conformant { border-color: var(--pass); }
+.verdict.non-conformant { border-color: var(--fail); }
+.verdict .result { font-weight: 700; letter-spacing: 0.04em; }
+.verdict.conformant .result { color: var(--pass); }
+.verdict.non-conformant .result { color: var(--fail); }
+.verdict .counts { color: var(--muted); font-size: 0.9rem; }
+
+.area { margin-bottom: 1rem; }
+.area h3 { margin: 0.5rem 0 0.35rem; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.area ul { list-style: none; margin: 0; padding: 0; }
+.check { display: flex; align-items: center; gap: 0.6rem; padding: 0.35rem 0; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.badge { font-size: 0.68rem; font-weight: 700; padding: 0.1rem 0.45rem; border-radius: 999px; text-transform: uppercase; }
+.badge.pass { background: rgba(70, 201, 139, 0.18); color: var(--pass); }
+.badge.fail { background: rgba(255, 107, 129, 0.18); color: var(--fail); }
+.badge.skip { background: rgba(107, 122, 144, 0.18); color: var(--skip); }
+.check .id { font-family: ui-monospace, monospace; font-size: 0.88rem; }
+.check .detail { color: var(--muted); font-size: 0.82rem; }
+.tag.warn { background: rgba(245, 185, 91, 0.18); color: var(--warn); font-size: 0.66rem; padding: 0.05rem 0.4rem; border-radius: 999px; }
+
+.panels { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.5rem; }
+@media (max-width: 760px) { .panels { grid-template-columns: 1fr; } }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 0.9rem 1rem; }
+.panel h2 { margin: 0 0 0.6rem; font-size: 0.95rem; }
+.empty { color: var(--muted); font-size: 0.88rem; }
+
+.envlog { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.4rem; }
+.env { padding: 0.4rem 0.5rem; border-radius: 6px; border-left: 3px solid var(--line); background: rgba(255,255,255,0.02); }
+.env code { display: block; word-break: break-all; background: none; font-size: 0.8rem; }
+.env.ok { border-left-color: var(--pass); }
+.env.bad { border-left-color: var(--fail); }
+.errs { color: var(--fail); font-size: 0.78rem; margin-top: 0.3rem; font-family: ui-monospace, monospace; }
+
+.manifest { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.manifest th { text-align: left; color: var(--muted); font-weight: 500; padding: 0.25rem 0.5rem 0.25rem 0; white-space: nowrap; vertical-align: top; }
+.manifest td { font-family: ui-monospace, monospace; word-break: break-all; padding: 0.25rem 0; }

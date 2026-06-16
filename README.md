@@ -21,9 +21,43 @@ A **napplet** is a sandboxed web app that runs inside a **shell**. The shell and
 | [@napplet/nap](packages/nap) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fnap?label=npm)](https://www.npmjs.com/package/@napplet/nap) | [![JSR](https://jsr.io/badges/@napplet/nap)](https://jsr.io/@napplet/nap) | Compatibility package for 16 NAP domain subpaths (relay, storage, inc, keys, theme, media, notify, identity, config, resource, connect, class, cvm, outbox, upload, intent) with barrel + granular (types/shim/sdk) exports. Tree-shakable (`sideEffects: false`). Includes ownership-aware `media`, `resource`, `connect`, `class`, the ContextVM `cvm` bridge, outbox-aware `outbox` relay routing, shell-mediated `upload`, archetype `intent` dispatch, and read-only `identity` helpers. See [packages/nap/README.md](packages/nap/README.md) for the full subpath reference. |
 | [@napplet/vite-plugin](packages/vite-plugin) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fvite-plugin?label=npm)](https://www.npmjs.com/package/@napplet/vite-plugin) | [![JSR](https://jsr.io/badges/@napplet/vite-plugin)](https://jsr.io/@napplet/vite-plugin) | Vite plugin for NIP-5D manifest generation. Computes per-file SHA-256 hashes, signs a kind 35129 napplet manifest event (NIP-5A `path` + aggregate `x` tag schema) at build time, and injects `requires` meta tags. v0.29.0 ships a `connect?: string[]` option for user-gated direct-network origin declaration and a fail-loud inline-script diagnostic; the `strictCsp` option from v0.28.0 is `@deprecated` (accepts-but-warns) since the shell is now the sole runtime CSP authority. |
 | [@napplet/boilerplate](packages/boilerplate) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fboilerplate?label=npm)](https://www.npmjs.com/package/@napplet/boilerplate) | — | Interactive `npx @napplet/boilerplate` generator that clones the `github.com/napplet/boilerplate` template, asks for destination/name/type, and prepares a Vite + TypeScript napplet starter. |
+| [@napplet/conformance](packages/conformance) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fconformance?label=npm)](https://www.npmjs.com/package/@napplet/conformance) | [![JSR](https://jsr.io/badges/@napplet/conformance)](https://jsr.io/@napplet/conformance) | Framework-agnostic conformance engine: hand-written per-NAP envelope validators (all 16 domains), a manifest/meta validator, a scriptable reference mock shell, the zero-config check catalog, and pretty/JSON/JUnit reporters. Browser-safe; reused by both the CLI and the web runtime. |
+| [@napplet/conformance-cli](packages/conformance-cli) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fconformance-cli?label=npm)](https://www.npmjs.com/package/@napplet/conformance-cli) | — | Headless `napplet-conformance` runner. Drives the engine against a napplet in real Chromium (Playwright) and sets a CI exit code — wire it up as `test:conformance`. npm-only (Playwright dependency). |
+
+## Conformance testing
+
+Napplets can verify they conform to the NAP protocol **before** publishing, in two
+scopes that share one engine:
+
+```bash
+# Headless / CI — exits non-zero on any error-severity failure:
+npx napplet-conformance ./dist
+```
+
+```bash
+# App variant — opens the live web runtime and re-runs on every change (like vitest --ui):
+npx napplet-conformance --ui . --exec "vite build --watch"
+```
+
+```jsonc
+// package.json — works with pnpm / npm / yarn / bun:
+{
+  "scripts": {
+    "test:conformance": "napplet-conformance ./dist",
+    "test:conformance:ui": "napplet-conformance --ui . --exec \"vite build --watch\""
+  }
+}
+```
+
+The same web runtime ships standalone (`apps/conformance`, deployed at `/conformance`)
+and runs the checks live in the browser with a visual report. v1 is zero-config protocol
+conformance: manifest/meta validity, boots under `sandbox="allow-scripts"`, installs
+`window.napplet`, every emitted envelope is well-formed, graceful degradation when
+`shell.supports()` is false, and no forbidden globals.
 
 ## Changelog
 
+- **Conformance tooling** — new `@napplet/conformance` engine + `@napplet/conformance-cli` runner + standalone `apps/conformance` web runtime let a napplet self-verify NAP protocol conformance headlessly (CI) and live in the browser. Hand-written per-NAP envelope validators (drift-guarded against `@napplet/nap`), manifest checks, a reference mock shell, and a `test:conformance`-ready CLI.
 - **v0.32.0 — Read-Only NAP-IDENTITY** — `identity.getPublicKey()` is a snapshot that resolves to a hex pubkey or `""` when no user is connected, and `identity.onChanged(handler)` receives shell-pushed `identity.changed` updates. Identity no longer exposes decrypt, encrypt, or signing operations.
 - **v0.29.0 — NAP-CONNECT + Shell as CSP Authority** — shell-assigned class integer (`window.napplet.class`), user-gated direct-network origins via manifest `connect` tags (`window.napplet.connect`), shell as sole runtime CSP authority, `@napplet/vite-plugin` `strictCsp` option deprecated in favor of shell-emitted CSP.
 
@@ -91,14 +125,16 @@ The informational site and package documentation live in `apps/`:
 
 - `apps/web` -- Svelte + Vite marketing/education SPA explaining NIP-5D and the paradigm.
 - `apps/docs` -- VitePress documentation, served under `/docs`.
+- `apps/conformance` -- the standalone conformance web runtime, served under `/conformance`.
 
 ```bash
-pnpm --filter @napplet/web dev     # marketing SPA
-pnpm --filter @napplet/docs dev    # documentation
+pnpm --filter @napplet/web dev             # marketing SPA
+pnpm --filter @napplet/docs dev            # documentation
+pnpm --filter @napplet/conformance-web dev # conformance runtime
 ```
 
-`.github/workflows/deploy-site.yml` builds both, stitches docs under `/docs`, and
-deploys to Bunny + nsite. Configure deploy secrets with
+`.github/workflows/deploy-site.yml` builds all three, stitches docs under `/docs`
+and the conformance runtime under `/conformance`, and deploys to Bunny + nsite. Configure deploy secrets with
 `scripts/setup-site-secrets.sh`.
 
 ## Related

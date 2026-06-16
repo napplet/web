@@ -361,6 +361,29 @@ identitySub.close();
 if (!window.napplet.shell.supports('nap:identity')) { /* no identity NAP */ }
 ```
 
+## Step 13 — Verify conformance before publishing
+
+Build the napplet, then run the conformance harness against it. It loads the build
+into a real `sandbox="allow-scripts"` iframe, drives the protocol with a reference
+shell, and fails on any malformed envelope, manifest problem, boot failure, or
+forbidden-global reference — so you find protocol bugs locally instead of after
+publishing into a runtime.
+
+```jsonc
+// package.json
+{ "scripts": { "test:conformance": "napplet-conformance ./dist" } }
+```
+
+```bash
+pnpm build
+pnpm test:conformance        # exits non-zero on any error-severity failure
+```
+
+The bin is package-manager agnostic (`npx napplet-conformance ./dist` works under
+npm / yarn / bun too). For an interactive, visual report you can also load the build
+in the standalone conformance web runtime. CI: see `.github/workflows/conformance.yml`
+for the headless pattern (cache Playwright's Chromium, then run the CLI).
+
 ## Runtime guard
 
 Importing `@napplet/shim` arms a runtime guard. A napplet only works inside a

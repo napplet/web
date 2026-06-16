@@ -38,6 +38,19 @@ importers:
         specifier: ^4.1.2
         version: 4.1.2(@types/node@22.19.15)(happy-dom@20.10.3)(vite@6.4.2(@types/node@22.19.15)(jiti@2.6.1))
 
+  apps/conformance:
+    dependencies:
+      '@napplet/conformance':
+        specifier: workspace:^
+        version: link:../../packages/conformance
+    devDependencies:
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vite:
+        specifier: ^6.4.2
+        version: 6.4.2(@types/node@22.19.15)(jiti@2.6.1)
+
   apps/docs:
     devDependencies:
       vitepress:
@@ -67,6 +80,50 @@ importers:
 
   packages/boilerplate:
     devDependencies:
+      '@types/node':
+        specifier: ^22.15.0
+        version: 22.19.15
+      tsup:
+        specifier: ^8.5.0
+        version: 8.5.1(jiti@2.6.1)(postcss@8.5.10)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
+  packages/conformance:
+    dependencies:
+      '@napplet/core':
+        specifier: workspace:^
+        version: link:../core
+      '@napplet/nap':
+        specifier: workspace:^
+        version: link:../nap
+    devDependencies:
+      '@types/node':
+        specifier: ^22.15.0
+        version: 22.19.15
+      happy-dom:
+        specifier: ^20.10.3
+        version: 20.10.3
+      tsup:
+        specifier: ^8.5.0
+        version: 8.5.1(jiti@2.6.1)(postcss@8.5.10)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
+  packages/conformance-cli:
+    dependencies:
+      '@napplet/conformance':
+        specifier: workspace:^
+        version: link:../conformance
+      playwright:
+        specifier: ^1.59.1
+        version: 1.61.0
+    devDependencies:
+      '@napplet/conformance-web':
+        specifier: workspace:*
+        version: link:../../apps/conformance
       '@types/node':
         specifier: ^22.15.0
         version: 22.19.15
@@ -158,6 +215,19 @@ importers:
       vite:
         specifier: ^6.4.2
         version: 6.4.2(@types/node@22.19.15)(jiti@2.6.1)
+
+  tests/e2e/harness:
+    devDependencies:
+      '@napplet/conformance-cli':
+        specifier: workspace:^
+        version: link:../../../packages/conformance-cli
+      vitest:
+        specifier: ^4.1.2
+        version: 4.1.2(@types/node@22.19.15)(happy-dom@20.10.3)(vite@6.4.2(@types/node@22.19.15)(jiti@2.6.1))
+
+  tests/fixtures/napplets/broken: {}
+
+  tests/fixtures/napplets/conformant: {}
 
 packages:
 

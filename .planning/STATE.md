@@ -1,16 +1,15 @@
 ---
 gsd_state_version: 1.0
-milestone: v0.31.0
-milestone_name: Cleanup Quality Gate
-status: Awaiting next milestone
-stopped_at: Milestone v0.31.0 archived
-last_updated: "2026-05-24T15:14:55+02:00"
-last_activity: 2026-06-15 — Completed quick task 260615-u78: add CI link checker for SPA + docs
+milestone: v0.32.0
+milestone_name: Napplet Conformance
+status: planning
+last_updated: "2026-06-16T17:49:21.028Z"
+last_activity: 2026-06-16
 progress:
   total_phases: 5
   completed_phases: 5
-  total_plans: 5
-  completed_plans: 5
+  total_plans: 0
+  completed_plans: 0
   percent: 100
 ---
 
@@ -28,10 +27,46 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 
 ## Current Position
 
-Phase: Milestone v0.31.0 complete
+Phase: 153 (extension) COMPLETE — conformance app UI/watch mode + HMR-style live re-run.
 Plan: —
-Status: Awaiting next milestone
-Last activity: 2026-06-15 — Completed quick task 260615-u78: add CI link checker for SPA + docs
+
+### Phase 153 record (UI/watch extension, user-requested follow-on) — COMPLETE
+- Goal: start the conformance app via CLI (like `vitest --ui`) + HMR/live re-run, shippable as a boilerplate script; no regression to headless.
+- `napplet-conformance --ui [dir] [--port] [--no-open] [--exec "<cmd>"]`: serves the bundled conformance web app + the napplet (same origin, ACAO, Cache-Control:no-store) + an SSE stream; watches the napplet's served dir; opens the browser; re-runs conformance live on every change. `--exec "vite build --watch"` makes it one turnkey command (edit→rebuild→auto re-run). Headless path untouched (`--ui` additive).
+- One UI codebase: the CLI bundles apps/conformance/dist into dist/ui at build time (scripts/copy-ui.mjs; @napplet/conformance-web added as workspace devDep for build order). Same app served standalone at /conformance.
+- App live mode (`?live=1`): EventSource → re-run on `rerun`, watching badge, run-stamp, manual Re-run button.
+- Shared static.ts (MIME/sendFile/setCors) used by both servers; startUiServer refactored into helpers (handleSse/handleNapplet/handleApp/startWatcher) to clear a function-length finding.
+- Boilerplate doc + READMEs add `test:conformance` (headless) + `test:conformance:ui` (app variant).
+- Verified: live browser loop CONFORMANT → (edit napplet) → auto re-ran → NON-CONFORMANT. cli unit tests 4→8 (ui-server SSE/watch/serve/SPA). Full gate green: build, type-check, test:unit (216), test:e2e (4), test:conformance. aislop 89 (my code clean).
+Status: M1+M2+M3+M4 COMPLETE. Final gate green: build(11), type-check(14), test:unit(212), test:e2e(4), test:conformance(CONFORMANT). aislop 89 (only environmental vite/js-yaml dep advisories remain). Changesets authored; new packages at 0.0.0 → first publish 0.1.0.
+
+### Phase 152 record (REL-01..05) — COMPLETE
+- REL-01: root `pnpm test:conformance` dogfood green (CLI vs conformant fixture, exit 0).
+- REL-02: boilerplate template change documented at docs/conformance/boilerplate-integration.md (separate napplet/boilerplate repo); also surfaced in PR body.
+- REL-03: root README (packages table + Conformance section + changelog bullet + website list), skills/build-napplet/SKILL.md (Step 13), package READMEs.
+- REL-04: changesets .changeset/napplet-conformance.md + napplet-conformance-cli.md (minor → 0.1.0 first release); engine has jsr.json (npm+JSR), cli npm-only. Versions set to 0.0.0.
+- REL-05: full cross-path gate green; aislop 89/Healthy.
+- NOTE FOR USER: README on main already had a `v0.32.0 — Read-Only NAP-IDENTITY` changelog entry (pre-existing) that collides with this milestone's v0.32.0 label. Left it untouched; added conformance additively. Milestone version label may need reconciliation (this work could be v0.33.0). Surfaced in PR.
+- NOTE: aislop's 1 error = vite (high, upgrade 6.4.3+) + 1 warn = js-yaml — both environmental dependency advisories, not introduced here; out of scope (separate dep-bump like v0.31.0).
+Last activity: 2026-06-16 — Phase 150 (b7a7f7e) CLI+fixtures+e2e+CI; Phase 151 apps/conformance web runtime verified live (CONFORMANT, 2 envelopes, manifest inspector) + deploy wiring at /conformance
+
+### Phase 150 record (CLI-01..06) — COMPLETE (b7a7f7e)
+- @napplet/conformance-cli (npm-only, playwright). bin napplet-conformance. Loopback ACAO:* server + Playwright Chromium + bootAndCollect + node-side checks + reporters + exit codes. Fixtures (conformant/broken) under tests/fixtures/napplets/*. e2e under tests/e2e/harness (test:e2e). conformance.yml CI with browser cache. Verified: conformant->0, broken->1.
+
+### Phase 151 record (WEB-01..03) — COMPLETE
+- apps/conformance (@napplet/conformance-web): vanilla TS + Vite. Loads napplet by ?url= / input, runs engine live (bootAndCollect+runConformance), renders check tree + envelope log + manifest inspector. Reuses @napplet/conformance directly. type-check + build green. Verified live in real browser cross-origin: verdict CONFORMANT, 2 envelopes, manifest-type rendered. Deploy wiring: deploy-site.yml builds with base=/conformance/ and assembles into site/conformance.
+
+### Phase 150 design decisions (in progress)
+- Sandbox opacity: a napplet in allow-scripts (no same-origin) iframe is opaque to parent. Observable boot signal = shim's `shell.ready` postMessage. Boot failure = no shell.ready within timeout (also how same-origin reliance manifests). Forbidden-global (window.nostr) access is UNOBSERVABLE across the sandbox → detected via static scan of the built bundle (node-side), fed into ConformanceContext.forbiddenGlobals.
+- Split: `bootAndCollect` (browser-safe DOM harness) lives in the ENGINE (reused by CLI host page AND web runtime). Returns BootCollection { installedGlobal, bootError, emitted, degraded }. `runConformance` runs in node (pure). 
+- NEW PACKAGE `@napplet/conformance-cli` (separate from engine): depends on @napplet/conformance + playwright. Keeps engine zero-heavy-dep + JSR-publishable; CLI is npm-only. Bin `napplet-conformance`. Serves napplet dir + host page on loopback, Playwright chromium runs bootAndCollect, returns BootCollection, node assembles ctx (+manifestHtml +forbiddenGlobals static-scan) and runs checks + reporters + exit code.
+
+### Phase 148 record (ENGINE-01/03/04/05) — COMPLETE
+- `@napplet/conformance` v0.1.0 package: ESM-only, deps @napplet/core + @napplet/nap (workspace:^), tsup/type-check/vitest, package.json + jsr.json.
+- `ENVELOPE_SPECS`: single source-of-truth map of all 123 wire discriminants (60 outbound / 63 inbound; connect=0). `validateEnvelope()` returns field-level verdicts (codes: not-an-object, missing-type, malformed-type, unknown-domain, unknown-type, inbound-type-emitted, missing-field, wrong-type).
+- `validateManifest()`: napplet-type (regex), napplet-aggregate-hash (64-hex), napplet-requires (known NAP / nap: prefix), napplet-config-schema (JSON, rejects `pattern` keyword), napplet-connect-requires (canonical `normalizeConnectOrigin` from @napplet/nap/connect/types), no-inline-`<script>` (ported from vite-plugin html.ts).
+- Drift test scans `packages/nap/src/**/*.ts` for `^type: 'domain.action'` literals (excludes JSDoc) → asserts ENVELOPE_SPECS covers every one + no stale entries.
+- DECISION: validators hand-written + drift-guarded (not generated). DECISION: reuse `normalizeConnectOrigin` to avoid origin-validation drift (makes @napplet/nap a runtime dep).
 
 ## Accumulated Context
 

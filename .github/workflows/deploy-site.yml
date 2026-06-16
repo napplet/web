@@ -10,6 +10,7 @@ on:
     paths:
       - 'apps/web/**'
       - 'apps/docs/**'
+      - 'apps/conformance/**'
       - 'packages/**'
       - '.github/workflows/deploy-site.yml'
   workflow_dispatch:
@@ -43,7 +44,10 @@ jobs:
       - name: Build docs (base /docs/)
         run: pnpm --filter @napplet/docs build
 
-      # Assemble one artifact: SPA at root, docs at /docs.
+      - name: Build conformance runtime (base /conformance/)
+        run: pnpm --filter @napplet/conformance-web build --base=/conformance/
+
+      # Assemble one artifact: SPA at root, docs at /docs, conformance at /conformance.
       - name: Assemble site
         run: |
           set -euo pipefail
@@ -52,6 +56,8 @@ jobs:
           cp -r apps/web/dist/. site/
           mkdir -p site/docs
           cp -r apps/docs/.vitepress/dist/. site/docs/
+          mkdir -p site/conformance
+          cp -r apps/conformance/dist/. site/conformance/
           echo "Assembled $(find site -type f | wc -l) files into ./site"
 
       # ─── Bunny: upload to storage zone, then purge the pull zone ───────────

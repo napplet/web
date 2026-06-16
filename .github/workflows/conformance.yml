@@ -1,0 +1,38 @@
+name: Conformance
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  conformance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      # Build the engine, the CLI (incl. the browser host bundle), and deps.
+      - run: pnpm build
+
+      # Cache Playwright's Chromium across runs, keyed by the installed version.
+      - name: Resolve Playwright version
+        id: pw
+        run: echo "version=$(node -p "require('playwright/package.json').version")" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ steps.pw.outputs.version }}
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      # Run the conformance CLI against the in-repo fixtures (passing + broken).
+      - name: Conformance e2e
+        run: pnpm --filter @napplet/conformance-e2e test:e2e
