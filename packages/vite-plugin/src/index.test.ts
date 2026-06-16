@@ -83,7 +83,7 @@ describe('nip5aManifest artifact modes', () => {
     const fixture = makeFixture();
     fs.writeFileSync(
       path.join(fixture.dist, 'index.html'),
-      '<!doctype html><meta name="napplet-aggregate-hash" content=""><script type="module">console.log("inline")</script>',
+      '<!doctype html><script type="module">console.log("inline")</script>',
     );
 
     await expect(
@@ -97,7 +97,7 @@ describe('nip5aManifest artifact modes', () => {
       path.join(fixture.dist, 'index.html'),
       [
         '<!doctype html><html><head>',
-        '<meta name="napplet-aggregate-hash" content="">',
+        '',
         '<link rel="stylesheet" href="./assets/index.css">',
         '</head><body>',
         '<script type="module" src="./assets/index.js"></script>',
@@ -114,11 +114,11 @@ describe('nip5aManifest artifact modes', () => {
 
     const manifest = readManifest(fixture.dist);
     const html = fs.readFileSync(path.join(fixture.dist, 'index.html'), 'utf-8');
-    const hashInputHtml = html.replace(
-      `<meta name="napplet-aggregate-hash" content="${manifest.aggregateHash}">`,
-      '<meta name="napplet-aggregate-hash" content="">',
-    );
-    const indexHash = sha256(hashInputHtml);
+    // The plugin never writes the aggregate hash back into index.html (a file
+    // cannot contain a hash that covers itself), so the on-disk html IS the hash
+    // input — no meta to strip.
+    expect(html).not.toContain('napplet-aggregate-hash');
+    const indexHash = sha256(html);
     const expected = computeAggregateHash([[indexHash, '/index.html']]);
 
     expect(html).toContain('<style>.app { color: red; }</style>');
@@ -151,7 +151,7 @@ describe('nip5aManifest artifact modes', () => {
         path.join(fixture.dist, 'index.html'),
         [
           '<!doctype html><html><head>',
-          '<meta name="napplet-aggregate-hash" content="">',
+          '',
           `<link rel="stylesheet" href="${testCase.href}">`,
           '</head><body>',
           `<script type="module" src="${testCase.src}"></script>`,
@@ -181,7 +181,7 @@ describe('nip5aManifest artifact modes', () => {
       path.join(fixture.dist, 'index.html'),
       [
         '<!doctype html><html><head>',
-        '<meta name="napplet-aggregate-hash" content="">',
+        '',
         '<link rel="modulepreload" href="./assets/chunk.js">',
         '</head><body>',
         '<script type="module" src="./assets/index.js"></script>',
@@ -209,7 +209,7 @@ describe('nip5aManifest artifact modes', () => {
     const baseFixture = makeFixture();
     const configFixture = makeFixture();
     const connectFixture = makeFixture();
-    const html = '<!doctype html><meta name="napplet-aggregate-hash" content=""><script type="module" src="./assets/index.js"></script>';
+    const html = '<!doctype html><script type="module" src="./assets/index.js"></script>';
 
     for (const fixture of [baseFixture, configFixture, connectFixture]) {
       fs.writeFileSync(path.join(fixture.dist, 'index.html'), html);

@@ -20,7 +20,6 @@ describe('validateManifest — happy path', () => {
     const v = validateManifest(doc);
     expect(v.ok, JSON.stringify(v.errors)).toBe(true);
     expect(v.nappletType).toBe('hello-napplet');
-    expect(v.aggregateHash).toBe(HASH);
     expect(v.requires).toEqual(['relay', 'storage']);
   });
 
@@ -51,17 +50,6 @@ describe('validateManifest — failures', () => {
     expect(v.errors.some((e) => e.code === 'invalid-napplet-type')).toBe(true);
   });
 
-  it('requires the aggregate hash by default but not when disabled', () => {
-    const head = `<meta name="napplet-type" content="x">`;
-    expect(validateManifest(html({ head })).errors.some((e) => e.code === 'missing-aggregate-hash')).toBe(true);
-    expect(validateManifest(html({ head }), { requireAggregateHash: false }).ok).toBe(true);
-  });
-
-  it('flags a malformed aggregate hash', () => {
-    const v = validateManifest(html({ head: `<meta name="napplet-type" content="x"><meta name="napplet-aggregate-hash" content="NOTHEX">` }));
-    expect(v.errors.some((e) => e.code === 'invalid-aggregate-hash')).toBe(true);
-  });
-
   it('flags an unknown required NAP', () => {
     const v = validateManifest(html({ head: `<meta name="napplet-type" content="x"><meta name="napplet-aggregate-hash" content="${HASH}"><meta name="napplet-requires" content="relay,telepathy">` }));
     expect(v.errors.some((e) => e.code === 'unknown-required-nap')).toBe(true);
@@ -71,6 +59,16 @@ describe('validateManifest — failures', () => {
     const schema = JSON.stringify({ type: 'object', properties: { name: { type: 'string', pattern: '^x' } } });
     const v = validateManifest(html({ head: `<meta name="napplet-type" content="x"><meta name="napplet-aggregate-hash" content="${HASH}"><meta name="napplet-config-schema" content='${schema}'>` }));
     expect(v.errors.some((e) => e.code === 'invalid-config-schema')).toBe(true);
+  });
+
+  it('accepts an HTML-entity-escaped config schema (as the build plugin actually emits it)', () => {
+    // The vite-plugin serializes the schema with &quot; in the content attribute.
+    const escaped = JSON.stringify({ type: 'object', properties: { accentColor: { type: 'string', enum: ['blue', 'green'] } }, required: ['accentColor'] })
+      .replace(/&/g, '&amp;')
+      .replace(/"/g, '&quot;');
+    const v = validateManifest(html({ head: `<meta name="napplet-type" content="x"><meta name="napplet-config-schema" content="${escaped}">` }));
+    expect(v.ok, JSON.stringify(v.errors)).toBe(true);
+    expect(v.errors.some((e) => e.code === 'invalid-config-schema')).toBe(false);
   });
 
   it('rejects an invalid connect origin', () => {

@@ -39,7 +39,6 @@ describe('manifest checks', () => {
   it('passes napplet-type / aggregate-hash for a good manifest', () => {
     const ctx = makeContext({ manifestHtml: manifest(goodHead) });
     expect(run('manifest/napplet-type', ctx).status).toBe('pass');
-    expect(run('manifest/aggregate-hash', ctx).status).toBe('pass');
   });
 
   it('fails a missing napplet-type', () => {
