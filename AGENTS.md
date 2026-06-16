@@ -1,8 +1,7 @@
 # AGENTS.md
 
 This file is the source of truth for agents working in this repo. `CLAUDE.md` is a
-symlink to it. The system-wide `~/AGENTS.md` (Arch/Hyprland safety) still applies on
-top of everything here.
+symlink to it.
 
 ## Agent SDLC
 
@@ -62,8 +61,8 @@ milestones so each phase runs discuss→plan→execute without per-step promptin
 - Never carry a large uncommitted diff across steps or a context boundary. If you must
   pause, commit WIP (`wip: …`) or stash with a message — **uncommitted work is the only
   work that gets lost.**
-- Conventional Commits (`feat(scope): …`). End every commit message with:
-  `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
+- Conventional Commits (`feat(scope): …`). Credit the authoring agent with a
+  `Co-Authored-By:` trailer.
 - Stage by explicit path. Never `git add -A` / `-u` when unrelated changes are present.
 
 ### 4. No drift — code, tests, and docs move together
