@@ -56,6 +56,45 @@ export interface ConformanceContext {
   lifecycle: { listenerLeak: boolean } | null;
 }
 
+/** A host-observable boot result (see `bootAndCollect`). */
+export interface BootCollectionLike {
+  installedGlobal: boolean;
+  bootError: string | null;
+  emitted: RecordedEnvelope[];
+  degraded: BootObservation | null;
+}
+
+/** Inputs a host supplies alongside a boot collection to form a full context. */
+export interface BuildContextInput {
+  /** The napplet's `index.html`. */
+  manifestHtml: string;
+  /** The browser-observable boot result. */
+  boot: BootCollectionLike;
+  /** Forbidden globals found by static analysis (e.g. `['window.nostr']`). */
+  forbiddenGlobals?: string[];
+  /** Sandbox attributes the host used. Defaults to the conformant `allow-scripts` only. */
+  sandbox?: SandboxState;
+  /** Best-effort lifecycle observation. */
+  lifecycle?: { listenerLeak: boolean } | null;
+}
+
+/**
+ * Assemble a full {@link ConformanceContext} from a boot collection plus the
+ * host-side pieces (manifest HTML, static-analysis findings, sandbox config).
+ */
+export function buildContext(input: BuildContextInput): ConformanceContext {
+  return {
+    manifestHtml: input.manifestHtml,
+    sandbox: input.sandbox ?? { allowScripts: true, allowSameOrigin: false },
+    installedGlobal: input.boot.installedGlobal,
+    bootError: input.boot.bootError,
+    emitted: input.boot.emitted,
+    forbiddenGlobals: input.forbiddenGlobals ?? [],
+    degraded: input.boot.degraded,
+    lifecycle: input.lifecycle ?? null,
+  };
+}
+
 /**
  * Build a context with conformant defaults, overriding only what a test cares
  * about. Useful in unit tests and as a documented baseline shape.

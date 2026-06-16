@@ -1,0 +1,44 @@
+{
+  "name": "@napplet/conformance-cli",
+  "version": "0.1.0",
+  "description": "Headless CLI that runs @napplet/conformance against a napplet in real Chromium via Playwright — the `test:conformance` runner",
+  "type": "module",
+  "bin": {
+    "napplet-conformance": "./dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@napplet/conformance": "workspace:^",
+    "playwright": "^1.59.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.3"
+  },
+  "scripts": {
+    "build": "tsup",
+    "type-check": "tsc --noEmit",
+    "test:unit": "vitest run"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sandwichfarm/napplet.git",
+    "directory": "packages/conformance-cli"
+  },
+  "keywords": [
+    "nostr",
+    "napplet",
+    "conformance",
+    "cli",
+    "playwright",
+    "nip-5d"
+  ]
+}

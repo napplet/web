@@ -51,12 +51,18 @@ export type {
 } from './shell/reference-shell.js';
 
 // ── context ──────────────────────────────────────────────────────────────────
-export { makeContext } from './run/context.js';
+export { makeContext, buildContext } from './run/context.js';
 export type {
   ConformanceContext,
   SandboxState,
   BootObservation,
+  BootCollectionLike,
+  BuildContextInput,
 } from './run/context.js';
+
+// ── boot harness (browser-safe) ──────────────────────────────────────────────
+export { bootAndCollect } from './run/boot.js';
+export type { BootCollection, BootOptions } from './run/boot.js';
 
 // ── checks ───────────────────────────────────────────────────────────────────
 export { CHECKS } from './checks/catalog.js';

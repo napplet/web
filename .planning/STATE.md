@@ -7,10 +7,10 @@ last_updated: "2026-06-16T17:49:21.028Z"
 last_activity: 2026-06-16
 progress:
   total_phases: 5
-  completed_phases: 0
+  completed_phases: 2
   total_plans: 0
   completed_plans: 0
-  percent: 0
+  percent: 40
 ---
 
 # Project State
@@ -27,10 +27,22 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 
 ## Current Position
 
-Phase: 148 — Conformance Package + Validators (next to plan/execute)
+Phase: 150 — Headless CLI + Fixtures + e2e + CI (next)
 Plan: —
-Status: Roadmap approved (5 phases, 148-152); ready to plan/execute Phase 148
-Last activity: 2026-06-16 — Milestone v0.32.0 roadmap created (Phases 148-152, all 23 REQ-IDs mapped)
+Status: M1 COMPLETE (Phases 148+149). Engine done: validators, reference shell, checks, runner, reporters. 65 tests green. Executing M2.
+Last activity: 2026-06-16 — Phase 149 done (ebf49aa): reference shell + 14-check catalog + runConformance + 3 reporters
+
+### Phase 150 design decisions (in progress)
+- Sandbox opacity: a napplet in allow-scripts (no same-origin) iframe is opaque to parent. Observable boot signal = shim's `shell.ready` postMessage. Boot failure = no shell.ready within timeout (also how same-origin reliance manifests). Forbidden-global (window.nostr) access is UNOBSERVABLE across the sandbox → detected via static scan of the built bundle (node-side), fed into ConformanceContext.forbiddenGlobals.
+- Split: `bootAndCollect` (browser-safe DOM harness) lives in the ENGINE (reused by CLI host page AND web runtime). Returns BootCollection { installedGlobal, bootError, emitted, degraded }. `runConformance` runs in node (pure). 
+- NEW PACKAGE `@napplet/conformance-cli` (separate from engine): depends on @napplet/conformance + playwright. Keeps engine zero-heavy-dep + JSR-publishable; CLI is npm-only. Bin `napplet-conformance`. Serves napplet dir + host page on loopback, Playwright chromium runs bootAndCollect, returns BootCollection, node assembles ctx (+manifestHtml +forbiddenGlobals static-scan) and runs checks + reporters + exit code.
+
+### Phase 148 record (ENGINE-01/03/04/05) — COMPLETE
+- `@napplet/conformance` v0.1.0 package: ESM-only, deps @napplet/core + @napplet/nap (workspace:^), tsup/type-check/vitest, package.json + jsr.json.
+- `ENVELOPE_SPECS`: single source-of-truth map of all 123 wire discriminants (60 outbound / 63 inbound; connect=0). `validateEnvelope()` returns field-level verdicts (codes: not-an-object, missing-type, malformed-type, unknown-domain, unknown-type, inbound-type-emitted, missing-field, wrong-type).
+- `validateManifest()`: napplet-type (regex), napplet-aggregate-hash (64-hex), napplet-requires (known NAP / nap: prefix), napplet-config-schema (JSON, rejects `pattern` keyword), napplet-connect-requires (canonical `normalizeConnectOrigin` from @napplet/nap/connect/types), no-inline-`<script>` (ported from vite-plugin html.ts).
+- Drift test scans `packages/nap/src/**/*.ts` for `^type: 'domain.action'` literals (excludes JSDoc) → asserts ENVELOPE_SPECS covers every one + no stale entries.
+- DECISION: validators hand-written + drift-guarded (not generated). DECISION: reuse `normalizeConnectOrigin` to avoid origin-validation drift (makes @napplet/nap a runtime dep).
 
 ## Accumulated Context
 

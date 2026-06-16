@@ -1,0 +1,14 @@
+{
+  "name": "@napplet/conformance-e2e",
+  "version": "0.0.0",
+  "private": true,
+  "description": "End-to-end tests driving the napplet-conformance CLI against fixture napplets",
+  "type": "module",
+  "scripts": {
+    "test:e2e": "vitest run"
+  },
+  "devDependencies": {
+    "@napplet/conformance-cli": "workspace:^",
+    "vitest": "^4.1.2"
+  }
+}
