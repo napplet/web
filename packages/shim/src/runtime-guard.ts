@@ -28,9 +28,9 @@
  * @packageDocumentation
  */
 
-// ─── Help links ────────────────────────────────────────────────────────────
-// Canonical source for these URLs is apps/web/src/lib/site.ts (LINKS); kept in
-// sync intentionally. These are constants — never interpolate untrusted input.
+// Help links. Canonical source for these URLs is apps/web/src/lib/site.ts
+// (LINKS); kept in sync intentionally. These are constants — never interpolate
+// untrusted input.
 
 /** NIP-5D specification (draft PR) — how napplets and runtimes talk. */
 export const NIP_5D_SPEC_URL = 'https://github.com/nostr-protocol/nips/pull/2303/files';
@@ -45,13 +45,13 @@ export const KEHTO_WEB_URL = 'https://github.com/kehto/web';
  */
 export const HANDSHAKE_TIMEOUT_MS = 3000;
 
-// ─── Internal state ─────────────────────────────────────────────────────────
+// Internal state.
 
 let runtimeConfirmed = false;
 let modalShown = false;
 let guardTimer: ReturnType<typeof setTimeout> | undefined;
 
-// ─── Public API ─────────────────────────────────────────────────────────────
+// Public API.
 
 /**
  * Mark that a napplet runtime is present. Called by the shim the moment any
@@ -86,7 +86,7 @@ export function installRuntimeGuard(): void {
   }, HANDSHAKE_TIMEOUT_MS);
 }
 
-// ─── Detection helpers ──────────────────────────────────────────────────────
+// Detection helpers.
 
 function isTopLevel(): boolean {
   try {
@@ -100,7 +100,8 @@ function isTopLevel(): boolean {
 
 function isStandaloneAllowed(): boolean {
   try {
-    if ((window as unknown as { __NAPPLET_ALLOW_STANDALONE__?: unknown }).__NAPPLET_ALLOW_STANDALONE__ === true) {
+    const w = window as Window & typeof globalThis & { __NAPPLET_ALLOW_STANDALONE__?: unknown };
+    if (w.__NAPPLET_ALLOW_STANDALONE__ === true) {
       return true;
     }
     if (typeof document !== 'undefined' && document.querySelector('meta[name="napplet-allow-standalone"]')) {
@@ -112,7 +113,7 @@ function isStandaloneAllowed(): boolean {
   return false;
 }
 
-// ─── Failure surface ────────────────────────────────────────────────────────
+// Failure surface.
 
 function triggerGuard(): void {
   console.error(
@@ -146,14 +147,77 @@ function renderRuntimeErrorModal(): void {
   const root: ShadowRoot | HTMLElement = host.attachShadow
     ? host.attachShadow({ mode: 'open' })
     : host;
-  root.innerHTML = modalMarkup();
+
+  // Build the tree with DOM APIs (no innerHTML): content is all static text.
+  const style = document.createElement('style');
+  style.textContent = MODAL_CSS;
+  root.appendChild(style);
+  root.appendChild(buildModalOverlay());
 
   document.body.appendChild(host);
 }
 
-function modalMarkup(): string {
-  return `
-<style>
+interface ElOptions {
+  className?: string;
+  text?: string;
+  attrs?: Record<string, string>;
+  children?: Array<Node | string>;
+}
+
+function makeEl(tag: string, options: ElOptions = {}): HTMLElement {
+  const node = document.createElement(tag);
+  if (options.className) node.className = options.className;
+  if (options.text !== undefined) node.textContent = options.text;
+  if (options.attrs) {
+    for (const [name, value] of Object.entries(options.attrs)) node.setAttribute(name, value);
+  }
+  if (options.children) node.append(...options.children);
+  return node;
+}
+
+function linkRow(href: string, title: string, description: string): HTMLElement {
+  const label = makeEl('span', { text: title, children: [makeEl('small', { text: description })] });
+  const arrow = makeEl('span', { className: 'arrow', text: '→', attrs: { 'aria-hidden': 'true' } });
+  return makeEl('a', {
+    attrs: { href, target: '_blank', rel: 'noopener noreferrer' },
+    children: [label, arrow],
+  });
+}
+
+function buildModalOverlay(): HTMLElement {
+  const badge = makeEl('span', { className: 'badge', text: 'Napplet · no runtime' });
+  const title = makeEl('h1', { text: 'This napplet can’t run here', attrs: { id: 'napplet-rg-title' } });
+
+  const intro = makeEl('p');
+  intro.append(
+    'Napplets are sandboxed apps that run ',
+    makeEl('strong', { text: 'inside a napplet runtime' }),
+    '. The runtime proxies all Nostr access — relays, signing, storage — over ',
+    makeEl('code', { text: 'postMessage' }),
+    ', the wire format defined by NIP-5D. Opened on its own (for example directly ' +
+      'from a NIP-5A nsite gateway), there’s no runtime to talk to, so nothing loads.',
+  );
+
+  const cta = makeEl('p', { text: 'To use this napplet, open it inside a napplet runtime:' });
+
+  const links = makeEl('div', {
+    className: 'links',
+    children: [
+      linkRow(NAPPLET_RUN_URL, 'napplet.run', 'Find a runtime to open napplets in'),
+      linkRow(KEHTO_WEB_URL, 'kehto/web', 'The reference web runtime — open source'),
+      linkRow(NIP_5D_SPEC_URL, 'NIP-5D specification', 'How napplets and runtimes talk'),
+    ],
+  });
+
+  const card = makeEl('div', { className: 'card', children: [badge, title, intro, cta, links] });
+  return makeEl('div', {
+    className: 'overlay',
+    attrs: { role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'napplet-rg-title' },
+    children: [card],
+  });
+}
+
+const MODAL_CSS = `
   :host { all: initial; }
   * { box-sizing: border-box; }
   .overlay {
@@ -198,38 +262,9 @@ function modalMarkup(): string {
   a:hover { background: rgba(124, 108, 255, 0.14); border-color: rgba(124, 108, 255, 0.45); }
   a small { display: block; margin-top: 2px; font-size: 11px; font-weight: 400; color: #8b8ba7; }
   a .arrow { color: #8b8ba7; flex: none; }
-</style>
-<div class="overlay" role="dialog" aria-modal="true" aria-labelledby="napplet-rg-title">
-  <div class="card">
-    <span class="badge">Napplet · no runtime</span>
-    <h1 id="napplet-rg-title">This napplet can’t run here</h1>
-    <p>
-      Napplets are sandboxed apps that run <strong>inside a napplet runtime</strong>.
-      The runtime proxies all Nostr access — relays, signing, storage — over
-      <code>postMessage</code>, the wire format defined by NIP-5D. Opened on its own
-      (for example directly from a NIP-5A nsite gateway), there’s no runtime to talk
-      to, so nothing loads.
-    </p>
-    <p>To use this napplet, open it inside a napplet runtime:</p>
-    <div class="links">
-      <a href="${NAPPLET_RUN_URL}" target="_blank" rel="noopener noreferrer">
-        <span>napplet.run<small>Find a runtime to open napplets in</small></span>
-        <span class="arrow" aria-hidden="true">→</span>
-      </a>
-      <a href="${KEHTO_WEB_URL}" target="_blank" rel="noopener noreferrer">
-        <span>kehto/web<small>The reference web runtime — open source</small></span>
-        <span class="arrow" aria-hidden="true">→</span>
-      </a>
-      <a href="${NIP_5D_SPEC_URL}" target="_blank" rel="noopener noreferrer">
-        <span>NIP-5D specification<small>How napplets and runtimes talk</small></span>
-        <span class="arrow" aria-hidden="true">→</span>
-      </a>
-    </div>
-  </div>
-</div>`;
-}
+`;
 
-// ─── Test-only hook ─────────────────────────────────────────────────────────
+// Test-only hook.
 
 /**
  * Reset internal guard state. Test-only; not part of the public API.

@@ -76,7 +76,9 @@ while (queue.length) {
   let hrefs = [];
   try {
     await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 });
-    hrefs = await page.$$eval('a[href]', (as) => as.map((a) => a.getAttribute('href')));
+    hrefs = await page.evaluate(() =>
+      Array.from(document.querySelectorAll('a[href]'), (a) => a.getAttribute('href')),
+    );
   } catch (err) {
     broken.push({ url, status: 'render-error', detail: err.message });
     continue;
