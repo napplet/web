@@ -162,10 +162,10 @@
     <div class="node node-net">
       <div class="net-head">
         {#key i}
-          <span class="node-kind">{nap.destKind}</span>
-        {/key}
-        {#key i}
-          <span class="node-name">{nap.destName}</span>
+          <div class="net-head-inner">
+            <span class="node-kind">{nap.destKind}</span>
+            <span class="node-name">{nap.destName}</span>
+          </div>
         {/key}
       </div>
       <div class="relay-dots">
@@ -264,20 +264,33 @@
   }
 
   .node-net { border-color: var(--cyan); }
+  /* Reserve height for the tallest rotating name (two lines, e.g. "media
+     session" / "theme tokens") so the activity dots below never collide with a
+     wrapped name. The kind+name crossfade as one naturally-flowing block. */
   .net-head {
     position: relative;
-    min-height: 2.4em;
+    min-height: 3.4em;
+  }
+  .net-head-inner {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 5px;
+    animation: swap-in 0.45s ease both;
   }
-  .net-head .node-kind { position: absolute; top: 0; left: 0; animation: swap-in 0.45s ease both; }
-  .net-head .node-name { position: absolute; top: 1.1em; left: 0; animation: swap-in 0.45s ease both; }
+  .node-net .node-name {
+    font-size: 1.1rem;
+    line-height: 1.2;
+  }
   .relay-dots {
     flex-direction: row;
     gap: 6px;
     margin-top: 4px;
   }
+  .node-net .relay-dots { margin-top: 12px; }
   .relay-dots span {
     width: 10px; height: 10px; border-radius: 50%;
     background: var(--cyan);
@@ -422,9 +435,8 @@
     .flow { grid-template-columns: 1fr; }
     .call-slot { min-height: 0; }
     .node-call { position: static; }
-    .net-head { min-height: 0; gap: 2px; }
-    .net-head .node-kind,
-    .net-head .node-name { position: static; }
+    .net-head { min-height: 0; }
+    .net-head-inner { position: static; }
     /* Vertical connector between stacked nodes: labels stack, the track stays a
        horizontal line, the caption sits below — no cramped side-by-side row. */
     .wire { height: auto; padding: 14px 4px 6px; gap: 8px; }
@@ -442,7 +454,6 @@
     .relay-dots span { animation: none; }
     .node-call,
     .wire-label,
-    .net-head .node-kind,
-    .net-head .node-name { animation: none; }
+    .net-head-inner { animation: none; }
   }
 </style>
