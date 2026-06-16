@@ -1,17 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v0.31.0
-milestone_name: Cleanup Quality Gate
-status: Awaiting next milestone
-stopped_at: Milestone v0.31.0 archived
-last_updated: "2026-05-24T15:14:55+02:00"
-last_activity: 2026-06-15 — Completed quick task 260615-u78: add CI link checker for SPA + docs
+milestone: v0.32.0
+milestone_name: Napplet Conformance
+status: planning
+last_updated: "2026-06-16T17:49:21.028Z"
+last_activity: 2026-06-16
 progress:
-  total_phases: 5
-  completed_phases: 5
-  total_plans: 5
-  completed_plans: 5
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -28,10 +27,10 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 
 ## Current Position
 
-Phase: Milestone v0.31.0 complete
+Phase: Not started (defining requirements)
 Plan: —
-Status: Awaiting next milestone
-Last activity: 2026-06-15 — Completed quick task 260615-u78: add CI link checker for SPA + docs
+Status: Defining requirements
+Last activity: 2026-06-16 — Milestone v0.32.0 started
 
 ## Accumulated Context
 
