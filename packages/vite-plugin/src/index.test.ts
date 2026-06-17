@@ -199,19 +199,16 @@ describe('nip5aManifest artifact modes', () => {
     ).rejects.toThrow('local external assets remain');
   });
 
-  it('excludes config and connect from the NIP-5A aggregate but still emits their tags', async () => {
+  it('excludes config from the NIP-5A aggregate but still emits its tag', async () => {
     // NIP-5D §Identity: the runtime recomputes aggregateHash from the `path`
-    // tags ALONE and asserts it equals the `x` tag. Capability declarations
-    // (`config` / `connect`) are emitted as their own tags but MUST NOT feed the
-    // aggregate — otherwise a conformant runtime would reject the napplet.
-    // (Grant invalidation on a capability change moves to those tags at the
-    // shell layer; it is no longer encoded in the content address.)
+    // tags ALONE and asserts it equals the `x` tag. The `config` capability
+    // declaration is emitted as its own tag but MUST NOT feed the aggregate —
+    // otherwise a conformant runtime would reject the napplet.
     const baseFixture = makeFixture();
     const configFixture = makeFixture();
-    const connectFixture = makeFixture();
     const html = '<!doctype html><script type="module" src="./assets/index.js"></script>';
 
-    for (const fixture of [baseFixture, configFixture, connectFixture]) {
+    for (const fixture of [baseFixture, configFixture]) {
       fs.writeFileSync(path.join(fixture.dist, 'index.html'), html);
       fs.writeFileSync(path.join(fixture.dist, 'assets', 'index.js'), 'console.log("same");');
     }
@@ -231,35 +228,23 @@ describe('nip5aManifest artifact modes', () => {
       },
       configFixture,
     );
-    await runCloseBundle(
-      {
-        nappletType: 'synthetic-connect',
-        artifactMode: 'single-file',
-        connect: ['https://api.example.com'],
-      },
-      connectFixture,
-    );
 
     const base = readManifest(baseFixture.dist);
     const withConfig = readManifest(configFixture.dist);
-    const withConnect = readManifest(connectFixture.dist);
 
     // Identical dist bytes → identical aggregate, regardless of capabilities.
     expect(withConfig.aggregateHash).toBe(base.aggregateHash);
-    expect(withConnect.aggregateHash).toBe(base.aggregateHash);
 
     // Capability tags are still present on the manifest.
     expect(withConfig.tags.some((tag) => tag[0] === 'config')).toBe(true);
-    expect(withConnect.tags).toContainEqual(['connect', 'https://api.example.com']);
 
     // The ONLY `x` tag on each manifest is the path-tags aggregate — no
     // capability bytes leak into the content address under any disguise.
-    for (const manifest of [base, withConfig, withConnect]) {
+    for (const manifest of [base, withConfig]) {
       expect(manifest.tags.filter((tag) => tag[0] === 'x')).toEqual([
         ['x', manifest.aggregateHash, 'aggregate'],
       ]);
       expect(manifest.tags.some((tag) => tag[1] === 'config:schema')).toBe(false);
-      expect(manifest.tags.some((tag) => tag[1] === 'connect:origins')).toBe(false);
     }
   });
 });

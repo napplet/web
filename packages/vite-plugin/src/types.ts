@@ -65,63 +65,6 @@ export interface Nip5aManifestOptions {
    * @see NAP-CONFIG spec (napplet/naps#13)
    */
   configSchema?: NappletConfigSchema | string;
-
-  /**
-   * @deprecated v0.29.0 — the shell is now the sole CSP authority. This option has NO effect
-   * and will be hard-removed in a future milestone (tracked as REMOVE-STRICTCSP). The plugin emits a
-   * one-shot `console.warn` per build when this field is set so existing v0.28.0 consumers
-   * discover the deprecation on upgrade without their `vite.config.ts` breaking.
-   *
-   * Typed as `unknown` to remain assignment-compatible with the removed
-   * `boolean | object` shape — any prior value parses cleanly; no branch reads it.
-   */
-  strictCsp?: unknown;
-
-  /**
-   * Direct-network-access origins this napplet intends to reach from the sandbox
-   * (NAP-CONNECT). Each entry is an **origin** — scheme + host + optional
-   * non-default port — validated against the NAP-CONNECT Origin Format rules
-   * and emitted as one `['connect', <origin>]` tag per origin on the signed
-   * NIP-5A manifest.
-   *
-   * **Origin format rules** (delegated to the shared
-   * {@link normalizeConnectOrigin} validator from `@napplet/nap/connect/types`):
-   * - Scheme MUST be one of `https:` / `wss:` / `http:` / `ws:` (lowercase).
-   * - Host MUST be lowercase. Wildcards (`*`) are not permitted.
-   * - Default ports MUST be omitted (`:443` on `https:`/`wss:`, `:80` on `http:`/`ws:`).
-   * - IDN hosts MUST be Punycode-encoded before emission (`xn--` form, lowercase).
-   *   IPv4 literals are accepted; IPv6 literals are out of v1 scope.
-   * - Path / query / fragment MUST NOT appear.
-   *
-   * **Build-time behaviors:**
-   * 1. Each origin is normalized through the shared validator in `configResolved`;
-   *    violations throw a `[nip5a-manifest]`-prefixed error that chains the
-   *    nap's diagnostic so authors see exactly which origin failed and why.
-   * 2. Normalized origins are folded into `aggregateHash` via the NAP-CONNECT
-   *    canonical fold (lowercase → ASCII-ascending sort → LF-join → UTF-8 →
-   *    SHA-256 → lowercase hex) and pushed as the synthetic xTag entry
-   *    `[<hash>, 'connect:origins']`. Any origin-list change flips
-   *    `aggregateHash`, which auto-invalidates shell grants keyed on
-   *    `(dTag, aggregateHash)`.
-   * 3. One `['connect', <normalized-origin>]` manifest tag is emitted per
-   *    origin in author-declared order, placed between `['x', ...]` tags and
-   *    `['config', ...]` tags on the signed event.
-   * 4. Cleartext origins (`http:` / `ws:`) trigger an informational
-   *    `console.warn` describing browser mixed-content rules. Non-blocking.
-   * 5. When Vite is running in dev mode (`vite serve`), an optional
-   *    `<meta name="napplet-connect-requires" content="...">` tag is injected
-   *    for shell-less local preview. This `requires` name is **distinct**
-   *    from the shell-authoritative `...-granted` meta defined in NAP-CONNECT
-   *    §Runtime API — the plugin MUST NEVER emit the `granted` variant; the
-   *    shell is the sole writer of that name.
-   *
-   * When omitted or empty, the plugin emits no `connect` tags, performs no
-   * fold, and the napplet is treated as NAP-CLASS-1 (strict / no-user-declared-
-   * origins) by conformant shells.
-   *
-   * @see NAP-CONNECT spec — napplet/naps#NAP-CONNECT
-   */
-  connect?: string[];
 }
 
 /** Internal: resolved per-plugin-instance build state shared across hooks. */
@@ -132,7 +75,6 @@ export interface ManifestPluginState {
   artifactMode: Nip5aArtifactMode;
   resolvedSchema: NappletConfigSchema | null;
   resolvedSchemaSource: string | null;
-  normalizedConnect: string[];
 }
 
 /** Internal: unsigned manifest template carrying the precomputed aggregateHash. */
