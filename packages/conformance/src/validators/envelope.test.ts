@@ -41,13 +41,6 @@ describe('validateEnvelope — direction enforcement', () => {
     expect(v.direction).toBe('in');
     expect(v.errors[0].code).toBe('inbound-type-emitted');
   });
-
-  it('rejects connect.* entirely (connect has no wire protocol)', () => {
-    const v = validateEnvelope({ type: 'connect.request', id: 'x' });
-    // connect is a known NAP domain but has zero envelope specs.
-    expect(v.ok).toBe(false);
-    expect(v.errors[0].code).toBe('unknown-type');
-  });
 });
 
 describe('validateEnvelope — outbound field checks', () => {

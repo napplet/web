@@ -40,9 +40,7 @@ const ID = { id: 'string' } as const;
 
 /**
  * The complete napplet wire surface: every `domain.action` discriminant across all
- * 16 NAP domains, with its direction and (for outbound) required fields. `connect`
- * has no wire protocol (grants flow via CSP + meta tag) and therefore no entries —
- * a napplet emitting any `connect.*` envelope is non-conformant.
+ * 14 NAP domains, with its direction and (for outbound) required fields.
  */
 export const ENVELOPE_SPECS: Record<string, EnvelopeSpec> = {
   // ── relay ────────────────────────────────────────────────────────────────

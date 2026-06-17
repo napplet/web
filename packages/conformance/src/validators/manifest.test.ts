@@ -23,18 +23,17 @@ describe('validateManifest — happy path', () => {
     expect(v.requires).toEqual(['relay', 'storage']);
   });
 
-  it('accepts nap:-prefixed requires and a valid connect origin', () => {
+  it('accepts nap:-prefixed requires', () => {
     const doc = html({
       head: `
         <meta name="napplet-type" content="x">
         <meta name="napplet-aggregate-hash" content="${HASH}">
         <meta name="napplet-requires" content="nap:relay, nap:identity">
-        <meta name="napplet-connect-requires" content="https://api.example.com wss://stream.example.com">
       `,
     });
     const v = validateManifest(doc);
     expect(v.ok, JSON.stringify(v.errors)).toBe(true);
-    expect(v.connectOrigins).toContain('https://api.example.com');
+    expect(v.requires).toEqual(['nap:relay', 'nap:identity']);
   });
 });
 
@@ -69,11 +68,6 @@ describe('validateManifest — failures', () => {
     const v = validateManifest(html({ head: `<meta name="napplet-type" content="x"><meta name="napplet-config-schema" content="${escaped}">` }));
     expect(v.ok, JSON.stringify(v.errors)).toBe(true);
     expect(v.errors.some((e) => e.code === 'invalid-config-schema')).toBe(false);
-  });
-
-  it('rejects an invalid connect origin', () => {
-    const v = validateManifest(html({ head: `<meta name="napplet-type" content="x"><meta name="napplet-aggregate-hash" content="${HASH}"><meta name="napplet-connect-requires" content="https://*.example.com">` }));
-    expect(v.errors.some((e) => e.code === 'invalid-connect-origin')).toBe(true);
   });
 });
 

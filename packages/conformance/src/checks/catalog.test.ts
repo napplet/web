@@ -49,13 +49,12 @@ describe('manifest checks', () => {
   it('skips optional metas when absent, fails them when invalid', () => {
     const absent = makeContext({ manifestHtml: manifest(goodHead) });
     expect(run('manifest/config-schema', absent).status).toBe('skip');
-    expect(run('manifest/connect-origins', absent).status).toBe('skip');
     expect(run('manifest/declared-naps', absent).status).toBe('skip');
 
-    const badConnect = makeContext({
-      manifestHtml: manifest(`${goodHead}<meta name="napplet-connect-requires" content="https://*.bad">`),
+    const badSchema = makeContext({
+      manifestHtml: manifest(`${goodHead}<meta name="napplet-config-schema" content='{"type":"object","properties":{"x":{"type":"string","pattern":"^a"}}}'>`),
     });
-    expect(run('manifest/connect-origins', badConnect).status).toBe('fail');
+    expect(run('manifest/config-schema', badSchema).status).toBe('fail');
   });
 
   it('fails inline scripts', () => {

@@ -51,13 +51,9 @@ function declaredDiscriminants(): Set<string> {
 }
 
 describe('envelope validator drift guard', () => {
-  it('every NAP domain in NAP_DOMAINS has at least one validator entry, except connect (no wire)', () => {
+  it('every NAP domain in NAP_DOMAINS has at least one validator entry', () => {
     const domainsWithSpecs = new Set(Object.keys(ENVELOPE_SPECS).map((t) => t.slice(0, t.indexOf('.'))));
     for (const domain of NAP_DOMAINS) {
-      if (domain === 'connect') {
-        expect(domainsWithSpecs.has(domain), 'connect must have NO wire specs').toBe(false);
-        continue;
-      }
       expect(domainsWithSpecs.has(domain), `NAP domain "${domain}" has no ENVELOPE_SPECS entry`).toBe(true);
     }
   });

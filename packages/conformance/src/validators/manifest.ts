@@ -9,19 +9,14 @@
  * | `napplet-type`             | the napplet type / `d` tag                          |
  * | `napplet-requires`         | comma-joined list of required NAP domains           |
  * | `napplet-config-schema`    | inline `JSON.stringify` of the config schema        |
- * | `napplet-connect-requires` | space-joined connect origins (dev-only)             |
  *
  * {@link validateManifest} reads a napplet's HTML and checks each declaration
  * plus the no-inline-`<script>` rule the shell-as-CSP-authority model requires.
- *
- * The origin check reuses the canonical {@link normalizeConnectOrigin} so the
- * conformance verdict can never drift from what the build plugin and shell accept.
  *
  * @packageDocumentation
  */
 
 import { NAP_DOMAINS } from '@napplet/core';
-import { normalizeConnectOrigin } from '@napplet/nap/connect/types';
 
 /** A napplet type/d-tag: lowercase, starts alnum, then alnum or `._:-`. */
 const NAPPLET_TYPE_RE = /^[a-z0-9][a-z0-9._:-]*$/;
@@ -41,7 +36,6 @@ export interface ManifestError {
     | 'invalid-napplet-type'
     | 'unknown-required-nap'
     | 'invalid-config-schema'
-    | 'invalid-connect-origin'
     | 'inline-script';
   /** Human-readable explanation. */
   message: string;
@@ -55,8 +49,6 @@ export interface ManifestVerdict {
   nappletType?: string;
   /** Parsed `napplet-requires` (domain names), empty when absent. */
   requires: string[];
-  /** Parsed `napplet-connect-requires` origins, empty when absent. */
-  connectOrigins: string[];
   /** Hard failures. */
   errors: ManifestError[];
   /** Non-fatal advisories. */
@@ -193,19 +185,6 @@ export function validateManifest(html: string, _options: ValidateManifestOptions
     }
   }
 
-  // ── napplet-connect-requires (dev-only meta, validated when present) ────────
-  const connectRaw = readMeta(html, 'napplet-connect-requires');
-  const connectTokens = connectRaw ? connectRaw.split(/\s+/).map((s) => s.trim()).filter(Boolean) : [];
-  const connectOrigins: string[] = [];
-  for (const origin of connectTokens) {
-    try {
-      connectOrigins.push(normalizeConnectOrigin(origin));
-    } catch (err) {
-      const reason = err instanceof Error ? err.message : String(err);
-      errors.push({ code: 'invalid-connect-origin', message: `connect origin "${origin}" is invalid: ${reason}` });
-    }
-  }
-
   // ── no inline scripts ───────────────────────────────────────────────────────
   for (const offender of findInlineScripts(html)) {
     errors.push({ code: 'inline-script', message: `Inline <script> is forbidden under script-src 'self': ${offender}` });
@@ -215,7 +194,6 @@ export function validateManifest(html: string, _options: ValidateManifestOptions
     ok: errors.length === 0,
     nappletType,
     requires,
-    connectOrigins,
     errors,
     warnings,
   };
