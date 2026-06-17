@@ -284,4 +284,56 @@ describe('nip5aManifest artifact modes', () => {
       expect(manifest.tags.some((tag) => tag[1] === 'config:schema')).toBe(false);
     }
   });
+
+  it('emits one ["archetype", slug, ...naps] tag per role without changing the aggregate', async () => {
+    // NAAT (napplet/naps ARCHETYPES.md): a napplet declares the roles it
+    // fulfills as ['archetype', slug, ...naps] tags. Per NIP-5D §Identity these
+    // are excluded from the aggregate `x` hash (same as `config`) — declaring
+    // archetypes over identical dist bytes MUST NOT change the content address.
+    const baseFixture = makeFixture();
+    const archetypeFixture = makeFixture();
+    const html = '<!doctype html><script type="module" src="./assets/index.js"></script>';
+
+    for (const fixture of [baseFixture, archetypeFixture]) {
+      fs.writeFileSync(path.join(fixture.dist, 'index.html'), html);
+      fs.writeFileSync(path.join(fixture.dist, 'assets', 'index.js'), 'console.log("same");');
+    }
+
+    await runCloseBundle(
+      { nappletType: 'archetype-base', artifactMode: 'single-file' },
+      baseFixture,
+    );
+    await runCloseBundle(
+      {
+        nappletType: 'archetype-roles',
+        artifactMode: 'single-file',
+        // Object form (with naps) plus string shorthand (no naps).
+        archetypes: [{ slug: 'feed', naps: ['NAP-4'] }, 'note'],
+      },
+      archetypeFixture,
+    );
+
+    const base = readManifest(baseFixture.dist);
+    const withArchetypes = readManifest(archetypeFixture.dist);
+
+    // Identical dist bytes → identical aggregate, regardless of archetype tags.
+    expect(withArchetypes.aggregateHash).toBe(base.aggregateHash);
+
+    // One tag per declared role, in author-declared order, naps appended.
+    const archetypeTags = withArchetypes.tags.filter((tag) => tag[0] === 'archetype');
+    expect(archetypeTags).toEqual([
+      ['archetype', 'feed', 'NAP-4'],
+      ['archetype', 'note'],
+    ]);
+
+    // The base build (no archetypes) emits no archetype tag at all.
+    expect(base.tags.some((tag) => tag[0] === 'archetype')).toBe(false);
+
+    // The ONLY `x` tag on each manifest stays the path-tags aggregate.
+    for (const manifest of [base, withArchetypes]) {
+      expect(manifest.tags.filter((tag) => tag[0] === 'x')).toEqual([
+        ['x', manifest.aggregateHash, 'aggregate'],
+      ]);
+    }
+  });
 });
