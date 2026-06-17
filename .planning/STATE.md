@@ -31,7 +31,7 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 Phase: 155 (Implement NAP-SHELL) — COMPLETE
 Plan: 155-01 — COMPLETE
 Status: Milestone v0.33.0 shipped — PR #48
-Last activity: 2026-06-17 — Completed quick task 260617-qmu: retired the deferred NAP-CLASS / NAP-CONNECT surface (deleted both SHELL-*-POLICY specs, cleaned root README + build-napplet SKILL) AND removed the residual opaque `class` field that Phase 155 re-homed into NAP-SHELL `shell.init` (canonical NAP-SHELL carries no class). `shell.init` is now `{ capabilities, services }`. Removed across core/shim/nap/conformance + tests; changeset (minor ×4); build + type-check + test:unit all green. 8 commits (bfaaaf8…9ffa822).
+Last activity: 2026-06-17 — Wired per-package GitHub Releases after npm deploy (scripts/github-releases.mjs + Publish-workflow step, idempotent + backfilling); branch chore/github-releases. Earlier: completed quick task 260617-qmu: retired the deferred NAP-CLASS / NAP-CONNECT surface (deleted both SHELL-*-POLICY specs, cleaned root README + build-napplet SKILL) AND removed the residual opaque `class` field that Phase 155 re-homed into NAP-SHELL `shell.init` (canonical NAP-SHELL carries no class). `shell.init` is now `{ capabilities, services }`. Removed across core/shim/nap/conformance + tests; changeset (minor ×4); build + type-check + test:unit all green. 8 commits (bfaaaf8…9ffa822).
 
 Prior activity: 2026-06-17 — Executed 155-01-PLAN.md: added @napplet/core NAP-SHELL types, the @napplet/nap/shell subpath, migrated the shim handshake to cache the `{ capabilities:{domains,protocols}, services, class }` environment, and migrated conformance (validator/reference-shell/boot/checks). 4 task commits (4eddcb5, 99de482, 86a9ca6, e8e5438). build + type-check + test:unit all green.
 
@@ -290,6 +290,7 @@ Surfaced by research (informational — each belongs to a specific phase plan):
 | 260617-83q | Fix napplet/web#53: remove anti-spec assertNoInlineScripts (vite-plugin) + the no-inline-scripts conformance check — inline JS is mandatory under NIP-5D srcdoc/opaque-origin loading. Harden AGENTS.md protocol-fidelity guardrails | 2026-06-17 | 44cf48c | [260617-83q-fix-napplet-web-53-remove-anti-spec-asse](./quick/260617-83q-fix-napplet-web-53-remove-anti-spec-asse/) |
 | 260617-mym | Resolve #57 (NAP-STORAGE per-instance scope) and #58 (NAAT archetype manifest tag) | 2026-06-17 | e63ee78 | [260617-mym-resolve-57-nap-storage-per-instance-scop](./quick/260617-mym-resolve-57-nap-storage-per-instance-scop/) |
 | 260617-qmu | Retire deferred NAP-CLASS / NAP-CONNECT surface from docs/specs AND the residual opaque `class` field re-homed into NAP-SHELL `shell.init` (canonical NAP-SHELL has no class) — AGENTS.md rule 8 | 2026-06-17 | 9ffa822 | [260617-qmu-retire-deferred-nap-class-nap-connect-su](./quick/260617-qmu-retire-deferred-nap-class-nap-connect-su/) |
+| 260617-rel | Publish per-package GitHub Releases (CHANGELOG body) after npm deploy — idempotent scripts/github-releases.mjs + Publish-workflow step (fast) | 2026-06-17 | 6a49f80 | — (inline /gsd:fast) |
 
 Last session: 2026-04-21T20:46:00.000Z
 Stopped at: Completed 142-03-PLAN.md (Phase 142 TERMINAL-COMPLETE)
