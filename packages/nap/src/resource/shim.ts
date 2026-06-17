@@ -1,6 +1,7 @@
 // @napplet/nap/resource -- Resource NAP shim (byte-fetching primitive: bytes, bytesAsObjectURL)
 // Single-flight cache, AbortSignal cancellation, data: scheme decoded inline (zero shell round-trip).
 
+import { postToShell } from '../boundary.js';
 import type {
   ResourceBytesMessage,
   ResourceBytesResultMessage,
@@ -71,7 +72,7 @@ function sendBytesRequest(url: string, id: string): Promise<Blob> {
       id,
       url,
     };
-    window.parent.postMessage(msg, '*');
+    postToShell(msg);
 
     setTimeout(() => {
       if (pending.delete(id)) {
@@ -89,7 +90,7 @@ function sendCancel(id: string): void {
     type: 'resource.cancel',
     id,
   };
-  window.parent.postMessage(msg, '*');
+  postToShell(msg);
 }
 
 /**

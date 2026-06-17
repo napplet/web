@@ -1,6 +1,7 @@
 // @napplet/nap/inc -- INC NAP shim
 // Inter-napplet communication via topic pub/sub over postMessage.
 
+import { postToShell } from '../boundary.js';
 import type { NostrEvent } from '@napplet/core';
 import type {
   IncEmitMessage,
@@ -44,7 +45,7 @@ export function emit(
     topic,
     ...(payload !== undefined ? { payload } : {}),
   };
-  window.parent.postMessage(msg, '*');
+  postToShell(msg);
 }
 
 /**
@@ -95,7 +96,7 @@ export function on(
     id: crypto.randomUUID(),
     topic,
   };
-  window.parent.postMessage(subscribeMsg, '*');
+  postToShell(subscribeMsg);
 
   return {
     close(): void {
@@ -111,7 +112,7 @@ export function on(
         type: 'inc.unsubscribe',
         topic,
       };
-      window.parent.postMessage(unsubMsg, '*');
+      postToShell(unsubMsg);
     },
   };
 }

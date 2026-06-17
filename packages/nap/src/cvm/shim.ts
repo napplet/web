@@ -2,6 +2,7 @@
 // Correlates cvm.* request/response envelopes; routes uncorrelated cvm.event notifications to listeners.
 // The shell owns all ContextVM transport: relay routing, signing, encryption, initialization, payment.
 
+import { postToShell } from '../boundary.js';
 import type {
   CvmServerRef,
   CvmServer,
@@ -146,7 +147,7 @@ export function discover(query?: CvmDiscoverQuery): Promise<CvmServer[]> {
       id,
       ...(query === undefined ? {} : { query }),
     };
-    window.parent.postMessage(msg, '*');
+    postToShell(msg);
   });
 }
 
@@ -189,7 +190,7 @@ export function request(
       message,
       ...(options === undefined ? {} : { options }),
     };
-    window.parent.postMessage(msg, '*');
+    postToShell(msg);
   });
 }
 
@@ -331,7 +332,7 @@ export function close(server: CvmServerRef): Promise<void> {
       id,
       server,
     };
-    window.parent.postMessage(msg, '*');
+    postToShell(msg);
   });
 }
 

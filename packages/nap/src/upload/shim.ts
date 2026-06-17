@@ -2,6 +2,7 @@
 // Correlates upload.* request/result envelopes; routes upload.status.changed pushes to listeners.
 // The shell owns server selection, auth signing, consent, policy, and the HTTP upload.
 
+import { postToShell } from '../boundary.js';
 import type { Subscription } from '@napplet/core';
 import type {
   UploadRequest,
@@ -120,7 +121,7 @@ export function upload(request: UploadRequest): Promise<UploadResult> {
       request,
     };
     // Structured clone carries Blob/ArrayBuffer across the boundary; no encoding.
-    window.parent.postMessage(msg, '*');
+    postToShell(msg);
   });
 }
 
@@ -143,7 +144,7 @@ export function status(uploadId: string): Promise<UploadStatus> {
       id,
       uploadId,
     };
-    window.parent.postMessage(msg, '*');
+    postToShell(msg);
   });
 }
 

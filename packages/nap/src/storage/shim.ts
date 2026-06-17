@@ -13,6 +13,7 @@
  *   const allKeys = await window.napplet.storage.keys();
  */
 
+import { postToShell } from '../boundary.js';
 import type {
   StorageScope,
   StorageGetMessage,
@@ -61,7 +62,7 @@ function sendStorageRequest(
   return new Promise((resolve, reject) => {
     pendingResponses.set(message.id, { resolve, reject });
 
-    window.parent.postMessage(message, '*');
+    postToShell(message);
 
     // 5-second timeout
     setTimeout(() => {

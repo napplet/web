@@ -1,6 +1,7 @@
 // @napplet/nap/keys -- Keys NAP shim (keyboard forwarding + action keybindings)
 // Full NAP-KEYS smart forwarding, suppress list, action handlers, and shell-push binding updates.
 
+import { postToShell } from '../boundary.js';
 import type {
   KeysForwardMessage,
   KeysRegisterActionMessage,
@@ -165,7 +166,7 @@ function handleKeydown(event: KeyboardEvent): void {
     shift: event.shiftKey,
     meta: event.metaKey,
   };
-  window.parent.postMessage(msg, '*');
+  postToShell(msg);
 }
 
 /**
@@ -200,7 +201,7 @@ export function registerAction(action: {
       id,
       action,
     };
-    window.parent.postMessage(msg, '*');
+    postToShell(msg);
 
     setTimeout(() => {
       if (pendingRegistrations.delete(id)) {
@@ -219,7 +220,7 @@ export function unregisterAction(actionId: string): void {
     type: 'keys.unregisterAction',
     actionId,
   };
-  window.parent.postMessage(msg, '*');
+  postToShell(msg);
 }
 
 /**
