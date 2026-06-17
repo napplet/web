@@ -1,5 +1,16 @@
 # @napplet/vite-plugin
 
+## 0.8.1
+
+### Patch Changes
+
+- Stop rejecting inline `<script>` — it broke spec-faithful `srcdoc` napplets ([napplet/web#53](https://github.com/napplet/web/issues/53)).
+
+  Per NIP-5D a napplet is a single self-contained `/index.html` loaded via `iframe.srcdoc` with `sandbox="allow-scripts"` and no `allow-same-origin` (an opaque origin). There is no served origin from which to fetch an external `<script src>`, so a napplet's executable JS **must** be inline. The toolchain was enforcing the opposite under an invented "shell-as-CSP-authority / `script-src 'self'`" model that NIP-5D never defines and that was justified by NAP-CONNECT/strict-CSP — since deferred from the NAPs track.
+
+  - **`@napplet/vite-plugin`**: removed `assertNoInlineScripts` and its unconditional `closeBundle` call. The build no longer aborts on inline scripts; `artifactMode: 'single-file'` still folds local script/style assets into `index.html` and now preserves any pre-existing inline scripts verbatim.
+  - **`@napplet/conformance`** (and bundled **`@napplet/conformance-cli`**): removed the `manifest/no-inline-scripts` check, the `inline-script` error code, and the `findInlineScripts` export. A conformant napplet that carries inline JS no longer fails conformance.
+
 ## 0.8.0
 
 ### Minor Changes

@@ -26,7 +26,6 @@ export type {
 
 export {
   validateManifest,
-  findInlineScripts,
 } from './validators/manifest.js';
 export type {
   ManifestError,

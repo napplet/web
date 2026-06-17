@@ -1,92 +1,22 @@
 /**
  * @napplet/vite-plugin — HTML scanning and single-file artifact inlining.
  *
- * Two concerns live here: the inline-`<script>` guard enforced in the default
- * `external-assets` mode, and the `single-file` artifact pipeline that inlines
- * local JS/CSS into `index.html`, deletes the consumed assets, and asserts the
- * HTML is the only served artifact left in dist/.
+ * The `single-file` artifact pipeline inlines local JS/CSS references into
+ * `index.html`, deletes the consumed assets, and asserts the HTML is the only
+ * served artifact left in dist/.
+ *
+ * Inline `<script>` elements are deliberately NOT rejected. Per NIP-5D a
+ * napplet is a single self-contained `/index.html` loaded via `iframe.srcdoc`
+ * with `sandbox="allow-scripts"` and no `allow-same-origin` (an opaque origin),
+ * so its executable JS lives inline — there is no served origin from which to
+ * fetch an external `<script src>`. See the canonical NIP-5D text for the
+ * loading model; this comment is non-normative.
  */
 
 import type { UserConfig } from 'vite';
 import * as fs from 'fs';
 import * as path from 'path';
 import { walkDir } from './hashing.js';
-
-/**
- * Scan production HTML for forbidden inline `<script>` elements.
- *
- * Under the v0.29.0 shell-as-CSP-authority model, shells emit
- * `script-src 'self'` which blocks inline scripts at runtime. We fail the
- * build here so authors discover the violation at `pnpm build` rather than
- * as a silent runtime CSP block. (Locked decision Q4 — hard error.)
- *
- * Allow-list (accepted as NOT inline):
- *   - `<script src="...">` with any non-empty `src` (externally-loaded)
- *   - `<script type="application/json">...</script>` (non-executing data)
- *   - `<script type="application/ld+json">...</script>` (non-executing JSON-LD)
- *   - `<script type="importmap">...</script>` (browser-recognized, non-executing-JS)
- *   - `<script type="speculationrules">...</script>` (browser-recognized, non-executing-JS)
- *   - Content inside HTML comments — stripped before scanning
- *
- * Rejected (throws):
- *   - `<script>inline content</script>`
- *   - `<script src="">...</script>` (empty src = inline fallback per W3C)
- *   - `<script type="module">inline</script>`
- *   - `<script type="text/javascript">inline</script>`
- *
- * @param html - Contents of `dist/index.html` to scan.
- * @throws Error with `[nip5a-manifest]` prefix listing every offending tag.
- */
-export function assertNoInlineScripts(html: string): void {
-  // Strip HTML comments (non-greedy, multi-line) so commented-out scripts
-  // don't produce false positives.
-  const stripped = html.replace(/<!--[\s\S]*?-->/g, '');
-
-  // Find every <script ...> opening tag. Attribute section may contain
-  // whitespace and newlines; [\s\S]*? handles both, non-greedy halts at
-  // the first >.
-  const scriptTagRe = /<script\b([\s\S]*?)>/gi;
-  const offenders: string[] = [];
-
-  let m: RegExpExecArray | null;
-  while ((m = scriptTagRe.exec(stripped)) !== null) {
-    const attrsBlob = m[1];
-
-    // src="..." with at least one non-whitespace char — valid external load.
-    const srcMatch = /\bsrc\s*=\s*(?:"([^"]*)"|'([^']*)')/i.exec(attrsBlob);
-    if (srcMatch) {
-      const srcValue = (srcMatch[1] ?? srcMatch[2] ?? '').trim();
-      if (srcValue.length > 0) continue;
-      // src="" — treat as inline (empty src executes inline fallback per W3C).
-      const tag = m[0].length > 80 ? m[0].slice(0, 80) + '...' : m[0];
-      offenders.push(`${tag}  (empty src attribute)`);
-      continue;
-    }
-
-    // No src — check type= for allow-listed non-executing values.
-    const typeMatch = /\btype\s*=\s*(?:"([^"]*)"|'([^']*)')/i.exec(attrsBlob);
-    if (typeMatch) {
-      const typeValue = (typeMatch[1] ?? typeMatch[2] ?? '').trim().toLowerCase();
-      const NON_EXECUTING_TYPES = new Set([
-        'application/json',
-        'application/ld+json',
-        'importmap',
-        'speculationrules',
-      ]);
-      if (NON_EXECUTING_TYPES.has(typeValue)) continue;
-    }
-
-    const tag = m[0].length > 80 ? m[0].slice(0, 80) + '...' : m[0];
-    offenders.push(`${tag}  (inline <script> without src)`);
-  }
-
-  if (offenders.length > 0) {
-    const list = offenders.map((o) => `  - ${o}`).join('\n');
-    throw new Error(
-      `[nip5a-manifest] Inline <script> elements are not allowed in napplet HTML under the v0.29.0 shell-as-CSP-authority model. The shell emits \`script-src 'self'\` which blocks inline scripts at runtime. Move inline JS to a file and reference it via \`<script src="..."></script>\`. Offending elements (${offenders.length}):\n${list}`,
-    );
-  }
-}
 
 function getAttr(attrs: string, name: string): string | null {
   const attrRe = new RegExp(

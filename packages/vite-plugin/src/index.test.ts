@@ -79,7 +79,11 @@ describe('NIP-5A aggregate hash', () => {
 });
 
 describe('nip5aManifest artifact modes', () => {
-  it('rejects inline executable scripts in the default external-assets mode', async () => {
+  it('preserves inline executable scripts in the default external-assets mode', async () => {
+    // NIP-5D loads a napplet as a single self-contained `/index.html` via
+    // `iframe.srcdoc` with `sandbox="allow-scripts"` (opaque origin), so inline
+    // JS is the norm — it MUST NOT be rejected at build time. (Regression guard
+    // for napplet/web#53.)
     const fixture = makeFixture();
     fs.writeFileSync(
       path.join(fixture.dist, 'index.html'),
@@ -88,7 +92,40 @@ describe('nip5aManifest artifact modes', () => {
 
     await expect(
       runCloseBundle({ nappletType: 'inline-default' }, fixture),
-    ).rejects.toThrow('Inline <script> elements are not allowed');
+    ).resolves.toBeUndefined();
+
+    const html = fs.readFileSync(path.join(fixture.dist, 'index.html'), 'utf-8');
+    expect(html).toContain('<script type="module">console.log("inline")</script>');
+  });
+
+  it('preserves a pre-existing inline script while inlining external assets in single-file mode', async () => {
+    // The exact napplet/web#53 case: a single-file napplet whose built
+    // index.html already carries an inline `<script type="module">`. Single-file
+    // mode must fold in the external asset AND leave the inline script intact.
+    const fixture = makeFixture();
+    fs.writeFileSync(
+      path.join(fixture.dist, 'index.html'),
+      [
+        '<!doctype html><html><head></head><body>',
+        '<script type="module">window.__napplet_boot = true;</script>',
+        '<script type="module" src="./assets/index.js"></script>',
+        '</body></html>',
+      ].join(''),
+    );
+    fs.writeFileSync(path.join(fixture.dist, 'assets', 'index.js'), 'console.log("ext");');
+
+    await runCloseBundle(
+      { nappletType: 'inline-plus-asset', artifactMode: 'single-file' },
+      fixture,
+    );
+
+    const html = fs.readFileSync(path.join(fixture.dist, 'index.html'), 'utf-8');
+    // Pre-existing inline script survives verbatim.
+    expect(html).toContain('<script type="module">window.__napplet_boot = true;</script>');
+    // External asset is folded inline and the original src reference is gone.
+    expect(html).toContain('<script type="module">console.log("ext");</script>');
+    expect(html).not.toContain('src="./assets/index.js"');
+    expect(fs.existsSync(path.join(fixture.dist, 'assets', 'index.js'))).toBe(false);
   });
 
   it('emits a NIP-5D kind 35129 named manifest with NIP-5A path + aggregate x tags', async () => {

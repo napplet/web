@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { validateManifest, findInlineScripts } from './manifest.js';
+import { validateManifest } from './manifest.js';
 
 const HASH = 'a'.repeat(64);
 
@@ -71,32 +71,15 @@ describe('validateManifest — failures', () => {
   });
 });
 
-describe('findInlineScripts / inline-script rule', () => {
-  it('allows external, json, ld+json, importmap, speculationrules', () => {
-    const doc = html({
-      head: `
-        <script src="/a.js"></script>
-        <script type="application/json">{"a":1}</script>
-        <script type="application/ld+json">{"@context":"x"}</script>
-        <script type="importmap">{"imports":{}}</script>
-        <script type="speculationrules">{"prefetch":[]}</script>
-      `,
-    });
-    expect(findInlineScripts(doc)).toHaveLength(0);
-  });
-
-  it('flags inline, module-inline, and empty-src scripts', () => {
-    const doc = html({ body: `<script>alert(1)</script><script type="module">x()</script><script src="">y()</script>` });
-    expect(findInlineScripts(doc)).toHaveLength(3);
-  });
-
-  it('ignores commented-out scripts', () => {
-    const doc = html({ body: `<!-- <script>nope()</script> -->` });
-    expect(findInlineScripts(doc)).toHaveLength(0);
-  });
-
-  it('surfaces inline scripts as manifest errors', () => {
-    const v = validateManifest(html({ head: `<meta name="napplet-type" content="x"><meta name="napplet-aggregate-hash" content="${HASH}">`, body: `<script>boom()</script>` }));
-    expect(v.errors.some((e) => e.code === 'inline-script')).toBe(true);
+describe('inline scripts are not a conformance failure', () => {
+  it('does not flag inline <script> elements (NIP-5D srcdoc napplets carry inline JS) — napplet/web#53', () => {
+    const v = validateManifest(
+      html({
+        head: `<meta name="napplet-type" content="x"><meta name="napplet-aggregate-hash" content="${HASH}">`,
+        body: `<script type="module">window.boot = true; alert(1)</script>`,
+      }),
+    );
+    expect(v.errors).toHaveLength(0);
+    expect(v.ok).toBe(true);
   });
 });

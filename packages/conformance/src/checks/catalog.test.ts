@@ -56,11 +56,6 @@ describe('manifest checks', () => {
     });
     expect(run('manifest/config-schema', badSchema).status).toBe('fail');
   });
-
-  it('fails inline scripts', () => {
-    const ctx = makeContext({ manifestHtml: manifest(goodHead, '<script>boom()</script>') });
-    expect(run('manifest/no-inline-scripts', ctx).status).toBe('fail');
-  });
 });
 
 describe('boot checks', () => {

@@ -23,10 +23,21 @@ green, not to call a task "done", not because a sibling file already does it:
 
 1. **Never invent protocol surface.** Message types, `domain.action` envelopes,
    `<meta name="napplet-*">` manifest tags, boot/init handshakes, NAP domains,
-   manifest fields, capability names. If it is not defined in canonical NIP-5D or
-   an accepted/proposed NAP, you MUST NOT add it, depend on it, or treat it as
-   real protocol. Wire surface that exists only in our packages (e.g. a shim
-   handshake, a plugin-injected meta) is implementation plumbing, **not** protocol.
+   manifest fields, capability names — **and the loading / transport / security
+   model**: the `iframe.srcdoc` + `sandbox` token set, opaque-origin assumptions,
+   any CSP / `script-src` posture, the inline-vs-external-script rule, and the
+   single-file `/index.html` artifact shape. If it is not defined in canonical
+   NIP-5D or an accepted/proposed NAP, you MUST NOT add it, depend on it, or treat
+   it as real protocol. The litmus test for "is this protocol?" is **does it
+   change what an interoperable shell or napplet must do, or what bytes a
+   conformant napplet may contain?** If yes, it is protocol — a build lint, a CSP
+   model, or an artifact-shape rule does not get to be "just plumbing" because it
+   lives in tooling. Wire surface that genuinely exists only inside our packages
+   and constrains nothing on the wire (e.g. an internal shim handshake) is
+   implementation plumbing — but do not use that label to smuggle in a runtime or
+   artifact rule the spec never stated. (See napplet/web#53: an invented
+   "shell-as-CSP-authority / `script-src 'self'`" model produced a build error
+   and a conformance check that rejected every spec-faithful `srcdoc` napplet.)
 
 2. **A gap in the spec = STOP and FLAG. Never invent to fill it.** If the
    implementation genuinely needs a message / tag / handshake / domain the spec
@@ -44,11 +55,16 @@ green, not to call a task "done", not because a sibling file already does it:
    rubber-stamp it, and do not copy it into a new file just because it already
    exists elsewhere.
 
-4. **Conformance tests the spec, not our plumbing.** Every conformance check must
-   map to a NIP-5D / NAP requirement. A check that actually tests a private
-   convention of our toolchain (a shim's `shell.ready` handshake, a plugin's
-   `napplet-type` meta) is a bug: it fails spec-faithful napplets and passes only
-   our stack. Flag it; do not extend it.
+4. **Conformance checks AND build-time hard errors test the spec, not our
+   plumbing.** Every conformance check must map to a NIP-5D / NAP requirement. A
+   check that actually tests a private convention of our toolchain (a shim's
+   `shell.ready` handshake, a plugin's `napplet-type` meta) is a bug: it fails
+   spec-faithful napplets and passes only our stack. Flag it; do not extend it.
+   The same rule binds any **build-failing assertion** the toolchain throws (e.g.
+   `@napplet/vite-plugin` aborting `closeBundle`): a hard error that a conformant
+   napplet would trip is the identical defect, just relocated from the validator
+   to the build. Before adding one, cite the NIP-5D / NAP clause it enforces; if
+   you cannot, it is invented surface (rule 1) — do not add it.
 
 5. **Do not keep our own copy of the spec.** This repo must not contain a
    paraphrase, summary, or pinned-fork snapshot that presents itself as normative.
@@ -58,6 +74,25 @@ green, not to call a task "done", not because a sibling file already does it:
 6. **Read the source; don't guess.** For any protocol question, open the canonical
    NIP-5D / NAP text. Do not answer from memory, do not extrapolate a requirement
    the spec does not state, and do not write your own normative text.
+
+7. **No normative decision is "locked" without a spec citation.** A planning
+   artifact, ADR, or "locked decision" that asserts a MUST / forbidden / required
+   behavior of the protocol (what a shell emits, what a napplet may contain, how
+   loading works) MUST cite the canonical NIP-5D / NAP section it derives from
+   before it can be treated as settled and executed. A locked decision carries no
+   authority over the spec: if the citation is missing or the spec says otherwise,
+   the decision is wrong, not the spec. Autonomous execution does not get to
+   ratify an uncited normative claim — flag it (rule 2) instead. (napplet/web#53
+   originated as a "locked Q4 — hard error" with no NIP-5D citation, then shipped.)
+
+8. **Retire on defer/reject — invented surface does not outlive its NAP.** When a
+   NAP is deferred, rejected, or removed (e.g. NAP-CONNECT / NAP-CLASS), sweeping
+   the **domain** is not enough: any implementation, build assertion, conformance
+   check, validator, doc, or comment that depended on that NAP — or on a model
+   justified by it — must be retired in the same change. Grep the whole repo for
+   the dependent surface (function names, error strings, capability names, model
+   nicknames) and remove or correct every hit. Orphaned enforcement left standing
+   after a defer is exactly how a deleted spec keeps breaking conformant napplets.
 
 ## Agent SDLC
 

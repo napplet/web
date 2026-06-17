@@ -82,10 +82,11 @@ stamps the real aggregate hash into the meta tag:
 - **Config schema validation** — the resolved schema is checked against the
   NAP-CONFIG Core Subset; `pattern`, `$ref`, a non-object root, or a
   `x-napplet-secret` with a `default` abort the build.
-- **Inline-script fail-loud** — any `<script>` without a non-empty `src` in
-  `dist/index.html` is a hard error (mirrors the shell's `script-src 'self'`
-  baseline). JSON / JSON-LD / importmap / speculationrules data islands are
-  allowed.
+- **Inline scripts are supported** — NIP-5D loads a napplet as a single
+  self-contained `/index.html` via `iframe.srcdoc` (opaque origin), so its JS is
+  inline by design. The plugin does not reject inline `<script>` elements. With
+  `artifactMode: 'single-file'` it folds local script/style assets into the HTML
+  and leaves any pre-existing inline scripts intact.
 
 ## Environment
 
