@@ -53,6 +53,18 @@ const PACKAGE_SOURCES: ReadonlyArray<{ name: string; blurb: string; jsr: boolean
     jsr: true,
   },
   {
+    name: '@napplet/conformance',
+    blurb:
+      'Framework-agnostic protocol conformance engine — reference mock shell, per-NAP envelope validators, a manifest validator, and reporters. A dev/test tool, not loaded in the sandbox.',
+    jsr: true,
+  },
+  {
+    name: '@napplet/conformance-cli',
+    blurb:
+      'The headless napplet-conformance runner. Drives the conformance engine against your napplet in real Chromium via Playwright — wire it up as test:conformance.',
+    jsr: false,
+  },
+  {
     name: '@napplet/boilerplate',
     blurb:
       'Interactive npx generator. Clones the boilerplate template and prepares a Vite + TypeScript napplet starter in seconds.',

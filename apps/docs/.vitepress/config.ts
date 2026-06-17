@@ -68,6 +68,8 @@ export default defineConfig({
           { text: '@napplet/sdk', link: '/packages/sdk' },
           { text: '@napplet/nap', link: '/packages/nap' },
           { text: '@napplet/vite-plugin', link: '/packages/vite-plugin' },
+          { text: '@napplet/conformance', link: '/packages/conformance' },
+          { text: '@napplet/conformance-cli', link: '/packages/conformance-cli' },
           { text: '@napplet/boilerplate', link: '/packages/boilerplate' },
         ],
       },
