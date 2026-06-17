@@ -1,5 +1,15 @@
 # @napplet/conformance-cli
 
+## 0.2.2
+
+### Patch Changes
+
+- Resolve a napplet target to its built `dist/index.html` before a sibling source `index.html`.
+
+  `napplet-conformance --ui .` (and `napplet-conformance .`) on a Vite **project root** previously served the source `index.html` — a Vite entry referencing `/src/*.ts` that cannot execute in the opaque-origin `srcdoc` sandbox — instead of the built single-file `dist/index.html`. The live UI runner then reported a spurious NON-CONFORMANT (no `napplet-type` meta, `window.napplet` never installed, no `shell.ready`) because it was testing the wrong, never-booting artifact.
+
+  `resolveNappletDir` now prefers `<target>/dist/index.html` over `<target>/index.html`, so pointing the CLI at a project root tests its build output. A plain built directory (only `index.html`, no `dist/`) still resolves as before, and `--ui . --exec "vite build --watch"` now serves the built single-file while running the build in the project root.
+
 ## 0.2.1
 
 ### Patch Changes

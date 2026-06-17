@@ -29,6 +29,7 @@ import {
 import { startHarnessServer } from './server.js';
 import { startUiServer } from './ui-server.js';
 import { scanForbiddenGlobals } from './scan.js';
+import { resolveNappletDir } from './resolve-napplet.js';
 
 interface CliOptions {
   target?: string;
@@ -54,7 +55,7 @@ Usage:
   napplet-conformance --url https://my.napplet/ [options]
 
 Arguments:
-  dir                      Built napplet directory (looks for ./index.html or ./dist/index.html)
+  dir                      Built napplet directory (prefers ./dist/index.html, falls back to ./index.html)
 
 Options:
   --url <url>              Test a remotely-served napplet instead of a local dir (headless)
@@ -142,19 +143,6 @@ function parseArgs(argv: string[]): CliOptions {
     }
   }
   return opts;
-}
-
-async function isFile(path: string): Promise<boolean> {
-  return (await stat(path).catch(() => null))?.isFile() ?? false;
-}
-
-/** Resolve the directory + index.html for a local napplet target. */
-async function resolveNappletDir(target: string): Promise<{ dir: string; indexHtml: string }> {
-  const base = resolve(target);
-  if (await isFile(join(base, 'index.html'))) return { dir: base, indexHtml: join(base, 'index.html') };
-  const dist = join(base, 'dist');
-  if (await isFile(join(dist, 'index.html'))) return { dir: dist, indexHtml: join(dist, 'index.html') };
-  throw new Error(`No index.html found in ${base} or ${dist}. Build the napplet first.`);
 }
 
 async function collectBoot(hostUrl: string, allowSameOrigin: boolean, totalTimeoutMs: number): Promise<BootCollection> {
