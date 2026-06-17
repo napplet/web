@@ -7,13 +7,12 @@ import {
 } from './reference-shell.js';
 
 describe('createReferenceShell — NAP-SHELL handshake', () => {
-  it('answers shell.ready with shell.init carrying default (all-NAP) capabilities + services + class', () => {
-    const shell = createReferenceShell({ services: ['signer'], class: 1 });
+  it('answers shell.ready with shell.init carrying default (all-NAP) capabilities + services', () => {
+    const shell = createReferenceShell({ services: ['signer'] });
     const out = shell.handle({ type: 'shell.ready' }) as Array<{
       type: string;
       capabilities: { domains: string[]; protocols: Record<string, string[]> };
       services: string[];
-      class: number | null;
     }>;
     expect(out).toHaveLength(1);
     expect(out[0].type).toBe('shell.init');
@@ -21,21 +20,18 @@ describe('createReferenceShell — NAP-SHELL handshake', () => {
     expect(out[0].capabilities.domains).toContain('storage');
     expect(out[0].capabilities.protocols).toEqual({});
     expect(out[0].services).toEqual(['signer']);
-    expect(out[0].class).toBe(1);
     // The handshake is not a NAP envelope; it must not be recorded.
     expect(shell.records).toHaveLength(0);
   });
 
   it('advertises empty capabilities when configured (drives supports()=false)', () => {
-    const shell = createReferenceShell({ capabilities: { domains: [], protocols: {} }, services: [], class: null });
+    const shell = createReferenceShell({ capabilities: { domains: [], protocols: {} }, services: [] });
     const out = shell.handle({ type: 'shell.ready' }) as Array<{
       capabilities: { domains: string[] };
       services: string[];
-      class: number | null;
     }>;
     expect(out[0].capabilities.domains).toEqual([]);
     expect(out[0].services).toEqual([]);
-    expect(out[0].class).toBeNull();
   });
 });
 
