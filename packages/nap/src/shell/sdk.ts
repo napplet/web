@@ -45,19 +45,6 @@ export function shellServices(): readonly string[] {
 }
 
 /**
- * The opaque class assigned to this napplet, or `null` when none is assigned.
- *
- * @example
- * ```ts
- * import { shellClass } from '@napplet/nap/shell';
- * const cls = shellClass();
- * ```
- */
-export function shellClass(): number | null {
-  return requireShell().class;
-}
-
-/**
  * Resolve once the NAP-SHELL environment has been delivered (immediately if
  * already delivered).
  *

@@ -1,6 +1,6 @@
 ---
 name: build-napplet
-description: Use when writing a napplet (sandboxed Nostr iframe app) using @napplet/shim — covers Vite project setup, NIP-5A manifest plugin, subscribe/publish/query relay API, scoped storage, inter-napplet events, the resource NAP for sandboxed byte fetching (replaces direct fetch / <img src=externalUrl>, both of which the iframe CSP blocks), NAP-CLASS + NAP-CONNECT for shell-assigned security class and user-gated direct network access, and read-only NAP-IDENTITY public-key tracking
+description: Use when writing a napplet (sandboxed Nostr iframe app) using @napplet/shim — covers Vite project setup, NIP-5A manifest plugin, subscribe/publish/query relay API, scoped storage, inter-napplet events, the resource NAP for sandboxed byte fetching (replaces direct fetch / <img src=externalUrl>, both of which the iframe CSP blocks), and read-only NAP-IDENTITY public-key tracking
 ---
 
 # Building a Napplet with @napplet/shim
@@ -252,92 +252,7 @@ if (window.napplet.shell.supports('perm:strict-csp')) {
 
 SVG inputs are silently rasterized server-side to PNG/WebP — napplets never receive `image/svg+xml` bytes (the shell rasterizes in a sandboxed Worker with no network access). The `mime` returned to the napplet is shell-classified via byte-sniffing, never the upstream `Content-Type` header.
 
-## Step 11 — Two-class posture + user-gated direct network access (NAP-CLASS + NAP-CONNECT)
-
-The shell is the sole runtime CSP authority and exposes two NAPs that together let a napplet explicitly request direct browser-level network access:
-
-- **NAP-CLASS** — the shell sends a single `class.assigned` wire envelope at iframe-ready time. Napplets read the integer at `window.napplet.class` (`number | undefined`). Current track members: `class: 1` = **NAP-CLASS-1** (strict baseline; `connect-src 'none'`); `class: 2` = **NAP-CLASS-2** (user-approved explicit-origin; `connect-src <granted-origins>`).
-- **NAP-CONNECT** — the napplet declares required origins at build time. The shell prompts the user at first load; on approval, the shell serves the napplet HTML with a runtime CSP whose `connect-src` contains the approved origins PLUS injects `<meta name="napplet-connect-granted">` for the shim to read synchronously. Napplets then read `window.napplet.connect` (`{ granted, origins }`).
-
-### Default to NAP-RESOURCE; reach for NAP-CONNECT only when necessary
-
-Default to NAP-RESOURCE for avatars, static assets, one-shot byte fetches, and bech32 resolution. Reach for NAP-CONNECT only when you need: POST/PUT/PATCH methods, WebSocket/SSE, custom headers, long-lived connections, streaming responses, or third-party libraries that call `fetch()` directly and aren't reasonable to refactor.
-
-Declaring a `connect` origin is a tax (user-facing prompt, full trust vote) — earn it by needing what NAP-RESOURCE can't give you. The shell has zero browser-level hook to observe, filter, or rate-limit post-grant traffic between a napplet and an approved origin.
-
-### Declaring origins at build time
-
-Origins go in `vite.config.ts` via `@napplet/vite-plugin`'s `connect: string[]` option. The plugin normalizes + validates each origin (lowercases scheme + host, Punycodes non-ASCII, rejects wildcards, paths, default ports, etc.), emits one `["connect", "<origin>"]` manifest tag per origin, and folds the normalized origin set into `aggregateHash` via a synthetic `connect:origins` entry.
-
-```ts
-// vite.config.ts
-import { defineConfig } from 'vite';
-import { nip5aManifest } from '@napplet/vite-plugin';
-
-export default defineConfig({
-  plugins: [
-    nip5aManifest({
-      nappletType: 'my-napplet',
-      connect: [
-        'https://api.example.com',
-        'wss://events.example.com',
-        'https://xn--caf-dma.example.com',   // café.example.com in Punycode
-      ],
-    }),
-  ],
-});
-```
-
-Supply origins as human-readable strings; the plugin Punycodes IDN and validates at `configResolved`. Accept: `https:`, `wss:`, `http:`, `ws:`; non-default ports; IPv4 literals. Reject: uppercase host, wildcards (`*`), path/query/fragment, default ports (`:443` for `https`/`wss`, `:80` for `http`/`ws`), non-Punycode non-ASCII, IPv6 literals (v1 scope).
-
-### Reading the runtime surface
-
-```ts
-import '@napplet/shim';
-
-// Class — check shell.supports('nap:class') before branching on the integer.
-if (window.napplet.shell.supports('nap:class')) {
-  const cls = window.napplet.class;   // number | undefined
-  if (cls === 2) {
-    // NAP-CLASS-2 — user approved at least one connect origin this load.
-  }
-}
-
-// Connect grant — window.napplet.connect is populated synchronously at shim install.
-if (window.napplet.connect.granted) {
-  const origins = window.napplet.connect.origins;   // readonly string[]
-  const res = await fetch(`${origins[0]}/items`, { method: 'POST', body: '{}' });
-} else {
-  // Fall back to window.napplet.resource.bytes(url) for what the resource NAP can express.
-}
-```
-
-`window.napplet.connect` MUST NEVER be `undefined` — it defaults to `{ granted: false, origins: [] }` on shells without `nap:connect`, on denied prompts, and pre-injection. This is the graceful-degradation guarantee.
-
-### Cleartext / mixed-content warning
-
-Browsers block `http:` and `ws:` fetches from napplets running in shells served over `https:`, regardless of the CSP header's `connect-src` value. A napplet declaring `http:` origins approved by the user will silently fail to fetch when the shell is served over `https:`, except for the `localhost` / `127.0.0.1` secure-context exceptions. The vite-plugin emits a build-time informational warning when `http:` or `ws:` origins appear in `connect`. Shells MAY refuse cleartext entirely — check `shell.supports('connect:scheme:http')` before relying on a cleartext grant:
-
-```ts
-if (window.napplet.connect.granted && window.napplet.shell.supports('connect:scheme:http')) {
-  // Cleartext http: grants are honored in this shell.
-}
-```
-
-Prefer `https:` and `wss:` origins end-to-end. Cleartext scheme declarations are accepted for operator-policy flexibility (localhost development, explicit opt-out-of-TLS deployments), not recommended as a default.
-
-### Graceful degradation
-
-Napplets SHOULD branch on four states, in priority order:
-
-1. `shell.supports('nap:connect') === true` AND `window.napplet.connect.granted === true` -> use direct `fetch` / `WebSocket` / `EventSource` against `window.napplet.connect.origins`.
-2. `shell.supports('nap:connect') === true` AND `window.napplet.connect.granted === false` -> user denied, prompt hasn't run, or shell chose not to grant. Fall back to NAP-RESOURCE; degrade affected features gracefully.
-3. `shell.supports('nap:connect') === false` AND `shell.supports('nap:resource') === true` -> shell doesn't implement NAP-CONNECT at all. POST / WebSocket / SSE features are unavailable; MUST degrade gracefully.
-4. Neither `nap:connect` nor `nap:resource` advertised -> napplet cannot reach the network at all. Display offline / read-only UX; no silent failures.
-
-See [NAP-CONNECT](https://github.com/napplet/naps) and [NAP-CLASS](https://github.com/napplet/naps) for the normative specs.
-
-## Step 12 — Track shell-user identity changes (NAP-IDENTITY)
+## Step 11 — Track shell-user identity changes (NAP-IDENTITY)
 
 Napplets can read the shell user's public key and subscribe to shell-pushed user changes. `getPublicKey()` always resolves: it returns a hex pubkey when a user/signer is connected, and `""` when no user is connected. Do not poll; shells push `identity.changed` whenever the value changes.
 
@@ -361,7 +276,7 @@ identitySub.close();
 if (!window.napplet.shell.supports('nap:identity')) { /* no identity NAP */ }
 ```
 
-## Step 13 — Verify conformance before publishing
+## Step 12 — Verify conformance before publishing
 
 Build the napplet, then run the conformance harness against it. It loads the build
 into a real `sandbox="allow-scripts"` iframe, drives the protocol with a reference
@@ -412,5 +327,3 @@ either `window.__NAPPLET_ALLOW_STANDALONE__ = true` or a
 - **Do not call `fetch()`, `<img src="https://...">`, `<link href="https://...">`, `XMLHttpRequest`, or `new WebSocket(...)` from a napplet.** The iframe sandbox + strict CSP (`connect-src 'none'`, `img-src blob: data:`) block all of them at the browser level. Use `window.napplet.resource.bytes(url)` instead — it returns a `Blob` you can pass to `URL.createObjectURL()` for `<img src>` use.
 - **Do not use the upstream `Content-Type` for resource MIME decisions.** The shell byte-sniffs the response and delivers a classified `mime` field on the result; the upstream `Content-Type` header is attacker-controlled and never reaches the napplet.
 - **Inline scripts are supported — your JS should be inline.** Per NIP-5D a napplet is a single self-contained `/index.html` loaded via `iframe.srcdoc` with `sandbox="allow-scripts"` (opaque origin, no served URL), so an external `<script src>` has nothing to fetch from. Ship your JS inline. `@napplet/vite-plugin`'s `artifactMode: 'single-file'` folds local build assets into the HTML for you and preserves any pre-existing inline scripts. (An earlier plugin version wrongly rejected inline scripts under an invented `script-src 'self'` model — removed, see napplet/web#53.)
-- **Do not assume `window.napplet.class` has a value at module top-level.** The shell sends `class.assigned` at iframe-ready time; the shim writes the integer after the envelope arrives. If your code runs before the dispatcher processes the envelope, `window.napplet.class` is `undefined`. Either gate on `shell.supports('nap:class')` AND defer (e.g., onto `requestAnimationFrame` / `queueMicrotask`), or treat `undefined` as "assume the most restrictive defaults the napplet can function under."
-- **Cleartext `http:` / `ws:` origins silently fail from HTTPS shells.** Browsers enforce mixed-content below the CSP layer. A user-approved `http://api.example.com` grant from a napplet loaded via `https://shell.example.com` will produce no traffic, with no CSP violation event — the browser drops the request transparently. Prefer `https:` / `wss:`. Use cleartext only for localhost / `127.0.0.1` development or when the shell explicitly advertises `shell.supports('connect:scheme:http') === true`.

@@ -58,8 +58,6 @@ export interface ReferenceShellOptions {
   capabilities?: Partial<ShellCapabilities>;
   /** Named services advertised in `shell.init`. Defaults to `[]`. */
   services?: string[];
-  /** The class assigned to the napplet in `shell.init`. Defaults to `null`. */
-  class?: number | null;
   /** Injectable clock for deterministic tests. Defaults to `Date.now`. */
   now?: () => number;
 }
@@ -172,8 +170,6 @@ export interface ReferenceShell {
   readonly capabilities: ShellCapabilities;
   /** Named services advertised in `shell.init`. */
   readonly services: string[];
-  /** The class advertised in `shell.init`. */
-  readonly class: number | null;
   /** All envelopes recorded so far, in arrival order. */
   readonly records: readonly RecordedEnvelope[];
   /**
@@ -192,7 +188,7 @@ export interface ReferenceShell {
  * @example
  * ```ts
  * const shell = createReferenceShell();
- * // NAP-SHELL handshake: shell.ready → shell.init { capabilities, services, class }
+ * // NAP-SHELL handshake: shell.ready → shell.init { capabilities, services }
  * shell.handle({ type: 'shell.ready' });
  * shell.handle({ type: 'storage.get', id: '1', key: 'k' }); // → [{ type:'storage.get.result', id:'1', value:null }]
  * shell.records[0].verdict.ok;                       // true (shell.ready is not recorded)
@@ -205,7 +201,6 @@ export function createReferenceShell(options: ReferenceShellOptions = {}): Refer
     protocols: options.capabilities?.protocols ?? {},
   };
   const services: string[] = options.services ?? [];
-  const klass: number | null = options.class ?? null;
   const records: RecordedEnvelope[] = [];
 
   function handle(envelope: unknown): unknown[] {
@@ -222,7 +217,6 @@ export function createReferenceShell(options: ReferenceShellOptions = {}): Refer
           type: 'shell.init',
           capabilities: { domains: capabilities.domains, protocols: capabilities.protocols },
           services,
-          class: klass,
         },
       ];
     }
@@ -237,7 +231,6 @@ export function createReferenceShell(options: ReferenceShellOptions = {}): Refer
   return {
     capabilities,
     services,
-    class: klass,
     get records() {
       return records;
     },

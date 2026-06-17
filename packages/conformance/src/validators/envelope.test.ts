@@ -113,7 +113,6 @@ describe('validateEnvelope — NAP-SHELL foundational domain', () => {
       type: 'shell.init',
       capabilities: { domains: [], protocols: {} },
       services: [],
-      class: null,
     });
     expect(v.ok).toBe(false);
     expect(v.domain).toBe('shell');

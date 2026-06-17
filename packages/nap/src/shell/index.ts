@@ -35,7 +35,6 @@ export {
 export {
   shellSupports,
   shellServices,
-  shellClass,
   shellReady,
   shellOnReady,
 } from './sdk.js';
