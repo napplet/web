@@ -64,7 +64,9 @@ Note: Phase 45 (IPC terminology cleanup) was completed as a quick task during v0
   2. `@napplet/vite-plugin` no longer exposes the `connect` option, emits no `connect` manifest tags or `napplet-connect-requires` meta, and `connect.ts`/`normalizeConnectOptions`/the orphaned `strictCsp` deprecation are deleted — yet a build still emits a valid NIP-5A manifest.
   3. The conformance engine no longer references connect: the `manifest/connect-origins` check and the `normalizeConnectOrigin` dependency are removed, `validateManifest` no longer validates connect origins, and the connect envelope validators are gone.
   4. A repo-wide grep for the retired connect surface (`window.napplet.connect`, `normalizeConnectOrigin`, `napplet-connect-requires`, `connect-origins`) returns zero first-party matches outside historical changelog/spec records.
-**Plans**: TBD
+
+**Plans:** 1 plan
+- [ ] 154-01-PLAN.md — Remove the connect domain from core/nap/sdk/shim, vite-plugin build+manifest, and conformance; keep build/type-check/test green and NIP-5A manifest generation working (mirrors NAP-CLASS deferral 9aa4b80).
 
 ### Phase 155: Implement NAP-SHELL
 **Goal**: NAP-SHELL is implemented as the mandatory, foundational (non-`supports()`-discoverable) bootstrap handshake — the shim performs `shell.ready` → `shell.init`, caches the `{ capabilities: { domains, protocols }, services, class }` environment, and answers `supports(domain, protocol?)` synchronously and locally; the public `window.napplet.shell` API, a `@napplet/nap/shell` subpath, and the conformance engine all recognize `shell.*` as a first-class NAP rather than a private special-case.
