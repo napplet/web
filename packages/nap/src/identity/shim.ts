@@ -1,6 +1,7 @@
 // @napplet/nap/identity -- Identity NAP shim (read-only user identity queries)
 // All queries are request/response pairs over postMessage to the shell.
 
+import { postToShell } from '../boundary.js';
 import type { Subscription } from '@napplet/core';
 import type {
   ProfileData,
@@ -162,7 +163,7 @@ function sendRequest<T>(msg: { type: string; id: string }): Promise<T> {
       timeout,
     });
 
-    window.parent.postMessage(msg, '*');
+    postToShell(msg);
   });
 }
 

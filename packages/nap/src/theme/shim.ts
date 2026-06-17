@@ -2,6 +2,7 @@
 // theme.get is a request/response pair over postMessage; theme.changed is a
 // shell-pushed update. Mirrors the identity shim (the other read-only NAP).
 
+import { postToShell } from '../boundary.js';
 import type { Subscription } from '@napplet/core';
 import type { Theme, ThemeGetMessage, ThemeNapMessage } from './types.js';
 
@@ -91,7 +92,7 @@ function sendRequest<T>(msg: { type: string; id: string }): Promise<T> {
       timeout,
     });
 
-    window.parent.postMessage(msg, '*');
+    postToShell(msg);
   });
 }
 

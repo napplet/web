@@ -1,6 +1,7 @@
 // @napplet/nap/media -- Media NAP shim (session management + command handlers)
 // Manages media sessions, reports state/capabilities, handles shell commands and controls.
 
+import { postToShell } from '../boundary.js';
 import type {
   MediaSessionCreate,
   MediaSessionResult,
@@ -157,7 +158,7 @@ export function createSession(options: MediaSessionCreate): Promise<MediaSession
       id,
       ...options,
     };
-    window.parent.postMessage(msg, '*');
+    postToShell(msg);
   });
 }
 
@@ -174,7 +175,7 @@ export function updateSession(sessionId: string, metadata: Partial<MediaMetadata
     sessionId,
     metadata,
   };
-  window.parent.postMessage(msg, '*');
+  postToShell(msg);
 }
 
 /**
@@ -188,7 +189,7 @@ export function destroySession(sessionId: string): void {
     type: 'media.session.destroy',
     sessionId,
   };
-  window.parent.postMessage(msg, '*');
+  postToShell(msg);
 
   commandHandlers.delete(sessionId);
   controlsHandlers.delete(sessionId);
@@ -212,7 +213,7 @@ export function reportState(
     sessionId,
     ...state,
   };
-  window.parent.postMessage(msg, '*');
+  postToShell(msg);
 }
 
 /**
@@ -228,7 +229,7 @@ export function reportCapabilities(sessionId: string, actions: MediaAction[]): v
     sessionId,
     actions,
   };
-  window.parent.postMessage(msg, '*');
+  postToShell(msg);
 }
 
 /**
@@ -246,7 +247,7 @@ export function sendCommand(sessionId: string, action: MediaAction, value?: numb
     action,
     ...(value === undefined ? {} : { value }),
   };
-  window.parent.postMessage(msg, '*');
+  postToShell(msg);
 }
 
 /**

@@ -72,6 +72,7 @@ import {
   handlers as intentHandlers,
   onChanged as intentOnChanged,
 } from '@napplet/nap/intent/shim';
+import { sendEnvelope } from '@napplet/core';
 import type { NappletGlobal, NappletShell, ShellEnvironment, ShellInitMessage } from '@napplet/core';
 import { createShellEnvironment, makeSupports, defaultSupports } from '@napplet/nap/shell/shim';
 import type { IncEventMessage } from '@napplet/nap/inc/types';
@@ -305,7 +306,7 @@ installIncShim();
 
 // Install central envelope message listener
 window.addEventListener('message', handleEnvelopeMessage);
-window.parent.postMessage({ type: 'shell.ready' }, '*');
+sendEnvelope(window.parent, { type: 'shell.ready' });
 
 // Arm the runtime guard: if no runtime answers the handshake (e.g. this napplet
 // was opened directly from a NIP-5A nsite gateway), surface a clear error modal

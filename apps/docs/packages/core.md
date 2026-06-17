@@ -53,6 +53,42 @@ prefix of `message.type` (the part before the first `.`).
   was found and called, `false` for an unknown or malformed type.
 - **`getRegisteredDomains()`** — list registered domain strings.
 
+### Boundary helpers (clone-safety)
+
+Every NAP shim crosses the napplet ⇄ shell boundary by structured-cloning a JSON
+envelope through `postMessage`. Framework reactive values — Svelte 5 `$state`,
+Vue `reactive`, Solid stores — are `Proxy` objects that are **not** structured-
+cloneable, so a naive `postMessage` throws `DataCloneError`, which is silently
+swallowed in async paths (the envelope never crosses). These helpers fix that.
+
+- **`sendEnvelope(target, message, targetOrigin?)`** — the single boundary
+  chokepoint the shims post through. Per the active clone mode it posts the
+  envelope, recovers a non-cloneable argument via a snapshot, or throws a loud,
+  actionable, synchronous error instead of swallowing it.
+- **`toCloneableSnapshot(value)`** — deep snapshot that strips reactive proxies
+  into plain objects/arrays while **preserving binary** (`Uint8Array`,
+  `ArrayBuffer`), `Date`, `RegExp`, `Map`, `Set`, and cycles. Unlike a `JSON`
+  round-trip it is lossless for binary; functions/symbols throw (never masked).
+- **`setCloneMode(mode)`** / **`getCloneMode()`** — choose how arguments are
+  treated: `'auto'` (default — post as-is, snapshot-and-retry on `DataCloneError`,
+  warn once), `'strict'` (throw on `DataCloneError`, never recover), or
+  `'snapshot'` (eagerly snapshot every envelope).
+- **`clearCloneWarnings()`** — reset the once-per-type auto-recovery warnings.
+
+```ts
+import { setCloneMode, toCloneableSnapshot } from '@napplet/core';
+
+// Default 'auto' just works — reactive state is snapshotted on the failure path.
+napplet.outbox.subscribe(filters, { relays, live: true });
+
+// Or normalize explicitly / eagerly:
+napplet.outbox.subscribe(toCloneableSnapshot(filters), { relays });
+setCloneMode('snapshot');
+```
+
+These helpers are SDK plumbing only — the bytes placed on the wire are identical
+plain envelopes, so they add no protocol surface.
+
 ### Protocol types & constants
 
 - **`NostrEvent`**, **`NostrFilter`**, **`EventTemplate`**, **`Subscription`** —

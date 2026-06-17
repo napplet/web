@@ -2,6 +2,7 @@
 // Correlates intent.* request/result envelopes; routes intent.changed pushes to listeners.
 // The shell owns archetype resolution, default handling, window lifecycle, and payload delivery.
 
+import { postToShell } from '../boundary.js';
 import type { Subscription } from '@napplet/core';
 import type {
   IntentRequest,
@@ -140,7 +141,7 @@ export function invoke(request: IntentRequest): Promise<IntentResult> {
       id,
       request,
     };
-    window.parent.postMessage(msg, '*');
+    postToShell(msg);
   });
 }
 
@@ -188,7 +189,7 @@ export function available(archetype: string): Promise<IntentAvailability> {
       id,
       archetype,
     };
-    window.parent.postMessage(msg, '*');
+    postToShell(msg);
   });
 }
 
@@ -210,7 +211,7 @@ export function handlers(): Promise<IntentAvailability[]> {
       type: 'intent.handlers',
       id,
     };
-    window.parent.postMessage(msg, '*');
+    postToShell(msg);
   });
 }
 

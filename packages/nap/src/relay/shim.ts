@@ -1,6 +1,7 @@
 // @napplet/nap/relay -- Relay NAP shim
 // JSON envelope wire format over postMessage to the shell.
 
+import { postToShell } from '../boundary.js';
 import type { NostrEvent, NostrFilter, Subscription, EventTemplate } from '@napplet/core';
 import type {
   RelaySubscribeMessage,
@@ -79,7 +80,7 @@ export function subscribe(
     filters: normalizedFilters,
     ...(options?.relay ? { relay: options.relay } : {}),
   };
-  window.parent.postMessage(subscribeMsg, '*');
+  postToShell(subscribeMsg);
 
   return {
     close(): void {
@@ -88,7 +89,7 @@ export function subscribe(
         id: crypto.randomUUID(),
         subId,
       };
-      window.parent.postMessage(closeMsg, '*');
+      postToShell(closeMsg);
       window.removeEventListener('message', handleMessage);
     },
   };
@@ -149,7 +150,7 @@ export function publish(
       id: publishId,
       event: template as NostrEvent,
     };
-    window.parent.postMessage(publishMsg, '*');
+    postToShell(publishMsg);
   });
 }
 
@@ -210,7 +211,7 @@ export function publishEncrypted(
       recipient,
       encryption,
     };
-    window.parent.postMessage(msg, '*');
+    postToShell(msg);
   });
 }
 
@@ -257,7 +258,7 @@ export function query(filters: NostrFilter | NostrFilter[]): Promise<NostrEvent[
       id: queryId,
       filters: normalizedFilters,
     };
-    window.parent.postMessage(queryMsg, '*');
+    postToShell(queryMsg);
   });
 }
 

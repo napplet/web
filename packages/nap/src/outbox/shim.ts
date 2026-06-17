@@ -2,6 +2,7 @@
 // Correlates outbox.* request/result envelopes; streams outbox.event/eose/closed to subscription listeners.
 // The shell owns relay discovery, routing, fallback, deduplication, signing, and publish fanout.
 
+import { postToShell } from '../boundary.js';
 import type {
   NostrEvent,
   NostrFilter,
@@ -192,7 +193,7 @@ export function query(
       filters,
       ...(options === undefined ? {} : { options }),
     };
-    window.parent.postMessage(msg, '*');
+    postToShell(msg);
   });
 }
 
@@ -234,7 +235,7 @@ export function subscribe(
     filters,
     ...(options === undefined ? {} : { options }),
   };
-  window.parent.postMessage(msg, '*');
+  postToShell(msg);
 
   function on(event: 'event', cb: (event: NostrEvent, relay?: string) => void): void;
   function on(event: 'eose', cb: () => void): void;
@@ -254,7 +255,7 @@ export function subscribe(
         id: crypto.randomUUID(),
         subId,
       };
-      window.parent.postMessage(closeMsg, '*');
+      postToShell(closeMsg);
     },
   };
 }
@@ -293,7 +294,7 @@ export function publish(
       event: template,
       ...(options === undefined ? {} : { options }),
     };
-    window.parent.postMessage(msg, '*');
+    postToShell(msg);
   });
 }
 
@@ -317,7 +318,7 @@ export function resolveRelays(target: OutboxTarget): Promise<OutboxRelayPlan> {
       id,
       target,
     };
-    window.parent.postMessage(msg, '*');
+    postToShell(msg);
   });
 }
 

@@ -1,4 +1,5 @@
 
+import { postToShell } from '../boundary.js';
 import type {
   NappletConfigSchema,
   ConfigValues,
@@ -187,7 +188,7 @@ export function registerSchema(
     const msg: ConfigRegisterSchemaMessage = version === undefined
       ? { type: 'config.registerSchema', id, schema }
       : { type: 'config.registerSchema', id, schema, version };
-    window.parent.postMessage(msg, '*');
+    postToShell(msg);
 
     setTimeout(() => {
       if (pendingRegistrations.delete(id)) {
@@ -211,7 +212,7 @@ export function get(): Promise<ConfigValues> {
     pendingGets.set(id, { resolve, reject });
 
     const msg: ConfigGetMessage = { type: 'config.get', id };
-    window.parent.postMessage(msg, '*');
+    postToShell(msg);
 
     setTimeout(() => {
       if (pendingGets.delete(id)) {
@@ -244,7 +245,7 @@ export function subscribe(
 
   if (firstSubscriber) {
     const msg: ConfigSubscribeMessage = { type: 'config.subscribe' };
-    window.parent.postMessage(msg, '*');
+    postToShell(msg);
   } else if (lastValues !== null) {
     // Late subscriber: we already have a cached snapshot. Deliver it on the
     // next microtask so the caller sees the Subscription returned first.
@@ -265,7 +266,7 @@ export function subscribe(
       const existed = subscribers.delete(callback);
       if (existed && subscribers.size === 0) {
         const msg: ConfigUnsubscribeMessage = { type: 'config.unsubscribe' };
-        window.parent.postMessage(msg, '*');
+        postToShell(msg);
       }
     },
   };
@@ -286,7 +287,7 @@ export function openSettings(options?: { section?: string }): void {
   const msg: ConfigOpenSettingsMessage = section === undefined
     ? { type: 'config.openSettings' }
     : { type: 'config.openSettings', section };
-  window.parent.postMessage(msg, '*');
+  postToShell(msg);
 }
 
 /**

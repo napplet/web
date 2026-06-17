@@ -1,6 +1,7 @@
 // @napplet/nap/notify -- Notify NAP shim (notification sending + interaction handlers)
 // Manages notification sending, permission flow, badge counts, and shell interaction callbacks.
 
+import { postToShell } from '../boundary.js';
 import type {
   NotificationAction,
   NotificationPriority,
@@ -173,7 +174,7 @@ export function send(notification: {
       id,
       ...notification,
     };
-    window.parent.postMessage(msg, '*');
+    postToShell(msg);
 
     setTimeout(() => {
       if (pendingSends.delete(id)) {
@@ -193,7 +194,7 @@ export function dismiss(notificationId: string): void {
     type: 'notify.dismiss',
     notificationId,
   };
-  window.parent.postMessage(msg, '*');
+  postToShell(msg);
 }
 
 /**
@@ -207,7 +208,7 @@ export function badge(count: number): void {
     type: 'notify.badge',
     count,
   };
-  window.parent.postMessage(msg, '*');
+  postToShell(msg);
 }
 
 /**
@@ -226,7 +227,7 @@ export function registerChannel(channel: {
     type: 'notify.channel.register',
     ...channel,
   };
-  window.parent.postMessage(msg, '*');
+  postToShell(msg);
 }
 
 /**
@@ -247,7 +248,7 @@ export function requestPermission(channel?: string): Promise<{ granted: boolean 
       id,
       channel,
     };
-    window.parent.postMessage(msg, '*');
+    postToShell(msg);
 
     setTimeout(() => {
       if (pendingPermissions.delete(id)) {
