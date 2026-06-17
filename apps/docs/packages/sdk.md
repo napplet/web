@@ -32,13 +32,12 @@ Top-level namespaced objects that mirror `window.napplet`:
 - **`config`** — `get`, `subscribe`, `openSettings`, `registerSchema`, `schema`
 - **`resource`** — `bytes`, `bytesAsObjectURL`
 
-`identity`, `connect`, `class`, and `shell` are **not** exported as top-level
+`identity` and `shell` are **not** exported as top-level
 objects. Use `window.napplet.identity.*` / `window.napplet.shell.supports()`
 directly, or the bare-name helpers the SDK re-exports:
 
 - `identityGetPublicKey`, `identityOnChanged`
-- `connectGranted`, `connectOrigins`, `normalizeConnectOrigin`
-- `getClass`, plus the `*_DOMAIN` constants and `install*Shim` installers
+- the `*_DOMAIN` constants and `install*Shim` installers
 - `resourceBytes`, `resourceBytesAsObjectURL`
 
 It also re-exports the protocol types from `@napplet/core` and the per-domain

@@ -7,8 +7,8 @@
 discovery meta tags the shim looks for; at build time (with a test private key) it
 walks `dist/`, computes per-file SHA-256 hashes and the NIP-5A aggregate hash,
 signs a NIP-5D **kind 35129** named-napplet manifest event (NIP-5A tag schema:
-`path` tags + one aggregate `x` tag), and emits the `requires` / `connect` /
-`config` tags. It runs at build/dev time only — it is **not** a runtime
+`path` tags + one aggregate `x` tag), and emits the `requires` / `config`
+tags. It runs at build/dev time only — it is **not** a runtime
 dependency.
 
 ::: tip
@@ -50,8 +50,6 @@ export default defineConfig({
 | `requires` | `string[]` | Service names this napplet needs. Injects a `napplet-requires` meta tag and `["requires", …]` manifest tags. |
 | `configSchema` | `NappletConfigSchema \| string` | A JSON Schema (draft-07+) for the napplet's NAP-CONFIG surface. Inline object or path; falls through to `config.schema.json` then `napplet.config.*` discovery. |
 | `artifactMode` | `'external-assets' \| 'single-file'` | Default `'external-assets'`. `'single-file'` inlines local JS/CSS into `index.html` before hashing — for gateway-portable NIP-5A artifacts. |
-| `connect` | `string[]` | Origins the napplet needs direct network access to. Validated and emitted as `["connect", …]` manifest tags. Not folded into the aggregate hash (NIP-5D §Identity: the aggregate is the `path` tags alone); a shell keys grant invalidation on the `connect` tags. |
-| `strictCsp` | `unknown` | **Deprecated (v0.29.0).** Accepted-but-warns, no effect — the shell is now the sole runtime CSP authority. |
 
 ## What gets injected
 
@@ -88,8 +86,6 @@ stamps the real aggregate hash into the meta tag:
   `dist/index.html` is a hard error (mirrors the shell's `script-src 'self'`
   baseline). JSON / JSON-LD / importmap / speculationrules data islands are
   allowed.
-- **Cleartext-origin warning** — declaring an `http:` / `ws:` origin in `connect`
-  logs an informational note about browser mixed-content reality.
 
 ## Environment
 
