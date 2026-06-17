@@ -43,4 +43,19 @@ capabilities shape).
 
 ## Traceability
 
-*(filled by the roadmap — each requirement maps to exactly one phase.)*
+Every v0.33.0 requirement maps to exactly one phase (DEFER-01 shipped pre-milestone in commit `9aa4b80`).
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| DEFER-01 | — (shipped `9aa4b80`) | Complete |
+| DEFER-02 | Phase 154 | Pending |
+| DEFER-03 | Phase 154 | Pending |
+| DEFER-04 | Phase 154 | Pending |
+| SHELL-01 | Phase 155 | Pending |
+| SHELL-02 | Phase 155 | Pending |
+| SHELL-03 | Phase 155 | Pending |
+| SHELL-04 | Phase 155 | Pending |
+| SHELL-05 | Phase 155 | Pending |
+| SHELL-06 | Phase 155 | Pending |
+
+**Coverage:** 10/10 v0.33.0 requirements mapped (DEFER-01 already complete; DEFER-02..04 → Phase 154; SHELL-01..06 → Phase 155). No orphans, no duplicates.

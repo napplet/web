@@ -3,10 +3,10 @@ gsd_state_version: 1.0
 milestone: v0.33.0
 milestone_name: NAP-SHELL Alignment
 status: planning
-last_updated: "2026-06-17T01:26:43.094Z"
+last_updated: "2026-06-17T02:00:00.000Z"
 last_activity: 2026-06-17
 progress:
-  total_phases: 0
+  total_phases: 2
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -21,16 +21,23 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 
 **Core value:** Prove that sandboxed Nostr apps can securely delegate to a host shell over a simple, standardized protocol — and ship the spec + SDK so others can build on it.
 
-**Current focus:** Planning next milestone
+**Current focus:** v0.33.0 NAP-SHELL Alignment — roadmap created (Phases 154-155); awaiting plan-phase
 
 > **Provenance note:** The "Accumulated Context" section below preserves bullet records from BOTH branches' STATE.md histories. Records tagged "v0.29.0" from main's lineage refer to the milestone NOW renumbered as v0.30.0 (Class-Gated Decrypt — Phases 135-138). Records tagged "v0.29.0" from feat/strict-model refer to NUB-CONNECT (Phases 135-142). Phase number alone is not a unique identifier across the two; cross-reference the topic (decrypt/identity/NIP-07 → v0.30.0; connect/class/CSP-authority → v0.29.0).
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 154 (Defer NAP-CONNECT) — not started
 Plan: —
-Status: Defining requirements
-Last activity: 2026-06-17 — Milestone v0.33.0 started
+Status: Roadmap created — ready to plan Phase 154
+Last activity: 2026-06-17 — Roadmap for v0.33.0 created (2 phases: 154 Defer NAP-CONNECT → 155 Implement NAP-SHELL)
+
+### v0.33.0 roadmap
+
+- Highest prior phase = 153 (v0.32.0 conformance UI/watch follow-on); v0.33.0 continues at 154.
+- Phase 154 Defer NAP-CONNECT (DEFER-02..04) MUST precede Phase 155 Implement NAP-SHELL (SHELL-01..06).
+- DEFER-01 (defer NAP-CLASS) already shipped in commit `9aa4b80` — no phase; marked complete in traceability.
+- Staged GREEN at every commit; retire connect/class first so NAP-SHELL lands on the clean `{domains, protocols}` capabilities shape. Branch `feat/nap-shell` off `main`.
 
 ### Phase 153 record (UI/watch extension, user-requested follow-on) — COMPLETE
 
