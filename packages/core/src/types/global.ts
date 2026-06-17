@@ -1,4 +1,4 @@
-import type { NappletGlobalShell } from '../envelope.js';
+import type { NappletShell } from './shell.js';
 import type { RelayApi, IncApi, StorageApi, KeysApi } from './global/nostr-api.js';
 import type { MediaApi, NotifyApi } from './global/media-api.js';
 import type {
@@ -268,21 +268,25 @@ export interface NappletGlobal {
    */
   intent: IntentApi;
   /**
-   * Shell capability queries. Check whether the shell supports a NAP,
-   * permission, or numbered NAP protocol.
+   * NAP-SHELL: the foundational, mandatory bootstrap handshake surface.
+   *
+   * `shell` is the one domain that is **not** discoverable via
+   * `supports()` — it is always present. The shim posts `shell.ready`, the
+   * runtime replies once with `shell.init` carrying the environment, and the
+   * shim caches it so `supports(domain, protocol?)` answers synchronously and
+   * locally thereafter. Also exposes the runtime's `services`, the napplet's
+   * opaque `class`, and `ready()` / `onReady()` to gate startup.
    *
    * @example
    * ```ts
-   * // NAP domain (bare shorthand or prefixed):
+   * // Synchronous, local capability queries (no wire round-trip):
    * if (window.napplet.shell.supports('relay')) { ... }
-   * if (window.napplet.shell.supports('nap:relay')) { ... }
+   * if (window.napplet.shell.supports('inc', 'NAP-2')) { ... }
    *
-   * // Permission:
-   * if (window.napplet.shell.supports('perm:popups')) { ... }
-   *
-   * // Numbered NAP protocol over an interface:
-   * if (window.napplet.shell.supports('inc', 'NAP-01')) { ... }
+   * // Await environment delivery, or react to it:
+   * const env = await window.napplet.shell.ready();
+   * const sub = window.napplet.shell.onReady((e) => start(e));
    * ```
    */
-  shell: NappletGlobalShell;
+  shell: NappletShell;
 }

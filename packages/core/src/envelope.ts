@@ -140,26 +140,3 @@ export interface ShellSupports {
   /** Check whether the shell supports a NAP capability, permission, or numbered protocol. */
   supports(capability: NamespacedCapability, protocol?: ProtocolId): boolean;
 }
-
-/**
- * Type for the `window.napplet.shell` namespace.
- * Extends {@link ShellSupports} to provide capability queries.
- *
- * @example
- * ```ts
- * // In a napplet iframe:
- * if (window.napplet.shell.supports('nap:relay')) {
- *   const signed = await window.napplet.relay.publish(template);
- * }
- *
- * // Bare NAP domain shorthand also works:
- * if (window.napplet.shell.supports('relay')) { ... }
- *
- * // Permission queries:
- * window.napplet.shell.supports('perm:popups');
- *
- * // NAP-NN protocol queries:
- * window.napplet.shell.supports('inc', 'NAP-01');
- * ```
- */
-export interface NappletGlobalShell extends ShellSupports {}

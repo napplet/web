@@ -14,6 +14,11 @@ import type {
   NamespacedCapability,
   NapProtocolId,
   ShellSupports,
+  ShellCapabilities,
+  ShellEnvironment,
+  NappletShell,
+  ShellReadyMessage,
+  ShellInitMessage,
 } from './index.js';
 
 describe('@napplet/core exports', () => {
@@ -88,6 +93,48 @@ describe('@napplet/core exports', () => {
       const shell: ShellSupports = { supports: () => true };
       expect(shell.supports('inc', protocol)).toBe(true);
       expect(shell.supports('nap:inc', 'NAP-02')).toBe(true);
+    });
+  });
+
+  describe('NAP-SHELL foundational types', () => {
+    it('exposes ShellCapabilities / ShellEnvironment / wire message shapes', () => {
+      const caps: ShellCapabilities = { domains: ['relay'], protocols: { inc: ['NAP-2'] } };
+      const env: ShellEnvironment = { capabilities: caps, services: ['signer'], class: 1 };
+      const ready: ShellReadyMessage = { type: 'shell.ready' };
+      const init: ShellInitMessage = {
+        type: 'shell.init',
+        capabilities: caps,
+        services: ['signer'],
+        class: 1,
+      };
+      expect(ready.type).toBe('shell.ready');
+      expect(init.type).toBe('shell.init');
+      expect(env.class).toBe(1);
+      expect(caps.domains).toContain('relay');
+    });
+
+    it('NappletShell.supports() takes a bare string + optional protocol and ready() yields a ShellEnvironment', async () => {
+      const env: ShellEnvironment = {
+        capabilities: { domains: ['relay'], protocols: {} },
+        services: [],
+        class: null,
+      };
+      const shell: NappletShell = {
+        supports: (domain, protocol) => domain === 'relay' && protocol === undefined,
+        services: [],
+        class: null,
+        ready: () => Promise.resolve(env),
+        onReady: (handler) => {
+          handler(env);
+          return { close() {} };
+        },
+      };
+      // Bare-string + protocol calls are type-legal.
+      expect(shell.supports('relay')).toBe(true);
+      expect(shell.supports('inc', 'NAP-2')).toBe(false);
+      // perm: queries still compile against the foundational supports() signature.
+      expect(shell.supports('perm:sign')).toBe(false);
+      await expect(shell.ready()).resolves.toBe(env);
     });
   });
 });

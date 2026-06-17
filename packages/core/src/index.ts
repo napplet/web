@@ -28,7 +28,6 @@ export type {
   NapProtocolId,
   ProtocolId,
   ShellSupports,
-  NappletGlobalShell,
 } from './envelope.js';
 export { NAP_DOMAINS } from './envelope.js';
 
@@ -80,6 +79,11 @@ export type {
   IntentCandidate,
   IntentAvailability,
   IntentResult,
+  ShellCapabilities,
+  ShellEnvironment,
+  NappletShell,
+  ShellReadyMessage,
+  ShellInitMessage,
   NappletGlobal,
 } from './types.js';
 
