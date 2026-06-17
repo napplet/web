@@ -76,14 +76,18 @@ export const CHECKS: Check[] = [
     id: 'boot/installs-global',
     area: 'boot',
     severity: 'error',
-    title: 'Installs window.napplet',
-    run: (ctx) => (ctx.installedGlobal ? result.pass() : result.fail('window.napplet was not present after load')),
+    // NAP-SHELL: the observable boot signal across the opaque sandbox is the
+    // shim posting `shell.ready`. Receiving it proves window.napplet installed.
+    title: 'Completes the NAP-SHELL handshake (posts shell.ready)',
+    run: (ctx) => (ctx.installedGlobal ? result.pass() : result.fail('window.napplet was not present after load (no NAP-SHELL shell.ready)')),
   },
   {
     id: 'boot/no-boot-error',
     area: 'boot',
     severity: 'error',
-    title: 'Boots without an uncaught error',
+    // Boot is observed via the NAP-SHELL `shell.ready` signal; its absence within
+    // the timeout (or a crash before it) surfaces here as a boot error.
+    title: 'Boots without an uncaught error (observed via NAP-SHELL shell.ready)',
     run: (ctx) => (ctx.bootError ? result.fail(ctx.bootError) : result.pass()),
   },
   {
@@ -137,7 +141,10 @@ export const CHECKS: Check[] = [
     id: 'degrade/supports-false',
     area: 'degradation',
     severity: 'error',
-    title: 'Does not crash when shell.supports() is false',
+    // NAP-SHELL: when the runtime advertises an empty environment (no domains/
+    // protocols), every shell.supports() returns false; a conformant napplet must
+    // degrade rather than crash.
+    title: 'Does not crash when the NAP-SHELL environment offers no capabilities (supports() false)',
     run: (ctx) => {
       if (!ctx.degraded) return result.skip('Host did not run the degraded (no-capabilities) pass');
       return ctx.degraded.bootError

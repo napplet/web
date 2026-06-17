@@ -6,8 +6,8 @@
  *
  *  1. **Records** every envelope the napplet emits, attaching a {@link EnvelopeVerdict}.
  *  2. **Answers** the napplet so its request/response promises resolve and it does
- *     not hang — including the `shell.ready` → `shell.init` capability handshake
- *     that drives `window.napplet.shell.supports()`.
+ *     not hang — including the NAP-SHELL `shell.ready` → `shell.init` bootstrap
+ *     handshake that drives `window.napplet.shell.supports()`.
  *
  * The shell is transport-agnostic: {@link ReferenceShell.handle} takes one inbound
  * envelope and returns the response envelopes to send back. {@link attachReferenceShell}
@@ -37,22 +37,29 @@ export interface RecordedEnvelope {
   timestamp: number;
 }
 
-/** Capability advertisement sent in the `shell.init` handshake. */
+/**
+ * Capability advertisement sent in the NAP-SHELL `shell.init` handshake.
+ * Mirrors the canonical `{ domains, protocols }` capability shape.
+ */
 export interface ShellCapabilities {
-  /** NAP domains (and `domain:NAP-NN` protocol entries) the shell supports. */
-  naps: string[];
-  /** `perm:*` sandbox capabilities the shell grants. */
-  sandbox: string[];
+  /** NAP domains the shell offers (e.g. `['relay', 'inc']`). */
+  domains: string[];
+  /** Per-domain numbered protocols the shell speaks (e.g. `{ inc: ['NAP-2'] }`). */
+  protocols: Record<string, string[]>;
 }
 
 /** Options for {@link createReferenceShell}. */
 export interface ReferenceShellOptions {
   /**
    * Capabilities advertised in `shell.init`. Defaults to **all** NAP domains and
-   * no sandbox perms — a fully-capable shell. Pass `{ naps: [], sandbox: [] }` to
+   * no protocols — a fully-capable shell. Pass `{ domains: [], protocols: {} }` to
    * drive the graceful-degradation check (every `supports()` returns false).
    */
   capabilities?: Partial<ShellCapabilities>;
+  /** Named services advertised in `shell.init`. Defaults to `[]`. */
+  services?: string[];
+  /** The class assigned to the napplet in `shell.init`. Defaults to `null`. */
+  class?: number | null;
   /** Injectable clock for deterministic tests. Defaults to `Date.now`. */
   now?: () => number;
 }
@@ -163,12 +170,16 @@ const RESPONDERS: Record<string, Responder> = {
 export interface ReferenceShell {
   /** Effective capabilities advertised in `shell.init`. */
   readonly capabilities: ShellCapabilities;
+  /** Named services advertised in `shell.init`. */
+  readonly services: string[];
+  /** The class advertised in `shell.init`. */
+  readonly class: number | null;
   /** All envelopes recorded so far, in arrival order. */
   readonly records: readonly RecordedEnvelope[];
   /**
    * Process one inbound envelope from the napplet. Records it (with verdict) and
    * returns the response envelopes the shell would post back. `shell.ready` returns
-   * the `shell.init` handshake; unknown/fire-and-forget messages return `[]`.
+   * the NAP-SHELL `shell.init` handshake; unknown/fire-and-forget messages return `[]`.
    */
   handle(envelope: unknown): unknown[];
   /** Clear recorded envelopes. */
@@ -181,17 +192,20 @@ export interface ReferenceShell {
  * @example
  * ```ts
  * const shell = createReferenceShell();
- * shell.handle({ type: 'shell.ready' });            // → [{ type: 'shell.init', capabilities }]
+ * // NAP-SHELL handshake: shell.ready → shell.init { capabilities, services, class }
+ * shell.handle({ type: 'shell.ready' });
  * shell.handle({ type: 'storage.get', id: '1', key: 'k' }); // → [{ type:'storage.get.result', id:'1', value:null }]
- * shell.records[1].verdict.ok;                       // true
+ * shell.records[0].verdict.ok;                       // true (shell.ready is not recorded)
  * ```
  */
 export function createReferenceShell(options: ReferenceShellOptions = {}): ReferenceShell {
   const now = options.now ?? (() => Date.now());
   const capabilities: ShellCapabilities = {
-    naps: options.capabilities?.naps ?? [...NAP_DOMAINS],
-    sandbox: options.capabilities?.sandbox ?? [],
+    domains: options.capabilities?.domains ?? [...NAP_DOMAINS],
+    protocols: options.capabilities?.protocols ?? {},
   };
+  const services: string[] = options.services ?? [];
+  const klass: number | null = options.class ?? null;
   const records: RecordedEnvelope[] = [];
 
   function handle(envelope: unknown): unknown[] {
@@ -200,10 +214,17 @@ export function createReferenceShell(options: ReferenceShellOptions = {}): Refer
         ? ((envelope as Record<string, unknown>).type as string)
         : undefined;
 
-    // The capability handshake is protocol scaffolding, not a NAP envelope — do
-    // not run it through the napplet-outbound validator/recorder.
+    // The NAP-SHELL handshake is bootstrap scaffolding — keep it out of the
+    // napplet-outbound validator/recorder so `records` reflects NAP traffic only.
     if (type === 'shell.ready') {
-      return [{ type: 'shell.init', capabilities: { naps: capabilities.naps, sandbox: capabilities.sandbox } }];
+      return [
+        {
+          type: 'shell.init',
+          capabilities: { domains: capabilities.domains, protocols: capabilities.protocols },
+          services,
+          class: klass,
+        },
+      ];
     }
 
     records.push({ envelope, verdict: validateEnvelope(envelope), timestamp: now() });
@@ -215,6 +236,8 @@ export function createReferenceShell(options: ReferenceShellOptions = {}): Refer
 
   return {
     capabilities,
+    services,
+    class: klass,
     get records() {
       return records;
     },

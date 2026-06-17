@@ -50,12 +50,28 @@ function declaredDiscriminants(): Set<string> {
   return found;
 }
 
+// NAP-SHELL's discriminants are validator-owned (foundational). The shell NAP
+// source re-exports the wire types from @napplet/core rather than declaring
+// `type: 'shell.ready'` string literals, so the source scan cannot find them —
+// exempt the foundational `shell` domain from both the missing- and stale-checks
+// and assert its discriminants directly instead.
+const FOUNDATIONAL_DOMAINS = new Set(['shell']);
+
+function isFoundational(type: string): boolean {
+  return FOUNDATIONAL_DOMAINS.has(type.slice(0, type.indexOf('.')));
+}
+
 describe('envelope validator drift guard', () => {
   it('every NAP domain in NAP_DOMAINS has at least one validator entry', () => {
     const domainsWithSpecs = new Set(Object.keys(ENVELOPE_SPECS).map((t) => t.slice(0, t.indexOf('.'))));
     for (const domain of NAP_DOMAINS) {
       expect(domainsWithSpecs.has(domain), `NAP domain "${domain}" has no ENVELOPE_SPECS entry`).toBe(true);
     }
+  });
+
+  it('declares the foundational NAP-SHELL discriminants (validator-owned)', () => {
+    expect(ENVELOPE_SPECS['shell.ready']?.dir).toBe('out');
+    expect(ENVELOPE_SPECS['shell.init']?.dir).toBe('in');
   });
 
   it('every discriminant declared in @napplet/nap source is covered by ENVELOPE_SPECS', () => {
@@ -67,7 +83,12 @@ describe('envelope validator drift guard', () => {
 
   it('does not declare specs for discriminants that no longer exist in source', () => {
     const declared = declaredDiscriminants();
-    const stale = Object.keys(ENVELOPE_SPECS).filter((t) => !declared.has(t)).sort();
+    // The foundational `shell` domain is validator-owned and has no scannable
+    // source literal; exclude it from the stale-check.
+    const stale = Object.keys(ENVELOPE_SPECS)
+      .filter((t) => !isFoundational(t))
+      .filter((t) => !declared.has(t))
+      .sort();
     expect(stale, `Remove stale ENVELOPE_SPECS entries: ${stale.join(', ')}`).toEqual([]);
   });
 });

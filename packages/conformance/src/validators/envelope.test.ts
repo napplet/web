@@ -100,14 +100,36 @@ describe('validateEnvelope — outbound field checks', () => {
   });
 });
 
+describe('validateEnvelope — NAP-SHELL foundational domain', () => {
+  it('accepts shell.ready as a bare outbound liveness ping', () => {
+    const v = validateEnvelope({ type: 'shell.ready' });
+    expect(v.ok).toBe(true);
+    expect(v.domain).toBe('shell');
+    expect(v.direction).toBe('out');
+  });
+
+  it('recognizes shell.init as inbound (not an unknown domain)', () => {
+    const v = validateEnvelope({
+      type: 'shell.init',
+      capabilities: { domains: [], protocols: {} },
+      services: [],
+      class: null,
+    });
+    expect(v.ok).toBe(false);
+    expect(v.domain).toBe('shell');
+    expect(v.direction).toBe('in');
+    expect(v.errors[0].code).toBe('inbound-type-emitted');
+  });
+});
+
 describe('ENVELOPE_SPECS invariants', () => {
-  it('has 122 discriminants split 60 outbound / 62 inbound', () => {
+  it('has 124 discriminants split 61 outbound / 63 inbound', () => {
     const all = knownEnvelopeTypes();
-    expect(all).toHaveLength(122);
+    expect(all).toHaveLength(124);
     const out = all.filter((t) => ENVELOPE_SPECS[t].dir === 'out');
     const inbound = all.filter((t) => ENVELOPE_SPECS[t].dir === 'in');
-    expect(out).toHaveLength(60);
-    expect(inbound).toHaveLength(62);
+    expect(out).toHaveLength(61);
+    expect(inbound).toHaveLength(63);
   });
 
   it('only outbound specs declare required fields', () => {
