@@ -1,5 +1,13 @@
 # @napplet/conformance
 
+## 0.2.2
+
+### Patch Changes
+
+- Updated dependencies [6c99508]
+  - @napplet/core@0.13.0
+  - @napplet/nap@0.13.0
+
 ## 0.2.1
 
 ### Patch Changes
