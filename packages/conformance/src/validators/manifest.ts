@@ -10,8 +10,12 @@
  * | `napplet-requires`         | comma-joined list of required NAP domains           |
  * | `napplet-config-schema`    | inline `JSON.stringify` of the config schema        |
  *
- * {@link validateManifest} reads a napplet's HTML and checks each declaration
- * plus the no-inline-`<script>` rule the shell-as-CSP-authority model requires.
+ * {@link validateManifest} reads a napplet's HTML and checks each declaration.
+ *
+ * Inline `<script>` elements are NOT a conformance failure: per NIP-5D a napplet
+ * is a single self-contained `/index.html` loaded via `iframe.srcdoc` with
+ * `sandbox="allow-scripts"` (opaque origin), so its executable JS lives inline.
+ * A check that rejected inline scripts would fail every spec-faithful napplet.
  *
  * @packageDocumentation
  */
@@ -20,13 +24,6 @@ import { NAP_DOMAINS } from '@napplet/core';
 
 /** A napplet type/d-tag: lowercase, starts alnum, then alnum or `._:-`. */
 const NAPPLET_TYPE_RE = /^[a-z0-9][a-z0-9._:-]*$/;
-/** `<script type="...">` values that are NOT executable inline JS. */
-const NON_EXECUTING_SCRIPT_TYPES = new Set([
-  'application/json',
-  'application/ld+json',
-  'importmap',
-  'speculationrules',
-]);
 
 /** A single manifest problem. */
 export interface ManifestError {
@@ -35,8 +32,7 @@ export interface ManifestError {
     | 'missing-napplet-type'
     | 'invalid-napplet-type'
     | 'unknown-required-nap'
-    | 'invalid-config-schema'
-    | 'inline-script';
+    | 'invalid-config-schema';
   /** Human-readable explanation. */
   message: string;
 }
@@ -88,34 +84,6 @@ function readMeta(html: string, name: string): string | undefined {
     return decodeHtmlEntities((contentMatch?.[1] ?? contentMatch?.[2] ?? '').trim());
   }
   return undefined;
-}
-
-/**
- * Find inline `<script>` offenders — ported from the build plugin's
- * `assertNoInlineScripts`. Returns the offending opening tags.
- */
-export function findInlineScripts(html: string): string[] {
-  // Strip HTML comments so commented-out scripts are not flagged.
-  const stripped = html.replace(/<!--[\s\S]*?-->/g, '');
-  const scriptTagRe = /<script\b([\s\S]*?)>/gi;
-  const offenders: string[] = [];
-  let m: RegExpExecArray | null;
-  while ((m = scriptTagRe.exec(stripped)) !== null) {
-    const tag = m[0];
-    const attrs = m[1] ?? '';
-    const srcMatch = /\bsrc\s*=\s*(?:"([^"]*)"|'([^']*)')/i.exec(attrs);
-    if (srcMatch) {
-      const srcValue = (srcMatch[1] ?? srcMatch[2] ?? '').trim();
-      if (srcValue.length > 0) continue; // external load — allowed
-      offenders.push(tag);
-      continue; // src="" executes inline fallback — forbidden
-    }
-    const typeMatch = /\btype\s*=\s*(?:"([^"]*)"|'([^']*)')/i.exec(attrs);
-    const typeValue = (typeMatch?.[1] ?? typeMatch?.[2] ?? '').trim().toLowerCase();
-    if (typeValue && NON_EXECUTING_SCRIPT_TYPES.has(typeValue)) continue;
-    offenders.push(tag);
-  }
-  return offenders;
 }
 
 /** Recursively test whether a JSON Schema fragment uses the forbidden `pattern` keyword. */
@@ -183,11 +151,6 @@ export function validateManifest(html: string, _options: ValidateManifestOptions
         errors.push({ code: 'invalid-config-schema', message: 'napplet-config-schema uses the `pattern` keyword, which the draft-07 core subset excludes (CVE-2025-69873)' });
       }
     }
-  }
-
-  // ── no inline scripts ───────────────────────────────────────────────────────
-  for (const offender of findInlineScripts(html)) {
-    errors.push({ code: 'inline-script', message: `Inline <script> is forbidden under script-src 'self': ${offender}` });
   }
 
   return {

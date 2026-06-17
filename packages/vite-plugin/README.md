@@ -297,27 +297,20 @@ if (!window.napplet.shell.supports('media')) {
 
 v0.29.0 adds a build-time safeguard enforced in `closeBundle` so misconfiguration fails loud before `dist/` reaches a shell.
 
-### Inline-script fail-loud (new in v0.29.0; mode-aware in v1.11)
+### Inline scripts are supported (and expected)
 
-The plugin scans `dist/index.html` after build for any `<script>` element without a non-empty `src` attribute. Such elements are hard-errors — the build throws and exits non-zero with a diagnostic referencing the shell's baseline `script-src 'self'` posture.
+Per NIP-5D a napplet is a single self-contained `/index.html` loaded via
+`iframe.srcdoc` with `sandbox="allow-scripts"` and no `allow-same-origin` — an
+opaque origin with no served URL. Its executable JS therefore lives **inline**;
+there is no origin from which the runtime could fetch an external
+`<script src>`. The plugin does **not** reject inline `<script>` elements. (An
+earlier version did, under an invented "shell-as-CSP-authority" model that
+NIP-5D does not define; that was removed — see napplet/web#53.)
 
-Allowed script variants (not flagged):
-- `<script src="..."></script>` — external module
-- `<script type="application/json">…</script>` — JSON data island
-- `<script type="application/ld+json">…</script>` — JSON-LD data island
-- `<script type="importmap">…</script>` — import map
-- `<script type="speculationrules">…</script>` — speculation rules
-- HTML comments (stripped before scan)
-
-Rejected:
-- `<script>console.log("hi")</script>` — inline JS without `src`
-- `<script type="module">/* inline */</script>` — inline module
-
-**Why:** The shell is now the sole runtime CSP authority. Every conformant shell serves napplet HTML with a CSP that includes `script-src 'self'` (or tighter, via `'nonce-…'`). Inline `<script>` without `src` violates that policy, so shipping inline JS guarantees the napplet will be partially non-functional at runtime. Surfacing this at build time converts a silent runtime failure into a loud build failure.
-
-Exception: when `artifactMode: 'single-file'` is set, the plugin validates the pre-inline HTML first, then creates the inline module scripts itself from local build assets. Those build-produced inline scripts are intentional and are accepted as part of the explicit single-file NIP-5A artifact contract.
-
-**Fixing:** Move inline JS into a `.js` module under `src/` and import it. For build-time state that needs to reach runtime code (feature flags, config defaults), use a `<script type="application/json" id="data">…</script>` data island and read it at runtime via `document.getElementById('data').textContent`.
+When `artifactMode: 'single-file'` is set, the plugin additionally folds any
+local `<script src>`/`<link rel="stylesheet">` build assets into `index.html`
+and deletes them, so the single file is the only served artifact. Pre-existing
+inline scripts in your built HTML are preserved verbatim.
 
 ## How It Works
 

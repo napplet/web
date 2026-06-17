@@ -14,7 +14,7 @@ import type { ManifestPluginState, ManifestTemplate, Nip5aManifestOptions } from
 import { NAPPLET_KIND_NAMED } from './types.js';
 import { computeAggregateHash, sha256File, walkDir } from './hashing.js';
 import { discoverConfigSchema, validateConfigSchema } from './config-schema.js';
-import { assertNoInlineScripts, inlineSingleFileBuildAssets } from './html.js';
+import { inlineSingleFileBuildAssets } from './html.js';
 
 /**
  * Resolve all per-build plugin state in the `configResolved` hook: out dir,
@@ -127,7 +127,6 @@ function prepareDistIndexHtml(distPath: string, state: ManifestPluginState): voi
   if (!fs.existsSync(indexPath)) return;
 
   let html = fs.readFileSync(indexPath, 'utf-8');
-  assertNoInlineScripts(html);
   if (state.artifactMode === 'single-file') {
     html = inlineSingleFileBuildAssets(html, distPath, state.base);
     fs.writeFileSync(indexPath, html);

@@ -49,16 +49,6 @@ export const CHECKS: Check[] = [
   manifestCheck('manifest/napplet-type', 'Declares a valid napplet-type', ['missing-napplet-type', 'invalid-napplet-type']),
   manifestCheck('manifest/declared-naps', 'napplet-requires lists only real NAP domains', ['unknown-required-nap'], 'napplet-requires'),
   manifestCheck('manifest/config-schema', 'Config schema is a draft-07 core subset', ['invalid-config-schema'], 'napplet-config-schema'),
-  {
-    id: 'manifest/no-inline-scripts',
-    area: 'manifest',
-    severity: 'error',
-    title: "No inline <script> (incompatible with script-src 'self')",
-    run: (ctx) => {
-      const errs = manifestErrors(ctx.manifestHtml, ['inline-script']);
-      return errs.length ? result.fail(`${errs.length} inline script(s) found`, errs) : result.pass();
-    },
-  },
 
   // ── boot ─────────────────────────────────────────────────────────────────────
   {
