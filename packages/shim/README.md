@@ -430,33 +430,45 @@ Errors reject the Promise with one of 8 codes: `not-found`, `blocked-by-policy`,
 Capability detection:
 
 ```ts
-if (window.napplet.shell.supports('nap:resource')) { /* ... */ }
-if (window.napplet.shell.supports('resource:scheme:blossom')) { /* ... */ }
-if (window.napplet.shell.supports('perm:strict-csp')) { /* shell enforces strict CSP */ }
+if (window.napplet.shell.supports('resource')) { /* shell offers the resource NAP */ }
 ```
 
-### `window.napplet.shell`
+### `window.napplet.shell` — NAP-SHELL
 
-Namespaced capability query. `supports()` checks whether the shell declared
-support for a NAP domain, permission, or numbered NAP-NN message protocol.
+`shell` is the **foundational, mandatory** NAP domain — the one capability that
+is *not* discoverable via `supports()` and is always present. It is the bootstrap
+handshake:
+
+1. On import, the shim posts `shell.ready` (no payload) — a bare "my receiver is
+   live" liveness signal.
+2. The runtime replies **once** with `shell.init`, carrying the environment
+   `{ capabilities: { domains, protocols }, services, class }`.
+3. The shim caches that environment, so `supports(domain, protocol?)` is answered
+   **synchronously and locally** thereafter — no wire round-trip per query.
 
 ```ts
-// NAP domains (bare shorthand or nap: prefix)
-window.napplet.shell.supports('relay');         // bare shorthand
-window.napplet.shell.supports('nap:identity');  // explicit prefix
+// Synchronous, local capability queries:
+window.napplet.shell.supports('relay');        // true if the runtime offers relay
+window.napplet.shell.supports('inc', 'NAP-2'); // true if it also speaks NAP-2
+window.napplet.shell.supports('unknown');      // false — domain not offered
 
-// Permissions
-window.napplet.shell.supports('perm:popups');
+// Named services and the napplet's opaque class:
+window.napplet.shell.services;                 // string[]  (e.g. ['signer'])
+window.napplet.shell.class;                    // number | null (opaque; carried, not interpreted)
 
-// Numbered NAP-NN message protocols over an interface
-window.napplet.shell.supports('inc', 'NAP-01');
+// Gate startup on environment delivery:
+const env = await window.napplet.shell.ready();
+const sub = window.napplet.shell.onReady((e) => start(e));
 ```
 
-Currently returns `false` for shell-granted permissions and numbered protocols
-until the shell populates it at iframe creation time. A shell can advertise a
-numbered protocol by including an interface/protocol entry such as `inc:NAP-01`
-in its NAP capability list. Use this as a feature gate before calling APIs that
-depend on a specific capability or message protocol.
+Before `shell.init` arrives, `supports()` returns `false` for everything,
+`services` is `[]`, `class` is `null`, and `ready()` is pending. A duplicate
+`shell.init` is ignored (first init wins). Use `supports()` as a feature gate
+before calling APIs that depend on a specific domain or numbered protocol.
+
+The `@napplet/nap/shell` subpath provides the NAP-SHELL types and SDK helpers
+(`shellSupports`, `shellServices`, `shellClass`, `shellReady`, `shellOnReady`)
+alongside the other domain subpaths.
 
 ## TypeScript Support
 

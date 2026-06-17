@@ -43,7 +43,7 @@ After `import '@napplet/shim'`, the global is populated with these sub-objects:
 | `resource` | Sandboxed byte fetching: `bytes`, `bytesAsObjectURL` |
 | `connect` | User-gated direct network access (state-only): `granted`, `origins` |
 | `class` | Shell-assigned integer class (or `undefined`) |
-| `shell` | `supports(capability, protocol?)` capability query |
+| `shell` | NAP-SHELL bootstrap handshake: `supports(domain, protocol?)`, `services`, `class`, `ready()`, `onReady()` |
 
 ## Usage
 
