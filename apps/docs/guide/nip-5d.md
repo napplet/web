@@ -1,9 +1,16 @@
 # NIP-5D explained
 
-[NIP-5D — *Nostr Web Applets*](#authoritative-source) is the specification that
+[NIP-5D — *Nostr Web Applets*](#source-of-truth) is the specification that
 defines how a napplet and its host shell talk to each other. This page summarizes
-the model the `@napplet/*` packages implement. For the normative text, always
-defer to the authoritative source linked below.
+the model the `@napplet/*` packages implement.
+
+::: warning NON-NORMATIVE — read the spec
+This page is an orientation, not the specification. The living, authoritative
+documents are **[NIP-5D (PR #2303)](https://github.com/nostr-protocol/nips/pull/2303)**
+and the **[NAPs track](https://github.com/napplet/naps)**. For every normative
+requirement ("MUST", message shapes, manifest fields), defer to those — not to
+this page, the packages, or any test.
+:::
 
 ## Philosophy
 
@@ -116,12 +123,14 @@ This is what makes the protocol modular: NAP contracts live in the
   shells, or social engineering — it secures the napplet-shell boundary, not the
   shell itself.
 
-## Authoritative source
+## Source of truth
 
-This page is a summary. The **authoritative** NIP-5D text lives at:
+This page is a **non-normative** summary. The living, authoritative documents are:
 
-- [`raw.githubusercontent.com/dskvr/nips/.../5D.md`](https://raw.githubusercontent.com/dskvr/nips/e6ee919ae2be57222d129ee1a8c9b69d34234299/5D.md)
-  (pinned commit `e6ee919ae2be57222d129ee1a8c9b69d34234299`)
+- **NIP-5D** (the protocol):
+  [github.com/nostr-protocol/nips/pull/2303](https://github.com/nostr-protocol/nips/pull/2303)
+- **NAPs track** (the capability domains):
+  [github.com/napplet/naps](https://github.com/napplet/naps)
 
-See [NIP-5D spec status](/spec) for the in-repo reference note and how drift is
-tracked.
+For every normative requirement, read those — not this page. See
+[NIP-5D spec status](/spec) for how drift is tracked.

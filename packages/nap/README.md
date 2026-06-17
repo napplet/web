@@ -215,7 +215,7 @@ configSubscribe<FromSchema<typeof schema>>((values) => {
 
 ## Protocol Reference
 
-- [NIP-5D](../../specs/NIP-5D.md) — Napplet-shell protocol specification (JSON envelope + NAP negotiation)
+- [NIP-5D](https://github.com/nostr-protocol/nips/pull/2303) — Napplet-shell protocol specification (JSON envelope + NAP negotiation)
 
 ## License
 

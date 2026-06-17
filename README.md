@@ -99,7 +99,7 @@ The iframe sandbox requires only `allow-scripts` -- **no `allow-same-origin`**. 
 
 ## Origin
 
-The napplet protocol is documented in the [NIP-5D specification draft](specs/NIP-5D.md). Any shell can host napplets, and any web app can become a napplet by importing `@napplet/shim`.
+The napplet protocol is defined by the living [NIP-5D specification](https://github.com/nostr-protocol/nips/pull/2303); the NAP capability domains are defined on the [NAPs track](https://github.com/napplet/naps). Any shell can host napplets, and any web app can become a napplet by importing `@napplet/shim`.
 
 ## Development
 
@@ -139,7 +139,8 @@ and the conformance runtime under `/conformance`, and deploys to Bunny + nsite. 
 
 ## Related
 
-- **[NIP-5D](specs/NIP-5D.md)** -- Protocol specification for the napplet-shell protocol
+- **[NIP-5D](https://github.com/nostr-protocol/nips/pull/2303)** -- the living napplet-shell protocol specification (source of truth)
+- **[NAPs track](https://github.com/napplet/naps)** -- where every NAP capability domain is proposed and defined
 
 ## License
 

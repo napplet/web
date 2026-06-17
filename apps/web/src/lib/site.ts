@@ -2,8 +2,8 @@ export const LINKS = {
   github: 'https://github.com/napplet/napplet',
   githubOrg: 'https://github.com/napplet',
   docs: '/docs/',
-  // Authoritative NIP-5D spec source (pinned commit referenced in specs/NIP-5D.md).
-  spec: 'https://github.com/nostr-protocol/nips/pull/2303/files',
+  // Canonical, living NIP-5D specification (the source of truth — never a repo copy).
+  spec: 'https://github.com/nostr-protocol/nips/pull/2303',
   boilerplate: 'https://github.com/napplet/boilerplate',
   // Kehto — the reference web runtime / shell implementation.
   kehto: 'https://github.com/kehto/web',

@@ -1,37 +1,30 @@
 # NIP-5D spec status
 
-The napplet packages implement **NIP-5D — *Nostr Web Applets***. This page is the
-reference-status note; for a readable walkthrough see
-[NIP-5D explained](/guide/nip-5d).
+The napplet packages implement **NIP-5D — *Nostr Web Applets***. This site does
+**not** host a copy of the specification — NIP-5D is a living document, and the
+canonical text is the only source of truth.
 
-## Authoritative source
+## Source of truth
 
-The **authoritative** NIP-5D text lives at the pinned source below. When the
-packages and any summary on this site drift from it, the authoritative source
-wins:
+When the packages, this site, or any summary drift from these, **the living
+documents win**:
 
-- **Spec:** [`raw.githubusercontent.com/dskvr/nips/.../5D.md`](https://raw.githubusercontent.com/dskvr/nips/e6ee919ae2be57222d129ee1a8c9b69d34234299/5D.md)
-- **Pinned commit:** `e6ee919ae2be57222d129ee1a8c9b69d34234299`
+- **NIP-5D** (the napplet ⇄ shell protocol):
+  [github.com/nostr-protocol/nips/pull/2303](https://github.com/nostr-protocol/nips/pull/2303)
+- **NAPs track** (every NAP capability domain — `relay`, `storage`, `identity`, …):
+  [github.com/napplet/naps](https://github.com/napplet/naps)
 
-It covers: Philosophy, Terminology, Transport, Wire Format, Identity, Manifest and
-NAP Negotiation, the NAP Extension Framework, Security Considerations, and
-References.
-
-## In-repo reference note
-
-The monorepo keeps a deliberately **non-authoritative** stub at
-[`specs/NIP-5D.md`](https://github.com/napplet/napplet/blob/main/specs/NIP-5D.md).
-It exists to point at the pinned authoritative source and the repo-local working
-contract — it is **not** an independent NIP authority and must not accumulate
-residual extension material.
+The [NIP-5D explained](/guide/nip-5d) page on this site is a **non-normative**
+orientation only; for every normative requirement, read the canonical NIP-5D and
+the relevant NAP.
 
 ## Expect drift
 
 ::: warning ALPHA — expect drift
 napplet is **alpha**. The specification is experimental and a moving target. There
 **will most certainly be drift** between the packages and the specification.
-Things **will most certainly change**. Always treat the authoritative source above
-as the source of truth, and pin to a specific package version when building.
+Things **will most certainly change**. Always treat the living documents above as
+the source of truth, and pin to a specific package version when building.
 :::
 
 ## Related specs

@@ -33,7 +33,7 @@
 // untrusted input.
 
 /** NIP-5D specification (draft PR) — how napplets and runtimes talk. */
-export const NIP_5D_SPEC_URL = 'https://github.com/nostr-protocol/nips/pull/2303/files';
+export const NIP_5D_SPEC_URL = 'https://github.com/nostr-protocol/nips/pull/2303';
 /** napplet.run — directory of runtimes a visitor can open napplets in. */
 export const NAPPLET_RUN_URL = 'https://napplet.run';
 /** kehto/web — the reference, open-source web runtime. */

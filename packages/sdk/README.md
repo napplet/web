@@ -437,7 +437,7 @@ If you are writing a vanilla napplet with no build step, use `window.napplet.*` 
 
 ## Protocol Reference
 
-- [NIP-5D](../../specs/NIP-5D.md) -- Napplet-shell protocol specification
+- [NIP-5D](https://github.com/nostr-protocol/nips/pull/2303) -- Napplet-shell protocol specification
 - [@napplet/shim](../shim/) -- Window installer package
 - [@napplet/core](../core/) -- Shared protocol types
 
