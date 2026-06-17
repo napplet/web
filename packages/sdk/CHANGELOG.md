@@ -1,5 +1,13 @@
 # @napplet/sdk
 
+## 0.13.2
+
+### Patch Changes
+
+- Updated dependencies [49b4660]
+  - @napplet/core@0.15.0
+  - @napplet/nap@0.15.0
+
 ## 0.13.1
 
 ### Patch Changes
