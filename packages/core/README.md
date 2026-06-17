@@ -391,6 +391,35 @@ import type {
 | `Subscription` | Handle with `close()` returned by subscribe/on |
 | `EventTemplate` | Unsigned event template for publishing |
 
+## Boundary Helpers (clone-safety)
+
+NAP shims cross the napplet ⇄ shell boundary by structured-cloning a JSON
+envelope through `postMessage`. Framework reactive values — Svelte 5 `$state`,
+Vue `reactive`, Solid stores — are `Proxy` objects that are **not** structured-
+cloneable, so a naive `postMessage` throws `DataCloneError`, which gets silently
+swallowed in async paths (the envelope never crosses the boundary). These
+helpers make that loud or transparent.
+
+| Export | Description |
+|--------|-------------|
+| `sendEnvelope(target, message, targetOrigin?)` | The single boundary chokepoint shims post through. Per the active mode it posts as-is, snapshot-recovers a non-cloneable arg, or throws a loud, synchronous, actionable error. |
+| `toCloneableSnapshot(value)` | Deep snapshot stripping reactive proxies into plain objects/arrays while preserving binary (`Uint8Array`/`ArrayBuffer`), `Date`, `RegExp`, `Map`, `Set`, and cycles. Lossless for binary (unlike `JSON`); functions/symbols throw. |
+| `setCloneMode(mode)` / `getCloneMode()` | `'auto'` (default: post as-is, snapshot-and-retry on `DataCloneError`, warn once), `'strict'` (throw, never recover), or `'snapshot'` (eagerly snapshot every envelope). |
+| `clearCloneWarnings()` | Reset the once-per-type auto-recovery warnings. |
+
+```ts
+import { setCloneMode, toCloneableSnapshot } from '@napplet/core';
+
+// Default 'auto' handles reactive state transparently on the failure path.
+// Or normalize explicitly:
+napplet.outbox.subscribe(toCloneableSnapshot(filters), { relays });
+// Or globally:
+setCloneMode('snapshot');
+```
+
+These are SDK plumbing only — identical plain envelopes reach the wire, so they
+add no protocol surface.
+
 ## Integration Note
 
 `@napplet/core` is consumed by all packages in the napplet ecosystem for envelope types and NAP dispatch.

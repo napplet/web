@@ -128,7 +128,12 @@ The shim communicates with the shell using JSON envelope messages (`{ type: "dom
 
 ### Outbound (napplet → shell)
 
-Messages sent via `window.parent.postMessage(msg, '*')`:
+Messages are posted to the shell through `@napplet/core`'s clone-safe
+`sendEnvelope(window.parent, msg)` boundary. Framework reactive values (Svelte 5
+`$state`, Vue `reactive`, Solid stores) that aren't structured-cloneable are
+snapshotted on the failure path instead of throwing a swallowed `DataCloneError`
+— see [`@napplet/core` boundary helpers](../core/README.md#boundary-helpers-clone-safety).
+The wire payloads are unchanged plain envelopes:
 
 ```ts
 { type: 'relay.subscribe', id: string, subId: string, filters: NostrFilter[] }
