@@ -240,7 +240,7 @@ Migration:
 - If your napplet ships inline `<script>` elements (without `src`), fix them before v0.30.0 — the build now hard-fails on inline scripts to mirror the shell's baseline `script-src 'self'` posture. See [Build-Time Diagnostics](#build-time-diagnostics) below.
 - If your napplet needs direct network access (previously implicit under a permissive dev CSP, now explicit), declare the origins via the new [`connect`](#connect-optional-v0290) option and let the shell prompt the user.
 
-See [NAP-CLASS-2.md](https://github.com/napplet/naps) for the shell-side posture that replaces the old in-page strict-CSP baseline, and [`specs/SHELL-CONNECT-POLICY.md`](../../specs/SHELL-CONNECT-POLICY.md) for the deployer-side checklist covering HTTP-responder precondition, residual meta-CSP refusal, and grant-persistence key.
+See [`specs/SHELL-CONNECT-POLICY.md`](../../specs/SHELL-CONNECT-POLICY.md) for the deployer-side checklist covering HTTP-responder precondition, residual meta-CSP refusal, and grant-persistence key.
 
 #### connect (optional, v0.29.0+)
 
@@ -295,7 +295,6 @@ Origins do NOT feed `aggregateHash`. Per NIP-5D §Identity the aggregate is the 
 **See also:**
 - [NAP-CONNECT](https://github.com/napplet/naps) — normative spec (origin format, aggregateHash fold, conformance fixture)
 - [`specs/SHELL-CONNECT-POLICY.md`](../../specs/SHELL-CONNECT-POLICY.md) — shell-deployer checklist (HTTP-responder precondition, residual meta-CSP refusal, grant persistence, consent prompt MUSTs, revocation UX)
-- [NAP-CLASS-2.md](https://github.com/napplet/naps) — posture triggered by presence of `connect` tags (CSP shape, shell responsibilities at serve time)
 
 ### Environment Variables
 

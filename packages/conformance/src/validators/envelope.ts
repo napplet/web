@@ -160,9 +160,6 @@ export const ENVELOPE_SPECS: Record<string, EnvelopeSpec> = {
   'resource.bytes.result': { dir: 'in' },
   'resource.bytes.error': { dir: 'in' },
 
-  // ── class (shell-initiated only) ─────────────────────────────────────────
-  'class.assigned': { dir: 'in' },
-
   // ── cvm ──────────────────────────────────────────────────────────────────
   'cvm.discover': { dir: 'out', fields: { ...ID } },
   'cvm.request': { dir: 'out', fields: { ...ID, server: 'object', message: 'object' } },

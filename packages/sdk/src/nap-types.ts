@@ -252,14 +252,6 @@ export type {
   NappletConnect,
 } from '@napplet/nap/connect';
 
-// Class NAP
-export type {
-  ClassMessage,
-  ClassAssignedMessage,
-  NappletClass,
-  ClassNapMessage,
-} from '@napplet/nap/class';
-
 // CVM NAP (ContextVM bridge)
 export type {
   McpMessage,

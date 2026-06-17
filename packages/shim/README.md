@@ -12,7 +12,7 @@
 
 1. Import `@napplet/shim` in your napplet's entry point (side-effect only -- no named exports)
 2. The shim registers with the shell via postMessage -- the shell assigns identity based on the iframe's `message.source` Window reference
-3. Once registered, `window.napplet` is populated with relay, inc, storage, keys, media, notify, identity, config, resource, connect, class, and shell sub-objects
+3. Once registered, `window.napplet` is populated with relay, inc, storage, keys, media, notify, identity, config, resource, connect, cvm, outbox, upload, intent, and shell sub-objects
 4. No `window.nostr` is installed -- signing and encryption are mediated by the shell via `relay.publish()` and `relay.publishEncrypted()`
 
 ### Installation
@@ -111,12 +111,6 @@ const avatarBlob = await window.napplet.resource.bytes('https://example.com/avat
 const handle = window.napplet.resource.bytesAsObjectURL('blossom:sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855');
 imgEl.src = handle.url;
 // later: handle.revoke();
-
-// Check the shell-assigned class (undefined if shell doesn't implement nap:class)
-if (window.napplet.shell.supports('nap:class')) {
-  const cls = window.napplet.class;
-  if (cls === 2) { /* user-approved explicit-origin posture */ }
-}
 
 // Use direct network access if the user approved `connect` origins at build time
 if (window.napplet.connect.granted) {
@@ -249,8 +243,6 @@ Messages received via `window.addEventListener('message', ...)`:
 
 { type: 'resource.bytes.result', id: string, blob: Blob, mime: string }
 { type: 'resource.bytes.error', id: string, error: 'not-found' | 'blocked-by-policy' | 'timeout' | 'too-large' | 'unsupported-scheme' | 'decode-failed' | 'network-error' | 'quota-exceeded', message?: string }
-
-{ type: 'class.assigned', id: string, class: number }
 ```
 
 All request/response pairs are correlated by the `id` field. Identity request timeouts after 30 seconds.
@@ -333,7 +325,6 @@ window.napplet = {
     readonly granted: boolean;
     readonly origins: readonly string[];
   },
-  class?: number,   // shell-assigned via class.assigned envelope; undefined on shells without nap:class
   shell: {
     supports(capability: NamespacedCapability, protocol?: ProtocolId): boolean;
   },
@@ -481,22 +472,6 @@ Capability detection (operator-policy refinements):
 if (window.napplet.shell.supports('connect:scheme:http')) { /* cleartext http: origins permitted */ }
 if (window.napplet.shell.supports('connect:scheme:ws'))   { /* cleartext ws: origins permitted */ }
 ```
-
-### `window.napplet.class`
-
-Shell-assigned integer class (NAP-CLASS). The shell sends exactly one `class.assigned` envelope per napplet lifecycle at iframe-ready time; the shim writes the integer to `window.napplet.class` via a `defineProperty` getter.
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `class` | `number \| undefined` | The class integer from the `class.assigned` envelope. `undefined` until the envelope arrives, or permanently `undefined` on shells that do not implement `nap:class`. |
-
-**Graceful-degradation default:** `window.napplet.class === undefined` on shells without `nap:class`, or before the wire envelope arrives. Never `0`, never `null`. Napplets SHOULD check `shell.supports('nap:class')` before branching on the value to distinguish "shell doesn't implement" from "envelope hasn't arrived yet".
-
-v0.29.0 ships two track members:
-- `class: 1` -> NAP-CLASS-1 (strict baseline; `connect-src 'none'`)
-- `class: 2` -> NAP-CLASS-2 (user-approved explicit-origin; `connect-src <granted-origins>`)
-
-The class integer is informational to the napplet; the shell enforces the posture via the CSP it serves with the HTML. Napplet code MUST NOT attempt to infer its own class from observed CSP or other signals — only `class.assigned` is authoritative.
 
 ### `window.napplet.shell`
 

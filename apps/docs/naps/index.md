@@ -157,17 +157,6 @@ if (window.napplet.connect.granted) {
 }
 ```
 
-### class
-
-Shell-assigned integer class via the `class.assigned` envelope; exposes
-`window.napplet.class` (or `undefined` until/unless assigned).
-
-```ts
-if (window.napplet.shell.supports('nap:class') && window.napplet.class !== undefined) {
-  console.log(`running as class ${window.napplet.class}`);
-}
-```
-
 ### cvm
 
 Native ContextVM bridge — MCP-over-Nostr (`discover` / `listTools` / `callTool` /
@@ -223,9 +212,10 @@ if (window.napplet.shell.supports('intent')) {
 ## Core domain union
 
 [`@napplet/core`](/packages/core) exports a `NapDomain` string union for the
-foundational twelve domains — `relay`, `identity`, `storage`, `inc`, `theme`,
-`keys`, `media`, `notify`, `config`, `resource`, `connect`, `class` — used as the
-discriminant for envelope routing and `shell.supports()`.
+foundational domains — `relay`, `identity`, `storage`, `inc`, `theme`,
+`keys`, `media`, `notify`, `config`, `resource`, `connect`, `cvm`, `outbox`,
+`upload`, `intent` — used as the discriminant for envelope routing and
+`shell.supports()`.
 
 ## Where to go next
 

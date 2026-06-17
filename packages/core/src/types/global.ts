@@ -219,39 +219,6 @@ export interface NappletGlobal {
    */
   connect: ConnectApi;
   /**
-   * Shell-assigned napplet class (abstract security-posture identifier).
-   *
-   * Populated by the NAP-CLASS wire message `class.assigned` (shell -> napplet,
-   * one terminal envelope per lifecycle) after iframe ready. The runtime value
-   * is a plain `number`, not a literal union — the class space is extensible
-   * as new NAP-CLASS-$N sub-track members are defined. Current canonical
-   * classes (defined in the NAP-CLASS track): `1` (strict baseline, no
-   * user-declared origins) and `2` (user-approved explicit-origin CSP).
-   *
-   * `undefined` in three distinct states, all of which napplets MUST handle
-   * gracefully:
-   * 1. Before the shell has sent `class.assigned` (early bootstrap).
-   * 2. When the shell does not implement `nap:class` (capability missing).
-   * 3. When the shell implements the NAP but intentionally withholds assignment.
-   *
-   * Cross-NAP invariant (in shells implementing both NAP-CONNECT and NAP-CLASS):
-   * `class === 2` iff `window.napplet.connect.granted === true`. See
-   * `specs/SHELL-CLASS-POLICY.md` (Phase 140) for the full shell-responsibility
-   * matrix.
-   *
-   * @example
-   * ```ts
-   * // Capability-check before branching on class:
-   * if (window.napplet.shell.supports('nap:class') && window.napplet.class !== undefined) {
-   *   console.log(`napplet running as class ${window.napplet.class}`);
-   * } else {
-   *   // Shell does not implement nap:class or assignment has not arrived;
-   *   // fall back to feature detection (e.g., window.napplet.connect.granted).
-   * }
-   * ```
-   */
-  class?: number;
-  /**
    * Native ContextVM bridge (NAP-CVM): MCP-over-Nostr access mediated by the shell.
    *
    * ContextVM transports Model Context Protocol JSON-RPC over Nostr relays using

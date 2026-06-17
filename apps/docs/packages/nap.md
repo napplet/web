@@ -1,10 +1,10 @@
 # @napplet/nap
 
-> All 16 napplet NAP domains as layered subpath exports. The package name remains
+> Every active napplet NAP domain as layered subpath exports. The package name remains
 > `@napplet/nap` for compatibility.
 
 `@napplet/nap` ships every NAP domain (relay, storage, inc, keys, theme, media,
-notify, identity, config, resource, connect, class, cvm, outbox, upload, intent)
+notify, identity, config, resource, connect, cvm, outbox, upload, intent)
 as independent, tree-shakable subpaths. It sits between the shim/sdk and
 [`@napplet/core`](./core) in the dependency graph.
 
@@ -52,8 +52,8 @@ import { notifySend } from '@napplet/nap/notify/sdk';
 ## Tree-shaking contract
 
 - Published with `sideEffects: false`.
-- The `exports` map declares **68 entry points**: 17 domain barrels, 17
-  types entries, and 17 shim + 17 sdk entries.
+- The `exports` map declares **64 entry points**: 16 domain barrels, 16
+  types entries, and 16 shim + 16 sdk entries.
 - A bundler importing only `@napplet/nap/relay/types` produces zero bytes from
   the other domains.
 
@@ -68,8 +68,6 @@ import { notifySend } from '@napplet/nap/notify/sdk';
 - **connect** — state-only, **no postMessage wire**. Grants flow through the
   shell-served CSP plus a `<meta name="napplet-connect-granted">` tag read at
   install time. Runtime state is `{ granted, origins }`, never `undefined`.
-- **class** — a single shell → napplet `class.assigned` envelope writes an integer
-  to `window.napplet.class` (or it stays `undefined`).
 
 See the [NAP domain reference](/naps/) for the full list with one-line purposes.
 

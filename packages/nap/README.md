@@ -1,6 +1,6 @@
 # @napplet/nap
 
-> All 16 napplet NAP domains (relay, storage, inc, keys, theme, media, notify, identity, config, resource, connect, class, cvm, outbox, upload, intent) as layered subpath exports. The package name remains `@napplet/nap` for compatibility.
+> Every active napplet NAP domain (relay, storage, inc, keys, theme, media, notify, identity, config, resource, connect, cvm, outbox, upload, intent) as layered subpath exports. The package name remains `@napplet/nap` for compatibility.
 
 ## Install
 
@@ -63,7 +63,7 @@ installRelayShim(nappletWindow, {
 });
 ```
 
-## 16 Domains
+## 15 Domains
 
 Each domain is an independent subpath. Barrel imports bundle types + shim installer + SDK helpers; granular subpaths isolate each surface.
 
@@ -80,7 +80,6 @@ Each domain is an independent subpath. Barrel imports bundle types + shim instal
 | config | `@napplet/nap/config` | `@napplet/nap/config/types` | `@napplet/nap/config/shim` | `@napplet/nap/config/sdk` | Declarative per-napplet config (schema-driven) |
 | resource | `@napplet/nap/resource` | `@napplet/nap/resource/types` | `@napplet/nap/resource/shim` | `@napplet/nap/resource/sdk` | Sandboxed byte fetching (https/blossom/nostr/data) via `bytes(url) → Blob` |
 | connect | `@napplet/nap/connect` | `@napplet/nap/connect/types` | `@napplet/nap/connect/shim` | `@napplet/nap/connect/sdk` | User-gated direct network access (state-only; no wire — grants flow via CSP + discovery meta tag) |
-| class | `@napplet/nap/class` | `@napplet/nap/class/types` | `@napplet/nap/class/shim` | `@napplet/nap/class/sdk` | Shell-assigned integer class via `class.assigned` wire envelope; exposes `window.napplet.class` |
 | cvm | `@napplet/nap/cvm` | `@napplet/nap/cvm/types` | `@napplet/nap/cvm/shim` | `@napplet/nap/cvm/sdk` | Native ContextVM bridge — MCP-over-Nostr (`discover`/`listTools`/`callTool`/`listResources`/`readResource`); shell owns all transport |
 | outbox | `@napplet/nap/outbox` | `@napplet/nap/outbox/types` | `@napplet/nap/outbox/shim` | `@napplet/nap/outbox/sdk` | Outbox-aware relay routing — `query`/`subscribe`/`publish`/`resolveRelays`; shell owns NIP-65 relay discovery, dedup, and fanout |
 | upload | `@napplet/nap/upload` | `@napplet/nap/upload/types` | `@napplet/nap/upload/shim` | `@napplet/nap/upload/sdk` | Shell-mediated file/blob upload — `upload`/`status`/`onStatus` over NIP-96 + Blossom rails; shell signs auth, returns NIP-94 metadata |
@@ -107,12 +106,12 @@ Each domain exposes up to three patterns (four including the barrel). Pick the s
 - Every subpath in the `exports` map is a discrete entry point; a bundler importing only `@napplet/nap/relay/types` produces zero bytes from the other 8 domains
 - Verified end-to-end in Phase 121 with a minimal-consumer smoke test
 
-The `exports` map in `package.json` declares 62 entry points:
+The `exports` map in `package.json` declares 58 entry points:
 
-- 16 domain barrels (`@napplet/nap/<domain>`)
-- 16 granular types entries (`@napplet/nap/<domain>/types`)
-- 15 granular shim entries (theme omitted — see [Theme Exception](#theme-exception))
-- 15 granular sdk entries (theme omitted — see [Theme Exception](#theme-exception))
+- 15 domain barrels (`@napplet/nap/<domain>`)
+- 15 granular types entries (`@napplet/nap/<domain>/types`)
+- 14 granular shim entries (theme omitted — see [Theme Exception](#theme-exception))
+- 14 granular sdk entries (theme omitted — see [Theme Exception](#theme-exception))
 
 Each entry maps to its own pre-built `.js` + `.d.ts` pair under `dist/<domain>/<surface>.{js,d.ts}`. No root `.` key exists, and there is no top-level `main`/`module`/`types` field — attempting `import '@napplet/nap'` fails with `ERR_PACKAGE_PATH_NOT_EXPORTED` by design.
 
@@ -180,9 +179,9 @@ user/signer is connected.
 See the [NAP-IDENTITY](https://github.com/napplet/naps/pull/12) draft spec for
 the current read-only contract.
 
-## Connect + Class NAPs (v0.29.0)
+## Connect NAP (v0.29.0)
 
-v0.29.0 adds two subpaths that work together to express user-gated direct network access and shell-assigned security class.
+v0.29.0 adds a subpath expressing user-gated direct network access.
 
 ### `@napplet/nap/connect`
 
@@ -204,26 +203,7 @@ const o = normalizeConnectOrigin('https://api.example.com');   // 'https://api.e
 
 `NappletConnect` is `{ readonly granted: boolean; readonly origins: readonly string[] }`. Default on shells that do not implement `nap:connect`, on denied prompts, or pre-injection: `{ granted: false, origins: [] }` (never `undefined`).
 
-### `@napplet/nap/class`
-
-Wire-driven NAP with a single shell -> napplet envelope `class.assigned` (`{ type: 'class.assigned'; id: string; class: number }`). Sent at iframe-ready time, exactly once per napplet lifecycle. The napplet shim writes the received integer to `window.napplet.class` via a `defineProperty` getter.
-
-```ts
-import type { ClassAssignedMessage, NappletClass } from '@napplet/nap/class/types';
-import { installClassShim, getClass } from '@napplet/nap/class';
-
-// Napplet-side (runs inside the sandboxed iframe)
-// installClassShim() registers the class.assigned dispatcher handler via registerNap.
-// Before the envelope arrives, or if the shell does not implement nap:class:
-// window.napplet.class === undefined (never 0, never null).
-if (window.napplet.shell.supports('nap:class') && getClass() === 2) {
-  // NAP-CLASS-2 posture -- user approved direct network access.
-}
-```
-
-The class integer is an identifier into the `NAP-CLASS-$N` sub-track (1 = strict baseline, 2 = user-approved explicit-origin). See the NAP-CLASS specs at `napplet/naps` for posture semantics.
-
-See [NAP-CONNECT](https://github.com/napplet/naps) and [NAP-CLASS](https://github.com/napplet/naps) for the normative specs, the canonical `connect:origins` aggregateHash fold, the origin format rules, the consent-flow MUSTs, and the at-most-one-terminal-envelope-per-lifecycle constraint.
+See [NAP-CONNECT](https://github.com/napplet/naps) for the normative spec, the origin format rules, and the consent-flow MUSTs.
 
 ## Package Surface
 
@@ -234,7 +214,7 @@ import { mediaCreateSession } from '@napplet/nap/media/sdk';
 import type { MediaNapMessage } from '@napplet/nap/media/types';
 ```
 
-Domain barrels are also available at `@napplet/nap/relay`, `@napplet/nap/storage`, `@napplet/nap/inc`, `@napplet/nap/keys`, `@napplet/nap/theme`, `@napplet/nap/media`, `@napplet/nap/notify`, `@napplet/nap/identity`, `@napplet/nap/config`, `@napplet/nap/resource`, `@napplet/nap/connect`, and `@napplet/nap/class`.
+Domain barrels are also available at `@napplet/nap/relay`, `@napplet/nap/storage`, `@napplet/nap/inc`, `@napplet/nap/keys`, `@napplet/nap/theme`, `@napplet/nap/media`, `@napplet/nap/notify`, `@napplet/nap/identity`, `@napplet/nap/config`, `@napplet/nap/resource`, and `@napplet/nap/connect`.
 
 ## Optional Peer Dependency
 

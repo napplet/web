@@ -54,7 +54,6 @@ export interface NappletMessage {
  * | `config`   | Per-napplet declarative configuration              |
  * | `resource` | Byte-fetching primitive (URL → Blob)               |
  * | `connect`  | User-gated direct network access (CSP connect-src) |
- * | `class`    | Shell-assigned napplet class / security posture    |
  *
  * @example
  * ```ts
@@ -62,7 +61,7 @@ export interface NappletMessage {
  * const isValid = NAP_DOMAINS.includes(domain); // true
  * ```
  */
-export type NapDomain = 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'connect' | 'class' | 'cvm' | 'outbox' | 'upload' | 'intent';
+export type NapDomain = 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'connect' | 'cvm' | 'outbox' | 'upload' | 'intent';
 
 /**
  * Runtime-accessible constant array of all NAP domain names.
@@ -75,7 +74,7 @@ export type NapDomain = 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'ke
  * }
  * ```
  */
-export const NAP_DOMAINS: readonly NapDomain[] = ['relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'connect', 'class', 'cvm', 'outbox', 'upload', 'intent'] as const;
+export const NAP_DOMAINS: readonly NapDomain[] = ['relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'connect', 'cvm', 'outbox', 'upload', 'intent'] as const;
 
 /**
  * Namespaced capability string for {@link ShellSupports.supports}.
@@ -86,7 +85,7 @@ export const NAP_DOMAINS: readonly NapDomain[] = ['relay', 'identity', 'storage'
  * |---------|---------------------|--------------------------------|
  * | `nap:`  | `'nap:relay'`       | Shell implements the relay NAP |
  * | `perm:` | `'perm:popups'`     | Shell grants popup permission  |
- * | `perm:` | `'perm:strict-csp'` | **@deprecated (v0.29.0)** — superseded by `nap:connect` + `nap:class`. Shell enforces strict CSP posture (v0.28.0). |
+ * | `perm:` | `'perm:strict-csp'` | **@deprecated (v0.29.0)** — superseded by `nap:connect`. Shell enforces strict CSP posture (v0.28.0). |
  * | *(bare)*| `'relay'`           | Shorthand for `'nap:relay'`    |
  *
  * Bare strings are valid only for NAP domains. Permissions MUST use the
@@ -100,8 +99,8 @@ export const NAP_DOMAINS: readonly NapDomain[] = ['relay', 'identity', 'storage'
  * const csp: NamespacedCapability = 'perm:strict-csp';
  * ```
  *
- * @deprecated `perm:strict-csp` — superseded in v0.29.0 by `nap:connect` + `nap:class`.
- * Shells implementing NAP-CONNECT and NAP-CLASS replace the v0.28.0 `perm:strict-csp` model.
+ * @deprecated `perm:strict-csp` — superseded in v0.29.0 by `nap:connect`.
+ * Shells implementing NAP-CONNECT replace the v0.28.0 `perm:strict-csp` model.
  */
 export type NamespacedCapability =
   | NapDomain

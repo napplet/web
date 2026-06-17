@@ -23,7 +23,6 @@ export { DOMAIN as NOTIFY_DOMAIN } from '@napplet/nap/notify';
 export { DOMAIN as CONFIG_DOMAIN } from '@napplet/nap/config';
 export { DOMAIN as RESOURCE_DOMAIN } from '@napplet/nap/resource';
 export { DOMAIN as CONNECT_DOMAIN } from '@napplet/nap/connect';
-export { DOMAIN as CLASS_DOMAIN } from '@napplet/nap/class';
 export { DOMAIN as CVM_DOMAIN } from '@napplet/nap/cvm';
 export { DOMAIN as OUTBOX_DOMAIN } from '@napplet/nap/outbox';
 export { DOMAIN as UPLOAD_DOMAIN } from '@napplet/nap/upload';
@@ -44,7 +43,6 @@ export { installNotifyShim } from '@napplet/nap/notify';
 export { installConfigShim } from '@napplet/nap/config';
 export { installResourceShim } from '@napplet/nap/resource';
 export { installConnectShim } from '@napplet/nap/connect';
-export { installClassShim } from '@napplet/nap/class';
 export { installCvmShim } from '@napplet/nap/cvm';
 export { installOutboxShim } from '@napplet/nap/outbox';
 export { installUploadShim } from '@napplet/nap/upload';
@@ -75,7 +73,6 @@ export { mediaCreateSession, mediaUpdateSession, mediaDestroySession, mediaRepor
 export { notifySend, notifyDismiss, notifyBadge, notifyRegisterChannel, notifyRequestPermission, notifyOnAction, notifyOnClicked, notifyOnDismissed, notifyOnControls } from '@napplet/nap/notify';
 export { resourceBytes, resourceBytesAsObjectURL } from '@napplet/nap/resource';
 export { connectGranted, connectOrigins, normalizeConnectOrigin } from '@napplet/nap/connect';
-export { getClass } from '@napplet/nap/class';
 export {
   cvmDiscover,
   cvmRequest,

@@ -94,13 +94,6 @@ const handle = resource.bytesAsObjectURL('blossom:sha256:e3b0c44298fc1c149afbf4c
 imgEl.src = handle.url;
 // handle.revoke() when done
 
-// Check shell-assigned class (v0.29.0, NAP-CLASS)
-import { getClass, CLASS_DOMAIN } from '@napplet/sdk';
-if (window.napplet.shell.supports(`nap:${CLASS_DOMAIN}`)) {
-  const cls = getClass();   // number | undefined
-  if (cls === 2) { /* NAP-CLASS-2 posture */ }
-}
-
 // Use direct network access if the user approved `connect` origins (v0.29.0, NAP-CONNECT)
 import { connectGranted, connectOrigins } from '@napplet/sdk';
 if (connectGranted()) {
@@ -279,31 +272,6 @@ const normalized = normalizeConnectOrigin('https://api.example.com');   // retur
 | `connectOrigins()` | function | `@napplet/nap/connect` | `() => readonly string[]` — readonly helper |
 | `normalizeConnectOrigin(origin)` | function | `@napplet/nap/connect` | Shared origin validator (used by vite-plugin AND shell implementations); throws on invalid input with `[@napplet/nap/connect]`-prefixed messages |
 
-### `class` (v0.29.0)
-
-Shell-assigned integer class (NAP-CLASS). Wire-only — the shell sends exactly one `class.assigned` envelope per napplet lifecycle; the shim writes the integer to `window.napplet.class`. The SDK re-exports the wire type, the domain constant, the installer, and a `getClass()` helper.
-
-```ts
-import type { ClassAssignedMessage, NappletClass, ClassNapMessage } from '@napplet/sdk';
-import { CLASS_DOMAIN, installClassShim, getClass } from '@napplet/sdk';
-
-if (window.napplet.shell.supports(`nap:${CLASS_DOMAIN}`)) {
-  const cls = getClass();   // number | undefined
-  // cls === 1 -> NAP-CLASS-1 (strict baseline)
-  // cls === 2 -> NAP-CLASS-2 (user-approved explicit-origin)
-  // cls === undefined -> shell doesn't implement nap:class OR envelope hasn't arrived yet
-}
-```
-
-| Export | Kind | Source | Description |
-|--------|------|--------|-------------|
-| `ClassAssignedMessage` | type | `@napplet/nap/class` | `{ type: 'class.assigned'; id: string; class: number }` |
-| `NappletClass` | type | `@napplet/nap/class` | `{ readonly class: number \| undefined }` |
-| `ClassMessage` / `ClassNapMessage` | type | `@napplet/nap/class` | Discriminated union alias (class.assigned is the only member in v1) |
-| `CLASS_DOMAIN` | const | `@napplet/nap/class` | The domain identifier string `'class'` |
-| `installClassShim` | function | `@napplet/nap/class` | Side-effect installer — registers the `class.assigned` dispatcher handler and mounts `window.napplet.class` |
-| `getClass()` | function | `@napplet/nap/class` | `() => number \| undefined` — readonly helper |
-
 ### `keys`
 
 Keyboard forwarding and action keybindings. Mirrors `window.napplet.keys`.
@@ -437,7 +405,6 @@ handlers in shell implementations or protocol-aware code.
 | `ConfigNapMessage` | `@napplet/nap/config` | Discriminated union of all config domain messages |
 | `ResourceNapMessage` | `@napplet/nap/resource` | Discriminated union of all resource domain messages |
 | `ConnectNapMessage` * | `@napplet/nap/connect` | State-only NAP — no wire messages. The `NappletConnect` runtime state type is the consumer-facing import. |
-| `ClassNapMessage`   | `@napplet/nap/class`   | Discriminated union of all class domain messages (v1: only `ClassAssignedMessage`) |
 
 \* There is no `ConnectNapMessage` type; NAP-CONNECT has no postMessage wire. The consumer-facing import is the `NappletConnect` runtime state interface.
 
@@ -450,7 +417,7 @@ Each NAP domain has a string constant re-exported from its package:
 
 ```ts
 import { RELAY_DOMAIN, IDENTITY_DOMAIN, STORAGE_DOMAIN, INC_DOMAIN, THEME_DOMAIN, KEYS_DOMAIN, MEDIA_DOMAIN, NOTIFY_DOMAIN, CONFIG_DOMAIN, RESOURCE_DOMAIN, CONNECT_DOMAIN, CLASS_DOMAIN } from '@napplet/sdk';
-// Values: 'relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'connect', 'class'
+// Values: 'relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'connect', 'cvm', 'outbox', 'upload', 'intent'
 ```
 
 These constants are re-exported from the individual domain packages. Use them with the shell capability query
@@ -479,10 +446,6 @@ if (window.napplet.shell.supports('nap:connect')) {
   // Check per-scheme operator policy:
   if (window.napplet.shell.supports('connect:scheme:http')) { /* cleartext http: origins permitted */ }
   if (window.napplet.shell.supports('connect:scheme:ws'))   { /* cleartext ws: origins permitted */ }
-}
-
-if (window.napplet.shell.supports('nap:class')) {
-  // NAP-CLASS is available -- window.napplet.class will be populated by class.assigned
 }
 ```
 

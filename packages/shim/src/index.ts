@@ -37,7 +37,6 @@ import {
   bytesAsObjectURL as resourceBytesAsObjectURL,
 } from '@napplet/nap/resource/shim';
 import { installConnectShim } from '@napplet/nap/connect/shim';
-import { installClassShim, handleClassMessage } from '@napplet/nap/class/shim';
 import {
   installCvmShim,
   handleCvmMessage,
@@ -98,7 +97,6 @@ const DOMAIN_ROUTERS: ReadonlyArray<readonly [string, DomainHandler]> = [
   ['media.', mediaShim.handleMediaMessage],
   ['notify.', handleNotifyMessage],
   ['resource.', handleResourceMessage],
-  ['class.', handleClassMessage],
   ['cvm.', handleCvmMessage],
   ['outbox.', handleOutboxMessage],
   ['upload.', handleUploadMessage],
@@ -369,9 +367,6 @@ installUploadShim();
 
 // Install intent shim (intent.* request/response correlation + intent.changed listeners; no install-time work)
 installIntentShim();
-
-// Install class shim (mounts window.napplet.class readonly getter; undefined until class.assigned arrives)
-installClassShim();
 
 // Install connect shim (reads <meta name="napplet-connect-granted">; replaces literal's connect field with defineProperty getter)
 installConnectShim();

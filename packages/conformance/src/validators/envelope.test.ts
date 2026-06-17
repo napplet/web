@@ -48,12 +48,6 @@ describe('validateEnvelope — direction enforcement', () => {
     expect(v.ok).toBe(false);
     expect(v.errors[0].code).toBe('unknown-type');
   });
-
-  it('rejects class.assigned emitted by a napplet (shell-initiated only)', () => {
-    const v = validateEnvelope({ type: 'class.assigned', id: 'x', class: 1 });
-    expect(v.ok).toBe(false);
-    expect(v.errors[0].code).toBe('inbound-type-emitted');
-  });
 });
 
 describe('validateEnvelope — outbound field checks', () => {
@@ -114,13 +108,13 @@ describe('validateEnvelope — outbound field checks', () => {
 });
 
 describe('ENVELOPE_SPECS invariants', () => {
-  it('has 123 discriminants split 60 outbound / 63 inbound', () => {
+  it('has 122 discriminants split 60 outbound / 62 inbound', () => {
     const all = knownEnvelopeTypes();
-    expect(all).toHaveLength(123);
+    expect(all).toHaveLength(122);
     const out = all.filter((t) => ENVELOPE_SPECS[t].dir === 'out');
     const inbound = all.filter((t) => ENVELOPE_SPECS[t].dir === 'in');
     expect(out).toHaveLength(60);
-    expect(inbound).toHaveLength(63);
+    expect(inbound).toHaveLength(62);
   });
 
   it('only outbound specs declare required fields', () => {
