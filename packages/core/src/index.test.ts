@@ -99,17 +99,16 @@ describe('@napplet/core exports', () => {
   describe('NAP-SHELL foundational types', () => {
     it('exposes ShellCapabilities / ShellEnvironment / wire message shapes', () => {
       const caps: ShellCapabilities = { domains: ['relay'], protocols: { inc: ['NAP-2'] } };
-      const env: ShellEnvironment = { capabilities: caps, services: ['signer'], class: 1 };
+      const env: ShellEnvironment = { capabilities: caps, services: ['signer'] };
       const ready: ShellReadyMessage = { type: 'shell.ready' };
       const init: ShellInitMessage = {
         type: 'shell.init',
         capabilities: caps,
         services: ['signer'],
-        class: 1,
       };
       expect(ready.type).toBe('shell.ready');
       expect(init.type).toBe('shell.init');
-      expect(env.class).toBe(1);
+      expect(env.services).toContain('signer');
       expect(caps.domains).toContain('relay');
     });
 
@@ -117,12 +116,10 @@ describe('@napplet/core exports', () => {
       const env: ShellEnvironment = {
         capabilities: { domains: ['relay'], protocols: {} },
         services: [],
-        class: null,
       };
       const shell: NappletShell = {
         supports: (domain, protocol) => domain === 'relay' && protocol === undefined,
         services: [],
-        class: null,
         ready: () => Promise.resolve(env),
         onReady: (handler) => {
           handler(env);

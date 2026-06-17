@@ -9,7 +9,7 @@
  * The handshake is two fire-and-forget messages: the napplet posts
  * {@link ShellReadyMessage} (`shell.ready`, no payload) to signal its receiver
  * is live, and the runtime replies exactly once with {@link ShellInitMessage}
- * (`shell.init`) carrying the environment — capabilities, services, and class.
+ * (`shell.init`) carrying the environment — capabilities and services.
  * The napplet caches that environment, which is what makes
  * {@link NappletShell.supports} answerable **synchronously and locally**.
  *
@@ -51,15 +51,14 @@ export interface ShellCapabilities {
 }
 
 /**
- * The environment the runtime delivers in `shell.init`: the capability set, the
- * named services it exposes for this napplet, and the napplet's assigned class.
+ * The environment the runtime delivers in `shell.init`: the capability set and
+ * the named services it exposes for this napplet.
  *
  * @example
  * ```ts
  * const env: ShellEnvironment = {
  *   capabilities: { domains: ['relay'], protocols: {} },
  *   services: ['signer'],
- *   class: 1,
  * };
  * ```
  */
@@ -68,8 +67,6 @@ export interface ShellEnvironment {
   capabilities: ShellCapabilities;
   /** Named services the runtime exposes for this napplet. */
   services: string[];
-  /** The opaque class assigned to this napplet, or `null` when none is assigned. */
-  class: number | null;
 }
 
 /**
@@ -101,9 +98,6 @@ export interface NappletShell {
 
   /** The named services the runtime exposes for this napplet (`[]` before init). */
   readonly services: readonly string[];
-
-  /** The class assigned to this napplet, or `null` when the runtime assigns none. */
-  readonly class: number | null;
 
   /**
    * Resolves once the environment has been delivered. Repeated calls after
@@ -143,7 +137,6 @@ export interface ShellReadyMessage extends NappletMessage {
  *   type: 'shell.init',
  *   capabilities: { domains: ['relay'], protocols: {} },
  *   services: [],
- *   class: 1,
  * };
  * ```
  */
@@ -153,6 +146,4 @@ export interface ShellInitMessage extends NappletMessage {
   capabilities: ShellCapabilities;
   /** Named services the runtime exposes for this napplet. */
   services: string[];
-  /** The opaque class assigned to this napplet, or `null`. */
-  class: number | null;
 }

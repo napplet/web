@@ -276,8 +276,8 @@ export interface NappletGlobal {
    * `supports()` — it is always present. The shim posts `shell.ready`, the
    * runtime replies once with `shell.init` carrying the environment, and the
    * shim caches it so `supports(domain, protocol?)` answers synchronously and
-   * locally thereafter. Also exposes the runtime's `services`, the napplet's
-   * opaque `class`, and `ready()` / `onReady()` to gate startup.
+   * locally thereafter. Also exposes the runtime's `services` and
+   * `ready()` / `onReady()` to gate startup.
    *
    * @example
    * ```ts

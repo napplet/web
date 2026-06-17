@@ -117,7 +117,7 @@ Type for the `window.napplet.shell` namespace. `shell` is the **foundational,
 mandatory** NAP domain — the one capability that cannot be discovered via
 `supports()` (and is not a member of `NAP_DOMAINS`). The shim posts `shell.ready`
 (no payload); the runtime replies **once** with `shell.init` carrying the
-environment `{ capabilities: { domains, protocols }, services, class }`; the shim
+environment `{ capabilities: { domains, protocols }, services }`; the shim
 caches it so `supports(domain, protocol?)` answers **synchronously and locally**
 thereafter (`false` before init and for any unknown domain/protocol).
 
@@ -125,7 +125,6 @@ thereafter (`false` before init and for any unknown domain/protocol).
 interface NappletShell {
   supports(domain: string, protocol?: string): boolean;
   readonly services: readonly string[];
-  readonly class: number | null;       // opaque integer the runtime assigns, or null
   ready(): Promise<ShellEnvironment>;   // resolves once the environment is delivered
   onReady(handler: (env: ShellEnvironment) => void): Subscription;
 }
@@ -133,7 +132,6 @@ interface NappletShell {
 interface ShellEnvironment {
   capabilities: ShellCapabilities;
   services: string[];
-  class: number | null;
 }
 
 interface ShellCapabilities {
@@ -381,8 +379,8 @@ import type {
 | `NamespacedCapability` | Union of `NapDomain \| nap:* \| perm:*` for `supports()` |
 | `NapProtocolId` | Numbered NAP protocol id such as `NAP-01` for the optional second `supports()` argument |
 | `ShellSupports` | Interface with `supports()` capability query method |
-| `NappletShell` | NAP-SHELL type for `window.napplet.shell` (`supports`, `services`, `class`, `ready`, `onReady`) |
-| `ShellEnvironment` | The `shell.init` environment: `{ capabilities, services, class }` |
+| `NappletShell` | NAP-SHELL type for `window.napplet.shell` (`supports`, `services`, `ready`, `onReady`) |
+| `ShellEnvironment` | The `shell.init` environment: `{ capabilities, services }` |
 | `ShellCapabilities` | The capability set `{ domains, protocols }` answering `supports()` |
 | `ShellReadyMessage` / `ShellInitMessage` | NAP-SHELL wire message types |
 | `NapHandler` | Callback type for domain handlers |
