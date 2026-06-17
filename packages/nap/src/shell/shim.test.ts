@@ -7,43 +7,36 @@ describe('createShellEnvironment', () => {
       type: 'shell.init',
       capabilities: { domains: ['relay', 'inc'], protocols: { inc: ['NAP-2'] } },
       services: ['signer'],
-      class: 1,
     });
     expect(env.capabilities.domains).toEqual(['relay', 'inc']);
     expect(env.capabilities.protocols).toEqual({ inc: ['NAP-2'] });
     expect(env.services).toEqual(['signer']);
-    expect(env.class).toBe(1);
   });
 
   it('coerces missing fields to safe empties', () => {
     const env = createShellEnvironment({ type: 'shell.init' });
     expect(env.capabilities).toEqual({ domains: [], protocols: {} });
     expect(env.services).toEqual([]);
-    expect(env.class).toBeNull();
   });
 
-  it('coerces malformed fields (non-arrays, non-objects, non-number class)', () => {
+  it('coerces malformed fields (non-arrays, non-objects)', () => {
     const env = createShellEnvironment({
       capabilities: { domains: 'relay', protocols: ['nope'] },
       services: { not: 'an array' },
-      class: 'high',
     } as unknown as Record<string, unknown>);
     expect(env.capabilities.domains).toEqual([]);
     expect(env.capabilities.protocols).toEqual({});
     expect(env.services).toEqual([]);
-    expect(env.class).toBeNull();
   });
 
   it('drops non-string entries inside domains / protocols / services', () => {
     const env = createShellEnvironment({
       capabilities: { domains: ['relay', 5, null], protocols: { inc: ['NAP-2', 7] } },
       services: ['a', 1],
-      class: 2,
     } as unknown as Record<string, unknown>);
     expect(env.capabilities.domains).toEqual(['relay']);
     expect(env.capabilities.protocols).toEqual({ inc: ['NAP-2'] });
     expect(env.services).toEqual(['a']);
-    expect(env.class).toBe(2);
   });
 });
 
@@ -51,7 +44,6 @@ describe('makeSupports', () => {
   const env = createShellEnvironment({
     capabilities: { domains: ['relay', 'inc'], protocols: { inc: ['NAP-2'] } },
     services: [],
-    class: null,
   });
   const supports = makeSupports(env);
 

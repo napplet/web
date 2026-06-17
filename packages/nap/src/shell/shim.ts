@@ -3,7 +3,7 @@
 // The actual mount + postMessage listener wiring lives in @napplet/shim's
 // index.ts. This module provides the pure pieces it composes:
 //   - createShellEnvironment(init): coerce an inbound shell.init payload into a
-//     validated ShellEnvironment ({ capabilities: { domains, protocols }, services, class }).
+//     validated ShellEnvironment ({ capabilities: { domains, protocols }, services }).
 //   - makeSupports(env): build the synchronous supports(domain, protocol?) closure.
 //   - defaultSupports: the pre-init closure — always returns false.
 
@@ -40,7 +40,7 @@ function toCapabilities(value: unknown): ShellCapabilities {
 /**
  * Parse an inbound `shell.init` payload into a validated {@link ShellEnvironment}.
  * Missing or malformed fields are coerced to safe empties: `domains`→`[]`,
- * `protocols`→`{}`, `services`→`[]`, `class`→`null`.
+ * `protocols`→`{}`, `services`→`[]`.
  *
  * @param init  The raw `shell.init` envelope received from the runtime.
  * @returns A normalized environment safe to cache and query.
@@ -51,17 +51,14 @@ function toCapabilities(value: unknown): ShellCapabilities {
  *   type: 'shell.init',
  *   capabilities: { domains: ['relay'], protocols: { inc: ['NAP-2'] } },
  *   services: ['signer'],
- *   class: 1,
  * });
  * ```
  */
 export function createShellEnvironment(init: Partial<ShellInitMessage> | Record<string, unknown>): ShellEnvironment {
   const record = init as Record<string, unknown>;
-  const rawClass = record['class'];
   return {
     capabilities: toCapabilities(record['capabilities']),
     services: toStringArray(record['services']),
-    class: typeof rawClass === 'number' ? rawClass : null,
   };
 }
 
