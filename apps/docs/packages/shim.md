@@ -41,7 +41,7 @@ After `import '@napplet/shim'`, the global is populated with these sub-objects:
 | `identity` | Read-only user queries: `getPublicKey`, `onChanged`, `getProfile`, … |
 | `config` | Per-napplet declarative config: `get`, `subscribe`, `openSettings`, `registerSchema`, `schema` |
 | `resource` | Sandboxed byte fetching: `bytes`, `bytesAsObjectURL` |
-| `shell` | NAP-SHELL bootstrap handshake: `supports(domain, protocol?)`, `services`, `class`, `ready()`, `onReady()` |
+| `shell` | NAP-SHELL bootstrap handshake: `supports(domain, protocol?)`, `services`, `ready()`, `onReady()` |
 
 ## Usage
 

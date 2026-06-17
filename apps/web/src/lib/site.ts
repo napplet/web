@@ -70,6 +70,12 @@ const PACKAGE_SOURCES: ReadonlyArray<{ name: string; blurb: string; jsr: boolean
       'Interactive npx generator. Clones the boilerplate template and prepares a Vite + TypeScript napplet starter in seconds.',
     jsr: false,
   },
+  {
+    name: '@napplet/skills',
+    blurb:
+      'Agent skills — design, build, and test a napplet end-to-end from one prompt. The napplet-skills CLI installs them into Claude Code, Cursor, Windsurf, AGENTS.md, Gemini, or Copilot.',
+    jsr: true,
+  },
 ];
 
 export const PACKAGES: PackageInfo[] = PACKAGE_SOURCES.map((p) => ({

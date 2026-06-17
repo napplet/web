@@ -71,6 +71,7 @@ export default defineConfig({
           { text: '@napplet/conformance', link: '/packages/conformance' },
           { text: '@napplet/conformance-cli', link: '/packages/conformance-cli' },
           { text: '@napplet/boilerplate', link: '/packages/boilerplate' },
+          { text: '@napplet/skills', link: '/packages/skills' },
         ],
       },
       {

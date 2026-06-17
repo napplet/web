@@ -14,6 +14,7 @@ The napplet SDK is a small set of focused, ESM-only packages. Most napplets use
 | [`@napplet/conformance`](./conformance) | Framework-agnostic protocol conformance engine — reference mock shell, per-NAP envelope validators, manifest validator, and reporters. A dev/test tool, not loaded in the sandbox. |
 | [`@napplet/conformance-cli`](./conformance-cli) | The headless `napplet-conformance` runner — drives the conformance engine against a napplet in real Chromium via Playwright. Wire it up as `test:conformance`. |
 | [`@napplet/boilerplate`](./boilerplate) | Interactive `npx` generator that clones the `github.com/napplet/boilerplate` template into a Vite + TypeScript starter. |
+| [`@napplet/skills`](./skills) | Agent skills (design / build / test) that let a coding agent create a napplet end-to-end, plus a `napplet-skills` installer for Claude Code, Cursor, Windsurf, Codex/Amp, Gemini, and Copilot. |
 
 ## Dependency graph
 
