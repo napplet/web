@@ -78,7 +78,7 @@ Note: Phase 45 (IPC terminology cleanup) was completed as a quick task during v0
   3. `import '@napplet/nap/shell'` resolves NAP-SHELL types (and any shim/sdk surface) consistent with the other domains' subpath layout (package/jsr/tsup exports present).
   4. The conformance envelope validator recognizes `shell.ready` (outbound) and `shell.init` (inbound) as NAP-SHELL envelopes with the reference-shell special-case removed, `shell` registered as the foundational non-`supports()`-discoverable domain, the reference shell replying in the `{ capabilities, services, class }` shape (migrated off `{ naps, sandbox }`) with boot-readiness still detected, and the `boot/installs-global`, `boot/no-boot-error`, and graceful-degradation checks re-titled/documented to cite NAP-SHELL.
 **Plans:** 1 plan
-- [ ] 155-01-PLAN.md — Implement NAP-SHELL across core (ShellEnvironment/NappletShell types), a new @napplet/nap/shell subpath, the shim (post shell.ready + cache shell.init {capabilities:{domains,protocols},services,class} + supports/services/class/ready/onReady), and conformance (validator recognizes shell.*, reference shell sends the new shape, boot/degrade checks cite NAP-SHELL); green at every commit.
+- [x] 155-01-PLAN.md — Implement NAP-SHELL across core (ShellEnvironment/NappletShell types), a new @napplet/nap/shell subpath, the shim (post shell.ready + cache shell.init {capabilities:{domains,protocols},services,class} + supports/services/class/ready/onReady), and conformance (validator recognizes shell.*, reference shell sends the new shape, boot/degrade checks cite NAP-SHELL); green at every commit.
 
 ### 🔨 v0.32.0 Napplet Conformance (Phases 148-152) — IN PROGRESS
 
@@ -632,7 +632,7 @@ Phases execute in numeric order: 154 → 155. Phase 154 (Defer NAP-CONNECT) MUST
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 154. Defer NAP-CONNECT | v0.33.0 | 1/1 | Complete | 2026-06-17 |
-| 155. Implement NAP-SHELL | v0.33.0 | 0/TBD | Not started | - |
+| 155. Implement NAP-SHELL | v0.33.0 | 1/1 | Complete   | 2026-06-17 |
 
 <details>
 <summary>Archived progress — v0.30.0 Class-Gated Decrypt Surface (Phases 135-138) — SHIPPED 2026-04-23</summary>

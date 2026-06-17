@@ -23,12 +23,12 @@ capabilities shape).
 
 ### NAP-SHELL bootstrap handshake (SHELL)
 
-- [ ] **SHELL-01**: The conformance envelope validator recognizes `shell.ready` (outbound) and `shell.init` (inbound) as NAP-SHELL envelopes — the reference-shell special-case that bypassed the domain validator is removed, and `shell` is registered as the foundational (non-`supports()`-discoverable) domain.
-- [ ] **SHELL-02**: `@napplet/shim` posts `shell.ready` (no payload) and caches the `shell.init` environment `{ capabilities: { domains, protocols }, services, class }`, then answers `supports(domain, protocol?)` synchronously and locally — `false` before init and for any unknown domain/protocol.
-- [ ] **SHELL-03**: `window.napplet.shell` exposes `supports(domain, protocol?)`, `services: string[]`, `class: number | null` (opaque), `ready(): Promise<ShellEnvironment>`, and `onReady(handler)`, typed in `@napplet/core`.
-- [ ] **SHELL-04**: The conformance reference shell replies with `shell.init` in the `{ capabilities: { domains, protocols }, services, class }` shape (migrated off `{ naps, sandbox }`); the boot harness still detects readiness.
-- [ ] **SHELL-05**: A `@napplet/nap/shell` subpath exposes NAP-SHELL types (and any shim/sdk surface) consistent with the other domains' subpath layout.
-- [ ] **SHELL-06**: The conformance `boot/installs-global`, `boot/no-boot-error`, and graceful-degradation checks are re-titled/documented to cite NAP-SHELL as the contract they verify (no longer a private handshake).
+- [x] **SHELL-01**: The conformance envelope validator recognizes `shell.ready` (outbound) and `shell.init` (inbound) as NAP-SHELL envelopes — the reference-shell special-case that bypassed the domain validator is removed, and `shell` is registered as the foundational (non-`supports()`-discoverable) domain.
+- [x] **SHELL-02**: `@napplet/shim` posts `shell.ready` (no payload) and caches the `shell.init` environment `{ capabilities: { domains, protocols }, services, class }`, then answers `supports(domain, protocol?)` synchronously and locally — `false` before init and for any unknown domain/protocol.
+- [x] **SHELL-03**: `window.napplet.shell` exposes `supports(domain, protocol?)`, `services: string[]`, `class: number | null` (opaque), `ready(): Promise<ShellEnvironment>`, and `onReady(handler)`, typed in `@napplet/core`.
+- [x] **SHELL-04**: The conformance reference shell replies with `shell.init` in the `{ capabilities: { domains, protocols }, services, class }` shape (migrated off `{ naps, sandbox }`); the boot harness still detects readiness.
+- [x] **SHELL-05**: A `@napplet/nap/shell` subpath exposes NAP-SHELL types (and any shim/sdk surface) consistent with the other domains' subpath layout.
+- [x] **SHELL-06**: The conformance `boot/installs-global`, `boot/no-boot-error`, and graceful-degradation checks are re-titled/documented to cite NAP-SHELL as the contract they verify (no longer a private handshake).
 
 ## Future Requirements (deferred)
 
@@ -51,11 +51,11 @@ Every v0.33.0 requirement maps to exactly one phase (DEFER-01 shipped pre-milest
 | DEFER-02 | Phase 154 | Complete |
 | DEFER-03 | Phase 154 | Complete |
 | DEFER-04 | Phase 154 | Complete |
-| SHELL-01 | Phase 155 | Pending |
-| SHELL-02 | Phase 155 | Pending |
-| SHELL-03 | Phase 155 | Pending |
-| SHELL-04 | Phase 155 | Pending |
-| SHELL-05 | Phase 155 | Pending |
-| SHELL-06 | Phase 155 | Pending |
+| SHELL-01 | Phase 155 | Complete |
+| SHELL-02 | Phase 155 | Complete |
+| SHELL-03 | Phase 155 | Complete |
+| SHELL-04 | Phase 155 | Complete |
+| SHELL-05 | Phase 155 | Complete |
+| SHELL-06 | Phase 155 | Complete |
 
 **Coverage:** 10/10 v0.33.0 requirements mapped (DEFER-01 already complete; DEFER-02..04 → Phase 154; SHELL-01..06 → Phase 155). No orphans, no duplicates.

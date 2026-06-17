@@ -3,14 +3,15 @@ gsd_state_version: 1.0
 milestone: v0.33.0
 milestone_name: NAP-SHELL Alignment
 status: planning
-last_updated: "2026-06-17T02:00:00.000Z"
-last_activity: 2026-06-17
+stopped_at: Completed 155-01-PLAN.md (Implement NAP-SHELL — SHELL-01..06)
+last_updated: "2026-06-17T04:30:00.000Z"
+last_activity: "2026-06-17 — Executed 155-01-PLAN.md: implemented NAP-SHELL end to end (core types + @napplet/nap/shell subpath + shim handshake + conformance). shell.init migrated {naps,sandbox}->{capabilities:{domains,protocols},services,class}. build + type-check + test:unit all green."
 progress:
   total_phases: 2
-  completed_phases: 1
-  total_plans: 1
-  completed_plans: 1
-  percent: 50
+  completed_phases: 2
+  total_plans: 2
+  completed_plans: 2
+  percent: 100
 ---
 
 # Project State
@@ -21,16 +22,26 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 
 **Core value:** Prove that sandboxed Nostr apps can securely delegate to a host shell over a simple, standardized protocol — and ship the spec + SDK so others can build on it.
 
-**Current focus:** v0.33.0 NAP-SHELL Alignment — Phase 154 (Defer NAP-CONNECT) COMPLETE; ready to plan Phase 155 (Implement NAP-SHELL)
+**Current focus:** v0.33.0 NAP-SHELL Alignment — Phase 154 (Defer NAP-CONNECT) + Phase 155 (Implement NAP-SHELL) both COMPLETE; all SHELL-01..06 satisfied. Milestone ready for verify/audit.
 
 > **Provenance note:** The "Accumulated Context" section below preserves bullet records from BOTH branches' STATE.md histories. Records tagged "v0.29.0" from main's lineage refer to the milestone NOW renumbered as v0.30.0 (Class-Gated Decrypt — Phases 135-138). Records tagged "v0.29.0" from feat/strict-model refer to NUB-CONNECT (Phases 135-142). Phase number alone is not a unique identifier across the two; cross-reference the topic (decrypt/identity/NIP-07 → v0.30.0; connect/class/CSP-authority → v0.29.0).
 
 ## Current Position
 
-Phase: 154 (Defer NAP-CONNECT) — COMPLETE
-Plan: 154-01 — COMPLETE
-Status: Phase 154 shipped (connect domain fully retired); ready to plan Phase 155 (Implement NAP-SHELL)
-Last activity: 2026-06-17 — Executed 154-01-PLAN.md: removed the connect domain from core/nap/sdk/shim, vite-plugin build+manifest, and conformance. NAP_DOMAINS now 14. build + type-check + test:unit all green; zero connect residue.
+Phase: 155 (Implement NAP-SHELL) — COMPLETE
+Plan: 155-01 — COMPLETE
+Status: Phase 155 shipped (NAP-SHELL implemented end to end across core/nap/shim/conformance); all SHELL-01..06 complete. v0.33.0 milestone ready for verify/audit.
+Last activity: 2026-06-17 — Executed 155-01-PLAN.md: added @napplet/core NAP-SHELL types, the @napplet/nap/shell subpath, migrated the shim handshake to cache the `{ capabilities:{domains,protocols}, services, class }` environment, and migrated conformance (validator/reference-shell/boot/checks). 4 task commits (4eddcb5, 99de482, 86a9ca6, e8e5438). build + type-check + test:unit all green.
+
+### Phase 155 record (SHELL-01..06) — COMPLETE
+
+- SHELL-01: validateEnvelope accepts the foundational `shell` domain (FOUNDATIONAL_DOMAINS, NOT in NAP_DOMAINS); `shell.ready` (out) + `shell.init` (in) specs added; reference-shell special-case framing removed. Count invariant 122→124 (61 out/63 in).
+- SHELL-02/03: shim posts `shell.ready`, caches the first `shell.init` into a ShellEnvironment, swaps in makeSupports, exposes services/class/ready()/onReady(); supports() false pre-init/unknown; duplicate init idempotent (first wins). NappletShell typed in @napplet/core.
+- SHELL-04: reference shell replies `{ capabilities:{domains,protocols}, services, class }`; boot harness degraded path `{ domains:[], protocols:{} }`; readiness still detected via shell.ready.
+- SHELL-05: `@napplet/nap/shell` subpath (types/shim/sdk/index) mirroring theme; package.json/jsr.json/tsup wired; re-exports core types + DOMAIN='shell'.
+- SHELL-06: boot/installs-global, boot/no-boot-error, degrade/supports-false re-titled/documented to cite NAP-SHELL (IDs/severities unchanged).
+- Removed `NappletGlobalShell` (sole consumer migrated); `ShellSupports` kept (sdk consumer). Retired the shim's perm:/sandbox path entirely.
+- Deviation (Rule 3): shim/src/shell.test.ts cast `window as unknown as {napplet}` to satisfy package tsc. Out-of-scope: apps/docs/packages/shim.md still lists deferred connect/class rows (logged to deferred-items.md).
 
 ### Phase 154 record (DEFER-02..04) — COMPLETE
 
@@ -221,9 +232,9 @@ Items acknowledged and deferred at v0.31.0 milestone close on 2026-05-24:
 
 ## Session Continuity
 
-Last session: 2026-06-17T04:01:00.000Z
-Stopped at: Completed 154-01-PLAN.md (Defer NAP-CONNECT — DEFER-02..04)
-Resume: `/gsd:plan-phase 155` to plan Implement NAP-SHELL (SHELL-01..06). connect + class are now both retired, so NAP-SHELL lands on the clean `{domains, protocols}` capabilities shape.
+Last session: 2026-06-17T04:30:00.000Z
+Stopped at: Completed 155-01-PLAN.md (Implement NAP-SHELL — SHELL-01..06)
+Resume: Phase 155 COMPLETE. All v0.33.0 SHELL requirements satisfied; both phases (154, 155) done. Next: orchestrator verify_phase_goal for Phase 155, then `/gsd:audit-milestone v0.33.0` → `/gsd:ship`.
 
 - v0.26.0: Consolidated `@napplet/nub-*` packages into single `@napplet/nub` with 34 subpath exports; deprecated packages ship as 1-line re-export shims for one release cycle
 - v0.27.0: Runtime API surface uses IFC terminology (`window.napplet.ifc`, `@napplet/sdk` `ifc` export); hard break, no backward-compat alias
@@ -281,4 +292,4 @@ Resume: Phase 142 TERMINAL-COMPLETE — all 13 VER-IDs (VER-01..13) verified PAS
 
 ## Operator Next Steps
 
-- Plan Phase 155 (Implement NAP-SHELL) with `/gsd:plan-phase 155`
+- Phase 155 (Implement NAP-SHELL) COMPLETE. Run `/gsd:audit-milestone v0.33.0`, then `/gsd:ship`.
