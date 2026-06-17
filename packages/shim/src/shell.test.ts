@@ -6,7 +6,7 @@ import type { NappletGlobal, ShellEnvironment } from '@napplet/core';
 import '../src/index.js';
 
 function napplet(): NappletGlobal {
-  return (window as Window & { napplet: NappletGlobal }).napplet;
+  return (window as unknown as { napplet: NappletGlobal }).napplet;
 }
 
 /** Deliver a shell.init as if posted by the parent runtime. */
