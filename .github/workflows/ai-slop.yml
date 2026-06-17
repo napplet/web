@@ -1,17 +1,15 @@
 name: AI Slop Score
 
 # Runs the AI-slop quality gate via the sandwichfarm/aislop-badge composite
-# action: scan the repo, write the Shields endpoint badge JSON, and (on main)
-# commit the badge back. Replaces the previous hand-rolled scan/badge/enforce
-# jobs. The badge commit pushes to main, so github-actions[bot] must be on the
-# main ruleset bypass list.
+# action: scan the repo and write the Shields endpoint badge JSON. The badge is
+# published to the dedicated, UNPROTECTED `badges` branch — the `main` ruleset
+# forbids direct (non-PR) pushes, including from github-actions[bot], so we never
+# commit the badge to main. The README's Shields endpoint reads from `badges`.
 
 "on":
   push:
     branches:
       - main
-    paths-ignore:
-      - ".github/badges/aislop-score.json"
   pull_request:
     branches:
       - main
@@ -45,5 +43,28 @@ jobs:
           # in-repo engines (formatting, quality, ai-slop, linting) are clean.
           minimum-score: "70"
           fail-on-error: "false"
-          # Commit the badge only on a direct push to main (never from PRs).
-          commit-badge: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
+          # Write the badge JSON only — never commit/push it to main (forbidden
+          # by the main ruleset). The publish step below pushes it to `badges`.
+          commit-badge: "false"
+          push: "false"
+
+      - name: Publish badge to the unprotected `badges` branch
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          tmp="$(mktemp -d)"
+          git clone --depth 1 --branch badges \
+            "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "$tmp"
+          cp .github/badges/aislop-score.json "$tmp/aislop-score.json"
+          cd "$tmp"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add aislop-score.json
+          if git diff --staged --quiet; then
+            echo "AI slop badge unchanged — nothing to publish."
+          else
+            git commit -m "chore: update AI slop badge [skip ci]"
+            git push origin badges
+          fi
