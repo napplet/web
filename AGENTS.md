@@ -213,6 +213,7 @@ This is the **napplet** monorepo — npm packages for the napplet protocol. Napp
 - `packages/vite-plugin` — **@napplet/vite-plugin** — NIP-5A manifest generation at build time
 - `packages/nap` — **@napplet/nap** — NAP domain subpaths (`@napplet/nap/relay`, `@napplet/nap/identity`, etc.)
 - `packages/boilerplate` — **@napplet/boilerplate** — Interactive `npx` generator for the `github.com/napplet/boilerplate` template
+- `packages/skills` — **@napplet/skills** — Agent skills (design/build/test) + `napplet-skills` installer; root `skills/` symlinks here
 
 ## Tech Stack
 
