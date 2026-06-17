@@ -24,7 +24,6 @@ describe('@napplet/shim — NAP-SHELL handshake', () => {
     expect(typeof shell.ready).toBe('function');
     expect(typeof shell.onReady).toBe('function');
     expect(Array.isArray(shell.services)).toBe(true);
-    expect(shell.class).toBeNull();
   });
 
   it('answers supports() false before shell.init and leaves ready() pending', async () => {
@@ -41,7 +40,7 @@ describe('@napplet/shim — NAP-SHELL handshake', () => {
     expect(resolved).toBe(false);
   });
 
-  it('caches shell.init and answers supports()/services/class/ready/onReady from cache', async () => {
+  it('caches shell.init and answers supports()/services/ready/onReady from cache', async () => {
     const shell = napplet().shell;
 
     let onReadyEnv: ShellEnvironment | undefined;
@@ -57,7 +56,6 @@ describe('@napplet/shim — NAP-SHELL handshake', () => {
       type: 'shell.init',
       capabilities: { domains: ['relay'], protocols: { relay: ['NAP-2'] } },
       services: ['signer'],
-      class: 1,
     });
 
     const env = await readyPromise;
@@ -68,7 +66,6 @@ describe('@napplet/shim — NAP-SHELL handshake', () => {
     expect(shell.supports('unknown')).toBe(false);
     expect(shell.supports('relay', 'NAP-99')).toBe(false);
     expect(shell.services).toEqual(['signer']);
-    expect(shell.class).toBe(1);
 
     // onReady fired exactly once with the env.
     expect(onReadyCalls).toBe(1);
@@ -91,12 +88,10 @@ describe('@napplet/shim — NAP-SHELL handshake', () => {
       type: 'shell.init',
       capabilities: { domains: ['inc'], protocols: {} },
       services: ['other'],
-      class: 9,
     });
-    // The first init (relay, signer, class 1) still wins.
+    // The first init (relay, signer) still wins.
     expect(shell.supports('relay')).toBe(true);
     expect(shell.supports('inc')).toBe(false);
     expect(shell.services).toEqual(['signer']);
-    expect(shell.class).toBe(1);
   });
 });

@@ -449,7 +449,7 @@ handshake:
 1. On import, the shim posts `shell.ready` (no payload) — a bare "my receiver is
    live" liveness signal.
 2. The runtime replies **once** with `shell.init`, carrying the environment
-   `{ capabilities: { domains, protocols }, services, class }`.
+   `{ capabilities: { domains, protocols }, services }`.
 3. The shim caches that environment, so `supports(domain, protocol?)` is answered
    **synchronously and locally** thereafter — no wire round-trip per query.
 
@@ -459,9 +459,8 @@ window.napplet.shell.supports('relay');        // true if the runtime offers rel
 window.napplet.shell.supports('inc', 'NAP-2'); // true if it also speaks NAP-2
 window.napplet.shell.supports('unknown');      // false — domain not offered
 
-// Named services and the napplet's opaque class:
+// Named services the runtime exposes for this napplet:
 window.napplet.shell.services;                 // string[]  (e.g. ['signer'])
-window.napplet.shell.class;                    // number | null (opaque; carried, not interpreted)
 
 // Gate startup on environment delivery:
 const env = await window.napplet.shell.ready();
@@ -469,12 +468,12 @@ const sub = window.napplet.shell.onReady((e) => start(e));
 ```
 
 Before `shell.init` arrives, `supports()` returns `false` for everything,
-`services` is `[]`, `class` is `null`, and `ready()` is pending. A duplicate
+`services` is `[]`, and `ready()` is pending. A duplicate
 `shell.init` is ignored (first init wins). Use `supports()` as a feature gate
 before calling APIs that depend on a specific domain or numbered protocol.
 
 The `@napplet/nap/shell` subpath provides the NAP-SHELL types and SDK helpers
-(`shellSupports`, `shellServices`, `shellClass`, `shellReady`, `shellOnReady`)
+(`shellSupports`, `shellServices`, `shellReady`, `shellOnReady`)
 alongside the other domain subpaths.
 
 ## TypeScript Support

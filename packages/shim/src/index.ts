@@ -97,11 +97,9 @@ function handleShellInit(msg: ShellInitMessage): void {
     const shell = napplet.shell as NappletShell & {
       supports: NappletShell['supports'];
       services: readonly string[];
-      class: number | null;
     };
     shell.supports = makeSupports(env);
     shell.services = env.services;
-    shell.class = env.class;
   }
 
   // Resolve all pending ready() promises and fire each onReady handler once.
@@ -300,7 +298,6 @@ installIncShim();
   shell: {
     supports: defaultSupports,
     services: [],
-    class: null,
     ready: shellReady,
     onReady: shellOnReady,
   },
