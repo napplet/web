@@ -1,6 +1,6 @@
 {
   "name": "@napplet/skills",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Agent skills (design / build / test) that let a coding agent create a napplet end-to-end, plus a napplet-skills installer for Claude Code, Cursor, Windsurf, Codex/Amp, Gemini, and Copilot",
   "type": "module",
   "main": "./dist/index.js",
