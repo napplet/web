@@ -36,7 +36,6 @@ import {
   bytes as resourceBytes,
   bytesAsObjectURL as resourceBytesAsObjectURL,
 } from '@napplet/nap/resource/shim';
-import { installConnectShim } from '@napplet/nap/connect/shim';
 import {
   installCvmShim,
   handleCvmMessage,
@@ -311,10 +310,6 @@ function installShellCapabilities(msg: ShellInitMessage): void {
     handlers: intentHandlers,
     onChanged: intentOnChanged,
   },
-  connect: {
-    granted: false,
-    origins: [],
-  },
   shell: {
     supports: defaultShellSupports,
   },
@@ -367,6 +362,3 @@ installUploadShim();
 
 // Install intent shim (intent.* request/response correlation + intent.changed listeners; no install-time work)
 installIntentShim();
-
-// Install connect shim (reads <meta name="napplet-connect-granted">; replaces literal's connect field with defineProperty getter)
-installConnectShim();

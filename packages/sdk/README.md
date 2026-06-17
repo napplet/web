@@ -26,7 +26,7 @@ npm install @napplet/sdk @napplet/shim
 
 ```ts
 import '@napplet/shim';
-import { relay, inc, storage, keys, media, notify, config, resource, type NappletConnect, type NostrEvent } from '@napplet/sdk';
+import { relay, inc, storage, keys, media, notify, config, resource, type NostrEvent } from '@napplet/sdk';
 
 // Subscribe to kind 1 notes
 const sub = relay.subscribe(
@@ -93,12 +93,6 @@ const avatarBlob = await resource.bytes('https://example.com/avatar.png');
 const handle = resource.bytesAsObjectURL('blossom:sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855');
 imgEl.src = handle.url;
 // handle.revoke() when done
-
-// Use direct network access if the user approved `connect` origins (v0.29.0, NAP-CONNECT)
-import { connectGranted, connectOrigins } from '@napplet/sdk';
-if (connectGranted()) {
-  const res = await fetch(`${connectOrigins()[0]}/items`);
-}
 
 // Clean up
 sub.close();
@@ -245,33 +239,6 @@ const blob = await resourceBytes('https://example.com/avatar.png');
 const handle = resourceBytesAsObjectURL('blossom:sha256:...');
 ```
 
-### `connect` (v0.29.0)
-
-User-gated direct network access (NAP-CONNECT). State-only — no method namespace, no wire messages. The SDK re-exports the `NappletConnect` type, the `CONNECT_DOMAIN` constant, the `installConnectShim` installer, and the `connectGranted` / `connectOrigins` / `normalizeConnectOrigin` helper functions.
-
-```ts
-import type { NappletConnect } from '@napplet/sdk';
-import { CONNECT_DOMAIN, installConnectShim, connectGranted, connectOrigins, normalizeConnectOrigin } from '@napplet/sdk';
-
-// Napplet-side runtime (window.napplet.connect is populated by the shim at install)
-if (connectGranted()) {
-  const origins: readonly string[] = connectOrigins();
-  const res = await fetch(`${origins[0]}/items`);
-}
-
-// Build-side / shell-side shared origin validator
-const normalized = normalizeConnectOrigin('https://api.example.com');   // returns input byte-identical on success; throws on invalid
-```
-
-| Export | Kind | Source | Description |
-|--------|------|--------|-------------|
-| `NappletConnect` | type | `@napplet/nap/connect` | `{ readonly granted: boolean; readonly origins: readonly string[] }` |
-| `CONNECT_DOMAIN` | const | `@napplet/nap/connect` | The domain identifier string `'connect'` |
-| `installConnectShim` | function | `@napplet/nap/connect` | Side-effect installer — reads the discovery meta tag and mounts `window.napplet.connect` |
-| `connectGranted()` | function | `@napplet/nap/connect` | `() => boolean` — readonly helper; safer than direct `window.napplet.connect.granted` access |
-| `connectOrigins()` | function | `@napplet/nap/connect` | `() => readonly string[]` — readonly helper |
-| `normalizeConnectOrigin(origin)` | function | `@napplet/nap/connect` | Shared origin validator (used by vite-plugin AND shell implementations); throws on invalid input with `[@napplet/nap/connect]`-prefixed messages |
-
 ### `keys`
 
 Keyboard forwarding and action keybindings. Mirrors `window.napplet.keys`.
@@ -404,9 +371,6 @@ handlers in shell implementations or protocol-aware code.
 | `NotifyNapMessage` | `@napplet/nap/notify` | Discriminated union of all notify domain messages |
 | `ConfigNapMessage` | `@napplet/nap/config` | Discriminated union of all config domain messages |
 | `ResourceNapMessage` | `@napplet/nap/resource` | Discriminated union of all resource domain messages |
-| `ConnectNapMessage` * | `@napplet/nap/connect` | State-only NAP — no wire messages. The `NappletConnect` runtime state type is the consumer-facing import. |
-
-\* There is no `ConnectNapMessage` type; NAP-CONNECT has no postMessage wire. The consumer-facing import is the `NappletConnect` runtime state interface.
 
 Individual message types (e.g., `RelaySubscribeMessage`, `IdentityGetPublicKeyMessage`) are also re-exported from
 `@napplet/sdk` for fine-grained typing.
@@ -416,8 +380,8 @@ Individual message types (e.g., `RelaySubscribeMessage`, `IdentityGetPublicKeyMe
 Each NAP domain has a string constant re-exported from its package:
 
 ```ts
-import { RELAY_DOMAIN, IDENTITY_DOMAIN, STORAGE_DOMAIN, INC_DOMAIN, THEME_DOMAIN, KEYS_DOMAIN, MEDIA_DOMAIN, NOTIFY_DOMAIN, CONFIG_DOMAIN, RESOURCE_DOMAIN, CONNECT_DOMAIN, CLASS_DOMAIN } from '@napplet/sdk';
-// Values: 'relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'connect', 'cvm', 'outbox', 'upload', 'intent'
+import { RELAY_DOMAIN, IDENTITY_DOMAIN, STORAGE_DOMAIN, INC_DOMAIN, THEME_DOMAIN, KEYS_DOMAIN, MEDIA_DOMAIN, NOTIFY_DOMAIN, CONFIG_DOMAIN, RESOURCE_DOMAIN, CVM_DOMAIN, OUTBOX_DOMAIN, UPLOAD_DOMAIN, INTENT_DOMAIN } from '@napplet/sdk';
+// Values: 'relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent'
 ```
 
 These constants are re-exported from the individual domain packages. Use them with the shell capability query
@@ -439,13 +403,6 @@ if (window.napplet.shell.supports('nap:config')) {
 if (window.napplet.shell.supports('nap:resource')) {
   // resource.bytes(url) is available; check per-scheme too:
   if (window.napplet.shell.supports('resource:scheme:blossom')) { /* ... */ }
-}
-
-if (window.napplet.shell.supports('nap:connect')) {
-  // NAP-CONNECT is available -- window.napplet.connect reflects shell grant state
-  // Check per-scheme operator policy:
-  if (window.napplet.shell.supports('connect:scheme:http')) { /* cleartext http: origins permitted */ }
-  if (window.napplet.shell.supports('connect:scheme:ws'))   { /* cleartext ws: origins permitted */ }
 }
 ```
 

@@ -247,11 +247,6 @@ export type {
   ResourceNapMessage,
 } from '@napplet/nap/resource';
 
-// Connect NAP
-export type {
-  NappletConnect,
-} from '@napplet/nap/connect';
-
 // CVM NAP (ContextVM bridge)
 export type {
   McpMessage,

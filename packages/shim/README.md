@@ -12,7 +12,7 @@
 
 1. Import `@napplet/shim` in your napplet's entry point (side-effect only -- no named exports)
 2. The shim registers with the shell via postMessage -- the shell assigns identity based on the iframe's `message.source` Window reference
-3. Once registered, `window.napplet` is populated with relay, inc, storage, keys, media, notify, identity, config, resource, connect, cvm, outbox, upload, intent, and shell sub-objects
+3. Once registered, `window.napplet` is populated with relay, inc, storage, keys, media, notify, identity, config, resource, cvm, outbox, upload, intent, and shell sub-objects
 4. No `window.nostr` is installed -- signing and encryption are mediated by the shell via `relay.publish()` and `relay.publishEncrypted()`
 
 ### Installation
@@ -112,12 +112,6 @@ const handle = window.napplet.resource.bytesAsObjectURL('blossom:sha256:e3b0c442
 imgEl.src = handle.url;
 // later: handle.revoke();
 
-// Use direct network access if the user approved `connect` origins at build time
-if (window.napplet.connect.granted) {
-  const res = await fetch(`${window.napplet.connect.origins[0]}/items`);
-  const data = await res.json();
-}
-
 // Clean up
 sub.close();
 incSub.close();
@@ -188,8 +182,6 @@ Messages sent via `window.parent.postMessage(msg, '*')`:
 
 { type: 'resource.bytes', id: string, url: string }
 { type: 'resource.cancel', id: string }
-
-// (NAP-CONNECT has no postMessage wire — grants flow via CSP header + <meta name="napplet-connect-granted">)
 ```
 
 ### Inbound (shell → napplet)
@@ -321,10 +313,6 @@ window.napplet = {
     bytes(url, opts?): Promise<Blob>;
     bytesAsObjectURL(url): { url: string; revoke: () => void };
   },
-  connect: {
-    readonly granted: boolean;
-    readonly origins: readonly string[];
-  },
   shell: {
     supports(capability: NamespacedCapability, protocol?: ProtocolId): boolean;
   },
@@ -445,32 +433,6 @@ Capability detection:
 if (window.napplet.shell.supports('nap:resource')) { /* ... */ }
 if (window.napplet.shell.supports('resource:scheme:blossom')) { /* ... */ }
 if (window.napplet.shell.supports('perm:strict-csp')) { /* shell enforces strict CSP */ }
-```
-
-### `window.napplet.connect`
-
-User-gated direct network access (NAP-CONNECT). NO postMessage wire — the shim reads `<meta name="napplet-connect-granted" content="<space-separated-origins>">` synchronously at install time. Napplets declare required origins at build time via `@napplet/vite-plugin`'s `connect: string[]` option; the user is prompted by the shell at first load per `(dTag, aggregateHash)`; on approval the shell emits a runtime CSP whose `connect-src` contains the approved origins AND injects the discovery meta tag.
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `granted` | `boolean` | `true` when the user approved all declared origins for this `(dTag, aggregateHash)`. `false` on denial, on shells without `nap:connect`, or pre-injection. |
-| `origins` | `readonly string[]` | The user-approved origins (already normalized per the shared `normalizeConnectOrigin` validator). Empty on denial. |
-
-**Graceful-degradation default:** `window.napplet.connect === { granted: false, origins: [] }` on shells that do not advertise `nap:connect` or have not injected the meta tag. The property is NEVER `undefined`.
-
-```ts
-if (window.napplet.shell.supports('nap:connect') && window.napplet.connect.granted) {
-  // Direct fetch / WebSocket to window.napplet.connect.origins is permitted.
-} else {
-  // Fall back to window.napplet.resource.bytes(url) for read-only byte fetches.
-}
-```
-
-Capability detection (operator-policy refinements):
-
-```ts
-if (window.napplet.shell.supports('connect:scheme:http')) { /* cleartext http: origins permitted */ }
-if (window.napplet.shell.supports('connect:scheme:ws'))   { /* cleartext ws: origins permitted */ }
 ```
 
 ### `window.napplet.shell`

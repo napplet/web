@@ -1,6 +1,6 @@
 # @napplet/nap
 
-> Every active napplet NAP domain (relay, storage, inc, keys, theme, media, notify, identity, config, resource, connect, cvm, outbox, upload, intent) as layered subpath exports. The package name remains `@napplet/nap` for compatibility.
+> Every active napplet NAP domain (relay, storage, inc, keys, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent) as layered subpath exports. The package name remains `@napplet/nap` for compatibility.
 
 ## Install
 
@@ -79,7 +79,6 @@ Each domain is an independent subpath. Barrel imports bundle types + shim instal
 | identity | `@napplet/nap/identity` | `@napplet/nap/identity/types` | `@napplet/nap/identity/shim` | `@napplet/nap/identity/sdk` | Read-only user queries (pubkey, metadata) |
 | config | `@napplet/nap/config` | `@napplet/nap/config/types` | `@napplet/nap/config/shim` | `@napplet/nap/config/sdk` | Declarative per-napplet config (schema-driven) |
 | resource | `@napplet/nap/resource` | `@napplet/nap/resource/types` | `@napplet/nap/resource/shim` | `@napplet/nap/resource/sdk` | Sandboxed byte fetching (https/blossom/nostr/data) via `bytes(url) → Blob` |
-| connect | `@napplet/nap/connect` | `@napplet/nap/connect/types` | `@napplet/nap/connect/shim` | `@napplet/nap/connect/sdk` | User-gated direct network access (state-only; no wire — grants flow via CSP + discovery meta tag) |
 | cvm | `@napplet/nap/cvm` | `@napplet/nap/cvm/types` | `@napplet/nap/cvm/shim` | `@napplet/nap/cvm/sdk` | Native ContextVM bridge — MCP-over-Nostr (`discover`/`listTools`/`callTool`/`listResources`/`readResource`); shell owns all transport |
 | outbox | `@napplet/nap/outbox` | `@napplet/nap/outbox/types` | `@napplet/nap/outbox/shim` | `@napplet/nap/outbox/sdk` | Outbox-aware relay routing — `query`/`subscribe`/`publish`/`resolveRelays`; shell owns NIP-65 relay discovery, dedup, and fanout |
 | upload | `@napplet/nap/upload` | `@napplet/nap/upload/types` | `@napplet/nap/upload/shim` | `@napplet/nap/upload/sdk` | Shell-mediated file/blob upload — `upload`/`status`/`onStatus` over NIP-96 + Blossom rails; shell signs auth, returns NIP-94 metadata |
@@ -179,32 +178,6 @@ user/signer is connected.
 See the [NAP-IDENTITY](https://github.com/napplet/naps/pull/12) draft spec for
 the current read-only contract.
 
-## Connect NAP (v0.29.0)
-
-v0.29.0 adds a subpath expressing user-gated direct network access.
-
-### `@napplet/nap/connect`
-
-State-only NAP — NO postMessage wire. Grants flow through the runtime CSP the shell serves with the napplet HTML, plus a shell-injected `<meta name="napplet-connect-granted" content="<space-separated-origins>">` tag read synchronously by the napplet shim at install time.
-
-```ts
-import type { NappletConnect } from '@napplet/nap/connect/types';
-import { installConnectShim, normalizeConnectOrigin } from '@napplet/nap/connect';
-
-// Napplet-side (runs inside the sandboxed iframe)
-// The shim populates window.napplet.connect synchronously at install time.
-if (window.napplet.connect.granted) {
-  const res = await fetch(`${window.napplet.connect.origins[0]}/items`, { method: 'POST', body: '{}' });
-}
-
-// Build-side / shell-side (shared origin validator; throws on invalid input)
-const o = normalizeConnectOrigin('https://api.example.com');   // 'https://api.example.com'
-```
-
-`NappletConnect` is `{ readonly granted: boolean; readonly origins: readonly string[] }`. Default on shells that do not implement `nap:connect`, on denied prompts, or pre-injection: `{ granted: false, origins: [] }` (never `undefined`).
-
-See [NAP-CONNECT](https://github.com/napplet/naps) for the normative spec, the origin format rules, and the consent-flow MUSTs.
-
 ## Package Surface
 
 `@napplet/nap` is the compatibility package for every NAP domain. Import each domain through the package subpath:
@@ -214,7 +187,7 @@ import { mediaCreateSession } from '@napplet/nap/media/sdk';
 import type { MediaNapMessage } from '@napplet/nap/media/types';
 ```
 
-Domain barrels are also available at `@napplet/nap/relay`, `@napplet/nap/storage`, `@napplet/nap/inc`, `@napplet/nap/keys`, `@napplet/nap/theme`, `@napplet/nap/media`, `@napplet/nap/notify`, `@napplet/nap/identity`, `@napplet/nap/config`, `@napplet/nap/resource`, and `@napplet/nap/connect`.
+Domain barrels are also available at `@napplet/nap/relay`, `@napplet/nap/storage`, `@napplet/nap/inc`, `@napplet/nap/keys`, `@napplet/nap/theme`, `@napplet/nap/media`, `@napplet/nap/notify`, `@napplet/nap/identity`, `@napplet/nap/config`, and `@napplet/nap/resource`.
 
 ## Optional Peer Dependency
 
