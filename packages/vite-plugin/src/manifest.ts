@@ -1,10 +1,9 @@
 /**
  * @napplet/vite-plugin — manifest resolution, dev meta tags, and bundle writing.
  *
- * Wires together schema discovery/validation, connect normalization, dev-mode
- * meta-tag injection, and the build-time napplet manifest pipeline (NIP-5A
- * aggregateHash computation, NIP-5D kind `35129` signing, artifact rewrites,
- * meta-tag injection).
+ * Wires together schema discovery/validation, dev-mode meta-tag injection, and
+ * the build-time napplet manifest pipeline (NIP-5A aggregateHash computation,
+ * NIP-5D kind `35129` signing, artifact rewrites, meta-tag injection).
  */
 
 import type { IndexHtmlTransformResult } from 'vite';
@@ -16,12 +15,10 @@ import { NAPPLET_KIND_NAMED } from './types.js';
 import { computeAggregateHash, sha256File, walkDir } from './hashing.js';
 import { discoverConfigSchema, validateConfigSchema } from './config-schema.js';
 import { assertNoInlineScripts, inlineSingleFileBuildAssets } from './html.js';
-import { normalizeConnectOptions } from './connect.js';
 
 /**
  * Resolve all per-build plugin state in the `configResolved` hook: out dir,
- * project root, base, config schema (discovered + validated), deprecation
- * warning, and normalized connect origins.
+ * project root, base, and config schema (discovered + validated).
  *
  * @param options - the plugin options as authored in `vite.config.ts`.
  * @param state - mutable plugin state, populated in place.
@@ -39,8 +36,6 @@ export async function resolvePluginConfig(
   state.resolvedSchema = result.schema;
   state.resolvedSchemaSource = result.source;
   validateResolvedSchema(state.resolvedSchema, state.resolvedSchemaSource);
-  warnDeprecatedStrictCsp(options);
-  state.normalizedConnect = normalizeConnectOptions(options);
 }
 
 function validateResolvedSchema(schema: NappletConfigSchema | null, source: string | null): void {
@@ -54,17 +49,9 @@ function validateResolvedSchema(schema: NappletConfigSchema | null, source: stri
   }
 }
 
-function warnDeprecatedStrictCsp(options: Nip5aManifestOptions): void {
-  if (options.strictCsp !== undefined) {
-    console.warn(
-      '[nip5a-manifest] strictCsp is deprecated in v0.29.0 and has no effect — the shell is now the sole CSP authority. Remove this option from your vite.config.ts. See v0.29.0 changelog for migration. (REMOVE-STRICTCSP tracks hard removal in a future milestone.)',
-    );
-  }
-}
-
 /**
  * Build the `transformIndexHtml` tag set: the napplet-type meta and optional
- * requires / config-schema / dev-only connect-requires meta tags.
+ * requires / config-schema meta tags.
  *
  * No `napplet-aggregate-hash` meta is emitted: a file cannot contain a hash that
  * covers itself, so the aggregate hash lives only in the external
@@ -72,14 +59,14 @@ function warnDeprecatedStrictCsp(options: Nip5aManifestOptions): void {
  * relay reads it. It is not a NIP-5D/5A index.html artifact.
  *
  * @param options - the plugin options.
- * @param state - resolved plugin state (schema + normalized connect).
- * @param isDev - true when Vite is serving (dev), gating the connect-requires meta.
+ * @param state - resolved plugin state (schema).
+ * @param _isDev - true when Vite is serving (dev). Currently unused.
  * @returns Vite index-html transform descriptors injected into `<head>`.
  */
 export function buildIndexHtmlTags(
   options: Nip5aManifestOptions,
   state: ManifestPluginState,
-  isDev: boolean,
+  _isDev: boolean,
 ): IndexHtmlTransformResult {
   const tags: IndexHtmlTransformResult = [
     {
@@ -105,17 +92,6 @@ export function buildIndexHtmlTags(
     });
   }
 
-  if (isDev && state.normalizedConnect.length > 0) {
-    tags.push({
-      tag: 'meta',
-      attrs: {
-        name: 'napplet-connect-requires',
-        content: state.normalizedConnect.join(' '),
-      },
-      injectTo: 'head' as const,
-    });
-  }
-
   return tags;
 }
 
@@ -128,7 +104,7 @@ export function buildIndexHtmlTags(
  * into index.html (a file cannot advertise a hash that covers itself).
  *
  * @param options - the plugin options.
- * @param state - resolved plugin state (out dir, schema, connect).
+ * @param state - resolved plugin state (out dir, schema).
  */
 export async function writeBundleManifest(options: Nip5aManifestOptions, state: ManifestPluginState): Promise<void> {
   const distPath = path.resolve(state.outDir);
@@ -165,13 +141,12 @@ function buildManifestTemplate(
 ): ManifestTemplate {
   // pathPairs are `[sha256hex, absolutePath]`, the sole input to the NIP-5A
   // aggregate hash (NIP-5D §Identity: the runtime recomputes the aggregate from
-  // the `path` tags alone and asserts it equals the `x` tag). Capabilities
-  // (`config` / `connect`) are emitted as their own tags but MUST NOT feed the
-  // aggregate, or a conformant runtime would reject the napplet.
+  // the `path` tags alone and asserts it equals the `x` tag). The `config`
+  // capability is emitted as its own tag but MUST NOT feed the aggregate, or a
+  // conformant runtime would reject the napplet.
   const pathPairs = buildPathPairs(distPath);
   const aggregateHash = computeAggregateHash(pathPairs);
   const pathTags = pathPairs.map(([hash, absPath]) => ['path', absPath, hash]);
-  const connectTags = state.normalizedConnect.map((origin) => ['connect', origin]);
   const configTags =
     state.resolvedSchema !== null ? [['config', JSON.stringify(state.resolvedSchema)]] : [];
   const requiresTags = (options.requires ?? []).map((name) => ['requires', name]);
@@ -183,7 +158,6 @@ function buildManifestTemplate(
       ['d', options.nappletType],
       ...pathTags,
       ['x', aggregateHash, 'aggregate'],
-      ...connectTags,
       ...configTags,
       ...requiresTags,
     ],

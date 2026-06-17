@@ -1,4 +1,4 @@
-import type { NappletGlobalShell } from '../envelope.js';
+import type { NappletShell } from './shell.js';
 import type { RelayApi, IncApi, StorageApi, KeysApi } from './global/nostr-api.js';
 import type { MediaApi, NotifyApi } from './global/media-api.js';
 import type {
@@ -6,7 +6,6 @@ import type {
   ThemeApi,
   ConfigApi,
   ResourceApi,
-  ConnectApi,
 } from './global/runtime-api.js';
 import type { CvmApi, OutboxApi, UploadApi, IntentApi } from './global/service-api.js';
 
@@ -190,68 +189,6 @@ export interface NappletGlobal {
    */
   resource: ResourceApi;
   /**
-   * User-gated direct network access: napplet declares desired `connect` origins
-   * at build time via `@napplet/vite-plugin`'s `connect` option; shell prompts the
-   * user at first load per `(dTag, aggregateHash)`; shell emits an explicit
-   * `connect-src <origin1> <origin2> …` CSP header on approval. The browser
-   * enforces network access at the CSP layer — shell has zero visibility into
-   * post-grant traffic. Napplet reads its own grant state via this namespace;
-   * both fields are populated synchronously at shim install from the
-   * `<meta name="napplet-connect-granted">` tag injected by the shell.
-   *
-   * Graceful degradation: `{ granted: false, origins: [] }` when shell does not
-   * advertise `nap:connect`, does not inject the meta tag, or denies the grant.
-   * This object is NEVER `undefined`.
-   *
-   * @example
-   * ```ts
-   * // Check grant state before firing cross-origin fetches:
-   * if (window.napplet.connect.granted) {
-   *   // CSP allows connect-src to these origins:
-   *   const allowed = window.napplet.connect.origins;
-   *   // fetch() will succeed for allowed origins, throw CSP violations otherwise.
-   *   const resp = await fetch('https://api.example.com/me');
-   * }
-   *
-   * // Capability-check the shell for the NAP itself:
-   * if (window.napplet.shell.supports('nap:connect')) { ... }
-   * ```
-   */
-  connect: ConnectApi;
-  /**
-   * Shell-assigned napplet class (abstract security-posture identifier).
-   *
-   * Populated by the NAP-CLASS wire message `class.assigned` (shell -> napplet,
-   * one terminal envelope per lifecycle) after iframe ready. The runtime value
-   * is a plain `number`, not a literal union — the class space is extensible
-   * as new NAP-CLASS-$N sub-track members are defined. Current canonical
-   * classes (defined in the NAP-CLASS track): `1` (strict baseline, no
-   * user-declared origins) and `2` (user-approved explicit-origin CSP).
-   *
-   * `undefined` in three distinct states, all of which napplets MUST handle
-   * gracefully:
-   * 1. Before the shell has sent `class.assigned` (early bootstrap).
-   * 2. When the shell does not implement `nap:class` (capability missing).
-   * 3. When the shell implements the NAP but intentionally withholds assignment.
-   *
-   * Cross-NAP invariant (in shells implementing both NAP-CONNECT and NAP-CLASS):
-   * `class === 2` iff `window.napplet.connect.granted === true`. See
-   * `specs/SHELL-CLASS-POLICY.md` (Phase 140) for the full shell-responsibility
-   * matrix.
-   *
-   * @example
-   * ```ts
-   * // Capability-check before branching on class:
-   * if (window.napplet.shell.supports('nap:class') && window.napplet.class !== undefined) {
-   *   console.log(`napplet running as class ${window.napplet.class}`);
-   * } else {
-   *   // Shell does not implement nap:class or assignment has not arrived;
-   *   // fall back to feature detection (e.g., window.napplet.connect.granted).
-   * }
-   * ```
-   */
-  class?: number;
-  /**
    * Native ContextVM bridge (NAP-CVM): MCP-over-Nostr access mediated by the shell.
    *
    * ContextVM transports Model Context Protocol JSON-RPC over Nostr relays using
@@ -331,21 +268,25 @@ export interface NappletGlobal {
    */
   intent: IntentApi;
   /**
-   * Shell capability queries. Check whether the shell supports a NAP,
-   * permission, or numbered NAP protocol.
+   * NAP-SHELL: the foundational, mandatory bootstrap handshake surface.
+   *
+   * `shell` is the one domain that is **not** discoverable via
+   * `supports()` — it is always present. The shim posts `shell.ready`, the
+   * runtime replies once with `shell.init` carrying the environment, and the
+   * shim caches it so `supports(domain, protocol?)` answers synchronously and
+   * locally thereafter. Also exposes the runtime's `services`, the napplet's
+   * opaque `class`, and `ready()` / `onReady()` to gate startup.
    *
    * @example
    * ```ts
-   * // NAP domain (bare shorthand or prefixed):
+   * // Synchronous, local capability queries (no wire round-trip):
    * if (window.napplet.shell.supports('relay')) { ... }
-   * if (window.napplet.shell.supports('nap:relay')) { ... }
+   * if (window.napplet.shell.supports('inc', 'NAP-2')) { ... }
    *
-   * // Permission:
-   * if (window.napplet.shell.supports('perm:popups')) { ... }
-   *
-   * // Numbered NAP protocol over an interface:
-   * if (window.napplet.shell.supports('inc', 'NAP-01')) { ... }
+   * // Await environment delivery, or react to it:
+   * const env = await window.napplet.shell.ready();
+   * const sub = window.napplet.shell.onReady((e) => start(e));
    * ```
    */
-  shell: NappletGlobalShell;
+  shell: NappletShell;
 }

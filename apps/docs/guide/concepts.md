@@ -104,23 +104,43 @@ storage and cannot read each other's data. There is a per-napplet quota (the shi
 documents 512 KB). Access is via `window.napplet.storage` (`getItem`, `setItem`,
 `removeItem`, `keys`).
 
+## NAP-SHELL — the bootstrap handshake
+
+`shell` is the one **foundational, mandatory** NAP domain: it defines
+`supports()` itself, so it is the single capability that cannot be discovered
+through `supports()` (and is not listed among the optional NAP domains). It is the
+two-message bootstrap handshake every conformant runtime implements:
+
+1. On import, the shim posts `shell.ready` (no payload) — a bare liveness signal.
+2. The runtime replies **once** with `shell.init`, carrying the environment
+   `{ capabilities: { domains, protocols }, services, class }`.
+3. The shim caches it, so `supports(domain, protocol?)` is answered
+   **synchronously and locally** afterwards.
+
+The public `window.napplet.shell` surface is `supports(domain, protocol?)`,
+`services: string[]`, `class: number | null` (opaque — carried, not interpreted),
+`ready(): Promise<ShellEnvironment>`, and `onReady(handler)`.
+
 ## `shell.supports()`
 
 Because shells implement only the NAP domains they choose to, a napplet must
-**feature-gate** before using a domain:
+**feature-gate** before using a domain. `supports()` is synchronous and answers
+from the cached environment (`false` before `shell.init`, and for any unknown
+domain or protocol):
 
 ```ts
 import '@napplet/shim';
 
-// NAP domains — bare shorthand or the nap: prefix
+// NAP domains
 if (window.napplet.shell.supports('relay')) { /* relay ops available */ }
-if (window.napplet.shell.supports('nap:identity')) { /* identity queries available */ }
+if (window.napplet.shell.supports('identity')) { /* identity queries available */ }
 
-// Permissions
-if (window.napplet.shell.supports('perm:popups')) { /* … */ }
+// Numbered NAP-NN message protocols over a domain
+if (window.napplet.shell.supports('inc', 'NAP-2')) { /* … */ }
 
-// Numbered NAP-NN message protocols over an interface
-if (window.napplet.shell.supports('inc', 'NAP-01')) { /* … */ }
+// Gate startup on environment delivery:
+const env = await window.napplet.shell.ready();
+window.napplet.shell.onReady((e) => start(e));
 ```
 
 This pairs with declarative negotiation: declare what you need in the manifest

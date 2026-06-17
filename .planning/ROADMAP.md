@@ -33,7 +33,8 @@
 - ✅ **v0.29.0 NUB-CONNECT + Shell as CSP Authority** — Phases 135-142 (shipped 2026-04-21) — [Archive](milestones/v0.29.0-ROADMAP.md)
 - ✅ **v0.30.0 Class-Gated Decrypt Surface** — Phases 135-138 (shipped 2026-04-23) — [Archive](milestones/v0.30.0-ROADMAP.md)
 - ✅ **v0.31.0 Cleanup Quality Gate** — Phases 143-147 (shipped 2026-05-24) — [Archive](milestones/v0.31.0-ROADMAP.md)
-- 🔨 **v0.32.0 Napplet Conformance** — Phases 148-152 (in progress)
+- ✅ **v0.32.0 Napplet Conformance** — Phases 148-153 (shipped 2026-06-16)
+- 🔨 **v0.33.0 NAP-SHELL Alignment** — Phases 154-155 (in progress)
 
 ## Phases
 
@@ -42,6 +43,42 @@
 - Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
 
 Note: Phase 45 (IPC terminology cleanup) was completed as a quick task during v0.8.0 and is not part of the v0.9.0 roadmap. Phases 57–60 were deprecated after v0.11.0 and archived under `milestones/v0.12.0-phases/deprecated/`.
+
+### 🔨 v0.33.0 NAP-SHELL Alignment (Phases 154-155) — IN PROGRESS
+
+**Milestone Goal:** Align the SDK to the updated NAPs track ([github.com/napplet/naps](https://github.com/napplet/naps), `naps/NAP-SHELL.md` + README domain table; [NIP-5D PR #2303](https://github.com/nostr-protocol/nips/pull/2303)). Implement the mandatory **NAP-SHELL** bootstrap handshake (`shell.ready` → `shell.init`; `shell` is a foundational, non-`supports()`-discoverable domain whose `shell.init` carries `{ capabilities: { domains, protocols }, services, class }`), and defer the now-inactive **NAP-CONNECT** domain (NAP-CLASS already deferred in commit `9aa4b80`). Breaking change (0.x ⇒ minor bumps); never invent protocol surface. Staged GREEN at every commit: retire `connect` first (clearing the `perm:`/`sandbox` capability tokens) so NAP-SHELL lands on the clean `{domains, protocols}` capabilities shape.
+
+**Phase groups:** Phase 154 Defer NAP-CONNECT → Phase 155 Implement NAP-SHELL. Phase 154 MUST precede Phase 155. Ships as one coordinated release PR off branch `feat/nap-shell`.
+
+- [x] **Phase 154: Defer NAP-CONNECT** — Remove the `connect` (NAP-CONNECT) domain from the runtime surface (`NAP_DOMAINS`/`NapDomain`, `window.napplet.connect`, the `@napplet/nap/connect` subpath incl. `__fixtures__` + package/jsr/tsup exports, sdk re-exports, conformance connect envelopes), from `@napplet/vite-plugin`'s build/manifest surface (the `connect` option, manifest `connect` tags, `napplet-connect-requires` dev meta, `connect.ts`/`normalizeConnectOptions`, the now-orphaned `strictCsp` deprecation), and from conformance (`manifest/connect-origins` check + `normalizeConnectOrigin` dependency) — while NIP-5A manifest generation still works. Requirements: DEFER-02, DEFER-03, DEFER-04.
+- [ ] **Phase 155: Implement NAP-SHELL** — Implement the mandatory foundational handshake: `@napplet/shim` posts `shell.ready` and caches the `shell.init` environment `{ capabilities: { domains, protocols }, services, class }`, then answers `supports(domain, protocol?)` synchronously/locally; `window.napplet.shell` exposes `supports()`, `services: string[]`, `class: number | null`, `ready()`, `onReady()` typed in `@napplet/core`; a `@napplet/nap/shell` subpath exposes NAP-SHELL types/surface; the conformance envelope validator recognizes `shell.*` (dropping the special-case) and registers `shell` as the foundational domain; the reference shell replies with the `{ capabilities, services, class }` shape; and the boot/degrade checks cite NAP-SHELL. Requirements: SHELL-01, SHELL-02, SHELL-03, SHELL-04, SHELL-05, SHELL-06.
+
+## Phase Details — v0.33.0 NAP-SHELL Alignment
+
+### Phase 154: Defer NAP-CONNECT
+**Goal**: The `connect` (NAP-CONNECT) domain is fully retired from the active runtime, build/manifest, and conformance surfaces — clearing the `perm:`/`sandbox` capability tokens — while the workspace stays green and NIP-5A manifest generation still works, so Phase 155 can land NAP-SHELL on the clean `{domains, protocols}` capabilities shape.
+**Depends on**: Nothing (first phase of milestone; NAP-CLASS already deferred in `9aa4b80`).
+**Requirements**: DEFER-02, DEFER-03, DEFER-04
+**Success Criteria** (what must be TRUE):
+  1. `window.napplet.connect` no longer exists, `connect` is gone from `NAP_DOMAINS`/`NapDomain`, the `@napplet/nap/connect` subpath (incl. `__fixtures__`) and its package/jsr/tsup exports + sdk re-exports are removed, and the workspace type-checks (`pnpm -r build` + `pnpm -r type-check` exit 0 across all packages).
+  2. `@napplet/vite-plugin` no longer exposes the `connect` option, emits no `connect` manifest tags or `napplet-connect-requires` meta, and `connect.ts`/`normalizeConnectOptions`/the orphaned `strictCsp` deprecation are deleted — yet a build still emits a valid NIP-5A manifest.
+  3. The conformance engine no longer references connect: the `manifest/connect-origins` check and the `normalizeConnectOrigin` dependency are removed, `validateManifest` no longer validates connect origins, and the connect envelope validators are gone.
+  4. A repo-wide grep for the retired connect surface (`window.napplet.connect`, `normalizeConnectOrigin`, `napplet-connect-requires`, `connect-origins`) returns zero first-party matches outside historical changelog/spec records.
+
+**Plans:** 1 plan
+- [x] 154-01-PLAN.md — Remove the connect domain from core/nap/sdk/shim, vite-plugin build+manifest, and conformance; keep build/type-check/test green and NIP-5A manifest generation working (mirrors NAP-CLASS deferral 9aa4b80).
+
+### Phase 155: Implement NAP-SHELL
+**Goal**: NAP-SHELL is implemented as the mandatory, foundational (non-`supports()`-discoverable) bootstrap handshake — the shim performs `shell.ready` → `shell.init`, caches the `{ capabilities: { domains, protocols }, services, class }` environment, and answers `supports(domain, protocol?)` synchronously and locally; the public `window.napplet.shell` API, a `@napplet/nap/shell` subpath, and the conformance engine all recognize `shell.*` as a first-class NAP rather than a private special-case.
+**Depends on**: Phase 154 (connect/class retired so capabilities land on the clean `{domains, protocols}` shape).
+**Requirements**: SHELL-01, SHELL-02, SHELL-03, SHELL-04, SHELL-05, SHELL-06
+**Success Criteria** (what must be TRUE):
+  1. After `import '@napplet/shim'`, the shim posts `shell.ready` (no payload) and caches the inbound `shell.init` environment `{ capabilities: { domains, protocols }, services, class }`; `window.napplet.shell.supports('relay', 'NAP-2')` answers synchronously from the cached environment, returning `false` before init and for any unknown domain/protocol.
+  2. `window.napplet.shell` exposes `supports(domain, protocol?)`, `services: string[]`, `class: number | null` (opaque), `ready(): Promise<ShellEnvironment>`, and `onReady(handler)`, all typed in `@napplet/core`; `pnpm -r build` + `pnpm -r type-check` exit 0 across all packages.
+  3. `import '@napplet/nap/shell'` resolves NAP-SHELL types (and any shim/sdk surface) consistent with the other domains' subpath layout (package/jsr/tsup exports present).
+  4. The conformance envelope validator recognizes `shell.ready` (outbound) and `shell.init` (inbound) as NAP-SHELL envelopes with the reference-shell special-case removed, `shell` registered as the foundational non-`supports()`-discoverable domain, the reference shell replying in the `{ capabilities, services, class }` shape (migrated off `{ naps, sandbox }`) with boot-readiness still detected, and the `boot/installs-global`, `boot/no-boot-error`, and graceful-degradation checks re-titled/documented to cite NAP-SHELL.
+**Plans:** 1 plan
+- [x] 155-01-PLAN.md — Implement NAP-SHELL across core (ShellEnvironment/NappletShell types), a new @napplet/nap/shell subpath, the shim (post shell.ready + cache shell.init {capabilities:{domains,protocols},services,class} + supports/services/class/ready/onReady), and conformance (validator recognizes shell.*, reference shell sends the new shape, boot/degrade checks cite NAP-SHELL); green at every commit.
 
 ### 🔨 v0.32.0 Napplet Conformance (Phases 148-152) — IN PROGRESS
 
@@ -589,8 +626,16 @@ Note: Phase 45 (IPC terminology cleanup) was completed as a quick task during v0
 
 ## Progress
 
-**Execution Order:**
-Phase 135 and Phase 136 are independent and MAY execute in parallel (Phase 135 ships first-party types/SDK; Phase 136 runs an empirical Playwright fixture — no shared artifact). Phase 137 blocks on BOTH (amendment cites the shipped surface from 135 and the observed CSP-block shape from 136). Phase 138 blocks on 135 (SDK surface to document) and 137 (amendment drafts to cite by filename). All v0.30.0 enforcement invariants (shell-side enforcement, filename citation discipline, public-repo hygiene) are cross-phase invariants and NOT optional per-phase add-ons.
+**Execution Order (v0.33.0 NAP-SHELL Alignment):**
+Phases execute in numeric order: 154 → 155. Phase 154 (Defer NAP-CONNECT) MUST precede Phase 155 (Implement NAP-SHELL) — retiring `connect`/`class` first clears the `perm:`/`sandbox` capability tokens so NAP-SHELL lands on the clean `{domains, protocols}` capabilities shape. Both stage GREEN at every commit (`pnpm -r build` + `pnpm -r type-check` exit 0). NAP-CLASS (DEFER-01) is already complete (commit `9aa4b80`) and has no phase.
+
+| Phase | Milestone | Plans Complete | Status | Completed |
+|-------|-----------|----------------|--------|-----------|
+| 154. Defer NAP-CONNECT | v0.33.0 | 1/1 | Complete | 2026-06-17 |
+| 155. Implement NAP-SHELL | v0.33.0 | 1/1 | Complete   | 2026-06-17 |
+
+<details>
+<summary>Archived progress — v0.30.0 Class-Gated Decrypt Surface (Phases 135-138) — SHIPPED 2026-04-23</summary>
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -598,3 +643,5 @@ Phase 135 and Phase 136 are independent and MAY execute in parallel (Phase 135 s
 | 136. Empirical CSP Injection-Block Verification | 2/2 | Complete    | 2026-04-23 |
 | 137. Public `napplet/nubs` Amendments (NUB-IDENTITY + NUB-CLASS-1 bundled) | 4/4 | Complete    | 2026-04-23 |
 | 138. In-Repo NIP-5D Amendment + Docs + Final Verification | 2/2 | Complete    | 2026-04-23 |
+
+</details>

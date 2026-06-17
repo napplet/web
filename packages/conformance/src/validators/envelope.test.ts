@@ -41,19 +41,6 @@ describe('validateEnvelope — direction enforcement', () => {
     expect(v.direction).toBe('in');
     expect(v.errors[0].code).toBe('inbound-type-emitted');
   });
-
-  it('rejects connect.* entirely (connect has no wire protocol)', () => {
-    const v = validateEnvelope({ type: 'connect.request', id: 'x' });
-    // connect is a known NAP domain but has zero envelope specs.
-    expect(v.ok).toBe(false);
-    expect(v.errors[0].code).toBe('unknown-type');
-  });
-
-  it('rejects class.assigned emitted by a napplet (shell-initiated only)', () => {
-    const v = validateEnvelope({ type: 'class.assigned', id: 'x', class: 1 });
-    expect(v.ok).toBe(false);
-    expect(v.errors[0].code).toBe('inbound-type-emitted');
-  });
 });
 
 describe('validateEnvelope — outbound field checks', () => {
@@ -113,13 +100,35 @@ describe('validateEnvelope — outbound field checks', () => {
   });
 });
 
+describe('validateEnvelope — NAP-SHELL foundational domain', () => {
+  it('accepts shell.ready as a bare outbound liveness ping', () => {
+    const v = validateEnvelope({ type: 'shell.ready' });
+    expect(v.ok).toBe(true);
+    expect(v.domain).toBe('shell');
+    expect(v.direction).toBe('out');
+  });
+
+  it('recognizes shell.init as inbound (not an unknown domain)', () => {
+    const v = validateEnvelope({
+      type: 'shell.init',
+      capabilities: { domains: [], protocols: {} },
+      services: [],
+      class: null,
+    });
+    expect(v.ok).toBe(false);
+    expect(v.domain).toBe('shell');
+    expect(v.direction).toBe('in');
+    expect(v.errors[0].code).toBe('inbound-type-emitted');
+  });
+});
+
 describe('ENVELOPE_SPECS invariants', () => {
-  it('has 123 discriminants split 60 outbound / 63 inbound', () => {
+  it('has 124 discriminants split 61 outbound / 63 inbound', () => {
     const all = knownEnvelopeTypes();
-    expect(all).toHaveLength(123);
+    expect(all).toHaveLength(124);
     const out = all.filter((t) => ENVELOPE_SPECS[t].dir === 'out');
     const inbound = all.filter((t) => ENVELOPE_SPECS[t].dir === 'in');
-    expect(out).toHaveLength(60);
+    expect(out).toHaveLength(61);
     expect(inbound).toHaveLength(63);
   });
 

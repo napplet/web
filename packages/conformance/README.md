@@ -15,11 +15,10 @@ envelope validates against the per-NAP validators, graceful degradation when
 ## What's in the box
 
 - `validateEnvelope(msg)` — runtime validation of any `domain.action` envelope a
-  napplet emits, across all 16 NAP domains. Catches malformed payloads, unknown
+  napplet emits, across all 14 NAP domains. Catches malformed payloads, unknown
   types, and napplets that put shell→napplet (inbound) traffic on the wire.
 - `validateManifest(html)` — checks `napplet-type`, `napplet-aggregate-hash`,
-  `napplet-requires`, `napplet-config-schema`, connect origins (via the canonical
-  `normalizeConnectOrigin`), and the no-inline-`<script>` rule.
+  `napplet-requires`, `napplet-config-schema`, and the no-inline-`<script>` rule.
 
 The validator surface is kept in lockstep with `@napplet/nap` by a drift test, so a
 new NAP message type cannot ship without matching conformance coverage.

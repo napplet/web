@@ -149,7 +149,6 @@ function renderManifest(html: string, fetched: boolean): string {
     <table class="manifest">
       ${row('napplet-type', m.nappletType)}
       ${row('requires', m.requires.join(', '))}
-      ${row('connect origins', m.connectOrigins.join(', '))}
     </table>
     ${m.errors.length ? `<div class="errs">${m.errors.map((e) => esc(`${e.code}: ${e.message}`)).join('<br>')}</div>` : ''}
   `;

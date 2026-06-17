@@ -6,22 +6,36 @@ import {
   type MessageWindowLike,
 } from './reference-shell.js';
 
-describe('createReferenceShell — handshake', () => {
-  it('answers shell.ready with shell.init carrying default (all-NAP) capabilities', () => {
-    const shell = createReferenceShell();
-    const out = shell.handle({ type: 'shell.ready' }) as Array<{ type: string; capabilities: { naps: string[] } }>;
+describe('createReferenceShell — NAP-SHELL handshake', () => {
+  it('answers shell.ready with shell.init carrying default (all-NAP) capabilities + services + class', () => {
+    const shell = createReferenceShell({ services: ['signer'], class: 1 });
+    const out = shell.handle({ type: 'shell.ready' }) as Array<{
+      type: string;
+      capabilities: { domains: string[]; protocols: Record<string, string[]> };
+      services: string[];
+      class: number | null;
+    }>;
     expect(out).toHaveLength(1);
     expect(out[0].type).toBe('shell.init');
-    expect(out[0].capabilities.naps).toContain('relay');
-    expect(out[0].capabilities.naps).toContain('storage');
+    expect(out[0].capabilities.domains).toContain('relay');
+    expect(out[0].capabilities.domains).toContain('storage');
+    expect(out[0].capabilities.protocols).toEqual({});
+    expect(out[0].services).toEqual(['signer']);
+    expect(out[0].class).toBe(1);
     // The handshake is not a NAP envelope; it must not be recorded.
     expect(shell.records).toHaveLength(0);
   });
 
   it('advertises empty capabilities when configured (drives supports()=false)', () => {
-    const shell = createReferenceShell({ capabilities: { naps: [], sandbox: [] } });
-    const out = shell.handle({ type: 'shell.ready' }) as Array<{ capabilities: { naps: string[] } }>;
-    expect(out[0].capabilities.naps).toEqual([]);
+    const shell = createReferenceShell({ capabilities: { domains: [], protocols: {} }, services: [], class: null });
+    const out = shell.handle({ type: 'shell.ready' }) as Array<{
+      capabilities: { domains: string[] };
+      services: string[];
+      class: number | null;
+    }>;
+    expect(out[0].capabilities.domains).toEqual([]);
+    expect(out[0].services).toEqual([]);
+    expect(out[0].class).toBeNull();
   });
 });
 

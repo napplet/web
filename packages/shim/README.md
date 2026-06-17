@@ -12,7 +12,7 @@
 
 1. Import `@napplet/shim` in your napplet's entry point (side-effect only -- no named exports)
 2. The shim registers with the shell via postMessage -- the shell assigns identity based on the iframe's `message.source` Window reference
-3. Once registered, `window.napplet` is populated with relay, inc, storage, keys, media, notify, identity, config, resource, connect, class, and shell sub-objects
+3. Once registered, `window.napplet` is populated with relay, inc, storage, keys, media, notify, identity, config, resource, cvm, outbox, upload, intent, and shell sub-objects
 4. No `window.nostr` is installed -- signing and encryption are mediated by the shell via `relay.publish()` and `relay.publishEncrypted()`
 
 ### Installation
@@ -112,18 +112,6 @@ const handle = window.napplet.resource.bytesAsObjectURL('blossom:sha256:e3b0c442
 imgEl.src = handle.url;
 // later: handle.revoke();
 
-// Check the shell-assigned class (undefined if shell doesn't implement nap:class)
-if (window.napplet.shell.supports('nap:class')) {
-  const cls = window.napplet.class;
-  if (cls === 2) { /* user-approved explicit-origin posture */ }
-}
-
-// Use direct network access if the user approved `connect` origins at build time
-if (window.napplet.connect.granted) {
-  const res = await fetch(`${window.napplet.connect.origins[0]}/items`);
-  const data = await res.json();
-}
-
 // Clean up
 sub.close();
 incSub.close();
@@ -194,8 +182,6 @@ Messages sent via `window.parent.postMessage(msg, '*')`:
 
 { type: 'resource.bytes', id: string, url: string }
 { type: 'resource.cancel', id: string }
-
-// (NAP-CONNECT has no postMessage wire — grants flow via CSP header + <meta name="napplet-connect-granted">)
 ```
 
 ### Inbound (shell → napplet)
@@ -249,8 +235,6 @@ Messages received via `window.addEventListener('message', ...)`:
 
 { type: 'resource.bytes.result', id: string, blob: Blob, mime: string }
 { type: 'resource.bytes.error', id: string, error: 'not-found' | 'blocked-by-policy' | 'timeout' | 'too-large' | 'unsupported-scheme' | 'decode-failed' | 'network-error' | 'quota-exceeded', message?: string }
-
-{ type: 'class.assigned', id: string, class: number }
 ```
 
 All request/response pairs are correlated by the `id` field. Identity request timeouts after 30 seconds.
@@ -329,11 +313,6 @@ window.napplet = {
     bytes(url, opts?): Promise<Blob>;
     bytesAsObjectURL(url): { url: string; revoke: () => void };
   },
-  connect: {
-    readonly granted: boolean;
-    readonly origins: readonly string[];
-  },
-  class?: number,   // shell-assigned via class.assigned envelope; undefined on shells without nap:class
   shell: {
     supports(capability: NamespacedCapability, protocol?: ProtocolId): boolean;
   },
@@ -451,75 +430,45 @@ Errors reject the Promise with one of 8 codes: `not-found`, `blocked-by-policy`,
 Capability detection:
 
 ```ts
-if (window.napplet.shell.supports('nap:resource')) { /* ... */ }
-if (window.napplet.shell.supports('resource:scheme:blossom')) { /* ... */ }
-if (window.napplet.shell.supports('perm:strict-csp')) { /* shell enforces strict CSP */ }
+if (window.napplet.shell.supports('resource')) { /* shell offers the resource NAP */ }
 ```
 
-### `window.napplet.connect`
+### `window.napplet.shell` — NAP-SHELL
 
-User-gated direct network access (NAP-CONNECT). NO postMessage wire — the shim reads `<meta name="napplet-connect-granted" content="<space-separated-origins>">` synchronously at install time. Napplets declare required origins at build time via `@napplet/vite-plugin`'s `connect: string[]` option; the user is prompted by the shell at first load per `(dTag, aggregateHash)`; on approval the shell emits a runtime CSP whose `connect-src` contains the approved origins AND injects the discovery meta tag.
+`shell` is the **foundational, mandatory** NAP domain — the one capability that
+is *not* discoverable via `supports()` and is always present. It is the bootstrap
+handshake:
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `granted` | `boolean` | `true` when the user approved all declared origins for this `(dTag, aggregateHash)`. `false` on denial, on shells without `nap:connect`, or pre-injection. |
-| `origins` | `readonly string[]` | The user-approved origins (already normalized per the shared `normalizeConnectOrigin` validator). Empty on denial. |
-
-**Graceful-degradation default:** `window.napplet.connect === { granted: false, origins: [] }` on shells that do not advertise `nap:connect` or have not injected the meta tag. The property is NEVER `undefined`.
+1. On import, the shim posts `shell.ready` (no payload) — a bare "my receiver is
+   live" liveness signal.
+2. The runtime replies **once** with `shell.init`, carrying the environment
+   `{ capabilities: { domains, protocols }, services, class }`.
+3. The shim caches that environment, so `supports(domain, protocol?)` is answered
+   **synchronously and locally** thereafter — no wire round-trip per query.
 
 ```ts
-if (window.napplet.shell.supports('nap:connect') && window.napplet.connect.granted) {
-  // Direct fetch / WebSocket to window.napplet.connect.origins is permitted.
-} else {
-  // Fall back to window.napplet.resource.bytes(url) for read-only byte fetches.
-}
+// Synchronous, local capability queries:
+window.napplet.shell.supports('relay');        // true if the runtime offers relay
+window.napplet.shell.supports('inc', 'NAP-2'); // true if it also speaks NAP-2
+window.napplet.shell.supports('unknown');      // false — domain not offered
+
+// Named services and the napplet's opaque class:
+window.napplet.shell.services;                 // string[]  (e.g. ['signer'])
+window.napplet.shell.class;                    // number | null (opaque; carried, not interpreted)
+
+// Gate startup on environment delivery:
+const env = await window.napplet.shell.ready();
+const sub = window.napplet.shell.onReady((e) => start(e));
 ```
 
-Capability detection (operator-policy refinements):
+Before `shell.init` arrives, `supports()` returns `false` for everything,
+`services` is `[]`, `class` is `null`, and `ready()` is pending. A duplicate
+`shell.init` is ignored (first init wins). Use `supports()` as a feature gate
+before calling APIs that depend on a specific domain or numbered protocol.
 
-```ts
-if (window.napplet.shell.supports('connect:scheme:http')) { /* cleartext http: origins permitted */ }
-if (window.napplet.shell.supports('connect:scheme:ws'))   { /* cleartext ws: origins permitted */ }
-```
-
-### `window.napplet.class`
-
-Shell-assigned integer class (NAP-CLASS). The shell sends exactly one `class.assigned` envelope per napplet lifecycle at iframe-ready time; the shim writes the integer to `window.napplet.class` via a `defineProperty` getter.
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `class` | `number \| undefined` | The class integer from the `class.assigned` envelope. `undefined` until the envelope arrives, or permanently `undefined` on shells that do not implement `nap:class`. |
-
-**Graceful-degradation default:** `window.napplet.class === undefined` on shells without `nap:class`, or before the wire envelope arrives. Never `0`, never `null`. Napplets SHOULD check `shell.supports('nap:class')` before branching on the value to distinguish "shell doesn't implement" from "envelope hasn't arrived yet".
-
-v0.29.0 ships two track members:
-- `class: 1` -> NAP-CLASS-1 (strict baseline; `connect-src 'none'`)
-- `class: 2` -> NAP-CLASS-2 (user-approved explicit-origin; `connect-src <granted-origins>`)
-
-The class integer is informational to the napplet; the shell enforces the posture via the CSP it serves with the HTML. Napplet code MUST NOT attempt to infer its own class from observed CSP or other signals — only `class.assigned` is authoritative.
-
-### `window.napplet.shell`
-
-Namespaced capability query. `supports()` checks whether the shell declared
-support for a NAP domain, permission, or numbered NAP-NN message protocol.
-
-```ts
-// NAP domains (bare shorthand or nap: prefix)
-window.napplet.shell.supports('relay');         // bare shorthand
-window.napplet.shell.supports('nap:identity');  // explicit prefix
-
-// Permissions
-window.napplet.shell.supports('perm:popups');
-
-// Numbered NAP-NN message protocols over an interface
-window.napplet.shell.supports('inc', 'NAP-01');
-```
-
-Currently returns `false` for shell-granted permissions and numbered protocols
-until the shell populates it at iframe creation time. A shell can advertise a
-numbered protocol by including an interface/protocol entry such as `inc:NAP-01`
-in its NAP capability list. Use this as a feature gate before calling APIs that
-depend on a specific capability or message protocol.
+The `@napplet/nap/shell` subpath provides the NAP-SHELL types and SDK helpers
+(`shellSupports`, `shellServices`, `shellClass`, `shellReady`, `shellOnReady`)
+alongside the other domain subpaths.
 
 ## TypeScript Support
 

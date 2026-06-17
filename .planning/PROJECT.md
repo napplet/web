@@ -1,6 +1,19 @@
 # Napplet Protocol SDK
 
-## Current Milestone: v0.32.0 Napplet Conformance
+## Current Milestone: v0.33.0 NAP-SHELL Alignment
+
+**Goal:** Align the SDK to the updated NAPs track — implement the mandatory NAP-SHELL bootstrap handshake, and defer the now-inactive NAP-CLASS and NAP-CONNECT domains.
+
+**Target features:**
+- Defer **NAP-CLASS** (`class` domain) — removed from `NAP_DOMAINS`, `window.napplet.class`, `@napplet/nap/class`, shim/sdk/conformance, docs. *(shipped — commit 9aa4b80)*
+- Defer **NAP-CONNECT** (`connect` domain) — remove from the active surface PLUS its build surface in `@napplet/vite-plugin` (the `connect` option, manifest `connect` tags, `napplet-connect-requires` meta) and the conformance `manifest/connect-origins` check. Keep manifest generation working.
+- Implement **NAP-SHELL** (mandatory, foundational) — `shell.ready` → `shell.init` handshake; `shell.init` carries `{ capabilities: { domains, protocols }, services, class }`; `window.napplet.shell` API gains `services`, `class` (opaque), `ready()`, `onReady()` alongside `supports(domain, protocol?)`; a `@napplet/nap/shell` subpath; the conformance envelope validator recognizes `shell.*` (drops the special-case) and the boot/degrade checks cite NAP-SHELL.
+
+**Scope (confirmed):** Source of truth is the NAPs track ([github.com/napplet/naps](https://github.com/napplet/naps), `naps/NAP-SHELL.md` + README domain table) and [NIP-5D PR #2303](https://github.com/nostr-protocol/nips/pull/2303). Never invent protocol surface (AGENTS.md "Protocol fidelity"). Breaking change (0.x ⇒ minor bumps); changeset per changed package. **Out of scope:** the new `value` (NAP-VALUE) and `pow` (NAP-POW) domains — a later milestone.
+
+**Key context:** Staged to stay green at every commit — defer `class` → defer `connect` → implement NAP-SHELL (retiring class/connect first clears the `perm:`/`sandbox` capability tokens so NAP-SHELL lands on the clean `{domains, protocols}` capabilities shape). Branch `feat/nap-shell` (off `main`). `class` capabilities shape question resolved by the deferral: `class` is now an opaque runtime-assigned integer carried by `shell.init` (no `class.assigned`).
+
+## Shipped: v0.32.0 Napplet Conformance
 
 **Goal:** Let any napplet self-verify protocol conformance locally — before publishing — via one browser-safe engine consumed by a headless CI CLI and a standalone single-window web runtime.
 

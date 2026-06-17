@@ -1,7 +1,7 @@
 {
   "name": "@napplet/nap",
   "version": "0.11.0",
-  "description": "All 16 napplet NAP domains (relay, storage, inc, keys, theme, media, notify, identity, config, resource, connect, class, cvm, outbox, upload, intent) as layered subpath exports",
+  "description": "The active napplet NAP domains (the foundational shell, plus relay, storage, inc, keys, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent) as layered subpath exports",
   "type": "module",
   "exports": {
     "./relay": {
@@ -83,6 +83,22 @@
     "./keys/sdk": {
       "types": "./dist/keys/sdk.d.ts",
       "import": "./dist/keys/sdk.js"
+    },
+    "./shell": {
+      "types": "./dist/shell/index.d.ts",
+      "import": "./dist/shell/index.js"
+    },
+    "./shell/types": {
+      "types": "./dist/shell/types.d.ts",
+      "import": "./dist/shell/types.js"
+    },
+    "./shell/shim": {
+      "types": "./dist/shell/shim.d.ts",
+      "import": "./dist/shell/shim.js"
+    },
+    "./shell/sdk": {
+      "types": "./dist/shell/sdk.d.ts",
+      "import": "./dist/shell/sdk.js"
     },
     "./theme": {
       "types": "./dist/theme/index.d.ts",
@@ -179,38 +195,6 @@
     "./resource/sdk": {
       "types": "./dist/resource/sdk.d.ts",
       "import": "./dist/resource/sdk.js"
-    },
-    "./connect": {
-      "types": "./dist/connect/index.d.ts",
-      "import": "./dist/connect/index.js"
-    },
-    "./connect/types": {
-      "types": "./dist/connect/types.d.ts",
-      "import": "./dist/connect/types.js"
-    },
-    "./connect/shim": {
-      "types": "./dist/connect/shim.d.ts",
-      "import": "./dist/connect/shim.js"
-    },
-    "./connect/sdk": {
-      "types": "./dist/connect/sdk.d.ts",
-      "import": "./dist/connect/sdk.js"
-    },
-    "./class": {
-      "types": "./dist/class/index.d.ts",
-      "import": "./dist/class/index.js"
-    },
-    "./class/types": {
-      "types": "./dist/class/types.d.ts",
-      "import": "./dist/class/types.js"
-    },
-    "./class/shim": {
-      "types": "./dist/class/shim.d.ts",
-      "import": "./dist/class/shim.js"
-    },
-    "./class/sdk": {
-      "types": "./dist/class/sdk.d.ts",
-      "import": "./dist/class/sdk.js"
     },
     "./cvm": {
       "types": "./dist/cvm/index.d.ts",

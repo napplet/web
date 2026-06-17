@@ -36,8 +36,6 @@ import {
   bytes as resourceBytes,
   bytesAsObjectURL as resourceBytesAsObjectURL,
 } from '@napplet/nap/resource/shim';
-import { installConnectShim } from '@napplet/nap/connect/shim';
-import { installClassShim, handleClassMessage } from '@napplet/nap/class/shim';
 import {
   installCvmShim,
   handleCvmMessage,
@@ -74,14 +72,66 @@ import {
   handlers as intentHandlers,
   onChanged as intentOnChanged,
 } from '@napplet/nap/intent/shim';
-import { NAP_DOMAINS, type NappletGlobal, type NamespacedCapability, type ProtocolId } from '@napplet/core';
+import type { NappletGlobal, NappletShell, ShellEnvironment, ShellInitMessage } from '@napplet/core';
+import { createShellEnvironment, makeSupports, defaultSupports } from '@napplet/nap/shell/shim';
 import type { IncEventMessage } from '@napplet/nap/inc/types';
 
-interface ShellInitMessage {
-  type: 'shell.init';
-  capabilities?: {
-    naps?: unknown;
-    sandbox?: unknown;
+// ── NAP-SHELL handshake state (foundational; mandatory) ──────────────────────
+// The shim posts shell.ready, the runtime replies once with shell.init, and we
+// cache that environment so window.napplet.shell.supports() answers locally.
+let currentEnv: ShellEnvironment | null = null;
+const readyResolvers: Array<(env: ShellEnvironment) => void> = [];
+const onReadyHandlers = new Set<(env: ShellEnvironment) => void>();
+
+/**
+ * Handle the first `shell.init`. Idempotent: a duplicate is ignored (first wins)
+ * per the NAP-SHELL "exactly once" + idempotent-readiness rule.
+ */
+function handleShellInit(msg: ShellInitMessage): void {
+  if (currentEnv) return; // first init wins
+  const env = createShellEnvironment(msg);
+  currentEnv = env;
+
+  const napplet = (window as Window & typeof globalThis & { napplet?: NappletGlobal }).napplet;
+  if (napplet) {
+    const shell = napplet.shell as NappletShell & {
+      supports: NappletShell['supports'];
+      services: readonly string[];
+      class: number | null;
+    };
+    shell.supports = makeSupports(env);
+    shell.services = env.services;
+    shell.class = env.class;
+  }
+
+  // Resolve all pending ready() promises and fire each onReady handler once.
+  for (const resolve of readyResolvers.splice(0)) resolve(env);
+  for (const handler of onReadyHandlers) handler(env);
+  onReadyHandlers.clear();
+}
+
+/** `window.napplet.shell.ready()` — resolve now if delivered, else queue. */
+function shellReady(): Promise<ShellEnvironment> {
+  if (currentEnv) return Promise.resolve(currentEnv);
+  return new Promise<ShellEnvironment>((resolve) => {
+    readyResolvers.push(resolve);
+  });
+}
+
+/** `window.napplet.shell.onReady()` — fire now if delivered, else register once. */
+function shellOnReady(handler: (env: ShellEnvironment) => void): { close(): void } {
+  if (currentEnv) {
+    handler(currentEnv);
+    return { close() { /* already fired */ } };
+  }
+  onReadyHandlers.add(handler);
+  let closed = false;
+  return {
+    close() {
+      if (closed) return;
+      closed = true;
+      onReadyHandlers.delete(handler);
+    },
   };
 }
 
@@ -98,7 +148,6 @@ const DOMAIN_ROUTERS: ReadonlyArray<readonly [string, DomainHandler]> = [
   ['media.', mediaShim.handleMediaMessage],
   ['notify.', handleNotifyMessage],
   ['resource.', handleResourceMessage],
-  ['class.', handleClassMessage],
   ['cvm.', handleCvmMessage],
   ['outbox.', handleOutboxMessage],
   ['upload.', handleUploadMessage],
@@ -120,7 +169,7 @@ function handleEnvelopeMessage(event: MessageEvent): void {
   const type = msg.type as string;
 
   if (type === 'shell.init') {
-    installShellCapabilities(msg as ShellInitMessage);
+    handleShellInit(msg as ShellInitMessage);
     return;
   }
 
@@ -140,77 +189,6 @@ function handleEnvelopeMessage(event: MessageEvent): void {
 }
 
 installIncShim();
-
-function defaultShellSupports(capability: NamespacedCapability, protocol?: ProtocolId): boolean {
-  if (protocol !== undefined) return false;
-
-  // perm:* — shell-granted only; nothing for the shim to assert.
-  if (typeof capability === 'string' && capability.startsWith('perm:')) return false;
-
-  const domain = normalizeCapabilityDomain(capability);
-
-  // Bare NAP shorthand (e.g. 'relay') or prefixed nap: capabilities.
-  return (NAP_DOMAINS as readonly string[]).includes(domain);
-}
-
-function normalizeCapabilityDomain(capability: string): string {
-  if (capability.startsWith('nap:')) {
-    return capability.slice(4);
-  }
-  return capability;
-}
-
-function normalizeProtocol(protocol: ProtocolId | undefined): string | undefined {
-  const upper = protocol?.toUpperCase();
-  if (!upper) return undefined;
-  return upper.startsWith('NAP-') ? `NAP-${upper.slice(4)}` : upper;
-}
-
-function listCapabilityNames(capabilities: ShellInitMessage['capabilities']): string[] {
-  return [
-    ...(Array.isArray(capabilities?.naps) ? capabilities.naps : []),
-  ].filter((capability): capability is string => typeof capability === 'string');
-}
-
-function createShellSupports(capabilities: ShellInitMessage['capabilities']): (capability: NamespacedCapability, protocol?: ProtocolId) => boolean {
-  const naps = new Set(
-    listCapabilityNames(capabilities)
-      .map(normalizeCapabilityDomain),
-  );
-  const protocols = new Set<string>();
-
-  for (const capability of naps) {
-    const match = /^([^:]+):(NAP-\d+)$/i.exec(capability);
-    if (!match) continue;
-    const [, domain, protocol] = match;
-    protocols.add(`${domain}:${normalizeProtocol(protocol as ProtocolId)}`);
-    naps.add(domain);
-  }
-
-  const sandbox = new Set(
-    Array.isArray(capabilities?.sandbox)
-      ? capabilities.sandbox.filter((capability): capability is string => typeof capability === 'string')
-      : [],
-  );
-
-  return (capability: NamespacedCapability, protocol?: ProtocolId): boolean => {
-    if (typeof capability !== 'string') return false;
-    if (protocol !== undefined) {
-      const normalizedProtocol = normalizeProtocol(protocol);
-      if (capability.startsWith('perm:') || !normalizedProtocol) return false;
-      const domain = normalizeCapabilityDomain(capability);
-      return protocols.has(`${domain}:${normalizedProtocol}`);
-    }
-    if (capability.startsWith('perm:')) return sandbox.has(capability);
-    return naps.has(normalizeCapabilityDomain(capability));
-  };
-}
-
-function installShellCapabilities(msg: ShellInitMessage): void {
-  const napplet = (window as Window & typeof globalThis & { napplet?: NappletGlobal }).napplet;
-  if (!napplet) return;
-  napplet.shell.supports = createShellSupports(msg.capabilities);
-}
 
 (window as Window & typeof globalThis & { napplet: NappletGlobal }).napplet = {
   relay: {
@@ -313,12 +291,12 @@ function installShellCapabilities(msg: ShellInitMessage): void {
     handlers: intentHandlers,
     onChanged: intentOnChanged,
   },
-  connect: {
-    granted: false,
-    origins: [],
-  },
   shell: {
-    supports: defaultShellSupports,
+    supports: defaultSupports,
+    services: [],
+    class: null,
+    ready: shellReady,
+    onReady: shellOnReady,
   },
 };
 
@@ -369,9 +347,3 @@ installUploadShim();
 
 // Install intent shim (intent.* request/response correlation + intent.changed listeners; no install-time work)
 installIntentShim();
-
-// Install class shim (mounts window.napplet.class readonly getter; undefined until class.assigned arrives)
-installClassShim();
-
-// Install connect shim (reads <meta name="napplet-connect-granted">; replaces literal's connect field with defineProperty getter)
-installConnectShim();

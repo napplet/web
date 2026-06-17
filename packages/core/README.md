@@ -57,14 +57,14 @@ interface RelaySubscribe extends NappletMessage {
 }
 ```
 
-The `type` field domain prefix (`relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `connect`, `class`) routes messages to the correct NAP handler via `dispatch()`.
+The `type` field domain prefix (`relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`) routes messages to the correct NAP handler via `dispatch()`.
 
 #### `NapDomain`
 
-String literal union of the twelve NAP capability domains.
+String literal union of the NAP capability domains.
 
 ```ts
-type NapDomain = 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'connect' | 'class';
+type NapDomain = 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'cvm' | 'outbox' | 'upload' | 'intent';
 ```
 
 | Domain    | Scope                                    |
@@ -79,15 +79,13 @@ type NapDomain = 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | '
 | `notify`  | Shell-rendered notifications              |
 | `config`  | Per-napplet declarative configuration (JSON Schema-driven) |
 | `resource` | Byte-fetching primitive (URL to Blob) |
-| `connect` | User-gated direct network access |
-| `class`   | Shell-assigned napplet class / security posture |
 
 #### `NAP_DOMAINS`
 
 Runtime constant array of all NAP domain strings. Useful for iteration and validation.
 
 ```ts
-const NAP_DOMAINS: readonly NapDomain[] = ['relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'connect', 'class'];
+const NAP_DOMAINS: readonly NapDomain[] = ['relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent'];
 
 for (const domain of NAP_DOMAINS) {
   console.log(`Checking support for: ${domain}`);
@@ -113,13 +111,48 @@ argument:
 window.napplet.shell.supports('inc', 'NAP-01');
 ```
 
-#### `NappletGlobalShell`
+#### `NappletShell` — NAP-SHELL (foundational handshake)
 
-Type for the `window.napplet.shell` namespace. Extends `ShellSupports`.
+Type for the `window.napplet.shell` namespace. `shell` is the **foundational,
+mandatory** NAP domain — the one capability that cannot be discovered via
+`supports()` (and is not a member of `NAP_DOMAINS`). The shim posts `shell.ready`
+(no payload); the runtime replies **once** with `shell.init` carrying the
+environment `{ capabilities: { domains, protocols }, services, class }`; the shim
+caches it so `supports(domain, protocol?)` answers **synchronously and locally**
+thereafter (`false` before init and for any unknown domain/protocol).
 
 ```ts
-interface NappletGlobalShell extends ShellSupports {}
+interface NappletShell {
+  supports(domain: string, protocol?: string): boolean;
+  readonly services: readonly string[];
+  readonly class: number | null;       // opaque integer the runtime assigns, or null
+  ready(): Promise<ShellEnvironment>;   // resolves once the environment is delivered
+  onReady(handler: (env: ShellEnvironment) => void): Subscription;
+}
+
+interface ShellEnvironment {
+  capabilities: ShellCapabilities;
+  services: string[];
+  class: number | null;
+}
+
+interface ShellCapabilities {
+  domains: string[];
+  protocols: Record<string, string[]>;
+}
 ```
+
+```ts
+// Synchronous, local capability queries (no wire round-trip):
+window.napplet.shell.supports('relay');        // true if the runtime offers relay
+window.napplet.shell.supports('inc', 'NAP-2'); // true if it also speaks NAP-2
+
+// Gate startup on the environment:
+const env = await window.napplet.shell.ready();
+const sub = window.napplet.shell.onReady((e) => start(e));
+```
+
+The `@napplet/nap/shell` subpath re-exports these types alongside `DOMAIN`.
 
 ---
 
@@ -333,7 +366,8 @@ TOPICS.WM_FOCUSED_WINDOW_CHANGED // 'wm:focused-window-changed'
 
 ```ts
 import type {
-  NappletMessage, NapDomain, NamespacedCapability, NapProtocolId, ShellSupports, NappletGlobalShell,
+  NappletMessage, NapDomain, NamespacedCapability, NapProtocolId, ShellSupports,
+  NappletShell, ShellEnvironment, ShellCapabilities, ShellReadyMessage, ShellInitMessage,
   NapHandler, NapDispatch,
   NostrEvent, NostrFilter, Capability,
   Subscription, EventTemplate, NappletGlobal,
@@ -347,7 +381,10 @@ import type {
 | `NamespacedCapability` | Union of `NapDomain \| nap:* \| perm:*` for `supports()` |
 | `NapProtocolId` | Numbered NAP protocol id such as `NAP-01` for the optional second `supports()` argument |
 | `ShellSupports` | Interface with `supports()` capability query method |
-| `NappletGlobalShell` | Type for `window.napplet.shell` (extends `ShellSupports`) |
+| `NappletShell` | NAP-SHELL type for `window.napplet.shell` (`supports`, `services`, `class`, `ready`, `onReady`) |
+| `ShellEnvironment` | The `shell.init` environment: `{ capabilities, services, class }` |
+| `ShellCapabilities` | The capability set `{ domains, protocols }` answering `supports()` |
+| `ShellReadyMessage` / `ShellInitMessage` | NAP-SHELL wire message types |
 | `NapHandler` | Callback type for domain handlers |
 | `NapDispatch` | Interface returned by `createDispatch()` |
 | `NostrEvent` | Nostr event structure |

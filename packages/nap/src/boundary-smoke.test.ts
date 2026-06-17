@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import { handleClassMessage } from './class/shim.js';
 import { handleConfigMessage } from './config/shim.js';
 import { handleCvmMessage } from './cvm/shim.js';
 import { handleIdentityMessage } from './identity/shim.js';
@@ -15,7 +14,6 @@ describe('shim message boundary guards', () => {
   it('ignores unknown message types without throwing', () => {
     const message = { type: 'unknown.domain' };
 
-    expect(() => handleClassMessage(message)).not.toThrow();
     expect(() => handleConfigMessage(message)).not.toThrow();
     expect(() => handleCvmMessage(message)).not.toThrow();
     expect(() => handleIdentityMessage(message)).not.toThrow();

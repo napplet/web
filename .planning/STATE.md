@@ -1,15 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v0.32.0
-milestone_name: Napplet Conformance
-status: planning
-last_updated: "2026-06-16T17:49:21.028Z"
-last_activity: 2026-06-16
+milestone: v0.33.0
+milestone_name: NAP-SHELL Alignment
+status: "Milestone v0.33.0 shipped — PR #48"
+stopped_at: Completed 155-01-PLAN.md (Implement NAP-SHELL — SHELL-01..06)
+last_updated: "2026-06-17T02:36:42.735Z"
+last_activity: "2026-06-17 — Executed 155-01-PLAN.md: added @napplet/core NAP-SHELL types, the @napplet/nap/shell subpath, migrated the shim handshake to cache the `{ capabilities:{domains,protocols}, services, class }` environment, and migrated conformance (validator/reference-shell/boot/checks). 4 task commits (4eddcb5, 99de482, 86a9ca6, e8e5438). build + type-check + test:unit all green."
 progress:
-  total_phases: 5
-  completed_phases: 5
-  total_plans: 0
-  completed_plans: 0
+  total_phases: 2
+  completed_phases: 2
+  total_plans: 2
+  completed_plans: 2
   percent: 100
 ---
 
@@ -21,16 +22,45 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 
 **Core value:** Prove that sandboxed Nostr apps can securely delegate to a host shell over a simple, standardized protocol — and ship the spec + SDK so others can build on it.
 
-**Current focus:** Planning next milestone
+**Current focus:** v0.33.0 NAP-SHELL Alignment — Phase 154 (Defer NAP-CONNECT) + Phase 155 (Implement NAP-SHELL) both COMPLETE; all SHELL-01..06 satisfied. Milestone ready for verify/audit.
 
 > **Provenance note:** The "Accumulated Context" section below preserves bullet records from BOTH branches' STATE.md histories. Records tagged "v0.29.0" from main's lineage refer to the milestone NOW renumbered as v0.30.0 (Class-Gated Decrypt — Phases 135-138). Records tagged "v0.29.0" from feat/strict-model refer to NUB-CONNECT (Phases 135-142). Phase number alone is not a unique identifier across the two; cross-reference the topic (decrypt/identity/NIP-07 → v0.30.0; connect/class/CSP-authority → v0.29.0).
 
 ## Current Position
 
-Phase: 153 (extension) COMPLETE — conformance app UI/watch mode + HMR-style live re-run.
-Plan: —
+Phase: 155 (Implement NAP-SHELL) — COMPLETE
+Plan: 155-01 — COMPLETE
+Status: Milestone v0.33.0 shipped — PR #48
+Last activity: 2026-06-17 — Executed 155-01-PLAN.md: added @napplet/core NAP-SHELL types, the @napplet/nap/shell subpath, migrated the shim handshake to cache the `{ capabilities:{domains,protocols}, services, class }` environment, and migrated conformance (validator/reference-shell/boot/checks). 4 task commits (4eddcb5, 99de482, 86a9ca6, e8e5438). build + type-check + test:unit all green.
+
+### Phase 155 record (SHELL-01..06) — COMPLETE
+
+- SHELL-01: validateEnvelope accepts the foundational `shell` domain (FOUNDATIONAL_DOMAINS, NOT in NAP_DOMAINS); `shell.ready` (out) + `shell.init` (in) specs added; reference-shell special-case framing removed. Count invariant 122→124 (61 out/63 in).
+- SHELL-02/03: shim posts `shell.ready`, caches the first `shell.init` into a ShellEnvironment, swaps in makeSupports, exposes services/class/ready()/onReady(); supports() false pre-init/unknown; duplicate init idempotent (first wins). NappletShell typed in @napplet/core.
+- SHELL-04: reference shell replies `{ capabilities:{domains,protocols}, services, class }`; boot harness degraded path `{ domains:[], protocols:{} }`; readiness still detected via shell.ready.
+- SHELL-05: `@napplet/nap/shell` subpath (types/shim/sdk/index) mirroring theme; package.json/jsr.json/tsup wired; re-exports core types + DOMAIN='shell'.
+- SHELL-06: boot/installs-global, boot/no-boot-error, degrade/supports-false re-titled/documented to cite NAP-SHELL (IDs/severities unchanged).
+- Removed `NappletGlobalShell` (sole consumer migrated); `ShellSupports` kept (sdk consumer). Retired the shim's perm:/sandbox path entirely.
+- Deviation (Rule 3): shim/src/shell.test.ts cast `window as unknown as {napplet}` to satisfy package tsc. Out-of-scope: apps/docs/packages/shim.md still lists deferred connect/class rows (logged to deferred-items.md).
+
+### Phase 154 record (DEFER-02..04) — COMPLETE
+
+- DEFER-02: `connect` removed from core (`NAP_DOMAINS`/`NapDomain` → 14 entries, `window.napplet.connect`/`ConnectApi` deleted), `@napplet/nap/connect` subpath + `__fixtures__` + package/jsr/tsup exports deleted, sdk re-exports + shim install removed.
+- DEFER-03: `@napplet/vite-plugin` `connect` option + manifest `connect` tags + `napplet-connect-requires` dev meta + `connect.ts`/`normalizeConnectOptions` + orphaned `strictCsp` deprecation removed; NIP-5A manifest generation still emits path + aggregate `x` + config tags (verified by narrowed aggregate-exclusion test).
+- DEFER-04: conformance `manifest/connect-origins` check + `normalizeConnectOrigin` dependency removed; `validateManifest` no longer validates connect origins; envelope drift guard now asserts every NAP_DOMAINS entry has wire specs.
+- Mirror of shipped NAP-CLASS deferral `9aa4b80`, extended to vite-plugin + conformance-manifest. Cleaned 2 orphaned NAP-CLASS doc refs the class commit missed.
+- nap.md tree-shaking count corrected to the REAL 60 entries / 15 barrels (the package ships a legacy `ifc` subpath beyond the 14 NAP_DOMAINS). ENVELOPE_SPECS count stayed 122/60-out/62-in (connect was wire-less).
+- Commits: 5dcd976 (core), 2441b74 (nap), 9e51727 (vite-plugin), bbfdea4 (conformance), 32f736e (docs), 763b84f (residual fixes). 6 task commits, all on branch `feat/nap-shell`.
+
+### v0.33.0 roadmap
+
+- Highest prior phase = 153 (v0.32.0 conformance UI/watch follow-on); v0.33.0 continues at 154.
+- Phase 154 Defer NAP-CONNECT (DEFER-02..04) MUST precede Phase 155 Implement NAP-SHELL (SHELL-01..06).
+- DEFER-01 (defer NAP-CLASS) already shipped in commit `9aa4b80` — no phase; marked complete in traceability.
+- Staged GREEN at every commit; retire connect/class first so NAP-SHELL lands on the clean `{domains, protocols}` capabilities shape. Branch `feat/nap-shell` off `main`.
 
 ### Phase 153 record (UI/watch extension, user-requested follow-on) — COMPLETE
+
 - Goal: start the conformance app via CLI (like `vitest --ui`) + HMR/live re-run, shippable as a boilerplate script; no regression to headless.
 - `napplet-conformance --ui [dir] [--port] [--no-open] [--exec "<cmd>"]`: serves the bundled conformance web app + the napplet (same origin, ACAO, Cache-Control:no-store) + an SSE stream; watches the napplet's served dir; opens the browser; re-runs conformance live on every change. `--exec "vite build --watch"` makes it one turnkey command (edit→rebuild→auto re-run). Headless path untouched (`--ui` additive).
 - One UI codebase: the CLI bundles apps/conformance/dist into dist/ui at build time (scripts/copy-ui.mjs; @napplet/conformance-web added as workspace devDep for build order). Same app served standalone at /conformance.
@@ -38,9 +68,11 @@ Plan: —
 - Shared static.ts (MIME/sendFile/setCors) used by both servers; startUiServer refactored into helpers (handleSse/handleNapplet/handleApp/startWatcher) to clear a function-length finding.
 - Boilerplate doc + READMEs add `test:conformance` (headless) + `test:conformance:ui` (app variant).
 - Verified: live browser loop CONFORMANT → (edit napplet) → auto re-ran → NON-CONFORMANT. cli unit tests 4→8 (ui-server SSE/watch/serve/SPA). Full gate green: build, type-check, test:unit (216), test:e2e (4), test:conformance. aislop 89 (my code clean).
+
 Status: M1+M2+M3+M4 COMPLETE. Final gate green: build(11), type-check(14), test:unit(212), test:e2e(4), test:conformance(CONFORMANT). aislop 89 (only environmental vite/js-yaml dep advisories remain). Changesets authored; new packages at 0.0.0 → first publish 0.1.0.
 
 ### Phase 152 record (REL-01..05) — COMPLETE
+
 - REL-01: root `pnpm test:conformance` dogfood green (CLI vs conformant fixture, exit 0).
 - REL-02: boilerplate template change documented at docs/conformance/boilerplate-integration.md (separate napplet/boilerplate repo); also surfaced in PR body.
 - REL-03: root README (packages table + Conformance section + changelog bullet + website list), skills/build-napplet/SKILL.md (Step 13), package READMEs.
@@ -48,20 +80,25 @@ Status: M1+M2+M3+M4 COMPLETE. Final gate green: build(11), type-check(14), test:
 - REL-05: full cross-path gate green; aislop 89/Healthy.
 - NOTE FOR USER: README on main already had a `v0.32.0 — Read-Only NAP-IDENTITY` changelog entry (pre-existing) that collides with this milestone's v0.32.0 label. Left it untouched; added conformance additively. Milestone version label may need reconciliation (this work could be v0.33.0). Surfaced in PR.
 - NOTE: aislop's 1 error = vite (high, upgrade 6.4.3+) + 1 warn = js-yaml — both environmental dependency advisories, not introduced here; out of scope (separate dep-bump like v0.31.0).
+
 Last activity: 2026-06-16 — Phase 150 (b7a7f7e) CLI+fixtures+e2e+CI; Phase 151 apps/conformance web runtime verified live (CONFORMANT, 2 envelopes, manifest inspector) + deploy wiring at /conformance
 
 ### Phase 150 record (CLI-01..06) — COMPLETE (b7a7f7e)
+
 - @napplet/conformance-cli (npm-only, playwright). bin napplet-conformance. Loopback ACAO:* server + Playwright Chromium + bootAndCollect + node-side checks + reporters + exit codes. Fixtures (conformant/broken) under tests/fixtures/napplets/*. e2e under tests/e2e/harness (test:e2e). conformance.yml CI with browser cache. Verified: conformant->0, broken->1.
 
 ### Phase 151 record (WEB-01..03) — COMPLETE
+
 - apps/conformance (@napplet/conformance-web): vanilla TS + Vite. Loads napplet by ?url= / input, runs engine live (bootAndCollect+runConformance), renders check tree + envelope log + manifest inspector. Reuses @napplet/conformance directly. type-check + build green. Verified live in real browser cross-origin: verdict CONFORMANT, 2 envelopes, manifest-type rendered. Deploy wiring: deploy-site.yml builds with base=/conformance/ and assembles into site/conformance.
 
 ### Phase 150 design decisions (in progress)
+
 - Sandbox opacity: a napplet in allow-scripts (no same-origin) iframe is opaque to parent. Observable boot signal = shim's `shell.ready` postMessage. Boot failure = no shell.ready within timeout (also how same-origin reliance manifests). Forbidden-global (window.nostr) access is UNOBSERVABLE across the sandbox → detected via static scan of the built bundle (node-side), fed into ConformanceContext.forbiddenGlobals.
 - Split: `bootAndCollect` (browser-safe DOM harness) lives in the ENGINE (reused by CLI host page AND web runtime). Returns BootCollection { installedGlobal, bootError, emitted, degraded }. `runConformance` runs in node (pure). 
 - NEW PACKAGE `@napplet/conformance-cli` (separate from engine): depends on @napplet/conformance + playwright. Keeps engine zero-heavy-dep + JSR-publishable; CLI is npm-only. Bin `napplet-conformance`. Serves napplet dir + host page on loopback, Playwright chromium runs bootAndCollect, returns BootCollection, node assembles ctx (+manifestHtml +forbiddenGlobals static-scan) and runs checks + reporters + exit code.
 
 ### Phase 148 record (ENGINE-01/03/04/05) — COMPLETE
+
 - `@napplet/conformance` v0.1.0 package: ESM-only, deps @napplet/core + @napplet/nap (workspace:^), tsup/type-check/vitest, package.json + jsr.json.
 - `ENVELOPE_SPECS`: single source-of-truth map of all 123 wire discriminants (60 outbound / 63 inbound; connect=0). `validateEnvelope()` returns field-level verdicts (codes: not-an-object, missing-type, malformed-type, unknown-domain, unknown-type, inbound-type-emitted, missing-field, wrong-type).
 - `validateManifest()`: napplet-type (regex), napplet-aggregate-hash (64-hex), napplet-requires (known NAP / nap: prefix), napplet-config-schema (JSON, rejects `pattern` keyword), napplet-connect-requires (canonical `normalizeConnectOrigin` from @napplet/nap/connect/types), no-inline-`<script>` (ported from vite-plugin html.ts).
@@ -195,9 +232,9 @@ Items acknowledged and deferred at v0.31.0 milestone close on 2026-05-24:
 
 ## Session Continuity
 
-Last session: 2026-04-23T15:19:18.662Z
-Stopped at: Completed 138-02-PLAN.md (parallel wave 1)
-Resume: `/gsd:plan-phase 135` to plan first-party types + SDK plumbing. Phase 136 may be planned in parallel.
+Last session: 2026-06-17T04:30:00.000Z
+Stopped at: Completed 155-01-PLAN.md (Implement NAP-SHELL — SHELL-01..06)
+Resume: Phase 155 COMPLETE. All v0.33.0 SHELL requirements satisfied; both phases (154, 155) done. Next: orchestrator verify_phase_goal for Phase 155, then `/gsd:audit-milestone v0.33.0` → `/gsd:ship`.
 
 - v0.26.0: Consolidated `@napplet/nub-*` packages into single `@napplet/nub` with 34 subpath exports; deprecated packages ship as 1-line re-export shims for one release cycle
 - v0.27.0: Runtime API surface uses IFC terminology (`window.napplet.ifc`, `@napplet/sdk` `ifc` export); hard break, no backward-compat alias
@@ -255,4 +292,4 @@ Resume: Phase 142 TERMINAL-COMPLETE — all 13 VER-IDs (VER-01..13) verified PAS
 
 ## Operator Next Steps
 
-- Start the next milestone with /gsd-new-milestone
+- Phase 155 (Implement NAP-SHELL) COMPLETE. Run `/gsd:audit-milestone v0.33.0`, then `/gsd:ship`.

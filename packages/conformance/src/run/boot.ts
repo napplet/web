@@ -5,11 +5,11 @@
  * iframe, attaches a {@link createReferenceShell reference shell}, and observes what
  * a host can actually see across the sandbox boundary:
  *
- *  - **installedGlobal / bootError** — derived from the shim's `shell.ready`
- *    postMessage. A no-`same-origin` sandbox is opaque to the parent, so
- *    `window.napplet` cannot be introspected directly; `shell.ready` is the real
- *    boot signal, and its absence within the timeout is how same-origin reliance
- *    (or a crash-on-boot) manifests.
+ *  - **installedGlobal / bootError** — derived from the shim's NAP-SHELL
+ *    `shell.ready` postMessage. A no-`same-origin` sandbox is opaque to the
+ *    parent, so `window.napplet` cannot be introspected directly; the NAP-SHELL
+ *    `shell.ready` signal is the real boot signal, and its absence within the
+ *    timeout is how same-origin reliance (or a crash-on-boot) manifests.
  *  - **emitted** — every envelope the napplet posts, recorded with a verdict.
  *  - **degraded** — an optional second boot under a no-capability shell to prove
  *    graceful degradation.
@@ -31,7 +31,7 @@ import type { BootObservation } from './context.js';
 
 /** What a host can observe by booting the napplet. */
 export interface BootCollection {
-  /** True when the napplet posted `shell.ready` (its shim installed and ran). */
+  /** True when the napplet posted the NAP-SHELL `shell.ready` signal (its shim installed and ran). */
   installedGlobal: boolean;
   /** Boot failure reason, or `null`. */
   bootError: string | null;
@@ -147,7 +147,7 @@ export async function bootAndCollect(options: BootOptions): Promise<BootCollecti
 
   let degraded: BootObservation | null = null;
   if (options.runDegraded ?? true) {
-    const d = await bootOnce({ naps: [], sandbox: [] }, resolved, doc, win);
+    const d = await bootOnce({ domains: [], protocols: {} }, resolved, doc, win);
     degraded = { bootError: d.bootError, emitted: d.emitted };
   }
 
