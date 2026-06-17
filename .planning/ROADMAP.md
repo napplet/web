@@ -50,7 +50,7 @@ Note: Phase 45 (IPC terminology cleanup) was completed as a quick task during v0
 
 **Phase groups:** Phase 154 Defer NAP-CONNECT → Phase 155 Implement NAP-SHELL. Phase 154 MUST precede Phase 155. Ships as one coordinated release PR off branch `feat/nap-shell`.
 
-- [ ] **Phase 154: Defer NAP-CONNECT** — Remove the `connect` (NAP-CONNECT) domain from the runtime surface (`NAP_DOMAINS`/`NapDomain`, `window.napplet.connect`, the `@napplet/nap/connect` subpath incl. `__fixtures__` + package/jsr/tsup exports, sdk re-exports, conformance connect envelopes), from `@napplet/vite-plugin`'s build/manifest surface (the `connect` option, manifest `connect` tags, `napplet-connect-requires` dev meta, `connect.ts`/`normalizeConnectOptions`, the now-orphaned `strictCsp` deprecation), and from conformance (`manifest/connect-origins` check + `normalizeConnectOrigin` dependency) — while NIP-5A manifest generation still works. Requirements: DEFER-02, DEFER-03, DEFER-04.
+- [x] **Phase 154: Defer NAP-CONNECT** — Remove the `connect` (NAP-CONNECT) domain from the runtime surface (`NAP_DOMAINS`/`NapDomain`, `window.napplet.connect`, the `@napplet/nap/connect` subpath incl. `__fixtures__` + package/jsr/tsup exports, sdk re-exports, conformance connect envelopes), from `@napplet/vite-plugin`'s build/manifest surface (the `connect` option, manifest `connect` tags, `napplet-connect-requires` dev meta, `connect.ts`/`normalizeConnectOptions`, the now-orphaned `strictCsp` deprecation), and from conformance (`manifest/connect-origins` check + `normalizeConnectOrigin` dependency) — while NIP-5A manifest generation still works. Requirements: DEFER-02, DEFER-03, DEFER-04.
 - [ ] **Phase 155: Implement NAP-SHELL** — Implement the mandatory foundational handshake: `@napplet/shim` posts `shell.ready` and caches the `shell.init` environment `{ capabilities: { domains, protocols }, services, class }`, then answers `supports(domain, protocol?)` synchronously/locally; `window.napplet.shell` exposes `supports()`, `services: string[]`, `class: number | null`, `ready()`, `onReady()` typed in `@napplet/core`; a `@napplet/nap/shell` subpath exposes NAP-SHELL types/surface; the conformance envelope validator recognizes `shell.*` (dropping the special-case) and registers `shell` as the foundational domain; the reference shell replies with the `{ capabilities, services, class }` shape; and the boot/degrade checks cite NAP-SHELL. Requirements: SHELL-01, SHELL-02, SHELL-03, SHELL-04, SHELL-05, SHELL-06.
 
 ## Phase Details — v0.33.0 NAP-SHELL Alignment
@@ -66,7 +66,7 @@ Note: Phase 45 (IPC terminology cleanup) was completed as a quick task during v0
   4. A repo-wide grep for the retired connect surface (`window.napplet.connect`, `normalizeConnectOrigin`, `napplet-connect-requires`, `connect-origins`) returns zero first-party matches outside historical changelog/spec records.
 
 **Plans:** 1 plan
-- [ ] 154-01-PLAN.md — Remove the connect domain from core/nap/sdk/shim, vite-plugin build+manifest, and conformance; keep build/type-check/test green and NIP-5A manifest generation working (mirrors NAP-CLASS deferral 9aa4b80).
+- [x] 154-01-PLAN.md — Remove the connect domain from core/nap/sdk/shim, vite-plugin build+manifest, and conformance; keep build/type-check/test green and NIP-5A manifest generation working (mirrors NAP-CLASS deferral 9aa4b80).
 
 ### Phase 155: Implement NAP-SHELL
 **Goal**: NAP-SHELL is implemented as the mandatory, foundational (non-`supports()`-discoverable) bootstrap handshake — the shim performs `shell.ready` → `shell.init`, caches the `{ capabilities: { domains, protocols }, services, class }` environment, and answers `supports(domain, protocol?)` synchronously and locally; the public `window.napplet.shell` API, a `@napplet/nap/shell` subpath, and the conformance engine all recognize `shell.*` as a first-class NAP rather than a private special-case.
@@ -630,7 +630,7 @@ Phases execute in numeric order: 154 → 155. Phase 154 (Defer NAP-CONNECT) MUST
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 154. Defer NAP-CONNECT | v0.33.0 | 0/TBD | Not started | - |
+| 154. Defer NAP-CONNECT | v0.33.0 | 1/1 | Complete | 2026-06-17 |
 | 155. Implement NAP-SHELL | v0.33.0 | 0/TBD | Not started | - |
 
 <details>

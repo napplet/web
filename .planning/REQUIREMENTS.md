@@ -17,9 +17,9 @@ capabilities shape).
 ### Defer inactive NAPs (DEFER)
 
 - [x] **DEFER-01**: The `class` (NAP-CLASS) domain is removed from the active surface — `NAP_DOMAINS`/`NapDomain`, `window.napplet.class`, the `@napplet/nap/class` subpath (+ package/jsr/tsup exports), shim install + router, sdk re-exports, the `class.assigned` conformance envelope, and docs/READMEs. *(shipped — commit 9aa4b80)*
-- [ ] **DEFER-02**: The `connect` (NAP-CONNECT) domain is removed from the runtime surface — `NAP_DOMAINS`/`NapDomain`, `window.napplet.connect`, the `@napplet/nap/connect` subpath incl. `__fixtures__` (+ package/jsr/tsup exports), sdk re-exports, and the conformance connect envelopes.
-- [ ] **DEFER-03**: NAP-CONNECT's build/manifest surface is removed from `@napplet/vite-plugin` — the `connect` option, manifest `connect` tags, the `napplet-connect-requires` dev meta, `connect.ts`/`normalizeConnectOptions`, and the now-orphaned `strictCsp` deprecation — while NIP-5A manifest generation still works.
-- [ ] **DEFER-04**: The conformance `manifest/connect-origins` check and the `normalizeConnectOrigin` dependency are removed; `validateManifest` no longer references connect origins.
+- [x] **DEFER-02**: The `connect` (NAP-CONNECT) domain is removed from the runtime surface — `NAP_DOMAINS`/`NapDomain`, `window.napplet.connect`, the `@napplet/nap/connect` subpath incl. `__fixtures__` (+ package/jsr/tsup exports), sdk re-exports, and the conformance connect envelopes. *(Phase 154-01)*
+- [x] **DEFER-03**: NAP-CONNECT's build/manifest surface is removed from `@napplet/vite-plugin` — the `connect` option, manifest `connect` tags, the `napplet-connect-requires` dev meta, `connect.ts`/`normalizeConnectOptions`, and the now-orphaned `strictCsp` deprecation — while NIP-5A manifest generation still works. *(Phase 154-01)*
+- [x] **DEFER-04**: The conformance `manifest/connect-origins` check and the `normalizeConnectOrigin` dependency are removed; `validateManifest` no longer references connect origins. *(Phase 154-01)*
 
 ### NAP-SHELL bootstrap handshake (SHELL)
 
@@ -48,9 +48,9 @@ Every v0.33.0 requirement maps to exactly one phase (DEFER-01 shipped pre-milest
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | DEFER-01 | — (shipped `9aa4b80`) | Complete |
-| DEFER-02 | Phase 154 | Pending |
-| DEFER-03 | Phase 154 | Pending |
-| DEFER-04 | Phase 154 | Pending |
+| DEFER-02 | Phase 154 | Complete |
+| DEFER-03 | Phase 154 | Complete |
+| DEFER-04 | Phase 154 | Complete |
 | SHELL-01 | Phase 155 | Pending |
 | SHELL-02 | Phase 155 | Pending |
 | SHELL-03 | Phase 155 | Pending |
