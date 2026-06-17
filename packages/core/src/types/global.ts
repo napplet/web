@@ -6,7 +6,6 @@ import type {
   ThemeApi,
   ConfigApi,
   ResourceApi,
-  ConnectApi,
 } from './global/runtime-api.js';
 import type { CvmApi, OutboxApi, UploadApi, IntentApi } from './global/service-api.js';
 
@@ -189,35 +188,6 @@ export interface NappletGlobal {
    * ```
    */
   resource: ResourceApi;
-  /**
-   * User-gated direct network access: napplet declares desired `connect` origins
-   * at build time via `@napplet/vite-plugin`'s `connect` option; shell prompts the
-   * user at first load per `(dTag, aggregateHash)`; shell emits an explicit
-   * `connect-src <origin1> <origin2> …` CSP header on approval. The browser
-   * enforces network access at the CSP layer — shell has zero visibility into
-   * post-grant traffic. Napplet reads its own grant state via this namespace;
-   * both fields are populated synchronously at shim install from the
-   * `<meta name="napplet-connect-granted">` tag injected by the shell.
-   *
-   * Graceful degradation: `{ granted: false, origins: [] }` when shell does not
-   * advertise `nap:connect`, does not inject the meta tag, or denies the grant.
-   * This object is NEVER `undefined`.
-   *
-   * @example
-   * ```ts
-   * // Check grant state before firing cross-origin fetches:
-   * if (window.napplet.connect.granted) {
-   *   // CSP allows connect-src to these origins:
-   *   const allowed = window.napplet.connect.origins;
-   *   // fetch() will succeed for allowed origins, throw CSP violations otherwise.
-   *   const resp = await fetch('https://api.example.com/me');
-   * }
-   *
-   * // Capability-check the shell for the NAP itself:
-   * if (window.napplet.shell.supports('nap:connect')) { ... }
-   * ```
-   */
-  connect: ConnectApi;
   /**
    * Native ContextVM bridge (NAP-CVM): MCP-over-Nostr access mediated by the shell.
    *
