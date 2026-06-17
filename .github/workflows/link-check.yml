@@ -10,18 +10,20 @@ name: Link check
 on:
   push:
     branches: [main]
+    # Docs surface only. The job still assembles + crawls the full site (SPA at /,
+    # docs at /docs), but a docs change is what warrants re-running the check; the
+    # checker's own machinery re-triggers it too.
     paths:
-      - 'apps/web/**'
       - 'apps/docs/**'
-      - 'packages/**'
       - 'scripts/check-links.mjs'
       - '.github/workflows/link-check.yml'
   pull_request:
     branches: [main]
+    # Docs surface only. The job still assembles + crawls the full site (SPA at /,
+    # docs at /docs), but a docs change is what warrants re-running the check; the
+    # checker's own machinery re-triggers it too.
     paths:
-      - 'apps/web/**'
       - 'apps/docs/**'
-      - 'packages/**'
       - 'scripts/check-links.mjs'
       - '.github/workflows/link-check.yml'
   workflow_dispatch:

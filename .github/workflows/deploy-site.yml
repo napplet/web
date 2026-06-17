@@ -7,11 +7,12 @@ name: Deploy site
 on:
   push:
     branches: [main]
+    # SPA + docs surface only. (The job also assembles the conformance app at
+    # /conformance; a conformance-app- or packages-only change no longer triggers
+    # a deploy — use workflow_dispatch, or it ships on the next SPA/docs change.)
     paths:
       - 'apps/web/**'
       - 'apps/docs/**'
-      - 'apps/conformance/**'
-      - 'packages/**'
       - '.github/workflows/deploy-site.yml'
   workflow_dispatch:
 
