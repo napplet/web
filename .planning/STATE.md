@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v0.33.0
 milestone_name: NAP-SHELL Alignment
-status: planning
+status: "Milestone v0.33.0 shipped — PR #48"
 stopped_at: Completed 155-01-PLAN.md (Implement NAP-SHELL — SHELL-01..06)
-last_updated: "2026-06-17T04:30:00.000Z"
-last_activity: "2026-06-17 — Executed 155-01-PLAN.md: implemented NAP-SHELL end to end (core types + @napplet/nap/shell subpath + shim handshake + conformance). shell.init migrated {naps,sandbox}->{capabilities:{domains,protocols},services,class}. build + type-check + test:unit all green."
+last_updated: "2026-06-17T02:36:42.735Z"
+last_activity: "2026-06-17 — Executed 155-01-PLAN.md: added @napplet/core NAP-SHELL types, the @napplet/nap/shell subpath, migrated the shim handshake to cache the `{ capabilities:{domains,protocols}, services, class }` environment, and migrated conformance (validator/reference-shell/boot/checks). 4 task commits (4eddcb5, 99de482, 86a9ca6, e8e5438). build + type-check + test:unit all green."
 progress:
   total_phases: 2
   completed_phases: 2
@@ -30,7 +30,7 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 
 Phase: 155 (Implement NAP-SHELL) — COMPLETE
 Plan: 155-01 — COMPLETE
-Status: Phase 155 shipped (NAP-SHELL implemented end to end across core/nap/shim/conformance); all SHELL-01..06 complete. v0.33.0 milestone ready for verify/audit.
+Status: Milestone v0.33.0 shipped — PR #48
 Last activity: 2026-06-17 — Executed 155-01-PLAN.md: added @napplet/core NAP-SHELL types, the @napplet/nap/shell subpath, migrated the shim handshake to cache the `{ capabilities:{domains,protocols}, services, class }` environment, and migrated conformance (validator/reference-shell/boot/checks). 4 task commits (4eddcb5, 99de482, 86a9ca6, e8e5438). build + type-check + test:unit all green.
 
 ### Phase 155 record (SHELL-01..06) — COMPLETE
