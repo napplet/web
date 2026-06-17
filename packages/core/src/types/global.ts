@@ -1,5 +1,7 @@
 import type { NappletShell } from './shell.js';
 import type { RelayApi, IncApi, StorageApi, KeysApi } from './global/nostr-api.js';
+
+export type { NappletInstanceStorage } from './global/nostr-api.js';
 import type { MediaApi, NotifyApi } from './global/media-api.js';
 import type {
   IdentityApi,

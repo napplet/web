@@ -14,6 +14,7 @@
  */
 
 import type {
+  StorageScope,
   StorageGetMessage,
   StorageSetMessage,
   StorageRemoveMessage,
@@ -71,12 +72,64 @@ function sendStorageRequest(
   });
 }
 
+// Scope-aware request builders shared by the shared (top-level) and instance
+// surfaces. When scope === 'instance', the `scope` field is included on the
+// wire; otherwise it is omitted entirely so shared requests stay byte-identical
+// to pre-scope builds (NAP-STORAGE: "shared" is the default and the absence of
+// `scope` MUST behave exactly as a shared request).
+
+async function getItemScoped(key: string, scope?: StorageScope): Promise<string | null> {
+  const msg: StorageGetMessage = {
+    type: 'storage.get',
+    id: crypto.randomUUID(),
+    key,
+    ...(scope === 'instance' ? { scope } : {}),
+  };
+  const result = await sendStorageRequest(msg) as StorageGetResultMessage;
+  return result.value;
+}
+
+async function setItemScoped(key: string, value: string, scope?: StorageScope): Promise<void> {
+  const msg: StorageSetMessage = {
+    type: 'storage.set',
+    id: crypto.randomUUID(),
+    key,
+    value,
+    ...(scope === 'instance' ? { scope } : {}),
+  };
+  await sendStorageRequest(msg);
+}
+
+async function removeItemScoped(key: string, scope?: StorageScope): Promise<void> {
+  const msg: StorageRemoveMessage = {
+    type: 'storage.remove',
+    id: crypto.randomUUID(),
+    key,
+    ...(scope === 'instance' ? { scope } : {}),
+  };
+  await sendStorageRequest(msg);
+}
+
+async function keysScoped(scope?: StorageScope): Promise<string[]> {
+  const msg: StorageKeysMessage = {
+    type: 'storage.keys',
+    id: crypto.randomUUID(),
+    ...(scope === 'instance' ? { scope } : {}),
+  };
+  const result = await sendStorageRequest(msg) as StorageKeysResultMessage;
+  return result.keys;
+}
+
 /**
  * Async localStorage-like state API for sandboxed napplets.
  *
  * Routes all state operations through the shell's state proxy via postMessage.
  * Each napplet's state is namespaced by its identity -- napplets cannot read each other's data.
  * A per-napplet 512 KB quota is enforced by the shell.
+ *
+ * Top-level methods use the default `"shared"` scope and emit no `scope` field
+ * on the wire. The `instance` sub-object is sugar that sets `scope: "instance"`
+ * for per-instance storage (NAP-STORAGE).
  */
 export const nappletStorage = {
   /**
@@ -86,14 +139,8 @@ export const nappletStorage = {
    * @param key  The state key
    * @returns The stored value, or null if not found
    */
-  async getItem(key: string): Promise<string | null> {
-    const msg: StorageGetMessage = {
-      type: 'storage.get',
-      id: crypto.randomUUID(),
-      key,
-    };
-    const result = await sendStorageRequest(msg) as StorageGetResultMessage;
-    return result.value;
+  getItem(key: string): Promise<string | null> {
+    return getItemScoped(key);
   },
 
   /**
@@ -103,14 +150,8 @@ export const nappletStorage = {
    * @param value  The string value to store
    * @throws If the napplet exceeds its 512 KB state quota
    */
-  async setItem(key: string, value: string): Promise<void> {
-    const msg: StorageSetMessage = {
-      type: 'storage.set',
-      id: crypto.randomUUID(),
-      key,
-      value,
-    };
-    await sendStorageRequest(msg);
+  setItem(key: string, value: string): Promise<void> {
+    return setItemScoped(key, value);
   },
 
   /**
@@ -118,13 +159,8 @@ export const nappletStorage = {
    *
    * @param key  The state key to remove
    */
-  async removeItem(key: string): Promise<void> {
-    const msg: StorageRemoveMessage = {
-      type: 'storage.remove',
-      id: crypto.randomUUID(),
-      key,
-    };
-    await sendStorageRequest(msg);
+  removeItem(key: string): Promise<void> {
+    return removeItemScoped(key);
   },
 
   /**
@@ -132,13 +168,47 @@ export const nappletStorage = {
    *
    * @returns Array of state key strings
    */
-  async keys(): Promise<string[]> {
-    const msg: StorageKeysMessage = {
-      type: 'storage.keys',
-      id: crypto.randomUUID(),
-    };
-    const result = await sendStorageRequest(msg) as StorageKeysResultMessage;
-    return result.keys;
+  keys(): Promise<string[]> {
+    return keysScoped();
+  },
+
+  /**
+   * Per-instance storage: identical surface to the shared methods, but every
+   * request carries `scope: "instance"` so the shell scopes the value to this
+   * napplet instance rather than sharing it across instances (NAP-STORAGE).
+   */
+  instance: {
+    /**
+     * Retrieve a per-instance value by key. Returns null if not found.
+     * @param key  The state key
+     */
+    getItem(key: string): Promise<string | null> {
+      return getItemScoped(key, 'instance');
+    },
+
+    /**
+     * Store a per-instance key-value pair.
+     * @param key    The state key
+     * @param value  The string value to store
+     */
+    setItem(key: string, value: string): Promise<void> {
+      return setItemScoped(key, value, 'instance');
+    },
+
+    /**
+     * Remove a per-instance key.
+     * @param key  The state key to remove
+     */
+    removeItem(key: string): Promise<void> {
+      return removeItemScoped(key, 'instance');
+    },
+
+    /**
+     * List all per-instance keys for this napplet instance.
+     */
+    keys(): Promise<string[]> {
+      return keysScoped('instance');
+    },
   },
 };
 

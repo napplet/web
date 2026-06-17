@@ -25,7 +25,7 @@ Top-level namespaced objects that mirror `window.napplet`:
 
 - **`relay`** — `subscribe`, `publish`, `publishEncrypted`, `query`
 - **`inc`** — `emit`, `on` (plus deprecated `ifc*` migration aliases)
-- **`storage`** — `getItem`, `setItem`, `removeItem`, `keys`
+- **`storage`** — `getItem`, `setItem`, `removeItem`, `keys`, plus `storage.instance.*` (per-instance scope)
 - **`keys`** — `registerAction`, `unregisterAction`, `onAction`
 - **`media`** — `createSession`, `reportState`, `onCommand`, …
 - **`notify`** — `send`, `badge`, `onAction`, …

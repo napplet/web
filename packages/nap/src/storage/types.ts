@@ -16,6 +16,18 @@ import type { NappletMessage } from '@napplet/core';
 export const DOMAIN = 'storage' as const;
 
 /**
+ * Storage scope for a request: `"shared"` (default) or `"instance"`.
+ *
+ * `"shared"` is the default; a request that omits `scope` MUST behave exactly
+ * as a shared request (backward compatible). `"instance"` selects per-instance
+ * storage, reached via the `instance.*` sugar. This is the only wire-level
+ * addition for per-instance storage.
+ *
+ * @see NAP-STORAGE (napplet/naps) — non-normative; defer to the spec.
+ */
+export type StorageScope = 'shared' | 'instance';
+
+/**
  * Base interface for all storage NAP messages.
  * Concrete message types narrow the `type` field to specific literals.
  */
@@ -42,6 +54,8 @@ export interface StorageGetMessage extends StorageMessage {
   id: string;
   /** The storage key to retrieve. */
   key: string;
+  /** Storage scope; default `"shared"` when omitted. */
+  scope?: StorageScope;
 }
 
 /**
@@ -65,6 +79,8 @@ export interface StorageSetMessage extends StorageMessage {
   key: string;
   /** The string value to store. */
   value: string;
+  /** Storage scope; default `"shared"` when omitted. */
+  scope?: StorageScope;
 }
 
 /**
@@ -76,6 +92,8 @@ export interface StorageRemoveMessage extends StorageMessage {
   id: string;
   /** The storage key to remove. */
   key: string;
+  /** Storage scope; default `"shared"` when omitted. */
+  scope?: StorageScope;
 }
 
 /**
@@ -85,6 +103,8 @@ export interface StorageKeysMessage extends StorageMessage {
   type: 'storage.keys';
   /** Correlation ID. */
   id: string;
+  /** Storage scope; default `"shared"` when omitted. */
+  scope?: StorageScope;
 }
 
 /**

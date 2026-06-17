@@ -64,6 +64,43 @@ export interface IncApi {
 }
 
 /**
+ * Per-instance napplet storage: identical surface to the shared {@link StorageApi}
+ * methods, but every request is scoped to this napplet instance rather than
+ * shared across all instances of the same napplet type.
+ *
+ * Reached via `window.napplet.storage.instance.*`. On the wire each call sets
+ * `scope: "instance"`; the shared top-level methods omit `scope` entirely.
+ *
+ * Non-normative summary — defer to NAP-STORAGE (napplet/naps) for the
+ * authoritative scope semantics.
+ */
+export interface NappletInstanceStorage {
+  /**
+   * Retrieve a per-instance value by key. Returns null if the key does not exist.
+   * @param key  The storage key
+   * @returns The stored string value, or null if not found
+   */
+  getItem(key: string): Promise<string | null>;
+  /**
+   * Store a per-instance key-value pair.
+   * @param key    The storage key
+   * @param value  The string value to store
+   * @throws If the napplet exceeds its storage quota
+   */
+  setItem(key: string, value: string): Promise<void>;
+  /**
+   * Remove a per-instance key.
+   * @param key  The storage key to remove
+   */
+  removeItem(key: string): Promise<void>;
+  /**
+   * List all per-instance keys for this napplet instance.
+   * @returns Array of storage key strings
+   */
+  keys(): Promise<string[]>;
+}
+
+/**
  * Napplet-scoped storage: async localStorage-like API proxied through the shell.
  * Each napplet's storage is isolated by identity — napplets cannot read each other's data.
  */
@@ -91,6 +128,14 @@ export interface StorageApi {
    * @returns Array of storage key strings
    */
   keys(): Promise<string[]>;
+  /**
+   * Per-instance storage: same surface as the shared methods above, but scoped
+   * to this napplet instance. Sets `scope: "instance"` on the wire; the shared
+   * top-level methods emit no `scope` field.
+   *
+   * Non-normative summary — defer to NAP-STORAGE (napplet/naps).
+   */
+  instance: NappletInstanceStorage;
 }
 
 /**

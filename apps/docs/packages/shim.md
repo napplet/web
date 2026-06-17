@@ -34,7 +34,7 @@ After `import '@napplet/shim'`, the global is populated with these sub-objects:
 | --- | --- |
 | `relay` | `subscribe`, `publish`, `publishEncrypted`, `query` through the shell's relay pool |
 | `inc` | Inter-napplet communication: `emit`, `on` |
-| `storage` | Scoped key-value storage: `getItem`, `setItem`, `removeItem`, `keys` (512 KB quota) |
+| `storage` | Scoped key-value storage: `getItem`, `setItem`, `removeItem`, `keys` (512 KB quota), plus `storage.instance.*` for per-instance scope |
 | `keys` | Keyboard forwarding + action keybindings: `registerAction`, `unregisterAction`, `onAction` |
 | `media` | Ownership-aware media sessions: `createSession`, `reportState`, `onCommand`, … |
 | `notify` | Shell-rendered notifications: `send`, `badge`, `onAction`, … |
