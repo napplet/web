@@ -285,6 +285,7 @@ Surfaced by research (informational — each belongs to a specific phase plan):
 | 260524-l1t | please add a workflow that runs the ai slop scan and produces a badge for the readme that shows the score | 2026-05-24 | 2835356 | [260524-l1t-please-add-a-workflow-that-runs-the-ai-s](./quick/260524-l1t-please-add-a-workflow-that-runs-the-ai-s/) |
 | 260615-fast | fix docs 404s: .html doc URLs (cleanUrls:false + SPA links) so they resolve on Bunny/nsite static hosting | 2026-06-15 | 025d4d9 | — (inline /gsd:fast) |
 | 260615-u78 | add CI link checker for SPA + docs (Playwright crawl over static-host-served assembly) to catch the cleanUrls 404 class | 2026-06-15 | 80586c3 | [260615-u78-add-ci-link-checker-for-spa-docs](./quick/260615-u78-add-ci-link-checker-for-spa-docs/) |
+| 260617-83q | Fix napplet/web#53: remove anti-spec assertNoInlineScripts (vite-plugin) + the no-inline-scripts conformance check — inline JS is mandatory under NIP-5D srcdoc/opaque-origin loading. Harden AGENTS.md protocol-fidelity guardrails | 2026-06-17 | 44cf48c | [260617-83q-fix-napplet-web-53-remove-anti-spec-asse](./quick/260617-83q-fix-napplet-web-53-remove-anti-spec-asse/) |
 
 Last session: 2026-04-21T20:46:00.000Z
 Stopped at: Completed 142-03-PLAN.md (Phase 142 TERMINAL-COMPLETE)
