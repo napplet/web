@@ -16,6 +16,7 @@
 export { DOMAIN } from './types.js';
 
 export type {
+  StorageScope,
   StorageMessage,
   StorageGetMessage,
   StorageSetMessage,
@@ -32,7 +33,16 @@ export type {
 
 export { installStorageShim, nappletStorage } from './shim.js';
 
-export { storageGetItem, storageSetItem, storageRemoveItem, storageKeys } from './sdk.js';
+export {
+  storageGetItem,
+  storageSetItem,
+  storageRemoveItem,
+  storageKeys,
+  storageInstanceGetItem,
+  storageInstanceSetItem,
+  storageInstanceRemoveItem,
+  storageInstanceKeys,
+} from './sdk.js';
 
 import { registerNap } from '@napplet/core';
 import { DOMAIN } from './types.js';

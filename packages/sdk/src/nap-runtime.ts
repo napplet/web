@@ -60,7 +60,16 @@ export {
   identityGetBadges,
 } from '@napplet/nap/identity';
 export { themeGet, themeOnChanged } from '@napplet/nap/theme';
-export { storageGetItem, storageSetItem, storageRemoveItem, storageKeys } from '@napplet/nap/storage';
+export {
+  storageGetItem,
+  storageSetItem,
+  storageRemoveItem,
+  storageKeys,
+  storageInstanceGetItem,
+  storageInstanceSetItem,
+  storageInstanceRemoveItem,
+  storageInstanceKeys,
+} from '@napplet/nap/storage';
 export { incEmit, incOn } from '@napplet/nap/inc';
 /**
  * @deprecated Use {@link incEmit} and {@link incOn}.

@@ -85,6 +85,7 @@ export type {
   ShellReadyMessage,
   ShellInitMessage,
   NappletGlobal,
+  NappletInstanceStorage,
 } from './types.js';
 
 export { TOPICS } from './topics.js';

@@ -152,10 +152,10 @@ Messages sent via `window.parent.postMessage(msg, '*')`:
 { type: 'inc.subscribe', id: string, topic: string }
 { type: 'inc.unsubscribe', topic: string }
 
-{ type: 'storage.get', id: string, key: string }
-{ type: 'storage.set', id: string, key: string, value: string }
-{ type: 'storage.remove', id: string, key: string }
-{ type: 'storage.keys', id: string }
+{ type: 'storage.get', id: string, key: string, scope?: 'shared' | 'instance' }
+{ type: 'storage.set', id: string, key: string, value: string, scope?: 'shared' | 'instance' }
+{ type: 'storage.remove', id: string, key: string, scope?: 'shared' | 'instance' }
+{ type: 'storage.keys', id: string, scope?: 'shared' | 'instance' }
 
 { type: 'keys.forward', key: string, code: string, ctrl: boolean, alt: boolean, shift: boolean, meta: boolean }
 { type: 'keys.registerAction', id: string, action: { id: string, label: string, defaultKey?: string } }
@@ -260,6 +260,12 @@ window.napplet = {
     setItem(key, value): Promise<void>;
     removeItem(key): Promise<void>;
     keys(): Promise<string[]>;
+    instance: {
+      getItem(key): Promise<string | null>;
+      setItem(key, value): Promise<void>;
+      removeItem(key): Promise<void>;
+      keys(): Promise<string[]>;
+    };
   },
   keys: {
     registerAction(action): Promise<{ actionId: string; binding?: string }>;
@@ -349,6 +355,7 @@ Sandboxed key-value storage proxied through the shell. Scoped by napplet identit
 | `setItem(key, value)` | `Promise<void>` | Store a key-value pair. Throws on quota exceeded. |
 | `removeItem(key)` | `Promise<void>` | Remove a stored key. |
 | `keys()` | `Promise<string[]>` | List all keys stored by this napplet. |
+| `instance.getItem/setItem/removeItem/keys` | (same as above) | Per-instance storage scope — same surface, scoped to this napplet instance (sets `scope: "instance"` on the wire). See NAP-STORAGE. |
 
 ### `window.napplet.keys`
 

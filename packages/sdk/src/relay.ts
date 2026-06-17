@@ -176,4 +176,44 @@ export const storage = {
   keys(): Promise<string[]> {
     return requireNapplet().storage.keys();
   },
+
+  /**
+   * Per-instance storage: same surface as the shared methods, but scoped to this
+   * napplet instance (sets `scope: "instance"` on the wire) rather than shared
+   * across instances. Defer to NAP-STORAGE (napplet/naps) for scope semantics.
+   */
+  instance: {
+    /**
+     * Retrieve a per-instance value by key. Returns null if not found.
+     * @param key  The storage key
+     */
+    getItem(key: string): Promise<string | null> {
+      return requireNapplet().storage.instance.getItem(key);
+    },
+
+    /**
+     * Store a per-instance key-value pair.
+     * @param key    The storage key
+     * @param value  The string value to store
+     */
+    setItem(key: string, value: string): Promise<void> {
+      return requireNapplet().storage.instance.setItem(key, value);
+    },
+
+    /**
+     * Remove a per-instance key.
+     * @param key  The storage key to remove
+     */
+    removeItem(key: string): Promise<void> {
+      return requireNapplet().storage.instance.removeItem(key);
+    },
+
+    /**
+     * List all per-instance keys for this napplet instance.
+     * @returns Array of storage key strings
+     */
+    keys(): Promise<string[]> {
+      return requireNapplet().storage.instance.keys();
+    },
+  },
 };

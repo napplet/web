@@ -113,6 +113,24 @@ Declares a JSON Schema (draft-07+) describing the napplet's per-napplet configur
 
 If none of the three paths resolve a schema, manifest/meta emission for the config tag is skipped silently -- build produces bytes identical to a pre-phase-114 napplet.
 
+#### archetypes (optional)
+
+**Type:** `Array<string | { slug: string; naps?: string[] }>`
+
+Declares the NAAT archetype roles this napplet fulfills (napplet/naps `ARCHETYPES.md`). Each entry emits **one** `['archetype', slug, ...naps]` tag on the kind 35129 manifest event, where `slug` is the role slug and `naps` are the NAP-N wire format(s) the napplet accepts for that role. A napplet may declare several archetype roles; a napplet with no archetype tag is fully valid.
+
+```ts
+nip5aManifest({
+  nappletType: 'my-feed',
+  // Object form (role + accepted NAP wire formats) and string shorthand
+  // ("feed" ≡ { slug: "feed" }) may be mixed:
+  archetypes: [{ slug: 'feed', naps: ['NAP-4'] }, 'note'],
+});
+// → emits ['archetype', 'feed', 'NAP-4'] and ['archetype', 'note']
+```
+
+Like the `config` tag, archetype tags are **not** folded into `aggregateHash`: per NIP-5D §Identity the aggregate is the NIP-5A hash of the `path` tags alone, so declaring archetypes never changes the napplet's content address. Blank slugs are skipped.
+
 #### artifactMode (optional, v1.11+)
 
 **Type:** `'external-assets' | 'single-file'`

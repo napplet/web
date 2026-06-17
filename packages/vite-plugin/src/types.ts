@@ -65,6 +65,23 @@ export interface Nip5aManifestOptions {
    * @see NAP-CONFIG spec (napplet/naps#13)
    */
   configSchema?: NappletConfigSchema | string;
+  /**
+   * NAAT archetype roles this napplet fulfills (napplet/naps `ARCHETYPES.md`).
+   *
+   * Each entry emits one `["archetype", slug, ...naps]` NIP-5A manifest tag,
+   * where `slug` is the role slug and `naps` are the NAP-N wire format(s) the
+   * napplet accepts for that role. A napplet may declare several archetype
+   * roles; a napplet with no archetype tag is fully valid.
+   *
+   * Accepts the object form `{ slug, naps? }` or a string shorthand where
+   * `"feed"` is equivalent to `{ slug: "feed" }` (no naps). Blank slugs are
+   * skipped.
+   *
+   * Like the `config` tag, archetype tags are excluded from the aggregate `x`
+   * hash (NIP-5D §Identity: the aggregate is recomputed from `path` tags
+   * alone). Non-normative summary — defer to `ARCHETYPES.md` (napplet/naps).
+   */
+  archetypes?: Array<string | { slug: string; naps?: string[] }>;
 }
 
 /** Internal: resolved per-plugin-instance build state shared across hooks. */

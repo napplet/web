@@ -206,6 +206,12 @@ installIncShim();
     setItem: nappletStorage.setItem.bind(nappletStorage),
     removeItem: nappletStorage.removeItem.bind(nappletStorage),
     keys: nappletStorage.keys.bind(nappletStorage),
+    instance: {
+      getItem: nappletStorage.instance.getItem.bind(nappletStorage.instance),
+      setItem: nappletStorage.instance.setItem.bind(nappletStorage.instance),
+      removeItem: nappletStorage.instance.removeItem.bind(nappletStorage.instance),
+      keys: nappletStorage.instance.keys.bind(nappletStorage.instance),
+    },
   },
   keys: {
     registerAction,

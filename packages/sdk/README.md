@@ -142,6 +142,7 @@ Sandboxed key-value storage. Mirrors `window.napplet.storage`. 512 KB quota per 
 | `setItem(key, value)` | `Promise<void>` | Store a key-value pair |
 | `removeItem(key)` | `Promise<void>` | Remove a stored key |
 | `keys()` | `Promise<string[]>` | List all stored keys |
+| `instance.getItem/setItem/removeItem/keys` | (same as above) | Per-instance storage scope — same surface, scoped to this napplet instance (sets `scope: "instance"` on the wire). See NAP-STORAGE. |
 
 ### `media`
 

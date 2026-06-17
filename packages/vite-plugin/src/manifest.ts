@@ -149,6 +149,10 @@ function buildManifestTemplate(
   const configTags =
     state.resolvedSchema !== null ? [['config', JSON.stringify(state.resolvedSchema)]] : [];
   const requiresTags = (options.requires ?? []).map((name) => ['requires', name]);
+  // Archetype tags (NAAT, napplet/naps `ARCHETYPES.md`): one
+  // `['archetype', slug, ...naps]` per declared role. Like config/requires they
+  // are NOT passed to computeAggregateHash — only pathPairs feed the aggregate.
+  const archetypeTags = buildArchetypeTags(options.archetypes);
 
   return {
     kind: NAPPLET_KIND_NAMED,
@@ -159,10 +163,30 @@ function buildManifestTemplate(
       ['x', aggregateHash, 'aggregate'],
       ...configTags,
       ...requiresTags,
+      ...archetypeTags,
     ],
     content: '',
     aggregateHash,
   };
+}
+
+/**
+ * Normalize the `archetypes` option into `['archetype', slug, ...naps]` tags.
+ * Accepts the object form `{ slug, naps? }` and the string shorthand
+ * (`"feed"` ≡ `{ slug: "feed" }`). Entries with an empty/blank slug are skipped.
+ */
+function buildArchetypeTags(
+  archetypes: Nip5aManifestOptions['archetypes'],
+): string[][] {
+  if (!archetypes) return [];
+  const tags: string[][] = [];
+  for (const entry of archetypes) {
+    const slug = (typeof entry === 'string' ? entry : entry.slug).trim();
+    if (slug === '') continue;
+    const naps = typeof entry === 'string' ? [] : entry.naps ?? [];
+    tags.push(['archetype', slug, ...naps]);
+  }
+  return tags;
 }
 
 /**
