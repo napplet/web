@@ -291,6 +291,7 @@ Surfaced by research (informational — each belongs to a specific phase plan):
 | 260617-mym | Resolve #57 (NAP-STORAGE per-instance scope) and #58 (NAAT archetype manifest tag) | 2026-06-17 | e63ee78 | [260617-mym-resolve-57-nap-storage-per-instance-scop](./quick/260617-mym-resolve-57-nap-storage-per-instance-scop/) |
 | 260617-qmu | Retire deferred NAP-CLASS / NAP-CONNECT surface from docs/specs AND the residual opaque `class` field re-homed into NAP-SHELL `shell.init` (canonical NAP-SHELL has no class) — AGENTS.md rule 8 | 2026-06-17 | 9ffa822 | [260617-qmu-retire-deferred-nap-class-nap-connect-su](./quick/260617-qmu-retire-deferred-nap-class-nap-connect-su/) |
 | 260617-rel | Publish per-package GitHub Releases (CHANGELOG body) after npm deploy — idempotent scripts/github-releases.mjs + Publish-workflow step (fast) | 2026-06-17 | 6a49f80 | — (inline /gsd:fast) |
+| 260619-qvr | Clarify alpha status in the bottom packages and boilerplate install sections | 2026-06-19 | 2a9d6b3 | [260619-qvr-clarify-alpha-status-notices-in-bottom-p](./quick/260619-qvr-clarify-alpha-status-notices-in-bottom-p/) |
 
 Last session: 2026-04-21T20:46:00.000Z
 Stopped at: Completed 142-03-PLAN.md (Phase 142 TERMINAL-COMPLETE)

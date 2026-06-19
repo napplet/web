@@ -14,6 +14,14 @@
       </p>
     </div>
 
+    <aside class="alpha-notice" aria-label="Alpha development ecosystem notice" use:reveal={{ delay: 80 }}>
+      <span class="notice-kicker">Alpha tooling</span>
+      <p>
+        The development ecosystem is alpha. Packages can break, tooling paths may be
+        incomplete, and the living spec can drift under active implementation.
+      </p>
+    </aside>
+
     <div class="grid">
       {#each PACKAGES as p, i}
         <a class="card pkg" href={p.docs} use:reveal={{ delay: (i % 3) * 60 }}>
@@ -49,6 +57,31 @@
 
 <style>
   .head { margin-bottom: 48px; }
+  .alpha-notice {
+    display: grid;
+    grid-template-columns: minmax(130px, 0.25fr) 1fr;
+    gap: 18px;
+    align-items: center;
+    margin: -16px 0 28px;
+    padding: 18px 22px;
+    border: 1px solid rgba(255, 206, 107, 0.38);
+    border-radius: 16px;
+    background:
+      linear-gradient(90deg, rgba(255, 206, 107, 0.12), rgba(255, 107, 199, 0.06)),
+      rgba(16, 7, 25, 0.72);
+    box-shadow: 0 18px 46px -30px rgba(255, 206, 107, 0.85);
+  }
+  .notice-kicker {
+    font-family: var(--font-mono);
+    color: var(--amber);
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .alpha-notice p {
+    color: var(--text);
+    font-size: 0.98rem;
+  }
   .grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -93,6 +126,10 @@
     .grid { grid-template-columns: repeat(2, 1fr); }
   }
   @media (max-width: 600px) {
+    .alpha-notice {
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
     .grid { grid-template-columns: 1fr; }
   }
 </style>
