@@ -3,6 +3,7 @@
   import { LINKS } from '../lib/site';
 
   let copied = $state(false);
+  let acceptedAlpha = $state(false);
   const cmd = 'npx @napplet/boilerplate';
 
   async function copy() {
@@ -19,29 +20,52 @@
 <section id="start" class="section start">
   <div class="container">
     <div class="panel" use:reveal>
-      <span class="eyebrow">Get started</span>
-      <h2 class="section-title">Scaffold a napplet in one command</h2>
-      <p class="section-lead">
-        The generator clones the template and sets up a Vite + TypeScript napplet, wired to
-        the shim. Point it at a compatible shell and you’re live.
-      </p>
+      {#if !acceptedAlpha}
+        <div class="alpha-gate" role="dialog" aria-modal="true" aria-labelledby="alpha-gate-title">
+          <div class="gate-card">
+            <span class="gate-kicker">Alpha boilerplate</span>
+            <h3 id="alpha-gate-title">Before you scaffold</h3>
+            <p>
+              The boilerplate is alpha, it could be broken, some tooling paths could be
+              broken or not complete. The spec could drift
+            </p>
+            <button class="btn btn-primary gate-action" onclick={() => (acceptedAlpha = true)}>
+              I Understand
+            </button>
+          </div>
+        </div>
+      {/if}
 
-      <button class="cmd" onclick={copy} aria-label="Copy command">
-        <span class="prompt">$</span>
-        <code>{cmd}</code>
-        <span class="copy">{copied ? 'copied ✓' : 'copy'}</span>
-      </button>
+      <div
+        class="panel-content"
+        class:locked={!acceptedAlpha}
+        aria-hidden={!acceptedAlpha}
+        inert={!acceptedAlpha}
+      >
+        <span class="eyebrow">Get started</span>
+        <h2 class="section-title">Scaffold a napplet in one command</h2>
+        <p class="section-lead">
+          The generator clones the template and sets up a Vite + TypeScript napplet, wired to
+          the shim. Point it at a compatible shell and you’re live.
+        </p>
 
-      <div class="links">
-        <a class="btn btn-primary" href={LINKS.docs}>Read the docs</a>
-        <a class="btn btn-ghost" href={LINKS.spec} target="_blank" rel="noopener">NIP-5D spec ↗</a>
-        <a class="btn btn-ghost" href={LINKS.github} target="_blank" rel="noopener">GitHub ↗</a>
+        <button class="cmd" onclick={copy} aria-label="Copy command">
+          <span class="prompt">$</span>
+          <code>{cmd}</code>
+          <span class="copy">{copied ? 'copied ✓' : 'copy'}</span>
+        </button>
+
+        <div class="links">
+          <a class="btn btn-primary" href={LINKS.docs}>Read the docs</a>
+          <a class="btn btn-ghost" href={LINKS.spec} target="_blank" rel="noopener">NIP-5D spec ↗</a>
+          <a class="btn btn-ghost" href={LINKS.github} target="_blank" rel="noopener">GitHub ↗</a>
+        </div>
+
+        <p class="alpha">
+          napplet is <strong>alpha</strong>. The spec is experimental and a moving target —
+          for adventurers only.
+        </p>
       </div>
-
-      <p class="alpha">
-        napplet is <strong>alpha</strong>. The spec is experimental and a moving target —
-        for adventurers only.
-      </p>
     </div>
   </div>
 </section>
@@ -57,6 +81,59 @@
       linear-gradient(180deg, var(--surface), var(--bg-soft));
     box-shadow: var(--shadow-card), var(--glow-soft);
     text-align: center;
+    position: relative;
+    overflow: hidden;
+    min-height: 438px;
+  }
+  .panel-content {
+    transition: filter 0.2s ease, opacity 0.2s ease;
+  }
+  .panel-content.locked {
+    filter: blur(7px);
+    opacity: 0.44;
+    pointer-events: none;
+    user-select: none;
+  }
+  .alpha-gate {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    background: rgba(8, 2, 20, 0.46);
+    backdrop-filter: blur(13px) saturate(120%);
+  }
+  .gate-card {
+    width: min(100%, 560px);
+    padding: clamp(24px, 4vw, 38px);
+    border: 1px solid rgba(255, 206, 107, 0.44);
+    border-radius: 18px;
+    background:
+      linear-gradient(180deg, rgba(37, 20, 64, 0.92), rgba(18, 8, 32, 0.96)),
+      var(--surface);
+    box-shadow: 0 28px 80px -32px rgba(0, 0, 0, 0.92);
+    text-align: left;
+  }
+  .gate-kicker {
+    display: inline-block;
+    margin-bottom: 14px;
+    font-family: var(--font-mono);
+    color: var(--amber);
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .gate-card h3 {
+    font-size: clamp(1.45rem, 4vw, 2.1rem);
+  }
+  .gate-card p {
+    margin-top: 14px;
+    color: var(--text-muted);
+    font-size: 1rem;
+  }
+  .gate-action {
+    margin-top: 24px;
   }
   .panel .eyebrow { justify-content: center; }
   .panel .section-title,
@@ -100,4 +177,13 @@
     color: var(--text-dim);
   }
   .alpha strong { color: var(--accent-bright); }
+
+  @media (max-width: 560px) {
+    .panel {
+      min-height: 520px;
+      padding: 26px 18px;
+    }
+    .alpha-gate { padding: 18px; }
+    .gate-card { border-radius: 14px; }
+  }
 </style>
