@@ -12,8 +12,7 @@
 
 1. Import `@napplet/shim` in your napplet's entry point (side-effect only -- no named exports)
 2. The shim registers with the shell via postMessage -- the shell assigns identity based on the iframe's `message.source` Window reference
-3. Once registered, `window.napplet` is populated with relay, inc, storage, keys, media, notify, identity, config, resource, cvm, outbox, upload, intent, common, and shell sub-objects
-3. Once registered, `window.napplet` is populated with relay, inc, storage, keys, media, notify, identity, config, resource, cvm, outbox, upload, intent, serial, and shell sub-objects
+3. Once registered, `window.napplet` is populated with relay, inc, storage, keys, media, notify, identity, config, resource, cvm, outbox, upload, intent, webrtc, link, lists, common, serial, and shell sub-objects
 4. No `window.nostr` is installed -- signing and encryption are mediated by the shell via `relay.publish()` and `relay.publishEncrypted()`
 
 ### Installation
@@ -113,6 +112,17 @@ const handle = window.napplet.resource.bytesAsObjectURL('blossom:sha256:e3b0c442
 imgEl.src = handle.url;
 // later: handle.revoke();
 
+// Open a shell-mediated WebRTC data session
+const { session } = await window.napplet.webrtc.open({
+  scope: { type: 'direct', pubkey: 'abc123...' },
+});
+await window.napplet.webrtc.send(session.id, { body: 'hello' });
+// Open an external URL through shell policy and opener isolation
+await window.napplet.link.open('https://example.com/post/123', { label: 'Read post' });
+// Mutate a supported NIP-51 list through the runtime
+await window.napplet.lists.add({ type: 'mute-list' }, [
+  { itemType: 'pubkey', value: 'abc123...' },
+]);
 // Open a shell-mediated serial session
 const serialSession = await window.napplet.serial.open({ options: { baudRate: 115200 } });
 await window.napplet.serial.write(serialSession.id, [112, 105, 110, 103, 10]);
@@ -197,6 +207,10 @@ The wire payloads are unchanged plain envelopes:
 { type: 'resource.bytes', id: string, url: string }
 { type: 'resource.cancel', id: string }
 
+{ type: 'link.open', id: string, url: string, options?: { label?: string } }
+{ type: 'lists.supported', id: string }
+{ type: 'lists.add', id: string, list: object, items: object[], options?: object }
+{ type: 'lists.remove', id: string, list: object, items: object[], options?: object }
 { type: 'serial.open', id: string, request: object }
 { type: 'serial.write', id: string, sessionId: string, data: number[] }
 { type: 'serial.close', id: string, sessionId: string, reason?: string }
@@ -253,6 +267,11 @@ Messages received via `window.addEventListener('message', ...)`:
 
 { type: 'resource.bytes.result', id: string, blob: Blob, mime: string }
 { type: 'resource.bytes.error', id: string, error: 'not-found' | 'blocked-by-policy' | 'timeout' | 'too-large' | 'unsupported-scheme' | 'decode-failed' | 'network-error' | 'quota-exceeded', message?: string }
+
+{ type: 'link.open.result', id: string, status: 'opened' | 'denied', error?: string }
+{ type: 'lists.supported.result', id: string, lists?: object[], error?: string }
+{ type: 'lists.add.result', id: string, ok: boolean, eventId?: string, added?: number, skipped?: number, error?: string, reason?: string, supported?: object[] }
+{ type: 'lists.remove.result', id: string, ok: boolean, eventId?: string, removed?: number, skipped?: number, error?: string, reason?: string, supported?: object[] }
 ```
 
 All request/response pairs are correlated by the `id` field. Identity request timeouts after 30 seconds.
@@ -336,6 +355,14 @@ window.napplet = {
   resource: {
     bytes(url, opts?): Promise<Blob>;
     bytesAsObjectURL(url): { url: string; revoke: () => void };
+  },
+  link: {
+    open(url, options?): Promise<{ status: 'opened' | 'denied' }>;
+  },
+  lists: {
+    supported(): Promise<ListSupport[]>;
+    add(list, items, options?): Promise<ListMutationResult>;
+    remove(list, items, options?): Promise<ListMutationResult>;
   },
   shell: {
     supports(capability: NamespacedCapability, protocol?: ProtocolId): boolean;

@@ -1,6 +1,6 @@
 {
   "name": "@napplet/nap",
-  "version": "0.15.0",
+  "version": "0.18.0",
   "license": "MIT",
   "exports": {
     "./relay": "./src/relay/index.ts",
@@ -67,6 +67,18 @@
     "./intent/types": "./src/intent/types.ts",
     "./intent/shim": "./src/intent/shim.ts",
     "./intent/sdk": "./src/intent/sdk.ts",
+    "./webrtc": "./src/webrtc/index.ts",
+    "./webrtc/types": "./src/webrtc/types.ts",
+    "./webrtc/shim": "./src/webrtc/shim.ts",
+    "./webrtc/sdk": "./src/webrtc/sdk.ts",
+    "./link": "./src/link/index.ts",
+    "./link/types": "./src/link/types.ts",
+    "./link/shim": "./src/link/shim.ts",
+    "./link/sdk": "./src/link/sdk.ts",
+    "./lists": "./src/lists/index.ts",
+    "./lists/types": "./src/lists/types.ts",
+    "./lists/shim": "./src/lists/shim.ts",
+    "./lists/sdk": "./src/lists/sdk.ts",
     "./common": "./src/common/index.ts",
     "./common/types": "./src/common/types.ts",
     "./common/shim": "./src/common/shim.ts",
@@ -77,7 +89,7 @@
     "./serial/sdk": "./src/serial/sdk.ts"
   },
   "imports": {
-    "@napplet/core": "jsr:@napplet/core@^0.15.0"
+    "@napplet/core": "jsr:@napplet/core@^0.18.0"
   },
   "publish": {
     "include": [

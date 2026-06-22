@@ -33,8 +33,8 @@ import {
 
 - **`NappletMessage`** — base interface for every message: `{ type: string }` in
   `domain.action` format. Concrete message types extend it with payload fields.
-- **`NapDomain`** — string literal union of the NAP capability domains, including `common`
-  (`'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'cvm' | 'outbox' | 'upload' | 'intent'`).
+- **`NapDomain`** — string literal union of the NAP capability domains
+  (`'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'cvm' | 'outbox' | 'upload' | 'intent' | 'webrtc' | 'link' | 'lists' | 'serial' | 'common'`).
 - **`ShellSupports`** / **`NappletGlobalShell`** — the `supports(capability, protocol?)`
   capability-query interface behind `window.napplet.shell`.
 - **`NAP_DOMAINS`** — runtime constant array of all domain strings, for iteration

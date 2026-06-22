@@ -3,7 +3,7 @@
  *
  * The NAP message types are TypeScript-only at the source. To conformance-test a
  * napplet we need to validate, at runtime, every postMessage envelope the napplet
- * emits against the protocol. This module hand-encodes the wire surface of the 15
+ * emits against the protocol. This module hand-encodes the wire surface of the
  * optional NAP domains plus the foundational `shell` domain (NAP-SHELL) as a
  * single source-of-truth map ({@link ENVELOPE_SPECS}) and exposes
  * {@link validateEnvelope}.
@@ -49,7 +49,6 @@ const ID = { id: 'string' } as const;
 
 /**
  * The complete napplet wire surface: every `domain.action` discriminant across the
- * 15 optional NAP domains plus the foundational `shell` domain (NAP-SHELL), with
  * optional NAP domains plus the foundational `shell` domain (NAP-SHELL), with
  * its direction and (for outbound) required fields.
  */
@@ -230,6 +229,25 @@ export const ENVELOPE_SPECS: Record<string, EnvelopeSpec> = {
   'common.unfollow.result': { dir: 'in' },
   'common.react.result': { dir: 'in' },
   'common.report.result': { dir: 'in' },
+
+  // ── webrtc ────────────────────────────────────────────────────────────────
+  'webrtc.open': { dir: 'out', fields: { ...ID, request: 'object' } },
+  'webrtc.send': { dir: 'out', fields: { ...ID, sessionId: 'string', payload: 'present' } },
+  'webrtc.close': { dir: 'out', fields: { ...ID, sessionId: 'string' } },
+  'webrtc.open.result': { dir: 'in' },
+  'webrtc.send.result': { dir: 'in' },
+  'webrtc.close.result': { dir: 'in' },
+  'webrtc.event': { dir: 'in' },
+  // ── link ─────────────────────────────────────────────────────────────────
+  'link.open': { dir: 'out', fields: { ...ID, url: 'string' } },
+  'link.open.result': { dir: 'in' },
+  // ── lists ────────────────────────────────────────────────────────────────
+  'lists.supported': { dir: 'out', fields: { ...ID } },
+  'lists.add': { dir: 'out', fields: { ...ID, list: 'object', items: 'array' } },
+  'lists.remove': { dir: 'out', fields: { ...ID, list: 'object', items: 'array' } },
+  'lists.supported.result': { dir: 'in' },
+  'lists.add.result': { dir: 'in' },
+  'lists.remove.result': { dir: 'in' },
   // ── serial ───────────────────────────────────────────────────────────────
   'serial.open': { dir: 'out', fields: { ...ID, request: 'object' } },
   'serial.write': { dir: 'out', fields: { ...ID, sessionId: 'string', data: 'array' } },

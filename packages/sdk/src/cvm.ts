@@ -1,6 +1,5 @@
 /**
- * @napplet/sdk -- ContextVM bridge, outbox routing, upload, intent, and common
- * @napplet/sdk -- ContextVM bridge, outbox routing, upload, intent, and serial
+ * @napplet/sdk -- ContextVM bridge, outbox routing, upload, intent, and WebRTC
  * wrapper objects.
  *
  * @packageDocumentation
@@ -33,19 +32,9 @@ import type {
   IntentRequest,
   IntentResult,
   IntentAvailability,
-  CommonActionResult,
-  CommonFollowsResult,
-  CommonNip19DecodeResult,
-  CommonNip19EncodeInput,
-  CommonNip19EncodeResult,
-  CommonProfileResult,
-  CommonProfileTarget,
-  CommonReaction,
-  CommonReportReason,
-  CommonReportTarget,
-  SerialEvent,
-  SerialOpenRequest,
-  SerialOpenResult,
+  WebrtcOpenRequest,
+  WebrtcOpenResult,
+  WebrtcEvent,
 } from '@napplet/core';
 import { requireNapplet } from './require-napplet.js';
 
@@ -308,7 +297,8 @@ export const intent = {
   },
 
   /**
-   * Check whether the runtime can currently satisfy an archetype.
+   * Check whether the runtime can currently satisfy an archetype and expose the
+   * manifest-derived contracts each candidate serves.
    * @param archetype  Role slug to check
    * @returns Promise resolving to the archetype availability
    */
@@ -335,154 +325,52 @@ export const intent = {
 };
 
 /**
- * Common social actions (NAP-COMMON): shell-mediated public NIP-19 helpers,
- * profile lookup, follows, follow/unfollow, reactions, and reports. The shell
- * owns identity, consent, event construction, signing, publishing, relay access,
- * and NIP-19 handling.
+ * Runtime-mediated WebRTC sessions (NAP-WEBRTC). The shell owns signaling,
+ * signing/encryption, SDP, ICE, and peer-connection lifecycle; napplets exchange
+ * only opaque application payloads over shell-scoped sessions.
  *
  * @example
  * ```ts
- * import { common } from '@napplet/sdk';
+ * import { webrtc } from '@napplet/sdk';
  *
- * const { pubkeys } = await common.follows();
- * await common.react(noteId, '+');
+ * const { session } = await webrtc.open({ scope: { type: 'direct', pubkey } });
+ * await webrtc.send(session.id, { body: 'hello' });
  * ```
  */
-export const common = {
+export const webrtc = {
   /**
-   * Encode a supported public NIP-19 value.
-   * @param input  Structured NIP-19 encode input
-   * @returns Promise resolving to the shell encode result
+   * Open a runtime-owned WebRTC session.
+   * @param request  Session scope and channel/protocol labels
+   * @returns Promise resolving to the opened session result
    */
-  encodeNip19(input: CommonNip19EncodeInput): Promise<CommonNip19EncodeResult> {
-    return requireNapplet().common.encodeNip19(input);
+  open(request: WebrtcOpenRequest): Promise<WebrtcOpenResult> {
+    return requireNapplet().webrtc.open(request);
   },
 
   /**
-   * Decode a supported public NIP-19 value.
-   * @param value  NIP-19 value to decode
-   * @returns Promise resolving to normalized decoded fields
+   * Send an opaque application payload over a session.
+   * @param sessionId  WebRTC session id
+   * @param payload    Application payload
    */
-  decodeNip19(value: string): Promise<CommonNip19DecodeResult> {
-    return requireNapplet().common.decodeNip19(value);
+  send(sessionId: string, payload: unknown): Promise<void> {
+    return requireNapplet().webrtc.send(sessionId, payload);
   },
 
   /**
-   * Resolve a profile by hex pubkey, npub, or nprofile.
-   * @param target  Profile target
-   * @returns Promise resolving to latest profile data when available
-   */
-  getProfile(target: CommonProfileTarget): Promise<CommonProfileResult> {
-    return requireNapplet().common.getProfile(target);
-  },
-
-  /**
-   * Return the shell user's followed pubkeys as hex.
-   * @returns Promise resolving to followed pubkeys
-   */
-  follows(): Promise<CommonFollowsResult> {
-    return requireNapplet().common.follows();
-  },
-
-  /**
-   * Ask the shell to follow one or more npub targets.
-   * @param pubkeys  Npub targets to follow
-   * @returns Promise resolving to the action result
-   */
-  follow(...pubkeys: string[]): Promise<CommonActionResult> {
-    return requireNapplet().common.follow(...pubkeys);
-  },
-
-  /**
-   * Ask the shell to unfollow one or more npub targets.
-   * @param pubkeys  Npub targets to unfollow
-   * @returns Promise resolving to the action result
-   */
-  unfollow(...pubkeys: string[]): Promise<CommonActionResult> {
-    return requireNapplet().common.unfollow(...pubkeys);
-  },
-
-  /**
-   * React to a native Nostr event.
-   * @param targetEventId     Event id to react to
-   * @param reaction          Reaction content
-   * @param customEmojiHref   Optional custom emoji URL
-   * @returns Promise resolving to the action result
-   */
-  react(
-    targetEventId: string,
-    reaction: CommonReaction,
-    customEmojiHref?: string,
-  ): Promise<CommonActionResult> {
-    return requireNapplet().common.react(targetEventId, reaction, customEmojiHref);
-  },
-
-  /**
-   * Report an event or pubkey with a NIP-56 reason.
-   * @param target  Structured report target
-   * @param reason  NIP-56 report reason
-   * @param text    Report text
-   * @returns Promise resolving to the action result
-   */
-  report(
-    target: CommonReportTarget,
-    reason: CommonReportReason,
-    text: string,
-  ): Promise<CommonActionResult> {
-    return requireNapplet().common.report(target, reason, text);
-  },
-};
-
-/**
- * Runtime-mediated serial device access (NAP-SERIAL): ask the shell to select
- * and open a user-approved serial session, write byte arrays to that session,
- * and receive shell-pushed state/data/close events. The shell owns raw port
- * handles, streams, OS paths, permissions, read loops, and lifecycle policy.
- *
- * @example
- * ```ts
- * import { serial } from '@napplet/sdk';
- *
- * const { session } = await serial.open({ options: { baudRate: 115200 } });
- * await serial.write(session.id, [112, 105, 110, 103, 10]);
- * ```
- */
-export const serial = {
-  /**
-   * Ask the runtime to select and open a serial session.
-   * @param request  Filters, options, and optional chooser label
-   * @returns Promise resolving to the runtime-assigned serial open result
-   */
-  open(request: SerialOpenRequest): Promise<SerialOpenResult> {
-    return requireNapplet().serial.open(request);
-  },
-
-  /**
-   * Write bytes to an open serial session.
-   * @param sessionId  Runtime-assigned serial session id
-   * @param data       Byte values to write
-   * @returns Promise resolving after the runtime acknowledges the write
-   */
-  write(sessionId: string, data: Uint8Array | number[]): Promise<void> {
-    return requireNapplet().serial.write(sessionId, data);
-  },
-
-  /**
-   * Close an open serial session.
-   * @param sessionId  Runtime-assigned serial session id
-   * @param reason     Optional reason for the close request
-   * @returns Promise resolving after the runtime acknowledges the close
+   * Close a WebRTC session.
+   * @param sessionId  WebRTC session id
+   * @param reason     Optional close reason
    */
   close(sessionId: string, reason?: string): Promise<void> {
-    return requireNapplet().serial.close(sessionId, reason);
+    return requireNapplet().webrtc.close(sessionId, reason);
   },
 
   /**
-   * Register for shell-pushed serial events.
-   * @param handler  Called with each serial event
-   * @returns A Subscription with `close()` to stop listening
+   * Subscribe to runtime-pushed WebRTC events.
+   * @param handler  Event handler
+   * @returns Subscription handle
    */
-  onEvent(handler: (event: SerialEvent) => void): Subscription {
-    return requireNapplet().serial.onEvent(handler);
+  onEvent(handler: (event: WebrtcEvent) => void): Subscription {
+    return requireNapplet().webrtc.onEvent(handler);
   },
 };

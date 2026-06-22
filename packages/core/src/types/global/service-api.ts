@@ -22,6 +22,9 @@ import type {
 } from '../outbox.js';
 import type { UploadRequest, UploadResult, UploadStatus } from '../upload.js';
 import type { IntentAvailability, IntentRequest, IntentResult } from '../intent.js';
+import type { LinkOpenOptions, LinkOpenResult } from '../link.js';
+import type { SerialEvent, SerialOpenRequest, SerialOpenResult } from '../serial.js';
+import type { ListItem, ListMutationResult, ListOptions, ListRef, ListSupport } from '../lists.js';
 import type {
   CommonActionResult,
   CommonFollowsResult,
@@ -34,7 +37,6 @@ import type {
   CommonReportReason,
   CommonReportTarget,
 } from '../common.js';
-import type { SerialEvent, SerialOpenRequest, SerialOpenResult } from '../serial.js';
 
 /**
  * Native ContextVM bridge (NAP-CVM): MCP-over-Nostr access mediated by the shell.
@@ -248,7 +250,8 @@ export interface IntentApi {
   open(archetype: string, payload?: unknown, opts?: Omit<IntentRequest, 'archetype' | 'action' | 'payload'>): Promise<IntentResult>;
   /**
    * Whether the runtime can currently satisfy `archetype`, with candidates and
-   * the actions/protocols each supports. Sourced from the installed catalog.
+   * the actions/protocols/contracts each supports. Sourced from the installed
+   * catalog.
    * @param archetype  Role slug to check
    * @returns Promise resolving to the archetype availability
    */
@@ -264,6 +267,69 @@ export interface IntentApi {
    * @returns A Subscription with `close()` to stop listening
    */
   onChanged(handler: (availability: IntentAvailability) => void): Subscription;
+}
+
+/**
+ * Shell-mediated link opening (NAP-LINK): the napplet asks the shell to open an
+ * external URL for the user. The shell owns navigation, policy, prompting,
+ * opener isolation, and browser context. The napplet receives no network
+ * access, opener authority, or fetched bytes.
+ *
+ * @example
+ * ```ts
+ * if (window.napplet.shell.supports('link')) {
+ *   const result = await window.napplet.link.open('https://example.com/post/123', { label: 'Read post' });
+ *   if (result.status === 'denied') showInlineFallback();
+ * }
+ * ```
+ */
+export interface LinkApi {
+  /**
+   * Request that the shell open an external URL for the user.
+   * @param url      Absolute URL to open
+   * @param options  Optional prompt/display hints
+   * @returns Promise resolving to the shell's open/deny status
+  */
+  open(url: string, options?: LinkOpenOptions): Promise<LinkOpenResult>;
+}
+
+/**
+ * Runtime-mediated NIP-51 list mutation (NAP-LISTS): the napplet names a list
+ * and semantic items to add/remove; the runtime owns current-event lookup,
+ * kind/type mapping, tag formatting, private item encryption, preservation,
+ * signing, and publishing.
+ *
+ * @example
+ * ```ts
+ * if (window.napplet.shell.supports('lists')) {
+ *   await window.napplet.lists.add({ type: 'mute-list' }, [
+ *     { itemType: 'pubkey', value: 'abc123...' },
+ *   ]);
+ * }
+ * ```
+ */
+export interface ListsApi {
+  /**
+   * Return the NIP-51 list kinds/types this runtime supports.
+   * @returns Promise resolving to supported list descriptions
+   */
+  supported(): Promise<ListSupport[]>;
+  /**
+   * Add items to a runtime-supported NIP-51 list.
+   * @param list     List reference by kind or derived type
+   * @param items    Items to add
+   * @param options  Optional create/metadata hints
+   * @returns Promise resolving to the mutation result
+   */
+  add(list: ListRef, items: ListItem[], options?: ListOptions): Promise<ListMutationResult>;
+  /**
+   * Remove items from a runtime-supported NIP-51 list.
+   * @param list     List reference by kind or derived type
+   * @param items    Items to remove
+   * @param options  Optional runtime hints
+   * @returns Promise resolving to the mutation result
+   */
+  remove(list: ListRef, items: ListItem[], options?: ListOptions): Promise<ListMutationResult>;
 }
 
 /**
@@ -331,7 +397,7 @@ export interface CommonApi {
    * Report an event or pubkey with a NIP-56 reason.
    * @param target  Structured report target
    * @param reason  NIP-56 report reason
-   * @param text    User-visible report text
+   * @param text    Report text
    * @returns Promise resolving to the action result
    */
   report(

@@ -159,8 +159,25 @@ const RESPONDERS: Record<string, Responder> = {
   'upload.status': (e) => ok({ type: 'upload.status.result', id: e.id, status: {} }),
 
   // intent
-  'intent.invoke': (e) => ok({ type: 'intent.invoke.result', id: e.id, result: {} }),
-  'intent.available': (e) => ok({ type: 'intent.available.result', id: e.id, availability: {} }),
+  'intent.invoke': (e) => ok({ type: 'intent.invoke.result', id: e.id, result: { ok: true, archetype: 'reference', action: 'open', handled: true } }),
+  'intent.available': (e) => ok({
+    type: 'intent.available.result',
+    id: e.id,
+    availability: {
+      archetype: e.archetype,
+      available: true,
+      candidates: [
+        {
+          dTag: 'reference-handler',
+          actions: ['open'],
+          protocols: ['NAP-4'],
+          contracts: [{ action: 'open', protocol: 'NAP-4', eventKinds: [1] }],
+          isDefault: true,
+        },
+      ],
+      hasDefault: true,
+    },
+  }),
   'intent.handlers': (e) => ok({ type: 'intent.handlers.result', id: e.id, handlers: [] }),
 
   // common
@@ -172,6 +189,26 @@ const RESPONDERS: Record<string, Responder> = {
   'common.unfollow': (e) => ok({ type: 'common.unfollow.result', id: e.id, ok: true }),
   'common.react': (e) => ok({ type: 'common.react.result', id: e.id, ok: true, eventId: '0'.repeat(64) }),
   'common.report': (e) => ok({ type: 'common.report.result', id: e.id, ok: true, eventId: '1'.repeat(64) }),
+
+  // webrtc
+  'webrtc.open': (e) => ok({
+    type: 'webrtc.open.result',
+    id: e.id,
+    session: {
+      id: 'webrtc-reference',
+      scope: { type: 'direct', pubkey: REFERENCE_PUBKEY },
+      channel: 'default',
+      state: 'connecting',
+    },
+  }),
+  'webrtc.send': (e) => ok({ type: 'webrtc.send.result', id: e.id }),
+  'webrtc.close': (e) => ok({ type: 'webrtc.close.result', id: e.id }),
+  // link
+  'link.open': (e) => ok({ type: 'link.open.result', id: e.id, status: 'opened' }),
+  // lists
+  'lists.supported': (e) => ok({ type: 'lists.supported.result', id: e.id, lists: [] }),
+  'lists.add': (e) => ok({ type: 'lists.add.result', id: e.id, ok: true, added: 0, skipped: 0 }),
+  'lists.remove': (e) => ok({ type: 'lists.remove.result', id: e.id, ok: true, removed: 0, skipped: 0 }),
   // serial
   'serial.open': (e) => ok({ type: 'serial.open.result', id: e.id, session: { id: `serial-${String(e.id)}`, state: 'open' } }),
   'serial.write': (e) => ok({ type: 'serial.write.result', id: e.id }),

@@ -3,10 +3,9 @@
 > Every active napplet NAP domain as layered subpath exports. The package name remains
 > `@napplet/nap` for compatibility.
 
-`@napplet/nap` ships every NAP domain (relay, storage, inc, keys, theme, media,
-notify, identity, config, resource, cvm, outbox, upload, intent, common)
 `@napplet/nap` ships every active NAP domain (relay, storage, inc, keys, theme,
-media, notify, identity, config, resource, cvm, outbox, upload, intent, serial)
+media, notify, identity, config, resource, cvm, outbox, upload, intent, webrtc,
+link, lists, common, serial)
 as independent, tree-shakable subpaths. It sits between the shim/sdk and
 [`@napplet/core`](./core) in the dependency graph.
 
@@ -54,8 +53,9 @@ import { notifySend } from '@napplet/nap/notify/sdk';
 ## Tree-shaking contract
 
 - Published with `sideEffects: false`.
-- The `exports` map declares **68 entry points**: 17 domain barrels, 17
-  types entries, 17 shim entries, and 17 sdk entries.
+- The `exports` map declares **84 entry points**: 19 active domain barrels,
+  19 active-domain types entries, 19 shim entries, 19 sdk entries, plus the
+  `ifc` compatibility and `shell` foundational subpaths.
 - A bundler importing only `@napplet/nap/relay/types` produces zero bytes from
   the other domains.
 
@@ -67,9 +67,17 @@ import { notifySend } from '@napplet/nap/notify/sdk';
 - **identity** — strictly **read-only**: it exposes the shell-user pubkey and
   public identity data but never signs, encrypts, or decrypts. Take one snapshot
   with `getPublicKey()`, then subscribe to shell-pushed `identity.changed`.
+- **webrtc** — runtime-mediated WebRTC data sessions. Napplets use shell-scoped
+  sessions while the shell owns signaling, SDP, ICE, and peer-connection
+  lifecycle.
+- **link** — shell-mediated external navigation via `open(url, options?)`. The
+  shell owns prompting, policy, opener isolation, and browser context.
+- **lists** — runtime-mediated NIP-51 list mutations via
+  `supported`/`add`/`remove`; the runtime owns lookup, merge, encryption,
+  signing, and publishing.
 - **common** — shell-mediated public NIP-19 helpers, profile lookup, follows,
   follow/unfollow, reactions, and reports; the shell owns identity, consent,
-  signing, publishing, and relay access.
+  event construction, signing, publishing, relay access, and NIP-19 handling.
 - **serial** — runtime-mediated serial device access: napplets get
   `open`/`write`/`close`/`onEvent`; the shell owns permissions, raw port
   handles, streams, OS paths, and lifecycle policy.

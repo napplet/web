@@ -197,6 +197,34 @@ if (window.napplet.shell.supports('intent')) {
 }
 ```
 
+### link
+
+Shell-mediated external link opening. This is user-visible navigation, not byte
+fetching; the shell owns prompting, policy, opener isolation, and browser context.
+
+```ts
+if (window.napplet.shell.supports('link')) {
+  const result = await window.napplet.link.open('https://example.com/post/123', {
+    label: 'Read post',
+  });
+  if (result.status === 'denied') showInlineFallback();
+}
+```
+
+### lists
+
+Runtime-mediated NIP-51 list mutations. Napplets send add/remove intent while the
+runtime owns current-event lookup, kind/type mapping, tag formatting, private
+item encryption, event preservation, signing, and publishing.
+
+```ts
+if (window.napplet.shell.supports('lists')) {
+  await window.napplet.lists.add({ type: 'mute-list' }, [
+    { itemType: 'pubkey', value: 'abc123...' },
+  ]);
+}
+```
+
 ### common
 
 Common social actions — public NIP-19 helpers, profile lookup, follows,
@@ -215,7 +243,7 @@ if (window.napplet.shell.supports('common')) {
 [`@napplet/core`](/packages/core) exports a `NapDomain` string union for the
 foundational domains — `relay`, `identity`, `storage`, `inc`, `theme`,
 `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`,
-`upload`, `intent`, `common` — used as the discriminant for envelope routing and
+`upload`, `intent`, `webrtc`, `link`, `lists`, `serial`, `common` — used as the discriminant for envelope routing and
 `shell.supports()`.
 
 ## Where to go next

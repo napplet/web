@@ -9,13 +9,16 @@ import type {
   ConfigApi,
   ResourceApi,
 } from './global/runtime-api.js';
+import type { WebrtcApi } from './webrtc.js';
 import type {
   CvmApi,
   OutboxApi,
   UploadApi,
   IntentApi,
-  CommonApi,
+  LinkApi,
+  ListsApi,
   SerialApi,
+  CommonApi,
 } from './global/service-api.js';
 
 /**
@@ -274,8 +277,42 @@ export interface NappletGlobal {
    *   if (available) await window.napplet.intent.open('note', { target: { type: 'event', id } });
    * }
    * ```
-   */
+  */
   intent: IntentApi;
+  /**
+   * Runtime-mediated WebRTC sessions. The shell owns signaling transport,
+   * signing/encryption, SDP, ICE, and RTCPeerConnection lifecycle.
+  */
+  webrtc: WebrtcApi;
+  /**
+   * Shell-mediated link opening (NAP-LINK): request user-visible navigation
+   * without giving the napplet direct navigation authority, opener access,
+   * network access, or fetched bytes.
+   *
+   * @example
+   * ```ts
+   * if (window.napplet.shell.supports('link')) {
+   *   await window.napplet.link.open('https://example.com/post/123', { label: 'Read post' });
+   * }
+   * ```
+  */
+  link: LinkApi;
+  /**
+   * Runtime-mediated NIP-51 list mutation (NAP-LISTS): add or remove semantic
+   * items from supported lists without requiring napplets to handle raw NIP-51
+   * tags, private item encryption, replaceable/addressable event preservation,
+   * signing, or publishing.
+   *
+   * @example
+   * ```ts
+   * if (window.napplet.shell.supports('lists')) {
+   *   await window.napplet.lists.add({ type: 'mute-list' }, [
+   *     { itemType: 'pubkey', value: 'abc123...' },
+   *   ]);
+   * }
+   * ```
+  */
+  lists: ListsApi;
   /**
    * Common social actions (NAP-COMMON): shell-mediated NIP-19 helpers, profile
    * lookup, follows, and signed social actions. The shell owns identity,

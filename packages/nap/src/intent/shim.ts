@@ -168,10 +168,10 @@ export function open(
 }
 
 /**
- * Check whether the runtime can currently satisfy `archetype`, with the candidate
- * napplets and the actions/protocols each supports. Sourced from the installed
- * catalog, so it reports `true` for an installed handler that is not yet running.
- * Use as a pre-flight guardrail before showing an affordance.
+ * Check whether the runtime can currently satisfy `archetype`, with the
+ * candidate napplets and the actions/protocols/contracts each supports. Sourced
+ * from the installed catalog, so it reports `true` for an installed handler that
+ * is not yet running. Use as a pre-flight guardrail before showing an affordance.
  *
  * @param archetype  Role slug to check
  * @returns Promise resolving to the archetype availability

@@ -73,6 +73,26 @@ import {
   onChanged as intentOnChanged,
 } from '@napplet/nap/intent/shim';
 import {
+  installWebrtcShim,
+  handleWebrtcMessage,
+  open as webrtcOpen,
+  send as webrtcSend,
+  close as webrtcClose,
+  onEvent as webrtcOnEvent,
+} from '@napplet/nap/webrtc/shim';
+import {
+  installLinkShim,
+  handleLinkMessage,
+  open as linkOpen,
+} from '@napplet/nap/link/shim';
+import {
+  installListsShim,
+  handleListsMessage,
+  supported as listsSupported,
+  add as listsAdd,
+  remove as listsRemove,
+} from '@napplet/nap/lists/shim';
+import {
   installCommonShim,
   handleCommonMessage,
   encodeNip19 as commonEncodeNip19,
@@ -171,6 +191,9 @@ const DOMAIN_ROUTERS: ReadonlyArray<readonly [string, DomainHandler]> = [
   ['outbox.', handleOutboxMessage],
   ['upload.', handleUploadMessage],
   ['intent.', handleIntentMessage],
+  ['webrtc.', handleWebrtcMessage],
+  ['link.', handleLinkMessage],
+  ['lists.', handleListsMessage],
   ['common.', handleCommonMessage],
   ['serial.', handleSerialMessage],
   ['identity.', identityShim.handleIdentityMessage],
@@ -318,6 +341,20 @@ installIncShim();
     handlers: intentHandlers,
     onChanged: intentOnChanged,
   },
+  webrtc: {
+    open: webrtcOpen,
+    send: webrtcSend,
+    close: webrtcClose,
+    onEvent: webrtcOnEvent,
+  },
+  link: {
+    open: linkOpen,
+  },
+  lists: {
+    supported: listsSupported,
+    add: listsAdd,
+    remove: listsRemove,
+  },
   common: {
     encodeNip19: commonEncodeNip19,
     decodeNip19: commonDecodeNip19,
@@ -392,5 +429,12 @@ installIntentShim();
 
 // Install common shim (common.* request/response correlation; no install-time work)
 installCommonShim();
+
+// Install WebRTC shim (webrtc.* request/response correlation + webrtc.event listeners; no install-time work)
+installWebrtcShim();
+// Install link shim (link.open request/response correlation; no install-time work)
+installLinkShim();
+// Install lists shim (lists.* request/response correlation; no install-time work)
+installListsShim();
 // Install serial shim (serial.* request/response correlation + serial.event listeners; no install-time work)
 installSerialShim();
