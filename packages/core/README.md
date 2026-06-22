@@ -58,6 +58,7 @@ interface RelaySubscribe extends NappletMessage {
 ```
 
 The `type` field domain prefix (`relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `common`) routes messages to the correct NAP handler via `dispatch()`.
+The `type` field domain prefix (`relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `serial`) routes messages to the correct NAP handler via `dispatch()`.
 
 #### `NapDomain`
 
@@ -65,6 +66,7 @@ String literal union of the NAP capability domains.
 
 ```ts
 type NapDomain = 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'cvm' | 'outbox' | 'upload' | 'intent' | 'common';
+type NapDomain = 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'cvm' | 'outbox' | 'upload' | 'intent' | 'serial';
 ```
 
 | Domain    | Scope                                    |
@@ -84,6 +86,7 @@ type NapDomain = 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | '
 | `upload` | Shell-mediated file/blob upload |
 | `intent` | Archetype intent dispatch |
 | `common` | Common social actions |
+| `serial`  | Runtime-mediated serial device access |
 
 #### `NAP_DOMAINS`
 
@@ -91,6 +94,7 @@ Runtime constant array of all NAP domain strings. Useful for iteration and valid
 
 ```ts
 const NAP_DOMAINS: readonly NapDomain[] = ['relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent', 'common'];
+const NAP_DOMAINS: readonly NapDomain[] = ['relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent', 'serial'];
 
 for (const domain of NAP_DOMAINS) {
   console.log(`Checking support for: ${domain}`);
@@ -381,6 +385,7 @@ import type {
 |------|-------------|
 | `NappletMessage` | Base interface for all JSON envelope messages |
 | `NapDomain` | Union of the fifteen NAP domain strings |
+| `NapDomain` | Union of the active NAP domain strings |
 | `NamespacedCapability` | Union of `NapDomain \| nap:* \| perm:*` for `supports()` |
 | `NapProtocolId` | Numbered NAP protocol id such as `NAP-01` for the optional second `supports()` argument |
 | `ShellSupports` | Interface with `supports()` capability query method |
