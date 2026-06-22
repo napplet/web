@@ -159,8 +159,25 @@ const RESPONDERS: Record<string, Responder> = {
   'upload.status': (e) => ok({ type: 'upload.status.result', id: e.id, status: {} }),
 
   // intent
-  'intent.invoke': (e) => ok({ type: 'intent.invoke.result', id: e.id, result: {} }),
-  'intent.available': (e) => ok({ type: 'intent.available.result', id: e.id, availability: {} }),
+  'intent.invoke': (e) => ok({ type: 'intent.invoke.result', id: e.id, result: { ok: true, archetype: 'reference', action: 'open', handled: true } }),
+  'intent.available': (e) => ok({
+    type: 'intent.available.result',
+    id: e.id,
+    availability: {
+      archetype: e.archetype,
+      available: true,
+      candidates: [
+        {
+          dTag: 'reference-handler',
+          actions: ['open'],
+          protocols: ['NAP-4'],
+          contracts: [{ action: 'open', protocol: 'NAP-4', eventKinds: [1] }],
+          isDefault: true,
+        },
+      ],
+      hasDefault: true,
+    },
+  }),
   'intent.handlers': (e) => ok({ type: 'intent.handlers.result', id: e.id, handlers: [] }),
 
   // link

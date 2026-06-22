@@ -300,7 +300,8 @@ export const intent = {
   },
 
   /**
-   * Check whether the runtime can currently satisfy an archetype.
+   * Check whether the runtime can currently satisfy an archetype and expose the
+   * manifest-derived contracts each candidate serves.
    * @param archetype  Role slug to check
    * @returns Promise resolving to the archetype availability
    */
