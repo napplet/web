@@ -26,6 +26,7 @@ npm install @napplet/sdk @napplet/shim
 
 ```ts
 import '@napplet/shim';
+import { relay, inc, storage, keys, media, notify, config, resource, webrtc, type NostrEvent } from '@napplet/sdk';
 import { relay, inc, storage, keys, media, notify, config, resource, link, type NostrEvent } from '@napplet/sdk';
 
 // Subscribe to kind 1 notes
@@ -94,6 +95,9 @@ const handle = resource.bytesAsObjectURL('blossom:sha256:e3b0c44298fc1c149afbf4c
 imgEl.src = handle.url;
 // handle.revoke() when done
 
+// Open a shell-mediated WebRTC data session
+const { session } = await webrtc.open({ scope: { type: 'direct', pubkey: 'abc123...' } });
+await webrtc.send(session.id, { body: 'hello' });
 // Open an external URL through the shell
 await link.open('https://example.com/post/123', { label: 'Read post' });
 

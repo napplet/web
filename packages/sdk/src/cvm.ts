@@ -1,7 +1,6 @@
 /**
- * @napplet/sdk -- ContextVM bridge, outbox routing, upload, intent, and link
- * @napplet/sdk -- ContextVM bridge, outbox routing, upload, intent, and serial
- * wrapper objects.
+ * @napplet/sdk -- ContextVM bridge, outbox routing, upload, intent, WebRTC,
+ * link, and serial wrapper objects.
  *
  * @packageDocumentation
  */
@@ -33,6 +32,9 @@ import type {
   IntentRequest,
   IntentResult,
   IntentAvailability,
+  WebrtcOpenRequest,
+  WebrtcOpenResult,
+  WebrtcEvent,
   LinkOpenOptions,
   LinkOpenResult,
   SerialEvent,
@@ -324,6 +326,57 @@ export const intent = {
    */
   onChanged(handler: (availability: IntentAvailability) => void): Subscription {
     return requireNapplet().intent.onChanged(handler);
+  },
+};
+
+/**
+ * Runtime-mediated WebRTC sessions (NAP-WEBRTC). The shell owns signaling,
+ * signing/encryption, SDP, ICE, and peer-connection lifecycle; napplets exchange
+ * only opaque application payloads over shell-scoped sessions.
+ *
+ * @example
+ * ```ts
+ * import { webrtc } from '@napplet/sdk';
+ *
+ * const { session } = await webrtc.open({ scope: { type: 'direct', pubkey } });
+ * await webrtc.send(session.id, { body: 'hello' });
+ * ```
+ */
+export const webrtc = {
+  /**
+   * Open a runtime-owned WebRTC session.
+   * @param request  Session scope and channel/protocol labels
+   * @returns Promise resolving to the opened session result
+   */
+  open(request: WebrtcOpenRequest): Promise<WebrtcOpenResult> {
+    return requireNapplet().webrtc.open(request);
+  },
+
+  /**
+   * Send an opaque application payload over a session.
+   * @param sessionId  WebRTC session id
+   * @param payload    Application payload
+   */
+  send(sessionId: string, payload: unknown): Promise<void> {
+    return requireNapplet().webrtc.send(sessionId, payload);
+  },
+
+  /**
+   * Close a WebRTC session.
+   * @param sessionId  WebRTC session id
+   * @param reason     Optional close reason
+   */
+  close(sessionId: string, reason?: string): Promise<void> {
+    return requireNapplet().webrtc.close(sessionId, reason);
+  },
+
+  /**
+   * Subscribe to runtime-pushed WebRTC events.
+   * @param handler  Event handler
+   * @returns Subscription handle
+   */
+  onEvent(handler: (event: WebrtcEvent) => void): Subscription {
+    return requireNapplet().webrtc.onEvent(handler);
   },
 };
 

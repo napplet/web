@@ -26,6 +26,7 @@ export { DOMAIN as CVM_DOMAIN } from '@napplet/nap/cvm';
 export { DOMAIN as OUTBOX_DOMAIN } from '@napplet/nap/outbox';
 export { DOMAIN as UPLOAD_DOMAIN } from '@napplet/nap/upload';
 export { DOMAIN as INTENT_DOMAIN } from '@napplet/nap/intent';
+export { DOMAIN as WEBRTC_DOMAIN } from '@napplet/nap/webrtc';
 export { DOMAIN as LINK_DOMAIN } from '@napplet/nap/link';
 export { DOMAIN as SERIAL_DOMAIN } from '@napplet/nap/serial';
 
@@ -47,6 +48,7 @@ export { installCvmShim } from '@napplet/nap/cvm';
 export { installOutboxShim } from '@napplet/nap/outbox';
 export { installUploadShim } from '@napplet/nap/upload';
 export { installIntentShim } from '@napplet/nap/intent';
+export { installWebrtcShim } from '@napplet/nap/webrtc';
 export { installLinkShim } from '@napplet/nap/link';
 export { installSerialShim } from '@napplet/nap/serial';
 
@@ -112,6 +114,12 @@ export {
   intentOnChanged,
 } from '@napplet/nap/intent';
 export { linkOpen } from '@napplet/nap/link';
+export {
+  webrtcOpen,
+  webrtcSend,
+  webrtcClose,
+  webrtcOnEvent,
+} from '@napplet/nap/webrtc';
 export {
   serialOpen,
   serialWrite,

@@ -15,6 +15,7 @@ envelope validates against the per-NAP validators, graceful degradation when
 ## What's in the box
 
 - `validateEnvelope(msg)` — runtime validation of any `domain.action` envelope a
+  napplet emits, across all 15 NAP domains. Catches malformed payloads, unknown
   napplet emits, across all active NAP domains. Catches malformed payloads, unknown
   types, and napplets that put shell→napplet (inbound) traffic on the wire.
 - `validateManifest(html)` — checks `napplet-type`, `napplet-aggregate-hash`,

@@ -9,6 +9,7 @@ import type {
   ConfigApi,
   ResourceApi,
 } from './global/runtime-api.js';
+import type { WebrtcApi } from './webrtc.js';
 import type { CvmApi, OutboxApi, UploadApi, IntentApi, LinkApi, SerialApi } from './global/service-api.js';
 
 /**
@@ -267,8 +268,13 @@ export interface NappletGlobal {
    *   if (available) await window.napplet.intent.open('note', { target: { type: 'event', id } });
    * }
    * ```
-   */
+  */
   intent: IntentApi;
+  /**
+   * Runtime-mediated WebRTC sessions. The shell owns signaling transport,
+   * signing/encryption, SDP, ICE, and RTCPeerConnection lifecycle.
+  */
+  webrtc: WebrtcApi;
   /**
    * Shell-mediated link opening (NAP-LINK): request user-visible navigation
    * without giving the napplet direct navigation authority, opener access,

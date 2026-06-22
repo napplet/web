@@ -73,6 +73,14 @@ import {
   onChanged as intentOnChanged,
 } from '@napplet/nap/intent/shim';
 import {
+  installWebrtcShim,
+  handleWebrtcMessage,
+  open as webrtcOpen,
+  send as webrtcSend,
+  close as webrtcClose,
+  onEvent as webrtcOnEvent,
+} from '@napplet/nap/webrtc/shim';
+import {
   installLinkShim,
   handleLinkMessage,
   open as linkOpen,
@@ -164,6 +172,7 @@ const DOMAIN_ROUTERS: ReadonlyArray<readonly [string, DomainHandler]> = [
   ['outbox.', handleOutboxMessage],
   ['upload.', handleUploadMessage],
   ['intent.', handleIntentMessage],
+  ['webrtc.', handleWebrtcMessage],
   ['link.', handleLinkMessage],
   ['serial.', handleSerialMessage],
   ['identity.', identityShim.handleIdentityMessage],
@@ -311,6 +320,12 @@ installIncShim();
     handlers: intentHandlers,
     onChanged: intentOnChanged,
   },
+  webrtc: {
+    open: webrtcOpen,
+    send: webrtcSend,
+    close: webrtcClose,
+    onEvent: webrtcOnEvent,
+  },
   link: {
     open: linkOpen,
   },
@@ -376,6 +391,8 @@ installUploadShim();
 // Install intent shim (intent.* request/response correlation + intent.changed listeners; no install-time work)
 installIntentShim();
 
+// Install WebRTC shim (webrtc.* request/response correlation + webrtc.event listeners; no install-time work)
+installWebrtcShim();
 // Install link shim (link.open request/response correlation; no install-time work)
 installLinkShim();
 // Install serial shim (serial.* request/response correlation + serial.event listeners; no install-time work)

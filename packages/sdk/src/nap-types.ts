@@ -344,6 +344,33 @@ export type {
   IntentNapMessage,
 } from '@napplet/nap/intent';
 
+// WEBRTC NAP (runtime-mediated WebRTC signaling)
+export type {
+  WebrtcScope,
+  WebrtcDirectScope,
+  WebrtcRoomScope,
+  WebrtcOpenRequest,
+  WebrtcOpenResult,
+  WebrtcState,
+  WebrtcSession,
+  WebrtcEvent,
+  WebrtcStateEvent,
+  WebrtcPeerEvent,
+  WebrtcMessageEvent,
+  WebrtcClosedEvent,
+  WebrtcApi,
+  WebrtcMessage,
+  WebrtcOpenMessage,
+  WebrtcOpenResultMessage,
+  WebrtcSendMessage,
+  WebrtcSendResultMessage,
+  WebrtcCloseMessage,
+  WebrtcCloseResultMessage,
+  WebrtcEventMessage,
+  WebrtcOutboundMessage,
+  WebrtcInboundMessage,
+  WebrtcNapMessage,
+} from '@napplet/nap/webrtc';
 // LINK NAP (shell-mediated link opening)
 export type {
   LinkOpenErrorCode,

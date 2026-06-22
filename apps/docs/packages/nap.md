@@ -4,6 +4,7 @@
 > `@napplet/nap` for compatibility.
 
 `@napplet/nap` ships every NAP domain (relay, storage, inc, keys, theme, media,
+notify, identity, config, resource, cvm, outbox, upload, intent, webrtc)
 notify, identity, config, resource, cvm, outbox, upload, intent, link)
 `@napplet/nap` ships every active NAP domain (relay, storage, inc, keys, theme,
 media, notify, identity, config, resource, cvm, outbox, upload, intent, serial)
@@ -69,6 +70,9 @@ import { notifySend } from '@napplet/nap/notify/sdk';
 - **identity** — strictly **read-only**: it exposes the shell-user pubkey and
   public identity data but never signs, encrypts, or decrypts. Take one snapshot
   with `getPublicKey()`, then subscribe to shell-pushed `identity.changed`.
+- **webrtc** — runtime-mediated WebRTC data sessions. Napplets use shell-scoped
+  sessions while the shell owns signaling, SDP, ICE, and peer-connection
+  lifecycle.
 - **link** — shell-mediated external navigation via `open(url, options?)`. The
   shell owns prompting, policy, opener isolation, and browser context.
 - **serial** — runtime-mediated serial device access: napplets get

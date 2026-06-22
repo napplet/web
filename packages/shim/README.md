@@ -12,6 +12,7 @@
 
 1. Import `@napplet/shim` in your napplet's entry point (side-effect only -- no named exports)
 2. The shim registers with the shell via postMessage -- the shell assigns identity based on the iframe's `message.source` Window reference
+3. Once registered, `window.napplet` is populated with relay, inc, storage, keys, media, notify, identity, config, resource, cvm, outbox, upload, intent, webrtc, and shell sub-objects
 3. Once registered, `window.napplet` is populated with relay, inc, storage, keys, media, notify, identity, config, resource, cvm, outbox, upload, intent, link, and shell sub-objects
 3. Once registered, `window.napplet` is populated with relay, inc, storage, keys, media, notify, identity, config, resource, cvm, outbox, upload, intent, serial, and shell sub-objects
 4. No `window.nostr` is installed -- signing and encryption are mediated by the shell via `relay.publish()` and `relay.publishEncrypted()`
@@ -113,6 +114,11 @@ const handle = window.napplet.resource.bytesAsObjectURL('blossom:sha256:e3b0c442
 imgEl.src = handle.url;
 // later: handle.revoke();
 
+// Open a shell-mediated WebRTC data session
+const { session } = await window.napplet.webrtc.open({
+  scope: { type: 'direct', pubkey: 'abc123...' },
+});
+await window.napplet.webrtc.send(session.id, { body: 'hello' });
 // Open an external URL through shell policy and opener isolation
 await window.napplet.link.open('https://example.com/post/123', { label: 'Read post' });
 // Open a shell-mediated serial session

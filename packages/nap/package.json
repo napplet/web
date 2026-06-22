@@ -1,7 +1,7 @@
 {
   "name": "@napplet/nap",
   "version": "0.17.0",
-  "description": "The active napplet NAP domains (the foundational shell, plus relay, storage, inc, keys, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent, serial) as layered subpath exports",
+  "description": "The active napplet NAP domains (the foundational shell, plus relay, storage, inc, keys, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent, webrtc, link, serial) as layered subpath exports",
   "type": "module",
   "exports": {
     "./relay": {
@@ -259,6 +259,22 @@
     "./intent/sdk": {
       "types": "./dist/intent/sdk.d.ts",
       "import": "./dist/intent/sdk.js"
+    },
+    "./webrtc": {
+      "types": "./dist/webrtc/index.d.ts",
+      "import": "./dist/webrtc/index.js"
+    },
+    "./webrtc/types": {
+      "types": "./dist/webrtc/types.d.ts",
+      "import": "./dist/webrtc/types.js"
+    },
+    "./webrtc/shim": {
+      "types": "./dist/webrtc/shim.d.ts",
+      "import": "./dist/webrtc/shim.js"
+    },
+    "./webrtc/sdk": {
+      "types": "./dist/webrtc/sdk.d.ts",
+      "import": "./dist/webrtc/sdk.js"
     },
     "./link": {
       "types": "./dist/link/index.d.ts",
