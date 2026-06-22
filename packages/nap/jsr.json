@@ -70,7 +70,11 @@
     "./pow": "./src/pow/index.ts",
     "./pow/types": "./src/pow/types.ts",
     "./pow/shim": "./src/pow/shim.ts",
-    "./pow/sdk": "./src/pow/sdk.ts"
+    "./pow/sdk": "./src/pow/sdk.ts",
+    "./serial": "./src/serial/index.ts",
+    "./serial/types": "./src/serial/types.ts",
+    "./serial/shim": "./src/serial/shim.ts",
+    "./serial/sdk": "./src/serial/sdk.ts"
   },
   "imports": {
     "@napplet/core": "jsr:@napplet/core@^0.15.0"

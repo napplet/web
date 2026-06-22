@@ -85,6 +85,14 @@ import {
   resume as powResume,
   formatHashRate as powFormatHashRate,
 } from '@napplet/nap/pow/shim';
+import {
+  installSerialShim,
+  handleSerialMessage,
+  open as serialOpen,
+  write as serialWrite,
+  close as serialClose,
+  onEvent as serialOnEvent,
+} from '@napplet/nap/serial/shim';
 import { sendEnvelope } from '@napplet/core';
 import type { NappletGlobal, NappletShell, ShellEnvironment, ShellInitMessage } from '@napplet/core';
 import { createShellEnvironment, makeSupports, defaultSupports } from '@napplet/nap/shell/shim';
@@ -165,6 +173,7 @@ const DOMAIN_ROUTERS: ReadonlyArray<readonly [string, DomainHandler]> = [
   ['upload.', handleUploadMessage],
   ['intent.', handleIntentMessage],
   ['pow.', handlePowMessage],
+  ['serial.', handleSerialMessage],
   ['identity.', identityShim.handleIdentityMessage],
   ['theme.', themeShim.handleThemeMessage],
   ['config.', handleConfigMessage],
@@ -321,6 +330,12 @@ installIncShim();
     resume: powResume,
     formatHashRate: powFormatHashRate,
   },
+  serial: {
+    open: serialOpen,
+    write: serialWrite,
+    close: serialClose,
+    onEvent: serialOnEvent,
+  },
   shell: {
     supports: defaultSupports,
     services: [],
@@ -379,3 +394,5 @@ installIntentShim();
 
 // Install POW shim (pow.* request/response correlation + mining job push routing; no install-time work)
 installPowShim();
+// Install serial shim (serial.* request/response correlation + serial.event listeners; no install-time work)
+installSerialShim();

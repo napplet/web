@@ -185,6 +185,10 @@ const RESPONDERS: Record<string, Responder> = {
   'pow.cancel': (e) => ok({ type: 'pow.cancel.result', id: e.id, jobId: e.jobId, cancelled: true }),
   'pow.pause': (e) => ok({ type: 'pow.pause.result', id: e.id, ...(typeof e.jobId === 'string' ? { jobId: e.jobId } : {}) }),
   'pow.resume': (e) => ok({ type: 'pow.resume.result', id: e.id, ...(typeof e.jobId === 'string' ? { jobId: e.jobId } : {}) }),
+  // serial
+  'serial.open': (e) => ok({ type: 'serial.open.result', id: e.id, session: { id: `serial-${String(e.id)}`, state: 'open' } }),
+  'serial.write': (e) => ok({ type: 'serial.write.result', id: e.id }),
+  'serial.close': (e) => ok({ type: 'serial.close.result', id: e.id }),
 };
 
 /** A reference shell instance. */

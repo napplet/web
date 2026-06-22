@@ -54,6 +54,7 @@ export interface NappletMessage {
  * | `config`   | Per-napplet declarative configuration              |
  * | `resource` | Byte-fetching primitive (URL → Blob)               |
  * | `pow`      | NIP-13 proof-of-work mining jobs                   |
+ * | `serial`   | Runtime-mediated serial device access             |
  *
  * @example
  * ```ts
@@ -61,7 +62,7 @@ export interface NappletMessage {
  * const isValid = NAP_DOMAINS.includes(domain); // true
  * ```
  */
-export type NapDomain = 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'cvm' | 'outbox' | 'upload' | 'intent' | 'pow';
+export type NapDomain = 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'cvm' | 'outbox' | 'upload' | 'intent' | 'pow' | 'serial';
 
 /**
  * Runtime-accessible constant array of all NAP domain names.
@@ -74,7 +75,7 @@ export type NapDomain = 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'ke
  * }
  * ```
  */
-export const NAP_DOMAINS: readonly NapDomain[] = ['relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent', 'pow'] as const;
+export const NAP_DOMAINS: readonly NapDomain[] = ['relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent', 'pow', 'serial'] as const;
 
 /**
  * Namespaced capability string for {@link ShellSupports.supports}.
