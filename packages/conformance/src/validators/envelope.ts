@@ -3,7 +3,7 @@
  *
  * The NAP message types are TypeScript-only at the source. To conformance-test a
  * napplet we need to validate, at runtime, every postMessage envelope the napplet
- * emits against the protocol. This module hand-encodes the wire surface of the 14
+ * emits against the protocol. This module hand-encodes the wire surface of the 15
  * optional NAP domains plus the foundational `shell` domain (NAP-SHELL) as a
  * single source-of-truth map ({@link ENVELOPE_SPECS}) and exposes
  * {@link validateEnvelope}.
@@ -49,6 +49,7 @@ const ID = { id: 'string' } as const;
 
 /**
  * The complete napplet wire surface: every `domain.action` discriminant across the
+ * 15 optional NAP domains plus the foundational `shell` domain (NAP-SHELL), with
  * optional NAP domains plus the foundational `shell` domain (NAP-SHELL), with
  * its direction and (for outbound) required fields.
  */
@@ -212,6 +213,9 @@ export const ENVELOPE_SPECS: Record<string, EnvelopeSpec> = {
   'intent.handlers.result': { dir: 'in' },
   'intent.changed': { dir: 'in' },
 
+  // ── link ─────────────────────────────────────────────────────────────────
+  'link.open': { dir: 'out', fields: { ...ID, url: 'string' } },
+  'link.open.result': { dir: 'in' },
   // ── serial ───────────────────────────────────────────────────────────────
   'serial.open': { dir: 'out', fields: { ...ID, request: 'object' } },
   'serial.write': { dir: 'out', fields: { ...ID, sessionId: 'string', data: 'array' } },

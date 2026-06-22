@@ -26,6 +26,7 @@ export { DOMAIN as CVM_DOMAIN } from '@napplet/nap/cvm';
 export { DOMAIN as OUTBOX_DOMAIN } from '@napplet/nap/outbox';
 export { DOMAIN as UPLOAD_DOMAIN } from '@napplet/nap/upload';
 export { DOMAIN as INTENT_DOMAIN } from '@napplet/nap/intent';
+export { DOMAIN as LINK_DOMAIN } from '@napplet/nap/link';
 export { DOMAIN as SERIAL_DOMAIN } from '@napplet/nap/serial';
 
 export { installRelayShim } from '@napplet/nap/relay';
@@ -46,6 +47,7 @@ export { installCvmShim } from '@napplet/nap/cvm';
 export { installOutboxShim } from '@napplet/nap/outbox';
 export { installUploadShim } from '@napplet/nap/upload';
 export { installIntentShim } from '@napplet/nap/intent';
+export { installLinkShim } from '@napplet/nap/link';
 export { installSerialShim } from '@napplet/nap/serial';
 
 export { relaySubscribe, relayPublish, relayPublishEncrypted, relayQuery } from '@napplet/nap/relay';
@@ -109,6 +111,7 @@ export {
   intentHandlers,
   intentOnChanged,
 } from '@napplet/nap/intent';
+export { linkOpen } from '@napplet/nap/link';
 export {
   serialOpen,
   serialWrite,

@@ -26,7 +26,7 @@ export { relay, inc, ifc, storage } from './relay.js';
 export { media, notify } from './media.js';
 export { keys, identity } from './keys.js';
 export { config, resource } from './config.js';
-export { cvm, outbox, upload, intent, serial } from './cvm.js';
+export { cvm, outbox, upload, intent, link, serial } from './cvm.js';
 
 // Type-only re-exports from @napplet/core and @napplet/nap/*.
 export type * from './nap-types.js';

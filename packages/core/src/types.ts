@@ -13,6 +13,7 @@ export type * from './types/cvm.js';
 export type * from './types/outbox.js';
 export type * from './types/upload.js';
 export type * from './types/intent.js';
+export type * from './types/link.js';
 export type * from './types/serial.js';
 export type * from './types/shell.js';
 export type * from './types/global.js';

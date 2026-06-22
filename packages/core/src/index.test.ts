@@ -61,6 +61,7 @@ describe('@napplet/core exports', () => {
       const _inc: NamespacedCapability = 'inc';
       const _theme: NamespacedCapability = 'theme';
       const _media: NamespacedCapability = 'media';
+      const _link: NamespacedCapability = 'link';
       const _serial: NamespacedCapability = 'serial';
       expect(true).toBe(true);
     });
@@ -72,6 +73,7 @@ describe('@napplet/core exports', () => {
       const _napInc: NamespacedCapability = 'nap:inc';
       const _napTheme: NamespacedCapability = 'nap:theme';
       const _napMedia: NamespacedCapability = 'nap:media';
+      const _napLink: NamespacedCapability = 'nap:link';
       const _napSerial: NamespacedCapability = 'nap:serial';
       expect(true).toBe(true);
     });

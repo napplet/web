@@ -260,6 +260,22 @@
       "types": "./dist/intent/sdk.d.ts",
       "import": "./dist/intent/sdk.js"
     },
+    "./link": {
+      "types": "./dist/link/index.d.ts",
+      "import": "./dist/link/index.js"
+    },
+    "./link/types": {
+      "types": "./dist/link/types.d.ts",
+      "import": "./dist/link/types.js"
+    },
+    "./link/shim": {
+      "types": "./dist/link/shim.d.ts",
+      "import": "./dist/link/shim.js"
+    },
+    "./link/sdk": {
+      "types": "./dist/link/sdk.d.ts",
+      "import": "./dist/link/sdk.js"
+    },
     "./serial": {
       "types": "./dist/serial/index.d.ts",
       "import": "./dist/serial/index.js"

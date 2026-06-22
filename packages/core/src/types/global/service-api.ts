@@ -22,6 +22,7 @@ import type {
 } from '../outbox.js';
 import type { UploadRequest, UploadResult, UploadStatus } from '../upload.js';
 import type { IntentAvailability, IntentRequest, IntentResult } from '../intent.js';
+import type { LinkOpenOptions, LinkOpenResult } from '../link.js';
 import type { SerialEvent, SerialOpenRequest, SerialOpenResult } from '../serial.js';
 
 /**
@@ -252,6 +253,30 @@ export interface IntentApi {
    * @returns A Subscription with `close()` to stop listening
    */
   onChanged(handler: (availability: IntentAvailability) => void): Subscription;
+}
+
+/**
+ * Shell-mediated link opening (NAP-LINK): the napplet asks the shell to open an
+ * external URL for the user. The shell owns navigation, policy, prompting,
+ * opener isolation, and browser context. The napplet receives no network
+ * access, opener authority, or fetched bytes.
+ *
+ * @example
+ * ```ts
+ * if (window.napplet.shell.supports('link')) {
+ *   const result = await window.napplet.link.open('https://example.com/post/123', { label: 'Read post' });
+ *   if (result.status === 'denied') showInlineFallback();
+ * }
+ * ```
+ */
+export interface LinkApi {
+  /**
+   * Request that the shell open an external URL for the user.
+   * @param url      Absolute URL to open
+   * @param options  Optional prompt/display hints
+   * @returns Promise resolving to the shell's open/deny status
+  */
+  open(url: string, options?: LinkOpenOptions): Promise<LinkOpenResult>;
 }
 
 /**

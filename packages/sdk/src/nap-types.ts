@@ -343,6 +343,19 @@ export type {
   IntentNapMessage,
 } from '@napplet/nap/intent';
 
+// LINK NAP (shell-mediated link opening)
+export type {
+  LinkOpenErrorCode,
+  LinkOpenOptions,
+  LinkOpenResult,
+  LinkOpenStatus,
+  LinkMessage,
+  LinkOpenMessage,
+  LinkOpenResultMessage,
+  LinkOutboundMessage,
+  LinkInboundMessage,
+  LinkNapMessage,
+} from '@napplet/nap/link';
 // SERIAL NAP (runtime-mediated serial device access)
 export type {
   SerialState,

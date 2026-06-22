@@ -163,6 +163,8 @@ const RESPONDERS: Record<string, Responder> = {
   'intent.available': (e) => ok({ type: 'intent.available.result', id: e.id, availability: {} }),
   'intent.handlers': (e) => ok({ type: 'intent.handlers.result', id: e.id, handlers: [] }),
 
+  // link
+  'link.open': (e) => ok({ type: 'link.open.result', id: e.id, status: 'opened' }),
   // serial
   'serial.open': (e) => ok({ type: 'serial.open.result', id: e.id, session: { id: `serial-${String(e.id)}`, state: 'open' } }),
   'serial.write': (e) => ok({ type: 'serial.write.result', id: e.id }),

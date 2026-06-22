@@ -73,6 +73,11 @@ import {
   onChanged as intentOnChanged,
 } from '@napplet/nap/intent/shim';
 import {
+  installLinkShim,
+  handleLinkMessage,
+  open as linkOpen,
+} from '@napplet/nap/link/shim';
+import {
   installSerialShim,
   handleSerialMessage,
   open as serialOpen,
@@ -159,6 +164,7 @@ const DOMAIN_ROUTERS: ReadonlyArray<readonly [string, DomainHandler]> = [
   ['outbox.', handleOutboxMessage],
   ['upload.', handleUploadMessage],
   ['intent.', handleIntentMessage],
+  ['link.', handleLinkMessage],
   ['serial.', handleSerialMessage],
   ['identity.', identityShim.handleIdentityMessage],
   ['theme.', themeShim.handleThemeMessage],
@@ -305,6 +311,9 @@ installIncShim();
     handlers: intentHandlers,
     onChanged: intentOnChanged,
   },
+  link: {
+    open: linkOpen,
+  },
   serial: {
     open: serialOpen,
     write: serialWrite,
@@ -367,5 +376,7 @@ installUploadShim();
 // Install intent shim (intent.* request/response correlation + intent.changed listeners; no install-time work)
 installIntentShim();
 
+// Install link shim (link.open request/response correlation; no install-time work)
+installLinkShim();
 // Install serial shim (serial.* request/response correlation + serial.event listeners; no install-time work)
 installSerialShim();

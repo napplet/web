@@ -26,7 +26,7 @@ npm install @napplet/sdk @napplet/shim
 
 ```ts
 import '@napplet/shim';
-import { relay, inc, storage, keys, media, notify, config, resource, type NostrEvent } from '@napplet/sdk';
+import { relay, inc, storage, keys, media, notify, config, resource, link, type NostrEvent } from '@napplet/sdk';
 
 // Subscribe to kind 1 notes
 const sub = relay.subscribe(
@@ -93,6 +93,9 @@ const avatarBlob = await resource.bytes('https://example.com/avatar.png');
 const handle = resource.bytesAsObjectURL('blossom:sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855');
 imgEl.src = handle.url;
 // handle.revoke() when done
+
+// Open an external URL through the shell
+await link.open('https://example.com/post/123', { label: 'Read post' });
 
 // Clean up
 sub.close();
