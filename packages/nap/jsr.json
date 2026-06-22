@@ -1,6 +1,6 @@
 {
   "name": "@napplet/nap",
-  "version": "0.15.0",
+  "version": "0.16.0",
   "license": "MIT",
   "exports": {
     "./relay": "./src/relay/index.ts",
@@ -77,7 +77,7 @@
     "./serial/sdk": "./src/serial/sdk.ts"
   },
   "imports": {
-    "@napplet/core": "jsr:@napplet/core@^0.15.0"
+    "@napplet/core": "jsr:@napplet/core@^0.16.0"
   },
   "publish": {
     "include": [
