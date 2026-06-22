@@ -9,7 +9,7 @@ import type {
   ConfigApi,
   ResourceApi,
 } from './global/runtime-api.js';
-import type { CvmApi, OutboxApi, UploadApi, IntentApi, SerialApi } from './global/service-api.js';
+import type { CvmApi, OutboxApi, UploadApi, IntentApi, SystemApi, SerialApi } from './global/service-api.js';
 
 /**
  * The window.napplet global installed at runtime by @napplet/shim.
@@ -267,8 +267,18 @@ export interface NappletGlobal {
    *   if (available) await window.napplet.intent.open('note', { target: { type: 'event', id } });
    * }
    * ```
-   */
+  */
   intent: IntentApi;
+  /**
+   * Read-only runtime diagnostics: NAP support, services, relays, storage,
+   * media, and napplet-scoped system status.
+   *
+   * @example
+   * ```ts
+   * const services = await window.napplet.system.services();
+   * ```
+  */
+  system: SystemApi;
   /**
    * Runtime-mediated serial device access (NAP-SERIAL): the napplet asks the
    * shell to select and open a user-approved serial session, writes byte arrays,

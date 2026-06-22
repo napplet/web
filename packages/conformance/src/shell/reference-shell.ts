@@ -163,6 +163,17 @@ const RESPONDERS: Record<string, Responder> = {
   'intent.available': (e) => ok({ type: 'intent.available.result', id: e.id, availability: {} }),
   'intent.handlers': (e) => ok({ type: 'intent.handlers.result', id: e.id, handlers: [] }),
 
+  // system
+  'system.naps': (e) => ok({ type: 'system.naps.result', id: e.id, naps: [] }),
+  'system.services': (e) => ok({ type: 'system.services.result', id: e.id, services: [] }),
+  'system.relays': (e) => ok({ type: 'system.relays.result', id: e.id, relays: [] }),
+  'system.eventCache': (e) => ok({ type: 'system.eventCache.result', id: e.id, status: { available: true, health: 'ok' } }),
+  'system.localStorage': (e) => ok({ type: 'system.localStorage.result', id: e.id, status: { available: true, health: 'ok' } }),
+  'system.indexedDb': (e) => ok({ type: 'system.indexedDb.result', id: e.id, status: { available: true, health: 'ok' } }),
+  'system.media': (e) => ok({ type: 'system.media.result', id: e.id, status: { available: true, health: 'ok' } }),
+  'system.nappletStorage': (e) => ok({ type: 'system.nappletStorage.result', id: e.id, status: { available: true, health: 'ok' } }),
+  'system.scopes': (e) => ok({ type: 'system.scopes.result', id: e.id, scopes: [] }),
+  'system.scope': (e) => ok({ type: 'system.scope.result', id: e.id, scope: { name: String(e.name), available: true, health: 'ok', details: {} } }),
   // serial
   'serial.open': (e) => ok({ type: 'serial.open.result', id: e.id, session: { id: `serial-${String(e.id)}`, state: 'open' } }),
   'serial.write': (e) => ok({ type: 'serial.write.result', id: e.id }),

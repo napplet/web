@@ -382,6 +382,8 @@ Individual message types (e.g., `RelaySubscribeMessage`, `IdentityGetPublicKeyMe
 Each NAP domain has a string constant re-exported from its package:
 
 ```ts
+import { RELAY_DOMAIN, IDENTITY_DOMAIN, STORAGE_DOMAIN, INC_DOMAIN, THEME_DOMAIN, KEYS_DOMAIN, MEDIA_DOMAIN, NOTIFY_DOMAIN, CONFIG_DOMAIN, RESOURCE_DOMAIN, CVM_DOMAIN, OUTBOX_DOMAIN, UPLOAD_DOMAIN, INTENT_DOMAIN } from '@napplet/sdk';
+// Values: 'relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent', 'system'
 import { RELAY_DOMAIN, IDENTITY_DOMAIN, STORAGE_DOMAIN, INC_DOMAIN, THEME_DOMAIN, KEYS_DOMAIN, MEDIA_DOMAIN, NOTIFY_DOMAIN, CONFIG_DOMAIN, RESOURCE_DOMAIN, CVM_DOMAIN, OUTBOX_DOMAIN, UPLOAD_DOMAIN, INTENT_DOMAIN, SERIAL_DOMAIN } from '@napplet/sdk';
 // Values: 'relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent', 'serial'
 ```

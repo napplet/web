@@ -1,5 +1,6 @@
 # @napplet/nap
 
+> Every active napplet NAP domain (relay, storage, inc, keys, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent, system) as layered subpath exports. The package name remains `@napplet/nap` for compatibility.
 > Every active napplet NAP domain (relay, storage, inc, keys, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent, serial) as layered subpath exports. The package name remains `@napplet/nap` for compatibility.
 
 ## Install
@@ -73,7 +74,7 @@ Each domain is an independent subpath. Barrel imports bundle types + shim instal
 | storage | `@napplet/nap/storage` | `@napplet/nap/storage/types` | `@napplet/nap/storage/shim` | `@napplet/nap/storage/sdk` | Scoped key-value storage |
 | inc | `@napplet/nap/inc` | `@napplet/nap/inc/types` | `@napplet/nap/inc/shim` | `@napplet/nap/inc/sdk` | Inter-napplet communication (topic pub/sub) |
 | keys | `@napplet/nap/keys` | `@napplet/nap/keys/types` | `@napplet/nap/keys/shim` | `@napplet/nap/keys/sdk` | Keyboard bindings + action registration |
-| theme | `@napplet/nap/theme` | `@napplet/nap/theme/types` | — | — | Read-only shell theme access (types-only today) |
+| theme | `@napplet/nap/theme` | `@napplet/nap/theme/types` | `@napplet/nap/theme/shim` | `@napplet/nap/theme/sdk` | Read-only shell theme access (`get` + `onChanged`) |
 | media | `@napplet/nap/media` | `@napplet/nap/media/types` | `@napplet/nap/media/shim` | `@napplet/nap/media/sdk` | Ownership-aware media sessions + playback |
 | notify | `@napplet/nap/notify` | `@napplet/nap/notify/types` | `@napplet/nap/notify/shim` | `@napplet/nap/notify/sdk` | Shell-rendered notifications |
 | identity | `@napplet/nap/identity` | `@napplet/nap/identity/types` | `@napplet/nap/identity/shim` | `@napplet/nap/identity/sdk` | Read-only user queries (pubkey, metadata) |
@@ -83,6 +84,7 @@ Each domain is an independent subpath. Barrel imports bundle types + shim instal
 | outbox | `@napplet/nap/outbox` | `@napplet/nap/outbox/types` | `@napplet/nap/outbox/shim` | `@napplet/nap/outbox/sdk` | Outbox-aware relay routing — `query`/`subscribe`/`publish`/`resolveRelays`; shell owns NIP-65 relay discovery, dedup, and fanout |
 | upload | `@napplet/nap/upload` | `@napplet/nap/upload/types` | `@napplet/nap/upload/shim` | `@napplet/nap/upload/sdk` | Shell-mediated file/blob upload — `upload`/`status`/`onStatus` over NIP-96 + Blossom rails; shell signs auth, returns NIP-94 metadata |
 | intent | `@napplet/nap/intent` | `@napplet/nap/intent/types` | `@napplet/nap/intent/shim` | `@napplet/nap/intent/sdk` | Archetype intent dispatch — `invoke`/`open`/`available`/`handlers`/`onChanged`; invoke another napplet by role, shell resolves the default handler |
+| system | `@napplet/nap/system` | `@napplet/nap/system/types` | `@napplet/nap/system/shim` | `@napplet/nap/system/sdk` | Read-only runtime system information — `naps`/`services`/`relays`/`eventCache`/`scope`; shell owns aggregation and redaction |
 | serial | `@napplet/nap/serial` | `@napplet/nap/serial/types` | `@napplet/nap/serial/shim` | `@napplet/nap/serial/sdk` | Runtime-mediated serial device access — `open`/`write`/`close`/`onEvent`; shell owns permissions, port handles, streams, and lifecycle |
 
 ### Deprecated IFC Compatibility
@@ -103,7 +105,7 @@ Each domain exposes up to three patterns (four including the barrel). Pick the s
 ## Tree-Shaking Contract
 
 - `@napplet/nap` publishes with `sideEffects: false`
-- Every subpath in the `exports` map is a discrete entry point; a bundler importing only `@napplet/nap/relay/types` produces zero bytes from the other 8 domains
+- Every subpath in the `exports` map is a discrete entry point; a bundler importing only `@napplet/nap/relay/types` produces zero bytes from the other domains
 - Verified end-to-end in Phase 121 with a minimal-consumer smoke test
 
 The `exports` map in `package.json` declares 68 entry points:

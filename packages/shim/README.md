@@ -12,7 +12,7 @@
 
 1. Import `@napplet/shim` in your napplet's entry point (side-effect only -- no named exports)
 2. The shim registers with the shell via postMessage -- the shell assigns identity based on the iframe's `message.source` Window reference
-3. Once registered, `window.napplet` is populated with relay, inc, storage, keys, media, notify, identity, config, resource, cvm, outbox, upload, intent, serial, and shell sub-objects
+3. Once registered, `window.napplet` is populated with relay, inc, storage, keys, media, notify, identity, config, resource, cvm, outbox, upload, intent, system, serial, and shell sub-objects
 4. No `window.nostr` is installed -- signing and encryption are mediated by the shell via `relay.publish()` and `relay.publishEncrypted()`
 
 ### Installation

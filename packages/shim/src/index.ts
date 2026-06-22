@@ -73,6 +73,20 @@ import {
   onChanged as intentOnChanged,
 } from '@napplet/nap/intent/shim';
 import {
+  installSystemShim,
+  handleSystemMessage,
+  naps as systemNaps,
+  services as systemServices,
+  relays as systemRelays,
+  eventCache as systemEventCache,
+  localStorage as systemLocalStorage,
+  indexedDb as systemIndexedDb,
+  media as systemMedia,
+  nappletStorage as systemNappletStorage,
+  scopes as systemScopes,
+  scope as systemScope,
+} from '@napplet/nap/system/shim';
+import {
   installSerialShim,
   handleSerialMessage,
   open as serialOpen,
@@ -159,6 +173,7 @@ const DOMAIN_ROUTERS: ReadonlyArray<readonly [string, DomainHandler]> = [
   ['outbox.', handleOutboxMessage],
   ['upload.', handleUploadMessage],
   ['intent.', handleIntentMessage],
+  ['system.', handleSystemMessage],
   ['serial.', handleSerialMessage],
   ['identity.', identityShim.handleIdentityMessage],
   ['theme.', themeShim.handleThemeMessage],
@@ -305,6 +320,18 @@ installIncShim();
     handlers: intentHandlers,
     onChanged: intentOnChanged,
   },
+  system: {
+    naps: systemNaps,
+    services: systemServices,
+    relays: systemRelays,
+    eventCache: systemEventCache,
+    localStorage: systemLocalStorage,
+    indexedDb: systemIndexedDb,
+    media: systemMedia,
+    nappletStorage: systemNappletStorage,
+    scopes: systemScopes,
+    scope: systemScope,
+  },
   serial: {
     open: serialOpen,
     write: serialWrite,
@@ -367,5 +394,7 @@ installUploadShim();
 // Install intent shim (intent.* request/response correlation + intent.changed listeners; no install-time work)
 installIntentShim();
 
+// Install system shim (system.* request/response correlation; no install-time work)
+installSystemShim();
 // Install serial shim (serial.* request/response correlation + serial.event listeners; no install-time work)
 installSerialShim();

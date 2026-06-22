@@ -22,6 +22,15 @@ import type {
 } from '../outbox.js';
 import type { UploadRequest, UploadResult, UploadStatus } from '../upload.js';
 import type { IntentAvailability, IntentRequest, IntentResult } from '../intent.js';
+import type {
+  SystemMediaStatus,
+  SystemNapStatus,
+  SystemRelayStatus,
+  SystemScopeStatus,
+  SystemScopeSummary,
+  SystemServiceStatus,
+  SystemStorageStatus,
+} from '../system.js';
 import type { SerialEvent, SerialOpenRequest, SerialOpenResult } from '../serial.js';
 
 /**
@@ -252,6 +261,72 @@ export interface IntentApi {
    * @returns A Subscription with `close()` to stop listening
    */
   onChanged(handler: (availability: IntentAvailability) => void): Subscription;
+}
+
+/**
+ * Read-only runtime system information (NAP-SYSTEM): narrow accessors for
+ * runtime snapshots. The shell owns aggregation, freshness, and redaction.
+ *
+ * @example
+ * ```ts
+ * if (window.napplet.shell.supports('system')) {
+ *   const naps = await window.napplet.system.naps();
+ *   const cache = await window.napplet.system.eventCache();
+ * }
+ * ```
+ */
+export interface SystemApi {
+  /**
+   * Return NAP support visible to this napplet.
+   * @returns Promise resolving to NAP support statuses
+   */
+  naps(): Promise<SystemNapStatus[]>;
+  /**
+   * Return runtime service availability and health.
+   * @returns Promise resolving to service statuses
+   */
+  services(): Promise<SystemServiceStatus[]>;
+  /**
+   * Return connected relay transport status.
+   * @returns Promise resolving to relay statuses
+   */
+  relays(): Promise<SystemRelayStatus[]>;
+  /**
+   * Return runtime event-cache status.
+   * @returns Promise resolving to event-cache status
+   */
+  eventCache(): Promise<SystemStorageStatus>;
+  /**
+   * Return runtime local-storage status.
+   * @returns Promise resolving to local-storage status
+   */
+  localStorage(): Promise<SystemStorageStatus>;
+  /**
+   * Return runtime IndexedDB / indexed object store status.
+   * @returns Promise resolving to indexed storage status
+   */
+  indexedDb(): Promise<SystemStorageStatus>;
+  /**
+   * Return runtime media subsystem status.
+   * @returns Promise resolving to media status
+   */
+  media(): Promise<SystemMediaStatus>;
+  /**
+   * Return NAP-STORAGE-style usage scoped to this napplet.
+   * @returns Promise resolving to napplet-scoped storage status
+   */
+  nappletStorage(): Promise<SystemStorageStatus>;
+  /**
+   * List napplet-scoped diagnostic areas available through `scope(name)`.
+   * @returns Promise resolving to scope summaries
+   */
+  scopes(): Promise<SystemScopeSummary[]>;
+  /**
+   * Return runtime-defined details for one napplet-scoped diagnostic area.
+   * @param name  Runtime-defined scope name
+   * @returns Promise resolving to scoped status
+  */
+  scope(name: string): Promise<SystemScopeStatus>;
 }
 
 /**
