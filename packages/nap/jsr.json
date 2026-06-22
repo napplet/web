@@ -70,7 +70,11 @@
     "./link": "./src/link/index.ts",
     "./link/types": "./src/link/types.ts",
     "./link/shim": "./src/link/shim.ts",
-    "./link/sdk": "./src/link/sdk.ts"
+    "./link/sdk": "./src/link/sdk.ts",
+    "./serial": "./src/serial/index.ts",
+    "./serial/types": "./src/serial/types.ts",
+    "./serial/shim": "./src/serial/shim.ts",
+    "./serial/sdk": "./src/serial/sdk.ts"
   },
   "imports": {
     "@napplet/core": "jsr:@napplet/core@^0.15.0"

@@ -5,6 +5,8 @@
 
 `@napplet/nap` ships every NAP domain (relay, storage, inc, keys, theme, media,
 notify, identity, config, resource, cvm, outbox, upload, intent, link)
+`@napplet/nap` ships every active NAP domain (relay, storage, inc, keys, theme,
+media, notify, identity, config, resource, cvm, outbox, upload, intent, serial)
 as independent, tree-shakable subpaths. It sits between the shim/sdk and
 [`@napplet/core`](./core) in the dependency graph.
 
@@ -54,6 +56,8 @@ import { notifySend } from '@napplet/nap/notify/sdk';
 - Published with `sideEffects: false`.
 - The `exports` map declares **68 entry points**: 17 subpath barrels, 17
   types entries, and 17 shim + 17 sdk entries.
+- The `exports` map declares **68 entry points**: 17 domain barrels, 17
+  types entries, 17 shim entries, and 17 sdk entries.
 - A bundler importing only `@napplet/nap/relay/types` produces zero bytes from
   the other domains.
 
@@ -67,6 +71,9 @@ import { notifySend } from '@napplet/nap/notify/sdk';
   with `getPublicKey()`, then subscribe to shell-pushed `identity.changed`.
 - **link** — shell-mediated external navigation via `open(url, options?)`. The
   shell owns prompting, policy, opener isolation, and browser context.
+- **serial** — runtime-mediated serial device access: napplets get
+  `open`/`write`/`close`/`onEvent`; the shell owns permissions, raw port
+  handles, streams, OS paths, and lifecycle policy.
 
 See the [NAP domain reference](/naps/) for the full list with one-line purposes.
 
