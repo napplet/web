@@ -115,18 +115,21 @@ If none of the three paths resolve a schema, manifest/meta emission for the conf
 
 #### archetypes (optional)
 
-**Type:** `Array<string | { slug: string; naps?: string[] }>`
+**Type:** `Array<string | { slug: string; naps?: string[]; contracts?: { protocol: string; eventKinds?: number[] }[] }>`
 
-Declares the NAAT archetype roles this napplet fulfills (napplet/naps `ARCHETYPES.md`). Each entry emits **one** `['archetype', slug, ...naps]` tag on the kind 35129 manifest event, where `slug` is the role slug and `naps` are the NAP-N wire format(s) the napplet accepts for that role. A napplet may declare several archetype roles; a napplet with no archetype tag is fully valid.
+Declares the NAAT archetype roles this napplet fulfills (napplet/naps `ARCHETYPES.md`). Each accepted protocol emits **one** `['archetype', slug, protocol, ...constraints]` tag on the kind 35129 manifest event, where `slug` is the role slug, `protocol` is a single NAP-N wire format, and constraints such as `kind:<number>` are scoped to that protocol. A napplet may declare several archetype roles; a napplet with no archetype tag is fully valid.
 
 ```ts
 nip5aManifest({
   nappletType: 'my-feed',
-  // Object form (role + accepted NAP wire formats) and string shorthand
-  // ("feed" ≡ { slug: "feed" }) may be mixed:
-  archetypes: [{ slug: 'feed', naps: ['NAP-4'] }, 'note'],
+  archetypes: [
+    { slug: 'feed', naps: ['NAP-5', 'NAP-6'] },
+    { slug: 'note', contracts: [{ protocol: 'NAP-4', eventKinds: [1, 30023] }] },
+  ],
 });
-// → emits ['archetype', 'feed', 'NAP-4'] and ['archetype', 'note']
+// → emits ['archetype', 'feed', 'NAP-5']
+// → emits ['archetype', 'feed', 'NAP-6']
+// → emits ['archetype', 'note', 'NAP-4', 'kind:1', 'kind:30023']
 ```
 
 Like the `config` tag, archetype tags are **not** folded into `aggregateHash`: per NIP-5D §Identity the aggregate is the NIP-5A hash of the `path` tags alone, so declaring archetypes never changes the napplet's content address. Blank slugs are skipped.

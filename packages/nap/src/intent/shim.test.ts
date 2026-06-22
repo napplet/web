@@ -122,12 +122,25 @@ describe('@napplet/nap/intent shim', () => {
       availability: {
         archetype: 'emoji-list',
         available: true,
-        candidates: [{ dTag: 'emojilistr', actions: ['open'], protocols: ['NAP-7'], isDefault: true }],
+        candidates: [
+          {
+            dTag: 'emojilistr',
+            actions: ['open'],
+            protocols: ['NAP-7'],
+            contracts: [{ action: 'open', protocol: 'NAP-7' }],
+            isDefault: true,
+          },
+        ],
         hasDefault: true,
       },
     });
 
-    await expect(promise).resolves.toMatchObject({ archetype: 'emoji-list', available: true, hasDefault: true });
+    await expect(promise).resolves.toMatchObject({
+      archetype: 'emoji-list',
+      available: true,
+      candidates: [{ contracts: [{ action: 'open', protocol: 'NAP-7' }] }],
+      hasDefault: true,
+    });
   });
 
   it('handlers() resolves the availability list', async () => {
@@ -138,10 +151,38 @@ describe('@napplet/nap/intent shim', () => {
     handleIntentMessage({
       type: 'intent.handlers.result',
       id: sent.id,
-      handlers: [{ archetype: 'note', available: true, candidates: [], hasDefault: true }],
+      handlers: [
+        {
+          archetype: 'note',
+          available: true,
+          candidates: [
+            {
+              dTag: 'noteview',
+              actions: ['open'],
+              protocols: ['NAP-4'],
+              contracts: [{ action: 'open', protocol: 'NAP-4', eventKinds: [1] }],
+            },
+          ],
+          hasDefault: true,
+        },
+      ],
     });
 
-    await expect(promise).resolves.toEqual([{ archetype: 'note', available: true, candidates: [], hasDefault: true }]);
+    await expect(promise).resolves.toEqual([
+      {
+        archetype: 'note',
+        available: true,
+        candidates: [
+          {
+            dTag: 'noteview',
+            actions: ['open'],
+            protocols: ['NAP-4'],
+            contracts: [{ action: 'open', protocol: 'NAP-4', eventKinds: [1] }],
+          },
+        ],
+        hasDefault: true,
+      },
+    ]);
   });
 
   it('onChanged receives intent.changed pushes and stops after close()', async () => {

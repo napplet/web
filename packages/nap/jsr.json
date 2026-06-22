@@ -1,6 +1,6 @@
 {
   "name": "@napplet/nap",
-  "version": "0.15.0",
+  "version": "0.17.0",
   "license": "MIT",
   "exports": {
     "./relay": "./src/relay/index.ts",
@@ -71,13 +71,17 @@
     "./webrtc/types": "./src/webrtc/types.ts",
     "./webrtc/shim": "./src/webrtc/shim.ts",
     "./webrtc/sdk": "./src/webrtc/sdk.ts",
+    "./link": "./src/link/index.ts",
+    "./link/types": "./src/link/types.ts",
+    "./link/shim": "./src/link/shim.ts",
+    "./link/sdk": "./src/link/sdk.ts",
     "./serial": "./src/serial/index.ts",
     "./serial/types": "./src/serial/types.ts",
     "./serial/shim": "./src/serial/shim.ts",
     "./serial/sdk": "./src/serial/sdk.ts"
   },
   "imports": {
-    "@napplet/core": "jsr:@napplet/core@^0.15.0"
+    "@napplet/core": "jsr:@napplet/core@^0.17.0"
   },
   "publish": {
     "include": [

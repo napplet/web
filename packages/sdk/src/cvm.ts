@@ -1,6 +1,6 @@
 /**
- * @napplet/sdk -- ContextVM bridge, outbox routing, upload, intent, and serial
- * wrapper objects.
+ * @napplet/sdk -- ContextVM bridge, outbox routing, upload, intent, WebRTC,
+ * link, and serial wrapper objects.
  *
  * @packageDocumentation
  */
@@ -35,6 +35,8 @@ import type {
   WebrtcOpenRequest,
   WebrtcOpenResult,
   WebrtcEvent,
+  LinkOpenOptions,
+  LinkOpenResult,
   SerialEvent,
   SerialOpenRequest,
   SerialOpenResult,
@@ -300,7 +302,8 @@ export const intent = {
   },
 
   /**
-   * Check whether the runtime can currently satisfy an archetype.
+   * Check whether the runtime can currently satisfy an archetype and expose the
+   * manifest-derived contracts each candidate serves.
    * @param archetype  Role slug to check
    * @returns Promise resolving to the archetype availability
    */
@@ -374,6 +377,30 @@ export const webrtc = {
    */
   onEvent(handler: (event: WebrtcEvent) => void): Subscription {
     return requireNapplet().webrtc.onEvent(handler);
+  },
+};
+
+/**
+ * Shell-mediated link opening (NAP-LINK): ask the shell to open an external URL
+ * for user-visible navigation. The shell owns prompting, policy, opener
+ * isolation, and browser context.
+ *
+ * @example
+ * ```ts
+ * import { link } from '@napplet/sdk';
+ *
+ * const result = await link.open('https://example.com/post/123', { label: 'Read post' });
+ * ```
+ */
+export const link = {
+  /**
+   * Request that the shell open an external URL for the user.
+   * @param url      Absolute URL to open
+   * @param options  Optional prompt/display hints
+   * @returns Promise resolving to the shell's open/deny status
+   */
+  open(url: string, options?: LinkOpenOptions): Promise<LinkOpenResult> {
+    return requireNapplet().link.open(url, options);
   },
 };
 

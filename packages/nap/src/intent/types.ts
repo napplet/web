@@ -21,6 +21,7 @@ import type {
   NappletMessage,
   IntentHandlerPreference,
   IntentBehavior,
+  IntentContract,
 } from '@napplet/core';
 
 /** The NAP domain name for intent messages. */
@@ -36,6 +37,9 @@ export type { IntentHandlerPreference };
 
 /** Window behavior hints for an invoke. */
 export type { IntentBehavior };
+
+/** One manifest-derived contract this candidate serves for the archetype. */
+export type { IntentContract };
 
 /** A request to dispatch an action to a napplet of a given archetype. */
 export interface IntentRequest {
@@ -63,6 +67,8 @@ export interface IntentCandidate {
   actions: string[];
   /** NAP-N ids this candidate accepts for the archetype. */
   protocols: string[];
+  /** Action/protocol contracts parsed from archetype manifest tags. */
+  contracts: IntentContract[];
   /** Whether this candidate is the user/runtime default. */
   isDefault?: boolean;
 }

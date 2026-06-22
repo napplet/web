@@ -221,6 +221,9 @@ export const ENVELOPE_SPECS: Record<string, EnvelopeSpec> = {
   'webrtc.send.result': { dir: 'in' },
   'webrtc.close.result': { dir: 'in' },
   'webrtc.event': { dir: 'in' },
+  // ── link ─────────────────────────────────────────────────────────────────
+  'link.open': { dir: 'out', fields: { ...ID, url: 'string' } },
+  'link.open.result': { dir: 'in' },
   // ── serial ───────────────────────────────────────────────────────────────
   'serial.open': { dir: 'out', fields: { ...ID, request: 'object' } },
   'serial.write': { dir: 'out', fields: { ...ID, sessionId: 'string', data: 'array' } },

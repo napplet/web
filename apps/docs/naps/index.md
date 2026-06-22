@@ -197,12 +197,26 @@ if (window.napplet.shell.supports('intent')) {
 }
 ```
 
+### link
+
+Shell-mediated external link opening. This is user-visible navigation, not byte
+fetching; the shell owns prompting, policy, opener isolation, and browser context.
+
+```ts
+if (window.napplet.shell.supports('link')) {
+  const result = await window.napplet.link.open('https://example.com/post/123', {
+    label: 'Read post',
+  });
+  if (result.status === 'denied') showInlineFallback();
+}
+```
+
 ## Core domain union
 
 [`@napplet/core`](/packages/core) exports a `NapDomain` string union for the
 foundational domains — `relay`, `identity`, `storage`, `inc`, `theme`,
 `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`,
-`upload`, `intent` — used as the discriminant for envelope routing and
+`upload`, `intent`, `link` — used as the discriminant for envelope routing and
 `shell.supports()`.
 
 ## Where to go next

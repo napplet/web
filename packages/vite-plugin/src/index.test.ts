@@ -285,11 +285,12 @@ describe('nip5aManifest artifact modes', () => {
     }
   });
 
-  it('emits one ["archetype", slug, ...naps] tag per role without changing the aggregate', async () => {
+  it('emits one ["archetype", slug, protocol] tag per contract without changing the aggregate', async () => {
     // NAAT (napplet/naps ARCHETYPES.md): a napplet declares the roles it
-    // fulfills as ['archetype', slug, ...naps] tags. Per NIP-5D §Identity these
-    // are excluded from the aggregate `x` hash (same as `config`) — declaring
-    // archetypes over identical dist bytes MUST NOT change the content address.
+    // fulfills as one ['archetype', slug, protocol, ...constraints] tag per
+    // protocol. Per NIP-5D §Identity these are excluded from the aggregate `x`
+    // hash (same as `config`) — declaring archetypes over identical dist bytes
+    // MUST NOT change the content address.
     const baseFixture = makeFixture();
     const archetypeFixture = makeFixture();
     const html = '<!doctype html><script type="module" src="./assets/index.js"></script>';
@@ -307,8 +308,12 @@ describe('nip5aManifest artifact modes', () => {
       {
         nappletType: 'archetype-roles',
         artifactMode: 'single-file',
-        // Object form (with naps) plus string shorthand (no naps).
-        archetypes: [{ slug: 'feed', naps: ['NAP-4'] }, 'note'],
+        // Legacy protocol list plus explicit constrained contracts.
+        archetypes: [
+          { slug: 'feed', naps: ['NAP-5', 'NAP-6'] },
+          { slug: 'note', contracts: [{ protocol: 'NAP-4', eventKinds: [1, 30023] }] },
+          'profile',
+        ],
       },
       archetypeFixture,
     );
@@ -319,11 +324,13 @@ describe('nip5aManifest artifact modes', () => {
     // Identical dist bytes → identical aggregate, regardless of archetype tags.
     expect(withArchetypes.aggregateHash).toBe(base.aggregateHash);
 
-    // One tag per declared role, in author-declared order, naps appended.
+    // One tag per protocol, in author-declared order. String shorthand without a
+    // protocol remains accepted but emits no invalid protocol-less tag.
     const archetypeTags = withArchetypes.tags.filter((tag) => tag[0] === 'archetype');
     expect(archetypeTags).toEqual([
-      ['archetype', 'feed', 'NAP-4'],
-      ['archetype', 'note'],
+      ['archetype', 'feed', 'NAP-5'],
+      ['archetype', 'feed', 'NAP-6'],
+      ['archetype', 'note', 'NAP-4', 'kind:1', 'kind:30023'],
     ]);
 
     // The base build (no archetypes) emits no archetype tag at all.

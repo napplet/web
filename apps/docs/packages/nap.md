@@ -5,6 +5,7 @@
 
 `@napplet/nap` ships every NAP domain (relay, storage, inc, keys, theme, media,
 notify, identity, config, resource, cvm, outbox, upload, intent, webrtc)
+notify, identity, config, resource, cvm, outbox, upload, intent, link)
 `@napplet/nap` ships every active NAP domain (relay, storage, inc, keys, theme,
 media, notify, identity, config, resource, cvm, outbox, upload, intent, serial)
 as independent, tree-shakable subpaths. It sits between the shim/sdk and
@@ -54,6 +55,8 @@ import { notifySend } from '@napplet/nap/notify/sdk';
 ## Tree-shaking contract
 
 - Published with `sideEffects: false`.
+- The `exports` map declares **68 entry points**: 17 subpath barrels, 17
+  types entries, and 17 shim + 17 sdk entries.
 - The `exports` map declares **68 entry points**: 17 domain barrels, 17
   types entries, 17 shim entries, and 17 sdk entries.
 - A bundler importing only `@napplet/nap/relay/types` produces zero bytes from
@@ -70,6 +73,8 @@ import { notifySend } from '@napplet/nap/notify/sdk';
 - **webrtc** — runtime-mediated WebRTC data sessions. Napplets use shell-scoped
   sessions while the shell owns signaling, SDP, ICE, and peer-connection
   lifecycle.
+- **link** — shell-mediated external navigation via `open(url, options?)`. The
+  shell owns prompting, policy, opener isolation, and browser context.
 - **serial** — runtime-mediated serial device access: napplets get
   `open`/`write`/`close`/`onEvent`; the shell owns permissions, raw port
   handles, streams, OS paths, and lifecycle policy.

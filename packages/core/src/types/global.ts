@@ -10,7 +10,7 @@ import type {
   ResourceApi,
 } from './global/runtime-api.js';
 import type { WebrtcApi } from './webrtc.js';
-import type { CvmApi, OutboxApi, UploadApi, IntentApi, SerialApi } from './global/service-api.js';
+import type { CvmApi, OutboxApi, UploadApi, IntentApi, LinkApi, SerialApi } from './global/service-api.js';
 
 /**
  * The window.napplet global installed at runtime by @napplet/shim.
@@ -275,6 +275,19 @@ export interface NappletGlobal {
    * signing/encryption, SDP, ICE, and RTCPeerConnection lifecycle.
   */
   webrtc: WebrtcApi;
+  /**
+   * Shell-mediated link opening (NAP-LINK): request user-visible navigation
+   * without giving the napplet direct navigation authority, opener access,
+   * network access, or fetched bytes.
+   *
+   * @example
+   * ```ts
+   * if (window.napplet.shell.supports('link')) {
+   *   await window.napplet.link.open('https://example.com/post/123', { label: 'Read post' });
+   * }
+   * ```
+  */
+  link: LinkApi;
   /**
    * Runtime-mediated serial device access (NAP-SERIAL): the napplet asks the
    * shell to select and open a user-approved serial session, writes byte arrays,
