@@ -4,8 +4,8 @@ milestone: v0.33.0
 milestone_name: NAP-SHELL Alignment
 status: "Milestone v0.33.0 shipped — PR #48"
 stopped_at: Completed 155-01-PLAN.md (Implement NAP-SHELL — SHELL-01..06)
-last_updated: "2026-06-17T02:36:42.735Z"
-last_activity: "2026-06-17 — Executed 155-01-PLAN.md: added @napplet/core NAP-SHELL types, the @napplet/nap/shell subpath, migrated the shim handshake to cache the `{ capabilities:{domains,protocols}, services, class }` environment, and migrated conformance (validator/reference-shell/boot/checks). 4 task commits (4eddcb5, 99de482, 86a9ca6, e8e5438). build + type-check + test:unit all green."
+last_updated: "2026-06-22T16:13:57Z"
+last_activity: "2026-06-22 — Quick task 260622-oxt implemented NAP-LISTS from napplet/naps PR #68: @napplet/core domain/types, @napplet/nap/lists package, shim + SDK wrappers, conformance validators/reference shell, docs, tests, and changeset. Commit 891af42. build + type-check + test:unit + diff-check + aislop green; inherited js-yaml advisory remains."
 progress:
   total_phases: 2
   completed_phases: 2
@@ -31,7 +31,9 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 Phase: 155 (Implement NAP-SHELL) — COMPLETE
 Plan: 155-01 — COMPLETE
 Status: Milestone v0.33.0 shipped — PR #48
-Last activity: 2026-06-17 — Wired per-package GitHub Releases after npm deploy (scripts/github-releases.mjs + Publish-workflow step, idempotent + backfilling); branch chore/github-releases. Earlier: completed quick task 260617-qmu: retired the deferred NAP-CLASS / NAP-CONNECT surface (deleted both SHELL-*-POLICY specs, cleaned root README + build-napplet SKILL) AND removed the residual opaque `class` field that Phase 155 re-homed into NAP-SHELL `shell.init` (canonical NAP-SHELL carries no class). `shell.init` is now `{ capabilities, services }`. Removed across core/shim/nap/conformance + tests; changeset (minor ×4); build + type-check + test:unit all green. 8 commits (bfaaaf8…9ffa822).
+Last activity: 2026-06-22 — Quick task 260622-oxt implemented NAP-LISTS from napplet/naps PR #68: @napplet/core domain/types, @napplet/nap/lists package, shim + SDK wrappers, conformance validators/reference shell, docs, tests, and changeset. Commit 891af42. build + type-check + test:unit + diff-check + aislop green; inherited js-yaml advisory remains.
+
+Prior activity: 2026-06-17 — Wired per-package GitHub Releases after npm deploy (scripts/github-releases.mjs + Publish-workflow step, idempotent + backfilling); branch chore/github-releases. Earlier: completed quick task 260617-qmu: retired the deferred NAP-CLASS / NAP-CONNECT surface (deleted both SHELL-*-POLICY specs, cleaned root README + build-napplet SKILL) AND removed the residual opaque `class` field that Phase 155 re-homed into NAP-SHELL `shell.init` (canonical NAP-SHELL carries no class). `shell.init` is now `{ capabilities, services }`. Removed across core/shim/nap/conformance + tests; changeset (minor ×4); build + type-check + test:unit all green. 8 commits (bfaaaf8…9ffa822).
 
 Prior activity: 2026-06-17 — Executed 155-01-PLAN.md: added @napplet/core NAP-SHELL types, the @napplet/nap/shell subpath, migrated the shim handshake to cache the `{ capabilities:{domains,protocols}, services, class }` environment, and migrated conformance (validator/reference-shell/boot/checks). 4 task commits (4eddcb5, 99de482, 86a9ca6, e8e5438). build + type-check + test:unit all green.
 
@@ -292,6 +294,7 @@ Surfaced by research (informational — each belongs to a specific phase plan):
 | 260617-qmu | Retire deferred NAP-CLASS / NAP-CONNECT surface from docs/specs AND the residual opaque `class` field re-homed into NAP-SHELL `shell.init` (canonical NAP-SHELL has no class) — AGENTS.md rule 8 | 2026-06-17 | 9ffa822 | [260617-qmu-retire-deferred-nap-class-nap-connect-su](./quick/260617-qmu-retire-deferred-nap-class-nap-connect-su/) |
 | 260617-rel | Publish per-package GitHub Releases (CHANGELOG body) after npm deploy — idempotent scripts/github-releases.mjs + Publish-workflow step (fast) | 2026-06-17 | 6a49f80 | — (inline /gsd:fast) |
 | 260619-qvr | Clarify alpha status in the bottom packages and boilerplate install sections | 2026-06-19 | 2a9d6b3 | [260619-qvr-clarify-alpha-status-notices-in-bottom-p](./quick/260619-qvr-clarify-alpha-status-notices-in-bottom-p/) |
+| 260622-oxt | Implement NAP-LISTS from napplet/naps PR #68 | 2026-06-22 | 891af42 | [260622-oxt-implement-nap-lists-from-napplet-naps-pr](./quick/260622-oxt-implement-nap-lists-from-napplet-naps-pr/) |
 
 Last session: 2026-04-21T20:46:00.000Z
 Stopped at: Completed 142-03-PLAN.md (Phase 142 TERMINAL-COMPLETE)
