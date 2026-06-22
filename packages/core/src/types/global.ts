@@ -10,7 +10,16 @@ import type {
   ResourceApi,
 } from './global/runtime-api.js';
 import type { WebrtcApi } from './webrtc.js';
-import type { CvmApi, OutboxApi, UploadApi, IntentApi, LinkApi, SerialApi, ListsApi } from './global/service-api.js';
+import type {
+  CvmApi,
+  OutboxApi,
+  UploadApi,
+  IntentApi,
+  LinkApi,
+  ListsApi,
+  SerialApi,
+  CommonApi,
+} from './global/service-api.js';
 
 /**
  * The window.napplet global installed at runtime by @napplet/shim.
@@ -304,6 +313,21 @@ export interface NappletGlobal {
    * ```
   */
   lists: ListsApi;
+  /**
+   * Common social actions (NAP-COMMON): shell-mediated NIP-19 helpers, profile
+   * lookup, follows, and signed social actions. The shell owns identity,
+   * consent, event construction, signing, publishing, relay access, and NIP-19
+   * handling.
+   *
+   * @example
+   * ```ts
+   * if (window.napplet.shell.supports('common')) {
+   *   const { pubkeys } = await window.napplet.common.follows();
+   *   await window.napplet.common.react(noteId, '+');
+   * }
+   * ```
+  */
+  common: CommonApi;
   /**
    * Runtime-mediated serial device access (NAP-SERIAL): the napplet asks the
    * shell to select and open a user-approved serial session, writes byte arrays,

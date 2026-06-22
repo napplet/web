@@ -1,6 +1,6 @@
 # @napplet/nap
 
-> Every active napplet NAP domain (relay, storage, inc, keys, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent, webrtc, link, lists, serial) as layered subpath exports. The package name remains `@napplet/nap` for compatibility.
+> Every active napplet NAP domain (relay, storage, inc, keys, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent, webrtc, link, lists, serial, common) as layered subpath exports. The package name remains `@napplet/nap` for compatibility.
 
 ## Install
 
@@ -63,7 +63,7 @@ installRelayShim(nappletWindow, {
 });
 ```
 
-## 18 Active Domains
+## 19 Active Domains
 
 Each domain is an independent subpath. Barrel imports bundle types + shim installer + SDK helpers; granular subpaths isolate each surface.
 
@@ -86,6 +86,7 @@ Each domain is an independent subpath. Barrel imports bundle types + shim instal
 | webrtc | `@napplet/nap/webrtc` | `@napplet/nap/webrtc/types` | `@napplet/nap/webrtc/shim` | `@napplet/nap/webrtc/sdk` | Runtime-mediated WebRTC data sessions — `open`/`send`/`close`/`onEvent`; shell owns signaling, SDP, ICE, and peer-connection lifecycle |
 | link | `@napplet/nap/link` | `@napplet/nap/link/types` | `@napplet/nap/link/shim` | `@napplet/nap/link/sdk` | Shell-mediated external link opening — `open(url, options?)`; shell owns navigation, policy, prompting, and opener isolation |
 | lists | `@napplet/nap/lists` | `@napplet/nap/lists/types` | `@napplet/nap/lists/shim` | `@napplet/nap/lists/sdk` | Runtime-mediated NIP-51 list mutations — `supported`/`add`/`remove`; runtime owns lookup, merge, encryption, signing, and publishing |
+| common | `@napplet/nap/common` | `@napplet/nap/common/types` | `@napplet/nap/common/shim` | `@napplet/nap/common/sdk` | Common social actions — public NIP-19 helpers, profile lookup, follows, follow/unfollow, reactions, and reports; shell owns identity/signing/publishing |
 | serial | `@napplet/nap/serial` | `@napplet/nap/serial/types` | `@napplet/nap/serial/shim` | `@napplet/nap/serial/sdk` | Runtime-mediated serial device access — `open`/`write`/`close`/`onEvent`; shell owns permissions, port handles, streams, and lifecycle |
 
 ### Deprecated IFC Compatibility
@@ -109,12 +110,12 @@ Each domain exposes up to three patterns (four including the barrel). Pick the s
 - Every subpath in the `exports` map is a discrete entry point; a bundler importing only `@napplet/nap/relay/types` produces zero bytes from unrelated domains
 - Verified end-to-end in Phase 121 with a minimal-consumer smoke test
 
-The `exports` map in `package.json` declares 80 entry points:
+The `exports` map in `package.json` declares 84 entry points:
 
-- 18 domain barrels (`@napplet/nap/<domain>`)
-- 18 granular types entries (`@napplet/nap/<domain>/types`)
-- 18 granular shim entries (`@napplet/nap/<domain>/shim`)
-- 18 granular sdk entries (`@napplet/nap/<domain>/sdk`)
+- 19 domain barrels (`@napplet/nap/<domain>`)
+- 19 granular types entries (`@napplet/nap/<domain>/types`)
+- 19 granular shim entries (`@napplet/nap/<domain>/shim`)
+- 19 granular sdk entries (`@napplet/nap/<domain>/sdk`)
 - 2 compatibility/foundational barrels (`ifc`, `shell`) with matching `types`,
   `shim`, and `sdk` entries
 
@@ -196,7 +197,7 @@ import { mediaCreateSession } from '@napplet/nap/media/sdk';
 import type { MediaNapMessage } from '@napplet/nap/media/types';
 ```
 
-Domain barrels are also available at `@napplet/nap/relay`, `@napplet/nap/storage`, `@napplet/nap/inc`, `@napplet/nap/keys`, `@napplet/nap/theme`, `@napplet/nap/media`, `@napplet/nap/notify`, `@napplet/nap/identity`, `@napplet/nap/config`, `@napplet/nap/resource`, `@napplet/nap/cvm`, `@napplet/nap/outbox`, `@napplet/nap/upload`, `@napplet/nap/intent`, `@napplet/nap/webrtc`, `@napplet/nap/link`, `@napplet/nap/lists`, and `@napplet/nap/serial`.
+Domain barrels are also available at `@napplet/nap/relay`, `@napplet/nap/storage`, `@napplet/nap/inc`, `@napplet/nap/keys`, `@napplet/nap/theme`, `@napplet/nap/media`, `@napplet/nap/notify`, `@napplet/nap/identity`, `@napplet/nap/config`, `@napplet/nap/resource`, `@napplet/nap/cvm`, `@napplet/nap/outbox`, `@napplet/nap/upload`, `@napplet/nap/intent`, `@napplet/nap/webrtc`, `@napplet/nap/link`, `@napplet/nap/lists`, `@napplet/nap/common`, and `@napplet/nap/serial`.
 
 ## Optional Peer Dependency
 

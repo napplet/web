@@ -93,6 +93,18 @@ import {
   remove as listsRemove,
 } from '@napplet/nap/lists/shim';
 import {
+  installCommonShim,
+  handleCommonMessage,
+  encodeNip19 as commonEncodeNip19,
+  decodeNip19 as commonDecodeNip19,
+  getProfile as commonGetProfile,
+  follows as commonFollows,
+  follow as commonFollow,
+  unfollow as commonUnfollow,
+  react as commonReact,
+  report as commonReport,
+} from '@napplet/nap/common/shim';
+import {
   installSerialShim,
   handleSerialMessage,
   open as serialOpen,
@@ -182,6 +194,7 @@ const DOMAIN_ROUTERS: ReadonlyArray<readonly [string, DomainHandler]> = [
   ['webrtc.', handleWebrtcMessage],
   ['link.', handleLinkMessage],
   ['lists.', handleListsMessage],
+  ['common.', handleCommonMessage],
   ['serial.', handleSerialMessage],
   ['identity.', identityShim.handleIdentityMessage],
   ['theme.', themeShim.handleThemeMessage],
@@ -342,6 +355,16 @@ installIncShim();
     add: listsAdd,
     remove: listsRemove,
   },
+  common: {
+    encodeNip19: commonEncodeNip19,
+    decodeNip19: commonDecodeNip19,
+    getProfile: commonGetProfile,
+    follows: commonFollows,
+    follow: commonFollow,
+    unfollow: commonUnfollow,
+    react: commonReact,
+    report: commonReport,
+  },
   serial: {
     open: serialOpen,
     write: serialWrite,
@@ -403,6 +426,9 @@ installUploadShim();
 
 // Install intent shim (intent.* request/response correlation + intent.changed listeners; no install-time work)
 installIntentShim();
+
+// Install common shim (common.* request/response correlation; no install-time work)
+installCommonShim();
 
 // Install WebRTC shim (webrtc.* request/response correlation + webrtc.event listeners; no install-time work)
 installWebrtcShim();

@@ -57,14 +57,14 @@ interface RelaySubscribe extends NappletMessage {
 }
 ```
 
-The `type` field domain prefix (`relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `webrtc`, `link`, `lists`, `serial`) routes messages to the correct NAP handler via `dispatch()`.
+The `type` field domain prefix (`relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `webrtc`, `link`, `lists`, `serial`, `common`) routes messages to the correct NAP handler via `dispatch()`.
 
 #### `NapDomain`
 
 String literal union of the NAP capability domains.
 
 ```ts
-type NapDomain = 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'cvm' | 'outbox' | 'upload' | 'intent' | 'webrtc' | 'link' | 'lists' | 'serial';
+type NapDomain = 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'cvm' | 'outbox' | 'upload' | 'intent' | 'webrtc' | 'link' | 'lists' | 'serial' | 'common';
 ```
 
 | Domain    | Scope                                    |
@@ -87,13 +87,14 @@ type NapDomain = 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | '
 | `link` | Shell-mediated external link opening |
 | `lists` | Runtime-mediated NIP-51 list mutations |
 | `serial`  | Runtime-mediated serial device access |
+| `common`  | Shell-mediated common social actions |
 
 #### `NAP_DOMAINS`
 
 Runtime constant array of all NAP domain strings. Useful for iteration and validation.
 
 ```ts
-const NAP_DOMAINS: readonly NapDomain[] = ['relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent', 'webrtc', 'link', 'lists', 'serial'];
+const NAP_DOMAINS: readonly NapDomain[] = ['relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent', 'webrtc', 'link', 'lists', 'serial', 'common'];
 
 for (const domain of NAP_DOMAINS) {
   console.log(`Checking support for: ${domain}`);

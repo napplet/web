@@ -212,6 +212,24 @@ export const ENVELOPE_SPECS: Record<string, EnvelopeSpec> = {
   'intent.handlers.result': { dir: 'in' },
   'intent.changed': { dir: 'in' },
 
+  // ── common ───────────────────────────────────────────────────────────────
+  'common.encodeNip19': { dir: 'out', fields: { ...ID, input: 'object' } },
+  'common.decodeNip19': { dir: 'out', fields: { ...ID, value: 'string' } },
+  'common.getProfile': { dir: 'out', fields: { ...ID, target: 'string' } },
+  'common.follows': { dir: 'out', fields: { ...ID } },
+  'common.follow': { dir: 'out', fields: { ...ID, pubkeys: 'array' } },
+  'common.unfollow': { dir: 'out', fields: { ...ID, pubkeys: 'array' } },
+  'common.react': { dir: 'out', fields: { ...ID, targetEventId: 'string', reaction: 'string' } },
+  'common.report': { dir: 'out', fields: { ...ID, target: 'object', reason: 'string', text: 'string' } },
+  'common.encodeNip19.result': { dir: 'in' },
+  'common.decodeNip19.result': { dir: 'in' },
+  'common.getProfile.result': { dir: 'in' },
+  'common.follows.result': { dir: 'in' },
+  'common.follow.result': { dir: 'in' },
+  'common.unfollow.result': { dir: 'in' },
+  'common.react.result': { dir: 'in' },
+  'common.report.result': { dir: 'in' },
+
   // ── webrtc ────────────────────────────────────────────────────────────────
   'webrtc.open': { dir: 'out', fields: { ...ID, request: 'object' } },
   'webrtc.send': { dir: 'out', fields: { ...ID, sessionId: 'string', payload: 'present' } },

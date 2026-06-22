@@ -54,6 +54,7 @@ describe('@napplet/core exports', () => {
       expect(NAP_DOMAINS).toContain('webrtc');
       expect(NAP_DOMAINS).toContain('serial');
       expect(NAP_DOMAINS).toContain('lists');
+      expect(NAP_DOMAINS).toContain('common');
     });
 
     it('NamespacedCapability accepts bare NAP domain shorthand', () => {
@@ -67,6 +68,7 @@ describe('@napplet/core exports', () => {
       const _link: NamespacedCapability = 'link';
       const _serial: NamespacedCapability = 'serial';
       const _lists: NamespacedCapability = 'lists';
+      const _common: NamespacedCapability = 'common';
       expect(true).toBe(true);
     });
 
@@ -81,6 +83,7 @@ describe('@napplet/core exports', () => {
       const _napLink: NamespacedCapability = 'nap:link';
       const _napSerial: NamespacedCapability = 'nap:serial';
       const _napLists: NamespacedCapability = 'nap:lists';
+      const _napCommon: NamespacedCapability = 'nap:common';
       expect(true).toBe(true);
     });
 

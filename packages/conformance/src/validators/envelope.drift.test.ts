@@ -37,7 +37,7 @@ function tsFiles(dir: string): string[] {
 function declaredDiscriminants(): Set<string> {
   const domains = new Set<string>(NAP_DOMAINS as readonly string[]);
   const found = new Set<string>();
-  const lineRe = /^\s*type:\s*['"]([a-zA-Z]+\.[a-zA-Z.]+)['"]/;
+  const lineRe = /^\s*type:\s*['"]([a-zA-Z]+\.[a-zA-Z0-9.]+)['"]/;
   for (const file of tsFiles(NAP_SRC)) {
     for (const line of readFileSync(file, 'utf8').split('\n')) {
       const m = lineRe.exec(line);
