@@ -372,6 +372,7 @@ handlers in shell implementations or protocol-aware code.
 | `NotifyNapMessage` | `@napplet/nap/notify` | Discriminated union of all notify domain messages |
 | `ConfigNapMessage` | `@napplet/nap/config` | Discriminated union of all config domain messages |
 | `ResourceNapMessage` | `@napplet/nap/resource` | Discriminated union of all resource domain messages |
+| `SerialNapMessage` | `@napplet/nap/serial` | Discriminated union of all serial domain messages |
 
 Individual message types (e.g., `RelaySubscribeMessage`, `IdentityGetPublicKeyMessage`) are also re-exported from
 `@napplet/sdk` for fine-grained typing.
@@ -381,8 +382,8 @@ Individual message types (e.g., `RelaySubscribeMessage`, `IdentityGetPublicKeyMe
 Each NAP domain has a string constant re-exported from its package:
 
 ```ts
-import { RELAY_DOMAIN, IDENTITY_DOMAIN, STORAGE_DOMAIN, INC_DOMAIN, THEME_DOMAIN, KEYS_DOMAIN, MEDIA_DOMAIN, NOTIFY_DOMAIN, CONFIG_DOMAIN, RESOURCE_DOMAIN, CVM_DOMAIN, OUTBOX_DOMAIN, UPLOAD_DOMAIN, INTENT_DOMAIN } from '@napplet/sdk';
-// Values: 'relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent'
+import { RELAY_DOMAIN, IDENTITY_DOMAIN, STORAGE_DOMAIN, INC_DOMAIN, THEME_DOMAIN, KEYS_DOMAIN, MEDIA_DOMAIN, NOTIFY_DOMAIN, CONFIG_DOMAIN, RESOURCE_DOMAIN, CVM_DOMAIN, OUTBOX_DOMAIN, UPLOAD_DOMAIN, INTENT_DOMAIN, SERIAL_DOMAIN } from '@napplet/sdk';
+// Values: 'relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent', 'serial'
 ```
 
 These constants are re-exported from the individual domain packages. Use them with the shell capability query

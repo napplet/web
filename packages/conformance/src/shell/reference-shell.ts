@@ -179,6 +179,11 @@ const RESPONDERS: Record<string, Responder> = {
     },
   }),
   'intent.handlers': (e) => ok({ type: 'intent.handlers.result', id: e.id, handlers: [] }),
+
+  // serial
+  'serial.open': (e) => ok({ type: 'serial.open.result', id: e.id, session: { id: `serial-${String(e.id)}`, state: 'open' } }),
+  'serial.write': (e) => ok({ type: 'serial.write.result', id: e.id }),
+  'serial.close': (e) => ok({ type: 'serial.close.result', id: e.id }),
 };
 
 /** A reference shell instance. */
