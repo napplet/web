@@ -14,4 +14,4 @@ overrides:
   esbuild: ^0.28.1
   # Pin to vite 6.x — clears the advisory on the vitepress-bundled vite 5 while
   # staying compatible (vitepress builds under vite 6 with an esnext target).
-  vite: ^6.4.2
+  vite: ^6.4.3
