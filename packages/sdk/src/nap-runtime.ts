@@ -27,6 +27,10 @@ export { DOMAIN as OUTBOX_DOMAIN } from '@napplet/nap/outbox';
 export { DOMAIN as UPLOAD_DOMAIN } from '@napplet/nap/upload';
 export { DOMAIN as INTENT_DOMAIN } from '@napplet/nap/intent';
 export { DOMAIN as BLE_DOMAIN } from '@napplet/nap/ble';
+export { DOMAIN as WEBRTC_DOMAIN } from '@napplet/nap/webrtc';
+export { DOMAIN as LINK_DOMAIN } from '@napplet/nap/link';
+export { DOMAIN as LISTS_DOMAIN } from '@napplet/nap/lists';
+export { DOMAIN as COMMON_DOMAIN } from '@napplet/nap/common';
 export { DOMAIN as SERIAL_DOMAIN } from '@napplet/nap/serial';
 
 export { installRelayShim } from '@napplet/nap/relay';
@@ -48,6 +52,10 @@ export { installOutboxShim } from '@napplet/nap/outbox';
 export { installUploadShim } from '@napplet/nap/upload';
 export { installIntentShim } from '@napplet/nap/intent';
 export { installBleShim } from '@napplet/nap/ble';
+export { installWebrtcShim } from '@napplet/nap/webrtc';
+export { installLinkShim } from '@napplet/nap/link';
+export { installListsShim } from '@napplet/nap/lists';
+export { installCommonShim } from '@napplet/nap/common';
 export { installSerialShim } from '@napplet/nap/serial';
 
 export { relaySubscribe, relayPublish, relayPublishEncrypted, relayQuery } from '@napplet/nap/relay';
@@ -121,6 +129,28 @@ export {
   bleClose,
   bleOnEvent,
 } from '@napplet/nap/ble';
+export { linkOpen } from '@napplet/nap/link';
+export {
+  listsSupported,
+  listsAdd,
+  listsRemove,
+} from '@napplet/nap/lists';
+export {
+  commonEncodeNip19,
+  commonDecodeNip19,
+  commonGetProfile,
+  commonFollows,
+  commonFollow,
+  commonUnfollow,
+  commonReact,
+  commonReport,
+} from '@napplet/nap/common';
+export {
+  webrtcOpen,
+  webrtcSend,
+  webrtcClose,
+  webrtcOnEvent,
+} from '@napplet/nap/webrtc';
 export {
   serialOpen,
   serialWrite,

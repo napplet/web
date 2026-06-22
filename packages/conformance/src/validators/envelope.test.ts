@@ -92,12 +92,20 @@ describe('validateEnvelope — outbound field checks', () => {
       outbox: { type: 'outbox.close', id: 'a', subId: 's' },
       upload: { type: 'upload.status', id: 'a', uploadId: 'u' },
       intent: { type: 'intent.handlers', id: 'a' },
-      ble: {
-        type: 'ble.read',
+      ble: { type: 'ble.read', id: 'a', sessionId: 's', target: { service: 'battery_service', characteristic: 'battery_level' } },
+      webrtc: {
+        type: 'webrtc.open',
         id: 'a',
-        sessionId: 's',
-        target: { service: 'battery_service', characteristic: 'battery_level' },
+        request: { scope: { type: 'direct', pubkey: 'abc123' } },
       },
+      link: { type: 'link.open', id: 'a', url: 'https://example.com/post/123' },
+      lists: {
+        type: 'lists.add',
+        id: 'a',
+        list: { type: 'mute-list' },
+        items: [{ itemType: 'pubkey', value: 'abc123' }],
+      },
+      common: { type: 'common.react', id: 'a', targetEventId: 'e'.repeat(64), reaction: '+' },
       serial: { type: 'serial.write', id: 'a', sessionId: 's', data: [1, 2, 3] },
     };
     for (const [domain, msg] of Object.entries(samples)) {
@@ -129,13 +137,13 @@ describe('validateEnvelope — NAP-SHELL foundational domain', () => {
 });
 
 describe('ENVELOPE_SPECS invariants', () => {
-  it('has 146 discriminants split 71 outbound / 75 inbound', () => {
+  it('has 177 discriminants split 86 outbound / 91 inbound', () => {
     const all = knownEnvelopeTypes();
-    expect(all).toHaveLength(146);
+    expect(all).toHaveLength(177);
     const out = all.filter((t) => ENVELOPE_SPECS[t].dir === 'out');
     const inbound = all.filter((t) => ENVELOPE_SPECS[t].dir === 'in');
-    expect(out).toHaveLength(71);
-    expect(inbound).toHaveLength(75);
+    expect(out).toHaveLength(86);
+    expect(inbound).toHaveLength(91);
   });
 
   it('only outbound specs declare required fields', () => {

@@ -38,7 +38,7 @@ export interface NappletMessage {
 }
 
 /**
- * String literal union of the fifteen NAP (Nostr Applet Protocol) domains.
+ * String literal union of the active NAP (Nostr Applet Protocol) domains.
  * Each domain corresponds to a capability namespace that a shell may support.
  *
  * | Domain     | Scope                                              |
@@ -53,8 +53,12 @@ export interface NappletMessage {
  * | `notify`   | Shell-rendered notifications                       |
  * | `config`   | Per-napplet declarative configuration              |
  * | `resource` | Byte-fetching primitive (URL → Blob)               |
- * | `ble`      | Runtime-mediated BLE/GATT sessions                 |
+ * | `ble`      | Runtime-mediated Bluetooth LE/GATT sessions       |
+ * | `webrtc`   | Runtime-mediated WebRTC signaling and data sessions |
+ * | `link`     | Shell-mediated user-visible link opening           |
+ * | `lists`    | Runtime-mediated NIP-51 list mutations            |
  * | `serial`   | Runtime-mediated serial device access             |
+ * | `common`   | Common social actions                              |
  *
  * @example
  * ```ts
@@ -62,7 +66,7 @@ export interface NappletMessage {
  * const isValid = NAP_DOMAINS.includes(domain); // true
  * ```
  */
-export type NapDomain = 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'cvm' | 'outbox' | 'upload' | 'intent' | 'ble' | 'serial';
+export type NapDomain = 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'cvm' | 'outbox' | 'upload' | 'intent' | 'ble' | 'webrtc' | 'link' | 'lists' | 'serial' | 'common';
 
 /**
  * Runtime-accessible constant array of all NAP domain names.
@@ -75,7 +79,7 @@ export type NapDomain = 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'ke
  * }
  * ```
  */
-export const NAP_DOMAINS: readonly NapDomain[] = ['relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent', 'ble', 'serial'] as const;
+export const NAP_DOMAINS: readonly NapDomain[] = ['relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent', 'ble', 'webrtc', 'link', 'lists', 'serial', 'common'] as const;
 
 /**
  * Namespaced capability string for {@link ShellSupports.supports}.

@@ -1,5 +1,5 @@
 /**
- * @napplet/sdk -- ContextVM bridge, outbox routing, upload, intent, and serial
+ * @napplet/sdk -- ContextVM bridge, outbox routing, upload, intent, and WebRTC
  * wrapper objects.
  *
  * @packageDocumentation
@@ -32,15 +32,9 @@ import type {
   IntentRequest,
   IntentResult,
   IntentAvailability,
-  BleOpenRequest,
-  BleOpenResult,
-  BleService,
-  BleAttribute,
-  BleWriteOptions,
-  BleEvent,
-  SerialEvent,
-  SerialOpenRequest,
-  SerialOpenResult,
+  WebrtcOpenRequest,
+  WebrtcOpenResult,
+  WebrtcEvent,
 } from '@napplet/core';
 import { requireNapplet } from './require-napplet.js';
 
@@ -303,7 +297,8 @@ export const intent = {
   },
 
   /**
-   * Check whether the runtime can currently satisfy an archetype.
+   * Check whether the runtime can currently satisfy an archetype and expose the
+   * manifest-derived contracts each candidate serves.
    * @param archetype  Role slug to check
    * @returns Promise resolving to the archetype availability
    */
@@ -330,150 +325,52 @@ export const intent = {
 };
 
 /**
- * Runtime-mediated BLE/GATT sessions (NAP-BLE). The shell owns chooser UI,
- * device permission, backend handles, GATT lifecycle, notification wiring, and
- * policy; napplets address only shell-scoped session ids.
+ * Runtime-mediated WebRTC sessions (NAP-WEBRTC). The shell owns signaling,
+ * signing/encryption, SDP, ICE, and peer-connection lifecycle; napplets exchange
+ * only opaque application payloads over shell-scoped sessions.
  *
  * @example
  * ```ts
- * import { ble } from '@napplet/sdk';
+ * import { webrtc } from '@napplet/sdk';
  *
- * const { session } = await ble.open({ acceptAllDevices: true });
- * const services = await ble.services(session.id);
+ * const { session } = await webrtc.open({ scope: { type: 'direct', pubkey } });
+ * await webrtc.send(session.id, { body: 'hello' });
  * ```
  */
-export const ble = {
+export const webrtc = {
   /**
-   * Open a runtime-owned BLE session.
-   * @param request  Device selection and optional service request
+   * Open a runtime-owned WebRTC session.
+   * @param request  Session scope and channel/protocol labels
    * @returns Promise resolving to the opened session result
    */
-  open(request: BleOpenRequest): Promise<BleOpenResult> {
-    return requireNapplet().ble.open(request);
+  open(request: WebrtcOpenRequest): Promise<WebrtcOpenResult> {
+    return requireNapplet().webrtc.open(request);
   },
 
   /**
-   * List exposed GATT services for a session.
-   * @param sessionId  BLE session id
-   * @returns Promise resolving to exposed services
+   * Send an opaque application payload over a session.
+   * @param sessionId  WebRTC session id
+   * @param payload    Application payload
    */
-  services(sessionId: string): Promise<BleService[]> {
-    return requireNapplet().ble.services(sessionId);
+  send(sessionId: string, payload: unknown): Promise<void> {
+    return requireNapplet().webrtc.send(sessionId, payload);
   },
 
   /**
-   * Read a characteristic or descriptor value.
-   * @param sessionId  BLE session id
-   * @param target     GATT attribute target
-   * @returns Promise resolving to bytes
-   */
-  read(sessionId: string, target: BleAttribute): Promise<number[]> {
-    return requireNapplet().ble.read(sessionId, target);
-  },
-
-  /**
-   * Write bytes to a characteristic or descriptor.
-   * @param sessionId  BLE session id
-   * @param target     GATT attribute target
-   * @param data       Byte array
-   * @param options    Write mode preference
-   */
-  write(
-    sessionId: string,
-    target: BleAttribute,
-    data: number[],
-    options?: BleWriteOptions,
-  ): Promise<void> {
-    return requireNapplet().ble.write(sessionId, target, data, options);
-  },
-
-  /**
-   * Start notifications or indications for a characteristic.
-   * @param sessionId  BLE session id
-   * @param target     Characteristic target
-   */
-  subscribe(sessionId: string, target: BleAttribute): Promise<void> {
-    return requireNapplet().ble.subscribe(sessionId, target);
-  },
-
-  /**
-   * Stop notifications or indications for a characteristic.
-   * @param sessionId  BLE session id
-   * @param target     Characteristic target
-   */
-  unsubscribe(sessionId: string, target: BleAttribute): Promise<void> {
-    return requireNapplet().ble.unsubscribe(sessionId, target);
-  },
-
-  /**
-   * Close a BLE session.
-   * @param sessionId  BLE session id
+   * Close a WebRTC session.
+   * @param sessionId  WebRTC session id
    * @param reason     Optional close reason
    */
   close(sessionId: string, reason?: string): Promise<void> {
-    return requireNapplet().ble.close(sessionId, reason);
+    return requireNapplet().webrtc.close(sessionId, reason);
   },
 
   /**
-   * Subscribe to runtime-pushed BLE events.
+   * Subscribe to runtime-pushed WebRTC events.
    * @param handler  Event handler
    * @returns Subscription handle
    */
-  onEvent(handler: (event: BleEvent) => void): Subscription {
-    return requireNapplet().ble.onEvent(handler);
-  },
-};
-
-/**
- * Runtime-mediated serial device access (NAP-SERIAL): ask the shell to select
- * and open a user-approved serial session, write byte arrays to that session,
- * and receive shell-pushed state/data/close events. The shell owns raw port
- * handles, streams, OS paths, permissions, read loops, and lifecycle policy.
- *
- * @example
- * ```ts
- * import { serial } from '@napplet/sdk';
- *
- * const { session } = await serial.open({ options: { baudRate: 115200 } });
- * await serial.write(session.id, [112, 105, 110, 103, 10]);
- * ```
- */
-export const serial = {
-  /**
-   * Ask the runtime to select and open a serial session.
-   * @param request  Filters, options, and optional chooser label
-   * @returns Promise resolving to the runtime-assigned serial open result
-   */
-  open(request: SerialOpenRequest): Promise<SerialOpenResult> {
-    return requireNapplet().serial.open(request);
-  },
-
-  /**
-   * Write bytes to an open serial session.
-   * @param sessionId  Runtime-assigned serial session id
-   * @param data       Byte values to write
-   * @returns Promise resolving after the runtime acknowledges the write
-   */
-  write(sessionId: string, data: Uint8Array | number[]): Promise<void> {
-    return requireNapplet().serial.write(sessionId, data);
-  },
-
-  /**
-   * Close an open serial session.
-   * @param sessionId  Runtime-assigned serial session id
-   * @param reason     Optional reason for the close request
-   * @returns Promise resolving after the runtime acknowledges the close
-   */
-  close(sessionId: string, reason?: string): Promise<void> {
-    return requireNapplet().serial.close(sessionId, reason);
-  },
-
-  /**
-   * Register for shell-pushed serial events.
-   * @param handler  Called with each serial event
-   * @returns A Subscription with `close()` to stop listening
-   */
-  onEvent(handler: (event: SerialEvent) => void): Subscription {
-    return requireNapplet().serial.onEvent(handler);
+  onEvent(handler: (event: WebrtcEvent) => void): Subscription {
+    return requireNapplet().webrtc.onEvent(handler);
   },
 };

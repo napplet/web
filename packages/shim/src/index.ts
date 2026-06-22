@@ -73,6 +73,14 @@ import {
   onChanged as intentOnChanged,
 } from '@napplet/nap/intent/shim';
 import {
+  installWebrtcShim,
+  handleWebrtcMessage,
+  open as webrtcOpen,
+  send as webrtcSend,
+  close as webrtcClose,
+  onEvent as webrtcOnEvent,
+} from '@napplet/nap/webrtc/shim';
+import {
   installBleShim,
   handleBleMessage,
   open as bleOpen,
@@ -84,6 +92,30 @@ import {
   close as bleClose,
   onEvent as bleOnEvent,
 } from '@napplet/nap/ble/shim';
+import {
+  installLinkShim,
+  handleLinkMessage,
+  open as linkOpen,
+} from '@napplet/nap/link/shim';
+import {
+  installListsShim,
+  handleListsMessage,
+  supported as listsSupported,
+  add as listsAdd,
+  remove as listsRemove,
+} from '@napplet/nap/lists/shim';
+import {
+  installCommonShim,
+  handleCommonMessage,
+  encodeNip19 as commonEncodeNip19,
+  decodeNip19 as commonDecodeNip19,
+  getProfile as commonGetProfile,
+  follows as commonFollows,
+  follow as commonFollow,
+  unfollow as commonUnfollow,
+  react as commonReact,
+  report as commonReport,
+} from '@napplet/nap/common/shim';
 import {
   installSerialShim,
   handleSerialMessage,
@@ -172,6 +204,10 @@ const DOMAIN_ROUTERS: ReadonlyArray<readonly [string, DomainHandler]> = [
   ['upload.', handleUploadMessage],
   ['intent.', handleIntentMessage],
   ['ble.', handleBleMessage],
+  ['webrtc.', handleWebrtcMessage],
+  ['link.', handleLinkMessage],
+  ['lists.', handleListsMessage],
+  ['common.', handleCommonMessage],
   ['serial.', handleSerialMessage],
   ['identity.', identityShim.handleIdentityMessage],
   ['theme.', themeShim.handleThemeMessage],
@@ -318,6 +354,12 @@ installIncShim();
     handlers: intentHandlers,
     onChanged: intentOnChanged,
   },
+  webrtc: {
+    open: webrtcOpen,
+    send: webrtcSend,
+    close: webrtcClose,
+    onEvent: webrtcOnEvent,
+  },
   ble: {
     open: bleOpen,
     services: bleServices,
@@ -327,6 +369,24 @@ installIncShim();
     unsubscribe: bleUnsubscribe,
     close: bleClose,
     onEvent: bleOnEvent,
+  },
+  link: {
+    open: linkOpen,
+  },
+  lists: {
+    supported: listsSupported,
+    add: listsAdd,
+    remove: listsRemove,
+  },
+  common: {
+    encodeNip19: commonEncodeNip19,
+    decodeNip19: commonDecodeNip19,
+    getProfile: commonGetProfile,
+    follows: commonFollows,
+    follow: commonFollow,
+    unfollow: commonUnfollow,
+    react: commonReact,
+    report: commonReport,
   },
   serial: {
     open: serialOpen,
@@ -390,7 +450,16 @@ installUploadShim();
 // Install intent shim (intent.* request/response correlation + intent.changed listeners; no install-time work)
 installIntentShim();
 
+// Install common shim (common.* request/response correlation; no install-time work)
+installCommonShim();
+
+// Install WebRTC shim (webrtc.* request/response correlation + webrtc.event listeners; no install-time work)
+installWebrtcShim();
 // Install BLE shim (ble.* request/response correlation + ble.event listeners; no install-time work)
 installBleShim();
+// Install link shim (link.open request/response correlation; no install-time work)
+installLinkShim();
+// Install lists shim (lists.* request/response correlation; no install-time work)
+installListsShim();
 // Install serial shim (serial.* request/response correlation + serial.event listeners; no install-time work)
 installSerialShim();

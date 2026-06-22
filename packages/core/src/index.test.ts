@@ -51,8 +51,11 @@ describe('@napplet/core exports', () => {
       const napDomain: NapDomain = 'identity';
       expect(NAP_DOMAINS).toContain(napDomain);
       expect(napDomain).toBe('identity');
+      expect(NAP_DOMAINS).toContain('webrtc');
       expect(NAP_DOMAINS).toContain('ble');
       expect(NAP_DOMAINS).toContain('serial');
+      expect(NAP_DOMAINS).toContain('lists');
+      expect(NAP_DOMAINS).toContain('common');
     });
 
     it('NamespacedCapability accepts bare NAP domain shorthand', () => {
@@ -63,7 +66,11 @@ describe('@napplet/core exports', () => {
       const _theme: NamespacedCapability = 'theme';
       const _media: NamespacedCapability = 'media';
       const _ble: NamespacedCapability = 'ble';
+      const _webrtc: NamespacedCapability = 'webrtc';
+      const _link: NamespacedCapability = 'link';
       const _serial: NamespacedCapability = 'serial';
+      const _lists: NamespacedCapability = 'lists';
+      const _common: NamespacedCapability = 'common';
       expect(true).toBe(true);
     });
 
@@ -75,7 +82,11 @@ describe('@napplet/core exports', () => {
       const _napTheme: NamespacedCapability = 'nap:theme';
       const _napMedia: NamespacedCapability = 'nap:media';
       const _napBle: NamespacedCapability = 'nap:ble';
+      const _napWebrtc: NamespacedCapability = 'nap:webrtc';
+      const _napLink: NamespacedCapability = 'nap:link';
       const _napSerial: NamespacedCapability = 'nap:serial';
+      const _napLists: NamespacedCapability = 'nap:lists';
+      const _napCommon: NamespacedCapability = 'nap:common';
       expect(true).toBe(true);
     });
 

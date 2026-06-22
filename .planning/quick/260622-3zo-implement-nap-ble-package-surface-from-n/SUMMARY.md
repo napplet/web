@@ -16,7 +16,7 @@ Byte payloads use JSON integer arrays (`number[]`) to match NAP-BLE prose and ex
 
 ## Verification
 
-- `node -e "const p=require('./packages/nap/package.json'); console.log(Object.keys(p.exports).length)"` -> `68`
+- `node -e "const p=require('./packages/nap/package.json'); console.log(Object.keys(p.exports).length)"` -> `88`
 - `rg -n "62 entry|60 entry|58 entry|All 16|all 17 domains|all 16 domains|Theme Exception|14 domains|fourteen|14 optional|twelve NAP|across all 14|all 14|15 Domains|16 Domains" README.md packages apps --glob '!**/CHANGELOG.md' --glob '!**/dist/**'` -> no matches
 - `pnpm install --frozen-lockfile`
 - `pnpm build` -> 12 turbo build tasks passed

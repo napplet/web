@@ -197,12 +197,66 @@ if (window.napplet.shell.supports('intent')) {
 }
 ```
 
+### ble
+
+Runtime-mediated Bluetooth LE/GATT sessions. Napplets receive opaque session ids
+and byte arrays while the shell owns chooser UI, permissions, device handles,
+GATT lifecycle, notifications, disconnects, and policy.
+
+```ts
+if (window.napplet.shell.supports('ble')) {
+  const { session } = await window.napplet.ble.open({ acceptAllDevices: true });
+  const services = await window.napplet.ble.services(session.id);
+}
+```
+
+### link
+
+Shell-mediated external link opening. This is user-visible navigation, not byte
+fetching; the shell owns prompting, policy, opener isolation, and browser context.
+
+```ts
+if (window.napplet.shell.supports('link')) {
+  const result = await window.napplet.link.open('https://example.com/post/123', {
+    label: 'Read post',
+  });
+  if (result.status === 'denied') showInlineFallback();
+}
+```
+
+### lists
+
+Runtime-mediated NIP-51 list mutations. Napplets send add/remove intent while the
+runtime owns current-event lookup, kind/type mapping, tag formatting, private
+item encryption, event preservation, signing, and publishing.
+
+```ts
+if (window.napplet.shell.supports('lists')) {
+  await window.napplet.lists.add({ type: 'mute-list' }, [
+    { itemType: 'pubkey', value: 'abc123...' },
+  ]);
+}
+```
+
+### common
+
+Common social actions — public NIP-19 helpers, profile lookup, follows,
+follow/unfollow, reactions, and reports. The shell owns identity, consent,
+event construction, signing, publishing, relay access, and NIP-19 handling.
+
+```ts
+if (window.napplet.shell.supports('common')) {
+  const { pubkeys } = await window.napplet.common.follows();
+  await window.napplet.common.react(eventId, '+');
+}
+```
+
 ## Core domain union
 
 [`@napplet/core`](/packages/core) exports a `NapDomain` string union for the
 foundational domains — `relay`, `identity`, `storage`, `inc`, `theme`,
 `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`,
-`upload`, `intent` — used as the discriminant for envelope routing and
+`upload`, `intent`, `ble`, `webrtc`, `link`, `lists`, `serial`, `common` — used as the discriminant for envelope routing and
 `shell.supports()`.
 
 ## Where to go next

@@ -150,8 +150,9 @@ function buildManifestTemplate(
     state.resolvedSchema !== null ? [['config', JSON.stringify(state.resolvedSchema)]] : [];
   const requiresTags = (options.requires ?? []).map((name) => ['requires', name]);
   // Archetype tags (NAAT, napplet/naps `ARCHETYPES.md`): one
-  // `['archetype', slug, ...naps]` per declared role. Like config/requires they
-  // are NOT passed to computeAggregateHash — only pathPairs feed the aggregate.
+  // `['archetype', slug, protocol, ...constraints]` per contract. Like
+  // config/requires they are NOT passed to computeAggregateHash — only pathPairs
+  // feed the aggregate.
   const archetypeTags = buildArchetypeTags(options.archetypes);
 
   return {
@@ -171,9 +172,9 @@ function buildManifestTemplate(
 }
 
 /**
- * Normalize the `archetypes` option into `['archetype', slug, ...naps]` tags.
- * Accepts the object form `{ slug, naps? }` and the string shorthand
- * (`"feed"` ≡ `{ slug: "feed" }`). Entries with an empty/blank slug are skipped.
+ * Normalize the `archetypes` option into one `['archetype', slug, protocol]`
+ * tag per protocol. Optional event-kind constraints are emitted as
+ * `kind:<number>` tokens scoped to the protocol in the same tag.
  */
 function buildArchetypeTags(
   archetypes: Nip5aManifestOptions['archetypes'],
@@ -183,8 +184,17 @@ function buildArchetypeTags(
   for (const entry of archetypes) {
     const slug = (typeof entry === 'string' ? entry : entry.slug).trim();
     if (slug === '') continue;
-    const naps = typeof entry === 'string' ? [] : entry.naps ?? [];
-    tags.push(['archetype', slug, ...naps]);
+    if (typeof entry === 'string') continue;
+    for (const protocol of entry.naps ?? []) {
+      const trimmedProtocol = protocol.trim();
+      if (trimmedProtocol !== '') tags.push(['archetype', slug, trimmedProtocol]);
+    }
+    for (const contract of entry.contracts ?? []) {
+      const protocol = contract.protocol.trim();
+      if (protocol === '') continue;
+      const kinds = (contract.eventKinds ?? []).map((kind) => `kind:${kind}`);
+      tags.push(['archetype', slug, protocol, ...kinds]);
+    }
   }
   return tags;
 }
@@ -227,4 +237,3 @@ async function writeManifestFile(
     fs.writeFileSync(path.join(distPath, '.nip5a-manifest.json'), JSON.stringify(manifest, null, 2));
   }
 }
-

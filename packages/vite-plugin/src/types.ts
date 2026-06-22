@@ -28,6 +28,12 @@ export const NAPPLET_KIND_NAMED = 35129;
 /** Configuration options for the NIP-5A manifest plugin. */
 export type Nip5aArtifactMode = 'external-assets' | 'single-file';
 
+/** One NAAT archetype contract emitted as an `archetype` manifest tag. */
+export interface Nip5aArchetypeContract {
+  protocol: string;
+  eventKinds?: number[];
+}
+
 export interface Nip5aManifestOptions {
   /** Napplet type/dtag identifier (e.g., 'feed', 'chat'). Used as the NIP-5A 'd' tag and injected as napplet-type meta attribute. */
   nappletType: string;
@@ -68,20 +74,22 @@ export interface Nip5aManifestOptions {
   /**
    * NAAT archetype roles this napplet fulfills (napplet/naps `ARCHETYPES.md`).
    *
-   * Each entry emits one `["archetype", slug, ...naps]` NIP-5A manifest tag,
-   * where `slug` is the role slug and `naps` are the NAP-N wire format(s) the
-   * napplet accepts for that role. A napplet may declare several archetype
-   * roles; a napplet with no archetype tag is fully valid.
+   * Each protocol emits one `["archetype", slug, protocol, ...constraints]`
+   * NIP-5A manifest tag, where `slug` is the role slug, `protocol` is one
+   * accepted NAP-N wire format, and optional `kind:<number>` constraints are
+   * scoped to that protocol. A napplet may declare several archetype roles; a
+   * napplet with no archetype tag is fully valid.
    *
-   * Accepts the object form `{ slug, naps? }` or a string shorthand where
-   * `"feed"` is equivalent to `{ slug: "feed" }` (no naps). Blank slugs are
-   * skipped.
+   * Accepts the object form `{ slug, naps? }` for protocol-only contracts,
+   * `{ slug, contracts? }` for per-protocol constraints, or the string shorthand
+   * where `"feed"` is equivalent to `{ slug: "feed" }` (no emitted protocol
+   * contract). Blank slugs and blank protocols are skipped.
    *
    * Like the `config` tag, archetype tags are excluded from the aggregate `x`
    * hash (NIP-5D §Identity: the aggregate is recomputed from `path` tags
    * alone). Non-normative summary — defer to `ARCHETYPES.md` (napplet/naps).
    */
-  archetypes?: Array<string | { slug: string; naps?: string[] }>;
+  archetypes?: Array<string | { slug: string; naps?: string[]; contracts?: Nip5aArchetypeContract[] }>;
 }
 
 /** Internal: resolved per-plugin-instance build state shared across hooks. */

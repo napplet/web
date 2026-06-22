@@ -1,5 +1,76 @@
 # @napplet/nap
 
+## 0.19.0
+
+### Minor Changes
+
+- 61431b7: Add NAP-COMMON common social actions.
+
+  The new `common` domain exposes shell-mediated public NIP-19 encode/decode,
+  profile lookup, follows, follow/unfollow, reactions, and reports. The shell owns
+  identity, consent, event construction, signing, publishing, relay access, and
+  NIP-19 handling.
+
+- 086f36e: Implement the draft NAP-LISTS surface from napplet/naps#68.
+
+  Adds the `lists` domain to `NapDomain`/`NAP_DOMAINS`, exposes
+  `window.napplet.lists.supported/add/remove`, publishes the
+  `@napplet/nap/lists` subpaths, re-exports SDK helpers and types, and teaches
+  the conformance envelope validator/reference shell about the `lists.*` wire
+  messages.
+
+### Patch Changes
+
+- Updated dependencies [61431b7]
+- Updated dependencies [086f36e]
+  - @napplet/core@0.19.0
+
+## 0.18.0
+
+### Minor Changes
+
+- 5cb3187: Add NAP-WEBRTC package support with core types, `@napplet/nap/webrtc` subpaths, `window.napplet.webrtc`, SDK helpers, conformance validators, and reference-shell responses.
+
+### Patch Changes
+
+- Updated dependencies [5cb3187]
+  - @napplet/core@0.18.0
+
+## 0.17.0
+
+### Minor Changes
+
+- 51b2ff1: Align NAP-INTENT availability with manifest-derived contracts from
+  `napplet/naps` PR #55. Intent candidates now expose required `contracts`
+  records, and the Vite plugin emits one archetype manifest tag per protocol with
+  optional per-protocol `kind:<number>` constraints.
+
+### Patch Changes
+
+- ef8ad6b: Add the NAP-LINK shell-mediated link opening surface, including core types,
+  `@napplet/nap/link` subpaths, `window.napplet.link`, SDK helpers, and
+  conformance/reference-shell support.
+- Updated dependencies [51b2ff1]
+- Updated dependencies [ef8ad6b]
+  - @napplet/core@0.17.0
+
+## 0.16.0
+
+### Minor Changes
+
+- 488ca0a: Add the NAP-SERIAL package surface.
+
+  This adds the `serial` NAP domain to core capability typing, exposes
+  `@napplet/nap/serial` types/shim/sdk/barrel subpaths, installs
+  `window.napplet.serial` through `@napplet/shim`, re-exports serial helpers from
+  `@napplet/sdk`, and teaches conformance validation/reference-shell handling
+  about `serial.open`, `serial.write`, `serial.close`, and `serial.event`.
+
+### Patch Changes
+
+- Updated dependencies [488ca0a]
+  - @napplet/core@0.16.0
+
 ## 0.15.0
 
 ### Minor Changes

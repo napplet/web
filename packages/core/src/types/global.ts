@@ -10,7 +10,17 @@ import type {
   ResourceApi,
 } from './global/runtime-api.js';
 import type { BleApi } from './ble.js';
-import type { CvmApi, OutboxApi, UploadApi, IntentApi, SerialApi } from './global/service-api.js';
+import type { WebrtcApi } from './webrtc.js';
+import type {
+  CvmApi,
+  OutboxApi,
+  UploadApi,
+  IntentApi,
+  LinkApi,
+  ListsApi,
+  SerialApi,
+  CommonApi,
+} from './global/service-api.js';
 
 /**
  * The window.napplet global installed at runtime by @napplet/shim.
@@ -271,10 +281,61 @@ export interface NappletGlobal {
   */
   intent: IntentApi;
   /**
-   * Runtime-mediated BLE/GATT sessions. The shell owns chooser UI, permission,
-   * backend handles, GATT lifecycle, notification wiring, and policy.
-  */
+   * Runtime-mediated Bluetooth LE/GATT sessions (NAP-BLE): the napplet asks
+   * the shell to select a user-approved device, operate on exposed GATT
+   * attributes, and receive state/notification/close events. The shell owns
+   * chooser UI, permissions, device handles, GATT lifecycle, and policy.
+   */
   ble: BleApi;
+  /**
+   * Runtime-mediated WebRTC sessions. The shell owns signaling transport,
+   * signing/encryption, SDP, ICE, and RTCPeerConnection lifecycle.
+  */
+  webrtc: WebrtcApi;
+  /**
+   * Shell-mediated link opening (NAP-LINK): request user-visible navigation
+   * without giving the napplet direct navigation authority, opener access,
+   * network access, or fetched bytes.
+   *
+   * @example
+   * ```ts
+   * if (window.napplet.shell.supports('link')) {
+   *   await window.napplet.link.open('https://example.com/post/123', { label: 'Read post' });
+   * }
+   * ```
+  */
+  link: LinkApi;
+  /**
+   * Runtime-mediated NIP-51 list mutation (NAP-LISTS): add or remove semantic
+   * items from supported lists without requiring napplets to handle raw NIP-51
+   * tags, private item encryption, replaceable/addressable event preservation,
+   * signing, or publishing.
+   *
+   * @example
+   * ```ts
+   * if (window.napplet.shell.supports('lists')) {
+   *   await window.napplet.lists.add({ type: 'mute-list' }, [
+   *     { itemType: 'pubkey', value: 'abc123...' },
+   *   ]);
+   * }
+   * ```
+  */
+  lists: ListsApi;
+  /**
+   * Common social actions (NAP-COMMON): shell-mediated NIP-19 helpers, profile
+   * lookup, follows, and signed social actions. The shell owns identity,
+   * consent, event construction, signing, publishing, relay access, and NIP-19
+   * handling.
+   *
+   * @example
+   * ```ts
+   * if (window.napplet.shell.supports('common')) {
+   *   const { pubkeys } = await window.napplet.common.follows();
+   *   await window.napplet.common.react(noteId, '+');
+   * }
+   * ```
+  */
+  common: CommonApi;
   /**
    * Runtime-mediated serial device access (NAP-SERIAL): the napplet asks the
    * shell to select and open a user-approved serial session, writes byte arrays,
