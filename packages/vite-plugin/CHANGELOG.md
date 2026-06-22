@@ -1,5 +1,14 @@
 # @napplet/vite-plugin
 
+## 0.10.0
+
+### Minor Changes
+
+- 51b2ff1: Align NAP-INTENT availability with manifest-derived contracts from
+  `napplet/naps` PR #55. Intent candidates now expose required `contracts`
+  records, and the Vite plugin emits one archetype manifest tag per protocol with
+  optional per-protocol `kind:<number>` constraints.
+
 ## 0.9.0
 
 ### Minor Changes

@@ -1,5 +1,20 @@
 # @napplet/core
 
+## 0.17.0
+
+### Minor Changes
+
+- 51b2ff1: Align NAP-INTENT availability with manifest-derived contracts from
+  `napplet/naps` PR #55. Intent candidates now expose required `contracts`
+  records, and the Vite plugin emits one archetype manifest tag per protocol with
+  optional per-protocol `kind:<number>` constraints.
+
+### Patch Changes
+
+- ef8ad6b: Add the NAP-LINK shell-mediated link opening surface, including core types,
+  `@napplet/nap/link` subpaths, `window.napplet.link`, SDK helpers, and
+  conformance/reference-shell support.
+
 ## 0.16.0
 
 ### Minor Changes
