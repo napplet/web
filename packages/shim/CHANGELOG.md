@@ -1,5 +1,31 @@
 # @napplet/shim
 
+## 0.20.0
+
+### Minor Changes
+
+- 61431b7: Add NAP-COMMON common social actions.
+
+  The new `common` domain exposes shell-mediated public NIP-19 encode/decode,
+  profile lookup, follows, follow/unfollow, reactions, and reports. The shell owns
+  identity, consent, event construction, signing, publishing, relay access, and
+  NIP-19 handling.
+
+- 086f36e: Implement the draft NAP-LISTS surface from napplet/naps#68.
+
+  Adds the `lists` domain to `NapDomain`/`NAP_DOMAINS`, exposes
+  `window.napplet.lists.supported/add/remove`, publishes the
+  `@napplet/nap/lists` subpaths, re-exports SDK helpers and types, and teaches
+  the conformance envelope validator/reference shell about the `lists.*` wire
+  messages.
+
+### Patch Changes
+
+- Updated dependencies [61431b7]
+- Updated dependencies [086f36e]
+  - @napplet/core@0.19.0
+  - @napplet/nap@0.19.0
+
 ## 0.19.0
 
 ### Minor Changes
