@@ -5,6 +5,7 @@
 
 `@napplet/nap` ships every active NAP domain (relay, storage, inc, keys, theme,
 media, notify, identity, config, resource, cvm, outbox, upload, intent, system)
+media, notify, identity, config, resource, cvm, outbox, upload, intent, serial)
 as independent, tree-shakable subpaths. It sits between the shim/sdk and
 [`@napplet/core`](./core) in the dependency graph.
 
@@ -68,6 +69,9 @@ import { notifySend } from '@napplet/nap/notify/sdk';
 - **system** — strictly **read-only**: it exposes runtime snapshots for NAP
   support, services, relays, storage, media, and napplet-scoped status. It does
   not grant access to any capability it reports.
+- **serial** — runtime-mediated serial device access: napplets get
+  `open`/`write`/`close`/`onEvent`; the shell owns permissions, raw port
+  handles, streams, OS paths, and lifecycle policy.
 
 See the [NAP domain reference](/naps/) for the full list with one-line purposes.
 

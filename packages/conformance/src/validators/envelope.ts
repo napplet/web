@@ -233,6 +233,14 @@ export const ENVELOPE_SPECS: Record<string, EnvelopeSpec> = {
   'system.nappletStorage.result': { dir: 'in' },
   'system.scopes.result': { dir: 'in' },
   'system.scope.result': { dir: 'in' },
+  // ── serial ───────────────────────────────────────────────────────────────
+  'serial.open': { dir: 'out', fields: { ...ID, request: 'object' } },
+  'serial.write': { dir: 'out', fields: { ...ID, sessionId: 'string', data: 'array' } },
+  'serial.close': { dir: 'out', fields: { ...ID, sessionId: 'string' } },
+  'serial.open.result': { dir: 'in' },
+  'serial.write.result': { dir: 'in' },
+  'serial.close.result': { dir: 'in' },
+  'serial.event': { dir: 'in' },
 };
 
 /** A single problem found while validating an envelope. */

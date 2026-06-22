@@ -38,7 +38,7 @@ export interface NappletMessage {
 }
 
 /**
- * String literal union of the fifteen NAP (Nostr Applet Protocol) domains.
+ * String literal union of the sixteen NAP (Nostr Applet Protocol) domains.
  * Each domain corresponds to a capability namespace that a shell may support.
  *
  * | Domain     | Scope                                              |
@@ -53,7 +53,12 @@ export interface NappletMessage {
  * | `notify`   | Shell-rendered notifications                       |
  * | `config`   | Per-napplet declarative configuration              |
  * | `resource` | Byte-fetching primitive (URL → Blob)               |
+ * | `cvm`      | Native ContextVM bridge                            |
+ * | `outbox`   | Outbox-aware relay routing                         |
+ * | `upload`   | Shell-mediated file/blob upload                    |
+ * | `intent`   | Archetype intent dispatch                          |
  * | `system`   | Read-only runtime system information               |
+ * | `serial`   | Runtime-mediated serial device access             |
  *
  * @example
  * ```ts
@@ -61,7 +66,7 @@ export interface NappletMessage {
  * const isValid = NAP_DOMAINS.includes(domain); // true
  * ```
  */
-export type NapDomain = 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'cvm' | 'outbox' | 'upload' | 'intent' | 'system';
+export type NapDomain = 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'cvm' | 'outbox' | 'upload' | 'intent' | 'system' | 'serial';
 
 /**
  * Runtime-accessible constant array of all NAP domain names.
@@ -74,7 +79,7 @@ export type NapDomain = 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'ke
  * }
  * ```
  */
-export const NAP_DOMAINS: readonly NapDomain[] = ['relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent', 'system'] as const;
+export const NAP_DOMAINS: readonly NapDomain[] = ['relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent', 'system', 'serial'] as const;
 
 /**
  * Namespaced capability string for {@link ShellSupports.supports}.

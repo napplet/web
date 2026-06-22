@@ -174,6 +174,10 @@ const RESPONDERS: Record<string, Responder> = {
   'system.nappletStorage': (e) => ok({ type: 'system.nappletStorage.result', id: e.id, status: { available: true, health: 'ok' } }),
   'system.scopes': (e) => ok({ type: 'system.scopes.result', id: e.id, scopes: [] }),
   'system.scope': (e) => ok({ type: 'system.scope.result', id: e.id, scope: { name: String(e.name), available: true, health: 'ok', details: {} } }),
+  // serial
+  'serial.open': (e) => ok({ type: 'serial.open.result', id: e.id, session: { id: `serial-${String(e.id)}`, state: 'open' } }),
+  'serial.write': (e) => ok({ type: 'serial.write.result', id: e.id }),
+  'serial.close': (e) => ok({ type: 'serial.close.result', id: e.id }),
 };
 
 /** A reference shell instance. */

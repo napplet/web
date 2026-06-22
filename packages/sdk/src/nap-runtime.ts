@@ -27,6 +27,7 @@ export { DOMAIN as OUTBOX_DOMAIN } from '@napplet/nap/outbox';
 export { DOMAIN as UPLOAD_DOMAIN } from '@napplet/nap/upload';
 export { DOMAIN as INTENT_DOMAIN } from '@napplet/nap/intent';
 export { DOMAIN as SYSTEM_DOMAIN } from '@napplet/nap/system';
+export { DOMAIN as SERIAL_DOMAIN } from '@napplet/nap/serial';
 
 export { installRelayShim } from '@napplet/nap/relay';
 export { installIdentityShim } from '@napplet/nap/identity';
@@ -47,6 +48,7 @@ export { installOutboxShim } from '@napplet/nap/outbox';
 export { installUploadShim } from '@napplet/nap/upload';
 export { installIntentShim } from '@napplet/nap/intent';
 export { installSystemShim } from '@napplet/nap/system';
+export { installSerialShim } from '@napplet/nap/serial';
 
 export { relaySubscribe, relayPublish, relayPublishEncrypted, relayQuery } from '@napplet/nap/relay';
 export {
@@ -121,3 +123,9 @@ export {
   systemScopes,
   systemScope,
 } from '@napplet/nap/system';
+export {
+  serialOpen,
+  serialWrite,
+  serialClose,
+  serialOnEvent,
+} from '@napplet/nap/serial';

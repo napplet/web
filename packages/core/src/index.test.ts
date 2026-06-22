@@ -52,6 +52,7 @@ describe('@napplet/core exports', () => {
       expect(NAP_DOMAINS).toContain(napDomain);
       expect(NAP_DOMAINS).toContain('system');
       expect(napDomain).toBe('identity');
+      expect(NAP_DOMAINS).toContain('serial');
     });
 
     it('NamespacedCapability accepts bare NAP domain shorthand', () => {
@@ -62,6 +63,7 @@ describe('@napplet/core exports', () => {
       const _theme: NamespacedCapability = 'theme';
       const _media: NamespacedCapability = 'media';
       const _system: NamespacedCapability = 'system';
+      const _serial: NamespacedCapability = 'serial';
       expect(true).toBe(true);
     });
 
@@ -73,6 +75,7 @@ describe('@napplet/core exports', () => {
       const _napTheme: NamespacedCapability = 'nap:theme';
       const _napMedia: NamespacedCapability = 'nap:media';
       const _napSystem: NamespacedCapability = 'nap:system';
+      const _napSerial: NamespacedCapability = 'nap:serial';
       expect(true).toBe(true);
     });
 

@@ -93,6 +93,7 @@ describe('validateEnvelope — outbound field checks', () => {
       upload: { type: 'upload.status', id: 'a', uploadId: 'u' },
       intent: { type: 'intent.handlers', id: 'a' },
       system: { type: 'system.scope', id: 'a', name: 'storage' },
+      serial: { type: 'serial.write', id: 'a', sessionId: 's', data: [1, 2, 3] },
     };
     for (const [domain, msg] of Object.entries(samples)) {
       const v = validateEnvelope(msg);
@@ -123,13 +124,13 @@ describe('validateEnvelope — NAP-SHELL foundational domain', () => {
 });
 
 describe('ENVELOPE_SPECS invariants', () => {
-  it('has 144 discriminants split 71 outbound / 73 inbound', () => {
+  it('has 151 discriminants split 74 outbound / 77 inbound', () => {
     const all = knownEnvelopeTypes();
-    expect(all).toHaveLength(144);
+    expect(all).toHaveLength(151);
     const out = all.filter((t) => ENVELOPE_SPECS[t].dir === 'out');
     const inbound = all.filter((t) => ENVELOPE_SPECS[t].dir === 'in');
-    expect(out).toHaveLength(71);
-    expect(inbound).toHaveLength(73);
+    expect(out).toHaveLength(74);
+    expect(inbound).toHaveLength(77);
   });
 
   it('only outbound specs declare required fields', () => {

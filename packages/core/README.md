@@ -58,6 +58,7 @@ interface RelaySubscribe extends NappletMessage {
 ```
 
 The `type` field domain prefix (`relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `system`) routes messages to the correct NAP handler via `dispatch()`.
+The `type` field domain prefix (`relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `serial`) routes messages to the correct NAP handler via `dispatch()`.
 
 #### `NapDomain`
 
@@ -65,6 +66,7 @@ String literal union of the NAP capability domains.
 
 ```ts
 type NapDomain = 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'cvm' | 'outbox' | 'upload' | 'intent' | 'system';
+type NapDomain = 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'cvm' | 'outbox' | 'upload' | 'intent' | 'serial';
 ```
 
 | Domain    | Scope                                    |
@@ -80,6 +82,7 @@ type NapDomain = 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | '
 | `config`  | Per-napplet declarative configuration (JSON Schema-driven) |
 | `resource` | Byte-fetching primitive (URL to Blob) |
 | `system`  | Read-only runtime system information |
+| `serial`  | Runtime-mediated serial device access |
 
 #### `NAP_DOMAINS`
 
@@ -87,6 +90,7 @@ Runtime constant array of all NAP domain strings. Useful for iteration and valid
 
 ```ts
 const NAP_DOMAINS: readonly NapDomain[] = ['relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent', 'system'];
+const NAP_DOMAINS: readonly NapDomain[] = ['relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent', 'serial'];
 
 for (const domain of NAP_DOMAINS) {
   console.log(`Checking support for: ${domain}`);
