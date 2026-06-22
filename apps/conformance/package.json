@@ -1,6 +1,6 @@
 {
   "name": "@napplet/conformance-web",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "private": true,
   "type": "module",
   "description": "Standalone single-window web runtime for napplet conformance testing",

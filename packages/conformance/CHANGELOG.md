@@ -1,5 +1,17 @@
 # @napplet/conformance
 
+## 0.5.0
+
+### Minor Changes
+
+- 5cb3187: Add NAP-WEBRTC package support with core types, `@napplet/nap/webrtc` subpaths, `window.napplet.webrtc`, SDK helpers, conformance validators, and reference-shell responses.
+
+### Patch Changes
+
+- Updated dependencies [5cb3187]
+  - @napplet/core@0.18.0
+  - @napplet/nap@0.18.0
+
 ## 0.4.1
 
 ### Patch Changes
