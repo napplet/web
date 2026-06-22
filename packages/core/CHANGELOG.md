@@ -1,5 +1,11 @@
 # @napplet/core
 
+## 0.20.0
+
+### Minor Changes
+
+- c6f8645: Add NAP-BLE package support with core types, `@napplet/nap/ble` subpaths, `window.napplet.ble`, SDK helpers, conformance validators, and reference-shell responses.
+
 ## 0.19.0
 
 ### Minor Changes
