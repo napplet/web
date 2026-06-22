@@ -3,7 +3,7 @@
  *
  * The NAP message types are TypeScript-only at the source. To conformance-test a
  * napplet we need to validate, at runtime, every postMessage envelope the napplet
- * emits against the protocol. This module hand-encodes the wire surface of the 14
+ * emits against the protocol. This module hand-encodes the wire surface of the 15
  * optional NAP domains plus the foundational `shell` domain (NAP-SHELL) as a
  * single source-of-truth map ({@link ENVELOPE_SPECS}) and exposes
  * {@link validateEnvelope}.
@@ -49,7 +49,7 @@ const ID = { id: 'string' } as const;
 
 /**
  * The complete napplet wire surface: every `domain.action` discriminant across the
- * 14 optional NAP domains plus the foundational `shell` domain (NAP-SHELL), with
+ * 15 optional NAP domains plus the foundational `shell` domain (NAP-SHELL), with
  * its direction and (for outbound) required fields.
  */
 export const ENVELOPE_SPECS: Record<string, EnvelopeSpec> = {
@@ -211,6 +211,24 @@ export const ENVELOPE_SPECS: Record<string, EnvelopeSpec> = {
   'intent.available.result': { dir: 'in' },
   'intent.handlers.result': { dir: 'in' },
   'intent.changed': { dir: 'in' },
+
+  // ── common ───────────────────────────────────────────────────────────────
+  'common.encodeNip19': { dir: 'out', fields: { ...ID, input: 'object' } },
+  'common.decodeNip19': { dir: 'out', fields: { ...ID, value: 'string' } },
+  'common.getProfile': { dir: 'out', fields: { ...ID, target: 'string' } },
+  'common.follows': { dir: 'out', fields: { ...ID } },
+  'common.follow': { dir: 'out', fields: { ...ID, pubkeys: 'array' } },
+  'common.unfollow': { dir: 'out', fields: { ...ID, pubkeys: 'array' } },
+  'common.react': { dir: 'out', fields: { ...ID, targetEventId: 'string', reaction: 'string' } },
+  'common.report': { dir: 'out', fields: { ...ID, target: 'object', reason: 'string', text: 'string' } },
+  'common.encodeNip19.result': { dir: 'in' },
+  'common.decodeNip19.result': { dir: 'in' },
+  'common.getProfile.result': { dir: 'in' },
+  'common.follows.result': { dir: 'in' },
+  'common.follow.result': { dir: 'in' },
+  'common.unfollow.result': { dir: 'in' },
+  'common.react.result': { dir: 'in' },
+  'common.report.result': { dir: 'in' },
 };
 
 /** A single problem found while validating an envelope. */

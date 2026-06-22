@@ -72,6 +72,18 @@ import {
   handlers as intentHandlers,
   onChanged as intentOnChanged,
 } from '@napplet/nap/intent/shim';
+import {
+  installCommonShim,
+  handleCommonMessage,
+  encodeNip19 as commonEncodeNip19,
+  decodeNip19 as commonDecodeNip19,
+  getProfile as commonGetProfile,
+  follows as commonFollows,
+  follow as commonFollow,
+  unfollow as commonUnfollow,
+  react as commonReact,
+  report as commonReport,
+} from '@napplet/nap/common/shim';
 import { sendEnvelope } from '@napplet/core';
 import type { NappletGlobal, NappletShell, ShellEnvironment, ShellInitMessage } from '@napplet/core';
 import { createShellEnvironment, makeSupports, defaultSupports } from '@napplet/nap/shell/shim';
@@ -151,6 +163,7 @@ const DOMAIN_ROUTERS: ReadonlyArray<readonly [string, DomainHandler]> = [
   ['outbox.', handleOutboxMessage],
   ['upload.', handleUploadMessage],
   ['intent.', handleIntentMessage],
+  ['common.', handleCommonMessage],
   ['identity.', identityShim.handleIdentityMessage],
   ['theme.', themeShim.handleThemeMessage],
   ['config.', handleConfigMessage],
@@ -296,6 +309,16 @@ installIncShim();
     handlers: intentHandlers,
     onChanged: intentOnChanged,
   },
+  common: {
+    encodeNip19: commonEncodeNip19,
+    decodeNip19: commonDecodeNip19,
+    getProfile: commonGetProfile,
+    follows: commonFollows,
+    follow: commonFollow,
+    unfollow: commonUnfollow,
+    react: commonReact,
+    report: commonReport,
+  },
   shell: {
     supports: defaultSupports,
     services: [],
@@ -351,3 +374,6 @@ installUploadShim();
 
 // Install intent shim (intent.* request/response correlation + intent.changed listeners; no install-time work)
 installIntentShim();
+
+// Install common shim (common.* request/response correlation; no install-time work)
+installCommonShim();

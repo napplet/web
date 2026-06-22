@@ -22,6 +22,18 @@ import type {
 } from '../outbox.js';
 import type { UploadRequest, UploadResult, UploadStatus } from '../upload.js';
 import type { IntentAvailability, IntentRequest, IntentResult } from '../intent.js';
+import type {
+  CommonActionResult,
+  CommonFollowsResult,
+  CommonNip19DecodeResult,
+  CommonNip19EncodeInput,
+  CommonNip19EncodeResult,
+  CommonProfileResult,
+  CommonProfileTarget,
+  CommonReaction,
+  CommonReportReason,
+  CommonReportTarget,
+} from '../common.js';
 
 /**
  * Native ContextVM bridge (NAP-CVM): MCP-over-Nostr access mediated by the shell.
@@ -251,4 +263,79 @@ export interface IntentApi {
    * @returns A Subscription with `close()` to stop listening
    */
   onChanged(handler: (availability: IntentAvailability) => void): Subscription;
+}
+
+/**
+ * Common social actions (NAP-COMMON): shell-mediated NIP-19 helpers, profile
+ * lookup, follows, and signed social actions. The shell owns identity, consent,
+ * event construction, signing, publishing, relay access, and NIP-19 handling.
+ *
+ * @example
+ * ```ts
+ * if (window.napplet.shell.supports('common')) {
+ *   const { pubkeys } = await window.napplet.common.follows();
+ *   await window.napplet.common.react(noteId, '+');
+ * }
+ * ```
+ */
+export interface CommonApi {
+  /**
+   * Encode a supported public NIP-19 value. `nsec` is intentionally unsupported.
+   * @param input  Structured NIP-19 encode input
+   * @returns Promise resolving to the shell encode result
+   */
+  encodeNip19(input: CommonNip19EncodeInput): Promise<CommonNip19EncodeResult>;
+  /**
+   * Decode a supported public NIP-19 value. `nsec` is intentionally unsupported.
+   * @param value  NIP-19 value to decode
+   * @returns Promise resolving to normalized decoded fields
+   */
+  decodeNip19(value: string): Promise<CommonNip19DecodeResult>;
+  /**
+   * Resolve a profile by hex pubkey, npub, or nprofile.
+   * @param target  Profile target
+   * @returns Promise resolving to latest profile data when available
+   */
+  getProfile(target: CommonProfileTarget): Promise<CommonProfileResult>;
+  /**
+   * Return the shell user's followed pubkeys as hex.
+   * @returns Promise resolving to followed pubkeys
+   */
+  follows(): Promise<CommonFollowsResult>;
+  /**
+   * Ask the shell to follow one or more npub targets.
+   * @param pubkeys  Npub targets to follow
+   * @returns Promise resolving to the action result
+   */
+  follow(...pubkeys: string[]): Promise<CommonActionResult>;
+  /**
+   * Ask the shell to unfollow one or more npub targets.
+   * @param pubkeys  Npub targets to unfollow
+   * @returns Promise resolving to the action result
+   */
+  unfollow(...pubkeys: string[]): Promise<CommonActionResult>;
+  /**
+   * React to a native Nostr event.
+   * @param targetEventId     Event id to react to
+   * @param reaction          Reaction content
+   * @param customEmojiHref   Optional custom emoji URL
+   * @returns Promise resolving to the action result
+   */
+  react(
+    targetEventId: string,
+    reaction: CommonReaction,
+    customEmojiHref?: string,
+  ): Promise<CommonActionResult>;
+  /**
+   * Report an event or pubkey with a NIP-56 reason.
+   * @param target  Structured report target
+   * @param reason  NIP-56 report reason
+   * @param text    User-visible report text
+   * @returns Promise resolving to the action result
+   */
+  report(
+    target: CommonReportTarget,
+    reason: CommonReportReason,
+    text: string,
+  ): Promise<CommonActionResult>;
 }

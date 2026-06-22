@@ -1,6 +1,6 @@
 # @napplet/nap
 
-> Every active napplet NAP domain (relay, storage, inc, keys, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent) as layered subpath exports. The package name remains `@napplet/nap` for compatibility.
+> Every active napplet NAP domain (relay, storage, inc, keys, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent, common) as layered subpath exports. The package name remains `@napplet/nap` for compatibility.
 
 ## Install
 
@@ -83,6 +83,7 @@ Each domain is an independent subpath. Barrel imports bundle types + shim instal
 | outbox | `@napplet/nap/outbox` | `@napplet/nap/outbox/types` | `@napplet/nap/outbox/shim` | `@napplet/nap/outbox/sdk` | Outbox-aware relay routing — `query`/`subscribe`/`publish`/`resolveRelays`; shell owns NIP-65 relay discovery, dedup, and fanout |
 | upload | `@napplet/nap/upload` | `@napplet/nap/upload/types` | `@napplet/nap/upload/shim` | `@napplet/nap/upload/sdk` | Shell-mediated file/blob upload — `upload`/`status`/`onStatus` over NIP-96 + Blossom rails; shell signs auth, returns NIP-94 metadata |
 | intent | `@napplet/nap/intent` | `@napplet/nap/intent/types` | `@napplet/nap/intent/shim` | `@napplet/nap/intent/sdk` | Archetype intent dispatch — `invoke`/`open`/`available`/`handlers`/`onChanged`; invoke another napplet by role, shell resolves the default handler |
+| common | `@napplet/nap/common` | `@napplet/nap/common/types` | `@napplet/nap/common/shim` | `@napplet/nap/common/sdk` | Common social actions — public NIP-19 helpers, profile lookup, follows, follow/unfollow, reactions, and reports; shell owns identity/signing/publishing |
 
 ### Deprecated IFC Compatibility
 
@@ -102,21 +103,17 @@ Each domain exposes up to three patterns (four including the barrel). Pick the s
 ## Tree-Shaking Contract
 
 - `@napplet/nap` publishes with `sideEffects: false`
-- Every subpath in the `exports` map is a discrete entry point; a bundler importing only `@napplet/nap/relay/types` produces zero bytes from the other 8 domains
+- Every subpath in the `exports` map is a discrete entry point; a bundler importing only `@napplet/nap/relay/types` produces zero bytes from the other domains
 - Verified end-to-end in Phase 121 with a minimal-consumer smoke test
 
-The `exports` map in `package.json` declares 58 entry points:
+The `exports` map in `package.json` declares 68 entry points:
 
-- 15 domain barrels (`@napplet/nap/<domain>`)
-- 15 granular types entries (`@napplet/nap/<domain>/types`)
-- 14 granular shim entries (theme omitted — see [Theme Exception](#theme-exception))
-- 14 granular sdk entries (theme omitted — see [Theme Exception](#theme-exception))
+- 17 domain barrels (`@napplet/nap/<domain>`)
+- 17 granular types entries (`@napplet/nap/<domain>/types`)
+- 17 granular shim entries (`@napplet/nap/<domain>/shim`)
+- 17 granular sdk entries (`@napplet/nap/<domain>/sdk`)
 
 Each entry maps to its own pre-built `.js` + `.d.ts` pair under `dist/<domain>/<surface>.{js,d.ts}`. No root `.` key exists, and there is no top-level `main`/`module`/`types` field — attempting `import '@napplet/nap'` fails with `ERR_PACKAGE_PATH_NOT_EXPORTED` by design.
-
-## Theme Exception
-
-Theme is types-only today — only `@napplet/nap/theme` (barrel, re-exports `./types`) and `@napplet/nap/theme/types` exist. There is no `@napplet/nap/theme/shim` or `@napplet/nap/theme/sdk` entry in the exports map. Shell-side theme handling stays in the host shell; this may change in a future milestone if a theme shim/sdk surface is added upstream.
 
 ## Resource NAP (v0.28.0)
 
@@ -187,7 +184,7 @@ import { mediaCreateSession } from '@napplet/nap/media/sdk';
 import type { MediaNapMessage } from '@napplet/nap/media/types';
 ```
 
-Domain barrels are also available at `@napplet/nap/relay`, `@napplet/nap/storage`, `@napplet/nap/inc`, `@napplet/nap/keys`, `@napplet/nap/theme`, `@napplet/nap/media`, `@napplet/nap/notify`, `@napplet/nap/identity`, `@napplet/nap/config`, and `@napplet/nap/resource`.
+Domain barrels are also available at `@napplet/nap/relay`, `@napplet/nap/storage`, `@napplet/nap/inc`, `@napplet/nap/keys`, `@napplet/nap/theme`, `@napplet/nap/media`, `@napplet/nap/notify`, `@napplet/nap/identity`, `@napplet/nap/config`, `@napplet/nap/resource`, `@napplet/nap/cvm`, `@napplet/nap/outbox`, `@napplet/nap/upload`, `@napplet/nap/intent`, and `@napplet/nap/common`.
 
 ## Optional Peer Dependency
 

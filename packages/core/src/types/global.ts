@@ -9,7 +9,7 @@ import type {
   ConfigApi,
   ResourceApi,
 } from './global/runtime-api.js';
-import type { CvmApi, OutboxApi, UploadApi, IntentApi } from './global/service-api.js';
+import type { CvmApi, OutboxApi, UploadApi, IntentApi, CommonApi } from './global/service-api.js';
 
 /**
  * The window.napplet global installed at runtime by @napplet/shim.
@@ -269,6 +269,21 @@ export interface NappletGlobal {
    * ```
    */
   intent: IntentApi;
+  /**
+   * Common social actions (NAP-COMMON): shell-mediated NIP-19 helpers, profile
+   * lookup, follows, and signed social actions. The shell owns identity,
+   * consent, event construction, signing, publishing, relay access, and NIP-19
+   * handling.
+   *
+   * @example
+   * ```ts
+   * if (window.napplet.shell.supports('common')) {
+   *   const { pubkeys } = await window.napplet.common.follows();
+   *   await window.napplet.common.react(noteId, '+');
+   * }
+   * ```
+   */
+  common: CommonApi;
   /**
    * NAP-SHELL: the foundational, mandatory bootstrap handshake surface.
    *

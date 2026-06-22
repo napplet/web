@@ -66,7 +66,11 @@
     "./intent": "./src/intent/index.ts",
     "./intent/types": "./src/intent/types.ts",
     "./intent/shim": "./src/intent/shim.ts",
-    "./intent/sdk": "./src/intent/sdk.ts"
+    "./intent/sdk": "./src/intent/sdk.ts",
+    "./common": "./src/common/index.ts",
+    "./common/types": "./src/common/types.ts",
+    "./common/shim": "./src/common/shim.ts",
+    "./common/sdk": "./src/common/sdk.ts"
   },
   "imports": {
     "@napplet/core": "jsr:@napplet/core@^0.15.0"

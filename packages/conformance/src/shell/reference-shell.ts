@@ -162,6 +162,16 @@ const RESPONDERS: Record<string, Responder> = {
   'intent.invoke': (e) => ok({ type: 'intent.invoke.result', id: e.id, result: {} }),
   'intent.available': (e) => ok({ type: 'intent.available.result', id: e.id, availability: {} }),
   'intent.handlers': (e) => ok({ type: 'intent.handlers.result', id: e.id, handlers: [] }),
+
+  // common
+  'common.encodeNip19': (e) => ok({ type: 'common.encodeNip19.result', id: e.id, ok: true, value: 'npub1reference', nip19Type: 'npub' }),
+  'common.decodeNip19': (e) => ok({ type: 'common.decodeNip19.result', id: e.id, ok: true, nip19Type: 'npub', hex: REFERENCE_PUBKEY }),
+  'common.getProfile': (e) => ok({ type: 'common.getProfile.result', id: e.id, ok: true, pubkey: REFERENCE_PUBKEY, profile: null }),
+  'common.follows': (e) => ok({ type: 'common.follows.result', id: e.id, ok: true, pubkeys: [] }),
+  'common.follow': (e) => ok({ type: 'common.follow.result', id: e.id, ok: true }),
+  'common.unfollow': (e) => ok({ type: 'common.unfollow.result', id: e.id, ok: true }),
+  'common.react': (e) => ok({ type: 'common.react.result', id: e.id, ok: true, eventId: '0'.repeat(64) }),
+  'common.report': (e) => ok({ type: 'common.report.result', id: e.id, ok: true, eventId: '1'.repeat(64) }),
 };
 
 /** A reference shell instance. */

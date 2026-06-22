@@ -197,12 +197,25 @@ if (window.napplet.shell.supports('intent')) {
 }
 ```
 
+### common
+
+Common social actions — public NIP-19 helpers, profile lookup, follows,
+follow/unfollow, reactions, and reports. The shell owns identity, consent,
+event construction, signing, publishing, relay access, and NIP-19 handling.
+
+```ts
+if (window.napplet.shell.supports('common')) {
+  const { pubkeys } = await window.napplet.common.follows();
+  await window.napplet.common.react(eventId, '+');
+}
+```
+
 ## Core domain union
 
 [`@napplet/core`](/packages/core) exports a `NapDomain` string union for the
 foundational domains — `relay`, `identity`, `storage`, `inc`, `theme`,
 `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`,
-`upload`, `intent` — used as the discriminant for envelope routing and
+`upload`, `intent`, `common` — used as the discriminant for envelope routing and
 `shell.supports()`.
 
 ## Where to go next
