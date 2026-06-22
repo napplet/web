@@ -24,6 +24,7 @@ import type { UploadRequest, UploadResult, UploadStatus } from '../upload.js';
 import type { IntentAvailability, IntentRequest, IntentResult } from '../intent.js';
 import type { LinkOpenOptions, LinkOpenResult } from '../link.js';
 import type { SerialEvent, SerialOpenRequest, SerialOpenResult } from '../serial.js';
+import type { ListItem, ListMutationResult, ListOptions, ListRef, ListSupport } from '../lists.js';
 
 /**
  * Native ContextVM bridge (NAP-CVM): MCP-over-Nostr access mediated by the shell.
@@ -278,6 +279,45 @@ export interface LinkApi {
    * @returns Promise resolving to the shell's open/deny status
   */
   open(url: string, options?: LinkOpenOptions): Promise<LinkOpenResult>;
+}
+
+/**
+ * Runtime-mediated NIP-51 list mutation (NAP-LISTS): the napplet names a list
+ * and semantic items to add/remove; the runtime owns current-event lookup,
+ * kind/type mapping, tag formatting, private item encryption, preservation,
+ * signing, and publishing.
+ *
+ * @example
+ * ```ts
+ * if (window.napplet.shell.supports('lists')) {
+ *   await window.napplet.lists.add({ type: 'mute-list' }, [
+ *     { itemType: 'pubkey', value: 'abc123...' },
+ *   ]);
+ * }
+ * ```
+ */
+export interface ListsApi {
+  /**
+   * Return the NIP-51 list kinds/types this runtime supports.
+   * @returns Promise resolving to supported list descriptions
+   */
+  supported(): Promise<ListSupport[]>;
+  /**
+   * Add items to a runtime-supported NIP-51 list.
+   * @param list     List reference by kind or derived type
+   * @param items    Items to add
+   * @param options  Optional create/metadata hints
+   * @returns Promise resolving to the mutation result
+   */
+  add(list: ListRef, items: ListItem[], options?: ListOptions): Promise<ListMutationResult>;
+  /**
+   * Remove items from a runtime-supported NIP-51 list.
+   * @param list     List reference by kind or derived type
+   * @param items    Items to remove
+   * @param options  Optional runtime hints
+   * @returns Promise resolving to the mutation result
+   */
+  remove(list: ListRef, items: ListItem[], options?: ListOptions): Promise<ListMutationResult>;
 }
 
 /**

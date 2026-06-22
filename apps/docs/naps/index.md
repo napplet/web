@@ -211,12 +211,26 @@ if (window.napplet.shell.supports('link')) {
 }
 ```
 
+### lists
+
+Runtime-mediated NIP-51 list mutations. Napplets send add/remove intent while the
+runtime owns current-event lookup, kind/type mapping, tag formatting, private
+item encryption, event preservation, signing, and publishing.
+
+```ts
+if (window.napplet.shell.supports('lists')) {
+  await window.napplet.lists.add({ type: 'mute-list' }, [
+    { itemType: 'pubkey', value: 'abc123...' },
+  ]);
+}
+```
+
 ## Core domain union
 
 [`@napplet/core`](/packages/core) exports a `NapDomain` string union for the
 foundational domains — `relay`, `identity`, `storage`, `inc`, `theme`,
 `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`,
-`upload`, `intent`, `link` — used as the discriminant for envelope routing and
+`upload`, `intent`, `webrtc`, `link`, `lists`, `serial` — used as the discriminant for envelope routing and
 `shell.supports()`.
 
 ## Where to go next

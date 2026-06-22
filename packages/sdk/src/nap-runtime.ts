@@ -28,6 +28,7 @@ export { DOMAIN as UPLOAD_DOMAIN } from '@napplet/nap/upload';
 export { DOMAIN as INTENT_DOMAIN } from '@napplet/nap/intent';
 export { DOMAIN as WEBRTC_DOMAIN } from '@napplet/nap/webrtc';
 export { DOMAIN as LINK_DOMAIN } from '@napplet/nap/link';
+export { DOMAIN as LISTS_DOMAIN } from '@napplet/nap/lists';
 export { DOMAIN as SERIAL_DOMAIN } from '@napplet/nap/serial';
 
 export { installRelayShim } from '@napplet/nap/relay';
@@ -50,6 +51,7 @@ export { installUploadShim } from '@napplet/nap/upload';
 export { installIntentShim } from '@napplet/nap/intent';
 export { installWebrtcShim } from '@napplet/nap/webrtc';
 export { installLinkShim } from '@napplet/nap/link';
+export { installListsShim } from '@napplet/nap/lists';
 export { installSerialShim } from '@napplet/nap/serial';
 
 export { relaySubscribe, relayPublish, relayPublishEncrypted, relayQuery } from '@napplet/nap/relay';
@@ -114,6 +116,11 @@ export {
   intentOnChanged,
 } from '@napplet/nap/intent';
 export { linkOpen } from '@napplet/nap/link';
+export {
+  listsSupported,
+  listsAdd,
+  listsRemove,
+} from '@napplet/nap/lists';
 export {
   webrtcOpen,
   webrtcSend,

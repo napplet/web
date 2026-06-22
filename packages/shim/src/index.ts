@@ -86,6 +86,13 @@ import {
   open as linkOpen,
 } from '@napplet/nap/link/shim';
 import {
+  installListsShim,
+  handleListsMessage,
+  supported as listsSupported,
+  add as listsAdd,
+  remove as listsRemove,
+} from '@napplet/nap/lists/shim';
+import {
   installSerialShim,
   handleSerialMessage,
   open as serialOpen,
@@ -174,6 +181,7 @@ const DOMAIN_ROUTERS: ReadonlyArray<readonly [string, DomainHandler]> = [
   ['intent.', handleIntentMessage],
   ['webrtc.', handleWebrtcMessage],
   ['link.', handleLinkMessage],
+  ['lists.', handleListsMessage],
   ['serial.', handleSerialMessage],
   ['identity.', identityShim.handleIdentityMessage],
   ['theme.', themeShim.handleThemeMessage],
@@ -329,6 +337,11 @@ installIncShim();
   link: {
     open: linkOpen,
   },
+  lists: {
+    supported: listsSupported,
+    add: listsAdd,
+    remove: listsRemove,
+  },
   serial: {
     open: serialOpen,
     write: serialWrite,
@@ -395,5 +408,7 @@ installIntentShim();
 installWebrtcShim();
 // Install link shim (link.open request/response correlation; no install-time work)
 installLinkShim();
+// Install lists shim (lists.* request/response correlation; no install-time work)
+installListsShim();
 // Install serial shim (serial.* request/response correlation + serial.event listeners; no install-time work)
 installSerialShim();

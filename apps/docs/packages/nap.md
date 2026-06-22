@@ -3,11 +3,9 @@
 > Every active napplet NAP domain as layered subpath exports. The package name remains
 > `@napplet/nap` for compatibility.
 
-`@napplet/nap` ships every NAP domain (relay, storage, inc, keys, theme, media,
-notify, identity, config, resource, cvm, outbox, upload, intent, webrtc)
-notify, identity, config, resource, cvm, outbox, upload, intent, link)
 `@napplet/nap` ships every active NAP domain (relay, storage, inc, keys, theme,
-media, notify, identity, config, resource, cvm, outbox, upload, intent, serial)
+media, notify, identity, config, resource, cvm, outbox, upload, intent, webrtc,
+link, lists, serial)
 as independent, tree-shakable subpaths. It sits between the shim/sdk and
 [`@napplet/core`](./core) in the dependency graph.
 
@@ -55,10 +53,9 @@ import { notifySend } from '@napplet/nap/notify/sdk';
 ## Tree-shaking contract
 
 - Published with `sideEffects: false`.
-- The `exports` map declares **68 entry points**: 17 subpath barrels, 17
-  types entries, and 17 shim + 17 sdk entries.
-- The `exports` map declares **68 entry points**: 17 domain barrels, 17
-  types entries, 17 shim entries, and 17 sdk entries.
+- The `exports` map declares **80 entry points**: 18 active domain barrels,
+  18 active-domain types entries, 18 shim entries, 18 sdk entries, plus the
+  `ifc` compatibility and `shell` foundational subpaths.
 - A bundler importing only `@napplet/nap/relay/types` produces zero bytes from
   the other domains.
 
@@ -75,6 +72,9 @@ import { notifySend } from '@napplet/nap/notify/sdk';
   lifecycle.
 - **link** — shell-mediated external navigation via `open(url, options?)`. The
   shell owns prompting, policy, opener isolation, and browser context.
+- **lists** — runtime-mediated NIP-51 list mutations via
+  `supported`/`add`/`remove`; the runtime owns lookup, merge, encryption,
+  signing, and publishing.
 - **serial** — runtime-mediated serial device access: napplets get
   `open`/`write`/`close`/`onEvent`; the shell owns permissions, raw port
   handles, streams, OS paths, and lifecycle policy.

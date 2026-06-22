@@ -195,6 +195,10 @@ const RESPONDERS: Record<string, Responder> = {
   'webrtc.close': (e) => ok({ type: 'webrtc.close.result', id: e.id }),
   // link
   'link.open': (e) => ok({ type: 'link.open.result', id: e.id, status: 'opened' }),
+  // lists
+  'lists.supported': (e) => ok({ type: 'lists.supported.result', id: e.id, lists: [] }),
+  'lists.add': (e) => ok({ type: 'lists.add.result', id: e.id, ok: true, added: 0, skipped: 0 }),
+  'lists.remove': (e) => ok({ type: 'lists.remove.result', id: e.id, ok: true, removed: 0, skipped: 0 }),
   // serial
   'serial.open': (e) => ok({ type: 'serial.open.result', id: e.id, session: { id: `serial-${String(e.id)}`, state: 'open' } }),
   'serial.write': (e) => ok({ type: 'serial.write.result', id: e.id }),

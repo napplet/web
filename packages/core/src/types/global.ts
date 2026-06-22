@@ -10,7 +10,7 @@ import type {
   ResourceApi,
 } from './global/runtime-api.js';
 import type { WebrtcApi } from './webrtc.js';
-import type { CvmApi, OutboxApi, UploadApi, IntentApi, LinkApi, SerialApi } from './global/service-api.js';
+import type { CvmApi, OutboxApi, UploadApi, IntentApi, LinkApi, SerialApi, ListsApi } from './global/service-api.js';
 
 /**
  * The window.napplet global installed at runtime by @napplet/shim.
@@ -288,6 +288,22 @@ export interface NappletGlobal {
    * ```
   */
   link: LinkApi;
+  /**
+   * Runtime-mediated NIP-51 list mutation (NAP-LISTS): add or remove semantic
+   * items from supported lists without requiring napplets to handle raw NIP-51
+   * tags, private item encryption, replaceable/addressable event preservation,
+   * signing, or publishing.
+   *
+   * @example
+   * ```ts
+   * if (window.napplet.shell.supports('lists')) {
+   *   await window.napplet.lists.add({ type: 'mute-list' }, [
+   *     { itemType: 'pubkey', value: 'abc123...' },
+   *   ]);
+   * }
+   * ```
+  */
+  lists: ListsApi;
   /**
    * Runtime-mediated serial device access (NAP-SERIAL): the napplet asks the
    * shell to select and open a user-approved serial session, writes byte arrays,
