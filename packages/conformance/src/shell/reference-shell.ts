@@ -176,6 +176,10 @@ const RESPONDERS: Record<string, Responder> = {
   }),
   'webrtc.send': (e) => ok({ type: 'webrtc.send.result', id: e.id }),
   'webrtc.close': (e) => ok({ type: 'webrtc.close.result', id: e.id }),
+  // serial
+  'serial.open': (e) => ok({ type: 'serial.open.result', id: e.id, session: { id: `serial-${String(e.id)}`, state: 'open' } }),
+  'serial.write': (e) => ok({ type: 'serial.write.result', id: e.id }),
+  'serial.close': (e) => ok({ type: 'serial.close.result', id: e.id }),
 };
 
 /** A reference shell instance. */

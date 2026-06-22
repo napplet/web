@@ -22,6 +22,7 @@ import type {
 } from '../outbox.js';
 import type { UploadRequest, UploadResult, UploadStatus } from '../upload.js';
 import type { IntentAvailability, IntentRequest, IntentResult } from '../intent.js';
+import type { SerialEvent, SerialOpenRequest, SerialOpenResult } from '../serial.js';
 
 /**
  * Native ContextVM bridge (NAP-CVM): MCP-over-Nostr access mediated by the shell.
@@ -251,4 +252,48 @@ export interface IntentApi {
    * @returns A Subscription with `close()` to stop listening
    */
   onChanged(handler: (availability: IntentAvailability) => void): Subscription;
+}
+
+/**
+ * Runtime-mediated serial device access (NAP-SERIAL): the napplet asks the shell
+ * to select and open a user-approved serial session, writes byte arrays to that
+ * session, and receives shell-pushed state/data/close events. The shell owns
+ * device selection, permissions, raw port handles, streams, OS paths, read loops,
+ * and lifecycle policy.
+ *
+ * @example
+ * ```ts
+ * if (window.napplet.shell.supports('serial')) {
+ *   const { session } = await window.napplet.serial.open({ options: { baudRate: 115200 } });
+ *   await window.napplet.serial.write(session.id, [112, 105, 110, 103, 10]);
+ * }
+ * ```
+ */
+export interface SerialApi {
+  /**
+   * Ask the runtime to select and open a serial session.
+   * @param request  Filters, options, and optional chooser label
+   * @returns Promise resolving to the runtime-assigned serial open result
+   */
+  open(request: SerialOpenRequest): Promise<SerialOpenResult>;
+  /**
+   * Write bytes to an open serial session.
+   * @param sessionId  Runtime-assigned serial session id
+   * @param data       Byte values to write
+   * @returns Promise resolving after the runtime acknowledges the write
+   */
+  write(sessionId: string, data: Uint8Array | number[]): Promise<void>;
+  /**
+   * Close an open serial session.
+   * @param sessionId  Runtime-assigned serial session id
+   * @param reason     Optional reason for the close request
+   * @returns Promise resolving after the runtime acknowledges the close
+   */
+  close(sessionId: string, reason?: string): Promise<void>;
+  /**
+   * Register for shell-pushed serial events.
+   * @param handler  Called with each serial event
+   * @returns A Subscription with `close()` to stop listening
+   */
+  onEvent(handler: (event: SerialEvent) => void): Subscription;
 }

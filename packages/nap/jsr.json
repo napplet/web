@@ -70,7 +70,11 @@
     "./webrtc": "./src/webrtc/index.ts",
     "./webrtc/types": "./src/webrtc/types.ts",
     "./webrtc/shim": "./src/webrtc/shim.ts",
-    "./webrtc/sdk": "./src/webrtc/sdk.ts"
+    "./webrtc/sdk": "./src/webrtc/sdk.ts",
+    "./serial": "./src/serial/index.ts",
+    "./serial/types": "./src/serial/types.ts",
+    "./serial/shim": "./src/serial/shim.ts",
+    "./serial/sdk": "./src/serial/sdk.ts"
   },
   "imports": {
     "@napplet/core": "jsr:@napplet/core@^0.15.0"

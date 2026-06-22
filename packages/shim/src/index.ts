@@ -80,6 +80,14 @@ import {
   close as webrtcClose,
   onEvent as webrtcOnEvent,
 } from '@napplet/nap/webrtc/shim';
+import {
+  installSerialShim,
+  handleSerialMessage,
+  open as serialOpen,
+  write as serialWrite,
+  close as serialClose,
+  onEvent as serialOnEvent,
+} from '@napplet/nap/serial/shim';
 import { sendEnvelope } from '@napplet/core';
 import type { NappletGlobal, NappletShell, ShellEnvironment, ShellInitMessage } from '@napplet/core';
 import { createShellEnvironment, makeSupports, defaultSupports } from '@napplet/nap/shell/shim';
@@ -160,6 +168,7 @@ const DOMAIN_ROUTERS: ReadonlyArray<readonly [string, DomainHandler]> = [
   ['upload.', handleUploadMessage],
   ['intent.', handleIntentMessage],
   ['webrtc.', handleWebrtcMessage],
+  ['serial.', handleSerialMessage],
   ['identity.', identityShim.handleIdentityMessage],
   ['theme.', themeShim.handleThemeMessage],
   ['config.', handleConfigMessage],
@@ -311,6 +320,12 @@ installIncShim();
     close: webrtcClose,
     onEvent: webrtcOnEvent,
   },
+  serial: {
+    open: serialOpen,
+    write: serialWrite,
+    close: serialClose,
+    onEvent: serialOnEvent,
+  },
   shell: {
     supports: defaultSupports,
     services: [],
@@ -369,3 +384,5 @@ installIntentShim();
 
 // Install WebRTC shim (webrtc.* request/response correlation + webrtc.event listeners; no install-time work)
 installWebrtcShim();
+// Install serial shim (serial.* request/response correlation + serial.event listeners; no install-time work)
+installSerialShim();
