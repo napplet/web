@@ -1,6 +1,6 @@
 # @napplet/nap
 
-> Every active napplet NAP domain (relay, storage, inc, keys, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent, webrtc, link, lists, serial, common) as layered subpath exports. The package name remains `@napplet/nap` for compatibility.
+> Every active napplet NAP domain (relay, storage, inc, keys, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent, ble, webrtc, link, lists, serial, common) as layered subpath exports. The package name remains `@napplet/nap` for compatibility.
 
 ## Install
 
@@ -63,7 +63,7 @@ installRelayShim(nappletWindow, {
 });
 ```
 
-## 19 Active Domains
+## 20 Active Domains
 
 Each domain is an independent subpath. Barrel imports bundle types + shim installer + SDK helpers; granular subpaths isolate each surface.
 
@@ -83,6 +83,7 @@ Each domain is an independent subpath. Barrel imports bundle types + shim instal
 | outbox | `@napplet/nap/outbox` | `@napplet/nap/outbox/types` | `@napplet/nap/outbox/shim` | `@napplet/nap/outbox/sdk` | Outbox-aware relay routing — `query`/`subscribe`/`publish`/`resolveRelays`; shell owns NIP-65 relay discovery, dedup, and fanout |
 | upload | `@napplet/nap/upload` | `@napplet/nap/upload/types` | `@napplet/nap/upload/shim` | `@napplet/nap/upload/sdk` | Shell-mediated file/blob upload — `upload`/`status`/`onStatus` over NIP-96 + Blossom rails; shell signs auth, returns NIP-94 metadata |
 | intent | `@napplet/nap/intent` | `@napplet/nap/intent/types` | `@napplet/nap/intent/shim` | `@napplet/nap/intent/sdk` | Archetype intent dispatch — `invoke`/`open`/`available`/`handlers`/`onChanged`; invoke another napplet by role, shell resolves the default handler |
+| ble | `@napplet/nap/ble` | `@napplet/nap/ble/types` | `@napplet/nap/ble/shim` | `@napplet/nap/ble/sdk` | Runtime-mediated Bluetooth LE/GATT sessions — `open`/`services`/`read`/`write`/`subscribe`/`unsubscribe`/`close`/`onEvent`; shell owns chooser UI, permissions, device handles, and lifecycle |
 | webrtc | `@napplet/nap/webrtc` | `@napplet/nap/webrtc/types` | `@napplet/nap/webrtc/shim` | `@napplet/nap/webrtc/sdk` | Runtime-mediated WebRTC data sessions — `open`/`send`/`close`/`onEvent`; shell owns signaling, SDP, ICE, and peer-connection lifecycle |
 | link | `@napplet/nap/link` | `@napplet/nap/link/types` | `@napplet/nap/link/shim` | `@napplet/nap/link/sdk` | Shell-mediated external link opening — `open(url, options?)`; shell owns navigation, policy, prompting, and opener isolation |
 | lists | `@napplet/nap/lists` | `@napplet/nap/lists/types` | `@napplet/nap/lists/shim` | `@napplet/nap/lists/sdk` | Runtime-mediated NIP-51 list mutations — `supported`/`add`/`remove`; runtime owns lookup, merge, encryption, signing, and publishing |
@@ -110,12 +111,12 @@ Each domain exposes up to three patterns (four including the barrel). Pick the s
 - Every subpath in the `exports` map is a discrete entry point; a bundler importing only `@napplet/nap/relay/types` produces zero bytes from unrelated domains
 - Verified end-to-end in Phase 121 with a minimal-consumer smoke test
 
-The `exports` map in `package.json` declares 84 entry points:
+The `exports` map in `package.json` declares 88 entry points:
 
-- 19 domain barrels (`@napplet/nap/<domain>`)
-- 19 granular types entries (`@napplet/nap/<domain>/types`)
-- 19 granular shim entries (`@napplet/nap/<domain>/shim`)
-- 19 granular sdk entries (`@napplet/nap/<domain>/sdk`)
+- 20 domain barrels (`@napplet/nap/<domain>`)
+- 20 granular types entries (`@napplet/nap/<domain>/types`)
+- 20 granular shim entries (`@napplet/nap/<domain>/shim`)
+- 20 granular sdk entries (`@napplet/nap/<domain>/sdk`)
 - 2 compatibility/foundational barrels (`ifc`, `shell`) with matching `types`,
   `shim`, and `sdk` entries
 
@@ -197,7 +198,7 @@ import { mediaCreateSession } from '@napplet/nap/media/sdk';
 import type { MediaNapMessage } from '@napplet/nap/media/types';
 ```
 
-Domain barrels are also available at `@napplet/nap/relay`, `@napplet/nap/storage`, `@napplet/nap/inc`, `@napplet/nap/keys`, `@napplet/nap/theme`, `@napplet/nap/media`, `@napplet/nap/notify`, `@napplet/nap/identity`, `@napplet/nap/config`, `@napplet/nap/resource`, `@napplet/nap/cvm`, `@napplet/nap/outbox`, `@napplet/nap/upload`, `@napplet/nap/intent`, `@napplet/nap/webrtc`, `@napplet/nap/link`, `@napplet/nap/lists`, `@napplet/nap/common`, and `@napplet/nap/serial`.
+Domain barrels are also available at `@napplet/nap/relay`, `@napplet/nap/storage`, `@napplet/nap/inc`, `@napplet/nap/keys`, `@napplet/nap/theme`, `@napplet/nap/media`, `@napplet/nap/notify`, `@napplet/nap/identity`, `@napplet/nap/config`, `@napplet/nap/resource`, `@napplet/nap/cvm`, `@napplet/nap/outbox`, `@napplet/nap/upload`, `@napplet/nap/intent`, `@napplet/nap/ble`, `@napplet/nap/webrtc`, `@napplet/nap/link`, `@napplet/nap/lists`, `@napplet/nap/common`, and `@napplet/nap/serial`.
 
 ## Optional Peer Dependency
 

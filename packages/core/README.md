@@ -57,14 +57,14 @@ interface RelaySubscribe extends NappletMessage {
 }
 ```
 
-The `type` field domain prefix (`relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `webrtc`, `link`, `lists`, `serial`, `common`) routes messages to the correct NAP handler via `dispatch()`.
+The `type` field domain prefix (`relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `ble`, `webrtc`, `link`, `lists`, `serial`, `common`) routes messages to the correct NAP handler via `dispatch()`.
 
 #### `NapDomain`
 
 String literal union of the NAP capability domains.
 
 ```ts
-type NapDomain = 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'cvm' | 'outbox' | 'upload' | 'intent' | 'webrtc' | 'link' | 'lists' | 'serial' | 'common';
+type NapDomain = 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'cvm' | 'outbox' | 'upload' | 'intent' | 'ble' | 'webrtc' | 'link' | 'lists' | 'serial' | 'common';
 ```
 
 | Domain    | Scope                                    |
@@ -83,6 +83,7 @@ type NapDomain = 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | '
 | `outbox` | Outbox-aware relay routing |
 | `upload` | Shell-mediated file/blob upload |
 | `intent` | Archetype intent dispatch |
+| `ble` | Runtime-mediated Bluetooth LE/GATT sessions |
 | `webrtc` | Runtime-mediated WebRTC data sessions |
 | `link` | Shell-mediated external link opening |
 | `lists` | Runtime-mediated NIP-51 list mutations |
@@ -94,7 +95,7 @@ type NapDomain = 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | '
 Runtime constant array of all NAP domain strings. Useful for iteration and validation.
 
 ```ts
-const NAP_DOMAINS: readonly NapDomain[] = ['relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent', 'webrtc', 'link', 'lists', 'serial', 'common'];
+const NAP_DOMAINS: readonly NapDomain[] = ['relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent', 'ble', 'webrtc', 'link', 'lists', 'serial', 'common'];
 
 for (const domain of NAP_DOMAINS) {
   console.log(`Checking support for: ${domain}`);

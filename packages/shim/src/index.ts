@@ -81,6 +81,18 @@ import {
   onEvent as webrtcOnEvent,
 } from '@napplet/nap/webrtc/shim';
 import {
+  installBleShim,
+  handleBleMessage,
+  open as bleOpen,
+  services as bleServices,
+  read as bleRead,
+  write as bleWrite,
+  subscribe as bleSubscribe,
+  unsubscribe as bleUnsubscribe,
+  close as bleClose,
+  onEvent as bleOnEvent,
+} from '@napplet/nap/ble/shim';
+import {
   installLinkShim,
   handleLinkMessage,
   open as linkOpen,
@@ -191,6 +203,7 @@ const DOMAIN_ROUTERS: ReadonlyArray<readonly [string, DomainHandler]> = [
   ['outbox.', handleOutboxMessage],
   ['upload.', handleUploadMessage],
   ['intent.', handleIntentMessage],
+  ['ble.', handleBleMessage],
   ['webrtc.', handleWebrtcMessage],
   ['link.', handleLinkMessage],
   ['lists.', handleListsMessage],
@@ -347,6 +360,16 @@ installIncShim();
     close: webrtcClose,
     onEvent: webrtcOnEvent,
   },
+  ble: {
+    open: bleOpen,
+    services: bleServices,
+    read: bleRead,
+    write: bleWrite,
+    subscribe: bleSubscribe,
+    unsubscribe: bleUnsubscribe,
+    close: bleClose,
+    onEvent: bleOnEvent,
+  },
   link: {
     open: linkOpen,
   },
@@ -432,6 +455,8 @@ installCommonShim();
 
 // Install WebRTC shim (webrtc.* request/response correlation + webrtc.event listeners; no install-time work)
 installWebrtcShim();
+// Install BLE shim (ble.* request/response correlation + ble.event listeners; no install-time work)
+installBleShim();
 // Install link shim (link.open request/response correlation; no install-time work)
 installLinkShim();
 // Install lists shim (lists.* request/response correlation; no install-time work)

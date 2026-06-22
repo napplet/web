@@ -344,6 +344,48 @@ export type {
   IntentNapMessage,
 } from '@napplet/nap/intent';
 
+// BLE NAP (runtime-mediated Bluetooth LE/GATT sessions)
+export type {
+  BleApi,
+  BleAttribute,
+  BleCharacteristic,
+  BleCharacteristicProperties,
+  BleCloseMessage,
+  BleCloseResultMessage,
+  BleClosedEvent,
+  BleDeviceFilter,
+  BleDeviceInfo,
+  BleEvent,
+  BleEventMessage,
+  BleInboundMessage,
+  BleManufacturerDataFilter,
+  BleMessage,
+  BleNapMessage,
+  BleNotificationEvent,
+  BleOpenMessage,
+  BleOpenRequest,
+  BleOpenResult,
+  BleOpenResultMessage,
+  BleOutboundMessage,
+  BleReadMessage,
+  BleReadResultMessage,
+  BleService,
+  BleServiceDataFilter,
+  BleServicesMessage,
+  BleServicesResultMessage,
+  BleSession,
+  BleSessionState,
+  BleStateEvent,
+  BleSubscribeMessage,
+  BleSubscribeResultMessage,
+  BleUnsubscribeMessage,
+  BleUnsubscribeResultMessage,
+  BleUuid,
+  BleWriteMessage,
+  BleWriteOptions,
+  BleWriteResultMessage,
+} from '@napplet/nap/ble';
+
 // WEBRTC NAP (runtime-mediated WebRTC signaling)
 export type {
   WebrtcScope,

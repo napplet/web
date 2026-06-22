@@ -12,7 +12,7 @@
 
 1. Import `@napplet/shim` in your napplet's entry point (side-effect only -- no named exports)
 2. The shim registers with the shell via postMessage -- the shell assigns identity based on the iframe's `message.source` Window reference
-3. Once registered, `window.napplet` is populated with relay, inc, storage, keys, media, notify, identity, config, resource, cvm, outbox, upload, intent, webrtc, link, lists, common, serial, and shell sub-objects
+3. Once registered, `window.napplet` is populated with relay, inc, storage, keys, media, notify, identity, config, resource, cvm, outbox, upload, intent, ble, webrtc, link, lists, common, serial, and shell sub-objects
 4. No `window.nostr` is installed -- signing and encryption are mediated by the shell via `relay.publish()` and `relay.publishEncrypted()`
 
 ### Installation
@@ -117,6 +117,9 @@ const { session } = await window.napplet.webrtc.open({
   scope: { type: 'direct', pubkey: 'abc123...' },
 });
 await window.napplet.webrtc.send(session.id, { body: 'hello' });
+// Open a shell-mediated BLE session
+const { session: bleSession } = await window.napplet.ble.open({ acceptAllDevices: true });
+const bleServices = await window.napplet.ble.services(bleSession.id);
 // Open an external URL through shell policy and opener isolation
 await window.napplet.link.open('https://example.com/post/123', { label: 'Read post' });
 // Mutate a supported NIP-51 list through the runtime

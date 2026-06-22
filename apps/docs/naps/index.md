@@ -197,6 +197,19 @@ if (window.napplet.shell.supports('intent')) {
 }
 ```
 
+### ble
+
+Runtime-mediated Bluetooth LE/GATT sessions. Napplets receive opaque session ids
+and byte arrays while the shell owns chooser UI, permissions, device handles,
+GATT lifecycle, notifications, disconnects, and policy.
+
+```ts
+if (window.napplet.shell.supports('ble')) {
+  const { session } = await window.napplet.ble.open({ acceptAllDevices: true });
+  const services = await window.napplet.ble.services(session.id);
+}
+```
+
 ### link
 
 Shell-mediated external link opening. This is user-visible navigation, not byte
@@ -243,7 +256,7 @@ if (window.napplet.shell.supports('common')) {
 [`@napplet/core`](/packages/core) exports a `NapDomain` string union for the
 foundational domains — `relay`, `identity`, `storage`, `inc`, `theme`,
 `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`,
-`upload`, `intent`, `webrtc`, `link`, `lists`, `serial`, `common` — used as the discriminant for envelope routing and
+`upload`, `intent`, `ble`, `webrtc`, `link`, `lists`, `serial`, `common` — used as the discriminant for envelope routing and
 `shell.supports()`.
 
 ## Where to go next

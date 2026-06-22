@@ -9,6 +9,7 @@ import type {
   ConfigApi,
   ResourceApi,
 } from './global/runtime-api.js';
+import type { BleApi } from './ble.js';
 import type { WebrtcApi } from './webrtc.js';
 import type {
   CvmApi,
@@ -279,6 +280,13 @@ export interface NappletGlobal {
    * ```
   */
   intent: IntentApi;
+  /**
+   * Runtime-mediated Bluetooth LE/GATT sessions (NAP-BLE): the napplet asks
+   * the shell to select a user-approved device, operate on exposed GATT
+   * attributes, and receive state/notification/close events. The shell owns
+   * chooser UI, permissions, device handles, GATT lifecycle, and policy.
+   */
+  ble: BleApi;
   /**
    * Runtime-mediated WebRTC sessions. The shell owns signaling transport,
    * signing/encryption, SDP, ICE, and RTCPeerConnection lifecycle.

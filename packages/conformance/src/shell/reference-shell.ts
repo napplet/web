@@ -180,6 +180,23 @@ const RESPONDERS: Record<string, Responder> = {
   }),
   'intent.handlers': (e) => ok({ type: 'intent.handlers.result', id: e.id, handlers: [] }),
 
+  // ble
+  'ble.open': (e) => ok({
+    type: 'ble.open.result',
+    id: e.id,
+    session: {
+      id: 'ble-reference',
+      state: 'open',
+      device: { id: 'reference-device', name: 'Reference BLE' },
+    },
+  }),
+  'ble.services': (e) => ok({ type: 'ble.services.result', id: e.id, services: [] }),
+  'ble.read': (e) => ok({ type: 'ble.read.result', id: e.id, data: [] }),
+  'ble.write': (e) => ok({ type: 'ble.write.result', id: e.id }),
+  'ble.subscribe': (e) => ok({ type: 'ble.subscribe.result', id: e.id }),
+  'ble.unsubscribe': (e) => ok({ type: 'ble.unsubscribe.result', id: e.id }),
+  'ble.close': (e) => ok({ type: 'ble.close.result', id: e.id }),
+
   // common
   'common.encodeNip19': (e) => ok({ type: 'common.encodeNip19.result', id: e.id, ok: true, value: 'npub1reference', nip19Type: 'npub' }),
   'common.decodeNip19': (e) => ok({ type: 'common.decodeNip19.result', id: e.id, ok: true, nip19Type: 'npub', hex: REFERENCE_PUBKEY }),

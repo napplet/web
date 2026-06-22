@@ -12,7 +12,7 @@
 ### How It Works
 
 1. Import `@napplet/shim` in your entry point to install the `window.napplet` global
-2. Import named exports from `@napplet/sdk` -- `relay`, `inc`, `storage`, `keys`, `lists`
+2. Import named exports from `@napplet/sdk` -- `relay`, `inc`, `storage`, `keys`, `ble`, `lists`
 3. Each SDK method delegates to its `window.napplet.*` counterpart at call time
 4. If `window.napplet` is not installed when a method is called, a descriptive error is thrown
 
@@ -26,7 +26,7 @@ npm install @napplet/sdk @napplet/shim
 
 ```ts
 import '@napplet/shim';
-import { relay, inc, storage, keys, media, notify, config, resource, webrtc, link, lists, type NostrEvent } from '@napplet/sdk';
+import { relay, inc, storage, keys, media, notify, config, resource, ble, webrtc, link, lists, type NostrEvent } from '@napplet/sdk';
 
 // Subscribe to kind 1 notes
 const sub = relay.subscribe(
@@ -97,6 +97,9 @@ imgEl.src = handle.url;
 // Open a shell-mediated WebRTC data session
 const { session } = await webrtc.open({ scope: { type: 'direct', pubkey: 'abc123...' } });
 await webrtc.send(session.id, { body: 'hello' });
+// Open a shell-mediated BLE session and inspect exposed services
+const { session: bleSession } = await ble.open({ acceptAllDevices: true });
+const bleServices = await ble.services(bleSession.id);
 // Open an external URL through the shell
 await link.open('https://example.com/post/123', { label: 'Read post' });
 // Add an item to a supported NIP-51 list through the runtime
@@ -344,6 +347,7 @@ import type {
   StorageNapMessage,
   IncNapMessage,
   KeysNapMessage,
+  BleNapMessage,
   ListsNapMessage,
   Action,
 } from '@napplet/sdk';
@@ -379,6 +383,7 @@ handlers in shell implementations or protocol-aware code.
 | `NotifyNapMessage` | `@napplet/nap/notify` | Discriminated union of all notify domain messages |
 | `ConfigNapMessage` | `@napplet/nap/config` | Discriminated union of all config domain messages |
 | `ResourceNapMessage` | `@napplet/nap/resource` | Discriminated union of all resource domain messages |
+| `BleNapMessage` | `@napplet/nap/ble` | Discriminated union of all BLE domain messages |
 | `ListsNapMessage` | `@napplet/nap/lists` | Discriminated union of all lists domain messages |
 | `CommonNapMessage` | `@napplet/nap/common` | Discriminated union of all common domain messages |
 | `SerialNapMessage` | `@napplet/nap/serial` | Discriminated union of all serial domain messages |
@@ -391,8 +396,8 @@ Individual message types (e.g., `RelaySubscribeMessage`, `IdentityGetPublicKeyMe
 Each NAP domain has a string constant re-exported from its package:
 
 ```ts
-import { RELAY_DOMAIN, IDENTITY_DOMAIN, STORAGE_DOMAIN, INC_DOMAIN, THEME_DOMAIN, KEYS_DOMAIN, MEDIA_DOMAIN, NOTIFY_DOMAIN, CONFIG_DOMAIN, RESOURCE_DOMAIN, CVM_DOMAIN, OUTBOX_DOMAIN, UPLOAD_DOMAIN, INTENT_DOMAIN, WEBRTC_DOMAIN, LINK_DOMAIN, LISTS_DOMAIN, COMMON_DOMAIN, SERIAL_DOMAIN } from '@napplet/sdk';
-// Values: 'relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent', 'webrtc', 'link', 'lists', 'common', 'serial'
+import { RELAY_DOMAIN, IDENTITY_DOMAIN, STORAGE_DOMAIN, INC_DOMAIN, THEME_DOMAIN, KEYS_DOMAIN, MEDIA_DOMAIN, NOTIFY_DOMAIN, CONFIG_DOMAIN, RESOURCE_DOMAIN, CVM_DOMAIN, OUTBOX_DOMAIN, UPLOAD_DOMAIN, INTENT_DOMAIN, BLE_DOMAIN, WEBRTC_DOMAIN, LINK_DOMAIN, LISTS_DOMAIN, COMMON_DOMAIN, SERIAL_DOMAIN } from '@napplet/sdk';
+// Values: 'relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent', 'ble', 'webrtc', 'link', 'lists', 'common', 'serial'
 ```
 
 These constants are re-exported from the individual domain packages. Use them with the shell capability query

@@ -212,6 +212,23 @@ export const ENVELOPE_SPECS: Record<string, EnvelopeSpec> = {
   'intent.handlers.result': { dir: 'in' },
   'intent.changed': { dir: 'in' },
 
+  // ── ble ──────────────────────────────────────────────────────────────────
+  'ble.open': { dir: 'out', fields: { ...ID, request: 'object' } },
+  'ble.services': { dir: 'out', fields: { ...ID, sessionId: 'string' } },
+  'ble.read': { dir: 'out', fields: { ...ID, sessionId: 'string', target: 'object' } },
+  'ble.write': { dir: 'out', fields: { ...ID, sessionId: 'string', target: 'object', data: 'array' } },
+  'ble.subscribe': { dir: 'out', fields: { ...ID, sessionId: 'string', target: 'object' } },
+  'ble.unsubscribe': { dir: 'out', fields: { ...ID, sessionId: 'string', target: 'object' } },
+  'ble.close': { dir: 'out', fields: { ...ID, sessionId: 'string' } },
+  'ble.open.result': { dir: 'in' },
+  'ble.services.result': { dir: 'in' },
+  'ble.read.result': { dir: 'in' },
+  'ble.write.result': { dir: 'in' },
+  'ble.subscribe.result': { dir: 'in' },
+  'ble.unsubscribe.result': { dir: 'in' },
+  'ble.close.result': { dir: 'in' },
+  'ble.event': { dir: 'in' },
+
   // ── common ───────────────────────────────────────────────────────────────
   'common.encodeNip19': { dir: 'out', fields: { ...ID, input: 'object' } },
   'common.decodeNip19': { dir: 'out', fields: { ...ID, value: 'string' } },
