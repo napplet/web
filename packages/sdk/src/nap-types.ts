@@ -384,6 +384,27 @@ export type {
   LinkInboundMessage,
   LinkNapMessage,
 } from '@napplet/nap/link';
+// LISTS NAP (runtime-mediated NIP-51 list mutations)
+export type {
+  ListErrorCode,
+  ListItem,
+  ListItemType,
+  ListItemVisibility,
+  ListMutationResult,
+  ListOptions,
+  ListRef,
+  ListSupport,
+  ListsMessage,
+  ListsSupportedMessage,
+  ListsSupportedResultMessage,
+  ListsAddMessage,
+  ListsAddResultMessage,
+  ListsRemoveMessage,
+  ListsRemoveResultMessage,
+  ListsOutboundMessage,
+  ListsInboundMessage,
+  ListsNapMessage,
+} from '@napplet/nap/lists';
 // SERIAL NAP (runtime-mediated serial device access)
 export type {
   SerialState,

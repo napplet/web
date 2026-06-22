@@ -1,6 +1,6 @@
 /**
- * @napplet/sdk -- ContextVM bridge, outbox routing, upload, intent, WebRTC,
- * link, and serial wrapper objects.
+ * @napplet/sdk -- ContextVM bridge, outbox routing, upload, intent, and WebRTC
+ * wrapper objects.
  *
  * @packageDocumentation
  */
@@ -35,11 +35,6 @@ import type {
   WebrtcOpenRequest,
   WebrtcOpenResult,
   WebrtcEvent,
-  LinkOpenOptions,
-  LinkOpenResult,
-  SerialEvent,
-  SerialOpenRequest,
-  SerialOpenResult,
 } from '@napplet/core';
 import { requireNapplet } from './require-napplet.js';
 
@@ -377,83 +372,5 @@ export const webrtc = {
    */
   onEvent(handler: (event: WebrtcEvent) => void): Subscription {
     return requireNapplet().webrtc.onEvent(handler);
-  },
-};
-
-/**
- * Shell-mediated link opening (NAP-LINK): ask the shell to open an external URL
- * for user-visible navigation. The shell owns prompting, policy, opener
- * isolation, and browser context.
- *
- * @example
- * ```ts
- * import { link } from '@napplet/sdk';
- *
- * const result = await link.open('https://example.com/post/123', { label: 'Read post' });
- * ```
- */
-export const link = {
-  /**
-   * Request that the shell open an external URL for the user.
-   * @param url      Absolute URL to open
-   * @param options  Optional prompt/display hints
-   * @returns Promise resolving to the shell's open/deny status
-   */
-  open(url: string, options?: LinkOpenOptions): Promise<LinkOpenResult> {
-    return requireNapplet().link.open(url, options);
-  },
-};
-
-/**
- * Runtime-mediated serial device access (NAP-SERIAL): ask the shell to select
- * and open a user-approved serial session, write byte arrays to that session,
- * and receive shell-pushed state/data/close events. The shell owns raw port
- * handles, streams, OS paths, permissions, read loops, and lifecycle policy.
- *
- * @example
- * ```ts
- * import { serial } from '@napplet/sdk';
- *
- * const { session } = await serial.open({ options: { baudRate: 115200 } });
- * await serial.write(session.id, [112, 105, 110, 103, 10]);
- * ```
- */
-export const serial = {
-  /**
-   * Ask the runtime to select and open a serial session.
-   * @param request  Filters, options, and optional chooser label
-   * @returns Promise resolving to the runtime-assigned serial open result
-   */
-  open(request: SerialOpenRequest): Promise<SerialOpenResult> {
-    return requireNapplet().serial.open(request);
-  },
-
-  /**
-   * Write bytes to an open serial session.
-   * @param sessionId  Runtime-assigned serial session id
-   * @param data       Byte values to write
-   * @returns Promise resolving after the runtime acknowledges the write
-   */
-  write(sessionId: string, data: Uint8Array | number[]): Promise<void> {
-    return requireNapplet().serial.write(sessionId, data);
-  },
-
-  /**
-   * Close an open serial session.
-   * @param sessionId  Runtime-assigned serial session id
-   * @param reason     Optional reason for the close request
-   * @returns Promise resolving after the runtime acknowledges the close
-   */
-  close(sessionId: string, reason?: string): Promise<void> {
-    return requireNapplet().serial.close(sessionId, reason);
-  },
-
-  /**
-   * Register for shell-pushed serial events.
-   * @param handler  Called with each serial event
-   * @returns A Subscription with `close()` to stop listening
-   */
-  onEvent(handler: (event: SerialEvent) => void): Subscription {
-    return requireNapplet().serial.onEvent(handler);
   },
 };
