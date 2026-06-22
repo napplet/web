@@ -36,7 +36,7 @@ Map each feature to the NAP domain that provides it. Use only domains the shell 
 | Playback / now-playing | `media` |
 | Notifications + badge | `notify` |
 
-Other domains exist (`cvm`, `outbox`, `upload`, `intent`) — consult NIP-5D / NAPs before relying on them. Every NAP is **voluntary**: assume a domain may be absent and degrade gracefully.
+Other domains exist (`cvm`, `outbox`, `upload`, `intent`, `pow`) — consult NIP-5D / NAPs before relying on them. Every NAP is **voluntary**: assume a domain may be absent and degrade gracefully.
 
 ## Step 2 — Declare requirements vs. optional
 

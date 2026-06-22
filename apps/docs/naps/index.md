@@ -197,12 +197,25 @@ if (window.napplet.shell.supports('intent')) {
 }
 ```
 
+### pow
+
+Shell-mediated NIP-13 proof-of-work mining jobs. The shell owns CPU scheduling,
+identity stamping, signing, publishing, consent, and policy.
+
+```ts
+if (window.napplet.shell.supports('pow')) {
+  const job = window.napplet.pow.mine({ kind: 1, content: 'gm', tags: [] }, 21);
+  job.on('progress', (p) => console.log(window.napplet.pow.formatHashRate(p.hashRate)));
+  const result = await job.completed;
+}
+```
+
 ## Core domain union
 
 [`@napplet/core`](/packages/core) exports a `NapDomain` string union for the
 foundational domains — `relay`, `identity`, `storage`, `inc`, `theme`,
 `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`,
-`upload`, `intent` — used as the discriminant for envelope routing and
+`upload`, `intent`, `pow` — used as the discriminant for envelope routing and
 `shell.supports()`.
 
 ## Where to go next

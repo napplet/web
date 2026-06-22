@@ -1,4 +1,5 @@
 /**
+ * @napplet/sdk -- ContextVM bridge, outbox routing, upload, intent, and POW
  * @napplet/sdk -- ContextVM bridge, outbox routing, upload, intent, and serial
  * wrapper objects.
  *
@@ -32,6 +33,12 @@ import type {
   IntentRequest,
   IntentResult,
   IntentAvailability,
+  PowEventTemplate,
+  PowOptions,
+  PowJob,
+  PowJobSummary,
+  PowProgress,
+  PowHashrate,
   SerialEvent,
   SerialOpenRequest,
   SerialOpenResult,
@@ -320,6 +327,107 @@ export const intent = {
    */
   onChanged(handler: (availability: IntentAvailability) => void): Subscription {
     return requireNapplet().intent.onChanged(handler);
+  },
+};
+
+/**
+ * Proof-of-work mining (NAP-POW): submit shell-mediated NIP-13 mining jobs and
+ * observe/control them through a local handle. The shell owns CPU scheduling,
+ * identity stamping, signing, publishing, consent, and policy.
+ *
+ * @example
+ * ```ts
+ * import { pow } from '@napplet/sdk';
+ *
+ * const job = pow.mine({ kind: 1, content: 'gm', tags: [] }, 21);
+ * job.on('progress', (p) => console.log(pow.formatHashRate(p.hashRate)));
+ * const result = await job.completed;
+ * ```
+ */
+export const pow = {
+  /**
+   * Submit a proof-of-work mining job.
+   * @param template  Event template to mine
+   * @param target    Required leading-zero-bit difficulty
+   * @param options   Optional scheduling and timeout hints
+   * @returns A local POW job handle
+   */
+  mine(
+    template: PowEventTemplate,
+    target: number,
+    options?: PowOptions,
+  ): PowJob {
+    return requireNapplet().pow.mine(template, target, options);
+  },
+
+  /**
+   * Submit a proof-of-work mining job that the shell signs and publishes.
+   * @param template  Event template to mine and publish
+   * @param target    Required leading-zero-bit difficulty
+   * @param options   Optional scheduling and timeout hints
+   * @returns A local POW job handle
+   */
+  mineAndPublish(
+    template: PowEventTemplate,
+    target: number,
+    options?: PowOptions,
+  ): PowJob {
+    return requireNapplet().pow.mineAndPublish(template, target, options);
+  },
+
+  /**
+   * Inspect tracked POW jobs.
+   * @returns Promise resolving to queue summaries
+   */
+  queue(): Promise<PowJobSummary[]> {
+    return requireNapplet().pow.queue();
+  },
+
+  /**
+   * Get a one-shot progress snapshot for a job.
+   * @param jobId  Job id to inspect
+   */
+  job(jobId: string): Promise<PowProgress> {
+    return requireNapplet().pow.job(jobId);
+  },
+
+  /**
+   * Get live miner-wide hash-rate telemetry.
+   */
+  hashrate(): Promise<PowHashrate> {
+    return requireNapplet().pow.hashrate();
+  },
+
+  /**
+   * Cancel a POW job.
+   * @param jobId  Job id to cancel
+   */
+  cancel(jobId: string): Promise<boolean> {
+    return requireNapplet().pow.cancel(jobId);
+  },
+
+  /**
+   * Pause one job, or the whole miner when omitted.
+   * @param jobId  Optional job id to pause
+   */
+  pause(jobId?: string): Promise<void> {
+    return requireNapplet().pow.pause(jobId);
+  },
+
+  /**
+   * Resume one job, or the whole miner when omitted.
+   * @param jobId  Optional job id to resume
+   */
+  resume(jobId?: string): Promise<void> {
+    return requireNapplet().pow.resume(jobId);
+  },
+
+  /**
+   * Format raw hashes per second for display. Local helper; sends no wire message.
+   * @param hashesPerSecond  Raw H/s value
+   */
+  formatHashRate(hashesPerSecond: number): string {
+    return requireNapplet().pow.formatHashRate(hashesPerSecond);
   },
 };
 

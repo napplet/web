@@ -73,6 +73,19 @@ import {
   onChanged as intentOnChanged,
 } from '@napplet/nap/intent/shim';
 import {
+  installPowShim,
+  handlePowMessage,
+  mine as powMine,
+  mineAndPublish as powMineAndPublish,
+  queue as powQueue,
+  job as powJob,
+  hashrate as powHashrate,
+  cancel as powCancel,
+  pause as powPause,
+  resume as powResume,
+  formatHashRate as powFormatHashRate,
+} from '@napplet/nap/pow/shim';
+import {
   installSerialShim,
   handleSerialMessage,
   open as serialOpen,
@@ -159,6 +172,7 @@ const DOMAIN_ROUTERS: ReadonlyArray<readonly [string, DomainHandler]> = [
   ['outbox.', handleOutboxMessage],
   ['upload.', handleUploadMessage],
   ['intent.', handleIntentMessage],
+  ['pow.', handlePowMessage],
   ['serial.', handleSerialMessage],
   ['identity.', identityShim.handleIdentityMessage],
   ['theme.', themeShim.handleThemeMessage],
@@ -305,6 +319,17 @@ installIncShim();
     handlers: intentHandlers,
     onChanged: intentOnChanged,
   },
+  pow: {
+    mine: powMine,
+    mineAndPublish: powMineAndPublish,
+    queue: powQueue,
+    job: powJob,
+    hashrate: powHashrate,
+    cancel: powCancel,
+    pause: powPause,
+    resume: powResume,
+    formatHashRate: powFormatHashRate,
+  },
   serial: {
     open: serialOpen,
     write: serialWrite,
@@ -367,5 +392,7 @@ installUploadShim();
 // Install intent shim (intent.* request/response correlation + intent.changed listeners; no install-time work)
 installIntentShim();
 
+// Install POW shim (pow.* request/response correlation + mining job push routing; no install-time work)
+installPowShim();
 // Install serial shim (serial.* request/response correlation + serial.event listeners; no install-time work)
 installSerialShim();

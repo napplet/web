@@ -22,6 +22,14 @@ import type {
 } from '../outbox.js';
 import type { UploadRequest, UploadResult, UploadStatus } from '../upload.js';
 import type { IntentAvailability, IntentRequest, IntentResult } from '../intent.js';
+import type {
+  PowEventTemplate,
+  PowOptions,
+  PowJob,
+  PowJobSummary,
+  PowProgress,
+  PowHashrate,
+} from '../pow.js';
 import type { SerialEvent, SerialOpenRequest, SerialOpenResult } from '../serial.js';
 
 /**
@@ -252,6 +260,80 @@ export interface IntentApi {
    * @returns A Subscription with `close()` to stop listening
    */
   onChanged(handler: (availability: IntentAvailability) => void): Subscription;
+}
+
+/**
+ * NIP-13 proof-of-work mining (NAP-POW): submit a shell-mediated mining job and
+ * observe/control its lifecycle. The shell owns identity stamping, CPU
+ * scheduling, worker/thread allocation, signing, publishing, consent, and policy;
+ * napplets receive job telemetry and the mined event, never signing keys or CPU
+ * authority beyond the shell's scheduler.
+ *
+ * @example
+ * ```ts
+ * if (window.napplet.shell.supports('pow')) {
+ *   const job = window.napplet.pow.mine({ kind: 1, content: 'gm', tags: [] }, 21);
+ *   job.on('progress', (p) => renderProgress(p.bestPow, p.hashRate));
+ *   const result = await job.completed;
+ *   console.log(result.event.id);
+ * }
+ * ```
+ */
+export interface PowApi {
+  /**
+   * Submit a mining job and return a local handle immediately.
+   * @param template  Event template; shell stamps pubkey and committed created_at
+   * @param target    Required leading-zero-bit difficulty
+   * @param opts      Optional worker, priority, timeout, and timestamp hints
+   * @returns Local job handle for state/progress/done/error events
+   */
+  mine(template: PowEventTemplate, target: number, opts?: PowOptions): PowJob;
+  /**
+   * Submit a mining job that the shell signs and publishes through outbox-aware fanout.
+   * @param template  Event template; shell stamps pubkey and committed created_at
+   * @param target    Required leading-zero-bit difficulty
+   * @param opts      Optional worker, priority, timeout, and timestamp hints
+   * @returns Local job handle for state/progress/done/error events
+   */
+  mineAndPublish(template: PowEventTemplate, target: number, opts?: PowOptions): PowJob;
+  /**
+   * Inspect tracked POW jobs for this napplet.
+   * @returns Promise resolving to queue summaries ordered by shell policy
+   */
+  queue(): Promise<PowJobSummary[]>;
+  /**
+   * Get a one-shot progress snapshot for a job.
+   * @param jobId  Shell-unique job handle created by the napplet
+   * @returns Promise resolving to the current job progress
+   */
+  job(jobId: string): Promise<PowProgress>;
+  /**
+   * Get live miner-wide hash-rate telemetry.
+   * @returns Promise resolving to total/per-worker/per-job hash rates
+   */
+  hashrate(): Promise<PowHashrate>;
+  /**
+   * Cancel a queued/running/paused job and free its workers.
+   * @param jobId  Job to cancel
+   * @returns Promise resolving true when the shell cancelled a matching job
+   */
+  cancel(jobId: string): Promise<boolean>;
+  /**
+   * Pause one job, or the whole miner when omitted.
+   * @param jobId  Optional job to pause
+   */
+  pause(jobId?: string): Promise<void>;
+  /**
+   * Resume one job, or the whole miner when omitted.
+   * @param jobId  Optional job to resume
+   */
+  resume(jobId?: string): Promise<void>;
+  /**
+   * Format raw hashes/second for display. Local helper; sends no wire message.
+   * @param hashesPerSecond  Raw H/s value
+   * @returns Human-readable scaled hash rate
+   */
+  formatHashRate(hashesPerSecond: number): string;
 }
 
 /**
