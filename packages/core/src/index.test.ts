@@ -51,6 +51,7 @@ describe('@napplet/core exports', () => {
       const napDomain: NapDomain = 'identity';
       expect(NAP_DOMAINS).toContain(napDomain);
       expect(napDomain).toBe('identity');
+      expect(NAP_DOMAINS).toContain('ble');
     });
 
     it('NamespacedCapability accepts bare NAP domain shorthand', () => {
@@ -60,6 +61,7 @@ describe('@napplet/core exports', () => {
       const _inc: NamespacedCapability = 'inc';
       const _theme: NamespacedCapability = 'theme';
       const _media: NamespacedCapability = 'media';
+      const _ble: NamespacedCapability = 'ble';
       expect(true).toBe(true);
     });
 
@@ -70,6 +72,7 @@ describe('@napplet/core exports', () => {
       const _napInc: NamespacedCapability = 'nap:inc';
       const _napTheme: NamespacedCapability = 'nap:theme';
       const _napMedia: NamespacedCapability = 'nap:media';
+      const _napBle: NamespacedCapability = 'nap:ble';
       expect(true).toBe(true);
     });
 

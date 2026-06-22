@@ -3,7 +3,7 @@
  *
  * The NAP message types are TypeScript-only at the source. To conformance-test a
  * napplet we need to validate, at runtime, every postMessage envelope the napplet
- * emits against the protocol. This module hand-encodes the wire surface of the 14
+ * emits against the protocol. This module hand-encodes the wire surface of the 15
  * optional NAP domains plus the foundational `shell` domain (NAP-SHELL) as a
  * single source-of-truth map ({@link ENVELOPE_SPECS}) and exposes
  * {@link validateEnvelope}.
@@ -49,7 +49,7 @@ const ID = { id: 'string' } as const;
 
 /**
  * The complete napplet wire surface: every `domain.action` discriminant across the
- * 14 optional NAP domains plus the foundational `shell` domain (NAP-SHELL), with
+ * 15 optional NAP domains plus the foundational `shell` domain (NAP-SHELL), with
  * its direction and (for outbound) required fields.
  */
 export const ENVELOPE_SPECS: Record<string, EnvelopeSpec> = {
@@ -211,6 +211,23 @@ export const ENVELOPE_SPECS: Record<string, EnvelopeSpec> = {
   'intent.available.result': { dir: 'in' },
   'intent.handlers.result': { dir: 'in' },
   'intent.changed': { dir: 'in' },
+
+  // ── ble ───────────────────────────────────────────────────────────────────
+  'ble.open': { dir: 'out', fields: { ...ID, request: 'object' } },
+  'ble.services': { dir: 'out', fields: { ...ID, sessionId: 'string' } },
+  'ble.read': { dir: 'out', fields: { ...ID, sessionId: 'string', target: 'object' } },
+  'ble.write': { dir: 'out', fields: { ...ID, sessionId: 'string', target: 'object', data: 'array' } },
+  'ble.subscribe': { dir: 'out', fields: { ...ID, sessionId: 'string', target: 'object' } },
+  'ble.unsubscribe': { dir: 'out', fields: { ...ID, sessionId: 'string', target: 'object' } },
+  'ble.close': { dir: 'out', fields: { ...ID, sessionId: 'string' } },
+  'ble.open.result': { dir: 'in' },
+  'ble.services.result': { dir: 'in' },
+  'ble.read.result': { dir: 'in' },
+  'ble.write.result': { dir: 'in' },
+  'ble.subscribe.result': { dir: 'in' },
+  'ble.unsubscribe.result': { dir: 'in' },
+  'ble.close.result': { dir: 'in' },
+  'ble.event': { dir: 'in' },
 };
 
 /** A single problem found while validating an envelope. */

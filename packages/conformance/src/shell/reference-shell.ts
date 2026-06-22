@@ -162,6 +162,23 @@ const RESPONDERS: Record<string, Responder> = {
   'intent.invoke': (e) => ok({ type: 'intent.invoke.result', id: e.id, result: {} }),
   'intent.available': (e) => ok({ type: 'intent.available.result', id: e.id, availability: {} }),
   'intent.handlers': (e) => ok({ type: 'intent.handlers.result', id: e.id, handlers: [] }),
+
+  // ble
+  'ble.open': (e) => ok({
+    type: 'ble.open.result',
+    id: e.id,
+    session: {
+      id: 'ble-reference',
+      state: 'open',
+      device: { id: 'reference-device', name: 'Reference BLE' },
+    },
+  }),
+  'ble.services': (e) => ok({ type: 'ble.services.result', id: e.id, services: [] }),
+  'ble.read': (e) => ok({ type: 'ble.read.result', id: e.id, data: [] }),
+  'ble.write': (e) => ok({ type: 'ble.write.result', id: e.id }),
+  'ble.subscribe': (e) => ok({ type: 'ble.subscribe.result', id: e.id }),
+  'ble.unsubscribe': (e) => ok({ type: 'ble.unsubscribe.result', id: e.id }),
+  'ble.close': (e) => ok({ type: 'ble.close.result', id: e.id }),
 };
 
 /** A reference shell instance. */

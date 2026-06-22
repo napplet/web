@@ -72,6 +72,18 @@ import {
   handlers as intentHandlers,
   onChanged as intentOnChanged,
 } from '@napplet/nap/intent/shim';
+import {
+  installBleShim,
+  handleBleMessage,
+  open as bleOpen,
+  services as bleServices,
+  read as bleRead,
+  write as bleWrite,
+  subscribe as bleSubscribe,
+  unsubscribe as bleUnsubscribe,
+  close as bleClose,
+  onEvent as bleOnEvent,
+} from '@napplet/nap/ble/shim';
 import { sendEnvelope } from '@napplet/core';
 import type { NappletGlobal, NappletShell, ShellEnvironment, ShellInitMessage } from '@napplet/core';
 import { createShellEnvironment, makeSupports, defaultSupports } from '@napplet/nap/shell/shim';
@@ -151,6 +163,7 @@ const DOMAIN_ROUTERS: ReadonlyArray<readonly [string, DomainHandler]> = [
   ['outbox.', handleOutboxMessage],
   ['upload.', handleUploadMessage],
   ['intent.', handleIntentMessage],
+  ['ble.', handleBleMessage],
   ['identity.', identityShim.handleIdentityMessage],
   ['theme.', themeShim.handleThemeMessage],
   ['config.', handleConfigMessage],
@@ -296,6 +309,16 @@ installIncShim();
     handlers: intentHandlers,
     onChanged: intentOnChanged,
   },
+  ble: {
+    open: bleOpen,
+    services: bleServices,
+    read: bleRead,
+    write: bleWrite,
+    subscribe: bleSubscribe,
+    unsubscribe: bleUnsubscribe,
+    close: bleClose,
+    onEvent: bleOnEvent,
+  },
   shell: {
     supports: defaultSupports,
     services: [],
@@ -351,3 +374,6 @@ installUploadShim();
 
 // Install intent shim (intent.* request/response correlation + intent.changed listeners; no install-time work)
 installIntentShim();
+
+// Install BLE shim (ble.* request/response correlation + ble.event listeners; no install-time work)
+installBleShim();

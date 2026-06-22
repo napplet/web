@@ -10,6 +10,7 @@ import type {
   ResourceApi,
 } from './global/runtime-api.js';
 import type { CvmApi, OutboxApi, UploadApi, IntentApi } from './global/service-api.js';
+import type { BleApi } from './ble.js';
 
 /**
  * The window.napplet global installed at runtime by @napplet/shim.
@@ -267,8 +268,13 @@ export interface NappletGlobal {
    *   if (available) await window.napplet.intent.open('note', { target: { type: 'event', id } });
    * }
    * ```
-   */
+  */
   intent: IntentApi;
+  /**
+   * Runtime-mediated BLE/GATT sessions. The shell owns chooser UI, permission,
+   * backend handles, GATT lifecycle, notification wiring, and policy.
+   */
+  ble: BleApi;
   /**
    * NAP-SHELL: the foundational, mandatory bootstrap handshake surface.
    *

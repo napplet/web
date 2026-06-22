@@ -38,7 +38,7 @@ export interface NappletMessage {
 }
 
 /**
- * String literal union of the fourteen NAP (Nostr Applet Protocol) domains.
+ * String literal union of the fifteen NAP (Nostr Applet Protocol) domains.
  * Each domain corresponds to a capability namespace that a shell may support.
  *
  * | Domain     | Scope                                              |
@@ -53,6 +53,7 @@ export interface NappletMessage {
  * | `notify`   | Shell-rendered notifications                       |
  * | `config`   | Per-napplet declarative configuration              |
  * | `resource` | Byte-fetching primitive (URL → Blob)               |
+ * | `ble`      | Runtime-mediated BLE/GATT sessions                 |
  *
  * @example
  * ```ts
@@ -60,7 +61,7 @@ export interface NappletMessage {
  * const isValid = NAP_DOMAINS.includes(domain); // true
  * ```
  */
-export type NapDomain = 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'cvm' | 'outbox' | 'upload' | 'intent';
+export type NapDomain = 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'cvm' | 'outbox' | 'upload' | 'intent' | 'ble';
 
 /**
  * Runtime-accessible constant array of all NAP domain names.
@@ -73,7 +74,7 @@ export type NapDomain = 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'ke
  * }
  * ```
  */
-export const NAP_DOMAINS: readonly NapDomain[] = ['relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent'] as const;
+export const NAP_DOMAINS: readonly NapDomain[] = ['relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent', 'ble'] as const;
 
 /**
  * Namespaced capability string for {@link ShellSupports.supports}.

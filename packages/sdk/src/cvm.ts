@@ -32,6 +32,12 @@ import type {
   IntentRequest,
   IntentResult,
   IntentAvailability,
+  BleOpenRequest,
+  BleOpenResult,
+  BleService,
+  BleAttribute,
+  BleWriteOptions,
+  BleEvent,
 } from '@napplet/core';
 import { requireNapplet } from './require-napplet.js';
 
@@ -317,5 +323,100 @@ export const intent = {
    */
   onChanged(handler: (availability: IntentAvailability) => void): Subscription {
     return requireNapplet().intent.onChanged(handler);
+  },
+};
+
+/**
+ * Runtime-mediated BLE/GATT sessions (NAP-BLE). The shell owns chooser UI,
+ * device permission, backend handles, GATT lifecycle, notification wiring, and
+ * policy; napplets address only shell-scoped session ids.
+ *
+ * @example
+ * ```ts
+ * import { ble } from '@napplet/sdk';
+ *
+ * const { session } = await ble.open({ acceptAllDevices: true });
+ * const services = await ble.services(session.id);
+ * ```
+ */
+export const ble = {
+  /**
+   * Open a runtime-owned BLE session.
+   * @param request  Device selection and optional service request
+   * @returns Promise resolving to the opened session result
+   */
+  open(request: BleOpenRequest): Promise<BleOpenResult> {
+    return requireNapplet().ble.open(request);
+  },
+
+  /**
+   * List exposed GATT services for a session.
+   * @param sessionId  BLE session id
+   * @returns Promise resolving to exposed services
+   */
+  services(sessionId: string): Promise<BleService[]> {
+    return requireNapplet().ble.services(sessionId);
+  },
+
+  /**
+   * Read a characteristic or descriptor value.
+   * @param sessionId  BLE session id
+   * @param target     GATT attribute target
+   * @returns Promise resolving to bytes
+   */
+  read(sessionId: string, target: BleAttribute): Promise<number[]> {
+    return requireNapplet().ble.read(sessionId, target);
+  },
+
+  /**
+   * Write bytes to a characteristic or descriptor.
+   * @param sessionId  BLE session id
+   * @param target     GATT attribute target
+   * @param data       Byte array
+   * @param options    Write mode preference
+   */
+  write(
+    sessionId: string,
+    target: BleAttribute,
+    data: number[],
+    options?: BleWriteOptions,
+  ): Promise<void> {
+    return requireNapplet().ble.write(sessionId, target, data, options);
+  },
+
+  /**
+   * Start notifications or indications for a characteristic.
+   * @param sessionId  BLE session id
+   * @param target     Characteristic target
+   */
+  subscribe(sessionId: string, target: BleAttribute): Promise<void> {
+    return requireNapplet().ble.subscribe(sessionId, target);
+  },
+
+  /**
+   * Stop notifications or indications for a characteristic.
+   * @param sessionId  BLE session id
+   * @param target     Characteristic target
+   */
+  unsubscribe(sessionId: string, target: BleAttribute): Promise<void> {
+    return requireNapplet().ble.unsubscribe(sessionId, target);
+  },
+
+  /**
+   * Close a BLE session.
+   * @param sessionId  BLE session id
+   * @param reason     Optional close reason
+   */
+  close(sessionId: string, reason?: string): Promise<void> {
+    return requireNapplet().ble.close(sessionId, reason);
+  },
+
+  /**
+   * Subscribe to runtime-pushed BLE events.
+   * @param handler  Event handler
+   * @returns Subscription handle
+   */
+  onEvent(handler: (event: BleEvent) => void): Subscription {
+    return requireNapplet().ble.onEvent(handler);
   },
 };
