@@ -66,7 +66,11 @@
     "./intent": "./src/intent/index.ts",
     "./intent/types": "./src/intent/types.ts",
     "./intent/shim": "./src/intent/shim.ts",
-    "./intent/sdk": "./src/intent/sdk.ts"
+    "./intent/sdk": "./src/intent/sdk.ts",
+    "./webrtc": "./src/webrtc/index.ts",
+    "./webrtc/types": "./src/webrtc/types.ts",
+    "./webrtc/shim": "./src/webrtc/shim.ts",
+    "./webrtc/sdk": "./src/webrtc/sdk.ts"
   },
   "imports": {
     "@napplet/core": "jsr:@napplet/core@^0.15.0"

@@ -10,6 +10,7 @@ import type {
   ResourceApi,
 } from './global/runtime-api.js';
 import type { CvmApi, OutboxApi, UploadApi, IntentApi } from './global/service-api.js';
+import type { WebrtcApi } from './webrtc.js';
 
 /**
  * The window.napplet global installed at runtime by @napplet/shim.
@@ -267,8 +268,13 @@ export interface NappletGlobal {
    *   if (available) await window.napplet.intent.open('note', { target: { type: 'event', id } });
    * }
    * ```
-   */
+  */
   intent: IntentApi;
+  /**
+   * Runtime-mediated WebRTC sessions. The shell owns signaling transport,
+   * signing/encryption, SDP, ICE, and RTCPeerConnection lifecycle.
+   */
+  webrtc: WebrtcApi;
   /**
    * NAP-SHELL: the foundational, mandatory bootstrap handshake surface.
    *

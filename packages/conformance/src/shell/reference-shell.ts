@@ -162,6 +162,20 @@ const RESPONDERS: Record<string, Responder> = {
   'intent.invoke': (e) => ok({ type: 'intent.invoke.result', id: e.id, result: {} }),
   'intent.available': (e) => ok({ type: 'intent.available.result', id: e.id, availability: {} }),
   'intent.handlers': (e) => ok({ type: 'intent.handlers.result', id: e.id, handlers: [] }),
+
+  // webrtc
+  'webrtc.open': (e) => ok({
+    type: 'webrtc.open.result',
+    id: e.id,
+    session: {
+      id: 'webrtc-reference',
+      scope: { type: 'direct', pubkey: REFERENCE_PUBKEY },
+      channel: 'default',
+      state: 'connecting',
+    },
+  }),
+  'webrtc.send': (e) => ok({ type: 'webrtc.send.result', id: e.id }),
+  'webrtc.close': (e) => ok({ type: 'webrtc.close.result', id: e.id }),
 };
 
 /** A reference shell instance. */

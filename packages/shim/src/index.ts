@@ -72,6 +72,14 @@ import {
   handlers as intentHandlers,
   onChanged as intentOnChanged,
 } from '@napplet/nap/intent/shim';
+import {
+  installWebrtcShim,
+  handleWebrtcMessage,
+  open as webrtcOpen,
+  send as webrtcSend,
+  close as webrtcClose,
+  onEvent as webrtcOnEvent,
+} from '@napplet/nap/webrtc/shim';
 import { sendEnvelope } from '@napplet/core';
 import type { NappletGlobal, NappletShell, ShellEnvironment, ShellInitMessage } from '@napplet/core';
 import { createShellEnvironment, makeSupports, defaultSupports } from '@napplet/nap/shell/shim';
@@ -151,6 +159,7 @@ const DOMAIN_ROUTERS: ReadonlyArray<readonly [string, DomainHandler]> = [
   ['outbox.', handleOutboxMessage],
   ['upload.', handleUploadMessage],
   ['intent.', handleIntentMessage],
+  ['webrtc.', handleWebrtcMessage],
   ['identity.', identityShim.handleIdentityMessage],
   ['theme.', themeShim.handleThemeMessage],
   ['config.', handleConfigMessage],
@@ -296,6 +305,12 @@ installIncShim();
     handlers: intentHandlers,
     onChanged: intentOnChanged,
   },
+  webrtc: {
+    open: webrtcOpen,
+    send: webrtcSend,
+    close: webrtcClose,
+    onEvent: webrtcOnEvent,
+  },
   shell: {
     supports: defaultSupports,
     services: [],
@@ -351,3 +366,6 @@ installUploadShim();
 
 // Install intent shim (intent.* request/response correlation + intent.changed listeners; no install-time work)
 installIntentShim();
+
+// Install WebRTC shim (webrtc.* request/response correlation + webrtc.event listeners; no install-time work)
+installWebrtcShim();
