@@ -50,6 +50,7 @@ const ID = { id: 'string' } as const;
 /**
  * The complete napplet wire surface: every `domain.action` discriminant across the
  * 15 optional NAP domains plus the foundational `shell` domain (NAP-SHELL), with
+ * optional NAP domains plus the foundational `shell` domain (NAP-SHELL), with
  * its direction and (for outbound) required fields.
  */
 export const ENVELOPE_SPECS: Record<string, EnvelopeSpec> = {
@@ -228,6 +229,14 @@ export const ENVELOPE_SPECS: Record<string, EnvelopeSpec> = {
   'ble.unsubscribe.result': { dir: 'in' },
   'ble.close.result': { dir: 'in' },
   'ble.event': { dir: 'in' },
+  // ── serial ───────────────────────────────────────────────────────────────
+  'serial.open': { dir: 'out', fields: { ...ID, request: 'object' } },
+  'serial.write': { dir: 'out', fields: { ...ID, sessionId: 'string', data: 'array' } },
+  'serial.close': { dir: 'out', fields: { ...ID, sessionId: 'string' } },
+  'serial.open.result': { dir: 'in' },
+  'serial.write.result': { dir: 'in' },
+  'serial.close.result': { dir: 'in' },
+  'serial.event': { dir: 'in' },
 };
 
 /** A single problem found while validating an envelope. */

@@ -84,6 +84,14 @@ import {
   close as bleClose,
   onEvent as bleOnEvent,
 } from '@napplet/nap/ble/shim';
+import {
+  installSerialShim,
+  handleSerialMessage,
+  open as serialOpen,
+  write as serialWrite,
+  close as serialClose,
+  onEvent as serialOnEvent,
+} from '@napplet/nap/serial/shim';
 import { sendEnvelope } from '@napplet/core';
 import type { NappletGlobal, NappletShell, ShellEnvironment, ShellInitMessage } from '@napplet/core';
 import { createShellEnvironment, makeSupports, defaultSupports } from '@napplet/nap/shell/shim';
@@ -164,6 +172,7 @@ const DOMAIN_ROUTERS: ReadonlyArray<readonly [string, DomainHandler]> = [
   ['upload.', handleUploadMessage],
   ['intent.', handleIntentMessage],
   ['ble.', handleBleMessage],
+  ['serial.', handleSerialMessage],
   ['identity.', identityShim.handleIdentityMessage],
   ['theme.', themeShim.handleThemeMessage],
   ['config.', handleConfigMessage],
@@ -319,6 +328,12 @@ installIncShim();
     close: bleClose,
     onEvent: bleOnEvent,
   },
+  serial: {
+    open: serialOpen,
+    write: serialWrite,
+    close: serialClose,
+    onEvent: serialOnEvent,
+  },
   shell: {
     supports: defaultSupports,
     services: [],
@@ -377,3 +392,5 @@ installIntentShim();
 
 // Install BLE shim (ble.* request/response correlation + ble.event listeners; no install-time work)
 installBleShim();
+// Install serial shim (serial.* request/response correlation + serial.event listeners; no install-time work)
+installSerialShim();

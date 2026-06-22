@@ -9,8 +9,8 @@ import type {
   ConfigApi,
   ResourceApi,
 } from './global/runtime-api.js';
-import type { CvmApi, OutboxApi, UploadApi, IntentApi } from './global/service-api.js';
 import type { BleApi } from './ble.js';
+import type { CvmApi, OutboxApi, UploadApi, IntentApi, SerialApi } from './global/service-api.js';
 
 /**
  * The window.napplet global installed at runtime by @napplet/shim.
@@ -273,8 +273,23 @@ export interface NappletGlobal {
   /**
    * Runtime-mediated BLE/GATT sessions. The shell owns chooser UI, permission,
    * backend handles, GATT lifecycle, notification wiring, and policy.
-   */
+  */
   ble: BleApi;
+  /**
+   * Runtime-mediated serial device access (NAP-SERIAL): the napplet asks the
+   * shell to select and open a user-approved serial session, writes byte arrays,
+   * and receives shell-pushed state/data/close events. The shell owns raw port
+   * handles, streams, OS paths, permissions, read loops, and lifecycle policy.
+   *
+   * @example
+   * ```ts
+   * if (window.napplet.shell.supports('serial')) {
+   *   const { session } = await window.napplet.serial.open({ options: { baudRate: 115200 } });
+   *   await window.napplet.serial.write(session.id, [112, 105, 110, 103, 10]);
+   * }
+   * ```
+   */
+  serial: SerialApi;
   /**
    * NAP-SHELL: the foundational, mandatory bootstrap handshake surface.
    *

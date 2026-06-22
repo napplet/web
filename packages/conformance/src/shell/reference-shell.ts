@@ -179,6 +179,10 @@ const RESPONDERS: Record<string, Responder> = {
   'ble.subscribe': (e) => ok({ type: 'ble.subscribe.result', id: e.id }),
   'ble.unsubscribe': (e) => ok({ type: 'ble.unsubscribe.result', id: e.id }),
   'ble.close': (e) => ok({ type: 'ble.close.result', id: e.id }),
+  // serial
+  'serial.open': (e) => ok({ type: 'serial.open.result', id: e.id, session: { id: `serial-${String(e.id)}`, state: 'open' } }),
+  'serial.write': (e) => ok({ type: 'serial.write.result', id: e.id }),
+  'serial.close': (e) => ok({ type: 'serial.close.result', id: e.id }),
 };
 
 /** A reference shell instance. */

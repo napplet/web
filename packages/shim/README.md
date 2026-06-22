@@ -13,6 +13,7 @@
 1. Import `@napplet/shim` in your napplet's entry point (side-effect only -- no named exports)
 2. The shim registers with the shell via postMessage -- the shell assigns identity based on the iframe's `message.source` Window reference
 3. Once registered, `window.napplet` is populated with relay, inc, storage, keys, media, notify, identity, config, resource, cvm, outbox, upload, intent, ble, and shell sub-objects
+3. Once registered, `window.napplet` is populated with relay, inc, storage, keys, media, notify, identity, config, resource, cvm, outbox, upload, intent, serial, and shell sub-objects
 4. No `window.nostr` is installed -- signing and encryption are mediated by the shell via `relay.publish()` and `relay.publishEncrypted()`
 
 ### Installation
@@ -115,6 +116,12 @@ imgEl.src = handle.url;
 // Open a shell-mediated BLE session
 const { session } = await window.napplet.ble.open({ acceptAllDevices: true });
 const services = await window.napplet.ble.services(session.id);
+// Open a shell-mediated serial session
+const serialSession = await window.napplet.serial.open({ options: { baudRate: 115200 } });
+await window.napplet.serial.write(serialSession.id, [112, 105, 110, 103, 10]);
+const serialSub = window.napplet.serial.onEvent((event) => {
+  console.log('serial event', event);
+});
 
 // Clean up
 sub.close();
@@ -124,6 +131,7 @@ keySub.close();
 mediaSub.close();
 notifySub.close();
 configSub.close();
+serialSub.close();
 ```
 
 ## Wire Format
@@ -191,6 +199,10 @@ The wire payloads are unchanged plain envelopes:
 
 { type: 'resource.bytes', id: string, url: string }
 { type: 'resource.cancel', id: string }
+
+{ type: 'serial.open', id: string, request: object }
+{ type: 'serial.write', id: string, sessionId: string, data: number[] }
+{ type: 'serial.close', id: string, sessionId: string, reason?: string }
 ```
 
 ### Inbound (shell → napplet)

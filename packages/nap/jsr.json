@@ -70,7 +70,11 @@
     "./ble": "./src/ble/index.ts",
     "./ble/types": "./src/ble/types.ts",
     "./ble/shim": "./src/ble/shim.ts",
-    "./ble/sdk": "./src/ble/sdk.ts"
+    "./ble/sdk": "./src/ble/sdk.ts",
+    "./serial": "./src/serial/index.ts",
+    "./serial/types": "./src/serial/types.ts",
+    "./serial/shim": "./src/serial/shim.ts",
+    "./serial/sdk": "./src/serial/sdk.ts"
   },
   "imports": {
     "@napplet/core": "jsr:@napplet/core@^0.15.0"

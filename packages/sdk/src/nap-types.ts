@@ -384,3 +384,25 @@ export type {
   BleInboundMessage,
   BleNapMessage,
 } from '@napplet/nap/ble';
+// SERIAL NAP (runtime-mediated serial device access)
+export type {
+  SerialState,
+  SerialPortFilter,
+  SerialOpenOptions,
+  SerialOpenRequest,
+  SerialPortInfo,
+  SerialSession,
+  SerialOpenResult,
+  SerialEvent,
+  SerialMessage,
+  SerialOpenMessage,
+  SerialOpenResultMessage,
+  SerialWriteMessage,
+  SerialWriteResultMessage,
+  SerialCloseMessage,
+  SerialCloseResultMessage,
+  SerialEventMessage,
+  SerialOutboundMessage,
+  SerialInboundMessage,
+  SerialNapMessage,
+} from '@napplet/nap/serial';
