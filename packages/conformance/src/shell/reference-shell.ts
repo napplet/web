@@ -162,6 +162,9 @@ const RESPONDERS: Record<string, Responder> = {
   'intent.invoke': (e) => ok({ type: 'intent.invoke.result', id: e.id, result: {} }),
   'intent.available': (e) => ok({ type: 'intent.available.result', id: e.id, availability: {} }),
   'intent.handlers': (e) => ok({ type: 'intent.handlers.result', id: e.id, handlers: [] }),
+
+  // link
+  'link.open': (e) => ok({ type: 'link.open.result', id: e.id, status: 'opened' }),
 };
 
 /** A reference shell instance. */

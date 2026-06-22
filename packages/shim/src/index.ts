@@ -72,6 +72,11 @@ import {
   handlers as intentHandlers,
   onChanged as intentOnChanged,
 } from '@napplet/nap/intent/shim';
+import {
+  installLinkShim,
+  handleLinkMessage,
+  open as linkOpen,
+} from '@napplet/nap/link/shim';
 import { sendEnvelope } from '@napplet/core';
 import type { NappletGlobal, NappletShell, ShellEnvironment, ShellInitMessage } from '@napplet/core';
 import { createShellEnvironment, makeSupports, defaultSupports } from '@napplet/nap/shell/shim';
@@ -151,6 +156,7 @@ const DOMAIN_ROUTERS: ReadonlyArray<readonly [string, DomainHandler]> = [
   ['outbox.', handleOutboxMessage],
   ['upload.', handleUploadMessage],
   ['intent.', handleIntentMessage],
+  ['link.', handleLinkMessage],
   ['identity.', identityShim.handleIdentityMessage],
   ['theme.', themeShim.handleThemeMessage],
   ['config.', handleConfigMessage],
@@ -296,6 +302,9 @@ installIncShim();
     handlers: intentHandlers,
     onChanged: intentOnChanged,
   },
+  link: {
+    open: linkOpen,
+  },
   shell: {
     supports: defaultSupports,
     services: [],
@@ -351,3 +360,6 @@ installUploadShim();
 
 // Install intent shim (intent.* request/response correlation + intent.changed listeners; no install-time work)
 installIntentShim();
+
+// Install link shim (link.open request/response correlation; no install-time work)
+installLinkShim();
