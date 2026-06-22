@@ -3,8 +3,8 @@
 > Every active napplet NAP domain as layered subpath exports. The package name remains
 > `@napplet/nap` for compatibility.
 
-`@napplet/nap` ships every NAP domain (relay, storage, inc, keys, theme, media,
-notify, identity, config, resource, cvm, outbox, upload, intent)
+`@napplet/nap` ships every active NAP domain (relay, storage, inc, keys, theme,
+media, notify, identity, config, resource, cvm, outbox, upload, intent, system)
 as independent, tree-shakable subpaths. It sits between the shim/sdk and
 [`@napplet/core`](./core) in the dependency graph.
 
@@ -52,8 +52,8 @@ import { notifySend } from '@napplet/nap/notify/sdk';
 ## Tree-shaking contract
 
 - Published with `sideEffects: false`.
-- The `exports` map declares **60 entry points**: 15 domain barrels, 15
-  types entries, and 15 shim + 15 sdk entries.
+- The `exports` map declares **68 entry points**: 17 domain barrels, 17
+  types entries, 17 shim entries, and 17 sdk entries.
 - A bundler importing only `@napplet/nap/relay/types` produces zero bytes from
   the other domains.
 
@@ -65,6 +65,9 @@ import { notifySend } from '@napplet/nap/notify/sdk';
 - **identity** — strictly **read-only**: it exposes the shell-user pubkey and
   public identity data but never signs, encrypts, or decrypts. Take one snapshot
   with `getPublicKey()`, then subscribe to shell-pushed `identity.changed`.
+- **system** — strictly **read-only**: it exposes runtime snapshots for NAP
+  support, services, relays, storage, media, and napplet-scoped status. It does
+  not grant access to any capability it reports.
 
 See the [NAP domain reference](/naps/) for the full list with one-line purposes.
 

@@ -49,7 +49,7 @@ const ID = { id: 'string' } as const;
 
 /**
  * The complete napplet wire surface: every `domain.action` discriminant across the
- * 14 optional NAP domains plus the foundational `shell` domain (NAP-SHELL), with
+ * optional NAP domains plus the foundational `shell` domain (NAP-SHELL), with
  * its direction and (for outbound) required fields.
  */
 export const ENVELOPE_SPECS: Record<string, EnvelopeSpec> = {
@@ -211,6 +211,28 @@ export const ENVELOPE_SPECS: Record<string, EnvelopeSpec> = {
   'intent.available.result': { dir: 'in' },
   'intent.handlers.result': { dir: 'in' },
   'intent.changed': { dir: 'in' },
+
+  // ── system ───────────────────────────────────────────────────────────────
+  'system.naps': { dir: 'out', fields: { ...ID } },
+  'system.services': { dir: 'out', fields: { ...ID } },
+  'system.relays': { dir: 'out', fields: { ...ID } },
+  'system.eventCache': { dir: 'out', fields: { ...ID } },
+  'system.localStorage': { dir: 'out', fields: { ...ID } },
+  'system.indexedDb': { dir: 'out', fields: { ...ID } },
+  'system.media': { dir: 'out', fields: { ...ID } },
+  'system.nappletStorage': { dir: 'out', fields: { ...ID } },
+  'system.scopes': { dir: 'out', fields: { ...ID } },
+  'system.scope': { dir: 'out', fields: { ...ID, name: 'string' } },
+  'system.naps.result': { dir: 'in' },
+  'system.services.result': { dir: 'in' },
+  'system.relays.result': { dir: 'in' },
+  'system.eventCache.result': { dir: 'in' },
+  'system.localStorage.result': { dir: 'in' },
+  'system.indexedDb.result': { dir: 'in' },
+  'system.media.result': { dir: 'in' },
+  'system.nappletStorage.result': { dir: 'in' },
+  'system.scopes.result': { dir: 'in' },
+  'system.scope.result': { dir: 'in' },
 };
 
 /** A single problem found while validating an envelope. */

@@ -72,6 +72,20 @@ import {
   handlers as intentHandlers,
   onChanged as intentOnChanged,
 } from '@napplet/nap/intent/shim';
+import {
+  installSystemShim,
+  handleSystemMessage,
+  naps as systemNaps,
+  services as systemServices,
+  relays as systemRelays,
+  eventCache as systemEventCache,
+  localStorage as systemLocalStorage,
+  indexedDb as systemIndexedDb,
+  media as systemMedia,
+  nappletStorage as systemNappletStorage,
+  scopes as systemScopes,
+  scope as systemScope,
+} from '@napplet/nap/system/shim';
 import { sendEnvelope } from '@napplet/core';
 import type { NappletGlobal, NappletShell, ShellEnvironment, ShellInitMessage } from '@napplet/core';
 import { createShellEnvironment, makeSupports, defaultSupports } from '@napplet/nap/shell/shim';
@@ -151,6 +165,7 @@ const DOMAIN_ROUTERS: ReadonlyArray<readonly [string, DomainHandler]> = [
   ['outbox.', handleOutboxMessage],
   ['upload.', handleUploadMessage],
   ['intent.', handleIntentMessage],
+  ['system.', handleSystemMessage],
   ['identity.', identityShim.handleIdentityMessage],
   ['theme.', themeShim.handleThemeMessage],
   ['config.', handleConfigMessage],
@@ -296,6 +311,18 @@ installIncShim();
     handlers: intentHandlers,
     onChanged: intentOnChanged,
   },
+  system: {
+    naps: systemNaps,
+    services: systemServices,
+    relays: systemRelays,
+    eventCache: systemEventCache,
+    localStorage: systemLocalStorage,
+    indexedDb: systemIndexedDb,
+    media: systemMedia,
+    nappletStorage: systemNappletStorage,
+    scopes: systemScopes,
+    scope: systemScope,
+  },
   shell: {
     supports: defaultSupports,
     services: [],
@@ -351,3 +378,6 @@ installUploadShim();
 
 // Install intent shim (intent.* request/response correlation + intent.changed listeners; no install-time work)
 installIntentShim();
+
+// Install system shim (system.* request/response correlation; no install-time work)
+installSystemShim();

@@ -1,6 +1,6 @@
 # @napplet/nap
 
-> Every active napplet NAP domain (relay, storage, inc, keys, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent) as layered subpath exports. The package name remains `@napplet/nap` for compatibility.
+> Every active napplet NAP domain (relay, storage, inc, keys, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent, system) as layered subpath exports. The package name remains `@napplet/nap` for compatibility.
 
 ## Install
 
@@ -63,7 +63,7 @@ installRelayShim(nappletWindow, {
 });
 ```
 
-## 15 Domains
+## 15 Active Domains
 
 Each domain is an independent subpath. Barrel imports bundle types + shim installer + SDK helpers; granular subpaths isolate each surface.
 
@@ -73,7 +73,7 @@ Each domain is an independent subpath. Barrel imports bundle types + shim instal
 | storage | `@napplet/nap/storage` | `@napplet/nap/storage/types` | `@napplet/nap/storage/shim` | `@napplet/nap/storage/sdk` | Scoped key-value storage |
 | inc | `@napplet/nap/inc` | `@napplet/nap/inc/types` | `@napplet/nap/inc/shim` | `@napplet/nap/inc/sdk` | Inter-napplet communication (topic pub/sub) |
 | keys | `@napplet/nap/keys` | `@napplet/nap/keys/types` | `@napplet/nap/keys/shim` | `@napplet/nap/keys/sdk` | Keyboard bindings + action registration |
-| theme | `@napplet/nap/theme` | `@napplet/nap/theme/types` | — | — | Read-only shell theme access (types-only today) |
+| theme | `@napplet/nap/theme` | `@napplet/nap/theme/types` | `@napplet/nap/theme/shim` | `@napplet/nap/theme/sdk` | Read-only shell theme access (`get` + `onChanged`) |
 | media | `@napplet/nap/media` | `@napplet/nap/media/types` | `@napplet/nap/media/shim` | `@napplet/nap/media/sdk` | Ownership-aware media sessions + playback |
 | notify | `@napplet/nap/notify` | `@napplet/nap/notify/types` | `@napplet/nap/notify/shim` | `@napplet/nap/notify/sdk` | Shell-rendered notifications |
 | identity | `@napplet/nap/identity` | `@napplet/nap/identity/types` | `@napplet/nap/identity/shim` | `@napplet/nap/identity/sdk` | Read-only user queries (pubkey, metadata) |
@@ -83,6 +83,7 @@ Each domain is an independent subpath. Barrel imports bundle types + shim instal
 | outbox | `@napplet/nap/outbox` | `@napplet/nap/outbox/types` | `@napplet/nap/outbox/shim` | `@napplet/nap/outbox/sdk` | Outbox-aware relay routing — `query`/`subscribe`/`publish`/`resolveRelays`; shell owns NIP-65 relay discovery, dedup, and fanout |
 | upload | `@napplet/nap/upload` | `@napplet/nap/upload/types` | `@napplet/nap/upload/shim` | `@napplet/nap/upload/sdk` | Shell-mediated file/blob upload — `upload`/`status`/`onStatus` over NIP-96 + Blossom rails; shell signs auth, returns NIP-94 metadata |
 | intent | `@napplet/nap/intent` | `@napplet/nap/intent/types` | `@napplet/nap/intent/shim` | `@napplet/nap/intent/sdk` | Archetype intent dispatch — `invoke`/`open`/`available`/`handlers`/`onChanged`; invoke another napplet by role, shell resolves the default handler |
+| system | `@napplet/nap/system` | `@napplet/nap/system/types` | `@napplet/nap/system/shim` | `@napplet/nap/system/sdk` | Read-only runtime system information — `naps`/`services`/`relays`/`eventCache`/`scope`; shell owns aggregation and redaction |
 
 ### Deprecated IFC Compatibility
 
@@ -102,21 +103,17 @@ Each domain exposes up to three patterns (four including the barrel). Pick the s
 ## Tree-Shaking Contract
 
 - `@napplet/nap` publishes with `sideEffects: false`
-- Every subpath in the `exports` map is a discrete entry point; a bundler importing only `@napplet/nap/relay/types` produces zero bytes from the other 8 domains
+- Every subpath in the `exports` map is a discrete entry point; a bundler importing only `@napplet/nap/relay/types` produces zero bytes from the other domains
 - Verified end-to-end in Phase 121 with a minimal-consumer smoke test
 
-The `exports` map in `package.json` declares 58 entry points:
+The `exports` map in `package.json` declares 68 entry points:
 
-- 15 domain barrels (`@napplet/nap/<domain>`)
-- 15 granular types entries (`@napplet/nap/<domain>/types`)
-- 14 granular shim entries (theme omitted — see [Theme Exception](#theme-exception))
-- 14 granular sdk entries (theme omitted — see [Theme Exception](#theme-exception))
+- 17 domain barrels (`@napplet/nap/<domain>`)
+- 17 granular types entries (`@napplet/nap/<domain>/types`)
+- 17 granular shim entries (`@napplet/nap/<domain>/shim`)
+- 17 granular sdk entries (`@napplet/nap/<domain>/sdk`)
 
 Each entry maps to its own pre-built `.js` + `.d.ts` pair under `dist/<domain>/<surface>.{js,d.ts}`. No root `.` key exists, and there is no top-level `main`/`module`/`types` field — attempting `import '@napplet/nap'` fails with `ERR_PACKAGE_PATH_NOT_EXPORTED` by design.
-
-## Theme Exception
-
-Theme is types-only today — only `@napplet/nap/theme` (barrel, re-exports `./types`) and `@napplet/nap/theme/types` exist. There is no `@napplet/nap/theme/shim` or `@napplet/nap/theme/sdk` entry in the exports map. Shell-side theme handling stays in the host shell; this may change in a future milestone if a theme shim/sdk surface is added upstream.
 
 ## Resource NAP (v0.28.0)
 
