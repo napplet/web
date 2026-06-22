@@ -28,7 +28,7 @@
   "devDependencies": {
     "@napplet/nap": "workspace:*",
     "@types/node": "^22.15.0",
-    "vite": "^6.4.2",
+    "vite": "^6.4.3",
     "tsup": "^8.5.0",
     "typescript": "^5.9.3"
   },

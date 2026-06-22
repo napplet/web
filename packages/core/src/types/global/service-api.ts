@@ -235,7 +235,8 @@ export interface IntentApi {
   open(archetype: string, payload?: unknown, opts?: Omit<IntentRequest, 'archetype' | 'action' | 'payload'>): Promise<IntentResult>;
   /**
    * Whether the runtime can currently satisfy `archetype`, with candidates and
-   * the actions/protocols each supports. Sourced from the installed catalog.
+   * the actions/protocols/contracts each supports. Sourced from the installed
+   * catalog.
    * @param archetype  Role slug to check
    * @returns Promise resolving to the archetype availability
    */

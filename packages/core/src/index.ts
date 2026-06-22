@@ -76,6 +76,7 @@ export type {
   IntentHandlerPreference,
   IntentBehavior,
   IntentRequest,
+  IntentContract,
   IntentCandidate,
   IntentAvailability,
   IntentResult,
