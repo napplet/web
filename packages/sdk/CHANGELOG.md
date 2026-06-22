@@ -1,5 +1,23 @@
 # @napplet/sdk
 
+## 0.14.0
+
+### Minor Changes
+
+- 488ca0a: Add the NAP-SERIAL package surface.
+
+  This adds the `serial` NAP domain to core capability typing, exposes
+  `@napplet/nap/serial` types/shim/sdk/barrel subpaths, installs
+  `window.napplet.serial` through `@napplet/shim`, re-exports serial helpers from
+  `@napplet/sdk`, and teaches conformance validation/reference-shell handling
+  about `serial.open`, `serial.write`, `serial.close`, and `serial.event`.
+
+### Patch Changes
+
+- Updated dependencies [488ca0a]
+  - @napplet/core@0.16.0
+  - @napplet/nap@0.16.0
+
 ## 0.13.2
 
 ### Patch Changes
