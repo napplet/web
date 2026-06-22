@@ -26,6 +26,7 @@ export { DOMAIN as CVM_DOMAIN } from '@napplet/nap/cvm';
 export { DOMAIN as OUTBOX_DOMAIN } from '@napplet/nap/outbox';
 export { DOMAIN as UPLOAD_DOMAIN } from '@napplet/nap/upload';
 export { DOMAIN as INTENT_DOMAIN } from '@napplet/nap/intent';
+export { DOMAIN as POW_DOMAIN } from '@napplet/nap/pow';
 
 export { installRelayShim } from '@napplet/nap/relay';
 export { installIdentityShim } from '@napplet/nap/identity';
@@ -45,6 +46,7 @@ export { installCvmShim } from '@napplet/nap/cvm';
 export { installOutboxShim } from '@napplet/nap/outbox';
 export { installUploadShim } from '@napplet/nap/upload';
 export { installIntentShim } from '@napplet/nap/intent';
+export { installPowShim } from '@napplet/nap/pow';
 
 export { relaySubscribe, relayPublish, relayPublishEncrypted, relayQuery } from '@napplet/nap/relay';
 export {
@@ -107,3 +109,14 @@ export {
   intentHandlers,
   intentOnChanged,
 } from '@napplet/nap/intent';
+export {
+  minePow,
+  mineAndPublishPow,
+  powQueue,
+  powJob,
+  powHashrate,
+  cancelPow,
+  pausePow,
+  resumePow,
+  formatPowHashRate,
+} from '@napplet/nap/pow';

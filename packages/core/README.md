@@ -57,14 +57,14 @@ interface RelaySubscribe extends NappletMessage {
 }
 ```
 
-The `type` field domain prefix (`relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`) routes messages to the correct NAP handler via `dispatch()`.
+The `type` field domain prefix (`relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `pow`) routes messages to the correct NAP handler via `dispatch()`.
 
 #### `NapDomain`
 
 String literal union of the NAP capability domains.
 
 ```ts
-type NapDomain = 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'cvm' | 'outbox' | 'upload' | 'intent';
+type NapDomain = 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'cvm' | 'outbox' | 'upload' | 'intent' | 'pow';
 ```
 
 | Domain    | Scope                                    |
@@ -79,13 +79,14 @@ type NapDomain = 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | '
 | `notify`  | Shell-rendered notifications              |
 | `config`  | Per-napplet declarative configuration (JSON Schema-driven) |
 | `resource` | Byte-fetching primitive (URL to Blob) |
+| `pow` | NIP-13 proof-of-work mining jobs |
 
 #### `NAP_DOMAINS`
 
 Runtime constant array of all NAP domain strings. Useful for iteration and validation.
 
 ```ts
-const NAP_DOMAINS: readonly NapDomain[] = ['relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent'];
+const NAP_DOMAINS: readonly NapDomain[] = ['relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent', 'pow'];
 
 for (const domain of NAP_DOMAINS) {
   console.log(`Checking support for: ${domain}`);
@@ -375,7 +376,7 @@ import type {
 | Type | Description |
 |------|-------------|
 | `NappletMessage` | Base interface for all JSON envelope messages |
-| `NapDomain` | Union of the twelve NAP domain strings |
+| `NapDomain` | Union of the active NAP domain strings |
 | `NamespacedCapability` | Union of `NapDomain \| nap:* \| perm:*` for `supports()` |
 | `NapProtocolId` | Numbered NAP protocol id such as `NAP-01` for the optional second `supports()` argument |
 | `ShellSupports` | Interface with `supports()` capability query method |
@@ -425,7 +426,7 @@ add no protocol surface.
 `@napplet/core` is consumed by all packages in the napplet ecosystem for envelope types and NAP dispatch.
 
 - **In this repo:** `@napplet/shim`, `@napplet/sdk`, and `@napplet/vite-plugin` import `NappletMessage`, `NapDomain`, `ShellSupports`, and all shared protocol types from `@napplet/core`.
-- **`@napplet/nap` domain modules** (`@napplet/nap/relay`, `@napplet/nap/identity`, `@napplet/nap/storage`, `@napplet/nap/inc`, `@napplet/nap/keys`, `@napplet/nap/media`, `@napplet/nap/notify`, `@napplet/nap/config`): extend `NappletMessage` for their domain-specific message types and call `registerNap` at import time. (The `@napplet/nap/theme` barrel is types-only — no `registerNap` side effect.)
+- **`@napplet/nap` domain modules** (`@napplet/nap/relay`, `@napplet/nap/identity`, `@napplet/nap/storage`, `@napplet/nap/inc`, `@napplet/nap/keys`, `@napplet/nap/media`, `@napplet/nap/notify`, `@napplet/nap/config`, `@napplet/nap/resource`, `@napplet/nap/cvm`, `@napplet/nap/outbox`, `@napplet/nap/upload`, `@napplet/nap/intent`, `@napplet/nap/pow`): extend `NappletMessage` for their domain-specific message types and call `registerNap` at import time.
 
 ## Protocol Reference
 

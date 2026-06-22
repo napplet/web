@@ -49,7 +49,7 @@ const ID = { id: 'string' } as const;
 
 /**
  * The complete napplet wire surface: every `domain.action` discriminant across the
- * 14 optional NAP domains plus the foundational `shell` domain (NAP-SHELL), with
+ * 15 optional NAP domains plus the foundational `shell` domain (NAP-SHELL), with
  * its direction and (for outbound) required fields.
  */
 export const ENVELOPE_SPECS: Record<string, EnvelopeSpec> = {
@@ -211,6 +211,28 @@ export const ENVELOPE_SPECS: Record<string, EnvelopeSpec> = {
   'intent.available.result': { dir: 'in' },
   'intent.handlers.result': { dir: 'in' },
   'intent.changed': { dir: 'in' },
+
+  // ── pow ──────────────────────────────────────────────────────────────────
+  'pow.mine': { dir: 'out', fields: { ...ID, jobId: 'string', template: 'object', target: 'number' } },
+  'pow.mine.result': { dir: 'in' },
+  'pow.mineAndPublish': { dir: 'out', fields: { ...ID, jobId: 'string', template: 'object', target: 'number' } },
+  'pow.mineAndPublish.result': { dir: 'in' },
+  'pow.state': { dir: 'in' },
+  'pow.progress': { dir: 'in' },
+  'pow.done': { dir: 'in' },
+  'pow.error': { dir: 'in' },
+  'pow.queue': { dir: 'out', fields: { ...ID } },
+  'pow.queue.result': { dir: 'in' },
+  'pow.job': { dir: 'out', fields: { ...ID, jobId: 'string' } },
+  'pow.job.result': { dir: 'in' },
+  'pow.hashrate': { dir: 'out', fields: { ...ID } },
+  'pow.hashrate.result': { dir: 'in' },
+  'pow.cancel': { dir: 'out', fields: { ...ID, jobId: 'string' } },
+  'pow.cancel.result': { dir: 'in' },
+  'pow.pause': { dir: 'out', fields: { ...ID } },
+  'pow.pause.result': { dir: 'in' },
+  'pow.resume': { dir: 'out', fields: { ...ID } },
+  'pow.resume.result': { dir: 'in' },
 };
 
 /** A single problem found while validating an envelope. */

@@ -9,7 +9,7 @@ import type {
   ConfigApi,
   ResourceApi,
 } from './global/runtime-api.js';
-import type { CvmApi, OutboxApi, UploadApi, IntentApi } from './global/service-api.js';
+import type { CvmApi, OutboxApi, UploadApi, IntentApi, PowApi } from './global/service-api.js';
 
 /**
  * The window.napplet global installed at runtime by @napplet/shim.
@@ -269,6 +269,22 @@ export interface NappletGlobal {
    * ```
    */
   intent: IntentApi;
+  /**
+   * NIP-13 proof-of-work mining (NAP-POW): shell-mediated mining jobs with
+   * progress, queue inspection, pause/resume/cancel, and optional publish.
+   * The shell owns CPU scheduling, identity stamping, signing, publishing,
+   * consent, and policy; napplets receive a job handle and telemetry.
+   *
+   * @example
+   * ```ts
+   * if (window.napplet.shell.supports('pow')) {
+   *   const job = window.napplet.pow.mine({ kind: 1, content: 'gm', tags: [] }, 21);
+   *   job.on('progress', (p) => console.log(p.bestPow, p.hashRate));
+   *   const result = await job.completed;
+   * }
+   * ```
+   */
+  pow: PowApi;
   /**
    * NAP-SHELL: the foundational, mandatory bootstrap handshake surface.
    *

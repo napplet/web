@@ -72,6 +72,19 @@ import {
   handlers as intentHandlers,
   onChanged as intentOnChanged,
 } from '@napplet/nap/intent/shim';
+import {
+  installPowShim,
+  handlePowMessage,
+  mine as powMine,
+  mineAndPublish as powMineAndPublish,
+  queue as powQueue,
+  job as powJob,
+  hashrate as powHashrate,
+  cancel as powCancel,
+  pause as powPause,
+  resume as powResume,
+  formatHashRate as powFormatHashRate,
+} from '@napplet/nap/pow/shim';
 import { sendEnvelope } from '@napplet/core';
 import type { NappletGlobal, NappletShell, ShellEnvironment, ShellInitMessage } from '@napplet/core';
 import { createShellEnvironment, makeSupports, defaultSupports } from '@napplet/nap/shell/shim';
@@ -151,6 +164,7 @@ const DOMAIN_ROUTERS: ReadonlyArray<readonly [string, DomainHandler]> = [
   ['outbox.', handleOutboxMessage],
   ['upload.', handleUploadMessage],
   ['intent.', handleIntentMessage],
+  ['pow.', handlePowMessage],
   ['identity.', identityShim.handleIdentityMessage],
   ['theme.', themeShim.handleThemeMessage],
   ['config.', handleConfigMessage],
@@ -296,6 +310,17 @@ installIncShim();
     handlers: intentHandlers,
     onChanged: intentOnChanged,
   },
+  pow: {
+    mine: powMine,
+    mineAndPublish: powMineAndPublish,
+    queue: powQueue,
+    job: powJob,
+    hashrate: powHashrate,
+    cancel: powCancel,
+    pause: powPause,
+    resume: powResume,
+    formatHashRate: powFormatHashRate,
+  },
   shell: {
     supports: defaultSupports,
     services: [],
@@ -351,3 +376,6 @@ installUploadShim();
 
 // Install intent shim (intent.* request/response correlation + intent.changed listeners; no install-time work)
 installIntentShim();
+
+// Install POW shim (pow.* request/response correlation + mining job push routing; no install-time work)
+installPowShim();

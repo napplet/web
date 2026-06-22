@@ -162,6 +162,29 @@ const RESPONDERS: Record<string, Responder> = {
   'intent.invoke': (e) => ok({ type: 'intent.invoke.result', id: e.id, result: {} }),
   'intent.available': (e) => ok({ type: 'intent.available.result', id: e.id, availability: {} }),
   'intent.handlers': (e) => ok({ type: 'intent.handlers.result', id: e.id, handlers: [] }),
+
+  // pow
+  'pow.mine': (e) => ok({ type: 'pow.mine.result', id: e.id, jobId: e.jobId, accepted: true, state: 'queued', position: 0 }),
+  'pow.mineAndPublish': (e) => ok({ type: 'pow.mineAndPublish.result', id: e.id, jobId: e.jobId, accepted: true, state: 'queued', position: 0 }),
+  'pow.queue': (e) => ok({ type: 'pow.queue.result', id: e.id, jobs: [] }),
+  'pow.job': (e) => ok({
+    type: 'pow.job.result',
+    id: e.id,
+    progress: {
+      jobId: e.jobId,
+      target: 0,
+      state: 'queued',
+      bestPow: 0,
+      hashes: 0,
+      hashRate: 0,
+      workers: [],
+      elapsedMs: 0,
+    },
+  }),
+  'pow.hashrate': (e) => ok({ type: 'pow.hashrate.result', id: e.id, hashrate: { hashRate: 0, workers: 0, perWorker: [], byJob: [] } }),
+  'pow.cancel': (e) => ok({ type: 'pow.cancel.result', id: e.id, jobId: e.jobId, cancelled: true }),
+  'pow.pause': (e) => ok({ type: 'pow.pause.result', id: e.id, ...(typeof e.jobId === 'string' ? { jobId: e.jobId } : {}) }),
+  'pow.resume': (e) => ok({ type: 'pow.resume.result', id: e.id, ...(typeof e.jobId === 'string' ? { jobId: e.jobId } : {}) }),
 };
 
 /** A reference shell instance. */

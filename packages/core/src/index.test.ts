@@ -19,6 +19,9 @@ import type {
   NappletShell,
   ShellReadyMessage,
   ShellInitMessage,
+  PowEventTemplate,
+  PowJob,
+  PowResult,
 } from './index.js';
 
 describe('@napplet/core exports', () => {
@@ -42,6 +45,9 @@ describe('@napplet/core exports', () => {
       const _filter: NostrFilter = {} as NostrFilter;
       const _topicKey: TopicKey = 'PROFILE_OPEN';
       const _topicVal: TopicValue = TOPICS.PROFILE_OPEN;
+      const _powTemplate: PowEventTemplate = { kind: 1, content: 'gm' };
+      const _powJob: PowJob = {} as PowJob;
+      const _powResult: PowResult = {} as PowResult;
       expect(true).toBe(true);
     });
   });
@@ -49,7 +55,9 @@ describe('@napplet/core exports', () => {
   describe('namespaced capability types', () => {
     it('exports NAP domain names', () => {
       const napDomain: NapDomain = 'identity';
+      const powDomain: NapDomain = 'pow';
       expect(NAP_DOMAINS).toContain(napDomain);
+      expect(NAP_DOMAINS).toContain(powDomain);
       expect(napDomain).toBe('identity');
     });
 
@@ -60,6 +68,7 @@ describe('@napplet/core exports', () => {
       const _inc: NamespacedCapability = 'inc';
       const _theme: NamespacedCapability = 'theme';
       const _media: NamespacedCapability = 'media';
+      const _pow: NamespacedCapability = 'pow';
       expect(true).toBe(true);
     });
 
@@ -70,6 +79,7 @@ describe('@napplet/core exports', () => {
       const _napInc: NamespacedCapability = 'nap:inc';
       const _napTheme: NamespacedCapability = 'nap:theme';
       const _napMedia: NamespacedCapability = 'nap:media';
+      const _napPow: NamespacedCapability = 'nap:pow';
       expect(true).toBe(true);
     });
 

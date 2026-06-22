@@ -12,7 +12,7 @@
 
 1. Import `@napplet/shim` in your napplet's entry point (side-effect only -- no named exports)
 2. The shim registers with the shell via postMessage -- the shell assigns identity based on the iframe's `message.source` Window reference
-3. Once registered, `window.napplet` is populated with relay, inc, storage, keys, media, notify, identity, config, resource, cvm, outbox, upload, intent, and shell sub-objects
+3. Once registered, `window.napplet` is populated with relay, inc, storage, keys, media, notify, identity, config, resource, cvm, outbox, upload, intent, pow, and shell sub-objects
 4. No `window.nostr` is installed -- signing and encryption are mediated by the shell via `relay.publish()` and `relay.publishEncrypted()`
 
 ### Installation
@@ -323,6 +323,17 @@ window.napplet = {
   resource: {
     bytes(url, opts?): Promise<Blob>;
     bytesAsObjectURL(url): { url: string; revoke: () => void };
+  },
+  pow: {
+    mine(template, target, opts?): PowJob;
+    mineAndPublish(template, target, opts?): PowJob;
+    queue(): Promise<PowJobSummary[]>;
+    job(jobId): Promise<PowProgress>;
+    hashrate(): Promise<PowHashrate>;
+    cancel(jobId): Promise<boolean>;
+    pause(jobId?): Promise<void>;
+    resume(jobId?): Promise<void>;
+    formatHashRate(hashesPerSecond): string;
   },
   shell: {
     supports(capability: NamespacedCapability, protocol?: ProtocolId): boolean;
