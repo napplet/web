@@ -4,7 +4,7 @@
  * @packageDocumentation
  */
 
-import type { Subscription } from '@napplet/core';
+import type { ResourceBytesItem, Subscription } from '@napplet/core';
 import { requireNapplet } from './require-napplet.js';
 
 /**
@@ -101,6 +101,7 @@ export const config = {
  * import { resource } from '@napplet/sdk';
  *
  * const blob = await resource.bytes('https://example.com/avatar.png');
+ * const items = await resource.bytesMany(['https://example.com/a.png']);
  * const handle = resource.bytesAsObjectURL('blossom:abc123...');
  * imgEl.src = handle.url;
  * imgEl.onload = () => handle.revoke();
@@ -112,8 +113,21 @@ export const resource = {
    * @param url  URL identifying the resource (any registered scheme).
    * @returns Promise resolving to the fetched bytes as a Blob.
    */
-  bytes(url: string): Promise<Blob> {
-    return requireNapplet().resource.bytes(url);
+  bytes(url: string, opts?: { signal?: AbortSignal }): Promise<Blob> {
+    return requireNapplet().resource.bytes(url, opts);
+  },
+
+  /**
+   * Fetch bytes for many URLs through one shell envelope.
+   * @param urls  Non-empty URL list.
+   * @param opts  Optional AbortController signal.
+   * @returns Promise resolving to ordered per-URL result items.
+   */
+  bytesMany(
+    urls: string[],
+    opts?: { signal?: AbortSignal },
+  ): Promise<ResourceBytesItem[]> {
+    return requireNapplet().resource.bytesMany(urls, opts);
   },
 
   /**

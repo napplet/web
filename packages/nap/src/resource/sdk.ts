@@ -6,6 +6,7 @@
  */
 
 import type { NappletGlobal } from '@napplet/core';
+import type { ResourceBytesItem } from './types.js';
 
 function requireResource(): NappletGlobal['resource'] {
   const w = window as Window & { napplet?: NappletGlobal };
@@ -30,8 +31,32 @@ function requireResource(): NappletGlobal['resource'] {
  * const url = URL.createObjectURL(blob);
  * ```
  */
-export function resourceBytes(url: string): Promise<Blob> {
-  return requireResource().bytes(url);
+export function resourceBytes(url: string, opts?: { signal?: AbortSignal }): Promise<Blob> {
+  return requireResource().bytes(url, opts);
+}
+
+/**
+ * Fetch bytes for many URLs through the shell's resource pipeline.
+ *
+ * @param urls  Non-empty URL list.
+ * @param opts  Optional `{ signal }` for AbortController cancellation.
+ * @returns Promise resolving to ordered per-URL result items.
+ *
+ * @example
+ * ```ts
+ * import { resourceBytesMany } from '@napplet/nap/resource';
+ *
+ * const items = await resourceBytesMany([
+ *   'https://example.com/avatar.png',
+ *   'blossom:sha256:...',
+ * ]);
+ * ```
+ */
+export function resourceBytesMany(
+  urls: string[],
+  opts?: { signal?: AbortSignal },
+): Promise<ResourceBytesItem[]> {
+  return requireResource().bytesMany(urls, opts);
 }
 
 /**

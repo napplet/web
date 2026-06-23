@@ -133,11 +133,16 @@ window.napplet.config.openSettings({ section: 'appearance' });
 
 ### resource
 
-Sandboxed byte fetching (`bytes(url) → Blob`) over https / blossom / nostr / data
-schemes — the only network-fetch primitive available inside the iframe sandbox.
+Sandboxed byte fetching (`bytes(url) -> Blob`, `bytesMany(urls) -> ResourceBytesItem[]`)
+over https / blossom / nostr / data schemes — the only network-fetch primitive
+available inside the iframe sandbox.
 
 ```ts
 const blob = await window.napplet.resource.bytes('https://example.com/avatar.png');
+const items = await window.napplet.resource.bytesMany([
+  'https://example.com/avatar.png',
+  'blossom:sha256:abc123…',
+]);
 
 // Managed object URL — revoke when done to free memory
 const { url, revoke } = window.napplet.resource.bytesAsObjectURL('blossom:sha256:abc123…');

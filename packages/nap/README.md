@@ -132,13 +132,19 @@ NAP domains.
 ## Resource NAP (v0.28.0)
 
 The `resource` domain ships in v0.28.0 alongside the milestone of browser-enforced
-resource isolation. It defines a single scheme-pluggable byte-fetching primitive:
+resource isolation. It defines scheme-pluggable byte-fetching primitives:
 
 ```ts
-import { bytes, bytesAsObjectURL } from '@napplet/nap/resource/sdk';
+import { bytes, bytesMany, bytesAsObjectURL } from '@napplet/nap/resource/sdk';
 
 // Fetch any URL the shell accepts under its policy. URL space is scheme-pluggable.
 const blob: Blob = await bytes('https://example.com/avatar.png');
+
+// Fetch many URLs in one envelope. Items preserve input order and length.
+const items = await bytesMany([
+  'https://example.com/avatar.png',
+  'blossom:sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+]);
 
 // Synchronous handle for <img src> use; revoke when done.
 const handle = bytesAsObjectURL('blossom:sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855');

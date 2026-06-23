@@ -194,6 +194,12 @@ export interface NappletGlobal {
    * // Fetch raw bytes:
    * const blob = await window.napplet.resource.bytes('https://example.com/avatar.png');
    *
+   * // Fetch many resources in one envelope:
+   * const items = await window.napplet.resource.bytesMany([
+   *   'https://example.com/avatar.png',
+   *   'blossom:sha256:abc123...',
+   * ]);
+   *
    * // Get a managed object URL (revoke when done to free memory):
    * const { url, revoke } = window.napplet.resource.bytesAsObjectURL('blossom:abc123...');
    * imgEl.src = url;

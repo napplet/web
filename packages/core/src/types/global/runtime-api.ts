@@ -183,6 +183,41 @@ export interface ConfigApi {
 }
 
 /**
+ * Typed error vocabulary for resource fetch failures.
+ */
+export type ResourceErrorCode =
+  | 'invalid-request'
+  | 'not-found'
+  | 'blocked-by-policy'
+  | 'timeout'
+  | 'too-large'
+  | 'unsupported-scheme'
+  | 'decode-failed'
+  | 'network-error'
+  | 'quota-exceeded';
+
+/** Successful per-URL item returned by `resource.bytesMany`. */
+export interface ResourceBytesOkItem {
+  url: string;
+  ok: true;
+  blob: Blob;
+  mime: string;
+  message?: string;
+}
+
+/** Failed per-URL item returned by `resource.bytesMany`. */
+export interface ResourceBytesErrorItem {
+  url: string;
+  ok: false;
+  error: ResourceErrorCode;
+  message?: string;
+  blob?: never;
+}
+
+/** Ordered per-URL item returned by `resource.bytesMany`. */
+export type ResourceBytesItem = ResourceBytesOkItem | ResourceBytesErrorItem;
+
+/**
  * Browser-enforced resource fetching: napplets request bytes by URL,
  * shell fetches and returns a Blob. The strict-CSP iframe sandbox
  * blocks all napplet-side network access, so this is the canonical
@@ -197,6 +232,12 @@ export interface ConfigApi {
  * ```ts
  * // Fetch raw bytes:
  * const blob = await window.napplet.resource.bytes('https://example.com/avatar.png');
+ *
+ * // Fetch many resources in one envelope:
+ * const items = await window.napplet.resource.bytesMany([
+ *   'https://example.com/avatar.png',
+ *   'blossom:sha256:abc123...',
+ * ]);
  *
  * // Get a managed object URL (revoke when done to free memory):
  * const { url, revoke } = window.napplet.resource.bytesAsObjectURL('blossom:abc123...');
@@ -213,7 +254,16 @@ export interface ResourceApi {
    * @param url  URL identifying the resource (any registered scheme)
    * @returns Promise resolving to the fetched bytes as a Blob
    */
-  bytes(url: string): Promise<Blob>;
+  bytes(url: string, opts?: { signal?: AbortSignal }): Promise<Blob>;
+  /**
+   * Fetch the bytes referenced by many URLs through one shell envelope.
+   * The returned items preserve input order and length. Failed URLs are
+   * represented as `ok: false` items; successful siblings remain available.
+   * @param urls  Non-empty URL list
+   * @param opts  Optional AbortController signal
+   * @returns Promise resolving to ordered per-URL result items
+   */
+  bytesMany(urls: string[], opts?: { signal?: AbortSignal }): Promise<ResourceBytesItem[]>;
   /**
    * Convenience wrapper around `bytes(url)` that returns a managed
    * object URL plus a `revoke` function. Calling `revoke()` invokes

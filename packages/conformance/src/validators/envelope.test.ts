@@ -75,6 +75,12 @@ describe('validateEnvelope — outbound field checks', () => {
     expect(validateEnvelope({ type: 'outbox.query', id: 'a' }).ok).toBe(false);
   });
 
+  it('requires resource.bytesMany to carry a URL array', () => {
+    expect(validateEnvelope({ type: 'resource.bytesMany', id: 'a', urls: ['https://x/y'] }).ok).toBe(true);
+    expect(validateEnvelope({ type: 'resource.bytesMany', id: 'a' }).errors[0].code).toBe('missing-field');
+    expect(validateEnvelope({ type: 'resource.bytesMany', id: 'a', urls: 'https://x/y' }).errors[0].code).toBe('wrong-type');
+  });
+
   it('validates a representative outbound message from every NAP that has one', () => {
     // One concrete happy-path per outbound-bearing domain.
     const samples: Record<string, unknown> = {
@@ -87,7 +93,7 @@ describe('validateEnvelope — outbound field checks', () => {
       media: { type: 'media.session.destroy', sessionId: 's' },
       notify: { type: 'notify.badge', count: 3 },
       config: { type: 'config.get', id: 'a' },
-      resource: { type: 'resource.bytes', id: 'a', url: 'https://x/y' },
+      resource: { type: 'resource.bytesMany', id: 'a', urls: ['https://x/y'] },
       cvm: { type: 'cvm.discover', id: 'a' },
       outbox: { type: 'outbox.close', id: 'a', subId: 's' },
       upload: { type: 'upload.status', id: 'a', uploadId: 'u' },
@@ -137,13 +143,13 @@ describe('validateEnvelope — NAP-SHELL foundational domain', () => {
 });
 
 describe('ENVELOPE_SPECS invariants', () => {
-  it('has 177 discriminants split 86 outbound / 91 inbound', () => {
+  it('has 180 discriminants split 87 outbound / 93 inbound', () => {
     const all = knownEnvelopeTypes();
-    expect(all).toHaveLength(177);
+    expect(all).toHaveLength(180);
     const out = all.filter((t) => ENVELOPE_SPECS[t].dir === 'out');
     const inbound = all.filter((t) => ENVELOPE_SPECS[t].dir === 'in');
-    expect(out).toHaveLength(86);
-    expect(inbound).toHaveLength(91);
+    expect(out).toHaveLength(87);
+    expect(inbound).toHaveLength(93);
   });
 
   it('only outbound specs declare required fields', () => {
