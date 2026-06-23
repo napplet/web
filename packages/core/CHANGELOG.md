@@ -1,5 +1,12 @@
 # @napplet/core
 
+## 0.21.0
+
+### Minor Changes
+
+- b0e0c76: Add the NAP-RESOURCE `resource.bytesMany` bulk byte-fetch surface, including
+  wire types, shim and SDK helpers, core global types, and conformance coverage.
+
 ## 0.20.0
 
 ### Minor Changes
