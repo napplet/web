@@ -1,6 +1,6 @@
 {
   "name": "@napplet/nap",
-  "version": "0.20.0",
+  "version": "0.21.0",
   "description": "The active napplet NAP domains (the foundational shell, plus relay, storage, inc, keys, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent, ble, webrtc, link, lists, serial, common) as layered subpath exports",
   "type": "module",
   "exports": {
