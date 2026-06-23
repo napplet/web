@@ -1,43 +1,29 @@
 /**
  * @napplet/nap/resource -- Resource NAP message types for the JSON envelope wire protocol.
  *
- * Defines 4 message types for byte-fetching:
- * - Napplet -> Shell: bytes (request), cancel (in-flight cancellation)
- * - Shell -> Napplet: bytes.result (success with Blob + MIME), bytes.error (8-code typed error)
+ * Defines resource byte-fetching messages:
+ * - Napplet -> Shell: bytes, bytesMany, cancel
+ * - Shell -> Napplet: bytes.result/error, bytesMany.result/error
  *
  * All types form a discriminated union on the `type` field.
  * Single-Blob delivery contract: no streaming, no partial payloads, no segmentation.
  */
 
-import type { NappletMessage } from '@napplet/core';
+import type {
+  NappletMessage,
+  ResourceBytesItem,
+  ResourceErrorCode,
+} from '@napplet/core';
+
+export type {
+  ResourceBytesOkItem,
+  ResourceBytesErrorItem,
+  ResourceBytesItem,
+  ResourceErrorCode,
+} from '@napplet/core';
 
 /** The NAP domain name for resource messages. */
 export const DOMAIN = 'resource' as const;
-
-/**
- * Typed error vocabulary for resource fetch failures.
- * The shell selects exactly one code per failed fetch.
- *
- * | Code | Meaning |
- * |------|---------|
- * | `not-found`         | Resource does not exist at the given URL |
- * | `blocked-by-policy` | Shell policy refused the fetch (e.g., private-IP block, scheme not allowed) |
- * | `timeout`           | Fetch exceeded the shell-imposed wall-clock budget |
- * | `too-large`         | Response body exceeded the shell's size cap |
- * | `unsupported-scheme`| URL scheme has no registered handler in this shell |
- * | `decode-failed`     | Bytes could not be decoded (e.g., malformed `data:` URI, invalid Blossom hash) |
- * | `network-error`     | Underlying transport failure (DNS, TLS, socket, refused) |
- * | `quota-exceeded`    | Per-napplet rate limit or concurrency cap reached |
- */
-export type ResourceErrorCode =
-  | 'not-found'
-  | 'blocked-by-policy'
-  | 'timeout'
-  | 'too-large'
-  | 'unsupported-scheme'
-  | 'decode-failed'
-  | 'network-error'
-  | 'quota-exceeded';
 
 /**
  * The four canonical v0.28.0 URL schemes routed through the resource NAP.
@@ -103,6 +89,19 @@ export interface ResourceBytesMessage extends ResourceMessage {
 }
 
 /**
+ * Request bytes for many URLs in one envelope. The shell processes each URL as
+ * if it were an independent `resource.bytes` request, but returns one ordered
+ * result array so one failed URL does not discard successful siblings.
+ */
+export interface ResourceBytesManyMessage extends ResourceMessage {
+  type: 'resource.bytesMany';
+  /** Correlation ID. */
+  id: string;
+  /** Non-empty URL list. Result items preserve this order and length. */
+  urls: string[];
+}
+
+/**
  * Cancel an in-flight `resource.bytes` request by correlation ID.
  * Fire-and-forget. The shell SHOULD abort upstream work and free
  * the request slot for quota purposes; no result is returned.
@@ -151,8 +150,20 @@ export interface ResourceBytesResultMessage extends ResourceMessage {
 }
 
 /**
- * Failed result for a `resource.bytes` request. Carries one of the
- * 8 typed error codes plus an optional human-readable message.
+ * Successful bulk result. `items` preserves input order and length; each item
+ * records its own success or failure.
+ */
+export interface ResourceBytesManyResultMessage extends ResourceMessage {
+  type: 'resource.bytesMany.result';
+  /** Correlation ID matching the original request. */
+  id: string;
+  /** Ordered one-item-per-input-URL result list. */
+  items: ResourceBytesItem[];
+}
+
+/**
+ * Failed result for a `resource.bytes` request. Carries one typed error code
+ * plus an optional human-readable message.
  *
  * @example
  * ```ts
@@ -174,15 +185,29 @@ export interface ResourceBytesErrorMessage extends ResourceMessage {
   message?: string;
 }
 
+/** Top-level failure for malformed or policy-rejected `resource.bytesMany`. */
+export interface ResourceBytesManyErrorMessage extends ResourceMessage {
+  type: 'resource.bytesMany.error';
+  /** Correlation ID matching the original request. */
+  id: string;
+  /** Typed error code. */
+  error: ResourceErrorCode;
+  /** Optional human-readable error detail. */
+  message?: string;
+}
+
 /** Napplet -> Shell resource messages. */
 export type ResourceRequestMessage =
   | ResourceBytesMessage
+  | ResourceBytesManyMessage
   | ResourceCancelMessage;
 
 /** Shell -> Napplet resource result messages (success or error). */
 export type ResourceResultMessage =
   | ResourceBytesResultMessage
-  | ResourceBytesErrorMessage;
+  | ResourceBytesErrorMessage
+  | ResourceBytesManyResultMessage
+  | ResourceBytesManyErrorMessage;
 
 /** All resource NAP message types (discriminated union on `type` field). */
 export type ResourceNapMessage = ResourceRequestMessage | ResourceResultMessage;

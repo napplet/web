@@ -81,7 +81,7 @@ Shell (any compatible shell)                @napplet/shim
   ShellBridge                                window.napplet.relay (subscribe/publish/query)
   ├── JSON envelope message routing          window.napplet.inc   (emit/on)
   ├── Identity via message.source            window.napplet.storage (get/set/remove)
-  ├── ACL enforcement                        window.napplet.resource (bytes/bytesAsObjectURL)
+  ├── ACL enforcement                        window.napplet.resource (bytes/bytesMany/bytesAsObjectURL)
   ├── NAP dispatch (relay/signer/storage)    window.napplet.shell.supports(domain)
   └── INC routing
 

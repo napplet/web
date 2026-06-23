@@ -1,9 +1,13 @@
-// @napplet/nap/resource -- Resource NAP shim (byte-fetching primitive: bytes, bytesAsObjectURL)
+// @napplet/nap/resource -- Resource NAP shim (byte-fetching primitives)
 // Single-flight cache, AbortSignal cancellation, data: scheme decoded inline (zero shell round-trip).
 
 import { postToShell } from '../boundary.js';
 import type {
   ResourceBytesMessage,
+  ResourceBytesManyMessage,
+  ResourceBytesItem,
+  ResourceBytesManyResultMessage,
+  ResourceBytesManyErrorMessage,
   ResourceBytesResultMessage,
   ResourceBytesErrorMessage,
   ResourceCancelMessage,
@@ -21,12 +25,17 @@ const REQUEST_TIMEOUT_MS = 30_000;
  */
 const inflight = new Map<string, Promise<Blob>>();
 
-/** Pending wire requests: correlation id -> { resolve, reject, url }. */
-const pending = new Map<string, {
-  resolve: (blob: Blob) => void;
+type Pending<T> = {
+  resolve: (value: T) => void;
   reject: (reason: Error) => void;
-  url: string;
-}>();
+  timeout: ReturnType<typeof setTimeout>;
+};
+
+/** Pending `resource.bytes` wire requests. */
+const pendingBytes = new Map<string, Pending<Blob>>();
+
+/** Pending `resource.bytesMany` wire requests. */
+const pendingMany = new Map<string, Pending<ResourceBytesItem[]>>();
 
 /** Guard against double-install. */
 let installed = false;
@@ -45,15 +54,31 @@ function isMessageType<T extends { type: string }>(
 export function handleResourceMessage(msg: { type: string; [key: string]: unknown }): void {
   if (isMessageType<ResourceBytesResultMessage>(msg, 'resource.bytes.result')) {
     const result = msg;
-    const p = pending.get(result.id);
+    const p = pendingBytes.get(result.id);
     if (!p) return;
-    pending.delete(result.id);
+    pendingBytes.delete(result.id);
+    clearTimeout(p.timeout);
     p.resolve(result.blob);
   } else if (isMessageType<ResourceBytesErrorMessage>(msg, 'resource.bytes.error')) {
     const err = msg;
-    const p = pending.get(err.id);
+    const p = pendingBytes.get(err.id);
     if (!p) return;
-    pending.delete(err.id);
+    pendingBytes.delete(err.id);
+    clearTimeout(p.timeout);
+    p.reject(new Error(err.message ? `${err.error}: ${err.message}` : err.error));
+  } else if (isMessageType<ResourceBytesManyResultMessage>(msg, 'resource.bytesMany.result')) {
+    const result = msg;
+    const p = pendingMany.get(result.id);
+    if (!p) return;
+    pendingMany.delete(result.id);
+    clearTimeout(p.timeout);
+    p.resolve(result.items);
+  } else if (isMessageType<ResourceBytesManyErrorMessage>(msg, 'resource.bytesMany.error')) {
+    const err = msg;
+    const p = pendingMany.get(err.id);
+    if (!p) return;
+    pendingMany.delete(err.id);
+    clearTimeout(p.timeout);
     p.reject(new Error(err.message ? `${err.error}: ${err.message}` : err.error));
   }
 }
@@ -65,7 +90,12 @@ export function handleResourceMessage(msg: { type: string; [key: string]: unknow
  */
 function sendBytesRequest(url: string, id: string): Promise<Blob> {
   return new Promise<Blob>((resolve, reject) => {
-    pending.set(id, { resolve, reject, url });
+    const timeout = setTimeout(() => {
+      if (pendingBytes.delete(id)) {
+        reject(new Error(`resource.bytes timed out for ${url}`));
+      }
+    }, REQUEST_TIMEOUT_MS);
+    pendingBytes.set(id, { resolve, reject, timeout });
 
     const msg: ResourceBytesMessage = {
       type: 'resource.bytes',
@@ -73,12 +103,27 @@ function sendBytesRequest(url: string, id: string): Promise<Blob> {
       url,
     };
     postToShell(msg);
+  });
+}
 
-    setTimeout(() => {
-      if (pending.delete(id)) {
-        reject(new Error(`resource.bytes timed out for ${url}`));
+/**
+ * Send a resource.bytesMany request envelope and return ordered per-URL items.
+ */
+function sendBytesManyRequest(urls: string[], id: string): Promise<ResourceBytesItem[]> {
+  return new Promise<ResourceBytesItem[]>((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      if (pendingMany.delete(id)) {
+        reject(new Error(`resource.bytesMany timed out for ${urls.length} URLs`));
       }
     }, REQUEST_TIMEOUT_MS);
+    pendingMany.set(id, { resolve, reject, timeout });
+
+    const msg: ResourceBytesManyMessage = {
+      type: 'resource.bytesMany',
+      id,
+      urls,
+    };
+    postToShell(msg);
   });
 }
 
@@ -110,22 +155,76 @@ function wireSignal(
   work: Promise<Blob>,
   signal?: AbortSignal,
   cancelId: string | null = null,
+  cancelPending?: (reason: Error) => void,
 ): Promise<Blob> {
   if (!signal) return work;
   if (signal.aborted) {
+    const error = new DOMException('Aborted', 'AbortError');
     if (cancelId) sendCancel(cancelId);
-    return Promise.reject(new DOMException('Aborted', 'AbortError'));
+    cancelPending?.(error);
+    return Promise.reject(error);
   }
   return new Promise<Blob>((resolve, reject) => {
     const onAbort = () => {
+      const error = new DOMException('Aborted', 'AbortError');
       if (cancelId) sendCancel(cancelId);
-      reject(new DOMException('Aborted', 'AbortError'));
+      cancelPending?.(error);
+      reject(error);
     };
     signal.addEventListener('abort', onAbort, { once: true });
     work.then(
       (b) => {
         signal.removeEventListener('abort', onAbort);
         resolve(b);
+      },
+      (e) => {
+        signal.removeEventListener('abort', onAbort);
+        reject(e);
+      },
+    );
+  });
+}
+
+function cancelBytes(id: string, reason: Error): void {
+  const p = pendingBytes.get(id);
+  if (!p) return;
+  pendingBytes.delete(id);
+  clearTimeout(p.timeout);
+  p.reject(reason);
+}
+
+function cancelMany(id: string, reason: Error): void {
+  const p = pendingMany.get(id);
+  if (!p) return;
+  pendingMany.delete(id);
+  clearTimeout(p.timeout);
+  p.reject(reason);
+}
+
+function wireManySignal(
+  work: Promise<ResourceBytesItem[]>,
+  signal?: AbortSignal,
+  cancelId: string | null = null,
+): Promise<ResourceBytesItem[]> {
+  if (!signal) return work;
+  if (signal.aborted) {
+    const error = new DOMException('Aborted', 'AbortError');
+    if (cancelId) sendCancel(cancelId);
+    if (cancelId) cancelMany(cancelId, error);
+    return Promise.reject(error);
+  }
+  return new Promise<ResourceBytesItem[]>((resolve, reject) => {
+    const onAbort = () => {
+      const error = new DOMException('Aborted', 'AbortError');
+      if (cancelId) sendCancel(cancelId);
+      if (cancelId) cancelMany(cancelId, error);
+      reject(error);
+    };
+    signal.addEventListener('abort', onAbort, { once: true });
+    work.then(
+      (items) => {
+        signal.removeEventListener('abort', onAbort);
+        resolve(items);
       },
       (e) => {
         signal.removeEventListener('abort', onAbort);
@@ -193,7 +292,38 @@ export function bytes(url: string, opts?: { signal?: AbortSignal }): Promise<Blo
   inflight.set(url, work);
 
   // Wire abort: if signal fires after dispatch, send cancel envelope and reject.
-  return wireSignal(work, opts?.signal, cancelId);
+  return wireSignal(
+    work,
+    opts?.signal,
+    cancelId,
+    cancelId ? (reason) => cancelBytes(cancelId, reason) : undefined,
+  );
+}
+
+/**
+ * Fetch bytes for many URLs through one shell envelope.
+ *
+ * `items` preserves the input order and length. Failed URLs are represented as
+ * `ok: false` items so successful siblings remain available to the caller.
+ *
+ * @param urls  Non-empty URL list.
+ * @param opts  Optional `{ signal }` for AbortController cancellation.
+ * @returns Promise resolving to ordered per-URL resource result items.
+ */
+export function bytesMany(
+  urls: string[],
+  opts?: { signal?: AbortSignal },
+): Promise<ResourceBytesItem[]> {
+  if (urls.length === 0) {
+    return Promise.reject(new Error('invalid-request: urls must be non-empty'));
+  }
+  if (opts?.signal?.aborted) {
+    return Promise.reject(new DOMException('Aborted', 'AbortError'));
+  }
+
+  const id = crypto.randomUUID();
+  const work = sendBytesManyRequest(urls, id);
+  return wireManySignal(work, opts?.signal, id);
 }
 
 /**
@@ -298,7 +428,8 @@ export function installResourceShim(): () => void {
   installed = true;
   return () => {
     inflight.clear();
-    pending.clear();
+    pendingBytes.clear();
+    pendingMany.clear();
     installed = false;
   };
 }

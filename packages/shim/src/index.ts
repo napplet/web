@@ -34,6 +34,7 @@ import {
   installResourceShim,
   handleResourceMessage,
   bytes as resourceBytes,
+  bytesMany as resourceBytesMany,
   bytesAsObjectURL as resourceBytesAsObjectURL,
 } from '@napplet/nap/resource/shim';
 import {
@@ -324,6 +325,7 @@ installIncShim();
   },
   resource: {
     bytes: resourceBytes,
+    bytesMany: resourceBytesMany,
     bytesAsObjectURL: resourceBytesAsObjectURL,
   },
   cvm: {

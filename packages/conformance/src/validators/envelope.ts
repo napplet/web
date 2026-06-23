@@ -170,9 +170,12 @@ export const ENVELOPE_SPECS: Record<string, EnvelopeSpec> = {
 
   // ── resource ─────────────────────────────────────────────────────────────
   'resource.bytes': { dir: 'out', fields: { ...ID, url: 'string' } },
+  'resource.bytesMany': { dir: 'out', fields: { ...ID, urls: 'array' } },
   'resource.cancel': { dir: 'out', fields: { ...ID } },
   'resource.bytes.result': { dir: 'in' },
   'resource.bytes.error': { dir: 'in' },
+  'resource.bytesMany.result': { dir: 'in' },
+  'resource.bytesMany.error': { dir: 'in' },
 
   // ── cvm ──────────────────────────────────────────────────────────────────
   'cvm.discover': { dir: 'out', fields: { ...ID } },

@@ -140,6 +140,18 @@ const RESPONDERS: Record<string, Responder> = {
 
   // resource
   'resource.bytes': (e) => ok({ type: 'resource.bytes.result', id: e.id, blob: new Blob([]), mime: 'application/octet-stream' }),
+  'resource.bytesMany': (e) => ok({
+    type: 'resource.bytesMany.result',
+    id: e.id,
+    items: Array.isArray(e.urls)
+      ? e.urls.map((url) => ({
+        url,
+        ok: true,
+        blob: new Blob([]),
+        mime: 'application/octet-stream',
+      }))
+      : [],
+  }),
   'resource.cancel': none,
 
   // cvm

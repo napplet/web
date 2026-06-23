@@ -30,7 +30,7 @@ Top-level namespaced objects that mirror `window.napplet`:
 - **`media`** — `createSession`, `reportState`, `onCommand`, …
 - **`notify`** — `send`, `badge`, `onAction`, …
 - **`config`** — `get`, `subscribe`, `openSettings`, `registerSchema`, `schema`
-- **`resource`** — `bytes`, `bytesAsObjectURL`
+- **`resource`** — `bytes`, `bytesMany`, `bytesAsObjectURL`
 
 `identity` and `shell` are **not** exported as top-level
 objects. Use `window.napplet.identity.*` / `window.napplet.shell.supports()`
@@ -38,7 +38,7 @@ directly, or the bare-name helpers the SDK re-exports:
 
 - `identityGetPublicKey`, `identityOnChanged`
 - the `*_DOMAIN` constants and `install*Shim` installers
-- `resourceBytes`, `resourceBytesAsObjectURL`
+- `resourceBytes`, `resourceBytesMany`, `resourceBytesAsObjectURL`
 
 It also re-exports the protocol types from `@napplet/core` and the per-domain
 message-type unions (`RelayNapMessage`, `IdentityNapMessage`, …) and `*_DOMAIN`
@@ -76,6 +76,10 @@ const configSub = config.subscribe((values) => applyTheme(values.theme));
 
 // Fetch external bytes through the shell (direct fetch is blocked by CSP)
 const avatarBlob = await resource.bytes('https://example.com/avatar.png');
+const avatarItems = await resource.bytesMany([
+  'https://example.com/avatar.png',
+  'blossom:sha256:abc123...',
+]);
 ```
 
 ### Typed config with `FromSchema`

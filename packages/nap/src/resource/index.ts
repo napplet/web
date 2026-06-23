@@ -2,7 +2,7 @@
  * @napplet/nap/resource -- Resource NAP module.
  *
  * Browser-enforced byte-fetching primitive. Napplets request bytes by URL,
- * shell fetches and returns a Blob. URL space is scheme-pluggable;
+ * shell fetches and returns Blobs. URL space is scheme-pluggable;
  * v0.28.0 ships `data:` (decoded in-shim, no round-trip) plus shell-side
  * `https:`, `blossom:`, `nostr:` (specced in NAP-RESOURCE Phase 132).
  *
@@ -11,8 +11,8 @@
  *
  * @example
  * ```ts
- * import type { ResourceBytesMessage, ResourceErrorCode } from '@napplet/nap/resource';
- * import { DOMAIN, installResourceShim, resourceBytes } from '@napplet/nap/resource';
+ * import type { ResourceBytesMessage, ResourceBytesItem, ResourceErrorCode } from '@napplet/nap/resource';
+ * import { DOMAIN, installResourceShim, resourceBytes, resourceBytesMany } from '@napplet/nap/resource';
  * ```
  *
  * @packageDocumentation
@@ -25,8 +25,14 @@ export type {
   ResourceScheme,
   ResourceMessage,
   ResourceBytesMessage,
+  ResourceBytesManyMessage,
   ResourceBytesResultMessage,
   ResourceBytesErrorMessage,
+  ResourceBytesOkItem,
+  ResourceBytesErrorItem,
+  ResourceBytesItem,
+  ResourceBytesManyResultMessage,
+  ResourceBytesManyErrorMessage,
   ResourceCancelMessage,
   ResourceSidecarEntry,
   ResourceRequestMessage,
@@ -38,12 +44,14 @@ export {
   installResourceShim,
   handleResourceMessage,
   bytes,
+  bytesMany,
   bytesAsObjectURL,
   hydrateResourceCache,
 } from './shim.js';
 
 export {
   resourceBytes,
+  resourceBytesMany,
   resourceBytesAsObjectURL,
 } from './sdk.js';
 

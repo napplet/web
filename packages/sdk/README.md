@@ -90,6 +90,10 @@ config.openSettings({ section: 'appearance' });
 
 // Fetch external bytes via the shell (the iframe sandbox + strict CSP block direct fetch)
 const avatarBlob = await resource.bytes('https://example.com/avatar.png');
+const resourceItems = await resource.bytesMany([
+  'https://example.com/avatar.png',
+  'blossom:sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+]);
 const handle = resource.bytesAsObjectURL('blossom:sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855');
 imgEl.src = handle.url;
 // handle.revoke() when done
@@ -238,6 +242,7 @@ Sandboxed byte fetching (NAP-RESOURCE). Mirrors `window.napplet.resource`. Requi
 | Method | Returns | Description |
 |--------|---------|-------------|
 | `bytes(url, opts?)` | `Promise<Blob>` | Fetch bytes through the shell. `opts.signal` accepts an `AbortSignal`. |
+| `bytesMany(urls, opts?)` | `Promise<ResourceBytesItem[]>` | Fetch many URLs through one envelope. Items preserve input order and length. |
 | `bytesAsObjectURL(url)` | `{ url: string; revoke: () => void }` | Synchronous handle whose `url` resolves to a blob URL once the fetch completes. |
 
 Four canonical schemes: `data:` (in-shim), `https:` (shell-side under policy), `blossom:sha256:<hex>` (hash-verified), `nostr:<bech32>` (single-hop NIP-19).
@@ -245,9 +250,10 @@ Four canonical schemes: `data:` (in-shim), `https:` (shell-side under policy), `
 Bare helper aliases are also re-exported for consumers that prefer functional imports:
 
 ```ts
-import { resourceBytes, resourceBytesAsObjectURL } from '@napplet/sdk';
+import { resourceBytes, resourceBytesMany, resourceBytesAsObjectURL } from '@napplet/sdk';
 
 const blob = await resourceBytes('https://example.com/avatar.png');
+const items = await resourceBytesMany(['https://example.com/a.png']);
 const handle = resourceBytesAsObjectURL('blossom:sha256:...');
 ```
 

@@ -155,6 +155,11 @@ export type {
   ShellInitMessage,
   NappletGlobal,
   NappletInstanceStorage,
+  ResourceApi,
+  ResourceErrorCode,
+  ResourceBytesOkItem,
+  ResourceBytesErrorItem,
+  ResourceBytesItem,
 } from './types.js';
 
 export { TOPICS } from './topics.js';

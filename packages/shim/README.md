@@ -108,6 +108,10 @@ window.napplet.config.openSettings({ section: 'appearance' });
 
 // Fetch external bytes via the shell (CSP blocks direct <img src=externalUrl> / fetch())
 const avatarBlob = await window.napplet.resource.bytes('https://example.com/avatar.png');
+const resourceItems = await window.napplet.resource.bytesMany([
+  'https://example.com/avatar.png',
+  'blossom:sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+]);
 const handle = window.napplet.resource.bytesAsObjectURL('blossom:sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855');
 imgEl.src = handle.url;
 // later: handle.revoke();
@@ -208,6 +212,7 @@ The wire payloads are unchanged plain envelopes:
 { type: 'config.openSettings', section?: string }
 
 { type: 'resource.bytes', id: string, url: string }
+{ type: 'resource.bytesMany', id: string, urls: string[] }
 { type: 'resource.cancel', id: string }
 
 { type: 'link.open', id: string, url: string, options?: { label?: string } }
@@ -269,7 +274,9 @@ Messages received via `window.addEventListener('message', ...)`:
 { type: 'config.schemaError', code: string, error: string }
 
 { type: 'resource.bytes.result', id: string, blob: Blob, mime: string }
-{ type: 'resource.bytes.error', id: string, error: 'not-found' | 'blocked-by-policy' | 'timeout' | 'too-large' | 'unsupported-scheme' | 'decode-failed' | 'network-error' | 'quota-exceeded', message?: string }
+{ type: 'resource.bytes.error', id: string, error: 'invalid-request' | 'not-found' | 'blocked-by-policy' | 'timeout' | 'too-large' | 'unsupported-scheme' | 'decode-failed' | 'network-error' | 'quota-exceeded', message?: string }
+{ type: 'resource.bytesMany.result', id: string, items: ResourceBytesItem[] }
+{ type: 'resource.bytesMany.error', id: string, error: 'invalid-request' | 'not-found' | 'blocked-by-policy' | 'timeout' | 'too-large' | 'unsupported-scheme' | 'decode-failed' | 'network-error' | 'quota-exceeded', message?: string }
 
 { type: 'link.open.result', id: string, status: 'opened' | 'denied', error?: string }
 { type: 'lists.supported.result', id: string, lists?: object[], error?: string }
@@ -357,6 +364,7 @@ window.napplet = {
   },
   resource: {
     bytes(url, opts?): Promise<Blob>;
+    bytesMany(urls, opts?): Promise<ResourceBytesItem[]>;
     bytesAsObjectURL(url): { url: string; revoke: () => void };
   },
   link: {
@@ -471,11 +479,12 @@ Per-napplet declarative configuration (NAP-CONFIG). The shell is the sole writer
 
 ### `window.napplet.resource`
 
-Sandboxed byte fetching. The iframe sandbox (no `allow-same-origin`) plus strict CSP (no `connect-src`) means napplets cannot fetch external URLs directly — `<img src="https://...">`, `fetch()`, and `XMLHttpRequest` are all blocked by the browser. Use `resource.bytes(url)` to fetch any external resource through the shell.
+Sandboxed byte fetching. The iframe sandbox (no `allow-same-origin`) plus strict CSP (no `connect-src`) means napplets cannot fetch external URLs directly — `<img src="https://...">`, `fetch()`, and `XMLHttpRequest` are all blocked by the browser. Use `resource.bytes(url)` or `resource.bytesMany(urls)` to fetch external resources through the shell.
 
 | Method | Returns | Description |
 |--------|---------|-------------|
 | `bytes(url, opts?)` | `Promise<Blob>` | Fetch bytes for a URL via the shell. `opts.signal` accepts an `AbortSignal` for cancellation. |
+| `bytesMany(urls, opts?)` | `Promise<ResourceBytesItem[]>` | Fetch many URLs through one envelope. Items preserve input order and length. |
 | `bytesAsObjectURL(url)` | `{ url: string; revoke: () => void }` | Synchronous handle whose `url` resolves to a blob URL once the underlying fetch completes. Caller MUST `revoke()` when done. |
 
 Four canonical schemes: `data:` (decoded in-shim), `https:` (shell-side network with policy), `blossom:sha256:<hex>` (hash-verified), `nostr:<bech32>` (single-hop NIP-19 resolution).
