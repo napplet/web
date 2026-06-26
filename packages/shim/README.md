@@ -290,7 +290,7 @@ All request/response pairs are correlated by the `id` field. Identity request ti
 
 ## `window.napplet` Shape
 
-After `import '@napplet/shim'`, the global `window.napplet` object has the following structure:
+After runtime injection, the global `window.napplet` object has the following structure:
 
 ```ts
 window.napplet = {
@@ -545,10 +545,17 @@ For napplet-side named imports, use `@napplet/sdk`.
 | **When to use** | In the host runtime before napplet scripts execute | In napplet code when you want typed imports in a bundler |
 | **Named exports** | `installNappletGlobal` | `relay`, `inc`, `storage`, `keys`, `identity`, plus types |
 
-**Typical usage:** Import both -- shim for window installation, SDK for typed API access:
+Runtime usage:
 
 ```ts
-import '@napplet/shim';
+import { installNappletGlobal } from '@napplet/shim';
+
+installNappletGlobal({ domains: ['relay', 'inc', 'storage', 'identity'] });
+```
+
+Napplet usage:
+
+```ts
 import { relay, inc, storage, keys, identity } from '@napplet/sdk';
 ```
 

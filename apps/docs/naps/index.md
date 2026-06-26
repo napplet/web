@@ -18,8 +18,7 @@ These domains ship as subpaths of [`@napplet/nap`](/packages/nap) (barrel /
 ## The domains
 
 Each domain below shows its purpose and a minimal example. Examples assume the
-shim is installed (`import '@napplet/shim'`) so `window.napplet` is available; the
-same calls are also importable as named helpers from
+runtime injected `window.napplet` before napplet code ran; the same calls are also importable as named helpers from
 [`@napplet/sdk`](/packages/sdk). Feature-gate optional domains with
 `if (window.napplet?.domain)` first.
 

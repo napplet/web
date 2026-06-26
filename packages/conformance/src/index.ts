@@ -4,7 +4,7 @@
  * Lets a napplet self-verify protocol conformance before publishing, in two scopes
  * that share this engine: a headless Playwright CLI (CI) and a standalone
  * single-window web runtime. v1 is zero-config protocol conformance — manifest/meta
- * validity, boots under `sandbox="allow-scripts"`, installs `window.napplet`, every
+ * validity, boots under `sandbox="allow-scripts"`, receives runtime-injected `window.napplet`, every
  * emitted postMessage envelope validates against the per-NAP validators here, and
  * graceful degradation when optional domains are absent.
  *

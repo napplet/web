@@ -208,7 +208,7 @@ This is the **napplet** monorepo — npm packages for the napplet protocol. Napp
 ## Packages
 
 - `packages/core` — **@napplet/core** — JSON envelope types, NAP dispatch, protocol constants
-- `packages/shim` — **@napplet/shim** — Side-effect window installer (window.napplet)
+- `packages/shim` — **@napplet/shim** — Runtime-side injected `window.napplet` domain installer
 - `packages/sdk` — **@napplet/sdk** — Named exports wrapping window.napplet for bundler consumers
 - `packages/vite-plugin` — **@napplet/vite-plugin** — NIP-5A manifest generation at build time
 - `packages/nap` — **@napplet/nap** — NAP domain subpaths (`@napplet/nap/relay`, `@napplet/nap/identity`, etc.)

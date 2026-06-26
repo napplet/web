@@ -1,21 +1,22 @@
 ---
 name: build-napplet
-description: Use when writing a napplet (sandboxed Nostr iframe app) — Vite setup, the NIP-5A manifest plugin, the @napplet/shim + @napplet/sdk API (relay subscribe/publish/query, scoped storage, read-only identity, inter-napplet events, sandboxed resource byte-fetching, config, theme, capability gating), and the single-file artifact rule. Pairs with design-napplet (plan first) and test-napplet (verify before publish).
+description: Use when writing a napplet (sandboxed Nostr iframe app) — Vite setup, the NIP-5A manifest plugin, runtime-injected window.napplet, the @napplet/sdk API (relay subscribe/publish/query, scoped storage, read-only identity, inter-napplet events, sandboxed resource byte-fetching, config, theme, capability gating), and the single-file artifact rule. Pairs with design-napplet (plan first) and test-napplet (verify before publish).
 ---
 
 # Building a Napplet
 
 Implements a `design-napplet` spec. A napplet is a single self-contained `/index.html` the shell loads into a `sandbox="allow-scripts"` iframe (no `allow-same-origin`); all host access is proxied over postMessage per NIP-5D. The napplet never holds keys. Protocol truth: NIP-5D (<https://github.com/nostr-protocol/nips/pull/2303>) + NAPs (<https://github.com/napplet/naps>). Never invent wire surface; flag gaps.
 
-## The two packages
+## Runtime Injection And SDK
 
-- **`@napplet/shim`** — *side-effect only, zero named exports.* `import '@napplet/shim'` installs `window.napplet` and registers with the shell. Importing `{ x } from '@napplet/shim'` is an error.
-- **`@napplet/sdk`** — named, typed wrappers over the same global, for bundlers.
+The runtime injects `window.napplet` before napplet scripts run. Napplet code
+does not import `@napplet/shim`; runtimes consume that package when they need the
+first-party installer. Napplets import `@napplet/sdk` for named, typed wrappers,
+or call `window.napplet.<domain>.*` directly.
 
-Canonical pattern — import both:
+Canonical pattern:
 
 ```ts
-import '@napplet/shim';                                  // installs window.napplet
 import { relay, inc, storage, identity } from '@napplet/sdk';
 ```
 
@@ -24,7 +25,7 @@ Equivalently call `window.napplet.<domain>.*` directly (identical behavior). Exa
 ## Step 1 — Install
 
 ```bash
-pnpm add @napplet/shim @napplet/sdk
+pnpm add @napplet/sdk
 pnpm add -D @napplet/vite-plugin
 ```
 
@@ -203,7 +204,7 @@ do not add napplet-owned bootstrap plumbing.
 
 ## Common pitfalls
 
-- `import { x } from '@napplet/shim'` — **error.** The shim has no named exports; use `@napplet/sdk` or `window.napplet.*`.
+- Napplet-owned `@napplet/shim` bootstrap — **wrong layer.** The runtime injects `window.napplet`; napplets use `@napplet/sdk` or direct domain properties.
 - No `discoverServices`/`hasService`/`hasServiceVersion` — use injected domain property presence.
 - Storage is `nappletStorage`-backed via `storage.*` — there is no `nappletState`/`nappStorage`/`nappState` import.
 - Never `localStorage`/`fetch`/`<img src=externalUrl>`/`WebSocket` — sandbox + CSP block them. Use `storage` and `resource`.

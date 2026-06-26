@@ -307,8 +307,6 @@ At build time (with `VITE_DEV_PRIVKEY_HEX` set), the manifest event also include
 The host shell reads `<meta name="napplet-requires">` during napplet initialization and compares against its supported capabilities. Napplets can also check at runtime:
 
 ```ts
-import '@napplet/shim';
-
 if (!window.napplet?.media) {
   console.warn('Media NAP not available — some features disabled');
 }

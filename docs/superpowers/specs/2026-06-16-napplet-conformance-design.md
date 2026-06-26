@@ -7,8 +7,8 @@
 ## Problem
 
 A napplet is a static Vite-built web app loaded into a `sandbox="allow-scripts"`
-(no `allow-same-origin`) iframe. It installs `window.napplet` via `@napplet/shim`
-and communicates with a host **shell** purely through `postMessage` JSON envelopes
+(no `allow-same-origin`) iframe. The runtime injects `window.napplet` before
+napplet scripts run, and communication with a host **shell** uses `postMessage` JSON envelopes
 `{ type: "domain.action", ...payload }` across 16 NAP domains, plus a build-time
 NIP-5A manifest (meta tags, `napplet-type`/d-tag, `aggregateHash`, config schema,
 connect origins, no inline scripts).

@@ -57,7 +57,7 @@ Single-page vertical scroll, sticky anchored nav, purple Nostr-native theme. Sec
 4. **How it works** — JSON envelope (`{ type: "domain.action", ...payload }`) over `postMessage`. Animated flow: napplet → `relay.subscribe` → shell → relay → event back. Covers sandbox (`allow-scripts` only, no `allow-same-origin`), identity via unforgeable `MessageEvent.source`, NAPs as capability domains.
 5. **Benefits** — card grid: keys never exposed · sandbox isolation · composability/reuse · smaller attack surface · user control · portability across shells.
 6. **Paradigm shift** — shells compete on trust + UX (not feature count); mix-and-match apps; focused dev surface; an ecosystem of interoperable napplets.
-7. **Where the runtime fits** — layered diagram: your napplet → `@napplet/shim`/`sdk` → NIP-5D envelope → shell/runtime (**Kehto**, linked) → Nostr network.
+7. **Where the runtime fits** — layered diagram: runtime-injected `window.napplet` + napplet SDK → NIP-5D envelope → shell/runtime (**Kehto**, linked) → Nostr network.
 8. **Packages** — six cards (core, shim, sdk, nap, vite-plugin, boilerplate) → docs + npm/JSR.
 9. **Get started** — `npx @napplet/boilerplate`, links to docs + spec.
 10. **Footer** — spec (NIP-5D), GitHub, docs, Kehto.

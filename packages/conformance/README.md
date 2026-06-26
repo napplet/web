@@ -8,7 +8,7 @@ in two scopes that share this one engine:
 - **Standalone web runtime** — the single-window `apps/conformance` app.
 
 v1 is **zero-config protocol conformance**: manifest/meta validity, boots under
-`sandbox="allow-scripts"`, installs `window.napplet`, every emitted postMessage
+`sandbox="allow-scripts"`, receives runtime-injected `window.napplet`, every emitted postMessage
 envelope validates against the per-NAP validators, graceful degradation when
 domain presence returns false, and no forbidden globals / undeclared egress.
 

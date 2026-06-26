@@ -2,9 +2,9 @@
  * @napplet/nap/config -- SDK helpers wrapping window.napplet.config.
  *
  * These convenience functions delegate to `window.napplet.config.*` at call time.
- * The shim must be imported somewhere first (typically via `@napplet/shim`) to
- * install the global. Each wrapper is a thin, stateless facade over the mounted
- * API -- no domain logic lives here.
+ * The runtime must inject the `config` domain before these wrappers are called.
+ * Each wrapper is a thin, stateless facade over the mounted API -- no domain
+ * logic lives here.
  *
  * Bare names are used (not `configGet` / `configSubscribe` etc.) per the merged
  * NAP-CONFIG spec. Phase 115 re-exports these under a `config` namespace in

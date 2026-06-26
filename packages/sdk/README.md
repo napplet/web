@@ -6,26 +6,24 @@
 
 ### Prerequisites
 
-- `@napplet/shim` must be imported (side-effect) to install `window.napplet` before SDK methods are called
+- A NIP-5D runtime injects `window.napplet` before SDK methods are called
 - A shell host running a napplet protocol shell implementation
 
 ### How It Works
 
-1. Import `@napplet/shim` in your entry point to install the `window.napplet` global
-2. Import named exports from `@napplet/sdk` -- `relay`, `inc`, `storage`, `keys`, `ble`, `lists`
-3. Each SDK method delegates to its `window.napplet.*` counterpart at call time
-4. If `window.napplet` is not installed when a method is called, a descriptive error is thrown
+1. Import named exports from `@napplet/sdk` -- `relay`, `inc`, `storage`, `keys`, `ble`, `lists`
+2. Each SDK method delegates to its injected `window.napplet.*` counterpart at call time
+3. If `window.napplet` or a requested domain is unavailable when a method is called, a descriptive error is thrown
 
 ### Installation
 
 ```bash
-npm install @napplet/sdk @napplet/shim
+npm install @napplet/sdk
 ```
 
 ## Quick Start
 
 ```ts
-import '@napplet/shim';
 import { relay, inc, storage, keys, media, notify, config, resource, ble, webrtc, link, lists, type NostrEvent } from '@napplet/sdk';
 
 // Subscribe to kind 1 notes
@@ -210,7 +208,6 @@ Per-napplet declarative configuration (NAP-CONFIG). Mirrors `window.napplet.conf
 `json-schema-to-ts` is declared as an optional `peerDependency` of `@napplet/nap` (scoped to the `@napplet/nap/config` domain's `FromSchema` typing). Install it in your napplet to get `FromSchema<typeof schema>` typing for your `config.subscribe` callback -- the `values` parameter is inferred directly from your schema (enums, required fields, defaults all flow through). Authors who skip `json-schema-to-ts` pay no install cost and `config.subscribe` still works with the default `Record<string, unknown>` typing.
 
 ```ts
-import '@napplet/shim';
 import { config } from '@napplet/sdk';
 import type { FromSchema } from 'json-schema-to-ts';
 
@@ -271,7 +268,7 @@ Keyboard forwarding and action keybindings. Mirrors `window.napplet.keys`.
 
 Read-only user identity queries (NAP-IDENTITY). The identity namespace
 is NOT exported as a top-level SDK object — use `window.napplet.identity.*` directly
-after importing `@napplet/shim`, or use the bare-name helpers below.
+after runtime injection, or use the bare-name helpers below.
 
 | Method | Returns | Description |
 |--------|---------|-------------|
@@ -409,37 +406,38 @@ if (window.napplet?.resource) {
 
 ## Runtime Guard
 
-If `window.napplet` is not installed when an SDK method is called, a clear error is thrown:
+If `window.napplet` or a requested domain is unavailable when an SDK method is
+called, a clear error is thrown:
 
 ```
-Error: window.napplet not installed -- import @napplet/shim first
+Error: window.napplet.relay is unavailable -- runtime did not inject this domain
 ```
 
-This protects against importing `@napplet/sdk` without the side-effect shim import.
+This protects napplets from assuming optional domains are always present.
 
 ## SDK vs Shim
 
 | | `@napplet/sdk` | `@napplet/shim` |
 |---|---|---|
-| **Import style** | `import { relay } from '@napplet/sdk'` | `import '@napplet/shim'` (side-effect) |
-| **What it does** | Named exports wrapping `window.napplet` | Installs `window.napplet` + shell registration |
+| **Import style** | `import { relay } from '@napplet/sdk'` | `import { installNappletGlobal } from '@napplet/shim'` |
+| **What it does** | Named exports wrapping injected domains | Runtime-side global installer |
 | **Dependencies** | `@napplet/core` (types only) | None (types from `@napplet/core`) |
-| **Side effects** | None | Yes -- installs globals, registers with shell |
-| **Required** | Optional convenience | Required in every napplet |
+| **Side effects** | None | Yes -- installs globals on a target window |
+| **Required** | Optional convenience for napplets | Runtime implementation detail |
 
-**Typical usage:** Import both -- shim for runtime, SDK for developer API:
+**Typical napplet usage:** import the SDK for typed API access:
 
 ```ts
-import '@napplet/shim';                                                  // required: installs window.napplet
-import { relay, inc, storage, keys, media, notify } from '@napplet/sdk';  // optional: typed API
+import { relay, inc, storage, keys, media, notify } from '@napplet/sdk';
 ```
 
-If you are writing a vanilla napplet with no build step, use `window.napplet.*` directly after importing the shim -- the SDK is not required.
+If you are writing a vanilla napplet with no build step, use the injected
+`window.napplet.*` namespace directly -- the SDK is not required.
 
 ## Protocol Reference
 
 - [NIP-5D](https://github.com/nostr-protocol/nips/pull/2303) -- Napplet-shell protocol specification
-- [@napplet/shim](../shim/) -- Window installer package
+- [@napplet/shim](../shim/) -- Runtime-side injected global installer
 - [@napplet/core](../core/) -- Shared protocol types
 
 ## License
