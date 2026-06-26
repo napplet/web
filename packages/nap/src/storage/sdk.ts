@@ -7,10 +7,10 @@
 
 import type { NappletGlobal } from '@napplet/core';
 
-function requireStorage(): NappletGlobal['storage'] {
+function requireStorage(): NonNullable<NappletGlobal['storage']> {
   const w = window as Window & { napplet?: NappletGlobal };
   if (!w.napplet?.storage) {
-    throw new Error('window.napplet.storage not installed -- import @napplet/shim first');
+    throw new Error('window.napplet.storage is unavailable -- runtime did not inject this domain');
   }
   return w.napplet.storage;
 }

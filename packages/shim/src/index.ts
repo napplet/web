@@ -1,4 +1,5 @@
-
+import { NAP_DOMAINS } from '@napplet/core';
+import type { NapDomain, NappletGlobal } from '@napplet/core';
 import { installKeysShim, handleKeysMessage, registerAction, unregisterAction, onAction } from '@napplet/nap/keys/shim';
 import * as mediaShim from '@napplet/nap/media/shim';
 import {
@@ -14,8 +15,6 @@ import {
   onDismissed as notifyOnDismissed,
   onControls as notifyOnControls,
 } from '@napplet/nap/notify/shim';
-import { installNostrDb } from './nipdb-shim.js';
-import { installRuntimeGuard, markRuntimePresent } from './runtime-guard.js';
 import { installStorageShim, nappletStorage } from '@napplet/nap/storage/shim';
 import { subscribe, publish, publishEncrypted, query } from '@napplet/nap/relay/shim';
 import * as identityShim from '@napplet/nap/identity/shim';
@@ -136,76 +135,19 @@ import {
   unsubscribe as dmUnsubscribe,
   onMessage as dmOnMessage,
 } from '@napplet/nap/dm/shim';
-import { sendEnvelope } from '@napplet/core';
-import type { NappletGlobal, NappletShell, ShellEnvironment, ShellInitMessage } from '@napplet/core';
-import { createShellEnvironment, makeSupports, defaultSupports } from '@napplet/nap/shell/shim';
 import type { IncEventMessage } from '@napplet/nap/inc/types';
 
-// ── NAP-SHELL handshake state (foundational; mandatory) ──────────────────────
-// The shim posts shell.ready, the runtime replies once with shell.init, and we
-// cache that environment so window.napplet.shell.supports() answers locally.
-let currentEnv: ShellEnvironment | null = null;
-const readyResolvers: Array<(env: ShellEnvironment) => void> = [];
-const onReadyHandlers = new Set<(env: ShellEnvironment) => void>();
-
-/**
- * Handle the first `shell.init`. Idempotent: a duplicate is ignored (first wins)
- * per the NAP-SHELL "exactly once" + idempotent-readiness rule.
- */
-function handleShellInit(msg: ShellInitMessage): void {
-  if (currentEnv) return; // first init wins
-  const env = createShellEnvironment(msg);
-  currentEnv = env;
-
-  const napplet = (window as Window & typeof globalThis & { napplet?: NappletGlobal }).napplet;
-  if (napplet) {
-    const shell = napplet.shell as NappletShell & {
-      supports: NappletShell['supports'];
-      services: readonly string[];
-    };
-    shell.supports = makeSupports(env);
-    shell.services = env.services;
-  }
-
-  // Resolve all pending ready() promises and fire each onReady handler once.
-  for (const resolve of readyResolvers.splice(0)) resolve(env);
-  for (const handler of onReadyHandlers) handler(env);
-  onReadyHandlers.clear();
+export interface NappletShimInstallOptions {
+  /** Domains the runtime exposes to this napplet. Omit to install every bundled domain. */
+  domains?: readonly NapDomain[];
 }
 
-/** `window.napplet.shell.ready()` — resolve now if delivered, else queue. */
-function shellReady(): Promise<ShellEnvironment> {
-  if (currentEnv) return Promise.resolve(currentEnv);
-  return new Promise<ShellEnvironment>((resolve) => {
-    readyResolvers.push(resolve);
-  });
-}
-
-/** `window.napplet.shell.onReady()` — fire now if delivered, else register once. */
-function shellOnReady(handler: (env: ShellEnvironment) => void): { close(): void } {
-  if (currentEnv) {
-    handler(currentEnv);
-    return { close() { /* already fired */ } };
-  }
-  onReadyHandlers.add(handler);
-  let closed = false;
-  return {
-    close() {
-      if (closed) return;
-      closed = true;
-      onReadyHandlers.delete(handler);
-    },
-  };
-}
-
-/**
- * Central message handler for JSON envelope messages from the shell.
- * Routes messages to appropriate handlers based on type prefix.
- */
 type DomainHandler = (msg: { type: string; [key: string]: unknown }) => void;
 
-// Domain prefix -> shim handler. Each NAP routes its own `<domain>.*` result
-// and push messages; prefixes are mutually exclusive so order is irrelevant.
+const DEFAULT_DOMAINS = new Set<NapDomain>(NAP_DOMAINS);
+const installedDomainShims = new Set<NapDomain>();
+let messageListenerInstalled = false;
+
 const DOMAIN_ROUTERS: ReadonlyArray<readonly [string, DomainHandler]> = [
   ['keys.', handleKeysMessage],
   ['media.', mediaShim.handleMediaMessage],
@@ -232,18 +174,8 @@ function handleEnvelopeMessage(event: MessageEvent): void {
   const msg = event.data;
   if (typeof msg !== 'object' || msg === null || typeof msg.type !== 'string') return;
 
-  // A valid envelope from the parent proves a runtime is on the other side;
-  // cancel the runtime guard so it never fires for an embedded napplet.
-  markRuntimePresent();
-
   const type = msg.type as string;
 
-  if (type === 'shell.init') {
-    handleShellInit(msg as ShellInitMessage);
-    return;
-  }
-
-  // INC events fan out to topic handlers (exact match, not a domain prefix).
   if (type === 'inc.event') {
     handleIncEvent(msg as IncEventMessage);
     return;
@@ -258,233 +190,328 @@ function handleEnvelopeMessage(event: MessageEvent): void {
   }
 }
 
-installIncShim();
+function createNappletGlobal(domains: ReadonlySet<NapDomain>): NappletGlobal {
+  const napplet: Partial<NappletGlobal> = {};
 
-(window as Window & typeof globalThis & { napplet: NappletGlobal }).napplet = {
-  relay: {
-    subscribe,
-    publish,
-    publishEncrypted,
-    query,
-  },
-  inc: {
-    emit,
-    on,
-  },
-  storage: {
-    getItem: nappletStorage.getItem.bind(nappletStorage),
-    setItem: nappletStorage.setItem.bind(nappletStorage),
-    removeItem: nappletStorage.removeItem.bind(nappletStorage),
-    keys: nappletStorage.keys.bind(nappletStorage),
-    instance: {
-      getItem: nappletStorage.instance.getItem.bind(nappletStorage.instance),
-      setItem: nappletStorage.instance.setItem.bind(nappletStorage.instance),
-      removeItem: nappletStorage.instance.removeItem.bind(nappletStorage.instance),
-      keys: nappletStorage.instance.keys.bind(nappletStorage.instance),
-    },
-  },
-  keys: {
-    registerAction,
-    unregisterAction,
-    onAction,
-  },
-  media: {
-    createSession: mediaShim.createSession,
-    updateSession: mediaShim.updateSession,
-    destroySession: mediaShim.destroySession,
-    reportState: mediaShim.reportState,
-    reportCapabilities: mediaShim.reportCapabilities,
-    sendCommand: mediaShim.sendCommand,
-    onCommand: mediaShim.onCommand,
-    onState: mediaShim.onState,
-    onCapabilities: mediaShim.onCapabilities,
-    onControls: mediaShim.onControls,
-  },
-  notify: {
-    send: notifySend,
-    dismiss: notifyDismiss,
-    badge: notifyBadge,
-    registerChannel: notifyRegisterChannel,
-    requestPermission: notifyRequestPermission,
-    onAction: notifyOnAction,
-    onClicked: notifyOnClicked,
-    onDismissed: notifyOnDismissed,
-    onControls: notifyOnControls,
-  },
-  identity: {
-    getPublicKey: identityShim.getPublicKey,
-    onChanged: identityShim.onChanged,
-    getRelays: identityShim.getRelays,
-    getProfile: identityShim.getProfile,
-    getFollows: identityShim.getFollows,
-    getList: identityShim.getList,
-    getZaps: identityShim.getZaps,
-    getMutes: identityShim.getMutes,
-    getBlocked: identityShim.getBlocked,
-    getBadges: identityShim.getBadges,
-  },
-  theme: {
-    get: themeShim.get,
-    onChanged: themeShim.onChanged,
-  },
-  config: {
-    registerSchema: configRegisterSchema,
-    get: configGet,
-    subscribe: configSubscribe,
-    openSettings: configOpenSettings,
-    onSchemaError: configOnSchemaError,
-    schema: null,
-  },
-  resource: {
-    bytes: resourceBytes,
-    bytesMany: resourceBytesMany,
-    bytesAsObjectURL: resourceBytesAsObjectURL,
-  },
-  cvm: {
-    discover: cvmDiscover,
-    request: cvmRequest,
-    listTools: cvmListTools,
-    callTool: cvmCallTool,
-    listResources: cvmListResources,
-    readResource: cvmReadResource,
-    close: cvmClose,
-    onEvent: cvmOnEvent,
-  },
-  outbox: {
-    query: outboxQuery,
-    subscribe: outboxSubscribe,
-    publish: outboxPublish,
-    resolveRelays: outboxResolveRelays,
-  },
-  upload: {
-    upload: uploadUpload,
-    status: uploadStatusFn,
-    onStatus: uploadOnStatus,
-  },
-  intent: {
-    invoke: intentInvoke,
-    open: intentOpen,
-    available: intentAvailable,
-    handlers: intentHandlers,
-    onChanged: intentOnChanged,
-  },
-  webrtc: {
-    open: webrtcOpen,
-    send: webrtcSend,
-    close: webrtcClose,
-    onEvent: webrtcOnEvent,
-  },
-  ble: {
-    open: bleOpen,
-    services: bleServices,
-    read: bleRead,
-    write: bleWrite,
-    subscribe: bleSubscribe,
-    unsubscribe: bleUnsubscribe,
-    close: bleClose,
-    onEvent: bleOnEvent,
-  },
-  link: {
-    open: linkOpen,
-  },
-  lists: {
-    supported: listsSupported,
-    add: listsAdd,
-    remove: listsRemove,
-  },
-  common: {
-    encodeNip19: commonEncodeNip19,
-    decodeNip19: commonDecodeNip19,
-    getProfile: commonGetProfile,
-    follows: commonFollows,
-    follow: commonFollow,
-    unfollow: commonUnfollow,
-    react: commonReact,
-    report: commonReport,
-  },
-  serial: {
-    open: serialOpen,
-    write: serialWrite,
-    close: serialClose,
-    onEvent: serialOnEvent,
-  },
-  dm: {
-    status: dmStatus,
-    conversations: dmConversations,
-    messages: dmMessages,
-    send: dmSend,
-    subscribe: dmSubscribe,
-    unsubscribe: dmUnsubscribe,
-    onMessage: dmOnMessage,
-  },
-  shell: {
-    supports: defaultSupports,
-    services: [],
-    ready: shellReady,
-    onReady: shellOnReady,
-  },
-};
+  if (domains.has('relay')) {
+    napplet.relay = {
+      subscribe,
+      publish,
+      publishEncrypted,
+      query,
+    };
+  }
 
-// Install central envelope message listener
-window.addEventListener('message', handleEnvelopeMessage);
-sendEnvelope(window.parent, { type: 'shell.ready' });
+  if (domains.has('inc')) {
+    napplet.inc = {
+      emit,
+      on,
+    };
+  }
 
-// Arm the runtime guard: if no runtime answers the handshake (e.g. this napplet
-// was opened directly from a NIP-5A nsite gateway), surface a clear error modal
-// instead of silently failing. Must run after shell.ready is posted above.
-installRuntimeGuard();
+  if (domains.has('storage')) {
+    napplet.storage = {
+      getItem: nappletStorage.getItem.bind(nappletStorage),
+      setItem: nappletStorage.setItem.bind(nappletStorage),
+      removeItem: nappletStorage.removeItem.bind(nappletStorage),
+      keys: nappletStorage.keys.bind(nappletStorage),
+      instance: {
+        getItem: nappletStorage.instance.getItem.bind(nappletStorage.instance),
+        setItem: nappletStorage.instance.setItem.bind(nappletStorage.instance),
+        removeItem: nappletStorage.instance.removeItem.bind(nappletStorage.instance),
+        keys: nappletStorage.instance.keys.bind(nappletStorage.instance),
+      },
+    };
+  }
 
-// Install window.nostrdb NIP-DB proxy
-installNostrDb();
+  if (domains.has('keys')) {
+    napplet.keys = {
+      registerAction,
+      unregisterAction,
+      onAction,
+    };
+  }
 
-// Install keys shim (smart forwarding + action keybindings)
-installKeysShim();
+  if (domains.has('media')) {
+    napplet.media = {
+      createSession: mediaShim.createSession,
+      updateSession: mediaShim.updateSession,
+      destroySession: mediaShim.destroySession,
+      reportState: mediaShim.reportState,
+      reportCapabilities: mediaShim.reportCapabilities,
+      sendCommand: mediaShim.sendCommand,
+      onCommand: mediaShim.onCommand,
+      onState: mediaShim.onState,
+      onCapabilities: mediaShim.onCapabilities,
+      onControls: mediaShim.onControls,
+    };
+  }
 
-// Install media shim (session management + command handlers)
-mediaShim.installMediaShim();
+  if (domains.has('notify')) {
+    napplet.notify = {
+      send: notifySend,
+      dismiss: notifyDismiss,
+      badge: notifyBadge,
+      registerChannel: notifyRegisterChannel,
+      requestPermission: notifyRequestPermission,
+      onAction: notifyOnAction,
+      onClicked: notifyOnClicked,
+      onDismissed: notifyOnDismissed,
+      onControls: notifyOnControls,
+    };
+  }
 
-// Install notify shim (notification sending + interaction handlers)
-installNotifyShim();
+  if (domains.has('identity')) {
+    napplet.identity = {
+      getPublicKey: identityShim.getPublicKey,
+      onChanged: identityShim.onChanged,
+      getRelays: identityShim.getRelays,
+      getProfile: identityShim.getProfile,
+      getFollows: identityShim.getFollows,
+      getList: identityShim.getList,
+      getZaps: identityShim.getZaps,
+      getMutes: identityShim.getMutes,
+      getBlocked: identityShim.getBlocked,
+      getBadges: identityShim.getBadges,
+    };
+  }
 
-// Install napplet-side storage proxy
-installStorageShim();
+  if (domains.has('theme')) {
+    napplet.theme = {
+      get: themeShim.get,
+      onChanged: themeShim.onChanged,
+    };
+  }
 
-// Install identity shim (read-only user identity queries)
-identityShim.installIdentityShim();
+  if (domains.has('config')) {
+    napplet.config = {
+      registerSchema: configRegisterSchema,
+      get: configGet,
+      subscribe: configSubscribe,
+      openSettings: configOpenSettings,
+      onSchemaError: configOnSchemaError,
+      schema: null,
+    };
+  }
 
-// Install theme shim (read-only shell theme access; theme.get + theme.changed)
-themeShim.installThemeShim();
+  if (domains.has('resource')) {
+    napplet.resource = {
+      bytes: resourceBytes,
+      bytesMany: resourceBytesMany,
+      bytesAsObjectURL: resourceBytesAsObjectURL,
+    };
+  }
 
-// Install config shim (manifest-meta schema read + window.napplet.config mount with readonly `schema` getter)
-installConfigShim();
+  if (domains.has('cvm')) {
+    napplet.cvm = {
+      discover: cvmDiscover,
+      request: cvmRequest,
+      listTools: cvmListTools,
+      callTool: cvmCallTool,
+      listResources: cvmListResources,
+      readResource: cvmReadResource,
+      close: cvmClose,
+      onEvent: cvmOnEvent,
+    };
+  }
 
-// Install resource shim (single-flight cache for byte fetches; no install-time work)
-installResourceShim();
+  if (domains.has('outbox')) {
+    napplet.outbox = {
+      query: outboxQuery,
+      subscribe: outboxSubscribe,
+      publish: outboxPublish,
+      resolveRelays: outboxResolveRelays,
+    };
+  }
 
-// Install ContextVM shim (cvm.* request/response correlation + cvm.event listeners; no install-time work)
-installCvmShim();
+  if (domains.has('upload')) {
+    napplet.upload = {
+      upload: uploadUpload,
+      status: uploadStatusFn,
+      onStatus: uploadOnStatus,
+    };
+  }
 
-// Install outbox shim (outbox.* request/response correlation + subscription event streaming; no install-time work)
-installOutboxShim();
+  if (domains.has('intent')) {
+    napplet.intent = {
+      invoke: intentInvoke,
+      open: intentOpen,
+      available: intentAvailable,
+      handlers: intentHandlers,
+      onChanged: intentOnChanged,
+    };
+  }
 
-// Install upload shim (upload.* request/response correlation + status.changed listeners; no install-time work)
-installUploadShim();
+  if (domains.has('webrtc')) {
+    napplet.webrtc = {
+      open: webrtcOpen,
+      send: webrtcSend,
+      close: webrtcClose,
+      onEvent: webrtcOnEvent,
+    };
+  }
 
-// Install intent shim (intent.* request/response correlation + intent.changed listeners; no install-time work)
-installIntentShim();
+  if (domains.has('ble')) {
+    napplet.ble = {
+      open: bleOpen,
+      services: bleServices,
+      read: bleRead,
+      write: bleWrite,
+      subscribe: bleSubscribe,
+      unsubscribe: bleUnsubscribe,
+      close: bleClose,
+      onEvent: bleOnEvent,
+    };
+  }
 
-// Install common shim (common.* request/response correlation; no install-time work)
-installCommonShim();
+  if (domains.has('link')) {
+    napplet.link = {
+      open: linkOpen,
+    };
+  }
 
-// Install WebRTC shim (webrtc.* request/response correlation + webrtc.event listeners; no install-time work)
-installWebrtcShim();
-// Install BLE shim (ble.* request/response correlation + ble.event listeners; no install-time work)
-installBleShim();
-// Install link shim (link.open request/response correlation; no install-time work)
-installLinkShim();
-// Install lists shim (lists.* request/response correlation; no install-time work)
-installListsShim();
-// Install serial shim (serial.* request/response correlation + serial.event listeners; no install-time work)
-installSerialShim();
-// Install DM shim (dm.* request/response correlation + dm.message listeners; no install-time work)
-installDmShim();
+  if (domains.has('lists')) {
+    napplet.lists = {
+      supported: listsSupported,
+      add: listsAdd,
+      remove: listsRemove,
+    };
+  }
+
+  if (domains.has('common')) {
+    napplet.common = {
+      encodeNip19: commonEncodeNip19,
+      decodeNip19: commonDecodeNip19,
+      getProfile: commonGetProfile,
+      follows: commonFollows,
+      follow: commonFollow,
+      unfollow: commonUnfollow,
+      react: commonReact,
+      report: commonReport,
+    };
+  }
+
+  if (domains.has('serial')) {
+    napplet.serial = {
+      open: serialOpen,
+      write: serialWrite,
+      close: serialClose,
+      onEvent: serialOnEvent,
+    };
+  }
+
+  if (domains.has('dm')) {
+    napplet.dm = {
+      status: dmStatus,
+      conversations: dmConversations,
+      messages: dmMessages,
+      send: dmSend,
+      subscribe: dmSubscribe,
+      unsubscribe: dmUnsubscribe,
+      onMessage: dmOnMessage,
+    };
+  }
+
+  return napplet as NappletGlobal;
+}
+
+function normalizeDomains(domains?: readonly NapDomain[]): Set<NapDomain> {
+  if (!domains) return new Set(DEFAULT_DOMAINS);
+  return new Set(domains.filter((domain) => DEFAULT_DOMAINS.has(domain)));
+}
+
+function installDomainShim(domain: NapDomain): void {
+  if (installedDomainShims.has(domain)) return;
+  installedDomainShims.add(domain);
+
+  switch (domain) {
+    case 'relay':
+      return;
+    case 'inc':
+      installIncShim();
+      return;
+    case 'storage':
+      installStorageShim();
+      return;
+    case 'keys':
+      installKeysShim();
+      return;
+    case 'media':
+      mediaShim.installMediaShim();
+      return;
+    case 'notify':
+      installNotifyShim();
+      return;
+    case 'identity':
+      identityShim.installIdentityShim();
+      return;
+    case 'theme':
+      themeShim.installThemeShim();
+      return;
+    case 'config':
+      installConfigShim();
+      return;
+    case 'resource':
+      installResourceShim();
+      return;
+    case 'cvm':
+      installCvmShim();
+      return;
+    case 'outbox':
+      installOutboxShim();
+      return;
+    case 'upload':
+      installUploadShim();
+      return;
+    case 'intent':
+      installIntentShim();
+      return;
+    case 'ble':
+      installBleShim();
+      return;
+    case 'webrtc':
+      installWebrtcShim();
+      return;
+    case 'link':
+      installLinkShim();
+      return;
+    case 'lists':
+      installListsShim();
+      return;
+    case 'serial':
+      installSerialShim();
+      return;
+    case 'common':
+      installCommonShim();
+      return;
+    case 'dm':
+      installDmShim();
+      return;
+  }
+}
+
+/**
+ * Install the runtime-provided `window.napplet` namespace.
+ *
+ * Runtimes call this before any napplet script executes. Domain properties are
+ * only present when the runtime exposes that NAP to the napplet.
+ */
+export function installNappletGlobal(options: NappletShimInstallOptions = {}): NappletGlobal {
+  const domains = normalizeDomains(options.domains);
+  const napplet = createNappletGlobal(domains);
+
+  (window as Window & typeof globalThis & { napplet: NappletGlobal }).napplet = napplet;
+
+  if (!messageListenerInstalled) {
+    window.addEventListener('message', handleEnvelopeMessage);
+    messageListenerInstalled = true;
+  }
+
+  for (const domain of domains) {
+    installDomainShim(domain);
+  }
+
+  return napplet;
+}
+
+installNappletGlobal();

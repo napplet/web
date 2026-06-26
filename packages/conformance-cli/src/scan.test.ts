@@ -21,7 +21,7 @@ describe('scanForbiddenGlobals', () => {
   it('returns empty for clean napplet sources', async () => {
     const dir = await fixtureDir();
     await writeFile(join(dir, 'index.html'), '<!doctype html><script type="module" src="./main.js"></script>');
-    await writeFile(join(dir, 'main.js'), 'window.parent.postMessage({ type: "shell.ready" }, "*");');
+    await writeFile(join(dir, 'main.js'), 'if (window.napplet?.relay) window.parent.postMessage({ type: "relay.query", id: "q", filters: [] }, "*");');
     expect(await scanForbiddenGlobals(dir)).toEqual([]);
   });
 

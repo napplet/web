@@ -12,10 +12,10 @@ import type {
   IntentAvailability,
 } from './types.js';
 
-function requireIntent(): NappletGlobal['intent'] {
+function requireIntent(): NonNullable<NappletGlobal['intent']> {
   const w = window as Window & { napplet?: NappletGlobal };
   if (!w.napplet?.intent) {
-    throw new Error('window.napplet.intent not installed -- import @napplet/shim first');
+    throw new Error('window.napplet.intent is unavailable -- runtime did not inject this domain');
   }
   return w.napplet.intent;
 }

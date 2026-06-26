@@ -8,10 +8,10 @@
 import type { NappletGlobal } from '@napplet/core';
 import type { ResourceBytesItem } from './types.js';
 
-function requireResource(): NappletGlobal['resource'] {
+function requireResource(): NonNullable<NappletGlobal['resource']> {
   const w = window as Window & { napplet?: NappletGlobal };
   if (!w.napplet?.resource) {
-    throw new Error('window.napplet.resource not installed -- import @napplet/shim first');
+    throw new Error('window.napplet.resource is unavailable -- runtime did not inject this domain');
   }
   return w.napplet.resource;
 }

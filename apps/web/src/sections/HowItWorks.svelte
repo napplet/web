@@ -21,7 +21,7 @@
     {
       n: '04',
       t: 'Capabilities, negotiated',
-      d: 'A napplet calls window.napplet.shell.supports("relay") to discover what a shell offers. NAP domains carve the protocol into modular capabilities.',
+      d: 'A runtime injects window.napplet.relay when relay access is available. NAP domains carve the protocol into modular capabilities.',
     },
   ];
 </script>

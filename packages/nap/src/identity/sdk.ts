@@ -8,10 +8,10 @@
 import type { NappletGlobal, Subscription } from '@napplet/core';
 import type { ProfileData, ZapReceipt, Badge, RelayPermission } from './types.js';
 
-function requireIdentity(): NappletGlobal['identity'] {
+function requireIdentity(): NonNullable<NappletGlobal['identity']> {
   const w = window as Window & { napplet?: NappletGlobal };
   if (!w.napplet?.identity) {
-    throw new Error('window.napplet.identity not installed -- import @napplet/shim first');
+    throw new Error('window.napplet.identity is unavailable -- runtime did not inject this domain');
   }
   return w.napplet.identity;
 }

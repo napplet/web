@@ -12,9 +12,10 @@ the napplet sandbox at runtime. One engine drives two scopes:
 - **Standalone web runtime** — the single-window `apps/conformance` app.
 
 v1 is **zero-config protocol conformance**: manifest/meta validity, boots under
-`sandbox="allow-scripts"`, installs `window.napplet`, every emitted postMessage
-envelope validates against the per-NAP validators, graceful degradation when
-`shell.supports()` returns `false`, and no forbidden globals / undeclared egress.
+`sandbox="allow-scripts"`, receives a runtime-injected `window.napplet`, every
+emitted postMessage envelope validates against the per-NAP validators, graceful
+degradation when a domain is absent, and no forbidden globals / undeclared
+egress.
 
 - **npm:** [`@napplet/conformance`](https://www.npmjs.com/package/@napplet/conformance)
 - **JSR:** [`@napplet/conformance`](https://jsr.io/@napplet/conformance)

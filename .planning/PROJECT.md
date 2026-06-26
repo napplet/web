@@ -1,17 +1,19 @@
 # Napplet Protocol SDK
 
-## Current Milestone: v0.33.0 NAP-SHELL Alignment
+## Current Milestone: v0.34.0 NIP-5D Runtime Injection
 
-**Goal:** Align the SDK to the updated NAPs track — implement the mandatory NAP-SHELL bootstrap handshake, and defer the now-inactive NAP-CLASS and NAP-CONNECT domains.
+**Goal:** Align the SDK, shim, conformance tooling, docs, skills, and boilerplate guidance with the current NIP-5D draft: runtimes inject `window.napplet` domain objects before napplet scripts run; napplets detect support by property presence, not by `window.napplet.shell.supports()`.
 
 **Target features:**
-- Defer **NAP-CLASS** (`class` domain) — removed from `NAP_DOMAINS`, `window.napplet.class`, `@napplet/nap/class`, shim/sdk/conformance, docs. *(shipped — commit 9aa4b80)*
-- Defer **NAP-CONNECT** (`connect` domain) — remove from the active surface PLUS its build surface in `@napplet/vite-plugin` (the `connect` option, manifest `connect` tags, `napplet-connect-requires` meta) and the conformance `manifest/connect-origins` check. Keep manifest generation working.
-- Implement **NAP-SHELL** (mandatory, foundational) — `shell.ready` → `shell.init` handshake; `shell.init` carries `{ capabilities: { domains, protocols }, services, class }`; `window.napplet.shell` API gains `services`, `class` (opaque), `ready()`, `onReady()` alongside `supports(domain, protocol?)`; a `@napplet/nap/shell` subpath; the conformance envelope validator recognizes `shell.*` (drops the special-case) and the boot/degrade checks cite NAP-SHELL.
+- Retire the invented **NAP-SHELL** bootstrap surface from current package and conformance behavior: no `shell.ready`, `shell.init`, `window.napplet.shell`, `supports()`, cached shell environment, or `@napplet/nap/shell` subpath as normative runtime API.
+- Update `@napplet/shim` into a runtime-owned injection payload that can install only the granted NAP domain objects for a napplet; domain absence is the availability signal.
+- Update core/sdk/nap typings so `window.napplet.<domain>` properties are optional, domain-local APIs stay typed, and examples gate with property presence.
+- Update conformance CLI/web/fixtures so boot success means an injected `window.napplet` namespace exists before napplet code and emitted envelopes are valid NAP traffic; no check requires a shell handshake.
+- Update docs, READMEs, skills, and boilerplate guidance to describe runtime injection and napplet-side type/SDK consumption accurately.
 
-**Scope (confirmed):** Source of truth is the NAPs track ([github.com/napplet/naps](https://github.com/napplet/naps), `naps/NAP-SHELL.md` + README domain table) and [NIP-5D PR #2303](https://github.com/nostr-protocol/nips/pull/2303). Never invent protocol surface (AGENTS.md "Protocol fidelity"). Breaking change (0.x ⇒ minor bumps); changeset per changed package. **Out of scope:** the new `value` (NAP-VALUE) and `pow` (NAP-POW) domains — a later milestone.
+**Scope (confirmed):** Source of truth is the current [NIP-5D PR #2303](https://github.com/nostr-protocol/nips/pull/2303) head `6ca5632` (`5D.md`) plus NAP domain specs in [github.com/napplet/naps](https://github.com/napplet/naps). NIP-5D defines only web namespace injection, envelope format, transport, manifest/identity, and domain availability by object presence. Per-domain operations, versioning, diagnostics, and compatibility checks belong to the matching NAP. Breaking change (0.x => minor bumps); changeset per changed package.
 
-**Key context:** Staged to stay green at every commit — defer `class` → defer `connect` → implement NAP-SHELL (retiring class/connect first clears the `perm:`/`sandbox` capability tokens so NAP-SHELL lands on the clean `{domains, protocols}` capabilities shape). Branch `feat/nap-shell` (off `main`). `class` capabilities shape question resolved by the deferral: `class` is now an opaque runtime-assigned integer carried by `shell.init` (no `class.assigned`).
+**Key context:** v0.33.0 implemented NAP-SHELL from an older draft. The 2026-06-26 PR update explicitly removed that capability query and handshake model. Treat v0.33 NAP-SHELL artifacts as stale implementation to retire, not as precedent.
 
 ## Shipped: v0.32.0 Napplet Conformance
 

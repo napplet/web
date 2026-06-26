@@ -6,35 +6,6 @@ import {
   type MessageWindowLike,
 } from './reference-shell.js';
 
-describe('createReferenceShell — NAP-SHELL handshake', () => {
-  it('answers shell.ready with shell.init carrying default (all-NAP) capabilities + services', () => {
-    const shell = createReferenceShell({ services: ['signer'] });
-    const out = shell.handle({ type: 'shell.ready' }) as Array<{
-      type: string;
-      capabilities: { domains: string[]; protocols: Record<string, string[]> };
-      services: string[];
-    }>;
-    expect(out).toHaveLength(1);
-    expect(out[0].type).toBe('shell.init');
-    expect(out[0].capabilities.domains).toContain('relay');
-    expect(out[0].capabilities.domains).toContain('storage');
-    expect(out[0].capabilities.protocols).toEqual({});
-    expect(out[0].services).toEqual(['signer']);
-    // The handshake is not a NAP envelope; it must not be recorded.
-    expect(shell.records).toHaveLength(0);
-  });
-
-  it('advertises empty capabilities when configured (drives supports()=false)', () => {
-    const shell = createReferenceShell({ capabilities: { domains: [], protocols: {} }, services: [] });
-    const out = shell.handle({ type: 'shell.ready' }) as Array<{
-      capabilities: { domains: string[] };
-      services: string[];
-    }>;
-    expect(out[0].capabilities.domains).toEqual([]);
-    expect(out[0].services).toEqual([]);
-  });
-});
-
 describe('createReferenceShell — record + respond', () => {
   it('records each inbound envelope with a verdict and timestamp', () => {
     let t = 1000;
@@ -49,7 +20,7 @@ describe('createReferenceShell — record + respond', () => {
 
   it('records a malformed envelope with a failing verdict', () => {
     const shell = createReferenceShell();
-    shell.handle({ type: 'relay.subscribe', id: '1' }); // missing subId + filters
+    shell.handle({ type: 'relay.subscribe', id: '1' });
     expect(shell.records[0].verdict.ok).toBe(false);
   });
 
@@ -95,17 +66,15 @@ describe('attachReferenceShell', () => {
     };
     const posted: unknown[] = [];
     const target = { postMessage: (m: unknown) => posted.push(m) };
-    const nappletWindow = {}; // stand-in for iframe.contentWindow
+    const nappletWindow = {};
 
     const shell = createReferenceShell();
     const detach = attachReferenceShell(shell, { host, target, expectedSource: nappletWindow });
     expect(typeof listener).toBe('function');
 
-    // Event from the wrong source is ignored.
     listener!({ source: {}, data: { type: 'storage.get', id: '1', key: 'k' } } as unknown as MessageEvent);
     expect(posted).toHaveLength(0);
 
-    // Event from the expected source is handled.
     listener!({ source: nappletWindow, data: { type: 'storage.get', id: '1', key: 'k' } } as unknown as MessageEvent);
     expect(posted).toEqual([{ type: 'storage.get.result', id: '1', value: null }]);
 

@@ -11,14 +11,7 @@ import type {
   NostrFilter,
   TopicKey,
   TopicValue,
-  NamespacedCapability,
-  NapProtocolId,
-  ShellSupports,
-  ShellCapabilities,
-  ShellEnvironment,
-  NappletShell,
-  ShellReadyMessage,
-  ShellInitMessage,
+  NappletGlobal,
 } from './index.js';
 
 describe('@napplet/core exports', () => {
@@ -46,7 +39,7 @@ describe('@napplet/core exports', () => {
     });
   });
 
-  describe('namespaced capability types', () => {
+  describe('runtime-injected domain types', () => {
     it('exports NAP domain names', () => {
       const napDomain: NapDomain = 'identity';
       expect(NAP_DOMAINS).toContain(napDomain);
@@ -59,99 +52,35 @@ describe('@napplet/core exports', () => {
       expect(NAP_DOMAINS).toContain('dm');
     });
 
-    it('NamespacedCapability accepts bare NAP domain shorthand', () => {
-      // Compile check: bare NAP domain strings are valid.
-      const _relay: NamespacedCapability = 'relay';
-      const _storage: NamespacedCapability = 'storage';
-      const _inc: NamespacedCapability = 'inc';
-      const _theme: NamespacedCapability = 'theme';
-      const _media: NamespacedCapability = 'media';
-      const _ble: NamespacedCapability = 'ble';
-      const _webrtc: NamespacedCapability = 'webrtc';
-      const _link: NamespacedCapability = 'link';
-      const _serial: NamespacedCapability = 'serial';
-      const _lists: NamespacedCapability = 'lists';
-      const _common: NamespacedCapability = 'common';
-      const _dm: NamespacedCapability = 'dm';
-      expect(true).toBe(true);
-    });
+    it('NappletGlobal represents domain availability by property presence', () => {
+      const napplet: NappletGlobal = {};
+      expect(napplet.relay).toBeUndefined();
 
-    it('NamespacedCapability accepts nap: prefixed domains', () => {
-      // Compile check: explicit NAP prefix
-      const _napRelay: NamespacedCapability = 'nap:relay';
-      const _napStorage: NamespacedCapability = 'nap:storage';
-      const _napInc: NamespacedCapability = 'nap:inc';
-      const _napTheme: NamespacedCapability = 'nap:theme';
-      const _napMedia: NamespacedCapability = 'nap:media';
-      const _napBle: NamespacedCapability = 'nap:ble';
-      const _napWebrtc: NamespacedCapability = 'nap:webrtc';
-      const _napLink: NamespacedCapability = 'nap:link';
-      const _napSerial: NamespacedCapability = 'nap:serial';
-      const _napLists: NamespacedCapability = 'nap:lists';
-      const _napCommon: NamespacedCapability = 'nap:common';
-      const _napDm: NamespacedCapability = 'nap:dm';
-      expect(true).toBe(true);
-    });
-
-    it('NamespacedCapability accepts perm: prefixed strings', () => {
-      // Compile check: permission prefix (per D-03)
-      const _permSign: NamespacedCapability = 'perm:sign';
-      const _permPopups: NamespacedCapability = 'perm:popups';
-      expect(true).toBe(true);
-    });
-
-    it('ShellSupports.supports() accepts NamespacedCapability', () => {
-      // Compile check: the interface method accepts all forms
-      const shell: ShellSupports = { supports: () => false };
-      expect(shell.supports('relay')).toBe(false);
-      expect(shell.supports('nap:relay')).toBe(false);
-      expect(shell.supports('perm:sign')).toBe(false);
-    });
-
-    it('ShellSupports.supports() accepts optional numbered NAP protocol ids', () => {
-      const protocol: NapProtocolId = 'NAP-01';
-      const shell: ShellSupports = { supports: () => true };
-      expect(shell.supports('inc', protocol)).toBe(true);
-      expect(shell.supports('nap:inc', 'NAP-02')).toBe(true);
-    });
-  });
-
-  describe('NAP-SHELL foundational types', () => {
-    it('exposes ShellCapabilities / ShellEnvironment / wire message shapes', () => {
-      const caps: ShellCapabilities = { domains: ['relay'], protocols: { inc: ['NAP-2'] } };
-      const env: ShellEnvironment = { capabilities: caps, services: ['signer'] };
-      const ready: ShellReadyMessage = { type: 'shell.ready' };
-      const init: ShellInitMessage = {
-        type: 'shell.init',
-        capabilities: caps,
-        services: ['signer'],
+      const injected: NappletGlobal = {
+        relay: {
+          subscribe: () => ({ close() { /* noop */ } }),
+          publish: async () => ({
+            id: '',
+            pubkey: '',
+            created_at: 0,
+            kind: 1,
+            tags: [],
+            content: '',
+            sig: '',
+          }),
+          publishEncrypted: async () => ({
+            id: '',
+            pubkey: '',
+            created_at: 0,
+            kind: 4,
+            tags: [],
+            content: '',
+            sig: '',
+          }),
+          query: async () => [],
+        } satisfies NonNullable<NappletGlobal['relay']>,
       };
-      expect(ready.type).toBe('shell.ready');
-      expect(init.type).toBe('shell.init');
-      expect(env.services).toContain('signer');
-      expect(caps.domains).toContain('relay');
-    });
-
-    it('NappletShell.supports() takes a bare string + optional protocol and ready() yields a ShellEnvironment', async () => {
-      const env: ShellEnvironment = {
-        capabilities: { domains: ['relay'], protocols: {} },
-        services: [],
-      };
-      const shell: NappletShell = {
-        supports: (domain, protocol) => domain === 'relay' && protocol === undefined,
-        services: [],
-        ready: () => Promise.resolve(env),
-        onReady: (handler) => {
-          handler(env);
-          return { close() {} };
-        },
-      };
-      // Bare-string + protocol calls are type-legal.
-      expect(shell.supports('relay')).toBe(true);
-      expect(shell.supports('inc', 'NAP-2')).toBe(false);
-      // perm: queries still compile against the foundational supports() signature.
-      expect(shell.supports('perm:sign')).toBe(false);
-      await expect(shell.ready()).resolves.toBe(env);
+      expect(typeof injected.relay?.query).toBe('function');
     });
   });
 });

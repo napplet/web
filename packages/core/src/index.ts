@@ -11,7 +11,7 @@
  * ```ts
  * import {
  *   type NostrEvent, type NostrFilter,
- *   type NappletMessage, type NapDomain, type ShellSupports,
+ *   type NappletMessage, type NapDomain,
  *   type NapHandler, type NapDispatch,
  *   NAP_DOMAINS, TOPICS,
  *   createDispatch, registerNap, dispatch, getRegisteredDomains,
@@ -24,10 +24,6 @@
 export type {
   NappletMessage,
   NapDomain,
-  NamespacedCapability,
-  NapProtocolId,
-  ProtocolId,
-  ShellSupports,
 } from './envelope.js';
 export { NAP_DOMAINS } from './envelope.js';
 
@@ -164,11 +160,6 @@ export type {
   SerialSession,
   SerialOpenResult,
   SerialEvent,
-  ShellCapabilities,
-  ShellEnvironment,
-  NappletShell,
-  ShellReadyMessage,
-  ShellInitMessage,
   NappletGlobal,
   NappletInstanceStorage,
   ResourceApi,

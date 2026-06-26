@@ -7,10 +7,10 @@
 
 import type { NappletGlobal, NostrEvent, Subscription } from '@napplet/core';
 
-function requireInc(): NappletGlobal['inc'] {
+function requireInc(): NonNullable<NappletGlobal['inc']> {
   const w = window as Window & { napplet?: NappletGlobal };
   if (!w.napplet?.inc) {
-    throw new Error('window.napplet.inc not installed -- import @napplet/shim first');
+    throw new Error('window.napplet.inc is unavailable -- runtime did not inject this domain');
   }
   return w.napplet.inc;
 }

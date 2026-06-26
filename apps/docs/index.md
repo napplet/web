@@ -24,7 +24,7 @@ features:
   - title: Browser-enforced sandbox
     details: The iframe uses allow-scripts only — no allow-same-origin. Identity is assigned at iframe creation via the unforgeable MessageEvent.source. No handshake required.
   - title: Modular NAP domains
-    details: Capabilities are split into NAP domains (relay, storage, inc, identity, and more). Shells implement the domains they support; napplets gate on shell.supports().
+    details: Capabilities are split into NAP domains (relay, storage, inc, identity, and more). Shells implement the domains they support; napplets gate on domain presence.
   - title: Just a JSON envelope
     details: 'Every message is { type: "domain.action", ...payload }. A simple, standardized wire format that any shell can host and any web app can speak.'
   - title: Portable across shells

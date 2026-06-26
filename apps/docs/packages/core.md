@@ -21,7 +21,7 @@ npm install @napplet/core
 
 ```ts
 import {
-  type NappletMessage, type NapDomain, type NapProtocolId, type ShellSupports,
+  type NappletMessage, type NapDomain, type NappletGlobal,
   type NapHandler, type NapDispatch,
   NAP_DOMAINS, SHELL_BRIDGE_URI, PROTOCOL_VERSION,
   createDispatch, registerNap, dispatch, getRegisteredDomains,
@@ -35,8 +35,8 @@ import {
   `domain.action` format. Concrete message types extend it with payload fields.
 - **`NapDomain`** — string literal union of the NAP capability domains
   (`'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'cvm' | 'outbox' | 'upload' | 'intent' | 'ble' | 'webrtc' | 'link' | 'lists' | 'serial' | 'common'`).
-- **`ShellSupports`** / **`NappletGlobalShell`** — the `supports(capability, protocol?)`
-  capability-query interface behind `window.napplet.shell`.
+- **`NappletGlobal`** — the runtime-injected `window.napplet` namespace with
+  optional domain properties.
 - **`NAP_DOMAINS`** — runtime constant array of all domain strings, for iteration
   and validation.
 

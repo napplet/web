@@ -12,7 +12,7 @@ import type {
   MediaState,
   MediaAction,
 } from '@napplet/nap/media';
-import { requireNapplet } from './require-napplet.js';
+import { requireDomain } from './require-napplet.js';
 
 /**
  * Media session control: create sessions, report state and metadata,
@@ -37,7 +37,7 @@ export const media = {
    * @returns The shell result with canonical sessionId and owner, or error
    */
   createSession(options: MediaSessionCreate): Promise<MediaSessionResult> {
-    return requireNapplet().media.createSession(options);
+    return requireDomain('media').createSession(options);
   },
 
   /**
@@ -46,7 +46,7 @@ export const media = {
    * @param metadata   Partial metadata fields to update
    */
   updateSession(sessionId: string, metadata: Partial<MediaMetadata>): void {
-    requireNapplet().media.updateSession(sessionId, metadata);
+    requireDomain('media').updateSession(sessionId, metadata);
   },
 
   /**
@@ -54,7 +54,7 @@ export const media = {
    * @param sessionId  The session to destroy
    */
   destroySession(sessionId: string): void {
-    requireNapplet().media.destroySession(sessionId);
+    requireDomain('media').destroySession(sessionId);
   },
 
   /**
@@ -63,7 +63,7 @@ export const media = {
    * @param state      Current playback state
    */
   reportState(sessionId: string, state: MediaState): void {
-    requireNapplet().media.reportState(sessionId, state);
+    requireDomain('media').reportState(sessionId, state);
   },
 
   /**
@@ -72,7 +72,7 @@ export const media = {
    * @param actions    Currently supported actions
    */
   reportCapabilities(sessionId: string, actions: MediaAction[]): void {
-    requireNapplet().media.reportCapabilities(sessionId, actions);
+    requireDomain('media').reportCapabilities(sessionId, actions);
   },
 
   /**
@@ -82,7 +82,7 @@ export const media = {
    * @param value      Optional value for seek/volume
    */
   sendCommand(sessionId: string, action: MediaAction, value?: number): void {
-    requireNapplet().media.sendCommand(sessionId, action, value);
+    requireDomain('media').sendCommand(sessionId, action, value);
   },
 
   /**
@@ -95,7 +95,7 @@ export const media = {
     sessionId: string,
     callback: (action: MediaAction, value?: number) => void,
   ): Subscription {
-    return requireNapplet().media.onCommand(sessionId, callback);
+    return requireDomain('media').onCommand(sessionId, callback);
   },
 
   /**
@@ -108,7 +108,7 @@ export const media = {
     sessionId: string,
     callback: (state: MediaState) => void,
   ): Subscription {
-    return requireNapplet().media.onState(sessionId, callback);
+    return requireDomain('media').onState(sessionId, callback);
   },
 
   /**
@@ -121,7 +121,7 @@ export const media = {
     sessionId: string,
     callback: (actions: MediaAction[]) => void,
   ): Subscription {
-    return requireNapplet().media.onCapabilities(sessionId, callback);
+    return requireDomain('media').onCapabilities(sessionId, callback);
   },
 
   /**
@@ -134,7 +134,7 @@ export const media = {
     sessionId: string,
     callback: (controls: MediaAction[]) => void,
   ): Subscription {
-    return requireNapplet().media.onControls(sessionId, callback);
+    return requireDomain('media').onControls(sessionId, callback);
   },
 };
 
@@ -167,7 +167,7 @@ export const notify = {
     channel?: string;
     priority?: 'low' | 'normal' | 'high' | 'urgent';
   }): Promise<{ notificationId: string }> {
-    return requireNapplet().notify.send(notification);
+    return requireDomain('notify').send(notification);
   },
 
   /**
@@ -175,7 +175,7 @@ export const notify = {
    * @param notificationId  The notification to dismiss
    */
   dismiss(notificationId: string): void {
-    requireNapplet().notify.dismiss(notificationId);
+    requireDomain('notify').dismiss(notificationId);
   },
 
   /**
@@ -183,7 +183,7 @@ export const notify = {
    * @param count  Badge count
    */
   badge(count: number): void {
-    requireNapplet().notify.badge(count);
+    requireDomain('notify').badge(count);
   },
 
   /**
@@ -196,7 +196,7 @@ export const notify = {
     description?: string;
     defaultPriority?: 'low' | 'normal' | 'high' | 'urgent';
   }): void {
-    requireNapplet().notify.registerChannel(channel);
+    requireDomain('notify').registerChannel(channel);
   },
 
   /**
@@ -205,7 +205,7 @@ export const notify = {
    * @returns Whether permission was granted
    */
   requestPermission(channel?: string): Promise<{ granted: boolean }> {
-    return requireNapplet().notify.requestPermission(channel);
+    return requireDomain('notify').requestPermission(channel);
   },
 
   /**
@@ -216,7 +216,7 @@ export const notify = {
   onAction(
     callback: (notificationId: string, actionId: string) => void,
   ): Subscription {
-    return requireNapplet().notify.onAction(callback);
+    return requireDomain('notify').onAction(callback);
   },
 
   /**
@@ -227,7 +227,7 @@ export const notify = {
   onClicked(
     callback: (notificationId: string) => void,
   ): Subscription {
-    return requireNapplet().notify.onClicked(callback);
+    return requireDomain('notify').onClicked(callback);
   },
 
   /**
@@ -238,7 +238,7 @@ export const notify = {
   onDismissed(
     callback: (notificationId: string, reason?: string) => void,
   ): Subscription {
-    return requireNapplet().notify.onDismissed(callback);
+    return requireDomain('notify').onDismissed(callback);
   },
 
   /**
@@ -249,6 +249,6 @@ export const notify = {
   onControls(
     callback: (controls: ('toasts' | 'badges' | 'actions' | 'channels' | 'system')[]) => void,
   ): Subscription {
-    return requireNapplet().notify.onControls(callback);
+    return requireDomain('notify').onControls(callback);
   },
 };

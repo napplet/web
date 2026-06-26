@@ -12,10 +12,6 @@ export type { EventTemplate } from '@napplet/core';
 export type {
   NappletMessage,
   NapDomain,
-  NamespacedCapability,
-  NapProtocolId,
-  ProtocolId,
-  ShellSupports,
 } from '@napplet/core';
 
 // Relay NAP

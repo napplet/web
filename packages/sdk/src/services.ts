@@ -44,7 +44,7 @@ import type {
   SerialOpenResult,
   Subscription,
 } from '@napplet/core';
-import { requireNapplet } from './require-napplet.js';
+import { requireDomain } from './require-napplet.js';
 
 /**
  * Shell-mediated link opening (NAP-LINK): ask the shell to open an external URL
@@ -66,7 +66,7 @@ export const link = {
    * @returns Promise resolving to the shell's open/deny status
    */
   open(url: string, options?: LinkOpenOptions): Promise<LinkOpenResult> {
-    return requireNapplet().link.open(url, options);
+    return requireDomain('link').open(url, options);
   },
 };
 
@@ -90,7 +90,7 @@ export const lists = {
    * @returns Promise resolving to supported list descriptions
    */
   supported(): Promise<ListSupport[]> {
-    return requireNapplet().lists.supported();
+    return requireDomain('lists').supported();
   },
 
   /**
@@ -100,7 +100,7 @@ export const lists = {
    * @param options  Optional create/metadata hints
    */
   add(list: ListRef, items: ListItem[], options?: ListOptions): Promise<ListMutationResult> {
-    return requireNapplet().lists.add(list, items, options);
+    return requireDomain('lists').add(list, items, options);
   },
 
   /**
@@ -110,7 +110,7 @@ export const lists = {
    * @param options  Optional runtime hints
    */
   remove(list: ListRef, items: ListItem[], options?: ListOptions): Promise<ListMutationResult> {
-    return requireNapplet().lists.remove(list, items, options);
+    return requireDomain('lists').remove(list, items, options);
   },
 };
 
@@ -135,7 +135,7 @@ export const common = {
    * @returns Promise resolving to the shell encode result
    */
   encodeNip19(input: CommonNip19EncodeInput): Promise<CommonNip19EncodeResult> {
-    return requireNapplet().common.encodeNip19(input);
+    return requireDomain('common').encodeNip19(input);
   },
 
   /**
@@ -144,7 +144,7 @@ export const common = {
    * @returns Promise resolving to normalized decoded fields
    */
   decodeNip19(value: string): Promise<CommonNip19DecodeResult> {
-    return requireNapplet().common.decodeNip19(value);
+    return requireDomain('common').decodeNip19(value);
   },
 
   /**
@@ -153,7 +153,7 @@ export const common = {
    * @returns Promise resolving to latest profile data when available
    */
   getProfile(target: CommonProfileTarget): Promise<CommonProfileResult> {
-    return requireNapplet().common.getProfile(target);
+    return requireDomain('common').getProfile(target);
   },
 
   /**
@@ -161,7 +161,7 @@ export const common = {
    * @returns Promise resolving to followed pubkeys
    */
   follows(): Promise<CommonFollowsResult> {
-    return requireNapplet().common.follows();
+    return requireDomain('common').follows();
   },
 
   /**
@@ -170,7 +170,7 @@ export const common = {
    * @returns Promise resolving to the action result
    */
   follow(...pubkeys: string[]): Promise<CommonActionResult> {
-    return requireNapplet().common.follow(...pubkeys);
+    return requireDomain('common').follow(...pubkeys);
   },
 
   /**
@@ -179,7 +179,7 @@ export const common = {
    * @returns Promise resolving to the action result
    */
   unfollow(...pubkeys: string[]): Promise<CommonActionResult> {
-    return requireNapplet().common.unfollow(...pubkeys);
+    return requireDomain('common').unfollow(...pubkeys);
   },
 
   /**
@@ -194,7 +194,7 @@ export const common = {
     reaction: CommonReaction,
     customEmojiHref?: string,
   ): Promise<CommonActionResult> {
-    return requireNapplet().common.react(targetEventId, reaction, customEmojiHref);
+    return requireDomain('common').react(targetEventId, reaction, customEmojiHref);
   },
 
   /**
@@ -209,7 +209,7 @@ export const common = {
     reason: CommonReportReason,
     text: string,
   ): Promise<CommonActionResult> {
-    return requireNapplet().common.report(target, reason, text);
+    return requireDomain('common').report(target, reason, text);
   },
 };
 
@@ -234,7 +234,7 @@ export const ble = {
    * @returns Promise resolving to the runtime-assigned BLE open result
    */
   open(request: BleOpenRequest): Promise<BleOpenResult> {
-    return requireNapplet().ble.open(request);
+    return requireDomain('ble').open(request);
   },
 
   /**
@@ -243,7 +243,7 @@ export const ble = {
    * @returns Promise resolving to exposed services
    */
   services(sessionId: string): Promise<BleService[]> {
-    return requireNapplet().ble.services(sessionId);
+    return requireDomain('ble').services(sessionId);
   },
 
   /**
@@ -253,7 +253,7 @@ export const ble = {
    * @returns Promise resolving to bytes
    */
   read(sessionId: string, target: BleAttribute): Promise<number[]> {
-    return requireNapplet().ble.read(sessionId, target);
+    return requireDomain('ble').read(sessionId, target);
   },
 
   /**
@@ -270,7 +270,7 @@ export const ble = {
     data: number[],
     options?: BleWriteOptions,
   ): Promise<void> {
-    return requireNapplet().ble.write(sessionId, target, data, options);
+    return requireDomain('ble').write(sessionId, target, data, options);
   },
 
   /**
@@ -279,7 +279,7 @@ export const ble = {
    * @param target     GATT characteristic target
    */
   subscribe(sessionId: string, target: BleAttribute): Promise<void> {
-    return requireNapplet().ble.subscribe(sessionId, target);
+    return requireDomain('ble').subscribe(sessionId, target);
   },
 
   /**
@@ -288,7 +288,7 @@ export const ble = {
    * @param target     GATT characteristic target
    */
   unsubscribe(sessionId: string, target: BleAttribute): Promise<void> {
-    return requireNapplet().ble.unsubscribe(sessionId, target);
+    return requireDomain('ble').unsubscribe(sessionId, target);
   },
 
   /**
@@ -297,7 +297,7 @@ export const ble = {
    * @param reason     Optional reason for the close request
    */
   close(sessionId: string, reason?: string): Promise<void> {
-    return requireNapplet().ble.close(sessionId, reason);
+    return requireDomain('ble').close(sessionId, reason);
   },
 
   /**
@@ -306,7 +306,7 @@ export const ble = {
    * @returns A Subscription with `close()` to stop listening
    */
   onEvent(handler: (event: BleEvent) => void): Subscription {
-    return requireNapplet().ble.onEvent(handler);
+    return requireDomain('ble').onEvent(handler);
   },
 };
 
@@ -331,7 +331,7 @@ export const serial = {
    * @returns Promise resolving to the runtime-assigned serial open result
    */
   open(request: SerialOpenRequest): Promise<SerialOpenResult> {
-    return requireNapplet().serial.open(request);
+    return requireDomain('serial').open(request);
   },
 
   /**
@@ -341,7 +341,7 @@ export const serial = {
    * @returns Promise resolving after the runtime acknowledges the write
    */
   write(sessionId: string, data: Uint8Array | number[]): Promise<void> {
-    return requireNapplet().serial.write(sessionId, data);
+    return requireDomain('serial').write(sessionId, data);
   },
 
   /**
@@ -351,7 +351,7 @@ export const serial = {
    * @returns Promise resolving after the runtime acknowledges the close
    */
   close(sessionId: string, reason?: string): Promise<void> {
-    return requireNapplet().serial.close(sessionId, reason);
+    return requireDomain('serial').close(sessionId, reason);
   },
 
   /**
@@ -360,7 +360,7 @@ export const serial = {
    * @returns A Subscription with `close()` to stop listening
    */
   onEvent(handler: (event: SerialEvent) => void): Subscription {
-    return requireNapplet().serial.onEvent(handler);
+    return requireDomain('serial').onEvent(handler);
   },
 };
 
@@ -383,7 +383,7 @@ export const dm = {
    * @returns Promise resolving to the runtime DM status
    */
   status(): Promise<DmStatus> {
-    return requireNapplet().dm.status();
+    return requireDomain('dm').status();
   },
 
   /**
@@ -392,7 +392,7 @@ export const dm = {
    * @returns Promise resolving to a page of conversations
    */
   conversations(query?: DmConversationQuery): Promise<DmConversationPage> {
-    return requireNapplet().dm.conversations(query);
+    return requireDomain('dm').conversations(query);
   },
 
   /**
@@ -401,7 +401,7 @@ export const dm = {
    * @returns Promise resolving to a page of messages
    */
   messages(query: DmMessageQuery): Promise<DmMessagePage> {
-    return requireNapplet().dm.messages(query);
+    return requireDomain('dm').messages(query);
   },
 
   /**
@@ -410,7 +410,7 @@ export const dm = {
    * @returns Promise resolving to the normalized send result
    */
   send(request: DmSendRequest): Promise<DmSendResult> {
-    return requireNapplet().dm.send(request);
+    return requireDomain('dm').send(request);
   },
 
   /**
@@ -419,7 +419,7 @@ export const dm = {
    * @returns Promise resolving to the runtime subscription id
    */
   subscribe(request?: DmSubscribeRequest): Promise<DmSubscription> {
-    return requireNapplet().dm.subscribe(request);
+    return requireDomain('dm').subscribe(request);
   },
 
   /**
@@ -428,7 +428,7 @@ export const dm = {
    * @returns Promise resolving to the runtime acknowledgement
    */
   unsubscribe(subscriptionId: string): Promise<DmOk> {
-    return requireNapplet().dm.unsubscribe(subscriptionId);
+    return requireDomain('dm').unsubscribe(subscriptionId);
   },
 
   /**
@@ -439,6 +439,6 @@ export const dm = {
   onMessage(
     handler: (message: DmMessage, subscriptionId: string) => void,
   ): Subscription {
-    return requireNapplet().dm.onMessage(handler);
+    return requireDomain('dm').onMessage(handler);
   },
 };

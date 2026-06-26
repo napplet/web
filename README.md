@@ -16,9 +16,9 @@ A **napplet** is a sandboxed web app that runs inside a **shell**. The shell and
 | Package | npm | JSR | Description |
 |---------|-----|-----|-------------|
 | [@napplet/core](packages/core) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fcore?label=npm)](https://www.npmjs.com/package/@napplet/core) | [![JSR](https://jsr.io/badges/@napplet/core)](https://jsr.io/@napplet/core) | JSON envelope types (`NappletMessage`, `NapDomain`), NAP dispatch infrastructure (`registerNap`, `dispatch`), protocol constants and Nostr types. Imported by all other packages. |
-| [@napplet/shim](packages/shim) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fshim?label=npm)](https://www.npmjs.com/package/@napplet/shim) | [![JSR](https://jsr.io/badges/@napplet/shim)](https://jsr.io/@napplet/shim) | Side-effect-only window installer for napplet iframes. Importing `@napplet/shim` installs the `window.napplet` global and registers with the shell. Sends JSON envelope messages via postMessage. Zero named exports. |
+| [@napplet/shim](packages/shim) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fshim?label=npm)](https://www.npmjs.com/package/@napplet/shim) | [![JSR](https://jsr.io/badges/@napplet/shim)](https://jsr.io/@napplet/shim) | Runtime-side helper for injecting selected `window.napplet.<domain>` objects before napplet code runs. Sends JSON envelope messages via postMessage. |
 | [@napplet/sdk](packages/sdk) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fsdk?label=npm)](https://www.npmjs.com/package/@napplet/sdk) | [![JSR](https://jsr.io/badges/@napplet/sdk)](https://jsr.io/@napplet/sdk) | Named TypeScript exports wrapping `window.napplet` for bundler consumers. Provides domain wrapper objects and NAP message type re-exports, including `relay`, `inc`, `storage`, `cvm`, `outbox`, `upload`, `intent`, `ble`, `webrtc`, `link`, `lists`, `common`, `serial`, and `dm`. |
-| [@napplet/nap](packages/nap) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fnap?label=npm)](https://www.npmjs.com/package/@napplet/nap) | [![JSR](https://jsr.io/badges/@napplet/nap)](https://jsr.io/@napplet/nap) | Compatibility package for NAP domain subpaths (relay, storage, inc, ifc, keys, shell, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent, ble, webrtc, link, lists, common, serial, dm) with barrel + granular (types/shim/sdk) exports. Tree-shakable (`sideEffects: false`). Includes ownership-aware `media` and `resource`, the ContextVM `cvm` bridge, outbox-aware `outbox` relay routing, shell-mediated `upload`, archetype `intent` dispatch, runtime-mediated BLE/WebRTC, link opening, list mutations, common social actions, serial device access, direct messages, and read-only `identity` helpers. See [packages/nap/README.md](packages/nap/README.md) for the full subpath reference. |
+| [@napplet/nap](packages/nap) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fnap?label=npm)](https://www.npmjs.com/package/@napplet/nap) | [![JSR](https://jsr.io/badges/@napplet/nap)](https://jsr.io/@napplet/nap) | Compatibility package for active NAP domain subpaths (relay, storage, inc, ifc, keys, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent, ble, webrtc, link, lists, common, serial, dm) with barrel + granular (types/shim/sdk) exports. Tree-shakable (`sideEffects: false`). Includes ownership-aware `media` and `resource`, the ContextVM `cvm` bridge, outbox-aware `outbox` relay routing, shell-mediated `upload`, archetype `intent` dispatch, runtime-mediated BLE/WebRTC, link opening, list mutations, common social actions, serial device access, direct messages, and read-only `identity` helpers. See [packages/nap/README.md](packages/nap/README.md) for the full subpath reference. |
 | [@napplet/vite-plugin](packages/vite-plugin) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fvite-plugin?label=npm)](https://www.npmjs.com/package/@napplet/vite-plugin) | [![JSR](https://jsr.io/badges/@napplet/vite-plugin)](https://jsr.io/@napplet/vite-plugin) | Vite plugin for NIP-5D manifest generation. Computes per-file SHA-256 hashes, signs a kind 35129 napplet manifest event (NIP-5A `path` + aggregate `x` tag schema) at build time, and injects `requires` meta tags. Options: required `nappletType` (the `d` tag), optional `requires` service dependencies, an `artifactMode` (`external-assets` default or `single-file`), an optional `configSchema` (NAP-CONFIG), and NAAT archetype role tags. |
 | [@napplet/boilerplate](packages/boilerplate) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fboilerplate?label=npm)](https://www.npmjs.com/package/@napplet/boilerplate) | — | Interactive `npx @napplet/boilerplate` generator that clones the `github.com/napplet/boilerplate` template, asks for destination/name/type, and prepares a Vite + TypeScript napplet starter. |
 | [@napplet/conformance](packages/conformance) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fconformance?label=npm)](https://www.npmjs.com/package/@napplet/conformance) | [![JSR](https://jsr.io/badges/@napplet/conformance)](https://jsr.io/@napplet/conformance) | Framework-agnostic conformance engine: hand-written envelope validators for the active NAP wire domains, a manifest/meta validator, a scriptable reference mock shell, the zero-config check catalog, and pretty/JSON/JUnit reporters. Browser-safe; reused by both the CLI and the web runtime. |
@@ -52,9 +52,9 @@ npx napplet-conformance --ui . --exec "vite build --watch"
 
 The same web runtime ships standalone (`apps/conformance`, deployed at `/conformance`)
 and runs the checks live in the browser with a visual report. v1 is zero-config protocol
-conformance: manifest/meta validity, boots under `sandbox="allow-scripts"`, installs
-`window.napplet`, every emitted envelope is well-formed, graceful degradation when
-`shell.supports()` is false, and no forbidden globals.
+conformance: manifest/meta validity, boots under `sandbox="allow-scripts"`, receives
+a runtime-injected `window.napplet`, every emitted envelope is well-formed,
+graceful degradation when a domain is absent, and no forbidden globals.
 
 ## Changelog
 
@@ -65,24 +65,23 @@ conformance: manifest/meta validity, boots under `sandbox="allow-scripts"`, inst
 ### Package Dependency Graph
 
 ```
-@napplet/shim ──┐
-                ├──► @napplet/nap ──► @napplet/core
-@napplet/sdk  ──┘
+@napplet/shim ──► @napplet/nap ──► @napplet/core
+@napplet/sdk  ──► @napplet/core
 
 @napplet/vite-plugin  (build-time only, depends on nostr-tools)
 
 @napplet/boilerplate  (CLI generator, clones github.com/napplet/boilerplate)
 ```
 
-### Napplet-Side Communication
+### Runtime Injection And Napplet-Side Communication
 
 ```
-Shell (any compatible shell)                @napplet/shim
+Shell runtime                              @napplet/shim
   ShellBridge                                window.napplet.relay (subscribe/publish/query)
   ├── JSON envelope message routing          window.napplet.inc   (emit/on)
   ├── Identity via message.source            window.napplet.storage (get/set/remove)
   ├── ACL enforcement                        window.napplet.resource (bytes/bytesMany/bytesAsObjectURL)
-  ├── NAP dispatch (relay/signer/storage)    window.napplet.shell.supports(domain)
+  ├── NAP dispatch (relay/signer/storage)    window.napplet.domain presence
   └── INC routing
 
 ◄────────── postMessage: { type: 'relay.subscribe', id, filters } ──────────►
@@ -96,7 +95,7 @@ The iframe sandbox requires only `allow-scripts` -- **no `allow-same-origin`**. 
 
 ## Origin
 
-The napplet protocol is defined by the living [NIP-5D specification](https://github.com/nostr-protocol/nips/pull/2303); the NAP capability domains are defined on the [NAPs track](https://github.com/napplet/naps). Any shell can host napplets, and any web app can become a napplet by importing `@napplet/shim`.
+The napplet protocol is defined by the living [NIP-5D specification](https://github.com/nostr-protocol/nips/pull/2303); the NAP capability domains are defined on the [NAPs track](https://github.com/napplet/naps). Any shell can host napplets by injecting `window.napplet` before napplet scripts run. Napplet application code consumes injected domains directly or through `@napplet/sdk`.
 
 ## Development
 

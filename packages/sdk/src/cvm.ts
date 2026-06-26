@@ -36,7 +36,7 @@ import type {
   WebrtcOpenResult,
   WebrtcEvent,
 } from '@napplet/core';
-import { requireNapplet } from './require-napplet.js';
+import { requireDomain } from './require-napplet.js';
 
 /**
  * Native ContextVM bridge (NAP-CVM): MCP-over-Nostr access mediated by the shell.
@@ -59,7 +59,7 @@ export const cvm = {
    * @returns Promise resolving to the discovered servers
    */
   discover(query?: CvmDiscoverQuery): Promise<CvmServer[]> {
-    return requireNapplet().cvm.discover(query);
+    return requireDomain('cvm').discover(query);
   },
 
   /**
@@ -74,7 +74,7 @@ export const cvm = {
     message: McpMessage,
     options?: CvmRequestOptions,
   ): Promise<McpMessage> {
-    return requireNapplet().cvm.request(server, message, options);
+    return requireDomain('cvm').request(server, message, options);
   },
 
   /**
@@ -83,7 +83,7 @@ export const cvm = {
    * @param options  Optional per-request options
    */
   listTools(server: CvmServerRef, options?: CvmRequestOptions): Promise<McpTool[]> {
-    return requireNapplet().cvm.listTools(server, options);
+    return requireDomain('cvm').listTools(server, options);
   },
 
   /**
@@ -99,7 +99,7 @@ export const cvm = {
     args?: Record<string, unknown>,
     options?: CvmRequestOptions,
   ): Promise<McpToolResult> {
-    return requireNapplet().cvm.callTool(server, name, args, options);
+    return requireDomain('cvm').callTool(server, name, args, options);
   },
 
   /**
@@ -108,7 +108,7 @@ export const cvm = {
    * @param options  Optional per-request options
    */
   listResources(server: CvmServerRef, options?: CvmRequestOptions): Promise<McpResource[]> {
-    return requireNapplet().cvm.listResources(server, options);
+    return requireDomain('cvm').listResources(server, options);
   },
 
   /**
@@ -122,7 +122,7 @@ export const cvm = {
     uri: string,
     options?: CvmRequestOptions,
   ): Promise<McpResourceContent> {
-    return requireNapplet().cvm.readResource(server, uri, options);
+    return requireDomain('cvm').readResource(server, uri, options);
   },
 
   /**
@@ -130,7 +130,7 @@ export const cvm = {
    * @param server  Server whose session should be torn down
    */
   close(server: CvmServerRef): Promise<void> {
-    return requireNapplet().cvm.close(server);
+    return requireDomain('cvm').close(server);
   },
 
   /**
@@ -141,7 +141,7 @@ export const cvm = {
   onEvent(
     callback: (server: CvmServerRef, message: McpMessage) => void,
   ): Subscription {
-    return requireNapplet().cvm.onEvent(callback);
+    return requireDomain('cvm').onEvent(callback);
   },
 };
 
@@ -172,7 +172,7 @@ export const outbox = {
     filters: NostrFilter | NostrFilter[],
     options?: OutboxQueryOptions,
   ): Promise<OutboxResult> {
-    return requireNapplet().outbox.query(filters, options);
+    return requireDomain('outbox').query(filters, options);
   },
 
   /**
@@ -185,7 +185,7 @@ export const outbox = {
     filters: NostrFilter | NostrFilter[],
     options?: OutboxSubscribeOptions,
   ): OutboxSubscription {
-    return requireNapplet().outbox.subscribe(filters, options);
+    return requireDomain('outbox').subscribe(filters, options);
   },
 
   /**
@@ -198,7 +198,7 @@ export const outbox = {
     template: EventTemplate,
     options?: OutboxPublishOptions,
   ): Promise<OutboxPublishResult> {
-    return requireNapplet().outbox.publish(template, options);
+    return requireDomain('outbox').publish(template, options);
   },
 
   /**
@@ -207,7 +207,7 @@ export const outbox = {
    * @returns Promise resolving to the relay plan
    */
   resolveRelays(target: OutboxTarget): Promise<OutboxRelayPlan> {
-    return requireNapplet().outbox.resolveRelays(target);
+    return requireDomain('outbox').resolveRelays(target);
   },
 };
 
@@ -233,7 +233,7 @@ export const upload = {
    * @returns Promise resolving to the initial upload result
    */
   upload(request: UploadRequest): Promise<UploadResult> {
-    return requireNapplet().upload.upload(request);
+    return requireDomain('upload').upload(request);
   },
 
   /**
@@ -242,7 +242,7 @@ export const upload = {
    * @returns Promise resolving to the latest status
    */
   status(uploadId: string): Promise<UploadStatus> {
-    return requireNapplet().upload.status(uploadId);
+    return requireDomain('upload').status(uploadId);
   },
 
   /**
@@ -251,7 +251,7 @@ export const upload = {
    * @returns A Subscription with `close()` to stop listening
    */
   onStatus(handler: (status: UploadStatus) => void): Subscription {
-    return requireNapplet().upload.onStatus(handler);
+    return requireDomain('upload').onStatus(handler);
   },
 };
 
@@ -278,7 +278,7 @@ export const intent = {
    * @returns Promise resolving to the invocation result
    */
   invoke(request: IntentRequest): Promise<IntentResult> {
-    return requireNapplet().intent.invoke(request);
+    return requireDomain('intent').invoke(request);
   },
 
   /**
@@ -293,7 +293,7 @@ export const intent = {
     payload?: unknown,
     opts?: Omit<IntentRequest, 'archetype' | 'action' | 'payload'>,
   ): Promise<IntentResult> {
-    return requireNapplet().intent.open(archetype, payload, opts);
+    return requireDomain('intent').open(archetype, payload, opts);
   },
 
   /**
@@ -303,7 +303,7 @@ export const intent = {
    * @returns Promise resolving to the archetype availability
    */
   available(archetype: string): Promise<IntentAvailability> {
-    return requireNapplet().intent.available(archetype);
+    return requireDomain('intent').available(archetype);
   },
 
   /**
@@ -311,7 +311,7 @@ export const intent = {
    * @returns Promise resolving to availability for each satisfiable archetype
    */
   handlers(): Promise<IntentAvailability[]> {
-    return requireNapplet().intent.handlers();
+    return requireDomain('intent').handlers();
   },
 
   /**
@@ -320,7 +320,7 @@ export const intent = {
    * @returns A Subscription with `close()` to stop listening
    */
   onChanged(handler: (availability: IntentAvailability) => void): Subscription {
-    return requireNapplet().intent.onChanged(handler);
+    return requireDomain('intent').onChanged(handler);
   },
 };
 
@@ -344,7 +344,7 @@ export const webrtc = {
    * @returns Promise resolving to the opened session result
    */
   open(request: WebrtcOpenRequest): Promise<WebrtcOpenResult> {
-    return requireNapplet().webrtc.open(request);
+    return requireDomain('webrtc').open(request);
   },
 
   /**
@@ -353,7 +353,7 @@ export const webrtc = {
    * @param payload    Application payload
    */
   send(sessionId: string, payload: unknown): Promise<void> {
-    return requireNapplet().webrtc.send(sessionId, payload);
+    return requireDomain('webrtc').send(sessionId, payload);
   },
 
   /**
@@ -362,7 +362,7 @@ export const webrtc = {
    * @param reason     Optional close reason
    */
   close(sessionId: string, reason?: string): Promise<void> {
-    return requireNapplet().webrtc.close(sessionId, reason);
+    return requireDomain('webrtc').close(sessionId, reason);
   },
 
   /**
@@ -371,6 +371,6 @@ export const webrtc = {
    * @returns Subscription handle
    */
   onEvent(handler: (event: WebrtcEvent) => void): Subscription {
-    return requireNapplet().webrtc.onEvent(handler);
+    return requireDomain('webrtc').onEvent(handler);
   },
 };
