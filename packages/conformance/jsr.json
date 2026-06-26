@@ -5,7 +5,7 @@
   "exports": "./src/index.ts",
   "imports": {
     "@napplet/core": "jsr:@napplet/core@^0.22.0",
-    "@napplet/nap": "jsr:@napplet/nap@^0.22.0"
+    "@napplet/nap": "jsr:@napplet/nap@^0.22.1"
   },
   "publish": {
     "include": [
