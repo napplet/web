@@ -1,5 +1,19 @@
 # @napplet/shim
 
+## 0.23.0
+
+### Minor Changes
+
+- 7e0c5bc: Add NAP-DM as a runtime-mediated direct-message capability with typed payloads,
+  `@napplet/nap/dm` subpath exports, `window.napplet.dm`, SDK wrappers, and
+  conformance validator coverage.
+
+### Patch Changes
+
+- Updated dependencies [7e0c5bc]
+  - @napplet/core@0.22.0
+  - @napplet/nap@0.22.0
+
 ## 0.22.0
 
 ### Minor Changes
