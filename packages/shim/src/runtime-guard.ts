@@ -17,7 +17,7 @@
  * Detection:
  *   - Top-level page (`window.self === window.top`): no parent shell can ever
  *     exist, so we fail loudly immediately.
- *   - Nested in an iframe: a real runtime answers `shell.ready` with `shell.init`
+ *   - Nested in an iframe: a real runtime answers `runtime-injected namespace
  *     near-instantly. We wait briefly; if no envelope arrives from the parent,
  *     the embedder is not a napplet runtime and we fail loudly.
  *
@@ -40,7 +40,7 @@ export const NAPPLET_RUN_URL = 'https://napplet.run';
 export const KEHTO_WEB_URL = 'https://github.com/kehto/web';
 
 /**
- * Grace period for the `shell.ready` → `shell.init` handshake when nested in an
+ * Grace period for the runtime-injection presence when nested in an
  * iframe. A real runtime replies within a few frames; this is generous slack.
  */
 export const HANDSHAKE_TIMEOUT_MS = 3000;
@@ -55,7 +55,7 @@ let guardTimer: ReturnType<typeof setTimeout> | undefined;
 
 /**
  * Mark that a napplet runtime is present. Called by the shim the moment any
- * valid envelope message arrives from `window.parent` (e.g. `shell.init`),
+ * valid envelope message arrives from `window.parent` (for example, a domain result),
  * which proves a runtime is on the other side and cancels the guard.
  */
 export function markRuntimePresent(): void {
@@ -68,7 +68,7 @@ export function markRuntimePresent(): void {
 
 /**
  * Arm the runtime guard. Idempotent enough to be safe; should be called once at
- * the end of shim install, after `shell.ready` is posted to the parent.
+ * the end of shim install, after the runtime installs the injected namespace.
  */
 export function installRuntimeGuard(): void {
   if (isStandaloneAllowed()) return;

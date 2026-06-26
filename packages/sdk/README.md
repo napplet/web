@@ -293,30 +293,16 @@ NAP-IDENTITY is strictly read-only. Signing remains delegated through
 `relay.publish()`, encryption through `relay.publishEncrypted()`, and identity
 changes arrive through `identity.changed` rather than polling.
 
-### `shell`
+### Runtime-Injected Domains
 
-Namespaced capability query. Access via `window.napplet.shell.supports()` after importing `@napplet/shim`.
-
-> Note: The SDK does not export a top-level `shell` object. Use `window.napplet.shell.supports()` directly.
-
-| Method | Returns | Description |
-|--------|---------|-------------|
-| `supports(capability, protocol?)` | `boolean` | Check shell support for a NAP (`nap:relay`), permission (`perm:popups`), or numbered NAP-NN protocol over an interface (`inc`, `NAP-01`). Bare NAP names are also accepted (`relay`). |
-
-**Example:**
+NIP-5D runtimes inject `window.napplet` before napplet code runs. Available NAP
+domains are present as properties; unavailable domains are absent. Gate optional
+behavior with property presence:
 
 ```ts
-import '@napplet/shim';
-
-// NAP domains (bare shorthand or nap: prefix)
-if (window.napplet.shell.supports('relay')) { /* ... */ }
-if (window.napplet.shell.supports('nap:identity')) { /* ... */ }
-
-// Permissions
-if (window.napplet.shell.supports('perm:popups')) { /* ... */ }
-
-// Numbered NAP-NN message protocols
-if (window.napplet.shell.supports('inc', 'NAP-01')) { /* ... */ }
+if (window.napplet?.relay) { /* relay API is available */ }
+if (window.napplet?.identity) { /* identity API is available */ }
+if (window.napplet?.inc) { /* inter-napplet channel API is available */ }
 ```
 
 ### Namespace Import
@@ -406,25 +392,24 @@ import { RELAY_DOMAIN, IDENTITY_DOMAIN, STORAGE_DOMAIN, INC_DOMAIN, THEME_DOMAIN
 // Values: 'relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent', 'ble', 'webrtc', 'link', 'lists', 'common', 'serial'
 ```
 
-These constants are re-exported from the individual domain packages. Use them with the shell capability query
-API for type-safe conditional logic:
+These constants are re-exported from the individual domain packages. Use
+property presence for type-safe conditional logic:
 
 ```ts
-if (window.napplet.shell.supports('nap:relay')) {
+if (window.napplet?.relay) {
   // relay operations are available
 }
 
-if (window.napplet.shell.supports('nap:identity')) {
+if (window.napplet?.identity) {
   // identity queries are available
 }
 
-if (window.napplet.shell.supports('nap:config')) {
+if (window.napplet?.config) {
   // NAP-CONFIG is available -- schema registration and subscribe()
 }
 
-if (window.napplet.shell.supports('nap:resource')) {
-  // resource.bytes(url) is available; check per-scheme too:
-  if (window.napplet.shell.supports('resource:scheme:blossom')) { /* ... */ }
+if (window.napplet?.resource) {
+  // resource.bytes(url) is available.
 }
 ```
 
