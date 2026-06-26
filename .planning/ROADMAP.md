@@ -55,8 +55,9 @@ domain is present as a property; unsupported domains are absent; `shell.ready`,
 protocol.
 
 **Phase groups:** Phase 156 source audit and plan lock -> Phase 157 package
-runtime-injection migration -> Phase 158 conformance/tooling migration -> Phase
-159 docs/skills/boilerplate migration -> Phase 160 release verification and PR.
+runtime-injection migration (4 plans) -> Phase 158 conformance/tooling
+migration (2 plans) -> Phase 159 docs/skills/boilerplate migration (2 plans)
+-> Phase 160 release verification and PR.
 Ships as one coordinated release PR off branch `feat/nip5d-runtime-injection`.
 
 - [ ] **Phase 156: Source Audit and Plan Lock** — Capture the live NIP-5D delta,
@@ -110,8 +111,11 @@ objects and no longer require the NAP-SHELL handshake or `supports()` API.
      active exports.
   4. `@napplet/sdk` helpers fail clearly when a domain object is absent and
      examples gate by property presence.
-**Plans:** 1 plan
-- [ ] 157-01-PLAN.md — Package API and tests migration.
+**Plans:** 4 plans
+- [ ] 157-01-PLAN.md — Core global/domain type migration.
+- [ ] 157-02-PLAN.md — Remove `@napplet/nap/shell` package subpath.
+- [ ] 157-03-PLAN.md — Shim runtime injection installer.
+- [ ] 157-04-PLAN.md — SDK guards and package verification.
 
 ### Phase 158: Conformance and Fixture Migration
 **Goal**: Conformance proves the current NIP-5D bootstrap boundary: injected
@@ -124,8 +128,9 @@ valid domain traffic.
   2. No conformance check, validator, drift guard, or fixture treats
      `shell.ready` / `shell.init` as required protocol.
   3. Fixtures pass/fail for domain traffic behavior, not shell handshake behavior.
-**Plans:** 1 plan
-- [ ] 158-01-PLAN.md — Conformance engine, CLI, web runtime, and fixtures.
+**Plans:** 2 plans
+- [ ] 158-01-PLAN.md — Conformance engine/runtime migration.
+- [ ] 158-02-PLAN.md — CLI, web runner, and fixture migration.
 
 ### Phase 159: Docs, Skills, and Boilerplate Guidance
 **Goal**: Author-facing and agent-facing guidance matches the current model:
@@ -138,8 +143,9 @@ runtimes inject, napplets use types/SDK, and domain absence means unavailable.
   2. Skills tell agents to build napplets against injected `window.napplet`
      domains, install types/SDK as needed, and avoid napplet-owned shim imports.
   3. Boilerplate docs/package guidance is checked and aligned.
-**Plans:** 1 plan
-- [ ] 159-01-PLAN.md — Docs, skills, and boilerplate surface migration.
+**Plans:** 2 plans
+- [ ] 159-01-PLAN.md — Root, package, and app docs migration.
+- [ ] 159-02-PLAN.md — Skills and boilerplate guidance migration.
 
 ### Phase 160: Release Verification and PR
 **Goal**: The migration is release-ready and publicly reviewable.
@@ -743,13 +749,19 @@ are historical context only and are retired by v0.34.0.
 
 ## Progress
 
-**Execution Order (v0.33.0 NAP-SHELL Alignment):**
-Phases execute in numeric order: 154 → 155. Phase 154 (Defer NAP-CONNECT) MUST precede Phase 155 (Implement NAP-SHELL) — retiring `connect`/`class` first clears the `perm:`/`sandbox` capability tokens so NAP-SHELL lands on the clean `{domains, protocols}` capabilities shape. Both stage GREEN at every commit (`pnpm -r build` + `pnpm -r type-check` exit 0). NAP-CLASS (DEFER-01) is already complete (commit `9aa4b80`) and has no phase.
+**Execution Order (v0.34.0 NIP-5D Runtime Injection):**
+Phase 156 locks source and plan evidence, Phase 157 migrates package APIs in
+four bounded plans, Phase 158 migrates conformance/runtime evidence, Phase 159
+updates docs/skills/boilerplate guidance, and Phase 160 runs release gates and
+opens the PR. Runtime-injection work supersedes v0.33 NAP-SHELL artifacts.
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 154. Defer NAP-CONNECT | v0.33.0 | 1/1 | Complete | 2026-06-17 |
-| 155. Implement NAP-SHELL | v0.33.0 | 1/1 | Complete   | 2026-06-17 |
+| 156. Source Audit and Plan Lock | v0.34.0 | 0/1 | In Progress | |
+| 157. Packages Runtime-Injection Migration | v0.34.0 | 0/4 | Planned | |
+| 158. Conformance and Fixture Migration | v0.34.0 | 0/2 | Planned | |
+| 159. Docs, Skills, and Boilerplate Guidance | v0.34.0 | 0/2 | Planned | |
+| 160. Release Verification and PR | v0.34.0 | 0/1 | Planned | |
 
 <details>
 <summary>Archived progress — v0.30.0 Class-Gated Decrypt Surface (Phases 135-138) — SHIPPED 2026-04-23</summary>
