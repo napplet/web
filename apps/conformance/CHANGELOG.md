@@ -1,5 +1,12 @@
 # @napplet/conformance-web
 
+## 0.0.9
+
+### Patch Changes
+
+- Updated dependencies [7e0c5bc]
+  - @napplet/conformance@0.9.0
+
 ## 0.0.8
 
 ### Patch Changes
