@@ -56,6 +56,7 @@ describe('@napplet/core exports', () => {
       expect(NAP_DOMAINS).toContain('serial');
       expect(NAP_DOMAINS).toContain('lists');
       expect(NAP_DOMAINS).toContain('common');
+      expect(NAP_DOMAINS).toContain('dm');
     });
 
     it('NamespacedCapability accepts bare NAP domain shorthand', () => {
@@ -71,6 +72,7 @@ describe('@napplet/core exports', () => {
       const _serial: NamespacedCapability = 'serial';
       const _lists: NamespacedCapability = 'lists';
       const _common: NamespacedCapability = 'common';
+      const _dm: NamespacedCapability = 'dm';
       expect(true).toBe(true);
     });
 
@@ -87,6 +89,7 @@ describe('@napplet/core exports', () => {
       const _napSerial: NamespacedCapability = 'nap:serial';
       const _napLists: NamespacedCapability = 'nap:lists';
       const _napCommon: NamespacedCapability = 'nap:common';
+      const _napDm: NamespacedCapability = 'nap:dm';
       expect(true).toBe(true);
     });
 

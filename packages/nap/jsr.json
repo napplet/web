@@ -90,7 +90,11 @@
     "./serial": "./src/serial/index.ts",
     "./serial/types": "./src/serial/types.ts",
     "./serial/shim": "./src/serial/shim.ts",
-    "./serial/sdk": "./src/serial/sdk.ts"
+    "./serial/sdk": "./src/serial/sdk.ts",
+    "./dm": "./src/dm/index.ts",
+    "./dm/types": "./src/dm/types.ts",
+    "./dm/shim": "./src/dm/shim.ts",
+    "./dm/sdk": "./src/dm/sdk.ts"
   },
   "imports": {
     "@napplet/core": "jsr:@napplet/core@^0.21.0"

@@ -20,6 +20,7 @@ import type {
   ListsApi,
   SerialApi,
   CommonApi,
+  DmApi,
 } from './global/service-api.js';
 
 /**
@@ -357,6 +358,22 @@ export interface NappletGlobal {
    * ```
    */
   serial: SerialApi;
+  /**
+   * Runtime-mediated direct messages (NAP-DM): napplets can request DM status,
+   * conversations, history, send, and live delivery while the runtime owns
+   * signing, encryption, relay routing, storage, key/session state, and policy.
+   *
+   * @example
+   * ```ts
+   * if (window.napplet.shell.supports('dm')) {
+   *   const { conversations } = await window.napplet.dm.conversations({ limit: 20 });
+   *   const live = await window.napplet.dm.subscribe({ conversationId: conversations[0]?.id });
+   *   window.napplet.dm.onMessage((message) => render(message));
+   *   await window.napplet.dm.unsubscribe(live.subscriptionId);
+   * }
+   * ```
+   */
+  dm: DmApi;
   /**
    * NAP-SHELL: the foundational, mandatory bootstrap handshake surface.
    *
