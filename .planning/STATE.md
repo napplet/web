@@ -4,8 +4,8 @@ milestone: v0.33.0
 milestone_name: NAP-SHELL Alignment
 status: "Milestone v0.33.0 shipped — PR #48"
 stopped_at: Completed 155-01-PLAN.md (Implement NAP-SHELL — SHELL-01..06)
-last_updated: "2026-06-26T14:41:06Z"
-last_activity: "2026-06-26 — Quick task 260626-mt6 implemented NAP-DM from napplet/naps PR #74: @napplet/core dm types/domain support, @napplet/nap/dm wire types + shim + SDK helpers, @napplet/sdk and @napplet/shim exports, conformance validators, docs, tests, and changeset. Commit c451810. build + type-check + test:unit + test:conformance + diff-check + aislop green; inherited js-yaml advisory remains."
+last_updated: "2026-06-26T15:01:32Z"
+last_activity: "2026-06-26 — Quick task 260626-nkv resolved napplet/web#91: relay query now guards missing/non-array result.events to [] with a regression test and patch changesets for @napplet/nap + @napplet/shim. Commit 9d23f6c. build + type-check + test:unit + test:conformance + diff-check + aislop green; inherited js-yaml advisory remains."
 progress:
   total_phases: 2
   completed_phases: 2
@@ -31,7 +31,7 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 Phase: 155 (Implement NAP-SHELL) — COMPLETE
 Plan: 155-01 — COMPLETE
 Status: Milestone v0.33.0 shipped — PR #48
-Last activity: 2026-06-26 — Quick task 260626-mt6 implemented NAP-DM from napplet/naps PR #74: @napplet/core dm types/domain support, @napplet/nap/dm wire types + shim + SDK helpers, @napplet/sdk and @napplet/shim exports, conformance validators, docs, tests, and changeset. Commit c451810. build + type-check + test:unit + test:conformance + diff-check + aislop green; inherited js-yaml advisory remains.
+Last activity: 2026-06-26 — Quick task 260626-nkv resolved napplet/web#91: relay query now guards missing/non-array result.events to [] with a regression test and patch changesets for @napplet/nap + @napplet/shim. Commit 9d23f6c. build + type-check + test:unit + test:conformance + diff-check + aislop green; inherited js-yaml advisory remains.
 
 Prior activity: 2026-06-17 — Wired per-package GitHub Releases after npm deploy (scripts/github-releases.mjs + Publish-workflow step, idempotent + backfilling); branch chore/github-releases. Earlier: completed quick task 260617-qmu: retired the deferred NAP-CLASS / NAP-CONNECT surface (deleted both SHELL-*-POLICY specs, cleaned root README + build-napplet SKILL) AND removed the residual opaque `class` field that Phase 155 re-homed into NAP-SHELL `shell.init` (canonical NAP-SHELL carries no class). `shell.init` is now `{ capabilities, services }`. Removed across core/shim/nap/conformance + tests; changeset (minor ×4); build + type-check + test:unit all green. 8 commits (bfaaaf8…9ffa822).
 
@@ -297,6 +297,7 @@ Surfaced by research (informational — each belongs to a specific phase plan):
 | 260622-oxt | Implement NAP-LISTS from napplet/naps PR #68 | 2026-06-22 | 891af42 | [260622-oxt-implement-nap-lists-from-napplet-naps-pr](./quick/260622-oxt-implement-nap-lists-from-napplet-naps-pr/) |
 | 260623-8j8 | implement bytesMany from updated NAP-RESOURCE | 2026-06-23 | 3bc214c | [260623-8j8-implement-bytesmany-from-updated-nap-res](./quick/260623-8j8-implement-bytesmany-from-updated-nap-res/) |
 | 260626-mt6 | Implement NAP-DM from napplet/naps PR #74 and prepare release PR with tests and changeset | 2026-06-26 | c451810 | [260626-mt6-implement-nap-dm-from-napplet-naps-74-an](./quick/260626-mt6-implement-nap-dm-from-napplet-naps-74-an/) |
+| 260626-nkv | Resolve napplet/web#91: guard relay query result events and open PR | 2026-06-26 | 9d23f6c | [260626-nkv-resolve-napplet-web-91-if-valid-guard-re](./quick/260626-nkv-resolve-napplet-web-91-if-valid-guard-re/) |
 
 Last session: 2026-04-21T20:46:00.000Z
 Stopped at: Completed 142-03-PLAN.md (Phase 142 TERMINAL-COMPLETE)

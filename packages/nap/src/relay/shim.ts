@@ -247,7 +247,7 @@ export function query(filters: NostrFilter | NostrFilter[]): Promise<NostrEvent[
       if (result.error) {
         reject(new Error(result.error));
       } else {
-        resolve(result.events);
+        resolve(Array.isArray(result.events) ? result.events : []);
       }
     }
 
