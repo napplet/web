@@ -5,7 +5,7 @@
  */
 
 import type { Subscription } from '@napplet/core';
-import { requireNapplet } from './require-napplet.js';
+import { requireDomain } from './require-napplet.js';
 
 /**
  * Keyboard forwarding and action keybindings: register named actions the shell
@@ -37,7 +37,7 @@ export const keys = {
     label: string;
     defaultKey?: string;
   }): Promise<{ actionId: string; binding?: string }> {
-    return requireNapplet().keys.registerAction(action);
+    return requireDomain('keys').registerAction(action);
   },
 
   /**
@@ -45,7 +45,7 @@ export const keys = {
    * @param actionId  The action to unregister
    */
   unregisterAction(actionId: string): void {
-    requireNapplet().keys.unregisterAction(actionId);
+    requireDomain('keys').unregisterAction(actionId);
   },
 
   /**
@@ -55,7 +55,7 @@ export const keys = {
    * @returns A Subscription with `close()` to stop listening
    */
   onAction(actionId: string, callback: () => void): Subscription {
-    return requireNapplet().keys.onAction(actionId, callback);
+    return requireDomain('keys').onAction(actionId, callback);
   },
 
   /**
@@ -84,14 +84,14 @@ export const keys = {
     action: { id: string; label: string; defaultKey?: string },
     handler: () => void,
   ): Promise<{ actionId: string; binding?: string; close: () => void }> {
-    const n = requireNapplet();
-    const result = await n.keys.registerAction(action);
-    const sub = n.keys.onAction(action.id, handler);
+    const n = requireDomain('keys');
+    const result = await n.registerAction(action);
+    const sub = n.onAction(action.id, handler);
     return {
       ...result,
       close() {
         sub.close();
-        n.keys.unregisterAction(action.id);
+        n.unregisterAction(action.id);
       },
     };
   },
@@ -116,7 +116,7 @@ export const identity = {
    * @returns Hex-encoded public key string
    */
   getPublicKey(): Promise<string> {
-    return requireNapplet().identity.getPublicKey();
+    return requireDomain('identity').getPublicKey();
   },
 
   /**
@@ -125,7 +125,7 @@ export const identity = {
    * @returns Subscription with close() to detach the handler
    */
   onChanged(handler: (pubkey: string) => void): Subscription {
-    return requireNapplet().identity.onChanged(handler);
+    return requireDomain('identity').onChanged(handler);
   },
 
   /**
@@ -133,7 +133,7 @@ export const identity = {
    * @returns Record mapping relay URLs to read/write permissions
    */
   getRelays(): Promise<Record<string, { read: boolean; write: boolean }>> {
-    return requireNapplet().identity.getRelays();
+    return requireDomain('identity').getRelays();
   },
 
   /**
@@ -150,7 +150,7 @@ export const identity = {
     lud16?: string;
     website?: string;
   } | null> {
-    return requireNapplet().identity.getProfile();
+    return requireDomain('identity').getProfile();
   },
 
   /**
@@ -158,7 +158,7 @@ export const identity = {
    * @returns Array of hex-encoded public keys
    */
   getFollows(): Promise<string[]> {
-    return requireNapplet().identity.getFollows();
+    return requireDomain('identity').getFollows();
   },
 
   /**
@@ -167,7 +167,7 @@ export const identity = {
    * @returns Array of list entry values
    */
   getList(listType: string): Promise<string[]> {
-    return requireNapplet().identity.getList(listType);
+    return requireDomain('identity').getList(listType);
   },
 
   /**
@@ -180,7 +180,7 @@ export const identity = {
     amount: number;
     content?: string;
   }[]> {
-    return requireNapplet().identity.getZaps();
+    return requireDomain('identity').getZaps();
   },
 
   /**
@@ -188,7 +188,7 @@ export const identity = {
    * @returns Array of hex-encoded muted public keys
    */
   getMutes(): Promise<string[]> {
-    return requireNapplet().identity.getMutes();
+    return requireDomain('identity').getMutes();
   },
 
   /**
@@ -196,7 +196,7 @@ export const identity = {
    * @returns Array of hex-encoded blocked public keys
    */
   getBlocked(): Promise<string[]> {
-    return requireNapplet().identity.getBlocked();
+    return requireDomain('identity').getBlocked();
   },
 
   /**
@@ -211,6 +211,6 @@ export const identity = {
     thumbs?: string[];
     awardedBy: string;
   }[]> {
-    return requireNapplet().identity.getBadges();
+    return requireDomain('identity').getBadges();
   },
 };

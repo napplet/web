@@ -35,7 +35,7 @@ interface NotifyApi {
 function requireNotify(): NotifyApi {
   const w = window as Window & { napplet?: { notify?: NotifyApi } };
   if (!w.napplet?.notify) {
-    throw new Error('window.napplet.notify not installed -- import @napplet/shim first');
+    throw new Error('window.napplet.notify is unavailable -- runtime did not inject this domain');
   }
   return w.napplet.notify;
 }

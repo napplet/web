@@ -4,10 +4,10 @@
 
 import type { LinkOpenOptions, LinkOpenResult, NappletGlobal } from '@napplet/core';
 
-function requireLink(): NappletGlobal['link'] {
+function requireLink(): NonNullable<NappletGlobal['link']> {
   const w = window as Window & { napplet?: NappletGlobal };
   if (!w.napplet?.link) {
-    throw new Error('window.napplet.link not installed -- import @napplet/shim first');
+    throw new Error('window.napplet.link is unavailable -- runtime did not inject this domain');
   }
   return w.napplet.link;
 }

@@ -41,7 +41,7 @@ function requireNapplet(): ConfigNamespace {
   const w = window as Window & { napplet?: { config?: ConfigNamespace } };
   if (!w.napplet?.config) {
     throw new Error(
-      'window.napplet.config not installed -- import @napplet/shim first',
+      'window.napplet.config is unavailable -- runtime did not inject this domain',
     );
   }
   return w.napplet.config;

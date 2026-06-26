@@ -303,7 +303,7 @@ A portable SDK for the napplet protocol — sandboxed Nostr mini-apps that run i
 - UPPER_SNAKE_CASE for constants: `REQUEST_TIMEOUT_MS`, `RING_BUFFER_SIZE`, `DEFAULT_STORAGE_QUOTA`, `SIGNER_SUB_ID`
 - Map/Set names: descriptive nouns without prefix, e.g., `subscriptions`, `pendingChallenges`, `sources`
 - Private state uses underscore prefix if exported: `_setInterPaneEventSender()`, `_resolveKeypairReady`
-- PascalCase for interfaces and types: `NostrEvent`, `NostrFilter`, `NappletMessage`, `NapDomain`, `ShellSupports`, `ThemeColors`
+- PascalCase for interfaces and types: `NostrEvent`, `NostrFilter`, `NappletMessage`, `NapDomain`, `NappletGlobal`, `ThemeColors`
 - Suffix conventions: `*Message` for envelope message types (e.g., `RelaySubscribeMessage`, `StorageGetMessage`)
 ## Code Style
 - No explicit linter/formatter configured in package (ESLint/Prettier)

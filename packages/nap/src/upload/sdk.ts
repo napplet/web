@@ -12,10 +12,10 @@ import type {
   UploadStatus,
 } from './types.js';
 
-function requireUpload(): NappletGlobal['upload'] {
+function requireUpload(): NonNullable<NappletGlobal['upload']> {
   const w = window as Window & { napplet?: NappletGlobal };
   if (!w.napplet?.upload) {
-    throw new Error('window.napplet.upload not installed -- import @napplet/shim first');
+    throw new Error('window.napplet.upload is unavailable -- runtime did not inject this domain');
   }
   return w.napplet.upload;
 }

@@ -8,10 +8,10 @@
 import type { NappletGlobal, Subscription } from '@napplet/core';
 import type { SerialEvent, SerialOpenRequest, SerialOpenResult } from './types.js';
 
-function requireSerial(): NappletGlobal['serial'] {
+function requireSerial(): NonNullable<NappletGlobal['serial']> {
   const w = window as Window & { napplet?: NappletGlobal };
   if (!w.napplet?.serial) {
-    throw new Error('window.napplet.serial not installed -- import @napplet/shim first');
+    throw new Error('window.napplet.serial is unavailable -- runtime did not inject this domain');
   }
   return w.napplet.serial;
 }

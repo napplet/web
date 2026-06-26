@@ -377,11 +377,11 @@ window.napplet = {
     add(list, items, options?): Promise<ListMutationResult>;
     remove(list, items, options?): Promise<ListMutationResult>;
   },
-  shell: {
-    supports(capability: NamespacedCapability, protocol?: ProtocolId): boolean;
-  },
 };
 ```
+
+No generic `shell` object is installed. Runtime capability is represented by
+which NAP domain properties the host injects.
 
 ### `window.napplet.relay`
 

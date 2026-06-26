@@ -30,7 +30,7 @@ interface MediaApi {
 function requireMedia(): MediaApi {
   const w = window as Window & { napplet?: { media?: MediaApi } };
   if (!w.napplet?.media) {
-    throw new Error('window.napplet.media not installed -- import @napplet/shim first');
+    throw new Error('window.napplet.media is unavailable -- runtime did not inject this domain');
   }
   return w.napplet.media;
 }

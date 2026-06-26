@@ -7,10 +7,10 @@ import type {
   WebrtcOpenResult,
 } from './types.js';
 
-function requireWebrtc(): NappletGlobal['webrtc'] {
+function requireWebrtc(): NonNullable<NappletGlobal['webrtc']> {
   const w = window as Window & { napplet?: NappletGlobal };
   if (!w.napplet?.webrtc) {
-    throw new Error('window.napplet.webrtc not installed -- import @napplet/shim first');
+    throw new Error('window.napplet.webrtc is unavailable -- runtime did not inject this domain');
   }
   return w.napplet.webrtc;
 }

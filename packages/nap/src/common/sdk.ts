@@ -19,10 +19,10 @@ import type {
   CommonReportTarget,
 } from './types.js';
 
-function requireCommon(): NappletGlobal['common'] {
+function requireCommon(): NonNullable<NappletGlobal['common']> {
   const w = window as Window & { napplet?: NappletGlobal };
   if (!w.napplet?.common) {
-    throw new Error('window.napplet.common not installed -- import @napplet/shim first');
+    throw new Error('window.napplet.common is unavailable -- runtime did not inject this domain');
   }
   return w.napplet.common;
 }

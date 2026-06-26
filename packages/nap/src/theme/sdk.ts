@@ -8,10 +8,10 @@
 import type { NappletGlobal, Subscription } from '@napplet/core';
 import type { Theme } from './types.js';
 
-function requireTheme(): NappletGlobal['theme'] {
+function requireTheme(): NonNullable<NappletGlobal['theme']> {
   const w = window as Window & { napplet?: NappletGlobal };
   if (!w.napplet?.theme) {
-    throw new Error('window.napplet.theme not installed -- import @napplet/shim first');
+    throw new Error('window.napplet.theme is unavailable -- runtime did not inject this domain');
   }
   return w.napplet.theme;
 }

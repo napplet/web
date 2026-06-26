@@ -17,10 +17,10 @@ import type {
   OutboxSubscription,
 } from './types.js';
 
-function requireOutbox(): NappletGlobal['outbox'] {
+function requireOutbox(): NonNullable<NappletGlobal['outbox']> {
   const w = window as Window & { napplet?: NappletGlobal };
   if (!w.napplet?.outbox) {
-    throw new Error('window.napplet.outbox not installed -- import @napplet/shim first');
+    throw new Error('window.napplet.outbox is unavailable -- runtime did not inject this domain');
   }
   return w.napplet.outbox;
 }

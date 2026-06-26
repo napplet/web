@@ -21,7 +21,7 @@ npm install @napplet/core
 
 ```ts
 import {
-  type NappletMessage, type NapDomain, type NapProtocolId, type ShellSupports,
+  type NappletMessage, type NapDomain, type NappletGlobal,
   type NapHandler, type NapDispatch,
   NAP_DOMAINS, SHELL_BRIDGE_URI, PROTOCOL_VERSION,
   createDispatch, registerNap, dispatch, getRegisteredDomains,

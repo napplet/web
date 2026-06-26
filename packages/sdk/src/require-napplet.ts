@@ -15,7 +15,27 @@ import type { NappletGlobal } from '@napplet/core';
 export function requireNapplet(): NappletGlobal {
   const w = window as Window & { napplet?: NappletGlobal };
   if (!w.napplet) {
-    throw new Error('window.napplet not installed -- import @napplet/shim first');
+    throw new Error('window.napplet is unavailable -- runtime did not inject the napplet namespace');
   }
   return w.napplet;
+}
+
+/**
+ * Retrieve a runtime-injected domain from `window.napplet`.
+ *
+ * Shells inject only the NAP domains available to the current napplet, so SDK
+ * wrappers check domain presence at method invocation instead of treating every
+ * property as installed.
+ */
+export function requireDomain<K extends keyof NappletGlobal>(
+  domain: K,
+): NonNullable<NappletGlobal[K]> {
+  const napplet = requireNapplet();
+  const value = napplet[domain];
+  if (!value) {
+    throw new Error(
+      `window.napplet.${String(domain)} is unavailable -- runtime did not inject this domain`,
+    );
+  }
+  return value as NonNullable<NappletGlobal[K]>;
 }

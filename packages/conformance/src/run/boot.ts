@@ -88,7 +88,7 @@ function runtimePrelude(domains: readonly string[]): string {
 
 function injectRuntime(html: string, url: string, domains: readonly string[]): string {
   const base = `<base href="${escapeHtmlAttr(url)}">`;
-  const script = `<script>${runtimePrelude(domains)}<\/script>`;
+  const script = `<script>${runtimePrelude(domains)}</script>`;
   const headOpen = /<head(?:\s[^>]*)?>/i.exec(html);
   if (headOpen) {
     const at = headOpen.index + headOpen[0].length;

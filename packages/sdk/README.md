@@ -330,9 +330,6 @@ import type {
   EventTemplate,
   NappletMessage,
   NapDomain,
-  NamespacedCapability,
-  NapProtocolId,
-  ShellSupports,
   // NAP message types (re-exported from NAP packages)
   RelayNapMessage,
   IdentityNapMessage,
@@ -355,9 +352,6 @@ import type {
 | `EventTemplate` | Unsigned event for `relay.publish()` |
 | `NappletMessage` | Base JSON envelope type for all protocol messages |
 | `NapDomain` | String literal union of NAP domain names |
-| `NamespacedCapability` | Union of `NapDomain \| nap:* \| perm:*` for `supports()` |
-| `NapProtocolId` | Numbered NAP protocol id such as `NAP-01` for the optional second `supports()` argument |
-| `ShellSupports` | Interface for the shell capability query API |
 
 ### NAP Message Types
 
