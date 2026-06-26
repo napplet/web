@@ -9,8 +9,8 @@ proposed and maintained in the [NAPs track](https://github.com/napplet/naps).
 
 The protocol is modular by design. A NAP must be **independently implementable**,
 and shells may support **any subset** of NAPs. That's why napplets feature-gate
-with `window.napplet.shell.supports('<domain>')` before using a domain and degrade
-gracefully when it's absent — see [Core concepts](/guide/concepts#shell-supports).
+with injected domain property presence before using a domain and degrade
+gracefully when it's absent — see [Core concepts](/guide/concepts#domain-presence).
 
 These domains ship as subpaths of [`@napplet/nap`](/packages/nap) (barrel /
 `types` / `shim` / `sdk` per domain).
@@ -21,7 +21,7 @@ Each domain below shows its purpose and a minimal example. Examples assume the
 shim is installed (`import '@napplet/shim'`) so `window.napplet` is available; the
 same calls are also importable as named helpers from
 [`@napplet/sdk`](/packages/sdk). Feature-gate optional domains with
-`window.napplet.shell.supports('<domain>')` first.
+`if (window.napplet?.domain)` first.
 
 ### relay
 
@@ -156,7 +156,7 @@ Native ContextVM bridge — MCP-over-Nostr (`discover` / `listTools` / `callTool
 `listResources` / `readResource`); the shell owns all transport.
 
 ```ts
-if (window.napplet.shell.supports('cvm')) {
+if (window.napplet?.cvm) {
   const servers = await window.napplet.cvm.discover({ search: 'relay' });
   const tools = await window.napplet.cvm.listTools(servers[0]);
   const result = await window.napplet.cvm.callTool(servers[0], tools[0].name, {});
@@ -170,7 +170,7 @@ shell owns NIP-65 relay discovery, dedup, and fanout. Use instead of `relay` whe
 selection is part of result correctness.
 
 ```ts
-if (window.napplet.shell.supports('outbox')) {
+if (window.napplet?.outbox) {
   const { events } = await window.napplet.outbox.query(
     [{ authors: ['ab12…'], kinds: [1], limit: 20 }],
     { strategy: 'outbox' },
@@ -184,7 +184,7 @@ Shell-mediated file/blob upload over NIP-96 + Blossom rails; the shell signs aut
 returns NIP-94 metadata.
 
 ```ts
-if (window.napplet.shell.supports('upload')) {
+if (window.napplet?.upload) {
   const result = await window.napplet.upload.upload({ data: blob, filename: 'pic.png' });
   if (result.status === 'complete') attach(result.url, result.nip94);
 }
@@ -196,7 +196,7 @@ Archetype intent dispatch — invoke another napplet by role, with the shell res
 default handler, window lifecycle, and trust boundary.
 
 ```ts
-if (window.napplet.shell.supports('intent')) {
+if (window.napplet?.intent) {
   const { available } = await window.napplet.intent.available('note');
   if (available) await window.napplet.intent.open('note', { target: { type: 'event', id } });
 }
@@ -209,7 +209,7 @@ and byte arrays while the shell owns chooser UI, permissions, device handles,
 GATT lifecycle, notifications, disconnects, and policy.
 
 ```ts
-if (window.napplet.shell.supports('ble')) {
+if (window.napplet?.ble) {
   const { session } = await window.napplet.ble.open({ acceptAllDevices: true });
   const services = await window.napplet.ble.services(session.id);
 }
@@ -221,7 +221,7 @@ Shell-mediated external link opening. This is user-visible navigation, not byte
 fetching; the shell owns prompting, policy, opener isolation, and browser context.
 
 ```ts
-if (window.napplet.shell.supports('link')) {
+if (window.napplet?.link) {
   const result = await window.napplet.link.open('https://example.com/post/123', {
     label: 'Read post',
   });
@@ -236,7 +236,7 @@ runtime owns current-event lookup, kind/type mapping, tag formatting, private
 item encryption, event preservation, signing, and publishing.
 
 ```ts
-if (window.napplet.shell.supports('lists')) {
+if (window.napplet?.lists) {
   await window.napplet.lists.add({ type: 'mute-list' }, [
     { itemType: 'pubkey', value: 'abc123...' },
   ]);
@@ -250,7 +250,7 @@ follow/unfollow, reactions, and reports. The shell owns identity, consent,
 event construction, signing, publishing, relay access, and NIP-19 handling.
 
 ```ts
-if (window.napplet.shell.supports('common')) {
+if (window.napplet?.common) {
   const { pubkeys } = await window.napplet.common.follows();
   await window.napplet.common.react(eventId, '+');
 }
@@ -262,7 +262,7 @@ if (window.napplet.shell.supports('common')) {
 foundational domains — `relay`, `identity`, `storage`, `inc`, `theme`,
 `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`,
 `upload`, `intent`, `ble`, `webrtc`, `link`, `lists`, `serial`, `common` — used as the discriminant for envelope routing and
-`shell.supports()`.
+domain presence.
 
 ## Where to go next
 

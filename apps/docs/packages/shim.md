@@ -41,7 +41,7 @@ After `import '@napplet/shim'`, the global is populated with these sub-objects:
 | `identity` | Read-only user queries: `getPublicKey`, `onChanged`, `getProfile`, … |
 | `config` | Per-napplet declarative config: `get`, `subscribe`, `openSettings`, `registerSchema`, `schema` |
 | `resource` | Sandboxed byte fetching: `bytes`, `bytesMany`, `bytesAsObjectURL` |
-| `shell` | NAP-SHELL bootstrap handshake: `supports(domain, protocol?)`, `services`, `ready()`, `onReady()` |
+| Domain absence | If a property is absent, that NAP is unavailable to the napplet. |
 
 ## Usage
 
@@ -72,7 +72,7 @@ const theme = await window.napplet.storage.getItem('theme'); // 'dark'
 const pubkey = await window.napplet.identity.getPublicKey(); // "" when signed out
 
 // Feature-gate before using a domain
-if (window.napplet.shell.supports('media')) {
+if (window.napplet?.media) {
   const { sessionId } = await window.napplet.media.createSession({
     owner: 'napplet',
     metadata: { title: 'My Song', artist: 'The Artist' },

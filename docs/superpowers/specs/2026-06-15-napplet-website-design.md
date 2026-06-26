@@ -71,7 +71,7 @@ Sidebar groups:
 
 - **Introduction** — what napplets are, NIP-5D in one page, who it's for.
 - **Getting Started** — install, `npx @napplet/boilerplate`, first napplet, shim vs sdk.
-- **Concepts** — JSON envelope, NAPs/NUBs, shell, sandbox model, identity, ACL, storage scoping, `shell.supports()`.
+- **Concepts** — JSON envelope, NAPs/NUBs, shell, sandbox model, identity, ACL, storage scoping, domain presence.
 - **Packages** — one page each: core, shim, sdk, nap, vite-plugin, boilerplate (seeded from existing READMEs, kept accurate to current exports).
 - **NAP domains** — reference for the 15 domains (relay, storage, inc, keys, theme, media, notify, identity, config, resource, connect, class, cvm, outbox, upload).
 - **Spec** — links the authoritative NIP-5D source + reference status.

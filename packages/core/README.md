@@ -20,7 +20,7 @@ npm install @napplet/core
 
 ```ts
 import {
-  type NappletMessage, type NapDomain, type NapProtocolId, type ShellSupports,
+  type NappletMessage, type NapDomain,
   type NapHandler, type NapDispatch,
   NAP_DOMAINS, SHELL_BRIDGE_URI, PROTOCOL_VERSION,
   createDispatch, registerNap, dispatch, getRegisteredDomains,
@@ -102,65 +102,17 @@ for (const domain of NAP_DOMAINS) {
 }
 ```
 
-#### `ShellSupports`
+#### `NappletGlobal`
 
-Interface for the shell capability query API.
-
-```ts
-interface ShellSupports {
-  supports(capability: NapDomain | string, protocol?: `NAP-${number}`): boolean;
-}
-```
-
-Napplets call `window.napplet.shell.supports(domain)` to check whether the shell
-declared support for a NAP domain before using that domain's API. For numbered
-NAP-NN message protocols, pass the protocol identifier as the optional second
-argument:
+Type for the runtime-injected `window.napplet` namespace. Domain properties are
+optional: presence means the runtime exposes that NAP, absence means it is
+unavailable.
 
 ```ts
-window.napplet.shell.supports('inc', 'NAP-01');
-```
-
-#### `NappletShell` — NAP-SHELL (foundational handshake)
-
-Type for the `window.napplet.shell` namespace. `shell` is the **foundational,
-mandatory** NAP domain — the one capability that cannot be discovered via
-`supports()` (and is not a member of `NAP_DOMAINS`). The shim posts `shell.ready`
-(no payload); the runtime replies **once** with `shell.init` carrying the
-environment `{ capabilities: { domains, protocols }, services }`; the shim
-caches it so `supports(domain, protocol?)` answers **synchronously and locally**
-thereafter (`false` before init and for any unknown domain/protocol).
-
-```ts
-interface NappletShell {
-  supports(domain: string, protocol?: string): boolean;
-  readonly services: readonly string[];
-  ready(): Promise<ShellEnvironment>;   // resolves once the environment is delivered
-  onReady(handler: (env: ShellEnvironment) => void): Subscription;
-}
-
-interface ShellEnvironment {
-  capabilities: ShellCapabilities;
-  services: string[];
-}
-
-interface ShellCapabilities {
-  domains: string[];
-  protocols: Record<string, string[]>;
+if (window.napplet?.relay) {
+  await window.napplet.relay.query([{ kinds: [1], limit: 1 }]);
 }
 ```
-
-```ts
-// Synchronous, local capability queries (no wire round-trip):
-window.napplet.shell.supports('relay');        // true if the runtime offers relay
-window.napplet.shell.supports('inc', 'NAP-2'); // true if it also speaks NAP-2
-
-// Gate startup on the environment:
-const env = await window.napplet.shell.ready();
-const sub = window.napplet.shell.onReady((e) => start(e));
-```
-
-The `@napplet/nap/shell` subpath re-exports these types alongside `DOMAIN`.
 
 ---
 
@@ -374,8 +326,7 @@ TOPICS.WM_FOCUSED_WINDOW_CHANGED // 'wm:focused-window-changed'
 
 ```ts
 import type {
-  NappletMessage, NapDomain, NamespacedCapability, NapProtocolId, ShellSupports,
-  NappletShell, ShellEnvironment, ShellCapabilities, ShellReadyMessage, ShellInitMessage,
+  NappletMessage, NapDomain,
   NapHandler, NapDispatch,
   NostrEvent, NostrFilter, Capability,
   Subscription, EventTemplate, NappletGlobal,
@@ -386,13 +337,6 @@ import type {
 |------|-------------|
 | `NappletMessage` | Base interface for all JSON envelope messages |
 | `NapDomain` | Union of the active NAP domain strings |
-| `NamespacedCapability` | Union of `NapDomain \| nap:* \| perm:*` for `supports()` |
-| `NapProtocolId` | Numbered NAP protocol id such as `NAP-01` for the optional second `supports()` argument |
-| `ShellSupports` | Interface with `supports()` capability query method |
-| `NappletShell` | NAP-SHELL type for `window.napplet.shell` (`supports`, `services`, `ready`, `onReady`) |
-| `ShellEnvironment` | The `shell.init` environment: `{ capabilities, services }` |
-| `ShellCapabilities` | The capability set `{ domains, protocols }` answering `supports()` |
-| `ShellReadyMessage` / `ShellInitMessage` | NAP-SHELL wire message types |
 | `NapHandler` | Callback type for domain handlers |
 | `NapDispatch` | Interface returned by `createDispatch()` |
 | `NostrEvent` | Nostr event structure |

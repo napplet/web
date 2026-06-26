@@ -54,7 +54,7 @@ The same web runtime ships standalone (`apps/conformance`, deployed at `/conform
 and runs the checks live in the browser with a visual report. v1 is zero-config protocol
 conformance: manifest/meta validity, boots under `sandbox="allow-scripts"`, installs
 `window.napplet`, every emitted envelope is well-formed, graceful degradation when
-`shell.supports()` is false, and no forbidden globals.
+domain presence is false, and no forbidden globals.
 
 ## Changelog
 
@@ -82,7 +82,7 @@ Shell (any compatible shell)                @napplet/shim
   ├── JSON envelope message routing          window.napplet.inc   (emit/on)
   ├── Identity via message.source            window.napplet.storage (get/set/remove)
   ├── ACL enforcement                        window.napplet.resource (bytes/bytesMany/bytesAsObjectURL)
-  ├── NAP dispatch (relay/signer/storage)    window.napplet.shell.supports(domain)
+  ├── NAP dispatch (relay/signer/storage)    window.napplet.domain presence
   └── INC routing
 
 ◄────────── postMessage: { type: 'relay.subscribe', id, filters } ──────────►

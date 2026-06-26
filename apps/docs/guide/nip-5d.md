@@ -89,7 +89,7 @@ gracefully.
 - The shell checks those `requires` tags against its own capabilities at load
   time and can warn on a mismatch.
 - At runtime, a napplet queries support with
-  `window.napplet.shell.supports('domain')`, which returns a boolean.
+  `window.napplet?.domain`, which returns a boolean.
 - Napplets MUST **gracefully degrade** when a capability is absent.
 
 The [`@napplet/vite-plugin`](/packages/vite-plugin) generates this manifest at

@@ -104,45 +104,19 @@ storage and cannot read each other's data. There is a per-napplet quota (the shi
 documents 512 KB). Access is via `window.napplet.storage` (`getItem`, `setItem`,
 `removeItem`, `keys`).
 
-## NAP-SHELL — the bootstrap handshake
-
-`shell` is the one **foundational, mandatory** NAP domain: it defines
-`supports()` itself, so it is the single capability that cannot be discovered
-through `supports()` (and is not listed among the optional NAP domains). It is the
-two-message bootstrap handshake every conformant runtime implements:
-
-1. On import, the shim posts `shell.ready` (no payload) — a bare liveness signal.
-2. The runtime replies **once** with `shell.init`, carrying the environment
-   `{ capabilities: { domains, protocols }, services, class }`.
-3. The shim caches it, so `supports(domain, protocol?)` is answered
-   **synchronously and locally** afterwards.
-
-The public `window.napplet.shell` surface is `supports(domain, protocol?)`,
-`services: string[]`, `class: number | null` (opaque — carried, not interpreted),
-`ready(): Promise<ShellEnvironment>`, and `onReady(handler)`.
-
-## `shell.supports()`
+## Domain Presence
 
 Because shells implement only the NAP domains they choose to, a napplet must
-**feature-gate** before using a domain. `supports()` is synchronous and answers
-from the cached environment (`false` before `shell.init`, and for any unknown
-domain or protocol):
+**feature-gate** before using a domain. NIP-5D runtimes inject
+`window.napplet` before napplet code runs; each available NAP domain is present
+as a property, and unavailable domains are absent:
 
 ```ts
-import '@napplet/shim';
-
-// NAP domains
-if (window.napplet.shell.supports('relay')) { /* relay ops available */ }
-if (window.napplet.shell.supports('identity')) { /* identity queries available */ }
-
-// Numbered NAP-NN message protocols over a domain
-if (window.napplet.shell.supports('inc', 'NAP-2')) { /* … */ }
-
-// Gate startup on environment delivery:
-const env = await window.napplet.shell.ready();
-window.napplet.shell.onReady((e) => start(e));
+if (window.napplet?.relay) { /* relay ops available */ }
+if (window.napplet?.identity) { /* identity queries available */ }
+if (window.napplet?.inc) { /* … */ }
 ```
 
 This pairs with declarative negotiation: declare what you need in the manifest
 (`requires` tags via [`@napplet/vite-plugin`](/packages/vite-plugin)), and gate at
-runtime with `supports()`. Always degrade gracefully when a capability is absent.
+runtime with property presence. Always degrade gracefully when a capability is absent.

@@ -146,22 +146,21 @@ sub.close();
 
 Always type-check `payload` (it is `unknown`).
 
-## Step 9 — Capability gating & shell environment
+## Step 9 — Domain availability
 
-There is **no** `discoverServices()`/`hasService()` — those do not exist. Capabilities come from the NAP-SHELL handshake: on import the shim posts `shell.ready`; the runtime replies once with `shell.init` carrying `{ capabilities, services }`. Thereafter `supports()` answers **synchronously and locally**.
+There is **no** `discoverServices()`/`hasService()` and no generic shell
+capability query. NIP-5D runtimes inject `window.napplet` before napplet code
+runs. Available domains are present as properties; unavailable domains are
+absent.
 
 ```ts
-// Synchronous feature gate (after init):
-if (window.napplet.shell.supports('resource')) { /* resource NAP available */ }
-if (window.napplet.shell.supports('inc', 'NAP-2')) { /* also speaks numbered protocol */ }
-
-// Gate startup on environment delivery:
-const env = await window.napplet.shell.ready();    // { capabilities, services }
-const services = env.services;                     // string[], e.g. ['signer']
-window.napplet.shell.onReady((e) => start(e));     // or push-style
+if (window.napplet?.resource) { /* resource NAP available */ }
+if (window.napplet?.inc) { /* inter-napplet events available */ }
+if (!window.napplet?.upload) { /* render fallback */ }
 ```
 
-Before `shell.init` arrives, `supports()` is `false` for everything and `services` is `[]`. Gate any domain-specific call behind `supports(domain)`.
+Gate every domain-specific call behind property presence unless the domain is a
+hard manifest requirement and the shell already refused incompatible loads.
 
 ## Step 10 — Fetch external bytes (resource NAP)
 
@@ -194,16 +193,18 @@ const theme = await window.napplet.theme.get();
 const themeSub = window.napplet.theme.onChanged((t) => paint(t));
 ```
 
-Declare config schema via the vite-plugin (`configSchema`) so the shell renders settings. Gate both behind `supports('config')` / `supports('theme')`.
+Declare config schema via the vite-plugin (`configSchema`) so the shell renders settings. Gate both behind `window.napplet?.config` / `window.napplet?.theme`.
 
 ## Runtime guard & standalone dev
 
-Importing `@napplet/shim` arms a guard: opened without a runtime (top-level page, or a frame that never answers `shell.ready`→`shell.init`), it renders an explanatory modal instead of failing silently. For standalone local dev, opt out before the shim loads with `window.__NAPPLET_ALLOW_STANDALONE__ = true` or a `<meta name="napplet-allow-standalone">` in `<head>`.
+Runtime injection belongs to the shell. Napplet application code should consume
+the injected `window.napplet` namespace or typed helpers from `@napplet/sdk`;
+do not add napplet-owned bootstrap plumbing.
 
 ## Common pitfalls
 
 - `import { x } from '@napplet/shim'` — **error.** The shim has no named exports; use `@napplet/sdk` or `window.napplet.*`.
-- No `discoverServices`/`hasService`/`hasServiceVersion` — use `shell.supports()` and `shell.ready().services`.
+- No `discoverServices`/`hasService`/`hasServiceVersion` — use injected domain property presence.
 - Storage is `nappletStorage`-backed via `storage.*` — there is no `nappletState`/`nappStorage`/`nappState` import.
 - Never `localStorage`/`fetch`/`<img src=externalUrl>`/`WebSocket` — sandbox + CSP block them. Use `storage` and `resource`.
 - Never call `window.nostr` — it isn't installed. Sign via `relay.publish`; identity is read-only.

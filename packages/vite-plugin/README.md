@@ -83,7 +83,7 @@ An array of service names this napplet requires from its host shell (e.g., `['au
 - Injects a `<meta name="napplet-requires">` tag into HTML (comma-separated service names)
 - Adds `['requires', 'service-name']` tags to the kind 35129 manifest event
 
-If the shell does not support all required capabilities, the napplet can detect this at runtime via `window.napplet.shell.supports()` or the shell can show a compatibility warning.
+If the shell does not support all required capabilities, the napplet can detect this at runtime via `window.napplet.domain presence` or the shell can show a compatibility warning.
 
 #### configSchema (optional)
 
@@ -309,7 +309,7 @@ The host shell reads `<meta name="napplet-requires">` during napplet initializat
 ```ts
 import '@napplet/shim';
 
-if (!window.napplet.shell.supports('media')) {
+if (!window.napplet?.media) {
   console.warn('Media NAP not available — some features disabled');
 }
 ```

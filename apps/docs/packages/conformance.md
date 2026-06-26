@@ -14,7 +14,7 @@ the napplet sandbox at runtime. One engine drives two scopes:
 v1 is **zero-config protocol conformance**: manifest/meta validity, boots under
 `sandbox="allow-scripts"`, installs `window.napplet`, every emitted postMessage
 envelope validates against the per-NAP validators, graceful degradation when
-`shell.supports()` returns `false`, and no forbidden globals / undeclared egress.
+domain presence returns `false`, and no forbidden globals / undeclared egress.
 
 - **npm:** [`@napplet/conformance`](https://www.npmjs.com/package/@napplet/conformance)
 - **JSR:** [`@napplet/conformance`](https://jsr.io/@napplet/conformance)

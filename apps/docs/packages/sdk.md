@@ -33,7 +33,7 @@ Top-level namespaced objects that mirror `window.napplet`:
 - **`resource`** — `bytes`, `bytesMany`, `bytesAsObjectURL`
 
 `identity` and `shell` are **not** exported as top-level
-objects. Use `window.napplet.identity.*` / `window.napplet.shell.supports()`
+objects. Use `window.napplet.identity.*` / `window.napplet.domain presence`
 directly, or the bare-name helpers the SDK re-exports:
 
 - `identityGetPublicKey`, `identityOnChanged`
