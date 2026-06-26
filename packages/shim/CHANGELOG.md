@@ -1,5 +1,14 @@
 # @napplet/shim
 
+## 0.23.1
+
+### Patch Changes
+
+- 0c45563: Guard relay query results so malformed host responses without an `events` array
+  resolve to `[]` instead of leaking `undefined` through the typed query contract.
+- Updated dependencies [0c45563]
+  - @napplet/nap@0.22.1
+
 ## 0.23.0
 
 ### Minor Changes
