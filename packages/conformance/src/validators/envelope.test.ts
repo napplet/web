@@ -143,13 +143,13 @@ describe('validateEnvelope — NAP-SHELL foundational domain', () => {
 });
 
 describe('ENVELOPE_SPECS invariants', () => {
-  it('has 180 discriminants split 87 outbound / 93 inbound', () => {
+  it('has 193 discriminants split 93 outbound / 100 inbound', () => {
     const all = knownEnvelopeTypes();
-    expect(all).toHaveLength(180);
+    expect(all).toHaveLength(193);
     const out = all.filter((t) => ENVELOPE_SPECS[t].dir === 'out');
     const inbound = all.filter((t) => ENVELOPE_SPECS[t].dir === 'in');
-    expect(out).toHaveLength(87);
-    expect(inbound).toHaveLength(93);
+    expect(out).toHaveLength(93);
+    expect(inbound).toHaveLength(100);
   });
 
   it('only outbound specs declare required fields', () => {

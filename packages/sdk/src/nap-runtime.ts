@@ -32,6 +32,7 @@ export { DOMAIN as LINK_DOMAIN } from '@napplet/nap/link';
 export { DOMAIN as LISTS_DOMAIN } from '@napplet/nap/lists';
 export { DOMAIN as COMMON_DOMAIN } from '@napplet/nap/common';
 export { DOMAIN as SERIAL_DOMAIN } from '@napplet/nap/serial';
+export { DOMAIN as DM_DOMAIN } from '@napplet/nap/dm';
 
 export { installRelayShim } from '@napplet/nap/relay';
 export { installIdentityShim } from '@napplet/nap/identity';
@@ -57,6 +58,7 @@ export { installLinkShim } from '@napplet/nap/link';
 export { installListsShim } from '@napplet/nap/lists';
 export { installCommonShim } from '@napplet/nap/common';
 export { installSerialShim } from '@napplet/nap/serial';
+export { installDmShim } from '@napplet/nap/dm';
 
 export { relaySubscribe, relayPublish, relayPublishEncrypted, relayQuery } from '@napplet/nap/relay';
 export {
@@ -157,3 +159,12 @@ export {
   serialClose,
   serialOnEvent,
 } from '@napplet/nap/serial';
+export {
+  dmStatus,
+  dmConversations,
+  dmMessages,
+  dmSend,
+  dmSubscribe,
+  dmUnsubscribe,
+  dmOnMessage,
+} from '@napplet/nap/dm';

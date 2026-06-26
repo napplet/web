@@ -1,0 +1,157 @@
+/**
+ * @napplet/nap/dm -- Runtime-mediated direct message types for NAP-DM.
+ *
+ * The runtime owns signing, encryption, relay routing, storage, key/session
+ * state, and policy. Napplets receive normalized conversations and messages.
+ */
+
+import type {
+  DmConversationPage,
+  DmConversationQuery,
+  DmMessage,
+  DmMessagePage,
+  DmMessageQuery,
+  DmOk,
+  DmSendRequest,
+  DmSendResult,
+  DmStatus,
+  DmSubscribeRequest,
+  DmSubscription,
+  NappletMessage,
+} from '@napplet/core';
+
+/** The NAP domain name for direct message operations. */
+export const DOMAIN = 'dm' as const;
+
+export type {
+  DmConversation,
+  DmConversationPage,
+  DmConversationQuery,
+  DmHexPubkey,
+  DmMessage,
+  DmMessagePage,
+  DmMessageQuery,
+  DmMessageStatus,
+  DmOk,
+  DmPeer,
+  DmSendRequest,
+  DmSendResult,
+  DmStatus,
+  DmSubscribeRequest,
+  DmSubscription,
+  DmTimestamp,
+} from '@napplet/core';
+
+/** Base interface for all DM NAP messages. */
+export interface DmMessageEnvelope extends NappletMessage {
+  /** Message type in "dm.<action>" format. */
+  type: `dm.${string}`;
+}
+
+/** Request current DM availability. */
+export interface DmStatusMessage extends DmMessageEnvelope {
+  type: 'dm.status';
+  id: string;
+}
+
+/** Result of `dm.status`. */
+export interface DmStatusResultMessage extends DmMessageEnvelope, Partial<DmStatus> {
+  type: 'dm.status.result';
+  id: string;
+  error?: string;
+}
+
+/** Request normalized DM conversations. */
+export interface DmConversationsMessage extends DmMessageEnvelope, DmConversationQuery {
+  type: 'dm.conversations';
+  id: string;
+}
+
+/** Result of `dm.conversations`. */
+export interface DmConversationsResultMessage extends DmMessageEnvelope, Partial<DmConversationPage> {
+  type: 'dm.conversations.result';
+  id: string;
+  error?: string;
+}
+
+/** Request message history for one conversation. */
+export interface DmMessagesMessage extends DmMessageEnvelope, DmMessageQuery {
+  type: 'dm.messages';
+  id: string;
+}
+
+/** Result of `dm.messages`. */
+export interface DmMessagesResultMessage extends DmMessageEnvelope, Partial<DmMessagePage> {
+  type: 'dm.messages.result';
+  id: string;
+  error?: string;
+}
+
+/** Ask the runtime to send a direct message. */
+export interface DmSendMessage extends DmMessageEnvelope, DmSendRequest {
+  type: 'dm.send';
+  id: string;
+}
+
+/** Result of `dm.send`. */
+export interface DmSendResultMessage extends DmMessageEnvelope, Partial<DmSendResult> {
+  type: 'dm.send.result';
+  id: string;
+  error?: string;
+}
+
+/** Request live DM delivery. */
+export interface DmSubscribeMessage extends DmMessageEnvelope, DmSubscribeRequest {
+  type: 'dm.subscribe';
+  id: string;
+}
+
+/** Result of `dm.subscribe`. */
+export interface DmSubscribeResultMessage extends DmMessageEnvelope, Partial<DmSubscription> {
+  type: 'dm.subscribe.result';
+  id: string;
+  error?: string;
+}
+
+/** Stop live DM delivery. */
+export interface DmUnsubscribeMessage extends DmMessageEnvelope {
+  type: 'dm.unsubscribe';
+  id: string;
+  subscriptionId: string;
+}
+
+/** Result of `dm.unsubscribe`. */
+export interface DmUnsubscribeResultMessage extends DmMessageEnvelope, Partial<DmOk> {
+  type: 'dm.unsubscribe.result';
+  id: string;
+  error?: string;
+}
+
+/** Shell-pushed live DM message. */
+export interface DmMessageEventMessage extends DmMessageEnvelope {
+  type: 'dm.message';
+  subscriptionId: string;
+  message: DmMessage;
+}
+
+/** Napplet -> Shell DM messages. */
+export type DmOutboundMessage =
+  | DmStatusMessage
+  | DmConversationsMessage
+  | DmMessagesMessage
+  | DmSendMessage
+  | DmSubscribeMessage
+  | DmUnsubscribeMessage;
+
+/** Shell -> Napplet DM messages. */
+export type DmInboundMessage =
+  | DmStatusResultMessage
+  | DmConversationsResultMessage
+  | DmMessagesResultMessage
+  | DmSendResultMessage
+  | DmSubscribeResultMessage
+  | DmUnsubscribeResultMessage
+  | DmMessageEventMessage;
+
+/** All DM NAP message types. */
+export type DmNapMessage = DmOutboundMessage | DmInboundMessage;

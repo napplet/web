@@ -19,6 +19,7 @@ export type * from './types/link.js';
 export type * from './types/serial.js';
 export type * from './types/lists.js';
 export type * from './types/common.js';
+export type * from './types/dm.js';
 export type * from './types/shell.js';
 export type * from './types/global.js';
 export type {

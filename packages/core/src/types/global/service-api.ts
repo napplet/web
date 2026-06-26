@@ -26,6 +26,19 @@ import type { LinkOpenOptions, LinkOpenResult } from '../link.js';
 import type { SerialEvent, SerialOpenRequest, SerialOpenResult } from '../serial.js';
 import type { ListItem, ListMutationResult, ListOptions, ListRef, ListSupport } from '../lists.js';
 import type {
+  DmConversationPage,
+  DmConversationQuery,
+  DmMessage,
+  DmMessagePage,
+  DmMessageQuery,
+  DmOk,
+  DmSendRequest,
+  DmSendResult,
+  DmStatus,
+  DmSubscribeRequest,
+  DmSubscription,
+} from '../dm.js';
+import type {
   CommonActionResult,
   CommonFollowsResult,
   CommonNip19DecodeResult,
@@ -449,4 +462,66 @@ export interface SerialApi {
    * @returns A Subscription with `close()` to stop listening
    */
   onEvent(handler: (event: SerialEvent) => void): Subscription;
+}
+
+/**
+ * Runtime-mediated direct messages (NAP-DM): the napplet presents DM UI while
+ * the shell owns signing, encryption, relay routing, storage, key/session
+ * state, and policy.
+ *
+ * @example
+ * ```ts
+ * if (window.napplet.shell.supports('dm')) {
+ *   const status = await window.napplet.dm.status();
+ *   if (status.available) {
+ *     const { conversations } = await window.napplet.dm.conversations({ limit: 20 });
+ *     const sub = await window.napplet.dm.subscribe({ conversationId: conversations[0]?.id });
+ *     window.napplet.dm.onMessage((message) => render(message));
+ *     await window.napplet.dm.unsubscribe(sub.subscriptionId);
+ *   }
+ * }
+ * ```
+ */
+export interface DmApi {
+  /**
+   * Get current DM availability and advisory runtime implementation labels.
+   * @returns Promise resolving to the runtime DM status
+   */
+  status(): Promise<DmStatus>;
+  /**
+   * Fetch normalized conversation summaries visible to this napplet.
+   * @param query  Optional cursor and limit
+   * @returns Promise resolving to a page of conversations
+   */
+  conversations(query?: DmConversationQuery): Promise<DmConversationPage>;
+  /**
+   * Fetch normalized message history for one conversation.
+   * @param query  Conversation id plus optional cursor and limit
+   * @returns Promise resolving to a page of messages
+   */
+  messages(query: DmMessageQuery): Promise<DmMessagePage>;
+  /**
+   * Ask the runtime to send a direct message.
+   * @param request  Recipients, content, and optional conversation/client ids
+   * @returns Promise resolving to the normalized sent message result
+   */
+  send(request: DmSendRequest): Promise<DmSendResult>;
+  /**
+   * Start live delivery for one conversation or all visible conversations.
+   * @param request  Optional conversation scope
+   * @returns Promise resolving to the runtime subscription id
+   */
+  subscribe(request?: DmSubscribeRequest): Promise<DmSubscription>;
+  /**
+   * Stop a live delivery subscription.
+   * @param subscriptionId  Runtime subscription id from subscribe()
+   * @returns Promise resolving to the runtime acknowledgement
+   */
+  unsubscribe(subscriptionId: string): Promise<DmOk>;
+  /**
+   * Register for shell-pushed `dm.message` deliveries.
+   * @param handler  Called with each message and its runtime subscription id
+   * @returns A Subscription with `close()` to stop listening
+   */
+  onMessage(handler: (message: DmMessage, subscriptionId: string) => void): Subscription;
 }

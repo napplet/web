@@ -125,6 +125,17 @@ import {
   close as serialClose,
   onEvent as serialOnEvent,
 } from '@napplet/nap/serial/shim';
+import {
+  installDmShim,
+  handleDmMessage,
+  status as dmStatus,
+  conversations as dmConversations,
+  messages as dmMessages,
+  send as dmSend,
+  subscribe as dmSubscribe,
+  unsubscribe as dmUnsubscribe,
+  onMessage as dmOnMessage,
+} from '@napplet/nap/dm/shim';
 import { sendEnvelope } from '@napplet/core';
 import type { NappletGlobal, NappletShell, ShellEnvironment, ShellInitMessage } from '@napplet/core';
 import { createShellEnvironment, makeSupports, defaultSupports } from '@napplet/nap/shell/shim';
@@ -210,6 +221,7 @@ const DOMAIN_ROUTERS: ReadonlyArray<readonly [string, DomainHandler]> = [
   ['lists.', handleListsMessage],
   ['common.', handleCommonMessage],
   ['serial.', handleSerialMessage],
+  ['dm.', handleDmMessage],
   ['identity.', identityShim.handleIdentityMessage],
   ['theme.', themeShim.handleThemeMessage],
   ['config.', handleConfigMessage],
@@ -396,6 +408,15 @@ installIncShim();
     close: serialClose,
     onEvent: serialOnEvent,
   },
+  dm: {
+    status: dmStatus,
+    conversations: dmConversations,
+    messages: dmMessages,
+    send: dmSend,
+    subscribe: dmSubscribe,
+    unsubscribe: dmUnsubscribe,
+    onMessage: dmOnMessage,
+  },
   shell: {
     supports: defaultSupports,
     services: [],
@@ -465,3 +486,5 @@ installLinkShim();
 installListsShim();
 // Install serial shim (serial.* request/response correlation + serial.event listeners; no install-time work)
 installSerialShim();
+// Install DM shim (dm.* request/response correlation + dm.message listeners; no install-time work)
+installDmShim();

@@ -276,6 +276,21 @@ export const ENVELOPE_SPECS: Record<string, EnvelopeSpec> = {
   'serial.write.result': { dir: 'in' },
   'serial.close.result': { dir: 'in' },
   'serial.event': { dir: 'in' },
+
+  // ── dm ───────────────────────────────────────────────────────────────────
+  'dm.status': { dir: 'out', fields: { ...ID } },
+  'dm.conversations': { dir: 'out', fields: { ...ID } },
+  'dm.messages': { dir: 'out', fields: { ...ID, conversationId: 'string' } },
+  'dm.send': { dir: 'out', fields: { ...ID, recipients: 'array', content: 'string' } },
+  'dm.subscribe': { dir: 'out', fields: { ...ID } },
+  'dm.unsubscribe': { dir: 'out', fields: { ...ID, subscriptionId: 'string' } },
+  'dm.status.result': { dir: 'in' },
+  'dm.conversations.result': { dir: 'in' },
+  'dm.messages.result': { dir: 'in' },
+  'dm.send.result': { dir: 'in' },
+  'dm.subscribe.result': { dir: 'in' },
+  'dm.unsubscribe.result': { dir: 'in' },
+  'dm.message': { dir: 'in' },
 };
 
 /** A single problem found while validating an envelope. */
