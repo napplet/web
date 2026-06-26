@@ -1,17 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v0.33.0
-milestone_name: NAP-SHELL Alignment
-status: "Milestone v0.33.0 shipped — PR #48"
-stopped_at: Completed 155-01-PLAN.md (Implement NAP-SHELL — SHELL-01..06)
-last_updated: "2026-06-26T15:01:32Z"
-last_activity: "2026-06-26 — Quick task 260626-nkv resolved napplet/web#91: relay query now guards missing/non-array result.events to [] with a regression test and patch changesets for @napplet/nap + @napplet/shim. Commit 9d23f6c. build + type-check + test:unit + test:conformance + diff-check + aislop green; inherited js-yaml advisory remains."
+milestone: v0.34.0
+milestone_name: NIP-5D Runtime Injection
+status: planning
+last_updated: "2026-06-26T20:03:29.543Z"
+last_activity: 2026-06-26
 progress:
-  total_phases: 2
-  completed_phases: 2
-  total_plans: 2
-  completed_plans: 2
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -22,20 +21,24 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 
 **Core value:** Prove that sandboxed Nostr apps can securely delegate to a host shell over a simple, standardized protocol — and ship the spec + SDK so others can build on it.
 
-**Current focus:** v0.33.0 NAP-SHELL Alignment — Phase 154 (Defer NAP-CONNECT) + Phase 155 (Implement NAP-SHELL) both COMPLETE; all SHELL-01..06 satisfied. Milestone ready for verify/audit.
+**Current focus:** v0.34.0 NIP-5D Runtime Injection — retire stale NAP-SHELL / `supports()` surfaces and align packages, conformance, docs, skills, and boilerplate guidance with runtime-injected `window.napplet` domain objects.
 
 > **Provenance note:** The "Accumulated Context" section below preserves bullet records from BOTH branches' STATE.md histories. Records tagged "v0.29.0" from main's lineage refer to the milestone NOW renumbered as v0.30.0 (Class-Gated Decrypt — Phases 135-138). Records tagged "v0.29.0" from feat/strict-model refer to NUB-CONNECT (Phases 135-142). Phase number alone is not a unique identifier across the two; cross-reference the topic (decrypt/identity/NIP-07 → v0.30.0; connect/class/CSP-authority → v0.29.0).
 
 ## Current Position
 
-Phase: 155 (Implement NAP-SHELL) — COMPLETE
-Plan: 155-01 — COMPLETE
-Status: Milestone v0.33.0 shipped — PR #48
-Last activity: 2026-06-26 — Quick task 260626-nkv resolved napplet/web#91: relay query now guards missing/non-array result.events to [] with a regression test and patch changesets for @napplet/nap + @napplet/shim. Commit 9d23f6c. build + type-check + test:unit + test:conformance + diff-check + aislop green; inherited js-yaml advisory remains.
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-06-26 — Milestone v0.34.0 started
 
-Prior activity: 2026-06-17 — Wired per-package GitHub Releases after npm deploy (scripts/github-releases.mjs + Publish-workflow step, idempotent + backfilling); branch chore/github-releases. Earlier: completed quick task 260617-qmu: retired the deferred NAP-CLASS / NAP-CONNECT surface (deleted both SHELL-*-POLICY specs, cleaned root README + build-napplet SKILL) AND removed the residual opaque `class` field that Phase 155 re-homed into NAP-SHELL `shell.init` (canonical NAP-SHELL carries no class). `shell.init` is now `{ capabilities, services }`. Removed across core/shim/nap/conformance + tests; changeset (minor ×4); build + type-check + test:unit all green. 8 commits (bfaaaf8…9ffa822).
+### v0.34.0 roadmap
 
-Prior activity: 2026-06-17 — Executed 155-01-PLAN.md: added @napplet/core NAP-SHELL types, the @napplet/nap/shell subpath, migrated the shim handshake to cache the `{ capabilities:{domains,protocols}, services, class }` environment, and migrated conformance (validator/reference-shell/boot/checks). 4 task commits (4eddcb5, 99de482, 86a9ca6, e8e5438). build + type-check + test:unit all green.
+- Live source: NIP-5D PR #2303 head `6ca5632` (`5D.md`), fetched 2026-06-26.
+- Runtime injects `window.napplet` before napplet scripts; available NAP domains are present as properties; unsupported domains are absent.
+- Removed old model: `window.napplet.shell`, `shell.supports()`, `shell.ready`, `shell.init`, cached shell environment, and `@napplet/nap/shell` are stale relative to current NIP-5D.
+- Phases: 156 audit/plan, 157 packages, 158 conformance/tooling, 159 docs/skills/boilerplate, 160 release verification and PR.
+- Branch: `feat/nip5d-runtime-injection`.
 
 ### Phase 155 record (SHELL-01..06) — COMPLETE
 
