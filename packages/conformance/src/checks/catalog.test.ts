@@ -111,9 +111,9 @@ describe('wire checks', () => {
 
 describe('degradation + lifecycle checks', () => {
   it('skips degradation when no degraded pass was run, passes when clean, fails on crash', () => {
-    expect(run('degrade/supports-false', makeContext()).status).toBe('skip');
-    expect(run('degrade/supports-false', makeContext({ degraded: { bootError: null, emitted: [] } })).status).toBe('pass');
-    expect(run('degrade/supports-false', makeContext({ degraded: { bootError: 'TypeError', emitted: [] } })).status).toBe('fail');
+    expect(run('degrade/domain-absence', makeContext()).status).toBe('skip');
+    expect(run('degrade/domain-absence', makeContext({ degraded: { bootError: null, emitted: [] } })).status).toBe('pass');
+    expect(run('degrade/domain-absence', makeContext({ degraded: { bootError: 'TypeError', emitted: [] } })).status).toBe('fail');
   });
 
   it('skips lifecycle when unmeasured, flags leaks as a warning', () => {
