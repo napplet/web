@@ -94,6 +94,15 @@ green, not to call a task "done", not because a sibling file already does it:
    nicknames) and remove or correct every hit. Orphaned enforcement left standing
    after a defer is exactly how a deleted spec keeps breaking conformant napplets.
 
+9. **Do not "correct" intended package surface down to current code.** If docs,
+   examples, README snippets, package export maps, or prior public helpers imply a
+   package/subpath API should exist, treat a mismatch as a possible implementation
+   gap first, not as a documentation typo. Before changing docs to avoid a missing
+   export, check whether the named surface is the intended compatibility contract.
+   For SDK subpaths especially, preserve ergonomic aliases and existing import
+   examples when they are consistent with the canonical NAP operation names; add
+   or restore the missing exports instead of narrowing the documented surface.
+
 ## Agent SDLC
 
 Follow this lifecycle for **every** task. The goal: cohesive, shippable units of work —
