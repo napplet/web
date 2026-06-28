@@ -4,7 +4,7 @@
  * @packageDocumentation
  */
 
-import type { ResourceBytesItem, Subscription } from '@napplet/core';
+import type { ResourceBytesItem, ResourceInfo, Subscription } from '@napplet/core';
 import { requireDomain } from './require-napplet.js';
 
 /**
@@ -108,6 +108,14 @@ export const config = {
  * ```
  */
 export const resource = {
+  /**
+   * Inspect resource schemes and coarse runtime policy limits.
+   * @returns Promise resolving to advisory resource info.
+   */
+  info(): Promise<ResourceInfo> {
+    return requireDomain('resource').info();
+  },
+
   /**
    * Fetch bytes for a URL through the shell's resource pipeline.
    * @param url  URL identifying the resource (any registered scheme).

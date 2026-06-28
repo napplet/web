@@ -217,6 +217,19 @@ export interface ResourceBytesErrorItem {
 /** Ordered per-URL item returned by `resource.bytesMany`. */
 export type ResourceBytesItem = ResourceBytesOkItem | ResourceBytesErrorItem;
 
+/** Runtime-disclosed support for one resource URL scheme. */
+export interface ResourceSchemeInfo {
+  scheme: string;
+  enabled: boolean;
+}
+
+/** Advisory resource capability and policy limits disclosed by the runtime. */
+export interface ResourceInfo {
+  schemes: ResourceSchemeInfo[];
+  maxBytes?: number;
+  maxUrls?: number;
+}
+
 /**
  * Browser-enforced resource fetching: napplets request bytes by URL,
  * shell fetches and returns a Blob. The strict-CSP iframe sandbox
@@ -246,6 +259,13 @@ export type ResourceBytesItem = ResourceBytesOkItem | ResourceBytesErrorItem;
  * ```
  */
 export interface ResourceApi {
+  /**
+   * Inspect resource schemes and coarse policy limits the runtime is willing
+   * to disclose. Advisory only; callers can use bytes/bytesMany without a
+   * preflight.
+   * @returns Promise resolving to the resource info snapshot.
+   */
+  info(): Promise<ResourceInfo>;
   /**
    * Fetch the bytes referenced by `url` through the shell's resource pipeline.
    * The shell selects a scheme handler, applies its resource policy
