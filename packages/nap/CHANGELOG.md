@@ -1,5 +1,20 @@
 # @napplet/nap
 
+## 0.24.0
+
+### Minor Changes
+
+- c711a3e: Add NAP-OUTBOX `outbox.getEvent` support across the runtime API, typed NAP helpers, SDK wrappers, injected global, and conformance envelope/reference shell.
+- ce41387: Add NAP-RESOURCE `resource.info` introspection across the runtime API, typed NAP helpers, SDK wrappers, injected global, and conformance envelope/reference shell.
+- 50b3c1b: Add NAP-UPLOAD `upload.info` introspection across the runtime API, typed NAP helpers, SDK wrappers, injected global, and conformance envelope/reference shell.
+
+### Patch Changes
+
+- Updated dependencies [c711a3e]
+- Updated dependencies [ce41387]
+- Updated dependencies [50b3c1b]
+  - @napplet/core@0.24.0
+
 ## 0.23.0
 
 ### Minor Changes
