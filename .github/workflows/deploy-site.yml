@@ -62,19 +62,46 @@ jobs:
           echo "Assembled $(find site -type f | wc -l) files into ./site"
 
       # ─── Bunny: upload to storage zone, then purge the pull zone ───────────
-      # storageEndpoint + storageZoneName are literals from the Bunny dashboard
-      # (Storage → napplet → FTP & API Access: Hostname + Username). Upload auth
-      # is BUNNY_STORAGE_PASSWORD (the zone read/write password — verified to
-      # return 201 on a PUT). This action only PUTs files (no remote LIST), so
-      # it needs nothing beyond write access. purgePullZone uses BUNNY_API_KEY.
+      # Storage zone, endpoint, and upload password come from the Bunny dashboard
+      # (Storage → your zone → FTP & API Access). Keep them in secrets so a zone
+      # rename or regional endpoint change does not require a workflow edit.
+      - name: Prepare Bunny storage config
+        id: bunny
+        env:
+          BUNNY_STORAGE_ZONE: ${{ secrets.BUNNY_STORAGE_ZONE }}
+          BUNNY_STORAGE_ENDPOINT: ${{ secrets.BUNNY_STORAGE_ENDPOINT }}
+        run: |
+          set -euo pipefail
+          if [ -z "$BUNNY_STORAGE_ZONE" ]; then
+            echo "BUNNY_STORAGE_ZONE is not configured" >&2
+            exit 1
+          fi
+          if [ -z "$BUNNY_STORAGE_ENDPOINT" ]; then
+            echo "BUNNY_STORAGE_ENDPOINT is not configured" >&2
+            exit 1
+          fi
+
+          endpoint="${BUNNY_STORAGE_ENDPOINT#http://}"
+          endpoint="${endpoint#https://}"
+          endpoint="${endpoint%%/*}"
+          if [ -z "$endpoint" ]; then
+            echo "BUNNY_STORAGE_ENDPOINT did not contain a host" >&2
+            exit 1
+          fi
+
+          {
+            printf 'storage-zone=%s\n' "$BUNNY_STORAGE_ZONE"
+            printf 'storage-endpoint=%s\n' "$endpoint"
+          } >> "$GITHUB_OUTPUT"
+
       - name: Deploy to Bunny CDN
         uses: ayeressian/bunnycdn-storage-deploy@v2.4.5
         with:
           source: site
           destination: ''
-          storageZoneName: napplet
+          storageZoneName: ${{ steps.bunny.outputs.storage-zone }}
           storagePassword: ${{ secrets.BUNNY_STORAGE_PASSWORD }}
-          storageEndpoint: storage.bunnycdn.com
+          storageEndpoint: ${{ steps.bunny.outputs.storage-endpoint }}
           accessKey: ${{ secrets.BUNNY_API_KEY }}
           pullZoneId: ${{ secrets.BUNNY_PULLZONE_ID }}
           upload: 'true'
