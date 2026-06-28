@@ -131,13 +131,13 @@ describe('validateEnvelope — no generic shell domain', () => {
 });
 
 describe('ENVELOPE_SPECS invariants', () => {
-  it('has 194 discriminants split 93 outbound / 101 inbound', () => {
+  it('has 196 discriminants split 94 outbound / 102 inbound', () => {
     const all = knownEnvelopeTypes();
-    expect(all).toHaveLength(194);
+    expect(all).toHaveLength(196);
     const out = all.filter((t) => ENVELOPE_SPECS[t].dir === 'out');
     const inbound = all.filter((t) => ENVELOPE_SPECS[t].dir === 'in');
-    expect(out).toHaveLength(93);
-    expect(inbound).toHaveLength(101);
+    expect(out).toHaveLength(94);
+    expect(inbound).toHaveLength(102);
   });
 
   it('only outbound specs declare required fields', () => {
