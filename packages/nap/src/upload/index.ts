@@ -25,11 +25,15 @@ export type {
   NostrTag,
   UploadRail,
   UploadState,
+  UploadRailInfo,
+  UploadInfo,
   UploadDimensions,
   UploadRequest,
   UploadResult,
   UploadStatus,
   UploadMessage,
+  UploadInfoMessage,
+  UploadInfoResultMessage,
   UploadUploadMessage,
   UploadUploadResultMessage,
   UploadStatusMessage,
@@ -43,12 +47,14 @@ export type {
 export {
   installUploadShim,
   handleUploadMessage,
+  info,
   upload,
   status,
   onStatus,
 } from './shim.js';
 
 export {
+  uploadInfo,
   uploadFile,
   uploadStatus,
   uploadOnStatus,

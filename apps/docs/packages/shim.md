@@ -39,7 +39,7 @@ After runtime injection, the global may be populated with these sub-objects:
 | `notify` | Shell-rendered notifications: `send`, `badge`, `onAction`, … |
 | `identity` | Read-only user queries: `getPublicKey`, `onChanged`, `getProfile`, … |
 | `config` | Per-napplet declarative config: `get`, `subscribe`, `openSettings`, `registerSchema`, `schema` |
-| `resource` | Sandboxed byte fetching: `bytes`, `bytesMany`, `bytesAsObjectURL` |
+| `resource` | Sandboxed byte fetching: `info`, `bytes`, `bytesMany`, `bytesAsObjectURL` |
 | Domain absence | If a property is absent, that NAP is unavailable to the napplet. |
 
 ## Usage

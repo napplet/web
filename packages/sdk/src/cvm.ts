@@ -28,6 +28,7 @@ import type {
   OutboxResult,
   OutboxPublishResult,
   OutboxSubscription,
+  UploadInfo,
   UploadRequest,
   UploadResult,
   UploadStatus,
@@ -242,6 +243,14 @@ export const outbox = {
  * ```
  */
 export const upload = {
+  /**
+   * Inspect upload rails and coarse runtime policy limits.
+   * @returns Promise resolving to advisory upload info.
+   */
+  info(): Promise<UploadInfo> {
+    return requireDomain('upload').info();
+  },
+
   /**
    * Upload bytes through the shell's storage pipeline.
    * @param request  The upload request (Blob/ArrayBuffer bytes + intent)

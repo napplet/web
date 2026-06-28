@@ -30,7 +30,7 @@ Top-level namespaced objects that mirror `window.napplet`:
 - **`media`** — `createSession`, `reportState`, `onCommand`, …
 - **`notify`** — `send`, `badge`, `onAction`, …
 - **`config`** — `get`, `subscribe`, `openSettings`, `registerSchema`, `schema`
-- **`resource`** — `bytes`, `bytesMany`, `bytesAsObjectURL`
+- **`resource`** — `info`, `bytes`, `bytesMany`, `bytesAsObjectURL`
 
 `identity` and `shell` are **not** exported as top-level
 objects. Use `window.napplet.identity.*` / `window.napplet.domain presence`
@@ -38,7 +38,7 @@ directly, or the bare-name helpers the SDK re-exports:
 
 - `identityGetPublicKey`, `identityOnChanged`
 - the `*_DOMAIN` constants and `install*Shim` installers
-- `resourceBytes`, `resourceBytesMany`, `resourceBytesAsObjectURL`
+- `resourceInfo`, `resourceBytes`, `resourceBytesMany`, `resourceBytesAsObjectURL`
 
 It also re-exports the protocol types from `@napplet/core` and the per-domain
 message-type unions (`RelayNapMessage`, `IdentityNapMessage`, …) and `*_DOMAIN`

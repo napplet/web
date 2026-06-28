@@ -7,6 +7,7 @@
 
 import type { NappletGlobal, Subscription } from '@napplet/core';
 import type {
+  UploadInfo,
   UploadRequest,
   UploadResult,
   UploadStatus,
@@ -19,6 +20,18 @@ function requireUpload(): NonNullable<NappletGlobal['upload']> {
   }
   return w.napplet.upload;
 }
+
+/**
+ * Inspect upload rails and coarse runtime policy limits.
+ *
+ * @returns Promise resolving to advisory upload info.
+ */
+export function uploadInfo(): Promise<UploadInfo> {
+  return requireUpload().info();
+}
+
+/** Alias for {@link uploadInfo} on the SDK subpath. */
+export const info = uploadInfo;
 
 /**
  * Upload bytes through the shell's storage pipeline.
@@ -37,6 +50,9 @@ export function uploadFile(request: UploadRequest): Promise<UploadResult> {
   return requireUpload().upload(request);
 }
 
+/** Alias for {@link uploadFile} on the SDK subpath. */
+export const upload = uploadFile;
+
 /**
  * Get the latest known status for a prior upload.
  *
@@ -47,6 +63,9 @@ export function uploadStatus(uploadId: string): Promise<UploadStatus> {
   return requireUpload().status(uploadId);
 }
 
+/** Alias for {@link uploadStatus} on the SDK subpath. */
+export const status = uploadStatus;
+
 /**
  * Register for shell-pushed upload status updates.
  *
@@ -56,3 +75,6 @@ export function uploadStatus(uploadId: string): Promise<UploadStatus> {
 export function uploadOnStatus(handler: (status: UploadStatus) => void): Subscription {
   return requireUpload().onStatus(handler);
 }
+
+/** Alias for {@link uploadOnStatus} on the SDK subpath. */
+export const onStatus = uploadOnStatus;

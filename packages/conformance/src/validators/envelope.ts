@@ -153,9 +153,12 @@ export const ENVELOPE_SPECS: Record<string, EnvelopeSpec> = {
   'config.schemaError': { dir: 'in' },
 
   // ── resource ─────────────────────────────────────────────────────────────
+  'resource.info': { dir: 'out', fields: { ...ID } },
   'resource.bytes': { dir: 'out', fields: { ...ID, url: 'string' } },
   'resource.bytesMany': { dir: 'out', fields: { ...ID, urls: 'array' } },
   'resource.cancel': { dir: 'out', fields: { ...ID } },
+  'resource.info.result': { dir: 'in' },
+  'resource.info.error': { dir: 'in' },
   'resource.bytes.result': { dir: 'in' },
   'resource.bytes.error': { dir: 'in' },
   'resource.bytesMany.result': { dir: 'in' },
@@ -186,8 +189,10 @@ export const ENVELOPE_SPECS: Record<string, EnvelopeSpec> = {
   'outbox.resolveRelays.result': { dir: 'in' },
 
   // ── upload ───────────────────────────────────────────────────────────────
+  'upload.info': { dir: 'out', fields: { ...ID } },
   'upload.upload': { dir: 'out', fields: { ...ID, request: 'object' } },
   'upload.status': { dir: 'out', fields: { ...ID, uploadId: 'string' } },
+  'upload.info.result': { dir: 'in' },
   'upload.upload.result': { dir: 'in' },
   'upload.status.result': { dir: 'in' },
   'upload.status.changed': { dir: 'in' },

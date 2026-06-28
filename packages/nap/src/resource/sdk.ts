@@ -6,7 +6,7 @@
  */
 
 import type { NappletGlobal } from '@napplet/core';
-import type { ResourceBytesItem } from './types.js';
+import type { ResourceBytesItem, ResourceInfo } from './types.js';
 
 function requireResource(): NonNullable<NappletGlobal['resource']> {
   const w = window as Window & { napplet?: NappletGlobal };
@@ -15,6 +15,18 @@ function requireResource(): NonNullable<NappletGlobal['resource']> {
   }
   return w.napplet.resource;
 }
+
+/**
+ * Inspect resource schemes and coarse runtime policy limits.
+ *
+ * @returns Promise resolving to advisory resource info.
+ */
+export function resourceInfo(): Promise<ResourceInfo> {
+  return requireResource().info();
+}
+
+/** Alias for {@link resourceInfo} on the SDK subpath. */
+export const info = resourceInfo;
 
 /**
  * Fetch bytes for a URL through the shell's resource pipeline.
@@ -34,6 +46,9 @@ function requireResource(): NonNullable<NappletGlobal['resource']> {
 export function resourceBytes(url: string, opts?: { signal?: AbortSignal }): Promise<Blob> {
   return requireResource().bytes(url, opts);
 }
+
+/** Alias for {@link resourceBytes} on the SDK subpath. */
+export const bytes = resourceBytes;
 
 /**
  * Fetch bytes for many URLs through the shell's resource pipeline.
@@ -59,6 +74,9 @@ export function resourceBytesMany(
   return requireResource().bytesMany(urls, opts);
 }
 
+/** Alias for {@link resourceBytesMany} on the SDK subpath. */
+export const bytesMany = resourceBytesMany;
+
 /**
  * Fetch bytes and return a managed object URL handle.
  * Call `revoke()` to release the underlying Blob URL.
@@ -80,3 +98,6 @@ export function resourceBytesMany(
 export function resourceBytesAsObjectURL(url: string): { url: string; revoke: () => void } {
   return requireResource().bytesAsObjectURL(url);
 }
+
+/** Alias for {@link resourceBytesAsObjectURL} on the SDK subpath. */
+export const bytesAsObjectURL = resourceBytesAsObjectURL;

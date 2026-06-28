@@ -22,7 +22,7 @@ import type {
   OutboxSubscription,
   OutboxTarget,
 } from '../outbox.js';
-import type { UploadRequest, UploadResult, UploadStatus } from '../upload.js';
+import type { UploadInfo, UploadRequest, UploadResult, UploadStatus } from '../upload.js';
 import type { IntentAvailability, IntentRequest, IntentResult } from '../intent.js';
 import type { LinkOpenOptions, LinkOpenResult } from '../link.js';
 import type { SerialEvent, SerialOpenRequest, SerialOpenResult } from '../serial.js';
@@ -212,6 +212,12 @@ export interface OutboxApi {
  * ```
  */
 export interface UploadApi {
+  /**
+   * Inspect upload rails and coarse policy limits the runtime is willing to
+   * disclose. Advisory only; callers can upload without a preflight.
+   * @returns Promise resolving to the upload info snapshot.
+   */
+  info(): Promise<UploadInfo>;
   /**
    * Upload bytes. The shell handles consent, server selection, rail auth
    * signing, and the HTTP upload, then resolves with the initial result.
