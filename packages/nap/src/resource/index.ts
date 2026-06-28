@@ -22,8 +22,13 @@ export { DOMAIN } from './types.js';
 
 export type {
   ResourceErrorCode,
+  ResourceSchemeInfo,
+  ResourceInfo,
   ResourceScheme,
   ResourceMessage,
+  ResourceInfoMessage,
+  ResourceInfoResultMessage,
+  ResourceInfoErrorMessage,
   ResourceBytesMessage,
   ResourceBytesManyMessage,
   ResourceBytesResultMessage,
@@ -43,6 +48,7 @@ export type {
 export {
   installResourceShim,
   handleResourceMessage,
+  info,
   bytes,
   bytesMany,
   bytesAsObjectURL,
@@ -50,6 +56,7 @@ export {
 } from './shim.js';
 
 export {
+  resourceInfo,
   resourceBytes,
   resourceBytesMany,
   resourceBytesAsObjectURL,

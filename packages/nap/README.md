@@ -136,7 +136,10 @@ The `resource` domain ships in v0.28.0 alongside the milestone of browser-enforc
 resource isolation. It defines scheme-pluggable byte-fetching primitives:
 
 ```ts
-import { bytes, bytesMany, bytesAsObjectURL } from '@napplet/nap/resource/sdk';
+import { info, bytes, bytesMany, bytesAsObjectURL } from '@napplet/nap/resource/sdk';
+
+// Advisory schemes and coarse policy limits. Not required before fetching.
+const resourceInfo = await info();
 
 // Fetch any URL the shell accepts under its policy. URL space is scheme-pluggable.
 const blob: Blob = await bytes('https://example.com/avatar.png');

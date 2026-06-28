@@ -13,6 +13,7 @@ import type {
   NappletMessage,
   ResourceBytesItem,
   ResourceErrorCode,
+  ResourceInfo,
 } from '@napplet/core';
 
 export type {
@@ -20,6 +21,8 @@ export type {
   ResourceBytesErrorItem,
   ResourceBytesItem,
   ResourceErrorCode,
+  ResourceSchemeInfo,
+  ResourceInfo,
 } from '@napplet/core';
 
 /** The NAP domain name for resource messages. */
@@ -61,6 +64,33 @@ export interface ResourceSidecarEntry {
 export interface ResourceMessage extends NappletMessage {
   /** Message type in "resource.<action>" format. */
   type: `resource.${string}`;
+}
+
+/** Inspect resource schemes and coarse runtime policy limits. */
+export interface ResourceInfoMessage extends ResourceMessage {
+  type: 'resource.info';
+  /** Correlation ID. */
+  id: string;
+}
+
+/** Successful result for a `resource.info` request. */
+export interface ResourceInfoResultMessage extends ResourceMessage {
+  type: 'resource.info.result';
+  /** Correlation ID matching the original request. */
+  id: string;
+  /** Advisory resource capability and policy limits. */
+  info: ResourceInfo;
+}
+
+/** Failed result for a `resource.info` request. */
+export interface ResourceInfoErrorMessage extends ResourceMessage {
+  type: 'resource.info.error';
+  /** Correlation ID matching the original request. */
+  id: string;
+  /** Error reason. */
+  error: string;
+  /** Optional human-readable error detail. */
+  message?: string;
 }
 
 /**
@@ -198,12 +228,15 @@ export interface ResourceBytesManyErrorMessage extends ResourceMessage {
 
 /** Napplet -> Shell resource messages. */
 export type ResourceRequestMessage =
+  | ResourceInfoMessage
   | ResourceBytesMessage
   | ResourceBytesManyMessage
   | ResourceCancelMessage;
 
 /** Shell -> Napplet resource result messages (success or error). */
 export type ResourceResultMessage =
+  | ResourceInfoResultMessage
+  | ResourceInfoErrorMessage
   | ResourceBytesResultMessage
   | ResourceBytesErrorMessage
   | ResourceBytesManyResultMessage

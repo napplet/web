@@ -24,6 +24,8 @@ export type * from './types/global.js';
 export type {
   ResourceApi,
   ResourceErrorCode,
+  ResourceSchemeInfo,
+  ResourceInfo,
   ResourceBytesOkItem,
   ResourceBytesErrorItem,
   ResourceBytesItem,

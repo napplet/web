@@ -32,6 +32,7 @@ import {
 import {
   installResourceShim,
   handleResourceMessage,
+  info as resourceInfo,
   bytes as resourceBytes,
   bytesMany as resourceBytesMany,
   bytesAsObjectURL as resourceBytesAsObjectURL,
@@ -296,6 +297,7 @@ function createNappletGlobal(domains: ReadonlySet<NapDomain>): NappletGlobal {
 
   if (domains.has('resource')) {
     napplet.resource = {
+      info: resourceInfo,
       bytes: resourceBytes,
       bytesMany: resourceBytesMany,
       bytesAsObjectURL: resourceBytesAsObjectURL,
