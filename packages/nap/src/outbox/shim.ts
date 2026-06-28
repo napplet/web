@@ -9,19 +9,23 @@ import type {
   EventTemplate,
 } from '@napplet/core';
 import type {
+  OutboxEventOptions,
   OutboxQueryOptions,
   OutboxSubscribeOptions,
   OutboxPublishOptions,
   OutboxTarget,
   OutboxRelayPlan,
+  OutboxEventResult,
   OutboxResult,
   OutboxPublishResult,
   OutboxSubscription,
+  OutboxGetEventMessage,
   OutboxQueryMessage,
   OutboxSubscribeMessage,
   OutboxCloseMessage,
   OutboxPublishMessage,
   OutboxResolveRelaysMessage,
+  OutboxGetEventResultMessage,
   OutboxQueryResultMessage,
   OutboxEventMessage,
   OutboxEoseMessage,
@@ -32,6 +36,13 @@ import type {
 
 /** Default timeout for outbox requests (30 seconds; aligns with other NAPs). */
 const REQUEST_TIMEOUT_MS = 30_000;
+
+/** Pending getEvent requests: correlation id -> resolver record. */
+const pendingGetEvent = new Map<string, {
+  resolve: (result: OutboxEventResult) => void;
+  reject: (reason: Error) => void;
+  timeout: ReturnType<typeof setTimeout>;
+}>();
 
 /** Pending query requests: correlation id -> resolver record. */
 const pendingQuery = new Map<string, {
@@ -72,6 +83,20 @@ function isMessageType<T extends { type: string }>(
   type: T['type'],
 ): msg is T {
   return msg.type === type;
+}
+
+function handleGetEventResult(msg: OutboxGetEventResultMessage): void {
+  const p = pendingGetEvent.get(msg.id);
+  if (!p) return;
+  pendingGetEvent.delete(msg.id);
+  clearTimeout(p.timeout);
+  const result: OutboxEventResult = {
+    relays: Array.isArray(msg.relays) ? msg.relays : [],
+  };
+  if (msg.event !== undefined) result.event = msg.event;
+  if (msg.incomplete !== undefined) result.incomplete = msg.incomplete;
+  if (msg.error !== undefined) result.error = msg.error;
+  p.resolve(result);
 }
 
 function handleQueryResult(msg: OutboxQueryResultMessage): void {
@@ -142,7 +167,9 @@ function handleSubClosed(msg: OutboxClosedMessage): void {
  * Covers query/publish/resolveRelays results plus event/eose/closed lifecycle.
  */
 export function handleOutboxMessage(msg: { type: string; [key: string]: unknown }): void {
-  if (isMessageType<OutboxQueryResultMessage>(msg, 'outbox.query.result')) {
+  if (isMessageType<OutboxGetEventResultMessage>(msg, 'outbox.getEvent.result')) {
+    handleGetEventResult(msg);
+  } else if (isMessageType<OutboxQueryResultMessage>(msg, 'outbox.query.result')) {
     handleQueryResult(msg);
   } else if (isMessageType<OutboxPublishResultMessage>(msg, 'outbox.publish.result')) {
     handlePublishResult(msg);
@@ -155,6 +182,41 @@ export function handleOutboxMessage(msg: { type: string; [key: string]: unknown 
   } else if (isMessageType<OutboxClosedMessage>(msg, 'outbox.closed')) {
     handleSubClosed(msg);
   }
+}
+
+/**
+ * Fetch one event by ID through shell-owned outbox routing. The shell validates
+ * that any returned event matches `eventId` and has a valid signature.
+ *
+ * @param eventId  Event id to fetch
+ * @param options  Optional author/relay hints, strategy, and timeout
+ * @returns Promise resolving to the outbox event result
+ *
+ * @example
+ * ```ts
+ * const { event } = await getEvent('ev1...', { author: 'ab12...', strategy: 'outbox' });
+ * ```
+ */
+export function getEvent(
+  eventId: string,
+  options?: OutboxEventOptions,
+): Promise<OutboxEventResult> {
+  const id = crypto.randomUUID();
+  const timeoutMs = options?.timeoutMs ?? REQUEST_TIMEOUT_MS;
+  return new Promise<OutboxEventResult>((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      if (pendingGetEvent.delete(id)) reject(new Error('outbox.getEvent timed out'));
+    }, timeoutMs);
+    pendingGetEvent.set(id, { resolve, reject, timeout });
+
+    const msg: OutboxGetEventMessage = {
+      type: 'outbox.getEvent',
+      id,
+      eventId,
+      ...(options === undefined ? {} : { options }),
+    };
+    postToShell(msg);
+  });
 }
 
 /**
@@ -334,9 +396,11 @@ export function installOutboxShim(): () => void {
   }
   installed = true;
   return () => {
+    for (const p of pendingGetEvent.values()) clearTimeout(p.timeout);
     for (const p of pendingQuery.values()) clearTimeout(p.timeout);
     for (const p of pendingPublish.values()) clearTimeout(p.timeout);
     for (const p of pendingResolve.values()) clearTimeout(p.timeout);
+    pendingGetEvent.clear();
     pendingQuery.clear();
     pendingPublish.clear();
     pendingResolve.clear();

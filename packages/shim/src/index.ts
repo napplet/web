@@ -51,6 +51,7 @@ import {
 import {
   installOutboxShim,
   handleOutboxMessage,
+  getEvent as outboxGetEvent,
   query as outboxQuery,
   subscribe as outboxSubscribe,
   publish as outboxPublish,
@@ -317,6 +318,7 @@ function createNappletGlobal(domains: ReadonlySet<NapDomain>): NappletGlobal {
 
   if (domains.has('outbox')) {
     napplet.outbox = {
+      getEvent: outboxGetEvent,
       query: outboxQuery,
       subscribe: outboxSubscribe,
       publish: outboxPublish,

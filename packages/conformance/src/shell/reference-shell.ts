@@ -139,6 +139,7 @@ const RESPONDERS: Record<string, Responder> = {
   'cvm.close': (e) => ok({ type: 'cvm.close.result', id: e.id }),
 
   // outbox
+  'outbox.getEvent': (e) => ok({ type: 'outbox.getEvent.result', id: e.id, relays: [] }),
   'outbox.query': (e) => ok({ type: 'outbox.query.result', id: e.id, events: [], relays: {} }),
   'outbox.subscribe': (e) => ok({ type: 'outbox.eose', subId: e.subId }),
   'outbox.close': none,

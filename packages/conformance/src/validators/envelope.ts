@@ -171,11 +171,13 @@ export const ENVELOPE_SPECS: Record<string, EnvelopeSpec> = {
   'cvm.event': { dir: 'in' },
 
   // ── outbox ───────────────────────────────────────────────────────────────
+  'outbox.getEvent': { dir: 'out', fields: { ...ID, eventId: 'string' } },
   'outbox.query': { dir: 'out', fields: { ...ID, filters: 'present' } },
   'outbox.subscribe': { dir: 'out', fields: { ...ID, subId: 'string', filters: 'present' } },
   'outbox.close': { dir: 'out', fields: { ...ID, subId: 'string' } },
   'outbox.publish': { dir: 'out', fields: { ...ID, event: 'object' } },
   'outbox.resolveRelays': { dir: 'out', fields: { ...ID, target: 'present' } },
+  'outbox.getEvent.result': { dir: 'in' },
   'outbox.query.result': { dir: 'in' },
   'outbox.event': { dir: 'in' },
   'outbox.eose': { dir: 'in' },

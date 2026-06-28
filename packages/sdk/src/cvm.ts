@@ -18,6 +18,8 @@ import type {
   McpToolResult,
   McpResource,
   McpResourceContent,
+  OutboxEventOptions,
+  OutboxEventResult,
   OutboxQueryOptions,
   OutboxSubscribeOptions,
   OutboxPublishOptions,
@@ -162,6 +164,19 @@ export const cvm = {
  * ```
  */
 export const outbox = {
+  /**
+   * Fetch one event by ID through shell-owned outbox routing.
+   * @param eventId  Event id to fetch
+   * @param options  Optional author/relay hints, strategy, and timeout
+   * @returns Promise resolving to the outbox event result
+   */
+  getEvent(
+    eventId: string,
+    options?: OutboxEventOptions,
+  ): Promise<OutboxEventResult> {
+    return requireDomain('outbox').getEvent(eventId, options);
+  },
+
   /**
    * Perform a one-shot outbox-aware query.
    * @param filters  NIP-01 filter or filters

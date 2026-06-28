@@ -104,6 +104,7 @@ export {
   cvmOnEvent,
 } from '@napplet/nap/cvm';
 export {
+  outboxGetEvent,
   outboxQuery,
   outboxSubscribe,
   outboxPublish,

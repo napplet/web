@@ -64,6 +64,51 @@ const EV = {
 };
 
 describe('@napplet/nap/outbox shim', () => {
+  it('posts outbox.getEvent and resolves with the event result', async () => {
+    const { getEvent, handleOutboxMessage } = await import('./shim.js');
+
+    const promise = getEvent('ev1', { author: 'ab12', strategy: 'outbox', timeoutMs: 3000 });
+    const sent = lastPosted('outbox.getEvent');
+    expect(sent).toEqual({
+      type: 'outbox.getEvent',
+      id: 'outbox-test-1',
+      eventId: 'ev1',
+      options: { author: 'ab12', strategy: 'outbox', timeoutMs: 3000 },
+    });
+
+    handleOutboxMessage({
+      type: 'outbox.getEvent.result',
+      id: sent.id,
+      event: EV,
+      relays: ['wss://relay.example.com'],
+    });
+
+    await expect(promise).resolves.toEqual({
+      event: EV,
+      relays: ['wss://relay.example.com'],
+    });
+  });
+
+  it('carries incomplete and inline error through getEvent results without rejecting', async () => {
+    const { getEvent, handleOutboxMessage } = await import('./shim.js');
+
+    const promise = getEvent('missing-event');
+    const sent = lastPosted('outbox.getEvent');
+    handleOutboxMessage({
+      type: 'outbox.getEvent.result',
+      id: sent.id,
+      relays: [],
+      incomplete: true,
+      error: 'not found',
+    });
+
+    await expect(promise).resolves.toEqual({
+      relays: [],
+      incomplete: true,
+      error: 'not found',
+    });
+  });
+
   it('posts outbox.query and resolves with the deduplicated result', async () => {
     const { query, handleOutboxMessage } = await import('./shim.js');
 

@@ -11,6 +11,8 @@ import type {
   McpToolResult,
 } from '../cvm.js';
 import type {
+  OutboxEventOptions,
+  OutboxEventResult,
   OutboxPublishOptions,
   OutboxPublishResult,
   OutboxQueryOptions,
@@ -152,6 +154,14 @@ export interface CvmApi {
  * ```
  */
 export interface OutboxApi {
+  /**
+   * Fetch one event by ID through shell-owned outbox routing. The shell validates
+   * that any returned event matches the requested id and has a valid signature.
+   * @param eventId  Event id to fetch
+   * @param options  Optional author/relay hints, strategy, and timeout
+   * @returns Promise resolving to the outbox event result
+   */
+  getEvent(eventId: string, options?: OutboxEventOptions): Promise<OutboxEventResult>;
   /**
    * Perform a one-shot outbox-aware query. The shell resolves relays, queries
    * them, deduplicates by event id, and validates signatures. Partial results
