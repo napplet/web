@@ -59,6 +59,7 @@ import {
 import {
   installUploadShim,
   handleUploadMessage,
+  info as uploadInfo,
   upload as uploadUpload,
   status as uploadStatusFn,
   onStatus as uploadOnStatus,
@@ -326,6 +327,7 @@ function createNappletGlobal(domains: ReadonlySet<NapDomain>): NappletGlobal {
 
   if (domains.has('upload')) {
     napplet.upload = {
+      info: uploadInfo,
       upload: uploadUpload,
       status: uploadStatusFn,
       onStatus: uploadOnStatus,

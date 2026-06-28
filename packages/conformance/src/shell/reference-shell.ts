@@ -146,6 +146,16 @@ const RESPONDERS: Record<string, Responder> = {
   'outbox.resolveRelays': (e) => ok({ type: 'outbox.resolveRelays.result', id: e.id, plan: {} }),
 
   // upload
+  'upload.info': (e) => ok({
+    type: 'upload.info.result',
+    id: e.id,
+    info: {
+      rails: [
+        { rail: 'nip96', enabled: true, returns: ['https'] },
+        { rail: 'blossom', enabled: true, returns: ['https', 'blossom'] },
+      ],
+    },
+  }),
   'upload.upload': (e) => ok({ type: 'upload.upload.result', id: e.id, result: { url: REFERENCE_BLOB_URL } }),
   'upload.status': (e) => ok({ type: 'upload.status.result', id: e.id, status: {} }),
 

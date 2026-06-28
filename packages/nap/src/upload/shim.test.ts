@@ -54,6 +54,39 @@ function lastPosted(type: string): any {
 }
 
 describe('@napplet/nap/upload shim', () => {
+  it('posts upload.info and resolves with advisory runtime info', async () => {
+    const { info, handleUploadMessage } = await import('./shim.js');
+
+    const promise = info();
+    const sent = lastPosted('upload.info');
+    expect(sent).toEqual({
+      type: 'upload.info',
+      id: 'upload-test-1',
+    });
+
+    const uploadInfo = {
+      rails: [
+        { rail: 'nip96', enabled: true, returns: ['https'] },
+        { rail: 'blossom', enabled: false, returns: ['https', 'blossom'] },
+      ],
+      maxBytes: 104_857_600,
+      mimeTypes: ['image/png', 'image/jpeg'],
+    };
+    handleUploadMessage({ type: 'upload.info.result', id: sent.id, info: uploadInfo });
+
+    await expect(promise).resolves.toEqual(uploadInfo);
+  });
+
+  it('rejects upload.info result errors', async () => {
+    const { info, handleUploadMessage } = await import('./shim.js');
+
+    const promise = info();
+    const sent = lastPosted('upload.info');
+    handleUploadMessage({ type: 'upload.info.result', id: sent.id, error: 'policy denied' });
+
+    await expect(promise).rejects.toThrow('policy denied');
+  });
+
   it('posts upload.upload (carrying the raw data) and resolves with the result', async () => {
     const { upload, handleUploadMessage } = await import('./shim.js');
 

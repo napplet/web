@@ -110,6 +110,7 @@ export {
   outboxResolveRelays,
 } from '@napplet/nap/outbox';
 export {
+  uploadInfo,
   uploadFile,
   uploadStatus,
   uploadOnStatus,
