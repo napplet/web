@@ -164,6 +164,8 @@ export type {
   NappletInstanceStorage,
   ResourceApi,
   ResourceErrorCode,
+  ResourceSchemeInfo,
+  ResourceInfo,
   ResourceBytesOkItem,
   ResourceBytesErrorItem,
   ResourceBytesItem,

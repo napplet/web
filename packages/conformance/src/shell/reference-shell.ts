@@ -131,6 +131,16 @@ const RESPONDERS: Record<string, Responder> = {
       }))
       : [],
   }),
+  'resource.info': (e) => ok({
+    type: 'resource.info.result',
+    id: e.id,
+    info: {
+      schemes: [
+        { scheme: 'data', enabled: true },
+        { scheme: 'https', enabled: true },
+      ],
+    },
+  }),
   'resource.cancel': none,
 
   // cvm

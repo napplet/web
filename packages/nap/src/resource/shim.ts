@@ -11,6 +11,10 @@ import type {
   ResourceBytesResultMessage,
   ResourceBytesErrorMessage,
   ResourceCancelMessage,
+  ResourceInfo,
+  ResourceInfoMessage,
+  ResourceInfoResultMessage,
+  ResourceInfoErrorMessage,
   ResourceSidecarEntry,
 } from './types.js';
 
@@ -34,6 +38,9 @@ type Pending<T> = {
 /** Pending `resource.bytes` wire requests. */
 const pendingBytes = new Map<string, Pending<Blob>>();
 
+/** Pending `resource.info` wire requests. */
+const pendingInfo = new Map<string, Pending<ResourceInfo>>();
+
 /** Pending `resource.bytesMany` wire requests. */
 const pendingMany = new Map<string, Pending<ResourceBytesItem[]>>();
 
@@ -52,7 +59,21 @@ function isMessageType<T extends { type: string }>(
  * Called by @napplet/shim's central dispatch loop (Phase 128 wires this in).
  */
 export function handleResourceMessage(msg: { type: string; [key: string]: unknown }): void {
-  if (isMessageType<ResourceBytesResultMessage>(msg, 'resource.bytes.result')) {
+  if (isMessageType<ResourceInfoResultMessage>(msg, 'resource.info.result')) {
+    const result = msg;
+    const p = pendingInfo.get(result.id);
+    if (!p) return;
+    pendingInfo.delete(result.id);
+    clearTimeout(p.timeout);
+    p.resolve(result.info);
+  } else if (isMessageType<ResourceInfoErrorMessage>(msg, 'resource.info.error')) {
+    const err = msg;
+    const p = pendingInfo.get(err.id);
+    if (!p) return;
+    pendingInfo.delete(err.id);
+    clearTimeout(p.timeout);
+    p.reject(new Error(err.message ? `${err.error}: ${err.message}` : err.error));
+  } else if (isMessageType<ResourceBytesResultMessage>(msg, 'resource.bytes.result')) {
     const result = msg;
     const p = pendingBytes.get(result.id);
     if (!p) return;
@@ -81,6 +102,24 @@ export function handleResourceMessage(msg: { type: string; [key: string]: unknow
     clearTimeout(p.timeout);
     p.reject(new Error(err.message ? `${err.error}: ${err.message}` : err.error));
   }
+}
+
+/** Send a resource.info request envelope and return advisory runtime info. */
+function sendInfoRequest(id: string): Promise<ResourceInfo> {
+  return new Promise<ResourceInfo>((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      if (pendingInfo.delete(id)) {
+        reject(new Error('resource.info timed out'));
+      }
+    }, REQUEST_TIMEOUT_MS);
+    pendingInfo.set(id, { resolve, reject, timeout });
+
+    const msg: ResourceInfoMessage = {
+      type: 'resource.info',
+      id,
+    };
+    postToShell(msg);
+  });
 }
 
 /**
@@ -232,6 +271,18 @@ function wireManySignal(
       },
     );
   });
+}
+
+/**
+ * Inspect resource schemes and coarse policy limits disclosed by the shell.
+ *
+ * This is advisory introspection only. Callers can issue `bytes` or `bytesMany`
+ * without calling `info()` first.
+ *
+ * @returns Promise resolving to the resource info snapshot.
+ */
+export function info(): Promise<ResourceInfo> {
+  return sendInfoRequest(crypto.randomUUID());
 }
 
 /**
@@ -428,6 +479,7 @@ export function installResourceShim(): () => void {
   installed = true;
   return () => {
     inflight.clear();
+    pendingInfo.clear();
     pendingBytes.clear();
     pendingMany.clear();
     installed = false;

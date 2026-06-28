@@ -92,7 +92,12 @@ export { ifcEmit, ifcOn } from '@napplet/nap/ifc';
 export { keysRegisterAction, keysUnregisterAction, keysOnAction, keysRegister } from '@napplet/nap/keys';
 export { mediaCreateSession, mediaUpdateSession, mediaDestroySession, mediaReportState, mediaReportCapabilities, mediaSendCommand, mediaOnCommand, mediaOnState, mediaOnCapabilities, mediaOnControls } from '@napplet/nap/media';
 export { notifySend, notifyDismiss, notifyBadge, notifyRegisterChannel, notifyRequestPermission, notifyOnAction, notifyOnClicked, notifyOnDismissed, notifyOnControls } from '@napplet/nap/notify';
-export { resourceBytes, resourceBytesMany, resourceBytesAsObjectURL } from '@napplet/nap/resource';
+export {
+  resourceInfo,
+  resourceBytes,
+  resourceBytesMany,
+  resourceBytesAsObjectURL,
+} from '@napplet/nap/resource';
 export {
   cvmDiscover,
   cvmRequest,

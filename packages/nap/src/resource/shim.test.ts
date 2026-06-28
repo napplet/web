@@ -49,6 +49,44 @@ function lastPosted(type: string): Record<string, unknown> {
 }
 
 describe('@napplet/nap/resource shim', () => {
+  it('posts resource.info and resolves with advisory runtime info', async () => {
+    const { info, handleResourceMessage } = await import('./shim.js');
+
+    const promise = info();
+    const sent = lastPosted('resource.info');
+    expect(sent).toEqual({
+      type: 'resource.info',
+      id: 'resource-test-1',
+    });
+
+    const runtimeInfo = {
+      schemes: [
+        { scheme: 'https', enabled: true },
+        { scheme: 'blossom', enabled: false },
+      ],
+      maxBytes: 10_485_760,
+      maxUrls: 100,
+    };
+    handleResourceMessage({ type: 'resource.info.result', id: sent.id, info: runtimeInfo });
+
+    await expect(promise).resolves.toEqual(runtimeInfo);
+  });
+
+  it('rejects resource.info errors', async () => {
+    const { info, handleResourceMessage } = await import('./shim.js');
+
+    const promise = info();
+    const sent = lastPosted('resource.info');
+    handleResourceMessage({
+      type: 'resource.info.error',
+      id: sent.id,
+      error: 'policy-denied',
+      message: 'redacted',
+    });
+
+    await expect(promise).rejects.toThrow('policy-denied: redacted');
+  });
+
   it('posts resource.bytesMany and resolves ordered per-URL items', async () => {
     const { bytesMany, handleResourceMessage } = await import('./shim.js');
 

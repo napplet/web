@@ -238,6 +238,7 @@ Sandboxed byte fetching (NAP-RESOURCE). Mirrors `window.napplet.resource`. Requi
 
 | Method | Returns | Description |
 |--------|---------|-------------|
+| `info()` | `Promise<ResourceInfo>` | Inspect advisory schemes and coarse policy limits. Not required before fetching. |
 | `bytes(url, opts?)` | `Promise<Blob>` | Fetch bytes through the shell. `opts.signal` accepts an `AbortSignal`. |
 | `bytesMany(urls, opts?)` | `Promise<ResourceBytesItem[]>` | Fetch many URLs through one envelope. Items preserve input order and length. |
 | `bytesAsObjectURL(url)` | `{ url: string; revoke: () => void }` | Synchronous handle whose `url` resolves to a blob URL once the fetch completes. |
@@ -247,8 +248,9 @@ Four canonical schemes: `data:` (in-shim), `https:` (shell-side under policy), `
 Bare helper aliases are also re-exported for consumers that prefer functional imports:
 
 ```ts
-import { resourceBytes, resourceBytesMany, resourceBytesAsObjectURL } from '@napplet/sdk';
+import { resourceInfo, resourceBytes, resourceBytesMany, resourceBytesAsObjectURL } from '@napplet/sdk';
 
+const info = await resourceInfo();
 const blob = await resourceBytes('https://example.com/avatar.png');
 const items = await resourceBytesMany(['https://example.com/a.png']);
 const handle = resourceBytesAsObjectURL('blossom:sha256:...');
