@@ -33,7 +33,7 @@ describe('napplet-conformance CLI e2e', () => {
     expect(stdout).toContain('RESULT: CONFORMANT');
     expect(stdout).toContain('[PASS] wire/envelope-well-formed');
     expect(stdout).toContain('[PASS] boot/installs-global');
-    expect(stdout).toContain('[PASS] degrade/supports-false');
+    expect(stdout).toContain('[PASS] degrade/domain-absence');
     expect(code).toBe(0);
   });
 

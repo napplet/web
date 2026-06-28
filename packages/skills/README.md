@@ -14,7 +14,7 @@ well-scoped prompt produces a working, conformant napplet.
 | Skill | When | Covers |
 | --- | --- | --- |
 | `design-napplet` | First — plan before code | Sandbox/CSP constraints, choosing NAP capabilities, hard-vs-optional requirements, **responsive layout for any viewport** (full-screen → tiny widget), the build spec to hand off. |
-| `build-napplet` | Implementation | `@napplet/shim` + `@napplet/sdk`, the Vite manifest plugin, relay/storage/identity/inc/resource/config/theme, capability gating via `shell.supports()`, the single-file artifact rule. |
+| `build-napplet` | Implementation | runtime-injected `window.napplet` + `@napplet/sdk`, the Vite manifest plugin, relay/storage/identity/inc/resource/config/theme, capability gating via domain presence, the single-file artifact rule. |
 | `test-napplet` | Before publishing | Protocol conformance via `napplet-conformance` (real Chromium + reference shell), interpreting failures, the runtime guard, CI wiring. |
 
 Each skill is a self-contained `SKILL.md` with YAML frontmatter (`name`,

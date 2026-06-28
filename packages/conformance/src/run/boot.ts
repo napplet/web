@@ -2,42 +2,33 @@
  * @napplet/conformance -- Browser-side boot harness.
  *
  * {@link bootAndCollect} loads a napplet into a real `sandbox="allow-scripts"`
- * iframe, attaches a {@link createReferenceShell reference shell}, and observes what
- * a host can actually see across the sandbox boundary:
+ * iframe, injects the NIP-5D runtime namespace before subject scripts, attaches
+ * a {@link createReferenceShell reference runtime}, and records host-observable
+ * postMessage envelopes.
  *
- *  - **installedGlobal / bootError** — derived from the shim's NAP-SHELL
- *    `shell.ready` postMessage. A no-`same-origin` sandbox is opaque to the
- *    parent, so `window.napplet` cannot be introspected directly; the NAP-SHELL
- *    `shell.ready` signal is the real boot signal, and its absence within the
- *    timeout is how same-origin reliance (or a crash-on-boot) manifests.
- *  - **emitted** — every envelope the napplet posts, recorded with a verdict.
- *  - **degraded** — an optional second boot under a no-capability shell to prove
- *    graceful degradation.
- *
- * This is browser-safe DOM code shared by the Playwright CLI host page and the
- * standalone web runtime. Forbidden-global access (e.g. `window.nostr`) is NOT
- * observable across the sandbox and is supplied separately by the host via static
- * analysis.
+ * The injected namespace is harness plumbing, not protocol surface. It exists so
+ * conformance can test the current NIP-5D boundary: runtime-provided domain
+ * properties are present before napplet code runs, and wire traffic after boot is
+ * regular NAP domain traffic.
  *
  * @packageDocumentation
  */
 
-import {
-  createReferenceShell,
-  type RecordedEnvelope,
-  type ShellCapabilities,
-} from '../shell/reference-shell.js';
+import { NAP_DOMAINS } from '@napplet/core';
+import { createReferenceShell, type RecordedEnvelope } from '../shell/reference-shell.js';
 import type { BootObservation } from './context.js';
+
+const INTERNAL_BOOT_ERROR = '__nappletConformance.error';
 
 /** What a host can observe by booting the napplet. */
 export interface BootCollection {
-  /** True when the napplet posted the NAP-SHELL `shell.ready` signal (its shim installed and ran). */
+  /** True when the harness injected `window.napplet` before subject scripts ran. */
   installedGlobal: boolean;
   /** Boot failure reason, or `null`. */
   bootError: string | null;
-  /** Envelopes emitted under a fully-capable shell. */
+  /** Envelopes emitted under a fully-capable runtime. */
   emitted: RecordedEnvelope[];
-  /** Observation from the no-capability degraded boot, or `null`. */
+  /** Observation from the no-domain degraded boot, or `null`. */
   degraded: BootObservation | null;
 }
 
@@ -45,11 +36,11 @@ export interface BootCollection {
 export interface BootOptions {
   /** The napplet URL to load. */
   url: string;
-  /** Milliseconds to await `shell.ready` before declaring boot failure. Default 5000. */
+  /** Milliseconds to await iframe load before declaring boot failure. Default 5000. */
   readyTimeoutMs?: number;
-  /** Milliseconds to keep recording envelopes after `shell.ready`. Default 600. */
+  /** Milliseconds to keep recording envelopes after boot. Default 600. */
   settleMs?: number;
-  /** Also run a no-capability degraded boot. Default true. */
+  /** Also run a no-domain degraded boot. Default true. */
   runDegraded?: boolean;
   /** Debug only: also grant `allow-same-origin` (a conformant load must NOT need it). Default false. */
   allowSameOrigin?: boolean;
@@ -69,14 +60,70 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-/** Boot the napplet once with the given capabilities and collect what's observable. */
+function escapeHtmlAttr(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function runtimePrelude(domains: readonly string[]): string {
+  return `
+(() => {
+  const domains = ${JSON.stringify(domains)};
+  const napplet = {};
+  for (const domain of domains) napplet[domain] = {};
+  window.napplet = napplet;
+  const report = (reason) => {
+    try {
+      window.parent.postMessage({ type: '${INTERNAL_BOOT_ERROR}', reason: String(reason && reason.message || reason) }, '*');
+    } catch {}
+  };
+  window.addEventListener('error', (event) => report(event.error || event.message));
+  window.addEventListener('unhandledrejection', (event) => report(event.reason));
+})();
+`;
+}
+
+function injectRuntime(html: string, url: string, domains: readonly string[]): string {
+  const base = `<base href="${escapeHtmlAttr(url)}">`;
+  const script = `<script>${runtimePrelude(domains)}</script>`;
+  const headOpen = /<head(?:\s[^>]*)?>/i.exec(html);
+  if (headOpen) {
+    const at = headOpen.index + headOpen[0].length;
+    return `${html.slice(0, at)}${base}${script}${html.slice(at)}`;
+  }
+  return `${base}${script}${html}`;
+}
+
+function decodeDataUrl(url: string): string | null {
+  if (!url.startsWith('data:')) return null;
+  const comma = url.indexOf(',');
+  if (comma < 0) return '';
+  const meta = url.slice(0, comma);
+  const body = url.slice(comma + 1);
+  if (meta.endsWith(';base64')) return atob(body);
+  return decodeURIComponent(body);
+}
+
+async function loadHtml(url: string): Promise<string> {
+  if (url === 'about:blank') return '<!doctype html><html><head></head><body></body></html>';
+  const data = decodeDataUrl(url);
+  if (data !== null) return data;
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`Failed to fetch napplet HTML: ${response.status} ${response.statusText}`);
+  return response.text();
+}
+
+/** Boot the napplet once with the given injected domain set and collect what's observable. */
 async function bootOnce(
-  caps: Partial<ShellCapabilities> | undefined,
+  domains: readonly string[],
   opts: Required<Pick<BootOptions, 'url' | 'readyTimeoutMs' | 'settleMs' | 'allowSameOrigin'>>,
   doc: Document,
   win: Window,
 ): Promise<SingleBoot> {
-  const shell = createReferenceShell(caps ? { capabilities: caps } : undefined);
+  const shell = createReferenceShell();
   const iframe = doc.createElement('iframe');
   iframe.setAttribute('sandbox', opts.allowSameOrigin ? 'allow-scripts allow-same-origin' : 'allow-scripts');
   iframe.setAttribute('aria-hidden', 'true');
@@ -85,33 +132,45 @@ async function bootOnce(
   iframe.style.height = '1px';
   iframe.style.left = '-9999px';
 
-  let resolveReady!: () => void;
-  const readyPromise = new Promise<void>((resolve) => {
-    resolveReady = resolve;
-  });
-
+  let bootError: string | null = null;
   const listener = (event: MessageEvent): void => {
     if (event.source !== iframe.contentWindow) return;
+    const data = event.data as { type?: unknown; reason?: unknown } | null;
+    if (data && typeof data === 'object' && data.type === INTERNAL_BOOT_ERROR) {
+      bootError = `napplet boot error: ${String(data.reason ?? 'unknown error')}`;
+      return;
+    }
     const responses = shell.handle(event.data);
     const source = event.source as Window | null;
     for (const response of responses) source?.postMessage(response, '*');
-    const data = event.data as { type?: unknown } | null;
-    if (data && typeof data === 'object' && data.type === 'shell.ready') resolveReady();
   };
+
+  let loaded = false;
+  const loadPromise = new Promise<void>((resolve) => {
+    iframe.addEventListener('load', () => {
+      loaded = true;
+      resolve();
+    }, { once: true });
+  });
 
   win.addEventListener('message', listener);
   (doc.body ?? doc.documentElement).appendChild(iframe);
-  iframe.setAttribute('src', opts.url);
 
-  let installedGlobal = false;
-  let bootError: string | null = null;
-  const timedOut = Symbol('timeout');
-  const race = await Promise.race([readyPromise.then(() => 'ready' as const), sleep(opts.readyTimeoutMs).then(() => timedOut)]);
-  if (race === timedOut) {
-    bootError = `napplet did not boot (no shell.ready within ${opts.readyTimeoutMs}ms; a conformant napplet must run under sandbox="allow-scripts" without allow-same-origin)`;
-  } else {
-    installedGlobal = true;
-    await sleep(opts.settleMs); // collect startup envelopes
+  try {
+    const html = await loadHtml(opts.url);
+    iframe.srcdoc = injectRuntime(html, opts.url, domains);
+  } catch (error) {
+    bootError = error instanceof Error ? error.message : String(error);
+  }
+
+  if (!bootError) {
+    const timedOut = Symbol('timeout');
+    const race = await Promise.race([loadPromise.then(() => 'loaded' as const), sleep(opts.readyTimeoutMs).then(() => timedOut)]);
+    if (race === timedOut || !loaded) {
+      bootError = `napplet did not boot (iframe did not load within ${opts.readyTimeoutMs}ms; a conformant napplet must run under sandbox="allow-scripts" without allow-same-origin)`;
+    } else {
+      await sleep(opts.settleMs);
+    }
   }
 
   win.removeEventListener('message', listener);
@@ -121,17 +180,11 @@ async function bootOnce(
     /* best-effort cleanup */
   }
 
-  return { installedGlobal, bootError, emitted: [...shell.records] };
+  return { installedGlobal: bootError === null, bootError, emitted: [...shell.records] };
 }
 
 /**
  * Boot a napplet and collect host-observable conformance evidence.
- *
- * @example
- * ```ts
- * const boot = await bootAndCollect({ url: '/index.html' });
- * // hand `boot` to runConformance via a ConformanceContext on the node side
- * ```
  */
 export async function bootAndCollect(options: BootOptions): Promise<BootCollection> {
   const doc = options.document ?? document;
@@ -143,11 +196,11 @@ export async function bootAndCollect(options: BootOptions): Promise<BootCollecti
     allowSameOrigin: options.allowSameOrigin ?? false,
   };
 
-  const primary = await bootOnce(undefined, resolved, doc, win);
+  const primary = await bootOnce(NAP_DOMAINS, resolved, doc, win);
 
   let degraded: BootObservation | null = null;
   if (options.runDegraded ?? true) {
-    const d = await bootOnce({ domains: [], protocols: {} }, resolved, doc, win);
+    const d = await bootOnce([], resolved, doc, win);
     degraded = { bootError: d.bootError, emitted: d.emitted };
   }
 

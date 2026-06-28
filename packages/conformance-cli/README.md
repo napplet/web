@@ -61,7 +61,7 @@ unchanged — `--ui` is purely additive.)
 --url <url>            Test a remotely-served napplet instead of a local dir
 --reporter <fmt>       pretty | json | junit            (default: pretty)
 --out <file>           Write the report to a file instead of stdout
---ready-timeout <ms>   Boot timeout waiting for shell.ready (default: 5000)
+--ready-timeout <ms>   Boot timeout waiting for iframe load (default: 5000)
 --settle <ms>          Envelope-collection window after boot (default: 600)
 --no-degraded          Skip the graceful-degradation pass
 --allow-same-origin    Debug only (a conformant napplet must not need it)

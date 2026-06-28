@@ -64,7 +64,7 @@ import type {
  *
  * @example
  * ```ts
- * if (window.napplet.shell.supports('cvm')) {
+ * if (window.napplet.cvm) {
  *   const servers = await window.napplet.cvm.discover({ search: 'relay' });
  *   const tools = await window.napplet.cvm.listTools(servers[0]);
  *   const result = await window.napplet.cvm.callTool(servers[0], tools[0].name, {});
@@ -143,7 +143,7 @@ export interface CvmApi {
  *
  * @example
  * ```ts
- * if (window.napplet.shell.supports('outbox')) {
+ * if (window.napplet.outbox) {
  *   const { events } = await window.napplet.outbox.query(
  *     [{ authors: ['ab12...'], kinds: [1], limit: 20 }],
  *     { strategy: 'outbox' },
@@ -195,7 +195,7 @@ export interface OutboxApi {
  *
  * @example
  * ```ts
- * if (window.napplet.shell.supports('upload')) {
+ * if (window.napplet.upload) {
  *   const result = await window.napplet.upload.upload({ data: blob, filename: 'pic.png' });
  *   if (result.status === 'complete') attach(result.url, result.nip94);
  * }
@@ -238,7 +238,7 @@ export interface UploadApi {
  *
  * @example
  * ```ts
- * if (window.napplet.shell.supports('intent')) {
+ * if (window.napplet.intent) {
  *   const { available } = await window.napplet.intent.available('note');
  *   if (available) await window.napplet.intent.open('note', { target: { type: 'event', id } });
  * }
@@ -290,7 +290,7 @@ export interface IntentApi {
  *
  * @example
  * ```ts
- * if (window.napplet.shell.supports('link')) {
+ * if (window.napplet.link) {
  *   const result = await window.napplet.link.open('https://example.com/post/123', { label: 'Read post' });
  *   if (result.status === 'denied') showInlineFallback();
  * }
@@ -314,7 +314,7 @@ export interface LinkApi {
  *
  * @example
  * ```ts
- * if (window.napplet.shell.supports('lists')) {
+ * if (window.napplet.lists) {
  *   await window.napplet.lists.add({ type: 'mute-list' }, [
  *     { itemType: 'pubkey', value: 'abc123...' },
  *   ]);
@@ -352,7 +352,7 @@ export interface ListsApi {
  *
  * @example
  * ```ts
- * if (window.napplet.shell.supports('common')) {
+ * if (window.napplet.common) {
  *   const { pubkeys } = await window.napplet.common.follows();
  *   await window.napplet.common.react(noteId, '+');
  * }
@@ -429,7 +429,7 @@ export interface CommonApi {
  *
  * @example
  * ```ts
- * if (window.napplet.shell.supports('serial')) {
+ * if (window.napplet.serial) {
  *   const { session } = await window.napplet.serial.open({ options: { baudRate: 115200 } });
  *   await window.napplet.serial.write(session.id, [112, 105, 110, 103, 10]);
  * }
@@ -471,7 +471,7 @@ export interface SerialApi {
  *
  * @example
  * ```ts
- * if (window.napplet.shell.supports('dm')) {
+ * if (window.napplet.dm) {
  *   const status = await window.napplet.dm.status();
  *   if (status.available) {
  *     const { conversations } = await window.napplet.dm.conversations({ limit: 20 });

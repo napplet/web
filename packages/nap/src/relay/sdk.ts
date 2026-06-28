@@ -13,10 +13,10 @@ import type {
   EventTemplate,
 } from '@napplet/core';
 
-function requireRelay(): NappletGlobal['relay'] {
+function requireRelay(): NonNullable<NappletGlobal['relay']> {
   const w = window as Window & { napplet?: NappletGlobal };
   if (!w.napplet?.relay) {
-    throw new Error('window.napplet.relay not installed -- import @napplet/shim first');
+    throw new Error('window.napplet.relay is unavailable -- runtime did not inject the relay domain');
   }
   return w.napplet.relay;
 }
@@ -116,7 +116,7 @@ export function relayPublishEncrypted(
 ): Promise<NostrEvent> {
   const w = window as Window & { napplet?: NappletGlobal };
   if (!w.napplet?.relay?.publishEncrypted) {
-    throw new Error('window.napplet.relay.publishEncrypted not installed -- import @napplet/shim first');
+    throw new Error('window.napplet.relay.publishEncrypted is unavailable -- runtime did not inject the relay domain');
   }
   return w.napplet.relay.publishEncrypted(template, recipient, encryption);
 }

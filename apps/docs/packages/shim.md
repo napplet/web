@@ -1,14 +1,13 @@
 # @napplet/shim
 
-> Side-effect-only window installer for napplet iframes. Importing it installs the
-> `window.napplet` global. No named exports.
+> Runtime-side helper for injecting selected `window.napplet.<domain>` objects
+> before napplet scripts run.
 
-`@napplet/shim` is the one package every napplet **must** import. The import is a
-**side effect**: it installs `window.napplet`, registers with the shell (which
-assigns identity from the iframe's `message.source`), and wires up the JSON
-envelope message handlers. It has no cryptographic dependencies — the shim sends
-messages, and the shell handles identity, signing, and encryption. **No
-`window.nostr` is installed.**
+`@napplet/shim` is consumed by NIP-5D runtimes, not by napplet application code.
+The runtime calls its installer before any napplet script runs, injecting only
+the NAP domain objects exposed to that napplet. It has no cryptographic
+dependencies — the shim sends messages, and the shell handles identity, signing,
+and encryption. **No `window.nostr` is installed.**
 
 - **npm:** [`@napplet/shim`](https://www.npmjs.com/package/@napplet/shim)
 - **JSR:** [`@napplet/shim`](https://jsr.io/@napplet/shim)
@@ -20,15 +19,15 @@ messages, and the shell handles identity, signing, and encryption. **No
 npm install @napplet/shim
 ```
 
-## Named exports
+## Runtime export
 
-**None.** `import { anything } from '@napplet/shim'` is a TypeScript error. The
-package exists purely for its side effect. For named, typed access use
-[`@napplet/sdk`](./sdk).
+`installNappletGlobal` installs selected domain objects onto a target window.
+Napplet-side code should use [`@napplet/sdk`](./sdk) or direct typed
+`window.napplet` access.
 
 ## The `window.napplet` shape
 
-After `import '@napplet/shim'`, the global is populated with these sub-objects:
+After runtime injection, the global may be populated with these sub-objects:
 
 | Namespace | What it does |
 | --- | --- |
@@ -41,14 +40,21 @@ After `import '@napplet/shim'`, the global is populated with these sub-objects:
 | `identity` | Read-only user queries: `getPublicKey`, `onChanged`, `getProfile`, … |
 | `config` | Per-napplet declarative config: `get`, `subscribe`, `openSettings`, `registerSchema`, `schema` |
 | `resource` | Sandboxed byte fetching: `bytes`, `bytesMany`, `bytesAsObjectURL` |
-| `shell` | NAP-SHELL bootstrap handshake: `supports(domain, protocol?)`, `services`, `ready()`, `onReady()` |
+| Domain absence | If a property is absent, that NAP is unavailable to the napplet. |
 
 ## Usage
 
 ```ts
-// Side-effect import — installs window.napplet (no window.nostr)
-import '@napplet/shim';
+import { installNappletGlobal } from '@napplet/shim';
 
+installNappletGlobal({
+  domains: ['relay', 'storage', 'identity'],
+});
+```
+
+Napplet application code then consumes injected domains:
+
+```ts
 // Subscribe to kind 1 notes
 const sub = window.napplet.relay.subscribe(
   { kinds: [1], limit: 20 },
@@ -72,7 +78,7 @@ const theme = await window.napplet.storage.getItem('theme'); // 'dark'
 const pubkey = await window.napplet.identity.getPublicKey(); // "" when signed out
 
 // Feature-gate before using a domain
-if (window.napplet.shell.supports('media')) {
+if (window.napplet?.media) {
   const { sessionId } = await window.napplet.media.createSession({
     owner: 'napplet',
     metadata: { title: 'My Song', artist: 'The Artist' },
@@ -91,7 +97,6 @@ from [`@napplet/core`](./core), or — preferably — use the named helpers in
 
 ```ts
 import type { NappletGlobal } from '@napplet/core';
-import '@napplet/shim';
 
 const napplet = (window as Window & { napplet: NappletGlobal }).napplet;
 ```

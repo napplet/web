@@ -5,8 +5,7 @@
  * localStorage directly. This shim provides an async API that sends
  * storage.* envelope messages directly to the shell's storage proxy.
  *
- * Usage (via window.napplet global):
- *   import '@napplet/shim';
+ * Usage (after runtime injection):
  *   const value = await window.napplet.storage.getItem('my-key');
  *   await window.napplet.storage.setItem('my-key', 'my-value');
  *   await window.napplet.storage.removeItem('my-key');

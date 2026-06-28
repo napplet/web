@@ -121,35 +121,23 @@ describe('validateEnvelope — outbound field checks', () => {
   });
 });
 
-describe('validateEnvelope — NAP-SHELL foundational domain', () => {
-  it('accepts shell.ready as a bare outbound liveness ping', () => {
-    const v = validateEnvelope({ type: 'shell.ready' });
-    expect(v.ok).toBe(true);
-    expect(v.domain).toBe('shell');
-    expect(v.direction).toBe('out');
-  });
-
-  it('recognizes shell.init as inbound (not an unknown domain)', () => {
-    const v = validateEnvelope({
-      type: 'shell.init',
-      capabilities: { domains: [], protocols: {} },
-      services: [],
-    });
-    expect(v.ok).toBe(false);
-    expect(v.domain).toBe('shell');
-    expect(v.direction).toBe('in');
-    expect(v.errors[0].code).toBe('inbound-type-emitted');
+describe('validateEnvelope — no generic shell domain', () => {
+  it('rejects removed generic shell messages as an unknown domain', () => {
+    const removedReady = ['shell', 'ready'].join('.');
+    const removedInit = ['shell', 'init'].join('.');
+    expect(validateEnvelope({ type: removedReady }).errors[0].code).toBe('unknown-domain');
+    expect(validateEnvelope({ type: removedInit }).errors[0].code).toBe('unknown-domain');
   });
 });
 
 describe('ENVELOPE_SPECS invariants', () => {
-  it('has 193 discriminants split 93 outbound / 100 inbound', () => {
+  it('has 191 discriminants split 92 outbound / 99 inbound', () => {
     const all = knownEnvelopeTypes();
-    expect(all).toHaveLength(193);
+    expect(all).toHaveLength(191);
     const out = all.filter((t) => ENVELOPE_SPECS[t].dir === 'out');
     const inbound = all.filter((t) => ENVELOPE_SPECS[t].dir === 'in');
-    expect(out).toHaveLength(93);
-    expect(inbound).toHaveLength(100);
+    expect(out).toHaveLength(92);
+    expect(inbound).toHaveLength(99);
   });
 
   it('only outbound specs declare required fields', () => {

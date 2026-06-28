@@ -21,10 +21,10 @@ import type {
   Subscription,
 } from '@napplet/core';
 
-function requireDm(): NappletGlobal['dm'] {
+function requireDm(): NonNullable<NappletGlobal['dm']> {
   const w = window as Window & { napplet?: NappletGlobal };
   if (!w.napplet?.dm) {
-    throw new Error('window.napplet.dm not installed -- import @napplet/shim first');
+    throw new Error('window.napplet.dm is unavailable -- runtime did not inject this domain');
   }
   return w.napplet.dm;
 }

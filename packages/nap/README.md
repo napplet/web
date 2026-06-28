@@ -175,8 +175,6 @@ take one snapshot with `getPublicKey()` and then subscribe to shell-pushed
 `identity.changed` updates instead of polling while a signer connects.
 
 ```ts
-import '@napplet/shim';
-
 const pubkey = await window.napplet.identity.getPublicKey(); // "" when signed out
 
 const sub = window.napplet.identity.onChanged((nextPubkey) => {

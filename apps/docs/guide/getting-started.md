@@ -30,10 +30,10 @@ See [`@napplet/boilerplate`](/packages/boilerplate) for the full option list.
 
 ## Install the packages manually
 
-If you'd rather add napplet to an existing app, install the runtime packages:
+If you'd rather add napplet to an existing app, install the napplet-side SDK:
 
 ```bash
-npm install @napplet/shim @napplet/sdk
+npm install @napplet/sdk
 ```
 
 And the build-time Vite plugin as a dev dependency, which generates the NIP-5A
@@ -55,13 +55,11 @@ export default defineConfig({
 
 ## Build your first napplet
 
-The single most important line is the **side-effect import of the shim**. It
-installs the `window.napplet` global and registers your napplet with the shell:
+NIP-5D runtimes inject `window.napplet` before your code runs. Napplet code can
+use the injected namespace directly:
 
 ```ts
 // main.ts
-import '@napplet/shim';
-
 // Subscribe to kind 1 notes through the shell's relay pool
 const sub = window.napplet.relay.subscribe(
   { kinds: [1], limit: 20 },
@@ -79,34 +77,32 @@ const signed = await window.napplet.relay.publish({
 ```
 
 Notice you never imported a signing library and never touched a relay socket. The
-shim sends `relay.subscribe` and `relay.publish` JSON envelopes; the shell does
+runtime sends `relay.subscribe` and `relay.publish` JSON envelopes; the shell does
 the rest.
 
-## When to use shim vs. sdk
+## Runtime injection vs. SDK
 
-Both packages exist; most napplets use **both**.
+Runtimes and napplets use different packages.
 
 | | [`@napplet/shim`](/packages/shim) | [`@napplet/sdk`](/packages/sdk) |
 | --- | --- | --- |
-| **Import style** | `import '@napplet/shim'` (side-effect) | `import { relay, inc } from '@napplet/sdk'` |
-| **What it does** | Installs the `window.napplet` global + registers with the shell | Named, typed exports that wrap `window.napplet` |
-| **Named exports** | None (a named import is a type error) | `relay`, `inc`, `storage`, `keys`, `media`, `notify`, `config`, `resource`, plus types |
-| **Required?** | **Always** — it installs the runtime | Optional convenience for bundler users |
+| **Import style** | `import { installNappletGlobal } from '@napplet/shim'` | `import { relay, inc } from '@napplet/sdk'` |
+| **Who uses it** | Host runtime before napplet scripts execute | Napplet application code |
+| **What it does** | Injects selected `window.napplet.<domain>` objects | Named, typed exports that wrap injected domains |
+| **Required?** | Required for runtimes that use these packages | Optional convenience for bundler users |
 
-- The **shim** is mandatory. Without it, `window.napplet` does not exist.
-- The **sdk** is an ergonomic, typed wrapper. Its methods delegate to
-  `window.napplet.*` at call time and throw a clear error if the shim wasn't
-  imported first.
+The **sdk** is an ergonomic, typed wrapper. Its methods delegate to
+`window.napplet.*` at call time and throw a clear error if the runtime did not
+inject the namespace or requested domain.
 
-Typical usage imports both — shim for the runtime, sdk for the typed API:
+Typical napplet code imports only the SDK:
 
 ```ts
-import '@napplet/shim';                              // required: installs window.napplet
-import { relay, inc, storage } from '@napplet/sdk';  // optional: typed API
+import { relay, inc, storage } from '@napplet/sdk';
 ```
 
 If you're writing a vanilla napplet with no build step, you can skip the sdk and
-use `window.napplet.*` directly after importing the shim.
+use the injected `window.napplet.*` namespace directly.
 
 ## Running in a shell
 

@@ -21,7 +21,7 @@ A napplet is a single self-contained `/index.html` loaded by a host **shell** in
 
 ## Step 1 — Pick capabilities (NAPs)
 
-Map each feature to the NAP domain that provides it. Use only domains the shell exposes; gate with `shell.supports(domain)` at runtime.
+Map each feature to the NAP domain that provides it. Use only domains the shell exposes; gate optional behavior with injected domain property presence.
 
 | Need | NAP domain |
 | --- | --- |
@@ -41,7 +41,7 @@ Other domains exist (`cvm`, `outbox`, `upload`, `intent`) — consult NIP-5D / N
 ## Step 2 — Declare requirements vs. optional
 
 - **Hard requirement** → list in the vite-plugin `requires: [...]` (service deps) so a shell can refuse/inform up front.
-- **Optional enhancement** → no manifest entry; guard at runtime with `shell.supports(domain)` and provide a fallback.
+- **Optional enhancement** → no manifest entry; guard at runtime with `if (window.napplet?.domain)` and provide a fallback.
 
 State which is which in the spec. Prefer optional + graceful degradation over hard requirements.
 

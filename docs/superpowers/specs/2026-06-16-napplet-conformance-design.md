@@ -7,8 +7,8 @@
 ## Problem
 
 A napplet is a static Vite-built web app loaded into a `sandbox="allow-scripts"`
-(no `allow-same-origin`) iframe. It installs `window.napplet` via `@napplet/shim`
-and communicates with a host **shell** purely through `postMessage` JSON envelopes
+(no `allow-same-origin`) iframe. The runtime injects `window.napplet` before
+napplet scripts run, and communication with a host **shell** uses `postMessage` JSON envelopes
 `{ type: "domain.action", ...payload }` across 16 NAP domains, plus a build-time
 NIP-5A manifest (meta tags, `napplet-type`/d-tag, `aggregateHash`, config schema,
 connect origins, no inline scripts).
@@ -79,7 +79,7 @@ Exports:
 
 - **`createReferenceShell(opts)`** — given a target `Window` (the napplet iframe's
   `contentWindow`) and a `MessagePort`/`postMessage` channel, implements a minimal
-  conformant shell: answers `shell.supports()`, responds to each NAP domain with
+  conformant shell: answers domain presence, responds to each NAP domain with
   spec-valid canned responses, and **records every inbound envelope** with a
   timestamp and validation verdict. Responders are data-driven and overridable so
   later milestones can script behavior.
@@ -112,7 +112,7 @@ Exports:
 | Boot | `boot/no-forbidden-globals` | no `window.nostr` access attempt |
 | Wire | `wire/envelope-well-formed` | EVERY emitted envelope validates against its NAP validator |
 | Wire | `wire/declared-naps-only` | napplet only emits domains it declared / gated behind `supports()` |
-| Degradation | `degrade/supports-false` | with `shell.supports()=false`, napplet does not hang/throw uncaught |
+| Degradation | `degrade/domain-absence` | with `domain presence=false`, napplet does not hang/throw uncaught |
 | Lifecycle | `lifecycle/clean-teardown` | subscriptions/listeners close on unload (best-effort) |
 
 Checks are **observational** where possible (the napplet drives itself; the shell

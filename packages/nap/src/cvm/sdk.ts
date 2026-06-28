@@ -18,10 +18,10 @@ import type {
   McpResourceContent,
 } from './types.js';
 
-function requireCvm(): NappletGlobal['cvm'] {
+function requireCvm(): NonNullable<NappletGlobal['cvm']> {
   const w = window as Window & { napplet?: NappletGlobal };
   if (!w.napplet?.cvm) {
-    throw new Error('window.napplet.cvm not installed -- import @napplet/shim first');
+    throw new Error('window.napplet.cvm is unavailable -- runtime did not inject this domain');
   }
   return w.napplet.cvm;
 }

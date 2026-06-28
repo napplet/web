@@ -10,7 +10,7 @@ import type {
   Subscription,
   EventTemplate,
 } from '@napplet/core';
-import { requireNapplet } from './require-napplet.js';
+import { requireDomain } from './require-napplet.js';
 
 /**
  * NIP-01 relay operations: subscribe to events, publish events, one-shot queries.
@@ -44,7 +44,7 @@ export const relay = {
     onEose: () => void,
     options?: { relay?: string; group?: string },
   ): Subscription {
-    return requireNapplet().relay.subscribe(filters, onEvent, onEose, options);
+    return requireDomain('relay').subscribe(filters, onEvent, onEose, options);
   },
 
   /**
@@ -57,7 +57,7 @@ export const relay = {
     template: EventTemplate,
     options?: { relay?: boolean },
   ): Promise<NostrEvent> {
-    return requireNapplet().relay.publish(template, options);
+    return requireDomain('relay').publish(template, options);
   },
 
   /**
@@ -72,7 +72,7 @@ export const relay = {
     recipient: string,
     encryption: 'nip44' | 'nip04' = 'nip44',
   ): Promise<NostrEvent> {
-    return requireNapplet().relay.publishEncrypted(template, recipient, encryption);
+    return requireDomain('relay').publishEncrypted(template, recipient, encryption);
   },
 
   /**
@@ -81,7 +81,7 @@ export const relay = {
    * @returns Promise resolving to array of matching NostrEvent objects
    */
   query(filters: NostrFilter | NostrFilter[]): Promise<NostrEvent[]> {
-    return requireNapplet().relay.query(filters);
+    return requireDomain('relay').query(filters);
   },
 };
 
@@ -107,7 +107,7 @@ export const inc = {
    * @param content    Event content (default: empty string)
    */
   emit(topic: string, extraTags?: string[][], content?: string): void {
-    requireNapplet().inc.emit(topic, extraTags, content);
+    requireDomain('inc').emit(topic, extraTags, content);
   },
 
   /**
@@ -120,7 +120,7 @@ export const inc = {
     topic: string,
     callback: (payload: unknown, event: NostrEvent) => void,
   ): Subscription {
-    return requireNapplet().inc.on(topic, callback);
+    return requireDomain('inc').on(topic, callback);
   },
 };
 
@@ -149,7 +149,7 @@ export const storage = {
    * @returns The stored string value, or null if not found
    */
   getItem(key: string): Promise<string | null> {
-    return requireNapplet().storage.getItem(key);
+    return requireDomain('storage').getItem(key);
   },
 
   /**
@@ -158,7 +158,7 @@ export const storage = {
    * @param value  The string value to store
    */
   setItem(key: string, value: string): Promise<void> {
-    return requireNapplet().storage.setItem(key, value);
+    return requireDomain('storage').setItem(key, value);
   },
 
   /**
@@ -166,7 +166,7 @@ export const storage = {
    * @param key  The storage key to remove
    */
   removeItem(key: string): Promise<void> {
-    return requireNapplet().storage.removeItem(key);
+    return requireDomain('storage').removeItem(key);
   },
 
   /**
@@ -174,7 +174,7 @@ export const storage = {
    * @returns Array of storage key strings
    */
   keys(): Promise<string[]> {
-    return requireNapplet().storage.keys();
+    return requireDomain('storage').keys();
   },
 
   /**
@@ -188,7 +188,7 @@ export const storage = {
      * @param key  The storage key
      */
     getItem(key: string): Promise<string | null> {
-      return requireNapplet().storage.instance.getItem(key);
+      return requireDomain('storage').instance.getItem(key);
     },
 
     /**
@@ -197,7 +197,7 @@ export const storage = {
      * @param value  The string value to store
      */
     setItem(key: string, value: string): Promise<void> {
-      return requireNapplet().storage.instance.setItem(key, value);
+      return requireDomain('storage').instance.setItem(key, value);
     },
 
     /**
@@ -205,7 +205,7 @@ export const storage = {
      * @param key  The storage key to remove
      */
     removeItem(key: string): Promise<void> {
-      return requireNapplet().storage.instance.removeItem(key);
+      return requireDomain('storage').instance.removeItem(key);
     },
 
     /**
@@ -213,7 +213,7 @@ export const storage = {
      * @returns Array of storage key strings
      */
     keys(): Promise<string[]> {
-      return requireNapplet().storage.instance.keys();
+      return requireDomain('storage').instance.keys();
     },
   },
 };

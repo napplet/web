@@ -42,7 +42,7 @@ napplet-conformance --ui ./dist
 
 Failures map to a NIP-5D / NAP requirement — fix the napplet, not the check. Common classes:
 
-- **Boot failure** — the shim never completed `shell.ready`→`shell.init`. Usually the build didn't import `@napplet/shim`, or a top-level throw blocked boot.
+- **Boot failure** — the runtime did not inject `window.napplet` before app code ran, or a top-level throw blocked boot.
 - **Malformed envelope** — a message that isn't a valid `{ type: "domain.action", … }` for its NAP. Re-check arguments to the `window.napplet.*` call.
 - **Manifest problem** — missing/invalid `napplet-type` meta or manifest tags. Confirm the vite-plugin ran and `nappletType` is set.
 - **Forbidden global** — the bundle references `fetch`, `localStorage`, `window.nostr`, `XMLHttpRequest`, `WebSocket`, etc. Replace with `resource.bytes` / `storage` / `relay`. (Static scan — even unreachable references flag.)

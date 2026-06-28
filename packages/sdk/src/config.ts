@@ -5,7 +5,7 @@
  */
 
 import type { ResourceBytesItem, Subscription } from '@napplet/core';
-import { requireNapplet } from './require-napplet.js';
+import { requireDomain } from './require-napplet.js';
 
 /**
  * Per-napplet declarative configuration (NAP-CONFIG): register a schema,
@@ -32,7 +32,7 @@ export const config = {
    * @returns A one-shot ConfigValues object.
    */
   get(): Promise<Record<string, unknown>> {
-    return requireNapplet().config.get();
+    return requireDomain('config').get();
   },
 
   /**
@@ -44,7 +44,7 @@ export const config = {
   subscribe(
     callback: (values: Record<string, unknown>) => void,
   ): Subscription {
-    return requireNapplet().config.subscribe(callback);
+    return requireDomain('config').subscribe(callback);
   },
 
   /**
@@ -52,7 +52,7 @@ export const config = {
    * @param options  Optional { section } to deep-link by x-napplet-section name.
    */
   openSettings(options?: { section?: string }): void {
-    requireNapplet().config.openSettings(options);
+    requireDomain('config').openSettings(options);
   },
 
   /**
@@ -65,7 +65,7 @@ export const config = {
     schema: Record<string, unknown>,
     version?: number,
   ): Promise<void> {
-    return requireNapplet().config.registerSchema(schema, version);
+    return requireDomain('config').registerSchema(schema, version);
   },
 
   /**
@@ -77,7 +77,7 @@ export const config = {
   onSchemaError(
     callback: (err: { code: string; error: string }) => void,
   ): () => void {
-    return requireNapplet().config.onSchemaError(callback);
+    return requireDomain('config').onSchemaError(callback);
   },
 
   /**
@@ -87,7 +87,7 @@ export const config = {
    * @returns The registered schema, or null if none.
    */
   get schema(): Record<string, unknown> | null {
-    return requireNapplet().config.schema;
+    return requireDomain('config').schema;
   },
 };
 
@@ -114,7 +114,7 @@ export const resource = {
    * @returns Promise resolving to the fetched bytes as a Blob.
    */
   bytes(url: string, opts?: { signal?: AbortSignal }): Promise<Blob> {
-    return requireNapplet().resource.bytes(url, opts);
+    return requireDomain('resource').bytes(url, opts);
   },
 
   /**
@@ -127,7 +127,7 @@ export const resource = {
     urls: string[],
     opts?: { signal?: AbortSignal },
   ): Promise<ResourceBytesItem[]> {
-    return requireNapplet().resource.bytesMany(urls, opts);
+    return requireDomain('resource').bytesMany(urls, opts);
   },
 
   /**
@@ -137,6 +137,6 @@ export const resource = {
    * @returns Synchronous handle `{ url, revoke }`.
    */
   bytesAsObjectURL(url: string): { url: string; revoke: () => void } {
-    return requireNapplet().resource.bytesAsObjectURL(url);
+    return requireDomain('resource').bytesAsObjectURL(url);
   },
 };

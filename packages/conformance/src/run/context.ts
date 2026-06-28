@@ -3,7 +3,7 @@
  *
  * A `ConformanceContext` is the plain-data input the check catalog runs against.
  * A host (the Playwright CLI host page, or the standalone web runtime) boots the
- * napplet in a `sandbox="allow-scripts"` iframe, attaches a reference shell, and
+ * napplet in a `sandbox="allow-scripts"` iframe, injects a reference runtime, and
  * assembles this snapshot. Keeping the context as pure data means the entire check
  * suite is unit-testable without a browser.
  *
@@ -46,8 +46,8 @@ export interface ConformanceContext {
   /** Forbidden globals the napplet tried to access, e.g. `['window.nostr']`. */
   forbiddenGlobals: string[];
   /**
-   * Observation from a second boot with `shell.supports()` forced false (empty
-   * capabilities). `null` when the host did not run the degraded pass.
+   * Observation from a second boot with no domains injected. `null` when the
+   * host did not run the degraded pass.
    */
   degraded: BootObservation | null;
   /**

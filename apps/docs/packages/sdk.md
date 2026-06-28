@@ -3,11 +3,11 @@
 > Named TypeScript exports for napplet developers using a bundler. Wraps
 > `window.napplet` at call time.
 
-`@napplet/sdk` gives you typed, named imports that delegate to their
-`window.napplet.*` counterparts. It depends on [`@napplet/core`](./core) for types
-only and has **no side effects** — so you still need
-[`@napplet/shim`](./shim) imported first to install the runtime. If a method is
-called before the shim installed `window.napplet`, the SDK throws a clear error.
+`@napplet/sdk` gives napplet code typed, named imports that delegate to injected
+`window.napplet.*` counterparts. It depends on [`@napplet/core`](./core) for
+types only and has **no side effects**. If a method is called before the runtime
+injected `window.napplet`, or before that domain is available, the SDK throws a
+clear error.
 
 - **npm:** [`@napplet/sdk`](https://www.npmjs.com/package/@napplet/sdk)
 - **JSR:** [`@napplet/sdk`](https://jsr.io/@napplet/sdk)
@@ -16,7 +16,7 @@ called before the shim installed `window.napplet`, the SDK throws a clear error.
 ## Install
 
 ```bash
-npm install @napplet/sdk @napplet/shim
+npm install @napplet/sdk
 ```
 
 ## Key exports
@@ -33,7 +33,7 @@ Top-level namespaced objects that mirror `window.napplet`:
 - **`resource`** — `bytes`, `bytesMany`, `bytesAsObjectURL`
 
 `identity` and `shell` are **not** exported as top-level
-objects. Use `window.napplet.identity.*` / `window.napplet.shell.supports()`
+objects. Use `window.napplet.identity.*` / `window.napplet.domain presence`
 directly, or the bare-name helpers the SDK re-exports:
 
 - `identityGetPublicKey`, `identityOnChanged`
@@ -47,7 +47,6 @@ constants from the NAP packages.
 ## Usage
 
 ```ts
-import '@napplet/shim'; // required: installs window.napplet
 import { relay, inc, storage, keys, config, resource, type NostrEvent } from '@napplet/sdk';
 
 // Subscribe to kind 1 notes
@@ -116,5 +115,5 @@ napplet.relay.subscribe({ kinds: [1] }, (e) => console.log(e));
 
 ## See also
 
-- [Shim vs. SDK](/guide/getting-started#when-to-use-shim-vs-sdk)
-- [`@napplet/shim`](./shim) — installs the global this package wraps
+- [Runtime injection vs. SDK](/guide/getting-started#runtime-injection-vs-sdk)
+- [`@napplet/shim`](./shim) — runtime-side injected global installer

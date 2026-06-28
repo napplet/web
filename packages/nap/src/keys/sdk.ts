@@ -7,10 +7,10 @@
 
 import type { NappletGlobal, Subscription } from '@napplet/core';
 
-function requireKeys(): NappletGlobal['keys'] {
+function requireKeys(): NonNullable<NappletGlobal['keys']> {
   const w = window as Window & { napplet?: NappletGlobal };
   if (!w.napplet?.keys) {
-    throw new Error('window.napplet.keys not installed -- import @napplet/shim first');
+    throw new Error('window.napplet.keys is unavailable -- runtime did not inject this domain');
   }
   return w.napplet.keys;
 }

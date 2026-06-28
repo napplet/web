@@ -1,5 +1,24 @@
 # @napplet/conformance
 
+## 0.9.1
+
+### Patch Changes
+
+- 688fb59: Align first-party packages with current NIP-5D runtime injection.
+
+  Runtimes now expose available NAPs by injecting `window.napplet.<domain>`
+  properties before napplet code runs. The retired generic shell capability
+  surface is removed from active package APIs: no `window.napplet.shell`, no
+  `shell.ready` / `shell.init` handshake, and no `@napplet/nap/shell` subpath.
+
+  Conformance now injects the runtime namespace before fixture code and validates
+  only NAP domain envelopes. Skills and package guidance now teach domain-property
+  presence instead of the retired shell supports API.
+
+- Updated dependencies [688fb59]
+  - @napplet/core@0.23.0
+  - @napplet/nap@0.23.0
+
 ## 0.9.0
 
 ### Minor Changes

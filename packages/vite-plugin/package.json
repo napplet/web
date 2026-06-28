@@ -1,6 +1,6 @@
 {
   "name": "@napplet/vite-plugin",
-  "version": "0.10.0",
+  "version": "0.10.1",
   "description": "Vite plugin for napplet development — injects aggregate hash meta tag during dev and optionally generates NIP-5A manifest at build time for local testing",
   "type": "module",
   "main": "./dist/index.js",

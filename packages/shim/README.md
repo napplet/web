@@ -1,6 +1,6 @@
 # @napplet/shim
 
-> Side-effect-only window installer for napplet iframes. Importing `@napplet/shim` installs the `window.napplet` global. No named exports. No cryptographic dependencies -- the shim sends JSON envelope messages and the shell handles identity.
+> Runtime injection helper for napplet iframes. It installs selected `window.napplet` domain objects. No cryptographic dependencies -- the shim sends JSON envelope messages and the shell handles identity.
 
 ## Getting Started
 
@@ -10,9 +10,9 @@
 
 ### How It Works
 
-1. Import `@napplet/shim` in your napplet's entry point (side-effect only -- no named exports)
-2. The shim registers with the shell via postMessage -- the shell assigns identity based on the iframe's `message.source` Window reference
-3. Once registered, `window.napplet` is populated with relay, inc, storage, keys, media, notify, identity, config, resource, cvm, outbox, upload, intent, ble, webrtc, link, lists, common, serial, and shell sub-objects
+1. A runtime imports `installNappletGlobal` before napplet scripts execute
+2. The runtime chooses which NAP domain objects to expose
+3. `window.napplet` is populated with the selected domain objects
 4. No `window.nostr` is installed -- signing and encryption are mediated by the shell via `relay.publish()` and `relay.publishEncrypted()`
 
 ### Installation
@@ -24,8 +24,10 @@ npm install @napplet/shim
 ## Quick Start
 
 ```ts
-// Side-effect import -- installs window.napplet (no window.nostr)
-import '@napplet/shim';
+import { installNappletGlobal } from '@napplet/shim';
+
+// Runtime-side injection before napplet scripts execute.
+installNappletGlobal({ domains: ['relay', 'storage', 'identity', 'inc'] });
 
 // Subscribe to kind 1 notes
 const sub = window.napplet.relay.subscribe(
@@ -288,7 +290,7 @@ All request/response pairs are correlated by the `id` field. Identity request ti
 
 ## `window.napplet` Shape
 
-After `import '@napplet/shim'`, the global `window.napplet` object has the following structure:
+After runtime injection, the global `window.napplet` object has the following structure:
 
 ```ts
 window.napplet = {
@@ -375,11 +377,11 @@ window.napplet = {
     add(list, items, options?): Promise<ListMutationResult>;
     remove(list, items, options?): Promise<ListMutationResult>;
   },
-  shell: {
-    supports(capability: NamespacedCapability, protocol?: ProtocolId): boolean;
-  },
 };
 ```
+
+No generic `shell` object is installed. Runtime capability is represented by
+which NAP domain properties the host injects.
 
 ### `window.napplet.relay`
 
@@ -494,55 +496,28 @@ Errors reject the Promise with one of 8 codes: `not-found`, `blocked-by-policy`,
 Capability detection:
 
 ```ts
-if (window.napplet.shell.supports('resource')) { /* shell offers the resource NAP */ }
+if (window.napplet?.resource) { /* shell offers the resource NAP */ }
 ```
 
-### `window.napplet.shell` — NAP-SHELL
+### Runtime-injected domains
 
-`shell` is the **foundational, mandatory** NAP domain — the one capability that
-is *not* discoverable via `supports()` and is always present. It is the bootstrap
-handshake:
-
-1. On import, the shim posts `shell.ready` (no payload) — a bare "my receiver is
-   live" liveness signal.
-2. The runtime replies **once** with `shell.init`, carrying the environment
-   `{ capabilities: { domains, protocols }, services }`.
-3. The shim caches that environment, so `supports(domain, protocol?)` is answered
-   **synchronously and locally** thereafter — no wire round-trip per query.
+Domain properties are the availability signal:
 
 ```ts
-// Synchronous, local capability queries:
-window.napplet.shell.supports('relay');        // true if the runtime offers relay
-window.napplet.shell.supports('inc', 'NAP-2'); // true if it also speaks NAP-2
-window.napplet.shell.supports('unknown');      // false — domain not offered
-
-// Named services the runtime exposes for this napplet:
-window.napplet.shell.services;                 // string[]  (e.g. ['signer'])
-
-// Gate startup on environment delivery:
-const env = await window.napplet.shell.ready();
-const sub = window.napplet.shell.onReady((e) => start(e));
+if (window.napplet?.relay) { /* relay API available */ }
+if (window.napplet?.resource) { /* resource API available */ }
+if (!window.napplet?.media) { /* render fallback */ }
 ```
-
-Before `shell.init` arrives, `supports()` returns `false` for everything,
-`services` is `[]`, and `ready()` is pending. A duplicate
-`shell.init` is ignored (first init wins). Use `supports()` as a feature gate
-before calling APIs that depend on a specific domain or numbered protocol.
-
-The `@napplet/nap/shell` subpath provides the NAP-SHELL types and SDK helpers
-(`shellSupports`, `shellServices`, `shellReady`, `shellOnReady`)
-alongside the other domain subpaths.
 
 ## TypeScript Support
 
-Importing `@napplet/shim` installs `window.napplet` at runtime. The package does
+The runtime installs `window.napplet` before napplet code runs. The package does
 not modify global `Window` types in its published source so it can be accepted by
 JSR. For direct `window.napplet` access, use `NappletGlobal` from
 `@napplet/core` in a local cast or ambient declaration:
 
 ```ts
 import type { NappletGlobal } from '@napplet/core';
-import '@napplet/shim';
 
 const napplet = (window as Window & { napplet: NappletGlobal }).napplet;
 
@@ -550,28 +525,37 @@ napplet.relay.subscribe({ kinds: [1] }, (event) => {
   // event is typed as NostrEvent
 });
 
-napplet.shell.supports('identity'); // typed as (capability: string) => boolean
+if (napplet.identity) {
+  await napplet.identity.getPublicKey();
+}
 ```
 
 For named typed helpers, prefer `@napplet/sdk`; it wraps `window.napplet` without
 requiring global type augmentation.
 
-**Note:** `@napplet/shim` has zero named exports -- `import { anything } from '@napplet/shim'` is a TypeScript error. For named imports, use `@napplet/sdk`.
+For napplet-side named imports, use `@napplet/sdk`.
 
 ## Shim vs SDK
 
 | | `@napplet/shim` | `@napplet/sdk` |
 |---|---|---|
-| **Import style** | `import '@napplet/shim'` (side-effect) | `import { relay, inc } from '@napplet/sdk'` |
-| **What it does** | Installs `window.napplet` global + shell registration | Named exports wrapping `window.napplet` |
+| **Import style** | `import { installNappletGlobal } from '@napplet/shim'` | `import { relay, inc } from '@napplet/sdk'` |
+| **What it does** | Runtime-side injected global installer | Named exports wrapping `window.napplet` |
 | **Dependencies** | `@napplet/nap` (uses `@napplet/nap/<domain>/shim` subpaths internally) | `@napplet/core` (types only) |
-| **When to use** | Always -- required to install the runtime | When you want typed imports in a bundler |
-| **Named exports** | None | `relay`, `inc`, `storage`, `keys`, `identity`, plus types |
+| **When to use** | In the host runtime before napplet scripts execute | In napplet code when you want typed imports in a bundler |
+| **Named exports** | `installNappletGlobal` | `relay`, `inc`, `storage`, `keys`, `identity`, plus types |
 
-**Typical usage:** Import both -- shim for window installation, SDK for typed API access:
+Runtime usage:
 
 ```ts
-import '@napplet/shim';
+import { installNappletGlobal } from '@napplet/shim';
+
+installNappletGlobal({ domains: ['relay', 'inc', 'storage', 'identity'] });
+```
+
+Napplet usage:
+
+```ts
 import { relay, inc, storage, keys, identity } from '@napplet/sdk';
 ```
 

@@ -58,16 +58,16 @@ describe('runtime guard', () => {
     expect(hrefs).toContain(NIP_5D_SPEC_URL);
   });
 
-  it('does not render when a runtime answers the handshake in time', () => {
+  it('does not render when a runtime confirms runtime presence in time', () => {
     vi.useFakeTimers();
     setTopLevel(false);
     installRuntimeGuard();
-    markRuntimePresent(); // shell.init arrived from the parent
+    markRuntimePresent(); // domain result arrived from the parent
     vi.advanceTimersByTime(HANDSHAKE_TIMEOUT_MS + 100);
     expect(host()).toBeNull();
   });
 
-  it('renders when embedded in a non-runtime iframe (no handshake)', () => {
+  it('renders when embedded in a non-runtime iframe (no runtime presence)', () => {
     vi.useFakeTimers();
     setTopLevel(false);
     installRuntimeGuard();

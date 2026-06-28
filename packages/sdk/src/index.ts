@@ -3,14 +3,14 @@
  *
  * Provides `relay`, `inc`, `storage`, and `keys` objects that delegate
  * to `window.napplet.*` at call time. Developers using a bundler can import
- * individual namespaces without depending on the shim's side-effect install:
+ * individual namespaces without depending on napplet-side bootstrap code:
  *
  * ```ts
  * import { relay, inc } from '@napplet/sdk';
  * ```
  *
- * The shim must still be imported somewhere in the application to install
- * the `window.napplet` global. The SDK only wraps it -- it does not install it.
+ * The runtime must inject `window.napplet` before napplet code runs. The SDK
+ * only wraps it -- it does not install it.
  *
  * Domain-specific SDK helpers are also available directly from NAP packages:
  * ```ts

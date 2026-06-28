@@ -1,4 +1,3 @@
-import type { NappletShell } from './shell.js';
 import type { RelayApi, IncApi, StorageApi, KeysApi } from './global/nostr-api.js';
 
 export type { NappletInstanceStorage } from './global/nostr-api.js';
@@ -24,33 +23,35 @@ import type {
 } from './global/service-api.js';
 
 /**
- * The window.napplet global installed at runtime by @napplet/shim.
+ * The window.napplet global injected by a NIP-5D runtime.
  *
  * The published packages avoid global `Window` type mutation for JSR
  * compatibility. Consumers that access `window.napplet` directly can use this
  * interface in a local ambient declaration or cast:
  * ```ts
  * import type { NappletGlobal } from '@napplet/core';
- * import '@napplet/shim';
- *
  * const napplet = (window as Window & { napplet: NappletGlobal }).napplet;
+ * if (napplet.relay) await napplet.relay.query([{ kinds: [1], limit: 1 }]);
  * ```
+ *
+ * Domain properties are optional. Presence means the runtime exposes that NAP
+ * domain to the napplet; absence means the domain is unavailable.
  */
 export interface NappletGlobal {
   /**
    * NIP-01 relay operations: subscribe to events, publish events, one-shot queries.
    * Routes through the shell's relay pool via postMessage.
    */
-  relay: RelayApi;
+  relay?: RelayApi;
   /**
    * Inter-napplet pubsub: broadcast and receive INC-PEER events through the shell.
    */
-  inc: IncApi;
+  inc?: IncApi;
   /**
    * Napplet-scoped storage: async localStorage-like API proxied through the shell.
    * Each napplet's storage is isolated by identity — napplets cannot read each other's data.
    */
-  storage: StorageApi;
+  storage?: StorageApi;
   /**
    * Keyboard forwarding and action keybindings: register named actions the shell
    * can bind to keys, forward unbound keystrokes to the shell, listen for
@@ -72,7 +73,7 @@ export interface NappletGlobal {
    * window.napplet.keys.unregisterAction('editor.save');
    * ```
    */
-  keys: KeysApi;
+  keys?: KeysApi;
   /**
    * Media session control: create sessions, report state and metadata,
    * declare capabilities, receive commands from the shell.
@@ -96,7 +97,7 @@ export interface NappletGlobal {
    * });
    * ```
    */
-  media: MediaApi;
+  media?: MediaApi;
   /**
    * Shell-rendered notifications: send notifications, set badge counts,
    * register channels, request permission, listen for user interaction.
@@ -117,7 +118,7 @@ export interface NappletGlobal {
    * });
    * ```
    */
-  notify: NotifyApi;
+  notify?: NotifyApi;
   /**
    * Read-only user identity queries: public key, profile, follows, relays,
    * lists, zaps, mutes, blocked, badges. All queries are strictly read-only --
@@ -136,7 +137,7 @@ export interface NappletGlobal {
    * const follows = await window.napplet.identity.getFollows();
    * ```
    */
-  identity: IdentityApi;
+  identity?: IdentityApi;
   /**
    * Read-only access to the shell's active theme (NAP-THEME).
    *
@@ -151,7 +152,7 @@ export interface NappletGlobal {
    * const sub = window.napplet.theme.onChanged((t) => applyTheme(t));
    * ```
    */
-  theme: ThemeApi;
+  theme?: ThemeApi;
   /**
    * Per-napplet declarative configuration (NAP-CONFIG).
    *
@@ -178,7 +179,7 @@ export interface NappletGlobal {
    * window.napplet.config.openSettings({ section: 'appearance' });
    * ```
    */
-  config: ConfigApi;
+  config?: ConfigApi;
   /**
    * Browser-enforced resource fetching: napplets request bytes by URL,
    * shell fetches and returns a Blob. The strict-CSP iframe sandbox
@@ -207,7 +208,7 @@ export interface NappletGlobal {
    * imgEl.onload = () => revoke();
    * ```
    */
-  resource: ResourceApi;
+  resource?: ResourceApi;
   /**
    * Native ContextVM bridge (NAP-CVM): MCP-over-Nostr access mediated by the shell.
    *
@@ -221,14 +222,14 @@ export interface NappletGlobal {
    *
    * @example
    * ```ts
-   * if (window.napplet.shell.supports('cvm')) {
+   * if (window.napplet.cvm) {
    *   const servers = await window.napplet.cvm.discover({ search: 'relay' });
    *   const tools = await window.napplet.cvm.listTools(servers[0]);
    *   const result = await window.napplet.cvm.callTool(servers[0], tools[0].name, {});
    * }
    * ```
    */
-  cvm: CvmApi;
+  cvm?: CvmApi;
   /**
    * Outbox-aware relay routing (NAP-OUTBOX): the napplet supplies Nostr filters
    * and intent; the shell discovers the correct relays (NIP-65 write/read relays,
@@ -242,7 +243,7 @@ export interface NappletGlobal {
    *
    * @example
    * ```ts
-   * if (window.napplet.shell.supports('outbox')) {
+   * if (window.napplet.outbox) {
    *   const { events } = await window.napplet.outbox.query(
    *     [{ authors: ['ab12...'], kinds: [1], limit: 20 }],
    *     { strategy: 'outbox' },
@@ -250,7 +251,7 @@ export interface NappletGlobal {
    * }
    * ```
    */
-  outbox: OutboxApi;
+  outbox?: OutboxApi;
   /**
    * Shell-mediated file/blob upload (NAP-UPLOAD): the napplet hands the shell raw
    * bytes plus upload intent; the shell selects a storage server, signs the rail
@@ -261,13 +262,13 @@ export interface NappletGlobal {
    *
    * @example
    * ```ts
-   * if (window.napplet.shell.supports('upload')) {
+   * if (window.napplet.upload) {
    *   const result = await window.napplet.upload.upload({ data: blob, filename: 'pic.png' });
    *   if (result.status === 'complete') attach(result.url, result.nip94);
    * }
    * ```
    */
-  upload: UploadApi;
+  upload?: UploadApi;
   /**
    * Archetype intent dispatch (NAP-INTENT): invoke another napplet by its role
    * (archetype) without addressing it directly. The napplet names a role +
@@ -280,25 +281,25 @@ export interface NappletGlobal {
    *
    * @example
    * ```ts
-   * if (window.napplet.shell.supports('intent')) {
+   * if (window.napplet.intent) {
    *   const { available } = await window.napplet.intent.available('note');
    *   if (available) await window.napplet.intent.open('note', { target: { type: 'event', id } });
    * }
    * ```
   */
-  intent: IntentApi;
+  intent?: IntentApi;
   /**
    * Runtime-mediated Bluetooth LE/GATT sessions (NAP-BLE): the napplet asks
    * the shell to select a user-approved device, operate on exposed GATT
    * attributes, and receive state/notification/close events. The shell owns
    * chooser UI, permissions, device handles, GATT lifecycle, and policy.
    */
-  ble: BleApi;
+  ble?: BleApi;
   /**
    * Runtime-mediated WebRTC sessions. The shell owns signaling transport,
    * signing/encryption, SDP, ICE, and RTCPeerConnection lifecycle.
   */
-  webrtc: WebrtcApi;
+  webrtc?: WebrtcApi;
   /**
    * Shell-mediated link opening (NAP-LINK): request user-visible navigation
    * without giving the napplet direct navigation authority, opener access,
@@ -306,12 +307,12 @@ export interface NappletGlobal {
    *
    * @example
    * ```ts
-   * if (window.napplet.shell.supports('link')) {
+   * if (window.napplet.link) {
    *   await window.napplet.link.open('https://example.com/post/123', { label: 'Read post' });
    * }
    * ```
   */
-  link: LinkApi;
+  link?: LinkApi;
   /**
    * Runtime-mediated NIP-51 list mutation (NAP-LISTS): add or remove semantic
    * items from supported lists without requiring napplets to handle raw NIP-51
@@ -320,14 +321,14 @@ export interface NappletGlobal {
    *
    * @example
    * ```ts
-   * if (window.napplet.shell.supports('lists')) {
+   * if (window.napplet.lists) {
    *   await window.napplet.lists.add({ type: 'mute-list' }, [
    *     { itemType: 'pubkey', value: 'abc123...' },
    *   ]);
    * }
    * ```
   */
-  lists: ListsApi;
+  lists?: ListsApi;
   /**
    * Common social actions (NAP-COMMON): shell-mediated NIP-19 helpers, profile
    * lookup, follows, and signed social actions. The shell owns identity,
@@ -336,13 +337,13 @@ export interface NappletGlobal {
    *
    * @example
    * ```ts
-   * if (window.napplet.shell.supports('common')) {
+   * if (window.napplet.common) {
    *   const { pubkeys } = await window.napplet.common.follows();
    *   await window.napplet.common.react(noteId, '+');
    * }
    * ```
   */
-  common: CommonApi;
+  common?: CommonApi;
   /**
    * Runtime-mediated serial device access (NAP-SERIAL): the napplet asks the
    * shell to select and open a user-approved serial session, writes byte arrays,
@@ -351,13 +352,13 @@ export interface NappletGlobal {
    *
    * @example
    * ```ts
-   * if (window.napplet.shell.supports('serial')) {
+   * if (window.napplet.serial) {
    *   const { session } = await window.napplet.serial.open({ options: { baudRate: 115200 } });
    *   await window.napplet.serial.write(session.id, [112, 105, 110, 103, 10]);
    * }
    * ```
    */
-  serial: SerialApi;
+  serial?: SerialApi;
   /**
    * Runtime-mediated direct messages (NAP-DM): napplets can request DM status,
    * conversations, history, send, and live delivery while the runtime owns
@@ -365,7 +366,7 @@ export interface NappletGlobal {
    *
    * @example
    * ```ts
-   * if (window.napplet.shell.supports('dm')) {
+   * if (window.napplet.dm) {
    *   const { conversations } = await window.napplet.dm.conversations({ limit: 20 });
    *   const live = await window.napplet.dm.subscribe({ conversationId: conversations[0]?.id });
    *   window.napplet.dm.onMessage((message) => render(message));
@@ -373,27 +374,5 @@ export interface NappletGlobal {
    * }
    * ```
    */
-  dm: DmApi;
-  /**
-   * NAP-SHELL: the foundational, mandatory bootstrap handshake surface.
-   *
-   * `shell` is the one domain that is **not** discoverable via
-   * `supports()` — it is always present. The shim posts `shell.ready`, the
-   * runtime replies once with `shell.init` carrying the environment, and the
-   * shim caches it so `supports(domain, protocol?)` answers synchronously and
-   * locally thereafter. Also exposes the runtime's `services` and
-   * `ready()` / `onReady()` to gate startup.
-   *
-   * @example
-   * ```ts
-   * // Synchronous, local capability queries (no wire round-trip):
-   * if (window.napplet.shell.supports('relay')) { ... }
-   * if (window.napplet.shell.supports('inc', 'NAP-2')) { ... }
-   *
-   * // Await environment delivery, or react to it:
-   * const env = await window.napplet.shell.ready();
-   * const sub = window.napplet.shell.onReady((e) => start(e));
-   * ```
-   */
-  shell: NappletShell;
+  dm?: DmApi;
 }

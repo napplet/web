@@ -1,21 +1,22 @@
 ---
 name: build-napplet
-description: Use when writing a napplet (sandboxed Nostr iframe app) — Vite setup, the NIP-5A manifest plugin, the @napplet/shim + @napplet/sdk API (relay subscribe/publish/query, scoped storage, read-only identity, inter-napplet events, sandboxed resource byte-fetching, config, theme, capability gating), and the single-file artifact rule. Pairs with design-napplet (plan first) and test-napplet (verify before publish).
+description: Use when writing a napplet (sandboxed Nostr iframe app) — Vite setup, the NIP-5A manifest plugin, runtime-injected window.napplet, the @napplet/sdk API (relay subscribe/publish/query, scoped storage, read-only identity, inter-napplet events, sandboxed resource byte-fetching, config, theme, capability gating), and the single-file artifact rule. Pairs with design-napplet (plan first) and test-napplet (verify before publish).
 ---
 
 # Building a Napplet
 
 Implements a `design-napplet` spec. A napplet is a single self-contained `/index.html` the shell loads into a `sandbox="allow-scripts"` iframe (no `allow-same-origin`); all host access is proxied over postMessage per NIP-5D. The napplet never holds keys. Protocol truth: NIP-5D (<https://github.com/nostr-protocol/nips/pull/2303>) + NAPs (<https://github.com/napplet/naps>). Never invent wire surface; flag gaps.
 
-## The two packages
+## Runtime Injection And SDK
 
-- **`@napplet/shim`** — *side-effect only, zero named exports.* `import '@napplet/shim'` installs `window.napplet` and registers with the shell. Importing `{ x } from '@napplet/shim'` is an error.
-- **`@napplet/sdk`** — named, typed wrappers over the same global, for bundlers.
+The runtime injects `window.napplet` before napplet scripts run. Napplet code
+does not import `@napplet/shim`; runtimes consume that package when they need the
+first-party installer. Napplets import `@napplet/sdk` for named, typed wrappers,
+or call `window.napplet.<domain>.*` directly.
 
-Canonical pattern — import both:
+Canonical pattern:
 
 ```ts
-import '@napplet/shim';                                  // installs window.napplet
 import { relay, inc, storage, identity } from '@napplet/sdk';
 ```
 
@@ -24,7 +25,7 @@ Equivalently call `window.napplet.<domain>.*` directly (identical behavior). Exa
 ## Step 1 — Install
 
 ```bash
-pnpm add @napplet/shim @napplet/sdk
+pnpm add @napplet/sdk
 pnpm add -D @napplet/vite-plugin
 ```
 
@@ -146,22 +147,21 @@ sub.close();
 
 Always type-check `payload` (it is `unknown`).
 
-## Step 9 — Capability gating & shell environment
+## Step 9 — Domain availability
 
-There is **no** `discoverServices()`/`hasService()` — those do not exist. Capabilities come from the NAP-SHELL handshake: on import the shim posts `shell.ready`; the runtime replies once with `shell.init` carrying `{ capabilities, services }`. Thereafter `supports()` answers **synchronously and locally**.
+There is **no** `discoverServices()`/`hasService()` and no generic shell
+capability query. NIP-5D runtimes inject `window.napplet` before napplet code
+runs. Available domains are present as properties; unavailable domains are
+absent.
 
 ```ts
-// Synchronous feature gate (after init):
-if (window.napplet.shell.supports('resource')) { /* resource NAP available */ }
-if (window.napplet.shell.supports('inc', 'NAP-2')) { /* also speaks numbered protocol */ }
-
-// Gate startup on environment delivery:
-const env = await window.napplet.shell.ready();    // { capabilities, services }
-const services = env.services;                     // string[], e.g. ['signer']
-window.napplet.shell.onReady((e) => start(e));     // or push-style
+if (window.napplet?.resource) { /* resource NAP available */ }
+if (window.napplet?.inc) { /* inter-napplet events available */ }
+if (!window.napplet?.upload) { /* render fallback */ }
 ```
 
-Before `shell.init` arrives, `supports()` is `false` for everything and `services` is `[]`. Gate any domain-specific call behind `supports(domain)`.
+Gate every domain-specific call behind property presence unless the domain is a
+hard manifest requirement and the shell already refused incompatible loads.
 
 ## Step 10 — Fetch external bytes (resource NAP)
 
@@ -194,16 +194,18 @@ const theme = await window.napplet.theme.get();
 const themeSub = window.napplet.theme.onChanged((t) => paint(t));
 ```
 
-Declare config schema via the vite-plugin (`configSchema`) so the shell renders settings. Gate both behind `supports('config')` / `supports('theme')`.
+Declare config schema via the vite-plugin (`configSchema`) so the shell renders settings. Gate both behind `window.napplet?.config` / `window.napplet?.theme`.
 
 ## Runtime guard & standalone dev
 
-Importing `@napplet/shim` arms a guard: opened without a runtime (top-level page, or a frame that never answers `shell.ready`→`shell.init`), it renders an explanatory modal instead of failing silently. For standalone local dev, opt out before the shim loads with `window.__NAPPLET_ALLOW_STANDALONE__ = true` or a `<meta name="napplet-allow-standalone">` in `<head>`.
+Runtime injection belongs to the shell. Napplet application code should consume
+the injected `window.napplet` namespace or typed helpers from `@napplet/sdk`;
+do not add napplet-owned bootstrap plumbing.
 
 ## Common pitfalls
 
-- `import { x } from '@napplet/shim'` — **error.** The shim has no named exports; use `@napplet/sdk` or `window.napplet.*`.
-- No `discoverServices`/`hasService`/`hasServiceVersion` — use `shell.supports()` and `shell.ready().services`.
+- Napplet-owned `@napplet/shim` bootstrap — **wrong layer.** The runtime injects `window.napplet`; napplets use `@napplet/sdk` or direct domain properties.
+- No `discoverServices`/`hasService`/`hasServiceVersion` — use injected domain property presence.
 - Storage is `nappletStorage`-backed via `storage.*` — there is no `nappletState`/`nappStorage`/`nappState` import.
 - Never `localStorage`/`fetch`/`<img src=externalUrl>`/`WebSocket` — sandbox + CSP block them. Use `storage` and `resource`.
 - Never call `window.nostr` — it isn't installed. Sign via `relay.publish`; identity is read-only.

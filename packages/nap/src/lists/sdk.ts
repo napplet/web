@@ -11,10 +11,10 @@ import type {
   NappletGlobal,
 } from '@napplet/core';
 
-function requireLists(): NappletGlobal['lists'] {
+function requireLists(): NonNullable<NappletGlobal['lists']> {
   const w = window as Window & { napplet?: NappletGlobal };
   if (!w.napplet?.lists) {
-    throw new Error('window.napplet.lists not installed -- import @napplet/shim first');
+    throw new Error('window.napplet.lists is unavailable -- runtime did not inject this domain');
   }
   return w.napplet.lists;
 }

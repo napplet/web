@@ -58,7 +58,7 @@ green, not to call a task "done", not because a sibling file already does it:
 4. **Conformance checks AND build-time hard errors test the spec, not our
    plumbing.** Every conformance check must map to a NIP-5D / NAP requirement. A
    check that actually tests a private convention of our toolchain (a shim's
-   `shell.ready` handshake, a plugin's `napplet-type` meta) is a bug: it fails
+   stale generic shell bootstrap, a plugin's `napplet-type` meta) is a bug: it fails
    spec-faithful napplets and passes only our stack. Flag it; do not extend it.
    The same rule binds any **build-failing assertion** the toolchain throws (e.g.
    `@napplet/vite-plugin` aborting `closeBundle`): a hard error that a conformant
@@ -208,7 +208,7 @@ This is the **napplet** monorepo — npm packages for the napplet protocol. Napp
 ## Packages
 
 - `packages/core` — **@napplet/core** — JSON envelope types, NAP dispatch, protocol constants
-- `packages/shim` — **@napplet/shim** — Side-effect window installer (window.napplet)
+- `packages/shim` — **@napplet/shim** — Runtime-side injected `window.napplet` domain installer
 - `packages/sdk` — **@napplet/sdk** — Named exports wrapping window.napplet for bundler consumers
 - `packages/vite-plugin` — **@napplet/vite-plugin** — NIP-5A manifest generation at build time
 - `packages/nap` — **@napplet/nap** — NAP domain subpaths (`@napplet/nap/relay`, `@napplet/nap/identity`, etc.)
@@ -232,7 +232,7 @@ This is the **napplet** monorepo — npm packages for the napplet protocol. Napp
 - **ACL**: Capabilities keyed on `(dTag, aggregateHash)`. Controls signing, storage, relay access.
 - **Storage scoping**: Keys scoped by `dTag:aggregateHash` so different napplet types and versions have isolated storage.
 - **Sandbox**: `allow-scripts` only — no `allow-same-origin`. Everything is proxied via the shell.
-- **shell.supports()**: Napplets query `window.napplet.shell.supports('relay')` to check NAP availability.
+- **Domain availability**: Runtimes inject only available `window.napplet.<domain>` objects; absence means unavailable.
 
 ## Build & Test
 
@@ -303,7 +303,7 @@ A portable SDK for the napplet protocol — sandboxed Nostr mini-apps that run i
 - UPPER_SNAKE_CASE for constants: `REQUEST_TIMEOUT_MS`, `RING_BUFFER_SIZE`, `DEFAULT_STORAGE_QUOTA`, `SIGNER_SUB_ID`
 - Map/Set names: descriptive nouns without prefix, e.g., `subscriptions`, `pendingChallenges`, `sources`
 - Private state uses underscore prefix if exported: `_setInterPaneEventSender()`, `_resolveKeypairReady`
-- PascalCase for interfaces and types: `NostrEvent`, `NostrFilter`, `NappletMessage`, `NapDomain`, `ShellSupports`, `ThemeColors`
+- PascalCase for interfaces and types: `NostrEvent`, `NostrFilter`, `NappletMessage`, `NapDomain`, `NappletGlobal`, `ThemeColors`
 - Suffix conventions: `*Message` for envelope message types (e.g., `RelaySubscribeMessage`, `StorageGetMessage`)
 ## Code Style
 - No explicit linter/formatter configured in package (ESLint/Prettier)

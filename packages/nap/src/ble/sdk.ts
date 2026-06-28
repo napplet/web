@@ -13,10 +13,10 @@ import type {
   BleWriteOptions,
 } from './types.js';
 
-function requireBle(): NappletGlobal['ble'] {
+function requireBle(): NonNullable<NappletGlobal['ble']> {
   const w = window as Window & { napplet?: NappletGlobal };
   if (!w.napplet?.ble) {
-    throw new Error('window.napplet.ble not installed -- import @napplet/shim first');
+    throw new Error('window.napplet.ble is unavailable -- runtime did not inject this domain');
   }
   return w.napplet.ble;
 }

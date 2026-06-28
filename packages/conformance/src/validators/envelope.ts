@@ -4,8 +4,7 @@
  * The NAP message types are TypeScript-only at the source. To conformance-test a
  * napplet we need to validate, at runtime, every postMessage envelope the napplet
  * emits against the protocol. This module hand-encodes the wire surface of the
- * optional NAP domains plus the foundational `shell` domain (NAP-SHELL) as a
- * single source-of-truth map ({@link ENVELOPE_SPECS}) and exposes
+ * NAP domains as a single source-of-truth map ({@link ENVELOPE_SPECS}) and exposes
  * {@link validateEnvelope}.
  *
  * Each entry records the envelope's **direction** (`out` = napplet→shell, `in` =
@@ -18,14 +17,6 @@
  */
 
 import { NAP_DOMAINS } from '@napplet/core';
-
-/**
- * Foundational domains carried alongside the optional NAP_DOMAINS. `shell` is
- * NAP-SHELL — mandatory, foundational, and NOT discoverable via `supports()`
- * (hence not a member of NAP_DOMAINS). The validator must accept `shell.*`
- * discriminants even though no `supports()` query can ever return a `shell`.
- */
-const FOUNDATIONAL_DOMAINS = ['shell'] as const;
 
 /** Direction of an envelope relative to the napplet. */
 export type EnvelopeDirection = 'out' | 'in';
@@ -48,17 +39,10 @@ export interface EnvelopeSpec {
 const ID = { id: 'string' } as const;
 
 /**
- * The complete napplet wire surface: every `domain.action` discriminant across the
- * optional NAP domains plus the foundational `shell` domain (NAP-SHELL), with
- * its direction and (for outbound) required fields.
+ * The complete napplet wire surface: every `domain.action` discriminant across
+ * NAP domains, with its direction and (for outbound) required fields.
  */
 export const ENVELOPE_SPECS: Record<string, EnvelopeSpec> = {
-  // ── shell (NAP-SHELL — foundational handshake) ─────────────────────────────
-  // `shell.ready` is a bare liveness ping (no required fields); `shell.init` is
-  // the runtime's environment reply (inbound — a napplet must not emit it).
-  'shell.ready': { dir: 'out' },
-  'shell.init': { dir: 'in' },
-
   // ── relay ────────────────────────────────────────────────────────────────
   'relay.subscribe': { dir: 'out', fields: { ...ID, subId: 'string', filters: 'array' } },
   'relay.close': { dir: 'out', fields: { ...ID, subId: 'string' } },
@@ -378,9 +362,7 @@ export function validateEnvelope(message: unknown): EnvelopeVerdict {
   }
 
   const domain = type.slice(0, dotIndex);
-  const isKnownDomain =
-    (NAP_DOMAINS as readonly string[]).includes(domain) ||
-    (FOUNDATIONAL_DOMAINS as readonly string[]).includes(domain);
+  const isKnownDomain = (NAP_DOMAINS as readonly string[]).includes(domain);
   if (!isKnownDomain) {
     return { ok: false, type, domain, errors: [{ code: 'unknown-domain', message: `"${domain}" is not a known NAP domain` }] };
   }
