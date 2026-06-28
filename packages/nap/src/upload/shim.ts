@@ -5,6 +5,9 @@
 import { postToShell } from '../boundary.js';
 import type { Subscription } from '@napplet/core';
 import type {
+  UploadInfo,
+  UploadInfoMessage,
+  UploadInfoResultMessage,
   UploadRequest,
   UploadResult,
   UploadStatus,
@@ -17,6 +20,13 @@ import type {
 
 /** Default timeout for the initial upload/status request-response (30s; the upload itself streams via status pushes). */
 const REQUEST_TIMEOUT_MS = 30_000;
+
+/** Pending info requests: correlation id -> resolver record. */
+const pendingInfo = new Map<string, {
+  resolve: (info: UploadInfo) => void;
+  reject: (reason: Error) => void;
+  timeout: ReturnType<typeof setTimeout>;
+}>();
 
 /** Pending upload requests: correlation id -> resolver record. */
 const pendingUpload = new Map<string, {
@@ -43,6 +53,18 @@ function isMessageType<T extends { type: string }>(
   type: T['type'],
 ): msg is T {
   return msg.type === type;
+}
+
+function handleInfoResult(msg: UploadInfoResultMessage): void {
+  const p = pendingInfo.get(msg.id);
+  if (!p) return;
+  pendingInfo.delete(msg.id);
+  clearTimeout(p.timeout);
+  if (msg.info !== undefined) {
+    p.resolve(msg.info);
+    return;
+  }
+  p.reject(new Error(msg.error ?? 'upload info unavailable'));
 }
 
 function handleUploadResult(msg: UploadUploadResultMessage): void {
@@ -79,13 +101,39 @@ function handleStatusChanged(msg: UploadStatusChangedMessage): void {
  * Covers upload.upload.result, upload.status.result, and upload.status.changed.
  */
 export function handleUploadMessage(msg: { type: string; [key: string]: unknown }): void {
-  if (isMessageType<UploadUploadResultMessage>(msg, 'upload.upload.result')) {
+  if (isMessageType<UploadInfoResultMessage>(msg, 'upload.info.result')) {
+    handleInfoResult(msg);
+  } else if (isMessageType<UploadUploadResultMessage>(msg, 'upload.upload.result')) {
     handleUploadResult(msg);
   } else if (isMessageType<UploadStatusResultMessage>(msg, 'upload.status.result')) {
     handleStatusResult(msg);
   } else if (isMessageType<UploadStatusChangedMessage>(msg, 'upload.status.changed')) {
     handleStatusChanged(msg);
   }
+}
+
+/**
+ * Inspect upload rails and coarse policy limits disclosed by the shell.
+ *
+ * This is advisory introspection only. Callers can upload without calling
+ * `info()` first.
+ *
+ * @returns Promise resolving to the upload info snapshot
+ */
+export function info(): Promise<UploadInfo> {
+  const id = crypto.randomUUID();
+  return new Promise<UploadInfo>((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      if (pendingInfo.delete(id)) reject(new Error('upload.info timed out'));
+    }, REQUEST_TIMEOUT_MS);
+    pendingInfo.set(id, { resolve, reject, timeout });
+
+    const msg: UploadInfoMessage = {
+      type: 'upload.info',
+      id,
+    };
+    postToShell(msg);
+  });
 }
 
 /**
@@ -184,8 +232,10 @@ export function installUploadShim(): () => void {
   }
   installed = true;
   return () => {
+    for (const p of pendingInfo.values()) clearTimeout(p.timeout);
     for (const p of pendingUpload.values()) clearTimeout(p.timeout);
     for (const p of pendingStatus.values()) clearTimeout(p.timeout);
+    pendingInfo.clear();
     pendingUpload.clear();
     pendingStatus.clear();
     statusHandlers.clear();

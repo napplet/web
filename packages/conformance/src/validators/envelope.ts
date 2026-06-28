@@ -187,8 +187,10 @@ export const ENVELOPE_SPECS: Record<string, EnvelopeSpec> = {
   'outbox.resolveRelays.result': { dir: 'in' },
 
   // ── upload ───────────────────────────────────────────────────────────────
+  'upload.info': { dir: 'out', fields: { ...ID } },
   'upload.upload': { dir: 'out', fields: { ...ID, request: 'object' } },
   'upload.status': { dir: 'out', fields: { ...ID, uploadId: 'string' } },
+  'upload.info.result': { dir: 'in' },
   'upload.upload.result': { dir: 'in' },
   'upload.status.result': { dir: 'in' },
   'upload.status.changed': { dir: 'in' },

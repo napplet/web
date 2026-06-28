@@ -6,6 +6,20 @@ export type UploadRail = 'nip96' | 'blossom' | (string & {});
 /** Lifecycle state of an upload. */
 export type UploadState = 'pending' | 'uploading' | 'complete' | 'failed' | 'cancelled';
 
+/** Runtime-disclosed support for one upload rail. */
+export interface UploadRailInfo {
+  rail: UploadRail;
+  enabled: boolean;
+  returns?: string[];
+}
+
+/** Advisory upload capability and policy limits disclosed by the runtime. */
+export interface UploadInfo {
+  rails: UploadRailInfo[];
+  maxBytes?: number;
+  mimeTypes?: string[];
+}
+
 /** A napplet's upload request; `data` crosses the boundary by structured clone. */
 export interface UploadRequest {
   rail?: UploadRail;

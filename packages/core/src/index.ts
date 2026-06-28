@@ -65,6 +65,8 @@ export type {
   OutboxSubscription,
   NostrTag,
   UploadRail,
+  UploadRailInfo,
+  UploadInfo,
   UploadState,
   UploadRequest,
   UploadResult,

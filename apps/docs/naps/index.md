@@ -185,6 +185,7 @@ returns NIP-94 metadata.
 
 ```ts
 if (window.napplet?.upload) {
+  const info = await window.napplet.upload.info();
   const result = await window.napplet.upload.upload({ data: blob, filename: 'pic.png' });
   if (result.status === 'complete') attach(result.url, result.nip94);
 }

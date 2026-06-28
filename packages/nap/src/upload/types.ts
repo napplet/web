@@ -18,6 +18,8 @@
 import type {
   NappletMessage,
   NostrTag,
+  UploadInfo,
+  UploadRailInfo,
   UploadRail,
   UploadState,
 } from '@napplet/core';
@@ -37,6 +39,12 @@ export type { UploadRail };
 
 /** Lifecycle state of an upload. */
 export type { UploadState };
+
+/** Runtime-disclosed support for one upload rail. */
+export type { UploadRailInfo };
+
+/** Advisory upload capability and policy limits disclosed by the runtime. */
+export type { UploadInfo };
 
 /** Pixel dimensions of an uploaded image/video. */
 export interface UploadDimensions {
@@ -116,6 +124,24 @@ export interface UploadMessage extends NappletMessage {
   type: `upload.${string}`;
 }
 
+/** Inspect upload rails and coarse runtime policy limits. */
+export interface UploadInfoMessage extends UploadMessage {
+  type: 'upload.info';
+  /** Correlation ID for this request. */
+  id: string;
+}
+
+/** Result of an `upload.info` request. */
+export interface UploadInfoResultMessage extends UploadMessage {
+  type: 'upload.info.result';
+  /** Correlation ID matching the original request. */
+  id: string;
+  /** Advisory upload capability and policy limits. */
+  info?: UploadInfo;
+  /** Error when info cannot be disclosed. */
+  error?: string;
+}
+
 /**
  * Upload the supplied bytes. The shell presents consent UI, selects a backend,
  * signs the rail authorization, performs the upload, and replies with
@@ -182,11 +208,13 @@ export interface UploadStatusChangedMessage extends UploadMessage {
 
 /** Napplet -> Shell upload messages. */
 export type UploadOutboundMessage =
+  | UploadInfoMessage
   | UploadUploadMessage
   | UploadStatusMessage;
 
 /** Shell -> Napplet upload messages. */
 export type UploadInboundMessage =
+  | UploadInfoResultMessage
   | UploadUploadResultMessage
   | UploadStatusResultMessage
   | UploadStatusChangedMessage;
