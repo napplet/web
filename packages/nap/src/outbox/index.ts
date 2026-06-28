@@ -23,15 +23,19 @@ export { DOMAIN } from './types.js';
 
 export type {
   OutboxStrategy,
+  OutboxEventOptions,
   OutboxQueryOptions,
   OutboxSubscribeOptions,
   OutboxPublishOptions,
   OutboxTarget,
   OutboxRelayPlan,
+  OutboxEventResult,
   OutboxResult,
   OutboxPublishResult,
   OutboxSubscription,
   OutboxMessage,
+  OutboxGetEventMessage,
+  OutboxGetEventResultMessage,
   OutboxQueryMessage,
   OutboxQueryResultMessage,
   OutboxSubscribeMessage,
@@ -51,6 +55,7 @@ export type {
 export {
   installOutboxShim,
   handleOutboxMessage,
+  getEvent,
   query,
   subscribe,
   publish,
@@ -58,6 +63,7 @@ export {
 } from './shim.js';
 
 export {
+  outboxGetEvent,
   outboxQuery,
   outboxSubscribe,
   outboxPublish,

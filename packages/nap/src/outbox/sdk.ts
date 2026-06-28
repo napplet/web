@@ -7,11 +7,13 @@
 
 import type { NappletGlobal, NostrFilter, EventTemplate } from '@napplet/core';
 import type {
+  OutboxEventOptions,
   OutboxQueryOptions,
   OutboxSubscribeOptions,
   OutboxPublishOptions,
   OutboxTarget,
   OutboxRelayPlan,
+  OutboxEventResult,
   OutboxResult,
   OutboxPublishResult,
   OutboxSubscription,
@@ -24,6 +26,23 @@ function requireOutbox(): NonNullable<NappletGlobal['outbox']> {
   }
   return w.napplet.outbox;
 }
+
+/**
+ * Fetch one event by ID through shell-owned outbox routing.
+ *
+ * @param eventId  Event id to fetch
+ * @param options  Optional author/relay hints, strategy, and timeout
+ * @returns Promise resolving to the outbox event result
+ */
+export function outboxGetEvent(
+  eventId: string,
+  options?: OutboxEventOptions,
+): Promise<OutboxEventResult> {
+  return requireOutbox().getEvent(eventId, options);
+}
+
+/** Alias for {@link outboxGetEvent} on the SDK subpath. */
+export const getEvent = outboxGetEvent;
 
 /**
  * Perform a one-shot outbox-aware query.
@@ -45,6 +64,9 @@ export function outboxQuery(
 ): Promise<OutboxResult> {
   return requireOutbox().query(filters, options);
 }
+
+/** Alias for {@link outboxQuery} on the SDK subpath. */
+export const query = outboxQuery;
 
 /**
  * Open a live outbox-aware subscription.
@@ -68,6 +90,9 @@ export function outboxSubscribe(
   return requireOutbox().subscribe(filters, options);
 }
 
+/** Alias for {@link outboxSubscribe} on the SDK subpath. */
+export const subscribe = outboxSubscribe;
+
 /**
  * Publish a shell-signed event using outbox-aware relay fanout.
  *
@@ -82,6 +107,9 @@ export function outboxPublish(
   return requireOutbox().publish(template, options);
 }
 
+/** Alias for {@link outboxPublish} on the SDK subpath. */
+export const publish = outboxPublish;
+
 /**
  * Resolve the relay plan the shell would use for a read/write target.
  *
@@ -91,3 +119,6 @@ export function outboxPublish(
 export function outboxResolveRelays(target: OutboxTarget): Promise<OutboxRelayPlan> {
   return requireOutbox().resolveRelays(target);
 }
+
+/** Alias for {@link outboxResolveRelays} on the SDK subpath. */
+export const resolveRelays = outboxResolveRelays;

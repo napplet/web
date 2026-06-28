@@ -8,8 +8,8 @@
  * owns relay discovery, routing, fallback, deduplication, and publish fanout policy.
  *
  * Defines the message types exchanged between napplet and shell:
- * - Napplet -> Shell: query, subscribe, close, publish, resolveRelays
- * - Shell -> Napplet: query.result, event, eose, closed, publish.result, resolveRelays.result
+ * - Napplet -> Shell: getEvent, query, subscribe, close, publish, resolveRelays
+ * - Shell -> Napplet: getEvent.result, query.result, event, eose, closed, publish.result, resolveRelays.result
  *
  * All types form a discriminated union on the `type` field.
  */
@@ -32,6 +32,18 @@ export const DOMAIN = 'outbox' as const;
  * - `auto`   -- let the shell choose per its policy and relay intelligence
  */
 export type { OutboxStrategy };
+
+/** Options for a single-event outbox lookup. */
+export interface OutboxEventOptions {
+  /** Author hint whose outbox relays should be primary when present. */
+  author?: string;
+  /** Relay hints; treated as hints subject to shell validation, not a bypass. */
+  relays?: string[];
+  /** Relay-selection strategy. */
+  strategy?: OutboxStrategy;
+  /** Wall-clock budget for the lookup, in milliseconds. */
+  timeoutMs?: number;
+}
 
 /** Options for a one-shot outbox query. */
 export interface OutboxQueryOptions {
@@ -85,6 +97,18 @@ export interface OutboxRelayPlan {
   missingAuthors?: string[];
 }
 
+/** The result of a single-event outbox lookup. */
+export interface OutboxEventResult {
+  /** The validated event when found. */
+  event?: NostrEvent;
+  /** Relay URLs where the shell observed the event. */
+  relays: string[];
+  /** True when lookup results are partial. */
+  incomplete?: boolean;
+  /** Error reason when the lookup could not complete. */
+  error?: string;
+}
+
 /** The result of an outbox query. */
 export interface OutboxResult {
   /** Deduplicated, signature-validated events. */
@@ -133,6 +157,44 @@ export interface OutboxSubscription {
 export interface OutboxMessage extends NappletMessage {
   /** Message type in "outbox.<action>" format. */
   type: `outbox.${string}`;
+}
+
+/**
+ * Fetch one event by ID through shell-owned outbox routing.
+ *
+ * @example
+ * ```ts
+ * const msg: OutboxGetEventMessage = {
+ *   type: 'outbox.getEvent',
+ *   id: crypto.randomUUID(),
+ *   eventId: 'ev1...',
+ *   options: { author: 'ab12...', strategy: 'outbox', timeoutMs: 3000 },
+ * };
+ * ```
+ */
+export interface OutboxGetEventMessage extends OutboxMessage {
+  type: 'outbox.getEvent';
+  /** Correlation ID for this request. */
+  id: string;
+  /** Event id to fetch. */
+  eventId: string;
+  /** Optional author/relay hints and request policy. */
+  options?: OutboxEventOptions;
+}
+
+/** Result of an `outbox.getEvent` request. */
+export interface OutboxGetEventResultMessage extends OutboxMessage {
+  type: 'outbox.getEvent.result';
+  /** Correlation ID matching the original request. */
+  id: string;
+  /** The validated event when found. */
+  event?: NostrEvent;
+  /** Relay URLs where the shell observed the event. */
+  relays: string[];
+  /** True when lookup results are partial. */
+  incomplete?: boolean;
+  /** Error reason when the lookup could not complete. */
+  error?: string;
 }
 
 /**
@@ -294,6 +356,7 @@ export interface OutboxResolveRelaysResultMessage extends OutboxMessage {
 
 /** Napplet -> Shell outbox messages. */
 export type OutboxOutboundMessage =
+  | OutboxGetEventMessage
   | OutboxQueryMessage
   | OutboxSubscribeMessage
   | OutboxCloseMessage
@@ -302,6 +365,7 @@ export type OutboxOutboundMessage =
 
 /** Shell -> Napplet outbox messages. */
 export type OutboxInboundMessage =
+  | OutboxGetEventResultMessage
   | OutboxQueryResultMessage
   | OutboxEventMessage
   | OutboxEoseMessage

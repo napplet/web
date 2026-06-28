@@ -165,12 +165,13 @@ if (window.napplet?.cvm) {
 
 ### outbox
 
-Outbox-aware relay routing — `query` / `subscribe` / `publish` / `resolveRelays`; the
-shell owns NIP-65 relay discovery, dedup, and fanout. Use instead of `relay` when relay
-selection is part of result correctness.
+Outbox-aware relay routing — `getEvent` / `query` / `subscribe` / `publish` /
+`resolveRelays`; the shell owns NIP-65 relay discovery, dedup, and fanout. Use instead
+of `relay` when relay selection is part of result correctness.
 
 ```ts
 if (window.napplet?.outbox) {
+  await window.napplet.outbox.getEvent('ev1…', { author: 'ab12…' });
   const { events } = await window.napplet.outbox.query(
     [{ authors: ['ab12…'], kinds: [1], limit: 20 }],
     { strategy: 'outbox' },

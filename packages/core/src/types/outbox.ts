@@ -12,6 +12,14 @@ export interface OutboxQueryOptions {
   timeoutMs?: number;
 }
 
+/** Options for a single-event outbox lookup. */
+export interface OutboxEventOptions {
+  author?: string;
+  relays?: string[];
+  strategy?: OutboxStrategy;
+  timeoutMs?: number;
+}
+
 /** Options for a live outbox subscription. */
 export interface OutboxSubscribeOptions extends OutboxQueryOptions {
   live?: boolean;
@@ -43,6 +51,14 @@ export interface OutboxRelayPlan {
 export interface OutboxResult {
   events: NostrEvent[];
   relays: Record<string, string[]>;
+  incomplete?: boolean;
+  error?: string;
+}
+
+/** The result of a single-event outbox lookup. */
+export interface OutboxEventResult {
+  event?: NostrEvent;
+  relays: string[];
   incomplete?: boolean;
   error?: string;
 }
