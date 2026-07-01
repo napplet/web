@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v0.34.0
 milestone_name: NIP-5D Runtime Injection
 status: planning
-last_updated: "2026-07-01T12:38:00.000Z"
+last_updated: "2026-07-01T12:48:22.000Z"
 last_activity: 2026-07-01
 progress:
   total_phases: 0
@@ -30,7 +30,14 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 Phase: Not started (defining requirements)
 Plan: —
 Status: Defining requirements
-Last activity: 2026-07-01 — Completed quick task 260701-k68: scaffold @napplet/cli Deno package foundation
+Last activity: 2026-07-01 — Completed quick task 260701-kdm: add secure local key storage and key-management commands to @napplet/cli
+
+### Quick task 260701-kdm — COMPLETE
+
+- Added native key storage providers for macOS Keychain, Windows Credential Manager, and Linux Secret Service.
+- Added `napplet keys store/use/list/delete/doctor` and config support for storing only a local key reference in `.napplet`.
+- Verification: `deno fmt --check packages/cli`; `deno lint packages/cli`; `pnpm --filter @napplet/cli build`; `pnpm --filter @napplet/cli test:unit`; `pnpm build`; `pnpm type-check`; `pnpm -r test:unit`; `git diff --check`; `pnpm dlx aislop@0.12.0 scan --json .`.
+- Commit: `8b2e1e47` (`Support local signing without plaintext key files`).
 
 ### v0.34.0 roadmap
 
