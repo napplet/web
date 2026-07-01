@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v0.34.0
 milestone_name: NIP-5D Runtime Injection
 status: planning
-last_updated: "2026-07-01T12:54:24.000Z"
+last_updated: "2026-07-01T13:00:07.000Z"
 last_activity: 2026-07-01
 progress:
   total_phases: 0
@@ -30,7 +30,16 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 Phase: Not started (defining requirements)
 Plan: —
 Status: Defining requirements
-Last activity: 2026-07-01 — Completed quick task 260701-kla: add NIP-5D/NIP-5A deploy event-building primitives to @napplet/cli
+Last activity: 2026-07-01 — Completed quick task 260701-kqi: add local private-key dry-run event signing to @napplet/cli
+
+### Quick task 260701-kqi — COMPLETE
+
+- Added local signing primitives for hex and `nsec` private keys using the CLI's declared `nostr-tools` dependency.
+- Extended `napplet deploy --dry-run` to attach `signedEvent` for built root/named manifest templates when signing resolves a local secret from `--sec`, `--prompt-sec`, or the configured native key-store reference.
+- Updated CLI docs and release metadata for the new dry-run signing output.
+- Verification: `deno fmt --check packages/cli`; `deno lint packages/cli`; `pnpm --filter @napplet/cli build`; `pnpm --filter @napplet/cli test:unit`; `pnpm build`; `pnpm type-check`; `pnpm -r test:unit`; `git diff --check`; `pnpm dlx aislop@0.12.0 scan --json .`.
+- Commit: `9c2f6510` (`Sign dry-run manifests with local private keys`).
+- Remaining scope: `nbunksec`/bunker signing, CI revocable-key workflows, relay publishing, blob upload, and snapshot source-address signing are still pending.
 
 ### Quick task 260701-kla — COMPLETE
 
