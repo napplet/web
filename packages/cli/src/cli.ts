@@ -1,7 +1,8 @@
-#!/usr/bin/env -S deno run --allow-read --allow-write --allow-run --allow-env
+#!/usr/bin/env -S deno run --allow-read --allow-write --allow-run --allow-env --allow-net
 
 import { initConfig, readConfig, setSigningKeyReference, writeConfig } from "./config.ts";
 import { createDeployPlan } from "./deploy-plan.ts";
+import { executeNetworkDeploy, networkDeploySucceeded } from "./deploy-network.ts";
 import { discoverNapplets } from "./discover.ts";
 import { KEY_SERVICE_NAME, requireKeyStoreProvider } from "./key-store.ts";
 import { createDeployManifestTemplates } from "./manifest.ts";
@@ -29,8 +30,8 @@ Usage:
   napplet paja [--config <file>] [-- <args>]
 
 Current scope:
-  deploy creates and prints a deployment plan. Network upload and relay publish
-  are intentionally not enabled yet.
+  deploy uploads files to configured Blossom servers and publishes signed
+  root/named/snapshot manifest events to configured relays for local signers.
 `;
 
 interface ParsedArgs {
@@ -173,12 +174,6 @@ async function commandDeploy(argv: string[]): Promise<number> {
     configPath: first(flags.values.get("config")),
   });
 
-  if (!flags.boolean.has("dry-run")) {
-    throw new Error(
-      "Network deploy is not implemented yet. Re-run with --dry-run to inspect the plan.",
-    );
-  }
-
   const signer = await maybeCreateLocalSigner(signing, flags);
   const manifests = signer
     ? signDeployManifestTemplates(
@@ -186,6 +181,17 @@ async function commandDeploy(argv: string[]): Promise<number> {
       signer,
     )
     : await createDeployManifestTemplates(plan, config);
+  if (!flags.boolean.has("dry-run")) {
+    if (!signer) {
+      throw new Error("Network deploy requires a local hex or nsec signer for this CLI slice");
+    }
+    const deploy = await executeNetworkDeploy(manifests, {
+      relays: config.relays,
+      blossomServers: config.blossomServers,
+    }, signer);
+    console.log(JSON.stringify({ signing, plan, manifests, deploy }, null, 2));
+    return networkDeploySucceeded(deploy, manifests) ? 0 : 1;
+  }
   console.log(JSON.stringify({ signing, plan, manifests }, null, 2));
   return 0;
 }

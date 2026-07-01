@@ -5,7 +5,7 @@
   "license": "MIT",
   "exports": "./src/mod.ts",
   "tasks": {
-    "dev": "deno run --allow-read --allow-write --allow-run --allow-env src/cli.ts",
+    "dev": "deno run --allow-read --allow-write --allow-run --allow-env --allow-net src/cli.ts",
     "build": "deno check src/cli.ts src/mod.ts",
     "test:unit": "deno test --allow-read --allow-write --allow-run --allow-env tests/"
   },
