@@ -3,8 +3,10 @@ import { hexToBytes } from "nostr-tools/utils";
 import { defaultConfig } from "../src/config.ts";
 import {
   createPrivateKeySigner,
+  decodeNbunksec,
   decodePrivateKey,
   detectSecretFormat,
+  encodeNbunksec,
   resolveSigningMethod,
   signDeployManifestTemplates,
 } from "../src/signing.ts";
@@ -52,9 +54,9 @@ Deno.test("decodePrivateKey supports hex and nsec local secrets", () => {
   assertEquals([...decodePrivateKey(nsec)], [...hexToBytes(privateKeyHex)]);
 });
 
-Deno.test("createPrivateKeySigner signs NIP-01 event templates", () => {
+Deno.test("createPrivateKeySigner signs NIP-01 event templates", async () => {
   const signer = createPrivateKeySigner(privateKeyHex);
-  const signed = signer.sign({
+  const signed = await signer.sign({
     kind: NAPPLET_KIND_ROOT,
     created_at: 123,
     tags: [["path", "/index.html", "a".repeat(64)]],
@@ -66,13 +68,13 @@ Deno.test("createPrivateKeySigner signs NIP-01 event templates", () => {
   assertEquals(signed.sig.length, 128);
 });
 
-Deno.test("signDeployManifestTemplates signs only built templates", () => {
+Deno.test("signDeployManifestTemplates signs only built templates", async () => {
   const candidate: NappletCandidate = {
     name: "feed",
     dir: "/tmp/feed",
     indexHtml: "/tmp/feed/index.html",
   };
-  const manifests = signDeployManifestTemplates([
+  const manifests = await signDeployManifestTemplates([
     {
       item: { candidate, target: "root", kind: NAPPLET_KIND_ROOT },
       files: [{ path: "/index.html", sha256: "a".repeat(64) }],
@@ -94,4 +96,16 @@ Deno.test("signDeployManifestTemplates signs only built templates", () => {
 
   assertEquals(manifests[0].signedEvent?.pubkey, publicKeyHex);
   assertEquals(manifests[1].signedEvent, undefined);
+});
+
+Deno.test("decodeNbunksec supports nsyte-compatible bunker info", () => {
+  const info = {
+    pubkey: "02".repeat(32),
+    localKey: "03".repeat(32),
+    relays: ["wss://relay.example", "wss://relay2.example"],
+    secret: "connect-secret",
+  };
+  const encoded = encodeNbunksec(info);
+  assertEquals(encoded.startsWith("nbunksec1"), true);
+  assertEquals(decodeNbunksec(encoded), info);
 });

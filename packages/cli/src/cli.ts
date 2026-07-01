@@ -8,8 +8,8 @@ import { KEY_SERVICE_NAME, requireKeyStoreProvider } from "./key-store.ts";
 import { createDeployManifestTemplates } from "./manifest.ts";
 import { runCommand, splitCommand } from "./process.ts";
 import {
-  createPrivateKeySigner,
-  type LocalSigner,
+  createSignerFromSecret,
+  type NappletSigner,
   resolveSigningMethod,
   signDeployManifestTemplates,
 } from "./signing.ts";
@@ -31,7 +31,7 @@ Usage:
 
 Current scope:
   deploy uploads files to configured Blossom servers and publishes signed
-  root/named/snapshot manifest events to configured relays for local signers.
+  root/named/snapshot manifest events to configured relays for local or nbunksec signers.
 `;
 
 interface ParsedArgs {
@@ -174,37 +174,41 @@ async function commandDeploy(argv: string[]): Promise<number> {
     configPath: first(flags.values.get("config")),
   });
 
-  const signer = await maybeCreateLocalSigner(signing, flags);
-  const manifests = signer
-    ? signDeployManifestTemplates(
-      await createDeployManifestTemplates(plan, config, { sourcePubkey: signer.pubkey }),
-      signer,
-    )
-    : await createDeployManifestTemplates(plan, config);
-  if (!flags.boolean.has("dry-run")) {
-    if (!signer) {
-      throw new Error("Network deploy requires a local hex or nsec signer for this CLI slice");
+  const signer = await maybeCreateSigner(signing, flags);
+  try {
+    const manifests = signer
+      ? await signDeployManifestTemplates(
+        await createDeployManifestTemplates(plan, config, { sourcePubkey: signer.pubkey }),
+        signer,
+      )
+      : await createDeployManifestTemplates(plan, config);
+    if (!flags.boolean.has("dry-run")) {
+      if (!signer) {
+        throw new Error("Network deploy requires a signer from --sec, --prompt-sec, config, or CI");
+      }
+      const deploy = await executeNetworkDeploy(manifests, {
+        relays: config.relays,
+        blossomServers: config.blossomServers,
+      }, signer);
+      console.log(JSON.stringify({ signing, plan, manifests, deploy }, null, 2));
+      return networkDeploySucceeded(deploy, manifests) ? 0 : 1;
     }
-    const deploy = await executeNetworkDeploy(manifests, {
-      relays: config.relays,
-      blossomServers: config.blossomServers,
-    }, signer);
-    console.log(JSON.stringify({ signing, plan, manifests, deploy }, null, 2));
-    return networkDeploySucceeded(deploy, manifests) ? 0 : 1;
+    console.log(JSON.stringify({ signing, plan, manifests }, null, 2));
+    return 0;
+  } finally {
+    await signer?.close?.();
   }
-  console.log(JSON.stringify({ signing, plan, manifests }, null, 2));
-  return 0;
 }
 
-async function maybeCreateLocalSigner(
+async function maybeCreateSigner(
   signing: SigningMethod,
   flags: FlagBag,
-): Promise<LocalSigner | null> {
-  const secret = await resolveLocalSigningSecret(signing, flags);
-  return secret ? createPrivateKeySigner(secret) : null;
+): Promise<NappletSigner | null> {
+  const secret = await resolveSigningSecret(signing, flags);
+  return secret ? await createSignerFromSecret(secret) : null;
 }
 
-async function resolveLocalSigningSecret(
+async function resolveSigningSecret(
   signing: SigningMethod,
   flags: FlagBag,
 ): Promise<string | null> {
@@ -217,6 +221,9 @@ async function resolveLocalSigningSecret(
       throw new Error(`No key reference "${signing.keyReference}" found in ${provider.name}`);
     }
     return secret;
+  }
+  if (signing.type === "ci-revocable") {
+    return Deno.env.get(signing.keyReference) ?? signing.keyReference;
   }
   return null;
 }

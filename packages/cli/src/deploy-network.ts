@@ -1,7 +1,7 @@
 import { SimplePool } from "nostr-tools/pool";
 import type { Event as NostrToolsEvent } from "nostr-tools/core";
 import { joinPath } from "./path.ts";
-import type { LocalSigner } from "./signing.ts";
+import type { NappletSigner } from "./signing.ts";
 import type { DeployManifestTemplate, ManifestFileMapping, SignedNostrEvent } from "./types.ts";
 
 const UPLOAD_AUTH_KIND = 24242;
@@ -55,7 +55,7 @@ export type RelayPublisher = (
 export async function executeNetworkDeploy(
   manifests: readonly DeployManifestTemplate[],
   config: NetworkDeployConfig,
-  signer: LocalSigner,
+  signer: NappletSigner,
   options: NetworkDeployOptions = {},
 ): Promise<NetworkDeployResult> {
   if (config.blossomServers.length === 0) {
@@ -124,11 +124,11 @@ export async function collectDeployFilePayloads(
 export async function uploadFilesToServers(
   files: readonly DeployFilePayload[],
   servers: readonly string[],
-  signer: LocalSigner,
+  signer: NappletSigner,
   options: Pick<NetworkDeployOptions, "fetch" | "now"> = {},
 ): Promise<ServerUploadResult[]> {
   const fetcher = options.fetch ?? fetch;
-  const authHeader = createUploadAuthorization(
+  const authHeader = await createUploadAuthorization(
     signer,
     [...new Set(files.map((file) => file.sha256))],
     options.now,
@@ -142,13 +142,13 @@ export async function uploadFilesToServers(
   return results;
 }
 
-export function createUploadAuthorization(
-  signer: LocalSigner,
+export async function createUploadAuthorization(
+  signer: NappletSigner,
   blobSha256s: readonly string[],
   now: () => number = () => Math.floor(Date.now() / 1000),
-): string {
+): Promise<string> {
   const createdAt = now();
-  const signed = signer.sign({
+  const signed = await signer.sign({
     kind: UPLOAD_AUTH_KIND,
     created_at: createdAt,
     tags: [

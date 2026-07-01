@@ -17,8 +17,8 @@ const privateKeyHex = "01".padStart(64, "0");
 const signer = createPrivateKeySigner(privateKeyHex);
 const sha256 = "1bc04b5291c26a46d918139138b992d2de976d6851d0893b0476b85bfbdfc6e6";
 
-Deno.test("createUploadAuthorization signs batch Blossom upload auth", () => {
-  const header = createUploadAuthorization(signer, [sha256], () => 123);
+Deno.test("createUploadAuthorization signs batch Blossom upload auth", async () => {
+  const header = await createUploadAuthorization(signer, [sha256], () => 123);
   assert(header.startsWith("Nostr "));
   const event = JSON.parse(atob(header.slice("Nostr ".length))) as SignedNostrEvent;
   assertEquals(event.kind, 24242);
@@ -35,13 +35,13 @@ Deno.test("createUploadAuthorization signs batch Blossom upload auth", () => {
 Deno.test("executeNetworkDeploy uploads unique files and publishes signed manifests", async () => {
   await withTempDir(async (dir) => {
     await Deno.writeTextFile(`${dir}/index.html`, "index");
-    const root = signer.sign({
+    const root = await signer.sign({
       kind: NAPPLET_KIND_ROOT,
       created_at: 123,
       tags: [["path", "/index.html", sha256]],
       content: "",
     });
-    const snapshot = signer.sign({
+    const snapshot = await signer.sign({
       kind: NAPPLET_KIND_SNAPSHOT,
       created_at: 123,
       tags: [["path", "/index.html", sha256], ["a", `${NAPPLET_KIND_ROOT}:${signer.pubkey}:`]],
