@@ -26,6 +26,9 @@ signing mode. `--dry-run` emits the same plan plus root, named, and companion sn
 events without uploading files or publishing to relays. Raw `bunker://` pairing is not implemented
 yet; generate and pass an `nbunksec` for CI-style remote signing.
 
+When a built napplet includes a plugin-generated `.nip5a-manifest.json`, deploy templates preserve
+canonical `requires` tags from that sidecar on root, named, and companion snapshot manifests.
+
 `napplet debug [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>]` prints the same
 operator-facing discovery and deploy planning state without uploading blobs or publishing events.
 Signing secrets are classified but not printed.

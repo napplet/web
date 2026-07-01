@@ -18,6 +18,7 @@ export interface ManifestBuildOptions {
   createdAt?: number;
   servers?: string[];
   sourcePubkey?: string;
+  metadataTags?: string[][];
 }
 
 export interface SnapshotSourceRef {
@@ -59,6 +60,7 @@ export async function createSiteManifestTemplate(
   for (const file of files) tags.push(["path", file.path, file.sha256]);
   tags.push(["x", aggregateHash, "aggregate"]);
   for (const server of options.servers ?? []) tags.push(["server", server]);
+  for (const tag of options.metadataTags ?? []) tags.push([...tag]);
   return {
     kind: item.target === "root" ? NAPPLET_KIND_ROOT : NAPPLET_KIND_NAMED,
     created_at: options.createdAt ?? nowSeconds(),
@@ -85,7 +87,7 @@ export function createSnapshotManifestTemplate(
   for (const tag of source.tags) {
     if (
       tag[0] === "path" || tag[0] === "server" || tag[0] === "title" || tag[0] === "description" ||
-      tag[0] === "source"
+      tag[0] === "source" || tag[0] === "requires"
     ) {
       tags.push([...tag]);
     }
@@ -106,11 +108,15 @@ export async function createDeployManifestTemplates(
 ): Promise<DeployManifestTemplate[]> {
   const result: DeployManifestTemplate[] = [];
   const filesByDir = new Map<string, ManifestFileMapping[]>();
+  const metadataByDir = new Map<string, string[][]>();
   const sourceTemplates = new Map<string, NostrEventTemplate>();
   for (const item of plan.items) {
     const files = filesByDir.get(item.candidate.dir) ??
       await collectManifestFiles(item.candidate.dir);
     filesByDir.set(item.candidate.dir, files);
+    const metadataTags = metadataByDir.get(item.candidate.dir) ??
+      await readPluginManifestMetadataTags(item.candidate.manifestPath);
+    metadataByDir.set(item.candidate.dir, metadataTags);
     const aggregateHash = await computeAggregateHash(files);
     if (item.target === "snapshot") {
       const snapshot = createDeploySnapshotTemplate(item, sourceTemplates, options);
@@ -125,6 +131,7 @@ export async function createDeployManifestTemplates(
     const template = await createSiteManifestTemplate(item, files, {
       createdAt: options.createdAt,
       servers: config.blossomServers,
+      metadataTags,
     });
     sourceTemplates.set(
       deploySourceKey(item.candidate.dir, {
@@ -176,6 +183,39 @@ function deploySourceKey(candidateDir: string, source: SnapshotDeploySource): st
   return `${candidateDir}\0${source.kind}\0${source.dTag ?? ""}`;
 }
 
+async function readPluginManifestMetadataTags(
+  manifestPath: string | undefined,
+): Promise<string[][]> {
+  if (!manifestPath) return [];
+  try {
+    const raw = await Deno.readTextFile(manifestPath);
+    const value = JSON.parse(raw) as { tags?: unknown };
+    if (!Array.isArray(value.tags)) return [];
+    const tags: string[][] = [];
+    for (const tag of value.tags) {
+      if (!Array.isArray(tag) || tag[0] !== "requires" || typeof tag[1] !== "string") continue;
+      const domain = tag[1].trim();
+      if (isNapDomain(domain)) tags.push(["requires", domain]);
+    }
+    return dedupeTags(tags);
+  } catch (error) {
+    if (error instanceof Deno.errors.NotFound || error instanceof SyntaxError) return [];
+    throw error;
+  }
+}
+
+function dedupeTags(tags: readonly string[][]): string[][] {
+  const seen = new Set<string>();
+  const result: string[][] = [];
+  for (const tag of tags) {
+    const key = tag.join("\0");
+    if (seen.has(key)) continue;
+    seen.add(key);
+    result.push([...tag]);
+  }
+  return result;
+}
+
 export function siteAddress(ref: SnapshotSourceRef): string {
   if (!/^[0-9a-f]{64}$/.test(ref.pubkey)) throw new Error("pubkey must be 64 lowercase hex chars");
   if (ref.kind === NAPPLET_KIND_ROOT) return `${NAPPLET_KIND_ROOT}:${ref.pubkey}:`;
@@ -188,6 +228,34 @@ export function normalizeDTag(value: string | undefined): string {
     throw new Error("Named napplet d tag must match ^[a-z0-9-]{1,13}$ and not end with '-'");
   }
   return dTag;
+}
+
+const NAP_DOMAINS = new Set([
+  "relay",
+  "identity",
+  "storage",
+  "inc",
+  "theme",
+  "keys",
+  "media",
+  "notify",
+  "config",
+  "resource",
+  "cvm",
+  "outbox",
+  "upload",
+  "intent",
+  "ble",
+  "webrtc",
+  "link",
+  "lists",
+  "serial",
+  "common",
+  "dm",
+]);
+
+function isNapDomain(domain: string): boolean {
+  return NAP_DOMAINS.has(domain);
 }
 
 async function collectManifestFilesInto(

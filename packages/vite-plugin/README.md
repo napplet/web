@@ -76,14 +76,14 @@ The napp type identifier (e.g., `'feed'`, `'chat'`, `'profile'`). This value is:
 
 #### requires (optional)
 
-**Type:** `string[]`
+**Type:** `string[] | { infer?: boolean; explicit?: string[]; mode?: 'warn' | 'error' }`
 
-An array of service names this napplet requires from its host shell (e.g., `['audio', 'notifications']`). When set:
+An explicit array of NAP domain names this napplet requires from its host shell, or an opt-in inference config. When set:
 
 - Injects a `<meta name="napplet-requires">` tag into HTML (comma-separated service names)
 - Adds `['requires', 'service-name']` tags to the kind 35129 manifest event
 
-If the shell does not support all required capabilities, the napplet can detect this at runtime via `window.napplet.domain presence` or the shell can show a compatibility warning.
+With inference enabled, the plugin scans statically visible source usage of `@napplet/nap/<domain>`, SDK domain subpaths, and direct `window.napplet.<domain>` access. Explicit requirements remain the author-controlled declaration; inferred domains are merged as tooling assistance and can warn or fail when explicit config is missing a domain.
 
 #### configSchema (optional)
 
@@ -260,7 +260,7 @@ node -e "import('nostr-tools/pure').then(m => console.log(Buffer.from(m.generate
 
 ## Service Dependencies
 
-Use the `requires` option when your napplet needs specific shell capabilities (like audio playback or push notifications) to function correctly.
+Use the `requires` option when your napplet needs specific shell capabilities to function correctly.
 
 ```ts
 // vite.config.ts
@@ -271,20 +271,33 @@ export default defineConfig({
   plugins: [
     nip5aManifest({
       nappletType: 'my-music-app',
-      requires: ['audio', 'notifications'],
+      requires: ['media', 'notify'],
     }),
   ],
 });
 ```
 
+Inference can be enabled when you want the plugin to check source usage against the explicit declaration:
+
+```ts
+nip5aManifest({
+  nappletType: 'feed',
+  requires: {
+    infer: true,
+    explicit: ['relay'],
+    mode: 'warn',
+  },
+});
+```
+
 ### What gets injected
 
-With `requires: ['audio', 'notifications']`, the plugin injects into your HTML `<head>`:
+With `requires: ['media', 'notify']`, the plugin injects into your HTML `<head>`:
 
 ```html
 <meta name="napplet-aggregate-hash" content="">
 <meta name="napplet-napp-type" content="my-music-app">
-<meta name="napplet-requires" content="audio,notifications">
+<meta name="napplet-requires" content="media,notify">
 ```
 
 At build time (with `VITE_DEV_PRIVKEY_HEX` set), the manifest event also includes `requires` tags:
@@ -296,8 +309,8 @@ At build time (with `VITE_DEV_PRIVKEY_HEX` set), the manifest event also include
     ["d", "my-music-app"],
     ["path", "/index.html", "<sha256>"],
     ["x", "<aggregateHash>", "aggregate"],
-    ["requires", "audio"],
-    ["requires", "notifications"]
+    ["requires", "media"],
+    ["requires", "notify"]
   ]
 }
 ```
@@ -379,8 +392,12 @@ interface Nip5aManifestOptions {
   /** Napplet type/dtag (e.g., 'feed', 'chat') */
   nappletType: string;
 
-  /** Service dependencies this napplet requires (e.g., ['audio', 'notifications']). Optional. */
-  requires?: string[];
+  /** NAP domains this napplet requires, optionally inferred from source usage. */
+  requires?: string[] | {
+    infer?: boolean;
+    explicit?: string[];
+    mode?: 'warn' | 'error';
+  };
 
   /**
    * Artifact output contract. Defaults to 'external-assets'. Set to

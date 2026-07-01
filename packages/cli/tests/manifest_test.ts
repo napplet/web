@@ -159,6 +159,52 @@ Deno.test("createDeployManifestTemplates builds snapshot templates with a signer
   });
 });
 
+Deno.test("createDeployManifestTemplates preserves plugin-emitted requires tags", async () => {
+  await withTempDir(async (dir) => {
+    await Deno.writeTextFile(`${dir}/index.html`, "index");
+    await Deno.writeTextFile(
+      `${dir}/.nip5a-manifest.json`,
+      JSON.stringify({
+        tags: [
+          ["requires", "relay"],
+          ["requires", "storage"],
+          ["server", "https://ignored.example"],
+        ],
+      }),
+    );
+    const candidate: NappletCandidate = {
+      name: "feed",
+      dir,
+      indexHtml: `${dir}/index.html`,
+      manifestPath: `${dir}/.nip5a-manifest.json`,
+    };
+    const config = defaultConfig({ named: ["feed"] });
+    const plan = createDeployPlan(config, [candidate], {
+      root: true,
+      names: ["feed"],
+      snapshot: true,
+    });
+    const manifests = await createDeployManifestTemplates(plan, config, {
+      createdAt: 123,
+      sourcePubkey: pubkey,
+    });
+
+    assertEquals(manifests.length, 4);
+    for (const manifest of manifests) {
+      assertEquals(manifest.template?.tags.filter((tag) => tag[0] === "requires"), [
+        ["requires", "relay"],
+        ["requires", "storage"],
+      ]);
+      assertEquals(
+        manifest.template?.tags.some((tag) =>
+          tag[0] === "server" && tag[1] === "https://ignored.example"
+        ),
+        false,
+      );
+    }
+  });
+});
+
 Deno.test("siteAddress renders root and named NIP-5A addresses", () => {
   assertEquals(siteAddress({ kind: NAPPLET_KIND_ROOT, pubkey }), `${NAPPLET_KIND_ROOT}:${pubkey}:`);
   assertEquals(
