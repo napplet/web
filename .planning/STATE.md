@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v0.34.0
 milestone_name: NIP-5D Runtime Injection
 status: planning
-last_updated: "2026-07-01T13:00:07.000Z"
+last_updated: "2026-07-01T13:04:07.000Z"
 last_activity: 2026-07-01
 progress:
   total_phases: 0
@@ -30,7 +30,16 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 Phase: Not started (defining requirements)
 Plan: —
 Status: Defining requirements
-Last activity: 2026-07-01 — Completed quick task 260701-kqi: add local private-key dry-run event signing to @napplet/cli
+Last activity: 2026-07-01 — Completed quick task 260701-kuy: generate signed dry-run snapshot manifests in @napplet/cli
+
+### Quick task 260701-kuy — COMPLETE
+
+- Changed deploy planning so `--snapshot` creates companion snapshot items for each selected root or named deploy target.
+- Added snapshot source metadata and used the local signer pubkey to generate NIP-5A snapshot `a` tags from paired source templates.
+- Extended dry-run local signing so generated snapshot templates receive signed events alongside root/named templates.
+- Verification: `deno fmt --check packages/cli`; `deno lint packages/cli`; `pnpm --filter @napplet/cli build`; `pnpm --filter @napplet/cli test:unit`; temp CLI dry-run with `--root --snapshot --sec`; `pnpm build`; `pnpm type-check`; `pnpm -r test:unit`; `git diff --check`; `pnpm dlx aislop@0.12.0 scan --json .`.
+- Commit: `c7766c7f` (`Generate signed dry-run snapshot manifests`).
+- Remaining scope: network upload/publish, `nbunksec`/bunker signing, CI revocable-key workflows, blob upload, and relay event publish are still pending.
 
 ### Quick task 260701-kqi — COMPLETE
 
