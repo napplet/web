@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v0.34.0
 milestone_name: NIP-5D Runtime Injection
 status: planning
-last_updated: "2026-07-01T13:24:09.000Z"
+last_updated: "2026-07-01T15:07:05.000Z"
 last_activity: 2026-07-01
 progress:
   total_phases: 0
@@ -30,7 +30,16 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 Phase: Not started (defining requirements)
 Plan: —
 Status: Defining requirements
-Last activity: 2026-07-01 — Completed quick task 260701-lvc: add read-only deploy diagnostics to @napplet/cli
+Last activity: 2026-07-01 — Completed quick task 260701-m2r: infer vite-plugin requires and preserve them in @napplet/cli deploy
+
+### Quick task 260701-m2r — COMPLETE
+
+- Added opt-in NAP requirement inference to `@napplet/vite-plugin` for static `@napplet/nap/<domain>` imports, SDK domain subpath imports, and direct `window.napplet.<domain>` usage.
+- Preserved legacy explicit `requires: string[]`, added object-form `{ infer, explicit, mode }`, deduped merged requirements, ignored type-only imports and dynamic property access, and added warn/error diagnostics for missing explicit declarations.
+- Updated `@napplet/cli` to preserve canonical plugin-emitted `requires` tags from `.nip5a-manifest.json` on root, named, and companion snapshot deploy templates.
+- Verification: `deno fmt packages/cli`; `deno fmt --check packages/cli`; `deno lint packages/cli`; `pnpm --filter @napplet/vite-plugin build`; `pnpm --filter @napplet/vite-plugin type-check`; `pnpm --filter @napplet/vite-plugin test:unit`; `pnpm --filter @napplet/cli build`; `pnpm --filter @napplet/cli test:unit`; `pnpm build`; `pnpm type-check`; `pnpm -r test:unit`; `pnpm dlx aislop@0.12.0 scan --json .`; `git diff --check`.
+- Commit: `69026fe6` (`Infer napplet requires from Vite source usage`).
+- Remaining scope: dynamic whole-program analysis remains out of scope; active-domain lists in vite-plugin/CLI should be kept in sync with `@napplet/core` when domains change.
 
 ### Quick task 260701-lvc — COMPLETE
 
