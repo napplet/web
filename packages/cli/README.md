@@ -20,9 +20,9 @@ key commands fail closed rather than writing secrets to plaintext.
 
 Network upload/publish is not enabled yet. Commands that would need network deploy side effects
 currently require `--dry-run` and emit a plan plus manifest templates. Dry-run output includes
-signed events when signing can resolve a local hex or `nsec` private key from `--sec`,
-`--prompt-sec`, or the configured native key-store reference. Snapshot templates are marked pending
-until source-address wiring can provide the required NIP-5A `a` tag.
+signed root, named, and companion snapshot events when signing can resolve a local hex or `nsec`
+private key from `--sec`, `--prompt-sec`, or the configured native key-store reference. Snapshot
+templates stay explicitly skipped for signer modes that cannot provide a local pubkey yet.
 
 ## Keys
 

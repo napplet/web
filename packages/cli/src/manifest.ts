@@ -9,6 +9,7 @@ import {
   NAPPLET_KIND_SNAPSHOT,
   type NappletConfig,
   type NostrEventTemplate,
+  type SnapshotDeploySource,
 } from "./types.ts";
 
 export const NAMED_SITE_D_TAG_PATTERN = /^[a-z0-9-]{1,13}$/;
@@ -16,6 +17,7 @@ export const NAMED_SITE_D_TAG_PATTERN = /^[a-z0-9-]{1,13}$/;
 export interface ManifestBuildOptions {
   createdAt?: number;
   servers?: string[];
+  sourcePubkey?: string;
 }
 
 export interface SnapshotSourceRef {
@@ -100,35 +102,78 @@ export function createSnapshotManifestTemplate(
 export async function createDeployManifestTemplates(
   plan: DeployPlan,
   config: NappletConfig,
-  options: { createdAt?: number } = {},
+  options: Pick<ManifestBuildOptions, "createdAt" | "sourcePubkey"> = {},
 ): Promise<DeployManifestTemplate[]> {
   const result: DeployManifestTemplate[] = [];
   const filesByDir = new Map<string, ManifestFileMapping[]>();
+  const sourceTemplates = new Map<string, NostrEventTemplate>();
   for (const item of plan.items) {
     const files = filesByDir.get(item.candidate.dir) ??
       await collectManifestFiles(item.candidate.dir);
     filesByDir.set(item.candidate.dir, files);
     const aggregateHash = await computeAggregateHash(files);
     if (item.target === "snapshot") {
+      const snapshot = createDeploySnapshotTemplate(item, sourceTemplates, options);
       result.push({
         item,
         files,
         aggregateHash,
-        skippedReason: "snapshot template requires the signer pubkey for its NIP-5A a tag",
+        ...snapshot,
       });
       continue;
     }
+    const template = await createSiteManifestTemplate(item, files, {
+      createdAt: options.createdAt,
+      servers: config.blossomServers,
+    });
+    sourceTemplates.set(
+      deploySourceKey(item.candidate.dir, {
+        target: item.target,
+        kind: item.target === "root" ? NAPPLET_KIND_ROOT : NAPPLET_KIND_NAMED,
+        dTag: item.dTag,
+      }),
+      template,
+    );
     result.push({
       item,
       files,
       aggregateHash,
-      template: await createSiteManifestTemplate(item, files, {
-        createdAt: options.createdAt,
-        servers: config.blossomServers,
-      }),
+      template,
     });
   }
   return result;
+}
+
+function createDeploySnapshotTemplate(
+  item: DeployPlanItem,
+  sourceTemplates: ReadonlyMap<string, NostrEventTemplate>,
+  options: { createdAt?: number; sourcePubkey?: string },
+): Pick<DeployManifestTemplate, "template" | "skippedReason"> {
+  if (!item.snapshotSource) {
+    return { skippedReason: "snapshot template requires a root or named source target" };
+  }
+  if (!options.sourcePubkey) {
+    return { skippedReason: "snapshot template requires the signer pubkey for its NIP-5A a tag" };
+  }
+  const source = sourceTemplates.get(deploySourceKey(item.candidate.dir, item.snapshotSource));
+  if (!source) {
+    return { skippedReason: "snapshot template requires its source template in the deploy plan" };
+  }
+  return {
+    template: createSnapshotManifestTemplate(
+      source,
+      {
+        kind: item.snapshotSource.kind,
+        pubkey: options.sourcePubkey,
+        dTag: item.snapshotSource.dTag,
+      },
+      { createdAt: options.createdAt },
+    ),
+  };
+}
+
+function deploySourceKey(candidateDir: string, source: SnapshotDeploySource): string {
+  return `${candidateDir}\0${source.kind}\0${source.dTag ?? ""}`;
 }
 
 export function siteAddress(ref: SnapshotSourceRef): string {

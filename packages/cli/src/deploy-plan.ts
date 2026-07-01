@@ -8,6 +8,7 @@ import {
   NAPPLET_KIND_SNAPSHOT,
   type NappletCandidate,
   type NappletConfig,
+  type SnapshotDeploySource,
 } from "./types.ts";
 import { configPath } from "./config.ts";
 
@@ -22,13 +23,10 @@ export function createDeployPlan(
 
   for (const candidate of candidates) {
     if (resolvedSelection.root) {
-      items.push(item(candidate, "root"));
+      pushDeployItem(items, candidate, item(candidate, "root"), resolvedSelection.snapshot);
     }
     for (const name of resolvedSelection.names) {
-      items.push(item(candidate, "named", name));
-    }
-    if (resolvedSelection.snapshot) {
-      items.push(item(candidate, "snapshot"));
+      pushDeployItem(items, candidate, item(candidate, "named", name), resolvedSelection.snapshot);
     }
   }
 
@@ -73,13 +71,30 @@ function item(
   candidate: NappletCandidate,
   target: DeployTargetKind,
   dTag?: string,
+  snapshotSource?: SnapshotDeploySource,
 ): DeployPlanItem {
   return {
     candidate,
     target,
     kind: kindForTarget(target),
     dTag,
+    snapshotSource,
   };
+}
+
+function pushDeployItem(
+  items: DeployPlanItem[],
+  candidate: NappletCandidate,
+  base: DeployPlanItem,
+  includeSnapshot: boolean,
+): void {
+  items.push(base);
+  if (!includeSnapshot || base.target === "snapshot") return;
+  items.push(item(candidate, "snapshot", undefined, {
+    target: base.target,
+    kind: base.target === "root" ? NAPPLET_KIND_ROOT : NAPPLET_KIND_NAMED,
+    dTag: base.dTag,
+  }));
 }
 
 function unique(values: string[]): string[] {

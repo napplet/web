@@ -8,15 +8,11 @@ import { createDeployManifestTemplates } from "./manifest.ts";
 import { runCommand, splitCommand } from "./process.ts";
 import {
   createPrivateKeySigner,
+  type LocalSigner,
   resolveSigningMethod,
   signDeployManifestTemplates,
 } from "./signing.ts";
-import type {
-  DeployManifestTemplate,
-  DeploySelection,
-  NappletConfig,
-  SigningMethod,
-} from "./types.ts";
+import type { DeploySelection, NappletConfig, SigningMethod } from "./types.ts";
 
 const HELP = `@napplet/cli
 
@@ -33,8 +29,8 @@ Usage:
   napplet paja [--config <file>] [-- <args>]
 
 Current scope:
-  deploy creates and prints a deployment plan. Uploading and event signing are
-  intentionally not enabled yet.
+  deploy creates and prints a deployment plan. Network upload and relay publish
+  are intentionally not enabled yet.
 `;
 
 interface ParsedArgs {
@@ -183,23 +179,23 @@ async function commandDeploy(argv: string[]): Promise<number> {
     );
   }
 
-  const manifests = await maybeSignManifests(
-    await createDeployManifestTemplates(plan, config),
-    signing,
-    flags,
-  );
+  const signer = await maybeCreateLocalSigner(signing, flags);
+  const manifests = signer
+    ? signDeployManifestTemplates(
+      await createDeployManifestTemplates(plan, config, { sourcePubkey: signer.pubkey }),
+      signer,
+    )
+    : await createDeployManifestTemplates(plan, config);
   console.log(JSON.stringify({ signing, plan, manifests }, null, 2));
   return 0;
 }
 
-async function maybeSignManifests(
-  manifests: DeployManifestTemplate[],
+async function maybeCreateLocalSigner(
   signing: SigningMethod,
   flags: FlagBag,
-): Promise<DeployManifestTemplate[]> {
+): Promise<LocalSigner | null> {
   const secret = await resolveLocalSigningSecret(signing, flags);
-  if (!secret) return manifests;
-  return signDeployManifestTemplates(manifests, createPrivateKeySigner(secret));
+  return secret ? createPrivateKeySigner(secret) : null;
 }
 
 async function resolveLocalSigningSecret(

@@ -22,6 +22,11 @@ Deno.test("createDeployPlan expands named deploys and optional snapshots", () =>
   );
   assertEquals(plan.items.map((item) => item.kind), [NAPPLET_KIND_NAMED, NAPPLET_KIND_SNAPSHOT]);
   assertEquals(plan.items[0].dTag, "feed");
+  assertEquals(plan.items[1].snapshotSource, {
+    target: "named",
+    kind: NAPPLET_KIND_NAMED,
+    dTag: "feed",
+  });
 });
 
 Deno.test("createDeployPlan supports root deploys", () => {
@@ -32,4 +37,29 @@ Deno.test("createDeployPlan supports root deploys", () => {
 Deno.test("createDeployPlan can add snapshots alongside an explicit root deploy", () => {
   const plan = createDeployPlan(defaultConfig(), [candidate], { root: true, snapshot: true });
   assertEquals(plan.items.map((item) => item.kind), [NAPPLET_KIND_ROOT, NAPPLET_KIND_SNAPSHOT]);
+  assertEquals(plan.items[1].snapshotSource, {
+    target: "root",
+    kind: NAPPLET_KIND_ROOT,
+    dTag: undefined,
+  });
+});
+
+Deno.test("createDeployPlan creates snapshot companions for root and named deploys", () => {
+  const plan = createDeployPlan(
+    defaultConfig(),
+    [candidate],
+    { root: true, names: ["feed"], snapshot: true },
+  );
+  assertEquals(plan.items.map((item) => [item.target, item.dTag ?? null]), [
+    ["root", null],
+    ["snapshot", null],
+    ["named", "feed"],
+    ["snapshot", null],
+  ]);
+  assertEquals(plan.items[1].snapshotSource?.target, "root");
+  assertEquals(plan.items[3].snapshotSource, {
+    target: "named",
+    kind: NAPPLET_KIND_NAMED,
+    dTag: "feed",
+  });
 });

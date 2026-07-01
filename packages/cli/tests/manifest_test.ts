@@ -134,6 +134,31 @@ Deno.test("createDeployManifestTemplates builds dry-run templates and flags snap
   });
 });
 
+Deno.test("createDeployManifestTemplates builds snapshot templates with a signer pubkey", async () => {
+  await withTempDir(async (dir) => {
+    await Deno.writeTextFile(`${dir}/index.html`, "index");
+    const candidate: NappletCandidate = {
+      name: "feed",
+      dir,
+      indexHtml: `${dir}/index.html`,
+    };
+    const config = defaultConfig({ named: ["feed"] });
+    const plan = createDeployPlan(config, [candidate], { snapshot: true });
+    const manifests = await createDeployManifestTemplates(plan, config, {
+      createdAt: 123,
+      sourcePubkey: pubkey,
+    });
+    assertEquals(manifests.length, 2);
+    assertEquals(manifests[0].template?.kind, NAPPLET_KIND_NAMED);
+    assertEquals(manifests[1].template?.kind, NAPPLET_KIND_SNAPSHOT);
+    assertEquals(
+      manifests[1].template?.tags.find((tag) => tag[0] === "a"),
+      ["a", `${NAPPLET_KIND_NAMED}:${pubkey}:feed`],
+    );
+    assertEquals(manifests[1].skippedReason, undefined);
+  });
+});
+
 Deno.test("siteAddress renders root and named NIP-5A addresses", () => {
   assertEquals(siteAddress({ kind: NAPPLET_KIND_ROOT, pubkey }), `${NAPPLET_KIND_ROOT}:${pubkey}:`);
   assertEquals(

@@ -49,11 +49,18 @@ export interface DeployPlanItem {
   target: DeployTargetKind;
   kind: number;
   dTag?: string;
+  snapshotSource?: SnapshotDeploySource;
 }
 
 export interface DeployPlan {
   configPath: string;
   items: DeployPlanItem[];
+}
+
+export interface SnapshotDeploySource {
+  target: Exclude<DeployTargetKind, "snapshot">;
+  kind: typeof NAPPLET_KIND_ROOT | typeof NAPPLET_KIND_NAMED;
+  dTag?: string;
 }
 
 export interface NostrEventTemplate {
