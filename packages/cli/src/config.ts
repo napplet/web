@@ -55,11 +55,11 @@ export function defaultConfig(overrides: Partial<NappletConfig> = {}): NappletCo
   };
 }
 
-export function configPath(cwd = Deno.cwd()): string {
+export function configPath(cwd: string = Deno.cwd()): string {
   return joinPath(cwd, CONFIG_DIR, CONFIG_FILE);
 }
 
-export async function readConfig(path = configPath()): Promise<NappletConfig | null> {
+export async function readConfig(path: string = configPath()): Promise<NappletConfig | null> {
   try {
     const raw = await Deno.readTextFile(path);
     return normalizeConfig(JSON.parse(raw));
@@ -72,7 +72,10 @@ export async function readConfig(path = configPath()): Promise<NappletConfig | n
   }
 }
 
-export async function writeConfig(config: NappletConfig, path = configPath()): Promise<void> {
+export async function writeConfig(
+  config: NappletConfig,
+  path: string = configPath(),
+): Promise<void> {
   await Deno.mkdir(dirname(path), { recursive: true });
   await Deno.writeTextFile(path, `${JSON.stringify(normalizeConfig(config), null, 2)}\n`);
 }
@@ -131,8 +134,22 @@ export function normalizeConfig(input: unknown): NappletConfig {
   });
 }
 
-export function resolveConfiguredSource(config: NappletConfig, cwd = Deno.cwd()): string {
+export function resolveConfiguredSource(
+  config: NappletConfig,
+  cwd: string = Deno.cwd(),
+): string {
   return resolvePath(cwd, config.sourceDir);
+}
+
+export function setSigningKeyReference(config: NappletConfig, keyReference: string): NappletConfig {
+  if (keyReference.trim() === "") throw new Error("keyReference cannot be empty");
+  return defaultConfig({
+    ...config,
+    signing: {
+      mode: "interactive",
+      keyReference,
+    },
+  });
 }
 
 function stringArray(value: unknown, field: string): string[] {

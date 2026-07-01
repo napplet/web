@@ -1,4 +1,4 @@
-import { defaultConfig, initConfig, readConfig } from "../src/config.ts";
+import { defaultConfig, initConfig, readConfig, setSigningKeyReference } from "../src/config.ts";
 import { assert, assertEquals, withTempDir } from "./assert.ts";
 
 Deno.test("defaultConfig uses a singular .napplet-style project model", () => {
@@ -23,5 +23,13 @@ Deno.test("initConfig writes .napplet/config.json", async () => {
     const config = await readConfig(result.path);
     assertEquals(config?.sourceDir, "dist");
     assertEquals(config?.named, ["feed"]);
+  });
+});
+
+Deno.test("setSigningKeyReference points config signing at a stored local key", () => {
+  const config = setSigningKeyReference(defaultConfig(), "default");
+  assertEquals(config.signing, {
+    mode: "interactive",
+    keyReference: "default",
   });
 });

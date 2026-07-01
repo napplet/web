@@ -1,8 +1,9 @@
 #!/usr/bin/env -S deno run --allow-read --allow-write --allow-run --allow-env
 
-import { initConfig, readConfig } from "./config.ts";
+import { initConfig, readConfig, setSigningKeyReference, writeConfig } from "./config.ts";
 import { createDeployPlan } from "./deploy-plan.ts";
 import { discoverNapplets } from "./discover.ts";
+import { KEY_SERVICE_NAME, requireKeyStoreProvider } from "./key-store.ts";
 import { runCommand, splitCommand } from "./process.ts";
 import { resolveSigningMethod } from "./signing.ts";
 import type { DeploySelection, NappletConfig } from "./types.ts";
@@ -12,13 +13,18 @@ const HELP = `@napplet/cli
 Usage:
   napplet init [--force] [--source-dir <dir>] [--relay <url>] [--server <url>] [--name <dtag>]
   napplet deploy [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>] [--prompt-sec] [--dry-run]
+  napplet keys store --name <ref> [--sec <secret> | --prompt-sec]
+  napplet keys use --name <ref> [--config <file>]
+  napplet keys list
+  napplet keys delete --name <ref>
+  napplet keys doctor
   napplet discover [--config <file>] [--all]
   napplet conformance [--config <file>] [--all] [-- <args>]
   napplet paja [--config <file>] [-- <args>]
 
 Current scope:
-  deploy creates and prints a deployment plan. Uploading, event signing, and
-  platform keychain storage are intentionally not enabled in this first slice.
+  deploy creates and prints a deployment plan. Uploading and event signing are
+  intentionally not enabled yet.
 `;
 
 interface ParsedArgs {
@@ -41,6 +47,8 @@ export async function main(argv = Deno.args): Promise<number> {
         return await commandDiscover(parsed.rest);
       case "deploy":
         return await commandDeploy(parsed.rest);
+      case "keys":
+        return await commandKeys(parsed.rest);
       case "conformance":
         return await commandConformance(parsed.rest);
       case "paja":
@@ -54,6 +62,65 @@ export async function main(argv = Deno.args): Promise<number> {
     console.error(error instanceof Error ? error.message : String(error));
     return 1;
   }
+}
+
+async function commandKeys(argv: string[]): Promise<number> {
+  const subcommand = argv[0] ?? "help";
+  const rest = argv.slice(1);
+  const flags = collectFlags(rest);
+
+  if (subcommand === "help" || subcommand === "--help" || subcommand === "-h") {
+    console.log(HELP);
+    return 0;
+  }
+
+  if (subcommand === "doctor") {
+    const provider = await requireKeyStoreProvider();
+    console.log(`Native key storage available: ${provider.name}`);
+    return 0;
+  }
+
+  const provider = await requireKeyStoreProvider();
+
+  if (subcommand === "store") {
+    const name = requiredValue(flags, "name");
+    const secret = await resolveSecretInput(flags);
+    await provider.store({ service: KEY_SERVICE_NAME, account: name, secret });
+    console.log(`Stored key reference "${name}" in ${provider.name}`);
+    return 0;
+  }
+
+  if (subcommand === "list") {
+    const accounts = await provider.list(KEY_SERVICE_NAME);
+    if (accounts.length === 0) {
+      console.log("No stored napplet keys");
+      return 0;
+    }
+    for (const account of accounts) console.log(account);
+    return 0;
+  }
+
+  if (subcommand === "use") {
+    const name = requiredValue(flags, "name");
+    const secret = await provider.retrieve(KEY_SERVICE_NAME, name);
+    if (!secret) throw new Error(`No key reference "${name}" found in ${provider.name}`);
+    const path = first(flags.values.get("config"));
+    const config = await readConfig(path);
+    if (!config) throw new Error(`No .napplet config found${path ? ` at ${path}` : ""}`);
+    await writeConfig(setSigningKeyReference(config, name), path);
+    console.log(`Configured .napplet signing.keyReference = "${name}"`);
+    return 0;
+  }
+
+  if (subcommand === "delete") {
+    const name = requiredValue(flags, "name");
+    const deleted = await provider.delete(KEY_SERVICE_NAME, name);
+    console.log(deleted ? `Deleted key reference "${name}"` : `No key reference "${name}" found`);
+    return deleted ? 0 : 1;
+  }
+
+  console.error(`Unknown keys subcommand: ${subcommand}`);
+  return 2;
 }
 
 function parseCommand(argv: string[]): ParsedArgs {
@@ -174,7 +241,9 @@ function collectFlags(argv: string[]): FlagBag {
       continue;
     }
     const name = arg.slice(2);
-    if (["force", "all", "root", "snapshot", "prompt-sec", "dry-run"].includes(name)) {
+    if (
+      ["force", "all", "root", "snapshot", "prompt-sec", "dry-run"].includes(name)
+    ) {
       flags.boolean.add(name);
       continue;
     }
@@ -190,6 +259,37 @@ function collectFlags(argv: string[]): FlagBag {
 
 function first(values: string[] | undefined): string | undefined {
   return values?.[0];
+}
+
+function requiredValue(flags: FlagBag, name: string): string {
+  const value = first(flags.values.get(name));
+  if (!value) throw new Error(`Missing --${name}`);
+  return value;
+}
+
+async function resolveSecretInput(flags: FlagBag): Promise<string> {
+  const sec = first(flags.values.get("sec"));
+  if (sec) return sec;
+  if (!flags.boolean.has("prompt-sec")) {
+    throw new Error("Provide --sec <secret> or --prompt-sec");
+  }
+  return await readSecretFromStdin();
+}
+
+async function readSecretFromStdin(): Promise<string> {
+  console.error("Enter signing secret, then press Ctrl-D:");
+  const chunks: Uint8Array[] = [];
+  for await (const chunk of Deno.stdin.readable) chunks.push(chunk);
+  const size = chunks.reduce((total, chunk) => total + chunk.length, 0);
+  const all = new Uint8Array(size);
+  let offset = 0;
+  for (const chunk of chunks) {
+    all.set(chunk, offset);
+    offset += chunk.length;
+  }
+  const secret = new TextDecoder().decode(all).trim();
+  if (!secret) throw new Error("No secret provided on stdin");
+  return secret;
 }
 
 if (import.meta.main) {
