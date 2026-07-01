@@ -1,6 +1,7 @@
 #!/usr/bin/env -S deno run --allow-read --allow-write --allow-run --allow-env --allow-net
 
 import { initConfig, readConfig, setSigningKeyReference, writeConfig } from "./config.ts";
+import { createDebugReport, createSigningDebugInfo } from "./debug.ts";
 import { createDeployPlan } from "./deploy-plan.ts";
 import { executeNetworkDeploy, networkDeploySucceeded } from "./deploy-network.ts";
 import { discoverNapplets } from "./discover.ts";
@@ -20,6 +21,7 @@ const HELP = `@napplet/cli
 Usage:
   napplet init [--force] [--source-dir <dir>] [--relay <url>] [--server <url>] [--name <dtag>]
   napplet deploy [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>] [--prompt-sec] [--dry-run]
+  napplet debug [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>]
   napplet keys store --name <ref> [--sec <secret> | --prompt-sec]
   napplet keys use --name <ref> [--config <file>]
   napplet keys list
@@ -54,6 +56,8 @@ export async function main(argv = Deno.args): Promise<number> {
         return await commandDiscover(parsed.rest);
       case "deploy":
         return await commandDeploy(parsed.rest);
+      case "debug":
+        return await commandDebug(parsed.rest);
       case "keys":
         return await commandKeys(parsed.rest);
       case "conformance":
@@ -176,6 +180,7 @@ async function commandDeploy(argv: string[]): Promise<number> {
 
   const signer = await maybeCreateSigner(signing, flags);
   try {
+    const signingInfo = createSigningDebugInfo(signing);
     const manifests = signer
       ? await signDeployManifestTemplates(
         await createDeployManifestTemplates(plan, config, { sourcePubkey: signer.pubkey }),
@@ -190,14 +195,36 @@ async function commandDeploy(argv: string[]): Promise<number> {
         relays: config.relays,
         blossomServers: config.blossomServers,
       }, signer);
-      console.log(JSON.stringify({ signing, plan, manifests, deploy }, null, 2));
+      console.log(JSON.stringify({ signing: signingInfo, plan, manifests, deploy }, null, 2));
       return networkDeploySucceeded(deploy, manifests) ? 0 : 1;
     }
-    console.log(JSON.stringify({ signing, plan, manifests }, null, 2));
+    console.log(JSON.stringify({ signing: signingInfo, plan, manifests }, null, 2));
     return 0;
   } finally {
     await signer?.close?.();
   }
+}
+
+async function commandDebug(argv: string[]): Promise<number> {
+  const flags = collectFlags(argv);
+  const config = await loadConfig(flags);
+  const selection: Partial<DeploySelection> = {
+    root: flags.boolean.has("root") ? true : undefined,
+    names: flags.values.get("name"),
+    snapshot: flags.boolean.has("snapshot") ? true : undefined,
+  };
+  const signing = resolveSigningMethod(config, {
+    sec: first(flags.values.get("sec")),
+    promptSec: flags.boolean.has("prompt-sec"),
+  });
+  const report = await createDebugReport(config, {
+    configPath: first(flags.values.get("config")),
+    traverse: flags.boolean.has("all"),
+    selection,
+    signing,
+  });
+  console.log(JSON.stringify(report, null, 2));
+  return 0;
 }
 
 async function maybeCreateSigner(

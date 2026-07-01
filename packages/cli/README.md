@@ -8,6 +8,8 @@ This first package slice provides:
 - `napplet discover --all` for traversing configured roots and staging built napplet directories.
 - `napplet deploy` for root, named, and snapshot deploy planning, Blossom uploads, relay publish,
   and local or `nbunksec` event signing.
+- `napplet debug` for read-only JSON diagnostics covering config, discovery, deploy-plan,
+  manifest-template, and signing readiness state.
 - `napplet keys store/use/list/delete/doctor` for local key references in the platform keychain.
 - `napplet conformance` as a wrapper around `@napplet/conformance-cli`.
 - `napplet paja` as a wrapper around `kehto paja`.
@@ -23,6 +25,10 @@ the configured native key-store reference, or `NAPPLET_CI_SIGNING_KEY` when `.na
 signing mode. `--dry-run` emits the same plan plus root, named, and companion snapshot manifest
 events without uploading files or publishing to relays. Raw `bunker://` pairing is not implemented
 yet; generate and pass an `nbunksec` for CI-style remote signing.
+
+`napplet debug [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>]` prints the same
+operator-facing discovery and deploy planning state without uploading blobs or publishing events.
+Signing secrets are classified but not printed.
 
 ## Keys
 
