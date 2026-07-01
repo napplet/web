@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v0.34.0
 milestone_name: NIP-5D Runtime Injection
 status: planning
-last_updated: "2026-07-01T12:48:22.000Z"
+last_updated: "2026-07-01T12:54:24.000Z"
 last_activity: 2026-07-01
 progress:
   total_phases: 0
@@ -30,7 +30,16 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 Phase: Not started (defining requirements)
 Plan: —
 Status: Defining requirements
-Last activity: 2026-07-01 — Completed quick task 260701-kdm: add secure local key storage and key-management commands to @napplet/cli
+Last activity: 2026-07-01 — Completed quick task 260701-kla: add NIP-5D/NIP-5A deploy event-building primitives to @napplet/cli
+
+### Quick task 260701-kla — COMPLETE
+
+- Corrected CLI deploy constants to canonical NIP-5A values: root `15128`, named `35128`, snapshot `5128`.
+- Added Deno-native manifest/event-template primitives for file hashing, path-only aggregate hashing, root/named templates, and pubkey-backed snapshot templates.
+- Extended `napplet deploy --dry-run` with unsigned manifest template output; snapshot entries remain explicitly skipped until signer pubkey resolution is wired.
+- Verification: `deno fmt --check packages/cli`; `deno lint packages/cli`; `pnpm --filter @napplet/cli build`; `pnpm --filter @napplet/cli test:unit`; `pnpm build`; `pnpm type-check`; `pnpm -r test:unit`; `git diff --check`; `pnpm dlx aislop@0.12.0 scan --json .`.
+- Commit: `e0f96bd2` (`Ground deploy templates in canonical NIP-5A manifests`).
+- Follow-up flagged: `@napplet/vite-plugin` still has older NIP-5D-specific `15129/35129` manifest constants and needs a separate canonical-spec sweep.
 
 ### Quick task 260701-kdm — COMPLETE
 
