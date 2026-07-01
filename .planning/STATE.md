@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v0.34.0
 milestone_name: NIP-5D Runtime Injection
 status: planning
-last_updated: "2026-07-01T13:04:07.000Z"
+last_updated: "2026-07-01T13:09:37.000Z"
 last_activity: 2026-07-01
 progress:
   total_phases: 0
@@ -30,7 +30,16 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 Phase: Not started (defining requirements)
 Plan: —
 Status: Defining requirements
-Last activity: 2026-07-01 — Completed quick task 260701-kuy: generate signed dry-run snapshot manifests in @napplet/cli
+Last activity: 2026-07-01 — Completed quick task 260701-kyb: enable local-signer network deploys in @napplet/cli
+
+### Quick task 260701-kyb — COMPLETE
+
+- Added local-signer network deploy helpers that upload unique files to configured Blossom servers and publish signed root/named/snapshot manifest events to configured relays.
+- Built Blossom upload authorization events with kind `24242`, `t=upload`, `x` blob hashes, expiration, and `client=napplet`.
+- Wired non-`--dry-run` `napplet deploy` for local hex/`nsec` signers; unsupported signer modes still fail closed for network deploy.
+- Verification: `deno fmt --check packages/cli`; `deno lint packages/cli`; `pnpm --filter @napplet/cli build`; `pnpm --filter @napplet/cli test:unit`; `pnpm build`; `pnpm type-check`; `pnpm -r test:unit`; `git diff --check`; `pnpm dlx aislop@0.12.0 scan --json .`.
+- Commit: `272ff8f7` (`Enable local-signer network deploys`).
+- Remaining scope: live Blossom/relay proof, `nbunksec`/bunker signing, CI revocable-key workflows, relay/server discovery, debug/status/sync/delete flows, and richer progress UI are still pending.
 
 ### Quick task 260701-kuy — COMPLETE
 
