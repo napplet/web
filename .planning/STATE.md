@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v0.34.0
 milestone_name: NIP-5D Runtime Injection
 status: planning
-last_updated: "2026-07-01T13:18:56.000Z"
+last_updated: "2026-07-01T13:24:09.000Z"
 last_activity: 2026-07-01
 progress:
   total_phases: 0
@@ -30,7 +30,16 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 Phase: Not started (defining requirements)
 Plan: —
 Status: Defining requirements
-Last activity: 2026-07-01 — Completed quick task 260701-l4f: add nbunksec CI remote signing support to @napplet/cli deploy
+Last activity: 2026-07-01 — Completed quick task 260701-lvc: add read-only deploy diagnostics to @napplet/cli
+
+### Quick task 260701-lvc — COMPLETE
+
+- Added `napplet debug` for local JSON diagnostics over config, discovery, deploy-plan, manifest-template, and signing readiness state.
+- Kept the command read-only: no Blossom upload, relay publish, key-store write, or live network probe.
+- Added sanitized signing diagnostics and switched deploy JSON output to that sanitized shape so direct CI signing material is not echoed.
+- Verification: `deno fmt packages/cli`; `deno fmt --check packages/cli`; `deno lint packages/cli`; `pnpm --filter @napplet/cli build`; `pnpm --filter @napplet/cli test:unit`; `pnpm build`; `pnpm type-check`; `pnpm -r test:unit`; `pnpm dlx aislop@0.12.0 scan --json .`; `git diff --check`.
+- Commit: `09dcbeaf` (`Expose deploy diagnostics without publishing`).
+- Remaining scope: live Blossom/relay status probing, raw `bunker://` pairing, sync/delete flows, and richer progress UI are still pending.
 
 ### Quick task 260701-l4f — COMPLETE
 
