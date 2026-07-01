@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v0.34.0
 milestone_name: NIP-5D Runtime Injection
 status: planning
-last_updated: "2026-07-01T13:09:37.000Z"
+last_updated: "2026-07-01T13:18:56.000Z"
 last_activity: 2026-07-01
 progress:
   total_phases: 0
@@ -30,7 +30,17 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 Phase: Not started (defining requirements)
 Plan: —
 Status: Defining requirements
-Last activity: 2026-07-01 — Completed quick task 260701-kyb: enable local-signer network deploys in @napplet/cli
+Last activity: 2026-07-01 — Completed quick task 260701-l4f: add nbunksec CI remote signing support to @napplet/cli deploy
+
+### Quick task 260701-l4f — COMPLETE
+
+- Added nsyte-compatible `nbunksec` signing for `@napplet/cli` deploy using an async signer interface shared by local and remote signers.
+- Implemented narrow local nbunksec bech32/TLV decode/encode helpers without adding a dependency, then wired decoded material to `nostr-tools/nip46` `BunkerSigner`.
+- Updated dry-run manifest signing, Blossom upload authorization signing, and network relay publish paths to await async signers and close signer sessions after deploy.
+- Documented `NAPPLET_CI_SIGNING_KEY` / `NAPPLET_CI_KEY_REFERENCE` usage and kept raw `bunker://` pairing explicitly unsupported.
+- Verification: `deno fmt packages/cli`; `deno fmt --check packages/cli`; `deno lint packages/cli`; `pnpm --filter @napplet/cli build`; `pnpm --filter @napplet/cli test:unit`; `pnpm build`; `pnpm type-check`; `pnpm -r test:unit`; `pnpm dlx aislop@0.12.0 scan --json .`; `git diff --check`.
+- Commit: `50e3872b` (`Support nbunksec CI signing in the CLI`).
+- Remaining scope: live bunker-session proof, raw `bunker://` pairing, relay/server discovery, debug/status/sync/delete flows, and richer progress UI are still pending.
 
 ### Quick task 260701-kyb — COMPLETE
 
