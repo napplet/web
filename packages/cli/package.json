@@ -1,0 +1,33 @@
+{
+  "name": "@napplet/cli",
+  "version": "0.0.0",
+  "description": "Deno CLI for discovering, testing, and deploying napplets",
+  "type": "module",
+  "files": [
+    "src",
+    "deno.json",
+    "README.md"
+  ],
+  "sideEffects": false,
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "deno task build",
+    "type-check": "deno task build",
+    "test:unit": "deno task test:unit"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sandwichfarm/napplet.git",
+    "directory": "packages/cli"
+  },
+  "keywords": [
+    "nostr",
+    "napplet",
+    "cli",
+    "deno",
+    "nip-5d"
+  ]
+}

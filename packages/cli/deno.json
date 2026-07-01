@@ -1,0 +1,23 @@
+{
+  "name": "@napplet/cli",
+  "version": "0.0.0",
+  "description": "Deno CLI for discovering, testing, and deploying napplets",
+  "license": "MIT",
+  "exports": "./src/mod.ts",
+  "tasks": {
+    "dev": "deno run --allow-read --allow-write --allow-run --allow-env src/cli.ts",
+    "build": "deno check src/cli.ts src/mod.ts",
+    "test:unit": "deno test --allow-read --allow-write --allow-run --allow-env tests/"
+  },
+  "fmt": {
+    "indentWidth": 2,
+    "lineWidth": 100,
+    "semiColons": true,
+    "singleQuote": false
+  },
+  "test": {
+    "include": [
+      "tests/"
+    ]
+  }
+}
