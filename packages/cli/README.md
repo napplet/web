@@ -6,7 +6,8 @@ This first package slice provides:
 
 - `napplet init` for a singular `.napplet/config.json`.
 - `napplet discover --all` for traversing configured roots and staging built napplet directories.
-- `napplet deploy --dry-run` for root, named, and snapshot deploy planning.
+- `napplet deploy --dry-run` for root, named, and snapshot deploy planning with unsigned NIP-5A
+  manifest templates.
 - `napplet keys store/use/list/delete/doctor` for local key references in the platform keychain.
 - `napplet conformance` as a wrapper around `@napplet/conformance-cli`.
 - `napplet paja` as a wrapper around `kehto paja`.
@@ -18,7 +19,9 @@ or Linux Secret Service via `secret-tool` with a D-Bus session. If no native pro
 key commands fail closed rather than writing secrets to plaintext.
 
 Network upload/publish and real event signing are not enabled yet. Commands that would need network
-deploy side effects currently require `--dry-run` and emit a plan.
+deploy side effects currently require `--dry-run` and emit a plan plus unsigned manifest templates.
+Snapshot templates are marked pending until the signer pubkey is available for the required NIP-5A
+`a` tag.
 
 ## Keys
 

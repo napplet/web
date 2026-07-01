@@ -1,9 +1,9 @@
 export const CONFIG_DIR = ".napplet";
 export const CONFIG_FILE = "config.json";
 
-export const NAPPLET_KIND_SNAPSHOT = 5129;
-export const NAPPLET_KIND_ROOT = 15129;
-export const NAPPLET_KIND_NAMED = 35129;
+export const NAPPLET_KIND_SNAPSHOT = 5128;
+export const NAPPLET_KIND_ROOT = 15128;
+export const NAPPLET_KIND_NAMED = 35128;
 
 export type DeployTargetKind = "root" | "named" | "snapshot";
 
@@ -54,6 +54,26 @@ export interface DeployPlanItem {
 export interface DeployPlan {
   configPath: string;
   items: DeployPlanItem[];
+}
+
+export interface NostrEventTemplate {
+  kind: number;
+  created_at: number;
+  tags: string[][];
+  content: string;
+}
+
+export interface ManifestFileMapping {
+  path: string;
+  sha256: string;
+}
+
+export interface DeployManifestTemplate {
+  item: DeployPlanItem;
+  files: ManifestFileMapping[];
+  aggregateHash: string;
+  template?: NostrEventTemplate;
+  skippedReason?: string;
 }
 
 export type SigningMethod =

@@ -4,6 +4,7 @@ import { initConfig, readConfig, setSigningKeyReference, writeConfig } from "./c
 import { createDeployPlan } from "./deploy-plan.ts";
 import { discoverNapplets } from "./discover.ts";
 import { KEY_SERVICE_NAME, requireKeyStoreProvider } from "./key-store.ts";
+import { createDeployManifestTemplates } from "./manifest.ts";
 import { runCommand, splitCommand } from "./process.ts";
 import { resolveSigningMethod } from "./signing.ts";
 import type { DeploySelection, NappletConfig } from "./types.ts";
@@ -173,7 +174,8 @@ async function commandDeploy(argv: string[]): Promise<number> {
     );
   }
 
-  console.log(JSON.stringify({ signing, plan }, null, 2));
+  const manifests = await createDeployManifestTemplates(plan, config);
+  console.log(JSON.stringify({ signing, plan, manifests }, null, 2));
   return 0;
 }
 
