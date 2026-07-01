@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v0.34.0
 milestone_name: NIP-5D Runtime Injection
 status: planning
-last_updated: "2026-07-01T15:07:05.000Z"
+last_updated: "2026-07-01T15:30:51.000Z"
 last_activity: 2026-07-01
 progress:
   total_phases: 0
@@ -30,7 +30,13 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 Phase: Not started (defining requirements)
 Plan: —
 Status: Defining requirements
-Last activity: 2026-07-01 — Completed quick task 260701-m2r: infer vite-plugin requires and preserve them in @napplet/cli deploy
+Last activity: 2026-07-01 — Completed quick task 260701-cif: install Deno in CI for @napplet/cli root tasks
+
+### Quick task 260701-cif — COMPLETE
+
+- Fixed live PR #103 failures in `CI / ci` and `Conformance / conformance` caused by `@napplet/cli` root tasks invoking `deno task` on GitHub runners without Deno installed.
+- Added `denoland/setup-deno@v2` to `.github/workflows/ci.yml` and `.github/workflows/conformance.yml`.
+- Verification: workflow YAML parsed with Ruby; `deno --version`; `pnpm type-check`; `pnpm build`; `pnpm test`; `pnpm --filter @napplet/conformance-e2e test:e2e`; `git diff --check`.
 
 ### Quick task 260701-m2r — COMPLETE
 
