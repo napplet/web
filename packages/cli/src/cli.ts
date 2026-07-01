@@ -6,8 +6,17 @@ import { discoverNapplets } from "./discover.ts";
 import { KEY_SERVICE_NAME, requireKeyStoreProvider } from "./key-store.ts";
 import { createDeployManifestTemplates } from "./manifest.ts";
 import { runCommand, splitCommand } from "./process.ts";
-import { resolveSigningMethod } from "./signing.ts";
-import type { DeploySelection, NappletConfig } from "./types.ts";
+import {
+  createPrivateKeySigner,
+  resolveSigningMethod,
+  signDeployManifestTemplates,
+} from "./signing.ts";
+import type {
+  DeployManifestTemplate,
+  DeploySelection,
+  NappletConfig,
+  SigningMethod,
+} from "./types.ts";
 
 const HELP = `@napplet/cli
 
@@ -174,9 +183,40 @@ async function commandDeploy(argv: string[]): Promise<number> {
     );
   }
 
-  const manifests = await createDeployManifestTemplates(plan, config);
+  const manifests = await maybeSignManifests(
+    await createDeployManifestTemplates(plan, config),
+    signing,
+    flags,
+  );
   console.log(JSON.stringify({ signing, plan, manifests }, null, 2));
   return 0;
+}
+
+async function maybeSignManifests(
+  manifests: DeployManifestTemplate[],
+  signing: SigningMethod,
+  flags: FlagBag,
+): Promise<DeployManifestTemplate[]> {
+  const secret = await resolveLocalSigningSecret(signing, flags);
+  if (!secret) return manifests;
+  return signDeployManifestTemplates(manifests, createPrivateKeySigner(secret));
+}
+
+async function resolveLocalSigningSecret(
+  signing: SigningMethod,
+  flags: FlagBag,
+): Promise<string | null> {
+  if (signing.type === "private-key") return requiredValue(flags, "sec");
+  if (signing.type === "prompt") return await readSecretFromStdin();
+  if (signing.type === "stored") {
+    const provider = await requireKeyStoreProvider();
+    const secret = await provider.retrieve(KEY_SERVICE_NAME, signing.keyReference);
+    if (!secret) {
+      throw new Error(`No key reference "${signing.keyReference}" found in ${provider.name}`);
+    }
+    return secret;
+  }
+  return null;
 }
 
 async function commandConformance(argv: string[]): Promise<number> {

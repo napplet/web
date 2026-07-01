@@ -63,6 +63,12 @@ export interface NostrEventTemplate {
   content: string;
 }
 
+export interface SignedNostrEvent extends NostrEventTemplate {
+  id: string;
+  pubkey: string;
+  sig: string;
+}
+
 export interface ManifestFileMapping {
   path: string;
   sha256: string;
@@ -73,6 +79,7 @@ export interface DeployManifestTemplate {
   files: ManifestFileMapping[];
   aggregateHash: string;
   template?: NostrEventTemplate;
+  signedEvent?: SignedNostrEvent;
   skippedReason?: string;
 }
 

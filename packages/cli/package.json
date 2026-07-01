@@ -17,6 +17,9 @@
     "type-check": "deno task build",
     "test:unit": "deno task test:unit"
   },
+  "dependencies": {
+    "nostr-tools": "^2.23.3"
+  },
   "license": "MIT",
   "repository": {
     "type": "git",

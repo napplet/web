@@ -6,8 +6,8 @@ This first package slice provides:
 
 - `napplet init` for a singular `.napplet/config.json`.
 - `napplet discover --all` for traversing configured roots and staging built napplet directories.
-- `napplet deploy --dry-run` for root, named, and snapshot deploy planning with unsigned NIP-5A
-  manifest templates.
+- `napplet deploy --dry-run` for root, named, and snapshot deploy planning with NIP-5A manifest
+  templates and local private-key event signing.
 - `napplet keys store/use/list/delete/doctor` for local key references in the platform keychain.
 - `napplet conformance` as a wrapper around `@napplet/conformance-cli`.
 - `napplet paja` as a wrapper around `kehto paja`.
@@ -18,10 +18,11 @@ Local key storage uses native platform secure storage: macOS Keychain, Windows C
 or Linux Secret Service via `secret-tool` with a D-Bus session. If no native provider is available,
 key commands fail closed rather than writing secrets to plaintext.
 
-Network upload/publish and real event signing are not enabled yet. Commands that would need network
-deploy side effects currently require `--dry-run` and emit a plan plus unsigned manifest templates.
-Snapshot templates are marked pending until the signer pubkey is available for the required NIP-5A
-`a` tag.
+Network upload/publish is not enabled yet. Commands that would need network deploy side effects
+currently require `--dry-run` and emit a plan plus manifest templates. Dry-run output includes
+signed events when signing can resolve a local hex or `nsec` private key from `--sec`,
+`--prompt-sec`, or the configured native key-store reference. Snapshot templates are marked pending
+until source-address wiring can provide the required NIP-5A `a` tag.
 
 ## Keys
 

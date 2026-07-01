@@ -1,4 +1,18 @@
-import type { NappletConfig, SigningMethod } from "./types.ts";
+import { nip19 } from "nostr-tools";
+import { finalizeEvent, getPublicKey } from "nostr-tools/pure";
+import { hexToBytes } from "nostr-tools/utils";
+import type {
+  DeployManifestTemplate,
+  NappletConfig,
+  NostrEventTemplate,
+  SignedNostrEvent,
+  SigningMethod,
+} from "./types.ts";
+
+export interface LocalSigner {
+  pubkey: string;
+  sign(template: NostrEventTemplate): SignedNostrEvent;
+}
 
 export function detectSecretFormat(
   secret: string,
@@ -41,4 +55,52 @@ export function resolveSigningMethod(
   }
 
   return { type: "none" };
+}
+
+export function createPrivateKeySigner(secret: string): LocalSigner {
+  const privateKey = decodePrivateKey(secret);
+  const pubkey = getPublicKey(privateKey);
+  return {
+    pubkey,
+    sign(template: NostrEventTemplate): SignedNostrEvent {
+      const signed = finalizeEvent({
+        kind: template.kind,
+        created_at: template.created_at,
+        tags: template.tags.map((tag) => [...tag]),
+        content: template.content,
+      }, privateKey);
+      return {
+        kind: signed.kind,
+        created_at: signed.created_at,
+        tags: signed.tags.map((tag) => [...tag]),
+        content: signed.content,
+        id: signed.id,
+        pubkey: signed.pubkey,
+        sig: signed.sig,
+      };
+    },
+  };
+}
+
+export function signDeployManifestTemplates(
+  manifests: readonly DeployManifestTemplate[],
+  signer: LocalSigner,
+): DeployManifestTemplate[] {
+  return manifests.map((manifest) => ({
+    ...manifest,
+    signedEvent: manifest.template ? signer.sign(manifest.template) : undefined,
+  }));
+}
+
+export function decodePrivateKey(secret: string): Uint8Array {
+  const trimmed = secret.trim();
+  if (/^[0-9a-fA-F]{64}$/.test(trimmed)) return hexToBytes(trimmed);
+  if (trimmed.startsWith("nsec1")) {
+    const decoded = nip19.decode(trimmed);
+    if (decoded.type !== "nsec" || !(decoded.data instanceof Uint8Array)) {
+      throw new Error("Invalid nsec private key");
+    }
+    return decoded.data;
+  }
+  throw new Error("Local signing requires an nsec or 64-character hex private key");
 }
