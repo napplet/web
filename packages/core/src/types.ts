@@ -20,6 +20,7 @@ export type * from './types/serial.js';
 export type * from './types/lists.js';
 export type * from './types/common.js';
 export type * from './types/dm.js';
+export type * from './types/count.js';
 export type * from './types/global.js';
 export type {
   ResourceApi,

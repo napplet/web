@@ -105,6 +105,7 @@ describe('validateEnvelope — outbound field checks', () => {
         request: { scope: { type: 'direct', pubkey: 'abc123' } },
       },
       link: { type: 'link.open', id: 'a', url: 'https://example.com/post/123' },
+      count: { type: 'count.query', id: 'a', filters: [{ kinds: [7], '#e': ['event-id'] }] },
       lists: {
         type: 'lists.add',
         id: 'a',
@@ -131,13 +132,13 @@ describe('validateEnvelope — no generic shell domain', () => {
 });
 
 describe('ENVELOPE_SPECS invariants', () => {
-  it('has 198 discriminants split 95 outbound / 103 inbound', () => {
+  it('has 200 discriminants split 96 outbound / 104 inbound', () => {
     const all = knownEnvelopeTypes();
-    expect(all).toHaveLength(198);
+    expect(all).toHaveLength(200);
     const out = all.filter((t) => ENVELOPE_SPECS[t].dir === 'out');
     const inbound = all.filter((t) => ENVELOPE_SPECS[t].dir === 'in');
-    expect(out).toHaveLength(95);
-    expect(inbound).toHaveLength(103);
+    expect(out).toHaveLength(96);
+    expect(inbound).toHaveLength(104);
   });
 
   it('only outbound specs declare required fields', () => {

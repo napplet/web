@@ -29,6 +29,7 @@ export { DOMAIN as INTENT_DOMAIN } from '@napplet/nap/intent';
 export { DOMAIN as BLE_DOMAIN } from '@napplet/nap/ble';
 export { DOMAIN as WEBRTC_DOMAIN } from '@napplet/nap/webrtc';
 export { DOMAIN as LINK_DOMAIN } from '@napplet/nap/link';
+export { DOMAIN as COUNT_DOMAIN } from '@napplet/nap/count';
 export { DOMAIN as LISTS_DOMAIN } from '@napplet/nap/lists';
 export { DOMAIN as COMMON_DOMAIN } from '@napplet/nap/common';
 export { DOMAIN as SERIAL_DOMAIN } from '@napplet/nap/serial';
@@ -55,6 +56,7 @@ export { installIntentShim } from '@napplet/nap/intent';
 export { installBleShim } from '@napplet/nap/ble';
 export { installWebrtcShim } from '@napplet/nap/webrtc';
 export { installLinkShim } from '@napplet/nap/link';
+export { installCountShim } from '@napplet/nap/count';
 export { installListsShim } from '@napplet/nap/lists';
 export { installCommonShim } from '@napplet/nap/common';
 export { installSerialShim } from '@napplet/nap/serial';
@@ -139,6 +141,7 @@ export {
   bleOnEvent,
 } from '@napplet/nap/ble';
 export { linkOpen } from '@napplet/nap/link';
+export { countQuery } from '@napplet/nap/count';
 export {
   listsSupported,
   listsAdd,

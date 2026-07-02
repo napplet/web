@@ -11,7 +11,7 @@
 
 ### How It Works
 
-1. Import named exports from `@napplet/sdk` -- `relay`, `inc`, `storage`, `keys`, `ble`, `lists`
+1. Import named exports from `@napplet/sdk` -- `relay`, `inc`, `storage`, `keys`, `ble`, `count`, `lists`
 2. Each SDK method delegates to its injected `window.napplet.*` counterpart at call time
 3. If `window.napplet` or a requested domain is unavailable when a method is called, a descriptive error is thrown
 
@@ -24,7 +24,7 @@ npm install @napplet/sdk
 ## Quick Start
 
 ```ts
-import { relay, inc, storage, keys, media, notify, config, resource, ble, webrtc, link, lists, type NostrEvent } from '@napplet/sdk';
+import { relay, inc, storage, keys, media, notify, config, resource, ble, webrtc, link, count, lists, type NostrEvent } from '@napplet/sdk';
 
 // Subscribe to kind 1 notes
 const sub = relay.subscribe(
@@ -369,6 +369,7 @@ handlers in shell implementations or protocol-aware code.
 | `ConfigNapMessage` | `@napplet/nap/config` | Discriminated union of all config domain messages |
 | `ResourceNapMessage` | `@napplet/nap/resource` | Discriminated union of all resource domain messages |
 | `BleNapMessage` | `@napplet/nap/ble` | Discriminated union of all BLE domain messages |
+| `CountNapMessage` | `@napplet/nap/count` | Discriminated union of all count domain messages |
 | `ListsNapMessage` | `@napplet/nap/lists` | Discriminated union of all lists domain messages |
 | `CommonNapMessage` | `@napplet/nap/common` | Discriminated union of all common domain messages |
 | `SerialNapMessage` | `@napplet/nap/serial` | Discriminated union of all serial domain messages |
@@ -381,8 +382,8 @@ Individual message types (e.g., `RelaySubscribeMessage`, `IdentityGetPublicKeyMe
 Each NAP domain has a string constant re-exported from its package:
 
 ```ts
-import { RELAY_DOMAIN, IDENTITY_DOMAIN, STORAGE_DOMAIN, INC_DOMAIN, THEME_DOMAIN, KEYS_DOMAIN, MEDIA_DOMAIN, NOTIFY_DOMAIN, CONFIG_DOMAIN, RESOURCE_DOMAIN, CVM_DOMAIN, OUTBOX_DOMAIN, UPLOAD_DOMAIN, INTENT_DOMAIN, BLE_DOMAIN, WEBRTC_DOMAIN, LINK_DOMAIN, LISTS_DOMAIN, COMMON_DOMAIN, SERIAL_DOMAIN } from '@napplet/sdk';
-// Values: 'relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent', 'ble', 'webrtc', 'link', 'lists', 'common', 'serial'
+import { RELAY_DOMAIN, IDENTITY_DOMAIN, STORAGE_DOMAIN, INC_DOMAIN, THEME_DOMAIN, KEYS_DOMAIN, MEDIA_DOMAIN, NOTIFY_DOMAIN, CONFIG_DOMAIN, RESOURCE_DOMAIN, CVM_DOMAIN, OUTBOX_DOMAIN, UPLOAD_DOMAIN, INTENT_DOMAIN, BLE_DOMAIN, WEBRTC_DOMAIN, LINK_DOMAIN, COUNT_DOMAIN, LISTS_DOMAIN, COMMON_DOMAIN, SERIAL_DOMAIN, DM_DOMAIN } from '@napplet/sdk';
+// Values: 'relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent', 'ble', 'webrtc', 'link', 'count', 'lists', 'common', 'serial', 'dm'
 ```
 
 These constants are re-exported from the individual domain packages. Use

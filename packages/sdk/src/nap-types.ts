@@ -432,6 +432,18 @@ export type {
   LinkInboundMessage,
   LinkNapMessage,
 } from '@napplet/nap/link';
+// COUNT NAP (runtime-mediated event counts)
+export type {
+  CountFilter,
+  CountOptions,
+  CountResult,
+  CountMessage,
+  CountQueryMessage,
+  CountQueryResultMessage,
+  CountOutboundMessage,
+  CountInboundMessage,
+  CountNapMessage,
+} from '@napplet/nap/count';
 // LISTS NAP (runtime-mediated NIP-51 list mutations)
 export type {
   ListErrorCode,

@@ -5,7 +5,7 @@
 
 `@napplet/nap` ships every active NAP domain (relay, storage, inc, keys, theme,
 media, notify, identity, config, resource, cvm, outbox, upload, intent, ble,
-webrtc, link, lists, common, serial)
+webrtc, link, count, lists, common, serial, dm)
 as independent, tree-shakable subpaths. It sits between the shim/sdk and
 [`@napplet/core`](./core) in the dependency graph.
 
@@ -53,9 +53,9 @@ import { notifySend } from '@napplet/nap/notify/sdk';
 ## Tree-shaking contract
 
 - Published with `sideEffects: false`.
-- The `exports` map declares **88 entry points**: 20 active domain barrels,
-  20 active-domain types entries, 20 shim entries, 20 sdk entries, plus the
-  `ifc` compatibility and `shell` foundational subpaths.
+- The `exports` map declares **92 entry points**: 22 active domain barrels,
+  22 active-domain types entries, 22 shim entries, 22 sdk entries, plus the
+  `ifc` compatibility wrapper.
 - A bundler importing only `@napplet/nap/relay/types` produces zero bytes from
   the other domains.
 
@@ -75,6 +75,9 @@ import { notifySend } from '@napplet/nap/notify/sdk';
   lifecycle.
 - **link** — shell-mediated external navigation via `open(url, options?)`. The
   shell owns prompting, policy, opener isolation, and browser context.
+- **count** — runtime-mediated event counts via `query(filters, options?)`. The
+  runtime owns relay COUNT support, indexing, aggregation, approximation, and
+  refusal policy.
 - **lists** — runtime-mediated NIP-51 list mutations via
   `supported`/`add`/`remove`; the runtime owns lookup, merge, encryption,
   signing, and publishing.

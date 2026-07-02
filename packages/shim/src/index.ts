@@ -101,6 +101,11 @@ import {
   open as linkOpen,
 } from '@napplet/nap/link/shim';
 import {
+  installCountShim,
+  handleCountMessage,
+  query as countQuery,
+} from '@napplet/nap/count/shim';
+import {
   installListsShim,
   handleListsMessage,
   supported as listsSupported,
@@ -163,6 +168,7 @@ const DOMAIN_ROUTERS: ReadonlyArray<readonly [string, DomainHandler]> = [
   ['ble.', handleBleMessage],
   ['webrtc.', handleWebrtcMessage],
   ['link.', handleLinkMessage],
+  ['count.', handleCountMessage],
   ['lists.', handleListsMessage],
   ['common.', handleCommonMessage],
   ['serial.', handleSerialMessage],
@@ -376,6 +382,12 @@ function createNappletGlobal(domains: ReadonlySet<NapDomain>): NappletGlobal {
     };
   }
 
+  if (domains.has('count')) {
+    napplet.count = {
+      query: countQuery,
+    };
+  }
+
   if (domains.has('lists')) {
     napplet.lists = {
       supported: listsSupported,
@@ -480,6 +492,9 @@ function installDomainShim(domain: NapDomain): void {
       return;
     case 'link':
       installLinkShim();
+      return;
+    case 'count':
+      installCountShim();
       return;
     case 'lists':
       installListsShim();

@@ -1,6 +1,6 @@
 # @napplet/nap
 
-> Every active napplet NAP domain (relay, storage, inc, keys, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent, ble, webrtc, link, lists, serial, common, dm) as layered subpath exports. The package name remains `@napplet/nap` for compatibility.
+> Every active napplet NAP domain (relay, storage, inc, keys, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent, ble, webrtc, link, count, lists, serial, common, dm) as layered subpath exports. The package name remains `@napplet/nap` for compatibility.
 
 ## Install
 
@@ -63,7 +63,7 @@ installRelayShim(nappletWindow, {
 });
 ```
 
-## 21 Active Domains
+## 22 Active Domains
 
 Each domain is an independent subpath. Barrel imports bundle types + shim installer + SDK helpers; granular subpaths isolate each surface.
 
@@ -86,6 +86,7 @@ Each domain is an independent subpath. Barrel imports bundle types + shim instal
 | ble | `@napplet/nap/ble` | `@napplet/nap/ble/types` | `@napplet/nap/ble/shim` | `@napplet/nap/ble/sdk` | Runtime-mediated Bluetooth LE/GATT sessions — `open`/`services`/`read`/`write`/`subscribe`/`unsubscribe`/`close`/`onEvent`; shell owns chooser UI, permissions, device handles, and lifecycle |
 | webrtc | `@napplet/nap/webrtc` | `@napplet/nap/webrtc/types` | `@napplet/nap/webrtc/shim` | `@napplet/nap/webrtc/sdk` | Runtime-mediated WebRTC data sessions — `open`/`send`/`close`/`onEvent`; shell owns signaling, SDP, ICE, and peer-connection lifecycle |
 | link | `@napplet/nap/link` | `@napplet/nap/link/types` | `@napplet/nap/link/shim` | `@napplet/nap/link/sdk` | Shell-mediated external link opening — `open(url, options?)`; shell owns navigation, policy, prompting, and opener isolation |
+| count | `@napplet/nap/count` | `@napplet/nap/count/types` | `@napplet/nap/count/shim` | `@napplet/nap/count/sdk` | Runtime-mediated event counts — `query(filters, options?)`; shell owns relay COUNT support, indexes, aggregation, approximation, and refusal policy |
 | lists | `@napplet/nap/lists` | `@napplet/nap/lists/types` | `@napplet/nap/lists/shim` | `@napplet/nap/lists/sdk` | Runtime-mediated NIP-51 list mutations — `supported`/`add`/`remove`; runtime owns lookup, merge, encryption, signing, and publishing |
 | common | `@napplet/nap/common` | `@napplet/nap/common/types` | `@napplet/nap/common/shim` | `@napplet/nap/common/sdk` | Common social actions — public NIP-19 helpers, profile lookup, follows, follow/unfollow, reactions, and reports; shell owns identity/signing/publishing |
 | serial | `@napplet/nap/serial` | `@napplet/nap/serial/types` | `@napplet/nap/serial/shim` | `@napplet/nap/serial/sdk` | Runtime-mediated serial device access — `open`/`write`/`close`/`onEvent`; shell owns permissions, port handles, streams, and lifecycle |
@@ -114,21 +115,20 @@ Each domain exposes up to three patterns (four including the barrel). Pick the s
 
 The `exports` map in `package.json` declares 92 entry points:
 
-- 21 domain barrels (`@napplet/nap/<domain>`)
-- 21 granular types entries (`@napplet/nap/<domain>/types`)
-- 21 granular shim entries (`@napplet/nap/<domain>/shim`)
-- 21 granular sdk entries (`@napplet/nap/<domain>/sdk`)
-- 2 compatibility/foundational barrels (`ifc`, `shell`) with matching `types`,
-  `shim`, and `sdk` entries
+- 22 domain barrels (`@napplet/nap/<domain>`)
+- 22 granular types entries (`@napplet/nap/<domain>/types`)
+- 22 granular shim entries (`@napplet/nap/<domain>/shim`)
+- 22 granular sdk entries (`@napplet/nap/<domain>/sdk`)
+- 1 deprecated compatibility wrapper (`ifc`) with matching `types`, `shim`,
+  and `sdk` entries
 
 Each entry maps to its own pre-built `.js` + `.d.ts` pair under `dist/<domain>/<surface>.{js,d.ts}`. No root `.` key exists, and there is no top-level `main`/`module`/`types` field — attempting `import '@napplet/nap'` fails with `ERR_PACKAGE_PATH_NOT_EXPORTED` by design.
 
 ## Compatibility Subpaths
 
-`shell` is foundational rather than a `NAP_DOMAINS` capability, and `ifc` is a
-deprecated compatibility wrapper for `inc`. They remain exported so older
-consumers keep working, but new napplet capability checks should use the active
-NAP domains.
+`ifc` is a deprecated compatibility wrapper for `inc`. It remains exported so
+older consumers keep working, but new napplet capability checks should use the
+active NAP domains.
 
 ## Resource NAP (v0.28.0)
 
@@ -206,7 +206,7 @@ import { mediaCreateSession } from '@napplet/nap/media/sdk';
 import type { MediaNapMessage } from '@napplet/nap/media/types';
 ```
 
-Domain barrels are also available at `@napplet/nap/relay`, `@napplet/nap/storage`, `@napplet/nap/inc`, `@napplet/nap/keys`, `@napplet/nap/theme`, `@napplet/nap/media`, `@napplet/nap/notify`, `@napplet/nap/identity`, `@napplet/nap/config`, `@napplet/nap/resource`, `@napplet/nap/cvm`, `@napplet/nap/outbox`, `@napplet/nap/upload`, `@napplet/nap/intent`, `@napplet/nap/ble`, `@napplet/nap/webrtc`, `@napplet/nap/link`, `@napplet/nap/lists`, `@napplet/nap/common`, `@napplet/nap/serial`, and `@napplet/nap/dm`.
+Domain barrels are also available at `@napplet/nap/relay`, `@napplet/nap/storage`, `@napplet/nap/inc`, `@napplet/nap/keys`, `@napplet/nap/theme`, `@napplet/nap/media`, `@napplet/nap/notify`, `@napplet/nap/identity`, `@napplet/nap/config`, `@napplet/nap/resource`, `@napplet/nap/cvm`, `@napplet/nap/outbox`, `@napplet/nap/upload`, `@napplet/nap/intent`, `@napplet/nap/ble`, `@napplet/nap/webrtc`, `@napplet/nap/link`, `@napplet/nap/count`, `@napplet/nap/lists`, `@napplet/nap/common`, `@napplet/nap/serial`, and `@napplet/nap/dm`.
 
 ## Optional Peer Dependency
 
