@@ -14,7 +14,7 @@
   },
   "scripts": {
     "build": "deno task build",
-    "type-check": "deno task build",
+    "type-check": "deno task check",
     "test:unit": "deno task test:unit"
   },
   "dependencies": {

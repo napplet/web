@@ -46,6 +46,12 @@ napplet keys delete --name default
 ## Development
 
 ```sh
-deno task build
+deno task check      # type-check
+deno task build      # type-check, then compile standalone binaries into dist/
 deno task test:unit
 ```
+
+`deno task build` runs `deno compile` for each supported target (Linux x86_64/aarch64,
+macOS x86_64/aarch64, Windows x86_64) and writes standalone `napplet-<target>` binaries to
+`dist/`, requiring no local Deno or Node install to run. Use `deno task compile:<target>` to
+build a single target.
