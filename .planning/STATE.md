@@ -301,6 +301,7 @@ Surfaced by research (informational — each belongs to a specific phase plan):
 | 260623-8j8 | implement bytesMany from updated NAP-RESOURCE | 2026-06-23 | 3bc214c | [260623-8j8-implement-bytesmany-from-updated-nap-res](./quick/260623-8j8-implement-bytesmany-from-updated-nap-res/) |
 | 260626-mt6 | Implement NAP-DM from napplet/naps PR #74 and prepare release PR with tests and changeset | 2026-06-26 | c451810 | [260626-mt6-implement-nap-dm-from-napplet-naps-74-an](./quick/260626-mt6-implement-nap-dm-from-napplet-naps-74-an/) |
 | 260626-nkv | Resolve napplet/web#91: guard relay query result events and open PR | 2026-06-26 | 9d23f6c | [260626-nkv-resolve-napplet-web-91-if-valid-guard-re](./quick/260626-nkv-resolve-napplet-web-91-if-valid-guard-re/) |
+| 260702-820 | Implement NAP-COUNT from napplet/naps PR #69 using current count.query surface | 2026-07-02 | 48a89ac5 | [260702-820-implement-nap-count](./quick/260702-820-implement-nap-count/) |
 
 Last session: 2026-04-21T20:46:00.000Z
 Stopped at: Completed 142-03-PLAN.md (Phase 142 TERMINAL-COMPLETE)

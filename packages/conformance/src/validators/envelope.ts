@@ -252,6 +252,9 @@ export const ENVELOPE_SPECS: Record<string, EnvelopeSpec> = {
   // ── link ─────────────────────────────────────────────────────────────────
   'link.open': { dir: 'out', fields: { ...ID, url: 'string' } },
   'link.open.result': { dir: 'in' },
+  // ── count ────────────────────────────────────────────────────────────────
+  'count.query': { dir: 'out', fields: { ...ID, filters: 'array' } },
+  'count.query.result': { dir: 'in' },
   // ── lists ────────────────────────────────────────────────────────────────
   'lists.supported': { dir: 'out', fields: { ...ID } },
   'lists.add': { dir: 'out', fields: { ...ID, list: 'object', items: 'array' } },

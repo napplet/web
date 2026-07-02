@@ -52,6 +52,7 @@ import type {
   CommonReportReason,
   CommonReportTarget,
 } from '../common.js';
+import type { CountFilter, CountOptions, CountResult } from '../count.js';
 
 /**
  * Native ContextVM bridge (NAP-CVM): MCP-over-Nostr access mediated by the shell.
@@ -320,6 +321,29 @@ export interface LinkApi {
    * @returns Promise resolving to the shell's open/deny status
   */
   open(url: string, options?: LinkOpenOptions): Promise<LinkOpenResult>;
+}
+
+/**
+ * Runtime-mediated event counts (NAP-COUNT): the napplet supplies one or more
+ * NIP-01 filters, and the runtime returns aggregate count metadata without
+ * sending matching event payloads. The runtime owns relay choice, NIP-45 COUNT
+ * support, indexes, caches, approximation, and refusal policy.
+ *
+ * @example
+ * ```ts
+ * if (window.napplet.count) {
+ *   const { count } = await window.napplet.count.query({ kinds: [7], '#e': [eventId] });
+ * }
+ * ```
+ */
+export interface CountApi {
+  /**
+   * Count events matching a non-empty NIP-01 filter array.
+   * @param filters  One NIP-01 filter or a non-empty array of filters
+   * @param options  Optional approximation and HyperLogLog hints
+   * @returns Promise resolving to the runtime count result
+   */
+  query(filters: CountFilter | CountFilter[], options?: CountOptions): Promise<CountResult>;
 }
 
 /**

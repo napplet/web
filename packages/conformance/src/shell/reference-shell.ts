@@ -234,6 +234,8 @@ const RESPONDERS: Record<string, Responder> = {
   'webrtc.close': (e) => ok({ type: 'webrtc.close.result', id: e.id }),
   // link
   'link.open': (e) => ok({ type: 'link.open.result', id: e.id, status: 'opened' }),
+  // count
+  'count.query': (e) => ok({ type: 'count.query.result', id: e.id, ok: true, count: 0 }),
   // lists
   'lists.supported': (e) => ok({ type: 'lists.supported.result', id: e.id, lists: [] }),
   'lists.add': (e) => ok({ type: 'lists.add.result', id: e.id, ok: true, added: 0, skipped: 0 }),
