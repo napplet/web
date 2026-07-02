@@ -1,5 +1,11 @@
 # @napplet/core
 
+## 0.25.0
+
+### Minor Changes
+
+- 284e100: Add the NAP-COUNT `count` domain with `count.query` / `count.query.result` envelope types, `window.napplet.count.query(...)`, `@napplet/nap/count` subpaths, SDK exports, and conformance validator/reference-shell coverage.
+
 ## 0.24.0
 
 ### Minor Changes

@@ -1,5 +1,17 @@
 # @napplet/shim
 
+## 0.26.0
+
+### Minor Changes
+
+- 284e100: Add the NAP-COUNT `count` domain with `count.query` / `count.query.result` envelope types, `window.napplet.count.query(...)`, `@napplet/nap/count` subpaths, SDK exports, and conformance validator/reference-shell coverage.
+
+### Patch Changes
+
+- Updated dependencies [284e100]
+  - @napplet/core@0.25.0
+  - @napplet/nap@0.25.0
+
 ## 0.25.0
 
 ### Minor Changes
