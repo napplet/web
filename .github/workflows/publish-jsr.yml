@@ -6,9 +6,10 @@ name: Publish to JSR
 # is linked under the @napplet scope on jsr.io.
 #
 # Trigger model:
-# - Fires on push to main (every Version Packages PR merge lands here, plus
-#   any direct main push). JSR's own version-already-published check makes
-#   re-runs a no-op when no new version is staged.
+# - Fires on push to main, but the publish job only runs for Version Packages
+#   merge commits. Ordinary feature PR merges still contain unconsumed
+#   changesets and may have stale jsr.json dependency pins until the generated
+#   Version Packages PR lands.
 # - Manual workflow_dispatch is also wired for one-off bootstrap publishes
 #   (e.g. the first @napplet/core@0.3.0 push after the scope was created).
 
@@ -23,6 +24,7 @@ concurrency:
 
 jobs:
   publish-jsr:
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'Version Packages')
     runs-on: ubuntu-latest
     permissions:
       contents: read

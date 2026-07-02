@@ -1,5 +1,9 @@
 name: Publish
 
+# This workflow must run on ordinary main pushes so changesets/action can create
+# or update the Version Packages PR. The registry publish path only runs after
+# that generated PR is merged, when the pending changesets have been consumed and
+# package/jsr versions have been updated.
 on:
   push:
     branches: [main]
