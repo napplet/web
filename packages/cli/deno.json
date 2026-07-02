@@ -6,7 +6,11 @@
   "exports": "./src/mod.ts",
   "nodeModulesDir": "none",
   "imports": {
-    "nostr-tools": "npm:nostr-tools@^2.23.3"
+    "nostr-tools": "npm:nostr-tools@^2.23.3",
+    "@scure/base": "npm:@scure/base@^1.2.6",
+    "@std/encoding": "jsr:@std/encoding@^1",
+    "@std/media-types": "jsr:@std/media-types@^1",
+    "@std/path": "jsr:@std/path@^1"
   },
   "tasks": {
     "dev": "deno run --allow-read --allow-write --allow-run --allow-env --allow-net src/cli.ts",

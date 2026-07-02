@@ -1,5 +1,8 @@
 import { SimplePool } from "nostr-tools/pool";
 import type { Event as NostrToolsEvent } from "nostr-tools/core";
+import { base64urlnopad } from "@scure/base";
+import { contentType } from "@std/media-types";
+import { extname } from "@std/path";
 import { joinPath } from "./path.ts";
 import type { NappletSigner } from "./signing.ts";
 import type { DeployManifestTemplate, ManifestFileMapping, SignedNostrEvent } from "./types.ts";
@@ -36,9 +39,17 @@ export interface RelayPublishResult {
   error?: string;
 }
 
+export interface UploadSummary {
+  servers: number;
+  serversFullyUploaded: number;
+  totalUploads: number;
+  failedUploads: number;
+}
+
 export interface NetworkDeployResult {
   uploaded: ServerUploadResult[];
   published: RelayPublishResult[];
+  uploadSummary: UploadSummary;
 }
 
 export interface NetworkDeployOptions {
@@ -70,11 +81,23 @@ export async function executeNetworkDeploy(
   }
   const files = await collectDeployFilePayloads(manifests);
   const uploaded = await uploadFilesToServers(files, config.blossomServers, signer, options);
-  const failedUploads = uploaded.filter((result) => !result.success);
-  if (failedUploads.length > 0) {
+  const uploadSummary = summarizeUploads(uploaded, config.blossomServers);
+  if (uploadSummary.failedUploads > 0) {
+    // Publish only when every server holds every blob, so each manifest `server` tag
+    // is a real mirror. Report how far we got so operators can tell a single failed
+    // mirror apart from a total upload failure.
+    console.error(
+      `[deploy] skipping relay publish: ${uploadSummary.serversFullyUploaded}/` +
+        `${uploadSummary.servers} servers fully uploaded ` +
+        `(${uploadSummary.failedUploads}/${uploadSummary.totalUploads} uploads failed).`,
+    );
+    for (const failed of uploaded.filter((result) => !result.success)) {
+      console.error(`[deploy]   ${failed.server} ${failed.file}: ${failed.error ?? "failed"}`);
+    }
     return {
       uploaded,
       published: [],
+      uploadSummary,
     };
   }
   const publish = options.publish ?? publishEventWithSimplePool;
@@ -82,7 +105,24 @@ export async function executeNetworkDeploy(
   for (const event of events) {
     published.push(...await publish(config.relays, event));
   }
-  return { uploaded, published };
+  return { uploaded, published, uploadSummary };
+}
+
+function summarizeUploads(
+  uploaded: readonly ServerUploadResult[],
+  servers: readonly string[],
+): UploadSummary {
+  const failedUploads = uploaded.filter((result) => !result.success).length;
+  const serversFullyUploaded = servers.filter((server) =>
+    uploaded.some((result) => result.server === server) &&
+    uploaded.every((result) => result.server !== server || result.success)
+  ).length;
+  return {
+    servers: servers.length,
+    serversFullyUploaded,
+    totalUploads: uploaded.length,
+    failedUploads,
+  };
 }
 
 export function networkDeploySucceeded(
@@ -128,13 +168,17 @@ export async function uploadFilesToServers(
   options: Pick<NetworkDeployOptions, "fetch" | "now"> = {},
 ): Promise<ServerUploadResult[]> {
   const fetcher = options.fetch ?? fetch;
-  const authHeader = await createUploadAuthorization(
-    signer,
-    [...new Set(files.map((file) => file.sha256))],
-    options.now,
-  );
+  const blobSha256s = [...new Set(files.map((file) => file.sha256))];
   const results: ServerUploadResult[] = [];
   for (const server of servers) {
+    // BUD-11: scope each token to the target server so a leaked header cannot be
+    // replayed against other Blossom servers before it expires.
+    const authHeader = await createUploadAuthorization(
+      signer,
+      blobSha256s,
+      options.now,
+      serverHost(server),
+    );
     for (const file of files) {
       results.push(await uploadFileToServer(file, server, authHeader, fetcher));
     }
@@ -146,20 +190,24 @@ export async function createUploadAuthorization(
   signer: NappletSigner,
   blobSha256s: readonly string[],
   now: () => number = () => Math.floor(Date.now() / 1000),
+  server?: string,
 ): Promise<string> {
   const createdAt = now();
+  const tags: string[][] = [
+    ["t", "upload"],
+    ...blobSha256s.map((hash) => ["x", hash]),
+    ["expiration", String(createdAt + UPLOAD_AUTH_TTL_SECONDS)],
+    ["client", "napplet"],
+  ];
+  if (server) tags.push(["server", server]);
   const signed = await signer.sign({
     kind: UPLOAD_AUTH_KIND,
     created_at: createdAt,
-    tags: [
-      ["t", "upload"],
-      ...blobSha256s.map((hash) => ["x", hash]),
-      ["expiration", String(createdAt + UPLOAD_AUTH_TTL_SECONDS)],
-      ["client", "napplet"],
-    ],
+    tags,
     content: "Upload blobs via napplet",
   });
-  return `Nostr ${btoa(JSON.stringify(signed))}`;
+  // BUD-11: the Nostr auth scheme uses base64url without padding ("mirroring JWT").
+  return `Nostr ${base64urlnopad.encode(new TextEncoder().encode(JSON.stringify(signed)))}`;
 }
 
 export async function publishEventWithSimplePool(
@@ -206,6 +254,8 @@ async function uploadFileToServer(
   const blobUrl = `${base}${file.sha256}`;
   const uploadUrl = `${base}upload`;
   try {
+    // BUD-01 makes HEAD /<sha256> a SHOULD, so only a positive hit lets us skip the
+    // upload; any other status (or a thrown error) falls through to PUT.
     const preflight = await fetcher(blobUrl, { method: "HEAD" });
     if (preflight.ok) {
       return {
@@ -216,9 +266,6 @@ async function uploadFileToServer(
         skipped: true,
       };
     }
-    if (preflight.status !== 404) {
-      return failure(server, file, `HEAD ${blobUrl} returned HTTP ${preflight.status}`);
-    }
   } catch {
     // Fall through to PUT; some Blossom servers do not support unauthenticated HEAD checks.
   }
@@ -228,24 +275,52 @@ async function uploadFileToServer(
     headers: {
       Authorization: authHeader,
       "Content-Type": file.contentType,
+      // BUD-02: lets the server reject a mismatched body early (409) before storing it.
+      "X-SHA-256": file.sha256,
     },
     body: new Blob([copyBytes(file.data).buffer], { type: file.contentType }),
   });
-  if (response.ok) {
-    return {
+  if (!response.ok) {
+    const body = await response.text().catch(() => "");
+    return failure(
       server,
-      file: file.path,
-      sha256: file.sha256,
-      success: true,
-      skipped: false,
-    };
+      file,
+      `PUT ${uploadUrl} returned HTTP ${response.status}${body ? `: ${body}` : ""}`,
+    );
   }
-  const body = await response.text().catch(() => "");
-  return failure(
+
+  // BUD-02: a 200/201 upload returns a blob descriptor; confirm the server stored the
+  // exact blob we asked for before treating the upload as successful.
+  const descriptorError = await verifyBlobDescriptor(response, file.sha256);
+  if (descriptorError) return failure(server, file, `PUT ${uploadUrl} ${descriptorError}`);
+  return {
     server,
-    file,
-    `PUT ${uploadUrl} returned HTTP ${response.status}${body ? `: ${body}` : ""}`,
-  );
+    file: file.path,
+    sha256: file.sha256,
+    success: true,
+    skipped: false,
+  };
+}
+
+async function verifyBlobDescriptor(
+  response: Response,
+  expectedSha256: string,
+): Promise<string | undefined> {
+  let descriptor: unknown;
+  try {
+    descriptor = await response.json();
+  } catch {
+    return "returned an unparseable blob descriptor";
+  }
+  if (typeof descriptor !== "object" || descriptor === null) {
+    return "returned an invalid blob descriptor";
+  }
+  const sha256 = (descriptor as { sha256?: unknown }).sha256;
+  if (typeof sha256 !== "string") return "blob descriptor is missing a sha256";
+  if (sha256.toLowerCase() !== expectedSha256) {
+    return `stored sha256 ${sha256} does not match expected ${expectedSha256}`;
+  }
+  return undefined;
 }
 
 function failure(server: string, file: DeployFilePayload, error: string): ServerUploadResult {
@@ -264,13 +339,20 @@ function copyBytes(bytes: Uint8Array): Uint8Array<ArrayBuffer> {
 }
 
 function contentTypeForPath(path: string): string {
-  if (path.endsWith(".html")) return "text/html; charset=utf-8";
-  if (path.endsWith(".js")) return "text/javascript; charset=utf-8";
-  if (path.endsWith(".css")) return "text/css; charset=utf-8";
-  if (path.endsWith(".json")) return "application/json; charset=utf-8";
-  if (path.endsWith(".svg")) return "image/svg+xml";
-  if (path.endsWith(".png")) return "image/png";
-  if (path.endsWith(".jpg") || path.endsWith(".jpeg")) return "image/jpeg";
-  if (path.endsWith(".webp")) return "image/webp";
+  const extension = extname(path);
+  const type = extension ? contentType(extension) : undefined;
+  if (type) return type;
+  console.warn(
+    `[deploy] no known content type for "${path}"; uploading as application/octet-stream`,
+  );
   return "application/octet-stream";
+}
+
+function serverHost(server: string): string {
+  try {
+    return new URL(server).host.toLowerCase();
+  } catch {
+    // Fall back to the raw value; config validation is responsible for URL shape.
+    return server.toLowerCase();
+  }
 }
