@@ -47,7 +47,7 @@ Deno.test("computeAggregateHash is order-independent and uses only path mappings
   assertEquals(first.length, 64);
 });
 
-Deno.test("createSiteManifestTemplate builds NIP-5A named and root manifests", async () => {
+Deno.test("createSiteManifestTemplate builds NIP-5D named and root manifests", async () => {
   const candidate: NappletCandidate = {
     name: "feed",
     dir: "/tmp/feed/dist",
@@ -205,7 +205,7 @@ Deno.test("createDeployManifestTemplates preserves plugin-emitted requires tags"
   });
 });
 
-Deno.test("siteAddress renders root and named NIP-5A addresses", () => {
+Deno.test("siteAddress renders root and named NIP-5D addresses", () => {
   assertEquals(siteAddress({ kind: NAPPLET_KIND_ROOT, pubkey }), `${NAPPLET_KIND_ROOT}:${pubkey}:`);
   assertEquals(
     siteAddress({ kind: NAPPLET_KIND_NAMED, pubkey, dTag: "feed" }),

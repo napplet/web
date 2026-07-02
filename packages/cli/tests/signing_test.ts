@@ -10,7 +10,7 @@ import {
   resolveSigningMethod,
   signDeployManifestTemplates,
 } from "../src/signing.ts";
-import { NAPPLET_KIND_ROOT, type NappletCandidate } from "../src/types.ts";
+import { NAPPLET_KIND_ROOT, NAPPLET_KIND_SNAPSHOT, type NappletCandidate } from "../src/types.ts";
 import { assertEquals } from "./assert.ts";
 
 const privateKeyHex = "01".padStart(64, "0");
@@ -87,7 +87,7 @@ Deno.test("signDeployManifestTemplates signs only built templates", async () => 
       },
     },
     {
-      item: { candidate, target: "snapshot", kind: 5128 },
+      item: { candidate, target: "snapshot", kind: NAPPLET_KIND_SNAPSHOT },
       files: [{ path: "/index.html", sha256: "a".repeat(64) }],
       aggregateHash: "b".repeat(64),
       skippedReason: "needs pubkey",

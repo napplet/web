@@ -75,8 +75,8 @@ napplet deploy --sec nsec1…             # upload blobs and publish manifests
 ```
 
 The named-site `d` tag comes from `--name` / `config.named`, falling back to `default` when unset.
-Use `--root` to publish the singular replaceable root site (kind 15128) instead of a named site, and
-`--snapshot` to also emit an immutable snapshot (kind 5128) companion.
+Use `--root` to publish the singular replaceable root napplet (kind 15129) instead of a named napplet, and
+`--snapshot` to also emit an immutable snapshot (kind 5129) companion.
 
 ### Napplet monorepo
 
