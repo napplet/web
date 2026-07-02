@@ -1,0 +1,35 @@
+{
+  "name": "@napplet/cli",
+  "version": "0.0.0",
+  "description": "Deno CLI for discovering, testing, and deploying napplets",
+  "license": "MIT",
+  "exports": "./src/mod.ts",
+  "nodeModulesDir": "none",
+  "imports": {
+    "nostr-tools": "npm:nostr-tools@^2.23.3",
+    "@scure/base": "npm:@scure/base@^1.2.6",
+    "@std/encoding": "jsr:@std/encoding@^1",
+    "@std/media-types": "jsr:@std/media-types@^1",
+    "@std/path": "jsr:@std/path@^1"
+  },
+  "tasks": {
+    "dev": "deno run --allow-read --allow-write --allow-run --allow-env --allow-net src/cli.ts",
+    "check": "deno check src/cli.ts src/mod.ts",
+    "build": "deno task check && deno task compile:linux-x86_64 && deno task compile:linux-aarch64 && deno task compile:darwin-x86_64 && deno task compile:darwin-aarch64 && deno task compile:windows-x86_64",
+    "compile:linux-x86_64": "deno compile --allow-read --allow-write --allow-run --allow-env --allow-net --target x86_64-unknown-linux-gnu --output dist/napplet-linux-x86_64 src/cli.ts",
+    "compile:linux-aarch64": "deno compile --allow-read --allow-write --allow-run --allow-env --allow-net --target aarch64-unknown-linux-gnu --output dist/napplet-linux-aarch64 src/cli.ts",
+    "compile:darwin-x86_64": "deno compile --allow-read --allow-write --allow-run --allow-env --allow-net --target x86_64-apple-darwin --output dist/napplet-darwin-x86_64 src/cli.ts",
+    "compile:darwin-aarch64": "deno compile --allow-read --allow-write --allow-run --allow-env --allow-net --target aarch64-apple-darwin --output dist/napplet-darwin-aarch64 src/cli.ts",
+    "compile:windows-x86_64": "deno compile --allow-read --allow-write --allow-run --allow-env --allow-net --target x86_64-pc-windows-msvc --output dist/napplet-windows-x86_64.exe src/cli.ts",
+    "test:unit": "deno test --allow-read --allow-write --allow-run --allow-env tests/"
+  },
+  "fmt": {
+    "indentWidth": 2,
+    "lineWidth": 100,
+    "semiColons": true,
+    "singleQuote": false
+  },
+  "test": {
+    "include": ["tests/"]
+  }
+}

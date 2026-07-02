@@ -34,11 +34,19 @@ export interface Nip5aArchetypeContract {
   eventKinds?: number[];
 }
 
+export interface Nip5aRequiresOptions {
+  infer?: boolean;
+  explicit?: string[];
+  mode?: 'warn' | 'error';
+}
+
+export type Nip5aRequiresOption = string[] | Nip5aRequiresOptions;
+
 export interface Nip5aManifestOptions {
   /** Napplet type/dtag identifier (e.g., 'feed', 'chat'). Used as the NIP-5A 'd' tag and injected as napplet-type meta attribute. */
   nappletType: string;
-  /** Service dependencies this napplet requires (e.g., ['audio', 'notifications']). Optional. */
-  requires?: string[];
+  /** NAP domains this napplet requires, optionally inferred from source usage. */
+  requires?: Nip5aRequiresOption;
   /**
    * Artifact output contract for production builds.
    *
@@ -100,6 +108,8 @@ export interface ManifestPluginState {
   artifactMode: Nip5aArtifactMode;
   resolvedSchema: NappletConfigSchema | null;
   resolvedSchemaSource: string | null;
+  inferredRequires: Set<string>;
+  reportedMissingRequires: Set<string>;
 }
 
 /** Internal: unsigned manifest template carrying the precomputed aggregateHash. */

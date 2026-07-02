@@ -25,9 +25,11 @@ async function runCloseBundle(
   options: Nip5aManifestOptions,
   fixture: { root: string; dist: string },
   viteConfig: Record<string, unknown> = {},
-): Promise<void> {
+  sources: Array<{ id: string; code: string }> = [],
+): Promise<{ warnings: string[] }> {
   const previousPrivkey = process.env.VITE_DEV_PRIVKEY_HEX;
   process.env.VITE_DEV_PRIVKEY_HEX = TEST_PRIVKEY;
+  const warnings: string[] = [];
   try {
     const plugin = nip5aManifest(options);
     await (plugin.configResolved as (config: unknown) => unknown)?.({
@@ -35,7 +37,18 @@ async function runCloseBundle(
       root: fixture.root,
       build: { outDir: fixture.dist },
     });
+    if (typeof plugin.transform === 'function') {
+      const context = {
+        warn(message: string) {
+          warnings.push(message);
+        },
+      };
+      for (const source of sources) {
+        await plugin.transform.call(context as never, source.code, source.id);
+      }
+    }
     await (plugin.closeBundle as () => unknown)?.();
+    return { warnings };
   } finally {
     if (previousPrivkey === undefined) {
       delete process.env.VITE_DEV_PRIVKEY_HEX;
@@ -92,7 +105,7 @@ describe('nip5aManifest artifact modes', () => {
 
     await expect(
       runCloseBundle({ nappletType: 'inline-default' }, fixture),
-    ).resolves.toBeUndefined();
+    ).resolves.toMatchObject({ warnings: [] });
 
     const html = fs.readFileSync(path.join(fixture.dist, 'index.html'), 'utf-8');
     expect(html).toContain('<script type="module">console.log("inline")</script>');
@@ -342,5 +355,129 @@ describe('nip5aManifest artifact modes', () => {
         ['x', manifest.aggregateHash, 'aggregate'],
       ]);
     }
+  });
+
+  it('infers requires tags from static NAP imports', async () => {
+    const fixture = makeFixture();
+    fs.writeFileSync(path.join(fixture.dist, 'index.html'), '<!doctype html>');
+
+    await runCloseBundle(
+      { nappletType: 'infer-import', requires: { infer: true } },
+      fixture,
+      {},
+      [{ id: path.join(fixture.root, 'src/main.ts'), code: "import { relayPublish } from '@napplet/nap/relay';\nrelayPublish({} as never);" }],
+    );
+
+    const manifest = readManifest(fixture.dist);
+    expect(manifest.tags).toContainEqual(['requires', 'relay']);
+  });
+
+  it('infers requires tags from SDK subpath imports and direct window.napplet usage', async () => {
+    const fixture = makeFixture();
+    fs.writeFileSync(path.join(fixture.dist, 'index.html'), '<!doctype html>');
+
+    await runCloseBundle(
+      { nappletType: 'infer-mixed', requires: { infer: true } },
+      fixture,
+      {},
+      [{
+        id: path.join(fixture.root, 'src/main.ts'),
+        code: [
+          "import { storageGetItem } from '@napplet/nap/storage';",
+          'window.napplet.identity.getPublicKey();',
+        ].join('\n'),
+      }],
+    );
+
+    const manifest = readManifest(fixture.dist);
+    expect(manifest.tags.filter((tag) => tag[0] === 'requires')).toEqual([
+      ['requires', 'identity'],
+      ['requires', 'storage'],
+    ]);
+  });
+
+  it('does not infer requirements from type-only imports or dynamic window access', async () => {
+    const fixture = makeFixture();
+    fs.writeFileSync(path.join(fixture.dist, 'index.html'), '<!doctype html>');
+
+    await runCloseBundle(
+      { nappletType: 'infer-none', requires: { infer: true } },
+      fixture,
+      {},
+      [{
+        id: path.join(fixture.root, 'src/main.ts'),
+        code: [
+          "import type { RelayRequest } from '@napplet/nap/relay/types';",
+          "const domain = 'identity';",
+          'window.napplet[domain];',
+        ].join('\n'),
+      }],
+    );
+
+    const manifest = readManifest(fixture.dist);
+    expect(manifest.tags.some((tag) => tag[0] === 'requires')).toBe(false);
+  });
+
+  it('preserves explicit array requirements without inference', async () => {
+    const fixture = makeFixture();
+    fs.writeFileSync(path.join(fixture.dist, 'index.html'), '<!doctype html>');
+
+    await runCloseBundle(
+      { nappletType: 'explicit-requires', requires: ['relay'] },
+      fixture,
+      {},
+      [{ id: path.join(fixture.root, 'src/main.ts'), code: "import '@napplet/nap/storage';" }],
+    );
+
+    const manifest = readManifest(fixture.dist);
+    expect(manifest.tags.filter((tag) => tag[0] === 'requires')).toEqual([['requires', 'relay']]);
+  });
+
+  it('dedupes explicit and inferred requirements', async () => {
+    const fixture = makeFixture();
+    fs.writeFileSync(path.join(fixture.dist, 'index.html'), '<!doctype html>');
+
+    await runCloseBundle(
+      { nappletType: 'dedupe-requires', requires: { infer: true, explicit: ['relay'] } },
+      fixture,
+      {},
+      [{ id: path.join(fixture.root, 'src/main.ts'), code: "import '@napplet/nap/relay';" }],
+    );
+
+    const manifest = readManifest(fixture.dist);
+    expect(manifest.tags.filter((tag) => tag[0] === 'requires')).toEqual([['requires', 'relay']]);
+  });
+
+  it('warns but builds when inference finds a requirement missing from explicit config', async () => {
+    const fixture = makeFixture();
+    fs.writeFileSync(path.join(fixture.dist, 'index.html'), '<!doctype html>');
+
+    const result = await runCloseBundle(
+      { nappletType: 'warn-requires', requires: { infer: true, explicit: ['relay'], mode: 'warn' } },
+      fixture,
+      {},
+      [{ id: path.join(fixture.root, 'src/main.ts'), code: "import '@napplet/nap/storage';" }],
+    );
+
+    expect(result.warnings.some((warning) => warning.includes('missing explicit requires'))).toBe(true);
+    const manifest = readManifest(fixture.dist);
+    expect(manifest.tags.filter((tag) => tag[0] === 'requires')).toEqual([
+      ['requires', 'relay'],
+      ['requires', 'storage'],
+    ]);
+  });
+
+  it('fails when inference finds a missing explicit requirement in error mode', async () => {
+    const fixture = makeFixture();
+    fs.writeFileSync(path.join(fixture.dist, 'index.html'), '<!doctype html>');
+
+    await expect(
+      runCloseBundle(
+        { nappletType: 'error-requires', requires: { infer: true, explicit: [], mode: 'error' } },
+        fixture,
+        {},
+        [{ id: path.join(fixture.root, 'src/main.ts'), code: "import '@napplet/nap/relay';" }],
+      ),
+    ).rejects.toThrow('missing explicit requires');
   });
 });

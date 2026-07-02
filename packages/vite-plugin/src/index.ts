@@ -29,9 +29,14 @@ import {
   resolvePluginConfig,
   writeBundleManifest,
 } from './manifest.js';
+import {
+  addInferredRequirements,
+  inferRequirementsFromSource,
+  reportRequirementDiagnostics,
+} from './requirements.js';
 
 export { NAPPLET_KIND_NAMED, NAPPLET_KIND_ROOT, NAPPLET_KIND_SNAPSHOT } from './types.js';
-export type { Nip5aArtifactMode, Nip5aManifestOptions } from './types.js';
+export type { Nip5aArtifactMode, Nip5aManifestOptions, Nip5aRequiresOptions } from './types.js';
 
 /**
  * Create the NIP-5A manifest Vite plugin.
@@ -55,6 +60,8 @@ export function nip5aManifest(options: Nip5aManifestOptions): Plugin {
     artifactMode: options.artifactMode ?? 'external-assets',
     resolvedSchema: null,
     resolvedSchemaSource: null,
+    inferredRequires: new Set(),
+    reportedMissingRequires: new Set(),
   };
 
   return {
@@ -69,11 +76,18 @@ export function nip5aManifest(options: Nip5aManifestOptions): Plugin {
       await resolvePluginConfig(options, state, config);
     },
 
+    transform(code: string, id: string) {
+      addInferredRequirements(state, inferRequirementsFromSource(code, id));
+      reportRequirementDiagnostics(options.requires, state, (message) => this.warn(message));
+      return null;
+    },
+
     transformIndexHtml(_html: string, ctx?: { server?: unknown }): IndexHtmlTransformResult {
       return buildIndexHtmlTags(options, state, !!ctx?.server);
     },
 
     async closeBundle() {
+      reportRequirementDiagnostics(options.requires, state, (message) => this.warn(message));
       await writeBundleManifest(options, state);
     },
   };

@@ -15,6 +15,7 @@ import { NAPPLET_KIND_NAMED } from './types.js';
 import { computeAggregateHash, sha256File, walkDir } from './hashing.js';
 import { discoverConfigSchema, validateConfigSchema } from './config-schema.js';
 import { inlineSingleFileBuildAssets } from './html.js';
+import { resolvedRequirements } from './requirements.js';
 
 /**
  * Resolve all per-build plugin state in the `configResolved` hook: out dir,
@@ -76,10 +77,11 @@ export function buildIndexHtmlTags(
     },
   ];
 
-  if (options.requires && options.requires.length > 0) {
+  const requires = resolvedRequirements(options.requires, state);
+  if (requires.length > 0) {
     tags.push({
       tag: 'meta',
-      attrs: { name: 'napplet-requires', content: options.requires.join(',') },
+      attrs: { name: 'napplet-requires', content: requires.join(',') },
       injectTo: 'head' as const,
     });
   }
@@ -148,7 +150,7 @@ function buildManifestTemplate(
   const pathTags = pathPairs.map(([hash, absPath]) => ['path', absPath, hash]);
   const configTags =
     state.resolvedSchema !== null ? [['config', JSON.stringify(state.resolvedSchema)]] : [];
-  const requiresTags = (options.requires ?? []).map((name) => ['requires', name]);
+  const requiresTags = resolvedRequirements(options.requires, state).map((name) => ['requires', name]);
   // Archetype tags (NAAT, napplet/naps `ARCHETYPES.md`): one
   // `['archetype', slug, protocol, ...constraints]` per contract. Like
   // config/requires they are NOT passed to computeAggregateHash — only pathPairs
