@@ -63,3 +63,65 @@ Deno.test("createDeployPlan creates snapshot companions for root and named deplo
     dTag: "feed",
   });
 });
+
+const feed: NappletCandidate = { name: "feed", dir: "/repo/feed", indexHtml: "/repo/feed/index.html" };
+const wiki: NappletCandidate = { name: "wiki", dir: "/repo/wiki", indexHtml: "/repo/wiki/index.html" };
+
+Deno.test("createDeployPlan monorepo mode uses each folder name as its own d tag", () => {
+  const plan = createDeployPlan(defaultConfig(), [feed, wiki], {}, { traverse: true });
+  assertEquals(plan.items.map((item) => [item.target, item.dTag ?? null]), [
+    ["named", "feed"],
+    ["named", "wiki"],
+  ]);
+});
+
+Deno.test("createDeployPlan monorepo mode does not cross-product candidates and names", () => {
+  const plan = createDeployPlan(
+    defaultConfig({ named: ["feed", "wiki"] }),
+    [feed, wiki],
+    {},
+    { traverse: true },
+  );
+  // Each folder deploys once under its own name, not four (candidates x names) items.
+  assertEquals(plan.items.map((item) => item.dTag), ["feed", "wiki"]);
+});
+
+Deno.test("createDeployPlan monorepo name filter selects matching folders", () => {
+  const plan = createDeployPlan(defaultConfig(), [feed, wiki], { names: ["wiki"] }, {
+    traverse: true,
+  });
+  assertEquals(plan.items.map((item) => [item.target, item.dTag ?? null]), [["named", "wiki"]]);
+});
+
+Deno.test("createDeployPlan monorepo mode rejects folder names that are invalid d tags", () => {
+  const bad: NappletCandidate = {
+    name: "My_Feed",
+    dir: "/repo/My_Feed",
+    indexHtml: "/repo/My_Feed/index.html",
+  };
+  let threw = false;
+  try {
+    createDeployPlan(defaultConfig(), [bad], {}, { traverse: true });
+  } catch (error) {
+    threw = true;
+    assertEquals(error instanceof Error && error.message.includes("My_Feed"), true);
+  }
+  assertEquals(threw, true);
+});
+
+Deno.test("createDeployPlan monorepo mode carries snapshot companions per folder", () => {
+  const plan = createDeployPlan(
+    defaultConfig({ named: ["feed", "wiki"] }),
+    [feed, wiki],
+    { snapshot: true },
+    { traverse: true },
+  );
+  assertEquals(plan.items.map((item) => [item.target, item.dTag ?? null]), [
+    ["named", "feed"],
+    ["snapshot", null],
+    ["named", "wiki"],
+    ["snapshot", null],
+  ]);
+  assertEquals(plan.items[1].snapshotSource?.dTag, "feed");
+  assertEquals(plan.items[3].snapshotSource?.dTag, "wiki");
+});

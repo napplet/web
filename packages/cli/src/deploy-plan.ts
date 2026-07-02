@@ -11,16 +11,33 @@ import {
   type SnapshotDeploySource,
 } from "./types.ts";
 import { configPath } from "./config.ts";
+import { NAMED_SITE_D_TAG_PATTERN } from "./manifest.ts";
 
 export function createDeployPlan(
   config: NappletConfig,
   candidates: NappletCandidate[],
   selection: Partial<DeploySelection> = {},
-  options: { cwd?: string; configPath?: string } = {},
+  options: { cwd?: string; configPath?: string; traverse?: boolean } = {},
 ): DeployPlan {
-  const resolvedSelection = normalizeSelection(config, selection);
   const items: DeployPlanItem[] = [];
+  if (options.traverse) {
+    planMonorepoDeploys(config, candidates, selection, items);
+  } else {
+    planSingleDeploys(config, candidates, selection, items);
+  }
+  return {
+    configPath: options.configPath ?? configPath(options.cwd),
+    items,
+  };
+}
 
+function planSingleDeploys(
+  config: NappletConfig,
+  candidates: NappletCandidate[],
+  selection: Partial<DeploySelection>,
+  items: DeployPlanItem[],
+): void {
+  const resolvedSelection = normalizeSelection(config, selection);
   for (const candidate of candidates) {
     if (resolvedSelection.root) {
       pushDeployItem(items, candidate, item(candidate, "root"), resolvedSelection.snapshot);
@@ -29,11 +46,61 @@ export function createDeployPlan(
       pushDeployItem(items, candidate, item(candidate, "named", name), resolvedSelection.snapshot);
     }
   }
+}
 
-  return {
-    configPath: options.configPath ?? configPath(options.cwd),
-    items,
-  };
+// In a monorepo each discovered napplet deploys under its own folder name as the d tag,
+// rather than the cross product of every candidate against a shared name list. A
+// configured/`--name` list acts as a filter selecting which folders to deploy.
+function planMonorepoDeploys(
+  config: NappletConfig,
+  candidates: NappletCandidate[],
+  selection: Partial<DeploySelection>,
+  items: DeployPlanItem[],
+): void {
+  const resolved = resolveMonorepoSelection(config, selection);
+  for (const candidate of candidates) {
+    if (resolved.root) {
+      pushDeployItem(items, candidate, item(candidate, "root"), resolved.snapshot);
+    }
+    if (!resolved.named) continue;
+    const dTag = candidate.name;
+    if (resolved.nameFilter.length > 0 && !resolved.nameFilter.includes(dTag)) continue;
+    assertFolderDTag(candidate);
+    pushDeployItem(items, candidate, item(candidate, "named", dTag), resolved.snapshot);
+  }
+}
+
+interface MonorepoSelection {
+  root: boolean;
+  snapshot: boolean;
+  named: boolean;
+  nameFilter: string[];
+}
+
+function resolveMonorepoSelection(
+  config: NappletConfig,
+  selection: Partial<DeploySelection>,
+): MonorepoSelection {
+  const nameFilter = unique(selection.names ?? config.named ?? []);
+  const explicitNames = selection.names !== undefined;
+  const explicitTarget = selection.root !== undefined || explicitNames ||
+    selection.snapshot !== undefined;
+  const root = selection.root ?? (!explicitTarget && config.defaultTarget === "root");
+  const snapshot = selection.snapshot ?? (!explicitTarget && config.defaultTarget === "snapshot");
+  const named = explicitNames ||
+    (!explicitTarget && config.defaultTarget === "named") ||
+    nameFilter.length > 0;
+  return { root, snapshot, named, nameFilter };
+}
+
+function assertFolderDTag(candidate: NappletCandidate): void {
+  const name = candidate.name;
+  if (!NAMED_SITE_D_TAG_PATTERN.test(name) || name.endsWith("-")) {
+    throw new Error(
+      `Napplet folder "${name}" (${candidate.dir}) is not a valid d tag; folder names ` +
+        `used as d tags must match ^[a-z0-9-]{1,13}$ and not end with '-'`,
+    );
+  }
 }
 
 export function normalizeSelection(

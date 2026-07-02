@@ -6,6 +6,9 @@ This first package slice provides:
 
 - `napplet init` for a singular `.napplet/config.json`.
 - `napplet discover --all` for traversing configured roots and staging built napplet directories.
+  In this monorepo mode each discovered napplet deploys under its own folder name as the named-site
+  `d` tag; `--name`/`config.named` then act as a filter selecting which folders to deploy. Folder
+  names used as `d` tags must be valid (`^[a-z0-9-]{1,13}$`, no trailing `-`).
 - `napplet deploy` for root, named, and snapshot deploy planning, Blossom uploads, relay publish,
   and local or `nbunksec` event signing.
 - `napplet debug` for read-only JSON diagnostics covering config, discovery, deploy-plan,

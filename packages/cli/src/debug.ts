@@ -88,6 +88,7 @@ export async function createDebugReport(
   const plan = createDeployPlan(config, candidates, options.selection, {
     cwd,
     configPath: options.configPath,
+    traverse: options.traverse,
   });
   const manifests = await createDeployManifestTemplates(plan, config);
 

@@ -176,6 +176,7 @@ async function commandDeploy(argv: string[]): Promise<number> {
   });
   const plan = createDeployPlan(config, candidates, selection, {
     configPath: first(flags.values.get("config")),
+    traverse: flags.boolean.has("all"),
   });
 
   const signer = await maybeCreateSigner(signing, flags);
