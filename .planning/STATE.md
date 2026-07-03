@@ -4,7 +4,7 @@ milestone: v0.34.0
 milestone_name: NIP-5D Runtime Injection
 status: planning
 last_updated: "2026-07-03T12:21:03+02:00"
-last_activity: 2026-07-03 - Completed quick task 260703-jrx: Finish RelayEventResult sidecar doc cleanup
+last_activity: 2026-07-03 - Completed quick task 260703-ver: Chase NAP-OUTBOX eose removal
 progress:
   total_phases: 0
   completed_phases: 0
@@ -30,7 +30,7 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 Phase: Not started (defining requirements)
 Plan: —
 Status: Defining requirements
-Last activity: 2026-07-03 — Quick task 260703-jrx completed; stale live policy/test-fixture references now use `RelayEventResult.sidecar.resources` and `{ result: { event } }`.
+Last activity: 2026-07-03 — Quick task 260703-ver completed; NAP-OUTBOX no longer exposes caller-selected `strategy`, subscribe `live`, or `outbox.eose` lifecycle surface.
 
 ### v0.34.0 roadmap
 
@@ -214,6 +214,7 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 | 260703-ghg | Align napplet packages with NAP RelayEventResult sidecars and updated outbox stream lifecycle | 2026-07-03 | 2ce3e3f2 | [260703-ghg-align-napplet-packages-with-nap-relayeve](./quick/260703-ghg-align-napplet-packages-with-nap-relayeve/) |
 | 260703-guj | Ignore Playwright MCP local artifacts | 2026-07-03 | f9f34992 | [260703-guj-ignore-playwright-mcp-local-artifacts](./quick/260703-guj-ignore-playwright-mcp-local-artifacts/) |
 | 260703-jrx | Finish RelayEventResult sidecar doc cleanup | 2026-07-03 | e1aceaed | [260703-jrx-finish-relayeventresult-sidecar-doc-cleanup](./quick/260703-jrx-finish-relayeventresult-sidecar-doc-cleanup/) |
+| 260703-ver | Chase NAP-OUTBOX eose removal | 2026-07-03 | 851d7ba2 | [260703-ver-chase-nap-outbox-eose-removal](./quick/260703-ver-chase-nap-outbox-eose-removal/) |
 
 ## Deferred Items
 

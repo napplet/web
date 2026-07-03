@@ -1,13 +1,9 @@
 import type { NostrEvent, RelayEventResult } from './nostr.js';
 
-/** Relay-selection strategy for outbox-model routing (NAP-OUTBOX). */
-export type OutboxStrategy = 'outbox' | 'inbox' | 'auto';
-
 /** Options for a one-shot outbox query. */
 export interface OutboxQueryOptions {
   authors?: string[];
   relays?: string[];
-  strategy?: OutboxStrategy;
   limit?: number;
   timeoutMs?: number;
 }
@@ -16,20 +12,16 @@ export interface OutboxQueryOptions {
 export interface OutboxEventOptions {
   author?: string;
   relays?: string[];
-  strategy?: OutboxStrategy;
   timeoutMs?: number;
 }
 
 /** Options for a live outbox subscription. */
-export interface OutboxSubscribeOptions extends OutboxQueryOptions {
-  live?: boolean;
-}
+export interface OutboxSubscribeOptions extends OutboxQueryOptions {}
 
 /** Options for an outbox publish. */
 export interface OutboxPublishOptions {
   relays?: string[];
   targetAuthors?: string[];
-  strategy?: OutboxStrategy;
 }
 
 /** A read/write target for outbox relay-plan resolution. */
@@ -37,7 +29,6 @@ export interface OutboxTarget {
   authors?: string[];
   pubkey?: string;
   direction?: 'read' | 'write';
-  strategy?: OutboxStrategy;
 }
 
 /** The relay plan the shell would use for an outbox target. */

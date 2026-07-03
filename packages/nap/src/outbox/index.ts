@@ -22,7 +22,6 @@
 export { DOMAIN } from './types.js';
 
 export type {
-  OutboxStrategy,
   RelayEventResult,
   OutboxEventOptions,
   OutboxQueryOptions,

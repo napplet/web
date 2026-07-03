@@ -174,7 +174,7 @@ if (window.napplet?.outbox) {
   await window.napplet.outbox.getEvent('ev1…', { author: 'ab12…' });
   const { events } = await window.napplet.outbox.query(
     [{ authors: ['ab12…'], kinds: [1], limit: 20 }],
-    { strategy: 'outbox' },
+    { authors: ['ab12…'], timeoutMs: 3000 },
   );
 }
 ```

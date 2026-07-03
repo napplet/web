@@ -72,13 +72,13 @@ describe('@napplet/nap/outbox shim', () => {
   it('posts outbox.getEvent and resolves with the event result', async () => {
     const { getEvent, handleOutboxMessage } = await import('./shim.js');
 
-    const promise = getEvent('ev1', { author: 'ab12', strategy: 'outbox', timeoutMs: 3000 });
+    const promise = getEvent('ev1', { author: 'ab12', timeoutMs: 3000 });
     const sent = lastPosted('outbox.getEvent');
     expect(sent).toEqual({
       type: 'outbox.getEvent',
       id: 'outbox-test-1',
       eventId: 'ev1',
-      options: { author: 'ab12', strategy: 'outbox', timeoutMs: 3000 },
+      options: { author: 'ab12', timeoutMs: 3000 },
     });
 
     handleOutboxMessage({
@@ -113,10 +113,13 @@ describe('@napplet/nap/outbox shim', () => {
   it('posts outbox.query and resolves with the deduplicated result', async () => {
     const { query, handleOutboxMessage } = await import('./shim.js');
 
-    const promise = query([{ authors: ['ab12'], kinds: [1] }], { strategy: 'outbox', timeoutMs: 3000 });
+    const promise = query([{ authors: ['ab12'], kinds: [1] }], {
+      authors: ['ab12'],
+      timeoutMs: 3000,
+    });
     const sent = lastPosted('outbox.query');
     expect(sent.filters).toEqual([{ authors: ['ab12'], kinds: [1] }]);
-    expect(sent.options).toEqual({ strategy: 'outbox', timeoutMs: 3000 });
+    expect(sent.options).toEqual({ authors: ['ab12'], timeoutMs: 3000 });
 
     handleOutboxMessage({
       type: 'outbox.query.result',
@@ -155,13 +158,13 @@ describe('@napplet/nap/outbox shim', () => {
     const events: unknown[] = [];
     let closedReason: string | undefined | null = null;
 
-    const sub = subscribe([{ kinds: [1] }], { live: true });
+    const sub = subscribe([{ kinds: [1] }], { timeoutMs: 3000 });
     sub.on('event', (result) => events.push(result));
     sub.on('closed', (reason) => { closedReason = reason ?? undefined; });
 
     const sent = lastPosted('outbox.subscribe');
     expect(sent.subId).toBeDefined();
-    expect(sent.options).toEqual({ live: true });
+    expect(sent.options).toEqual({ timeoutMs: 3000 });
 
     handleOutboxMessage({ type: 'outbox.event', subId: sent.subId, result: RESULT });
     expect(events).toEqual([RESULT]);
@@ -193,10 +196,12 @@ describe('@napplet/nap/outbox shim', () => {
   it('posts outbox.publish and resolves with the publish result', async () => {
     const { publish, handleOutboxMessage } = await import('./shim.js');
 
-    const promise = publish({ kind: 1, content: 'hi', tags: [], created_at: 1 }, { strategy: 'outbox' });
+    const promise = publish({ kind: 1, content: 'hi', tags: [], created_at: 1 }, {
+      targetAuthors: ['ab12'],
+    });
     const sent = lastPosted('outbox.publish');
     expect(sent.event).toEqual({ kind: 1, content: 'hi', tags: [], created_at: 1 });
-    expect(sent.options).toEqual({ strategy: 'outbox' });
+    expect(sent.options).toEqual({ targetAuthors: ['ab12'] });
 
     handleOutboxMessage({
       type: 'outbox.publish.result',

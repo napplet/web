@@ -119,7 +119,7 @@ function isCloneableLeaf(value: object): boolean {
  * // In a Svelte 5 napplet, filters/relays are $state proxies:
  * napplet.outbox.subscribe(
  *   toCloneableSnapshot(filters),
- *   { relays: toCloneableSnapshot(relays), live: true },
+ *   { relays: toCloneableSnapshot(relays), timeoutMs: 3000 },
  * );
  * ```
  */

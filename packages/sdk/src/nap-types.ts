@@ -280,7 +280,6 @@ export type {
 
 // OUTBOX NAP (outbox-aware relay routing)
 export type {
-  OutboxStrategy,
   OutboxEventOptions,
   OutboxQueryOptions,
   OutboxSubscribeOptions,

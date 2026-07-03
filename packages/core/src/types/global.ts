@@ -244,12 +244,12 @@ export interface NappletGlobal {
    *
    * @example
    * ```ts
-   * if (window.napplet.outbox) {
-   *   const { events } = await window.napplet.outbox.query(
-   *     [{ authors: ['ab12...'], kinds: [1], limit: 20 }],
-   *     { strategy: 'outbox' },
-   *   );
-   * }
+ * if (window.napplet.outbox) {
+ *   const { events } = await window.napplet.outbox.query(
+ *     [{ authors: ['ab12...'], kinds: [1], limit: 20 }],
+ *     { authors: ['ab12...'], timeoutMs: 3000 },
+ *   );
+ * }
    * ```
    */
   outbox?: OutboxApi;
