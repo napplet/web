@@ -33,6 +33,8 @@ export { createDispatch, registerNap, dispatch, getRegisteredDomains } from './d
 export type {
   NostrEvent,
   NostrFilter,
+  RelayEventSidecar,
+  RelayEventResult,
   Subscription,
   EventTemplate,
   MediaPlaybackOwner,
@@ -176,6 +178,7 @@ export type {
   ResourceBytesOkItem,
   ResourceBytesErrorItem,
   ResourceBytesItem,
+  ResourceSidecarEntry,
 } from './types.js';
 
 export { TOPICS } from './topics.js';

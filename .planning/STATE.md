@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v0.34.0
 milestone_name: NIP-5D Runtime Injection
 status: planning
-last_updated: "2026-06-26T20:03:29.543Z"
-last_activity: 2026-06-26
+last_updated: "2026-07-03T10:08:29Z"
+last_activity: 2026-07-03 - Completed quick task 260703-guj: Ignore Playwright MCP local artifacts
 progress:
   total_phases: 0
   completed_phases: 0
@@ -30,7 +30,7 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 Phase: Not started (defining requirements)
 Plan: —
 Status: Defining requirements
-Last activity: 2026-06-26 — Milestone v0.34.0 started
+Last activity: 2026-07-03 — Quick task 260703-guj completed; `.playwright-mcp/` is ignored as local Playwright MCP tool state.
 
 ### v0.34.0 roadmap
 
@@ -206,6 +206,13 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 - CARRIED: npm publish blocked on human npm auth (PUB-04)
 - INFO: Local `specs/NIP-5D.md` may be stale vs napplet/nubs master post-PR-15 (`window.nostr` removal merged 2026-04-21). Phase 138 NIP5D-01 syncs before layering v0.29.0 amendment
 - INFO: `world: 'MAIN'` extension-API bypass acknowledged as residual — no page-side blocking mechanism exists. NUB-CLASS-1 `connect-src 'none'` is the structural mitigation. Phase 136 artifact MUST document this honestly; Phase 137 amendment + Phase 138 NIP-5D amendment MUST NOT claim a fix
+
+### Quick Tasks Completed
+
+| Quick ID | Task | Date | Commit | Artifacts |
+|----------|------|------|--------|-----------|
+| 260703-ghg | Align napplet packages with NAP RelayEventResult sidecars and updated outbox stream lifecycle | 2026-07-03 | 2ce3e3f2 | [260703-ghg-align-napplet-packages-with-nap-relayeve](./quick/260703-ghg-align-napplet-packages-with-nap-relayeve/) |
+| 260703-guj | Ignore Playwright MCP local artifacts | 2026-07-03 | f9f34992 | [260703-guj-ignore-playwright-mcp-local-artifacts](./quick/260703-guj-ignore-playwright-mcp-local-artifacts/) |
 
 ## Deferred Items
 

@@ -183,7 +183,6 @@ export const ENVELOPE_SPECS: Record<string, EnvelopeSpec> = {
   'outbox.getEvent.result': { dir: 'in' },
   'outbox.query.result': { dir: 'in' },
   'outbox.event': { dir: 'in' },
-  'outbox.eose': { dir: 'in' },
   'outbox.closed': { dir: 'in' },
   'outbox.publish.result': { dir: 'in' },
   'outbox.resolveRelays.result': { dir: 'in' },

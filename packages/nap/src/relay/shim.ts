@@ -4,6 +4,7 @@
 import { postToShell } from '../boundary.js';
 import type { NostrEvent, NostrFilter, Subscription, EventTemplate } from '@napplet/core';
 import type {
+  RelayEventResult,
   RelaySubscribeMessage,
   RelayCloseMessage,
   RelayPublishMessage,
@@ -26,7 +27,7 @@ import { hydrateResourceCache } from '../resource/shim.js';
  * matching events back via `relay.event` messages.
  *
  * @param filters   One or more NIP-01 subscription filters
- * @param onEvent   Called for each matching event delivered by the shell
+ * @param onEvent   Called for each matching event result delivered by the shell
  * @param onEose    Called when the shell signals end of stored events (EOSE)
  * @param options   Optional: `{ relay, group }` for scoped relay subscriptions
  * @returns A Subscription handle with a `close()` method to tear down the subscription
@@ -43,7 +44,7 @@ import { hydrateResourceCache } from '../resource/shim.js';
  */
 export function subscribe(
   filters: NostrFilter | NostrFilter[],
-  onEvent: (event: NostrEvent) => void,
+  onEvent: (result: RelayEventResult) => void,
   onEose: () => void,
   options?: { relay?: string; group?: string },
 ): Subscription {
@@ -61,8 +62,8 @@ export function subscribe(
 
     if (msg.type === 'relay.event') {
       const eventMsg = msg as RelayEventMessage;
-      hydrateResourceCache(eventMsg.resources);
-      onEvent(eventMsg.event);
+      hydrateResourceCache(eventMsg.result.sidecar?.resources);
+      onEvent(eventMsg.result);
     } else if (msg.type === 'relay.eose') {
       onEose();
     } else if (msg.type === 'relay.closed') {
@@ -222,14 +223,14 @@ export function publishEncrypted(
  * instead of subscribe + collect + close.
  *
  * @param filters  NIP-01 subscription filters (single or array)
- * @returns Promise resolving to an array of matching NostrEvent objects
+ * @returns Promise resolving to an array of matching event results
  *
  * @example
  * ```ts
  * const profiles = await query({ kinds: [0], authors: [pubkey] });
  * ```
  */
-export function query(filters: NostrFilter | NostrFilter[]): Promise<NostrEvent[]> {
+export function query(filters: NostrFilter | NostrFilter[]): Promise<RelayEventResult[]> {
   const normalizedFilters = Array.isArray(filters) ? filters : [filters];
   const queryId = crypto.randomUUID();
 
@@ -247,7 +248,9 @@ export function query(filters: NostrFilter | NostrFilter[]): Promise<NostrEvent[
       if (result.error) {
         reject(new Error(result.error));
       } else {
-        resolve(Array.isArray(result.events) ? result.events : []);
+        const events = Array.isArray(result.events) ? result.events : [];
+        for (const item of events) hydrateResourceCache(item.sidecar?.resources);
+        resolve(events);
       }
     }
 

@@ -165,8 +165,9 @@ export interface OutboxApi {
   getEvent(eventId: string, options?: OutboxEventOptions): Promise<OutboxEventResult>;
   /**
    * Perform a one-shot outbox-aware query. The shell resolves relays, queries
-   * them, deduplicates by event id, and validates signatures. Partial results
-   * carry `incomplete: true`; a query-level failure arrives as inline `error`.
+   * them, deduplicates by event id, validates signatures, and returns
+   * `RelayEventResult` records. Partial results carry `incomplete: true`; a
+   * query-level failure arrives as inline `error`.
    * @param filters  NIP-01 filter or filters
    * @param options  Optional query options (authors, relays, strategy, limit, timeoutMs)
    * @returns Promise resolving to the outbox result
@@ -174,7 +175,8 @@ export interface OutboxApi {
   query(filters: NostrFilter | NostrFilter[], options?: OutboxQueryOptions): Promise<OutboxResult>;
   /**
    * Open a live outbox-aware subscription. The shell may add/remove relay
-   * connections as NIP-65 relay lists change.
+   * connections as NIP-65 relay lists change and streams until `close()` or
+   * `outbox.closed`.
    * @param filters  NIP-01 filter or filters
    * @param options  Optional subscribe options (adds `live`)
    * @returns An OutboxSubscription handle with `on(...)` and `close()`

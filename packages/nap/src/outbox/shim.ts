@@ -1,13 +1,9 @@
 // @napplet/nap/outbox -- Outbox-aware relay routing shim (query / subscribe / publish / resolveRelays).
-// Correlates outbox.* request/result envelopes; streams outbox.event/eose/closed to subscription listeners.
+// Correlates outbox.* request/result envelopes; streams outbox.event/closed to subscription listeners.
 // The shell owns relay discovery, routing, fallback, deduplication, signing, and publish fanout.
 
 import { postToShell } from '../boundary.js';
-import type {
-  NostrEvent,
-  NostrFilter,
-  EventTemplate,
-} from '@napplet/core';
+import type { NostrFilter, RelayEventResult, EventTemplate } from '@napplet/core';
 import type {
   OutboxEventOptions,
   OutboxQueryOptions,
@@ -28,11 +24,11 @@ import type {
   OutboxGetEventResultMessage,
   OutboxQueryResultMessage,
   OutboxEventMessage,
-  OutboxEoseMessage,
   OutboxClosedMessage,
   OutboxPublishResultMessage,
   OutboxResolveRelaysResultMessage,
 } from './types.js';
+import { hydrateResourceCache } from '../resource/shim.js';
 
 /** Default timeout for outbox requests (30 seconds; aligns with other NAPs). */
 const REQUEST_TIMEOUT_MS = 30_000;
@@ -67,8 +63,7 @@ const pendingResolve = new Map<string, {
 
 /** Per-subscription listener sets. */
 interface SubListeners {
-  event: Set<(event: NostrEvent, relay?: string) => void>;
-  eose: Set<() => void>;
+  event: Set<(result: RelayEventResult) => void>;
   closed: Set<(reason?: string) => void>;
 }
 
@@ -90,10 +85,11 @@ function handleGetEventResult(msg: OutboxGetEventResultMessage): void {
   if (!p) return;
   pendingGetEvent.delete(msg.id);
   clearTimeout(p.timeout);
-  const result: OutboxEventResult = {
-    relays: Array.isArray(msg.relays) ? msg.relays : [],
-  };
-  if (msg.event !== undefined) result.event = msg.event;
+  const result: OutboxEventResult = {};
+  if (msg.result !== undefined) {
+    hydrateResourceCache(msg.result.sidecar?.resources);
+    result.result = msg.result;
+  }
   if (msg.incomplete !== undefined) result.incomplete = msg.incomplete;
   if (msg.error !== undefined) result.error = msg.error;
   p.resolve(result);
@@ -104,9 +100,10 @@ function handleQueryResult(msg: OutboxQueryResultMessage): void {
   if (!p) return;
   pendingQuery.delete(msg.id);
   clearTimeout(p.timeout);
+  const events = Array.isArray(msg.events) ? msg.events : [];
+  for (const item of events) hydrateResourceCache(item.sidecar?.resources);
   const result: OutboxResult = {
-    events: Array.isArray(msg.events) ? msg.events : [],
-    relays: msg.relays ?? {},
+    events,
   };
   if (msg.incomplete !== undefined) result.incomplete = msg.incomplete;
   if (msg.error !== undefined) result.error = msg.error;
@@ -145,13 +142,8 @@ function handleResolveResult(msg: OutboxResolveRelaysResultMessage): void {
 function handleSubEvent(msg: OutboxEventMessage): void {
   const sub = subscriptions.get(msg.subId);
   if (!sub) return;
-  for (const cb of sub.event) cb(msg.event, msg.relay);
-}
-
-function handleSubEose(msg: OutboxEoseMessage): void {
-  const sub = subscriptions.get(msg.subId);
-  if (!sub) return;
-  for (const cb of sub.eose) cb();
+  hydrateResourceCache(msg.result.sidecar?.resources);
+  for (const cb of sub.event) cb(msg.result);
 }
 
 function handleSubClosed(msg: OutboxClosedMessage): void {
@@ -164,7 +156,7 @@ function handleSubClosed(msg: OutboxClosedMessage): void {
 
 /**
  * Handle outbox.* messages from the shell via the central message listener.
- * Covers query/publish/resolveRelays results plus event/eose/closed lifecycle.
+ * Covers query/publish/resolveRelays results plus event/closed lifecycle.
  */
 export function handleOutboxMessage(msg: { type: string; [key: string]: unknown }): void {
   if (isMessageType<OutboxGetEventResultMessage>(msg, 'outbox.getEvent.result')) {
@@ -177,8 +169,6 @@ export function handleOutboxMessage(msg: { type: string; [key: string]: unknown 
     handleResolveResult(msg);
   } else if (isMessageType<OutboxEventMessage>(msg, 'outbox.event')) {
     handleSubEvent(msg);
-  } else if (isMessageType<OutboxEoseMessage>(msg, 'outbox.eose')) {
-    handleSubEose(msg);
   } else if (isMessageType<OutboxClosedMessage>(msg, 'outbox.closed')) {
     handleSubClosed(msg);
   }
@@ -271,8 +261,7 @@ export function query(
  * @example
  * ```ts
  * const sub = subscribe([{ authors: ['ab12...'], kinds: [1] }], { strategy: 'outbox', live: true });
- * sub.on('event', (event, relay) => render(event, relay));
- * sub.on('eose', () => markCaughtUp());
+ * sub.on('event', (result) => render(result.event, result.sidecar?.relayHints));
  * // later: sub.close();
  * ```
  */
@@ -285,7 +274,6 @@ export function subscribe(
 
   const listeners: SubListeners = {
     event: new Set(),
-    eose: new Set(),
     closed: new Set(),
   };
   subscriptions.set(subId, listeners);
@@ -299,12 +287,10 @@ export function subscribe(
   };
   postToShell(msg);
 
-  function on(event: 'event', cb: (event: NostrEvent, relay?: string) => void): void;
-  function on(event: 'eose', cb: () => void): void;
+  function on(event: 'event', cb: (result: RelayEventResult) => void): void;
   function on(event: 'closed', cb: (reason?: string) => void): void;
-  function on(event: 'event' | 'eose' | 'closed', cb: (...args: never[]) => void): void {
-    if (event === 'event') listeners.event.add(cb as (event: NostrEvent, relay?: string) => void);
-    else if (event === 'eose') listeners.eose.add(cb as () => void);
+  function on(event: 'event' | 'closed', cb: (...args: never[]) => void): void {
+    if (event === 'event') listeners.event.add(cb as (result: RelayEventResult) => void);
     else if (event === 'closed') listeners.closed.add(cb as (reason?: string) => void);
   }
 

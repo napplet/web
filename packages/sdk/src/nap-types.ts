@@ -6,6 +6,8 @@
 
 export type { NostrEvent } from '@napplet/core';
 export type { NostrFilter } from '@napplet/core';
+export type { RelayEventSidecar } from '@napplet/core';
+export type { RelayEventResult } from '@napplet/core';
 export type { Subscription } from '@napplet/core';
 export type { EventTemplate } from '@napplet/core';
 
@@ -296,7 +298,6 @@ export type {
   OutboxQueryResultMessage,
   OutboxSubscribeMessage,
   OutboxEventMessage,
-  OutboxEoseMessage,
   OutboxClosedMessage,
   OutboxCloseMessage,
   OutboxPublishMessage,

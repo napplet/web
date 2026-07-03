@@ -1,4 +1,4 @@
-import type { NostrEvent, NostrFilter, Subscription, EventTemplate } from '../nostr.js';
+import type { NostrEvent, NostrFilter, RelayEventResult, Subscription, EventTemplate } from '../nostr.js';
 
 /**
  * NIP-01 relay operations: subscribe to events, publish events, one-shot queries.
@@ -8,14 +8,14 @@ export interface RelayApi {
   /**
    * Open a live NIP-01 subscription through the shell's relay pool.
    * @param filters  One or more NIP-01 subscription filters
-   * @param onEvent  Called for each matching event
+   * @param onEvent  Called for each matching event result
    * @param onEose   Called when the shell signals end of stored events (EOSE)
    * @param options  Optional: `{ relay, group }` for NIP-29 scoped relay subscriptions
    * @returns A Subscription handle with a `close()` method
    */
   subscribe(
     filters: NostrFilter | NostrFilter[],
-    onEvent: (event: NostrEvent) => void,
+    onEvent: (result: RelayEventResult) => void,
     onEose: () => void,
     options?: { relay?: string; group?: string },
   ): Subscription;
@@ -38,9 +38,9 @@ export interface RelayApi {
   /**
    * One-shot query: subscribe, collect events until EOSE, then resolve.
    * @param filters  NIP-01 subscription filters
-   * @returns Promise resolving to array of matching NostrEvent objects
+   * @returns Promise resolving to array of matching event results
    */
-  query(filters: NostrFilter | NostrFilter[]): Promise<NostrEvent[]>;
+  query(filters: NostrFilter | NostrFilter[]): Promise<RelayEventResult[]>;
 }
 
 /**

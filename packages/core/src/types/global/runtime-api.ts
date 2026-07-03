@@ -217,6 +217,13 @@ export interface ResourceBytesErrorItem {
 /** Ordered per-URL item returned by `resource.bytesMany`. */
 export type ResourceBytesItem = ResourceBytesOkItem | ResourceBytesErrorItem;
 
+/** Pre-resolved resource bytes carried by another NAP's event sidecar. */
+export interface ResourceSidecarEntry {
+  url: string;
+  blob: Blob;
+  mime: string;
+}
+
 /** Runtime-disclosed support for one resource URL scheme. */
 export interface ResourceSchemeInfo {
   scheme: string;

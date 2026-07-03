@@ -23,7 +23,7 @@
       domain: 'relay',
       call: 'window.napplet.relay<wbr />.subscribe()',
       out: '{ type: "relay.subscribe", id, filters }',
-      in: '{ type: "relay.event", subId, event }',
+      in: '{ type: "relay.event", subId, result }',
       destKind: 'nostr',
       destName: 'relays',
     },

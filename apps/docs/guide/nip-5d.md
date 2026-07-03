@@ -62,7 +62,7 @@ Request/response pairs are correlated by an `id` field:
 { type: "relay.subscribe", id: "abc", subId: "s1", filters: [{ kinds: [1] }] }
 
 // a result arrives back with a matching id (or a related event message)
-{ type: "relay.event", subId: "s1", event: { /* NostrEvent */ } }
+{ type: "relay.event", subId: "s1", result: { event: { /* NostrEvent */ } } }
 ```
 
 The `type` prefix before the first `.` is the **domain**, and routes the message

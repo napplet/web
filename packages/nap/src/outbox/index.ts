@@ -23,6 +23,7 @@ export { DOMAIN } from './types.js';
 
 export type {
   OutboxStrategy,
+  RelayEventResult,
   OutboxEventOptions,
   OutboxQueryOptions,
   OutboxSubscribeOptions,
@@ -40,7 +41,6 @@ export type {
   OutboxQueryResultMessage,
   OutboxSubscribeMessage,
   OutboxEventMessage,
-  OutboxEoseMessage,
   OutboxClosedMessage,
   OutboxCloseMessage,
   OutboxPublishMessage,

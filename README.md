@@ -85,7 +85,7 @@ Shell runtime                              @napplet/shim
   └── INC routing
 
 ◄────────── postMessage: { type: 'relay.subscribe', id, filters } ──────────►
-◄────────── postMessage: { type: 'relay.event', subId, event }    ──────────►
+◄────────── postMessage: { type: 'relay.event', subId, result }   ──────────►
 
 @napplet/vite-plugin (build time)
   └── NIP-5D manifest generation + requires tag injection

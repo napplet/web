@@ -23,6 +23,7 @@ export type {
   ResourceErrorCode,
   ResourceSchemeInfo,
   ResourceInfo,
+  ResourceSidecarEntry,
 } from '@napplet/core';
 
 /** The NAP domain name for resource messages. */
@@ -33,29 +34,6 @@ export const DOMAIN = 'resource' as const;
  * Future schemes plug in at the spec level (NAP-RESOURCE Phase 132 scheme registration).
  */
 export type ResourceScheme = 'data' | 'https' | 'blossom' | 'nostr';
-
-/**
- * Pre-resolved resource entry delivered alongside a relay event via the
- * NAP-RELAY sidecar amendment (Phase 127 / SIDE-01..04). Same shape as the
- * result envelope minus correlation/type fields.
- *
- * @example
- * ```ts
- * const entry: ResourceSidecarEntry = {
- *   url: 'https://example.com/avatar.png',
- *   blob: new Blob([...], { type: 'image/png' }),
- *   mime: 'image/png',
- * };
- * ```
- */
-export interface ResourceSidecarEntry {
-  /** The exact URL the napplet would request via `bytes(url)`. */
-  url: string;
-  /** Pre-fetched bytes. */
-  blob: Blob;
-  /** Shell-classified MIME (byte-sniffed; NOT upstream Content-Type). */
-  mime: string;
-}
 
 /**
  * Base interface for all resource NAP messages.

@@ -122,10 +122,10 @@ Relay operations through the shell's relay pool. Mirrors `window.napplet.relay`.
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| `subscribe(filters, onEvent, onEose, options?)` | `Subscription` | Open a live relay subscription through the shell's relay pool |
+| `subscribe(filters, onEvent, onEose, options?)` | `Subscription` | Open a live relay subscription through the shell's relay pool; `onEvent` receives `RelayEventResult` |
 | `publish(template, options?)` | `Promise<NostrEvent>` | Send event template to the shell for signing and broadcast |
 | `publishEncrypted(template, recipient, encryption?)` | `Promise<NostrEvent>` | Send event template for encryption, signing, and broadcast |
-| `query(filters)` | `Promise<NostrEvent[]>` | One-shot query: subscribe, collect until EOSE, resolve |
+| `query(filters)` | `Promise<RelayEventResult[]>` | One-shot query: collect `RelayEventResult` records until EOSE, resolve |
 
 ### `inc`
 
