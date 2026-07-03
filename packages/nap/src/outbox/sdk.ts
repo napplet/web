@@ -73,7 +73,7 @@ export const query = outboxQuery;
  *
  * @param filters  NIP-01 filter or filters
  * @param options  Optional subscribe options
- * @returns An OutboxSubscription handle
+ * @returns An OutboxSubscription handle that streams `RelayEventResult` records
  *
  * @example
  * ```ts

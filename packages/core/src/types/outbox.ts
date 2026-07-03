@@ -1,4 +1,4 @@
-import type { NostrEvent } from './nostr.js';
+import type { NostrEvent, RelayEventResult } from './nostr.js';
 
 /** Relay-selection strategy for outbox-model routing (NAP-OUTBOX). */
 export type OutboxStrategy = 'outbox' | 'inbox' | 'auto';
@@ -49,16 +49,14 @@ export interface OutboxRelayPlan {
 
 /** The result of an outbox query. */
 export interface OutboxResult {
-  events: NostrEvent[];
-  relays: Record<string, string[]>;
+  events: RelayEventResult[];
   incomplete?: boolean;
   error?: string;
 }
 
 /** The result of a single-event outbox lookup. */
 export interface OutboxEventResult {
-  event?: NostrEvent;
-  relays: string[];
+  result?: RelayEventResult;
   incomplete?: boolean;
   error?: string;
 }
@@ -74,8 +72,7 @@ export interface OutboxPublishResult {
 
 /** Handle for a live outbox subscription. */
 export interface OutboxSubscription {
-  on(event: 'event', cb: (event: NostrEvent, relay?: string) => void): void;
-  on(event: 'eose', cb: () => void): void;
+  on(event: 'event', cb: (result: RelayEventResult) => void): void;
   on(event: 'closed', cb: (reason?: string) => void): void;
   close(): void;
 }

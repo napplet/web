@@ -149,9 +149,9 @@ const RESPONDERS: Record<string, Responder> = {
   'cvm.close': (e) => ok({ type: 'cvm.close.result', id: e.id }),
 
   // outbox
-  'outbox.getEvent': (e) => ok({ type: 'outbox.getEvent.result', id: e.id, relays: [] }),
-  'outbox.query': (e) => ok({ type: 'outbox.query.result', id: e.id, events: [], relays: {} }),
-  'outbox.subscribe': (e) => ok({ type: 'outbox.eose', subId: e.subId }),
+  'outbox.getEvent': (e) => ok({ type: 'outbox.getEvent.result', id: e.id }),
+  'outbox.query': (e) => ok({ type: 'outbox.query.result', id: e.id, events: [] }),
+  'outbox.subscribe': (e) => ok({ type: 'outbox.closed', subId: e.subId, reason: 'reference shell complete' }),
   'outbox.close': none,
   'outbox.publish': (e) => ok({ type: 'outbox.publish.result', id: e.id, ok: true }),
   'outbox.resolveRelays': (e) => ok({ type: 'outbox.resolveRelays.result', id: e.id, plan: {} }),

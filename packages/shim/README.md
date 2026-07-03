@@ -231,11 +231,11 @@ The wire payloads are unchanged plain envelopes:
 Messages received via `window.addEventListener('message', ...)`:
 
 ```ts
-{ type: 'relay.event', subId: string, event: NostrEvent }
+{ type: 'relay.event', subId: string, result: RelayEventResult }
 { type: 'relay.eose', subId: string }
 { type: 'relay.publish.result', id: string, ok: boolean, event?: NostrEvent, error?: string }
 { type: 'relay.publishEncrypted.result', id: string, ok: boolean, event?: NostrEvent, error?: string }
-{ type: 'relay.query.result', id: string, events: NostrEvent[], error?: string }
+{ type: 'relay.query.result', id: string, events: RelayEventResult[], error?: string }
 
 { type: 'identity.getPublicKey.result', id: string, pubkey: string }
 { type: 'identity.getRelays.result', id: string, relays: Record<string, { read: boolean, write: boolean }>, error?: string }
@@ -298,7 +298,7 @@ window.napplet = {
     subscribe(filters, onEvent, onEose, options?): Subscription;
     publish(template, options?): Promise<NostrEvent>;
     publishEncrypted(template, recipient, encryption?): Promise<NostrEvent>;
-    query(filters): Promise<NostrEvent[]>;
+    query(filters): Promise<RelayEventResult[]>;
   },
   inc: {
     emit(topic, extraTags?, content?): void;
@@ -389,10 +389,10 @@ Relay operations through the shell's relay pool via JSON envelope (relay.subscri
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| `subscribe(filters, onEvent, onEose, options?)` | `Subscription` | Open a relay subscription via JSON envelope. `options.relay` and `options.group` for NIP-29 scoped relays. |
+| `subscribe(filters, onEvent, onEose, options?)` | `Subscription` | Open a relay subscription via JSON envelope. `onEvent` receives `RelayEventResult`. `options.relay` and `options.group` target scoped relays. |
 | `publish(template, options?)` | `Promise<NostrEvent>` | Send an event template to the shell for signing and broadcast. |
 | `publishEncrypted(template, recipient, encryption?)` | `Promise<NostrEvent>` | Send an event template to the shell for encryption, signing, and broadcast. NIP-44 default. |
-| `query(filters)` | `Promise<NostrEvent[]>` | One-shot query: sends a relay.query envelope, resolves when results arrive. |
+| `query(filters)` | `Promise<RelayEventResult[]>` | One-shot query: sends a relay.query envelope, resolves when result records arrive. |
 
 ### `window.napplet.inc`
 

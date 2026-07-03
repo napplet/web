@@ -63,6 +63,11 @@ const EV = {
   sig: 'sig',
 };
 
+const RESULT = {
+  event: EV,
+  sidecar: { relayHints: ['wss://relay.example.com'] },
+};
+
 describe('@napplet/nap/outbox shim', () => {
   it('posts outbox.getEvent and resolves with the event result', async () => {
     const { getEvent, handleOutboxMessage } = await import('./shim.js');
@@ -79,13 +84,11 @@ describe('@napplet/nap/outbox shim', () => {
     handleOutboxMessage({
       type: 'outbox.getEvent.result',
       id: sent.id,
-      event: EV,
-      relays: ['wss://relay.example.com'],
+      result: RESULT,
     });
 
     await expect(promise).resolves.toEqual({
-      event: EV,
-      relays: ['wss://relay.example.com'],
+      result: RESULT,
     });
   });
 
@@ -97,13 +100,11 @@ describe('@napplet/nap/outbox shim', () => {
     handleOutboxMessage({
       type: 'outbox.getEvent.result',
       id: sent.id,
-      relays: [],
       incomplete: true,
       error: 'not found',
     });
 
     await expect(promise).resolves.toEqual({
-      relays: [],
       incomplete: true,
       error: 'not found',
     });
@@ -120,13 +121,11 @@ describe('@napplet/nap/outbox shim', () => {
     handleOutboxMessage({
       type: 'outbox.query.result',
       id: sent.id,
-      events: [EV],
-      relays: { ev1: ['wss://relay.example.com'] },
+      events: [RESULT],
     });
 
     await expect(promise).resolves.toEqual({
-      events: [EV],
-      relays: { ev1: ['wss://relay.example.com'] },
+      events: [RESULT],
     });
   });
 
@@ -139,45 +138,39 @@ describe('@napplet/nap/outbox shim', () => {
       type: 'outbox.query.result',
       id: sent.id,
       events: [],
-      relays: {},
       incomplete: true,
       error: 'relay timeout',
     });
 
     await expect(promise).resolves.toEqual({
       events: [],
-      relays: {},
       incomplete: true,
       error: 'relay timeout',
     });
   });
 
-  it('subscribe streams events/eose to on() listeners and drops state on closed', async () => {
+  it('subscribe streams event results to on() listeners and drops state on closed', async () => {
     const { subscribe, handleOutboxMessage } = await import('./shim.js');
 
-    const events: Array<{ event: unknown; relay?: string }> = [];
-    let eoseCount = 0;
+    const events: unknown[] = [];
     let closedReason: string | undefined | null = null;
 
     const sub = subscribe([{ kinds: [1] }], { live: true });
-    sub.on('event', (event, relay) => events.push({ event, relay }));
-    sub.on('eose', () => { eoseCount++; });
+    sub.on('event', (result) => events.push(result));
     sub.on('closed', (reason) => { closedReason = reason ?? undefined; });
 
     const sent = lastPosted('outbox.subscribe');
     expect(sent.subId).toBeDefined();
     expect(sent.options).toEqual({ live: true });
 
-    handleOutboxMessage({ type: 'outbox.event', subId: sent.subId, event: EV, relay: 'wss://r.example' });
-    handleOutboxMessage({ type: 'outbox.eose', subId: sent.subId });
-    expect(events).toEqual([{ event: EV, relay: 'wss://r.example' }]);
-    expect(eoseCount).toBe(1);
+    handleOutboxMessage({ type: 'outbox.event', subId: sent.subId, result: RESULT });
+    expect(events).toEqual([RESULT]);
 
     handleOutboxMessage({ type: 'outbox.closed', subId: sent.subId, reason: 'upstream gone' });
     expect(closedReason).toBe('upstream gone');
 
     // After closed, further events are dropped (subscription state cleared).
-    handleOutboxMessage({ type: 'outbox.event', subId: sent.subId, event: EV });
+    handleOutboxMessage({ type: 'outbox.event', subId: sent.subId, result: RESULT });
     expect(events).toHaveLength(1);
   });
 
@@ -193,7 +186,7 @@ describe('@napplet/nap/outbox shim', () => {
     const closeMsg = lastPosted('outbox.close');
     expect(closeMsg.subId).toBe(sent.subId);
 
-    handleOutboxMessage({ type: 'outbox.event', subId: sent.subId, event: EV });
+    handleOutboxMessage({ type: 'outbox.event', subId: sent.subId, result: RESULT });
     expect(events).toHaveLength(0);
   });
 

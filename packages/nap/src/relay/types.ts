@@ -8,8 +8,14 @@
  * All types form a discriminated union on the `type` field.
  */
 
-import type { NappletMessage, NostrEvent, NostrFilter, EventTemplate } from "@napplet/core";
-import type { ResourceSidecarEntry } from '../resource/types.js';
+import type {
+  NappletMessage,
+  NostrEvent,
+  NostrFilter,
+  RelayEventResult,
+  EventTemplate,
+} from '@napplet/core';
+export type { RelayEventResult, RelayEventSidecar } from '@napplet/core';
 
 /** The NAP domain name for relay messages. */
 export const DOMAIN = 'relay' as const;
@@ -169,9 +175,9 @@ export interface RelayPublishEncryptedResultMessage extends RelayMessage {
 /**
  * A matching event delivered to an active subscription.
  *
- * The optional `resources` sidecar lets a shell pre-resolve resources
+ * The optional `result.sidecar.resources` sidecar lets a shell pre-resolve resources
  * referenced by the event (e.g., avatar / picture URLs in a kind:0 metadata
- * event); the relay shim calls `hydrateResourceCache(resources)` before
+ * event); the relay shim calls `hydrateResourceCache(result.sidecar.resources)` before
  * delivering this event to the napplet's `onEvent` callback so subsequent
  * `napplet.resource.bytes(url)` calls for sidecar-pre-populated URLs
  * resolve from cache without a postMessage round-trip.
@@ -184,15 +190,8 @@ export interface RelayEventMessage extends RelayMessage {
   type: 'relay.event';
   /** Subscription ID this event belongs to. */
   subId: string;
-  /** The matching Nostr event. */
-  event: NostrEvent;
-  /**
-   * Optional pre-resolved resources for URLs referenced by `event`.
-   * Shell-populated; default OFF (see JSDoc above for privacy rationale).
-   * Owned by the resource NAP (`@napplet/nap/resource/types`); imported
-   * here type-only as a sibling cross-NAP reference.
-   */
-  resources?: ResourceSidecarEntry[];
+  /** The raw event plus optional delivery sidecar metadata. */
+  result: RelayEventResult;
 }
 
 /**
@@ -241,8 +240,8 @@ export interface RelayQueryResultMessage extends RelayMessage {
   type: 'relay.query.result';
   /** Correlation ID matching the original query request. */
   id: string;
-  /** Array of matching events. */
-  events: NostrEvent[];
+  /** Array of matching event results. */
+  events: RelayEventResult[];
   /** Error message if query failed. */
   error?: string;
 }
