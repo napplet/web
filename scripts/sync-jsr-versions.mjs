@@ -1,11 +1,13 @@
 #!/usr/bin/env node
-// sync-jsr-versions.mjs — keep each packages/*/jsr.json in lockstep with its
-// sibling package.json. Run AFTER `pnpm version-packages` (which bumps
-// package.json via changesets) and BEFORE the JSR publish step.
+// sync-jsr-versions.mjs — keep each packages/* JSR package config in lockstep
+// with its sibling package.json. Most packages use jsr.json; Deno-first
+// packages such as @napplet/cli publish from deno.json. Run AFTER
+// `pnpm version-packages` (which bumps package.json via changesets) and BEFORE
+// the JSR publish step.
 //
 // Two things drift when changesets bumps versions, because changesets only
 // touches package.json:
-//   1. jsr.json#version — must match package.json#version.
+//   1. jsr.json#version or deno.json#version — must match package.json#version.
 //   2. jsr.json#imports — the internal `@napplet/*` constraints (e.g.
 //      "jsr:@napplet/core@^0.7.0"). JSR resolves cross-package imports against
 //      these constraints at publish time, so a stale `^0.7.0` makes a bumped
@@ -83,3 +85,33 @@ for (const entry of readdirSync(PACKAGES_DIR, { withFileTypes: true })) {
 }
 
 console.log(`sync-jsr-versions: ${changed} updated, ${skipped} packages skipped (no jsr.json)`);
+
+// ── Pass 3: sync Deno-first JSR packages that publish from deno.json ────────
+let denoChanged = 0;
+let denoSkipped = 0;
+
+for (const entry of readdirSync(PACKAGES_DIR, { withFileTypes: true })) {
+  if (!entry.isDirectory()) continue;
+  const pkgPath = join(PACKAGES_DIR, entry.name, 'package.json');
+  const jsrPath = join(PACKAGES_DIR, entry.name, 'jsr.json');
+  const denoPath = join(PACKAGES_DIR, entry.name, 'deno.json');
+  if (existsSync(jsrPath) || !existsSync(pkgPath) || !existsSync(denoPath)) {
+    denoSkipped++;
+    continue;
+  }
+
+  const pkg = JSON.parse(readFileSync(pkgPath, 'utf8'));
+  const deno = JSON.parse(readFileSync(denoPath, 'utf8'));
+  if (deno.name !== pkg.name || typeof deno.version !== 'string') {
+    denoSkipped++;
+    continue;
+  }
+  if (deno.version === pkg.version) continue;
+
+  deno.version = pkg.version;
+  writeFileSync(denoPath, JSON.stringify(deno, null, 2) + '\n');
+  console.log(`  synced ${entry.name}: deno.json version -> ${pkg.version}`);
+  denoChanged++;
+}
+
+console.log(`sync-jsr-versions: ${denoChanged} deno.json package configs updated`);
