@@ -42,7 +42,11 @@ URL-parse-time checks (looking at the literal hostname) are NOT sufficient — a
 
 ## Sidecar Pre-Resolution (default OFF)
 
-The NAP-RELAY amendment adds an optional `resources?: ResourceSidecarEntry[]` field on `relay.event` envelopes. When the shell pre-fetches resources referenced by an event and ships the bytes alongside the event, the napplet's subsequent `resource.bytes(url)` calls resolve from cache without a postMessage round-trip.
+Read-style relay event results may carry optional pre-resolved resources at
+`RelayEventResult.sidecar.resources?: ResourceSidecarEntry[]`. When the shell
+pre-fetches resources referenced by an event and ships the bytes alongside the
+event, the napplet's subsequent `resource.bytes(url)` calls resolve from cache
+without a postMessage round-trip.
 
 ### Privacy rationale (why default OFF)
 

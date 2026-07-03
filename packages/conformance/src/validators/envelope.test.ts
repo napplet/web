@@ -36,7 +36,7 @@ describe('validateEnvelope — structural guards', () => {
 
 describe('validateEnvelope — direction enforcement', () => {
   it('rejects a napplet emitting a shell→napplet (inbound) type', () => {
-    const v = validateEnvelope({ type: 'relay.event', subId: 's', event: {} });
+    const v = validateEnvelope({ type: 'relay.event', subId: 's', result: { event: {} } });
     expect(v.ok).toBe(false);
     expect(v.direction).toBe('in');
     expect(v.errors[0].code).toBe('inbound-type-emitted');

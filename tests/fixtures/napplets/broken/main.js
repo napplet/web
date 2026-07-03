@@ -7,5 +7,5 @@
 
 if (window.napplet?.relay) {
   window.parent.postMessage({ type: 'relay.subscribe', id: 'bad1' }, '*'); // missing subId + filters
-  window.parent.postMessage({ type: 'relay.event', subId: 'x', event: {} }, '*'); // inbound type emitted
+  window.parent.postMessage({ type: 'relay.event', subId: 'x', result: { event: {} } }, '*'); // inbound type emitted
 }
