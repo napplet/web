@@ -1,5 +1,16 @@
 # @napplet/nap
 
+## 0.26.0
+
+### Minor Changes
+
+- 6ccb056: Align relay and outbox read results with the current NAPs track: raw read events now use `RelayEventResult` with optional `sidecar.resources` and `sidecar.relayHints`, and NAP-OUTBOX no longer defines `outbox.eose`.
+
+### Patch Changes
+
+- Updated dependencies [6ccb056]
+  - @napplet/core@0.26.0
+
 ## 0.25.0
 
 ### Minor Changes

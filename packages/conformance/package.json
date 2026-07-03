@@ -1,6 +1,6 @@
 {
   "name": "@napplet/conformance",
-  "version": "0.11.0",
+  "version": "0.12.0",
   "description": "Framework-agnostic napplet protocol conformance engine — reference mock shell, per-NAP envelope validators, manifest validator, check registry, and reporters",
   "type": "module",
   "main": "./dist/index.js",
