@@ -20,7 +20,9 @@ describe('@napplet/nap publish manifest', () => {
     const rootPackage = readJson(new URL('../../../package.json', import.meta.url));
     const publishScript = rootPackage.scripts?.['publish-packages'] ?? '';
 
-    expect(publishScript).toContain('pnpm publish -r');
+    expect(publishScript).toContain('pnpm -r');
+    expect(publishScript).toContain('publish --access public');
+    expect(publishScript).toContain("--filter='!@napplet/cli'");
     expect(publishScript).not.toContain('changeset publish');
   });
 });

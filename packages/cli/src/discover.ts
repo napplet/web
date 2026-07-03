@@ -92,7 +92,9 @@ async function buildCandidate(
 
 function inferName(relative: string): string {
   const leaf = basename(relative === "." ? "root" : relative);
-  return leaf === "dist" ? basename(relativePath(".", relative).replace(/\/dist$/, "")) : leaf;
+  if (leaf !== "dist") return leaf;
+  const withoutDist = relative.replace(/\/dist$/, "");
+  return withoutDist === "dist" ? "root" : basename(withoutDist);
 }
 
 async function exists(path: string): Promise<boolean> {

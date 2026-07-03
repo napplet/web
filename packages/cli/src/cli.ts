@@ -8,6 +8,7 @@ import { discoverNapplets } from "./discover.ts";
 import { KEY_SERVICE_NAME, requireKeyStoreProvider } from "./key-store.ts";
 import { createDeployManifestTemplates } from "./manifest.ts";
 import { runCommand, splitCommand } from "./process.ts";
+import { captureScreenshots, createScreenshotPlan, parsePositiveInt } from "./screenshot.ts";
 import {
   createSignerFromSecret,
   type NappletSigner,
@@ -21,6 +22,7 @@ const HELP = `@napplet/cli
 Usage:
   napplet init [--force] [--source-dir <dir>] [--relay <url>] [--server <url>] [--name <dtag>]
   napplet deploy [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>] [--prompt-sec] [--dry-run]
+  napplet screenshot [--config <file>] [--all] [--name <candidate>] [--out-dir <dir>] [--file <name.png>] [--identity <npub|hex>] [--target-url <url>] [--browser <path>] [--width <px>] [--height <px>] [--timeout <ms>] [-- <paja args>]
   napplet debug [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>]
   napplet keys store --name <ref> [--sec <secret> | --prompt-sec]
   napplet keys use --name <ref> [--config <file>]
@@ -56,6 +58,8 @@ export async function main(argv = Deno.args): Promise<number> {
         return await commandDiscover(parsed.rest);
       case "deploy":
         return await commandDeploy(parsed.rest);
+      case "screenshot":
+        return await commandScreenshot(parsed.rest);
       case "debug":
         return await commandDebug(parsed.rest);
       case "keys":
@@ -206,6 +210,30 @@ async function commandDeploy(argv: string[]): Promise<number> {
   }
 }
 
+async function commandScreenshot(argv: string[]): Promise<number> {
+  const flags = collectFlags(argv);
+  const config = await loadConfig(flags);
+  const candidates = await discoverNapplets(config, { traverse: flags.boolean.has("all") });
+  const timeoutFlag = first(flags.values.get("timeout"));
+  const plan = createScreenshotPlan(candidates, {
+    all: flags.boolean.has("all"),
+    names: flags.values.get("name"),
+    outDir: first(flags.values.get("out-dir")) ?? config.screenshot?.directory,
+    file: first(flags.values.get("file")),
+    targetUrl: first(flags.values.get("target-url")),
+  });
+  const screenshots = await captureScreenshots(config, plan, {
+    identity: first(flags.values.get("identity")),
+    browser: first(flags.values.get("browser")),
+    width: parseOptionalPositiveInt(flags, "width"),
+    height: parseOptionalPositiveInt(flags, "height"),
+    timeoutMs: timeoutFlag ? parsePositiveInt(timeoutFlag, "timeout") : undefined,
+    pajaArgs: flags.afterDoubleDash,
+  });
+  console.log(JSON.stringify({ screenshots }, null, 2));
+  return 0;
+}
+
 async function commandDebug(argv: string[]): Promise<number> {
   const flags = collectFlags(argv);
   const config = await loadConfig(flags);
@@ -344,6 +372,11 @@ function requiredValue(flags: FlagBag, name: string): string {
   const value = first(flags.values.get(name));
   if (!value) throw new Error(`Missing --${name}`);
   return value;
+}
+
+function parseOptionalPositiveInt(flags: FlagBag, name: string): number | undefined {
+  const value = first(flags.values.get(name));
+  return value ? parsePositiveInt(value, name) : undefined;
 }
 
 async function resolveSecretInput(flags: FlagBag): Promise<string> {

@@ -1,5 +1,6 @@
 import { CONFIG_DIR, CONFIG_FILE, type NappletConfig } from "./types.ts";
 import { dirname, joinPath, resolvePath } from "./path.ts";
+import { DEFAULT_SCREENSHOT_DIR, DEFAULT_SCREENSHOT_IDENTITY } from "./screenshot.ts";
 
 export const DEFAULT_CONFIG: NappletConfig = {
   version: 1,
@@ -20,6 +21,13 @@ export const DEFAULT_CONFIG: NappletConfig = {
   },
   paja: {
     command: "kehto",
+  },
+  screenshot: {
+    directory: DEFAULT_SCREENSHOT_DIR,
+    identity: DEFAULT_SCREENSHOT_IDENTITY,
+    width: 1280,
+    height: 800,
+    timeoutMs: 30_000,
   },
 };
 
@@ -51,6 +59,16 @@ export function defaultConfig(overrides: Partial<NappletConfig> = {}): NappletCo
       ...DEFAULT_CONFIG.paja,
       ...overrides.paja,
       command: overrides.paja?.command ?? DEFAULT_CONFIG.paja?.command ?? "kehto",
+    },
+    screenshot: {
+      ...DEFAULT_CONFIG.screenshot,
+      ...overrides.screenshot,
+      directory: overrides.screenshot?.directory ?? DEFAULT_CONFIG.screenshot?.directory ??
+        DEFAULT_SCREENSHOT_DIR,
+      identity: overrides.screenshot?.identity ?? DEFAULT_CONFIG.screenshot?.identity,
+      width: overrides.screenshot?.width ?? DEFAULT_CONFIG.screenshot?.width,
+      height: overrides.screenshot?.height ?? DEFAULT_CONFIG.screenshot?.height,
+      timeoutMs: overrides.screenshot?.timeoutMs ?? DEFAULT_CONFIG.screenshot?.timeoutMs,
     },
   };
 }
@@ -131,6 +149,19 @@ export function normalizeConfig(input: unknown): NappletConfig {
         roots: stringArray(value.discover.roots, "discover.roots"),
       }
       : undefined,
+    screenshot: value.screenshot
+      ? {
+        directory: typeof value.screenshot.directory === "string"
+          ? value.screenshot.directory
+          : DEFAULT_SCREENSHOT_DIR,
+        identity: typeof value.screenshot.identity === "string"
+          ? value.screenshot.identity
+          : undefined,
+        width: optionalPositiveInteger(value.screenshot.width, "screenshot.width"),
+        height: optionalPositiveInteger(value.screenshot.height, "screenshot.height"),
+        timeoutMs: optionalPositiveInteger(value.screenshot.timeoutMs, "screenshot.timeoutMs"),
+      }
+      : undefined,
   });
 }
 
@@ -159,4 +190,12 @@ function stringArray(value: unknown, field: string): string[] {
     if (typeof entry !== "string") throw new Error(`${field} must contain only strings`);
   }
   return value;
+}
+
+function optionalPositiveInteger(value: unknown, field: string): number | undefined {
+  if (value === undefined) return undefined;
+  if (!Number.isInteger(value) || (value as number) <= 0) {
+    throw new Error(`${field} must be a positive integer`);
+  }
+  return value as number;
 }

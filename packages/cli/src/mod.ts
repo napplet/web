@@ -4,5 +4,6 @@ export * from "./discover.ts";
 export * from "./key-store.ts";
 export * from "./manifest.ts";
 export * from "./process.ts";
+export * from "./screenshot.ts";
 export * from "./signing.ts";
 export * from "./types.ts";
