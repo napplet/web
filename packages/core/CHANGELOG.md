@@ -1,5 +1,11 @@
 # @napplet/core
 
+## 0.27.0
+
+### Minor Changes
+
+- 332f785: Align NAP-OUTBOX with the current draft by removing caller-visible routing and lifecycle controls. `OutboxStrategy` is no longer exported, `strategy` is no longer accepted on outbox option objects, and `OutboxSubscribeOptions` no longer accepts `live`; subscription lifecycle is represented by the handle plus `outbox.close` / `outbox.closed`.
+
 ## 0.26.0
 
 ### Minor Changes
