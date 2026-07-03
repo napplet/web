@@ -5,5 +5,6 @@ dist/
 .omx/
 test-results/
 playwright-report/
+.playwright-mcp/
 .claude/
 .aislop/history.jsonl
