@@ -149,7 +149,7 @@ export interface CvmApi {
  * if (window.napplet.outbox) {
  *   const { events } = await window.napplet.outbox.query(
  *     [{ authors: ['ab12...'], kinds: [1], limit: 20 }],
- *     { strategy: 'outbox' },
+ *     { authors: ['ab12...'], timeoutMs: 3000 },
  *   );
  * }
  * ```
@@ -159,7 +159,7 @@ export interface OutboxApi {
    * Fetch one event by ID through shell-owned outbox routing. The shell validates
    * that any returned event matches the requested id and has a valid signature.
    * @param eventId  Event id to fetch
-   * @param options  Optional author/relay hints, strategy, and timeout
+   * @param options  Optional author/relay hints and timeout
    * @returns Promise resolving to the outbox event result
    */
   getEvent(eventId: string, options?: OutboxEventOptions): Promise<OutboxEventResult>;
@@ -169,7 +169,7 @@ export interface OutboxApi {
    * `RelayEventResult` records. Partial results carry `incomplete: true`; a
    * query-level failure arrives as inline `error`.
    * @param filters  NIP-01 filter or filters
-   * @param options  Optional query options (authors, relays, strategy, limit, timeoutMs)
+   * @param options  Optional query options (authors, relays, limit, timeoutMs)
    * @returns Promise resolving to the outbox result
    */
   query(filters: NostrFilter | NostrFilter[], options?: OutboxQueryOptions): Promise<OutboxResult>;
@@ -178,21 +178,21 @@ export interface OutboxApi {
    * connections as NIP-65 relay lists change and streams until `close()` or
    * `outbox.closed`.
    * @param filters  NIP-01 filter or filters
-   * @param options  Optional subscribe options (adds `live`)
+   * @param options  Optional subscribe options
    * @returns An OutboxSubscription handle with `on(...)` and `close()`
    */
   subscribe(filters: NostrFilter | NostrFilter[], options?: OutboxSubscribeOptions): OutboxSubscription;
   /**
    * Publish a shell-signed event using outbox-aware relay fanout.
    * @param template  Unsigned event template; the shell signs before fanout
-   * @param options   Optional publish options (relays, targetAuthors, strategy)
+   * @param options   Optional publish options (relays, targetAuthors)
    * @returns Promise resolving to the outbox publish result
    */
   publish(template: EventTemplate, options?: OutboxPublishOptions): Promise<OutboxPublishResult>;
   /**
    * Resolve the relay plan the shell would use for a read/write target.
    * Useful for diagnostics/UI; prefer query/subscribe/publish for access.
-   * @param target  The read/write target (authors/pubkey, direction, strategy)
+   * @param target  The read/write target (authors/pubkey, direction)
    * @returns Promise resolving to the relay plan
    */
   resolveRelays(target: OutboxTarget): Promise<OutboxRelayPlan>;

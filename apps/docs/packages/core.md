@@ -79,7 +79,7 @@ swallowed in async paths (the envelope never crosses). These helpers fix that.
 import { setCloneMode, toCloneableSnapshot } from '@napplet/core';
 
 // Default 'auto' just works — reactive state is snapshotted on the failure path.
-napplet.outbox.subscribe(filters, { relays, live: true });
+napplet.outbox.subscribe(filters, { relays, timeoutMs: 3000 });
 
 // Or normalize explicitly / eagerly:
 napplet.outbox.subscribe(toCloneableSnapshot(filters), { relays });

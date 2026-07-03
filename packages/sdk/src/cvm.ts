@@ -159,16 +159,18 @@ export const cvm = {
  * ```ts
  * import { outbox } from '@napplet/sdk';
  *
- * const { events } = await outbox.query([{ authors: ['ab12...'], kinds: [1] }], { strategy: 'outbox' });
- * const sub = outbox.subscribe([{ kinds: [1] }], { live: true });
- * sub.on('event', (event, relay) => render(event, relay));
+ * const { events } = await outbox.query([{ authors: ['ab12...'], kinds: [1] }], {
+ *   authors: ['ab12...'],
+ * });
+ * const sub = outbox.subscribe([{ kinds: [1] }], { timeoutMs: 3000 });
+ * sub.on('event', (result) => render(result.event, result.sidecar?.relayHints));
  * ```
  */
 export const outbox = {
   /**
    * Fetch one event by ID through shell-owned outbox routing.
    * @param eventId  Event id to fetch
-   * @param options  Optional author/relay hints, strategy, and timeout
+   * @param options  Optional author/relay hints and timeout
    * @returns Promise resolving to the outbox event result
    */
   getEvent(

@@ -179,12 +179,12 @@ export function handleOutboxMessage(msg: { type: string; [key: string]: unknown 
  * that any returned event matches `eventId` and has a valid signature.
  *
  * @param eventId  Event id to fetch
- * @param options  Optional author/relay hints, strategy, and timeout
+ * @param options  Optional author/relay hints and timeout
  * @returns Promise resolving to the outbox event result
  *
  * @example
  * ```ts
- * const { event } = await getEvent('ev1...', { author: 'ab12...', strategy: 'outbox' });
+ * const { result } = await getEvent('ev1...', { author: 'ab12...', timeoutMs: 3000 });
  * ```
  */
 export function getEvent(
@@ -216,14 +216,14 @@ export function getEvent(
  * `error` field describes a query-level failure (the promise still resolves).
  *
  * @param filters  NIP-01 filter or filters
- * @param options  Optional query options (authors, relays, strategy, limit, timeoutMs)
+ * @param options  Optional query options (authors, relays, limit, timeoutMs)
  * @returns Promise resolving to the outbox result
  *
  * @example
  * ```ts
  * const { events } = await query(
  *   [{ authors: ['ab12...'], kinds: [1], limit: 20 }],
- *   { strategy: 'outbox', timeoutMs: 3000 },
+ *   { authors: ['ab12...'], timeoutMs: 3000 },
  * );
  * ```
  */
@@ -255,12 +255,12 @@ export function query(
  * NIP-65 relay lists change.
  *
  * @param filters  NIP-01 filter or filters
- * @param options  Optional subscribe options (adds `live`)
+ * @param options  Optional subscribe options
  * @returns An OutboxSubscription handle
  *
  * @example
  * ```ts
- * const sub = subscribe([{ authors: ['ab12...'], kinds: [1] }], { strategy: 'outbox', live: true });
+ * const sub = subscribe([{ authors: ['ab12...'], kinds: [1] }], { timeoutMs: 3000 });
  * sub.on('event', (result) => render(result.event, result.sidecar?.relayHints));
  * // later: sub.close();
  * ```
@@ -314,14 +314,14 @@ export function subscribe(
  * if the shell never responds.
  *
  * @param template  Unsigned event template; the shell signs before fanout
- * @param options   Optional publish options (relays, targetAuthors, strategy)
+ * @param options   Optional publish options (relays, targetAuthors)
  * @returns Promise resolving to the outbox publish result
  *
  * @example
  * ```ts
  * const res = await publish(
  *   { kind: 1, content: 'hello', tags: [], created_at: Math.floor(Date.now() / 1000) },
- *   { strategy: 'outbox' },
+ *   { targetAuthors: ['ab12...'] },
  * );
  * ```
  */
@@ -350,7 +350,7 @@ export function publish(
  * Resolve the relay plan the shell would use for a read/write target. Useful for
  * diagnostics and UI; prefer `query`/`subscribe`/`publish` for actual access.
  *
- * @param target  The read/write target (authors/pubkey, direction, strategy)
+ * @param target  The read/write target (authors/pubkey, direction)
  * @returns Promise resolving to the relay plan
  */
 export function resolveRelays(target: OutboxTarget): Promise<OutboxRelayPlan> {

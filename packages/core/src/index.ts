@@ -56,7 +56,6 @@ export type {
   CvmDiscoverQuery,
   CvmServer,
   CvmRequestOptions,
-  OutboxStrategy,
   OutboxEventOptions,
   OutboxQueryOptions,
   OutboxSubscribeOptions,
