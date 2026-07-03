@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v0.34.0
 milestone_name: NIP-5D Runtime Injection
 status: planning
-last_updated: "2026-07-03T10:15:12Z"
-last_activity: 2026-07-03 - Completed quick task 260703-gz0: add @napplet/cli to the JSR-only publish path
+last_updated: "2026-07-03T12:48:51Z"
+last_activity: 2026-07-03 - Completed quick task 260703-kaa: add napplet CLI screenshot capture through Paja
 progress:
   total_phases: 0
   completed_phases: 0
@@ -30,7 +30,17 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 Phase: Not started (defining requirements)
 Plan: —
 Status: Defining requirements
-Last activity: 2026-07-03 — Completed quick task 260703-gz0: add @napplet/cli to the JSR-only publish path
+Last activity: 2026-07-03 — Completed quick task 260703-kaa: add napplet CLI screenshot capture through Paja
+
+### Quick task 260703-kaa — COMPLETE
+
+- Added `napplet screenshot` for loading discovered built napplets through `kehto paja`, fixed identity mode, and a Chromium DevTools Protocol iframe-only screenshot capture.
+- Default screenshot identity is `npub1uac67zc9er54ln0kl6e4qp2y6ta3enfcg7ywnayshvlw9r5w6ehsqq99rx`; `--identity <npub|hex>` overrides it.
+- Saved screenshots under deploy-root-relative `screenshots/` by default and reject output directories outside the deploy root so `napplet deploy` discovers the PNG as a normal manifest `path` entry, uploads it to Blossom, and includes it in the event without inventing protocol tags.
+- Fixed single-repo `dist/index.html` candidate naming from `..` to `root`, preventing hidden screenshot output names.
+- Updated docs, exports, tests, and changeset; repaired the stale publish-script unit assertion on `feat/napplet-cli` after CLI became JSR-only.
+- Verification: `deno lint src tests`; `deno task check`; `deno task test:unit`; live Paja + `/usr/bin/chromium` smoke producing `dist/screenshots/root.png` and dry-run deploy path tag `/screenshots/root.png`; `pnpm --filter @napplet/cli build`; `pnpm type-check`; `pnpm -r test:unit`; `pnpm build`; `git diff --check`; `pnpm dlx aislop@0.12.0 scan --json .` score 89 / Healthy.
+- Remaining note: local `/home/sandwich/.local/bin/kehto` does not dispatch because its direct-cli check expects `/index.js`; smoke used Kehto's built `dist/index.js` through `paja.command`.
 
 ### Quick task 260703-gz0 — COMPLETE
 

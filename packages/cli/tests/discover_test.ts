@@ -12,6 +12,7 @@ Deno.test("discoverNapplets prefers built dist/index.html", async () => {
     const candidates = await discoverNapplets(defaultConfig({ sourceDir: "." }), { cwd: dir });
     assertEquals(candidates.length, 1);
     assertEquals(candidates[0].dir, joinPath(dir, "dist"));
+    assertEquals(candidates[0].name, "root");
   });
 });
 

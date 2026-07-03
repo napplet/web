@@ -29,6 +29,13 @@ export interface NappletConfig {
   paja?: {
     command: string;
   };
+  screenshot?: {
+    directory: string;
+    identity?: string;
+    width?: number;
+    height?: number;
+    timeoutMs?: number;
+  };
 }
 
 export interface NappletCandidate {

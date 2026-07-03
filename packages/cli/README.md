@@ -9,6 +9,8 @@ This first package slice provides:
   (see [Project layouts](#project-layouts) for single-repo vs monorepo behavior).
 - `napplet deploy` for root, named, and snapshot deploy planning, Blossom uploads, relay publish,
   and local or `nbunksec` event signing.
+- `napplet screenshot` for loading a built napplet through `@kehto/paja`, capturing only the runtime
+  iframe, and saving a deploy-discoverable PNG.
 - `napplet debug` for read-only JSON diagnostics covering config, discovery, deploy-plan,
   manifest-template, and signing readiness state.
 - `napplet keys store/use/list/delete/doctor` for local key references in the platform keychain.
@@ -29,6 +31,13 @@ yet; generate and pass an `nbunksec` for CI-style remote signing.
 
 When a built napplet includes a plugin-generated `.nip5a-manifest.json`, deploy templates preserve
 canonical `requires` tags from that sidecar on root, named, and companion snapshot manifests.
+
+`napplet screenshot` saves PNG files under `screenshots/` inside each discovered deploy directory by
+default. Because screenshots are normal files under the deploy root, `napplet deploy` includes them
+as `path` tags, uploads them to Blossom, and publishes them in the same napplet manifest event. The
+command starts `kehto paja` with fixed identity mode using
+`npub1uac67zc9er54ln0kl6e4qp2y6ta3enfcg7ywnayshvlw9r5w6ehsqq99rx` by default; override it with
+`--identity <npub|hex>`.
 
 `napplet debug [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>]` prints the same
 operator-facing discovery and deploy planning state without uploading blobs or publishing events.
@@ -70,13 +79,14 @@ my-napplet/
 napplet init --relay wss://relay.example --server https://blossom.example --name my-napplet
 
 napplet debug                       # inspect the resolved plan, no network
+napplet screenshot                  # writes dist/screenshots/my-napplet.png
 napplet deploy --dry-run --sec nsec1…   # build + sign manifests, no upload/publish
 napplet deploy --sec nsec1…             # upload blobs and publish manifests
 ```
 
 The named-site `d` tag comes from `--name` / `config.named`, falling back to `default` when unset.
-Use `--root` to publish the singular replaceable root napplet (kind 15129) instead of a named napplet, and
-`--snapshot` to also emit an immutable snapshot (kind 5129) companion.
+Use `--root` to publish the singular replaceable root napplet (kind 15129) instead of a named
+napplet, and `--snapshot` to also emit an immutable snapshot (kind 5129) companion.
 
 ### Napplet monorepo
 
@@ -106,6 +116,7 @@ my-workspace/
 
 ```sh
 napplet discover --all                     # list every napplet found under roots
+napplet screenshot --all                   # capture one iframe PNG per discovered napplet
 napplet deploy --all --dry-run --sec nsec1…    # plan every napplet, no network
 napplet deploy --all --sec nsec1…              # deploy every napplet under its folder name
 napplet deploy --all --name feed --sec nsec1…  # deploy only the feed/ napplet
@@ -122,6 +133,22 @@ Notes for monorepo mode:
   never double-counted.
 - `--root` is a poor fit for `--all`: the root site is singular per pubkey, so deploying many
   napplets to it would have them overwrite one another.
+
+## Screenshots
+
+```sh
+napplet screenshot
+napplet screenshot --identity npub1...
+napplet screenshot --out-dir screenshots --file cover.png
+napplet screenshot --browser /usr/bin/chromium --width 1440 --height 900
+napplet screenshot --target-url http://127.0.0.1:5173 -- --theme dark
+```
+
+The output directory is relative to the discovered napplet deploy directory. Absolute paths and `..`
+segments are rejected so the generated file remains deploy-discoverable. When `--target-url` is
+omitted, the CLI serves the discovered built output on loopback and points Paja at that URL. When
+`--target-url` is provided, the command still writes the PNG under the discovered deploy directory
+so the next deploy picks it up.
 
 ## Keys
 
