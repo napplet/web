@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v0.34.0
 milestone_name: NIP-5D Runtime Injection
 status: planning
-last_updated: "2026-07-01T15:30:51.000Z"
-last_activity: 2026-07-01
+last_updated: "2026-07-03T10:15:12Z"
+last_activity: 2026-07-03 - Completed quick task 260703-gz0: add @napplet/cli to the JSR-only publish path
 progress:
   total_phases: 0
   completed_phases: 0
@@ -30,7 +30,17 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 Phase: Not started (defining requirements)
 Plan: —
 Status: Defining requirements
-Last activity: 2026-07-01 — Completed quick task 260701-cif: install Deno in CI for @napplet/cli root tasks
+Last activity: 2026-07-03 — Completed quick task 260703-gz0: add @napplet/cli to the JSR-only publish path
+
+### Quick task 260703-gz0 — COMPLETE
+
+- Added Deno setup to the JSR publish workflow before package publishing.
+- Kept `@napplet/cli` in the JSR publish filter while documenting that it publishes from `deno.json`.
+- Excluded `@napplet/cli` from the npm recursive publish script.
+- Extended `scripts/sync-jsr-versions.mjs` so Deno-first JSR package configs get their `deno.json` version synced from `package.json`.
+- Verification: JSON parse for root/CLI configs; Ruby YAML parse for `.github/workflows/publish-jsr.yml`; `deno --version`; pnpm publish filter help and package-list checks; `node scripts/sync-jsr-versions.mjs`; `npx jsr publish --dry-run --allow-slow-types --allow-dirty` in `packages/cli`; `node --check scripts/sync-jsr-versions.mjs`; `git diff --check`.
+- Commit: `6d98908c` (`Publish the Deno CLI through JSR only`).
+- Remaining scope: live GitHub Actions publish run was not triggered.
 
 ### Quick task 260701-cif — COMPLETE
 
@@ -379,6 +389,7 @@ Surfaced by research (informational — each belongs to a specific phase plan):
 | 260626-mt6 | Implement NAP-DM from napplet/naps PR #74 and prepare release PR with tests and changeset | 2026-06-26 | c451810 | [260626-mt6-implement-nap-dm-from-napplet-naps-74-an](./quick/260626-mt6-implement-nap-dm-from-napplet-naps-74-an/) |
 | 260626-nkv | Resolve napplet/web#91: guard relay query result events and open PR | 2026-06-26 | 9d23f6c | [260626-nkv-resolve-napplet-web-91-if-valid-guard-re](./quick/260626-nkv-resolve-napplet-web-91-if-valid-guard-re/) |
 | 260701-k68 | Scaffold @napplet/cli Deno package with init, discovery staging, deploy plan, signing mode parsing, and wrapper command surfaces | 2026-07-01 | 4bec5648 | [260701-k68-scaffold-napplet-cli-deno-package-with-i](./quick/260701-k68-scaffold-napplet-cli-deno-package-with-i/) |
+| 260703-gz0 | Add @napplet/cli to the JSR-only publish workflow | 2026-07-03 | 6d98908c | [260703-gz0-add-napplet-cli-to-jsr-only-publish-work](./quick/260703-gz0-add-napplet-cli-to-jsr-only-publish-work/) |
 
 Last session: 2026-04-21T20:46:00.000Z
 Stopped at: Completed 142-03-PLAN.md (Phase 142 TERMINAL-COMPLETE)
