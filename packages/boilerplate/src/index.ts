@@ -417,7 +417,7 @@ Verify:
   pnpm verify
 
 Benchmark napplet production from the napplet repo:
-  pnpm benchmark:creation
+  pnpm benchmark:creation -- --candidate <path-to-created-napplet> --condition skills
 `);
 }
 

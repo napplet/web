@@ -96,21 +96,33 @@ When the task changes the napplet boilerplate, creation workflow, or these
 skills, also run the napplet production benchmark from the monorepo:
 
 ```bash
-pnpm benchmark:creation -- --out benchmark.json --markdown benchmark.md
+pnpm benchmark:creation
+```
+
+The default run scores `benchmarks/prompts/outbox-latest-note.md` against the
+committed candidate fixture. Override the candidate and condition for real
+one-shot agent outputs:
+
+```bash
+pnpm benchmark:creation -- \
+  --prompt benchmarks/prompts/outbox-latest-note.md \
+  --candidate /path/to/agent-output \
+  --agent codex \
+  --condition skills \
+  --out benchmark.json \
+  --markdown benchmark.md
 ```
 
 The report captures:
 
 | Metric | Evidence |
 | --- | --- |
-| Development speed | `--started-at` wall time or elapsed benchmark tooling seconds |
-| Workflow | scenario prompt, scaffold command, and installed napplet skill packet |
+| Development speed | `--started-at` wall time or elapsed scoring seconds |
+| Workflow | frozen prompt hash, declared condition, and supplied candidate |
 | Accuracy | scenario behavior and protocol-boundary checks on the produced napplet |
-| Completeness | project files, build/verify/conformance scripts, benchmark guidance |
+| Completeness | project files, build/verify/conformance scripts, verification guidance |
 | Bugs | count of failed benchmark checks |
 
-For improvement work, keep both a baseline and an improved report so the
-iteration is measurable instead of anecdotal. The default command validates the
-benchmark methodology with a deterministic reference implementation; pass
-`--candidate <path>` to score a real produced napplet or
-`--no-reference --allow-failures` for an expected-failing baseline.
+For improvement work, keep one report for each compared condition. Use the same
+prompt file for each one-shot agent run and score the candidate it actually
+produced.

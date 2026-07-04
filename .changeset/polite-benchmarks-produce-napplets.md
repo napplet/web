@@ -3,7 +3,7 @@
 "@napplet/skills": patch
 ---
 
-Add production-focused napplet benchmarking guidance. The benchmark now measures
-a scenario-driven napplet workflow across boilerplate, installed skills,
-candidate implementation checks, completeness, and detected bugs instead of
-only scaffold initialization.
+Add agent-focused napplet benchmarking guidance. The benchmark now has a default
+frozen one-shot prompt and default candidate, supports prompt/candidate
+overrides, and reports implementation accuracy, completeness, and detected bugs
+instead of measuring scaffold or skill installation success.

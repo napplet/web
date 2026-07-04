@@ -1,3 +1,5 @@
-# my-napplet
+# Latest Note
 
-Minimal template used by the napplet production benchmark.
+Candidate fixture used by the napplet one-shot implementation benchmark.
+
+Run `pnpm verify` before publishing or comparing benchmark results.

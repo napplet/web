@@ -1,13 +1,10 @@
 #!/usr/bin/env node
 
-import { spawn } from 'node:child_process';
-import { cp, mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { createHash } from 'node:crypto';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
-  applyReferenceImplementation,
   inspectCandidate,
   markdownReport,
   readJson,
@@ -17,22 +14,20 @@ import {
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(scriptDir, '..');
 const defaultScenario = join(repoRoot, 'benchmarks/scenarios/outbox-latest-note.json');
-const defaultTemplate = join(repoRoot, 'packages/boilerplate/test-fixtures/basic-template');
-const boilerplateCli = join(repoRoot, 'packages/boilerplate/dist/index.js');
-const skillsCli = join(repoRoot, 'packages/skills/dist/cli.js');
+const defaultPrompt = join(repoRoot, 'benchmarks/prompts/outbox-latest-note.md');
+const defaultCandidate = join(repoRoot, 'packages/boilerplate/test-fixtures/basic-template');
 
 function parseArgs(argv) {
   const opts = {
     scenario: defaultScenario,
-    template: defaultTemplate,
-    candidate: '',
+    prompt: defaultPrompt,
+    promptExplicit: false,
+    candidate: defaultCandidate,
     out: '',
     markdown: '',
-    target: '',
-    keep: false,
-    skipBuild: false,
-    skipSkillInstall: false,
-    applyReference: true,
+    writePrompt: '',
+    condition: 'default-candidate',
+    agent: 'fixture',
     allowFailures: false,
     smoke: false,
     startedAt: '',
@@ -52,8 +47,9 @@ function parseArgs(argv) {
       case '--scenario':
         opts.scenario = resolve(repoRoot, value());
         break;
-      case '--template':
-        opts.template = resolve(repoRoot, value());
+      case '--prompt':
+        opts.prompt = resolve(repoRoot, value());
+        opts.promptExplicit = true;
         break;
       case '--candidate':
         opts.candidate = resolve(repoRoot, value());
@@ -64,26 +60,17 @@ function parseArgs(argv) {
       case '--markdown':
         opts.markdown = resolve(repoRoot, value());
         break;
-      case '--target':
-        opts.target = resolve(repoRoot, value());
+      case '--write-prompt':
+        opts.writePrompt = resolve(repoRoot, value());
+        break;
+      case '--condition':
+        opts.condition = value();
+        break;
+      case '--agent':
+        opts.agent = value();
         break;
       case '--started-at':
         opts.startedAt = value();
-        break;
-      case '--keep':
-        opts.keep = true;
-        break;
-      case '--skip-build':
-        opts.skipBuild = true;
-        break;
-      case '--skip-skill-install':
-        opts.skipSkillInstall = true;
-        break;
-      case '--apply-reference':
-        opts.applyReference = true;
-        break;
-      case '--no-reference':
-        opts.applyReference = false;
         break;
       case '--allow-failures':
         opts.allowFailures = true;
@@ -112,22 +99,20 @@ Usage:
 
 Options:
   --scenario <path>        Benchmark scenario JSON
-  --candidate <path>       Score an existing napplet project produced by an agent
-  --template <path>        Local template for generated benchmark workspaces
-  --target <path>          Scaffold into a fixed path instead of a temp dir
+  --prompt <path>          Frozen prompt markdown to score against
+  --write-prompt <path>    Write the frozen one-shot prompt for an agent run
+  --candidate <path>       Napplet project produced by a one-shot run
+  --condition <label>      Agent context/cohort label, e.g. skills, no-skills
+  --agent <label>          Agent label for report metadata
   --started-at <iso>       Development start time for wall-clock productivity stats
   --out <path>             Write JSON report
   --markdown <path>        Write markdown summary
-  --apply-reference        Apply deterministic reference implementation after scaffold (default)
-  --no-reference           Score scaffolded output as-is; useful for honest baselines
-  --skip-build             Use existing dist/ CLIs
-  --skip-skill-install     Do not install skills into the benchmark workspace
   --allow-failures         Exit 0 even when benchmark checks find bugs
   --smoke                  Compact stdout for package smoke tests
 
-Default mode scaffolds a candidate, installs the relevant napplet skills, and
-applies the deterministic reference implementation to validate the benchmark.
-Use --candidate to benchmark a real napplet produced by an agent or developer.
+By default this scores the repository's frozen prompt against the repository's
+candidate fixture. Use --prompt and --candidate to score another one-shot output
+without changing the benchmark contract.
 `);
 }
 
@@ -139,127 +124,53 @@ function elapsedMs(start) {
   return Number(process.hrtime.bigint() - start) / 1_000_000;
 }
 
-async function run(command, args, options = {}) {
-  const started = now();
-  const child = spawn(command, args, {
-    cwd: options.cwd ?? repoRoot,
-    stdio: ['ignore', 'pipe', 'pipe'],
-    env: process.env,
-  });
-  let stdout = '';
-  let stderr = '';
-  child.stdout.on('data', (chunk) => {
-    stdout += chunk.toString();
-  });
-  child.stderr.on('data', (chunk) => {
-    stderr += chunk.toString();
-  });
+function generatedPromptFor(scenario) {
+  return `# One-Shot Napplet Implementation Benchmark
 
-  const exitCode = await new Promise((resolveExit, reject) => {
-    child.on('error', reject);
-    child.on('close', resolveExit);
-  });
+You are an autonomous coding agent. Make one implementation attempt for the
+scenario below, then stop for scoring. Use the napplet repo's current skills,
+docs, boilerplate, and package APIs when they are available in your environment.
+Do not edit benchmark checks or weaken the task.
 
-  return {
-    command: [command, ...args].join(' '),
-    exitCode,
-    stdout,
-    stderr,
-    elapsedMs: elapsedMs(started),
-  };
+## Scenario
+
+${scenario.prompt.trim()}
+
+## Required Evidence In The Candidate
+
+- A complete napplet project with package scripts for build, conformance, and
+  verification.
+- Source code that implements the scenario through shell-owned napplet domains.
+- A README that names the produced napplet and how to verify it.
+
+The candidate directory produced by this single run will be scored by:
+\`pnpm benchmark:creation -- --candidate <candidate-dir>\`
+`;
 }
 
-async function writePrompt(workspace, scenario) {
-  const promptPath = join(workspace, 'PROMPT.md');
-  await writeFile(promptPath, `${scenario.prompt.trim()}\n`);
-  return promptPath;
-}
-
-async function installSkills(workspace, phases) {
-  if (!existsSync(skillsCli)) {
-    const started = now();
-    const target = join(workspace, 'agent-skills');
-    for (const name of ['make-napplet', 'build-napplet', 'test-napplet']) {
-      await mkdir(join(target, name), { recursive: true });
-      await cp(
-        join(repoRoot, 'packages/skills/skills', name, 'SKILL.md'),
-        join(target, name, 'SKILL.md'),
-      );
-    }
-    phases.push({
-      name: 'install-skills',
-      command: `copy packages/skills/skills/{make-napplet,build-napplet,test-napplet} ${target}`,
-      exitCode: 0,
-      stdout: '',
-      stderr: '',
-      elapsedMs: elapsedMs(started),
-    });
-    return;
+async function readPrompt(opts, scenario) {
+  if (!opts.promptExplicit && opts.scenario !== defaultScenario) {
+    return generatedPromptFor(scenario);
   }
-
-  const result = await run('node', [
-    skillsCli,
-    'install',
-    'make-napplet',
-    'build-napplet',
-    'test-napplet',
-    '--dir',
-    join(workspace, 'agent-skills'),
-  ]);
-  phases.push({ name: 'install-skills', ...result });
-  if (result.exitCode !== 0) {
-    throw new Error(`skill installation failed:\n${result.stderr || result.stdout}`);
+  try {
+    return await readFile(opts.prompt, 'utf8');
+  } catch (error) {
+    if (opts.prompt !== defaultPrompt) throw error;
+    return generatedPromptFor(scenario);
   }
 }
 
-async function scaffoldCandidate(target, workspace, scenario, opts, phases) {
-  const result = await run('node', [
-    boilerplateCli,
-    target,
-    '--template',
-    opts.template,
-    '--package-name',
-    scenario.packageName,
-    '--napplet-type',
-    scenario.nappletType,
-    '--title',
-    scenario.title,
-    '--yes',
-    '--force',
-  ]);
-  phases.push({ name: 'scaffold', ...result });
-  if (result.exitCode !== 0) {
-    throw new Error(`scaffold failed:\n${result.stderr || result.stdout}`);
-  }
-  await writeFile(join(workspace, 'SCAFFOLD_COMMAND.txt'), `${result.command}\n`);
-  return result.stdout;
-}
-
-async function buildTools(opts, phases) {
-  if (opts.skipBuild) return;
-  for (const pkg of ['@napplet/boilerplate', '@napplet/skills']) {
-    const build = await run('pnpm', ['--filter', pkg, 'build']);
-    phases.push({ name: `build-${pkg}`, ...build });
-    if (build.exitCode !== 0) throw new Error(`${pkg} build failed:\n${build.stderr || build.stdout}`);
-  }
-}
-
-async function prepareCandidate(opts, scenario, workspace, candidate, phases) {
-  if (opts.candidate) return '';
-  await writePrompt(workspace, scenario);
-  if (!opts.skipSkillInstall) await installSkills(workspace, phases);
-  const scaffoldStdout = await scaffoldCandidate(candidate, workspace, scenario, opts, phases);
-  if (opts.applyReference) await applyReferenceImplementation(candidate, scenario);
-  return scaffoldStdout;
+function hashText(value) {
+  return createHash('sha256').update(value).digest('hex');
 }
 
 function reportMetrics(checks, opts, totalStart) {
-  const toolingSeconds = Number((elapsedMs(totalStart) / 1000).toFixed(3));
+  const scoringSeconds = Number((elapsedMs(totalStart) / 1000).toFixed(3));
   return {
     developmentSeconds: opts.startedAt
       ? Number(((Date.now() - Date.parse(opts.startedAt)) / 1000).toFixed(3))
-      : toolingSeconds,
-    toolingSeconds,
+      : scoringSeconds,
+    scoringSeconds,
     workflow: summarizeScore(checks, 'workflow'),
     accuracy: summarizeScore(checks, 'accuracy'),
     completeness: summarizeScore(checks, 'completeness'),
@@ -272,21 +183,20 @@ function createReport(context, checks, metrics) {
     schemaVersion: 1,
     startedAt: context.startedAt,
     scenario: context.scenario,
+    agent: {
+      name: context.agent,
+      condition: context.condition,
+      oneShot: true,
+      promptSha256: context.promptSha256,
+    },
     methodology: {
-      speed: 'Development seconds from --started-at when supplied; otherwise elapsed benchmark tooling seconds.',
-      workflow: 'Skill packet, scenario prompt, and scaffold command evidence for using the surrounding tooling.',
+      speed: 'Development seconds from --started-at when supplied; otherwise elapsed scoring seconds.',
+      workflow: 'Frozen prompt, declared agent/tooling condition, and supplied candidate evidence.',
       accuracy: 'Scenario-specific behavior and protocol-boundary checks on the produced napplet.',
-      completeness: 'Expected project files, scripts, and benchmark guidance for a shippable napplet workflow.',
+      completeness: 'Expected project files, scripts, and verification guidance for a shippable napplet workflow.',
       bugs: 'Count of failed workflow, accuracy, and completeness checks.',
     },
-    workspaceDir: context.workspace,
     candidateDir: context.candidate,
-    phases: context.phases.map((phase) => ({
-      name: phase.name,
-      command: phase.command,
-      exitCode: phase.exitCode,
-      elapsedMs: Number(phase.elapsedMs.toFixed(3)),
-    })),
     checks,
     metrics,
   };
@@ -306,14 +216,16 @@ async function writeOutputs(opts, report) {
 function printResult(opts, report) {
   const metrics = report.metrics;
   if (opts.smoke) {
-    process.stdout.write(`napplet production benchmark: ${metrics.bugCount} bug(s), ${metrics.toolingSeconds}s\n`);
+    process.stdout.write(`napplet production benchmark: ${metrics.bugCount} bug(s), ${metrics.scoringSeconds}s\n`);
     return;
   }
   const relativeCandidate = relative(repoRoot, report.candidateDir);
   process.stdout.write(JSON.stringify({
     scenario: report.scenario.id,
+    agent: report.agent.name,
+    condition: report.agent.condition,
     developmentSeconds: metrics.developmentSeconds,
-    toolingSeconds: metrics.toolingSeconds,
+    scoringSeconds: metrics.scoringSeconds,
     workflow: metrics.workflow.score,
     accuracy: metrics.accuracy.score,
     completeness: metrics.completeness.score,
@@ -326,25 +238,31 @@ function printResult(opts, report) {
 async function main() {
   const opts = parseArgs(process.argv.slice(2));
   const scenario = await readJson(opts.scenario);
+  const staticPrompt = await readPrompt(opts, scenario);
+  const promptSha256 = hashText(staticPrompt);
+  if (opts.writePrompt) {
+    await mkdir(dirname(opts.writePrompt), { recursive: true });
+    await writeFile(opts.writePrompt, staticPrompt);
+  }
+
   const startedAt = opts.startedAt || new Date().toISOString();
   const totalStart = now();
-  const tempRoot = opts.candidate ? '' : await mkdtemp(join(tmpdir(), 'napplet-production-benchmark-'));
-  const workspace = opts.candidate ? dirname(opts.candidate) : tempRoot;
-  const candidate = opts.candidate || opts.target || join(tempRoot, 'candidate');
-  const phases = [];
-
-  try {
-    await buildTools(opts, phases);
-    const scaffoldStdout = await prepareCandidate(opts, scenario, workspace, candidate, phases);
-    const checks = await inspectCandidate(candidate, workspace, scenario, scaffoldStdout);
-    const metrics = reportMetrics(checks, opts, totalStart);
-    const report = createReport({ startedAt, scenario, workspace, candidate, phases }, checks, metrics);
-    await writeOutputs(opts, report);
-    printResult(opts, report);
-    if (metrics.bugCount > 0 && !opts.allowFailures) process.exitCode = 1;
-  } finally {
-    if (!opts.keep && tempRoot) await rm(tempRoot, { recursive: true, force: true });
-  }
+  const checks = await inspectCandidate(opts.candidate, scenario, {
+    condition: opts.condition,
+    staticPrompt,
+  });
+  const metrics = reportMetrics(checks, opts, totalStart);
+  const report = createReport({
+    startedAt,
+    scenario,
+    candidate: opts.candidate,
+    agent: opts.agent,
+    condition: opts.condition,
+    promptSha256,
+  }, checks, metrics);
+  await writeOutputs(opts, report);
+  printResult(opts, report);
+  if (metrics.bugCount > 0 && !opts.allowFailures) process.exitCode = 1;
 }
 
 main().catch((error) => {

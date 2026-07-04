@@ -3,8 +3,8 @@ status: ready
 must_haves:
   truths:
     - Benchmark methodology covers speed, workflow evidence, accuracy, completeness, and bug count.
-    - Tooling runs against the current boilerplate generator, skills, and scenario output.
-    - At least one benchmark run is documented before and after an improvement iteration.
+    - Tooling scores a candidate produced from a static one-shot prompt under a declared agent/tooling condition.
+    - The default prompt artifact and one candidate scoring report are documented.
   artifacts:
     - Root benchmark script and package command.
     - Boilerplate smoke fixture/test path.
@@ -30,20 +30,19 @@ Files:
 
 Action:
 - Implement a no-new-dependency benchmark runner that builds or uses local
-  boilerplate and skills CLIs, captures a scenario prompt and skill packet,
-  produces or scores a candidate napplet, records timings, scores workflow,
-  accuracy, and completeness, counts failed checks as bugs, and writes
-  JSON/markdown reports.
-- Make `@napplet/boilerplate` `test:unit` run the production benchmark in a fast
-  reference-smoke mode.
+  boilerplate fixture, writes a frozen one-shot prompt, scores a supplied
+  candidate napplet, records timings, scores workflow, accuracy, and
+  completeness, counts failed checks as bugs, and writes JSON/markdown reports.
+- Make `@napplet/boilerplate` `test:unit` run the production benchmark against a
+  fast candidate fixture.
 
 Verify:
 - `pnpm --filter @napplet/boilerplate build`
 - `pnpm --filter @napplet/boilerplate test:unit`
-- `pnpm benchmark:creation -- --out .planning/quick/260704-kmz-improve-developer-getting-started-around/baseline.json --markdown .planning/quick/260704-kmz-improve-developer-getting-started-around/baseline.md`
+- `pnpm benchmark:creation -- --out .planning/quick/260704-kmz-improve-developer-getting-started-around/improved.json --markdown .planning/quick/260704-kmz-improve-developer-getting-started-around/improved.md`
 
 Done:
-- Benchmark report contains development/tooling seconds, workflow score,
+- Benchmark report contains development/scoring seconds, workflow score,
   accuracy score, completeness score, and bug count.
 
 ## Task 2 - Improve getting-started surfaces
@@ -69,8 +68,8 @@ Verify:
 - Confirm docs mention the benchmark command and skill flow.
 
 Done:
-- The benchmark records one improvement iteration and docs/skills explain how to
-  reproduce it.
+- The benchmark records how to reproduce the static prompt and candidate scoring
+  flow for one-shot agent comparisons.
 
 ## Task 3 - Final verification and summary
 

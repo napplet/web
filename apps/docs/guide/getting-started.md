@@ -32,13 +32,26 @@ If you are improving the generator, skills, or starter workflow itself, measure
 the change from the napplet monorepo:
 
 ```bash
-pnpm benchmark:creation -- --out benchmark.json --markdown benchmark.md
+pnpm benchmark:creation
 ```
 
-The benchmark records development/tooling time, skill workflow evidence,
-scenario accuracy, completeness, and detected bug count for a produced napplet.
-Use `--candidate <path>` to score a real napplet produced after following the
-skills; use `--no-reference --allow-failures` for an expected-failing baseline.
+The default run scores `benchmarks/prompts/outbox-latest-note.md` against the
+committed candidate fixture. Override the candidate and condition for real
+one-shot agent outputs:
+
+```bash
+pnpm benchmark:creation -- \
+  --prompt benchmarks/prompts/outbox-latest-note.md \
+  --candidate /path/to/agent-output \
+  --agent codex \
+  --condition skills \
+  --out benchmark.json \
+  --markdown benchmark.md
+```
+
+The benchmark records the prompt hash, declared agent/tooling condition,
+scenario accuracy, completeness, and detected bug count for the produced
+napplet. Use the same prompt for every compared condition.
 
 ## Install the packages manually
 

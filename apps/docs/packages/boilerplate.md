@@ -47,19 +47,29 @@ By default the CLI clones `https://github.com/napplet/boilerplate.git`.
 ## Benchmarking production
 
 From the napplet monorepo, run the production benchmark to measure the generator,
-skills, and surrounding tooling against a concrete napplet scenario:
+skills, and surrounding tooling against a concrete one-shot agent scenario:
 
 ```bash
-pnpm benchmark:creation -- --out benchmark.json --markdown benchmark.md
+pnpm benchmark:creation
 ```
 
-The report records development/tooling time, workflow evidence, scenario
-accuracy, completeness, and a bug count based on failed checks.
+The default run scores `benchmarks/prompts/outbox-latest-note.md` against the
+committed candidate fixture. Override the candidate and condition for real
+one-shot agent outputs:
 
-The default command validates the methodology with a deterministic reference
-implementation. Use `--candidate <path>` to score a real napplet produced after
-using the skills, or `--no-reference --allow-failures` for an honest baseline
-that may contain known gaps.
+```bash
+pnpm benchmark:creation -- \
+  --prompt benchmarks/prompts/outbox-latest-note.md \
+  --candidate /path/to/agent-output \
+  --agent codex \
+  --condition skills \
+  --out benchmark.json \
+  --markdown benchmark.md
+```
+
+The report records the frozen prompt hash, declared agent/tooling condition,
+scenario accuracy, completeness, and a bug count based on failed checks. Score
+each compared condition from its actual produced candidate directory.
 
 ## See also
 

@@ -1,9 +1,9 @@
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
 export const CHECKS = {
-  workflow: ['skill-packet', 'scenario-prompt', 'scaffold-command'],
+  workflow: ['static-prompt', 'agent-condition', 'candidate-directory'],
   accuracy: [
     'package-name',
     'napplet-type',
@@ -12,6 +12,7 @@ export const CHECKS = {
     'readme-title',
     'outbox-boundary',
     'signed-out-fallback',
+    'latest-note-rendering',
     'forbidden-surfaces',
   ],
   completeness: [
@@ -22,7 +23,7 @@ export const CHECKS = {
     'build-script',
     'verify-script',
     'conformance-script',
-    'benchmark-guidance',
+    'verification-guidance',
   ],
 };
 
@@ -58,52 +59,21 @@ function candidatePaths(target) {
   };
 }
 
-export async function applyReferenceImplementation(target, scenario) {
-  const source = `import { outbox } from '@napplet/sdk';
-
-const app = document.querySelector<HTMLHeadingElement>('#app-title');
-
-async function render(): Promise<void> {
-  if (!app) return;
-  app.dataset.scenario = '${scenario.id}';
-
-  if (!window.napplet?.outbox) {
-    app.textContent = '${scenario.fallbackText}';
-    app.dataset.state = 'signed-out';
-    return;
-  }
-
-  const result = await outbox.query([{ kinds: [1], limit: 1 }], { timeoutMs: 1000 });
-  const latest = result.events.at(0)?.event.content ?? 'No notes yet';
-  app.textContent = latest;
-  app.dataset.state = 'ready';
-}
-
-void render();
-`;
-  await mkdir(join(target, 'src'), { recursive: true });
-  await writeFile(join(target, 'src/main.ts'), source);
-  await writeFile(
-    join(target, 'README.md'),
-    `# ${scenario.title}\n\nBenchmark scenario: ${scenario.id}\n\nRun \`pnpm verify\` before publishing.\n`,
-  );
-}
-
-function workflowChecks(workspace, scaffoldStdout) {
+function workflowChecks(target, scenario, options) {
   return [
-    existsSync(join(workspace, 'agent-skills/make-napplet/SKILL.md'))
-      ? pass('skill-packet', 'workflow', 'make/build/test skills installed for the scenario')
-      : fail('skill-packet', 'workflow', 'benchmark workspace lacks installed napplet skills'),
-    existsSync(join(workspace, 'PROMPT.md'))
-      ? pass('scenario-prompt', 'workflow', 'scenario prompt captured')
-      : fail('scenario-prompt', 'workflow', 'scenario prompt missing'),
-    existsSync(join(workspace, 'SCAFFOLD_COMMAND.txt')) || scaffoldStdout
-      ? pass('scaffold-command', 'workflow', 'scaffold command captured')
-      : fail('scaffold-command', 'workflow', 'scaffold command not recorded'),
+    options.staticPrompt.includes(scenario.prompt.trim())
+      ? pass('static-prompt', 'workflow', 'frozen one-shot prompt embeds the scenario')
+      : fail('static-prompt', 'workflow', 'static prompt does not include the scenario text'),
+    options.condition
+      ? pass('agent-condition', 'workflow', `condition=${options.condition}`)
+      : fail('agent-condition', 'workflow', 'agent/tooling condition label missing'),
+    existsSync(target)
+      ? pass('candidate-directory', 'workflow', 'candidate directory supplied for scoring')
+      : fail('candidate-directory', 'workflow', 'candidate directory missing'),
   ];
 }
 
-function completenessChecks(paths, scripts, scaffoldStdout, readme) {
+function completenessChecks(paths, scripts, readme) {
   return [
     checkFileExists(paths.packagePath, 'package-json', 'completeness', 'package.json'),
     checkFileExists(paths.vitePath, 'vite-config', 'completeness', 'vite.config.ts'),
@@ -118,9 +88,9 @@ function completenessChecks(paths, scripts, scaffoldStdout, readme) {
     scripts['test:conformance']
       ? pass('conformance-script', 'completeness', `test:conformance=${scripts['test:conformance']}`)
       : fail('conformance-script', 'completeness', 'package.json lacks a test:conformance script'),
-    /benchmark:creation|benchmark:production/.test(scaffoldStdout) || readme.includes('benchmark')
-      ? pass('benchmark-guidance', 'completeness', 'candidate points to benchmark evidence')
-      : fail('benchmark-guidance', 'completeness', 'candidate does not mention benchmark evidence'),
+    readme.includes('pnpm verify') || readme.includes('test:conformance')
+      ? pass('verification-guidance', 'completeness', 'README explains candidate verification')
+      : fail('verification-guidance', 'completeness', 'README does not explain how to verify the candidate'),
   ];
 }
 
@@ -149,13 +119,16 @@ function accuracyChecks(packageJson, files, scenario) {
     files.source.includes('window.napplet?.outbox') && files.source.includes(scenario.fallbackText)
       ? pass('signed-out-fallback', 'accuracy', 'missing outbox path has a user-visible fallback')
       : fail('signed-out-fallback', 'accuracy', 'missing-domain or signed-out fallback is incomplete'),
+    files.source.includes('.content') && files.source.includes('textContent')
+      ? pass('latest-note-rendering', 'accuracy', 'latest note content is rendered into the UI')
+      : fail('latest-note-rendering', 'accuracy', 'source does not render latest note content'),
     !forbiddenHit
       ? pass('forbidden-surfaces', 'accuracy', 'no forbidden app-owned surfaces found')
       : fail('forbidden-surfaces', 'accuracy', `found forbidden surface: ${forbiddenHit}`),
   ];
 }
 
-export async function inspectCandidate(target, workspace, scenario, scaffoldStdout) {
+export async function inspectCandidate(target, scenario, options) {
   const paths = candidatePaths(target);
   const packageJson = existsSync(paths.packagePath) ? await readJson(paths.packagePath) : {};
   const files = {
@@ -165,8 +138,8 @@ export async function inspectCandidate(target, workspace, scenario, scaffoldStdo
     source: await readTextIfExists(paths.sourcePath),
   };
   return [
-    ...workflowChecks(workspace, scaffoldStdout),
-    ...completenessChecks(paths, packageJson.scripts ?? {}, scaffoldStdout, files.readme),
+    ...workflowChecks(target, scenario, options),
+    ...completenessChecks(paths, packageJson.scripts ?? {}, files.readme),
     ...accuracyChecks(packageJson, files, scenario),
   ];
 }
@@ -188,12 +161,15 @@ export function markdownReport(report) {
     '',
     `Scenario: ${report.scenario.id}`,
     `Run: ${report.startedAt}`,
+    `Agent: ${report.agent.name}`,
+    `Condition: ${report.agent.condition}`,
+    `Prompt SHA-256: \`${report.agent.promptSha256}\``,
     `Candidate: \`${report.candidateDir}\``,
     '',
     '## Results',
     '',
     `- Development seconds: ${report.metrics.developmentSeconds}`,
-    `- Tooling seconds: ${report.metrics.toolingSeconds}`,
+    `- Scoring seconds: ${report.metrics.scoringSeconds}`,
     `- Workflow: ${report.metrics.workflow.passed}/${report.metrics.workflow.total} (${report.metrics.workflow.score})`,
     `- Accuracy: ${report.metrics.accuracy.passed}/${report.metrics.accuracy.total} (${report.metrics.accuracy.score})`,
     `- Completeness: ${report.metrics.completeness.passed}/${report.metrics.completeness.total} (${report.metrics.completeness.score})`,

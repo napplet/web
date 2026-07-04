@@ -68,14 +68,27 @@ themselves, pair `make-napplet` / `test-napplet` with the monorepo production
 benchmark:
 
 ```bash
-pnpm benchmark:creation -- --out benchmark.json --markdown benchmark.md
+pnpm benchmark:creation
 ```
 
-The report measures development/tooling time, skill workflow evidence,
+The default run scores `benchmarks/prompts/outbox-latest-note.md` against the
+committed candidate fixture. Override the candidate and condition for real
+one-shot agent outputs:
+
+```bash
+pnpm benchmark:creation -- \
+  --prompt benchmarks/prompts/outbox-latest-note.md \
+  --candidate /path/to/agent-output \
+  --agent codex \
+  --condition skills \
+  --out benchmark.json \
+  --markdown benchmark.md
+```
+
+The report measures a frozen one-shot prompt, declared agent/tooling condition,
 implementation accuracy, completeness, and detected bug count for a concrete
-napplet scenario. Keep a baseline report when optimizing a workflow so changes
-are compared against evidence. Use `--candidate <path>` for a real agent-built
-napplet and `--no-reference --allow-failures` for an expected-failing baseline.
+napplet scenario. Keep one report per compared condition so workflow changes are
+compared against evidence.
 
 ## CLI
 

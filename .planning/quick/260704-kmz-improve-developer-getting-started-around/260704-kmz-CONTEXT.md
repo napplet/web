@@ -17,10 +17,13 @@ based on the benchmark.
 ## Implementation Decisions
 
 ### Benchmark shape
-- Use deterministic, executable benchmarks that can run locally and in CI.
-- Benchmark the production of a napplet from a scenario using boilerplate,
-  skills, and surrounding tooling, not just template initialization.
-- Measure development speed, skill workflow evidence, implementation accuracy,
+- Use an executable benchmark that can run locally and in CI.
+- Materialize one frozen prompt for the agent, then score the candidate produced
+  by that one-shot run.
+- Label the agent/tooling condition (`skills`, `no-skills`, `docs-only`, etc.)
+  so the benchmark measures skill/tool effectiveness in agent context, not
+  whether skills were installed successfully.
+- Measure development speed, workflow evidence, implementation accuracy,
   completeness, and detected bug count with transparent checks instead of
   subjective claims.
 
@@ -35,8 +38,8 @@ based on the benchmark.
 
 ### Protocol boundaries
 - Benchmark checks must not invent protocol requirements. They can check local
-  tooling outputs, skill packet availability, expected project files, package
-  scripts, and scenario-specific app behavior against existing package surfaces.
+  candidate availability, expected project files, package scripts, and
+  scenario-specific app behavior against existing package surfaces.
 
 </decisions>
 
@@ -47,12 +50,13 @@ based on the benchmark.
 - Add a package-local fixture template for reproducible production-benchmark
   setup.
 - Score methodology:
-  - speed: wall-clock seconds from `--started-at` or benchmark tooling elapsed time
-  - workflow: scenario prompt, scaffold command, and skill packet evidence
+  - speed: wall-clock seconds from `--started-at` or scoring elapsed time
+  - workflow: static prompt, condition label, and candidate directory evidence
   - accuracy: scenario behavior and protocol-boundary checks
   - completeness: required project files and scripts
   - bugs: count of failed benchmark checks
-- Run a baseline benchmark, improve one measured weakness, rerun, and record both.
+- Keep one report per compared condition. Do not use deterministic reference
+  implementations as benchmark success evidence.
 
 </specifics>
 

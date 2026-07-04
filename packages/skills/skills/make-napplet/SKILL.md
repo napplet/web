@@ -75,13 +75,26 @@ surrounding tooling itself, run the production benchmark before and after the
 improvement:
 
 ```bash
-pnpm benchmark:creation -- --out benchmark.json --markdown benchmark.md
+pnpm benchmark:creation
 ```
 
-Use the report as evidence for development speed, skill workflow coverage,
-scenario accuracy, completeness, and detected bug count. Use `--candidate` to
-score a napplet produced by an actual agent run. Use
-`--no-reference --allow-failures` only for an honest baseline with known gaps.
+The default run scores `benchmarks/prompts/outbox-latest-note.md` against the
+committed candidate fixture. Override the candidate and condition for real
+one-shot agent outputs:
+
+```bash
+pnpm benchmark:creation -- \
+  --prompt benchmarks/prompts/outbox-latest-note.md \
+  --candidate /path/to/agent-output \
+  --agent codex \
+  --condition skills \
+  --out benchmark.json \
+  --markdown benchmark.md
+```
+
+Use the report as evidence for the frozen prompt, declared agent/tooling
+condition, scenario accuracy, completeness, and detected bug count. Score only
+the candidate produced by the one-shot agent run.
 
 Do not claim "done" after design or code alone. Done means the built artifact
 passes the relevant conformance/build/test checks and the boundary audit has no
@@ -115,9 +128,8 @@ flag the missing package/spec surface.
 - Every optional NAP is gated with a graceful fallback.
 - Every hard requirement is declared with a bare domain name in the manifest
   `requires` list, not `NAP-*`.
-- For starter/skills/tooling changes, a benchmark report records development
-  speed, workflow evidence, accuracy, completeness, and bug count before and
-  after one improvement.
+- For starter/skills/tooling changes, benchmark reports record the same frozen
+  prompt against each compared agent/tooling condition.
 - The final answer includes the commands/checks that passed and any live-shell
   interoperability gap that was not tested.
 

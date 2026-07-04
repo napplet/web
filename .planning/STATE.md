@@ -4,7 +4,7 @@ milestone: v0.34.0
 milestone_name: NIP-5D Runtime Injection
 status: planning
 last_updated: "2026-07-03T12:21:03+02:00"
-last_activity: 2026-07-04 - Completed quick task 260704-kmz: Improve developer getting started around boilerplate, testing, skills, and benchmark methodology/tooling for napplet creation
+last_activity: 2026-07-04 - Corrected quick task 260704-kmz: benchmark now scores static one-shot agent outputs instead of scaffold/reference or skill-install mechanics
 progress:
   total_phases: 0
   completed_phases: 0
@@ -30,7 +30,7 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 Phase: Not started (defining requirements)
 Plan: —
 Status: Defining requirements
-Last activity: 2026-07-04 — Quick task 260704-kmz completed; napplet production benchmarking now measures skill workflow evidence, scenario accuracy, completeness, and detected bugs for a produced candidate napplet.
+Last activity: 2026-07-04 — Quick task 260704-kmz corrected; napplet production benchmarking now writes a frozen prompt, labels the agent/tooling condition, and scores the produced candidate for workflow evidence, scenario accuracy, completeness, and detected bugs.
 
 ### v0.34.0 roadmap
 

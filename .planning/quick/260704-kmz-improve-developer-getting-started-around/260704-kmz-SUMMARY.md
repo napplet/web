@@ -8,39 +8,43 @@ date: 2026-07-04
 
 ## Outcome
 
-Implemented a production-focused napplet benchmark for developer onboarding
-tooling. The benchmark now evaluates a concrete napplet scenario across:
+Implemented an agent-focused napplet benchmark for developer onboarding tooling.
+The benchmark now evaluates the candidate produced from a frozen one-shot prompt
+across:
 
-- scenario prompt capture
-- installed `make-napplet` / `build-napplet` / `test-napplet` skill packet
-- boilerplate scaffold command evidence
+- static prompt hash
+- declared agent/tooling condition
+- supplied candidate directory evidence
 - candidate napplet workflow, accuracy, completeness, and bug count
 
-This replaces the narrower scaffold-initialization benchmark direction. The
-boilerplate package now uses the production benchmark in its unit smoke path.
+This replaces the invalid install/scaffold-focused benchmark direction. The
+boilerplate package now uses the production benchmark against a candidate
+fixture in its unit smoke path.
 
 ## Benchmark Evidence
 
-Baseline report:
-`.planning/quick/260704-kmz-improve-developer-getting-started-around/baseline.md`
+Static prompt:
+`benchmarks/prompts/outbox-latest-note.md`
 
 - Scenario: `outbox-latest-note`
-- Development/tooling seconds: 3.162
-- Workflow: 2/3 (0.667)
-- Accuracy: 7/8 (0.875)
-- Completeness: 8/8 (1)
-- Bugs found: 2
-- Caught gaps: missing skill packet and incomplete missing-domain fallback
+- Prompt SHA-256: `f06fed10725f1c3340231cac22050889fb6e5038fd0b5fd17801916f14d291ba`
 
-Improved/reference report:
+Candidate scoring report:
 `.planning/quick/260704-kmz-improve-developer-getting-started-around/improved.md`
 
 - Scenario: `outbox-latest-note`
-- Development/tooling seconds: 3.175
+- Agent: `fixture`
+- Condition: `default-candidate`
+- Development/scoring seconds: 0.001
 - Workflow: 3/3 (1)
-- Accuracy: 8/8 (1)
+- Accuracy: 9/9 (1)
 - Completeness: 8/8 (1)
 - Bugs found: 0
+
+Invalidated prior evidence:
+- Removed `baseline.json`/`baseline.md` because those reports measured missing
+  skill installation and scaffold/reference behavior, not one-shot agent
+  implementation accuracy.
 
 ## Changed Files
 
@@ -58,13 +62,14 @@ Improved/reference report:
 - `apps/docs/guide/getting-started.md`
 - `apps/docs/packages/boilerplate.md`
 - `apps/docs/packages/skills.md`
+- `benchmarks/prompts/outbox-latest-note.md`
 - `.changeset/polite-benchmarks-produce-napplets.md`
 
 ## Verification
 
-- `pnpm benchmark:creation -- --skip-skill-install --no-reference --allow-failures --out .../baseline.json --markdown .../baseline.md`
-- `pnpm benchmark:creation -- --apply-reference --out .../improved.json --markdown .../improved.md`
-- `node scripts/benchmark-napplet-production.mjs --skip-build --apply-reference --smoke`
+- `pnpm benchmark:creation -- --out .../improved.json --markdown .../improved.md`
+- `node scripts/benchmark-napplet-production.mjs --smoke`
+- `node scripts/benchmark-napplet-production.mjs --prompt benchmarks/prompts/outbox-latest-note.md --candidate packages/boilerplate/test-fixtures/basic-template --agent fixture --condition skills --smoke`
 - `python3 ~/.codex/skills/.system/skill-creator/scripts/quick_validate.py packages/skills/skills/make-napplet`
 - `python3 ~/.codex/skills/.system/skill-creator/scripts/quick_validate.py packages/skills/skills/test-napplet`
 - `pnpm --filter @napplet/boilerplate test:unit`
@@ -77,7 +82,6 @@ Improved/reference report:
 
 ## Remaining Risks
 
-- The included improved run uses deterministic `--apply-reference` mode to test
-  the benchmark methodology. A live agent-run benchmark should use
-  `--candidate <path>` against the napplet actually produced by an agent after
-  following the installed skills.
+- The included report uses a committed fixture candidate as the smoke proof. A
+  live comparison still needs separate one-shot agent runs for each condition
+  being compared, then `--candidate <path>` scoring for each output.

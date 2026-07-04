@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "startedAt": "2026-07-04T13:11:33.860Z",
+  "startedAt": "2026-07-04T13:31:22.529Z",
   "scenario": {
     "id": "outbox-latest-note",
     "title": "Latest Note",
@@ -18,59 +18,38 @@
       "relay."
     ]
   },
+  "agent": {
+    "name": "fixture",
+    "condition": "default-candidate",
+    "oneShot": true,
+    "promptSha256": "f06fed10725f1c3340231cac22050889fb6e5038fd0b5fd17801916f14d291ba"
+  },
   "methodology": {
-    "speed": "Development seconds from --started-at when supplied; otherwise elapsed benchmark tooling seconds.",
-    "workflow": "Skill packet, scenario prompt, and scaffold command evidence for using the surrounding tooling.",
+    "speed": "Development seconds from --started-at when supplied; otherwise elapsed scoring seconds.",
+    "workflow": "Frozen prompt, declared agent/tooling condition, and supplied candidate evidence.",
     "accuracy": "Scenario-specific behavior and protocol-boundary checks on the produced napplet.",
-    "completeness": "Expected project files, scripts, and benchmark guidance for a shippable napplet workflow.",
+    "completeness": "Expected project files, scripts, and verification guidance for a shippable napplet workflow.",
     "bugs": "Count of failed workflow, accuracy, and completeness checks."
   },
-  "workspaceDir": "/tmp/napplet-production-benchmark-hXGZPr",
-  "candidateDir": "/tmp/napplet-production-benchmark-hXGZPr/candidate",
-  "phases": [
-    {
-      "name": "build-@napplet/boilerplate",
-      "command": "pnpm --filter @napplet/boilerplate build",
-      "exitCode": 0,
-      "elapsedMs": 1601.528
-    },
-    {
-      "name": "build-@napplet/skills",
-      "command": "pnpm --filter @napplet/skills build",
-      "exitCode": 0,
-      "elapsedMs": 2004.543
-    },
-    {
-      "name": "install-skills",
-      "command": "node /home/sandwich/Develop/napplet/packages/skills/dist/cli.js install make-napplet build-napplet test-napplet --dir /tmp/napplet-production-benchmark-hXGZPr/agent-skills",
-      "exitCode": 0,
-      "elapsedMs": 29.309
-    },
-    {
-      "name": "scaffold",
-      "command": "node /home/sandwich/Develop/napplet/packages/boilerplate/dist/index.js /tmp/napplet-production-benchmark-hXGZPr/candidate --template /home/sandwich/Develop/napplet/packages/boilerplate/test-fixtures/basic-template --package-name benchmark-napplet --napplet-type benchmark-napplet --title Latest Note --yes --force",
-      "exitCode": 0,
-      "elapsedMs": 29.564
-    }
-  ],
+  "candidateDir": "/home/sandwich/Develop/napplet/packages/boilerplate/test-fixtures/basic-template",
   "checks": [
     {
-      "name": "skill-packet",
+      "name": "static-prompt",
       "category": "workflow",
       "ok": true,
-      "detail": "make/build/test skills installed for the scenario"
+      "detail": "frozen one-shot prompt embeds the scenario"
     },
     {
-      "name": "scenario-prompt",
+      "name": "agent-condition",
       "category": "workflow",
       "ok": true,
-      "detail": "scenario prompt captured"
+      "detail": "condition=default-candidate"
     },
     {
-      "name": "scaffold-command",
+      "name": "candidate-directory",
       "category": "workflow",
       "ok": true,
-      "detail": "scaffold command captured"
+      "detail": "candidate directory supplied for scoring"
     },
     {
       "name": "package-json",
@@ -115,10 +94,10 @@
       "detail": "test:conformance=napplet-conformance ./dist"
     },
     {
-      "name": "benchmark-guidance",
+      "name": "verification-guidance",
       "category": "completeness",
       "ok": true,
-      "detail": "candidate points to benchmark evidence"
+      "detail": "README explains candidate verification"
     },
     {
       "name": "package-name",
@@ -163,6 +142,12 @@
       "detail": "missing outbox path has a user-visible fallback"
     },
     {
+      "name": "latest-note-rendering",
+      "category": "accuracy",
+      "ok": true,
+      "detail": "latest note content is rendered into the UI"
+    },
+    {
       "name": "forbidden-surfaces",
       "category": "accuracy",
       "ok": true,
@@ -170,16 +155,16 @@
     }
   ],
   "metrics": {
-    "developmentSeconds": 3.668,
-    "toolingSeconds": 3.668,
+    "developmentSeconds": 0.001,
+    "scoringSeconds": 0.001,
     "workflow": {
       "passed": 3,
       "total": 3,
       "score": 1
     },
     "accuracy": {
-      "passed": 8,
-      "total": 8,
+      "passed": 9,
+      "total": 9,
       "score": 1
     },
     "completeness": {

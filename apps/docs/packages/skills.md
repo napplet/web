@@ -64,13 +64,26 @@ themselves, run the monorepo production benchmark before and after the
 improvement:
 
 ```bash
-pnpm benchmark:creation -- --out benchmark.json --markdown benchmark.md
+pnpm benchmark:creation
 ```
 
-It records development/tooling time, skill workflow evidence, implementation
-accuracy, completeness, and detected bug count for a produced napplet so
-improvements are measurable. Use `--candidate <path>` for a real agent-built
-napplet and `--no-reference --allow-failures` for an expected-failing baseline.
+The default run scores `benchmarks/prompts/outbox-latest-note.md` against the
+committed candidate fixture. Override the candidate and condition for real
+one-shot agent outputs:
+
+```bash
+pnpm benchmark:creation -- \
+  --prompt benchmarks/prompts/outbox-latest-note.md \
+  --candidate /path/to/agent-output \
+  --agent codex \
+  --condition skills \
+  --out benchmark.json \
+  --markdown benchmark.md
+```
+
+It records a frozen one-shot prompt, declared agent/tooling condition,
+implementation accuracy, completeness, and detected bug count for a produced
+napplet. Keep one report per compared condition so improvements are measurable.
 
 ## Programmatic API
 

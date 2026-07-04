@@ -34,15 +34,26 @@ By default, the CLI clones:
 ## Benchmarking napplet production
 
 The napplet monorepo includes a production benchmark for the generator, skills,
-and surrounding tooling. It uses a concrete scenario, installs the relevant
-napplet skills into the benchmark workspace, produces a candidate napplet, then
-scores workflow evidence, scenario accuracy, completeness, and bug count.
+and surrounding tooling. It uses a concrete static prompt, then scores the
+napplet an agent produced after one implementation attempt.
 
 ```bash
-pnpm benchmark:creation -- --out benchmark.json --markdown benchmark.md
+pnpm benchmark:creation
 ```
 
-The default command applies a deterministic reference implementation to validate
-the benchmark methodology. Use `--candidate <path>` to score a real napplet
-produced by an agent or developer, or `--no-reference --allow-failures` when
-recording a baseline that is expected to contain known gaps.
+The default run scores `benchmarks/prompts/outbox-latest-note.md` against the
+committed candidate fixture. Override the candidate and condition for real
+one-shot agent outputs:
+
+```bash
+pnpm benchmark:creation -- \
+  --prompt benchmarks/prompts/outbox-latest-note.md \
+  --candidate /path/to/agent-output \
+  --agent codex \
+  --condition skills \
+  --out benchmark.json \
+  --markdown benchmark.md
+```
+
+Use the same prompt for every compared condition and change only the agent
+context, such as `skills`, `no-skills`, or `docs-only`.
