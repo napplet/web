@@ -1,5 +1,13 @@
 # @napplet/sdk
 
+## 0.24.1
+
+### Patch Changes
+
+- 82e50c2: Teach OUTBOX-first napplet construction, add a one-prompt `make-napplet` orchestration skill, and align copied package examples so agents do not default social reads and publishes to low-level NAP-RELAY.
+- Updated dependencies [82e50c2]
+  - @napplet/nap@0.27.1
+
 ## 0.24.0
 
 ### Minor Changes

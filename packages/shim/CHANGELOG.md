@@ -1,5 +1,12 @@
 # @napplet/shim
 
+## 0.26.3
+
+### Patch Changes
+
+- Updated dependencies [82e50c2]
+  - @napplet/nap@0.27.1
+
 ## 0.26.2
 
 ### Patch Changes

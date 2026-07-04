@@ -1,5 +1,11 @@
 # @napplet/skills
 
+## 0.2.2
+
+### Patch Changes
+
+- 82e50c2: Teach OUTBOX-first napplet construction, add a one-prompt `make-napplet` orchestration skill, and align copied package examples so agents do not default social reads and publishes to low-level NAP-RELAY.
+
 ## 0.2.1
 
 ### Patch Changes
@@ -26,5 +32,5 @@
   skills are written against the verified live API surface (`@napplet/sdk` named
   API, injected-domain property presence for capability checks, scoped `storage`,
   the single-file artifact rule). The
-    monorepo's root `skills/` is now a symlink to this package's `skills/` so the
-    repo and the published package share one source of truth.
+  monorepo's root `skills/` is now a symlink to this package's `skills/` so the
+  repo and the published package share one source of truth.
