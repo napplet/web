@@ -1,6 +1,6 @@
 ---
 name: test-napplet
-description: Use to verify a napplet before publishing — run protocol conformance with the @napplet/conformance-cli runner (real Chromium, reference shell), interpret failures, confirm the single-file artifact and runtime guard, and wire a CI check. Run after build-napplet, before shipping.
+description: Use to verify a napplet before publishing - run protocol conformance with the @napplet/conformance-cli runner (real Chromium, reference shell), interpret failures, confirm OUTBOX-first boundaries, the single-file artifact, runtime guard, and CI wiring. Run after build-napplet, before shipping.
 ---
 
 # Testing a Napplet
@@ -49,12 +49,37 @@ Failures map to a NIP-5D / NAP requirement — fix the napplet, not the check. C
 
 A check that fails a spec-faithful napplet but passes only this toolchain is a tooling bug — flag it; do not work around it.
 
-## Step 4 — Confirm the artifact & guard
+## Step 4 — Boundary Audit
+
+Before publishing, inspect source and built output for wrong-layer code:
+
+| Check | Expected |
+| --- | --- |
+| Normal social reads/publishes | `outbox`, `common`, `lists`, `count`, or `dm`, not default `relay` |
+| Any `relay.subscribe` / `relay.publish` use | A comment or spec note naming the relay-local escape hatch |
+| Signing/encryption | No `window.nostr`, private keys, local signing, or app-owned encryption |
+| Relay routing | No app-owned NIP-65 resolver, relay pool, WebSocket relay client, or relay fanout policy |
+| Network and media bytes | No direct `fetch`, `XMLHttpRequest`, `WebSocket`, or external `<img src>`; use `resource` |
+| Persistence | No `localStorage`, `IndexedDB`, cookies, or direct filesystem state; use `storage` |
+| Capability checks | Domain property presence (`window.napplet?.outbox`), never `shell.supports` |
+
+If a direct relay use remains, prove why `outbox`, `common`, `lists`, `count`, and `dm` do not fit. Otherwise refactor before shipping.
+
+## Step 5 — Confirm the artifact & guard
 
 - **Single file:** the published napplet is one `index.html` with inline JS (opaque-origin `srcdoc`, no external `<script src>`). Use `artifactMode: 'single-file'`. Verify `dist/index.html` is self-contained.
 - **Runtime guard:** opened without a runtime it shows an explanatory modal rather than failing silently. For standalone manual testing, opt out before the shim loads via `window.__NAPPLET_ALLOW_STANDALONE__ = true` or `<meta name="napplet-allow-standalone">`.
 
-## Step 5 — CI
+## Step 6 — Scenario Smoke Tests
+
+Exercise the feature against the NAP domains it declares:
+
+- Signed-out path: identity returns `""`; app degrades without publish/list/dm actions.
+- OUTBOX path: `outbox.query`, `outbox.subscribe`, and `outbox.publish` use current option fields only (`authors`, `author`, `relays`, `targetAuthors`, `limit`, `timeoutMs`). No `strategy`, subscribe `live`, or `outbox.eose`.
+- Optional-domain path: remove an optional domain from the mock runtime and verify fallback UI.
+- Escape hatch path: if `relay` is used, test the explicit relay-local behavior and teardown.
+
+## Step 7 — CI
 
 Run conformance headless in CI: cache Playwright's Chromium, build, then run the CLI. See `.github/workflows/conformance.yml` in the napplet monorepo for the reference pattern.
 

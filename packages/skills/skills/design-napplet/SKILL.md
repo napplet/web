@@ -1,11 +1,11 @@
 ---
 name: design-napplet
-description: Use FIRST when planning a napplet (sandboxed Nostr iframe app), before writing code — turns an app idea into a concrete build spec: which NAP capabilities it needs, which services it requires, the sandbox/CSP constraints that shape it, and a responsive layout that survives any viewport from full-screen to a tiny widget.
+description: Use FIRST when planning a napplet (sandboxed Nostr iframe app), before writing code - turns an app idea into a concrete build spec covering required NAP capabilities, shell services, sandbox/CSP constraints, OUTBOX-first event routing, and a responsive layout that survives any viewport from full-screen to a tiny widget.
 ---
 
 # Designing a Napplet
 
-Run this before `build-napplet`. Output a short spec the build step executes against. Do not write app code here.
+Run this before `build-napplet`. Output a short spec the build step executes against. Do not write app code here. If the task is porting an existing Nostr app, run `port-nostr-app` first to identify the boundaries that must be replaced.
 
 ## What a napplet is
 
@@ -25,8 +25,13 @@ Map each feature to the NAP domain that provides it. Use only domains the shell 
 
 | Need | NAP domain |
 | --- | --- |
-| Read/publish Nostr events | `relay` |
-| User pubkey / profile / follows / lists | `identity` (read-only) |
+| Read/publish Nostr events where relay choice affects correctness | `outbox` |
+| Low-level relay access to one explicit relay, relay diagnostics, or protocols outside the outbox model | `relay` |
+| Common public social actions: profile lookup, follows, follow/unfollow, reactions, reports, NIP-19 helpers | `common` |
+| Safe NIP-51 / NIP-65 list mutations | `lists` |
+| Counts for reactions, replies, reposts, quotes, reports, followers | `count` |
+| Direct-message UI and message send/history/live delivery | `dm` |
+| User pubkey / public identity snapshots | `identity` (read-only) |
 | Persist app state | `storage` |
 | Talk to other napplets | `inc` |
 | Fetch avatars / external bytes | `resource` |
@@ -36,7 +41,23 @@ Map each feature to the NAP domain that provides it. Use only domains the shell 
 | Playback / now-playing | `media` |
 | Notifications + badge | `notify` |
 
-Other domains exist (`cvm`, `outbox`, `upload`, `intent`) — consult NIP-5D / NAPs before relying on them. Every NAP is **voluntary**: assume a domain may be absent and degrade gracefully.
+Other domains exist (`cvm`, `upload`, `intent`, `ble`, `webrtc`, `link`, `serial`) - consult NIP-5D / NAPs before relying on them. Every NAP is **voluntary**: assume a domain may be absent and degrade gracefully.
+
+## Step 1.5 — Choose The Right Nostr Boundary
+
+Default to the highest-level NAP that owns the user intent:
+
+| Feature shape | Prefer | Do not start with |
+| --- | --- | --- |
+| Timeline/feed/profile/event reads that should follow author relay lists | `outbox.query` / `outbox.subscribe` | Manual `relay.subscribe` plus app-owned relay discovery |
+| Publishing user-authored public events | `outbox.publish` | `relay.publish` unless the outbox model is wrong for the feature |
+| Follow/unfollow/react/report/profile lookup/NIP-19 helpers | `common` | Hand-built events plus relay publish |
+| Mute/pin/bookmark/follow-set/relay-list mutation | `lists` | Editing replacement list events locally |
+| Counts or badges where event bodies are not needed | `count.query` | Downloading matching events through relay/outbox |
+| Direct-message products | `dm` | Implementing NIP-04/NIP-17/NDR crypto and relay routing inside the napplet |
+| One explicit relay, group relay, raw relay diagnostics, or a protocol not expressible through outbox/common/lists/count/dm | `relay` | Treating relay as the default app data layer |
+
+Use `relay` as an escape hatch only when the feature genuinely needs relay-local semantics. If the app is social, publishing user events, reading authors' events, or mutating user-owned Nostr state, it is almost always `outbox`, `common`, `lists`, `count`, or `dm`.
 
 ## Step 2 — Declare requirements vs. optional
 
@@ -61,11 +82,12 @@ Produce a short block the build step consumes:
 ```
 nappletType: <kebab d-tag, e.g. "note-feed">
 purpose: <one line>
-NAPs used: relay (req), identity (opt), storage (req), resource (opt)
+NAPs used: outbox (req), common (opt), identity (opt), storage (req), resource (opt)
 requires (services): []        # hard service deps, usually empty
 config schema: <fields or "none">
 layout: <tiny state> / <large state>, responsive strategy
-data flow: <subscriptions, publishes, stored keys>
+data flow: <outbox queries/subscriptions/publishes, social actions, stored keys>
+relay escape hatches: <none, or exact reason + why outbox/common/lists/count/dm do not apply>
 ```
 
 Hand this to `build-napplet`. Then verify with `test-napplet`.

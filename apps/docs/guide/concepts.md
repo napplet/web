@@ -19,11 +19,11 @@ response pairs are correlated by an `id` field. The base type is
 with its own concrete message types.
 
 ```ts
-// outbound: napplet → shell
-{ type: 'relay.publish', id: 'q1', event: { /* EventTemplate */ } }
+// outbound: napplet -> shell
+{ type: 'outbox.publish', id: 'q1', event: { /* EventTemplate */ } }
 
-// inbound: shell → napplet
-{ type: 'relay.publish.result', id: 'q1', ok: true, event: { /* NostrEvent */ } }
+// inbound: shell -> napplet
+{ type: 'outbox.publish.result', id: 'q1', ok: true, event: { /* NostrEvent */ } }
 ```
 
 Unrecognized message types are silently ignored, which is what lets a napplet

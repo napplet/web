@@ -45,9 +45,8 @@ a new NAP message type cannot ship without matching conformance coverage.
 import { validateEnvelope, validateManifest } from '@napplet/conformance';
 
 validateEnvelope({
-  type: 'relay.subscribe',
+  type: 'outbox.query',
   id: 'a',
-  subId: 'b',
   filters: [{ kinds: [1] }],
 }).ok; // true
 

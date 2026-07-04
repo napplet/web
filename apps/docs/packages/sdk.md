@@ -23,7 +23,12 @@ npm install @napplet/sdk
 
 Top-level namespaced objects that mirror `window.napplet`:
 
-- **`relay`** — `subscribe`, `publish`, `publishEncrypted`, `query`
+- **`outbox`** — `getEvent`, `query`, `subscribe`, `publish`, `resolveRelays`
+- **`common`** — profile lookup, follow/unfollow, reactions, reports, NIP-19 helpers
+- **`lists`** — NIP-51 list read and mutation helpers
+- **`count`** — count queries through the shell
+- **`dm`** — shell-mediated encrypted direct-message helpers
+- **`relay`** — low-level explicit relay proxy; use only for relay-local escape hatches
 - **`inc`** — `emit`, `on` (plus deprecated `ifc*` migration aliases)
 - **`storage`** — `getItem`, `setItem`, `removeItem`, `keys`, plus `storage.instance.*` (per-instance scope)
 - **`keys`** — `registerAction`, `unregisterAction`, `onAction`
@@ -32,11 +37,16 @@ Top-level namespaced objects that mirror `window.napplet`:
 - **`config`** — `get`, `subscribe`, `openSettings`, `registerSchema`, `schema`
 - **`resource`** — `info`, `bytes`, `bytesMany`, `bytesAsObjectURL`
 
-`identity` and `shell` are **not** exported as top-level
-objects. Use `window.napplet.identity.*` / `window.napplet.domain presence`
-directly, or the bare-name helpers the SDK re-exports:
+`identity` is exported as a top-level object and through bare-name helpers:
 
 - `identityGetPublicKey`, `identityOnChanged`
+
+There is no top-level `shell` object. Detect capability availability from
+runtime-injected domain presence (`window.napplet?.outbox`, `window.napplet?.dm`,
+and so on).
+
+The SDK also re-exports:
+
 - the `*_DOMAIN` constants and `install*Shim` installers
 - `resourceInfo`, `resourceBytes`, `resourceBytesMany`, `resourceBytesAsObjectURL`
 
@@ -47,22 +57,30 @@ constants from the NAP packages.
 ## Usage
 
 ```ts
-import { relay, inc, storage, keys, config, resource, type NostrEvent } from '@napplet/sdk';
+import { outbox, common, inc, storage, keys, config, resource } from '@napplet/sdk';
 
-// Subscribe to kind 1 notes
-const sub = relay.subscribe(
-  { kinds: [1], limit: 20 },
-  (event) => console.log('New note:', event.content),
-  () => console.log('End of stored events'),
+// Read kind 1 notes through outbox-aware routing
+const { events } = await outbox.query(
+  [{ kinds: [1], limit: 20 }],
+  { timeoutMs: 3000 },
 );
+for (const result of events) console.log('Note:', result.event.content);
 
-// Publish a signed note
-const signed = await relay.publish({
+// Subscribe to live updates through the same outbox boundary
+const sub = outbox.subscribe([{ kinds: [1], limit: 20 }], { timeoutMs: 3000 });
+sub.on('event', (result) => console.log('New note:', result.event.content));
+
+// Publish a signed note through the user's outbox/write relays
+const published = await outbox.publish({
   kind: 1,
   content: 'Hello from my napplet!',
   tags: [],
   created_at: Math.floor(Date.now() / 1000),
 });
+if (!published.ok || !published.event) throw new Error(published.error ?? 'publish failed');
+
+// Common social actions keep consent, event construction, signing, and relay routing in the shell
+await common.react(published.event.id, '+');
 
 // Inter-napplet messaging
 inc.emit('chat:message', [], JSON.stringify({ text: 'hi' }));
@@ -110,7 +128,7 @@ identical to `window.napplet`:
 
 ```ts
 import * as napplet from '@napplet/sdk';
-napplet.relay.subscribe({ kinds: [1] }, (e) => console.log(e));
+const { events } = await napplet.outbox.query([{ kinds: [1], limit: 20 }]);
 ```
 
 ## See also

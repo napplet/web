@@ -60,25 +60,32 @@ use the injected namespace directly:
 
 ```ts
 // main.ts
-// Subscribe to kind 1 notes through the shell's relay pool
-const sub = window.napplet.relay.subscribe(
-  { kinds: [1], limit: 20 },
-  (event) => console.log('New note:', event.content),
-  () => console.log('End of stored events'),
+// Read kind 1 notes through the shell's outbox-aware routing
+const { events } = await window.napplet.outbox.query(
+  [{ kinds: [1], limit: 20 }],
+  { timeoutMs: 3000 },
 );
+for (const result of events) console.log('Note:', result.event.content);
 
-// Publish a note — the shell signs it; your napplet never sees the key
-const signed = await window.napplet.relay.publish({
+// Subscribe to live updates through the same outbox boundary
+const sub = window.napplet.outbox.subscribe([{ kinds: [1], limit: 20 }], {
+  timeoutMs: 3000,
+});
+sub.on('event', (result) => console.log('New note:', result.event.content));
+
+// Publish a note — the shell signs and fans it out; your napplet never sees the key
+const published = await window.napplet.outbox.publish({
   kind: 1,
   content: 'Hello from my napplet!',
   tags: [],
   created_at: Math.floor(Date.now() / 1000),
 });
+if (!published.ok) throw new Error(published.error ?? 'publish failed');
 ```
 
 Notice you never imported a signing library and never touched a relay socket. The
-runtime sends `relay.subscribe` and `relay.publish` JSON envelopes; the shell does
-the rest.
+runtime sends `outbox.query`, `outbox.subscribe`, and `outbox.publish` JSON
+envelopes; the shell does relay discovery, signing, fanout, and policy.
 
 ## Runtime injection vs. SDK
 
@@ -86,7 +93,7 @@ Runtimes and napplets use different packages.
 
 | | [`@napplet/shim`](/packages/shim) | [`@napplet/sdk`](/packages/sdk) |
 | --- | --- | --- |
-| **Import style** | `import { installNappletGlobal } from '@napplet/shim'` | `import { relay, inc } from '@napplet/sdk'` |
+| **Import style** | `import { installNappletGlobal } from '@napplet/shim'` | `import { outbox, inc } from '@napplet/sdk'` |
 | **Who uses it** | Host runtime before napplet scripts execute | Napplet application code |
 | **What it does** | Injects selected `window.napplet.<domain>` objects | Named, typed exports that wrap injected domains |
 | **Required?** | Required for runtimes that use these packages | Optional convenience for bundler users |
@@ -98,7 +105,7 @@ inject the namespace or requested domain.
 Typical napplet code imports only the SDK:
 
 ```ts
-import { relay, inc, storage } from '@napplet/sdk';
+import { outbox, inc, storage } from '@napplet/sdk';
 ```
 
 If you're writing a vanilla napplet with no build step, you can skip the sdk and

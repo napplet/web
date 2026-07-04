@@ -11,7 +11,7 @@
 
 ### How It Works
 
-1. Import named exports from `@napplet/sdk` -- `relay`, `inc`, `storage`, `keys`, `ble`, `count`, `lists`
+1. Import named exports from `@napplet/sdk` -- `outbox`, `common`, `relay`, `inc`, `storage`, `keys`, `ble`, `count`, `lists`
 2. Each SDK method delegates to its injected `window.napplet.*` counterpart at call time
 3. If `window.napplet` or a requested domain is unavailable when a method is called, a descriptive error is thrown
 
@@ -24,22 +24,30 @@ npm install @napplet/sdk
 ## Quick Start
 
 ```ts
-import { relay, inc, storage, keys, media, notify, config, resource, ble, webrtc, link, count, lists, type NostrEvent } from '@napplet/sdk';
+import { outbox, common, inc, storage, keys, media, notify, config, resource, ble, webrtc, link, count, lists } from '@napplet/sdk';
 
-// Subscribe to kind 1 notes
-const sub = relay.subscribe(
-  { kinds: [1], limit: 20 },
-  (event) => console.log('New note:', event.content),
-  () => console.log('End of stored events'),
+// Read kind 1 notes through outbox-aware routing
+const { events } = await outbox.query(
+  [{ kinds: [1], limit: 20 }],
+  { timeoutMs: 3000 },
 );
+for (const result of events) console.log('Note:', result.event.content);
 
-// Publish a signed note
-const signed = await relay.publish({
+// Subscribe to live updates through the same outbox boundary
+const sub = outbox.subscribe([{ kinds: [1], limit: 20 }], { timeoutMs: 3000 });
+sub.on('event', (result) => console.log('New note:', result.event.content));
+
+// Publish a signed note through the user's outbox/write relays
+const published = await outbox.publish({
   kind: 1,
   content: 'Hello from my napplet!',
   tags: [],
   created_at: Math.floor(Date.now() / 1000),
 });
+if (!published.ok || !published.event) throw new Error(published.error ?? 'publish failed');
+
+// Common social actions keep consent, event construction, signing, and relay routing in the shell
+await common.react(published.event.id, '+');
 
 // Inter-napplet messaging
 inc.emit('chat:message', [], JSON.stringify({ text: 'hi' }));
@@ -118,7 +126,10 @@ configSub.close();
 
 ### `relay`
 
-Relay operations through the shell's relay pool. Mirrors `window.napplet.relay`.
+Low-level relay operations through the shell's relay pool. Mirrors `window.napplet.relay`.
+Use this for explicit relay-local behavior such as group relays, diagnostics,
+and protocol tooling. For normal social reads/publishes, prefer `outbox` or a
+higher-level domain such as `common`, `lists`, `count`, or `dm`.
 
 | Method | Returns | Description |
 |--------|---------|-------------|
@@ -126,6 +137,26 @@ Relay operations through the shell's relay pool. Mirrors `window.napplet.relay`.
 | `publish(template, options?)` | `Promise<NostrEvent>` | Send event template to the shell for signing and broadcast |
 | `publishEncrypted(template, recipient, encryption?)` | `Promise<NostrEvent>` | Send event template for encryption, signing, and broadcast |
 | `query(filters)` | `Promise<RelayEventResult[]>` | One-shot query: collect `RelayEventResult` records until EOSE, resolve |
+
+### `outbox`
+
+Outbox-aware relay routing. Mirrors `window.napplet.outbox`. The napplet supplies
+filters, event ids, templates, and intent; the shell owns NIP-65 relay discovery,
+fallback, deduplication, signature validation, signing, and publish fanout.
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `getEvent(eventId, options?)` | `Promise<OutboxEventResult>` | Fetch one event through author/relay-aware routing |
+| `query(filters, options?)` | `Promise<OutboxResult>` | One-shot outbox-aware query returning `RelayEventResult[]` |
+| `subscribe(filters, options?)` | `OutboxSubscription` | Live outbox-aware stream with `on('event')` and `close()` |
+| `publish(template, options?)` | `Promise<OutboxPublishResult>` | Shell-sign and fan out through the user's write relays and directed inbox relays |
+| `resolveRelays(target)` | `Promise<OutboxRelayPlan>` | Diagnostic/advisory relay plan; prefer query/subscribe/publish for app behavior |
+
+### `common`
+
+Common social actions. Mirrors `window.napplet.common`. Use it for NIP-19
+helpers, profile lookup, follows, follow/unfollow, reactions, and reports so the
+shell owns consent, event construction, signing, publishing, and lookup policy.
 
 ### `inc`
 
@@ -268,29 +299,30 @@ Keyboard forwarding and action keybindings. Mirrors `window.napplet.keys`.
 
 ### `identity`
 
-Read-only user identity queries (NAP-IDENTITY). The identity namespace
-is NOT exported as a top-level SDK object — use `window.napplet.identity.*` directly
-after runtime injection, or use the bare-name helpers below.
+Read-only user identity queries (NAP-IDENTITY). Use the exported `identity`
+object, `window.napplet.identity.*` directly after runtime injection, or the
+bare-name helpers below.
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| `window.napplet.identity.getPublicKey()` | `Promise<string>` | Shell-user pubkey, or `""` when no user/signer is connected |
-| `window.napplet.identity.onChanged(handler)` | `{ close(): void }` | Listen for shell-pushed identity changes; handler receives a pubkey or `""` |
+| `identity.getPublicKey()` | `Promise<string>` | Shell-user pubkey, or `""` when no user/signer is connected |
+| `identity.onChanged(handler)` | `{ close(): void }` | Listen for shell-pushed identity changes; handler receives a pubkey or `""` |
 
 Bare helper aliases are also re-exported for consumers that prefer functional imports:
 
 ```ts
-import { identityGetPublicKey, identityOnChanged } from '@napplet/sdk';
+import { identity, identityGetPublicKey, identityOnChanged } from '@napplet/sdk';
 
-const pubkey = await identityGetPublicKey();
+const pubkey = await identity.getPublicKey();
 const sub = identityOnChanged((nextPubkey) => {
   console.log(nextPubkey || 'signed out');
 });
 ```
 
 NAP-IDENTITY is strictly read-only. Signing remains delegated through
-`relay.publish()`, encryption through `relay.publishEncrypted()`, and identity
-changes arrive through `identity.changed` rather than polling.
+`outbox.publish()` or higher-level action domains (`common`, `lists`, `dm`).
+Use `relay.publish()` only for explicit low-level relay escape hatches.
+Identity changes arrive through `identity.changed` rather than polling.
 
 ### Runtime-Injected Domains
 
@@ -299,7 +331,8 @@ domains are present as properties; unavailable domains are absent. Gate optional
 behavior with property presence:
 
 ```ts
-if (window.napplet?.relay) { /* relay API is available */ }
+if (window.napplet?.outbox) { /* outbox API is available */ }
+if (window.napplet?.relay) { /* low-level relay API is available */ }
 if (window.napplet?.identity) { /* identity API is available */ }
 if (window.napplet?.inc) { /* inter-napplet channel API is available */ }
 ```
@@ -311,7 +344,7 @@ if (window.napplet?.inc) { /* inter-napplet channel API is available */ }
 ```ts
 import * as napplet from '@napplet/sdk';
 
-napplet.relay.subscribe({ kinds: [1] }, (e) => console.log(e));
+const { events } = await napplet.outbox.query([{ kinds: [1], limit: 20 }]);
 napplet.storage.setItem('key', 'value');
 napplet.config.subscribe((v) => console.log(v));
 ```
@@ -348,7 +381,7 @@ import type {
 | `NostrEvent` | Standard Nostr event object |
 | `NostrFilter` | Relay subscription filter |
 | `Subscription` | Handle with `close()` method |
-| `EventTemplate` | Unsigned event for `relay.publish()` |
+| `EventTemplate` | Unsigned event template for shell-mediated publish domains such as `outbox.publish()` |
 | `NappletMessage` | Base JSON envelope type for all protocol messages |
 | `NapDomain` | String literal union of NAP domain names |
 
