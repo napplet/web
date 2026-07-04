@@ -7,6 +7,7 @@ import { executeNetworkDeploy, networkDeploySucceeded } from "./deploy-network.t
 import { discoverNapplets } from "./discover.ts";
 import { KEY_SERVICE_NAME, requireKeyStoreProvider } from "./key-store.ts";
 import { createDeployManifestTemplates } from "./manifest.ts";
+import { connectRemoteSigner, DEFAULT_CONNECT_RELAYS } from "./nostr-connect.ts";
 import { runCommand, splitCommand } from "./process.ts";
 import {
   createSignerFromSecret,
@@ -23,6 +24,7 @@ Usage:
   napplet deploy [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>] [--prompt-sec] [--dry-run]
   napplet debug [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>]
   napplet keys store --name <ref> [--sec <secret> | --prompt-sec]
+  napplet keys connect --name <ref> [--relay <url> ...] [--config <file>]
   napplet keys use --name <ref> [--config <file>]
   napplet keys list
   napplet keys delete --name <ref>
@@ -98,6 +100,25 @@ async function commandKeys(argv: string[]): Promise<number> {
     const secret = await resolveSecretInput(flags);
     await provider.store({ service: KEY_SERVICE_NAME, account: name, secret });
     console.log(`Stored key reference "${name}" in ${provider.name}`);
+    return 0;
+  }
+
+  if (subcommand === "connect") {
+    const name = requiredValue(flags, "name");
+    const relays = flags.values.get("relay") ?? DEFAULT_CONNECT_RELAYS.slice();
+    const { nbunksec, pubkey, relays: sessionRelays } = await connectRemoteSigner({
+      relays,
+      appName: "napplet CLI",
+    });
+    await provider.store({ service: KEY_SERVICE_NAME, account: name, secret: nbunksec });
+    const path = first(flags.values.get("config"));
+    const config = await readConfig(path);
+    if (!config) throw new Error(`No .napplet config found${path ? ` at ${path}` : ""}`);
+    await writeConfig(setSigningKeyReference(config, name), path);
+    console.log(`Stored remote signer "${name}" in ${provider.name}`);
+    console.log(`Configured .napplet signing.keyReference = "${name}"`);
+    console.log(`Remote signer pubkey: ${pubkey}`);
+    console.log(`Session relays: ${sessionRelays.join(", ")}`);
     return 0;
   }
 

@@ -1,14 +1,23 @@
 {
   "version": "5",
   "specifiers": {
+    "jsr:@libs/qrcode@^3.0.1": "3.0.1",
+    "jsr:@std/bytes@^1.0.6": "1.0.6",
     "jsr:@std/encoding@1": "1.0.11",
     "jsr:@std/internal@^1.0.14": "1.0.14",
     "jsr:@std/media-types@1": "1.1.0",
     "jsr:@std/path@1": "1.1.6",
+    "jsr:@std/streams@1": "1.1.1",
     "npm:@scure/base@^1.2.6": "1.2.6",
     "npm:nostr-tools@^2.23.3": "2.23.8"
   },
   "jsr": {
+    "@libs/qrcode@3.0.1": {
+      "integrity": "33b861840fbcc0a88498c35d316153e8f82eaeb0714d6b6cf2ab0b133d44527b"
+    },
+    "@std/bytes@1.0.6": {
+      "integrity": "f6ac6adbd8ccd99314045f5703e23af0a68d7f7e58364b47d2c7f408aeb5820a"
+    },
     "@std/encoding@1.0.11": {
       "integrity": "e7cef2f0b3153bccc17431e7c864a1de03a4b6d9647389c43e08aaa775d37385"
     },
@@ -22,6 +31,12 @@
       "integrity": "c68485c2a4dfbb5ae3cc74fae4e8c4e5d874cf8a8ed12927917235c758b46cbe",
       "dependencies": [
         "jsr:@std/internal"
+      ]
+    },
+    "@std/streams@1.1.1": {
+      "integrity": "92556d350e537e9dce527a6d08f6f15be3ff65e656079dea69d15252187c7613",
+      "dependencies": [
+        "jsr:@std/bytes"
       ]
     }
   },
@@ -77,9 +92,11 @@
   },
   "workspace": {
     "dependencies": [
+      "jsr:@libs/qrcode@^3.0.1",
       "jsr:@std/encoding@1",
       "jsr:@std/media-types@1",
       "jsr:@std/path@1",
+      "jsr:@std/streams@1",
       "npm:@scure/base@^1.2.6",
       "npm:nostr-tools@^2.23.3"
     ],

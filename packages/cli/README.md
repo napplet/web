@@ -11,7 +11,8 @@ This first package slice provides:
   and local or `nbunksec` event signing.
 - `napplet debug` for read-only JSON diagnostics covering config, discovery, deploy-plan,
   manifest-template, and signing readiness state.
-- `napplet keys store/use/list/delete/doctor` for local key references in the platform keychain.
+- `napplet keys store/connect/use/list/delete/doctor` for local key references in the platform
+  keychain, including NIP-46 remote-signer login via `keys connect`.
 - `napplet conformance` as a wrapper around `@napplet/conformance-cli`.
 - `napplet paja` as a wrapper around `kehto paja`.
 - signing input classification compatible with nsyte-style `--sec`, `--prompt-sec`, stored
@@ -75,8 +76,8 @@ napplet deploy --sec nsec1…             # upload blobs and publish manifests
 ```
 
 The named-site `d` tag comes from `--name` / `config.named`, falling back to `default` when unset.
-Use `--root` to publish the singular replaceable root napplet (kind 15129) instead of a named napplet, and
-`--snapshot` to also emit an immutable snapshot (kind 5129) companion.
+Use `--root` to publish the singular replaceable root napplet (kind 15129) instead of a named
+napplet, and `--snapshot` to also emit an immutable snapshot (kind 5129) companion.
 
 ### Napplet monorepo
 
@@ -128,10 +129,28 @@ Notes for monorepo mode:
 ```sh
 napplet keys doctor
 napplet keys store --name default --sec nsec1...
+napplet keys connect --name remote --relay wss://relay.nsec.app
 napplet keys use --name default
 napplet keys list
 napplet keys delete --name default
 ```
+
+### Remote signer login (`keys connect`)
+
+`napplet keys connect --name <ref> [--relay <url> ...] [--config <file>]` runs a
+[NIP-46](https://github.com/nostr-protocol/nips/blob/master/46.md) remote-signer login so you can
+pair a signer (for example a phone app) without pasting a raw `nsec`. It prints a scannable
+`nostrconnect://` QR code and, at the same time, waits for a `bunker://` URL pasted on stdin —
+whichever completes first wins the race and the other is cancelled. When `--relay` is omitted it
+listens on `wss://relay.nsec.app` and `wss://bucket.coracle.social`.
+
+On success the paired session is encoded as an `nbunksec`, stored in the platform keychain under
+`--name`, and `.napplet` `signing.keyReference` is pointed at it — the same lifecycle as
+`keys store` + `keys use`. The stored `nbunksec` is consumed by the existing deploy sign-time path;
+only the reference name is written to `.napplet`, never the secret.
+
+> NIP-46 is Nostr remote-signing transport. It is independent of the napplet ⇄ shell protocol
+> (NIP-5D) and does not add any napplet protocol surface.
 
 ## Development
 
@@ -145,3 +164,7 @@ deno task test:unit
 x86_64/aarch64, Windows x86_64) and writes standalone `napplet-<target>` binaries to `dist/`,
 requiring no local Deno or Node install to run. Use `deno task compile:<target>` to build a single
 target.
+
+Dependencies are declared in `deno.json` `imports`. The npm dependency (`nostr-tools`) is mirrored
+in `package.json`; the JSR-only dependencies (`@libs/qrcode` for `keys connect` QR rendering and
+`@std/streams` for stdin line reading) have no npm equivalent and live in `deno.json` only.
