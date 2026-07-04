@@ -390,6 +390,7 @@ Surfaced by research (informational — each belongs to a specific phase plan):
 | 260626-nkv | Resolve napplet/web#91: guard relay query result events and open PR | 2026-06-26 | 9d23f6c | [260626-nkv-resolve-napplet-web-91-if-valid-guard-re](./quick/260626-nkv-resolve-napplet-web-91-if-valid-guard-re/) |
 | 260701-k68 | Scaffold @napplet/cli Deno package with init, discovery staging, deploy plan, signing mode parsing, and wrapper command surfaces | 2026-07-01 | 4bec5648 | [260701-k68-scaffold-napplet-cli-deno-package-with-i](./quick/260701-k68-scaffold-napplet-cli-deno-package-with-i/) |
 | 260703-gz0 | Add @napplet/cli to the JSR-only publish workflow | 2026-07-03 | 6d98908c | [260703-gz0-add-napplet-cli-to-jsr-only-publish-work](./quick/260703-gz0-add-napplet-cli-to-jsr-only-publish-work/) |
+| 260704-fb4 | Add `napplet keys connect` NIP-46 remote-signer login (nostrconnect QR + bunker:// paste race) | 2026-07-04 | fdc0f80 | [260704-fb4-napplet-keys-connect-nip-46-remote-signe](./quick/260704-fb4-napplet-keys-connect-nip-46-remote-signe/) |
 
 Last session: 2026-04-21T20:46:00.000Z
 Stopped at: Completed 142-03-PLAN.md (Phase 142 TERMINAL-COMPLETE)
