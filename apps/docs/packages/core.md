@@ -92,7 +92,8 @@ plain envelopes, so they add no protocol surface.
 ### Protocol types & constants
 
 - **`NostrEvent`**, **`NostrFilter`**, **`EventTemplate`**, **`Subscription`** —
-  shared Nostr structures used by the relay and identity NAPs.
+  shared Nostr structures used by NAP domains such as outbox, relay, and
+  identity.
 - **`Capability`** / **`ALL_CAPABILITIES`** — the human-readable capability strings
   (`relay:read`, `relay:write`, `sign:event`, `sign:nip44`, `state:read`, …).
 - **`PROTOCOL_VERSION`** (`'4.0.0'`), **`SHELL_BRIDGE_URI`** (`'napplet://shell'`),
@@ -107,14 +108,14 @@ import { createDispatch } from '@napplet/core';
 
 const { registerNap, dispatch } = createDispatch();
 
-registerNap('relay', (msg) => {
-  // handles all relay.* messages
-  console.log('relay message:', msg.type);
+registerNap('outbox', (msg) => {
+  // handles all outbox.* messages
+  console.log('outbox message:', msg.type);
 });
 
-dispatch({ type: 'relay.subscribe' }); // true
-dispatch({ type: 'unknown.action' });  // false
-dispatch({ type: 'malformed' });        // false (no dot)
+dispatch({ type: 'outbox.query', id: 'abc', filters: [{ kinds: [1] }] }); // true
+dispatch({ type: 'unknown.action' });                                     // false
+dispatch({ type: 'malformed' });                                           // false (no dot)
 ```
 
 ## See also

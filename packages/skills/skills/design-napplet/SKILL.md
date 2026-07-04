@@ -1,11 +1,11 @@
 ---
 name: design-napplet
-description: Use FIRST when planning a napplet (sandboxed Nostr iframe app), before writing code — turns an app idea into a concrete build spec: which NAP capabilities it needs, which services it requires, the sandbox/CSP constraints that shape it, and a responsive layout that survives any viewport from full-screen to a tiny widget.
+description: Use FIRST when planning a napplet (sandboxed Nostr iframe app), before writing code - turns an app idea into a concrete build spec covering required NAP capabilities, shell domains, sandbox/loading constraints, OUTBOX-first event routing, and a responsive layout that survives any viewport from full-screen to a tiny widget.
 ---
 
 # Designing a Napplet
 
-Run this before `build-napplet`. Output a short spec the build step executes against. Do not write app code here.
+Run this before `build-napplet`. Output a short spec the build step executes against. Do not write app code here. If the task is porting an existing Nostr app, run `port-nostr-app` first to identify the boundaries that must be replaced.
 
 ## What a napplet is
 
@@ -13,7 +13,7 @@ A napplet is a single self-contained `/index.html` loaded by a host **shell** in
 
 ## Constraints that drive every design decision
 
-- **No ambient network.** `fetch`, `XMLHttpRequest`, `WebSocket`, `<img src=https://…>`, `<link href=https://…>` are CSP/sandbox-blocked. All external bytes flow through `resource.bytes(url)`. Design around request/await, not direct loads.
+- **No ambient network.** `fetch`, `XMLHttpRequest`, `WebSocket`, `<img src=https://…>`, and `<link href=https://…>` are outside the napplet authority boundary. All external bytes flow through `resource.bytes(url)`. Design around request/await, not direct loads.
 - **No direct persistence.** `localStorage`/`IndexedDB`/cookies throw or are inert. State goes through `storage` (512 KB quota, async).
 - **No keys.** The napplet never signs. It hands templates to the shell. Never plan a flow that needs a raw privkey.
 - **Single file.** Ships as one `index.html` (JS inline, assets folded in). No runtime code-splitting, no external `<script src>`. Keep the bundle lean.
@@ -23,10 +23,15 @@ A napplet is a single self-contained `/index.html` loaded by a host **shell** in
 
 Map each feature to the NAP domain that provides it. Use only domains the shell exposes; gate optional behavior with injected domain property presence.
 
-| Need | NAP domain |
+| Need | Current package NAP domain |
 | --- | --- |
-| Read/publish Nostr events | `relay` |
-| User pubkey / profile / follows / lists | `identity` (read-only) |
+| Read/publish Nostr events where relay choice affects correctness | `outbox` |
+| Low-level relay access to one explicit relay, relay diagnostics, or protocols outside the outbox model | `relay` |
+| Common public social actions: profile lookup, follows, follow/unfollow, reactions, reports, NIP-19 helpers | `common` |
+| Safe NIP-51 / NIP-65 list mutations | `lists` |
+| Counts for reactions, replies, reposts, quotes, reports, followers | `count` |
+| Direct-message UI and message send/history/live delivery | `dm` |
+| User pubkey / public identity snapshots | `identity` (read-only) |
 | Persist app state | `storage` |
 | Talk to other napplets | `inc` |
 | Fetch avatars / external bytes | `resource` |
@@ -36,11 +41,36 @@ Map each feature to the NAP domain that provides it. Use only domains the shell 
 | Playback / now-playing | `media` |
 | Notifications + badge | `notify` |
 
-Other domains exist (`cvm`, `outbox`, `upload`, `intent`) — consult NIP-5D / NAPs before relying on them. Every NAP is **voluntary**: assume a domain may be absent and degrade gracefully.
+Other shipped package domains exist (`cvm`, `upload`, `intent`, `ble`,
+`webrtc`, `link`, `serial`) - consult NIP-5D / NAPs before relying on them.
+Every NAP is **voluntary**: assume a domain may be absent and degrade
+gracefully.
+
+Open NAP proposals are not automatically package surfaces. Do not design against
+domains such as Blossom, hashtree, torrent, proof-of-work, system, or value
+unless the current packages export that domain. Use an existing shipped boundary
+when it faithfully owns the intent (`resource`, `upload`, `link`, `intent`,
+etc.) or flag the missing package/spec surface.
+
+## Step 1.5 — Choose The Right Nostr Boundary
+
+Default to the highest-level NAP that owns the user intent:
+
+| Feature shape | Prefer | Do not start with |
+| --- | --- | --- |
+| Timeline/feed/profile/event reads that should follow author relay lists | `outbox.query` / `outbox.subscribe` | Manual `relay.subscribe` plus app-owned relay discovery |
+| Publishing user-authored public events | `outbox.publish` | `relay.publish` unless the outbox model is wrong for the feature |
+| Follow/unfollow/react/report/profile lookup/NIP-19 helpers | `common` | Hand-built events plus relay publish |
+| Mute/pin/bookmark/follow-set/relay-list mutation | `lists` | Editing replacement list events locally |
+| Counts or badges where event bodies are not needed | `count.query` | Downloading matching events through relay/outbox |
+| Direct-message products | `dm` | Implementing NIP-04/NIP-17/NDR crypto and relay routing inside the napplet |
+| One explicit relay, group relay, raw relay diagnostics, or a protocol not expressible through outbox/common/lists/count/dm | `relay` | Treating relay as the default app data layer |
+
+Use `relay` as an escape hatch only when the feature genuinely needs relay-local semantics. If the app is social, publishing user events, reading authors' events, or mutating user-owned Nostr state, it is almost always `outbox`, `common`, `lists`, `count`, or `dm`.
 
 ## Step 2 — Declare requirements vs. optional
 
-- **Hard requirement** → list in the vite-plugin `requires: [...]` (service deps) so a shell can refuse/inform up front.
+- **Hard requirement** → list bare NAP domain names in the vite-plugin `requires: [...]` so a shell can refuse/inform up front.
 - **Optional enhancement** → no manifest entry; guard at runtime with `if (window.napplet?.domain)` and provide a fallback.
 
 State which is which in the spec. Prefer optional + graceful degradation over hard requirements.
@@ -61,11 +91,12 @@ Produce a short block the build step consumes:
 ```
 nappletType: <kebab d-tag, e.g. "note-feed">
 purpose: <one line>
-NAPs used: relay (req), identity (opt), storage (req), resource (opt)
-requires (services): []        # hard service deps, usually empty
+NAPs used: outbox (req), common (opt), identity (opt), storage (req), resource (opt)
+requires: []        # hard NAP domain requirements, usually empty
 config schema: <fields or "none">
 layout: <tiny state> / <large state>, responsive strategy
-data flow: <subscriptions, publishes, stored keys>
+data flow: <outbox queries/subscriptions/publishes, social actions, stored keys>
+relay escape hatches: <none, or exact reason + why outbox/common/lists/count/dm do not apply>
 ```
 
 Hand this to `build-napplet`. Then verify with `test-napplet`.
