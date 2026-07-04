@@ -145,7 +145,7 @@ export async function inspectCandidate(target, scenario, options) {
 }
 
 export function summarizeScore(checks, category) {
-  const total = CHECKS[category].length;
+  const total = checks.filter((check) => check.category === category).length;
   const passed = checks.filter((check) => check.category === category && check.ok).length;
   return {
     passed,

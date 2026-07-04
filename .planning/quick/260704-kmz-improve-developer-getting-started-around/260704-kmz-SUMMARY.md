@@ -9,10 +9,11 @@ date: 2026-07-04
 ## Outcome
 
 Implemented an agent-focused napplet benchmark for developer onboarding tooling.
-The benchmark now evaluates the candidate produced from a frozen one-shot prompt
-across:
+The root package benchmark now runs Codex against the frozen one-shot prompt by
+default, then evaluates the produced candidate across:
 
 - static prompt hash
+- agent completion/timeout status
 - declared agent/tooling condition
 - supplied candidate directory evidence
 - candidate napplet workflow, accuracy, completeness, and bug count
@@ -27,7 +28,19 @@ Static prompt:
 `benchmarks/prompts/outbox-latest-note.md`
 
 - Scenario: `outbox-latest-note`
-- Prompt SHA-256: `f06fed10725f1c3340231cac22050889fb6e5038fd0b5fd17801916f14d291ba`
+- Prompt SHA-256: `cdf24bc9818b974aff4b1e92b9912f60ebcf2d15eba65e2e0ecc56ddc9b023b9`
+
+Verified no-placeholder live command:
+
+```bash
+rm -rf /tmp/napplet-benchmark-timeout-smoke /tmp/napplet-benchmark-timeout-smoke.json /tmp/napplet-benchmark-timeout-smoke.md
+pnpm benchmark:creation -- --candidate /tmp/napplet-benchmark-timeout-smoke --out /tmp/napplet-benchmark-timeout-smoke.json --markdown /tmp/napplet-benchmark-timeout-smoke.md --agent-timeout 5 --allow-failures
+```
+
+- Result: exited 0 in 5.388s
+- Report files: `/tmp/napplet-benchmark-timeout-smoke.json`, `/tmp/napplet-benchmark-timeout-smoke.md`
+- Agent evidence: `agent timed out after 5s; scored partial candidate`
+- Candidate evidence: `/tmp/napplet-benchmark-timeout-smoke/BENCHMARK_PROMPT.md`
 
 Candidate scoring report:
 `.planning/quick/260704-kmz-improve-developer-getting-started-around/improved.md`
@@ -68,6 +81,7 @@ Invalidated prior evidence:
 ## Verification
 
 - `pnpm benchmark:creation -- --out .../improved.json --markdown .../improved.md`
+- `pnpm benchmark:creation -- --candidate /tmp/napplet-benchmark-timeout-smoke --out /tmp/napplet-benchmark-timeout-smoke.json --markdown /tmp/napplet-benchmark-timeout-smoke.md --agent-timeout 5 --allow-failures`
 - `node scripts/benchmark-napplet-production.mjs --smoke`
 - `node scripts/benchmark-napplet-production.mjs --prompt benchmarks/prompts/outbox-latest-note.md --candidate packages/boilerplate/test-fixtures/basic-template --agent fixture --condition skills --smoke`
 - `python3 ~/.codex/skills/.system/skill-creator/scripts/quick_validate.py packages/skills/skills/make-napplet`
@@ -82,6 +96,6 @@ Invalidated prior evidence:
 
 ## Remaining Risks
 
-- The included report uses a committed fixture candidate as the smoke proof. A
-  live comparison still needs separate one-shot agent runs for each condition
-  being compared, then `--candidate <path>` scoring for each output.
+- The included planning report uses a committed fixture candidate for stable
+  smoke proof; the live timeout smoke proves the package command invokes Codex
+  and writes report files even when the agent does not finish in time.

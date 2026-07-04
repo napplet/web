@@ -71,18 +71,17 @@ benchmark:
 pnpm benchmark:creation
 ```
 
-The default run scores `benchmarks/prompts/outbox-latest-note.md` against the
-committed candidate fixture. Override the candidate and condition for real
-one-shot agent outputs:
+The default run sends `benchmarks/prompts/outbox-latest-note.md` to Codex
+and scores the temp candidate it creates. Use stable `/tmp` paths when you want
+report files:
 
 ```bash
+rm -rf /tmp/napplet-benchmark-codex
 pnpm benchmark:creation -- \
-  --prompt benchmarks/prompts/outbox-latest-note.md \
-  --candidate /path/to/agent-output \
-  --agent codex \
-  --condition skills \
-  --out benchmark.json \
-  --markdown benchmark.md
+  --candidate /tmp/napplet-benchmark-codex \
+  --out /tmp/napplet-benchmark-codex.json \
+  --markdown /tmp/napplet-benchmark-codex.md \
+  --allow-failures
 ```
 
 The report measures a frozen one-shot prompt, declared agent/tooling condition,

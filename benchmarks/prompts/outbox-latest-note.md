@@ -16,5 +16,5 @@ Build a small napplet named Latest Note. It should read the latest kind 1 note t
 - Source code that implements the scenario through shell-owned napplet domains.
 - A README that names the produced napplet and how to verify it.
 
-The candidate directory produced by this single run will be scored by:
-`pnpm benchmark:creation -- --candidate <candidate-dir>`
+The benchmark harness will score the candidate directory produced by this
+single run.

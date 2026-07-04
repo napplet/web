@@ -9,7 +9,7 @@
     "test:unit": "turbo run test:unit",
     "test:e2e": "turbo run test:e2e",
     "test:conformance": "node packages/conformance-cli/dist/cli.js tests/fixtures/napplets/conformant",
-    "benchmark:creation": "node scripts/benchmark-napplet-production.mjs",
+    "benchmark:creation": "node scripts/benchmark-napplet-production.mjs --run-agent codex",
     "lint": "turbo run lint",
     "type-check": "turbo run type-check",
     "check:links": "node scripts/check-links.mjs",

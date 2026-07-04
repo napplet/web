@@ -1,10 +1,10 @@
 # Napplet Production Benchmark
 
 Scenario: outbox-latest-note
-Run: 2026-07-04T13:31:22.529Z
+Run: 2026-07-04T13:52:21.087Z
 Agent: fixture
 Condition: default-candidate
-Prompt SHA-256: `f06fed10725f1c3340231cac22050889fb6e5038fd0b5fd17801916f14d291ba`
+Prompt SHA-256: `cdf24bc9818b974aff4b1e92b9912f60ebcf2d15eba65e2e0ecc56ddc9b023b9`
 Candidate: `/home/sandwich/Develop/napplet/packages/boilerplate/test-fixtures/basic-template`
 
 ## Results

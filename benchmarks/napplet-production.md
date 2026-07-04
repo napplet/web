@@ -10,24 +10,22 @@ tool or skill installation as success.
 pnpm benchmark:creation
 ```
 
-The default command scores:
+The default package command runs Codex once with:
 
 - prompt: `benchmarks/prompts/outbox-latest-note.md`
 - scenario: `benchmarks/scenarios/outbox-latest-note.json`
-- candidate: `packages/boilerplate/test-fixtures/basic-template`
+- candidate: a fresh `/tmp/napplet-outbox-latest-note-codex-*` directory
+- agent timeout: 300 seconds; a timeout is scored as a partial candidate
 
-Override the prompt, candidate, agent label, or condition when comparing real
-one-shot agent runs:
+Use this exact command when you want the candidate and reports at stable paths:
 
 ```bash
+rm -rf /tmp/napplet-benchmark-codex
 pnpm benchmark:creation -- \
-  --prompt benchmarks/prompts/outbox-latest-note.md \
-  --candidate /path/to/agent-output \
-  --agent codex \
-  --condition skills \
-  --started-at 2026-07-04T12:00:00Z \
-  --out benchmark.json \
-  --markdown benchmark.md
+  --candidate /tmp/napplet-benchmark-codex \
+  --out /tmp/napplet-benchmark-codex.json \
+  --markdown /tmp/napplet-benchmark-codex.md \
+  --allow-failures
 ```
 
 Every compared agent should receive the same prompt file. Use `--condition` to
