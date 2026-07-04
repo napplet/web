@@ -174,6 +174,78 @@ function clearLines(count: number, write: (bytes: Uint8Array) => void): void {
   write(encoder.encode(`\x1b[${count}A`));
 }
 
+/** A connected remote-signer session produced by either race branch. */
+interface RemoteSession {
+  signer: BunkerSigner;
+  pubkey: string;
+  relays: string[];
+  secret?: string;
+}
+
+/** Print the QR + prompt block; returns the number of terminal lines written. */
+function printConnectPrompt(
+  uri: string,
+  qrLines: string[],
+  timeoutMs: number,
+  print: (line: string) => void,
+): number {
+  print("Scan this QR with a NIP-46 signer, or paste a bunker:// URL and press Enter:");
+  for (const line of qrLines) print(line);
+  print("");
+  print(uri);
+  print(`Waiting for a remote signer (timeout ${Math.round(timeoutMs / 1000)}s)...`);
+  return qrLines.length + 4;
+}
+
+/** QR branch: resolve once a remote signer scans the nostrconnect:// URI. */
+async function awaitScan(
+  clientSk: Uint8Array,
+  uri: string,
+  pool: AbstractSimplePool,
+  abort: AbortSignal,
+  relays: string[],
+  secret: string,
+): Promise<RemoteSession> {
+  const signer = await BunkerSigner.fromURI(clientSk, uri, { pool }, abort);
+  const pubkey = await signer.getPublicKey();
+  return { signer, pubkey, relays, secret };
+}
+
+/** Paste branch: resolve once a bunker:// URL is pasted on stdin. */
+async function awaitPaste(
+  clientSk: Uint8Array,
+  pool: AbstractSimplePool,
+  abort: AbortController,
+  source: ReadableStream<Uint8Array>,
+  relays: string[],
+  onReader: (reader: ReadableStreamDefaultReader<string>) => void,
+): Promise<RemoteSession> {
+  const lines = source
+    .pipeThrough(new TextDecoderStream())
+    .pipeThrough(new TextLineStream());
+  const reader = lines.getReader();
+  onReader(reader);
+  for (;;) {
+    const { value, done } = await reader.read();
+    if (done) return await new Promise<never>(() => {});
+    if (value === undefined) continue;
+    const bunker = detectBunkerLine(value);
+    if (!bunker) continue;
+    const pointer: BunkerPointer | null = await parseBunkerInput(bunker);
+    if (!pointer) continue;
+    abort.abort();
+    const signer = BunkerSigner.fromBunker(clientSk, pointer, { pool });
+    await signer.connect();
+    const pubkey = await signer.getPublicKey();
+    return {
+      signer,
+      pubkey,
+      relays: pointer.relays.length > 0 ? pointer.relays : relays,
+      secret: pointer.secret ?? undefined,
+    };
+  }
+}
+
 /**
  * Run the NIP-46 remote-signer login flow. Prints a nostrconnect QR and races
  * a scan (BunkerSigner.fromURI) against a pasted bunker:// URL on stdin —
@@ -212,52 +284,24 @@ export async function connectRemoteSigner(options: ConnectOptions): Promise<Conn
   });
 
   const qrLines = renderQrLines(uri);
-  print("Scan this QR with a NIP-46 signer, or paste a bunker:// URL and press Enter:");
-  for (const line of qrLines) print(line);
-  print("");
-  print(uri);
-  print(`Waiting for a remote signer (timeout ${Math.round(timeoutMs / 1000)}s)...`);
-  const linesPrinted = qrLines.length + 4;
+  const linesPrinted = printConnectPrompt(uri, qrLines, timeoutMs, print);
 
   const abort = new AbortController();
   let reader: ReadableStreamDefaultReader<string> | undefined;
-  let winner:
-    | { signer: BunkerSigner; pubkey: string; relays: string[]; secret?: string }
-    | undefined;
+  let winner: RemoteSession | undefined;
   let timer: ReturnType<typeof setTimeout> | undefined;
 
-  const qrTask = (async () => {
-    const signer = await BunkerSigner.fromURI(clientSk, uri, { pool }, abort.signal);
-    const pubkey = await signer.getPublicKey();
-    return { signer, pubkey, relays, secret };
-  })();
-
-  const pasteTask = (async () => {
-    const source = options.stdin ?? Deno.stdin.readable;
-    const lines = source
-      .pipeThrough(new TextDecoderStream())
-      .pipeThrough(new TextLineStream());
-    reader = lines.getReader();
-    for (;;) {
-      const { value, done } = await reader.read();
-      if (done) return await new Promise<never>(() => {});
-      if (value === undefined) continue;
-      const bunker = detectBunkerLine(value);
-      if (!bunker) continue;
-      const pointer: BunkerPointer | null = await parseBunkerInput(bunker);
-      if (!pointer) continue;
-      abort.abort();
-      const signer = BunkerSigner.fromBunker(clientSk, pointer, { pool });
-      await signer.connect();
-      const pubkey = await signer.getPublicKey();
-      return {
-        signer,
-        pubkey,
-        relays: pointer.relays.length > 0 ? pointer.relays : relays,
-        secret: pointer.secret ?? undefined,
-      };
-    }
-  })();
+  const qrTask = awaitScan(clientSk, uri, pool, abort.signal, relays, secret);
+  const pasteTask = awaitPaste(
+    clientSk,
+    pool,
+    abort,
+    options.stdin ?? Deno.stdin.readable,
+    relays,
+    (r) => {
+      reader = r;
+    },
+  );
 
   const timeoutTask = new Promise<never>((_, reject) => {
     timer = setTimeout(() => {
