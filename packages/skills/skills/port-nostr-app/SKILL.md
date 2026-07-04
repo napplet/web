@@ -9,6 +9,12 @@ Use this before `design-napplet` when the starting point is an existing Nostr ap
 
 Protocol truth: NIP-5D (<https://github.com/nostr-protocol/nips/pull/2303>) plus NAPs (<https://github.com/napplet/naps>). Open the canonical spec before adding or depending on any message type, manifest tag, capability, or loading rule. If a needed surface is undefined, flag the gap instead of inventing it.
 
+Use current package exports as the implementation boundary. Open NAP proposals
+such as Blossom, hashtree, torrent, proof-of-work, system, or value are not
+usable package surfaces until the current `@napplet/*` packages export matching
+domains. In a port, map those needs to an existing shipped NAP only when it
+faithfully owns the intent; otherwise list the feature as blocked/deferred.
+
 ## Migration Rule
 
 Replace app-owned infrastructure with the highest-level NAP that owns the user intent:
@@ -119,6 +125,7 @@ source app:
 features kept:
 features split/deferred:
 NAPs used:
+package/proposal gaps:
 requires:
 optional domains and fallbacks:
 outbox reads:

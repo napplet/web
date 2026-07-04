@@ -7,7 +7,7 @@ import { listSkills, readSkill, install, TARGETS } from './index.js';
 describe('skill registry', () => {
   it('ships the napplet skills', () => {
     const names = listSkills().map((s) => s.name);
-    expect(names).toEqual(['build-napplet', 'design-napplet', 'port-nostr-app', 'test-napplet']);
+    expect(names).toEqual(['build-napplet', 'design-napplet', 'make-napplet', 'port-nostr-app', 'test-napplet']);
   });
 
   it('parses a description from each SKILL.md frontmatter', () => {
@@ -36,7 +36,7 @@ describe('install', () => {
 
   it('skillDir target writes SKILL.md per skill', () => {
     const results = install({ to: 'claude', cwd });
-    expect(results).toHaveLength(4);
+    expect(results).toHaveLength(5);
     expect(existsSync(join(cwd, '.claude/skills/build-napplet/SKILL.md'))).toBe(true);
     expect(results.every((r) => r.action === 'wrote')).toBe(true);
   });
@@ -52,6 +52,7 @@ describe('install', () => {
     install({ to: 'agents', cwd });
     const doc = readFileSync(join(cwd, 'AGENTS.md'), 'utf8');
     expect(doc).toContain('@napplet/skills:start');
+    expect(doc).toContain('## Skill: make-napplet');
     expect(doc).toContain('## Skill: design-napplet');
     expect(doc).toContain('## Skill: test-napplet');
   });

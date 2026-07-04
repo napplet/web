@@ -91,7 +91,7 @@ await storage.setItem('theme', 'dark');
 // Live per-napplet config
 const configSub = config.subscribe((values) => applyTheme(values.theme));
 
-// Fetch external bytes through the shell (direct fetch is blocked by CSP)
+// Fetch external bytes through the shell
 const avatarBlob = await resource.bytes('https://example.com/avatar.png');
 const avatarItems = await resource.bytesMany([
   'https://example.com/avatar.png',

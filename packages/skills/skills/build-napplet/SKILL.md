@@ -7,6 +7,13 @@ description: Use when writing a napplet (sandboxed Nostr iframe app) - Vite setu
 
 Implements a `design-napplet` spec. A napplet is a single self-contained `/index.html` the shell loads into a `sandbox="allow-scripts"` iframe (no `allow-same-origin`); all host access is proxied over postMessage per NIP-5D. The napplet never holds keys. Protocol truth: NIP-5D (<https://github.com/nostr-protocol/nips/pull/2303>) + NAPs (<https://github.com/napplet/naps>). Never invent wire surface; flag gaps.
 
+Use only domains and helpers shipped by the current packages. Current package
+domains are `relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`,
+`notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `ble`,
+`webrtc`, `link`, `count`, `lists`, `serial`, `common`, and `dm`. Open NAP
+proposals such as Blossom, hashtree, torrent, proof-of-work, system, or value
+are not package APIs until the current packages export matching domains.
+
 ## Runtime Injection And SDK
 
 The runtime injects `window.napplet` before napplet scripts run. Napplet code
@@ -43,7 +50,7 @@ export default defineConfig({
     nip5aManifest({
       nappletType: 'my-napplet',     // required — NIP-5D d-tag
       artifactMode: 'single-file',   // fold assets + keep inline scripts in one index.html
-      // requires: ['signer'],       // optional hard service deps → napplet-requires meta
+      // requires: ['outbox', 'storage'], // optional hard NAP domain requirements
       // configSchema: './config.schema.json', // optional NAP-CONFIG schema
     }),
   ],
@@ -207,7 +214,9 @@ hard manifest requirement and the shell already refused incompatible loads.
 
 ## Step 10 — Fetch external bytes (resource NAP)
 
-The sandbox + strict CSP (`connect-src 'none'`, `img-src blob: data:`) block `fetch`, `<img src=https://…>`, `XMLHttpRequest`, and `WebSocket` at the browser level. Route every external byte through `resource`.
+The sandboxed napplet model does not give app code ambient network authority.
+Route every external byte through `resource` instead of `fetch`,
+`<img src=https://…>`, `XMLHttpRequest`, or `WebSocket`.
 
 ```ts
 const blob = await window.napplet.resource.bytes('https://example.com/avatar.png');
@@ -247,10 +256,11 @@ do not add napplet-owned bootstrap plumbing.
 ## Common pitfalls
 
 - Napplet-owned `@napplet/shim` bootstrap — **wrong layer.** The runtime injects `window.napplet`; napplets use `@napplet/sdk` or direct domain properties.
+- Treating open NAP proposals as shipped package APIs — **wrong surface.** If the current packages do not export the domain/helper, use an existing shipped NAP that faithfully owns the intent or flag the gap.
 - No `discoverServices`/`hasService`/`hasServiceVersion` — use injected domain property presence.
 - Treating NAP-RELAY as the default data layer — **wrong default.** Use `outbox` for normal event reads/publishes, `common` for social actions, `lists` for list mutations, `count` for counts, and `dm` for messages. Use `relay` only when the spec names a relay-local escape hatch.
 - Storage is `nappletStorage`-backed via `storage.*` — there is no `nappletState`/`nappStorage`/`nappState` import.
-- Never `localStorage`/`fetch`/`<img src=externalUrl>`/`WebSocket` — sandbox + CSP block them. Use `storage` and `resource`.
+- Never `localStorage`/`fetch`/`<img src=externalUrl>`/`WebSocket` — the sandboxed napplet model delegates that authority to the shell. Use `storage` and `resource`.
 - Never call `window.nostr` — it isn't installed. Sign/publish via `outbox.publish` or higher-level NAPs; identity is read-only.
 - `publish()`/`query()` are async — `await` them; errors surface as structured results or rejections depending on the domain.
 - `outbox.query()` is one-shot; `outbox.subscribe()` is the live stream.
