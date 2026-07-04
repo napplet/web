@@ -70,6 +70,19 @@ using `relay` is wrong.
 3. Run `build-napplet` against that spec.
 4. Run `test-napplet` before reporting completion.
 
+When working inside the napplet monorepo or changing the starter, skills, or
+surrounding tooling itself, run the production benchmark before and after the
+improvement:
+
+```bash
+pnpm benchmark:creation -- --out benchmark.json --markdown benchmark.md
+```
+
+Use the report as evidence for development speed, skill workflow coverage,
+scenario accuracy, completeness, and detected bug count. Use `--candidate` to
+score a napplet produced by an actual agent run. Use
+`--no-reference --allow-failures` only for an honest baseline with known gaps.
+
 Do not claim "done" after design or code alone. Done means the built artifact
 passes the relevant conformance/build/test checks and the boundary audit has no
 forbidden surfaces.
@@ -102,6 +115,9 @@ flag the missing package/spec surface.
 - Every optional NAP is gated with a graceful fallback.
 - Every hard requirement is declared with a bare domain name in the manifest
   `requires` list, not `NAP-*`.
+- For starter/skills/tooling changes, a benchmark report records development
+  speed, workflow evidence, accuracy, completeness, and bug count before and
+  after one improvement.
 - The final answer includes the commands/checks that passed and any live-shell
   interoperability gap that was not tested.
 

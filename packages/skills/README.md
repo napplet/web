@@ -61,6 +61,22 @@ Install a single skill by naming it:
 napplet-skills install build-napplet --to gemini
 ```
 
+## Benchmark-aware creation
+
+When you are improving the starter, boilerplate generator, or the skills
+themselves, pair `make-napplet` / `test-napplet` with the monorepo production
+benchmark:
+
+```bash
+pnpm benchmark:creation -- --out benchmark.json --markdown benchmark.md
+```
+
+The report measures development/tooling time, skill workflow evidence,
+implementation accuracy, completeness, and detected bug count for a concrete
+napplet scenario. Keep a baseline report when optimizing a workflow so changes
+are compared against evidence. Use `--candidate <path>` for a real agent-built
+napplet and `--no-reference --allow-failures` for an expected-failing baseline.
+
 ## CLI
 
 ```

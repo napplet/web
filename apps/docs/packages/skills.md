@@ -57,6 +57,21 @@ napplet-skills install build-napplet --to gemini   # just one skill
 napplet-skills print build-napplet > skill.md      # raw markdown to stdout
 ```
 
+## Benchmark-aware creation
+
+For work that changes the starter, boilerplate generator, or the skills
+themselves, run the monorepo production benchmark before and after the
+improvement:
+
+```bash
+pnpm benchmark:creation -- --out benchmark.json --markdown benchmark.md
+```
+
+It records development/tooling time, skill workflow evidence, implementation
+accuracy, completeness, and detected bug count for a produced napplet so
+improvements are measurable. Use `--candidate <path>` for a real agent-built
+napplet and `--no-reference --allow-failures` for an expected-failing baseline.
+
 ## Programmatic API
 
 ```ts

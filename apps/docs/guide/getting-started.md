@@ -28,6 +28,18 @@ npx @napplet/boilerplate ./my-napplet \
 
 See [`@napplet/boilerplate`](/packages/boilerplate) for the full option list.
 
+If you are improving the generator, skills, or starter workflow itself, measure
+the change from the napplet monorepo:
+
+```bash
+pnpm benchmark:creation -- --out benchmark.json --markdown benchmark.md
+```
+
+The benchmark records development/tooling time, skill workflow evidence,
+scenario accuracy, completeness, and detected bug count for a produced napplet.
+Use `--candidate <path>` to score a real napplet produced after following the
+skills; use `--no-reference --allow-failures` for an expected-failing baseline.
+
 ## Install the packages manually
 
 If you'd rather add napplet to an existing app, install the napplet-side SDK:

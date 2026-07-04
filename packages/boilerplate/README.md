@@ -31,3 +31,18 @@ By default, the CLI clones:
 
 `https://github.com/napplet/boilerplate.git`
 
+## Benchmarking napplet production
+
+The napplet monorepo includes a production benchmark for the generator, skills,
+and surrounding tooling. It uses a concrete scenario, installs the relevant
+napplet skills into the benchmark workspace, produces a candidate napplet, then
+scores workflow evidence, scenario accuracy, completeness, and bug count.
+
+```bash
+pnpm benchmark:creation -- --out benchmark.json --markdown benchmark.md
+```
+
+The default command applies a deterministic reference implementation to validate
+the benchmark methodology. Use `--candidate <path>` to score a real napplet
+produced by an agent or developer, or `--no-reference --allow-failures` when
+recording a baseline that is expected to contain known gaps.

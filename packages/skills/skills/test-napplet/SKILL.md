@@ -89,3 +89,28 @@ Run conformance headless in CI: cache Playwright's Chromium, build, then run the
 ```
 
 Green conformance + a self-contained single-file build = ready to publish.
+
+## Step 8 - Benchmark tooling changes
+
+When the task changes the napplet boilerplate, creation workflow, or these
+skills, also run the napplet production benchmark from the monorepo:
+
+```bash
+pnpm benchmark:creation -- --out benchmark.json --markdown benchmark.md
+```
+
+The report captures:
+
+| Metric | Evidence |
+| --- | --- |
+| Development speed | `--started-at` wall time or elapsed benchmark tooling seconds |
+| Workflow | scenario prompt, scaffold command, and installed napplet skill packet |
+| Accuracy | scenario behavior and protocol-boundary checks on the produced napplet |
+| Completeness | project files, build/verify/conformance scripts, benchmark guidance |
+| Bugs | count of failed benchmark checks |
+
+For improvement work, keep both a baseline and an improved report so the
+iteration is measurable instead of anecdotal. The default command validates the
+benchmark methodology with a deterministic reference implementation; pass
+`--candidate <path>` to score a real produced napplet or
+`--no-reference --allow-failures` for an expected-failing baseline.
