@@ -1,6 +1,6 @@
 # @napplet/skills
 
-> Agent skills that let a coding agent design, build, and test a [napplet](https://github.com/napplet/napplet) end-to-end — plus a `napplet-skills` installer that drops them into whatever location your agent reads.
+> Agent skills that let a coding agent design, build, port, and test a [napplet](https://github.com/napplet/napplet) end-to-end — plus a `napplet-skills` installer that drops them into whatever location your agent reads.
 
 A **napplet** is a sandboxed Nostr iframe app (NIP-5D). These skills carry the
 exact, verified API surface and protocol constraints an agent needs so that one
@@ -13,8 +13,9 @@ well-scoped prompt produces a working, conformant napplet.
 
 | Skill | When | Covers |
 | --- | --- | --- |
-| `design-napplet` | First — plan before code | Sandbox/CSP constraints, choosing NAP capabilities, hard-vs-optional requirements, **responsive layout for any viewport** (full-screen → tiny widget), the build spec to hand off. |
-| `build-napplet` | Implementation | runtime-injected `window.napplet` + `@napplet/sdk`, the Vite manifest plugin, relay/storage/identity/inc/resource/config/theme, capability gating via domain presence, the single-file artifact rule. |
+| `design-napplet` | First — plan before code | Sandbox/CSP constraints, OUTBOX-first NAP selection, hard-vs-optional requirements, **responsive layout for any viewport** (full-screen → tiny widget), the build spec to hand off. |
+| `build-napplet` | Implementation | runtime-injected `window.napplet` + `@napplet/sdk`, the Vite manifest plugin, OUTBOX-first event access, relay as an explicit low-level escape hatch, storage/identity/inc/resource/common/lists/count/dm/config/theme, capability gating via domain presence, the single-file artifact rule. |
+| `port-nostr-app` | Migrating an existing Nostr app | Replace direct relay pools, `window.nostr`, local storage, direct fetch/media loads, and app-owned signing/routing with shell-owned NAP boundaries before building. |
 | `test-napplet` | Before publishing | Protocol conformance via `napplet-conformance` (real Chromium + reference shell), interpreting failures, the runtime guard, CI wiring. |
 
 Each skill is a self-contained `SKILL.md` with YAML frontmatter (`name`,

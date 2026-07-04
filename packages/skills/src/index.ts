@@ -1,7 +1,7 @@
 /**
  * @napplet/skills — agent skills for building napplets end-to-end.
  *
- * Ships three Markdown skills (`design-napplet`, `build-napplet`,
+ * Ships Markdown skills (`design-napplet`, `build-napplet`, `port-nostr-app`,
  * `test-napplet`) plus the logic to install them into whatever skill / rules
  * location a given coding agent reads. The `napplet-skills` CLI (see
  * `./cli.ts`) is a thin wrapper over the exports here.

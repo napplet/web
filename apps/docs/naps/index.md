@@ -24,23 +24,20 @@ runtime injected `window.napplet` before napplet code ran; the same calls are al
 
 ### relay
 
-Nostr relay proxy — subscribe, publish, and one-shot query through the shell's relay pool.
+Low-level Nostr relay proxy — subscribe, publish, and one-shot query through the
+shell's relay pool. Use this only for explicit relay-local behavior such as a
+group relay, diagnostics, or protocol tooling. For normal social reads and
+publishes, use [`outbox`](#outbox) or a higher-level domain such as
+[`common`](#common), [`lists`](#lists), [`count`](#count), or `dm`.
 
 ```ts
-// Live subscription (returns a handle with .close())
+// Explicit relay-local subscription (returns a handle with .close())
 const sub = window.napplet.relay.subscribe(
-  [{ kinds: [1], limit: 20 }],
-  (event) => render(event),
+  [{ kinds: [9, 10, 11, 12], limit: 20 }],
+  (result) => render(result.event),
   () => console.log('end of stored events'),
+  { relay: 'wss://groups.example.com' },
 );
-
-// Publish — the shell signs; the napplet never holds keys
-await window.napplet.relay.publish({
-  kind: 1, content: 'gm', tags: [], created_at: Math.floor(Date.now() / 1000),
-});
-
-// One-shot query — resolves with an array after EOSE
-const notes = await window.napplet.relay.query([{ kinds: [1], authors: [pubkey] }]);
 ```
 
 ### storage
@@ -166,8 +163,9 @@ if (window.napplet?.cvm) {
 ### outbox
 
 Outbox-aware relay routing — `getEvent` / `query` / `subscribe` / `publish` /
-`resolveRelays`; the shell owns NIP-65 relay discovery, dedup, and fanout. Use instead
-of `relay` when relay selection is part of result correctness.
+`resolveRelays`; the shell owns NIP-65 relay discovery, fallback, dedup,
+signature validation, signing, and fanout. This is the default event-read and
+publish boundary when relay selection is part of result correctness.
 
 ```ts
 if (window.napplet?.outbox) {
@@ -176,6 +174,18 @@ if (window.napplet?.outbox) {
     [{ authors: ['ab12…'], kinds: [1], limit: 20 }],
     { authors: ['ab12…'], timeoutMs: 3000 },
   );
+  const sub = window.napplet.outbox.subscribe(
+    [{ authors: ['ab12…'], kinds: [1], limit: 20 }],
+    { authors: ['ab12…'], timeoutMs: 3000 },
+  );
+  sub.on('event', (result) => render(result.event, result.sidecar?.relayHints));
+
+  await window.napplet.outbox.publish({
+    kind: 1,
+    content: 'gm',
+    tags: [],
+    created_at: Math.floor(Date.now() / 1000),
+  });
 }
 ```
 

@@ -14,7 +14,7 @@ pnpm add @napplet/nap
 
 ```ts
 // Barrel — types + shim installer + sdk helper together
-import { installRelayShim, relaySubscribe, RelaySubscribeMessage } from '@napplet/nap/relay';
+import { installOutboxShim, outboxQuery, OutboxQueryMessage } from '@napplet/nap/outbox';
 ```
 
 ```ts
@@ -22,7 +22,10 @@ import { installRelayShim, relaySubscribe, RelaySubscribeMessage } from '@napple
 import type { IncEventMessage } from '@napplet/nap/inc/types';
 ```
 
-Shells that only need to mount a NAP import the shim subpath directly:
+Runtime code that needs only a domain shim imports the shim subpath directly.
+Napplet application code should not call shim installers; it consumes the
+runtime-injected `window.napplet.<domain>` object through `@napplet/sdk` or the
+domain SDK helpers.
 
 ```ts
 // Granular — shim installer only (no SDK helpers bundled)
@@ -36,31 +39,23 @@ Napplet authors that want a typed wrapper over `window.napplet` without the inst
 import { notifySend } from '@napplet/nap/notify/sdk';
 ```
 
-End-to-end: a napplet subscribes to a relay stream using the SDK helper, while the shell mounts the matching installer on the napplet window:
+End-to-end: a napplet queries outbox-aware event data using the SDK helper. The
+runtime must inject `window.napplet.outbox` before app code runs; the napplet does
+not construct that object itself.
 
 ```ts
 // In the napplet (runs inside the sandboxed iframe)
-import { relaySubscribe } from '@napplet/nap/relay/sdk';
+import { outboxQuery, outboxSubscribe } from '@napplet/nap/outbox/sdk';
 
-const sub = relaySubscribe(
+const { events } = await outboxQuery(
   [{ kinds: [1], limit: 20 }],
-  {
-    onEvent: (event) => console.log('note', event),
-    onEose: () => console.log('caught up'),
-  },
+  { timeoutMs: 3000 },
 );
+for (const result of events) console.log('note', result.event);
 
-// Later, tear down the subscription
+const sub = outboxSubscribe([{ kinds: [1], limit: 20 }], { timeoutMs: 3000 });
+sub.on('event', (result) => console.log('new note', result.event));
 sub.close();
-```
-
-```ts
-// In the shell (runs on the host page)
-import { installRelayShim } from '@napplet/nap/relay/shim';
-
-installRelayShim(nappletWindow, {
-  // shell-provided relay pool, ACL, etc.
-});
 ```
 
 ## 22 Active Domains
@@ -69,7 +64,7 @@ Each domain is an independent subpath. Barrel imports bundle types + shim instal
 
 | Domain | Barrel | Types | Shim | SDK | Purpose |
 |--------|--------|-------|------|-----|---------|
-| relay | `@napplet/nap/relay` | `@napplet/nap/relay/types` | `@napplet/nap/relay/shim` | `@napplet/nap/relay/sdk` | Nostr relay proxy (subscribe/publish/query) |
+| relay | `@napplet/nap/relay` | `@napplet/nap/relay/types` | `@napplet/nap/relay/shim` | `@napplet/nap/relay/sdk` | Low-level Nostr relay proxy for explicit relay-local behavior (subscribe/publish/query) |
 | storage | `@napplet/nap/storage` | `@napplet/nap/storage/types` | `@napplet/nap/storage/shim` | `@napplet/nap/storage/sdk` | Scoped key-value storage |
 | inc | `@napplet/nap/inc` | `@napplet/nap/inc/types` | `@napplet/nap/inc/shim` | `@napplet/nap/inc/sdk` | Inter-napplet communication (topic pub/sub) |
 | keys | `@napplet/nap/keys` | `@napplet/nap/keys/types` | `@napplet/nap/keys/shim` | `@napplet/nap/keys/sdk` | Keyboard bindings + action registration |
