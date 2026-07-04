@@ -44,6 +44,32 @@ npx @napplet/boilerplate ./my-napplet \
 
 By default the CLI clones `https://github.com/napplet/boilerplate.git`.
 
+## Benchmarking production
+
+From the napplet monorepo, run the production benchmark to measure the generator,
+skills, and surrounding tooling against a concrete one-shot agent scenario:
+
+```bash
+pnpm benchmark:creation
+```
+
+The default run sends `benchmarks/prompts/outbox-latest-note.md` to Codex
+and scores the temp candidate it creates. Use stable `/tmp` paths when you want
+report files:
+
+```bash
+rm -rf /tmp/napplet-benchmark-codex
+pnpm benchmark:creation -- \
+  --candidate /tmp/napplet-benchmark-codex \
+  --out /tmp/napplet-benchmark-codex.json \
+  --markdown /tmp/napplet-benchmark-codex.md \
+  --allow-failures
+```
+
+The report records the frozen prompt hash, declared agent/tooling condition,
+scenario accuracy, completeness, and a bug count based on failed checks. Score
+each compared condition from its actual produced candidate directory.
+
 ## See also
 
 - [Getting started](/guide/getting-started) — scaffold and run your first napplet

@@ -89,3 +89,39 @@ Run conformance headless in CI: cache Playwright's Chromium, build, then run the
 ```
 
 Green conformance + a self-contained single-file build = ready to publish.
+
+## Step 8 - Benchmark tooling changes
+
+When the task changes the napplet boilerplate, creation workflow, or these
+skills, also run the napplet production benchmark from the monorepo:
+
+```bash
+pnpm benchmark:creation
+```
+
+The default run sends `benchmarks/prompts/outbox-latest-note.md` to Codex
+and scores the temp candidate it creates. Use stable `/tmp` paths when you want
+report files:
+
+```bash
+rm -rf /tmp/napplet-benchmark-codex
+pnpm benchmark:creation -- \
+  --candidate /tmp/napplet-benchmark-codex \
+  --out /tmp/napplet-benchmark-codex.json \
+  --markdown /tmp/napplet-benchmark-codex.md \
+  --allow-failures
+```
+
+The report captures:
+
+| Metric | Evidence |
+| --- | --- |
+| Development speed | `--started-at` wall time or elapsed scoring seconds |
+| Workflow | frozen prompt hash, declared condition, and supplied candidate |
+| Accuracy | scenario behavior and protocol-boundary checks on the produced napplet |
+| Completeness | project files, build/verify/conformance scripts, verification guidance |
+| Bugs | count of failed benchmark checks |
+
+For improvement work, keep one report for each compared condition. Use the same
+prompt file for each one-shot agent run and score the candidate it actually
+produced.

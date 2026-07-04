@@ -70,6 +70,31 @@ using `relay` is wrong.
 3. Run `build-napplet` against that spec.
 4. Run `test-napplet` before reporting completion.
 
+When working inside the napplet monorepo or changing the starter, skills, or
+surrounding tooling itself, run the production benchmark before and after the
+improvement:
+
+```bash
+pnpm benchmark:creation
+```
+
+The default run sends `benchmarks/prompts/outbox-latest-note.md` to Codex
+and scores the temp candidate it creates. Use stable `/tmp` paths when you want
+report files:
+
+```bash
+rm -rf /tmp/napplet-benchmark-codex
+pnpm benchmark:creation -- \
+  --candidate /tmp/napplet-benchmark-codex \
+  --out /tmp/napplet-benchmark-codex.json \
+  --markdown /tmp/napplet-benchmark-codex.md \
+  --allow-failures
+```
+
+Use the report as evidence for the frozen prompt, declared agent/tooling
+condition, scenario accuracy, completeness, and detected bug count. Score only
+the candidate produced by the one-shot agent run.
+
 Do not claim "done" after design or code alone. Done means the built artifact
 passes the relevant conformance/build/test checks and the boundary audit has no
 forbidden surfaces.
@@ -102,6 +127,8 @@ flag the missing package/spec surface.
 - Every optional NAP is gated with a graceful fallback.
 - Every hard requirement is declared with a bare domain name in the manifest
   `requires` list, not `NAP-*`.
+- For starter/skills/tooling changes, benchmark reports record the same frozen
+  prompt against each compared agent/tooling condition.
 - The final answer includes the commands/checks that passed and any live-shell
   interoperability gap that was not tested.
 

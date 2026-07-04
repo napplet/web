@@ -1,0 +1,17 @@
+{
+  "id": "outbox-latest-note",
+  "title": "Latest Note",
+  "packageName": "benchmark-napplet",
+  "nappletType": "benchmark-napplet",
+  "fallbackText": "Open in a napplet shell to load notes.",
+  "prompt": "Build a small napplet named Latest Note. It should read the latest kind 1 note through the shell-owned OUTBOX boundary, show a clear fallback when the outbox domain is unavailable, avoid direct relay sockets and app-owned signing, and keep build plus conformance verification available through package scripts.",
+  "forbiddenPatterns": [
+    "window.nostr",
+    "localStorage",
+    "indexedDB",
+    "WebSocket",
+    "XMLHttpRequest",
+    "fetch(",
+    "relay."
+  ]
+}

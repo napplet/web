@@ -31,3 +31,28 @@ By default, the CLI clones:
 
 `https://github.com/napplet/boilerplate.git`
 
+## Benchmarking napplet production
+
+The napplet monorepo includes a production benchmark for the generator, skills,
+and surrounding tooling. It uses a concrete static prompt, then scores the
+napplet an agent produced after one implementation attempt.
+
+```bash
+pnpm benchmark:creation
+```
+
+The default run sends `benchmarks/prompts/outbox-latest-note.md` to Codex
+and scores the temp candidate it creates. Use stable `/tmp` paths when you want
+report files:
+
+```bash
+rm -rf /tmp/napplet-benchmark-codex
+pnpm benchmark:creation -- \
+  --candidate /tmp/napplet-benchmark-codex \
+  --out /tmp/napplet-benchmark-codex.json \
+  --markdown /tmp/napplet-benchmark-codex.md \
+  --allow-failures
+```
+
+Use the same prompt for every compared condition and change only the agent
+context, such as `skills`, `no-skills`, or `docs-only`.

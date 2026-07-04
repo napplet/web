@@ -1,0 +1,21 @@
+{
+  "name": "benchmark-napplet",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "test:conformance": "napplet-conformance ./dist",
+    "verify": "pnpm build && pnpm test:conformance"
+  },
+  "dependencies": {
+    "@napplet/sdk": "^0.24.0"
+  },
+  "devDependencies": {
+    "@napplet/conformance-cli": "^0.2.13",
+    "@napplet/vite-plugin": "^0.10.1",
+    "typescript": "^5.9.3",
+    "vite": "^6.4.3"
+  }
+}

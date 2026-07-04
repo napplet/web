@@ -415,6 +415,9 @@ Next:
 
 Verify:
   pnpm verify
+
+Benchmark napplet production from the napplet repo:
+  pnpm benchmark:creation -- --candidate /tmp/napplet-benchmark-codex --out /tmp/napplet-benchmark-codex.json --markdown /tmp/napplet-benchmark-codex.md --allow-failures
 `);
 }
 
@@ -428,4 +431,3 @@ main().catch((error: unknown) => {
   console.error(`@napplet/boilerplate: ${message}`);
   process.exitCode = 1;
 });
-

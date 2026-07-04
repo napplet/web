@@ -61,6 +61,34 @@ Install a single skill by naming it:
 napplet-skills install build-napplet --to gemini
 ```
 
+## Benchmark-aware creation
+
+When you are improving the starter, boilerplate generator, or the skills
+themselves, pair `make-napplet` / `test-napplet` with the monorepo production
+benchmark:
+
+```bash
+pnpm benchmark:creation
+```
+
+The default run sends `benchmarks/prompts/outbox-latest-note.md` to Codex
+and scores the temp candidate it creates. Use stable `/tmp` paths when you want
+report files:
+
+```bash
+rm -rf /tmp/napplet-benchmark-codex
+pnpm benchmark:creation -- \
+  --candidate /tmp/napplet-benchmark-codex \
+  --out /tmp/napplet-benchmark-codex.json \
+  --markdown /tmp/napplet-benchmark-codex.md \
+  --allow-failures
+```
+
+The report measures a frozen one-shot prompt, declared agent/tooling condition,
+implementation accuracy, completeness, and detected bug count for a concrete
+napplet scenario. Keep one report per compared condition so workflow changes are
+compared against evidence.
+
 ## CLI
 
 ```

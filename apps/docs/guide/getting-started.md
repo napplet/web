@@ -28,6 +28,30 @@ npx @napplet/boilerplate ./my-napplet \
 
 See [`@napplet/boilerplate`](/packages/boilerplate) for the full option list.
 
+If you are improving the generator, skills, or starter workflow itself, measure
+the change from the napplet monorepo:
+
+```bash
+pnpm benchmark:creation
+```
+
+The default run sends `benchmarks/prompts/outbox-latest-note.md` to Codex
+and scores the temp candidate it creates. Use stable `/tmp` paths when you want
+report files:
+
+```bash
+rm -rf /tmp/napplet-benchmark-codex
+pnpm benchmark:creation -- \
+  --candidate /tmp/napplet-benchmark-codex \
+  --out /tmp/napplet-benchmark-codex.json \
+  --markdown /tmp/napplet-benchmark-codex.md \
+  --allow-failures
+```
+
+The benchmark records the prompt hash, declared agent/tooling condition,
+scenario accuracy, completeness, and detected bug count for the produced
+napplet. Use the same prompt for every compared condition.
+
 ## Install the packages manually
 
 If you'd rather add napplet to an existing app, install the napplet-side SDK:
