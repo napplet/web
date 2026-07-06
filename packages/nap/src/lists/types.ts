@@ -71,7 +71,7 @@ export interface ListsAddMessage extends ListsMessage {
 }
 
 /** Result of a `lists.add` request. */
-export interface ListsAddResultMessage extends ListsMessage, ListMutationResult {
+export interface ListsAddResultMessage extends ListsMessage, Omit<ListMutationResult, 'removed'> {
   type: 'lists.add.result';
   /** Correlation ID matching the original request. */
   id: string;
@@ -91,7 +91,7 @@ export interface ListsRemoveMessage extends ListsMessage {
 }
 
 /** Result of a `lists.remove` request. */
-export interface ListsRemoveResultMessage extends ListsMessage, ListMutationResult {
+export interface ListsRemoveResultMessage extends ListsMessage, Omit<ListMutationResult, 'added'> {
   type: 'lists.remove.result';
   /** Correlation ID matching the original request. */
   id: string;
