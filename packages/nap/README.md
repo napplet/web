@@ -152,11 +152,12 @@ imgEl.src = handle.url;
 handle.revoke();
 ```
 
-Four canonical schemes are defined in the spec:
+Canonical schemes are defined in the spec:
 
 - `data:` — RFC 2397, decoded inside the napplet shim with zero shell round-trip
 - `https:` — shell-side network fetch under the default resource policy (private-IP block list at DNS time, MIME byte-sniffing, size cap, timeout, rate limit, redirect cap)
 - `blossom:sha256:<hex>` — Blossom hash → bytes; shell verifies hash before delivery
+- `htree:` — Hashtree reference; shell verifies every Hashtree hash before delivery
 - `nostr:<bech32>` — single-hop NIP-19 resolution against the shell's relay pool
 
 Errors arrive as one of 8 typed codes: `not-found`, `blocked-by-policy`, `timeout`,

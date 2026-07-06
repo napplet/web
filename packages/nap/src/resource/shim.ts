@@ -324,7 +324,7 @@ export function bytes(url: string, opts?: { signal?: AbortSignal }): Promise<Blo
   let cancelId: string | null = null;
 
   try {
-    const protocol = new URL(url).protocol; // 'data:', 'https:', 'blossom:', 'nostr:', ...
+    const protocol = new URL(url).protocol; // 'data:', 'https:', 'blossom:', 'htree:', 'nostr:', ...
     if (protocol === 'data:') {
       work = decodeDataUrl(url);
     } else {

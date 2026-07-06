@@ -32,7 +32,7 @@ export const info = resourceInfo;
  * Fetch bytes for a URL through the shell's resource pipeline.
  *
  * @param url  URL identifying the resource (any registered scheme:
- *             `data:`, `https:`, `blossom:`, `nostr:`, ...)
+ *             `data:`, `https:`, `blossom:`, `htree:`, `nostr:`, ...)
  * @returns Promise resolving to the fetched bytes as a Blob
  *
  * @example
@@ -64,6 +64,7 @@ export const bytes = resourceBytes;
  * const items = await resourceBytesMany([
  *   'https://example.com/avatar.png',
  *   'blossom:sha256:...',
+ *   'htree://example-root/path',
  * ]);
  * ```
  */

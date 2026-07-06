@@ -286,7 +286,7 @@ imgEl.src = handle.url; // resolves once fetched
 handle.revoke();        // when done
 ```
 
-Schemes: `data:` (decoded in-shim, no round-trip), `https:` (shell network under policy), `blossom:sha256:<hex>` (hash-verified), `nostr:<bech32>` (single-hop NIP-19). Cancel with `bytes(url, { signal })`. Rejections carry a `code` — branch on it, never the message string:
+Schemes: `data:` (decoded in-shim, no round-trip), `https:` (shell network under policy), `blossom:sha256:<hex>` (hash-verified), `htree:` (Hashtree-verified), `nostr:<bech32>` (single-hop NIP-19). Cancel with `bytes(url, { signal })`. Rejections carry a `code` — branch on it, never the message string:
 `not-found`, `blocked-by-policy`, `timeout`, `too-large`, `unsupported-scheme`, `decode-failed`, `network-error`, `quota-exceeded`.
 
 The shell byte-sniffs and classifies the MIME; never trust the upstream `Content-Type`. SVG inputs are rasterized server-side — napplets never receive `image/svg+xml`.
