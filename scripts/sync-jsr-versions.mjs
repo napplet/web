@@ -21,6 +21,9 @@ import { fileURLToPath } from 'node:url';
 
 const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const PACKAGES_DIR = join(REPO_ROOT, 'packages');
+const JSR_EXPORT_SKIP_SUBPATHS = new Map([
+  ['@napplet/shim', new Set(['./prelude.global'])],
+]);
 
 // ── Pass 1: map every workspace package name → current version ──────────────
 const versions = new Map();
@@ -55,13 +58,21 @@ for (const entry of readdirSync(PACKAGES_DIR, { withFileTypes: true })) {
   // entry get updated by hand). Only applies to packages whose jsr.json uses an
   // object exports map (e.g. @napplet/nap); single-string exports are left as-is.
   // Each package.json export points at built dist/*.js; JSR publishes source, so
-  // map dist/<p>/<f>.js → src/<p>/<f>.ts.
+  // map dist/<p>/<f>.js → src/<p>/<f>.ts. Skip package-specific browser artifacts
+  // that exist only after npm build and have no source-module equivalent.
   if (jsr.exports && typeof jsr.exports === 'object' && pkg.exports && typeof pkg.exports === 'object') {
     const regenerated = {};
+    const skipSubpaths = JSR_EXPORT_SKIP_SUBPATHS.get(pkg.name) ?? new Set();
     for (const [subpath, target] of Object.entries(pkg.exports)) {
+      if (skipSubpaths.has(subpath)) continue;
       const jsEntry = typeof target === 'string' ? target : (target.import || target.default);
       if (!jsEntry) continue;
-      regenerated[subpath] = jsEntry.replace('/dist/', '/src/').replace(/\.js$/, '.ts');
+      const sourceEntry = jsEntry.replace('/dist/', '/src/').replace(/\.js$/, '.ts');
+      const sourcePath = join(dirname(jsrPath), sourceEntry.replace(/^\.\//, ''));
+      if (!existsSync(sourcePath)) {
+        throw new Error(`${pkg.name} ${subpath} maps to missing JSR source file: ${sourceEntry}`);
+      }
+      regenerated[subpath] = sourceEntry;
     }
     jsr.exports = regenerated;
   }

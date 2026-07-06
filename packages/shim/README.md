@@ -25,7 +25,7 @@ npm install @napplet/shim
 
 ### Host-injected srcdoc prelude
 
-Shells that construct `iframe.srcdoc` should use the package-owned browser
+Shells that construct `iframe.srcdoc` should use the npm package's browser
 prelude artifact instead of requiring each napplet bundle to import the shim.
 The prelude requires an explicit domain allowlist and installs only those
 callable `window.napplet.<domain>` objects.
@@ -50,7 +50,9 @@ const srcdoc = html.replace(
 
 The global artifact exposes `globalThis.NappletShimPrelude.install({ domains })`.
 `@napplet/shim/prelude` also exports `installNappletRuntimePrelude()` for
-bundled host runtimes that can import ESM directly.
+bundled host runtimes that can import ESM directly. JSR publishes the source ESM
+helpers under `@napplet/shim/prelude`; the generated `prelude.global` artifact
+is npm-only.
 
 ### Module import compatibility
 
