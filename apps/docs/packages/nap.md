@@ -81,9 +81,10 @@ import { notifySend } from '@napplet/nap/notify/sdk';
 - **lists** — runtime-mediated NIP-51 list mutations via
   `supported`/`add`/`remove`; the runtime owns lookup, merge, encryption,
   signing, and publishing.
-- **common** — shell-mediated public NIP-19 helpers, profile lookup, follows,
-  follow/unfollow, reactions, and reports; the shell owns identity, consent,
-  event construction, signing, publishing, relay access, and NIP-19 handling.
+- **common** — shell-mediated public NIP-19 helpers, profile lookup returning
+  `RelayEventResult`, follows, follow/unfollow, reactions, and reports; the
+  shell owns identity, consent, event construction, signing, publishing, relay
+  access, and NIP-19 handling.
 - **serial** — runtime-mediated serial device access: napplets get
   `open`/`write`/`close`/`onEvent`; the shell owns permissions, raw port
   handles, streams, OS paths, and lifecycle policy.
