@@ -25,6 +25,35 @@ npm install @napplet/shim
 Napplet-side code should use [`@napplet/sdk`](./sdk) or direct typed
 `window.napplet` access.
 
+For `iframe.srcdoc` runtimes, `@napplet/shim/prelude` exposes a host-injectable
+surface that does not require every napplet bundle to import the shim. Inline the
+browser artifact from `@napplet/shim/prelude.global`, then activate it with an
+explicit domain allowlist:
+
+```ts
+import { readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
+import { renderNappletRuntimePreludeCall } from '@napplet/shim/prelude';
+
+const require = createRequire(import.meta.url);
+const preludeSource = readFileSync(
+  require.resolve('@napplet/shim/prelude.global'),
+  'utf8',
+);
+
+const activatePrelude = renderNappletRuntimePreludeCall({
+  domains: ['identity', 'storage', 'outbox'],
+});
+
+const srcdoc = html.replace(
+  '<head>',
+  `<head><script>${preludeSource}\n${activatePrelude}</script>`,
+);
+```
+
+The IIFE artifact exposes `globalThis.NappletShimPrelude.install({ domains })`
+and installs only the requested known NAP domains.
+
 ## The `window.napplet` shape
 
 After runtime injection, the global may be populated with these sub-objects:
