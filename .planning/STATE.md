@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v0.34.0
 milestone_name: NIP-5D Runtime Injection
 status: planning
-last_updated: "2026-07-06T12:40:26+02:00"
-last_activity: 2026-07-06 - Completed quick task 260706-hhx: Add Codex as an installation target for @napplet/skills skills installer
+last_updated: "2026-07-06T15:29:10+02:00"
+last_activity: 2026-07-06 - Completed quick task 260706-lc6: Resolve napplet/web#119 conformance reference resource.bytes support
 progress:
   total_phases: 0
   completed_phases: 0
@@ -30,7 +30,7 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 Phase: Not started (defining requirements)
 Plan: —
 Status: Defining requirements
-Last activity: 2026-07-06 — Quick task 260706-hhx completed; `@napplet/skills` now has a first-class `codex` installer target for `.codex/skills/<skill>/SKILL.md`.
+Last activity: 2026-07-06 — Quick task 260706-lc6 completed; conformance now injects direct `window.napplet.resource.bytes()` for declared resource domains and decodes `data:` URL bytes in the reference shell.
 
 ### v0.34.0 roadmap
 
@@ -216,6 +216,7 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 | 260703-jrx | Finish RelayEventResult sidecar doc cleanup | 2026-07-03 | e1aceaed | [260703-jrx-finish-relayeventresult-sidecar-doc-cleanup](./quick/260703-jrx-finish-relayeventresult-sidecar-doc-cleanup/) |
 | 260703-ver | Chase NAP-OUTBOX eose removal | 2026-07-03 | 851d7ba2 | [260703-ver-chase-nap-outbox-eose-removal](./quick/260703-ver-chase-nap-outbox-eose-removal/) |
 | 260706-hhx | Add Codex as an installation target for @napplet/skills skills installer | 2026-07-06 | e74946d6 | [260706-hhx-add-codex-as-an-installation-target-for-](./quick/260706-hhx-add-codex-as-an-installation-target-for-/) |
+| 260706-lc6 | Resolve napplet/web#119 conformance reference resource.bytes support | 2026-07-06 | 5ca864bc | [260706-lc6-resolve-napplet-web-119-conformance-refe](./quick/260706-lc6-resolve-napplet-web-119-conformance-refe/) |
 
 ## Deferred Items
 
