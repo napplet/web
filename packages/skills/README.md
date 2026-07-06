@@ -35,9 +35,10 @@ npx @napplet/skills install --to claude
 | --- | --- | --- |
 | `claude` | `.claude/skills/<skill>/SKILL.md` | one folder per skill |
 | `claude-user` | `~/.claude/skills/<skill>/SKILL.md` | global, all projects |
+| `codex` | `.codex/skills/<skill>/SKILL.md` | one folder per skill |
 | `cursor` | `.cursor/rules/<skill>.mdc` | one rule file per skill |
 | `windsurf` | `.windsurf/rules/<skill>.md` | one rule file per skill |
-| `agents` | `AGENTS.md` | appended block (Codex, Amp, Jules, generic) |
+| `agents` | `AGENTS.md` | appended block (Amp, Jules, generic) |
 | `gemini` | `GEMINI.md` | appended block (Gemini CLI) |
 | `copilot` | `.github/copilot-instructions.md` | appended block |
 
@@ -51,6 +52,7 @@ duplicating it. The rest of the file is untouched.
 napplet-skills install --dir vendor/skills        # writes <dir>/<skill>/SKILL.md
 napplet-skills install --out CONTRIBUTING.md       # appends the managed block
 napplet-skills install --to claude --symlink       # symlink instead of copy
+napplet-skills install --to codex                  # writes .codex/skills
 napplet-skills install make-napplet --to agents    # one-prompt workflow only
 napplet-skills print build-napplet > skill.md      # raw markdown to stdout
 ```
@@ -77,6 +79,7 @@ import { listSkills, readSkill, install } from '@napplet/skills';
 listSkills();                      // [{ name, description, path }, …]
 readSkill('build-napplet');        // full SKILL.md source
 install({ to: 'claude' });         // → InstallResult[]
+install({ to: 'codex' });          // → InstallResult[]
 install({ dir: 'vendor/skills' }); // custom skillDir
 ```
 
