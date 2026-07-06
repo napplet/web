@@ -10,7 +10,7 @@
 
 ### How It Works
 
-1. A runtime imports `installNappletGlobal` before napplet scripts execute
+1. A runtime injects the prelude before napplet scripts execute
 2. The runtime chooses which NAP domain objects to expose
 3. `window.napplet` is populated with the selected domain objects
 4. No `window.nostr` is installed -- signing and encryption are mediated by the shell via `relay.publish()` and `relay.publishEncrypted()`
@@ -22,6 +22,40 @@ npm install @napplet/shim
 ```
 
 ## Quick Start
+
+### Host-injected srcdoc prelude
+
+Shells that construct `iframe.srcdoc` should use the package-owned browser
+prelude artifact instead of requiring each napplet bundle to import the shim.
+The prelude requires an explicit domain allowlist and installs only those
+callable `window.napplet.<domain>` objects.
+
+```ts
+import { readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
+import { renderNappletRuntimePreludeCall } from '@napplet/shim/prelude';
+
+const require = createRequire(import.meta.url);
+const preludePath = require.resolve('@napplet/shim/prelude.global');
+const preludeSource = readFileSync(preludePath, 'utf8');
+const activatePrelude = renderNappletRuntimePreludeCall({
+  domains: ['identity', 'storage', 'outbox'],
+});
+
+const srcdoc = html.replace(
+  '<head>',
+  `<head><script>${preludeSource}\n${activatePrelude}</script>`,
+);
+```
+
+The global artifact exposes `globalThis.NappletShimPrelude.install({ domains })`.
+`@napplet/shim/prelude` also exports `installNappletRuntimePrelude()` for
+bundled host runtimes that can import ESM directly.
+
+### Module import compatibility
+
+The root `@napplet/shim` entry still keeps the older side-effect behavior for
+tests and runtimes that already bundle the shim module.
 
 ```ts
 import { installNappletGlobal } from '@napplet/shim';
@@ -539,8 +573,8 @@ For napplet-side named imports, use `@napplet/sdk`.
 
 | | `@napplet/shim` | `@napplet/sdk` |
 |---|---|---|
-| **Import style** | `import { installNappletGlobal } from '@napplet/shim'` | `import { relay, inc } from '@napplet/sdk'` |
-| **What it does** | Runtime-side injected global installer | Named exports wrapping `window.napplet` |
+| **Import style** | `import { installNappletGlobal } from '@napplet/shim'` or `@napplet/shim/prelude` | `import { relay, inc } from '@napplet/sdk'` |
+| **What it does** | Runtime-side injected global installer plus host prelude artifact | Named exports wrapping `window.napplet` |
 | **Dependencies** | `@napplet/nap` (uses `@napplet/nap/<domain>/shim` subpaths internally) | `@napplet/core` (types only) |
 | **When to use** | In the host runtime before napplet scripts execute | In napplet code when you want typed imports in a bundler |
 | **Named exports** | `installNappletGlobal` | `relay`, `inc`, `storage`, `keys`, `identity`, plus types |
@@ -551,6 +585,14 @@ Runtime usage:
 import { installNappletGlobal } from '@napplet/shim';
 
 installNappletGlobal({ domains: ['relay', 'inc', 'storage', 'identity'] });
+```
+
+Host prelude usage:
+
+```ts
+import { renderNappletRuntimePreludeCall } from '@napplet/shim/prelude';
+
+renderNappletRuntimePreludeCall({ domains: ['relay', 'identity'] });
 ```
 
 Napplet usage:
