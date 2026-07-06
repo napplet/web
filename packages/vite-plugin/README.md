@@ -94,6 +94,45 @@ If the shell does not support all required domains, the napplet can detect this
 at runtime via `window.napplet?.domain` presence or the shell can show a
 compatibility warning.
 
+#### title (optional)
+
+**Type:** `string`
+
+Human-readable napplet title. When set, the plugin **sets/overrides** the built
+HTML `<title>` element (inserting one after `<head>` if the document has none),
+replacing any author-written title. This is **plain HTML** — NOT a `napplet-*`
+protocol meta tag. When omitted, the author's existing `<title>` is left
+untouched and no empty tag is emitted.
+
+The injected value is HTML-escaped for element-text context (`&`, `<`, `>`). At
+deploy time the napplet CLI reads this back out of the built `index.html` and
+emits it as the NIP-5A `["title", …]` manifest tag.
+
+#### description (optional)
+
+**Type:** `string`
+
+Human-readable napplet description. When set, the plugin **sets/overrides** the
+built HTML `<meta name="description">` element (inserting one after `<head>` if
+absent), replacing any existing description meta. This is **plain HTML** — NOT a
+`napplet-*` protocol meta tag. When omitted, the author's existing description
+meta is left untouched and no empty tag is emitted.
+
+The injected value is HTML-escaped for attribute context (`&`, `"`). At deploy
+time the napplet CLI reads this back out of the built `index.html` and emits it
+as the NIP-5A `["description", …]` manifest tag.
+
+```ts
+nip5aManifest({
+  nappletType: 'my-feed',
+  title: 'My Feed',
+  description: 'A cozy Nostr feed napplet',
+});
+// → built index.html carries <title>My Feed</title>
+// → built index.html carries <meta name="description" content="A cozy Nostr feed napplet">
+// → napplet CLI emits ["title", "My Feed"] and ["description", "A cozy Nostr feed napplet"]
+```
+
 #### configSchema (optional)
 
 **Type:** `NappletConfigSchema | string | undefined`
@@ -409,6 +448,20 @@ interface Nip5aManifestOptions {
     explicit?: string[];
     mode?: 'warn' | 'error';
   };
+
+  /**
+   * Human-readable title. Sets/overrides the built HTML `<title>` (plain HTML,
+   * not a napplet-* meta). The napplet CLI emits it as the NIP-5A `["title", …]`
+   * manifest tag at deploy.
+   */
+  title?: string;
+
+  /**
+   * Human-readable description. Sets/overrides the built HTML
+   * `<meta name="description">` (plain HTML, not a napplet-* meta). The napplet
+   * CLI emits it as the NIP-5A `["description", …]` manifest tag at deploy.
+   */
+  description?: string;
 
   /**
    * Artifact output contract. Defaults to 'external-assets'. Set to

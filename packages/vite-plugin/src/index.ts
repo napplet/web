@@ -23,7 +23,7 @@
 
 import type { Plugin, IndexHtmlTransformResult } from 'vite';
 import type { ManifestPluginState, Nip5aManifestOptions } from './types.js';
-import { singleFileBuildConfig } from './html.js';
+import { applyHtmlMetadata, singleFileBuildConfig } from './html.js';
 import {
   buildIndexHtmlTags,
   resolvePluginConfig,
@@ -82,8 +82,18 @@ export function nip5aManifest(options: Nip5aManifestOptions): Plugin {
       return null;
     },
 
-    transformIndexHtml(_html: string, ctx?: { server?: unknown }): IndexHtmlTransformResult {
-      return buildIndexHtmlTags(options, state, !!ctx?.server);
+    transformIndexHtml(html: string, ctx?: { server?: unknown }): IndexHtmlTransformResult {
+      const tags = buildIndexHtmlTags(options, state, !!ctx?.server);
+      // When title/description are set they must OVERRIDE any existing
+      // `<title>` / description meta — Vite tag descriptors only append, so we
+      // return the html-string transform form to rewrite the document in place.
+      if (options.title !== undefined || options.description !== undefined) {
+        return {
+          html: applyHtmlMetadata(html, { title: options.title, description: options.description }),
+          tags,
+        };
+      }
+      return tags;
     },
 
     async closeBundle() {

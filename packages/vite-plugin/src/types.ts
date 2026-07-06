@@ -48,6 +48,26 @@ export interface Nip5aManifestOptions {
   /** NAP domains this napplet requires, optionally inferred from source usage. */
   requires?: Nip5aRequiresOption;
   /**
+   * Human-readable napplet title. When set, the plugin sets/overrides the built
+   * HTML `<title>` element (inserting one after `<head>` if absent). This is
+   * PLAIN HTML — NOT a `napplet-*` protocol meta tag. When omitted, the author's
+   * existing `<title>` is left untouched.
+   *
+   * The napplet CLI reads this back out of the built `index.html` at deploy time
+   * and emits it as the NIP-5A `["title", ...]` manifest tag.
+   */
+  title?: string;
+  /**
+   * Human-readable napplet description. When set, the plugin sets/overrides the
+   * built HTML `<meta name="description">` element (inserting one after `<head>`
+   * if absent). This is PLAIN HTML — NOT a `napplet-*` protocol meta tag. When
+   * omitted, the author's existing description meta is left untouched.
+   *
+   * The napplet CLI reads this back out of the built `index.html` at deploy time
+   * and emits it as the NIP-5A `["description", ...]` manifest tag.
+   */
+  description?: string;
+  /**
    * Artifact output contract for production builds.
    *
    * - `external-assets` (default): preserves Vite's normal HTML + JS/CSS asset

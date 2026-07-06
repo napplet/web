@@ -6,7 +6,7 @@
  * NIP-5D kind `35129` signing, artifact rewrites, meta-tag injection).
  */
 
-import type { IndexHtmlTransformResult } from 'vite';
+import type { HtmlTagDescriptor } from 'vite';
 import type { NappletConfigSchema } from '@napplet/nap/config/types';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -68,8 +68,8 @@ export function buildIndexHtmlTags(
   options: Nip5aManifestOptions,
   state: ManifestPluginState,
   _isDev: boolean,
-): IndexHtmlTransformResult {
-  const tags: IndexHtmlTransformResult = [
+): HtmlTagDescriptor[] {
+  const tags: HtmlTagDescriptor[] = [
     {
       tag: 'meta',
       attrs: { name: 'napplet-type', content: options.nappletType },

@@ -3,6 +3,7 @@ import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
+import type { IndexHtmlTransformResult } from 'vite';
 import { nip5aManifest, NAPPLET_KIND_NAMED, type Nip5aManifestOptions } from './index';
 import { computeAggregateHash } from './hashing';
 
@@ -479,5 +480,90 @@ describe('nip5aManifest artifact modes', () => {
         [{ id: path.join(fixture.root, 'src/main.ts'), code: "import '@napplet/nap/relay';" }],
       ),
     ).rejects.toThrow('missing explicit requires');
+  });
+});
+
+describe('nip5aManifest title/description HTML metadata', () => {
+  // The plugin's title/description options inject PLAIN HTML `<title>` /
+  // `<meta name="description">` (NOT napplet-* protocol meta). The napplet CLI
+  // reads these back out of the built index.html to emit the NIP-5A
+  // `["title", …]` / `["description", …]` manifest tags.
+  function transformIndexHtml(
+    options: Nip5aManifestOptions,
+    html: string,
+  ): IndexHtmlTransformResult {
+    const plugin = nip5aManifest(options);
+    const hook = plugin.transformIndexHtml as (
+      html: string,
+      ctx?: unknown,
+    ) => IndexHtmlTransformResult;
+    return hook.call(plugin, html);
+  }
+
+  function transformedHtml(options: Nip5aManifestOptions, html: string): string {
+    const result = transformIndexHtml(options, html);
+    if (result && !Array.isArray(result) && typeof result === 'object' && 'html' in result) {
+      return result.html;
+    }
+    throw new Error('expected an html-string transform result');
+  }
+
+  it('overrides an existing <title> with the title option', () => {
+    const out = transformedHtml(
+      { nappletType: 'feed', title: 'My Napp' },
+      '<!doctype html><html><head><title>Old</title></head><body></body></html>',
+    );
+    expect(out).toContain('<title>My Napp</title>');
+    expect(out).not.toContain('Old');
+  });
+
+  it('injects a <title> after <head> when none exists', () => {
+    const out = transformedHtml(
+      { nappletType: 'feed', title: 'My Napp' },
+      '<!doctype html><html><head></head><body></body></html>',
+    );
+    expect(out).toContain('<head><title>My Napp</title></head>');
+  });
+
+  it('overrides an existing description meta (single/double quotes, attr order)', () => {
+    for (const meta of [
+      '<meta name="description" content="stale">',
+      "<meta name='description' content='stale'>",
+      '<meta content="stale" name="description">',
+    ]) {
+      const out = transformedHtml(
+        { nappletType: 'feed', description: 'A cool napplet' },
+        `<!doctype html><html><head>${meta}</head><body></body></html>`,
+      );
+      expect(out).toContain('content="A cool napplet"');
+      expect(out).not.toContain('stale');
+    }
+  });
+
+  it('injects a description meta after <head> when none exists', () => {
+    const out = transformedHtml(
+      { nappletType: 'feed', description: 'A cool napplet' },
+      '<!doctype html><html><head></head><body></body></html>',
+    );
+    expect(out).toContain('<head><meta name="description" content="A cool napplet"></head>');
+  });
+
+  it('leaves author HTML untouched and emits only tags when neither option is set', () => {
+    const html = '<!doctype html><html><head><title>Author</title></head><body></body></html>';
+    const result = transformIndexHtml({ nappletType: 'feed' }, html);
+    // No html-string transform form — only the meta tag descriptors.
+    expect(Array.isArray(result)).toBe(true);
+  });
+
+  it('HTML-escapes injected title (element text) and description (attribute) values', () => {
+    const out = transformedHtml(
+      { nappletType: 'feed', title: 'Hi <b> & "you"', description: 'A "cool" & <napplet>' },
+      '<!doctype html><html><head><title>Old</title><meta name="description" content="stale"></head><body></body></html>',
+    );
+    // Title: element-text escaping (& < >), quote left as-is.
+    expect(out).toContain('<title>Hi &lt;b&gt; &amp; "you"</title>');
+    // Description: attribute escaping (& "), angle brackets safe inside quotes.
+    expect(out).toContain('content="A &quot;cool&quot; &amp; <napplet>"');
+    expect(out).not.toContain('stale');
   });
 });
