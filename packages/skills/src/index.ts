@@ -115,9 +115,10 @@ export interface Target {
 export const TARGETS: Record<string, Target> = {
   claude: { id: 'claude', label: 'Claude Code (project)', kind: 'skillDir', base: '.claude/skills' },
   'claude-user': { id: 'claude-user', label: 'Claude Code (user, global)', kind: 'skillDir', base: '.claude/skills', home: true },
+  codex: { id: 'codex', label: 'Codex (project)', kind: 'skillDir', base: '.codex/skills' },
   cursor: { id: 'cursor', label: 'Cursor rules', kind: 'ruleFile', base: '.cursor/rules', ext: '.mdc' },
   windsurf: { id: 'windsurf', label: 'Windsurf rules', kind: 'ruleFile', base: '.windsurf/rules', ext: '.md' },
-  agents: { id: 'agents', label: 'AGENTS.md (Codex, Amp, Jules, generic)', kind: 'appendDoc', base: 'AGENTS.md' },
+  agents: { id: 'agents', label: 'AGENTS.md (Amp, Jules, generic)', kind: 'appendDoc', base: 'AGENTS.md' },
   gemini: { id: 'gemini', label: 'Gemini CLI (GEMINI.md)', kind: 'appendDoc', base: 'GEMINI.md' },
   copilot: { id: 'copilot', label: 'GitHub Copilot', kind: 'appendDoc', base: '.github/copilot-instructions.md' },
 };
@@ -161,6 +162,7 @@ function cursorFrontmatter(description: string): string {
  * ```ts
  * import { install } from '@napplet/skills';
  * install({ to: 'claude' });             // .claude/skills/<name>/SKILL.md
+ * install({ to: 'codex' });              // .codex/skills/<name>/SKILL.md
  * install({ to: 'agents' });             // append to ./AGENTS.md
  * install({ dir: 'vendor/skills' });     // custom skillDir
  * ```

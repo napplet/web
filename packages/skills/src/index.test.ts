@@ -41,6 +41,20 @@ describe('install', () => {
     expect(results.every((r) => r.action === 'wrote')).toBe(true);
   });
 
+  it('codex target writes project-local Codex skills', () => {
+    const results = install({ to: 'codex', cwd, skills: ['make-napplet'] });
+    expect(results).toEqual([
+      {
+        skill: 'make-napplet',
+        dest: join(cwd, '.codex/skills/make-napplet/SKILL.md'),
+        action: 'wrote',
+      },
+    ]);
+    expect(readFileSync(join(cwd, '.codex/skills/make-napplet/SKILL.md'), 'utf8')).toContain(
+      '# Making A Napplet End To End',
+    );
+  });
+
   it('ruleFile target writes one .mdc per skill with cursor frontmatter', () => {
     install({ to: 'cursor', cwd });
     const f = join(cwd, '.cursor/rules/build-napplet.mdc');
@@ -77,7 +91,7 @@ describe('install', () => {
 
   it('exposes the documented targets', () => {
     expect(Object.keys(TARGETS)).toEqual(
-      expect.arrayContaining(['claude', 'claude-user', 'cursor', 'windsurf', 'agents', 'gemini', 'copilot']),
+      expect.arrayContaining(['claude', 'claude-user', 'codex', 'cursor', 'windsurf', 'agents', 'gemini', 'copilot']),
     );
   });
 });
