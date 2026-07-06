@@ -1,5 +1,25 @@
 # @napplet/skills
 
+## 0.2.5
+
+### Patch Changes
+
+- 85683dc: Teach napplet authoring skills to prefer `@napplet/sdk` helpers for implementation calls, reserving direct `window.napplet?.domain` access for capability gates and true SDK gaps.
+
+## 0.2.4
+
+### Patch Changes
+
+- 4cfc04f: Teach napplet build skills to start from the boilerplate generator and preserve its tooling substrate.
+- 0f3ed8c: Align napplet authoring skills with all NAP domains implemented by the current `@napplet/*` package surface, including explicit NAP-KEYS guidance for shortcuts and keybindings.
+
+## 0.2.3
+
+### Patch Changes
+
+- bb5ff4b: Add `codex` as a project-local installer target that writes shipped napplet
+  skills to `.codex/skills/<skill>/SKILL.md`.
+
 ## 0.2.2
 
 ### Patch Changes

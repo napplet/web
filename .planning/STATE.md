@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v0.34.0
 milestone_name: NIP-5D Runtime Injection
 status: planning
-last_updated: "2026-07-06T12:40:26+02:00"
-last_activity: 2026-07-06 - Completed quick task 260706-hhx: Add Codex as an installation target for @napplet/skills skills installer
+last_updated: "2026-07-06T18:41:24+02:00"
+last_activity: 2026-07-06 - Completed quick task 260706-qdq: Make napplet authoring skills SDK-first
 progress:
   total_phases: 0
   completed_phases: 0
@@ -30,7 +30,7 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 Phase: Not started (defining requirements)
 Plan: —
 Status: Defining requirements
-Last activity: 2026-07-06 — Quick task 260706-eh0 completed; NIP-5A `title`/`description` manifest tags now populated end-to-end: `@napplet/vite-plugin` gains `title`/`description` options that inject/override built HTML, and the CLI emits the spec-defined `title`/`description` tags parsed from the built `index.html`.
+Last activity: 2026-07-06 — Quick tasks 260706-rm2, 260706-qdq, and 260706-eh0 completed; Publish to JSR now includes the `@napplet/shim` prelude export fix, napplet authoring skills are SDK-first, and NIP-5A `title`/`description` manifest tags are populated end-to-end.
 
 ### Quick task 260703-gz0 — COMPLETE
 
@@ -294,6 +294,20 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 - INFO: Local `specs/NIP-5D.md` may be stale vs napplet/nubs master post-PR-15 (`window.nostr` removal merged 2026-04-21). Phase 138 NIP5D-01 syncs before layering v0.29.0 amendment
 - INFO: `world: 'MAIN'` extension-API bypass acknowledged as residual — no page-side blocking mechanism exists. NUB-CLASS-1 `connect-src 'none'` is the structural mitigation. Phase 136 artifact MUST document this honestly; Phase 137 amendment + Phase 138 NIP-5D amendment MUST NOT claim a fix
 
+### Quick Tasks Completed
+
+| Quick ID | Task | Date | Commit | Artifacts |
+|----------|------|------|--------|-----------|
+| 260703-ghg | Align napplet packages with NAP RelayEventResult sidecars and updated outbox stream lifecycle | 2026-07-03 | 2ce3e3f2 | [260703-ghg-align-napplet-packages-with-nap-relayeve](./quick/260703-ghg-align-napplet-packages-with-nap-relayeve/) |
+| 260703-guj | Ignore Playwright MCP local artifacts | 2026-07-03 | f9f34992 | [260703-guj-ignore-playwright-mcp-local-artifacts](./quick/260703-guj-ignore-playwright-mcp-local-artifacts/) |
+| 260703-jrx | Finish RelayEventResult sidecar doc cleanup | 2026-07-03 | e1aceaed | [260703-jrx-finish-relayeventresult-sidecar-doc-cleanup](./quick/260703-jrx-finish-relayeventresult-sidecar-doc-cleanup/) |
+| 260703-ver | Chase NAP-OUTBOX eose removal | 2026-07-03 | 851d7ba2 | [260703-ver-chase-nap-outbox-eose-removal](./quick/260703-ver-chase-nap-outbox-eose-removal/) |
+| 260706-hhx | Add Codex as an installation target for @napplet/skills skills installer | 2026-07-06 | e74946d6 | [260706-hhx-add-codex-as-an-installation-target-for-](./quick/260706-hhx-add-codex-as-an-installation-target-for-/) |
+| 260706-lc6 | Resolve napplet/web#119 conformance reference resource.bytes support | 2026-07-06 | 5ca864bc | [260706-lc6-resolve-napplet-web-119-conformance-refe](./quick/260706-lc6-resolve-napplet-web-119-conformance-refe/) |
+| 260706-l3j | Audit local skill scaffolding workflow so new napplets start from boilerplate | 2026-07-06 | 829b3121 | [260706-l3j-audit-local-skill-scaffolding-workflow-s](./quick/260706-l3j-audit-local-skill-scaffolding-workflow-s/) |
+| 260706-qdq | Make napplet authoring skills SDK-first | 2026-07-06 | f8ea69a7 | [260706-qdq-make-napplet-authoring-skills-sdk-first-](./quick/260706-qdq-make-napplet-authoring-skills-sdk-first-/) |
+| 260706-lsr | Align napplet authoring skills with implemented package NAP domains | 2026-07-06 | 986299aa | [260706-lsr-task-ensure-napplet-skills-include-all-a](./quick/260706-lsr-task-ensure-napplet-skills-include-all-a/) |
+| 260706-psu | Resolve napplet/web#126 with @napplet/shim host prelude | 2026-07-06 | 4e726171 | [260706-psu-task-resolve-napplet-web-126-by-adding-a](./quick/260706-psu-task-resolve-napplet-web-126-by-adding-a/) |
 ## Deferred Items
 
 Items acknowledged and deferred at v0.31.0 milestone close on 2026-05-24:
@@ -398,6 +412,7 @@ Surfaced by research (informational — each belongs to a specific phase plan):
 | 260704-fb4 | Add `napplet keys connect` NIP-46 remote-signer login (nostrconnect QR + bunker:// paste race) | 2026-07-04 | fdc0f80 | [260704-fb4-napplet-keys-connect-nip-46-remote-signe](./quick/260704-fb4-napplet-keys-connect-nip-46-remote-signe/) |
 | 260706-hhx | Add Codex as an installation target for @napplet/skills skills installer | 2026-07-06 | e74946d6 | [260706-hhx-add-codex-as-an-installation-target-for-](./quick/260706-hhx-add-codex-as-an-installation-target-for-/) |
 | 260706-eh0 | Populate NIP-5A title/description manifest tags from built HTML (vite-plugin options + CLI index.html parsing) | 2026-07-06 | 838efa5 | [260706-eh0-populate-nip-5a-title-description-manife](./quick/260706-eh0-populate-nip-5a-title-description-manife/) |
+| 260706-rm2 | Fix Publish to JSR failure for @napplet/shim missing prelude.global source export | 2026-07-06 | 6cb6b6b5 | [260706-rm2-fix-publish-to-jsr-failure-for-napplet-s](./quick/260706-rm2-fix-publish-to-jsr-failure-for-napplet-s/) |
 
 Last session: 2026-04-21T20:46:00.000Z
 Stopped at: Completed 142-03-PLAN.md (Phase 142 TERMINAL-COMPLETE)

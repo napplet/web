@@ -1,5 +1,11 @@
 # @napplet/conformance
 
+## 0.12.2
+
+### Patch Changes
+
+- 5371643: Expose `resource.bytes` in the conformance reference runtime and support deterministic `data:` URL bytes.
+
 ## 0.12.1
 
 ### Patch Changes

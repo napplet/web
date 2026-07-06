@@ -5,13 +5,14 @@
   "scripts": {
     "build": "turbo run build",
     "dev:site": "turbo run dev --filter=@napplet/web --filter=@napplet/docs",
-    "test": "turbo run test:unit",
+    "test": "pnpm check:jsr && turbo run test:unit",
     "test:unit": "turbo run test:unit",
     "test:e2e": "turbo run test:e2e",
     "test:conformance": "node packages/conformance-cli/dist/cli.js tests/fixtures/napplets/conformant",
     "lint": "turbo run lint",
     "type-check": "turbo run type-check",
     "check:links": "node scripts/check-links.mjs",
+    "check:jsr": "node scripts/check-jsr-exports.mjs",
     "version-packages": "changeset version && node scripts/sync-jsr-versions.mjs",
     "publish-packages": "turbo run build && pnpm -r --filter='!@napplet/cli' publish --access public --no-git-checks",
     "publish-jsr": "node scripts/sync-jsr-versions.mjs && pnpm -r --filter='./packages/*' --filter='!@napplet/boilerplate' --filter='!@napplet/conformance-cli' exec npx jsr publish --allow-slow-types --allow-dirty"
