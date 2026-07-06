@@ -100,6 +100,14 @@ The deprecated `ifc` subpath is only an INC compatibility alias; new work uses
 against it as usable API. Use an existing shipped boundary only when it
 faithfully models the task, otherwise flag the missing package/spec surface.
 
+Implementation code is SDK-first: import callable helpers from `@napplet/sdk`
+when they exist. Use direct `window.napplet?.domain` access for domain
+availability checks and fallback branching, not as the default way to call NAP
+methods. If a current package domain lacks a central SDK namespace/object, use
+the helper exports that `@napplet/sdk` re-exports (for example
+`themeGet` / `themeOnChanged`) or flag the package gap instead of inventing a
+local client.
+
 ## Step 5 - Completion Checklist
 
 - No `window.nostr`, private keys, app-owned signing/encryption, relay pools,
@@ -107,6 +115,8 @@ faithfully models the task, otherwise flag the missing package/spec surface.
   WebSockets in napplet code.
 - No `shell.supports`, `shell.ready`, `discoverServices`, or generic service
   probing. Domain availability is `window.napplet?.domain`.
+- Napplet implementation calls use `@napplet/sdk` helpers wherever available;
+  direct `window.napplet.<domain>.*` calls appear only for true SDK gaps.
 - `outbox.query` / `outbox.subscribe` / `outbox.publish` use current option
   fields only: `authors`, `author`, `relays`, `targetAuthors`, `limit`,
   `timeoutMs`. No `strategy`, subscribe `live`, or `outbox.eose`.

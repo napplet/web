@@ -18,8 +18,8 @@ well-scoped prompt produces a working, conformant napplet.
 | --- | --- | --- |
 | `make-napplet` | One-prompt end-to-end builds | Orchestrates port/design/build/test, keeps social reads/publishes OUTBOX-first, blocks fake package surfaces, and defines the final completion checklist. |
 | `design-napplet` | First — plan before code | Sandbox/loading constraints, OUTBOX-first NAP selection, hard-vs-optional requirements, responsive layout for any viewport (full-screen → tiny widget), the build spec to hand off. |
-| `build-napplet` | Implementation | Start from `@napplet/boilerplate`, preserve its Vite/package/script/conformance substrate, then implement with runtime-injected `window.napplet` + `@napplet/sdk`, OUTBOX-first event access, relay as an explicit low-level escape hatch, storage/identity/inc/resource/common/lists/count/dm/config/theme, capability gating via domain presence, the single-file artifact rule. |
-| `port-nostr-app` | Migrating an existing Nostr app | Replace direct relay pools, `window.nostr`, local storage, direct fetch/media loads, and app-owned signing/routing with shell-owned NAP boundaries before building. |
+| `build-napplet` | Implementation | Start from `@napplet/boilerplate`, preserve its Vite/package/script/conformance substrate, then implement calls through `@napplet/sdk` helpers while using runtime-injected `window.napplet?.domain` only for availability gates, OUTBOX-first event access, relay as an explicit low-level escape hatch, storage/identity/inc/resource/common/lists/count/dm/config/theme, capability gating via domain presence, the single-file artifact rule. |
+| `port-nostr-app` | Migrating an existing Nostr app | Replace direct relay pools, `window.nostr`, local storage, direct fetch/media loads, and app-owned signing/routing with shell-owned NAP boundaries and SDK helper imports before building. |
 | `test-napplet` | Before publishing | Protocol conformance via `napplet-conformance` (real Chromium + reference shell), interpreting failures, the runtime guard, CI wiring. |
 
 Each skill is a self-contained `SKILL.md` with YAML frontmatter (`name`,

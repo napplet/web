@@ -17,6 +17,11 @@ not exported by the current `@napplet/*` packages, do not treat it as usable API
 Map a need to an existing shipped NAP only when it faithfully owns the intent;
 otherwise list the feature as blocked/deferred.
 
+Ports should replace app-owned infrastructure with `@napplet/sdk` imports, not
+with hand-written `window.napplet.<domain>.*` clients. Keep direct
+`window.napplet?.domain` access for availability checks and graceful fallback
+paths; use SDK helper exports for actual calls whenever they exist.
+
 ## Migration Rule
 
 Replace app-owned infrastructure with the highest-level NAP that owns the user intent:
@@ -133,6 +138,7 @@ NAPs used:
 package/proposal gaps:
 requires:
 optional domains and fallbacks:
+SDK helpers/imports:
 outbox reads:
 outbox publishes:
 social/list/count/dm actions:

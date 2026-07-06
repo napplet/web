@@ -25,6 +25,9 @@ Map each feature to the NAP domain that provides it. Use only domains exported
 by the current `@napplet/nap` / `@napplet/sdk` packages; gate optional behavior
 with injected domain property presence. If a NAP is not in this package
 inventory, do not design against it as usable API — flag a package/spec gap.
+Name the `@napplet/sdk` helper or namespace the build should import for each
+domain. Direct `window.napplet?.domain` checks are for availability and fallback
+design; implementation calls should use SDK helpers where they exist.
 
 | Need | Implemented package NAP domain |
 | --- | --- |
@@ -96,6 +99,7 @@ nappletType: <kebab d-tag, e.g. "note-feed">
 purpose: <one line>
 NAPs used: outbox (req), common (opt), identity (opt), storage (req), resource (opt)
 requires: []        # hard NAP domain requirements, usually empty
+SDK helpers: outbox.query, outbox.subscribe, common.getProfile, storage.getItem, resource.bytes
 config schema: <fields or "none">
 layout: <tiny state> / <large state>, responsive strategy
 data flow: <outbox queries/subscriptions/publishes, social actions, stored keys>
