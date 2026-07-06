@@ -28,9 +28,14 @@ npx @napplet/boilerplate ./my-napplet \
 
 See [`@napplet/boilerplate`](/packages/boilerplate) for the full option list.
 
-## Install the packages manually
+## Retrofit an existing app manually
 
-If you'd rather add napplet to an existing app, install the napplet-side SDK:
+For a new napplet, prefer the generator above. It owns the package manager pin,
+Vite config, single-file build plumbing, scripts, conformance wiring, and starter
+layout. Use manual wiring only when you are adding napplet support to an existing
+app.
+
+Install the napplet-side SDK:
 
 ```bash
 npm install @napplet/sdk
@@ -49,8 +54,21 @@ import { defineConfig } from 'vite';
 import { nip5aManifest } from '@napplet/vite-plugin';
 
 export default defineConfig({
-  plugins: [nip5aManifest({ nappletType: 'my-napp' })],
+  plugins: [nip5aManifest({ nappletType: 'my-napplet', artifactMode: 'single-file' })],
 });
+```
+
+Mirror the boilerplate scripts so verification stays consistent:
+
+```jsonc
+{
+  "scripts": {
+    "build": "vite build",
+    "type-check": "tsc --noEmit",
+    "verify": "npm run type-check && npm run build",
+    "test:conformance": "npm run build && napplet-conformance ./dist"
+  }
+}
 ```
 
 ## Build your first napplet
