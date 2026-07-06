@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v0.34.0
 milestone_name: NIP-5D Runtime Injection
 status: planning
-last_updated: "2026-07-03T12:21:03+02:00"
-last_activity: 2026-07-03 - Completed quick task 260703-ver: Chase NAP-OUTBOX eose removal
+last_updated: "2026-07-06T12:40:26+02:00"
+last_activity: 2026-07-06 - Completed quick task 260706-hhx: Add Codex as an installation target for @napplet/skills skills installer
 progress:
   total_phases: 0
   completed_phases: 0
@@ -30,7 +30,7 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 Phase: Not started (defining requirements)
 Plan: —
 Status: Defining requirements
-Last activity: 2026-07-03 — Quick task 260703-ver completed; NAP-OUTBOX no longer exposes caller-selected `strategy`, subscribe `live`, or `outbox.eose` lifecycle surface.
+Last activity: 2026-07-06 — Quick task 260706-hhx completed; `@napplet/skills` now has a first-class `codex` installer target for `.codex/skills/<skill>/SKILL.md`.
 
 ### v0.34.0 roadmap
 
@@ -215,6 +215,7 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 | 260703-guj | Ignore Playwright MCP local artifacts | 2026-07-03 | f9f34992 | [260703-guj-ignore-playwright-mcp-local-artifacts](./quick/260703-guj-ignore-playwright-mcp-local-artifacts/) |
 | 260703-jrx | Finish RelayEventResult sidecar doc cleanup | 2026-07-03 | e1aceaed | [260703-jrx-finish-relayeventresult-sidecar-doc-cleanup](./quick/260703-jrx-finish-relayeventresult-sidecar-doc-cleanup/) |
 | 260703-ver | Chase NAP-OUTBOX eose removal | 2026-07-03 | 851d7ba2 | [260703-ver-chase-nap-outbox-eose-removal](./quick/260703-ver-chase-nap-outbox-eose-removal/) |
+| 260706-hhx | Add Codex as an installation target for @napplet/skills skills installer | 2026-07-06 | e74946d6 | [260706-hhx-add-codex-as-an-installation-target-for-](./quick/260706-hhx-add-codex-as-an-installation-target-for-/) |
 
 ## Deferred Items
 
