@@ -5,7 +5,25 @@ description: Use to verify a napplet before publishing - run protocol conformanc
 
 # Testing a Napplet
 
-Conformance proves the build speaks NIP-5D correctly inside a real `sandbox="allow-scripts"` iframe driven by a reference shell — catching malformed envelopes, manifest problems, boot failures, and forbidden-global references locally instead of after publishing. Truth: NIP-5D (<https://github.com/nostr-protocol/nips/pull/2303>) + NAPs (<https://github.com/napplet/naps>).
+Conformance proves the build speaks NIP-5D correctly inside a real `sandbox="allow-scripts"` iframe driven by a reference shell — catching malformed envelopes, manifest problems, boot failures, and forbidden browser-authority references locally instead of after publishing. Truth: NIP-5D (<https://github.com/nostr-protocol/nips/pull/2303>) + NAPs (<https://github.com/napplet/naps>).
+
+## Sandbox Authority Contract
+
+Testing is not green if the napplet still owns browser authority that belongs to
+the shell. Treat any of these in served source or built output as a release
+blocker:
+
+- `fetch`, `XMLHttpRequest`, `WebSocket`, relay pools, direct NIP-65 routing, or
+  app-owned network fanout.
+- `localStorage`, `sessionStorage`, IndexedDB, cookies, or other browser-local
+  persistence.
+- External network-loaded `<script>`, stylesheet, image, audio, video, font, CSS
+  URL, or dynamic import.
+- `window.nostr`, raw keys, app-owned signing, or app-owned encryption.
+
+Expected replacements are `resource` for bytes, `storage` for state, `outbox` /
+`common` / `lists` / `count` / `dm` for social Nostr behavior, `relay` only for
+a documented relay-local escape hatch, and `link` for external URL opening.
 
 ## Step 1 — Build first
 
@@ -64,6 +82,15 @@ Before publishing, inspect source and built output for wrong-layer code:
 | Capability checks | Domain property presence (`window.napplet?.outbox`), never `shell.supports` |
 
 If a direct relay use remains, prove why `outbox`, `common`, `lists`, `count`, and `dm` do not fit. Otherwise refactor before shipping.
+
+Also scan for direct browser authority with exact strings before completion:
+
+```bash
+grep -RInE "fetch\\s*\\(|XMLHttpRequest|WebSocket|localStorage|sessionStorage|indexedDB|document\\.cookie|window\\.nostr|<img[^>]+src=['\\\"]?https?:|<script[^>]+src=['\\\"]?https?:|<link[^>]+href=['\\\"]?https?:" src dist index.html
+```
+
+Any hit in authored or bundled napplet code must be removed or explained as a
+tooling false positive before shipping.
 
 ## Step 5 — Confirm the artifact & guard
 

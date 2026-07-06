@@ -44,6 +44,10 @@ describe('skill registry', () => {
     }
 
     const buildSkill = readSkill('build-napplet');
+    expect(buildSkill).toContain('Sandbox Authority Contract');
+    expect(buildSkill).toContain('Never call `fetch`, `XMLHttpRequest`, `WebSocket`');
+    expect(buildSkill).toContain('ROMs, WASM companions, images, avatars, media, fonts, JSON');
+    expect(buildSkill).toContain('If a dependency contains dormant forbidden references');
     expect(buildSkill).toContain('If the feature mentions shortcuts');
     expect(buildSkill).toContain('NAP-KEYS');
     expect(buildSkill).toContain('keys.register');
@@ -56,12 +60,19 @@ describe('skill registry', () => {
 
     const makeSkill = readSkill('make-napplet');
     expect(makeSkill).toContain('Implementation code is SDK-first');
+    expect(makeSkill).toContain('Do not ship a napplet that "mostly works"');
 
     const designSkill = readSkill('design-napplet');
     expect(designSkill).toContain('SDK helpers:');
+    expect(designSkill).toContain('Design as if direct browser authority does not exist');
 
     const portSkill = readSkill('port-nostr-app');
     expect(portSkill).toContain('with `@napplet/sdk` imports');
+    expect(portSkill).toContain('Do not preserve browser authority from the source app');
+
+    const testSkill = readSkill('test-napplet');
+    expect(testSkill).toContain('Testing is not green if the napplet still owns browser authority');
+    expect(testSkill).toContain('grep -RInE "fetch\\\\s*\\\\(');
   });
 
   it('parses a description from each SKILL.md frontmatter', () => {
