@@ -1,6 +1,6 @@
 ---
 name: make-napplet
-description: Use when a user asks to create, build, implement, prototype, or port a complete napplet in one prompt. Orchestrates the napplet skills end to end by running port-nostr-app when starting from an existing Nostr app, design-napplet before code, build-napplet for implementation, and test-napplet before claiming done. Keeps normal social reads and publishes OUTBOX-first and treats NAP-RELAY as an explicit escape hatch only.
+description: Use when a user asks to create, build, implement, prototype, or port a complete napplet in one prompt. Orchestrates the napplet skills end to end, covers every current package-implemented NAP domain, keeps normal social reads and publishes OUTBOX-first, routes shortcuts/keybindings to NAP-KEYS, and treats NAP-RELAY as an explicit escape hatch only.
 ---
 
 # Making A Napplet End To End
@@ -32,6 +32,7 @@ Write a small build brief before editing:
 ```
 nappletType:
 new build or port:
+boilerplate substrate:
 single-purpose job:
 must-have user flows:
 optional user flows:
@@ -57,6 +58,12 @@ Default social/event boundary:
 - Local app state uses `storage`.
 - External bytes use `resource`; uploads use `upload`.
 - Cross-napplet handoff uses `inc` or `intent`.
+- Keyboard shortcuts/action keybindings use `keys`.
+- Playback/now-playing uses `media`; notifications/badges use `notify`.
+- Settings/theme use `config` and `theme`.
+- Native bridge/device/session features use `cvm`, `ble`, `serial`, or `webrtc`
+  only when the user story needs that exact shell-mediated boundary.
+- External URL opening uses `link`.
 - `relay` is only for an explicit relay-local escape hatch such as group relay
   protocols, diagnostics, or raw relay tooling outside the outbox model.
 
@@ -67,12 +74,17 @@ using `relay` is wrong.
 
 1. For ports, run `port-nostr-app` and produce its inventory/handoff.
 2. Run `design-napplet` and produce the build spec.
-3. Run `build-napplet` against that spec.
-4. Run `test-napplet` before reporting completion.
+3. For new projects, scaffold with `@napplet/boilerplate` before implementation
+   and preserve the generated package manager config, Vite config, scripts,
+   layout, README/docs structure, and conformance wiring.
+4. Run `build-napplet` against that spec, editing only project-specific files
+   such as `src/main.ts`, `src/styles.css`, `vite.config.ts` fields,
+   `index.html` title/root markup, config schema, and README/docs.
+5. Run `test-napplet` before reporting completion.
 
 Do not claim "done" after design or code alone. Done means the built artifact
-passes the relevant conformance/build/test checks and the boundary audit has no
-forbidden surfaces.
+passes the boilerplate validation (`pnpm verify`, `pnpm test:conformance`), any
+feature-specific checks, and the boundary audit has no forbidden surfaces.
 
 ## Step 4 - Package Surface Rule
 
@@ -83,11 +95,10 @@ package domains are:
 `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `ble`, `webrtc`,
 `link`, `count`, `lists`, `serial`, `common`, `dm`.
 
-Open NAP proposals such as Blossom, hashtree, torrent, proof-of-work, system, or
-value are not package surfaces until the current packages export matching
-domains. If a user story needs one, use an existing shipped boundary when it
-faithfully models the task (`resource`, `upload`, `link`, `intent`, etc.) or
-flag the missing package/spec surface.
+The deprecated `ifc` subpath is only an INC compatibility alias; new work uses
+`inc`. If a NAP is not in the package-domain list above, do not implement
+against it as usable API. Use an existing shipped boundary only when it
+faithfully models the task, otherwise flag the missing package/spec surface.
 
 ## Step 5 - Completion Checklist
 
@@ -102,6 +113,8 @@ flag the missing package/spec surface.
 - Every optional NAP is gated with a graceful fallback.
 - Every hard requirement is declared with a bare domain name in the manifest
   `requires` list, not `NAP-*`.
+- Shortcut/keybind features use `keys.register()` / `keys.onAction()` rather
+  than app-owned global shortcut plumbing.
 - The final answer includes the commands/checks that passed and any live-shell
   interoperability gap that was not tested.
 

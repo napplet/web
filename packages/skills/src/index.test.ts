@@ -10,6 +10,45 @@ describe('skill registry', () => {
     expect(names).toEqual(['build-napplet', 'design-napplet', 'make-napplet', 'port-nostr-app', 'test-napplet']);
   });
 
+  it('keeps authoring skills aligned with implemented package NAP domains', () => {
+    const implementedDomains = [
+      'relay',
+      'identity',
+      'storage',
+      'inc',
+      'theme',
+      'keys',
+      'media',
+      'notify',
+      'config',
+      'resource',
+      'cvm',
+      'outbox',
+      'upload',
+      'intent',
+      'ble',
+      'webrtc',
+      'link',
+      'count',
+      'lists',
+      'serial',
+      'common',
+      'dm',
+    ];
+
+    for (const skill of ['design-napplet', 'build-napplet', 'make-napplet', 'port-nostr-app']) {
+      const markdown = readSkill(skill);
+      for (const domain of implementedDomains) {
+        expect(markdown).toContain(`\`${domain}\``);
+      }
+    }
+
+    const buildSkill = readSkill('build-napplet');
+    expect(buildSkill).toContain('If the feature mentions shortcuts');
+    expect(buildSkill).toContain('NAP-KEYS');
+    expect(buildSkill).toContain('keys.register');
+  });
+
   it('parses a description from each SKILL.md frontmatter', () => {
     for (const s of listSkills()) expect(s.description.length).toBeGreaterThan(10);
   });

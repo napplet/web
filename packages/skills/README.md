@@ -13,14 +13,33 @@ well-scoped prompt produces a working, conformant napplet.
 
 | Skill | When | Covers |
 | --- | --- | --- |
-| `make-napplet` | One-prompt end-to-end builds | Orchestrates port/design/build/test, keeps social reads/publishes OUTBOX-first, blocks fake package surfaces, and defines the final completion checklist. |
-| `design-napplet` | First — plan before code | Sandbox/loading constraints, OUTBOX-first NAP selection, hard-vs-optional requirements, **responsive layout for any viewport** (full-screen → tiny widget), the build spec to hand off. |
-| `build-napplet` | Implementation | runtime-injected `window.napplet` + `@napplet/sdk`, the Vite manifest plugin, OUTBOX-first event access, relay as an explicit low-level escape hatch, storage/identity/inc/resource/common/lists/count/dm/config/theme, capability gating via domain presence, the single-file artifact rule. |
-| `port-nostr-app` | Migrating an existing Nostr app | Replace direct relay pools, `window.nostr`, local storage, direct fetch/media loads, and app-owned signing/routing with shell-owned NAP boundaries before building. |
+| `make-napplet` | One-prompt end-to-end builds | Orchestrates port/design/build/test, keeps social reads/publishes OUTBOX-first, blocks fake package surfaces, covers every implemented package NAP domain, and defines the final completion checklist. |
+| `design-napplet` | First — plan before code | Sandbox/loading constraints, OUTBOX-first NAP selection, package-implemented NAP inventory, hard-vs-optional requirements, **responsive layout for any viewport** (full-screen → tiny widget), the build spec to hand off. |
+| `build-napplet` | Implementation | Start from `@napplet/boilerplate`, preserve its Vite/package/script/conformance substrate, then implement with runtime-injected `window.napplet` + `@napplet/sdk`, OUTBOX-first event access, relay as an explicit low-level escape hatch, all implemented package domains (`relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `ble`, `webrtc`, `link`, `count`, `lists`, `serial`, `common`, `dm`), capability gating via domain presence, the single-file artifact rule. |
+| `port-nostr-app` | Migrating an existing Nostr app | Replace direct relay pools, `window.nostr`, local storage, direct fetch/media loads, app-owned shortcut plumbing, and app-owned signing/routing with shell-owned NAP boundaries before building. |
 | `test-napplet` | Before publishing | Protocol conformance via `napplet-conformance` (real Chromium + reference shell), interpreting failures, the runtime guard, CI wiring. |
 
 Each skill is a self-contained `SKILL.md` with YAML frontmatter (`name`,
 `description`) — the format Claude Code, Cursor, and most agents consume.
+
+## Scaffolding substrate
+
+For new napplet projects, `build-napplet` and the top-level `make-napplet`
+workflow treat [`@napplet/boilerplate`](../boilerplate) as authoritative. Agents
+should scaffold with the generator, keep its package manager pin, Vite config,
+scripts, file layout, README/docs structure, and conformance wiring, then edit
+only project-specific surfaces such as `nappletType`, `requires`, config schema,
+`src/main.ts`, `src/styles.css`, title/root markup, and README content.
+
+The expected generated-project validation is:
+
+```bash
+pnpm verify
+pnpm test:conformance
+```
+
+Manual package/script/Vite wiring belongs only to explicit existing-app
+retrofits, and should mirror the boilerplate contract.
 
 ## Install routes
 
