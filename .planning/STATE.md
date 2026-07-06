@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v0.34.0
 milestone_name: NIP-5D Runtime Injection
 status: planning
-last_updated: "2026-07-06T18:41:24+02:00"
-last_activity: 2026-07-06 - Completed quick task 260706-qdq: Make napplet authoring skills SDK-first
+last_updated: "2026-07-07T00:03:01+02:00"
+last_activity: 2026-07-07 - Completed quick task 260706-dmu: Align NAP-DM result envelope unions
 progress:
   total_phases: 0
   completed_phases: 0
@@ -30,7 +30,7 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 Phase: Not started (defining requirements)
 Plan: —
 Status: Defining requirements
-Last activity: 2026-07-06 — Quick task 260706-qdq completed; napplet authoring skills now prefer `@napplet/sdk` helpers for implementation calls while retaining `window.napplet?.domain` as the availability probe.
+Last activity: 2026-07-07 - Quick task 260706-dmu completed; NAP-DM result message types now enforce success-or-error unions and export `DmError` through the package type surface.
 
 ### v0.34.0 roadmap
 
@@ -221,6 +221,7 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 | 260706-qdq | Make napplet authoring skills SDK-first | 2026-07-06 | f8ea69a7 | [260706-qdq-make-napplet-authoring-skills-sdk-first-](./quick/260706-qdq-make-napplet-authoring-skills-sdk-first-/) |
 | 260706-lsr | Align napplet authoring skills with implemented package NAP domains | 2026-07-06 | 986299aa | [260706-lsr-task-ensure-napplet-skills-include-all-a](./quick/260706-lsr-task-ensure-napplet-skills-include-all-a/) |
 | 260706-psu | Resolve napplet/web#126 with @napplet/shim host prelude | 2026-07-06 | 4e726171 | [260706-psu-task-resolve-napplet-web-126-by-adding-a](./quick/260706-psu-task-resolve-napplet-web-126-by-adding-a/) |
+| 260706-dmu | Align NAP-DM result envelope unions | 2026-07-07 | ac9c32e0 | [260706-dmu-align-dm-result-envelope-unions](./quick/260706-dmu-align-dm-result-envelope-unions/) |
 
 ## Deferred Items
 
