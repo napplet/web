@@ -30,7 +30,7 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 Phase: Not started (defining requirements)
 Plan: —
 Status: Defining requirements
-Last activity: 2026-07-06 — Quick task 260706-hhx completed; `@napplet/skills` now has a first-class `codex` installer target for `.codex/skills/<skill>/SKILL.md`.
+Last activity: 2026-07-06 — Quick task 260706-eh0 completed; NIP-5A `title`/`description` manifest tags now populated end-to-end: `@napplet/vite-plugin` gains `title`/`description` options that inject/override built HTML, and the CLI emits the spec-defined `title`/`description` tags parsed from the built `index.html`.
 
 ### Quick task 260703-gz0 — COMPLETE
 
@@ -397,6 +397,7 @@ Surfaced by research (informational — each belongs to a specific phase plan):
 | 260703-ver | Chase NAP-OUTBOX eose removal | 2026-07-03 | 851d7ba2 | [260703-ver-chase-nap-outbox-eose-removal](./quick/260703-ver-chase-nap-outbox-eose-removal/) |
 | 260704-fb4 | Add `napplet keys connect` NIP-46 remote-signer login (nostrconnect QR + bunker:// paste race) | 2026-07-04 | fdc0f80 | [260704-fb4-napplet-keys-connect-nip-46-remote-signe](./quick/260704-fb4-napplet-keys-connect-nip-46-remote-signe/) |
 | 260706-hhx | Add Codex as an installation target for @napplet/skills skills installer | 2026-07-06 | e74946d6 | [260706-hhx-add-codex-as-an-installation-target-for-](./quick/260706-hhx-add-codex-as-an-installation-target-for-/) |
+| 260706-eh0 | Populate NIP-5A title/description manifest tags from built HTML (vite-plugin options + CLI index.html parsing) | 2026-07-06 | 838efa5 | [260706-eh0-populate-nip-5a-title-description-manife](./quick/260706-eh0-populate-nip-5a-title-description-manife/) |
 
 Last session: 2026-04-21T20:46:00.000Z
 Stopped at: Completed 142-03-PLAN.md (Phase 142 TERMINAL-COMPLETE)
