@@ -27,8 +27,8 @@ Napplet-side code should use [`@napplet/sdk`](./sdk) or direct typed
 
 For `iframe.srcdoc` runtimes, `@napplet/shim/prelude` exposes a host-injectable
 surface that does not require every napplet bundle to import the shim. Inline the
-browser artifact from `@napplet/shim/prelude.global`, then activate it with an
-explicit domain allowlist:
+npm browser artifact from `@napplet/shim/prelude.global`, then activate it with
+an explicit domain allowlist:
 
 ```ts
 import { readFileSync } from 'node:fs';
@@ -52,7 +52,9 @@ const srcdoc = html.replace(
 ```
 
 The IIFE artifact exposes `globalThis.NappletShimPrelude.install({ domains })`
-and installs only the requested known NAP domains.
+and installs only the requested known NAP domains. JSR exposes the source ESM
+helpers under `@napplet/shim/prelude`; the generated `prelude.global` artifact
+is npm-only.
 
 ## The `window.napplet` shape
 
