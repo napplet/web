@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: complete
 created: 2026-07-06
 quick_id: 260706-psu
 slug: task-resolve-napplet-web-126-by-adding-a
@@ -48,3 +48,7 @@ runtime prelude surface to `@napplet/shim`.
   `@napplet/shim/prelude`.
 - Root gates before PR: `pnpm build`, `pnpm type-check`, `pnpm -r test:unit`,
   `pnpm lint`, `git diff --check`.
+
+## Outcome
+
+Implemented in commit `4e726171`.

@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v0.34.0
 milestone_name: NIP-5D Runtime Injection
 status: planning
-last_updated: "2026-07-06T15:50:50+02:00"
-last_activity: 2026-07-06 - Completed quick task 260706-lsr: Align napplet authoring skills with implemented package NAP domains
+last_updated: "2026-07-06T18:41:24+02:00"
+last_activity: 2026-07-06 - Completed quick task 260706-psu: Resolve napplet/web#126 with @napplet/shim host prelude
 progress:
   total_phases: 0
   completed_phases: 0
@@ -30,7 +30,7 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 Phase: Not started (defining requirements)
 Plan: —
 Status: Defining requirements
-Last activity: 2026-07-06 — Quick task 260706-lsr completed; napplet authoring skills now cover every current package-implemented NAP domain, route shortcut/keybinding work through NAP-KEYS, and avoid promoting unimplemented NAP proposals as usable API.
+Last activity: 2026-07-06 — Quick task 260706-psu completed; `@napplet/shim` now exposes a host-injectable runtime prelude surface plus `prelude.global` IIFE artifact for srcdoc runtimes.
 
 ### v0.34.0 roadmap
 
@@ -219,6 +219,7 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 | 260706-lc6 | Resolve napplet/web#119 conformance reference resource.bytes support | 2026-07-06 | 5ca864bc | [260706-lc6-resolve-napplet-web-119-conformance-refe](./quick/260706-lc6-resolve-napplet-web-119-conformance-refe/) |
 | 260706-l3j | Audit local skill scaffolding workflow so new napplets start from boilerplate | 2026-07-06 | 829b3121 | [260706-l3j-audit-local-skill-scaffolding-workflow-s](./quick/260706-l3j-audit-local-skill-scaffolding-workflow-s/) |
 | 260706-lsr | Align napplet authoring skills with implemented package NAP domains | 2026-07-06 | 986299aa | [260706-lsr-task-ensure-napplet-skills-include-all-a](./quick/260706-lsr-task-ensure-napplet-skills-include-all-a/) |
+| 260706-psu | Resolve napplet/web#126 with @napplet/shim host prelude | 2026-07-06 | 4e726171 | [260706-psu-task-resolve-napplet-web-126-by-adding-a](./quick/260706-psu-task-resolve-napplet-web-126-by-adding-a/) |
 
 ## Deferred Items
 
