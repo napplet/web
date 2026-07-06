@@ -115,7 +115,10 @@ export async function createDeployManifestTemplates(
       await collectManifestFiles(item.candidate.dir);
     filesByDir.set(item.candidate.dir, files);
     const metadataTags = metadataByDir.get(item.candidate.dir) ??
-      await readPluginManifestMetadataTags(item.candidate.manifestPath);
+      dedupeTags([
+        ...await readIndexHtmlMetadataTags(item.candidate.indexHtml),
+        ...await readPluginManifestMetadataTags(item.candidate.manifestPath),
+      ]);
     metadataByDir.set(item.candidate.dir, metadataTags);
     const aggregateHash = await computeAggregateHash(files);
     if (item.target === "snapshot") {
@@ -202,6 +205,74 @@ async function readPluginManifestMetadataTags(
     if (error instanceof Deno.errors.NotFound || error instanceof SyntaxError) return [];
     throw error;
   }
+}
+
+/**
+ * Read the NIP-5A single-value `title` / `description` manifest tags out of a
+ * built `index.html`. These come from PLAIN HTML — the `<title>` element and a
+ * `<meta name="description">` element (as authored by @napplet/vite-plugin's
+ * title/description options) — NOT from any `napplet-*` protocol meta tag.
+ *
+ * Returns at most one `["title", value]` and one `["description", value]` tag.
+ * Values are entity-decoded and trimmed; empty/whitespace-only values emit no
+ * tag. A missing/unreadable file yields `[]` (mirrors readPluginManifestMetadataTags).
+ */
+async function readIndexHtmlMetadataTags(indexHtmlPath: string | undefined): Promise<string[][]> {
+  if (!indexHtmlPath) return [];
+  let html: string;
+  try {
+    html = await Deno.readTextFile(indexHtmlPath);
+  } catch (error) {
+    if (error instanceof Deno.errors.NotFound) return [];
+    throw error;
+  }
+  const tags: string[][] = [];
+  const title = extractHtmlTitle(html);
+  if (title) tags.push(["title", title]);
+  const description = extractHtmlDescription(html);
+  if (description) tags.push(["description", description]);
+  return tags;
+}
+
+/** Inner text of the FIRST `<title>…</title>`, decoded + trimmed; null if empty. */
+function extractHtmlTitle(html: string): string | null {
+  const match = /<title\b[^>]*>([\s\S]*?)<\/title>/i.exec(html);
+  if (!match) return null;
+  const value = decodeHtmlEntities(match[1]).trim();
+  return value.length > 0 ? value : null;
+}
+
+/** `content` of the FIRST non-empty `<meta name="description">`, decoded + trimmed. */
+function extractHtmlDescription(html: string): string | null {
+  const metaRe = /<meta\b[^>]*>/gi;
+  let match: RegExpExecArray | null;
+  while ((match = metaRe.exec(html)) !== null) {
+    const tag = match[0];
+    const name = getHtmlTagAttr(tag, "name");
+    if (name === null || name.toLowerCase() !== "description") continue;
+    const content = getHtmlTagAttr(tag, "content");
+    if (content === null) continue;
+    const value = decodeHtmlEntities(content).trim();
+    if (value.length > 0) return value;
+  }
+  return null;
+}
+
+/** Read one HTML attribute value off a tag (single/double/unquoted); null if absent. */
+function getHtmlTagAttr(tag: string, name: string): string | null {
+  const re = new RegExp(`\\b${name}\\s*=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s>]+))`, "i");
+  const match = re.exec(tag);
+  return match ? (match[1] ?? match[2] ?? match[3] ?? "") : null;
+}
+
+/** Decode the standard HTML entities. `&amp;` is decoded LAST to avoid double-decoding. */
+function decodeHtmlEntities(value: string): string {
+  return value
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&amp;/g, "&");
 }
 
 function dedupeTags(tags: readonly string[][]): string[][] {

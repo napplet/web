@@ -205,6 +205,108 @@ Deno.test("createDeployManifestTemplates preserves plugin-emitted requires tags"
   });
 });
 
+Deno.test("createDeployManifestTemplates emits trimmed title/description tags from index.html", async () => {
+  await withTempDir(async (dir) => {
+    await Deno.writeTextFile(
+      `${dir}/index.html`,
+      [
+        "<!doctype html><html><head>",
+        "<title>  Feed  </title>",
+        '<meta name="description" content="A feed napplet">',
+        "</head><body></body></html>",
+      ].join(""),
+    );
+    const candidate: NappletCandidate = { name: "feed", dir, indexHtml: `${dir}/index.html` };
+    const config = defaultConfig({ named: ["feed"] });
+    const plan = createDeployPlan(config, [candidate], {
+      root: true,
+      names: ["feed"],
+      snapshot: true,
+    });
+    const manifests = await createDeployManifestTemplates(plan, config, {
+      createdAt: 123,
+      sourcePubkey: pubkey,
+    });
+
+    assertEquals(manifests.length, 4);
+    // Title/description are trimmed and propagate to root, named, AND snapshots.
+    for (const manifest of manifests) {
+      assertEquals(manifest.template?.tags.filter((tag) => tag[0] === "title"), [[
+        "title",
+        "Feed",
+      ]]);
+      assertEquals(manifest.template?.tags.filter((tag) => tag[0] === "description"), [
+        ["description", "A feed napplet"],
+      ]);
+    }
+  });
+});
+
+Deno.test("createDeployManifestTemplates omits title/description when missing or empty", async () => {
+  await withTempDir(async (dir) => {
+    await Deno.writeTextFile(
+      `${dir}/index.html`,
+      '<!doctype html><html><head><title>   </title><meta name="description" content=""></head><body></body></html>',
+    );
+    const candidate: NappletCandidate = { name: "feed", dir, indexHtml: `${dir}/index.html` };
+    const config = defaultConfig({ named: ["feed"] });
+    const plan = createDeployPlan(config, [candidate], { root: true });
+    const manifests = await createDeployManifestTemplates(plan, config, { createdAt: 123 });
+
+    assertEquals(manifests[0].template?.tags.some((tag) => tag[0] === "title"), false);
+    assertEquals(manifests[0].template?.tags.some((tag) => tag[0] === "description"), false);
+  });
+});
+
+Deno.test("createDeployManifestTemplates dedupes title/description and coexists with requires", async () => {
+  await withTempDir(async (dir) => {
+    await Deno.writeTextFile(
+      `${dir}/index.html`,
+      [
+        "<!doctype html><html><head>",
+        "<title>First</title>",
+        "<title>Second</title>",
+        "<meta name='description' content='Desc &amp; more'>",
+        "</head><body></body></html>",
+      ].join(""),
+    );
+    await Deno.writeTextFile(
+      `${dir}/.nip5a-manifest.json`,
+      JSON.stringify({ tags: [["requires", "relay"]] }),
+    );
+    const candidate: NappletCandidate = {
+      name: "feed",
+      dir,
+      indexHtml: `${dir}/index.html`,
+      manifestPath: `${dir}/.nip5a-manifest.json`,
+    };
+    const config = defaultConfig({ named: ["feed"] });
+    const plan = createDeployPlan(config, [candidate], {
+      root: true,
+      names: ["feed"],
+      snapshot: true,
+    });
+    const manifests = await createDeployManifestTemplates(plan, config, {
+      createdAt: 123,
+      sourcePubkey: pubkey,
+    });
+
+    assertEquals(manifests.length, 4);
+    for (const manifest of manifests) {
+      // First non-empty title wins; entity-decoded description; requires coexist.
+      assertEquals(manifest.template?.tags.filter((tag) => tag[0] === "title"), [
+        ["title", "First"],
+      ]);
+      assertEquals(manifest.template?.tags.filter((tag) => tag[0] === "description"), [
+        ["description", "Desc & more"],
+      ]);
+      assertEquals(manifest.template?.tags.filter((tag) => tag[0] === "requires"), [
+        ["requires", "relay"],
+      ]);
+    }
+  });
+});
+
 Deno.test("siteAddress renders root and named NIP-5D addresses", () => {
   assertEquals(siteAddress({ kind: NAPPLET_KIND_ROOT, pubkey }), `${NAPPLET_KIND_ROOT}:${pubkey}:`);
   assertEquals(

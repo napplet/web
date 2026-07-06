@@ -31,6 +31,13 @@ yet; generate and pass an `nbunksec` for CI-style remote signing.
 When a built napplet includes a plugin-generated `.nip5a-manifest.json`, deploy templates preserve
 canonical `requires` tags from that sidecar on root, named, and companion snapshot manifests.
 
+Deploy also reads the built `index.html` and emits the NIP-5A single-value `title` / `description`
+manifest tags from its plain-HTML `<title>` element and `<meta name="description">` element (as
+authored by `@napplet/vite-plugin`'s `title` / `description` options). Values are entity-decoded and
+trimmed; empty or missing values emit no tag, and at most one `["title", …]` and one
+`["description", …]` tag are emitted on root, named, and companion snapshot manifests. These are
+plain HTML read back out at deploy time — not `napplet-*` protocol meta tags.
+
 `napplet debug [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>]` prints the same
 operator-facing discovery and deploy planning state without uploading blobs or publishing events.
 Signing secrets are classified but not printed.
