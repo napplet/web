@@ -1,5 +1,11 @@
 # @napplet/skills
 
+## 0.2.5
+
+### Patch Changes
+
+- 85683dc: Teach napplet authoring skills to prefer `@napplet/sdk` helpers for implementation calls, reserving direct `window.napplet?.domain` access for capability gates and true SDK gaps.
+
 ## 0.2.4
 
 ### Patch Changes
