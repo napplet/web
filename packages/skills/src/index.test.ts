@@ -47,6 +47,21 @@ describe('skill registry', () => {
     expect(buildSkill).toContain('If the feature mentions shortcuts');
     expect(buildSkill).toContain('NAP-KEYS');
     expect(buildSkill).toContain('keys.register');
+    expect(buildSkill).toContain('SDK-first');
+    expect(buildSkill).toContain('Use direct `window.napplet?.domain` access only');
+    expect(buildSkill).toContain("import { resource } from '@napplet/sdk';");
+    expect(buildSkill).toContain("import { config, themeGet, themeOnChanged } from '@napplet/sdk';");
+    expect(buildSkill).not.toContain('Equivalently call `window.napplet.<domain>.*` directly');
+    expect(buildSkill).not.toContain('Examples below use whichever reads clearest');
+
+    const makeSkill = readSkill('make-napplet');
+    expect(makeSkill).toContain('Implementation code is SDK-first');
+
+    const designSkill = readSkill('design-napplet');
+    expect(designSkill).toContain('SDK helpers:');
+
+    const portSkill = readSkill('port-nostr-app');
+    expect(portSkill).toContain('with `@napplet/sdk` imports');
   });
 
   it('parses a description from each SKILL.md frontmatter', () => {

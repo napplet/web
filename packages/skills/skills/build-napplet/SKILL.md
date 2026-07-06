@@ -22,8 +22,10 @@ API even if a spec PR exists. Flag the package/spec gap.
 
 The runtime injects `window.napplet` before napplet scripts run. Napplet code
 does not import `@napplet/shim`; runtimes consume that package when they need the
-first-party installer. Napplets import `@napplet/sdk` for named, typed wrappers,
-or call `window.napplet.<domain>.*` directly.
+first-party installer. Napplet implementation code is **SDK-first**: import
+named, typed wrappers from `@napplet/sdk` for every domain call the SDK exposes.
+Use direct `window.napplet?.domain` access only for domain availability checks,
+fallback branching, or a real package gap where no SDK wrapper exists.
 
 Canonical pattern:
 
@@ -31,7 +33,10 @@ Canonical pattern:
 import { outbox, common, inc, storage, identity } from '@napplet/sdk';
 ```
 
-Equivalently call `window.napplet.<domain>.*` directly (identical behavior). Examples below use whichever reads clearest; both hit the same runtime.
+Do not hand-build NAP domain clients, envelope dispatchers, or `window.napplet`
+objects inside napplet code. The SDK wrappers still delegate to the injected
+runtime at call time, but they keep examples typed, current, and aligned with
+the package surface agents actually import.
 
 ## Step 1 — Start From The Boilerplate
 
@@ -269,10 +274,12 @@ Route every external byte through `resource` instead of `fetch`,
 `<img src=https://…>`, `XMLHttpRequest`, or `WebSocket`.
 
 ```ts
-const blob = await window.napplet.resource.bytes('https://example.com/avatar.png');
+import { resource } from '@napplet/sdk';
+
+const blob = await resource.bytes('https://example.com/avatar.png');
 imgEl.src = URL.createObjectURL(blob);             // revokeObjectURL when done
 
-const handle = window.napplet.resource.bytesAsObjectURL(
+const handle = resource.bytesAsObjectURL(
   'blossom:sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
 );
 imgEl.src = handle.url; // resolves once fetched
@@ -287,12 +294,14 @@ The shell byte-sniffs and classifies the MIME; never trust the upstream `Content
 ## Step 12 — Config & theme (optional)
 
 ```ts
-const cfg = await window.napplet.config.get();                 // validated + defaulted snapshot
-const cfgSub = window.napplet.config.subscribe((v) => apply(v)); // live updates
-window.napplet.config.openSettings({ section: 'appearance' });  // deep-link shell settings UI
+import { config, themeGet, themeOnChanged } from '@napplet/sdk';
 
-const theme = await window.napplet.theme.get();
-const themeSub = window.napplet.theme.onChanged((t) => paint(t));
+const cfg = await config.get();                   // validated + defaulted snapshot
+const cfgSub = config.subscribe((v) => apply(v)); // live updates
+config.openSettings({ section: 'appearance' });  // deep-link shell settings UI
+
+const colors = await themeGet();
+const themeSub = themeOnChanged((t) => paint(t));
 ```
 
 Declare config schema via the vite-plugin (`configSchema`) so the shell renders settings. Gate both behind `window.napplet?.config` / `window.napplet?.theme`.
@@ -344,8 +353,8 @@ in `requires` only for hard requirements.
 ## Runtime guard & standalone dev
 
 Runtime injection belongs to the shell. Napplet application code should consume
-the injected `window.napplet` namespace or typed helpers from `@napplet/sdk`;
-do not add napplet-owned bootstrap plumbing.
+typed helpers from `@napplet/sdk` for calls and the injected `window.napplet`
+namespace for capability checks; do not add napplet-owned bootstrap plumbing.
 
 ## Boilerplate Validation
 
@@ -366,7 +375,8 @@ those exact commands before completion.
 
 - Recreating the boilerplate by hand — **wrong substrate.** Start from
   `@napplet/boilerplate` for new napplets and preserve its scripts/config/layout.
-- Napplet-owned `@napplet/shim` bootstrap — **wrong layer.** The runtime injects `window.napplet`; napplets use `@napplet/sdk` or direct domain properties.
+- Napplet-owned `@napplet/shim` bootstrap — **wrong layer.** The runtime injects `window.napplet`; napplets use `@napplet/sdk` for calls and direct domain properties only for availability checks.
+- Reaching straight into `window.napplet.<domain>.*` when `@napplet/sdk` exports that domain — **wrong default.** Prefer SDK wrappers for implementation calls; keep direct access for `window.napplet?.domain` gating or true SDK gaps.
 - Treating open NAP proposals as shipped package APIs — **wrong surface.** If the current packages do not export the domain/helper, use an existing shipped NAP that faithfully owns the intent or flag the gap.
 - No `discoverServices`/`hasService`/`hasServiceVersion` — use injected domain property presence.
 - Treating NAP-RELAY as the default data layer — **wrong default.** Use `outbox` for normal event reads/publishes, `common` for social actions, `lists` for list mutations, `count` for counts, and `dm` for messages. Use `relay` only when the spec names a relay-local escape hatch.
