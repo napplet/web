@@ -262,6 +262,8 @@ importers:
 
   tests/fixtures/napplets/conformant: {}
 
+  tests/fixtures/napplets/resource-data: {}
+
 packages:
 
   '@algolia/abtesting@1.20.0':

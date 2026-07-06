@@ -68,12 +68,73 @@ function escapeHtmlAttr(value: string): string {
     .replace(/>/g, '&gt;');
 }
 
-function runtimePrelude(domains: readonly string[]): string {
+export function runtimePrelude(domains: readonly string[]): string {
   return `
 (() => {
   const domains = ${JSON.stringify(domains)};
   const napplet = {};
   for (const domain of domains) napplet[domain] = {};
+  const pending = new Map();
+  let seq = 0;
+  const nextId = () => {
+    try {
+      if (window.crypto && typeof window.crypto.randomUUID === 'function') return window.crypto.randomUUID();
+    } catch {}
+    seq += 1;
+    return 'conformance-' + Date.now().toString(36) + '-' + seq.toString(36);
+  };
+  const request = (message, resultType, errorType) => new Promise((resolve, reject) => {
+    const id = message.id || nextId();
+    const timeout = window.setTimeout(() => {
+      pending.delete(id);
+      reject(new Error(message.type + ' timed out'));
+    }, 5000);
+    pending.set(id, { resolve, reject, resultType, errorType, timeout });
+    window.parent.postMessage({ ...message, id }, '*');
+  });
+  window.addEventListener('message', (event) => {
+    const msg = event.data;
+    if (!msg || typeof msg !== 'object' || typeof msg.id !== 'string') return;
+    const slot = pending.get(msg.id);
+    if (!slot) return;
+    if (msg.type !== slot.resultType && msg.type !== slot.errorType) return;
+    pending.delete(msg.id);
+    window.clearTimeout(slot.timeout);
+    if (msg.type === slot.errorType) {
+      slot.reject(new Error(msg.message ? msg.error + ': ' + msg.message : String(msg.error || 'request failed')));
+      return;
+    }
+    slot.resolve(msg);
+  });
+  if (napplet.resource) {
+    napplet.resource.info = () =>
+      request({ type: 'resource.info' }, 'resource.info.result', 'resource.info.error')
+        .then((msg) => msg.info);
+    napplet.resource.bytes = (url) =>
+      request({ type: 'resource.bytes', url: String(url) }, 'resource.bytes.result', 'resource.bytes.error')
+        .then((msg) => msg.blob);
+    napplet.resource.bytesMany = (urls) =>
+      request({ type: 'resource.bytesMany', urls: Array.from(urls || []) }, 'resource.bytesMany.result', 'resource.bytesMany.error')
+        .then((msg) => msg.items);
+    napplet.resource.bytesAsObjectURL = (url) => {
+      const handle = { url: '', revoke: () => {} };
+      let objectUrl = '';
+      let revoked = false;
+      const ready = napplet.resource.bytes(url).then((blob) => {
+        if (revoked) return;
+        objectUrl = URL.createObjectURL(blob);
+        handle.url = objectUrl;
+        return objectUrl;
+      });
+      handle.revoke = () => {
+        if (revoked) return;
+        revoked = true;
+        if (objectUrl) URL.revokeObjectURL(objectUrl);
+      };
+      Object.defineProperty(handle, 'ready', { value: ready, enumerable: false });
+      return handle;
+    };
+  }
   window.napplet = napplet;
   const report = (reason) => {
     try {

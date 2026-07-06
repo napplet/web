@@ -37,6 +37,20 @@ describe('createReferenceShell — record + respond', () => {
     ]);
   });
 
+  it('decodes data URLs for resource.bytes responses without fetch', async () => {
+    const shell = createReferenceShell();
+    const [response] = shell.handle({
+      type: 'resource.bytes',
+      id: 'R',
+      url: 'data:text/plain;base64,aGk=',
+    }) as Array<{ type: string; id: string; blob: Blob; mime: string }>;
+
+    expect(response.type).toBe('resource.bytes.result');
+    expect(response.id).toBe('R');
+    expect(response.mime).toBe('text/plain');
+    expect(await response.blob.text()).toBe('hi');
+  });
+
   it('returns no response for fire-and-forget and unknown messages', () => {
     const shell = createReferenceShell();
     expect(shell.handle({ type: 'inc.emit', topic: 't' })).toEqual([]);

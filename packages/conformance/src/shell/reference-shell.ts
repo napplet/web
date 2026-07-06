@@ -47,6 +47,32 @@ type Responder = (env: Record<string, unknown>) => unknown[];
 const ok = <T extends Record<string, unknown>>(v: T): T[] => [v];
 const none: Responder = () => [];
 
+function dataUrlToBlob(url: unknown): { blob: Blob; mime: string } | null {
+  if (typeof url !== 'string' || !url.startsWith('data:')) return null;
+
+  const comma = url.indexOf(',');
+  if (comma < 0) {
+    return { blob: new Blob([], { type: 'text/plain' }), mime: 'text/plain' };
+  }
+
+  const meta = url.slice('data:'.length, comma);
+  const body = url.slice(comma + 1);
+  const parts = meta.split(';').filter(Boolean);
+  const base64 = parts.includes('base64');
+  const mime = parts.find((part) => part.includes('/')) ?? 'text/plain';
+
+  try {
+    if (base64) {
+      const binary = globalThis.atob(body);
+      const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+      return { blob: new Blob([bytes], { type: mime }), mime };
+    }
+    return { blob: new Blob([decodeURIComponent(body)], { type: mime }), mime };
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Spec-valid canned responders keyed by outbound `type`. Each echoes the
  * correlation `id`/`subId` so the napplet's pending promise resolves. Payloads are
@@ -118,17 +144,26 @@ const RESPONDERS: Record<string, Responder> = {
   'config.openSettings': none,
 
   // resource
-  'resource.bytes': (e) => ok({ type: 'resource.bytes.result', id: e.id, blob: new Blob([]), mime: 'application/octet-stream' }),
+  'resource.bytes': (e) => {
+    const decoded = dataUrlToBlob(e.url);
+    if (!decoded) {
+      return ok({ type: 'resource.bytes.result', id: e.id, blob: new Blob([]), mime: 'application/octet-stream' });
+    }
+    return ok({ type: 'resource.bytes.result', id: e.id, blob: decoded.blob, mime: decoded.mime });
+  },
   'resource.bytesMany': (e) => ok({
     type: 'resource.bytesMany.result',
     id: e.id,
     items: Array.isArray(e.urls)
-      ? e.urls.map((url) => ({
-        url,
-        ok: true,
-        blob: new Blob([]),
-        mime: 'application/octet-stream',
-      }))
+      ? e.urls.map((url) => {
+        const decoded = dataUrlToBlob(url);
+        return {
+          url,
+          ok: true,
+          blob: decoded?.blob ?? new Blob([]),
+          mime: decoded?.mime ?? 'application/octet-stream',
+        };
+      })
       : [],
   }),
   'resource.info': (e) => ok({

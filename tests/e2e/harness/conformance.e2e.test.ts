@@ -37,6 +37,17 @@ describe('napplet-conformance CLI e2e', () => {
     expect(code).toBe(0);
   });
 
+  it('passes a resource.bytes data URL fixture with exit 0', async () => {
+    const report = JSON.parse((await runCli([fixture('resource-data'), '--reporter', 'json'])).stdout);
+    expect(report.ok).toBe(true);
+    expect(report.napplet).toBe('resource-data-fixture');
+    expect(report.checks).toEqual(expect.arrayContaining([
+      expect.objectContaining({ id: 'boot/no-boot-error', status: 'pass' }),
+      expect.objectContaining({ id: 'wire/envelope-well-formed', status: 'pass' }),
+      expect.objectContaining({ id: 'degrade/domain-absence', status: 'pass' }),
+    ]));
+  });
+
   it('fails the broken fixture with exit 1', async () => {
     const { code, stdout } = await runCli([fixture('broken')]);
     expect(stdout).toContain('RESULT: NON-CONFORMANT');
