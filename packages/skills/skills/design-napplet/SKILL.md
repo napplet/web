@@ -1,6 +1,6 @@
 ---
 name: design-napplet
-description: Use FIRST when planning a napplet (sandboxed Nostr iframe app), before writing code - turns an app idea into a concrete build spec covering required NAP capabilities, shell domains, sandbox/loading constraints, OUTBOX-first event routing, and a responsive layout that survives any viewport from full-screen to a tiny widget.
+description: Use FIRST when planning a napplet (sandboxed Nostr iframe app), before writing code - turns an app idea into a concrete build spec covering every current package-implemented NAP domain, required vs optional shell domains, sandbox/loading constraints, OUTBOX-first event routing, and a responsive layout that survives any viewport from full-screen to a tiny widget.
 ---
 
 # Designing a Napplet
@@ -21,9 +21,12 @@ A napplet is a single self-contained `/index.html` loaded by a host **shell** in
 
 ## Step 1 — Pick capabilities (NAPs)
 
-Map each feature to the NAP domain that provides it. Use only domains the shell exposes; gate optional behavior with injected domain property presence.
+Map each feature to the NAP domain that provides it. Use only domains exported
+by the current `@napplet/nap` / `@napplet/sdk` packages; gate optional behavior
+with injected domain property presence. If a NAP is not in this package
+inventory, do not design against it as usable API — flag a package/spec gap.
 
-| Need | Current package NAP domain |
+| Need | Implemented package NAP domain |
 | --- | --- |
 | Read/publish Nostr events where relay choice affects correctness | `outbox` |
 | Low-level relay access to one explicit relay, relay diagnostics, or protocols outside the outbox model | `relay` |
@@ -35,22 +38,22 @@ Map each feature to the NAP domain that provides it. Use only domains the shell 
 | Persist app state | `storage` |
 | Talk to other napplets | `inc` |
 | Fetch avatars / external bytes | `resource` |
+| Upload user-selected files or blobs through shell policy | `upload` |
+| Open external links through shell prompting/policy | `link` |
+| Invoke or expose app-to-app actions | `intent` |
 | User-configurable settings | `config` |
 | Match shell light/dark/accent | `theme` |
-| Keybindings | `keys` |
-| Playback / now-playing | `media` |
-| Notifications + badge | `notify` |
+| Keyboard shortcuts, forwarded key events, action keybindings | `keys` |
+| Playback / now-playing / media command sessions | `media` |
+| Notifications, badge counts, notification actions | `notify` |
+| ContextVM / MCP-style native tool bridge | `cvm` |
+| Bluetooth LE / GATT access through shell policy | `ble` |
+| Serial-port access through shell policy | `serial` |
+| WebRTC signaling/session mediation | `webrtc` |
 
-Other shipped package domains exist (`cvm`, `upload`, `intent`, `ble`,
-`webrtc`, `link`, `serial`) - consult NIP-5D / NAPs before relying on them.
-Every NAP is **voluntary**: assume a domain may be absent and degrade
-gracefully.
-
-Open NAP proposals are not automatically package surfaces. Do not design against
-domains such as Blossom, hashtree, torrent, proof-of-work, system, or value
-unless the current packages export that domain. Use an existing shipped boundary
-when it faithfully owns the intent (`resource`, `upload`, `link`, `intent`,
-etc.) or flag the missing package/spec surface.
+The deprecated `ifc` package subpath is an INC compatibility alias; choose
+`inc` for new work. Every NAP is **voluntary**: assume a domain may be absent and
+degrade gracefully unless it is a hard manifest requirement.
 
 ## Step 1.5 — Choose The Right Nostr Boundary
 

@@ -1,6 +1,6 @@
 ---
 name: build-napplet
-description: Use when writing a napplet (sandboxed Nostr iframe app) - Vite setup, the NIP-5A manifest plugin, runtime-injected window.napplet, the @napplet/sdk API (OUTBOX-first event access, relay as explicit escape hatch, common social actions, lists, count, dm, scoped storage, read-only identity, inter-napplet events, sandboxed resource byte-fetching, config, theme, capability gating), and the single-file artifact rule. Pairs with design-napplet (plan first), port-nostr-app (for migrations), and test-napplet (verify before publish).
+description: Use when writing a napplet (sandboxed Nostr iframe app) - Vite setup, the NIP-5A manifest plugin, runtime-injected window.napplet, the @napplet/sdk API for every current package-implemented NAP domain, OUTBOX-first event access, relay as explicit escape hatch, NAP-KEYS for shortcuts/keybindings, domain-presence gating, and the single-file artifact rule. Pairs with design-napplet (plan first), port-nostr-app (for migrations), and test-napplet (verify before publish).
 ---
 
 # Building a Napplet
@@ -8,11 +8,15 @@ description: Use when writing a napplet (sandboxed Nostr iframe app) - Vite setu
 Implements a `design-napplet` spec. A napplet is a single self-contained `/index.html` the shell loads into a `sandbox="allow-scripts"` iframe (no `allow-same-origin`); all host access is proxied over postMessage per NIP-5D. The napplet never holds keys. Protocol truth: NIP-5D (<https://github.com/nostr-protocol/nips/pull/2303>) + NAPs (<https://github.com/napplet/naps>). Never invent wire surface; flag gaps.
 
 Use only domains and helpers shipped by the current packages. Current package
-domains are `relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`,
-`notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `ble`,
-`webrtc`, `link`, `count`, `lists`, `serial`, `common`, and `dm`. Open NAP
-proposals such as Blossom, hashtree, torrent, proof-of-work, system, or value
-are not package APIs until the current packages export matching domains.
+domains are:
+
+`relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`,
+`config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `ble`, `webrtc`,
+`link`, `count`, `lists`, `serial`, `common`, and `dm`.
+
+The deprecated `ifc` subpath is only an INC compatibility alias; new napplets use
+`inc`. If a NAP is not in the list above, do not implement against it as usable
+API even if a spec PR exists. Flag the package/spec gap.
 
 ## Runtime Injection And SDK
 
@@ -246,6 +250,50 @@ const themeSub = window.napplet.theme.onChanged((t) => paint(t));
 ```
 
 Declare config schema via the vite-plugin (`configSchema`) so the shell renders settings. Gate both behind `window.napplet?.config` / `window.napplet?.theme`.
+
+## Step 12 — Keyboard shortcuts and actions (keys NAP)
+
+If the feature mentions shortcuts, hotkeys, keyboard forwarding, command
+palettes, editor actions, media shortcuts, or app-level keybinds, use NAP-KEYS.
+Do not hand-roll global key capture as the main integration path; the shell owns
+reserved shortcuts and binding policy.
+
+```ts
+import { keys } from '@napplet/sdk';
+
+if (window.napplet?.keys) {
+  const saveBinding = await keys.register(
+    { id: 'note.save', label: 'Save note', defaultKey: 'Ctrl+S' },
+    () => saveCurrentNote(),
+  );
+
+  // On teardown:
+  saveBinding.close();
+}
+```
+
+Use stable action IDs (`domain.action` or `feature.action`) so shells can
+remember bindings. Always close handles on teardown.
+
+## Step 13 — Other implemented package NAPs
+
+These are implemented package domains too; include them when the feature needs
+their exact boundary:
+
+| Domain | Use when |
+| --- | --- |
+| `upload` | The napplet needs shell-mediated file/blob upload. |
+| `link` | The napplet asks the shell to open an external URL. |
+| `intent` | The napplet invokes or exposes app-to-app actions. |
+| `media` | The napplet owns playback/now-playing state or handles media commands. |
+| `notify` | The napplet needs shell-rendered notifications, badges, or actions. |
+| `cvm` | The napplet needs a shell-mediated ContextVM/MCP bridge. |
+| `ble` | The napplet needs Bluetooth LE/GATT access. |
+| `serial` | The napplet needs serial-port access. |
+| `webrtc` | The napplet needs shell-mediated WebRTC signaling/session setup. |
+
+Gate optional domains with `window.napplet?.domain`. Declare bare domain names
+in `requires` only for hard requirements.
 
 ## Runtime guard & standalone dev
 
