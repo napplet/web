@@ -1,0 +1,7 @@
+{
+  "name": "@napplet-fixture/resource-data",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Resource.bytes data URL fixture for @napplet/conformance e2e",
+  "type": "module"
+}
