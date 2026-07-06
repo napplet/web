@@ -168,10 +168,18 @@ export const ENVELOPE_SPECS: Record<string, EnvelopeSpec> = {
   'cvm.discover': { dir: 'out', fields: { ...ID } },
   'cvm.request': { dir: 'out', fields: { ...ID, server: 'object', message: 'object' } },
   'cvm.close': { dir: 'out', fields: { ...ID, server: 'object' } },
+  'cvm.registry.list': { dir: 'out', fields: { ...ID } },
+  'cvm.registry.has': { dir: 'out', fields: { ...ID, family: 'string' } },
+  'cvm.registry.describe': { dir: 'out', fields: { ...ID, family: 'string' } },
+  'cvm.registry.call': { dir: 'out', fields: { ...ID, family: 'string', tool: 'string' } },
   'cvm.discover.result': { dir: 'in' },
   'cvm.request.result': { dir: 'in' },
   'cvm.close.result': { dir: 'in' },
   'cvm.event': { dir: 'in' },
+  'cvm.registry.list.result': { dir: 'in' },
+  'cvm.registry.has.result': { dir: 'in' },
+  'cvm.registry.describe.result': { dir: 'in' },
+  'cvm.registry.call.result': { dir: 'in' },
 
   // ── outbox ───────────────────────────────────────────────────────────────
   'outbox.getEvent': { dir: 'out', fields: { ...ID, eventId: 'string' } },

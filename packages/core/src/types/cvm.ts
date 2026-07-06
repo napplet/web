@@ -92,3 +92,50 @@ export interface CvmRequestOptions {
   initialize?: boolean;
   payment?: 'deny' | 'prompt' | 'allow';
 }
+
+/** JSON object passed to ContextVM tools. */
+export type JsonObject = Record<string, unknown>;
+
+/** JSON Schema object advertised by a ContextVM registry tool. */
+export type JsonSchema = Record<string, unknown>;
+
+/** Query for shell-curated ContextVM registry families. */
+export interface CvmRegistryQuery {
+  search?: string;
+  family?: string;
+  schemaHash?: string;
+  limit?: number;
+}
+
+/** Selection constraints for a ContextVM registry family. */
+export interface CvmRegistryOptions {
+  schemaHash?: string;
+  server?: CvmServerRef;
+}
+
+/** Call options for a shell-selected ContextVM registry tool. */
+export interface CvmRegistryCallOptions extends CvmRegistryOptions {
+  timeoutMs?: number;
+  initialize?: boolean;
+  payment?: 'deny' | 'prompt' | 'allow';
+  cache?: 'default' | 'reload' | 'no-store';
+}
+
+/** A tool advertised inside a shell-curated ContextVM registry family. */
+export interface CvmRegistryTool {
+  name: string;
+  description?: string;
+  inputSchema: JsonSchema;
+  outputSchema?: JsonSchema;
+  schemaHash?: string;
+}
+
+/** A shell-curated ContextVM tool family and its candidate providers. */
+export interface CvmRegistryEntry {
+  family: string;
+  description?: string;
+  schemaHash?: string;
+  selected?: CvmServerRef;
+  providers?: CvmServerRef[];
+  tools: CvmRegistryTool[];
+}

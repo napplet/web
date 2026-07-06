@@ -16,6 +16,11 @@ import type {
   McpToolResult,
   McpResource,
   McpResourceContent,
+  JsonObject,
+  CvmRegistryQuery,
+  CvmRegistryOptions,
+  CvmRegistryCallOptions,
+  CvmRegistryEntry,
 } from './types.js';
 
 function requireCvm(): NonNullable<NappletGlobal['cvm']> {
@@ -150,4 +155,60 @@ export function cvmOnEvent(
   callback: (server: CvmServerRef, message: McpMessage) => void,
 ): Subscription {
   return requireCvm().onEvent(callback);
+}
+
+/**
+ * List shell-curated ContextVM registry families.
+ *
+ * @param query  Optional search/family/schema filter
+ * @returns Promise resolving to registry entries
+ */
+export function cvmRegistryList(query?: CvmRegistryQuery): Promise<CvmRegistryEntry[]> {
+  return requireCvm().registry.list(query);
+}
+
+/**
+ * Test whether the shell can call a ContextVM registry family.
+ *
+ * @param family   Registry family name
+ * @param options  Optional schema/provider constraints
+ * @returns Promise resolving to availability
+ */
+export function cvmRegistryHas(
+  family: string,
+  options?: CvmRegistryOptions,
+): Promise<boolean> {
+  return requireCvm().registry.has(family, options);
+}
+
+/**
+ * Describe a shell-selected ContextVM registry family.
+ *
+ * @param family   Registry family name
+ * @param options  Optional schema/provider constraints
+ * @returns Promise resolving to the selected registry entry
+ */
+export function cvmRegistryDescribe(
+  family: string,
+  options?: CvmRegistryOptions,
+): Promise<CvmRegistryEntry> {
+  return requireCvm().registry.describe(family, options);
+}
+
+/**
+ * Call a tool on the shell-selected provider for a ContextVM registry family.
+ *
+ * @param family   Registry family name
+ * @param tool     Tool name inside the family
+ * @param args     Optional tool arguments
+ * @param options  Optional schema/provider/cache/payment constraints
+ * @returns Promise resolving to the MCP tool result
+ */
+export function cvmRegistryCall(
+  family: string,
+  tool: string,
+  args?: JsonObject,
+  options?: CvmRegistryCallOptions,
+): Promise<McpToolResult> {
+  return requireCvm().registry.call(family, tool, args, options);
 }

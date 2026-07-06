@@ -48,6 +48,10 @@ import {
   readResource as cvmReadResource,
   close as cvmClose,
   onEvent as cvmOnEvent,
+  registryList as cvmRegistryList,
+  registryHas as cvmRegistryHas,
+  registryDescribe as cvmRegistryDescribe,
+  registryCall as cvmRegistryCall,
 } from '@napplet/nap/cvm/shim';
 import {
   installOutboxShim,
@@ -322,6 +326,12 @@ function createNappletGlobal(domains: ReadonlySet<NapDomain>): NappletGlobal {
       readResource: cvmReadResource,
       close: cvmClose,
       onEvent: cvmOnEvent,
+      registry: {
+        list: cvmRegistryList,
+        has: cvmRegistryHas,
+        describe: cvmRegistryDescribe,
+        call: cvmRegistryCall,
+      },
     };
   }
 

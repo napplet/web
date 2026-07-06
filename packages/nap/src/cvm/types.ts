@@ -8,9 +8,12 @@
  * encryption, JSON-RPC correlation, initialization, policy, and optional payment
  * prompts. The napplet supplies a server identity and the MCP operation it wants.
  *
- * Defines 7 message types exchanged between napplet and shell:
- * - Napplet -> Shell: discover, request, close
- * - Shell -> Napplet: discover.result, request.result, close.result, event
+ * Defines message types exchanged between napplet and shell:
+ * - Napplet -> Shell: discover, request, close, registry.list, registry.has,
+ *   registry.describe, registry.call
+ * - Shell -> Napplet: discover.result, request.result, close.result, event,
+ *   registry.list.result, registry.has.result, registry.describe.result,
+ *   registry.call.result
  *
  * All types form a discriminated union on the `type` field.
  */
@@ -21,6 +24,13 @@ import type {
   McpToolResult,
   McpTextResourceContents,
   McpResourceContent,
+  JsonObject,
+  JsonSchema,
+  CvmRegistryQuery,
+  CvmRegistryOptions,
+  CvmRegistryCallOptions,
+  CvmRegistryTool,
+  CvmRegistryEntry,
 } from '@napplet/core';
 
 /** The NAP domain name for ContextVM messages. */
@@ -106,6 +116,16 @@ export interface McpBlobResourceContents {
 
 /** A single MCP resource content entry: either text or base64 blob. */
 export type { McpResourceContent };
+
+export type {
+  JsonObject,
+  JsonSchema,
+  CvmRegistryQuery,
+  CvmRegistryOptions,
+  CvmRegistryCallOptions,
+  CvmRegistryTool,
+  CvmRegistryEntry,
+};
 
 /**
  * Identifies a ContextVM server by its Nostr public key, with optional relay hints.
@@ -313,18 +333,116 @@ export interface CvmEventMessage extends CvmMessage {
   message: McpMessage;
 }
 
+/** List shell-curated ContextVM registry families. */
+export interface CvmRegistryListMessage extends CvmMessage {
+  type: 'cvm.registry.list';
+  /** Correlation ID for this request. */
+  id: string;
+  /** Optional registry query. */
+  query?: CvmRegistryQuery;
+}
+
+/** Result of `cvm.registry.list`. */
+export interface CvmRegistryListResultMessage extends CvmMessage {
+  type: 'cvm.registry.list.result';
+  /** Correlation ID matching the original request. */
+  id: string;
+  /** Registry entries known to the shell. */
+  entries?: CvmRegistryEntry[];
+  /** Error reason when the registry list could not be read. */
+  error?: string;
+}
+
+/** Test whether the shell can call a registry family. */
+export interface CvmRegistryHasMessage extends CvmMessage {
+  type: 'cvm.registry.has';
+  /** Correlation ID for this request. */
+  id: string;
+  /** Registry family name. */
+  family: string;
+  /** Optional schema/provider constraints. */
+  options?: CvmRegistryOptions;
+}
+
+/** Result of `cvm.registry.has`. */
+export interface CvmRegistryHasResultMessage extends CvmMessage {
+  type: 'cvm.registry.has.result';
+  /** Correlation ID matching the original request. */
+  id: string;
+  /** Whether the shell can call this family under the requested constraints. */
+  has?: boolean;
+  /** Error reason when the registry lookup failed. */
+  error?: string;
+}
+
+/** Describe the shell-selected registry family entry. */
+export interface CvmRegistryDescribeMessage extends CvmMessage {
+  type: 'cvm.registry.describe';
+  /** Correlation ID for this request. */
+  id: string;
+  /** Registry family name. */
+  family: string;
+  /** Optional schema/provider constraints. */
+  options?: CvmRegistryOptions;
+}
+
+/** Result of `cvm.registry.describe`. */
+export interface CvmRegistryDescribeResultMessage extends CvmMessage {
+  type: 'cvm.registry.describe.result';
+  /** Correlation ID matching the original request. */
+  id: string;
+  /** Shell-selected registry entry. */
+  entry?: CvmRegistryEntry;
+  /** Error reason when the family could not be described. */
+  error?: string;
+}
+
+/** Call a registry tool through the shell-selected provider. */
+export interface CvmRegistryCallMessage extends CvmMessage {
+  type: 'cvm.registry.call';
+  /** Correlation ID for this request. */
+  id: string;
+  /** Registry family name. */
+  family: string;
+  /** Tool name within the family. */
+  tool: string;
+  /** Optional tool arguments. */
+  args?: JsonObject;
+  /** Optional schema/provider/cache/payment constraints. */
+  options?: CvmRegistryCallOptions;
+}
+
+/** Result of `cvm.registry.call`. */
+export interface CvmRegistryCallResultMessage extends CvmMessage {
+  type: 'cvm.registry.call.result';
+  /** Correlation ID matching the original request. */
+  id: string;
+  /** MCP tool result returned by the selected provider. */
+  result?: McpToolResult;
+  /** Error reason when the call could not complete. */
+  error?: string;
+}
+
 /** Napplet -> Shell ContextVM messages. */
 export type CvmOutboundMessage =
   | CvmDiscoverMessage
   | CvmRequestMessage
-  | CvmCloseMessage;
+  | CvmCloseMessage
+  | CvmRegistryListMessage
+  | CvmRegistryHasMessage
+  | CvmRegistryDescribeMessage
+  | CvmRegistryCallMessage;
 
 /** Shell -> Napplet ContextVM messages. */
 export type CvmInboundMessage =
   | CvmDiscoverResultMessage
   | CvmRequestResultMessage
   | CvmCloseResultMessage
-  | CvmEventMessage;
+  | CvmEventMessage
+  | CvmRegistryListResultMessage
+  | CvmRegistryHasResultMessage
+  | CvmRegistryDescribeResultMessage
+  | CvmRegistryCallResultMessage;
 
 /** All ContextVM NAP message types (discriminated union on `type` field). */
 export type CvmNapMessage = CvmOutboundMessage | CvmInboundMessage;

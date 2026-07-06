@@ -150,7 +150,8 @@ imgEl.onload = () => revoke();
 ### cvm
 
 Native ContextVM bridge — MCP-over-Nostr (`discover` / `listTools` / `callTool` /
-`listResources` / `readResource`); the shell owns all transport.
+`listResources` / `readResource` / `registry.*`); the shell owns transport,
+registry selection, and tool policy.
 
 ```ts
 if (window.napplet?.cvm) {

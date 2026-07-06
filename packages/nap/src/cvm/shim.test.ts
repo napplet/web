@@ -178,6 +178,62 @@ describe('@napplet/nap/cvm shim', () => {
     await expect(promise).resolves.toBeUndefined();
   });
 
+  it('registry.list posts cvm.registry.list and resolves returned entries', async () => {
+    const { registryList, handleCvmMessage } = await import('./shim.js');
+
+    const promise = registryList({ family: 'relatr', limit: 1 });
+    const sent = lastPosted('cvm.registry.list');
+    expect(sent.query).toEqual({ family: 'relatr', limit: 1 });
+
+    const entries = [
+      {
+        family: 'relatr',
+        tools: [{ name: 'search_profiles', inputSchema: { type: 'object' } }],
+      },
+    ];
+    handleCvmMessage({ type: 'cvm.registry.list.result', id: sent.id, entries });
+
+    await expect(promise).resolves.toEqual(entries);
+  });
+
+  it('registry.has posts cvm.registry.has and resolves availability', async () => {
+    const { registryHas, handleCvmMessage } = await import('./shim.js');
+
+    const promise = registryHas('relatr', { schemaHash: 'abc123' });
+    const sent = lastPosted('cvm.registry.has');
+    expect(sent.family).toBe('relatr');
+    expect(sent.options).toEqual({ schemaHash: 'abc123' });
+
+    handleCvmMessage({ type: 'cvm.registry.has.result', id: sent.id, has: true });
+    await expect(promise).resolves.toBe(true);
+  });
+
+  it('registry.describe rejects when the shell omits entry without an error', async () => {
+    const { registryDescribe, handleCvmMessage } = await import('./shim.js');
+
+    const promise = registryDescribe('relatr');
+    const sent = lastPosted('cvm.registry.describe');
+    handleCvmMessage({ type: 'cvm.registry.describe.result', id: sent.id });
+
+    await expect(promise).rejects.toThrow('cvm.registry.describe.result missing entry');
+  });
+
+  it('registry.call posts cvm.registry.call and resolves MCP tool results', async () => {
+    const { registryCall, handleCvmMessage } = await import('./shim.js');
+
+    const promise = registryCall('relatr', 'search_profiles', { q: 'jack' }, { cache: 'reload' });
+    const sent = lastPosted('cvm.registry.call');
+    expect(sent.family).toBe('relatr');
+    expect(sent.tool).toBe('search_profiles');
+    expect(sent.args).toEqual({ q: 'jack' });
+    expect(sent.options).toEqual({ cache: 'reload' });
+
+    const result = { content: [{ type: 'text', text: '{}' }], isError: false };
+    handleCvmMessage({ type: 'cvm.registry.call.result', id: sent.id, result });
+
+    await expect(promise).resolves.toEqual(result);
+  });
+
   it('ignores unknown and uncorrelated messages without throwing', async () => {
     const { handleCvmMessage } = await import('./shim.js');
 
