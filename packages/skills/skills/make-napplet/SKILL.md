@@ -32,6 +32,7 @@ Write a small build brief before editing:
 ```
 nappletType:
 new build or port:
+boilerplate substrate:
 single-purpose job:
 must-have user flows:
 optional user flows:
@@ -73,12 +74,17 @@ using `relay` is wrong.
 
 1. For ports, run `port-nostr-app` and produce its inventory/handoff.
 2. Run `design-napplet` and produce the build spec.
-3. Run `build-napplet` against that spec.
-4. Run `test-napplet` before reporting completion.
+3. For new projects, scaffold with `@napplet/boilerplate` before implementation
+   and preserve the generated package manager config, Vite config, scripts,
+   layout, README/docs structure, and conformance wiring.
+4. Run `build-napplet` against that spec, editing only project-specific files
+   such as `src/main.ts`, `src/styles.css`, `vite.config.ts` fields,
+   `index.html` title/root markup, config schema, and README/docs.
+5. Run `test-napplet` before reporting completion.
 
 Do not claim "done" after design or code alone. Done means the built artifact
-passes the relevant conformance/build/test checks and the boundary audit has no
-forbidden surfaces.
+passes the boilerplate validation (`pnpm verify`, `pnpm test:conformance`), any
+feature-specific checks, and the boundary audit has no forbidden surfaces.
 
 ## Step 4 - Package Surface Rule
 

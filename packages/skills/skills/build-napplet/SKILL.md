@@ -33,16 +33,62 @@ import { outbox, common, inc, storage, identity } from '@napplet/sdk';
 
 Equivalently call `window.napplet.<domain>.*` directly (identical behavior). Examples below use whichever reads clearest; both hit the same runtime.
 
-## Step 1 — Install
+## Step 1 — Start From The Boilerplate
+
+For a new napplet, scaffold with `@napplet/boilerplate` first. The generator
+clones the canonical `github.com/napplet/boilerplate` template and preserves the
+package manager pin, Vite config, single-file build plumbing, scripts,
+conformance wiring, docs layout, and starter source structure.
 
 ```bash
-pnpm add @napplet/sdk
-pnpm add -D @napplet/vite-plugin
+npx @napplet/boilerplate ./my-napplet \
+  --package-name my-napplet \
+  --napplet-type my-napplet \
+  --title "My Napplet" \
+  --yes
 ```
 
-## Step 2 — Configure the Vite plugin
+Do not recreate `package.json`, `pnpm-lock.yaml`, `vite.config.ts`, TypeScript
+config, `index.html`, conformance scripts, or release/build plumbing inline.
+Agents should edit the generated project, not replace its substrate.
 
-`nip5aManifest` hashes build output and writes the NIP-5A manifest at build time, injecting a `<meta name="napplet-type">` tag the runtime keys on. `nappletType` (the NIP-5D d-tag) is required.
+Use the existing-app/manual path only when the user explicitly asks to retrofit
+napplet support into a pre-existing app. In that case, mirror the boilerplate's
+tooling shape instead of inventing a local one.
+
+## Step 2 — Project-Specific Edit Points
+
+After scaffolding, keep the boilerplate-owned files and make only the
+project-specific edits the generator/template expects:
+
+- `package.json`: package name only, plus dependencies only when the feature
+  truly needs them.
+- `vite.config.ts`: `nappletType`, hard `requires`, and optional config schema.
+- `index.html`: title/root markup that the UI needs.
+- `src/main.ts` and `src/styles.css`: application behavior and presentation.
+- `README.md` and `docs/*`: project-specific usage, boundaries, and verification
+  notes.
+
+Preserve the template scripts unless the project has an explicit reason to
+change them:
+
+```jsonc
+{
+  "scripts": {
+    "build": "vite build",
+    "type-check": "tsc --noEmit",
+    "verify": "pnpm type-check && pnpm build",
+    "test:conformance": "pnpm build && napplet-conformance ./dist"
+  }
+}
+```
+
+## Step 3 — Configure the Vite plugin
+
+The boilerplate already wires `nip5aManifest`. Update its project fields rather
+than replacing the config. `nip5aManifest` hashes build output and writes the
+NIP-5A manifest at build time, injecting a `<meta name="napplet-type">` tag the
+runtime keys on. `nappletType` (the NIP-5D d-tag) is required.
 
 ```ts
 // vite.config.ts
@@ -63,7 +109,7 @@ export default defineConfig({
 
 The aggregate hash is computed into the manifest (`.nip5a-manifest.json`) and the signed event — it is **not** injected as a meta tag. Set `VITE_DEV_PRIVKEY_HEX` (hex 32-byte key) to produce a signed manifest in CI; dev builds work without it.
 
-## Step 3 — Read And Publish Nostr Events Through Outbox First
+## Step 4 — Read And Publish Nostr Events Through Outbox First
 
 Most napplets should use NAP-OUTBOX for Nostr event reads and publishes. The napplet supplies filters, event IDs, publish templates, and intent; the shell owns NIP-65 relay discovery, fallbacks, relay intelligence, deduplication, signature validation, signing, and fanout policy.
 
@@ -112,7 +158,7 @@ For directed events, pass `targetAuthors` so the shell can include recipient inb
 await outbox.publish(template, { targetAuthors: [recipientPubkey] });
 ```
 
-## Step 4 — Use Higher-Level Social NAPs Before Raw Events
+## Step 5 — Use Higher-Level Social NAPs Before Raw Events
 
 When a NAP owns the user intent, call that NAP instead of building and publishing raw events.
 
@@ -133,7 +179,7 @@ if (status.available) await dm.send({ recipients: [pubkey], content: 'hi' });
 
 This keeps consent, read-modify-write merges, list preservation, encryption, signing, relay routing, and policy in the shell.
 
-## Step 5 — Relay Is A Low-Level Escape Hatch
+## Step 6 — Relay Is A Low-Level Escape Hatch
 
 Use NAP-RELAY only when the feature needs relay-local semantics that OUTBOX and higher-level NAPs cannot express: a specific group relay, raw relay diagnostics, relay protocol tools, or a domain-specific protocol outside the outbox model.
 
@@ -151,7 +197,7 @@ sub.close();
 
 Do not use `relay.publish` as the default social publish path. Prefer `outbox.publish`, `common`, `lists`, or `dm` unless the design spec names the exact relay escape hatch.
 
-## Step 6 — Scoped storage
+## Step 7 — Scoped storage
 
 Storage is async, proxied through the shell, scoped per napplet (512 KB quota). Never touch `localStorage` (throws `SecurityError` without `allow-same-origin`).
 
@@ -167,7 +213,7 @@ const keys = await storage.keys();                 // string[]
 
 `storage.instance.*` exposes the same surface scoped to this napplet **instance** (per NAP-STORAGE) when you need per-placement state.
 
-## Step 7 — Read-only identity
+## Step 8 — Read-only identity
 
 `getPublicKey()` always resolves: hex pubkey when a user is connected, `""` when not. Don't poll — subscribe to changes. Identity is strictly read-only (no sign/encrypt/decrypt).
 
@@ -183,7 +229,7 @@ sub.close();
 
 Also available: `getProfile()`, `getFollows()`, `getList(type)`, `getRelays()`, `getMutes()`, `getBlocked()`, `getBadges()`, `getZaps()`. Use `common` for profile lookup and social actions when available; `identity` is for the current shell user snapshot.
 
-## Step 8 — Inter-napplet events
+## Step 9 — Inter-napplet events
 
 `inc.emit` broadcasts to topic subscribers; `inc.on` subscribes. `emit(topic, extraTags?, content?)` returns nothing and does not confirm delivery.
 
@@ -200,7 +246,7 @@ sub.close();
 
 Always type-check `payload` (it is `unknown`).
 
-## Step 9 — Domain availability
+## Step 10 — Domain availability
 
 There is **no** `discoverServices()`/`hasService()` and no generic shell
 capability query. NIP-5D runtimes inject `window.napplet` before napplet code
@@ -216,7 +262,7 @@ if (!window.napplet?.upload) { /* render fallback */ }
 Gate every domain-specific call behind property presence unless the domain is a
 hard manifest requirement and the shell already refused incompatible loads.
 
-## Step 10 — Fetch external bytes (resource NAP)
+## Step 11 — Fetch external bytes (resource NAP)
 
 The sandboxed napplet model does not give app code ambient network authority.
 Route every external byte through `resource` instead of `fetch`,
@@ -238,7 +284,7 @@ Schemes: `data:` (decoded in-shim, no round-trip), `https:` (shell network under
 
 The shell byte-sniffs and classifies the MIME; never trust the upstream `Content-Type`. SVG inputs are rasterized server-side — napplets never receive `image/svg+xml`.
 
-## Step 11 — Config & theme (optional)
+## Step 12 — Config & theme (optional)
 
 ```ts
 const cfg = await window.napplet.config.get();                 // validated + defaulted snapshot
@@ -301,8 +347,25 @@ Runtime injection belongs to the shell. Napplet application code should consume
 the injected `window.napplet` namespace or typed helpers from `@napplet/sdk`;
 do not add napplet-owned bootstrap plumbing.
 
+## Boilerplate Validation
+
+Before claiming done on a generated napplet, run the template's own commands
+from the generated project directory:
+
+```bash
+pnpm install
+pnpm verify
+pnpm test:conformance
+```
+
+If the user intentionally starts from an existing app instead of the
+boilerplate, add equivalent scripts that match the boilerplate contract and run
+those exact commands before completion.
+
 ## Common pitfalls
 
+- Recreating the boilerplate by hand — **wrong substrate.** Start from
+  `@napplet/boilerplate` for new napplets and preserve its scripts/config/layout.
 - Napplet-owned `@napplet/shim` bootstrap — **wrong layer.** The runtime injects `window.napplet`; napplets use `@napplet/sdk` or direct domain properties.
 - Treating open NAP proposals as shipped package APIs — **wrong surface.** If the current packages do not export the domain/helper, use an existing shipped NAP that faithfully owns the intent or flag the gap.
 - No `discoverServices`/`hasService`/`hasServiceVersion` — use injected domain property presence.
