@@ -70,6 +70,8 @@ while (queue.length) {
   }
 
   const type = res.headers.get('content-type') || '';
+  await res.arrayBuffer();
+
   if (ASSET_EXT.test(new URL(url).pathname) || !/text\/html/i.test(type)) continue;
 
   // Render so client-injected links (the SPA) are discoverable.

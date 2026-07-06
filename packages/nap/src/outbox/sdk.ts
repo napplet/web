@@ -31,7 +31,7 @@ function requireOutbox(): NonNullable<NappletGlobal['outbox']> {
  * Fetch one event by ID through shell-owned outbox routing.
  *
  * @param eventId  Event id to fetch
- * @param options  Optional author/relay hints, strategy, and timeout
+ * @param options  Optional author/relay hints and timeout
  * @returns Promise resolving to the outbox event result
  */
 export function outboxGetEvent(
@@ -73,13 +73,13 @@ export const query = outboxQuery;
  *
  * @param filters  NIP-01 filter or filters
  * @param options  Optional subscribe options
- * @returns An OutboxSubscription handle
+ * @returns An OutboxSubscription handle that streams `RelayEventResult` records
  *
  * @example
  * ```ts
  * import { outboxSubscribe } from '@napplet/nap/outbox';
  *
- * const sub = outboxSubscribe([{ kinds: [1] }], { live: true });
+ * const sub = outboxSubscribe([{ kinds: [1] }], { timeoutMs: 3000 });
  * sub.on('event', (event) => render(event));
  * ```
  */

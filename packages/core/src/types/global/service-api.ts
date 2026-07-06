@@ -52,6 +52,7 @@ import type {
   CommonReportReason,
   CommonReportTarget,
 } from '../common.js';
+import type { CountFilter, CountOptions, CountResult } from '../count.js';
 
 /**
  * Native ContextVM bridge (NAP-CVM): MCP-over-Nostr access mediated by the shell.
@@ -148,7 +149,7 @@ export interface CvmApi {
  * if (window.napplet.outbox) {
  *   const { events } = await window.napplet.outbox.query(
  *     [{ authors: ['ab12...'], kinds: [1], limit: 20 }],
- *     { strategy: 'outbox' },
+ *     { authors: ['ab12...'], timeoutMs: 3000 },
  *   );
  * }
  * ```
@@ -158,38 +159,40 @@ export interface OutboxApi {
    * Fetch one event by ID through shell-owned outbox routing. The shell validates
    * that any returned event matches the requested id and has a valid signature.
    * @param eventId  Event id to fetch
-   * @param options  Optional author/relay hints, strategy, and timeout
+   * @param options  Optional author/relay hints and timeout
    * @returns Promise resolving to the outbox event result
    */
   getEvent(eventId: string, options?: OutboxEventOptions): Promise<OutboxEventResult>;
   /**
    * Perform a one-shot outbox-aware query. The shell resolves relays, queries
-   * them, deduplicates by event id, and validates signatures. Partial results
-   * carry `incomplete: true`; a query-level failure arrives as inline `error`.
+   * them, deduplicates by event id, validates signatures, and returns
+   * `RelayEventResult` records. Partial results carry `incomplete: true`; a
+   * query-level failure arrives as inline `error`.
    * @param filters  NIP-01 filter or filters
-   * @param options  Optional query options (authors, relays, strategy, limit, timeoutMs)
+   * @param options  Optional query options (authors, relays, limit, timeoutMs)
    * @returns Promise resolving to the outbox result
    */
   query(filters: NostrFilter | NostrFilter[], options?: OutboxQueryOptions): Promise<OutboxResult>;
   /**
    * Open a live outbox-aware subscription. The shell may add/remove relay
-   * connections as NIP-65 relay lists change.
+   * connections as NIP-65 relay lists change and streams until `close()` or
+   * `outbox.closed`.
    * @param filters  NIP-01 filter or filters
-   * @param options  Optional subscribe options (adds `live`)
+   * @param options  Optional subscribe options
    * @returns An OutboxSubscription handle with `on(...)` and `close()`
    */
   subscribe(filters: NostrFilter | NostrFilter[], options?: OutboxSubscribeOptions): OutboxSubscription;
   /**
    * Publish a shell-signed event using outbox-aware relay fanout.
    * @param template  Unsigned event template; the shell signs before fanout
-   * @param options   Optional publish options (relays, targetAuthors, strategy)
+   * @param options   Optional publish options (relays, targetAuthors)
    * @returns Promise resolving to the outbox publish result
    */
   publish(template: EventTemplate, options?: OutboxPublishOptions): Promise<OutboxPublishResult>;
   /**
    * Resolve the relay plan the shell would use for a read/write target.
    * Useful for diagnostics/UI; prefer query/subscribe/publish for access.
-   * @param target  The read/write target (authors/pubkey, direction, strategy)
+   * @param target  The read/write target (authors/pubkey, direction)
    * @returns Promise resolving to the relay plan
    */
   resolveRelays(target: OutboxTarget): Promise<OutboxRelayPlan>;
@@ -320,6 +323,29 @@ export interface LinkApi {
    * @returns Promise resolving to the shell's open/deny status
   */
   open(url: string, options?: LinkOpenOptions): Promise<LinkOpenResult>;
+}
+
+/**
+ * Runtime-mediated event counts (NAP-COUNT): the napplet supplies one or more
+ * NIP-01 filters, and the runtime returns aggregate count metadata without
+ * sending matching event payloads. The runtime owns relay choice, NIP-45 COUNT
+ * support, indexes, caches, approximation, and refusal policy.
+ *
+ * @example
+ * ```ts
+ * if (window.napplet.count) {
+ *   const { count } = await window.napplet.count.query({ kinds: [7], '#e': [eventId] });
+ * }
+ * ```
+ */
+export interface CountApi {
+  /**
+   * Count events matching a non-empty NIP-01 filter array.
+   * @param filters  One NIP-01 filter or a non-empty array of filters
+   * @param options  Optional approximation and HyperLogLog hints
+   * @returns Promise resolving to the runtime count result
+   */
+  query(filters: CountFilter | CountFilter[], options?: CountOptions): Promise<CountResult>;
 }
 
 /**

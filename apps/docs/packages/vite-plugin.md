@@ -47,7 +47,7 @@ export default defineConfig({
 | Option | Type | Purpose |
 | --- | --- | --- |
 | `nappletType` *(required)* | `string` | The napp type / `d` tag; injected as `<meta name="napplet-napp-type">` and used as the manifest `d` tag. |
-| `requires` | `string[]` | Service names this napplet needs. Injects a `napplet-requires` meta tag and `["requires", …]` manifest tags. |
+| `requires` | `string[]` | Bare NAP domain names this napplet needs, such as `outbox` or `storage`. Injects a `napplet-requires` meta tag and `["requires", …]` manifest tags. |
 | `configSchema` | `NappletConfigSchema \| string` | A JSON Schema (draft-07+) for the napplet's NAP-CONFIG surface. Inline object or path; falls through to `config.schema.json` then `napplet.config.*` discovery. |
 | `artifactMode` | `'external-assets' \| 'single-file'` | Default `'external-assets'`. `'single-file'` inlines local JS/CSS into `index.html` before hashing — for gateway-portable NIP-5A artifacts. |
 
@@ -71,8 +71,8 @@ stamps the real aggregate hash into the meta tag:
     ["d", "my-music-app"],
     ["path", "/index.html", "<sha256>"],
     ["x", "<aggregateHash>", "aggregate"],
-    ["requires", "audio"],
-    ["requires", "notifications"]
+    ["requires", "outbox"],
+    ["requires", "storage"]
   ]
 }
 ```

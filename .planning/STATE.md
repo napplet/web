@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v0.34.0
 milestone_name: NIP-5D Runtime Injection
 status: planning
-last_updated: "2026-07-03T10:15:12Z"
-last_activity: 2026-07-03 - Completed quick task 260703-gz0: add @napplet/cli to the JSR-only publish path
+last_updated: "2026-07-06T12:40:26+02:00"
+last_activity: 2026-07-06 - Completed quick task 260706-hhx: Add Codex as an installation target for @napplet/skills skills installer
 progress:
   total_phases: 0
   completed_phases: 0
@@ -30,7 +30,7 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 Phase: Not started (defining requirements)
 Plan: —
 Status: Defining requirements
-Last activity: 2026-07-03 — Completed quick task 260703-gz0: add @napplet/cli to the JSR-only publish path
+Last activity: 2026-07-06 — Quick task 260706-hhx completed; `@napplet/skills` now has a first-class `codex` installer target for `.codex/skills/<skill>/SKILL.md`.
 
 ### Quick task 260703-gz0 — COMPLETE
 
@@ -389,8 +389,14 @@ Surfaced by research (informational — each belongs to a specific phase plan):
 | 260626-mt6 | Implement NAP-DM from napplet/naps PR #74 and prepare release PR with tests and changeset | 2026-06-26 | c451810 | [260626-mt6-implement-nap-dm-from-napplet-naps-74-an](./quick/260626-mt6-implement-nap-dm-from-napplet-naps-74-an/) |
 | 260626-nkv | Resolve napplet/web#91: guard relay query result events and open PR | 2026-06-26 | 9d23f6c | [260626-nkv-resolve-napplet-web-91-if-valid-guard-re](./quick/260626-nkv-resolve-napplet-web-91-if-valid-guard-re/) |
 | 260701-k68 | Scaffold @napplet/cli Deno package with init, discovery staging, deploy plan, signing mode parsing, and wrapper command surfaces | 2026-07-01 | 4bec5648 | [260701-k68-scaffold-napplet-cli-deno-package-with-i](./quick/260701-k68-scaffold-napplet-cli-deno-package-with-i/) |
+| 260702-820 | Implement NAP-COUNT from napplet/naps PR #69 using current count.query surface | 2026-07-02 | 48a89ac5 | [260702-820-implement-nap-count](./quick/260702-820-implement-nap-count/) |
+| 260703-ghg | Align napplet packages with NAP RelayEventResult sidecars and updated outbox stream lifecycle | 2026-07-03 | 2ce3e3f2 | [260703-ghg-align-napplet-packages-with-nap-relayeve](./quick/260703-ghg-align-napplet-packages-with-nap-relayeve/) |
+| 260703-guj | Ignore Playwright MCP local artifacts | 2026-07-03 | f9f34992 | [260703-guj-ignore-playwright-mcp-local-artifacts](./quick/260703-guj-ignore-playwright-mcp-local-artifacts/) |
 | 260703-gz0 | Add @napplet/cli to the JSR-only publish workflow | 2026-07-03 | 6d98908c | [260703-gz0-add-napplet-cli-to-jsr-only-publish-work](./quick/260703-gz0-add-napplet-cli-to-jsr-only-publish-work/) |
+| 260703-jrx | Finish RelayEventResult sidecar doc cleanup | 2026-07-03 | e1aceaed | [260703-jrx-finish-relayeventresult-sidecar-doc-cleanup](./quick/260703-jrx-finish-relayeventresult-sidecar-doc-cleanup/) |
+| 260703-ver | Chase NAP-OUTBOX eose removal | 2026-07-03 | 851d7ba2 | [260703-ver-chase-nap-outbox-eose-removal](./quick/260703-ver-chase-nap-outbox-eose-removal/) |
 | 260704-fb4 | Add `napplet keys connect` NIP-46 remote-signer login (nostrconnect QR + bunker:// paste race) | 2026-07-04 | fdc0f80 | [260704-fb4-napplet-keys-connect-nip-46-remote-signe](./quick/260704-fb4-napplet-keys-connect-nip-46-remote-signe/) |
+| 260706-hhx | Add Codex as an installation target for @napplet/skills skills installer | 2026-07-06 | e74946d6 | [260706-hhx-add-codex-as-an-installation-target-for-](./quick/260706-hhx-add-codex-as-an-installation-target-for-/) |
 
 Last session: 2026-04-21T20:46:00.000Z
 Stopped at: Completed 142-03-PLAN.md (Phase 142 TERMINAL-COMPLETE)

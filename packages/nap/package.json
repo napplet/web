@@ -1,7 +1,7 @@
 {
   "name": "@napplet/nap",
-  "version": "0.24.0",
-  "description": "The active napplet NAP domains (relay, storage, inc, keys, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent, ble, webrtc, link, lists, serial, common, dm) as layered subpath exports",
+  "version": "0.27.1",
+  "description": "The active napplet NAP domains (relay, storage, inc, keys, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent, ble, webrtc, link, count, lists, serial, common, dm) as layered subpath exports",
   "type": "module",
   "exports": {
     "./relay": {
@@ -292,6 +292,22 @@
       "types": "./dist/link/sdk.d.ts",
       "import": "./dist/link/sdk.js"
     },
+    "./count": {
+      "types": "./dist/count/index.d.ts",
+      "import": "./dist/count/index.js"
+    },
+    "./count/types": {
+      "types": "./dist/count/types.d.ts",
+      "import": "./dist/count/types.js"
+    },
+    "./count/shim": {
+      "types": "./dist/count/shim.d.ts",
+      "import": "./dist/count/shim.js"
+    },
+    "./count/sdk": {
+      "types": "./dist/count/sdk.d.ts",
+      "import": "./dist/count/sdk.js"
+    },
     "./lists": {
       "types": "./dist/lists/index.d.ts",
       "import": "./dist/lists/index.js"
@@ -370,7 +386,8 @@
   "devDependencies": {
     "@types/node": "^22.15.0",
     "tsup": "^8.5.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.2"
   },
   "peerDependencies": {
     "json-schema-to-ts": "^3.1.1"

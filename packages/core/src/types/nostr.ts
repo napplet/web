@@ -1,3 +1,5 @@
+import type { ResourceSidecarEntry } from './global/runtime-api.js';
+
 /**
  * Standard NIP-01 nostr event.
  * @example
@@ -16,6 +18,20 @@ export interface NostrEvent {
   tags: string[][];
   content: string;
   sig: string;
+}
+
+/** Metadata carried alongside a raw relay-read event result. */
+export interface RelayEventSidecar {
+  /** Pre-resolved resource bytes under NAP-RESOURCE policy. */
+  resources?: ResourceSidecarEntry[];
+  /** Advisory relay URLs where the runtime observed the event or expects reads to work. */
+  relayHints?: string[];
+}
+
+/** Raw event result returned by read-style relay surfaces. */
+export interface RelayEventResult {
+  event: NostrEvent;
+  sidecar?: RelayEventSidecar;
 }
 
 /**

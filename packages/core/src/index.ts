@@ -33,6 +33,8 @@ export { createDispatch, registerNap, dispatch, getRegisteredDomains } from './d
 export type {
   NostrEvent,
   NostrFilter,
+  RelayEventSidecar,
+  RelayEventResult,
   Subscription,
   EventTemplate,
   MediaPlaybackOwner,
@@ -54,7 +56,6 @@ export type {
   CvmDiscoverQuery,
   CvmServer,
   CvmRequestOptions,
-  OutboxStrategy,
   OutboxEventOptions,
   OutboxQueryOptions,
   OutboxSubscribeOptions,
@@ -156,6 +157,9 @@ export type {
   DmSubscribeRequest,
   DmSubscription,
   DmOk,
+  CountFilter,
+  CountOptions,
+  CountResult,
   SerialState,
   SerialPortFilter,
   SerialOpenOptions,
@@ -173,6 +177,7 @@ export type {
   ResourceBytesOkItem,
   ResourceBytesErrorItem,
   ResourceBytesItem,
+  ResourceSidecarEntry,
 } from './types.js';
 
 export { TOPICS } from './topics.js';

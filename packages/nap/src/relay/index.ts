@@ -22,6 +22,8 @@ export type {
   RelayPublishMessage,
   RelayPublishEncryptedMessage,
   RelayQueryMessage,
+  RelayEventResult,
+  RelayEventSidecar,
   RelayEventMessage,
   RelayEoseMessage,
   RelayClosedMessage,

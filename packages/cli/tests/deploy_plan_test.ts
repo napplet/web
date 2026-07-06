@@ -64,8 +64,16 @@ Deno.test("createDeployPlan creates snapshot companions for root and named deplo
   });
 });
 
-const feed: NappletCandidate = { name: "feed", dir: "/repo/feed", indexHtml: "/repo/feed/index.html" };
-const wiki: NappletCandidate = { name: "wiki", dir: "/repo/wiki", indexHtml: "/repo/wiki/index.html" };
+const feed: NappletCandidate = {
+  name: "feed",
+  dir: "/repo/feed",
+  indexHtml: "/repo/feed/index.html",
+};
+const wiki: NappletCandidate = {
+  name: "wiki",
+  dir: "/repo/wiki",
+  indexHtml: "/repo/wiki/index.html",
+};
 
 Deno.test("createDeployPlan monorepo mode uses each folder name as its own d tag", () => {
   const plan = createDeployPlan(defaultConfig(), [feed, wiki], {}, { traverse: true });

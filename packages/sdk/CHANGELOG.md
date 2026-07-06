@@ -1,5 +1,49 @@
 # @napplet/sdk
 
+## 0.24.1
+
+### Patch Changes
+
+- 82e50c2: Teach OUTBOX-first napplet construction, add a one-prompt `make-napplet` orchestration skill, and align copied package examples so agents do not default social reads and publishes to low-level NAP-RELAY.
+- Updated dependencies [82e50c2]
+  - @napplet/nap@0.27.1
+
+## 0.24.0
+
+### Minor Changes
+
+- 332f785: Align NAP-OUTBOX with the current draft by removing caller-visible routing and lifecycle controls. `OutboxStrategy` is no longer exported, `strategy` is no longer accepted on outbox option objects, and `OutboxSubscribeOptions` no longer accepts `live`; subscription lifecycle is represented by the handle plus `outbox.close` / `outbox.closed`.
+
+### Patch Changes
+
+- Updated dependencies [332f785]
+  - @napplet/core@0.27.0
+  - @napplet/nap@0.27.0
+
+## 0.23.0
+
+### Minor Changes
+
+- 6ccb056: Align relay and outbox read results with the current NAPs track: raw read events now use `RelayEventResult` with optional `sidecar.resources` and `sidecar.relayHints`, and NAP-OUTBOX no longer defines `outbox.eose`.
+
+### Patch Changes
+
+- Updated dependencies [6ccb056]
+  - @napplet/core@0.26.0
+  - @napplet/nap@0.26.0
+
+## 0.22.0
+
+### Minor Changes
+
+- 284e100: Add the NAP-COUNT `count` domain with `count.query` / `count.query.result` envelope types, `window.napplet.count.query(...)`, `@napplet/nap/count` subpaths, SDK exports, and conformance validator/reference-shell coverage.
+
+### Patch Changes
+
+- Updated dependencies [284e100]
+  - @napplet/core@0.25.0
+  - @napplet/nap@0.25.0
+
 ## 0.21.0
 
 ### Minor Changes

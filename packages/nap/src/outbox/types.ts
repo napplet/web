@@ -9,7 +9,7 @@
  *
  * Defines the message types exchanged between napplet and shell:
  * - Napplet -> Shell: getEvent, query, subscribe, close, publish, resolveRelays
- * - Shell -> Napplet: getEvent.result, query.result, event, eose, closed, publish.result, resolveRelays.result
+ * - Shell -> Napplet: getEvent.result, query.result, event, closed, publish.result, resolveRelays.result
  *
  * All types form a discriminated union on the `type` field.
  */
@@ -18,20 +18,14 @@ import type {
   NappletMessage,
   NostrEvent,
   NostrFilter,
+  RelayEventResult,
   EventTemplate,
-  OutboxStrategy,
 } from '@napplet/core';
 
 /** The NAP domain name for outbox messages. */
 export const DOMAIN = 'outbox' as const;
 
-/**
- * Relay-selection strategy:
- * - `outbox` -- query/publish via author write relays (the outbox model)
- * - `inbox`  -- query/publish via recipient read relays (the inbox model)
- * - `auto`   -- let the shell choose per its policy and relay intelligence
- */
-export type { OutboxStrategy };
+export type { RelayEventResult };
 
 /** Options for a single-event outbox lookup. */
 export interface OutboxEventOptions {
@@ -39,8 +33,6 @@ export interface OutboxEventOptions {
   author?: string;
   /** Relay hints; treated as hints subject to shell validation, not a bypass. */
   relays?: string[];
-  /** Relay-selection strategy. */
-  strategy?: OutboxStrategy;
   /** Wall-clock budget for the lookup, in milliseconds. */
   timeoutMs?: number;
 }
@@ -51,8 +43,6 @@ export interface OutboxQueryOptions {
   authors?: string[];
   /** Relay hints; treated as a hint subject to shell validation, not a bypass. */
   relays?: string[];
-  /** Relay-selection strategy. */
-  strategy?: OutboxStrategy;
   /** Maximum events to collect. */
   limit?: number;
   /** Wall-clock budget for the query, in milliseconds. */
@@ -60,10 +50,7 @@ export interface OutboxQueryOptions {
 }
 
 /** Options for a live outbox subscription. */
-export interface OutboxSubscribeOptions extends OutboxQueryOptions {
-  /** Keep the subscription open for real-time events after EOSE. */
-  live?: boolean;
-}
+export interface OutboxSubscribeOptions extends OutboxQueryOptions {}
 
 /** Options for an outbox publish. */
 export interface OutboxPublishOptions {
@@ -71,8 +58,6 @@ export interface OutboxPublishOptions {
   relays?: string[];
   /** Recipient authors whose inbox relays should be included for directed events. */
   targetAuthors?: string[];
-  /** Relay-selection strategy. */
-  strategy?: OutboxStrategy;
 }
 
 /** A read/write target for relay-plan resolution. */
@@ -83,8 +68,6 @@ export interface OutboxTarget {
   pubkey?: string;
   /** Whether the plan is for reading (their write relays) or writing (their read relays). */
   direction?: 'read' | 'write';
-  /** Relay-selection strategy. */
-  strategy?: OutboxStrategy;
 }
 
 /** The relay plan the shell would use for a target. */
@@ -99,10 +82,8 @@ export interface OutboxRelayPlan {
 
 /** The result of a single-event outbox lookup. */
 export interface OutboxEventResult {
-  /** The validated event when found. */
-  event?: NostrEvent;
-  /** Relay URLs where the shell observed the event. */
-  relays: string[];
+  /** The validated event result when found. */
+  result?: RelayEventResult;
   /** True when lookup results are partial. */
   incomplete?: boolean;
   /** Error reason when the lookup could not complete. */
@@ -111,10 +92,8 @@ export interface OutboxEventResult {
 
 /** The result of an outbox query. */
 export interface OutboxResult {
-  /** Deduplicated, signature-validated events. */
-  events: NostrEvent[];
-  /** Map of event id -> relay URLs where the shell observed the event. */
-  relays: Record<string, string[]>;
+  /** Deduplicated, signature-validated event results. */
+  events: RelayEventResult[];
   /** True when some relay lists or connections failed and results are partial. */
   incomplete?: boolean;
   /** Error reason when the query could not complete. */
@@ -140,10 +119,8 @@ export interface OutboxPublishResult {
  * and tear the subscription down with `close()`.
  */
 export interface OutboxSubscription {
-  /** Listen for matching events; `relay` is the relay the event was observed on. */
-  on(event: 'event', cb: (event: NostrEvent, relay?: string) => void): void;
-  /** Listen for end-of-stored-events. */
-  on(event: 'eose', cb: () => void): void;
+  /** Listen for matching event results. */
+  on(event: 'event', cb: (result: RelayEventResult) => void): void;
   /** Listen for shell/upstream subscription closure. */
   on(event: 'closed', cb: (reason?: string) => void): void;
   /** Close the subscription and stop receiving events. */
@@ -168,7 +145,7 @@ export interface OutboxMessage extends NappletMessage {
  *   type: 'outbox.getEvent',
  *   id: crypto.randomUUID(),
  *   eventId: 'ev1...',
- *   options: { author: 'ab12...', strategy: 'outbox', timeoutMs: 3000 },
+ *   options: { author: 'ab12...', timeoutMs: 3000 },
  * };
  * ```
  */
@@ -187,10 +164,8 @@ export interface OutboxGetEventResultMessage extends OutboxMessage {
   type: 'outbox.getEvent.result';
   /** Correlation ID matching the original request. */
   id: string;
-  /** The validated event when found. */
-  event?: NostrEvent;
-  /** Relay URLs where the shell observed the event. */
-  relays: string[];
+  /** The validated event result when found. */
+  result?: RelayEventResult;
   /** True when lookup results are partial. */
   incomplete?: boolean;
   /** Error reason when the lookup could not complete. */
@@ -208,7 +183,7 @@ export interface OutboxGetEventResultMessage extends OutboxMessage {
  *   type: 'outbox.query',
  *   id: crypto.randomUUID(),
  *   filters: [{ authors: ['ab12...'], kinds: [1], limit: 20 }],
- *   options: { strategy: 'outbox', timeoutMs: 3000 },
+ *   options: { authors: ['ab12...'], timeoutMs: 3000 },
  * };
  * ```
  */
@@ -227,10 +202,8 @@ export interface OutboxQueryResultMessage extends OutboxMessage {
   type: 'outbox.query.result';
   /** Correlation ID matching the original request. */
   id: string;
-  /** Deduplicated events. */
-  events: NostrEvent[];
-  /** Map of event id -> relay URLs. */
-  relays: Record<string, string[]>;
+  /** Deduplicated event results. */
+  events: RelayEventResult[];
   /** True when results are partial. */
   incomplete?: boolean;
   /** Error reason when the query could not complete. */
@@ -248,7 +221,7 @@ export interface OutboxQueryResultMessage extends OutboxMessage {
  *   id: crypto.randomUUID(),
  *   subId: 'sub-1',
  *   filters: [{ authors: ['ab12...'], kinds: [1], limit: 50 }],
- *   options: { strategy: 'outbox', live: true },
+ *   options: { authors: ['ab12...'], timeoutMs: 3000 },
  * };
  * ```
  */
@@ -269,17 +242,8 @@ export interface OutboxEventMessage extends OutboxMessage {
   type: 'outbox.event';
   /** Subscription ID this event belongs to. */
   subId: string;
-  /** The matching Nostr event. */
-  event: NostrEvent;
-  /** The relay the event was observed on, when known. */
-  relay?: string;
-}
-
-/** End-of-stored-events signal for an outbox subscription. */
-export interface OutboxEoseMessage extends OutboxMessage {
-  type: 'outbox.eose';
-  /** Subscription ID that reached end of stored events. */
-  subId: string;
+  /** The raw event plus optional delivery sidecar metadata. */
+  result: RelayEventResult;
 }
 
 /** An outbox subscription was closed by the shell or upstream relay. */
@@ -309,7 +273,7 @@ export interface OutboxCloseMessage extends OutboxMessage {
  *   type: 'outbox.publish',
  *   id: crypto.randomUUID(),
  *   event: { kind: 1, content: 'hello', tags: [], created_at: now },
- *   options: { strategy: 'outbox' },
+ *   options: { targetAuthors: ['ab12...'] },
  * };
  * ```
  */
@@ -368,7 +332,6 @@ export type OutboxInboundMessage =
   | OutboxGetEventResultMessage
   | OutboxQueryResultMessage
   | OutboxEventMessage
-  | OutboxEoseMessage
   | OutboxClosedMessage
   | OutboxPublishResultMessage
   | OutboxResolveRelaysResultMessage;

@@ -36,7 +36,7 @@ describe('validateEnvelope — structural guards', () => {
 
 describe('validateEnvelope — direction enforcement', () => {
   it('rejects a napplet emitting a shell→napplet (inbound) type', () => {
-    const v = validateEnvelope({ type: 'relay.event', subId: 's', event: {} });
+    const v = validateEnvelope({ type: 'relay.event', subId: 's', result: { event: {} } });
     expect(v.ok).toBe(false);
     expect(v.direction).toBe('in');
     expect(v.errors[0].code).toBe('inbound-type-emitted');
@@ -105,6 +105,7 @@ describe('validateEnvelope — outbound field checks', () => {
         request: { scope: { type: 'direct', pubkey: 'abc123' } },
       },
       link: { type: 'link.open', id: 'a', url: 'https://example.com/post/123' },
+      count: { type: 'count.query', id: 'a', filters: [{ kinds: [7], '#e': ['event-id'] }] },
       lists: {
         type: 'lists.add',
         id: 'a',
@@ -131,12 +132,12 @@ describe('validateEnvelope — no generic shell domain', () => {
 });
 
 describe('ENVELOPE_SPECS invariants', () => {
-  it('has 198 discriminants split 95 outbound / 103 inbound', () => {
+  it('has 199 discriminants split 96 outbound / 103 inbound', () => {
     const all = knownEnvelopeTypes();
-    expect(all).toHaveLength(198);
+    expect(all).toHaveLength(199);
     const out = all.filter((t) => ENVELOPE_SPECS[t].dir === 'out');
     const inbound = all.filter((t) => ENVELOPE_SPECS[t].dir === 'in');
-    expect(out).toHaveLength(95);
+    expect(out).toHaveLength(96);
     expect(inbound).toHaveLength(103);
   });
 

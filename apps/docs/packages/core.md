@@ -34,7 +34,7 @@ import {
 - **`NappletMessage`** — base interface for every message: `{ type: string }` in
   `domain.action` format. Concrete message types extend it with payload fields.
 - **`NapDomain`** — string literal union of the NAP capability domains
-  (`'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'cvm' | 'outbox' | 'upload' | 'intent' | 'ble' | 'webrtc' | 'link' | 'lists' | 'serial' | 'common'`).
+  (`'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'cvm' | 'outbox' | 'upload' | 'intent' | 'ble' | 'webrtc' | 'link' | 'count' | 'lists' | 'serial' | 'common' | 'dm'`).
 - **`NappletGlobal`** — the runtime-injected `window.napplet` namespace with
   optional domain properties.
 - **`NAP_DOMAINS`** — runtime constant array of all domain strings, for iteration
@@ -79,7 +79,7 @@ swallowed in async paths (the envelope never crosses). These helpers fix that.
 import { setCloneMode, toCloneableSnapshot } from '@napplet/core';
 
 // Default 'auto' just works — reactive state is snapshotted on the failure path.
-napplet.outbox.subscribe(filters, { relays, live: true });
+napplet.outbox.subscribe(filters, { relays, timeoutMs: 3000 });
 
 // Or normalize explicitly / eagerly:
 napplet.outbox.subscribe(toCloneableSnapshot(filters), { relays });
@@ -92,7 +92,8 @@ plain envelopes, so they add no protocol surface.
 ### Protocol types & constants
 
 - **`NostrEvent`**, **`NostrFilter`**, **`EventTemplate`**, **`Subscription`** —
-  shared Nostr structures used by the relay and identity NAPs.
+  shared Nostr structures used by NAP domains such as outbox, relay, and
+  identity.
 - **`Capability`** / **`ALL_CAPABILITIES`** — the human-readable capability strings
   (`relay:read`, `relay:write`, `sign:event`, `sign:nip44`, `state:read`, …).
 - **`PROTOCOL_VERSION`** (`'4.0.0'`), **`SHELL_BRIDGE_URI`** (`'napplet://shell'`),
@@ -107,14 +108,14 @@ import { createDispatch } from '@napplet/core';
 
 const { registerNap, dispatch } = createDispatch();
 
-registerNap('relay', (msg) => {
-  // handles all relay.* messages
-  console.log('relay message:', msg.type);
+registerNap('outbox', (msg) => {
+  // handles all outbox.* messages
+  console.log('outbox message:', msg.type);
 });
 
-dispatch({ type: 'relay.subscribe' }); // true
-dispatch({ type: 'unknown.action' });  // false
-dispatch({ type: 'malformed' });        // false (no dot)
+dispatch({ type: 'outbox.query', id: 'abc', filters: [{ kinds: [1] }] }); // true
+dispatch({ type: 'unknown.action' });                                     // false
+dispatch({ type: 'malformed' });                                           // false (no dot)
 ```
 
 ## See also

@@ -45,7 +45,7 @@ so a compromised napplet cannot reach the shell's DOM, cookies, or key material.
 ## NIP-5D in one paragraph
 
 NIP-5D defines the napplet-shell protocol. All messages are JSON objects with a
-`type` field in `domain.action` format — `{ type: "relay.subscribe", ...payload }` —
+`type` field in `domain.action` format - `{ type: "outbox.query", ...payload }` -
 sent over `postMessage`. The shell assigns each napplet an identity at iframe
 creation time by mapping the iframe's unforgeable `MessageEvent.source` to a
 `(dTag, aggregateHash)` tuple from the napplet's NIP-5A manifest, so no handshake

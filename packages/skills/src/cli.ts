@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
  * `napplet-skills` — install the napplet agent skills into whatever location
- * your coding agent reads (Claude Code, Cursor, Windsurf, Codex/Amp via
- * AGENTS.md, Gemini, Copilot, …), or print them to stdout.
+ * your coding agent reads (Claude Code, Codex, Cursor, Windsurf, AGENTS.md,
+ * Gemini, Copilot, …), or print them to stdout.
  *
  * @packageDocumentation
  */
@@ -28,6 +28,7 @@ ${Object.values(TARGETS).map((t) => `  ${t.id.padEnd(13)} ${t.label}`).join('\n'
 
 Examples:
   napplet-skills install --to claude        # .claude/skills/<skill>/SKILL.md
+  napplet-skills install --to codex         # .codex/skills/<skill>/SKILL.md
   napplet-skills install --to cursor        # .cursor/rules/<skill>.mdc
   napplet-skills install --to agents        # append to ./AGENTS.md
   napplet-skills install build-napplet --to gemini

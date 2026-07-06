@@ -31,7 +31,12 @@ After runtime injection, the global may be populated with these sub-objects:
 
 | Namespace | What it does |
 | --- | --- |
-| `relay` | `subscribe`, `publish`, `publishEncrypted`, `query` through the shell's relay pool |
+| `outbox` | Outbox-aware `getEvent`, `query`, `subscribe`, `publish`, and `resolveRelays`; default for normal event reads and publishes |
+| `common` | Profile lookup, follow/unfollow, reactions, reports, and NIP-19 helpers |
+| `lists` | NIP-51 list read and mutation helpers |
+| `count` | Count queries through the shell |
+| `dm` | Shell-mediated encrypted direct-message helpers |
+| `relay` | Low-level explicit relay proxy for relay-local escape hatches |
 | `inc` | Inter-napplet communication: `emit`, `on` |
 | `storage` | Scoped key-value storage: `getItem`, `setItem`, `removeItem`, `keys` (512 KB quota), plus `storage.instance.*` for per-instance scope |
 | `keys` | Keyboard forwarding + action keybindings: `registerAction`, `unregisterAction`, `onAction` |
@@ -48,27 +53,34 @@ After runtime injection, the global may be populated with these sub-objects:
 import { installNappletGlobal } from '@napplet/shim';
 
 installNappletGlobal({
-  domains: ['relay', 'storage', 'identity'],
+  domains: ['outbox', 'storage', 'identity'],
 });
 ```
 
 Napplet application code then consumes injected domains:
 
 ```ts
-// Subscribe to kind 1 notes
-const sub = window.napplet.relay.subscribe(
-  { kinds: [1], limit: 20 },
-  (event) => console.log('New note:', event.content),
-  () => console.log('End of stored events'),
+// Read kind 1 notes through outbox-aware routing
+const { events } = await window.napplet.outbox.query(
+  [{ kinds: [1], limit: 20 }],
+  { timeoutMs: 3000 },
 );
+for (const result of events) console.log('Note:', result.event.content);
 
-// Publish a note (the shell signs it)
-const signed = await window.napplet.relay.publish({
+// Subscribe to live updates through the same outbox boundary
+const sub = window.napplet.outbox.subscribe([{ kinds: [1], limit: 20 }], {
+  timeoutMs: 3000,
+});
+sub.on('event', (result) => console.log('New note:', result.event.content));
+
+// Publish a note (the shell signs and fans it out)
+const published = await window.napplet.outbox.publish({
   kind: 1,
   content: 'Hello from my napplet!',
   tags: [],
   created_at: Math.floor(Date.now() / 1000),
 });
+if (!published.ok) throw new Error(published.error ?? 'publish failed');
 
 // Scoped storage, proxied through the shell
 await window.napplet.storage.setItem('theme', 'dark');

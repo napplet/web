@@ -113,10 +113,11 @@ function summarizeUploads(
   servers: readonly string[],
 ): UploadSummary {
   const failedUploads = uploaded.filter((result) => !result.success).length;
-  const serversFullyUploaded = servers.filter((server) =>
-    uploaded.some((result) => result.server === server) &&
-    uploaded.every((result) => result.server !== server || result.success)
-  ).length;
+  const serversFullyUploaded =
+    servers.filter((server) =>
+      uploaded.some((result) => result.server === server) &&
+      uploaded.every((result) => result.server !== server || result.success)
+    ).length;
   return {
     servers: servers.length,
     serversFullyUploaded,

@@ -1,5 +1,37 @@
 # @napplet/conformance
 
+## 0.12.1
+
+### Patch Changes
+
+- Updated dependencies [332f785]
+  - @napplet/core@0.27.0
+  - @napplet/nap@0.27.0
+
+## 0.12.0
+
+### Minor Changes
+
+- 6ccb056: Align relay and outbox read results with the current NAPs track: raw read events now use `RelayEventResult` with optional `sidecar.resources` and `sidecar.relayHints`, and NAP-OUTBOX no longer defines `outbox.eose`.
+
+### Patch Changes
+
+- Updated dependencies [6ccb056]
+  - @napplet/core@0.26.0
+  - @napplet/nap@0.26.0
+
+## 0.11.0
+
+### Minor Changes
+
+- 284e100: Add the NAP-COUNT `count` domain with `count.query` / `count.query.result` envelope types, `window.napplet.count.query(...)`, `@napplet/nap/count` subpaths, SDK exports, and conformance validator/reference-shell coverage.
+
+### Patch Changes
+
+- Updated dependencies [284e100]
+  - @napplet/core@0.25.0
+  - @napplet/nap@0.25.0
+
 ## 0.10.0
 
 ### Minor Changes

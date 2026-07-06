@@ -1,11 +1,18 @@
 ---
 name: build-napplet
-description: Use when writing a napplet (sandboxed Nostr iframe app) — Vite setup, the NIP-5A manifest plugin, runtime-injected window.napplet, the @napplet/sdk API (relay subscribe/publish/query, scoped storage, read-only identity, inter-napplet events, sandboxed resource byte-fetching, config, theme, capability gating), and the single-file artifact rule. Pairs with design-napplet (plan first) and test-napplet (verify before publish).
+description: Use when writing a napplet (sandboxed Nostr iframe app) - Vite setup, the NIP-5A manifest plugin, runtime-injected window.napplet, the @napplet/sdk API (OUTBOX-first event access, relay as explicit escape hatch, common social actions, lists, count, dm, scoped storage, read-only identity, inter-napplet events, sandboxed resource byte-fetching, config, theme, capability gating), and the single-file artifact rule. Pairs with design-napplet (plan first), port-nostr-app (for migrations), and test-napplet (verify before publish).
 ---
 
 # Building a Napplet
 
 Implements a `design-napplet` spec. A napplet is a single self-contained `/index.html` the shell loads into a `sandbox="allow-scripts"` iframe (no `allow-same-origin`); all host access is proxied over postMessage per NIP-5D. The napplet never holds keys. Protocol truth: NIP-5D (<https://github.com/nostr-protocol/nips/pull/2303>) + NAPs (<https://github.com/napplet/naps>). Never invent wire surface; flag gaps.
+
+Use only domains and helpers shipped by the current packages. Current package
+domains are `relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`,
+`notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `ble`,
+`webrtc`, `link`, `count`, `lists`, `serial`, `common`, and `dm`. Open NAP
+proposals such as Blossom, hashtree, torrent, proof-of-work, system, or value
+are not package APIs until the current packages export matching domains.
 
 ## Runtime Injection And SDK
 
@@ -17,7 +24,7 @@ or call `window.napplet.<domain>.*` directly.
 Canonical pattern:
 
 ```ts
-import { relay, inc, storage, identity } from '@napplet/sdk';
+import { outbox, common, inc, storage, identity } from '@napplet/sdk';
 ```
 
 Equivalently call `window.napplet.<domain>.*` directly (identical behavior). Examples below use whichever reads clearest; both hit the same runtime.
@@ -43,7 +50,7 @@ export default defineConfig({
     nip5aManifest({
       nappletType: 'my-napplet',     // required — NIP-5D d-tag
       artifactMode: 'single-file',   // fold assets + keep inline scripts in one index.html
-      // requires: ['signer'],       // optional hard service deps → napplet-requires meta
+      // requires: ['outbox', 'storage'], // optional hard NAP domain requirements
       // configSchema: './config.schema.json', // optional NAP-CONFIG schema
     }),
   ],
@@ -52,51 +59,93 @@ export default defineConfig({
 
 The aggregate hash is computed into the manifest (`.nip5a-manifest.json`) and the signed event — it is **not** injected as a meta tag. Set `VITE_DEV_PRIVKEY_HEX` (hex 32-byte key) to produce a signed manifest in CI; dev builds work without it.
 
-## Step 3 — Subscribe to relay events
+## Step 3 — Read And Publish Nostr Events Through Outbox First
 
-`subscribe` is a live stream; call `sub.close()` to stop. Signature: `subscribe(filters, onEvent, onEose, options?)`.
+Most napplets should use NAP-OUTBOX for Nostr event reads and publishes. The napplet supplies filters, event IDs, publish templates, and intent; the shell owns NIP-65 relay discovery, fallbacks, relay intelligence, deduplication, signature validation, signing, and fanout policy.
+
+`outbox.query` is a one-shot read. `outbox.subscribe` is a live stream; call `sub.close()` to stop. Event returns are `RelayEventResult` records, so read the raw event at `result.event`.
 
 ```ts
-import { relay } from '@napplet/sdk';
-import type { NostrEvent } from '@napplet/core';
+import { outbox, identity } from '@napplet/sdk';
 
-const me = await window.napplet.identity.getPublicKey();
+const me = await identity.getPublicKey();
+if (!me) renderSignedOut();
 
-const sub = relay.subscribe(
-  { kinds: [1], authors: [me], limit: 20 },
-  (event: NostrEvent) => console.log('note:', event.content),
-  () => console.log('EOSE — stored events loaded'),
+const { events } = await outbox.query(
+  [{ kinds: [1], authors: [me], limit: 20 }],
+  { authors: [me], timeoutMs: 3000 },
 );
+for (const result of events) renderNote(result.event, result.sidecar?.relayHints);
+
+const sub = outbox.subscribe(
+  [{ kinds: [1], authors: [me], limit: 20 }],
+  { authors: [me], timeoutMs: 3000 },
+);
+sub.on('event', (result) => renderNote(result.event, result.sidecar?.relayHints));
+sub.on('closed', (reason) => markStreamClosed(reason));
 
 sub.close(); // on teardown
 ```
 
-## Step 4 — Publish an event
-
-The shell signs; the napplet never holds keys. Always `await`.
+Publish through `outbox.publish` for normal user-authored social/event output. The shell signs; the napplet never holds keys. Check `ok` because publish failures return structured results.
 
 ```ts
-import { relay } from '@napplet/sdk';
+import { outbox } from '@napplet/sdk';
 
-const signed = await relay.publish({
+const result = await outbox.publish({
   kind: 1,
   content: 'Hello from a napplet!',
   tags: [],
   created_at: Math.floor(Date.now() / 1000),
 });
-console.log('published', signed.id);
+if (!result.ok || !result.event) throw new Error(result.error ?? 'publish failed');
+console.log('published', result.event.id);
 ```
 
-Encrypted DMs: `relay.publishEncrypted(template, recipientPubkey, 'nip44')` (NIP-44 default).
+For directed events, pass `targetAuthors` so the shell can include recipient inbox relays.
 
-## Step 5 — Query a snapshot
+```ts
+await outbox.publish(template, { targetAuthors: [recipientPubkey] });
+```
 
-`query` resolves once after EOSE — a one-shot, not a stream. Use `subscribe` for live data.
+## Step 4 — Use Higher-Level Social NAPs Before Raw Events
+
+When a NAP owns the user intent, call that NAP instead of building and publishing raw events.
+
+```ts
+import { common, lists, count, dm } from '@napplet/sdk';
+
+const profile = await common.getProfile('npub1...');
+await common.react(noteId, '+');
+await common.follow('npub1...');
+
+await lists.add({ type: 'mute-list' }, [{ itemType: 'pubkey', value: pubkey }]);
+
+const reactions = await count.query({ kinds: [7], '#e': [noteId] });
+
+const status = await dm.status();
+if (status.available) await dm.send({ recipients: [pubkey], content: 'hi' });
+```
+
+This keeps consent, read-modify-write merges, list preservation, encryption, signing, relay routing, and policy in the shell.
+
+## Step 5 — Relay Is A Low-Level Escape Hatch
+
+Use NAP-RELAY only when the feature needs relay-local semantics that OUTBOX and higher-level NAPs cannot express: a specific group relay, raw relay diagnostics, relay protocol tools, or a domain-specific protocol outside the outbox model.
 
 ```ts
 import { relay } from '@napplet/sdk';
-const events = await relay.query({ kinds: [1], limit: 50 });
+
+const sub = relay.subscribe(
+  [{ kinds: [9, 10, 11, 12], limit: 50 }],
+  (result) => renderGroupEvent(result.event),
+  () => markCaughtUp(),
+  { relay: 'wss://groups.example.com' },
+);
+sub.close();
 ```
+
+Do not use `relay.publish` as the default social publish path. Prefer `outbox.publish`, `common`, `lists`, or `dm` unless the design spec names the exact relay escape hatch.
 
 ## Step 6 — Scoped storage
 
@@ -128,7 +177,7 @@ const sub = identity.onChanged((pubkey) => {
 sub.close();
 ```
 
-Also available: `getProfile()`, `getFollows()`, `getList(type)`, `getRelays()`, `getMutes()`, `getBlocked()`, `getBadges()`, `getZaps()`.
+Also available: `getProfile()`, `getFollows()`, `getList(type)`, `getRelays()`, `getMutes()`, `getBlocked()`, `getBadges()`, `getZaps()`. Use `common` for profile lookup and social actions when available; `identity` is for the current shell user snapshot.
 
 ## Step 8 — Inter-napplet events
 
@@ -165,7 +214,9 @@ hard manifest requirement and the shell already refused incompatible loads.
 
 ## Step 10 — Fetch external bytes (resource NAP)
 
-The sandbox + strict CSP (`connect-src 'none'`, `img-src blob: data:`) block `fetch`, `<img src=https://…>`, `XMLHttpRequest`, and `WebSocket` at the browser level. Route every external byte through `resource`.
+The sandboxed napplet model does not give app code ambient network authority.
+Route every external byte through `resource` instead of `fetch`,
+`<img src=https://…>`, `XMLHttpRequest`, or `WebSocket`.
 
 ```ts
 const blob = await window.napplet.resource.bytes('https://example.com/avatar.png');
@@ -205,11 +256,13 @@ do not add napplet-owned bootstrap plumbing.
 ## Common pitfalls
 
 - Napplet-owned `@napplet/shim` bootstrap — **wrong layer.** The runtime injects `window.napplet`; napplets use `@napplet/sdk` or direct domain properties.
+- Treating open NAP proposals as shipped package APIs — **wrong surface.** If the current packages do not export the domain/helper, use an existing shipped NAP that faithfully owns the intent or flag the gap.
 - No `discoverServices`/`hasService`/`hasServiceVersion` — use injected domain property presence.
+- Treating NAP-RELAY as the default data layer — **wrong default.** Use `outbox` for normal event reads/publishes, `common` for social actions, `lists` for list mutations, `count` for counts, and `dm` for messages. Use `relay` only when the spec names a relay-local escape hatch.
 - Storage is `nappletStorage`-backed via `storage.*` — there is no `nappletState`/`nappStorage`/`nappState` import.
-- Never `localStorage`/`fetch`/`<img src=externalUrl>`/`WebSocket` — sandbox + CSP block them. Use `storage` and `resource`.
-- Never call `window.nostr` — it isn't installed. Sign via `relay.publish`; identity is read-only.
-- `publish()`/`query()` are async — `await` them; errors surface as rejections (signer timeout, ACL denial).
-- `query()` is one-shot (resolves after EOSE); `subscribe()` is the live stream.
+- Never `localStorage`/`fetch`/`<img src=externalUrl>`/`WebSocket` — the sandboxed napplet model delegates that authority to the shell. Use `storage` and `resource`.
+- Never call `window.nostr` — it isn't installed. Sign/publish via `outbox.publish` or higher-level NAPs; identity is read-only.
+- `publish()`/`query()` are async — `await` them; errors surface as structured results or rejections depending on the domain.
+- `outbox.query()` is one-shot; `outbox.subscribe()` is the live stream.
 - **JS must be inline.** A napplet is one `srcdoc` `index.html` with an opaque origin — an external `<script src>` has nothing to fetch. `artifactMode: 'single-file'` folds assets and keeps inline scripts.
 - Don't trust upstream `Content-Type` for resource MIME; the shell delivers a byte-sniffed `mime`.

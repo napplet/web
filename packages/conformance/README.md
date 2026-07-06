@@ -18,7 +18,7 @@ domain presence returns false, and no forbidden globals / undeclared egress.
   napplet emits, across all active NAP domains. Catches malformed payloads,
   unknown types, and napplets that put shell→napplet (inbound) traffic on the wire.
 - `validateManifest(html)` — checks `napplet-type`, `napplet-aggregate-hash`,
-  `napplet-requires`, `napplet-config-schema`, and the no-inline-`<script>` rule.
+  `napplet-requires`, and `napplet-config-schema` manifest metadata.
 
 The validator surface is kept in lockstep with `@napplet/nap` by a drift test, so a
 new NAP message type cannot ship without matching conformance coverage.

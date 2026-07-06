@@ -5,9 +5,9 @@ import { tmpdir } from 'node:os';
 import { listSkills, readSkill, install, TARGETS } from './index.js';
 
 describe('skill registry', () => {
-  it('ships the three napplet skills', () => {
+  it('ships the napplet skills', () => {
     const names = listSkills().map((s) => s.name);
-    expect(names).toEqual(['build-napplet', 'design-napplet', 'test-napplet']);
+    expect(names).toEqual(['build-napplet', 'design-napplet', 'make-napplet', 'port-nostr-app', 'test-napplet']);
   });
 
   it('parses a description from each SKILL.md frontmatter', () => {
@@ -36,9 +36,23 @@ describe('install', () => {
 
   it('skillDir target writes SKILL.md per skill', () => {
     const results = install({ to: 'claude', cwd });
-    expect(results).toHaveLength(3);
+    expect(results).toHaveLength(5);
     expect(existsSync(join(cwd, '.claude/skills/build-napplet/SKILL.md'))).toBe(true);
     expect(results.every((r) => r.action === 'wrote')).toBe(true);
+  });
+
+  it('codex target writes project-local Codex skills', () => {
+    const results = install({ to: 'codex', cwd, skills: ['make-napplet'] });
+    expect(results).toEqual([
+      {
+        skill: 'make-napplet',
+        dest: join(cwd, '.codex/skills/make-napplet/SKILL.md'),
+        action: 'wrote',
+      },
+    ]);
+    expect(readFileSync(join(cwd, '.codex/skills/make-napplet/SKILL.md'), 'utf8')).toContain(
+      '# Making A Napplet End To End',
+    );
   });
 
   it('ruleFile target writes one .mdc per skill with cursor frontmatter', () => {
@@ -52,6 +66,7 @@ describe('install', () => {
     install({ to: 'agents', cwd });
     const doc = readFileSync(join(cwd, 'AGENTS.md'), 'utf8');
     expect(doc).toContain('@napplet/skills:start');
+    expect(doc).toContain('## Skill: make-napplet');
     expect(doc).toContain('## Skill: design-napplet');
     expect(doc).toContain('## Skill: test-napplet');
   });
@@ -76,7 +91,7 @@ describe('install', () => {
 
   it('exposes the documented targets', () => {
     expect(Object.keys(TARGETS)).toEqual(
-      expect.arrayContaining(['claude', 'claude-user', 'cursor', 'windsurf', 'agents', 'gemini', 'copilot']),
+      expect.arrayContaining(['claude', 'claude-user', 'codex', 'cursor', 'windsurf', 'agents', 'gemini', 'copilot']),
     );
   });
 });

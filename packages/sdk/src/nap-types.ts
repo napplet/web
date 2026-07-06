@@ -6,6 +6,8 @@
 
 export type { NostrEvent } from '@napplet/core';
 export type { NostrFilter } from '@napplet/core';
+export type { RelayEventSidecar } from '@napplet/core';
+export type { RelayEventResult } from '@napplet/core';
 export type { Subscription } from '@napplet/core';
 export type { EventTemplate } from '@napplet/core';
 
@@ -278,7 +280,6 @@ export type {
 
 // OUTBOX NAP (outbox-aware relay routing)
 export type {
-  OutboxStrategy,
   OutboxEventOptions,
   OutboxQueryOptions,
   OutboxSubscribeOptions,
@@ -296,7 +297,6 @@ export type {
   OutboxQueryResultMessage,
   OutboxSubscribeMessage,
   OutboxEventMessage,
-  OutboxEoseMessage,
   OutboxClosedMessage,
   OutboxCloseMessage,
   OutboxPublishMessage,
@@ -432,6 +432,18 @@ export type {
   LinkInboundMessage,
   LinkNapMessage,
 } from '@napplet/nap/link';
+// COUNT NAP (runtime-mediated event counts)
+export type {
+  CountFilter,
+  CountOptions,
+  CountResult,
+  CountMessage,
+  CountQueryMessage,
+  CountQueryResultMessage,
+  CountOutboundMessage,
+  CountInboundMessage,
+  CountNapMessage,
+} from '@napplet/nap/count';
 // LISTS NAP (runtime-mediated NIP-51 list mutations)
 export type {
   ListErrorCode,

@@ -9,6 +9,7 @@ import type {
   NappletGlobal,
   NostrEvent,
   NostrFilter,
+  RelayEventResult,
   Subscription,
   EventTemplate,
 } from '@napplet/core';
@@ -25,7 +26,7 @@ function requireRelay(): NonNullable<NappletGlobal['relay']> {
  * Open a live NIP-01 subscription through the shell's relay pool.
  *
  * @param filters  One or more NIP-01 subscription filters
- * @param onEvent  Called for each matching event
+ * @param onEvent  Called for each matching event result
  * @param onEose   Called when the shell signals end of stored events (EOSE)
  * @param options  Optional: `{ relay, group }` for NIP-29 scoped relay subscriptions
  * @returns A Subscription handle with a `close()` method
@@ -43,7 +44,7 @@ function requireRelay(): NonNullable<NappletGlobal['relay']> {
  */
 export function relaySubscribe(
   filters: NostrFilter | NostrFilter[],
-  onEvent: (event: NostrEvent) => void,
+  onEvent: (result: RelayEventResult) => void,
   onEose: () => void,
   options?: { relay?: string; group?: string },
 ): Subscription {
@@ -78,7 +79,7 @@ export function relayPublish(
  * One-shot query: subscribe, collect events until EOSE, then resolve.
  *
  * @param filters  NIP-01 subscription filters
- * @returns Promise resolving to array of matching NostrEvent objects
+ * @returns Promise resolving to array of matching event results
  *
  * @example
  * ```ts
@@ -87,7 +88,7 @@ export function relayPublish(
  * const profiles = await relayQuery({ kinds: [0], authors: [pubkey] });
  * ```
  */
-export function relayQuery(filters: NostrFilter | NostrFilter[]): Promise<NostrEvent[]> {
+export function relayQuery(filters: NostrFilter | NostrFilter[]): Promise<RelayEventResult[]> {
   return requireRelay().query(filters);
 }
 

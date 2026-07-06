@@ -4,7 +4,7 @@
   "license": "MIT",
   "exports": "./src/index.ts",
   "imports": {
-    "@napplet/nap": "jsr:@napplet/nap@^0.24.0",
+    "@napplet/nap": "jsr:@napplet/nap@^0.27.1",
     "nostr-tools": "npm:nostr-tools@^2.23.3",
     "vite": "npm:vite@^6.3.0"
   },

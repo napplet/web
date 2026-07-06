@@ -16,6 +16,7 @@ import type {
   UploadApi,
   IntentApi,
   LinkApi,
+  CountApi,
   ListsApi,
   SerialApi,
   CommonApi,
@@ -243,12 +244,12 @@ export interface NappletGlobal {
    *
    * @example
    * ```ts
-   * if (window.napplet.outbox) {
-   *   const { events } = await window.napplet.outbox.query(
-   *     [{ authors: ['ab12...'], kinds: [1], limit: 20 }],
-   *     { strategy: 'outbox' },
-   *   );
-   * }
+ * if (window.napplet.outbox) {
+ *   const { events } = await window.napplet.outbox.query(
+ *     [{ authors: ['ab12...'], kinds: [1], limit: 20 }],
+ *     { authors: ['ab12...'], timeoutMs: 3000 },
+ *   );
+ * }
    * ```
    */
   outbox?: OutboxApi;
@@ -313,6 +314,20 @@ export interface NappletGlobal {
    * ```
   */
   link?: LinkApi;
+  /**
+   * Runtime-mediated event counts (NAP-COUNT): request aggregate counts for
+   * NIP-01 filters without receiving matching event payloads. The runtime owns
+   * relay COUNT support, indexing, caching, approximation, relay disclosure, and
+   * refusal policy.
+   *
+   * @example
+   * ```ts
+   * if (window.napplet.count) {
+   *   const result = await window.napplet.count.query({ kinds: [7], '#e': [eventId] });
+   * }
+   * ```
+  */
+  count?: CountApi;
   /**
    * Runtime-mediated NIP-51 list mutation (NAP-LISTS): add or remove semantic
    * items from supported lists without requiring napplets to handle raw NIP-51

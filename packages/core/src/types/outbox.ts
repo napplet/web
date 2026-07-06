@@ -1,13 +1,9 @@
-import type { NostrEvent } from './nostr.js';
-
-/** Relay-selection strategy for outbox-model routing (NAP-OUTBOX). */
-export type OutboxStrategy = 'outbox' | 'inbox' | 'auto';
+import type { NostrEvent, RelayEventResult } from './nostr.js';
 
 /** Options for a one-shot outbox query. */
 export interface OutboxQueryOptions {
   authors?: string[];
   relays?: string[];
-  strategy?: OutboxStrategy;
   limit?: number;
   timeoutMs?: number;
 }
@@ -16,20 +12,16 @@ export interface OutboxQueryOptions {
 export interface OutboxEventOptions {
   author?: string;
   relays?: string[];
-  strategy?: OutboxStrategy;
   timeoutMs?: number;
 }
 
 /** Options for a live outbox subscription. */
-export interface OutboxSubscribeOptions extends OutboxQueryOptions {
-  live?: boolean;
-}
+export interface OutboxSubscribeOptions extends OutboxQueryOptions {}
 
 /** Options for an outbox publish. */
 export interface OutboxPublishOptions {
   relays?: string[];
   targetAuthors?: string[];
-  strategy?: OutboxStrategy;
 }
 
 /** A read/write target for outbox relay-plan resolution. */
@@ -37,7 +29,6 @@ export interface OutboxTarget {
   authors?: string[];
   pubkey?: string;
   direction?: 'read' | 'write';
-  strategy?: OutboxStrategy;
 }
 
 /** The relay plan the shell would use for an outbox target. */
@@ -49,16 +40,14 @@ export interface OutboxRelayPlan {
 
 /** The result of an outbox query. */
 export interface OutboxResult {
-  events: NostrEvent[];
-  relays: Record<string, string[]>;
+  events: RelayEventResult[];
   incomplete?: boolean;
   error?: string;
 }
 
 /** The result of a single-event outbox lookup. */
 export interface OutboxEventResult {
-  event?: NostrEvent;
-  relays: string[];
+  result?: RelayEventResult;
   incomplete?: boolean;
   error?: string;
 }
@@ -74,8 +63,7 @@ export interface OutboxPublishResult {
 
 /** Handle for a live outbox subscription. */
 export interface OutboxSubscription {
-  on(event: 'event', cb: (event: NostrEvent, relay?: string) => void): void;
-  on(event: 'eose', cb: () => void): void;
+  on(event: 'event', cb: (result: RelayEventResult) => void): void;
   on(event: 'closed', cb: (reason?: string) => void): void;
   close(): void;
 }

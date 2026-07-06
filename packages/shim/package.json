@@ -1,6 +1,6 @@
 {
   "name": "@napplet/shim",
-  "version": "0.25.0",
+  "version": "0.26.3",
   "description": "Napplet SDK — subscribe, publish, query, emit, on, nappStorage for Nostr-native iframe applications",
   "type": "module",
   "main": "./dist/index.js",
@@ -25,7 +25,8 @@
   },
   "devDependencies": {
     "tsup": "^8.5.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.2"
   },
   "scripts": {
     "build": "tsup",

@@ -78,12 +78,21 @@ The napp type identifier (e.g., `'feed'`, `'chat'`, `'profile'`). This value is:
 
 **Type:** `string[] | { infer?: boolean; explicit?: string[]; mode?: 'warn' | 'error' }`
 
-An explicit array of NAP domain names this napplet requires from its host shell, or an opt-in inference config. When set:
+An array of bare NAP domain names this napplet requires from its host shell
+(e.g., `['outbox', 'storage']`), or an opt-in inference config. When set:
 
-- Injects a `<meta name="napplet-requires">` tag into HTML (comma-separated service names)
-- Adds `['requires', 'service-name']` tags to the kind 35129 manifest event
+- Injects a `<meta name="napplet-requires">` tag into HTML (comma-separated domain names)
+- Adds `['requires', 'domain']` tags to the kind 35129 manifest event
 
-With inference enabled, the plugin scans statically visible source usage of `@napplet/nap/<domain>`, SDK domain subpaths, and direct `window.napplet.<domain>` access. Explicit requirements remain the author-controlled declaration; inferred domains are merged as tooling assistance and can warn or fail when explicit config is missing a domain.
+With inference enabled, the plugin scans statically visible source usage of
+`@napplet/nap/<domain>`, SDK domain subpath imports, and direct
+`window.napplet.<domain>` access. Explicit requirements remain the
+author-controlled declaration; inferred domains are merged as tooling assistance
+and can warn or fail when explicit config is missing a domain.
+
+If the shell does not support all required domains, the napplet can detect this
+at runtime via `window.napplet?.domain` presence or the shell can show a
+compatibility warning.
 
 #### configSchema (optional)
 
@@ -143,7 +152,7 @@ Controls the build artifact shape the plugin validates and hashes.
 
 | Value | Behaviour |
 |-------|-----------|
-| `'external-assets'` | Preserve Vite's default `index.html` + JS/CSS asset graph. Inline executable scripts are rejected. |
+| `'external-assets'` | Preserve Vite's default `index.html` + JS/CSS asset graph. Inline executable scripts are allowed. |
 | `'single-file'` | Force Vite toward a single emitted artifact, inline local JS/CSS build asset references into `index.html`, and fail if local external assets remain before aggregate-hash and manifest generation. |
 
 Use `single-file` when the napplet is meant to be served as a production-equivalent NIP-5A gateway artifact: a gateway-portable `index.html` loaded in an opaque-origin NIP-5D iframe without relying on separate local JS/CSS bundle routes.
@@ -165,7 +174,7 @@ export default defineConfig({
 
 In single-file mode:
 
-- The plugin first rejects any inline executable scripts already present in the built HTML.
+- The plugin preserves any inline executable scripts already present in the built HTML.
 - It asks Vite/Rollup for a single-entry artifact shape (`inlineDynamicImports`, no CSS code-split, inline static assets) so ordinary static and dynamic imports are bundled before the close-bundle rewrite.
 - It then rewrites local stylesheet links and local script `src` tags to inline `<style>` / `<script>` blocks and removes those inlined JS/CSS files from `dist/`.
 - It fails the build if any local stylesheet, modulepreload, script `src`, or extra emitted file remains after rewriting.
@@ -258,9 +267,10 @@ If set, the plugin signs the manifest event at build time. If not set, manifest 
 node -e "import('nostr-tools/pure').then(m => console.log(Buffer.from(m.generateSecretKey()).toString('hex')))"
 ```
 
-## Service Dependencies
+## NAP Domain Requirements
 
-Use the `requires` option when your napplet needs specific shell capabilities to function correctly.
+Use the `requires` option when your napplet needs specific NAP domains to
+function correctly.
 
 ```ts
 // vite.config.ts
@@ -270,14 +280,15 @@ import { nip5aManifest } from '@napplet/vite-plugin';
 export default defineConfig({
   plugins: [
     nip5aManifest({
-      nappletType: 'my-music-app',
-      requires: ['media', 'notify'],
+      nappletType: 'my-feed',
+      requires: ['outbox', 'storage'],
     }),
   ],
 });
 ```
 
-Inference can be enabled when you want the plugin to check source usage against the explicit declaration:
+Inference can be enabled when you want the plugin to check source usage against
+the explicit declaration:
 
 ```ts
 nip5aManifest({
@@ -292,12 +303,12 @@ nip5aManifest({
 
 ### What gets injected
 
-With `requires: ['media', 'notify']`, the plugin injects into your HTML `<head>`:
+With `requires: ['outbox', 'storage']`, the plugin injects into your HTML `<head>`:
 
 ```html
 <meta name="napplet-aggregate-hash" content="">
-<meta name="napplet-napp-type" content="my-music-app">
-<meta name="napplet-requires" content="media,notify">
+<meta name="napplet-napp-type" content="my-feed">
+<meta name="napplet-requires" content="outbox,storage">
 ```
 
 At build time (with `VITE_DEV_PRIVKEY_HEX` set), the manifest event also includes `requires` tags:
@@ -306,22 +317,22 @@ At build time (with `VITE_DEV_PRIVKEY_HEX` set), the manifest event also include
 {
   "kind": 35129,
   "tags": [
-    ["d", "my-music-app"],
+    ["d", "my-feed"],
     ["path", "/index.html", "<sha256>"],
     ["x", "<aggregateHash>", "aggregate"],
-    ["requires", "media"],
-    ["requires", "notify"]
+    ["requires", "outbox"],
+    ["requires", "storage"]
   ]
 }
 ```
 
 ### Runtime compatibility checking
 
-The host shell reads `<meta name="napplet-requires">` during napplet initialization and compares against its supported capabilities. Napplets can also check at runtime:
+The host shell reads `<meta name="napplet-requires">` during napplet initialization and compares against its supported NAP domains. Napplets can also check at runtime:
 
 ```ts
-if (!window.napplet?.media) {
-  console.warn('Media NAP not available — some features disabled');
+if (!window.napplet?.outbox) {
+  console.warn('OUTBOX NAP not available — feed disabled');
 }
 ```
 
@@ -336,8 +347,8 @@ Per NIP-5D a napplet is a single self-contained `/index.html` loaded via
 opaque origin with no served URL. Its executable JS therefore lives **inline**;
 there is no origin from which the runtime could fetch an external
 `<script src>`. The plugin does **not** reject inline `<script>` elements. (An
-earlier version did, under an invented "shell-as-CSP-authority" model that
-NIP-5D does not define; that was removed — see napplet/web#53.)
+earlier version did under a loading model that NIP-5D does not define; that was
+removed — see napplet/web#53.)
 
 When `artifactMode: 'single-file'` is set, the plugin additionally folds any
 local `<script src>`/`<link rel="stylesheet">` build assets into `index.html`
@@ -392,7 +403,7 @@ interface Nip5aManifestOptions {
   /** Napplet type/dtag (e.g., 'feed', 'chat') */
   nappletType: string;
 
-  /** NAP domains this napplet requires, optionally inferred from source usage. */
+  /** Bare NAP domain requirements this napplet needs, optionally inferred from source usage. */
   requires?: string[] | {
     infer?: boolean;
     explicit?: string[];
@@ -419,7 +430,7 @@ interface Nip5aManifestOptions {
 ## Protocol Reference
 
 - [NAP-CONFIG spec (PR #13)](https://github.com/napplet/naps/pull/13) -- per-napplet declarative configuration
-- [NAP-RESOURCE (drafts)](https://github.com/napplet/naps) — sandboxed byte fetching primitive that strict CSP enforces against
+- [NAP-RESOURCE (drafts)](https://github.com/napplet/naps) — shell-owned byte fetching primitive for sandboxed napplets
 - [NIP-5D](https://github.com/nostr-protocol/nips/pull/2303) -- Napplet-shell protocol specification
 - [NIP-5A](https://github.com/nostr-protocol/nips/blob/master/5A.md) -- Nsite specification
 - [Aggregate Hash PR](https://github.com/nostr-protocol/nips/pull/2287) -- NIP-5A aggregate hash extension (not yet merged)
