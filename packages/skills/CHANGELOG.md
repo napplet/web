@@ -1,5 +1,12 @@
 # @napplet/skills
 
+## 0.2.4
+
+### Patch Changes
+
+- 4cfc04f: Teach napplet build skills to start from the boilerplate generator and preserve its tooling substrate.
+- 0f3ed8c: Align napplet authoring skills with all NAP domains implemented by the current `@napplet/*` package surface, including explicit NAP-KEYS guidance for shortcuts and keybindings.
+
 ## 0.2.3
 
 ### Patch Changes
