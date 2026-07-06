@@ -95,3 +95,8 @@ export interface DmSubscription {
 export interface DmOk {
   ok: boolean;
 }
+
+/** Error payload returned when a DM request cannot be fulfilled. */
+export interface DmError {
+  error: string;
+}

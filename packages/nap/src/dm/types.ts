@@ -12,6 +12,7 @@ import type {
   DmMessagePage,
   DmMessageQuery,
   DmOk,
+  DmError,
   DmSendRequest,
   DmSendResult,
   DmStatus,
@@ -33,6 +34,7 @@ export type {
   DmMessageQuery,
   DmMessageStatus,
   DmOk,
+  DmError,
   DmPeer,
   DmSendRequest,
   DmSendResult,
@@ -48,6 +50,14 @@ export interface DmMessageEnvelope extends NappletMessage {
   type: `dm.${string}`;
 }
 
+type DmResultError<TSuccess extends object> =
+  & DmError
+  & { [K in keyof TSuccess]?: undefined };
+
+type DmResultMessage<TEnvelope extends DmMessageEnvelope, TSuccess extends object> =
+  | (TEnvelope & TSuccess & { error?: undefined })
+  | (TEnvelope & DmResultError<TSuccess>);
+
 /** Request current DM availability. */
 export interface DmStatusMessage extends DmMessageEnvelope {
   type: 'dm.status';
@@ -55,11 +65,12 @@ export interface DmStatusMessage extends DmMessageEnvelope {
 }
 
 /** Result of `dm.status`. */
-export interface DmStatusResultMessage extends DmMessageEnvelope, Partial<DmStatus> {
+interface DmStatusResultEnvelope extends DmMessageEnvelope {
   type: 'dm.status.result';
   id: string;
-  error?: string;
 }
+
+export type DmStatusResultMessage = DmResultMessage<DmStatusResultEnvelope, DmStatus>;
 
 /** Request normalized DM conversations. */
 export interface DmConversationsMessage extends DmMessageEnvelope, DmConversationQuery {
@@ -68,11 +79,13 @@ export interface DmConversationsMessage extends DmMessageEnvelope, DmConversatio
 }
 
 /** Result of `dm.conversations`. */
-export interface DmConversationsResultMessage extends DmMessageEnvelope, Partial<DmConversationPage> {
+interface DmConversationsResultEnvelope extends DmMessageEnvelope {
   type: 'dm.conversations.result';
   id: string;
-  error?: string;
 }
+
+export type DmConversationsResultMessage =
+  DmResultMessage<DmConversationsResultEnvelope, DmConversationPage>;
 
 /** Request message history for one conversation. */
 export interface DmMessagesMessage extends DmMessageEnvelope, DmMessageQuery {
@@ -81,11 +94,12 @@ export interface DmMessagesMessage extends DmMessageEnvelope, DmMessageQuery {
 }
 
 /** Result of `dm.messages`. */
-export interface DmMessagesResultMessage extends DmMessageEnvelope, Partial<DmMessagePage> {
+interface DmMessagesResultEnvelope extends DmMessageEnvelope {
   type: 'dm.messages.result';
   id: string;
-  error?: string;
 }
+
+export type DmMessagesResultMessage = DmResultMessage<DmMessagesResultEnvelope, DmMessagePage>;
 
 /** Ask the runtime to send a direct message. */
 export interface DmSendMessage extends DmMessageEnvelope, DmSendRequest {
@@ -94,11 +108,12 @@ export interface DmSendMessage extends DmMessageEnvelope, DmSendRequest {
 }
 
 /** Result of `dm.send`. */
-export interface DmSendResultMessage extends DmMessageEnvelope, Partial<DmSendResult> {
+interface DmSendResultEnvelope extends DmMessageEnvelope {
   type: 'dm.send.result';
   id: string;
-  error?: string;
 }
+
+export type DmSendResultMessage = DmResultMessage<DmSendResultEnvelope, DmSendResult>;
 
 /** Request live DM delivery. */
 export interface DmSubscribeMessage extends DmMessageEnvelope, DmSubscribeRequest {
@@ -107,11 +122,13 @@ export interface DmSubscribeMessage extends DmMessageEnvelope, DmSubscribeReques
 }
 
 /** Result of `dm.subscribe`. */
-export interface DmSubscribeResultMessage extends DmMessageEnvelope, Partial<DmSubscription> {
+interface DmSubscribeResultEnvelope extends DmMessageEnvelope {
   type: 'dm.subscribe.result';
   id: string;
-  error?: string;
 }
+
+export type DmSubscribeResultMessage =
+  DmResultMessage<DmSubscribeResultEnvelope, DmSubscription>;
 
 /** Stop live DM delivery. */
 export interface DmUnsubscribeMessage extends DmMessageEnvelope {
@@ -121,11 +138,12 @@ export interface DmUnsubscribeMessage extends DmMessageEnvelope {
 }
 
 /** Result of `dm.unsubscribe`. */
-export interface DmUnsubscribeResultMessage extends DmMessageEnvelope, Partial<DmOk> {
+interface DmUnsubscribeResultEnvelope extends DmMessageEnvelope {
   type: 'dm.unsubscribe.result';
   id: string;
-  error?: string;
 }
+
+export type DmUnsubscribeResultMessage = DmResultMessage<DmUnsubscribeResultEnvelope, DmOk>;
 
 /** Shell-pushed live DM message. */
 export interface DmMessageEventMessage extends DmMessageEnvelope {
