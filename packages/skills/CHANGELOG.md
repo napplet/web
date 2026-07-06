@@ -1,5 +1,12 @@
 # @napplet/skills
 
+## 0.2.3
+
+### Patch Changes
+
+- bb5ff4b: Add `codex` as a project-local installer target that writes shipped napplet
+  skills to `.codex/skills/<skill>/SKILL.md`.
+
 ## 0.2.2
 
 ### Patch Changes
