@@ -1,6 +1,6 @@
 ---
 name: port-nostr-app
-description: Use when converting an existing Nostr web app into a napplet - audit the app-owned relay, signing, storage, network, media, and routing layers; map each feature to the right NAP boundary; default social reads and publishes to NAP-OUTBOX, not NAP-RELAY; then hand a clean build spec to design-napplet/build-napplet.
+description: Use when converting an existing Nostr web app into a napplet - audit app-owned relay, signing, storage, network, media, keyboard shortcuts, and routing layers; map each feature to a current package-implemented NAP boundary; default social reads and publishes to NAP-OUTBOX, not NAP-RELAY; then hand a clean build spec to design-napplet/build-napplet.
 ---
 
 # Porting A Nostr App To A Napplet
@@ -9,11 +9,13 @@ Use this before `design-napplet` when the starting point is an existing Nostr ap
 
 Protocol truth: NIP-5D (<https://github.com/nostr-protocol/nips/pull/2303>) plus NAPs (<https://github.com/napplet/naps>). Open the canonical spec before adding or depending on any message type, manifest tag, capability, or loading rule. If a needed surface is undefined, flag the gap instead of inventing it.
 
-Use current package exports as the implementation boundary. Open NAP proposals
-such as Blossom, hashtree, torrent, proof-of-work, system, or value are not
-usable package surfaces until the current `@napplet/*` packages export matching
-domains. In a port, map those needs to an existing shipped NAP only when it
-faithfully owns the intent; otherwise list the feature as blocked/deferred.
+Use current package exports as the implementation boundary. Implemented package
+domains are `relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`,
+`notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `ble`,
+`webrtc`, `link`, `count`, `lists`, `serial`, `common`, and `dm`. If a NAP is
+not exported by the current `@napplet/*` packages, do not treat it as usable API.
+Map a need to an existing shipped NAP only when it faithfully owns the intent;
+otherwise list the feature as blocked/deferred.
 
 ## Migration Rule
 
@@ -31,6 +33,9 @@ Replace app-owned infrastructure with the highest-level NAP that owns the user i
 | `localStorage`, IndexedDB, cookies | `storage` |
 | `fetch`, `XMLHttpRequest`, WebSocket, direct external images/media | `resource`, `upload`, `link`, `media`, or shell-owned NAPs |
 | App-level cross-window/plugin bus | `inc` or `intent` |
+| Global shortcuts, editor hotkeys, action keybindings | `keys` |
+| Notifications, badges, notification actions | `notify` |
+| Device/native session bridges | `ble`, `serial`, `webrtc`, or `cvm` only when the current package domain fits |
 
 If the port still contains a relay client, signer, direct storage layer, or direct network layer after this pass, assume the boundary is wrong until proven otherwise.
 
@@ -131,6 +136,7 @@ optional domains and fallbacks:
 outbox reads:
 outbox publishes:
 social/list/count/dm actions:
+keys/media/notify/device domains:
 relay escape hatches:
 storage keys:
 resource URLs/schemes:
