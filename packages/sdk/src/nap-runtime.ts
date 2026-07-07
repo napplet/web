@@ -109,6 +109,10 @@ export {
   cvmReadResource,
   cvmClose,
   cvmOnEvent,
+  cvmRegistryList,
+  cvmRegistryHas,
+  cvmRegistryDescribe,
+  cvmRegistryCall,
 } from '@napplet/nap/cvm';
 export {
   outboxGetEvent,

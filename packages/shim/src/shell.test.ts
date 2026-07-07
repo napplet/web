@@ -11,6 +11,7 @@ describe('@napplet/shim — runtime injection', () => {
     const installed = napplet();
     expect(installed.relay).toBeDefined();
     expect(installed.storage).toBeDefined();
+    expect(installed.cvm?.registry).toBeDefined();
     expect((installed as { shell?: unknown }).shell).toBeUndefined();
   });
 

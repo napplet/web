@@ -53,6 +53,19 @@ describe('@napplet/nap/media shim', () => {
       owner: 'shell',
       source: { url: 'https://example.com/live.mp3', mimeType: 'audio/mpeg' },
       metadata: { title: 'Live Set' },
+      context: {
+        label: 'Live queue',
+        detail: 'Main stage',
+        index: 0,
+        total: 1,
+        links: [
+          {
+            rel: 'live-chat',
+            title: 'Live chat',
+            nostr: { address: '30311:pubkey:d-tag' },
+          },
+        ],
+      },
       capabilities: ['play', 'pause'],
       autoplay: true,
       live: true,
@@ -66,6 +79,19 @@ describe('@napplet/nap/media shim', () => {
           owner: 'shell',
           source: { url: 'https://example.com/live.mp3', mimeType: 'audio/mpeg' },
           metadata: { title: 'Live Set' },
+          context: {
+            label: 'Live queue',
+            detail: 'Main stage',
+            index: 0,
+            total: 1,
+            links: [
+              {
+                rel: 'live-chat',
+                title: 'Live chat',
+                nostr: { address: '30311:pubkey:d-tag' },
+              },
+            ],
+          },
           capabilities: ['play', 'pause'],
           autoplay: true,
           live: true,

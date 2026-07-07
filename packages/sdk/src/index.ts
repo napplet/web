@@ -24,6 +24,7 @@
 // window.napplet wrapper objects, grouped by domain.
 export { relay, inc, ifc, storage } from './relay.js';
 export { media, notify } from './media.js';
+export type { MediaContextLink, MediaNostrRef, MediaSessionContext } from './media.js';
 export { keys, identity } from './keys.js';
 export { config, resource } from './config.js';
 export { cvm, outbox, upload, intent, webrtc } from './cvm.js';

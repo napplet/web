@@ -15,6 +15,26 @@ the NAPs track (<https://github.com/napplet/naps>). Use the current
 Never invent message types, domains, manifest tags, loading rules, or shell
 authority to satisfy a prompt.
 
+## Sandbox Authority Contract
+
+Before any design or code, treat the iframe sandbox as a hard boundary:
+
+- Napplet code has no ambient browser authority. Do not use `fetch`,
+  `XMLHttpRequest`, `WebSocket`, `localStorage`, `sessionStorage`, IndexedDB,
+  cookies, external `<script src>`, external `<link href>`, or external
+  `<img src>` in generated napplet code.
+- External bytes, including ROMs, WASM side files, avatars, images, audio,
+  video, fonts, and JSON, must be either bundled into the single-file artifact
+  or requested through `resource.bytes` / `resource.bytesMany`.
+- Persistent state goes through `storage`; relay/network behavior goes through
+  `outbox`, `common`, `lists`, `count`, `dm`, or an explicit `relay` escape
+  hatch; external links go through `link`.
+- If a library tries to own browser storage or network internally, either
+  configure it onto shell-provided NAPs, stub the forbidden path so it never
+  runs, bundle the required bytes at build time, or flag the library as
+  unsuitable for a strict napplet. Do not ship a napplet that "mostly works"
+  until it hits a browser `NetworkError`.
+
 ## Decision Tree
 
 | User request | First step |

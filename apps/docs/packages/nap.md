@@ -67,6 +67,9 @@ import { notifySend } from '@napplet/nap/notify/sdk';
 - **identity** — strictly **read-only**: it exposes the shell-user pubkey and
   public identity data but never signs, encrypts, or decrypts. Take one snapshot
   with `getPublicKey()`, then subscribe to shell-pushed `identity.changed`.
+- **media** — ownership-aware media sessions with optional context links for
+  queue position and related Nostr resources; the shell owns playback policy for
+  shell-owned sessions.
 - **ble** — runtime-mediated Bluetooth LE/GATT sessions. Napplets use
   shell-scoped sessions and byte arrays while the shell owns chooser UI,
   permissions, device handles, GATT lifecycle, notifications, and policy.
@@ -81,9 +84,10 @@ import { notifySend } from '@napplet/nap/notify/sdk';
 - **lists** — runtime-mediated NIP-51 list mutations via
   `supported`/`add`/`remove`; the runtime owns lookup, merge, encryption,
   signing, and publishing.
-- **common** — shell-mediated public NIP-19 helpers, profile lookup, follows,
-  follow/unfollow, reactions, and reports; the shell owns identity, consent,
-  event construction, signing, publishing, relay access, and NIP-19 handling.
+- **common** — shell-mediated public NIP-19 helpers, profile lookup returning
+  `RelayEventResult`, follows, follow/unfollow, reactions, and reports; the
+  shell owns identity, consent, event construction, signing, publishing, relay
+  access, and NIP-19 handling.
 - **serial** — runtime-mediated serial device access: napplets get
   `open`/`write`/`close`/`onEvent`; the shell owns permissions, raw port
   handles, streams, OS paths, and lifecycle policy.

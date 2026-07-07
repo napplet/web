@@ -59,16 +59,26 @@ function settle<T>(
   p.reject(new Error(error ?? fallbackError));
 }
 
-function mutationResultFrom(msg: ListsAddResultMessage | ListsRemoveResultMessage): ListMutationResult {
+function mutationResultBaseFrom(msg: ListsAddResultMessage | ListsRemoveResultMessage): ListMutationResult {
   const result: ListMutationResult = { ok: msg.ok };
   if (msg.eventId !== undefined) result.eventId = msg.eventId;
   if (msg.event !== undefined) result.event = msg.event;
-  if (msg.added !== undefined) result.added = msg.added;
-  if (msg.removed !== undefined) result.removed = msg.removed;
   if (msg.skipped !== undefined) result.skipped = msg.skipped;
   if (msg.error !== undefined) result.error = msg.error;
   if (msg.reason !== undefined) result.reason = msg.reason;
   if (msg.supported !== undefined) result.supported = msg.supported;
+  return result;
+}
+
+function addResultFrom(msg: ListsAddResultMessage): ListMutationResult {
+  const result = mutationResultBaseFrom(msg);
+  if (msg.added !== undefined) result.added = msg.added;
+  return result;
+}
+
+function removeResultFrom(msg: ListsRemoveResultMessage): ListMutationResult {
+  const result = mutationResultBaseFrom(msg);
+  if (msg.removed !== undefined) result.removed = msg.removed;
   return result;
 }
 
@@ -83,11 +93,11 @@ function handleSupportedResult(msg: ListsSupportedResultMessage): void {
 }
 
 function handleAddResult(msg: ListsAddResultMessage): void {
-  settle(pendingAdd, msg.id, mutationResultFrom(msg), 'lists.add failed');
+  settle(pendingAdd, msg.id, addResultFrom(msg), 'lists.add failed');
 }
 
 function handleRemoveResult(msg: ListsRemoveResultMessage): void {
-  settle(pendingRemove, msg.id, mutationResultFrom(msg), 'lists.remove failed');
+  settle(pendingRemove, msg.id, removeResultFrom(msg), 'lists.remove failed');
 }
 
 /**

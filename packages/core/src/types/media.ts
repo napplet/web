@@ -1,16 +1,25 @@
 /** The side that fetches/decodes media and emits authoritative playback state. */
 export type MediaPlaybackOwner = 'shell' | 'napplet';
 
+/** Nostr event or address reference with optional relay hints. */
+export interface MediaNostrRef {
+  eventId?: string;
+  address?: string;
+  relays?: string[];
+}
+
 /** Source reference for shell-owned media playback or advisory source metadata. */
 export interface MediaSourceRef {
   url?: string;
   blossomHash?: string;
-  nostr?: {
-    eventId?: string;
-    address?: string;
-    relays?: string[];
-  };
+  nostr?: MediaNostrRef;
   mimeType?: string;
+}
+
+/** Artwork reference for media sessions. */
+export interface MediaArtwork {
+  url?: string;
+  hash?: string;
 }
 
 /** Media session metadata. */
@@ -18,9 +27,25 @@ export interface MediaMetadata {
   title?: string;
   artist?: string;
   album?: string;
-  artwork?: { url?: string; hash?: string };
+  artwork?: MediaArtwork;
   duration?: number;
   mediaType?: 'audio' | 'video';
+}
+
+/** Link from a media session context to a related resource. */
+export interface MediaContextLink {
+  rel: string;
+  title?: string;
+  nostr?: MediaNostrRef;
+}
+
+/** Optional UI, queue, and related-resource context for a media session. */
+export interface MediaSessionContext {
+  label?: string;
+  detail?: string;
+  index?: number;
+  total?: number;
+  links?: MediaContextLink[];
 }
 
 /** Media playback state. */
@@ -37,6 +62,7 @@ export type MediaAction = 'play' | 'pause' | 'stop' | 'next' | 'prev' | 'seek' |
 interface MediaSessionCreateBase {
   sessionId?: string;
   metadata?: MediaMetadata;
+  context?: MediaSessionContext;
   capabilities?: MediaAction[];
   autoplay?: boolean;
   live?: boolean;
