@@ -1,13 +1,16 @@
 import { type CommandRunner, runCommand } from "./process.ts";
 
+/** KEY_SERVICE_NAME constant used by native key storage helpers. */
 export const KEY_SERVICE_NAME = "napplet";
 
+/** StoredSecret shape used by native key storage helpers. */
 export interface StoredSecret {
   service: string;
   account: string;
   secret: string;
 }
 
+/** KeyStoreProvider shape used by native key storage helpers. */
 export interface KeyStoreProvider {
   readonly name: string;
   isAvailable(): Promise<boolean>;
@@ -17,12 +20,14 @@ export interface KeyStoreProvider {
   list(service: string): Promise<string[]>;
 }
 
+/** KeyStoreOptions shape used by native key storage helpers. */
 export interface KeyStoreOptions {
   os?: typeof Deno.build.os;
   env?: Record<string, string | undefined>;
   run?: CommandRunner;
 }
 
+/** get key store provider helper for native key storage. */
 export async function getKeyStoreProvider(
   options: KeyStoreOptions = {},
 ): Promise<KeyStoreProvider | null> {
@@ -39,6 +44,7 @@ export async function getKeyStoreProvider(
   return await provider.isAvailable() ? provider : null;
 }
 
+/** require key store provider helper for native key storage. */
 export async function requireKeyStoreProvider(
   options: KeyStoreOptions = {},
 ): Promise<KeyStoreProvider> {
@@ -68,6 +74,7 @@ function createProvider(
   }
 }
 
+/** MacOSKeychain implementation for native key storage. */
 export class MacOSKeychain implements KeyStoreProvider {
   readonly name = "macOS Keychain";
 
@@ -124,6 +131,7 @@ export class MacOSKeychain implements KeyStoreProvider {
   }
 }
 
+/** WindowsCredentialManager implementation for native key storage. */
 export class WindowsCredentialManager implements KeyStoreProvider {
   readonly name = "Windows Credential Manager";
 
@@ -220,6 +228,7 @@ public class NappletCredentialManager {
   }
 }
 
+/** LinuxSecretService implementation for native key storage. */
 export class LinuxSecretService implements KeyStoreProvider {
   readonly name = "Linux Secret Service";
 

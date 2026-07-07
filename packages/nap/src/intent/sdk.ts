@@ -1,4 +1,10 @@
 /**
+ * Napplet NAP intent sdk entrypoint.
+ *
+ * @module
+ */
+
+/**
  * @napplet/nap/intent -- SDK helpers wrapping window.napplet.intent.
  *
  * These convenience functions delegate to `window.napplet.intent.*` at call time.

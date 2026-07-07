@@ -1,10 +1,11 @@
 /**
- * @napplet/nap/ble -- Runtime-mediated Bluetooth Low Energy GATT access.
+ * Napplet NAP ble -- Runtime-mediated Bluetooth Low Energy GATT access.
  *
  * Barrel export for NAP-BLE. The runtime owns device discovery, chooser UI,
  * permission, backend handles, GATT lifecycle, notifications, disconnects, and
  * policy. Napplets receive opaque sessions and byte arrays only.
  *
+ * @module
  * @packageDocumentation
  */
 

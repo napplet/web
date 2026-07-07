@@ -1,3 +1,9 @@
+/**
+ * Napplet NAP config shim entrypoint.
+ *
+ * @module
+ */
+
 
 import { postToShell } from '../boundary.js';
 import type {

@@ -1,4 +1,10 @@
 /**
+ * Napplet NAP upload domain entrypoint.
+ *
+ * @module
+ */
+
+/**
  * @napplet/nap/upload -- Shell-mediated file/blob upload NAP module (NAP-UPLOAD).
  *
  * A napplet hands the shell raw bytes plus upload intent; the shell selects a

@@ -1,6 +1,7 @@
 import { CONFIG_DIR, CONFIG_FILE, type NappletConfig } from "./types.ts";
 import { dirname, joinPath, resolvePath } from "./path.ts";
 
+/** DEFAULT_CONFIG constant used by configuration helpers. */
 export const DEFAULT_CONFIG: NappletConfig = {
   version: 1,
   sourceDir: ".",
@@ -23,6 +24,7 @@ export const DEFAULT_CONFIG: NappletConfig = {
   },
 };
 
+/** default config helper for configuration. */
 export function defaultConfig(overrides: Partial<NappletConfig> = {}): NappletConfig {
   return {
     ...DEFAULT_CONFIG,
@@ -55,10 +57,12 @@ export function defaultConfig(overrides: Partial<NappletConfig> = {}): NappletCo
   };
 }
 
+/** config path helper for configuration. */
 export function configPath(cwd: string = Deno.cwd()): string {
   return joinPath(cwd, CONFIG_DIR, CONFIG_FILE);
 }
 
+/** read config helper for configuration. */
 export async function readConfig(path: string = configPath()): Promise<NappletConfig | null> {
   try {
     const raw = await Deno.readTextFile(path);
@@ -72,6 +76,7 @@ export async function readConfig(path: string = configPath()): Promise<NappletCo
   }
 }
 
+/** write config helper for configuration. */
 export async function writeConfig(
   config: NappletConfig,
   path: string = configPath(),
@@ -80,6 +85,7 @@ export async function writeConfig(
   await Deno.writeTextFile(path, `${JSON.stringify(normalizeConfig(config), null, 2)}\n`);
 }
 
+/** init config helper for configuration. */
 export async function initConfig(
   options: {
     cwd?: string;
@@ -107,6 +113,7 @@ export async function initConfig(
   return { path, config, created: true };
 }
 
+/** normalize config helper for configuration. */
 export function normalizeConfig(input: unknown): NappletConfig {
   if (!input || typeof input !== "object") {
     throw new Error("Config must be a JSON object");
@@ -134,6 +141,7 @@ export function normalizeConfig(input: unknown): NappletConfig {
   });
 }
 
+/** resolve configured source helper for configuration. */
 export function resolveConfiguredSource(
   config: NappletConfig,
   cwd: string = Deno.cwd(),
@@ -141,6 +149,7 @@ export function resolveConfiguredSource(
   return resolvePath(cwd, config.sourceDir);
 }
 
+/** set signing key reference helper for configuration. */
 export function setSigningKeyReference(config: NappletConfig, keyReference: string): NappletConfig {
   if (keyReference.trim() === "") throw new Error("keyReference cannot be empty");
   return defaultConfig({

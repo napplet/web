@@ -1,4 +1,10 @@
 /**
+ * Napplet NAP notify types entrypoint.
+ *
+ * @module
+ */
+
+/**
  * @napplet/nap/notify -- Notification message types
  * for the JSON envelope wire protocol.
  *

@@ -1,3 +1,9 @@
+/**
+ * Napplet NAP intent shim entrypoint.
+ *
+ * @module
+ */
+
 // @napplet/nap/intent -- Archetype intent dispatcher shim (invoke / open / available / handlers / changed push).
 // Correlates intent.* request/result envelopes; routes intent.changed pushes to listeners.
 // The shell owns archetype resolution, default handling, window lifecycle, and payload delivery.

@@ -1,4 +1,10 @@
 /**
+ * Napplet NAP link types entrypoint.
+ *
+ * @module
+ */
+
+/**
  * @napplet/nap/link -- Shell-mediated link opening message types.
  *
  * NAP-LINK lets a sandboxed napplet ask the shell to open an external URL for

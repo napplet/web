@@ -1,5 +1,5 @@
 /**
- * @napplet/nap/keys -- Keys NAP module.
+ * Napplet NAP keys -- Keys NAP module.
  *
  * Exports typed message definitions for the keys domain, shim installer,
  * SDK helpers, and registers the 'keys' domain with core dispatch on import.
@@ -10,6 +10,7 @@
  * import { DOMAIN, installKeysShim, keysRegisterAction } from '@napplet/nap/keys';
  * ```
  *
+ * @module
  * @packageDocumentation
  */
 

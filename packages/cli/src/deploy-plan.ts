@@ -13,6 +13,7 @@ import {
 import { configPath } from "./config.ts";
 import { NAMED_SITE_D_TAG_PATTERN } from "./manifest.ts";
 
+/** create deploy plan helper for deployment planning. */
 export function createDeployPlan(
   config: NappletConfig,
   candidates: NappletCandidate[],
@@ -103,6 +104,7 @@ function assertFolderDTag(candidate: NappletCandidate): void {
   }
 }
 
+/** normalize selection helper for deployment planning. */
 export function normalizeSelection(
   config: NappletConfig,
   selection: Partial<DeploySelection>,
@@ -123,6 +125,7 @@ export function normalizeSelection(
   };
 }
 
+/** kind for target helper for deployment planning. */
 export function kindForTarget(target: DeployTargetKind): number {
   switch (target) {
     case "root":

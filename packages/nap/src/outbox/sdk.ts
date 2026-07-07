@@ -1,4 +1,10 @@
 /**
+ * Napplet NAP outbox sdk entrypoint.
+ *
+ * @module
+ */
+
+/**
  * @napplet/nap/outbox -- SDK helpers wrapping window.napplet.outbox.
  *
  * These convenience functions delegate to `window.napplet.outbox.*` at call time.

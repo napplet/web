@@ -1,3 +1,9 @@
+/**
+ * Napplet NAP common shim entrypoint.
+ *
+ * @module
+ */
+
 // @napplet/nap/common -- Common social action shim.
 // Correlates common.* request/result envelopes. The shell owns identity,
 // consent, event construction, signing, publishing, relay access, and NIP-19.

@@ -1,4 +1,10 @@
 /**
+ * Napplet NAP config domain entrypoint.
+ *
+ * @module
+ */
+
+/**
  * @napplet/nap/config -- NAP-CONFIG message types, shim installer, and SDK
  * helpers for per-napplet declarative configuration.
  *

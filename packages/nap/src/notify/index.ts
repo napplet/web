@@ -1,5 +1,5 @@
 /**
- * @napplet/nap/notify -- Notify NAP module.
+ * Napplet NAP notify -- Notify NAP module.
  *
  * Exports typed message definitions for the notify domain, shim installer,
  * SDK helpers, and registers the 'notify' domain with core dispatch on import.
@@ -10,6 +10,7 @@
  * import { DOMAIN, installNotifyShim, notifySend } from '@napplet/nap/notify';
  * ```
  *
+ * @module
  * @packageDocumentation
  */
 

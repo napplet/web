@@ -1,5 +1,11 @@
 #!/usr/bin/env -S deno run --allow-read --allow-write --allow-run --allow-env --allow-net
 
+/**
+ * Executable entrypoint for the `napplet` command.
+ *
+ * @module
+ */
+
 import { initConfig, readConfig, setSigningKeyReference, writeConfig } from "./config.ts";
 import { createDebugReport, createSigningDebugInfo } from "./debug.ts";
 import { createDeployPlan } from "./deploy-plan.ts";
@@ -43,6 +49,12 @@ interface ParsedArgs {
   rest: string[];
 }
 
+/**
+ * Run the CLI command dispatcher.
+ *
+ * @param argv Command-line arguments, excluding executable name.
+ * @returns Process exit code.
+ */
 export async function main(argv = Deno.args): Promise<number> {
   const parsed = parseCommand(argv);
   try {

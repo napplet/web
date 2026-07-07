@@ -1,4 +1,10 @@
 /**
+ * Napplet NAP storage shim entrypoint.
+ *
+ * @module
+ */
+
+/**
  * Storage shim -- napplet-side localStorage-like API over postMessage.
  *
  * Without allow-same-origin, iframes have opaque origins and cannot access
@@ -26,6 +32,19 @@ import type {
 interface PendingRequest {
   resolve: (value: unknown) => void;
   reject: (reason: Error) => void;
+}
+
+interface NappletStorageApi {
+  getItem(key: string): Promise<string | null>;
+  setItem(key: string, value: string): Promise<void>;
+  removeItem(key: string): Promise<void>;
+  keys(): Promise<string[]>;
+  instance: {
+    getItem(key: string): Promise<string | null>;
+    setItem(key: string, value: string): Promise<void>;
+    removeItem(key: string): Promise<void>;
+    keys(): Promise<string[]>;
+  };
 }
 
 const pendingResponses = new Map<string, PendingRequest>();
@@ -131,7 +150,7 @@ async function keysScoped(scope?: StorageScope): Promise<string[]> {
  * on the wire. The `instance` sub-object is sugar that sets `scope: "instance"`
  * for per-instance storage (NAP-STORAGE).
  */
-export const nappletStorage = {
+export const nappletStorage: NappletStorageApi = {
   /**
    * Retrieve a stored value by key.
    * Returns null if the key does not exist (matching localStorage semantics).

@@ -7,6 +7,7 @@
 import type {
   LinkOpenOptions,
   LinkOpenResult,
+  NappletGlobal,
   ListItem,
   ListMutationResult,
   ListOptions,
@@ -49,6 +50,8 @@ import type {
 } from '@napplet/core';
 import { requireDomain } from './require-napplet.js';
 
+type SdkDomain<K extends keyof NappletGlobal> = NonNullable<NappletGlobal[K]>;
+
 /**
  * Shell-mediated link opening (NAP-LINK): ask the shell to open an external URL
  * for user-visible navigation. The shell owns prompting, policy, opener
@@ -61,7 +64,7 @@ import { requireDomain } from './require-napplet.js';
  * const result = await link.open('https://example.com/post/123', { label: 'Read post' });
  * ```
  */
-export const link = {
+export const link: SdkDomain<'link'> = {
   /**
    * Request that the shell open an external URL for the user.
    * @param url      Absolute URL to open
@@ -86,7 +89,7 @@ export const link = {
  * const result = await count.query({ kinds: [7], '#e': [eventId] });
  * ```
  */
-export const count = {
+export const count: SdkDomain<'count'> = {
   /**
    * Count events matching one or more NIP-01 filters.
    * @param filters  One NIP-01 filter or a non-empty array of filters
@@ -112,7 +115,7 @@ export const count = {
  * ]);
  * ```
  */
-export const lists = {
+export const lists: SdkDomain<'lists'> = {
   /**
    * Return the NIP-51 list kinds/types this runtime supports.
    * @returns Promise resolving to supported list descriptions
@@ -156,7 +159,7 @@ export const lists = {
  * await common.react(noteId, '+');
  * ```
  */
-export const common = {
+export const common: SdkDomain<'common'> = {
   /**
    * Encode a supported public NIP-19 value.
    * @param input  Structured NIP-19 encode input
@@ -255,7 +258,7 @@ export const common = {
  * const services = await ble.services(session.id);
  * ```
  */
-export const ble = {
+export const ble: SdkDomain<'ble'> = {
   /**
    * Ask the runtime to select and open a BLE session.
    * @param request  Device selection and optional service request
@@ -352,7 +355,7 @@ export const ble = {
  * await serial.write(session.id, [112, 105, 110, 103, 10]);
  * ```
  */
-export const serial = {
+export const serial: SdkDomain<'serial'> = {
   /**
    * Ask the runtime to select and open a serial session.
    * @param request  Filters, options, and optional chooser label
@@ -405,7 +408,7 @@ export const serial = {
  * dm.onMessage((message) => render(message));
  * ```
  */
-export const dm = {
+export const dm: SdkDomain<'dm'> = {
   /**
    * Get current DM availability and advisory runtime labels.
    * @returns Promise resolving to the runtime DM status

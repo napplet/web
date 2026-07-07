@@ -1,3 +1,9 @@
+/**
+ * Napplet NAP link shim entrypoint.
+ *
+ * @module
+ */
+
 // @napplet/nap/link -- Shell-mediated link opening shim.
 // Correlates link.open request/result envelopes. The shell owns navigation.
 

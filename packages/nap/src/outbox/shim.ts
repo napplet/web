@@ -1,3 +1,9 @@
+/**
+ * Napplet NAP outbox shim entrypoint.
+ *
+ * @module
+ */
+
 // @napplet/nap/outbox -- Outbox-aware relay routing shim (query / subscribe / publish / resolveRelays).
 // Correlates outbox.* request/result envelopes; streams outbox.event/closed to subscription listeners.
 // The shell owns relay discovery, routing, fallback, deduplication, signing, and publish fanout.

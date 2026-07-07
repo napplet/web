@@ -1,5 +1,5 @@
 /**
- * @napplet/nap/lists -- Runtime-mediated NIP-51 list mutation NAP module.
+ * Napplet NAP lists -- Runtime-mediated NIP-51 list mutation NAP module.
  *
  * NAP-LISTS lets a sandboxed napplet ask the runtime to add or remove items
  * from supported NIP-51 lists. The runtime owns lookup, merge, encryption,
@@ -15,6 +15,7 @@
  * ]);
  * ```
  *
+ * @module
  * @packageDocumentation
  */
 

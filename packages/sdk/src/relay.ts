@@ -7,11 +7,14 @@
 import type {
   NostrEvent,
   NostrFilter,
+  NappletGlobal,
   RelayEventResult,
   Subscription,
   EventTemplate,
 } from '@napplet/core';
 import { requireDomain } from './require-napplet.js';
+
+type SdkDomain<K extends keyof NappletGlobal> = NonNullable<NappletGlobal[K]>;
 
 /**
  * NIP-01 relay operations: subscribe to events, publish events, one-shot queries.
@@ -30,7 +33,7 @@ import { requireDomain } from './require-napplet.js';
  * );
  * ```
  */
-export const relay = {
+export const relay: SdkDomain<'relay'> = {
   /**
    * Open a live NIP-01 subscription through the shell's relay pool.
    * @param filters  One or more NIP-01 subscription filters
@@ -100,7 +103,7 @@ export const relay = {
  * });
  * ```
  */
-export const inc = {
+export const inc: SdkDomain<'inc'> = {
   /**
    * Broadcast an INC-PEER event to other napplets via the shell.
    * @param topic      The 't' tag value (e.g., 'profile:open')
@@ -129,7 +132,7 @@ export const inc = {
  * @deprecated Use {@link inc}. NAP-IFC was renamed to NAP-INC; this package
  * alias is kept only to ease downstream migration.
  */
-export const ifc = inc;
+export const ifc: SdkDomain<'inc'> = inc;
 
 /**
  * Napplet-scoped storage: async localStorage-like API proxied through the shell.
@@ -143,7 +146,7 @@ export const ifc = inc;
  * const theme = await storage.getItem('theme'); // 'dark'
  * ```
  */
-export const storage = {
+export const storage: SdkDomain<'storage'> = {
   /**
    * Retrieve a stored value by key. Returns null if the key does not exist.
    * @param key  The storage key

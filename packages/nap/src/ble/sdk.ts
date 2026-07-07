@@ -1,3 +1,9 @@
+/**
+ * Napplet NAP ble sdk entrypoint.
+ *
+ * @module
+ */
+
 // @napplet/nap/ble/sdk -- Named helpers wrapping window.napplet.ble.
 
 import type {

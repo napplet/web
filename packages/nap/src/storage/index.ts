@@ -1,5 +1,5 @@
 /**
- * @napplet/nap/storage -- Storage NAP module.
+ * Napplet NAP storage -- Storage NAP module.
  *
  * Exports typed message definitions for the storage domain, shim installer,
  * SDK helpers, and registers the 'storage' domain with core dispatch on import.
@@ -10,6 +10,7 @@
  * import { DOMAIN, installStorageShim, storageGetItem } from '@napplet/nap/storage';
  * ```
  *
+ * @module
  * @packageDocumentation
  */
 

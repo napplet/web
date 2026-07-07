@@ -1,3 +1,9 @@
+/**
+ * Napplet NAP cvm shim entrypoint.
+ *
+ * @module
+ */
+
 // @napplet/nap/cvm -- ContextVM bridge shim (discover / request / MCP convenience wrappers / server events).
 // Correlates cvm.* request/response envelopes; routes uncorrelated cvm.event notifications to listeners.
 // The shell owns all ContextVM transport: relay routing, signing, encryption, initialization, payment.

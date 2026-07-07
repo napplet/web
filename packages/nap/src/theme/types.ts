@@ -1,4 +1,10 @@
 /**
+ * Napplet NAP theme types entrypoint.
+ *
+ * @module
+ */
+
+/**
  * @napplet/nap/theme -- Shell-provided theming message types for the JSON envelope wire protocol.
  *
  * Defines 3 message types for read-only theme access:

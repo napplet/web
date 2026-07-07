@@ -1,3 +1,9 @@
+/**
+ * Napplet NAP theme shim entrypoint.
+ *
+ * @module
+ */
+
 // @napplet/nap/theme -- Theme NAP shim (read-only shell theme access)
 // theme.get is a request/response pair over postMessage; theme.changed is a
 // shell-pushed update. Mirrors the identity shim (the other read-only NAP).

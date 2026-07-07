@@ -1,4 +1,10 @@
 /**
+ * Napplet NAP serial domain entrypoint.
+ *
+ * @module
+ */
+
+/**
  * @napplet/nap/serial -- Runtime-mediated serial device access module (NAP-SERIAL).
  *
  * A napplet asks the shell to select and open a user-approved serial session,

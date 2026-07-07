@@ -1,4 +1,10 @@
 /**
+ * Napplet NAP resource types entrypoint.
+ *
+ * @module
+ */
+
+/**
  * @napplet/nap/resource -- Resource NAP message types for the JSON envelope wire protocol.
  *
  * Defines resource byte-fetching messages:

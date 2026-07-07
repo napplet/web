@@ -1,4 +1,10 @@
 /**
+ * Napplet NAP ifc types entrypoint.
+ *
+ * @module
+ */
+
+/**
  * @napplet/nap/ifc -- deprecated compatibility types for NAP-INC.
  *
  * @deprecated Use `@napplet/nap/inc/types`. The protocol was renamed from

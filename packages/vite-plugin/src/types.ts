@@ -6,6 +6,8 @@
  * NIP-5D kind constants are re-exported from `index.ts`; the
  * `ManifestPluginState` / `ManifestTemplate` shapes are internal plumbing
  * shared between the orchestrator and the manifest builder.
+ *
+ * @module
  */
 
 import type { NappletConfigSchema } from '@napplet/nap/config/types';
@@ -21,8 +23,11 @@ import type { NappletConfigSchema } from '@napplet/nap/config/types';
  * (`5129`) kinds are declared here for completeness but are not produced by
  * this typed-build plugin — there is no root-napplet build mode.
  */
+/** Snapshot napplet manifest kind. Declared for tooling that reads existing manifests. */
 export const NAPPLET_KIND_SNAPSHOT = 5129;
+/** Root napplet manifest kind. Declared for tooling that reads existing manifests. */
 export const NAPPLET_KIND_ROOT = 15129;
+/** Named napplet manifest kind emitted by this plugin. */
 export const NAPPLET_KIND_NAMED = 35129;
 
 /** Configuration options for the NIP-5A manifest plugin. */
@@ -34,14 +39,20 @@ export interface Nip5aArchetypeContract {
   eventKinds?: number[];
 }
 
+/** Requirement inference and explicit-domain options. */
 export interface Nip5aRequiresOptions {
+  /** Infer required NAP domains from static source usage. */
   infer?: boolean;
+  /** Explicit NAP domains to emit alongside inferred domains. */
   explicit?: string[];
+  /** Diagnostic mode for missing explicit declarations. */
   mode?: 'warn' | 'error';
 }
 
+/** Supported forms for the `requires` plugin option. */
 export type Nip5aRequiresOption = string[] | Nip5aRequiresOptions;
 
+/** Public configuration for {@link import('./index.js').nip5aManifest}. */
 export interface Nip5aManifestOptions {
   /** Napplet type/dtag identifier (e.g., 'feed', 'chat'). Used as the NIP-5A 'd' tag and injected as napplet-type meta attribute. */
   nappletType: string;

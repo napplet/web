@@ -1,3 +1,9 @@
+/**
+ * Napplet NAP notify shim entrypoint.
+ *
+ * @module
+ */
+
 // @napplet/nap/notify -- Notify NAP shim (notification sending + interaction handlers)
 // Manages notification sending, permission flow, badge counts, and shell interaction callbacks.
 

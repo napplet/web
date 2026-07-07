@@ -1,4 +1,10 @@
 /**
+ * Napplet NAP count sdk entrypoint.
+ *
+ * @module
+ */
+
+/**
  * @napplet/nap/count -- SDK helpers wrapping window.napplet.count.
  */
 

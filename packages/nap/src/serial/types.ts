@@ -1,4 +1,10 @@
 /**
+ * Napplet NAP serial types entrypoint.
+ *
+ * @module
+ */
+
+/**
  * @napplet/nap/serial -- Runtime-mediated serial access message types for the JSON envelope wire protocol.
  *
  * NAP-SERIAL lets a napplet communicate with user-approved serial devices

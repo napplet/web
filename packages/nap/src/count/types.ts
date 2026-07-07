@@ -1,4 +1,10 @@
 /**
+ * Napplet NAP count types entrypoint.
+ *
+ * @module
+ */
+
+/**
  * @napplet/nap/count -- Runtime-mediated event count message types.
  *
  * NAP-COUNT lets a napplet ask the runtime to count events matching non-empty

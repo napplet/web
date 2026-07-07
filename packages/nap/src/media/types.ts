@@ -1,4 +1,10 @@
 /**
+ * Napplet NAP media types entrypoint.
+ *
+ * @module
+ */
+
+/**
  * @napplet/nap/media -- Media session control message types
  * for the JSON envelope wire protocol.
  *

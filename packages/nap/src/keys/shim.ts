@@ -1,3 +1,9 @@
+/**
+ * Napplet NAP keys shim entrypoint.
+ *
+ * @module
+ */
+
 // @napplet/nap/keys -- Keys NAP shim (keyboard forwarding + action keybindings)
 // Full NAP-KEYS smart forwarding, suppress list, action handlers, and shell-push binding updates.
 

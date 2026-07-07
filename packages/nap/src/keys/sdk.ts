@@ -1,4 +1,10 @@
 /**
+ * Napplet NAP keys sdk entrypoint.
+ *
+ * @module
+ */
+
+/**
  * @napplet/nap/keys -- SDK helpers wrapping window.napplet.keys.
  *
  * These convenience functions delegate to `window.napplet.keys.*` at call time.

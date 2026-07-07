@@ -12,8 +12,10 @@ import {
   type SnapshotDeploySource,
 } from "./types.ts";
 
+/** NAMED_SITE_D_TAG_PATTERN constant used by manifest construction helpers. */
 export const NAMED_SITE_D_TAG_PATTERN = /^[a-z0-9-]{1,13}$/;
 
+/** ManifestBuildOptions shape used by manifest construction helpers. */
 export interface ManifestBuildOptions {
   createdAt?: number;
   servers?: string[];
@@ -21,12 +23,14 @@ export interface ManifestBuildOptions {
   metadataTags?: string[][];
 }
 
+/** SnapshotSourceRef shape used by manifest construction helpers. */
 export interface SnapshotSourceRef {
   kind: typeof NAPPLET_KIND_ROOT | typeof NAPPLET_KIND_NAMED;
   pubkey: string;
   dTag?: string;
 }
 
+/** collect manifest files helper for manifest construction. */
 export async function collectManifestFiles(dir: string): Promise<ManifestFileMapping[]> {
   const files: ManifestFileMapping[] = [];
   await collectManifestFilesInto(dir, "", files);
@@ -35,6 +39,7 @@ export async function collectManifestFiles(dir: string): Promise<ManifestFileMap
   return files;
 }
 
+/** compute aggregate hash helper for manifest construction. */
 export async function computeAggregateHash(
   files: readonly ManifestFileMapping[],
 ): Promise<string> {
@@ -46,6 +51,7 @@ export async function computeAggregateHash(
   return await sha256Text(lines.join(""));
 }
 
+/** create site manifest template helper for manifest construction. */
 export async function createSiteManifestTemplate(
   item: DeployPlanItem,
   files: readonly ManifestFileMapping[],
@@ -69,6 +75,7 @@ export async function createSiteManifestTemplate(
   };
 }
 
+/** create snapshot manifest template helper for manifest construction. */
 export function createSnapshotManifestTemplate(
   source: NostrEventTemplate,
   sourceRef: SnapshotSourceRef,
@@ -101,6 +108,7 @@ export function createSnapshotManifestTemplate(
   };
 }
 
+/** create deploy manifest templates helper for manifest construction. */
 export async function createDeployManifestTemplates(
   plan: DeployPlan,
   config: NappletConfig,
@@ -287,12 +295,14 @@ function dedupeTags(tags: readonly string[][]): string[][] {
   return result;
 }
 
+/** site address helper for manifest construction. */
 export function siteAddress(ref: SnapshotSourceRef): string {
   if (!/^[0-9a-f]{64}$/.test(ref.pubkey)) throw new Error("pubkey must be 64 lowercase hex chars");
   if (ref.kind === NAPPLET_KIND_ROOT) return `${NAPPLET_KIND_ROOT}:${ref.pubkey}:`;
   return `${NAPPLET_KIND_NAMED}:${ref.pubkey}:${normalizeDTag(ref.dTag)}`;
 }
 
+/** normalize d tag helper for manifest construction. */
 export function normalizeDTag(value: string | undefined): string {
   const dTag = value?.trim() ?? "";
   if (!NAMED_SITE_D_TAG_PATTERN.test(dTag) || dTag.endsWith("-")) {

@@ -1,4 +1,10 @@
 /**
+ * Napplet NAP resource sdk entrypoint.
+ *
+ * @module
+ */
+
+/**
  * @napplet/nap/resource -- SDK helpers wrapping window.napplet.resource.
  *
  * These convenience functions delegate to `window.napplet.resource.*` at call time.

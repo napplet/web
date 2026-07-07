@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v0.34.0
 milestone_name: NIP-5D Runtime Injection
 status: planning
-last_updated: "2026-07-07T14:15:28+02:00"
-last_activity: 2026-07-07 - Quick task 260707-jrh in release-fix stage: Publish workflow now installs Deno before root build so Changesets can reach the Version Packages PR step.
+last_updated: "2026-07-07T15:37:18+02:00"
+last_activity: 2026-07-07 - Quick task 260707-le9 complete: JSR score readiness improved with module docs, explicit public API types, dry-runs without slow-types, and operator-only settings documented.
 progress:
   total_phases: 0
   completed_phases: 0
@@ -30,7 +30,15 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 Phase: Not started (defining requirements)
 Plan: —
 Status: Defining requirements
-Last activity: 2026-07-07 — Quick task 260707-jrh in release-fix stage; `.github/workflows/publish.yml` now installs Deno before `pnpm build`, unblocking the Deno-backed `@napplet/cli` build that previously stopped Changesets before it could create the Version Packages PR.
+Last activity: 2026-07-07 — Quick task 260707-le9 complete; local JSR score blockers were reduced with module docs and explicit public API types, all publishable package dry-runs now pass without `--allow-slow-types`, and remaining gaps are JSR account/project settings.
+
+### Quick task 260707-le9 — COMPLETE
+
+- Live JSR score pages and current JSR docs were used to separate local blockers from operator-only settings.
+- Added docs/typing fixes for `@napplet/cli`, `@napplet/conformance`, `@napplet/nap`, `@napplet/sdk`, `@napplet/shim`, and `@napplet/vite-plugin`.
+- Added `.changeset/jsr-score-metadata.md` so changed publishable packages release the source/docs readiness updates.
+- Verification: package type-checks; JSR dry-runs without `--allow-slow-types` for all publishable packages; `pnpm check:jsr`; `pnpm type-check`; `pnpm build`; `pnpm -r test:unit`; `pnpm lint`; `git diff --check`; `aislop` full and changed-file scans.
+- Remaining operator work: set JSR package descriptions, runtime compatibility, and GitHub/OIDC provenance links in JSR settings, then publish from GitHub Actions after merge.
 
 ### Quick task 260707-jrh — IN RELEASE FIX
 

@@ -4,8 +4,10 @@
  * @packageDocumentation
  */
 
-import type { ResourceBytesItem, ResourceInfo, Subscription } from '@napplet/core';
+import type { NappletGlobal, ResourceBytesItem, ResourceInfo, Subscription } from '@napplet/core';
 import { requireDomain } from './require-napplet.js';
+
+type SdkDomain<K extends keyof NappletGlobal> = NonNullable<NappletGlobal[K]>;
 
 /**
  * Per-napplet declarative configuration (NAP-CONFIG): register a schema,
@@ -26,7 +28,7 @@ import { requireDomain } from './require-napplet.js';
  * config.openSettings({ section: 'appearance' });
  * ```
  */
-export const config = {
+export const config: SdkDomain<'config'> = {
   /**
    * Snapshot current validated + defaulted config values.
    * @returns A one-shot ConfigValues object.
@@ -110,7 +112,7 @@ export const config = {
  * imgEl.onload = () => handle.revoke();
  * ```
  */
-export const resource = {
+export const resource: SdkDomain<'resource'> = {
   /**
    * Inspect resource schemes and coarse runtime policy limits.
    * @returns Promise resolving to advisory resource info.

@@ -1,4 +1,10 @@
 /**
+ * Napplet NAP dm types entrypoint.
+ *
+ * @module
+ */
+
+/**
  * @napplet/nap/dm -- Runtime-mediated direct message types for NAP-DM.
  *
  * The runtime owns signing, encryption, relay routing, storage, key/session

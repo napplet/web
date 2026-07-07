@@ -1,4 +1,10 @@
 /**
+ * Napplet NAP theme sdk entrypoint.
+ *
+ * @module
+ */
+
+/**
  * @napplet/nap/theme -- SDK helpers wrapping window.napplet.theme.
  *
  * These convenience functions delegate to `window.napplet.theme.*` at call time.

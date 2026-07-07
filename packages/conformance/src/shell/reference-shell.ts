@@ -20,7 +20,7 @@
 import { validateEnvelope, type EnvelopeVerdict } from '../validators/envelope.js';
 
 /** A 64-hex reference user pubkey the shell reports for identity queries. */
-export const REFERENCE_PUBKEY = 'f'.repeat(64);
+export const REFERENCE_PUBKEY: string = 'f'.repeat(64);
 
 /** A placeholder blob URL for canned upload responses. `.invalid` is reserved (RFC 2606) and never resolves. */
 const REFERENCE_BLOB_URL = 'https://reference.invalid/blob';

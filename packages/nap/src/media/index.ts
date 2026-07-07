@@ -1,5 +1,5 @@
 /**
- * @napplet/nap/media -- Media NAP module.
+ * Napplet NAP media -- Media NAP module.
  *
  * Exports typed message definitions for the media domain, shim installer,
  * SDK helpers, and registers the 'media' domain with core dispatch on import.
@@ -10,6 +10,7 @@
  * import { DOMAIN, installMediaShim, mediaCreateSession } from '@napplet/nap/media';
  * ```
  *
+ * @module
  * @packageDocumentation
  */
 

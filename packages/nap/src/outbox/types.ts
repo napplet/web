@@ -1,4 +1,10 @@
 /**
+ * Napplet NAP outbox types entrypoint.
+ *
+ * @module
+ */
+
+/**
  * @napplet/nap/outbox -- Outbox-aware relay routing message types for the JSON envelope wire protocol.
  *
  * NAP-OUTBOX gives napplets outbox-model relay routing through the shell. A napplet

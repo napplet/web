@@ -1,3 +1,9 @@
+/**
+ * Napplet NAP webrtc sdk entrypoint.
+ *
+ * @module
+ */
+
 // @napplet/nap/webrtc/sdk -- Named helpers wrapping window.napplet.webrtc.
 
 import type { NappletGlobal, Subscription } from '@napplet/core';

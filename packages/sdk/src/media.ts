@@ -4,7 +4,7 @@
  * @packageDocumentation
  */
 
-import type { Subscription } from '@napplet/core';
+import type { NappletGlobal, Subscription } from '@napplet/core';
 import type {
   MediaSessionCreate,
   MediaSessionResult,
@@ -18,6 +18,8 @@ export type {
   MediaSessionContext,
 } from '@napplet/nap/media';
 import { requireDomain } from './require-napplet.js';
+
+type SdkDomain<K extends keyof NappletGlobal> = NonNullable<NappletGlobal[K]>;
 
 /**
  * Media session control: create sessions, report state and metadata,
@@ -35,7 +37,7 @@ import { requireDomain } from './require-napplet.js';
  * media.reportState(sessionId, { status: 'playing', position: 42.5 });
  * ```
  */
-export const media = {
+export const media: SdkDomain<'media'> = {
   /**
    * Create a new media session with the shell.
    * @param options  Ownership-aware session options
@@ -158,7 +160,7 @@ export const media = {
  * notify.badge(3);
  * ```
  */
-export const notify = {
+export const notify: SdkDomain<'notify'> = {
   /**
    * Send a notification to the shell.
    * @param notification  Notification payload (title required)
