@@ -76,17 +76,62 @@ The napp type identifier (e.g., `'feed'`, `'chat'`, `'profile'`). This value is:
 
 #### requires (optional)
 
-**Type:** `string[]`
+**Type:** `string[] | { infer?: boolean; explicit?: string[]; mode?: 'warn' | 'error' }`
 
 An array of bare NAP domain names this napplet requires from its host shell
-(e.g., `['outbox', 'storage']`). When set:
+(e.g., `['outbox', 'storage']`), or an opt-in inference config. When set:
 
 - Injects a `<meta name="napplet-requires">` tag into HTML (comma-separated domain names)
 - Adds `['requires', 'domain']` tags to the kind 35129 manifest event
 
+With inference enabled, the plugin scans statically visible source usage of
+`@napplet/nap/<domain>`, SDK domain subpath imports, and direct
+`window.napplet.<domain>` access. Explicit requirements remain the
+author-controlled declaration; inferred domains are merged as tooling assistance
+and can warn or fail when explicit config is missing a domain.
+
 If the shell does not support all required domains, the napplet can detect this
 at runtime via `window.napplet?.domain` presence or the shell can show a
 compatibility warning.
+
+#### title (optional)
+
+**Type:** `string`
+
+Human-readable napplet title. When set, the plugin **sets/overrides** the built
+HTML `<title>` element (inserting one after `<head>` if the document has none),
+replacing any author-written title. This is **plain HTML** — NOT a `napplet-*`
+protocol meta tag. When omitted, the author's existing `<title>` is left
+untouched and no empty tag is emitted.
+
+The injected value is HTML-escaped for element-text context (`&`, `<`, `>`). At
+deploy time the napplet CLI reads this back out of the built `index.html` and
+emits it as the NIP-5A `["title", …]` manifest tag.
+
+#### description (optional)
+
+**Type:** `string`
+
+Human-readable napplet description. When set, the plugin **sets/overrides** the
+built HTML `<meta name="description">` element (inserting one after `<head>` if
+absent), replacing any existing description meta. This is **plain HTML** — NOT a
+`napplet-*` protocol meta tag. When omitted, the author's existing description
+meta is left untouched and no empty tag is emitted.
+
+The injected value is HTML-escaped for attribute context (`&`, `"`). At deploy
+time the napplet CLI reads this back out of the built `index.html` and emits it
+as the NIP-5A `["description", …]` manifest tag.
+
+```ts
+nip5aManifest({
+  nappletType: 'my-feed',
+  title: 'My Feed',
+  description: 'A cozy Nostr feed napplet',
+});
+// → built index.html carries <title>My Feed</title>
+// → built index.html carries <meta name="description" content="A cozy Nostr feed napplet">
+// → napplet CLI emits ["title", "My Feed"] and ["description", "A cozy Nostr feed napplet"]
+```
 
 #### configSchema (optional)
 
@@ -281,6 +326,20 @@ export default defineConfig({
 });
 ```
 
+Inference can be enabled when you want the plugin to check source usage against
+the explicit declaration:
+
+```ts
+nip5aManifest({
+  nappletType: 'feed',
+  requires: {
+    infer: true,
+    explicit: ['relay'],
+    mode: 'warn',
+  },
+});
+```
+
 ### What gets injected
 
 With `requires: ['outbox', 'storage']`, the plugin injects into your HTML `<head>`:
@@ -383,8 +442,26 @@ interface Nip5aManifestOptions {
   /** Napplet type/dtag (e.g., 'feed', 'chat') */
   nappletType: string;
 
-  /** Bare NAP domain requirements this napplet needs (e.g., ['outbox', 'storage']). Optional. */
-  requires?: string[];
+  /** Bare NAP domain requirements this napplet needs, optionally inferred from source usage. */
+  requires?: string[] | {
+    infer?: boolean;
+    explicit?: string[];
+    mode?: 'warn' | 'error';
+  };
+
+  /**
+   * Human-readable title. Sets/overrides the built HTML `<title>` (plain HTML,
+   * not a napplet-* meta). The napplet CLI emits it as the NIP-5A `["title", …]`
+   * manifest tag at deploy.
+   */
+  title?: string;
+
+  /**
+   * Human-readable description. Sets/overrides the built HTML
+   * `<meta name="description">` (plain HTML, not a napplet-* meta). The napplet
+   * CLI emits it as the NIP-5A `["description", …]` manifest tag at deploy.
+   */
+  description?: string;
 
   /**
    * Artifact output contract. Defaults to 'external-assets'. Set to

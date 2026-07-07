@@ -14,8 +14,8 @@
     "check:links": "node scripts/check-links.mjs",
     "check:jsr": "node scripts/check-jsr-exports.mjs",
     "version-packages": "changeset version && node scripts/sync-jsr-versions.mjs",
-    "publish-packages": "turbo run build && pnpm publish -r --access public --no-git-checks",
-    "publish-jsr": "node scripts/sync-jsr-versions.mjs && pnpm -r --filter='./packages/*' exec npx jsr publish --allow-slow-types --allow-dirty"
+    "publish-packages": "turbo run build && pnpm -r --filter='!@napplet/cli' publish --access public --no-git-checks",
+    "publish-jsr": "node scripts/sync-jsr-versions.mjs && pnpm -r --filter='./packages/*' --filter='!@napplet/boilerplate' --filter='!@napplet/conformance-cli' exec npx jsr publish --allow-slow-types --allow-dirty"
   },
   "devDependencies": {
     "@changesets/cli": "^2.30.0",

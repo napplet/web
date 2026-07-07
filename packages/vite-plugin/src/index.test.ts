@@ -3,6 +3,7 @@ import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
+import type { IndexHtmlTransformResult } from 'vite';
 import { nip5aManifest, NAPPLET_KIND_NAMED, type Nip5aManifestOptions } from './index';
 import { computeAggregateHash } from './hashing';
 
@@ -25,9 +26,11 @@ async function runCloseBundle(
   options: Nip5aManifestOptions,
   fixture: { root: string; dist: string },
   viteConfig: Record<string, unknown> = {},
-): Promise<void> {
+  sources: Array<{ id: string; code: string }> = [],
+): Promise<{ warnings: string[] }> {
   const previousPrivkey = process.env.VITE_DEV_PRIVKEY_HEX;
   process.env.VITE_DEV_PRIVKEY_HEX = TEST_PRIVKEY;
+  const warnings: string[] = [];
   try {
     const plugin = nip5aManifest(options);
     await (plugin.configResolved as (config: unknown) => unknown)?.({
@@ -35,7 +38,18 @@ async function runCloseBundle(
       root: fixture.root,
       build: { outDir: fixture.dist },
     });
+    if (typeof plugin.transform === 'function') {
+      const context = {
+        warn(message: string) {
+          warnings.push(message);
+        },
+      };
+      for (const source of sources) {
+        await plugin.transform.call(context as never, source.code, source.id);
+      }
+    }
     await (plugin.closeBundle as () => unknown)?.();
+    return { warnings };
   } finally {
     if (previousPrivkey === undefined) {
       delete process.env.VITE_DEV_PRIVKEY_HEX;
@@ -92,7 +106,7 @@ describe('nip5aManifest artifact modes', () => {
 
     await expect(
       runCloseBundle({ nappletType: 'inline-default' }, fixture),
-    ).resolves.toBeUndefined();
+    ).resolves.toMatchObject({ warnings: [] });
 
     const html = fs.readFileSync(path.join(fixture.dist, 'index.html'), 'utf-8');
     expect(html).toContain('<script type="module">console.log("inline")</script>');
@@ -342,5 +356,214 @@ describe('nip5aManifest artifact modes', () => {
         ['x', manifest.aggregateHash, 'aggregate'],
       ]);
     }
+  });
+
+  it('infers requires tags from static NAP imports', async () => {
+    const fixture = makeFixture();
+    fs.writeFileSync(path.join(fixture.dist, 'index.html'), '<!doctype html>');
+
+    await runCloseBundle(
+      { nappletType: 'infer-import', requires: { infer: true } },
+      fixture,
+      {},
+      [{ id: path.join(fixture.root, 'src/main.ts'), code: "import { relayPublish } from '@napplet/nap/relay';\nrelayPublish({} as never);" }],
+    );
+
+    const manifest = readManifest(fixture.dist);
+    expect(manifest.tags).toContainEqual(['requires', 'relay']);
+  });
+
+  it('infers requires tags from SDK subpath imports and direct window.napplet usage', async () => {
+    const fixture = makeFixture();
+    fs.writeFileSync(path.join(fixture.dist, 'index.html'), '<!doctype html>');
+
+    await runCloseBundle(
+      { nappletType: 'infer-mixed', requires: { infer: true } },
+      fixture,
+      {},
+      [{
+        id: path.join(fixture.root, 'src/main.ts'),
+        code: [
+          "import { storageGetItem } from '@napplet/nap/storage';",
+          'window.napplet.identity.getPublicKey();',
+        ].join('\n'),
+      }],
+    );
+
+    const manifest = readManifest(fixture.dist);
+    expect(manifest.tags.filter((tag) => tag[0] === 'requires')).toEqual([
+      ['requires', 'identity'],
+      ['requires', 'storage'],
+    ]);
+  });
+
+  it('does not infer requirements from type-only imports or dynamic window access', async () => {
+    const fixture = makeFixture();
+    fs.writeFileSync(path.join(fixture.dist, 'index.html'), '<!doctype html>');
+
+    await runCloseBundle(
+      { nappletType: 'infer-none', requires: { infer: true } },
+      fixture,
+      {},
+      [{
+        id: path.join(fixture.root, 'src/main.ts'),
+        code: [
+          "import type { RelayRequest } from '@napplet/nap/relay/types';",
+          "const domain = 'identity';",
+          'window.napplet[domain];',
+        ].join('\n'),
+      }],
+    );
+
+    const manifest = readManifest(fixture.dist);
+    expect(manifest.tags.some((tag) => tag[0] === 'requires')).toBe(false);
+  });
+
+  it('preserves explicit array requirements without inference', async () => {
+    const fixture = makeFixture();
+    fs.writeFileSync(path.join(fixture.dist, 'index.html'), '<!doctype html>');
+
+    await runCloseBundle(
+      { nappletType: 'explicit-requires', requires: ['relay'] },
+      fixture,
+      {},
+      [{ id: path.join(fixture.root, 'src/main.ts'), code: "import '@napplet/nap/storage';" }],
+    );
+
+    const manifest = readManifest(fixture.dist);
+    expect(manifest.tags.filter((tag) => tag[0] === 'requires')).toEqual([['requires', 'relay']]);
+  });
+
+  it('dedupes explicit and inferred requirements', async () => {
+    const fixture = makeFixture();
+    fs.writeFileSync(path.join(fixture.dist, 'index.html'), '<!doctype html>');
+
+    await runCloseBundle(
+      { nappletType: 'dedupe-requires', requires: { infer: true, explicit: ['relay'] } },
+      fixture,
+      {},
+      [{ id: path.join(fixture.root, 'src/main.ts'), code: "import '@napplet/nap/relay';" }],
+    );
+
+    const manifest = readManifest(fixture.dist);
+    expect(manifest.tags.filter((tag) => tag[0] === 'requires')).toEqual([['requires', 'relay']]);
+  });
+
+  it('warns but builds when inference finds a requirement missing from explicit config', async () => {
+    const fixture = makeFixture();
+    fs.writeFileSync(path.join(fixture.dist, 'index.html'), '<!doctype html>');
+
+    const result = await runCloseBundle(
+      { nappletType: 'warn-requires', requires: { infer: true, explicit: ['relay'], mode: 'warn' } },
+      fixture,
+      {},
+      [{ id: path.join(fixture.root, 'src/main.ts'), code: "import '@napplet/nap/storage';" }],
+    );
+
+    expect(result.warnings.some((warning) => warning.includes('missing explicit requires'))).toBe(true);
+    const manifest = readManifest(fixture.dist);
+    expect(manifest.tags.filter((tag) => tag[0] === 'requires')).toEqual([
+      ['requires', 'relay'],
+      ['requires', 'storage'],
+    ]);
+  });
+
+  it('fails when inference finds a missing explicit requirement in error mode', async () => {
+    const fixture = makeFixture();
+    fs.writeFileSync(path.join(fixture.dist, 'index.html'), '<!doctype html>');
+
+    await expect(
+      runCloseBundle(
+        { nappletType: 'error-requires', requires: { infer: true, explicit: [], mode: 'error' } },
+        fixture,
+        {},
+        [{ id: path.join(fixture.root, 'src/main.ts'), code: "import '@napplet/nap/relay';" }],
+      ),
+    ).rejects.toThrow('missing explicit requires');
+  });
+});
+
+describe('nip5aManifest title/description HTML metadata', () => {
+  // The plugin's title/description options inject PLAIN HTML `<title>` /
+  // `<meta name="description">` (NOT napplet-* protocol meta). The napplet CLI
+  // reads these back out of the built index.html to emit the NIP-5A
+  // `["title", …]` / `["description", …]` manifest tags.
+  function transformIndexHtml(
+    options: Nip5aManifestOptions,
+    html: string,
+  ): IndexHtmlTransformResult {
+    const plugin = nip5aManifest(options);
+    const hook = plugin.transformIndexHtml as (
+      html: string,
+      ctx?: unknown,
+    ) => IndexHtmlTransformResult;
+    return hook.call(plugin, html);
+  }
+
+  function transformedHtml(options: Nip5aManifestOptions, html: string): string {
+    const result = transformIndexHtml(options, html);
+    if (result && !Array.isArray(result) && typeof result === 'object' && 'html' in result) {
+      return result.html;
+    }
+    throw new Error('expected an html-string transform result');
+  }
+
+  it('overrides an existing <title> with the title option', () => {
+    const out = transformedHtml(
+      { nappletType: 'feed', title: 'My Napp' },
+      '<!doctype html><html><head><title>Old</title></head><body></body></html>',
+    );
+    expect(out).toContain('<title>My Napp</title>');
+    expect(out).not.toContain('Old');
+  });
+
+  it('injects a <title> after <head> when none exists', () => {
+    const out = transformedHtml(
+      { nappletType: 'feed', title: 'My Napp' },
+      '<!doctype html><html><head></head><body></body></html>',
+    );
+    expect(out).toContain('<head><title>My Napp</title></head>');
+  });
+
+  it('overrides an existing description meta (single/double quotes, attr order)', () => {
+    for (const meta of [
+      '<meta name="description" content="stale">',
+      "<meta name='description' content='stale'>",
+      '<meta content="stale" name="description">',
+    ]) {
+      const out = transformedHtml(
+        { nappletType: 'feed', description: 'A cool napplet' },
+        `<!doctype html><html><head>${meta}</head><body></body></html>`,
+      );
+      expect(out).toContain('content="A cool napplet"');
+      expect(out).not.toContain('stale');
+    }
+  });
+
+  it('injects a description meta after <head> when none exists', () => {
+    const out = transformedHtml(
+      { nappletType: 'feed', description: 'A cool napplet' },
+      '<!doctype html><html><head></head><body></body></html>',
+    );
+    expect(out).toContain('<head><meta name="description" content="A cool napplet"></head>');
+  });
+
+  it('leaves author HTML untouched and emits only tags when neither option is set', () => {
+    const html = '<!doctype html><html><head><title>Author</title></head><body></body></html>';
+    const result = transformIndexHtml({ nappletType: 'feed' }, html);
+    // No html-string transform form — only the meta tag descriptors.
+    expect(Array.isArray(result)).toBe(true);
+  });
+
+  it('HTML-escapes injected title (element text) and description (attribute) values', () => {
+    const out = transformedHtml(
+      { nappletType: 'feed', title: 'Hi <b> & "you"', description: 'A "cool" & <napplet>' },
+      '<!doctype html><html><head><title>Old</title><meta name="description" content="stale"></head><body></body></html>',
+    );
+    // Title: element-text escaping (& < >), quote left as-is.
+    expect(out).toContain('<title>Hi &lt;b&gt; &amp; "you"</title>');
+    // Description: attribute escaping (& "), angle brackets safe inside quotes.
+    expect(out).toContain('content="A &quot;cool&quot; &amp; <napplet>"');
+    expect(out).not.toContain('stale');
   });
 });
