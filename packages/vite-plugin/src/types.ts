@@ -34,11 +34,39 @@ export interface Nip5aArchetypeContract {
   eventKinds?: number[];
 }
 
+export interface Nip5aRequiresOptions {
+  infer?: boolean;
+  explicit?: string[];
+  mode?: 'warn' | 'error';
+}
+
+export type Nip5aRequiresOption = string[] | Nip5aRequiresOptions;
+
 export interface Nip5aManifestOptions {
   /** Napplet type/dtag identifier (e.g., 'feed', 'chat'). Used as the NIP-5A 'd' tag and injected as napplet-type meta attribute. */
   nappletType: string;
-  /** Service dependencies this napplet requires (e.g., ['audio', 'notifications']). Optional. */
-  requires?: string[];
+  /** NAP domains this napplet requires, optionally inferred from source usage. */
+  requires?: Nip5aRequiresOption;
+  /**
+   * Human-readable napplet title. When set, the plugin sets/overrides the built
+   * HTML `<title>` element (inserting one after `<head>` if absent). This is
+   * PLAIN HTML — NOT a `napplet-*` protocol meta tag. When omitted, the author's
+   * existing `<title>` is left untouched.
+   *
+   * The napplet CLI reads this back out of the built `index.html` at deploy time
+   * and emits it as the NIP-5A `["title", ...]` manifest tag.
+   */
+  title?: string;
+  /**
+   * Human-readable napplet description. When set, the plugin sets/overrides the
+   * built HTML `<meta name="description">` element (inserting one after `<head>`
+   * if absent). This is PLAIN HTML — NOT a `napplet-*` protocol meta tag. When
+   * omitted, the author's existing description meta is left untouched.
+   *
+   * The napplet CLI reads this back out of the built `index.html` at deploy time
+   * and emits it as the NIP-5A `["description", ...]` manifest tag.
+   */
+  description?: string;
   /**
    * Artifact output contract for production builds.
    *
@@ -100,6 +128,8 @@ export interface ManifestPluginState {
   artifactMode: Nip5aArtifactMode;
   resolvedSchema: NappletConfigSchema | null;
   resolvedSchemaSource: string | null;
+  inferredRequires: Set<string>;
+  reportedMissingRequires: Set<string>;
 }
 
 /** Internal: unsigned manifest template carrying the precomputed aggregateHash. */
