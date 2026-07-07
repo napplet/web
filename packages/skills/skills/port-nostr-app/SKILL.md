@@ -22,6 +22,27 @@ with hand-written `window.napplet.<domain>.*` clients. Keep direct
 `window.napplet?.domain` access for availability checks and graceful fallback
 paths; use SDK helper exports for actual calls whenever they exist.
 
+## Sandbox Authority Contract
+
+Do not preserve browser authority from the source app. A port is not complete
+until these surfaces are gone from napplet runtime code:
+
+- `fetch`, `XMLHttpRequest`, `WebSocket`, relay pools, direct NIP-65 routing, and
+  any app-owned network fanout.
+- `localStorage`, `sessionStorage`, IndexedDB, cookies, filesystem-like browser
+  caches, and ad hoc persistence.
+- External `<script src>`, `<link href>`, `<img src>`, `<audio src>`,
+  `<video src>`, CSS network URLs, and dynamic network imports.
+- `window.nostr`, raw private keys, local signing, local encryption/decryption,
+  or extension-specific signer assumptions.
+
+For resource-heavy ports, inventory every ROM, WASM side file, avatar, image,
+font, media file, and JSON fetch. Bundle immutable bytes into the single-file
+artifact when that is the product shape; otherwise route them through
+`resource.bytes` / `resource.bytesMany`. If the old dependency cannot run
+without direct browser fetch/storage/socket authority, stop and flag that
+dependency instead of wrapping it in a napplet.
+
 ## Migration Rule
 
 Replace app-owned infrastructure with the highest-level NAP that owns the user intent:
