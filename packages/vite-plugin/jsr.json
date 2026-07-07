@@ -1,10 +1,10 @@
 {
   "name": "@napplet/vite-plugin",
-  "version": "0.11.0",
+  "version": "0.11.1",
   "license": "MIT",
   "exports": "./src/index.ts",
   "imports": {
-    "@napplet/nap": "jsr:@napplet/nap@^0.27.2",
+    "@napplet/nap": "jsr:@napplet/nap@^0.27.3",
     "nostr-tools": "npm:nostr-tools@^2.23.3",
     "vite": "npm:vite@^6.3.0"
   },

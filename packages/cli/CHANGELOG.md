@@ -1,5 +1,11 @@
 # @napplet/cli
 
+## 0.1.1
+
+### Patch Changes
+
+- 954b6bb: Improve JSR score readiness with module docs and explicit public API types.
+
 ## 0.1.0
 
 ### Minor Changes

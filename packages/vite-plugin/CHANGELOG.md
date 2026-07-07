@@ -1,5 +1,11 @@
 # @napplet/vite-plugin
 
+## 0.11.1
+
+### Patch Changes
+
+- 954b6bb: Improve JSR score readiness with module docs and explicit public API types.
+
 ## 0.11.0
 
 ### Minor Changes

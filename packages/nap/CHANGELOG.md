@@ -1,5 +1,11 @@
 # @napplet/nap
 
+## 0.27.3
+
+### Patch Changes
+
+- 954b6bb: Improve JSR score readiness with module docs and explicit public API types.
+
 ## 0.27.2
 
 ### Patch Changes
