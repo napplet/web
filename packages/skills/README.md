@@ -6,6 +6,13 @@ A **napplet** is a sandboxed Nostr iframe app (NIP-5D). These skills carry the
 exact, verified API surface and protocol constraints an agent needs so that one
 well-scoped prompt produces a working, conformant napplet.
 
+The skills treat the sandbox as an authoring contract, not a suggestion:
+generated napplet code must not use direct `fetch`, XHR, WebSocket, browser
+storage, cookies, `window.nostr`, external scripts/styles/images, or direct
+relay/signing infrastructure. External bytes go through `resource`, state goes
+through `storage`, and social Nostr behavior goes through shell-owned NAPs such
+as `outbox`, `common`, `lists`, `count`, and `dm`.
+
 - **npm:** [`@napplet/skills`](https://www.npmjs.com/package/@napplet/skills)
 - **JSR:** [`@napplet/skills`](https://jsr.io/@napplet/skills)
 
@@ -17,7 +24,7 @@ well-scoped prompt produces a working, conformant napplet.
 | `design-napplet` | First — plan before code | Sandbox/loading constraints, OUTBOX-first NAP selection, package-implemented NAP inventory, hard-vs-optional requirements, **responsive layout for any viewport** (full-screen → tiny widget), the build spec to hand off. |
 | `build-napplet` | Implementation | Start from `@napplet/boilerplate`, preserve its Vite/package/script/conformance substrate, then implement calls through `@napplet/sdk` helpers while using runtime-injected `window.napplet?.domain` only for availability gates, OUTBOX-first event access, relay as an explicit low-level escape hatch, all implemented package domains (`relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `ble`, `webrtc`, `link`, `count`, `lists`, `serial`, `common`, `dm`), capability gating via domain presence, the single-file artifact rule. |
 | `port-nostr-app` | Migrating an existing Nostr app | Replace direct relay pools, `window.nostr`, local storage, direct fetch/media loads, app-owned shortcut plumbing, and app-owned signing/routing with shell-owned NAP boundaries and SDK helper imports before building. |
-| `test-napplet` | Before publishing | Protocol conformance via `napplet-conformance` (real Chromium + reference shell), interpreting failures, the runtime guard, CI wiring. |
+| `test-napplet` | Before publishing | Protocol conformance via `napplet-conformance` (real Chromium + reference shell), forbidden browser-authority scans, interpreting failures, the runtime guard, CI wiring. |
 
 Each skill is a self-contained `SKILL.md` with YAML frontmatter (`name`,
 `description`) — the format Claude Code, Cursor, and most agents consume.

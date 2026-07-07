@@ -4,11 +4,13 @@ import type { ResourceBytesItem } from './types.js';
 const posted: Array<Record<string, unknown>> = [];
 let uuidCounter = 0;
 let originalCryptoDescriptor: PropertyDescriptor | undefined;
+let originalFetchDescriptor: PropertyDescriptor | undefined;
 
 beforeEach(() => {
   posted.length = 0;
   uuidCounter = 0;
   originalCryptoDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'crypto');
+  originalFetchDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'fetch');
 
   Object.defineProperty(globalThis, 'crypto', {
     configurable: true,
@@ -37,6 +39,11 @@ afterEach(() => {
     Object.defineProperty(globalThis, 'crypto', originalCryptoDescriptor);
   } else {
     Reflect.deleteProperty(globalThis, 'crypto');
+  }
+  if (originalFetchDescriptor) {
+    Object.defineProperty(globalThis, 'fetch', originalFetchDescriptor);
+  } else {
+    Reflect.deleteProperty(globalThis, 'fetch');
   }
   Reflect.deleteProperty(globalThis, 'window');
 });
@@ -85,6 +92,25 @@ describe('@napplet/nap/resource shim', () => {
     });
 
     await expect(promise).rejects.toThrow('policy-denied: redacted');
+  });
+
+  it('decodes data URLs without browser fetch or shell messages', async () => {
+    const fetchSpy = vi.fn(() => {
+      throw new Error('fetch should not be used for data URLs');
+    });
+    Object.defineProperty(globalThis, 'fetch', {
+      configurable: true,
+      value: fetchSpy,
+    });
+
+    const { bytes } = await import('./shim.js');
+
+    const blob = await bytes('data:text/plain;base64,aGk=');
+
+    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(posted).toHaveLength(0);
+    expect(blob.type).toBe('text/plain');
+    await expect(blob.text()).resolves.toBe('hi');
   });
 
   it('posts resource.bytesMany and resolves ordered per-URL items', async () => {

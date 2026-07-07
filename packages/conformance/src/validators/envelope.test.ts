@@ -94,7 +94,7 @@ describe('validateEnvelope — outbound field checks', () => {
       notify: { type: 'notify.badge', count: 3 },
       config: { type: 'config.get', id: 'a' },
       resource: { type: 'resource.bytesMany', id: 'a', urls: ['https://x/y'] },
-      cvm: { type: 'cvm.discover', id: 'a' },
+      cvm: { type: 'cvm.registry.call', id: 'a', family: 'relatr', tool: 'search_profiles' },
       outbox: { type: 'outbox.close', id: 'a', subId: 's' },
       upload: { type: 'upload.status', id: 'a', uploadId: 'u' },
       intent: { type: 'intent.handlers', id: 'a' },
@@ -132,13 +132,13 @@ describe('validateEnvelope — no generic shell domain', () => {
 });
 
 describe('ENVELOPE_SPECS invariants', () => {
-  it('has 199 discriminants split 96 outbound / 103 inbound', () => {
+  it('has 207 discriminants split 100 outbound / 107 inbound', () => {
     const all = knownEnvelopeTypes();
-    expect(all).toHaveLength(199);
+    expect(all).toHaveLength(207);
     const out = all.filter((t) => ENVELOPE_SPECS[t].dir === 'out');
     const inbound = all.filter((t) => ENVELOPE_SPECS[t].dir === 'in');
-    expect(out).toHaveLength(96);
-    expect(inbound).toHaveLength(103);
+    expect(out).toHaveLength(100);
+    expect(inbound).toHaveLength(107);
   });
 
   it('only outbound specs declare required fields', () => {

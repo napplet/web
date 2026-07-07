@@ -13,13 +13,26 @@ import type {
   McpToolResult,
   McpResource,
   McpResourceContent,
+  JsonObject,
+  CvmRegistryQuery,
+  CvmRegistryOptions,
+  CvmRegistryCallOptions,
+  CvmRegistryEntry,
   CvmDiscoverMessage,
   CvmRequestMessage,
   CvmCloseMessage,
+  CvmRegistryListMessage,
+  CvmRegistryHasMessage,
+  CvmRegistryDescribeMessage,
+  CvmRegistryCallMessage,
   CvmDiscoverResultMessage,
   CvmRequestResultMessage,
   CvmCloseResultMessage,
   CvmEventMessage,
+  CvmRegistryListResultMessage,
+  CvmRegistryHasResultMessage,
+  CvmRegistryDescribeResultMessage,
+  CvmRegistryCallResultMessage,
 } from './types.js';
 import type { Subscription } from '@napplet/core';
 
@@ -43,6 +56,34 @@ const pendingRequest = new Map<string, {
 /** Pending close operations: correlation id -> resolver record. */
 const pendingClose = new Map<string, {
   resolve: () => void;
+  reject: (reason: Error) => void;
+  timeout: ReturnType<typeof setTimeout>;
+}>();
+
+/** Pending registry list requests. */
+const pendingRegistryList = new Map<string, {
+  resolve: (entries: CvmRegistryEntry[]) => void;
+  reject: (reason: Error) => void;
+  timeout: ReturnType<typeof setTimeout>;
+}>();
+
+/** Pending registry availability requests. */
+const pendingRegistryHas = new Map<string, {
+  resolve: (has: boolean) => void;
+  reject: (reason: Error) => void;
+  timeout: ReturnType<typeof setTimeout>;
+}>();
+
+/** Pending registry describe requests. */
+const pendingRegistryDescribe = new Map<string, {
+  resolve: (entry: CvmRegistryEntry) => void;
+  reject: (reason: Error) => void;
+  timeout: ReturnType<typeof setTimeout>;
+}>();
+
+/** Pending registry tool calls. */
+const pendingRegistryCall = new Map<string, {
+  resolve: (result: McpToolResult) => void;
   reject: (reason: Error) => void;
   timeout: ReturnType<typeof setTimeout>;
 }>();
@@ -107,6 +148,62 @@ function handleEvent(msg: CvmEventMessage): void {
   }
 }
 
+function handleRegistryListResult(msg: CvmRegistryListResultMessage): void {
+  const p = pendingRegistryList.get(msg.id);
+  if (!p) return;
+  pendingRegistryList.delete(msg.id);
+  clearTimeout(p.timeout);
+  if (msg.error !== undefined) {
+    p.reject(new Error(msg.error));
+    return;
+  }
+  p.resolve(Array.isArray(msg.entries) ? msg.entries : []);
+}
+
+function handleRegistryHasResult(msg: CvmRegistryHasResultMessage): void {
+  const p = pendingRegistryHas.get(msg.id);
+  if (!p) return;
+  pendingRegistryHas.delete(msg.id);
+  clearTimeout(p.timeout);
+  if (msg.error !== undefined) {
+    p.reject(new Error(msg.error));
+    return;
+  }
+  p.resolve(msg.has === true);
+}
+
+function handleRegistryDescribeResult(msg: CvmRegistryDescribeResultMessage): void {
+  const p = pendingRegistryDescribe.get(msg.id);
+  if (!p) return;
+  pendingRegistryDescribe.delete(msg.id);
+  clearTimeout(p.timeout);
+  if (msg.error !== undefined) {
+    p.reject(new Error(msg.error));
+    return;
+  }
+  if (msg.entry === undefined) {
+    p.reject(new Error('cvm.registry.describe.result missing entry'));
+    return;
+  }
+  p.resolve(msg.entry);
+}
+
+function handleRegistryCallResult(msg: CvmRegistryCallResultMessage): void {
+  const p = pendingRegistryCall.get(msg.id);
+  if (!p) return;
+  pendingRegistryCall.delete(msg.id);
+  clearTimeout(p.timeout);
+  if (msg.error !== undefined) {
+    p.reject(new Error(msg.error));
+    return;
+  }
+  if (msg.result === undefined) {
+    p.reject(new Error('cvm.registry.call.result missing result'));
+    return;
+  }
+  p.resolve(msg.result);
+}
+
 /**
  * Handle cvm.* messages from the shell via the central message listener.
  * Covers cvm.discover.result, cvm.request.result, cvm.close.result, and cvm.event.
@@ -120,6 +217,14 @@ export function handleCvmMessage(msg: { type: string; [key: string]: unknown }):
     handleCloseResult(msg);
   } else if (isMessageType<CvmEventMessage>(msg, 'cvm.event')) {
     handleEvent(msg);
+  } else if (isMessageType<CvmRegistryListResultMessage>(msg, 'cvm.registry.list.result')) {
+    handleRegistryListResult(msg);
+  } else if (isMessageType<CvmRegistryHasResultMessage>(msg, 'cvm.registry.has.result')) {
+    handleRegistryHasResult(msg);
+  } else if (isMessageType<CvmRegistryDescribeResultMessage>(msg, 'cvm.registry.describe.result')) {
+    handleRegistryDescribeResult(msg);
+  } else if (isMessageType<CvmRegistryCallResultMessage>(msg, 'cvm.registry.call.result')) {
+    handleRegistryCallResult(msg);
   }
 }
 
@@ -364,6 +469,128 @@ export function onEvent(
 }
 
 /**
+ * List shell-curated ContextVM registry families.
+ *
+ * @param query  Optional search/family/schema filter
+ * @returns Promise resolving to registry entries
+ */
+export function registryList(query?: CvmRegistryQuery): Promise<CvmRegistryEntry[]> {
+  const id = crypto.randomUUID();
+  return new Promise<CvmRegistryEntry[]>((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      if (pendingRegistryList.delete(id)) reject(new Error('cvm.registry.list timed out'));
+    }, REQUEST_TIMEOUT_MS);
+    pendingRegistryList.set(id, { resolve, reject, timeout });
+
+    const msg: CvmRegistryListMessage = {
+      type: 'cvm.registry.list',
+      id,
+      ...(query === undefined ? {} : { query }),
+    };
+    postToShell(msg);
+  });
+}
+
+/**
+ * Test whether the shell can call a ContextVM registry family.
+ *
+ * @param family   Registry family name
+ * @param options  Optional schema/provider constraints
+ * @returns Promise resolving to availability
+ */
+export function registryHas(
+  family: string,
+  options?: CvmRegistryOptions,
+): Promise<boolean> {
+  const id = crypto.randomUUID();
+  return new Promise<boolean>((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      if (pendingRegistryHas.delete(id)) reject(new Error('cvm.registry.has timed out'));
+    }, REQUEST_TIMEOUT_MS);
+    pendingRegistryHas.set(id, { resolve, reject, timeout });
+
+    const msg: CvmRegistryHasMessage = {
+      type: 'cvm.registry.has',
+      id,
+      family,
+      ...(options === undefined ? {} : { options }),
+    };
+    postToShell(msg);
+  });
+}
+
+/**
+ * Describe a shell-selected ContextVM registry family.
+ *
+ * @param family   Registry family name
+ * @param options  Optional schema/provider constraints
+ * @returns Promise resolving to the selected registry entry
+ */
+export function registryDescribe(
+  family: string,
+  options?: CvmRegistryOptions,
+): Promise<CvmRegistryEntry> {
+  const id = crypto.randomUUID();
+  return new Promise<CvmRegistryEntry>((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      if (pendingRegistryDescribe.delete(id)) reject(new Error('cvm.registry.describe timed out'));
+    }, REQUEST_TIMEOUT_MS);
+    pendingRegistryDescribe.set(id, { resolve, reject, timeout });
+
+    const msg: CvmRegistryDescribeMessage = {
+      type: 'cvm.registry.describe',
+      id,
+      family,
+      ...(options === undefined ? {} : { options }),
+    };
+    postToShell(msg);
+  });
+}
+
+/**
+ * Call a tool on the shell-selected provider for a ContextVM registry family.
+ *
+ * @param family   Registry family name
+ * @param tool     Tool name inside the family
+ * @param args     Optional tool arguments
+ * @param options  Optional schema/provider/cache/payment constraints
+ * @returns Promise resolving to the MCP tool result
+ */
+export function registryCall(
+  family: string,
+  tool: string,
+  args?: JsonObject,
+  options?: CvmRegistryCallOptions,
+): Promise<McpToolResult> {
+  const id = crypto.randomUUID();
+  const timeoutMs = options?.timeoutMs ?? REQUEST_TIMEOUT_MS;
+  return new Promise<McpToolResult>((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      if (pendingRegistryCall.delete(id)) reject(new Error('cvm.registry.call timed out'));
+    }, timeoutMs);
+    pendingRegistryCall.set(id, { resolve, reject, timeout });
+
+    const msg: CvmRegistryCallMessage = {
+      type: 'cvm.registry.call',
+      id,
+      family,
+      tool,
+      ...(args === undefined ? {} : { args }),
+      ...(options === undefined ? {} : { options }),
+    };
+    postToShell(msg);
+  });
+}
+
+/** Shell-curated ContextVM registry helper namespace. */
+export const registry = {
+  list: registryList,
+  has: registryHas,
+  describe: registryDescribe,
+  call: registryCall,
+};
+
+/**
  * Install the ContextVM shim. Registration-only -- ContextVM operations are
  * issued on demand, not at install time.
  *
@@ -378,9 +605,17 @@ export function installCvmShim(): () => void {
     for (const p of pendingDiscover.values()) clearTimeout(p.timeout);
     for (const p of pendingRequest.values()) clearTimeout(p.timeout);
     for (const p of pendingClose.values()) clearTimeout(p.timeout);
+    for (const p of pendingRegistryList.values()) clearTimeout(p.timeout);
+    for (const p of pendingRegistryHas.values()) clearTimeout(p.timeout);
+    for (const p of pendingRegistryDescribe.values()) clearTimeout(p.timeout);
+    for (const p of pendingRegistryCall.values()) clearTimeout(p.timeout);
     pendingDiscover.clear();
     pendingRequest.clear();
     pendingClose.clear();
+    pendingRegistryList.clear();
+    pendingRegistryHas.clear();
+    pendingRegistryDescribe.clear();
+    pendingRegistryCall.clear();
     eventHandlers.clear();
     installed = false;
   };

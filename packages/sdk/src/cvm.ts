@@ -18,6 +18,11 @@ import type {
   McpToolResult,
   McpResource,
   McpResourceContent,
+  JsonObject,
+  CvmRegistryQuery,
+  CvmRegistryOptions,
+  CvmRegistryCallOptions,
+  CvmRegistryEntry,
   OutboxEventOptions,
   OutboxEventResult,
   OutboxQueryOptions,
@@ -145,6 +150,54 @@ export const cvm = {
     callback: (server: CvmServerRef, message: McpMessage) => void,
   ): Subscription {
     return requireDomain('cvm').onEvent(callback);
+  },
+
+  /** Shell-curated ContextVM registry families. */
+  registry: {
+    /**
+     * List registry families known to the shell.
+     * @param query  Optional family/search/schema filter
+     */
+    list(query?: CvmRegistryQuery): Promise<CvmRegistryEntry[]> {
+      return requireDomain('cvm').registry.list(query);
+    },
+
+    /**
+     * Test whether the shell can call a registry family.
+     * @param family   Registry family name
+     * @param options  Optional schema/provider constraints
+     */
+    has(family: string, options?: CvmRegistryOptions): Promise<boolean> {
+      return requireDomain('cvm').registry.has(family, options);
+    },
+
+    /**
+     * Describe the shell-selected registry family entry.
+     * @param family   Registry family name
+     * @param options  Optional schema/provider constraints
+     */
+    describe(
+      family: string,
+      options?: CvmRegistryOptions,
+    ): Promise<CvmRegistryEntry> {
+      return requireDomain('cvm').registry.describe(family, options);
+    },
+
+    /**
+     * Call a tool on the shell-selected provider for a registry family.
+     * @param family   Registry family name
+     * @param tool     Tool name inside the family
+     * @param args     Tool arguments
+     * @param options  Optional schema/provider/cache/payment constraints
+     */
+    call(
+      family: string,
+      tool: string,
+      args?: JsonObject,
+      options?: CvmRegistryCallOptions,
+    ): Promise<McpToolResult> {
+      return requireDomain('cvm').registry.call(family, tool, args, options);
+    },
   },
 };
 
