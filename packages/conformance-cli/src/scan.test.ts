@@ -18,6 +18,44 @@ describe('scanForbiddenGlobals', () => {
     expect(found).toContain('globalThis.nostr');
   });
 
+  it('detects direct browser network and persistence surfaces', async () => {
+    const dir = await fixtureDir();
+    await writeFile(
+      join(dir, 'app.js'),
+      [
+        'await fetch("https://example.com/rom.gb");',
+        'new XMLHttpRequest();',
+        'new WebSocket("wss://relay.example.com");',
+        'localStorage.setItem("k", "v");',
+        'sessionStorage.getItem("k");',
+        'indexedDB.open("napplet");',
+        'document.cookie = "x=y";',
+      ].join('\n'),
+    );
+    await writeFile(
+      join(dir, 'index.html'),
+      [
+        '<img src="https://example.com/avatar.png">',
+        '<script src="https://example.com/app.js"></script>',
+        '<link rel="stylesheet" href="https://example.com/app.css">',
+      ].join('\n'),
+    );
+
+    const found = await scanForbiddenGlobals(dir);
+    expect(found).toEqual(expect.arrayContaining([
+      'fetch',
+      'XMLHttpRequest',
+      'WebSocket',
+      'localStorage',
+      'sessionStorage',
+      'indexedDB',
+      'document.cookie',
+      'external img src',
+      'external script src',
+      'external stylesheet href',
+    ]));
+  });
+
   it('returns empty for clean napplet sources', async () => {
     const dir = await fixtureDir();
     await writeFile(join(dir, 'index.html'), '<!doctype html><script type="module" src="./main.js"></script>');

@@ -11,6 +11,25 @@ Run this before `build-napplet`. Output a short spec the build step executes aga
 
 A napplet is a single self-contained `/index.html` loaded by a host **shell** into an iframe with `sandbox="allow-scripts"` (no `allow-same-origin`, opaque origin). It talks to the shell over `postMessage` using the NIP-5D JSON envelope. The shell owns identity, signing, relays, storage, and network. The napplet owns UI and logic only. Protocol is defined by canonical NIP-5D (<https://github.com/nostr-protocol/nips/pull/2303>) and the NAPs track (<https://github.com/napplet/naps>) — never invent surface; if you need something undefined, flag it.
 
+## Sandbox Authority Contract
+
+Design as if direct browser authority does not exist. A valid spec must name the
+NAP boundary for every capability:
+
+- External bytes (ROMs, WASM side files, images, avatars, media, fonts, JSON)
+  are bundled into the single-file artifact or flow through `resource`.
+- Persistence flows through `storage`; never browser storage, cookies, or a
+  local database.
+- Nostr reads and publishes flow through `outbox`, `common`, `lists`, `count`,
+  `dm`, or an explicit `relay` escape hatch.
+- External navigation flows through `link`; external media/playback policy
+  flows through `media` when the shell owns that session boundary.
+
+If the design would require `fetch`, `XMLHttpRequest`, `WebSocket`,
+`localStorage`, `sessionStorage`, IndexedDB, cookies, external scripts/styles,
+external images, direct relay pools, or app-owned signing, the design is not a
+napplet yet. Redesign it around a shipped NAP or flag the missing capability.
+
 ## Constraints that drive every design decision
 
 - **No ambient network.** `fetch`, `XMLHttpRequest`, `WebSocket`, `<img src=https://…>`, and `<link href=https://…>` are outside the napplet authority boundary. All external bytes flow through `resource.bytes(url)`. Design around request/await, not direct loads.
