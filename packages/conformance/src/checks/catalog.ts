@@ -80,10 +80,10 @@ export const CHECKS: Check[] = [
     id: 'boot/no-forbidden-globals',
     area: 'boot',
     severity: 'error',
-    title: 'Does not access forbidden globals (e.g. window.nostr)',
+    title: 'Does not access forbidden browser authority surfaces',
     run: (ctx) =>
       ctx.forbiddenGlobals.length
-        ? result.fail(`Accessed forbidden global(s): ${ctx.forbiddenGlobals.join(', ')}`, ctx.forbiddenGlobals)
+        ? result.fail(`Accessed forbidden surface(s): ${ctx.forbiddenGlobals.join(', ')}`, ctx.forbiddenGlobals)
         : result.pass(),
   },
 

@@ -109,10 +109,26 @@ describe('@napplet/nap/common shim', () => {
       ok: true,
       pubkey: 'd'.repeat(64),
       profile: { name: 'alice' },
-      relays: ['wss://relay.example'],
+      result: {
+        event: {
+          id: '0'.repeat(64),
+          pubkey: 'd'.repeat(64),
+          created_at: 1234567890,
+          kind: 0,
+          tags: [],
+          content: '{"name":"alice"}',
+          sig: 'f'.repeat(128),
+        },
+        sidecar: { relayHints: ['wss://relay.example'] },
+      },
     });
 
-    await expect(promise).resolves.toMatchObject({ ok: true, pubkey: 'd'.repeat(64), profile: { name: 'alice' } });
+    await expect(promise).resolves.toMatchObject({
+      ok: true,
+      pubkey: 'd'.repeat(64),
+      profile: { name: 'alice' },
+      result: { sidecar: { relayHints: ['wss://relay.example'] } },
+    });
   });
 
   it('posts common.follows and resolves hex pubkeys', async () => {

@@ -4,7 +4,7 @@ milestone: v0.34.0
 milestone_name: NIP-5D Runtime Injection
 status: planning
 last_updated: "2026-07-07T00:17:29+02:00"
-last_activity: 2026-07-07 - Completed quick task 260707-hrs: Align RESOURCE htree scheme
+last_activity: 2026-07-07 - Completed quick task 260707-hrs plus 2026-07-07 quick task 260706-dmu and 2026-07-06 quick tasks 260706-lst, 260706-med, 260706-cmn, 260706-cvr, and 260706-via: Align RESOURCE htree scheme, align NAP-DM result envelope unions, align NAP-LISTS result envelope fields, align NAP-MEDIA session context, align NAP-COMMON profile result, align NAP-CVM registry surface, and harden napplet skills against direct browser authority
 progress:
   total_phases: 0
   completed_phases: 0
@@ -30,8 +30,7 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 Phase: Not started (defining requirements)
 Plan: —
 Status: Defining requirements
-Last activity: 2026-07-07 - Quick task 260707-hrs completed; RESOURCE package type/docs surface now includes the NAP-RESOURCE `htree:` scheme while shell-owned Hashtree resolution remains out of scope.
-Last activity: 2026-07-06 — Quick tasks 260706-rm2, 260706-qdq, and 260706-eh0 completed; Publish to JSR now includes the `@napplet/shim` prelude export fix, napplet authoring skills are SDK-first, and NIP-5A `title`/`description` manifest tags are populated end-to-end.
+Last activity: 2026-07-07 — Quick task 260707-hrs completed, following 2026-07-07 quick task 260706-dmu and 2026-07-06 quick tasks 260706-via, 260706-rm2, 260706-qdq, 260706-eh0, 260706-cvr, 260706-cmn, 260706-med, and 260706-lst; RESOURCE package type/docs surface now includes the NAP-RESOURCE `htree:` scheme while shell-owned Hashtree resolution remains out of scope, NAP-DM result message types now enforce success-or-error unions and export `DmError` through the package type surface, napplet authoring skills were hardened against direct browser authority, are SDK-first, Publish to JSR includes the `@napplet/shim` prelude export fix, NIP-5A `title`/`description` manifest tags are populated end-to-end, CVM registry helpers now match the live NAP-CVM draft's `cvm.registry.*` request/result family, Common profile lookup now returns the NAP-defined RelayEventResult wrapper as `result?`, media session creation now forwards the NAP-defined `context?` payload, and lists add/remove results now use the NAP-defined result envelope fields.
 
 ### Quick task 260703-gz0 — COMPLETE
 
@@ -308,8 +307,14 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 | 260706-lc6 | Resolve napplet/web#119 conformance reference resource.bytes support | 2026-07-06 | 5ca864bc | [260706-lc6-resolve-napplet-web-119-conformance-refe](./quick/260706-lc6-resolve-napplet-web-119-conformance-refe/) |
 | 260706-l3j | Audit local skill scaffolding workflow so new napplets start from boilerplate | 2026-07-06 | 829b3121 | [260706-l3j-audit-local-skill-scaffolding-workflow-s](./quick/260706-l3j-audit-local-skill-scaffolding-workflow-s/) |
 | 260706-qdq | Make napplet authoring skills SDK-first | 2026-07-06 | f8ea69a7 | [260706-qdq-make-napplet-authoring-skills-sdk-first-](./quick/260706-qdq-make-napplet-authoring-skills-sdk-first-/) |
+| 260706-lst | Align NAP-LISTS add/remove result envelope fields | 2026-07-06 | 76f5c4d5 | [260706-lst-align-lists-result-fields](./quick/260706-lst-align-lists-result-fields/) |
+| 260706-med | Align NAP-MEDIA session context with context links | 2026-07-06 | fa383a7f | [260706-med-align-media-session-context](./quick/260706-med-align-media-session-context/) |
+| 260706-cmn | Align NAP-COMMON profile result with RelayEventResult | 2026-07-06 | ef8365f6 | [260706-cmn-align-common-profile-result](./quick/260706-cmn-align-common-profile-result/) |
+| 260706-cvr | Align NAP-CVM registry surface with napplet/naps PR #31 | 2026-07-06 | 0a0a7327 | [260706-cvr-align-nap-cvm-registry-surface](./quick/260706-cvr-align-nap-cvm-registry-surface/) |
 | 260706-lsr | Align napplet authoring skills with implemented package NAP domains | 2026-07-06 | 986299aa | [260706-lsr-task-ensure-napplet-skills-include-all-a](./quick/260706-lsr-task-ensure-napplet-skills-include-all-a/) |
 | 260706-psu | Resolve napplet/web#126 with @napplet/shim host prelude | 2026-07-06 | 4e726171 | [260706-psu-task-resolve-napplet-web-126-by-adding-a](./quick/260706-psu-task-resolve-napplet-web-126-by-adding-a/) |
+| 260706-dmu | Align NAP-DM result envelope unions | 2026-07-07 | ac9c32e0 | [260706-dmu-align-dm-result-envelope-unions](./quick/260706-dmu-align-dm-result-envelope-unions/) |
+| 260706-via | Harden napplet skills against direct browser network and storage APIs in sandboxed napplets | 2026-07-06 | e781e436 | [260706-via-harden-napplet-skills-against-direct-bro](./quick/260706-via-harden-napplet-skills-against-direct-bro/) |
 ## Deferred Items
 
 Items acknowledged and deferred at v0.31.0 milestone close on 2026-05-24:

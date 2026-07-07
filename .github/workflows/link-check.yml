@@ -45,6 +45,8 @@ jobs:
           node-version: 22
           cache: pnpm
 
+      - uses: denoland/setup-deno@v2
+
       - run: pnpm install --frozen-lockfile
 
       # Build workspace package deps the apps may import, then each app.

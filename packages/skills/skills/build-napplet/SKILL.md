@@ -7,6 +7,30 @@ description: Use when writing a napplet (sandboxed Nostr iframe app) - Vite setu
 
 Implements a `design-napplet` spec. A napplet is a single self-contained `/index.html` the shell loads into a `sandbox="allow-scripts"` iframe (no `allow-same-origin`); all host access is proxied over postMessage per NIP-5D. The napplet never holds keys. Protocol truth: NIP-5D (<https://github.com/nostr-protocol/nips/pull/2303>) + NAPs (<https://github.com/napplet/naps>). Never invent wire surface; flag gaps.
 
+## Sandbox Authority Contract
+
+Treat this as a pre-code gate. If the implementation plan needs any direct
+browser network, browser persistence, or external runtime asset, rewrite the
+plan before coding.
+
+- Never call `fetch`, `XMLHttpRequest`, `WebSocket`, `localStorage`,
+  `sessionStorage`, IndexedDB, `document.cookie`, `window.nostr`, or any relay
+  pool/signing API from napplet code.
+- Never load runtime bytes through external `<script src>`, `<link href>`,
+  `<img src>`, `<audio src>`, `<video src>`, CSS `url(https://...)`, dynamic
+  `import("https://...")`, or side files that the opaque-origin `srcdoc`
+  iframe must fetch.
+- ROMs, WASM companions, images, avatars, media, fonts, JSON, and other bytes
+  must be either folded into the single `/index.html` artifact at build time or
+  requested through `resource.bytes` / `resource.bytesMany` under shell policy.
+- Browser-local state must use `storage`; Nostr network reads/publishes must use
+  `outbox`, `common`, `lists`, `count`, `dm`, or a documented `relay` escape
+  hatch; external URL opening must use `link`.
+- If a dependency contains dormant forbidden references, prove they are removed,
+  tree-shaken, or replaced by NAP-backed adapters in the built output. If a
+  dependency actually needs direct fetch/storage/socket authority at runtime,
+  stop and flag it instead of shipping.
+
 Use only domains and helpers shipped by the current packages. Current package
 domains are:
 

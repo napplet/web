@@ -12,6 +12,11 @@ import type {
   MediaState,
   MediaAction,
 } from '@napplet/nap/media';
+export type {
+  MediaContextLink,
+  MediaNostrRef,
+  MediaSessionContext,
+} from '@napplet/nap/media';
 import { requireDomain } from './require-napplet.js';
 
 /**

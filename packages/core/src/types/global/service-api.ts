@@ -9,6 +9,11 @@ import type {
   McpResourceContent,
   McpTool,
   McpToolResult,
+  JsonObject,
+  CvmRegistryCallOptions,
+  CvmRegistryEntry,
+  CvmRegistryOptions,
+  CvmRegistryQuery,
 } from '../cvm.js';
 import type {
   OutboxEventOptions,
@@ -131,6 +136,42 @@ export interface CvmApi {
    * @returns A Subscription with `close()` to stop listening
    */
   onEvent(callback: (server: CvmServerRef, message: McpMessage) => void): Subscription;
+  /**
+   * Shell-curated ContextVM tool families. The shell selects providers,
+   * verifies schema hashes, applies cache/payment policy, and performs calls.
+   */
+  registry: {
+    /**
+     * List registry families known to the shell.
+     * @param query  Optional family/search/schema filter
+     */
+    list(query?: CvmRegistryQuery): Promise<CvmRegistryEntry[]>;
+    /**
+     * Test whether the shell can call a registry family.
+     * @param family   Registry family name
+     * @param options  Optional schema/provider constraints
+     */
+    has(family: string, options?: CvmRegistryOptions): Promise<boolean>;
+    /**
+     * Describe the shell-selected registry family entry.
+     * @param family   Registry family name
+     * @param options  Optional schema/provider constraints
+     */
+    describe(family: string, options?: CvmRegistryOptions): Promise<CvmRegistryEntry>;
+    /**
+     * Call a tool on the shell-selected provider for a registry family.
+     * @param family   Registry family name
+     * @param tool     Tool name inside the family
+     * @param args     Tool arguments
+     * @param options  Optional schema/provider/cache/payment constraints
+     */
+    call(
+      family: string,
+      tool: string,
+      args?: JsonObject,
+      options?: CvmRegistryCallOptions,
+    ): Promise<McpToolResult>;
+  };
 }
 
 /**
