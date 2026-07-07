@@ -27,6 +27,82 @@ function getAttr(attrs: string, name: string): string | null {
   return match ? (match[1] ?? match[2] ?? match[3] ?? '').trim() : null;
 }
 
+/** Escape a value for HTML element-text context (`&`, `<`, `>`). */
+function escapeHtmlText(value: string): string {
+  return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+/** Escape a value for a double-quoted HTML attribute context (`&`, `"`). */
+function escapeHtmlAttr(value: string): string {
+  return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+}
+
+/** Insert `snippet` right after the opening `<head>` tag, or prepend it. */
+function insertIntoHead(html: string, snippet: string): string {
+  const headRe = /<head\b[^>]*>/i;
+  if (headRe.test(html)) return html.replace(headRe, (open) => `${open}${snippet}`);
+  return `${snippet}${html}`;
+}
+
+function setHtmlTitle(html: string, title: string): string {
+  const escaped = escapeHtmlText(title);
+  // Replace the inner text of the FIRST <title>…</title> (attributes preserved).
+  const titleRe = /(<title\b[^>]*>)[\s\S]*?(<\/title>)/i;
+  if (titleRe.test(html)) return html.replace(titleRe, (_m, open, close) => `${open}${escaped}${close}`);
+  return insertIntoHead(html, `<title>${escaped}</title>`);
+}
+
+function setContentAttr(tag: string, escapedValue: string): string {
+  const contentRe = /(\bcontent\s*=\s*)(?:"[^"]*"|'[^']*'|[^\s>]+)/i;
+  if (contentRe.test(tag)) return tag.replace(contentRe, `$1"${escapedValue}"`);
+  return tag.replace(/\s*\/?>$/, ` content="${escapedValue}">`);
+}
+
+function setHtmlDescription(html: string, description: string): string {
+  const escaped = escapeHtmlAttr(description);
+  let replaced = false;
+  const result = html.replace(/<meta\b[^>]*>/gi, (tag) => {
+    if (replaced) return tag;
+    const name = getAttr(tag, 'name');
+    if (name?.toLowerCase() !== 'description') return tag;
+    replaced = true;
+    return setContentAttr(tag, escaped);
+  });
+  if (replaced) return result;
+  return insertIntoHead(html, `<meta name="description" content="${escaped}">`);
+}
+
+/**
+ * Set/override the built HTML `<title>` and/or `<meta name="description">` from
+ * the plugin's `title` / `description` options.
+ *
+ * OVERRIDE-when-set / untouched-when-absent: an option that is `undefined`
+ * leaves the corresponding author HTML unmodified. When BOTH are absent the
+ * input html is returned unchanged. Injected values are HTML-escaped for their
+ * context (title → element text; description → double-quoted attribute) so a
+ * value containing a quote or angle bracket cannot break out of the tag.
+ *
+ * These are PLAIN HTML elements, NOT `napplet-*` protocol meta tags. The napplet
+ * CLI reads them back out of the built index.html to emit NIP-5A
+ * `["title", …]` / `["description", …]` manifest tags at deploy time.
+ *
+ * @param html - the source index.html string.
+ * @param options - `title` and/or `description` values to inject.
+ * @returns the modified html (or the input unchanged when both options absent).
+ * @example
+ * applyHtmlMetadata('<head><title>Old</title></head>', { title: 'My Napp' });
+ * // → '<head><title>My Napp</title></head>'
+ */
+export function applyHtmlMetadata(
+  html: string,
+  options: { title?: string; description?: string },
+): string {
+  let result = html;
+  if (options.title !== undefined) result = setHtmlTitle(result, options.title);
+  if (options.description !== undefined) result = setHtmlDescription(result, options.description);
+  return result;
+}
+
 function stripAttrs(attrs: string, names: string[]): string {
   let cleaned = attrs;
   for (const name of names) {

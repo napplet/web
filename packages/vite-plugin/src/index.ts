@@ -23,15 +23,20 @@
 
 import type { Plugin, IndexHtmlTransformResult } from 'vite';
 import type { ManifestPluginState, Nip5aManifestOptions } from './types.js';
-import { singleFileBuildConfig } from './html.js';
+import { applyHtmlMetadata, singleFileBuildConfig } from './html.js';
 import {
   buildIndexHtmlTags,
   resolvePluginConfig,
   writeBundleManifest,
 } from './manifest.js';
+import {
+  addInferredRequirements,
+  inferRequirementsFromSource,
+  reportRequirementDiagnostics,
+} from './requirements.js';
 
 export { NAPPLET_KIND_NAMED, NAPPLET_KIND_ROOT, NAPPLET_KIND_SNAPSHOT } from './types.js';
-export type { Nip5aArtifactMode, Nip5aManifestOptions } from './types.js';
+export type { Nip5aArtifactMode, Nip5aManifestOptions, Nip5aRequiresOptions } from './types.js';
 
 /**
  * Create the NIP-5A manifest Vite plugin.
@@ -55,6 +60,8 @@ export function nip5aManifest(options: Nip5aManifestOptions): Plugin {
     artifactMode: options.artifactMode ?? 'external-assets',
     resolvedSchema: null,
     resolvedSchemaSource: null,
+    inferredRequires: new Set(),
+    reportedMissingRequires: new Set(),
   };
 
   return {
@@ -69,11 +76,28 @@ export function nip5aManifest(options: Nip5aManifestOptions): Plugin {
       await resolvePluginConfig(options, state, config);
     },
 
-    transformIndexHtml(_html: string, ctx?: { server?: unknown }): IndexHtmlTransformResult {
-      return buildIndexHtmlTags(options, state, !!ctx?.server);
+    transform(code: string, id: string) {
+      addInferredRequirements(state, inferRequirementsFromSource(code, id));
+      reportRequirementDiagnostics(options.requires, state, (message) => this.warn(message));
+      return null;
+    },
+
+    transformIndexHtml(html: string, ctx?: { server?: unknown }): IndexHtmlTransformResult {
+      const tags = buildIndexHtmlTags(options, state, !!ctx?.server);
+      // When title/description are set they must OVERRIDE any existing
+      // `<title>` / description meta — Vite tag descriptors only append, so we
+      // return the html-string transform form to rewrite the document in place.
+      if (options.title !== undefined || options.description !== undefined) {
+        return {
+          html: applyHtmlMetadata(html, { title: options.title, description: options.description }),
+          tags,
+        };
+      }
+      return tags;
     },
 
     async closeBundle() {
+      reportRequirementDiagnostics(options.requires, state, (message) => this.warn(message));
       await writeBundleManifest(options, state);
     },
   };

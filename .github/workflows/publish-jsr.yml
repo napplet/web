@@ -35,6 +35,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
+      - uses: denoland/setup-deno@v2
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -42,8 +43,10 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       # Idempotent — copies each packages/*/package.json#version into the
-      # sibling jsr.json#version. Catches the case where someone bumped
-      # package.json by hand without re-running `pnpm version-packages`.
+      # sibling JSR package config version. Most packages use jsr.json;
+      # @napplet/cli is Deno-first and publishes from deno.json. Catches
+      # the case where someone bumped package.json by hand without
+      # re-running `pnpm version-packages`.
       - name: Sync jsr.json versions
         run: node scripts/sync-jsr-versions.mjs
 
@@ -64,9 +67,10 @@ jobs:
       # we tighten public type exports later (tracked separately).
       # --allow-dirty: tolerates the sync step's jsr.json edits without
       # requiring a follow-up commit.
-      # @napplet/boilerplate (npx CLI generator) and @napplet/conformance-cli
-      # (Playwright-backed runner) are published to npm only — they have no
-      # jsr.json, so they are excluded from the JSR publish set. The pure
-      # @napplet/conformance engine still publishes to JSR.
+      # @napplet/cli publishes to JSR from deno.json only; it is intentionally
+      # excluded from npm publishing in the Publish workflow. @napplet/boilerplate
+      # (npx CLI generator) and @napplet/conformance-cli (Playwright-backed runner)
+      # are published to npm only, so they are excluded from the JSR publish set.
+      # The pure @napplet/conformance engine still publishes to JSR.
       - name: Publish to JSR (topologically ordered)
         run: pnpm -r --workspace-concurrency=1 --filter='./packages/*' --filter='!@napplet/boilerplate' --filter='!@napplet/conformance-cli' exec npx jsr publish --allow-slow-types --allow-dirty
