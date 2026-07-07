@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v0.34.0
 milestone_name: NIP-5D Runtime Injection
 status: planning
-last_updated: "2026-07-07T13:06:15+02:00"
-last_activity: 2026-07-07 - Completed quick task 260707-i3h: refreshed @napplet/cli README for installation and usage, exposed the JSR CLI subpath, and ignored local benchmark outputs.
+last_updated: "2026-07-07T14:15:28+02:00"
+last_activity: 2026-07-07 - Quick task 260707-jrh in release-fix stage: Publish workflow now installs Deno before root build so Changesets can reach the Version Packages PR step.
 progress:
   total_phases: 0
   completed_phases: 0
@@ -30,7 +30,14 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 Phase: Not started (defining requirements)
 Plan: —
 Status: Defining requirements
-Last activity: 2026-07-07 — Quick task 260707-i3h completed; `@napplet/cli` README now leads with install, quick start, command reference, signing/key management, layouts, wrapper commands, troubleshooting, and development usage; `@napplet/cli` exposes `./cli` for JSR install; root benchmark outputs are ignored.
+Last activity: 2026-07-07 — Quick task 260707-jrh in release-fix stage; `.github/workflows/publish.yml` now installs Deno before `pnpm build`, unblocking the Deno-backed `@napplet/cli` build that previously stopped Changesets before it could create the Version Packages PR.
+
+### Quick task 260707-jrh — IN RELEASE FIX
+
+- Root cause: `Publish` workflow run `28862432870` failed during `pnpm build` with `sh: 1: deno: not found` while building `@napplet/cli`, so `changesets/action` never ran and no Version Packages PR could be created after PR #140 merged.
+- Fix: added `denoland/setup-deno@v2` to `.github/workflows/publish.yml` before install/build, matching the CI and JSR workflows that already install Deno for Deno-backed package tasks.
+- Verification: YAML parse for `.github/workflows/publish.yml`; `deno --version`; `git diff --check`; `pnpm build`; `pnpm type-check`; `pnpm -r test:unit`; `pnpm dlx aislop@0.12.0 scan --json .`.
+- Remaining scope: push and merge the fix PR, confirm `Publish` creates/updates the Version Packages PR, merge that PR, then verify live npm/JSR registry state for released packages.
 
 ### Quick task 260707-i3h — COMPLETE
 
