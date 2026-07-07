@@ -1,3 +1,9 @@
+/**
+ * Napplet NAP serial shim entrypoint.
+ *
+ * @module
+ */
+
 // @napplet/nap/serial -- Runtime-mediated serial shim.
 // Correlates serial.* request/result envelopes; routes serial.event pushes to listeners.
 // The shell owns device selection, permissions, port handles, streams, and policy.

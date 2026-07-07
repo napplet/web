@@ -1,4 +1,10 @@
 /**
+ * Napplet NAP lists sdk entrypoint.
+ *
+ * @module
+ */
+
+/**
  * @napplet/nap/lists -- SDK helpers wrapping window.napplet.lists.
  */
 

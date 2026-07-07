@@ -1,4 +1,10 @@
 /**
+ * Napplet NAP identity types entrypoint.
+ *
+ * @module
+ */
+
+/**
  * @napplet/nap/identity -- Read-only user identity query types
  * for the JSON envelope wire protocol.
  *

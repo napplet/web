@@ -1,4 +1,10 @@
 /**
+ * Napplet NAP dm sdk entrypoint.
+ *
+ * @module
+ */
+
+/**
  * @napplet/nap/dm -- SDK helpers wrapping window.napplet.dm.
  *
  * These functions delegate to `window.napplet.dm.*` at call time. The shim must

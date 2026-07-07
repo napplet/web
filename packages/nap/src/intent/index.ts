@@ -1,4 +1,10 @@
 /**
+ * Napplet NAP intent domain entrypoint.
+ *
+ * @module
+ */
+
+/**
  * @napplet/nap/intent -- Archetype intent dispatcher NAP module (NAP-INTENT).
  *
  * Invoke another napplet by its archetype (role) without addressing it directly.

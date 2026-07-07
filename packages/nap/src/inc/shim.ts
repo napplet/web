@@ -1,3 +1,9 @@
+/**
+ * Napplet NAP inc shim entrypoint.
+ *
+ * @module
+ */
+
 // @napplet/nap/inc -- INC NAP shim
 // Inter-napplet communication via topic pub/sub over postMessage.
 

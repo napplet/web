@@ -9,6 +9,7 @@ const IGNORE_DIRS = new Set([
   "coverage",
 ]);
 
+/** discover napplets helper for napplet discovery. */
 export async function discoverNapplets(
   config: NappletConfig,
   options: { cwd?: string; traverse?: boolean } = {},

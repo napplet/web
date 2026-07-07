@@ -1,4 +1,10 @@
 /**
+ * Napplet NAP relay sdk entrypoint.
+ *
+ * @module
+ */
+
+/**
  * @napplet/nap/relay -- SDK helpers wrapping window.napplet.relay.
  *
  * These convenience functions delegate to `window.napplet.relay.*` at call time.

@@ -1,20 +1,24 @@
+/** CommandResult shape used by subprocess execution helpers. */
 export interface CommandResult {
   code: number;
   stdout: string;
   stderr: string;
 }
 
+/** CommandOptions shape used by subprocess execution helpers. */
 export interface CommandOptions {
   cwd?: string;
   input?: string;
 }
 
+/** CommandRunner union used by subprocess execution helpers. */
 export type CommandRunner = (
   command: string,
   args: string[],
   options?: CommandOptions,
 ) => Promise<CommandResult>;
 
+/** run command helper for subprocess execution. */
 export async function runCommand(
   command: string,
   args: string[],
@@ -50,6 +54,7 @@ async function writeInputAndCollect(
   return await child.output();
 }
 
+/** split command helper for subprocess execution. */
 export function splitCommand(command: string): { command: string; args: string[] } {
   const parts = command.trim().split(/\s+/).filter(Boolean);
   const executable = parts.shift();

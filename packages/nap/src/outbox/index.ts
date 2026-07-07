@@ -1,4 +1,10 @@
 /**
+ * Napplet NAP outbox domain entrypoint.
+ *
+ * @module
+ */
+
+/**
  * @napplet/nap/outbox -- Outbox-aware relay routing NAP module (NAP-OUTBOX).
  *
  * Outbox-model relay routing through the shell. A napplet supplies Nostr filters

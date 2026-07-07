@@ -1,5 +1,5 @@
 /**
- * @napplet/nap/common -- Common social action NAP module (NAP-COMMON).
+ * Napplet NAP common -- Common social action NAP module (NAP-COMMON).
  *
  * Shell-mediated public NIP-19 helpers, profile lookup, follows, follow/unfollow,
  * reactions, and reports. The shell owns identity, consent, event construction,
@@ -16,6 +16,7 @@
  * await commonReact(noteId, '+');
  * ```
  *
+ * @module
  * @packageDocumentation
  */
 

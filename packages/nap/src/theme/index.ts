@@ -1,5 +1,5 @@
 /**
- * @napplet/nap/theme -- Theme NAP module.
+ * Napplet NAP theme -- Theme NAP module.
  *
  * Exports typed message definitions for the theme domain, the shim installer,
  * SDK helpers, and registers the 'theme' domain with core dispatch on import.
@@ -10,6 +10,7 @@
  * import { DOMAIN, installThemeShim, themeGet } from '@napplet/nap/theme';
  * ```
  *
+ * @module
  * @packageDocumentation
  */
 

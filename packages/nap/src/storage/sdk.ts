@@ -1,4 +1,10 @@
 /**
+ * Napplet NAP storage sdk entrypoint.
+ *
+ * @module
+ */
+
+/**
  * @napplet/nap/storage -- SDK helpers wrapping window.napplet.storage.
  *
  * These convenience functions delegate to `window.napplet.storage.*` at call time.

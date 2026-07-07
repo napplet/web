@@ -1,4 +1,10 @@
 /**
+ * Napplet NAP config sdk entrypoint.
+ *
+ * @module
+ */
+
+/**
  * @napplet/nap/config -- SDK helpers wrapping window.napplet.config.
  *
  * These convenience functions delegate to `window.napplet.config.*` at call time.

@@ -1,5 +1,5 @@
 /**
- * @napplet/nap/link -- Shell-mediated link opening NAP module.
+ * Napplet NAP link -- Shell-mediated link opening NAP module.
  *
  * NAP-LINK lets a sandboxed napplet ask the shell to open an external URL for
  * user-visible navigation. It is not resource fetching: the shell owns policy,
@@ -13,6 +13,7 @@
  * const result = await linkOpen('https://example.com/post/123', { label: 'Read post' });
  * ```
  *
+ * @module
  * @packageDocumentation
  */
 

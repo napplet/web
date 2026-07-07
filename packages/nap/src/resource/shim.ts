@@ -1,3 +1,9 @@
+/**
+ * Napplet NAP resource shim entrypoint.
+ *
+ * @module
+ */
+
 // @napplet/nap/resource -- Resource NAP shim (byte-fetching primitives)
 // Single-flight cache, AbortSignal cancellation, data: scheme decoded inline (zero shell round-trip).
 

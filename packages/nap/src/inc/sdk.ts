@@ -1,4 +1,10 @@
 /**
+ * Napplet NAP inc sdk entrypoint.
+ *
+ * @module
+ */
+
+/**
  * @napplet/nap/inc -- SDK helpers wrapping window.napplet.inc.
  *
  * These convenience functions delegate to `window.napplet.inc.*` at call time.

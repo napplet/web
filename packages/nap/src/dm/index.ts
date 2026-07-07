@@ -1,5 +1,5 @@
 /**
- * @napplet/nap/dm -- Runtime-mediated direct messages module (NAP-DM).
+ * Napplet NAP dm -- Runtime-mediated direct messages module (NAP-DM).
  *
  * A napplet presents direct-message UI while the runtime owns signing,
  * encryption, relay routing, storage, key/session state, and policy. The
@@ -15,6 +15,7 @@
  * await dmSend({ recipients: ['<hex>'], content: 'hello' });
  * ```
  *
+ * @module
  * @packageDocumentation
  */
 

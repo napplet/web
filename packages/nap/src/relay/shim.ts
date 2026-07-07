@@ -1,3 +1,9 @@
+/**
+ * Napplet NAP relay shim entrypoint.
+ *
+ * @module
+ */
+
 // @napplet/nap/relay -- Relay NAP shim
 // JSON envelope wire format over postMessage to the shell.
 

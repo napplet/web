@@ -1,3 +1,9 @@
+/**
+ * Napplet NAP media shim entrypoint.
+ *
+ * @module
+ */
+
 // @napplet/nap/media -- Media NAP shim (session management + command handlers)
 // Manages media sessions, reports state/capabilities, handles shell commands and controls.
 

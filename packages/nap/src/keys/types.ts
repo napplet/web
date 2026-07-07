@@ -1,4 +1,10 @@
 /**
+ * Napplet NAP keys types entrypoint.
+ *
+ * @module
+ */
+
+/**
  * @napplet/nap/keys -- Keyboard forwarding and action keybinding message types
  * for the JSON envelope wire protocol.
  *

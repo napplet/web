@@ -1,3 +1,9 @@
+/**
+ * Napplet NAP ble shim entrypoint.
+ *
+ * @module
+ */
+
 // @napplet/nap/ble -- Runtime-mediated BLE/GATT shim.
 // Correlates ble.* request/result envelopes and routes ble.event pushes.
 

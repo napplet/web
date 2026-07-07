@@ -7,6 +7,7 @@
 
 import type {
   NostrFilter,
+  NappletGlobal,
   Subscription,
   EventTemplate,
   CvmServerRef,
@@ -46,6 +47,8 @@ import type {
 } from '@napplet/core';
 import { requireDomain } from './require-napplet.js';
 
+type SdkDomain<K extends keyof NappletGlobal> = NonNullable<NappletGlobal[K]>;
+
 /**
  * Native ContextVM bridge (NAP-CVM): MCP-over-Nostr access mediated by the shell.
  * The shell owns ContextVM transport, signing, encryption, correlation, policy,
@@ -60,7 +63,7 @@ import { requireDomain } from './require-napplet.js';
  * const result = await cvm.callTool(servers[0], tools[0].name, {});
  * ```
  */
-export const cvm = {
+export const cvm: SdkDomain<'cvm'> = {
   /**
    * Discover public ContextVM servers known to the shell.
    * @param query  Optional discovery filter
@@ -219,7 +222,7 @@ export const cvm = {
  * sub.on('event', (result) => render(result.event, result.sidecar?.relayHints));
  * ```
  */
-export const outbox = {
+export const outbox: SdkDomain<'outbox'> = {
   /**
    * Fetch one event by ID through shell-owned outbox routing.
    * @param eventId  Event id to fetch
@@ -297,7 +300,7 @@ export const outbox = {
  * if (result.status === 'complete') attach(result.url, result.nip94);
  * ```
  */
-export const upload = {
+export const upload: SdkDomain<'upload'> = {
   /**
    * Inspect upload rails and coarse runtime policy limits.
    * @returns Promise resolving to advisory upload info.
@@ -350,7 +353,7 @@ export const upload = {
  * }
  * ```
  */
-export const intent = {
+export const intent: SdkDomain<'intent'> = {
   /**
    * Invoke a napplet by archetype.
    * @param request  The intent request (archetype + action + payload + routing)
@@ -416,7 +419,7 @@ export const intent = {
  * await webrtc.send(session.id, { body: 'hello' });
  * ```
  */
-export const webrtc = {
+export const webrtc: SdkDomain<'webrtc'> = {
   /**
    * Open a runtime-owned WebRTC session.
    * @param request  Session scope and channel/protocol labels

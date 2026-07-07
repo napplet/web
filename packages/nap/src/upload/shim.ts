@@ -1,3 +1,9 @@
+/**
+ * Napplet NAP upload shim entrypoint.
+ *
+ * @module
+ */
+
 // @napplet/nap/upload -- Shell-mediated upload shim (upload / status / status push).
 // Correlates upload.* request/result envelopes; routes upload.status.changed pushes to listeners.
 // The shell owns server selection, auth signing, consent, policy, and the HTTP upload.

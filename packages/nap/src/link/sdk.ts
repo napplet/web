@@ -1,4 +1,10 @@
 /**
+ * Napplet NAP link sdk entrypoint.
+ *
+ * @module
+ */
+
+/**
  * @napplet/nap/link -- SDK helpers wrapping window.napplet.link.
  */
 

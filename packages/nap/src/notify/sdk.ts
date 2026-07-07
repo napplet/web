@@ -1,4 +1,10 @@
 /**
+ * Napplet NAP notify sdk entrypoint.
+ *
+ * @module
+ */
+
+/**
  * @napplet/nap/notify -- SDK helpers wrapping window.napplet.notify.
  *
  * These convenience functions delegate to `window.napplet.notify.*` at call time.

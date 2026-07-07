@@ -1,4 +1,10 @@
 /**
+ * Napplet NAP lists types entrypoint.
+ *
+ * @module
+ */
+
+/**
  * @napplet/nap/lists -- Runtime-mediated NIP-51 list mutation message types.
  *
  * NAP-LISTS lets a napplet ask the runtime to add or remove semantic items from

@@ -1,4 +1,10 @@
 /**
+ * Napplet NAP media sdk entrypoint.
+ *
+ * @module
+ */
+
+/**
  * @napplet/nap/media -- SDK helpers wrapping window.napplet.media.
  *
  * These convenience functions delegate to `window.napplet.media.*` at call time.

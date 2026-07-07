@@ -10,14 +10,17 @@ import type {
   SigningMethod,
 } from "./types.ts";
 
+/** NappletSigner shape used by Nostr signing helpers. */
 export interface NappletSigner {
   pubkey: string;
   sign(template: NostrEventTemplate): Promise<SignedNostrEvent>;
   close?(): Promise<void>;
 }
 
+/** LocalSigner union used by Nostr signing helpers. */
 export type LocalSigner = NappletSigner;
 
+/** NbunksecInfo shape used by Nostr signing helpers. */
 export interface NbunksecInfo {
   pubkey: string;
   localKey: string;
@@ -25,6 +28,7 @@ export interface NbunksecInfo {
   secret?: string;
 }
 
+/** detect secret format helper for Nostr signing. */
 export function detectSecretFormat(
   secret: string,
 ): "nsec" | "nbunksec" | "bunker-url" | "hex" | null {
@@ -36,6 +40,7 @@ export function detectSecretFormat(
   return null;
 }
 
+/** resolve signing method helper for Nostr signing. */
 export function resolveSigningMethod(
   config: NappletConfig,
   options: { sec?: string; promptSec?: boolean; env?: Record<string, string | undefined> } = {},
@@ -68,6 +73,7 @@ export function resolveSigningMethod(
   return { type: "none" };
 }
 
+/** create signer from secret helper for Nostr signing. */
 export async function createSignerFromSecret(secret: string): Promise<NappletSigner> {
   const format = detectSecretFormat(secret);
   if (format === "nsec" || format === "hex") return createPrivateKeySigner(secret);
@@ -78,6 +84,7 @@ export async function createSignerFromSecret(secret: string): Promise<NappletSig
   throw new Error("Signing requires nsec, nbunksec, bunker:// URL, or 64-character hex input");
 }
 
+/** create private key signer helper for Nostr signing. */
 export function createPrivateKeySigner(secret: string): LocalSigner {
   const privateKey = decodePrivateKey(secret);
   const pubkey = getPublicKey(privateKey);
@@ -103,6 +110,7 @@ export function createPrivateKeySigner(secret: string): LocalSigner {
   };
 }
 
+/** sign deploy manifest templates helper for Nostr signing. */
 export function signDeployManifestTemplates(
   manifests: readonly DeployManifestTemplate[],
   signer: NappletSigner,
@@ -115,6 +123,7 @@ export function signDeployManifestTemplates(
   );
 }
 
+/** decode private key helper for Nostr signing. */
 export function decodePrivateKey(secret: string): Uint8Array {
   const trimmed = secret.trim();
   if (/^[0-9a-fA-F]{64}$/.test(trimmed)) return hexToBytes(trimmed);
@@ -128,6 +137,7 @@ export function decodePrivateKey(secret: string): Uint8Array {
   throw new Error("Local signing requires an nsec or 64-character hex private key");
 }
 
+/** decode nbunksec helper for Nostr signing. */
 export function decodeNbunksec(value: string): NbunksecInfo {
   const bytes = decodeBech32("nbunksec", value.trim());
   const info: NbunksecInfo = {
@@ -157,6 +167,7 @@ export function decodeNbunksec(value: string): NbunksecInfo {
   return info;
 }
 
+/** create nbunksec signer helper for Nostr signing. */
 export async function createNbunksecSigner(secret: string): Promise<NappletSigner> {
   const info = decodeNbunksec(secret);
   const signer = BunkerSigner.fromBunker(
@@ -187,6 +198,7 @@ export async function createNbunksecSigner(secret: string): Promise<NappletSigne
   };
 }
 
+/** encode nbunksec helper for Nostr signing. */
 export function encodeNbunksec(info: NbunksecInfo): string {
   const parts: Uint8Array[] = [
     tlv(0, hexToBytes(info.pubkey)),

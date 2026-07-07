@@ -1,4 +1,10 @@
 /**
+ * Napplet NAP intent types entrypoint.
+ *
+ * @module
+ */
+
+/**
  * @napplet/nap/intent -- Archetype intent dispatcher message types for the JSON envelope wire protocol.
  *
  * NAP-INTENT lets a napplet invoke *another* napplet by its archetype (a shared

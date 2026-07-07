@@ -1,3 +1,9 @@
+/**
+ * Napplet NAP dm shim entrypoint.
+ *
+ * @module
+ */
+
 // @napplet/nap/dm -- Runtime-mediated direct-message shim.
 // Correlates dm.* request/result envelopes and routes dm.message pushes.
 

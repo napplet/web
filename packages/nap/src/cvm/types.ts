@@ -1,4 +1,10 @@
 /**
+ * Napplet NAP cvm types entrypoint.
+ *
+ * @module
+ */
+
+/**
  * @napplet/nap/cvm -- ContextVM bridge message types for the JSON envelope wire protocol.
  *
  * NAP-CVM gives napplets native access to ContextVM servers through the shell.

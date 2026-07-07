@@ -1,4 +1,10 @@
 /**
+ * Napplet NAP inc types entrypoint.
+ *
+ * @module
+ */
+
+/**
  * @napplet/nap/inc -- Inter-napplet communication message types for the JSON envelope wire protocol.
  *
  * Defines 14 message types for two INC modes:

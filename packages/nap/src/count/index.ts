@@ -1,5 +1,5 @@
 /**
- * @napplet/nap/count -- Runtime-mediated event counts.
+ * Napplet NAP count -- Runtime-mediated event counts.
  *
  * NAP-COUNT lets a sandboxed napplet request aggregate counts for NIP-01
  * filters while the runtime owns relay COUNT support, indexes, caches,
@@ -12,6 +12,7 @@
  * const result = await countQuery({ kinds: [7], '#e': [eventId] });
  * ```
  *
+ * @module
  * @packageDocumentation
  */
 

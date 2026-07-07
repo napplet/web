@@ -1,4 +1,10 @@
 /**
+ * Napplet NAP identity sdk entrypoint.
+ *
+ * @module
+ */
+
+/**
  * @napplet/nap/identity -- SDK helpers wrapping window.napplet.identity.
  *
  * These convenience functions delegate to `window.napplet.identity.*` at call time.

@@ -1,4 +1,10 @@
 /**
+ * Napplet NAP config types entrypoint.
+ *
+ * @module
+ */
+
+/**
  * @napplet/nap/config -- NAP-CONFIG message types for per-napplet declarative
  * configuration in the JSON envelope wire protocol.
  *

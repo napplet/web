@@ -1,3 +1,9 @@
+/**
+ * Napplet NAP count shim entrypoint.
+ *
+ * @module
+ */
+
 // @napplet/nap/count -- Runtime-mediated event count shim.
 // Correlates count.query request/result envelopes; the runtime owns counting.
 

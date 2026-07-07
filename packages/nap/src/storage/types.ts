@@ -1,4 +1,10 @@
 /**
+ * Napplet NAP storage types entrypoint.
+ *
+ * @module
+ */
+
+/**
  * @napplet/nap/storage -- Scoped storage message types for the JSON envelope wire protocol.
  *
  * Defines 8 message types for key-value storage proxied through the shell:

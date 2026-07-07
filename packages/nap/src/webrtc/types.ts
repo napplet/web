@@ -1,4 +1,10 @@
 /**
+ * Napplet NAP webrtc types entrypoint.
+ *
+ * @module
+ */
+
+/**
  * @napplet/nap/webrtc -- Runtime-mediated WebRTC message types.
  *
  * NAP-WEBRTC lets napplets request runtime-owned WebRTC data sessions while the

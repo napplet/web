@@ -1,4 +1,10 @@
 /**
+ * Napplet NAP cvm sdk entrypoint.
+ *
+ * @module
+ */
+
+/**
  * @napplet/nap/cvm -- SDK helpers wrapping window.napplet.cvm.
  *
  * These convenience functions delegate to `window.napplet.cvm.*` at call time.

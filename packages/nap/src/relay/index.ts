@@ -1,5 +1,5 @@
 /**
- * @napplet/nap/relay -- Relay NAP module.
+ * Napplet NAP relay -- Relay NAP module.
  *
  * Exports typed message definitions for the relay domain, shim installer,
  * SDK helpers, and registers the 'relay' domain with core dispatch on import.
@@ -10,6 +10,7 @@
  * import { DOMAIN, installRelayShim, relaySubscribe } from '@napplet/nap/relay';
  * ```
  *
+ * @module
  * @packageDocumentation
  */
 

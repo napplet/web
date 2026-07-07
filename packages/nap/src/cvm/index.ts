@@ -1,4 +1,10 @@
 /**
+ * Napplet NAP cvm domain entrypoint.
+ *
+ * @module
+ */
+
+/**
  * @napplet/nap/cvm -- ContextVM bridge NAP module (NAP-CVM).
  *
  * Native access to ContextVM servers through the shell. ContextVM transports

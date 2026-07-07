@@ -4,8 +4,17 @@
  * @packageDocumentation
  */
 
-import type { Subscription } from '@napplet/core';
+import type { NappletGlobal, Subscription } from '@napplet/core';
 import { requireDomain } from './require-napplet.js';
+
+type SdkDomain<K extends keyof NappletGlobal> = NonNullable<NappletGlobal[K]>;
+
+interface KeysSdk extends SdkDomain<'keys'> {
+  register(
+    action: { id: string; label: string; defaultKey?: string },
+    handler: () => void,
+  ): Promise<{ actionId: string; binding?: string; close: () => void }>;
+}
 
 /**
  * Keyboard forwarding and action keybindings: register named actions the shell
@@ -26,7 +35,7 @@ import { requireDomain } from './require-napplet.js';
  * });
  * ```
  */
-export const keys = {
+export const keys: KeysSdk = {
   /**
    * Declare a named action that the shell can bind to a key.
    * @param action  The action to register (id, label, optional defaultKey)
@@ -110,7 +119,7 @@ export const keys = {
  * const follows = await identity.getFollows();
  * ```
  */
-export const identity = {
+export const identity: SdkDomain<'identity'> = {
   /**
    * Get the user's hex-encoded public key. Always succeeds.
    * @returns Hex-encoded public key string

@@ -1,4 +1,10 @@
 /**
+ * Napplet NAP common types entrypoint.
+ *
+ * @module
+ */
+
+/**
  * @napplet/nap/common -- Common social action message types for the JSON envelope wire protocol.
  *
  * NAP-COMMON lets napplets ask the shell to perform common Nostr social tasks:

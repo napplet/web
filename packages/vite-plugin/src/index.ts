@@ -1,5 +1,5 @@
 /**
- * @napplet/vite-plugin — napplet manifest generation plugin for Vite.
+ * Napplet Vite plugin for manifest generation.
  *
  * - transformIndexHtml: injects napplet-type (+ optional requires / config-schema)
  *   meta tags. No aggregate-hash meta — a file cannot contain a hash that covers
@@ -19,6 +19,8 @@
  * sibling modules (`types.ts`, `hashing.ts`, `config-schema.ts`, `html.ts`,
  * `manifest.ts`); this module orchestrates them into the Vite `Plugin` and
  * re-exports the stable public API.
+ *
+ * @module
  */
 
 import type { Plugin, IndexHtmlTransformResult } from 'vite';

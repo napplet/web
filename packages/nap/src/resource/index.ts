@@ -1,4 +1,10 @@
 /**
+ * Napplet NAP resource domain entrypoint.
+ *
+ * @module
+ */
+
+/**
  * @napplet/nap/resource -- Resource NAP module.
  *
  * Browser-enforced byte-fetching primitive. Napplets request bytes by URL,

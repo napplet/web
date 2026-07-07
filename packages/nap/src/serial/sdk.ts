@@ -1,4 +1,10 @@
 /**
+ * Napplet NAP serial sdk entrypoint.
+ *
+ * @module
+ */
+
+/**
  * @napplet/nap/serial -- SDK helpers wrapping window.napplet.serial.
  *
  * These convenience functions delegate to `window.napplet.serial.*` at call time.

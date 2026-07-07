@@ -1,3 +1,9 @@
+/**
+ * Napplet NAP webrtc shim entrypoint.
+ *
+ * @module
+ */
+
 // @napplet/nap/webrtc -- Runtime-mediated WebRTC shim.
 // Correlates webrtc.* request/result envelopes and routes webrtc.event pushes.
 

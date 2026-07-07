@@ -1,3 +1,9 @@
+/**
+ * Napplet NAP lists shim entrypoint.
+ *
+ * @module
+ */
+
 // @napplet/nap/lists -- Runtime-mediated NIP-51 list mutation shim.
 // Correlates lists.* request/result envelopes. The runtime owns mutation logic.
 

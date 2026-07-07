@@ -1,4 +1,10 @@
 /**
+ * Napplet NAP upload types entrypoint.
+ *
+ * @module
+ */
+
+/**
  * @napplet/nap/upload -- Shell-mediated file/blob upload message types for the JSON envelope wire protocol.
  *
  * NAP-UPLOAD lets a napplet hand the shell raw bytes plus a description of the

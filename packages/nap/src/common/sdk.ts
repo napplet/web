@@ -1,4 +1,10 @@
 /**
+ * Napplet NAP common sdk entrypoint.
+ *
+ * @module
+ */
+
+/**
  * @napplet/nap/common -- SDK helpers wrapping window.napplet.common.
  *
  * These convenience functions delegate to `window.napplet.common.*` at call time.

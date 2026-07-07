@@ -1,5 +1,5 @@
 /**
- * @napplet/nap/inc -- INC NAP module.
+ * Napplet NAP inc -- INC NAP module.
  *
  * Exports typed message definitions for the inc domain, shim installer,
  * SDK helpers, and registers the 'inc' domain with core dispatch on import.
@@ -10,6 +10,7 @@
  * import { DOMAIN, installIncShim, incEmit, incOn } from '@napplet/nap/inc';
  * ```
  *
+ * @module
  * @packageDocumentation
  */
 

@@ -1,7 +1,14 @@
+/**
+ * Explicit-domain runtime prelude helpers for shell-managed injection.
+ *
+ * @module
+ */
+
 import { NAP_DOMAINS } from '@napplet/core';
 import type { NapDomain, NappletGlobal } from '@napplet/core';
 import { installNappletGlobal } from './runtime.js';
 
+/** Options for installing a constrained `window.napplet` runtime prelude. */
 export interface NappletRuntimePreludeOptions {
   /** Explicit NAP domain allowlist the shell exposes to this napplet. */
   domains: readonly NapDomain[];
@@ -74,5 +81,6 @@ export function renderNappletRuntimePreludeScript(options: NappletRuntimePrelude
   return `<script>${renderNappletRuntimePreludeCall(options)}</script>`;
 }
 
-export const install = installNappletRuntimePrelude;
+/** Alias for {@link installNappletRuntimePrelude}. */
+export const install: typeof installNappletRuntimePrelude = installNappletRuntimePrelude;
 export type { NapDomain, NappletGlobal };

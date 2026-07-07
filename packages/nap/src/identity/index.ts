@@ -1,5 +1,5 @@
 /**
- * @napplet/nap/identity -- Identity NAP module.
+ * Napplet NAP identity -- Identity NAP module.
  *
  * Exports typed message definitions for the identity domain, shim installer,
  * SDK helpers, and registers the 'identity' domain with core dispatch on import.
@@ -10,6 +10,7 @@
  * import { DOMAIN, installIdentityShim, identityGetPublicKey } from '@napplet/nap/identity';
  * ```
  *
+ * @module
  * @packageDocumentation
  */
 

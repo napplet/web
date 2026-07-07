@@ -1,3 +1,9 @@
+/**
+ * Napplet NAP identity shim entrypoint.
+ *
+ * @module
+ */
+
 // @napplet/nap/identity -- Identity NAP shim (read-only user identity queries)
 // All queries are request/response pairs over postMessage to the shell.
 

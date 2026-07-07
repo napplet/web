@@ -1,4 +1,10 @@
 /**
+ * Napplet NAP webrtc domain entrypoint.
+ *
+ * @module
+ */
+
+/**
  * @napplet/nap/webrtc -- Runtime-mediated WebRTC sessions.
  *
  * Barrel export for NAP-WEBRTC. The runtime owns signaling transport,

@@ -1,4 +1,10 @@
 /**
+ * Napplet NAP ble types entrypoint.
+ *
+ * @module
+ */
+
+/**
  * @napplet/nap/ble -- Runtime-mediated BLE/GATT message types.
  *
  * NAP-BLE lets napplets work with user-approved BLE devices through opaque

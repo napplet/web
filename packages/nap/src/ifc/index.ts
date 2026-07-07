@@ -1,4 +1,10 @@
 /**
+ * Napplet NAP ifc domain entrypoint.
+ *
+ * @module
+ */
+
+/**
  * @napplet/nap/ifc -- deprecated compatibility barrel for NAP-INC.
  *
  * @deprecated Use `@napplet/nap/inc`. The canonical domain, wire messages, and

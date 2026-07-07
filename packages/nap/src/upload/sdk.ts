@@ -1,4 +1,10 @@
 /**
+ * Napplet NAP upload sdk entrypoint.
+ *
+ * @module
+ */
+
+/**
  * @napplet/nap/upload -- SDK helpers wrapping window.napplet.upload.
  *
  * These convenience functions delegate to `window.napplet.upload.*` at call time.
