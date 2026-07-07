@@ -69,7 +69,7 @@ Each domain is an independent subpath. Barrel imports bundle types + shim instal
 | inc | `@napplet/nap/inc` | `@napplet/nap/inc/types` | `@napplet/nap/inc/shim` | `@napplet/nap/inc/sdk` | Inter-napplet communication (topic pub/sub) |
 | keys | `@napplet/nap/keys` | `@napplet/nap/keys/types` | `@napplet/nap/keys/shim` | `@napplet/nap/keys/sdk` | Keyboard bindings + action registration |
 | theme | `@napplet/nap/theme` | `@napplet/nap/theme/types` | — | — | Read-only shell theme access (types-only today) |
-| media | `@napplet/nap/media` | `@napplet/nap/media/types` | `@napplet/nap/media/shim` | `@napplet/nap/media/sdk` | Ownership-aware media sessions + playback |
+| media | `@napplet/nap/media` | `@napplet/nap/media/types` | `@napplet/nap/media/shim` | `@napplet/nap/media/sdk` | Ownership-aware media sessions with context links + playback |
 | notify | `@napplet/nap/notify` | `@napplet/nap/notify/types` | `@napplet/nap/notify/shim` | `@napplet/nap/notify/sdk` | Shell-rendered notifications |
 | identity | `@napplet/nap/identity` | `@napplet/nap/identity/types` | `@napplet/nap/identity/shim` | `@napplet/nap/identity/sdk` | Read-only user queries (pubkey, metadata) |
 | config | `@napplet/nap/config` | `@napplet/nap/config/types` | `@napplet/nap/config/shim` | `@napplet/nap/config/sdk` | Declarative per-napplet config (schema-driven) |

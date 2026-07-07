@@ -29,20 +29,22 @@ export type { MediaPlaybackOwner };
  * Source reference for shell-owned playback, or advisory source metadata for
  * napplet-owned playback.
  */
+export interface MediaNostrRef {
+  /** Event id containing or referencing media. */
+  eventId?: string;
+  /** Address coordinate containing or referencing media. */
+  address?: string;
+  /** Relay hints for resolving the Nostr reference. */
+  relays?: string[];
+}
+
 export interface MediaSourceRef {
   /** Direct URL to media bytes. Shells fetch through shell-controlled policy. */
   url?: string;
   /** Blossom content hash reference. */
   blossomHash?: string;
   /** Nostr event/address reference. */
-  nostr?: {
-    /** Event id containing or referencing media. */
-    eventId?: string;
-    /** Address coordinate containing or referencing media. */
-    address?: string;
-    /** Relay hints for resolving the Nostr reference. */
-    relays?: string[];
-  };
+  nostr?: MediaNostrRef;
   /** Optional MIME type hint. */
   mimeType?: string;
 }
@@ -93,6 +95,34 @@ export interface MediaArtwork {
   url?: string;
   /** Blossom hash (SHA-256) the shell can resolve via its Blossom servers. */
   hash?: string;
+}
+
+/**
+ * Related resource link for a media session context.
+ */
+export interface MediaContextLink {
+  /** Lower-case relation name such as `live-chat` or `source-event`. */
+  rel: string;
+  /** Optional human-readable link title. */
+  title?: string;
+  /** Optional Nostr event or address reference. */
+  nostr?: MediaNostrRef;
+}
+
+/**
+ * Optional UI, queue, and related-resource context for a media session.
+ */
+export interface MediaSessionContext {
+  /** Short label for the session context, such as a playlist name. */
+  label?: string;
+  /** Additional detail for the session context. */
+  detail?: string;
+  /** Zero-based or shell-defined position in a list or queue. */
+  index?: number;
+  /** Total number of items in the associated list or queue. */
+  total?: number;
+  /** Related resource links for the media session. */
+  links?: MediaContextLink[];
 }
 
 /**
@@ -163,6 +193,7 @@ export interface MediaMessage extends NappletMessage {
  *   owner: 'napplet',
  *   sessionId: 's1',
  *   metadata: { title: 'My Song', artist: 'The Artist' },
+ *   context: { label: 'Queue', index: 0, total: 12 },
  * };
  * ```
  */
@@ -178,6 +209,8 @@ export interface MediaSessionCreateMessage extends MediaMessage {
   source?: MediaSourceRef;
   /** Optional initial metadata. */
   metadata?: MediaMetadata;
+  /** Optional UI, queue, or related-resource context. */
+  context?: MediaSessionContext;
   /** Initial supported actions. */
   capabilities?: MediaAction[];
   /** Request autoplay when policy allows it. */

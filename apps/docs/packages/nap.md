@@ -67,6 +67,9 @@ import { notifySend } from '@napplet/nap/notify/sdk';
 - **identity** — strictly **read-only**: it exposes the shell-user pubkey and
   public identity data but never signs, encrypts, or decrypts. Take one snapshot
   with `getPublicKey()`, then subscribe to shell-pushed `identity.changed`.
+- **media** — ownership-aware media sessions with optional context links for
+  queue position and related Nostr resources; the shell owns playback policy for
+  shell-owned sessions.
 - **ble** — runtime-mediated Bluetooth LE/GATT sessions. Napplets use
   shell-scoped sessions and byte arrays while the shell owns chooser UI,
   permissions, device handles, GATT lifecycle, notifications, and policy.
