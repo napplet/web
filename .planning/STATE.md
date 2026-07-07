@@ -4,7 +4,7 @@ milestone: v0.34.0
 milestone_name: NIP-5D Runtime Injection
 status: planning
 last_updated: "2026-07-06T23:14:12+02:00"
-last_activity: 2026-07-06 - Completed quick task 260706-cvr: Align NAP-CVM registry surface
+last_activity: 2026-07-06 - Completed quick tasks 260706-cvr and 260706-via: Align NAP-CVM registry surface and harden napplet skills against direct browser authority
 progress:
   total_phases: 0
   completed_phases: 0
@@ -30,7 +30,7 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 Phase: Not started (defining requirements)
 Plan: —
 Status: Defining requirements
-Last activity: 2026-07-06 — Quick tasks 260706-rm2, 260706-qdq, 260706-eh0, and 260706-cvr completed; Publish to JSR now includes the `@napplet/shim` prelude export fix, napplet authoring skills are SDK-first, NIP-5A `title`/`description` manifest tags are populated end-to-end, and CVM registry helpers now match the live NAP-CVM draft's `cvm.registry.*` request/result family.
+Last activity: 2026-07-06 — Quick tasks 260706-via, 260706-rm2, 260706-qdq, 260706-eh0, and 260706-cvr completed; napplet authoring skills were hardened against direct browser authority, are SDK-first, Publish to JSR includes the `@napplet/shim` prelude export fix, NIP-5A `title`/`description` manifest tags are populated end-to-end, and CVM registry helpers now match the live NAP-CVM draft's `cvm.registry.*` request/result family.
 
 ### Quick task 260703-gz0 — COMPLETE
 
@@ -309,6 +309,7 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 | 260706-cvr | Align NAP-CVM registry surface with napplet/naps PR #31 | 2026-07-06 | 0a0a7327 | [260706-cvr-align-nap-cvm-registry-surface](./quick/260706-cvr-align-nap-cvm-registry-surface/) |
 | 260706-lsr | Align napplet authoring skills with implemented package NAP domains | 2026-07-06 | 986299aa | [260706-lsr-task-ensure-napplet-skills-include-all-a](./quick/260706-lsr-task-ensure-napplet-skills-include-all-a/) |
 | 260706-psu | Resolve napplet/web#126 with @napplet/shim host prelude | 2026-07-06 | 4e726171 | [260706-psu-task-resolve-napplet-web-126-by-adding-a](./quick/260706-psu-task-resolve-napplet-web-126-by-adding-a/) |
+| 260706-via | Harden napplet skills against direct browser network and storage APIs in sandboxed napplets | 2026-07-06 | e781e436 | [260706-via-harden-napplet-skills-against-direct-bro](./quick/260706-via-harden-napplet-skills-against-direct-bro/) |
 ## Deferred Items
 
 Items acknowledged and deferred at v0.31.0 milestone close on 2026-05-24:
