@@ -16,6 +16,7 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
+      - uses: denoland/setup-deno@v2
       - run: pnpm install --frozen-lockfile
 
       # Build the engine, the CLI (incl. the browser host bundle), and deps.
