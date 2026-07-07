@@ -1,5 +1,21 @@
 # @napplet/core
 
+## 0.27.1
+
+### Patch Changes
+
+- e60f8a6: Align NAP-MEDIA session creation with the optional `context` payload and related
+  public media context types.
+- bf246df: Align `CommonProfileResult` with NAP-COMMON by returning the relay-owned
+  `RelayEventResult` wrapper as `result` instead of split `event` and `relays`
+  fields.
+- d88d674: Align NAP-DM result message types with success-or-error wire envelopes and
+  export the `DmError` schema.
+- f63f8af: Align NAP-CVM with the live registry API by adding `cvm.registry.*` wire types,
+  helpers, injected runtime surface, and conformance coverage.
+- 22d2e45: Align NAP-RESOURCE public type and docs with the canonical `htree:` resource
+  scheme.
+
 ## 0.27.0
 
 ### Minor Changes

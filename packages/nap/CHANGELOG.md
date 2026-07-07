@@ -1,5 +1,36 @@
 # @napplet/nap
 
+## 0.27.2
+
+### Patch Changes
+
+- e60f8a6: Align NAP-MEDIA session creation with the optional `context` payload and related
+  public media context types.
+- dd2b0bc: Harden napplet sandbox authoring and verification.
+
+  - `@napplet/nap` decodes `data:` resource URLs without using browser `fetch`.
+  - `@napplet/conformance-cli` flags direct browser network, storage, cookie, and external network-loaded asset surfaces in served napplet code.
+  - `@napplet/conformance` reports the broader forbidden-surface check accurately.
+  - `@napplet/skills` moves the sandbox authority contract into the top-level authoring flow so generated napplets route bytes, state, relays, signing, and links through shell-owned NAPs.
+
+- ae5eecf: Align NAP-LISTS add/remove result message types with their action-specific wire
+  count fields.
+- bf246df: Align `CommonProfileResult` with NAP-COMMON by returning the relay-owned
+  `RelayEventResult` wrapper as `result` instead of split `event` and `relays`
+  fields.
+- d88d674: Align NAP-DM result message types with success-or-error wire envelopes and
+  export the `DmError` schema.
+- f63f8af: Align NAP-CVM with the live registry API by adding `cvm.registry.*` wire types,
+  helpers, injected runtime surface, and conformance coverage.
+- 22d2e45: Align NAP-RESOURCE public type and docs with the canonical `htree:` resource
+  scheme.
+- Updated dependencies [e60f8a6]
+- Updated dependencies [bf246df]
+- Updated dependencies [d88d674]
+- Updated dependencies [f63f8af]
+- Updated dependencies [22d2e45]
+  - @napplet/core@0.27.1
+
 ## 0.27.1
 
 ### Patch Changes

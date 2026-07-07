@@ -1,5 +1,23 @@
 # @napplet/shim
 
+## 0.26.5
+
+### Patch Changes
+
+- f63f8af: Align NAP-CVM with the live registry API by adding `cvm.registry.*` wire types,
+  helpers, injected runtime surface, and conformance coverage.
+- 22d2e45: Align NAP-RESOURCE public type and docs with the canonical `htree:` resource
+  scheme.
+- Updated dependencies [e60f8a6]
+- Updated dependencies [dd2b0bc]
+- Updated dependencies [ae5eecf]
+- Updated dependencies [bf246df]
+- Updated dependencies [d88d674]
+- Updated dependencies [f63f8af]
+- Updated dependencies [22d2e45]
+  - @napplet/core@0.27.1
+  - @napplet/nap@0.27.2
+
 ## 0.26.4
 
 ### Patch Changes
