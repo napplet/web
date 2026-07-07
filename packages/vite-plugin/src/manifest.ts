@@ -6,7 +6,7 @@
  * NIP-5D kind `35129` signing, artifact rewrites, meta-tag injection).
  */
 
-import type { IndexHtmlTransformResult } from 'vite';
+import type { HtmlTagDescriptor } from 'vite';
 import type { NappletConfigSchema } from '@napplet/nap/config/types';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -15,6 +15,7 @@ import { NAPPLET_KIND_NAMED } from './types.js';
 import { computeAggregateHash, sha256File, walkDir } from './hashing.js';
 import { discoverConfigSchema, validateConfigSchema } from './config-schema.js';
 import { inlineSingleFileBuildAssets } from './html.js';
+import { resolvedRequirements } from './requirements.js';
 
 /**
  * Resolve all per-build plugin state in the `configResolved` hook: out dir,
@@ -67,8 +68,8 @@ export function buildIndexHtmlTags(
   options: Nip5aManifestOptions,
   state: ManifestPluginState,
   _isDev: boolean,
-): IndexHtmlTransformResult {
-  const tags: IndexHtmlTransformResult = [
+): HtmlTagDescriptor[] {
+  const tags: HtmlTagDescriptor[] = [
     {
       tag: 'meta',
       attrs: { name: 'napplet-type', content: options.nappletType },
@@ -76,10 +77,11 @@ export function buildIndexHtmlTags(
     },
   ];
 
-  if (options.requires && options.requires.length > 0) {
+  const requires = resolvedRequirements(options.requires, state);
+  if (requires.length > 0) {
     tags.push({
       tag: 'meta',
-      attrs: { name: 'napplet-requires', content: options.requires.join(',') },
+      attrs: { name: 'napplet-requires', content: requires.join(',') },
       injectTo: 'head' as const,
     });
   }
@@ -148,7 +150,7 @@ function buildManifestTemplate(
   const pathTags = pathPairs.map(([hash, absPath]) => ['path', absPath, hash]);
   const configTags =
     state.resolvedSchema !== null ? [['config', JSON.stringify(state.resolvedSchema)]] : [];
-  const requiresTags = (options.requires ?? []).map((name) => ['requires', name]);
+  const requiresTags = resolvedRequirements(options.requires, state).map((name) => ['requires', name]);
   // Archetype tags (NAAT, napplet/naps `ARCHETYPES.md`): one
   // `['archetype', slug, protocol, ...constraints]` per contract. Like
   // config/requires they are NOT passed to computeAggregateHash — only pathPairs
