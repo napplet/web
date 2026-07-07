@@ -168,6 +168,7 @@ export type {
   DmSubscribeRequest,
   DmSubscription,
   DmOk,
+  DmError,
   CountFilter,
   CountOptions,
   CountResult,

@@ -559,6 +559,7 @@ export type {
   DmMessagesResultMessage,
   DmNapMessage,
   DmOk,
+  DmError,
   DmOutboundMessage,
   DmPeer,
   DmSendMessage,
