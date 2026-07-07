@@ -1,6 +1,6 @@
 {
   "name": "@napplet/cli",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Deno CLI for discovering, testing, and deploying napplets",
   "type": "module",
   "files": [
