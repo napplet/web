@@ -30,7 +30,94 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 Phase: Not started (defining requirements)
 Plan: —
 Status: Defining requirements
-Last activity: 2026-07-06 - Quick task 260706-lst completed; `@napplet/nap/lists` result message types now match the NAP-LISTS action-specific add/remove wire count fields.
+Last activity: 2026-07-06 — Quick tasks 260706-rm2, 260706-qdq, and 260706-eh0 completed; Publish to JSR now includes the `@napplet/shim` prelude export fix, napplet authoring skills are SDK-first, and NIP-5A `title`/`description` manifest tags are populated end-to-end.
+
+### Quick task 260703-gz0 — COMPLETE
+
+- Added Deno setup to the JSR publish workflow before package publishing.
+- Kept `@napplet/cli` in the JSR publish filter while documenting that it publishes from `deno.json`.
+- Excluded `@napplet/cli` from the npm recursive publish script.
+- Extended `scripts/sync-jsr-versions.mjs` so Deno-first JSR package configs get their `deno.json` version synced from `package.json`.
+- Verification: JSON parse for root/CLI configs; Ruby YAML parse for `.github/workflows/publish-jsr.yml`; `deno --version`; pnpm publish filter help and package-list checks; `node scripts/sync-jsr-versions.mjs`; `npx jsr publish --dry-run --allow-slow-types --allow-dirty` in `packages/cli`; `node --check scripts/sync-jsr-versions.mjs`; `git diff --check`.
+- Commit: `6d98908c` (`Publish the Deno CLI through JSR only`).
+- Remaining scope: live GitHub Actions publish run was not triggered.
+
+### Quick task 260701-cif — COMPLETE
+
+- Fixed live PR #103 failures in `CI / ci` and `Conformance / conformance` caused by `@napplet/cli` root tasks invoking `deno task` on GitHub runners without Deno installed.
+- Added `denoland/setup-deno@v2` to `.github/workflows/ci.yml` and `.github/workflows/conformance.yml`.
+- Verification: workflow YAML parsed with Ruby; `deno --version`; `pnpm type-check`; `pnpm build`; `pnpm test`; `pnpm --filter @napplet/conformance-e2e test:e2e`; `git diff --check`.
+
+### Quick task 260701-m2r — COMPLETE
+
+- Added opt-in NAP requirement inference to `@napplet/vite-plugin` for static `@napplet/nap/<domain>` imports, SDK domain subpath imports, and direct `window.napplet.<domain>` usage.
+- Preserved legacy explicit `requires: string[]`, added object-form `{ infer, explicit, mode }`, deduped merged requirements, ignored type-only imports and dynamic property access, and added warn/error diagnostics for missing explicit declarations.
+- Updated `@napplet/cli` to preserve canonical plugin-emitted `requires` tags from `.nip5a-manifest.json` on root, named, and companion snapshot deploy templates.
+- Verification: `deno fmt packages/cli`; `deno fmt --check packages/cli`; `deno lint packages/cli`; `pnpm --filter @napplet/vite-plugin build`; `pnpm --filter @napplet/vite-plugin type-check`; `pnpm --filter @napplet/vite-plugin test:unit`; `pnpm --filter @napplet/cli build`; `pnpm --filter @napplet/cli test:unit`; `pnpm build`; `pnpm type-check`; `pnpm -r test:unit`; `pnpm dlx aislop@0.12.0 scan --json .`; `git diff --check`.
+- Commit: `69026fe6` (`Infer napplet requires from Vite source usage`).
+- Remaining scope: dynamic whole-program analysis remains out of scope; active-domain lists in vite-plugin/CLI should be kept in sync with `@napplet/core` when domains change.
+
+### Quick task 260701-lvc — COMPLETE
+
+- Added `napplet debug` for local JSON diagnostics over config, discovery, deploy-plan, manifest-template, and signing readiness state.
+- Kept the command read-only: no Blossom upload, relay publish, key-store write, or live network probe.
+- Added sanitized signing diagnostics and switched deploy JSON output to that sanitized shape so direct CI signing material is not echoed.
+- Verification: `deno fmt packages/cli`; `deno fmt --check packages/cli`; `deno lint packages/cli`; `pnpm --filter @napplet/cli build`; `pnpm --filter @napplet/cli test:unit`; `pnpm build`; `pnpm type-check`; `pnpm -r test:unit`; `pnpm dlx aislop@0.12.0 scan --json .`; `git diff --check`.
+- Commit: `09dcbeaf` (`Expose deploy diagnostics without publishing`).
+- Remaining scope: live Blossom/relay status probing, raw `bunker://` pairing, sync/delete flows, and richer progress UI are still pending.
+
+### Quick task 260701-l4f — COMPLETE
+
+- Added nsyte-compatible `nbunksec` signing for `@napplet/cli` deploy using an async signer interface shared by local and remote signers.
+- Implemented narrow local nbunksec bech32/TLV decode/encode helpers without adding a dependency, then wired decoded material to `nostr-tools/nip46` `BunkerSigner`.
+- Updated dry-run manifest signing, Blossom upload authorization signing, and network relay publish paths to await async signers and close signer sessions after deploy.
+- Documented `NAPPLET_CI_SIGNING_KEY` / `NAPPLET_CI_KEY_REFERENCE` usage and kept raw `bunker://` pairing explicitly unsupported.
+- Verification: `deno fmt packages/cli`; `deno fmt --check packages/cli`; `deno lint packages/cli`; `pnpm --filter @napplet/cli build`; `pnpm --filter @napplet/cli test:unit`; `pnpm build`; `pnpm type-check`; `pnpm -r test:unit`; `pnpm dlx aislop@0.12.0 scan --json .`; `git diff --check`.
+- Commit: `50e3872b` (`Support nbunksec CI signing in the CLI`).
+- Remaining scope: live bunker-session proof, raw `bunker://` pairing, relay/server discovery, debug/status/sync/delete flows, and richer progress UI are still pending.
+
+### Quick task 260701-kyb — COMPLETE
+
+- Added local-signer network deploy helpers that upload unique files to configured Blossom servers and publish signed root/named/snapshot manifest events to configured relays.
+- Built Blossom upload authorization events with kind `24242`, `t=upload`, `x` blob hashes, expiration, and `client=napplet`.
+- Wired non-`--dry-run` `napplet deploy` for local hex/`nsec` signers; unsupported signer modes still fail closed for network deploy.
+- Verification: `deno fmt --check packages/cli`; `deno lint packages/cli`; `pnpm --filter @napplet/cli build`; `pnpm --filter @napplet/cli test:unit`; `pnpm build`; `pnpm type-check`; `pnpm -r test:unit`; `git diff --check`; `pnpm dlx aislop@0.12.0 scan --json .`.
+- Commit: `272ff8f7` (`Enable local-signer network deploys`).
+- Remaining scope: live Blossom/relay proof, `nbunksec`/bunker signing, CI revocable-key workflows, relay/server discovery, debug/status/sync/delete flows, and richer progress UI are still pending.
+
+### Quick task 260701-kuy — COMPLETE
+
+- Changed deploy planning so `--snapshot` creates companion snapshot items for each selected root or named deploy target.
+- Added snapshot source metadata and used the local signer pubkey to generate NIP-5A snapshot `a` tags from paired source templates.
+- Extended dry-run local signing so generated snapshot templates receive signed events alongside root/named templates.
+- Verification: `deno fmt --check packages/cli`; `deno lint packages/cli`; `pnpm --filter @napplet/cli build`; `pnpm --filter @napplet/cli test:unit`; temp CLI dry-run with `--root --snapshot --sec`; `pnpm build`; `pnpm type-check`; `pnpm -r test:unit`; `git diff --check`; `pnpm dlx aislop@0.12.0 scan --json .`.
+- Commit: `c7766c7f` (`Generate signed dry-run snapshot manifests`).
+- Remaining scope: network upload/publish, `nbunksec`/bunker signing, CI revocable-key workflows, blob upload, and relay event publish are still pending.
+
+### Quick task 260701-kqi — COMPLETE
+
+- Added local signing primitives for hex and `nsec` private keys using the CLI's declared `nostr-tools` dependency.
+- Extended `napplet deploy --dry-run` to attach `signedEvent` for built root/named manifest templates when signing resolves a local secret from `--sec`, `--prompt-sec`, or the configured native key-store reference.
+- Updated CLI docs and release metadata for the new dry-run signing output.
+- Verification: `deno fmt --check packages/cli`; `deno lint packages/cli`; `pnpm --filter @napplet/cli build`; `pnpm --filter @napplet/cli test:unit`; `pnpm build`; `pnpm type-check`; `pnpm -r test:unit`; `git diff --check`; `pnpm dlx aislop@0.12.0 scan --json .`.
+- Commit: `9c2f6510` (`Sign dry-run manifests with local private keys`).
+- Remaining scope: `nbunksec`/bunker signing, CI revocable-key workflows, relay publishing, blob upload, and snapshot source-address signing are still pending.
+
+### Quick task 260701-kla — COMPLETE
+
+- Corrected CLI deploy constants to canonical NIP-5A values: root `15128`, named `35128`, snapshot `5128`.
+- Added Deno-native manifest/event-template primitives for file hashing, path-only aggregate hashing, root/named templates, and pubkey-backed snapshot templates.
+- Extended `napplet deploy --dry-run` with unsigned manifest template output; snapshot entries remain explicitly skipped until signer pubkey resolution is wired.
+- Verification: `deno fmt --check packages/cli`; `deno lint packages/cli`; `pnpm --filter @napplet/cli build`; `pnpm --filter @napplet/cli test:unit`; `pnpm build`; `pnpm type-check`; `pnpm -r test:unit`; `git diff --check`; `pnpm dlx aislop@0.12.0 scan --json .`.
+- Commit: `e0f96bd2` (`Ground deploy templates in canonical NIP-5A manifests`).
+- Follow-up flagged: `@napplet/vite-plugin` still has older NIP-5D-specific `15129/35129` manifest constants and needs a separate canonical-spec sweep.
+
+### Quick task 260701-kdm — COMPLETE
+
+- Added native key storage providers for macOS Keychain, Windows Credential Manager, and Linux Secret Service.
+- Added `napplet keys store/use/list/delete/doctor` and config support for storing only a local key reference in `.napplet`.
+- Verification: `deno fmt --check packages/cli`; `deno lint packages/cli`; `pnpm --filter @napplet/cli build`; `pnpm --filter @napplet/cli test:unit`; `pnpm build`; `pnpm type-check`; `pnpm -r test:unit`; `git diff --check`; `pnpm dlx aislop@0.12.0 scan --json .`.
+- Commit: `8b2e1e47` (`Support local signing without plaintext key files`).
 
 ### v0.34.0 roadmap
 
@@ -222,7 +309,6 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 | 260706-lst | Align NAP-LISTS add/remove result envelope fields | 2026-07-06 | 76f5c4d5 | [260706-lst-align-lists-result-fields](./quick/260706-lst-align-lists-result-fields/) |
 | 260706-lsr | Align napplet authoring skills with implemented package NAP domains | 2026-07-06 | 986299aa | [260706-lsr-task-ensure-napplet-skills-include-all-a](./quick/260706-lsr-task-ensure-napplet-skills-include-all-a/) |
 | 260706-psu | Resolve napplet/web#126 with @napplet/shim host prelude | 2026-07-06 | 4e726171 | [260706-psu-task-resolve-napplet-web-126-by-adding-a](./quick/260706-psu-task-resolve-napplet-web-126-by-adding-a/) |
-
 ## Deferred Items
 
 Items acknowledged and deferred at v0.31.0 milestone close on 2026-05-24:
@@ -317,7 +403,16 @@ Surfaced by research (informational — each belongs to a specific phase plan):
 | 260623-8j8 | implement bytesMany from updated NAP-RESOURCE | 2026-06-23 | 3bc214c | [260623-8j8-implement-bytesmany-from-updated-nap-res](./quick/260623-8j8-implement-bytesmany-from-updated-nap-res/) |
 | 260626-mt6 | Implement NAP-DM from napplet/naps PR #74 and prepare release PR with tests and changeset | 2026-06-26 | c451810 | [260626-mt6-implement-nap-dm-from-napplet-naps-74-an](./quick/260626-mt6-implement-nap-dm-from-napplet-naps-74-an/) |
 | 260626-nkv | Resolve napplet/web#91: guard relay query result events and open PR | 2026-06-26 | 9d23f6c | [260626-nkv-resolve-napplet-web-91-if-valid-guard-re](./quick/260626-nkv-resolve-napplet-web-91-if-valid-guard-re/) |
+| 260701-k68 | Scaffold @napplet/cli Deno package with init, discovery staging, deploy plan, signing mode parsing, and wrapper command surfaces | 2026-07-01 | 4bec5648 | [260701-k68-scaffold-napplet-cli-deno-package-with-i](./quick/260701-k68-scaffold-napplet-cli-deno-package-with-i/) |
 | 260702-820 | Implement NAP-COUNT from napplet/naps PR #69 using current count.query surface | 2026-07-02 | 48a89ac5 | [260702-820-implement-nap-count](./quick/260702-820-implement-nap-count/) |
+| 260703-ghg | Align napplet packages with NAP RelayEventResult sidecars and updated outbox stream lifecycle | 2026-07-03 | 2ce3e3f2 | [260703-ghg-align-napplet-packages-with-nap-relayeve](./quick/260703-ghg-align-napplet-packages-with-nap-relayeve/) |
+| 260703-guj | Ignore Playwright MCP local artifacts | 2026-07-03 | f9f34992 | [260703-guj-ignore-playwright-mcp-local-artifacts](./quick/260703-guj-ignore-playwright-mcp-local-artifacts/) |
+| 260703-gz0 | Add @napplet/cli to the JSR-only publish workflow | 2026-07-03 | 6d98908c | [260703-gz0-add-napplet-cli-to-jsr-only-publish-work](./quick/260703-gz0-add-napplet-cli-to-jsr-only-publish-work/) |
+| 260703-jrx | Finish RelayEventResult sidecar doc cleanup | 2026-07-03 | e1aceaed | [260703-jrx-finish-relayeventresult-sidecar-doc-cleanup](./quick/260703-jrx-finish-relayeventresult-sidecar-doc-cleanup/) |
+| 260703-ver | Chase NAP-OUTBOX eose removal | 2026-07-03 | 851d7ba2 | [260703-ver-chase-nap-outbox-eose-removal](./quick/260703-ver-chase-nap-outbox-eose-removal/) |
+| 260704-fb4 | Add `napplet keys connect` NIP-46 remote-signer login (nostrconnect QR + bunker:// paste race) | 2026-07-04 | fdc0f80 | [260704-fb4-napplet-keys-connect-nip-46-remote-signe](./quick/260704-fb4-napplet-keys-connect-nip-46-remote-signe/) |
+| 260706-hhx | Add Codex as an installation target for @napplet/skills skills installer | 2026-07-06 | e74946d6 | [260706-hhx-add-codex-as-an-installation-target-for-](./quick/260706-hhx-add-codex-as-an-installation-target-for-/) |
+| 260706-eh0 | Populate NIP-5A title/description manifest tags from built HTML (vite-plugin options + CLI index.html parsing) | 2026-07-06 | 838efa5 | [260706-eh0-populate-nip-5a-title-description-manife](./quick/260706-eh0-populate-nip-5a-title-description-manife/) |
 | 260706-rm2 | Fix Publish to JSR failure for @napplet/shim missing prelude.global source export | 2026-07-06 | 6cb6b6b5 | [260706-rm2-fix-publish-to-jsr-failure-for-napplet-s](./quick/260706-rm2-fix-publish-to-jsr-failure-for-napplet-s/) |
 
 Last session: 2026-04-21T20:46:00.000Z
