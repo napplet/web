@@ -1,4 +1,4 @@
-import type { NostrEvent } from './nostr.js';
+import type { NostrEvent, RelayEventResult } from './nostr.js';
 
 /** NIP-19 entity types NAP-COMMON exposes to napplets. */
 export type CommonNip19Type = 'npub' | 'note' | 'nprofile' | 'nevent' | 'naddr' | 'nrelay';
@@ -91,10 +91,8 @@ export interface CommonProfileResult {
   pubkey: CommonHexPubkey;
   /** Latest profile metadata, or null when none was found. */
   profile?: CommonProfileData | null;
-  /** Kind 0 event backing the profile data. */
-  event?: NostrEvent;
-  /** Relays used or hinted during lookup. */
-  relays?: string[];
+  /** Relay-owned kind 0 event result backing the profile data. */
+  result?: RelayEventResult;
   /** Error reason when lookup failed. */
   error?: string;
 }

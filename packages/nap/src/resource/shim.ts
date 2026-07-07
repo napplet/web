@@ -177,12 +177,74 @@ function sendCancel(id: string): void {
   postToShell(msg);
 }
 
+function isHexByte(value: string): boolean {
+  return /^[0-9a-fA-F]{2}$/.test(value);
+}
+
+function percentDecodeToBytes(value: string): Uint8Array {
+  const bytes: number[] = [];
+  const encoder = new TextEncoder();
+  for (let i = 0; i < value.length; i += 1) {
+    const char = value[i];
+    if (char === '%' && isHexByte(value.slice(i + 1, i + 3))) {
+      bytes.push(Number.parseInt(value.slice(i + 1, i + 3), 16));
+      i += 2;
+      continue;
+    }
+    bytes.push(...encoder.encode(char));
+  }
+  return new Uint8Array(bytes);
+}
+
+function percentDecodeToString(value: string): string {
+  let output = '';
+  for (let i = 0; i < value.length; i += 1) {
+    const char = value[i];
+    if (char === '%' && isHexByte(value.slice(i + 1, i + 3))) {
+      output += String.fromCharCode(Number.parseInt(value.slice(i + 1, i + 3), 16));
+      i += 2;
+      continue;
+    }
+    output += char;
+  }
+  return output;
+}
+
+function base64ToBytes(value: string): Uint8Array {
+  const decoded = atob(percentDecodeToString(value).replace(/\s/g, ''));
+  const bytes = new Uint8Array(decoded.length);
+  for (let i = 0; i < decoded.length; i += 1) {
+    bytes[i] = decoded.charCodeAt(i);
+  }
+  return bytes;
+}
+
+function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
+  const buffer = new ArrayBuffer(bytes.byteLength);
+  new Uint8Array(buffer).set(bytes);
+  return buffer;
+}
+
 /**
- * Decode a `data:` URI in-shim using the browser's native fetch parser.
+ * Decode a `data:` URI in-shim without browser network primitives.
  * Zero postMessage round-trip. Used by bytes() when the URL scheme is `data:`.
  */
 function decodeDataUrl(url: string): Promise<Blob> {
-  return fetch(url).then((r) => r.blob());
+  const comma = url.indexOf(',');
+  if (comma < 0) return Promise.reject(new Error('invalid data URL'));
+
+  const metadata = url.slice('data:'.length, comma);
+  const data = url.slice(comma + 1);
+  const parts = metadata.split(';').filter((part) => part.length > 0);
+  const isBase64 = parts.some((part) => part.toLowerCase() === 'base64');
+  const type = parts.filter((part) => part.toLowerCase() !== 'base64').join(';');
+
+  try {
+    const bytes = isBase64 ? base64ToBytes(data) : percentDecodeToBytes(data);
+    return Promise.resolve(new Blob([toArrayBuffer(bytes)], { type }));
+  } catch (error) {
+    return Promise.reject(error instanceof Error ? error : new Error('invalid data URL'));
+  }
 }
 
 /**

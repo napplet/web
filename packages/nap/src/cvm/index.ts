@@ -35,6 +35,13 @@ export type {
   CvmDiscoverQuery,
   CvmServer,
   CvmRequestOptions,
+  JsonObject,
+  JsonSchema,
+  CvmRegistryQuery,
+  CvmRegistryOptions,
+  CvmRegistryCallOptions,
+  CvmRegistryTool,
+  CvmRegistryEntry,
   CvmMessage,
   CvmDiscoverMessage,
   CvmDiscoverResultMessage,
@@ -43,6 +50,14 @@ export type {
   CvmCloseMessage,
   CvmCloseResultMessage,
   CvmEventMessage,
+  CvmRegistryListMessage,
+  CvmRegistryListResultMessage,
+  CvmRegistryHasMessage,
+  CvmRegistryHasResultMessage,
+  CvmRegistryDescribeMessage,
+  CvmRegistryDescribeResultMessage,
+  CvmRegistryCallMessage,
+  CvmRegistryCallResultMessage,
   CvmOutboundMessage,
   CvmInboundMessage,
   CvmNapMessage,
@@ -59,6 +74,11 @@ export {
   readResource,
   close,
   onEvent,
+  registryList,
+  registryHas,
+  registryDescribe,
+  registryCall,
+  registry,
 } from './shim.js';
 
 export {
@@ -70,6 +90,10 @@ export {
   cvmReadResource,
   cvmClose,
   cvmOnEvent,
+  cvmRegistryList,
+  cvmRegistryHas,
+  cvmRegistryDescribe,
+  cvmRegistryCall,
 } from './sdk.js';
 
 import { registerNap } from '@napplet/core';
