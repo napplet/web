@@ -3,7 +3,10 @@
   "version": "0.0.0",
   "description": "Deno CLI for discovering, testing, and deploying napplets",
   "license": "MIT",
-  "exports": "./src/mod.ts",
+  "exports": {
+    ".": "./src/mod.ts",
+    "./cli": "./src/cli.ts"
+  },
   "nodeModulesDir": "none",
   "imports": {
     "nostr-tools": "npm:nostr-tools@^2.23.3",
