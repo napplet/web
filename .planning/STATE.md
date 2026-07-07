@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v0.34.0
 milestone_name: NIP-5D Runtime Injection
 status: planning
-last_updated: "2026-07-07T00:17:29+02:00"
-last_activity: 2026-07-07 - Completed quick task 260707-hrs plus 2026-07-07 quick task 260706-dmu and 2026-07-06 quick tasks 260706-lst, 260706-med, 260706-cmn, 260706-cvr, and 260706-via: Align RESOURCE htree scheme, align NAP-DM result envelope unions, align NAP-LISTS result envelope fields, align NAP-MEDIA session context, align NAP-COMMON profile result, align NAP-CVM registry surface, and harden napplet skills against direct browser authority
+last_updated: "2026-07-07T13:06:15+02:00"
+last_activity: 2026-07-07 - Completed quick task 260707-i3h: refreshed @napplet/cli README for installation and usage, exposed the JSR CLI subpath, and ignored local benchmark outputs.
 progress:
   total_phases: 0
   completed_phases: 0
@@ -30,7 +30,16 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 Phase: Not started (defining requirements)
 Plan: —
 Status: Defining requirements
-Last activity: 2026-07-07 — Quick task 260707-hrs completed, following 2026-07-07 quick task 260706-dmu and 2026-07-06 quick tasks 260706-via, 260706-rm2, 260706-qdq, 260706-eh0, 260706-cvr, 260706-cmn, 260706-med, and 260706-lst; RESOURCE package type/docs surface now includes the NAP-RESOURCE `htree:` scheme while shell-owned Hashtree resolution remains out of scope, NAP-DM result message types now enforce success-or-error unions and export `DmError` through the package type surface, napplet authoring skills were hardened against direct browser authority, are SDK-first, Publish to JSR includes the `@napplet/shim` prelude export fix, NIP-5A `title`/`description` manifest tags are populated end-to-end, CVM registry helpers now match the live NAP-CVM draft's `cvm.registry.*` request/result family, Common profile lookup now returns the NAP-defined RelayEventResult wrapper as `result?`, media session creation now forwards the NAP-defined `context?` payload, and lists add/remove results now use the NAP-defined result envelope fields.
+Last activity: 2026-07-07 — Quick task 260707-i3h completed; `@napplet/cli` README now leads with install, quick start, command reference, signing/key management, layouts, wrapper commands, troubleshooting, and development usage; `@napplet/cli` exposes `./cli` for JSR install; root benchmark outputs are ignored.
+
+### Quick task 260707-i3h — COMPLETE
+
+- Rewrote `packages/cli/README.md` as user-facing install and usage documentation, removing internal package-slice framing.
+- Added `@napplet/cli` JSR export `./cli` so `deno install ... jsr:@napplet/cli/cli` is a real entrypoint.
+- Added root `benchmark.json` and `benchmark.md` to `.gitignore`; the local benchmark outputs no longer appear in status.
+- Added `.changeset/cli-readme-install.md` as a patch changeset.
+- Verification: `deno fmt --check packages/cli/deno.json`; `deno task check` and `deno task test:unit` in `packages/cli`; `deno task dev --help`; `npx jsr publish --dry-run --allow-slow-types --allow-dirty` in `packages/cli`; `git diff --check`; `pnpm dlx aislop@0.12.0 scan --json .`; `pnpm build`; `pnpm type-check`; `pnpm -r test:unit`.
+- Remaining scope: live install from JSR awaits publishing this branch.
 
 ### Quick task 260703-gz0 — COMPLETE
 

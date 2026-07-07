@@ -8,3 +8,7 @@ playwright-report/
 .playwright-mcp/
 .claude/
 .aislop/history.jsonl
+
+# Local benchmark outputs
+/benchmark.json
+/benchmark.md
