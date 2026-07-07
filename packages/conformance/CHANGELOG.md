@@ -1,5 +1,28 @@
 # @napplet/conformance
 
+## 0.12.3
+
+### Patch Changes
+
+- dd2b0bc: Harden napplet sandbox authoring and verification.
+
+  - `@napplet/nap` decodes `data:` resource URLs without using browser `fetch`.
+  - `@napplet/conformance-cli` flags direct browser network, storage, cookie, and external network-loaded asset surfaces in served napplet code.
+  - `@napplet/conformance` reports the broader forbidden-surface check accurately.
+  - `@napplet/skills` moves the sandbox authority contract into the top-level authoring flow so generated napplets route bytes, state, relays, signing, and links through shell-owned NAPs.
+
+- f63f8af: Align NAP-CVM with the live registry API by adding `cvm.registry.*` wire types,
+  helpers, injected runtime surface, and conformance coverage.
+- Updated dependencies [e60f8a6]
+- Updated dependencies [dd2b0bc]
+- Updated dependencies [ae5eecf]
+- Updated dependencies [bf246df]
+- Updated dependencies [d88d674]
+- Updated dependencies [f63f8af]
+- Updated dependencies [22d2e45]
+  - @napplet/core@0.27.1
+  - @napplet/nap@0.27.2
+
 ## 0.12.2
 
 ### Patch Changes

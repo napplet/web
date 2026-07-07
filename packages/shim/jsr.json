@@ -1,14 +1,14 @@
 {
   "name": "@napplet/shim",
-  "version": "0.26.4",
+  "version": "0.26.5",
   "license": "MIT",
   "exports": {
     ".": "./src/index.ts",
     "./prelude": "./src/prelude.ts"
   },
   "imports": {
-    "@napplet/core": "jsr:@napplet/core@^0.27.0",
-    "@napplet/nap": "jsr:@napplet/nap@^0.27.1"
+    "@napplet/core": "jsr:@napplet/core@^0.27.1",
+    "@napplet/nap": "jsr:@napplet/nap@^0.27.2"
   },
   "publish": {
     "include": [

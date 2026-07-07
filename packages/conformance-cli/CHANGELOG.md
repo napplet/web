@@ -1,5 +1,20 @@
 # @napplet/conformance-cli
 
+## 0.2.14
+
+### Patch Changes
+
+- dd2b0bc: Harden napplet sandbox authoring and verification.
+
+  - `@napplet/nap` decodes `data:` resource URLs without using browser `fetch`.
+  - `@napplet/conformance-cli` flags direct browser network, storage, cookie, and external network-loaded asset surfaces in served napplet code.
+  - `@napplet/conformance` reports the broader forbidden-surface check accurately.
+  - `@napplet/skills` moves the sandbox authority contract into the top-level authoring flow so generated napplets route bytes, state, relays, signing, and links through shell-owned NAPs.
+
+- Updated dependencies [dd2b0bc]
+- Updated dependencies [f63f8af]
+  - @napplet/conformance@0.12.3
+
 ## 0.2.13
 
 ### Patch Changes
