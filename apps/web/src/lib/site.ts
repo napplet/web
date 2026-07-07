@@ -53,6 +53,12 @@ const PACKAGE_SOURCES: ReadonlyArray<{ name: string; blurb: string; jsr: boolean
     jsr: true,
   },
   {
+    name: '@napplet/cli',
+    blurb:
+      'Deno CLI for discovering, inspecting, testing, and deploying built napplets. Publishes NIP-5A manifests to Blossom and Nostr relays.',
+    jsr: true,
+  },
+  {
     name: '@napplet/conformance',
     blurb:
       'Framework-agnostic protocol conformance engine — reference mock shell, per-NAP envelope validators, a manifest validator, and reporters. A dev/test tool, not loaded in the sandbox.',
@@ -62,6 +68,12 @@ const PACKAGE_SOURCES: ReadonlyArray<{ name: string; blurb: string; jsr: boolean
     name: '@napplet/conformance-cli',
     blurb:
       'The headless napplet-conformance runner. Drives the conformance engine against your napplet in real Chromium via Playwright — wire it up as test:conformance.',
+    jsr: false,
+  },
+  {
+    name: '@napplet/conformance-web',
+    blurb:
+      'Browser conformance runtime. Loads a napplet URL, runs the conformance engine live in the page, and powers the deployed /conformance app.',
     jsr: false,
   },
   {
