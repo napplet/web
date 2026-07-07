@@ -274,7 +274,7 @@ Sandboxed byte fetching (NAP-RESOURCE). Mirrors `window.napplet.resource`. Requi
 | `bytesMany(urls, opts?)` | `Promise<ResourceBytesItem[]>` | Fetch many URLs through one envelope. Items preserve input order and length. |
 | `bytesAsObjectURL(url)` | `{ url: string; revoke: () => void }` | Synchronous handle whose `url` resolves to a blob URL once the fetch completes. |
 
-Four canonical schemes: `data:` (in-shim), `https:` (shell-side under policy), `blossom:sha256:<hex>` (hash-verified), `nostr:<bech32>` (single-hop NIP-19).
+Canonical schemes: `data:` (in-shim), `https:` (shell-side under policy), `blossom:sha256:<hex>` (hash-verified), `htree:` (Hashtree-verified), `nostr:<bech32>` (single-hop NIP-19).
 
 Bare helper aliases are also re-exported for consumers that prefer functional imports:
 

@@ -30,10 +30,9 @@ export type {
 export const DOMAIN = 'resource' as const;
 
 /**
- * The four canonical v0.28.0 URL schemes routed through the resource NAP.
- * Future schemes plug in at the spec level (NAP-RESOURCE Phase 132 scheme registration).
+ * Canonical URL schemes currently listed by NAP-RESOURCE.
  */
-export type ResourceScheme = 'data' | 'https' | 'blossom' | 'nostr';
+export type ResourceScheme = 'data' | 'https' | 'blossom' | 'htree' | 'nostr';
 
 /**
  * Base interface for all resource NAP messages.

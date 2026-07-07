@@ -94,14 +94,17 @@ export const config = {
 /**
  * Browser-enforced byte-fetching primitive: napplets request bytes by URL,
  * shell fetches and returns a Blob. URL space is scheme-pluggable
- * (`data:`, `https:`, `blossom:`, `nostr:`).
+ * (`data:`, `https:`, `blossom:`, `htree:`, `nostr:`).
  *
  * @example
  * ```ts
  * import { resource } from '@napplet/sdk';
  *
  * const blob = await resource.bytes('https://example.com/avatar.png');
- * const items = await resource.bytesMany(['https://example.com/a.png']);
+ * const items = await resource.bytesMany([
+ *   'https://example.com/a.png',
+ *   'htree://example-root/path',
+ * ]);
  * const handle = resource.bytesAsObjectURL('blossom:abc123...');
  * imgEl.src = handle.url;
  * imgEl.onload = () => handle.revoke();

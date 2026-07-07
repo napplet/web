@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v0.34.0
 milestone_name: NIP-5D Runtime Injection
 status: planning
-last_updated: "2026-07-07T00:03:01+02:00"
-last_activity: 2026-07-07 - Completed quick task 260706-dmu plus 2026-07-06 quick tasks 260706-lst, 260706-med, 260706-cmn, 260706-cvr, and 260706-via: Align NAP-DM result envelope unions, align NAP-LISTS result envelope fields, align NAP-MEDIA session context, align NAP-COMMON profile result, align NAP-CVM registry surface, and harden napplet skills against direct browser authority
+last_updated: "2026-07-07T00:17:29+02:00"
+last_activity: 2026-07-07 - Completed quick task 260707-hrs plus 2026-07-07 quick task 260706-dmu and 2026-07-06 quick tasks 260706-lst, 260706-med, 260706-cmn, 260706-cvr, and 260706-via: Align RESOURCE htree scheme, align NAP-DM result envelope unions, align NAP-LISTS result envelope fields, align NAP-MEDIA session context, align NAP-COMMON profile result, align NAP-CVM registry surface, and harden napplet skills against direct browser authority
 progress:
   total_phases: 0
   completed_phases: 0
@@ -30,7 +30,7 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 Phase: Not started (defining requirements)
 Plan: —
 Status: Defining requirements
-Last activity: 2026-07-07 — Quick task 260706-dmu completed, following 2026-07-06 quick tasks 260706-via, 260706-rm2, 260706-qdq, 260706-eh0, 260706-cvr, 260706-cmn, 260706-med, and 260706-lst; NAP-DM result message types now enforce success-or-error unions and export `DmError` through the package type surface, napplet authoring skills were hardened against direct browser authority, are SDK-first, Publish to JSR includes the `@napplet/shim` prelude export fix, NIP-5A `title`/`description` manifest tags are populated end-to-end, CVM registry helpers now match the live NAP-CVM draft's `cvm.registry.*` request/result family, Common profile lookup now returns the NAP-defined RelayEventResult wrapper as `result?`, media session creation now forwards the NAP-defined `context?` payload, and lists add/remove results now use the NAP-defined result envelope fields.
+Last activity: 2026-07-07 — Quick task 260707-hrs completed, following 2026-07-07 quick task 260706-dmu and 2026-07-06 quick tasks 260706-via, 260706-rm2, 260706-qdq, 260706-eh0, 260706-cvr, 260706-cmn, 260706-med, and 260706-lst; RESOURCE package type/docs surface now includes the NAP-RESOURCE `htree:` scheme while shell-owned Hashtree resolution remains out of scope, NAP-DM result message types now enforce success-or-error unions and export `DmError` through the package type surface, napplet authoring skills were hardened against direct browser authority, are SDK-first, Publish to JSR includes the `@napplet/shim` prelude export fix, NIP-5A `title`/`description` manifest tags are populated end-to-end, CVM registry helpers now match the live NAP-CVM draft's `cvm.registry.*` request/result family, Common profile lookup now returns the NAP-defined RelayEventResult wrapper as `result?`, media session creation now forwards the NAP-defined `context?` payload, and lists add/remove results now use the NAP-defined result envelope fields.
 
 ### Quick task 260703-gz0 — COMPLETE
 
@@ -298,6 +298,7 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 
 | Quick ID | Task | Date | Commit | Artifacts |
 |----------|------|------|--------|-----------|
+| 260707-hrs | Align RESOURCE htree scheme | 2026-07-07 | 7ec9561f | [260707-hrs-align-resource-htree-scheme](./quick/260707-hrs-align-resource-htree-scheme/) |
 | 260703-ghg | Align napplet packages with NAP RelayEventResult sidecars and updated outbox stream lifecycle | 2026-07-03 | 2ce3e3f2 | [260703-ghg-align-napplet-packages-with-nap-relayeve](./quick/260703-ghg-align-napplet-packages-with-nap-relayeve/) |
 | 260703-guj | Ignore Playwright MCP local artifacts | 2026-07-03 | f9f34992 | [260703-guj-ignore-playwright-mcp-local-artifacts](./quick/260703-guj-ignore-playwright-mcp-local-artifacts/) |
 | 260703-jrx | Finish RelayEventResult sidecar doc cleanup | 2026-07-03 | e1aceaed | [260703-jrx-finish-relayeventresult-sidecar-doc-cleanup](./quick/260703-jrx-finish-relayeventresult-sidecar-doc-cleanup/) |

@@ -188,9 +188,10 @@ export interface NappletGlobal {
    * (and only) byte-fetching primitive available inside a napplet.
    *
    * URL space is scheme-pluggable: shells register handlers per scheme.
-   * The four canonical v0.28.0 schemes are `data:` (decoded in-shim,
-   * no round-trip), `https:` (shell-side network with policy), `blossom:`
-   * (Blossom hash → bytes), and `nostr:` (NIP-19 single-hop resolution).
+   * Canonical schemes include `data:` (decoded in-shim, no round-trip),
+   * `https:` (shell-side network with policy), `blossom:` (Blossom hash to
+   * bytes), `htree:` (Hashtree-verified bytes), and `nostr:` (NIP-19
+   * single-hop resolution).
    *
    * @example
    * ```ts
@@ -201,6 +202,7 @@ export interface NappletGlobal {
    * const items = await window.napplet.resource.bytesMany([
    *   'https://example.com/avatar.png',
    *   'blossom:sha256:abc123...',
+   *   'htree://example-root/path',
    * ]);
    *
    * // Get a managed object URL (revoke when done to free memory):

@@ -525,7 +525,7 @@ Sandboxed byte fetching. The iframe sandbox (no `allow-same-origin`) plus strict
 | `bytesMany(urls, opts?)` | `Promise<ResourceBytesItem[]>` | Fetch many URLs through one envelope. Items preserve input order and length. |
 | `bytesAsObjectURL(url)` | `{ url: string; revoke: () => void }` | Synchronous handle whose `url` resolves to a blob URL once the underlying fetch completes. Caller MUST `revoke()` when done. |
 
-Four canonical schemes: `data:` (decoded in-shim), `https:` (shell-side network with policy), `blossom:sha256:<hex>` (hash-verified), `nostr:<bech32>` (single-hop NIP-19 resolution).
+Canonical schemes: `data:` (decoded in-shim), `https:` (shell-side network with policy), `blossom:sha256:<hex>` (hash-verified), `htree:` (Hashtree-verified), `nostr:<bech32>` (single-hop NIP-19 resolution).
 
 Errors reject the Promise with one of 8 codes: `not-found`, `blocked-by-policy`, `timeout`, `too-large`, `unsupported-scheme`, `decode-failed`, `network-error`, `quota-exceeded`.
 

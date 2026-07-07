@@ -3,8 +3,8 @@
  *
  * Browser-enforced byte-fetching primitive. Napplets request bytes by URL,
  * shell fetches and returns Blobs. URL space is scheme-pluggable;
- * v0.28.0 ships `data:` (decoded in-shim, no round-trip) plus shell-side
- * `https:`, `blossom:`, `nostr:` (specced in NAP-RESOURCE Phase 132).
+ * Canonical NAP-RESOURCE schemes include `data:` (decoded in-shim, no
+ * round-trip) plus shell-side `https:`, `blossom:`, `htree:`, and `nostr:`.
  *
  * Exports typed message definitions for the resource domain, shim installer,
  * SDK helpers, and registers the 'resource' domain with core dispatch on import.
