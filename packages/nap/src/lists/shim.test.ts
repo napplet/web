@@ -108,6 +108,7 @@ describe('@napplet/nap/lists shim', () => {
       ok: true,
       eventId: 'event-1',
       added: 1,
+      removed: 99,
       skipped: 0,
     });
 
@@ -141,6 +142,38 @@ describe('@napplet/nap/lists shim', () => {
       error: 'unsupported-list',
       reason: 'kind not enabled',
       supported: [],
+    });
+  });
+
+  it('posts lists.remove and resolves removed mutation results', async () => {
+    const { remove, handleListsMessage } = await import('./shim.js');
+
+    const promise = remove(
+      { type: 'mute-list' },
+      [{ itemType: 'pubkey', value: 'abc123', visibility: 'private' }],
+    );
+    const sent = lastPosted('lists.remove');
+    expect(sent).toMatchObject({
+      id: 'lists-test-1',
+      list: { type: 'mute-list' },
+      items: [{ itemType: 'pubkey', value: 'abc123', visibility: 'private' }],
+    });
+
+    handleListsMessage({
+      type: 'lists.remove.result',
+      id: sent.id,
+      ok: true,
+      eventId: 'event-2',
+      added: 99,
+      removed: 1,
+      skipped: 0,
+    });
+
+    await expect(promise).resolves.toEqual({
+      ok: true,
+      eventId: 'event-2',
+      removed: 1,
+      skipped: 0,
     });
   });
 

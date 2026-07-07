@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v0.34.0
 milestone_name: NIP-5D Runtime Injection
 status: planning
-last_updated: "2026-07-06T23:41:08+02:00"
-last_activity: 2026-07-06 - Completed quick tasks 260706-med, 260706-cmn, 260706-cvr, and 260706-via: Align NAP-MEDIA session context, align NAP-COMMON profile result, align NAP-CVM registry surface, and harden napplet skills against direct browser authority
+last_updated: "2026-07-06T23:49:39+02:00"
+last_activity: 2026-07-06 - Completed quick tasks 260706-lst, 260706-med, 260706-cmn, 260706-cvr, and 260706-via: Align NAP-LISTS result envelope fields, align NAP-MEDIA session context, align NAP-COMMON profile result, align NAP-CVM registry surface, and harden napplet skills against direct browser authority
 progress:
   total_phases: 0
   completed_phases: 0
@@ -30,7 +30,7 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 Phase: Not started (defining requirements)
 Plan: —
 Status: Defining requirements
-Last activity: 2026-07-06 — Quick tasks 260706-via, 260706-rm2, 260706-qdq, 260706-eh0, 260706-cvr, 260706-cmn, and 260706-med completed; napplet authoring skills were hardened against direct browser authority, are SDK-first, Publish to JSR includes the `@napplet/shim` prelude export fix, NIP-5A `title`/`description` manifest tags are populated end-to-end, CVM registry helpers now match the live NAP-CVM draft's `cvm.registry.*` request/result family, Common profile lookup now returns the NAP-defined RelayEventResult wrapper as `result?`, and media session creation now forwards the NAP-defined `context?` payload.
+Last activity: 2026-07-06 — Quick tasks 260706-via, 260706-rm2, 260706-qdq, 260706-eh0, 260706-cvr, 260706-cmn, 260706-med, and 260706-lst completed; napplet authoring skills were hardened against direct browser authority, are SDK-first, Publish to JSR includes the `@napplet/shim` prelude export fix, NIP-5A `title`/`description` manifest tags are populated end-to-end, CVM registry helpers now match the live NAP-CVM draft's `cvm.registry.*` request/result family, Common profile lookup now returns the NAP-defined RelayEventResult wrapper as `result?`, media session creation now forwards the NAP-defined `context?` payload, and lists add/remove results now use the NAP-defined result envelope fields.
 
 ### Quick task 260703-gz0 — COMPLETE
 
@@ -306,6 +306,7 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 | 260706-lc6 | Resolve napplet/web#119 conformance reference resource.bytes support | 2026-07-06 | 5ca864bc | [260706-lc6-resolve-napplet-web-119-conformance-refe](./quick/260706-lc6-resolve-napplet-web-119-conformance-refe/) |
 | 260706-l3j | Audit local skill scaffolding workflow so new napplets start from boilerplate | 2026-07-06 | 829b3121 | [260706-l3j-audit-local-skill-scaffolding-workflow-s](./quick/260706-l3j-audit-local-skill-scaffolding-workflow-s/) |
 | 260706-qdq | Make napplet authoring skills SDK-first | 2026-07-06 | f8ea69a7 | [260706-qdq-make-napplet-authoring-skills-sdk-first-](./quick/260706-qdq-make-napplet-authoring-skills-sdk-first-/) |
+| 260706-lst | Align NAP-LISTS add/remove result envelope fields | 2026-07-06 | 76f5c4d5 | [260706-lst-align-lists-result-fields](./quick/260706-lst-align-lists-result-fields/) |
 | 260706-med | Align NAP-MEDIA session context with context links | 2026-07-06 | fa383a7f | [260706-med-align-media-session-context](./quick/260706-med-align-media-session-context/) |
 | 260706-cmn | Align NAP-COMMON profile result with RelayEventResult | 2026-07-06 | ef8365f6 | [260706-cmn-align-common-profile-result](./quick/260706-cmn-align-common-profile-result/) |
 | 260706-cvr | Align NAP-CVM registry surface with napplet/naps PR #31 | 2026-07-06 | 0a0a7327 | [260706-cvr-align-nap-cvm-registry-surface](./quick/260706-cvr-align-nap-cvm-registry-surface/) |
