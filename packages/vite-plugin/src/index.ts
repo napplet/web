@@ -1,26 +1,47 @@
 /**
- * Napplet Vite plugin for manifest generation.
+ * Vite plugin for napplet local development and manifest test artifacts.
  *
- * - transformIndexHtml: injects napplet-type (+ optional requires / config-schema)
- *   meta tags. No aggregate-hash meta — a file cannot contain a hash that covers
- *   itself.
- * - closeBundle (build only): walks dist/, computes per-file SHA-256 hashes,
- *   computes the NIP-5A aggregate hash, signs a NIP-5D kind 35129 napplet
- *   manifest event (NIP-5A tag schema: `path` tags + one aggregate `x` tag), and
- *   writes it to dist/.nip5a-manifest.json. The aggregate hash lives only in that
- *   external manifest, never back in index.html.
+ * Install it as a development dependency in a napplet project:
  *
- * Config:
- *   VITE_DEV_PRIVKEY_HEX — hex-encoded 32-byte private key for signing manifests.
- *   If not set, manifest generation is skipped; explicit artifact rewrites
- *   still run so local build shape matches the requested contract.
+ * ```sh
+ * pnpm add -D @napplet/vite-plugin
+ * ```
  *
- * This file is the package's public entry. Implementation is split across
- * sibling modules (`types.ts`, `hashing.ts`, `config-schema.ts`, `html.ts`,
- * `manifest.ts`); this module orchestrates them into the Vite `Plugin` and
- * re-exports the stable public API.
+ * Then add the plugin to `vite.config.ts`:
  *
- * @module
+ * ```ts
+ * import { defineConfig } from "vite";
+ * import { nip5aManifest } from "@napplet/vite-plugin";
+ *
+ * export default defineConfig({
+ *   plugins: [
+ *     nip5aManifest({
+ *       nappletType: "feed",
+ *       requires: ["outbox", "storage"],
+ *       artifactMode: "single-file",
+ *     }),
+ *   ],
+ * });
+ * ```
+ *
+ * During dev, the plugin injects napplet metadata tags so local shells can
+ * identify the napplet type and declared requirements. During build it can:
+ *
+ * - rewrite local JS/CSS assets into `index.html` for single-file artifacts
+ * - compute per-file SHA-256 hashes and the NIP-5A aggregate hash
+ * - write `.nip5a-manifest.json` containing a signed NIP-5D kind 35129 manifest
+ * - inject optional title, description, required-domain, config-schema, and
+ *   archetype metadata from plugin options
+ *
+ * Set `VITE_DEV_PRIVKEY_HEX` to a hex-encoded 32-byte private key when you want
+ * the build-time manifest signed. Without it, manifest signing is skipped while
+ * the requested artifact rewrites still run.
+ *
+ * This plugin is a local development and verification tool. Production deploy
+ * flows should use a deploy tool that publishes the built artifact and signed
+ * manifest to the target storage and relays.
+ *
+ * @packageDocumentation
  */
 
 import type { Plugin, IndexHtmlTransformResult } from 'vite';
