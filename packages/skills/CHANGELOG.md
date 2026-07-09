@@ -1,5 +1,11 @@
 # @napplet/skills
 
+## 0.2.7
+
+### Patch Changes
+
+- dc00955: Align napplet authoring guidance with the current SDK/runtime contract.
+
 ## 0.2.6
 
 ### Patch Changes
