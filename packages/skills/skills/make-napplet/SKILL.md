@@ -121,28 +121,40 @@ against it as usable API. Use an existing shipped boundary only when it
 faithfully models the task, otherwise flag the missing package/spec surface.
 
 Implementation code is SDK-first: import callable helpers from `@napplet/sdk`
-when they exist. Use direct `window.napplet?.domain` access for domain
-availability checks and fallback branching, not as the default way to call NAP
-methods. If a current package domain lacks a central SDK namespace/object, use
-the helper exports that `@napplet/sdk` re-exports (for example
-`themeGet` / `themeOnChanged`) or flag the package gap instead of inventing a
-local client.
+when they exist. Use direct `window.napplet?.domain` access for post-injection
+optional-domain fallback checks, not as the default way to call NAP methods. If
+a current package domain lacks a central SDK namespace/object, use the helper
+exports that `@napplet/sdk` re-exports (for example `themeGet` /
+`themeOnChanged`) or flag the package gap instead of inventing a local client.
+
+Current packages do not expose `window.napplet.shell`, `shell.ready()`, or
+`shell.supports(...)`. Use `@napplet/sdk` wrappers for calls and use
+`window.napplet?.domain` only as an optional-domain fallback check after runtime
+injection. Do not add a private readiness handshake or generic service probing
+layer to generated napplet code.
 
 ## Step 5 - Completion Checklist
 
 - No `window.nostr`, private keys, app-owned signing/encryption, relay pools,
   direct NIP-65 routing, `localStorage`, direct `fetch`, external scripts, or
   WebSockets in napplet code.
-- No `shell.supports`, `shell.ready`, `discoverServices`, or generic service
-  probing. Domain availability is `window.napplet?.domain`.
+- No `shell.ready()`, `shell.supports(...)`, `discoverServices`, or generic
+  service probing. Current packages expose no `window.napplet.shell` namespace.
+  Optional-domain fallback checks are `window.napplet?.domain` after runtime
+  injection.
 - Napplet implementation calls use `@napplet/sdk` helpers wherever available;
   direct `window.napplet.<domain>.*` calls appear only for true SDK gaps.
-- `outbox.query` / `outbox.subscribe` / `outbox.publish` use current option
-  fields only: `authors`, `author`, `relays`, `targetAuthors`, `limit`,
-  `timeoutMs`. No `strategy`, subscribe `live`, or `outbox.eose`.
+- Outbox calls use current option fields only:
+  `outbox.getEvent`: `author`, `relays`, `timeoutMs`;
+  `outbox.query` / `outbox.subscribe`: `authors`, `relays`, `limit`, `timeoutMs`;
+  `outbox.publish`: `relays`, `targetAuthors`.
+  No `strategy`, subscribe `live`, publish `timeoutMs`, or `outbox.eose`.
 - Every optional NAP is gated with a graceful fallback.
 - Every hard requirement is declared with a bare domain name in the manifest
   `requires` list, not `NAP-*`.
+- Do not add `keys` to `requires` when local buttons, menus, text input, or
+  click/tap controls let the napplet function without shell-managed key
+  reservation.
 - Shortcut/keybind features use `keys.register()` / `keys.onAction()` rather
   than app-owned global shortcut plumbing.
 - The final answer includes the commands/checks that passed and any live-shell

@@ -41,12 +41,18 @@ napplet yet. Redesign it around a shipped NAP or flag the missing capability.
 ## Step 1 — Pick capabilities (NAPs)
 
 Map each feature to the NAP domain that provides it. Use only domains exported
-by the current `@napplet/nap` / `@napplet/sdk` packages; gate optional behavior
-with injected domain property presence. If a NAP is not in this package
-inventory, do not design against it as usable API — flag a package/spec gap.
-Name the `@napplet/sdk` helper or namespace the build should import for each
-domain. Direct `window.napplet?.domain` checks are for availability and fallback
-design; implementation calls should use SDK helpers where they exist.
+by the current `@napplet/nap` / `@napplet/sdk` packages. Current packages do not
+expose `window.napplet.shell`, `shell.ready()`, or `shell.supports(...)`; do not
+design a private readiness handshake or generic service probe. A conforming
+runtime installs `window.napplet` before app module code runs. If a host exposes
+domains later than that, flag a runtime/package gap.
+
+Use `@napplet/sdk` wrappers for calls. Name the helper or namespace the build
+should import for each domain. Use direct `window.napplet?.domain` checks only
+as optional-domain fallback checks after runtime injection; do not make direct
+`window.napplet.<domain>.*` calls the implementation surface when SDK helpers
+exist. If a NAP is not in this package inventory, do not design against it as
+usable API — flag a package/spec gap.
 
 | Need | Implemented package NAP domain |
 | --- | --- |
@@ -95,10 +101,16 @@ Use `relay` as an escape hatch only when the feature genuinely needs relay-local
 
 ## Step 2 — Declare requirements vs. optional
 
-- **Hard requirement** → list bare NAP domain names in the vite-plugin `requires: [...]` so a shell can refuse/inform up front.
-- **Optional enhancement** → no manifest entry; guard at runtime with `if (window.napplet?.domain)` and provide a fallback.
+- **Hard requirement** → list bare NAP domain names in the vite-plugin
+  `requires: [...]` only when the napplet cannot perform its core task without
+  that domain, so a shell can refuse/inform up front.
+- **Optional enhancement** → no manifest entry; guard after runtime injection
+  with `if (window.napplet?.domain)` and provide a fallback.
 
-State which is which in the spec. Prefer optional + graceful degradation over hard requirements.
+State which is which in the spec. Prefer optional + graceful degradation over
+hard requirements. Do not add `keys` to `requires` when local buttons, menus,
+text input, click/tap controls, or other non-reserved shortcuts let the napplet
+function without shell-managed key reservation.
 
 ## Step 3 — Responsiveness is mandatory
 
@@ -117,7 +129,8 @@ Produce a short block the build step consumes:
 nappletType: <kebab d-tag, e.g. "note-feed">
 purpose: <one line>
 NAPs used: outbox (req), common (opt), identity (opt), storage (req), resource (opt)
-requires: []        # hard NAP domain requirements, usually empty
+requires: []        # hard requirements only; keep optional enhancements out
+optional domains and fallbacks: resource -> show initials when avatar fetch unavailable; keys -> use buttons/menu when shell key reservation is absent
 SDK helpers: outbox.query, outbox.subscribe, common.getProfile, storage.getItem, resource.bytes
 config schema: <fields or "none">
 layout: <tiny state> / <large state>, responsive strategy

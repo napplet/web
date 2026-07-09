@@ -19,8 +19,15 @@ otherwise list the feature as blocked/deferred.
 
 Ports should replace app-owned infrastructure with `@napplet/sdk` imports, not
 with hand-written `window.napplet.<domain>.*` clients. Keep direct
-`window.napplet?.domain` access for availability checks and graceful fallback
-paths; use SDK helper exports for actual calls whenever they exist.
+`window.napplet?.domain` access for post-injection optional-domain fallback
+checks; use SDK helper exports for actual calls whenever they exist.
+
+Current packages do not expose `window.napplet.shell`, `shell.ready()`, or
+`shell.supports(...)`. Use `@napplet/sdk` wrappers for calls and use
+`window.napplet?.domain` only as an optional-domain fallback check after runtime
+injection. If a source app needed an async service-discovery layer, remove that
+layer or flag the missing package/runtime surface instead of recreating it
+inside the napplet.
 
 ## Sandbox Authority Contract
 
@@ -64,6 +71,11 @@ Replace app-owned infrastructure with the highest-level NAP that owns the user i
 | Device/native session bridges | `ble`, `serial`, `webrtc`, or `cvm` only when the current package domain fits |
 
 If the port still contains a relay client, signer, direct storage layer, or direct network layer after this pass, assume the boundary is wrong until proven otherwise.
+
+Do not add `keys` to `requires` when local buttons, menus, text input, or
+click/tap controls let the napplet function without shell-managed key
+reservation. Treat key reservation as optional unless the port's core workflow
+cannot work without shell-owned reserved shortcuts.
 
 ## Step 1 - Inventory The Existing App
 
@@ -137,13 +149,15 @@ Search and delete or replace:
 - `new WebSocket("wss://...")`, relay pool libraries, direct NIP-65 resolvers, app-owned fanout/dedup.
 - `fetch`, `XMLHttpRequest`, direct `<img src="https://...">`, external scripts/styles.
 - `localStorage`, `sessionStorage`, IndexedDB, cookies.
-- Generic capability probes such as `discoverServices`, `hasService`, `shell.supports`.
+- Generic capability probes such as `discoverServices`, `hasService`,
+  `shell.ready()`, or `shell.supports(...)`.
 
-Capability checks are property checks:
+Optional-domain fallback checks are property checks after runtime injection; use
+SDK imports for the actual calls inside enabled branches:
 
 ```ts
-if (window.napplet?.outbox) loadFeed();
-if (!window.napplet?.common) disableSocialActions();
+if (window.napplet?.common) enableSocialActions();
+else disableSocialActions();
 ```
 
 ## Step 5 - Hand Off To Build

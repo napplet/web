@@ -79,7 +79,7 @@ Before publishing, inspect source and built output for wrong-layer code:
 | Relay routing | No app-owned NIP-65 resolver, relay pool, WebSocket relay client, or relay fanout policy |
 | Network and media bytes | No direct `fetch`, `XMLHttpRequest`, `WebSocket`, or external `<img src>`; use `resource` |
 | Persistence | No `localStorage`, `IndexedDB`, cookies, or direct filesystem state; use `storage` |
-| Capability checks | Domain property presence (`window.napplet?.outbox`), never `shell.supports` |
+| Optional-domain fallback checks | `window.napplet?.domain` after runtime injection; no `window.napplet.shell`, `shell.ready()`, `shell.supports(...)`, or generic service probing |
 
 If a direct relay use remains, prove why `outbox`, `common`, `lists`, `count`, and `dm` do not fit. Otherwise refactor before shipping.
 
@@ -102,7 +102,7 @@ tooling false positive before shipping.
 Exercise the feature against the NAP domains it declares:
 
 - Signed-out path: identity returns `""`; app degrades without publish/list/dm actions.
-- OUTBOX path: `outbox.query`, `outbox.subscribe`, and `outbox.publish` use current option fields only (`authors`, `author`, `relays`, `targetAuthors`, `limit`, `timeoutMs`). No `strategy`, subscribe `live`, or `outbox.eose`.
+- OUTBOX path: current option fields only: `outbox.getEvent` uses `author`, `relays`, `timeoutMs`; `outbox.query` / `outbox.subscribe` use `authors`, `relays`, `limit`, `timeoutMs`; `outbox.publish` uses `relays`, `targetAuthors`. No `strategy`, subscribe `live`, publish `timeoutMs`, or `outbox.eose`.
 - Optional-domain path: remove an optional domain from the mock runtime and verify fallback UI.
 - Escape hatch path: if `relay` is used, test the explicit relay-local behavior and teardown.
 
