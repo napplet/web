@@ -75,6 +75,34 @@ describe('skill registry', () => {
     expect(testSkill).toContain('grep -RInE "fetch\\\\s*\\\\(');
   });
 
+  it('keeps runtime capability guidance aligned with the current SDK contract', () => {
+    const affectedSkills = ['design-napplet', 'build-napplet', 'make-napplet', 'port-nostr-app'];
+    const packageReadme = readFileSync(new URL('../README.md', import.meta.url), 'utf8');
+
+    for (const skill of affectedSkills) {
+      const markdown = readSkill(skill);
+      const prose = markdown.replace(/\s+/g, ' ');
+      expect(prose).toContain(
+        'Current packages do not expose `window.napplet.shell`, `shell.ready()`, or `shell.supports(...)`',
+      );
+      expect(prose).toContain('Use `@napplet/sdk` wrappers for calls');
+      expect(prose).toContain('Do not add `keys` to `requires`');
+    }
+
+    const makeSkill = readSkill('make-napplet');
+    const makeProse = makeSkill.replace(/\s+/g, ' ');
+    expect(makeProse).toContain('`outbox.getEvent`: `author`, `relays`, `timeoutMs`');
+    expect(makeProse).toContain('`outbox.query` / `outbox.subscribe`: `authors`, `relays`, `limit`, `timeoutMs`');
+    expect(makeProse).toContain('`outbox.publish`: `relays`, `targetAuthors`');
+    expect(makeProse).toContain('No `strategy`, subscribe `live`, publish `timeoutMs`, or `outbox.eose`');
+
+    expect(packageReadme).toContain('window.napplet?.domain` only for optional-domain fallback checks');
+    expect(packageReadme).toContain('no `shell.ready()` / `shell.supports(...)` API');
+    expect(packageReadme).toContain('keep optional enhancements such as');
+    expect(packageReadme).not.toContain('availability gates');
+    expect(packageReadme).not.toContain('capability gating via domain presence');
+  });
+
   it('parses a description from each SKILL.md frontmatter', () => {
     for (const s of listSkills()) expect(s.description.length).toBeGreaterThan(10);
   });
