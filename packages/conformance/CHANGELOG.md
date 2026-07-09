@@ -1,5 +1,11 @@
 # @napplet/conformance
 
+## 0.12.5
+
+### Patch Changes
+
+- 35a593a: Improve the JSR-facing package overview and README content for CLI, conformance, shim, and Vite plugin packages.
+
 ## 0.12.4
 
 ### Patch Changes
