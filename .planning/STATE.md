@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v0.34.0
 milestone_name: NIP-5D Runtime Injection
 status: planning
-last_updated: "2026-07-07T15:37:18+02:00"
-last_activity: 2026-07-07 - Quick task 260707-le9 complete: JSR score readiness improved with module docs, explicit public API types, dry-runs without slow-types, and operator-only settings documented.
+last_updated: "2026-07-09T20:13:00+02:00"
+last_activity: 2026-07-09 - Quick task 260709-rwi complete: sparse JSR overview/README surfaces fixed for cli, conformance, shim, and vite-plugin.
 progress:
   total_phases: 0
   completed_phases: 0
@@ -30,7 +30,15 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 Phase: Not started (defining requirements)
 Plan: —
 Status: Defining requirements
-Last activity: 2026-07-07 — Quick task 260707-le9 complete; local JSR score blockers were reduced with module docs and explicit public API types, all publishable package dry-runs now pass without `--allow-slow-types`, and remaining gaps are JSR account/project settings.
+Last activity: 2026-07-09 — Quick task 260709-rwi complete; sparse JSR overview/README surfaces were fixed for `@napplet/cli`, `@napplet/conformance`, `@napplet/shim`, and `@napplet/vite-plugin`, with package dry-runs and repo gates green.
+
+### Quick task 260709-rwi — COMPLETE
+
+- Audited live JSR scope: `@napplet/cli`, `@napplet/conformance`, `@napplet/core`, `@napplet/nap`, `@napplet/nub`, `@napplet/sdk`, `@napplet/shim`, `@napplet/skills`, and `@napplet/vite-plugin`.
+- Fixed repo-owned sparse JSR package docs by expanding root `@packageDocumentation` for CLI, shim, and vite-plugin, plus expanding the short conformance README.
+- Added `.changeset/fresh-readmes-jump.md` so the changed shipped docs release for `@napplet/cli`, `@napplet/conformance`, `@napplet/shim`, and `@napplet/vite-plugin`.
+- Verification: JSR dry-runs without `--allow-slow-types` for all four affected packages; `pnpm check:jsr`; `pnpm type-check`; `pnpm build`; `pnpm -r test:unit`; `pnpm lint`; `git diff --check`; `aislop` full and changed-file scans.
+- Remaining scope: live JSR pages update after merge/release; `@napplet/nub` remains live on JSR but has no source package in this checkout.
 
 ### Quick task 260707-le9 — COMPLETE
 
