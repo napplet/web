@@ -68,6 +68,8 @@ const RESULT = {
   sidecar: { relayHints: ['wss://relay.example.com'] },
 };
 
+const RESOURCE_URL = 'https://example.com/a.txt';
+
 describe('@napplet/nap/outbox shim', () => {
   it('posts outbox.getEvent and resolves with the event result', async () => {
     const { getEvent, handleOutboxMessage } = await import('./shim.js');
@@ -130,6 +132,37 @@ describe('@napplet/nap/outbox shim', () => {
     await expect(promise).resolves.toEqual({
       events: [RESULT],
     });
+  });
+
+  it('hydrates resource sidecars from query results before resolving', async () => {
+    const { query, handleOutboxMessage } = await import('./shim.js');
+    const { bytes } = await import('../resource/shim.js');
+    const resourceBlob = new Blob(['from outbox'], { type: 'text/plain' });
+    const sidecarResult = {
+      event: {
+        ...EV,
+        tags: [['r', RESOURCE_URL]],
+      },
+      sidecar: {
+        resources: [{ url: RESOURCE_URL, blob: resourceBlob, mime: 'text/plain' }],
+      },
+    };
+
+    const promise = query([{ kinds: [1] }]);
+    const sent = lastPosted('outbox.query');
+    handleOutboxMessage({
+      type: 'outbox.query.result',
+      id: sent.id,
+      events: [sidecarResult],
+    });
+
+    await expect(promise).resolves.toEqual({
+      events: [sidecarResult],
+    });
+
+    const hydrated = await bytes(RESOURCE_URL);
+    await expect(hydrated.text()).resolves.toBe('from outbox');
+    expect(postedMessages.some((posted) => posted.msg?.type === 'resource.bytes')).toBe(false);
   });
 
   it('carries incomplete and inline error through query results without rejecting', async () => {
