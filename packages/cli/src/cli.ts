@@ -18,6 +18,7 @@ import { commandKeys } from "./keys-command.ts";
 import { createDeployManifestTemplates } from "./manifest.ts";
 import {
   createDeployProgressReporter,
+  type InitReport,
   isTerminalOutput,
   renderDeployReport,
   renderInitReport,
@@ -108,6 +109,12 @@ async function commandInit(argv: string[]): Promise<number> {
     console.log(renderInitReport({ path: configPath(), config: existing, created: false }));
     return 0;
   }
+  const result = await runInitFromFlags(flags);
+  console.log(renderInitReport(result));
+  return 0;
+}
+
+async function runInitFromFlags(flags: FlagBag): Promise<InitReport> {
   const seed = {
     force: flags.boolean.has("force"),
     sourceDir: first(flags.values.get("source-dir")),
@@ -152,8 +159,7 @@ async function commandInit(argv: string[]): Promise<number> {
     named: options.named,
     defaultTarget: options.defaultTarget,
   });
-  console.log(renderInitReport(result));
-  return 0;
+  return result;
 }
 
 async function commandDiscover(argv: string[]): Promise<number> {
@@ -167,7 +173,7 @@ async function commandDiscover(argv: string[]): Promise<number> {
 async function commandDeploy(argv: string[]): Promise<number> {
   const flags = collectFlags(argv);
   const jsonOutput = flags.boolean.has("json") || !isTerminalOutput();
-  const config = await loadConfig(flags);
+  const config = await loadDeployConfig(flags, jsonOutput);
   const candidates = await discoverNapplets(config, { traverse: flags.boolean.has("all") });
   const selection: Partial<DeploySelection> = {
     root: flags.boolean.has("root") ? true : undefined,
@@ -240,6 +246,43 @@ async function commandDeploy(argv: string[]): Promise<number> {
   } finally {
     await signer?.close?.();
   }
+}
+
+export interface DeployConfigLoaderOptions {
+  readConfig?: (path?: string) => Promise<NappletConfig | null>;
+  isTerminalInput?: () => boolean;
+  runInit?: (flags: FlagBag) => Promise<InitReport>;
+  printStatus?: (line: string) => void;
+  printReport?: (report: string) => void;
+}
+
+/**
+ * Resolve deploy configuration, bootstrapping through guided init for first-run terminals.
+ *
+ * @param flags Parsed CLI flags for the deploy invocation.
+ * @param jsonOutput Whether deploy output must remain machine-readable JSON.
+ * @param options Test seams for I/O and initialization.
+ * @returns The loaded or newly initialized config.
+ */
+export async function loadDeployConfig(
+  flags: FlagBag,
+  jsonOutput: boolean,
+  options: DeployConfigLoaderOptions = {},
+): Promise<NappletConfig> {
+  const path = first(flags.values.get("config"));
+  const config = await (options.readConfig ?? readConfig)(path);
+  if (config) return config;
+  const terminalInput = options.isTerminalInput ?? isTerminalInput;
+  if (path || jsonOutput || !terminalInput()) {
+    throw new Error(`No .napplet config found${path ? ` at ${path}` : ""}. Run: napplet init`);
+  }
+
+  const printStatus = options.printStatus ?? console.error;
+  const printReport = options.printReport ?? console.log;
+  printStatus("No .napplet config found. Starting interactive setup...");
+  const result = await (options.runInit ?? runInitFromFlags)(flags);
+  printReport(renderInitReport(result));
+  return result.config;
 }
 
 async function commandDebug(argv: string[]): Promise<number> {
