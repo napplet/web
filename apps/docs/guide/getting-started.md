@@ -28,10 +28,20 @@ npx @napplet/boilerplate ./my-napplet \
 
 See [`@napplet/boilerplate`](/packages/boilerplate) for the full option list.
 
-For a complete hand-written example, follow
-[Build a Note Drafts napplet](./build-note-drafts-napplet). It creates a small
-Nostr note composer that autosaves through `storage`, reads the shell-user
-pubkey through `identity`, publishes through `outbox`, and runs in Kehto/Paja.
+Choose the Note Drafts path that matches how you want to learn:
+
+- [Build a Note Drafts napplet from scratch](./build-note-drafts-napplet) hand-wires
+  every file so you can see the runtime boundary one piece at a time.
+- [Build a Note Drafts napplet from boilerplate](./build-note-drafts-napplet-from-boilerplate)
+  starts from the generator, preserves its project substrate, and replaces the
+  starter demo with the same note composer.
+- [Build a Note Drafts napplet with an AI Agent and @napplet.skills](./build-note-drafts-napplet-with-ai-agent-and-skills)
+  shows the prompt, review loop, and verification commands for agent-assisted
+  authoring.
+
+All three create a small Nostr note composer that autosaves through `storage`,
+reads the shell-user pubkey through `identity`, publishes through `outbox`, and
+runs in Kehto/Paja.
 
 ## Retrofit an existing app manually
 

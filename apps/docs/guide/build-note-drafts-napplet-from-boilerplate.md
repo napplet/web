@@ -1,18 +1,14 @@
-# Tutorial: build a Note Drafts napplet from scratch
+# Tutorial: build a Note Drafts napplet from boilerplate
 
-This tutorial builds a small Nostr note composer that runs as a napplet in
-Kehto/Paja. The app starts with a runtime check, then grows one capability at a
-time:
+This tutorial builds the same Note Drafts app as the
+[from-scratch tutorial](./build-note-drafts-napplet), but starts from
+`@napplet/boilerplate` instead of an empty directory.
 
-1. Render the app frame and inspect runtime domain presence.
-2. Read the current shell-user pubkey through read-only `identity`.
-3. Autosave a draft through shell-scoped `storage`.
-4. Publish a kind `1` note through `outbox`.
-
-The example is intentionally a note composer because composing is common Nostr
-UX, but it still teaches the napplet boundary. The napplet never sees a private
-key, never opens a relay socket, never writes browser storage, and never chooses
-write relays. The shell does those jobs.
+Use this path when you want the generator to own the project substrate:
+package-manager pin, Vite + TypeScript config, single-file build plumbing,
+conformance scripts, starter docs, and local agent guidance. You still replace
+the starter demo with a focused app that uses only the domains it needs:
+`identity`, `storage`, and `outbox`.
 
 Protocol references used here:
 
@@ -24,112 +20,106 @@ Protocol references used here:
 - [NAPs](https://github.com/napplet/naps), the capability-domain specs for
   `identity`, `storage`, and `outbox`
 
-## 1. Create the project
+## 1. Scaffold the starter
 
-Start from an empty directory:
+Run the generator with explicit values so the tutorial is repeatable:
 
 ```bash
-mkdir note-drafts
+npx @napplet/boilerplate ./note-drafts \
+  --package-name note-drafts \
+  --napplet-type notedrafts \
+  --title "Note Drafts" \
+  --yes
 cd note-drafts
-pnpm init
-pnpm add @napplet/sdk@^0.24.4
-pnpm add -D @napplet/vite-plugin@^0.11.2 @napplet/conformance-cli@^0.2.14 @kehto/cli@^0.2.11 typescript@^5.9.3 vite@^6.4.3
+pnpm install
 ```
 
-Replace the generated `package.json` with this:
+The generated repository includes broad starter examples and context docs. For
+this tutorial, treat them as a substrate, not as app requirements. The Note
+Drafts app does not need direct relay queries, notifications, config settings,
+resource loading, or a napplet-side shell probe.
 
-<!-- tutorial-file: package.json -->
-```json
+## 2. Tighten package metadata
+
+Keep the generated scripts, but prune the dependencies to the app's actual
+surface. The napplet app imports `@napplet/sdk`; the shell/runtime injects
+`window.napplet` before the app runs.
+
+```jsonc
 {
   "name": "note-drafts",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "kehto paja --config kehto.dev.json -- pnpm vite --host 127.0.0.1",
+    "dev": "vite --host 127.0.0.1",
     "build": "vite build",
+    "preview": "vite preview --host 127.0.0.1",
     "type-check": "tsc --noEmit",
+    "verify": "pnpm type-check && pnpm build",
     "test:conformance": "pnpm build && napplet-conformance ./dist",
-    "verify": "pnpm type-check && pnpm test:conformance"
+    "test:conformance:ui": "napplet-conformance --ui . --exec \"vite build --watch\""
   },
   "dependencies": {
     "@napplet/sdk": "^0.24.4"
   },
   "devDependencies": {
-    "@kehto/cli": "^0.2.11",
     "@napplet/conformance-cli": "^0.2.14",
     "@napplet/vite-plugin": "^0.11.2",
     "typescript": "^5.9.3",
-    "vite": "^6.4.3"
-  }
-}
-```
-
-What this teaches: napplet application code uses `@napplet/sdk`; local runtime
-testing uses Kehto/Paja; conformance tests the built artifact, not source files.
-
-## 2. Configure TypeScript and the manifest plugin
-
-Add strict TypeScript:
-
-<!-- tutorial-file: tsconfig.json -->
-```json
-{
-  "compilerOptions": {
-    "target": "ES2022",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "strict": true,
-    "verbatimModuleSyntax": true,
-    "types": ["vite/client"],
-    "skipLibCheck": true
+    "vite": "^6.4.3",
+    "vite-plugin-singlefile": "^2.3.3"
   },
-  "include": ["src", "vite.config.ts"]
+  "packageManager": "pnpm@10.8.0",
+  "license": "MIT"
 }
 ```
 
-Now add `vite.config.ts`:
+Then update the install:
 
-<!-- tutorial-file: vite.config.ts -->
+```bash
+pnpm install
+```
+
+What this teaches: the boilerplate gives you a valid project shape; the app
+still declares only the packages and NAP domains it actually uses.
+
+## 3. Configure the manifest for Note Drafts
+
+Open `vite.config.ts`. Keep the generated single-file plugin and manifest plugin
+shape, but change the project-specific fields:
+
 ```ts
 import { defineConfig } from 'vite';
+import { viteSingleFile } from 'vite-plugin-singlefile';
 import { nip5aManifest } from '@napplet/vite-plugin';
 
 export default defineConfig({
-  build: {
-    modulePreload: false,
-  },
   plugins: [
+    viteSingleFile(),
     nip5aManifest({
       nappletType: 'notedrafts',
       title: 'Note Drafts',
       description: 'Draft and publish short Nostr notes from a sandboxed napplet.',
       requires: ['identity', 'storage', 'outbox'],
-      artifactMode: 'single-file',
     }),
   ],
 });
 ```
 
-The important fields are:
+The `requires` list is deliberately short:
 
-- `build.modulePreload: false`: keeps Vite from injecting a preload helper that
-  calls `fetch`.
-- `nappletType`: the short named-site `d` tag for this napplet.
-- `requires`: hard domains the shell must provide for the full app.
-- `artifactMode: 'single-file'`: folds the built JS and CSS into one
-  `dist/index.html`.
+- `identity`: read the shell-user pubkey.
+- `storage`: autosave the draft under shell-managed storage scoping.
+- `outbox`: ask the shell to sign and publish a kind `1` note.
 
-What this teaches: `requires` is declarative compatibility metadata. Runtime
-code still checks domain presence so local toggles and smaller shells fail
-gracefully.
+Do not keep domains from the starter demo unless the app still calls them.
 
-## 3. Add the HTML entry
+## 4. Keep the HTML entry small
 
-The source HTML is ordinary Vite HTML:
+The starter already has `index.html`. Make sure its title and root element match
+the app:
 
-<!-- tutorial-file: index.html -->
 ```html
 <!doctype html>
 <html lang="en">
@@ -145,14 +135,13 @@ The source HTML is ordinary Vite HTML:
 </html>
 ```
 
-Kehto/Paja will load this into a runtime iframe during development. The
-production build will inline the app script and CSS into `dist/index.html`.
+The production build still becomes one self-contained `dist/index.html`; the
+source HTML keeps the Vite module entry during development.
 
-## 4. Start with the napplet boundary
+## 5. Replace the starter app
 
-Create `src/main.ts` with the imports, domain names, and app container:
+Replace `src/main.ts` with the status-first Note Drafts app:
 
-<!-- tutorial-chunk: src/main.ts -->
 ```ts
 import { identity, outbox, storage } from '@napplet/sdk';
 import './styles.css';
@@ -168,20 +157,7 @@ const app = document.querySelector<HTMLDivElement>('#app');
 if (!app) {
   throw new Error('Missing #app container');
 }
-```
 
-This first step names the only runtime domains the app will use. There is no
-relay pool, signer object, `localStorage`, or `window.nostr`.
-
-What this teaches: a napplet is untrusted app code. It asks the runtime for
-capabilities through NAP domains.
-
-## 5. Render a status-first UI
-
-Add the app markup and typed DOM lookups:
-
-<!-- tutorial-chunk: src/main.ts -->
-```ts
 app.innerHTML = `
   <main class="shell">
     <section class="masthead">
@@ -231,31 +207,13 @@ const form = requireElement<HTMLFormElement>('#composer');
 const note = requireElement<HTMLTextAreaElement>('#note');
 const count = requireElement<HTMLElement>('#count');
 const publishButton = requireElement<HTMLButtonElement>('#publish');
-```
 
-Status text comes before the feature logic on purpose. A napplet should tell the
-user when a shell capability is absent instead of failing silently.
-
-## 6. Check domain presence before calling SDK methods
-
-Add small helpers:
-
-<!-- tutorial-chunk: src/main.ts -->
-```ts
 function hasDomain(domain: RequiredDomain): boolean {
   return Boolean((window as NappletWindow).napplet?.[domain]);
 }
 
 function shortKey(value: string): string {
   return value.length > 16 ? `${value.slice(0, 8)}...${value.slice(-8)}` : value;
-}
-
-function setDraftStatus(message: string): void {
-  draftStatus.textContent = message;
-}
-
-function setPublishStatus(message: string): void {
-  publishStatus.textContent = message;
 }
 
 function updateCount(): void {
@@ -266,18 +224,7 @@ function setBusy(busy: boolean): void {
   publishButton.disabled = busy;
   publishButton.textContent = busy ? 'Publishing...' : 'Publish note';
 }
-```
 
-The SDK methods throw clear errors if a domain is unavailable. The UI still
-checks first because a good napplet can explain missing runtime support to a
-person.
-
-## 7. Read the shell-user identity
-
-Add identity loading:
-
-<!-- tutorial-chunk: src/main.ts -->
-```ts
 async function loadIdentity(): Promise<void> {
   if (!hasDomain('identity')) {
     pubkey.textContent = 'identity unavailable';
@@ -293,21 +240,10 @@ async function loadIdentity(): Promise<void> {
 
   window.addEventListener('pagehide', () => subscription.close(), { once: true });
 }
-```
 
-`identity` is read-only. It tells the napplet which shell-user is connected, but
-it does not sign, encrypt, or expose keys. The app takes a startup snapshot and
-then listens for shell-pushed changes.
-
-## 8. Autosave through shell storage
-
-Add draft loading and debounced saving:
-
-<!-- tutorial-chunk: src/main.ts -->
-```ts
 async function loadDraft(): Promise<void> {
   if (!hasDomain('storage')) {
-    setDraftStatus('storage unavailable');
+    draftStatus.textContent = 'storage unavailable';
     return;
   }
 
@@ -315,9 +251,9 @@ async function loadDraft(): Promise<void> {
   if (saved) {
     note.value = saved;
     updateCount();
-    setDraftStatus('restored from shell storage');
+    draftStatus.textContent = 'restored from shell storage';
   } else {
-    setDraftStatus('empty');
+    draftStatus.textContent = 'empty';
   }
 }
 
@@ -327,7 +263,7 @@ function queueDraftSave(): void {
   updateCount();
 
   if (!hasDomain('storage')) {
-    setDraftStatus('storage unavailable');
+    draftStatus.textContent = 'storage unavailable';
     return;
   }
 
@@ -338,36 +274,30 @@ function queueDraftSave(): void {
   saveTimer = window.setTimeout(() => {
     void storage.instance
       .setItem(draftKey, note.value)
-      .then(() => setDraftStatus(note.value ? 'saved' : 'empty'))
-      .catch((error: unknown) => setDraftStatus(error instanceof Error ? error.message : 'save failed'));
+      .then(() => {
+        draftStatus.textContent = note.value ? 'saved' : 'empty';
+      })
+      .catch((error: unknown) => {
+        draftStatus.textContent = error instanceof Error ? error.message : 'save failed';
+      });
   }, 250);
 }
-```
 
-This replaces browser storage. `storage.instance` is scoped by the shell to this
-napplet instance, so another napplet cannot read this draft.
-
-## 9. Publish through outbox
-
-Add publishing:
-
-<!-- tutorial-chunk: src/main.ts -->
-```ts
 async function publishNote(): Promise<void> {
   const content = note.value.trim();
 
   if (!content) {
-    setPublishStatus('Write something first');
+    publishStatus.textContent = 'Write something first';
     return;
   }
 
   if (!hasDomain('outbox')) {
-    setPublishStatus('outbox unavailable');
+    publishStatus.textContent = 'outbox unavailable';
     return;
   }
 
   setBusy(true);
-  setPublishStatus('Waiting for shell confirmation...');
+  publishStatus.textContent = 'Waiting for shell confirmation...';
 
   try {
     const result = await outbox.publish(
@@ -389,28 +319,17 @@ async function publishNote(): Promise<void> {
 
     if (hasDomain('storage')) {
       await storage.instance.removeItem(draftKey);
-      setDraftStatus('cleared after publish');
+      draftStatus.textContent = 'cleared after publish';
     }
 
-    setPublishStatus(`published ${shortKey(result.eventId ?? result.event?.id ?? '')}`);
+    publishStatus.textContent = `published ${shortKey(result.eventId ?? result.event?.id ?? '')}`;
   } catch (error) {
-    setPublishStatus(error instanceof Error ? error.message : 'publish failed');
+    publishStatus.textContent = error instanceof Error ? error.message : 'publish failed';
   } finally {
     setBusy(false);
   }
 }
-```
 
-The napplet supplies an unsigned event template. The shell owns signing, relay
-selection, fanout, and policy. `toOutbox: true` asks the shell to include the
-user's write relays.
-
-## 10. Wire the feature together
-
-Add the event listeners and startup calls:
-
-<!-- tutorial-chunk: src/main.ts -->
-```ts
 note.addEventListener('input', queueDraftSave);
 form.addEventListener('submit', (event) => {
   event.preventDefault();
@@ -422,19 +341,22 @@ void loadIdentity().catch((error: unknown) => {
   pubkey.textContent = error instanceof Error ? error.message : 'identity failed';
 });
 void loadDraft().catch((error: unknown) => {
-  setDraftStatus(error instanceof Error ? error.message : 'draft load failed');
+  draftStatus.textContent = error instanceof Error ? error.message : 'draft load failed';
 });
 ```
 
-At this point `src/main.ts` is complete. The final behavior is layered, not
-magic: runtime capability check, identity snapshot, storage-backed draft, and
-outbox publish.
+What changed from the broad starter:
 
-## 11. Add styles
+- No napplet-side `@napplet/shim` import.
+- No shell capability-probing namespace.
+- No direct relay read path.
+- No app-owned persistence.
+- No signing or relay fanout code.
 
-Create `src/styles.css`:
+## 6. Replace the styles
 
-<!-- tutorial-file: src/styles.css -->
+Replace `src/styles.css` with compact app styles:
+
 ```css
 :root {
   color: #f7f4ef;
@@ -467,10 +389,6 @@ textarea {
   padding: 32px;
 }
 
-.masthead {
-  margin: 0 0 24px;
-}
-
 .eyebrow,
 .label {
   color: #9fd4c9;
@@ -488,7 +406,7 @@ h1 {
 
 .lede {
   max-width: 36rem;
-  margin: 0;
+  margin: 0 0 24px;
   color: #d6d0c5;
 }
 
@@ -581,91 +499,42 @@ button:disabled {
 }
 ```
 
-Run a first local check:
+## 7. Update the project docs
+
+Replace the generated README's feature list with the app boundary:
+
+```md
+# Note Drafts
+
+A small NIP-5D napplet for drafting and publishing kind `1` Nostr notes.
+
+The app uses:
+
+- `identity` to show the shell-user pubkey.
+- `storage` to autosave one draft under shell-managed storage scoping.
+- `outbox` to ask the shell to sign and publish.
+
+It does not access private keys, `window.nostr`, browser storage, relay sockets,
+or direct network APIs.
+```
+
+Keep the generated `docs/` context files. They are useful reminders for future
+edits, but the canonical protocol source remains the living NIP-5D and NAP text
+linked from those docs.
+
+## 8. Verify the generated-project path
+
+Run the checks the boilerplate already provides:
 
 ```bash
 pnpm type-check
 pnpm build
+pnpm test:conformance
 ```
 
-## 12. Configure Napplet CLI and Paja
-
-Add a Napplet CLI config for discovery, conformance, and later deploy dry-runs:
-
-<!-- tutorial-file: .napplet/config.json -->
-```json
-{
-  "version": 1,
-  "sourceDir": ".",
-  "relays": ["wss://relay.damus.io"],
-  "blossomServers": ["https://cdn.hzrd149.com"],
-  "defaultTarget": "named",
-  "named": ["notedrafts"],
-  "conformance": {
-    "command": "napplet-conformance"
-  },
-  "paja": {
-    "command": "kehto"
-  }
-}
-```
-
-Add a Paja simulation config:
-
-<!-- tutorial-file: kehto.dev.json -->
-```json
-{
-  "targetUrl": "http://127.0.0.1:5173",
-  "simulation": {
-    "identity": {
-      "mode": "fixed",
-      "pubkey": "4444444444444444444444444444444444444444444444444444444444444444"
-    },
-    "capabilities": {
-      "domains": {
-        "identity": true,
-        "storage": true,
-        "outbox": true
-      }
-    },
-    "theme": {
-      "mode": "dark"
-    }
-  }
-}
-```
-
-Run the app:
+Inspect the emitted metadata:
 
 ```bash
-pnpm dev
-```
-
-Open the Paja runtime URL printed by the command, not the raw Vite URL. In Paja:
-
-1. Confirm `identity`, `storage`, and `outbox` are enabled in Interfaces.
-2. Grant storage read/write and outbox write in ACL when Paja asks.
-3. Type a draft, reload the target iframe, and confirm the draft is restored.
-4. Publish the note and confirm Paja asks before signing/publishing.
-
-Then toggle off `storage` or `outbox` in Interfaces and reload. The app should
-show a status message rather than throwing.
-
-## 13. Verify the artifact
-
-Run:
-
-```bash
-pnpm verify
-```
-
-That command type-checks the app, builds the single-file artifact, and runs
-`napplet-conformance` against `dist/index.html`.
-
-Inspect the metadata the shell will read:
-
-```bash
-pnpm build
 grep -n "napplet-type\\|napplet-requires" dist/index.html
 ```
 
@@ -676,19 +545,13 @@ Expected metadata:
 <meta name="napplet-requires" content="identity,outbox,storage">
 ```
 
-The built `dist/index.html` is the file you test and publish. Do not point
-conformance or deploy tooling at source `index.html`; it still contains the Vite
-`/src/main.ts` module reference.
+Open the app in your target shell or Paja runtime and verify:
 
-## What stayed outside the napplet
+1. The runtime user status changes from "Checking identity..." to a pubkey or
+   "signed out".
+2. A typed draft survives iframe reload.
+3. Publishing asks the shell to sign and fan out the note.
+4. Disabling `storage` or `outbox` shows a status message instead of crashing.
 
-- Signing: `outbox.publish` asks the shell to sign the event.
-- Relay fanout: `toOutbox: true` lets the shell use the user's write relays.
-- Draft persistence: `storage.instance` is scoped by the shell to this napplet
-  instance.
-- User identity: `identity.getPublicKey` returns the shell-user pubkey snapshot;
-  `identity.onChanged` listens for shell-pushed signer changes.
-
-If a future feature needs follows, reactions, list mutations, direct messages, or
-counts, use the highest-level NAP that owns that user intent. Do not add a relay
-client, private-key handling, or browser storage layer to the napplet.
+That proves the boilerplate substrate stayed intact while the app boundary
+became a focused Note Drafts napplet.
