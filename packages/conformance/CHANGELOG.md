@@ -1,5 +1,11 @@
 # @napplet/conformance
 
+## 0.13.0
+
+### Minor Changes
+
+- 3dbced2: Validate NIP-5D manifest events instead of private HTML manifest metadata in the default conformance path. Adds `validateManifestEvent` and napplet manifest kind exports while keeping `validateManifest(html)` as an HTML-only compatibility wrapper.
+
 ## 0.12.6
 
 ### Patch Changes
