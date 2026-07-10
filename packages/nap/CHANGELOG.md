@@ -1,5 +1,18 @@
 # @napplet/nap
 
+## 0.28.0
+
+### Minor Changes
+
+- 0c76ded: Align NAP-OUTBOX publish fanout with the current draft by replacing
+  `targetAuthors` with explicit `toOutbox`, `toInboxes`, and validated `relays`
+  guidance.
+
+### Patch Changes
+
+- Updated dependencies [0c76ded]
+  - @napplet/core@0.28.0
+
 ## 0.27.3
 
 ### Patch Changes
