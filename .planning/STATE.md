@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v0.34.0
 milestone_name: NIP-5D Runtime Injection
 status: planning
-last_updated: "2026-07-10T15:27:52+02:00"
-last_activity: 2026-07-10 - Quick task 260710-lai complete: Note Drafts docs now cover from-scratch, boilerplate, and agent-assisted tutorial paths.
+last_updated: "2026-07-10T15:43:49+02:00"
+last_activity: 2026-07-10 - Quick task 260710-lsc complete: Note Drafts AI-agent tutorial now keeps the user prompt product-focused and leaves napplet boundary details to @napplet/skills.
 progress:
   total_phases: 0
   completed_phases: 0
@@ -30,7 +30,23 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 Phase: Not started (defining requirements)
 Plan: —
 Status: Defining requirements
-Last activity: 2026-07-10 — Quick task 260710-lai complete; renamed the existing Note Drafts tutorial and added boilerplate plus AI-agent variants with docs/sidebar links and validation evidence.
+Last activity: 2026-07-10 — Quick task 260710-lsc complete; simplified the Note Drafts AI-agent tutorial prompt so `@napplet/skills` owns boilerplate, domain, boundary, and verification guidance.
+
+### Quick task 260710-lsc — COMPLETE
+
+- Shortened the Note Drafts AI-agent tutorial's example prompt to product scope:
+  app title, package name, napplet type, user flow, and verification evidence.
+- Moved the `identity` / `storage` / `outbox` mapping into the "skills should
+  infer" explanation instead of requiring users to paste it into the prompt.
+- Reframed forbidden-surface and metadata checks as review evidence, not
+  first-prompt content.
+- Simplified the repair prompt to rerun `make-napplet` / `build-napplet` /
+  `test-napplet`; recurring boundary misses should be fixed in
+  `@napplet/skills`, not by expanding the tutorial prompt.
+- Verification: `pnpm --filter @napplet/docs build`; `git diff --check`;
+  `pnpm build`; `pnpm type-check`; `pnpm -r test:unit`; `pnpm lint` (no tasks);
+  staged `aislop@0.12.0` 98/100 with only the existing `js-yaml` advisory.
+- Commit: `ab3940a0` (`Clarify that skills own Note Drafts prompt details`).
 
 ### Quick task 260710-lai — COMPLETE
 
