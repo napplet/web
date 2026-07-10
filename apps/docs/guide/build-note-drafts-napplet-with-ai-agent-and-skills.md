@@ -1,4 +1,4 @@
-# Tutorial: build a Note Drafts napplet with an AI Agent and @napplet.skills
+# Tutorial: build a Note Drafts napplet with an AI Agent and @napplet/skills
 
 This tutorial builds the Note Drafts napplet with a coding agent instead of
 typing every file yourself. It uses `@napplet/skills`, the packaged authoring
@@ -60,58 +60,41 @@ that tells the agent to check NIP-5D and NAPs, scaffold from
 `@napplet/boilerplate`, use shipped `@napplet/*` package exports, and stop
 instead of inventing missing protocol surface.
 
-## 3. Give the agent a constrained build prompt
+## 3. Give the agent a small product prompt
 
 Paste a prompt like this into your coding agent:
 
 ```text
-Build a Note Drafts napplet in this directory.
+Build a Note Drafts napplet in this directory using the installed
+@napplet/skills guidance.
 
-Use the installed napplet make-napplet/build-napplet/test-napplet guidance.
-Scaffold from @napplet/boilerplate first, then edit only the generated project.
+The app should let a user write one short Nostr note, autosave the draft, and
+publish it through the host shell.
 
-Goal:
-- App title: Note Drafts
+Use:
+- app title: Note Drafts
 - package name: note-drafts
 - nappletType: notedrafts
-- User flow: write one short kind 1 Nostr note, autosave the draft, publish through the shell.
 
-Required NAP domains:
-- identity: read the shell-user pubkey and listen for changes
-- storage: autosave and clear the draft under shell-managed storage
-- outbox: publish the note with shell signing and fanout
-
-Hard boundaries:
-- No window.nostr
-- No private keys or app-owned signing
-- No direct relay sockets, WebSocket, fetch, EventSource, or relay pools
-- No localStorage/sessionStorage/IndexedDB/cookies
-- No invented shell.ready(), shell.supports(...), discoverServices, or generic capability probing
-- Do not add domains to requires unless this app directly calls them
-
-Expected files:
-- package.json with boilerplate scripts preserved
-- vite.config.ts with nappletType notedrafts and requires identity/storage/outbox
-- index.html title/root for Note Drafts
-- src/main.ts implemented with @napplet/sdk identity, storage, and outbox helpers
-- src/styles.css for responsive app layout
-- README.md explaining the app boundary and verification
-
-Verification before completion:
-- pnpm install
-- pnpm type-check
-- pnpm build
-- pnpm test:conformance
-- grep built dist/index.html for napplet-type and napplet-requires metadata
-- scan src/main.ts for forbidden surfaces listed above
-
-Report the changed files and exact command evidence. If a needed API is missing
-from the current packages/specs, stop and flag the gap instead of inventing it.
+Follow the skills end to end and report the changed files plus verification
+evidence.
 ```
 
-The important part is the hard boundary list. It gives the agent a concrete
-review target and prevents a plausible-looking Nostr app from bypassing the
-shell.
+This prompt is intentionally short. The installed `make-napplet` guidance is
+responsible for routing the work through the `build-napplet` and `test-napplet`
+skills, starting from `@napplet/boilerplate`, choosing the shell-mediated
+domains, preserving the generated scripts, and refusing direct browser or
+signing authority.
+
+For this app, the skills should infer:
+
+- `identity` reads the shell-user pubkey and listens for changes.
+- `storage` autosaves and clears the draft under shell-managed storage.
+- `outbox` publishes the note with shell signing and fanout.
+- `requires` contains only the domains the app directly calls:
+  `identity`, `storage`, and `outbox`.
+- If a needed API is missing from current packages or specs, the agent should
+  stop and flag that package/spec gap instead of inventing a local protocol.
 
 ## 4. Review the agent's first diff
 
@@ -137,7 +120,8 @@ The diff should look like this:
 - The code checks for absent hard domains only to show user-facing errors; it
   does not invent a shell discovery API.
 
-Run a quick forbidden-surface scan:
+Run a quick forbidden-surface scan. You should not need to paste this list into
+the first prompt; it is here so you can audit the result:
 
 ```bash
 rg "window\\.nostr|localStorage|sessionStorage|indexedDB|fetch\\(|WebSocket|EventSource|shell\\.ready|shell\\.supports|discoverServices" src
@@ -148,24 +132,20 @@ them before continuing.
 
 ## 5. Use a repair prompt when needed
 
-If the first pass keeps starter-demo code or broad requirements, use a focused
-repair prompt:
+If the first pass keeps starter-demo code, broad requirements, or shell bypasses,
+use a focused repair prompt:
 
 ```text
-Repair the Note Drafts napplet boundary.
+The first pass drifted from the installed napplet skills.
 
-Remove any unused starter-demo domains and any calls to shell.ready(),
-shell.supports(...), window.nostr, localStorage, direct relay sockets, fetch, or
-app-owned signing. The app may use only @napplet/sdk identity, storage, and
-outbox helpers.
-
-Keep the boilerplate build/conformance scripts intact. Update vite.config.ts so
-requires is exactly identity, storage, and outbox. Then rerun pnpm type-check,
-pnpm build, and pnpm test:conformance.
+Re-run the make-napplet/build-napplet/test-napplet guidance, repair any boundary
+or verification failures, and keep the Note Drafts product scope unchanged.
 ```
 
 Keep repair prompts narrow. Do not ask the agent to redesign the whole app after
-you already have a working structure.
+you already have a working structure. If the same boundary detail must be added
+to every user prompt, treat that as a `@napplet/skills` bug and update the
+relevant skill instead of growing the prompt.
 
 ## 6. Verify the artifact, not just the source
 
