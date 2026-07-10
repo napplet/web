@@ -130,10 +130,18 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       # ─── nsite: publish to Nostr + Blossom ─────────────────────────────────
+      # Optional mirror: Bunny is the canonical deploy path for this workflow.
       - name: Deploy to nsite
+        id: deploy-nsite
+        continue-on-error: true
         uses: sandwichfarm/nsite-action@v0.5.1
         with:
           directory: site
           nbunksec: ${{ secrets.NBUNK_SECRET }}
           relays: ${{ steps.nsite.outputs.relays }}
           servers: ${{ steps.nsite.outputs.servers }}
+
+      - name: Report skipped nsite deploy
+        if: ${{ steps.deploy-nsite.outcome == 'failure' }}
+        run: |
+          echo "::warning::nsite deploy failed; Bunny CDN deploy already completed, so skipping the optional nsite mirror failure."
