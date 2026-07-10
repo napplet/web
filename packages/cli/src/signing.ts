@@ -40,6 +40,25 @@ export function detectSecretFormat(
   return null;
 }
 
+/** normalize public key helper for bunker config values. */
+export function normalizePublicKey(input: string): string {
+  const trimmed = input.trim();
+  if (/^[0-9a-fA-F]{64}$/.test(trimmed)) return trimmed.toLowerCase();
+  if (trimmed.startsWith("npub1")) {
+    const decoded = nip19.decode(trimmed);
+    if (decoded.type !== "npub") throw new Error("Invalid npub public key");
+    if (typeof decoded.data === "string" && /^[0-9a-fA-F]{64}$/.test(decoded.data)) {
+      return decoded.data.toLowerCase();
+    }
+  }
+  throw new Error("Invalid bunker pubkey. Expected npub or 64-character hex.");
+}
+
+/** encode public key helper for key-store alias lookup. */
+export function encodePublicKey(pubkey: string): string {
+  return nip19.npubEncode(normalizePublicKey(pubkey));
+}
+
 /** resolve signing method helper for Nostr signing. */
 export function resolveSigningMethod(
   config: NappletConfig,
@@ -68,6 +87,16 @@ export function resolveSigningMethod(
 
   if (config.signing?.keyReference) {
     return { type: "stored", source: "config", keyReference: config.signing.keyReference };
+  }
+
+  const bunkerPubkey = config.signing?.pubkey ?? config.bunkerPubkey;
+  if (bunkerPubkey) {
+    return {
+      type: "bunker-pubkey",
+      source: "config",
+      pubkey: normalizePublicKey(bunkerPubkey),
+      relays: [...(config.signing?.relays ?? config.relays)],
+    };
   }
 
   return { type: "none" };

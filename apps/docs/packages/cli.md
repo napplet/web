@@ -56,6 +56,9 @@ napplet deploy --sec nsec1...
   events without uploading or publishing.
 - `napplet deploy` uploads files to configured Blossom servers and publishes
   signed root, named, and optional snapshot manifest events to configured relays.
+- When no signer flag or stored signer exists, interactive `napplet deploy`
+  starts the NIP-46 connection flow and stores the paired remote signer when
+  native key storage is available.
 
 ## Commands
 

@@ -51,6 +51,7 @@
 
 export * from "./config.ts";
 export * from "./deploy-plan.ts";
+export * from "./deploy-signer.ts";
 export * from "./discover.ts";
 export * from "./flags.ts";
 export * from "./init-wizard.ts";

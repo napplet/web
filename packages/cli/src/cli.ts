@@ -9,24 +9,19 @@
 import { configPath, initConfig, readConfig } from "./config.ts";
 import { createDebugReport, createSigningDebugInfo } from "./debug.ts";
 import { createDeployPlan } from "./deploy-plan.ts";
+import { createDeploySigner } from "./deploy-signer.ts";
 import { executeNetworkDeploy, networkDeploySucceeded } from "./deploy-network.ts";
 import { discoverNapplets } from "./discover.ts";
-import { collectFlags, first, type FlagBag, requiredValue } from "./flags.ts";
+import { collectFlags, first, type FlagBag } from "./flags.ts";
 import { type InitWizardResult, promptInitWizard } from "./init-wizard.ts";
 import { commandKeys } from "./keys-command.ts";
-import { KEY_SERVICE_NAME, requireKeyStoreProvider } from "./key-store.ts";
 import { createDeployManifestTemplates } from "./manifest.ts";
 import { isTerminalOutput, renderDeployReport, renderInitReport } from "./output.ts";
-import { isTerminalInput, promptSecret } from "./prompt.ts";
+import { isTerminalInput } from "./prompt.ts";
 import { runCommand, splitCommand } from "./process.ts";
-import {
-  createSignerFromSecret,
-  type NappletSigner,
-  resolveSigningMethod,
-  signDeployManifestTemplates,
-} from "./signing.ts";
+import { resolveSigningMethod, signDeployManifestTemplates } from "./signing.ts";
 import { getBlossomServerSuggestions, getRelaySuggestions } from "./suggestions.ts";
-import type { DeploySelection, NappletConfig, SigningMethod } from "./types.ts";
+import type { DeploySelection, NappletConfig } from "./types.ts";
 
 const HELP = `@napplet/cli
 
@@ -46,7 +41,7 @@ Usage:
 
 Current scope:
   deploy uploads files to configured Blossom servers and publishes signed
-  root/named/snapshot manifest events to configured relays for local or nbunksec signers.
+  root/named/snapshot manifest events to configured relays for local or NIP-46 signers.
   Interactive terminals receive a human deploy report; use --json for CI output.
 `;
 
@@ -177,16 +172,24 @@ async function commandDeploy(argv: string[]): Promise<number> {
     traverse: flags.boolean.has("all"),
   });
 
-  const signer = await maybeCreateSigner(signing, flags);
+  const dryRun = flags.boolean.has("dry-run");
+  const { signer, signing: deploySigning } = await createDeploySigner(signing, config, {
+    sec: first(flags.values.get("sec")),
+    required: !dryRun,
+    interactiveConnect: !dryRun && isTerminalInput() && !jsonOutput,
+    configPath: first(flags.values.get("config")),
+    print: (line) => console.error(line),
+    writePromptBytes: (bytes) => Deno.stderr.writeSync(bytes),
+  });
   try {
-    const signingInfo = createSigningDebugInfo(signing);
+    const signingInfo = createSigningDebugInfo(deploySigning);
     const manifests = signer
       ? await signDeployManifestTemplates(
         await createDeployManifestTemplates(plan, config, { sourcePubkey: signer.pubkey }),
         signer,
       )
       : await createDeployManifestTemplates(plan, config);
-    if (!flags.boolean.has("dry-run")) {
+    if (!dryRun) {
       if (!signer) {
         throw new Error("Network deploy requires a signer from --sec, --prompt-sec, config, or CI");
       }
@@ -243,34 +246,6 @@ async function commandDebug(argv: string[]): Promise<number> {
   return 0;
 }
 
-async function maybeCreateSigner(
-  signing: SigningMethod,
-  flags: FlagBag,
-): Promise<NappletSigner | null> {
-  const secret = await resolveSigningSecret(signing, flags);
-  return secret ? await createSignerFromSecret(secret) : null;
-}
-
-async function resolveSigningSecret(
-  signing: SigningMethod,
-  flags: FlagBag,
-): Promise<string | null> {
-  if (signing.type === "private-key") return requiredValue(flags, "sec");
-  if (signing.type === "prompt") return await readSecretFromStdin();
-  if (signing.type === "stored") {
-    const provider = await requireKeyStoreProvider();
-    const secret = await provider.retrieve(KEY_SERVICE_NAME, signing.keyReference);
-    if (!secret) {
-      throw new Error(`No key reference "${signing.keyReference}" found in ${provider.name}`);
-    }
-    return secret;
-  }
-  if (signing.type === "ci-revocable") {
-    return Deno.env.get(signing.keyReference) ?? signing.keyReference;
-  }
-  return null;
-}
-
 async function commandConformance(argv: string[]): Promise<number> {
   const flags = collectFlags(argv);
   const config = await loadConfig(flags);
@@ -303,10 +278,6 @@ async function loadConfig(flags: FlagBag): Promise<NappletConfig> {
     throw new Error(`No .napplet config found${path ? ` at ${path}` : ""}. Run: napplet init`);
   }
   return config;
-}
-
-async function readSecretFromStdin(): Promise<string> {
-  return await promptSecret();
 }
 
 if (import.meta.main) {

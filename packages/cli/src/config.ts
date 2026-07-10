@@ -133,11 +133,24 @@ export function normalizeConfig(input: unknown): NappletConfig {
     sourceDir: typeof value.sourceDir === "string" ? value.sourceDir : ".",
     relays: stringArray(value.relays, "relays"),
     blossomServers: stringArray(value.blossomServers, "blossomServers"),
+    bunkerPubkey: typeof value.bunkerPubkey === "string" ? value.bunkerPubkey : undefined,
     named: stringArray(value.named, "named"),
     discover: value.discover
       ? {
         enabled: value.discover.enabled ?? true,
         roots: stringArray(value.discover.roots, "discover.roots"),
+      }
+      : undefined,
+    signing: value.signing
+      ? {
+        mode: value.signing.mode === "ci" ? "ci" : "interactive",
+        keyReference: typeof value.signing.keyReference === "string"
+          ? value.signing.keyReference
+          : undefined,
+        pubkey: typeof value.signing.pubkey === "string" ? value.signing.pubkey : undefined,
+        relays: value.signing.relays === undefined
+          ? undefined
+          : stringArray(value.signing.relays, "signing.relays"),
       }
       : undefined,
   });
@@ -157,8 +170,35 @@ export function setSigningKeyReference(config: NappletConfig, keyReference: stri
   return defaultConfig({
     ...config,
     signing: {
+      ...config.signing,
       mode: "interactive",
       keyReference,
+    },
+  });
+}
+
+/** set signing remote helper for interactive NIP-46 configuration. */
+export function setSigningRemote(
+  config: NappletConfig,
+  options: {
+    pubkey: string;
+    keyReference?: string;
+    relays?: string[];
+  },
+): NappletConfig {
+  if (options.pubkey.trim() === "") throw new Error("pubkey cannot be empty");
+  if (options.keyReference !== undefined && options.keyReference.trim() === "") {
+    throw new Error("keyReference cannot be empty");
+  }
+  return defaultConfig({
+    ...config,
+    bunkerPubkey: options.pubkey,
+    signing: {
+      ...config.signing,
+      mode: "interactive",
+      keyReference: options.keyReference,
+      pubkey: options.pubkey,
+      relays: options.relays ?? config.signing?.relays,
     },
   });
 }

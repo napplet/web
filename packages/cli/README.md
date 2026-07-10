@@ -154,6 +154,7 @@ the network deploy. Interactive terminals print a human report by default. Non-t
 explicit `--json` print the full JSON report for CI.
 
 ```sh
+napplet deploy
 napplet deploy --dry-run --sec nsec1...
 napplet deploy --name feed --snapshot --sec nsec1...
 napplet deploy --all --sec nsec1...
@@ -166,6 +167,9 @@ Signing can come from:
 - `--prompt-sec`, which reads hidden terminal input until Enter and still accepts piped stdin in
   non-interactive runs
 - a stored key reference configured by `napplet keys use`
+- a configured bunker pubkey/npub whose `nbunksec` session exists in native key storage
+- an interactive NIP-46 connection flow when no signer is configured and `deploy` is running in a
+  terminal
 - `NAPPLET_CI_SIGNING_KEY` or `NAPPLET_CI_KEY_REFERENCE` when `.napplet` uses CI signing mode
 
 The human deploy report includes each signed manifest event's short event id plus a copyable
@@ -209,6 +213,12 @@ The command prints a `nostrconnect://` QR code and waits for either:
 
 On success it stores an `nbunksec` in the platform keychain, updates `.napplet`
 `signing.keyReference`, and uses that stored reference for later deploy signing.
+
+Plain interactive `napplet deploy` uses the same NIP-46 flow when no signer flag or stored signer is
+available. It stores the paired session under the remote signer pubkey when native key storage is
+available, writes that pubkey to `.napplet` config, and continues the current deploy. If native key
+storage is unavailable, the current deploy can still proceed after pairing, but the session is not
+persisted for later runs.
 
 ## Project Layouts
 
