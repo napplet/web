@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v0.34.0
 milestone_name: NIP-5D Runtime Injection
 status: planning
-last_updated: "2026-07-10T15:43:49+02:00"
-last_activity: 2026-07-10 - Quick task 260710-lsc complete: Note Drafts AI-agent tutorial now keeps the user prompt product-focused and leaves napplet boundary details to @napplet/skills.
+last_updated: "2026-07-10T16:35:02+02:00"
+last_activity: 2026-07-10 - Quick task 260710-mzr complete: Core concepts now appears first in the docs Getting Started sidebar group.
 progress:
   total_phases: 0
   completed_phases: 0
@@ -30,7 +30,19 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 Phase: Not started (defining requirements)
 Plan: —
 Status: Defining requirements
-Last activity: 2026-07-10 — Quick task 260710-lsc complete; simplified the Note Drafts AI-agent tutorial prompt so `@napplet/skills` owns boilerplate, domain, boundary, and verification guidance.
+Last activity: 2026-07-10 — Quick task 260710-mzr complete; moved Core concepts to the top of the docs Getting Started sidebar group.
+
+### Quick task 260710-mzr — COMPLETE
+
+- Moved `Core concepts` above `Getting started` in the VitePress `Getting Started`
+  sidebar group.
+- Kept the change scoped to docs information architecture; no package runtime or
+  protocol surface changed.
+- Verification: `pnpm --filter @napplet/docs build`; `git diff --check`;
+  `pnpm build`; `pnpm type-check`; `pnpm -r test:unit`; `pnpm lint`
+  (0 tasks); `pnpm dlx aislop@0.12.0 scan --changes --base origin/main .`
+  (98/100 from the existing `js-yaml` advisory).
+- Commit: `bc4cd533` (`Put concepts before tutorials in docs sidebar`).
 
 ### Quick task 260710-lsc — COMPLETE
 
@@ -377,6 +389,7 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 
 | Quick ID | Task | Date | Commit | Artifacts |
 |----------|------|------|--------|-----------|
+| 260710-mzr | Move Core Concepts to the top of the affected docs section | 2026-07-10 | bc4cd533 | [260710-mzr-move-core-concepts-to-the-top-of-the-aff](./quick/260710-mzr-move-core-concepts-to-the-top-of-the-aff/) |
 | 260710-lai | Add Note Drafts boilerplate and AI-agent tutorials | 2026-07-10 | 39676ba4 | [260710-lai-write-note-drafts-tutorial-variants-upda](./quick/260710-lai-write-note-drafts-tutorial-variants-upda/) |
 | 260710-kmj | Treat nsite deploy failures as optional skips in Deploy site | 2026-07-10 | 2248c6c8 | [260710-kmj-treat-nsite-deploy-failures-as-optional-](./quick/260710-kmj-treat-nsite-deploy-failures-as-optional-/) |
 | 260707-hrs | Align RESOURCE htree scheme | 2026-07-07 | 7ec9561f | [260707-hrs-align-resource-htree-scheme](./quick/260707-hrs-align-resource-htree-scheme/) |
