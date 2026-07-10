@@ -56,6 +56,7 @@ export default defineConfig({
         text: 'Getting Started',
         items: [
           { text: 'Getting started', link: '/guide/getting-started' },
+          { text: 'Build a note drafts napplet', link: '/guide/build-note-drafts-napplet' },
           { text: 'Core concepts', link: '/guide/concepts' },
         ],
       },

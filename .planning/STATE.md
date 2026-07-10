@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v0.34.0
 milestone_name: NIP-5D Runtime Injection
 status: planning
-last_updated: "2026-07-09T20:13:00+02:00"
-last_activity: 2026-07-09 - Quick task 260709-rwi complete: sparse JSR overview/README surfaces fixed for cli, conformance, shim, and vite-plugin.
+last_updated: "2026-07-10T12:31:54+02:00"
+last_activity: 2026-07-10 - Quick task 260710-gyt complete: from-scratch Note Drafts napplet tutorial plus executable tutorial extraction/conformance test.
 progress:
   total_phases: 0
   completed_phases: 0
@@ -30,7 +30,15 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 Phase: Not started (defining requirements)
 Plan: —
 Status: Defining requirements
-Last activity: 2026-07-09 — Quick task 260709-rwi complete; sparse JSR overview/README surfaces were fixed for `@napplet/cli`, `@napplet/conformance`, `@napplet/shim`, and `@napplet/vite-plugin`, with package dry-runs and repo gates green.
+Last activity: 2026-07-10 — Quick task 260710-gyt complete; added a from-scratch Note Drafts napplet tutorial and executable tutorial validation that extracts the documented project, type-checks it, builds the single-file artifact, and runs conformance.
+
+### Quick task 260710-gyt — COMPLETE
+
+- Added `apps/docs/guide/build-note-drafts-napplet.md`, a hand-written tutorial that grows a Nostr note composer from runtime boundary checks through read-only `identity`, shell-scoped `storage.instance`, `outbox.publish`, Kehto/Paja runtime simulation, and artifact verification.
+- Wired the guide into the VitePress sidebar and getting-started page.
+- Added `scripts/test-tutorial.mjs` plus root `pnpm test:tutorial`; the harness extracts `tutorial-file` blocks and cumulative `tutorial-chunk` blocks, materializes the documented app, blocks stale/forbidden surfaces (`shell.supports`, `window.nostr`, browser storage, direct relay sockets), type-checks, builds, asserts single-file metadata, and runs `napplet-conformance`.
+- Verification: `pnpm test:tutorial` (conformance 7 pass / 0 fail / 4 skip); `pnpm --filter @napplet/docs build`; `pnpm build`; `pnpm type-check`; `pnpm -r test:unit`; `pnpm lint` (no configured lint tasks); `npx --yes aislop scan --changes .` (100/100); `git diff --check`; `pnpm test`.
+- No changeset: docs/test/root-script coverage only; no publishable package output changed.
 
 ### Quick task 260709-rwi — COMPLETE
 

@@ -28,6 +28,11 @@ npx @napplet/boilerplate ./my-napplet \
 
 See [`@napplet/boilerplate`](/packages/boilerplate) for the full option list.
 
+For a complete hand-written example, follow
+[Build a Note Drafts napplet](./build-note-drafts-napplet). It creates a small
+Nostr note composer that autosaves through `storage`, reads the shell-user
+pubkey through `identity`, publishes through `outbox`, and runs in Kehto/Paja.
+
 ## Retrofit an existing app manually
 
 For a new napplet, prefer the generator above. It owns the package manager pin,
