@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v0.34.0
 milestone_name: NIP-5D Runtime Injection
 status: planning
-last_updated: "2026-07-10T18:09:12+02:00"
-last_activity: 2026-07-10 - Quick task 260710-opm complete: @napplet/cli now has guided init, hidden secret prompts, human deploy reports, NIP-19 pointers, and raw bunker:// signing.
+last_updated: "2026-07-10T19:43:46+02:00"
+last_activity: 2026-07-10 - Quick task 260710-rce complete: @napplet/cli deploy manifests now exclude local control state when sourceDir is the repo root.
 progress:
   total_phases: 0
   completed_phases: 0
@@ -30,7 +30,29 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 Phase: Not started (defining requirements)
 Plan: —
 Status: Defining requirements
-Last activity: 2026-07-10 - Quick task 260710-opm complete; `@napplet/cli` now has guided init, hidden secret prompts, human deploy reports, NIP-19 pointers, and raw `bunker://` signing.
+Last activity: 2026-07-10 - Quick task 260710-rce complete; `@napplet/cli` deploy manifests now exclude local control state when `sourceDir` is the repo root.
+
+### Quick task 260710-rce - COMPLETE
+
+- Fixed `@napplet/cli` deploy manifest collection so source-root deploys skip
+  hidden local/control paths such as `.napplet/config.json`, `.git`, and
+  `.env`, while still allowing intentional `.well-known` content.
+- Added an explicit `node_modules` directory skip so dependency trees are never
+  signed as napplet content.
+- Kept `.nip5a-manifest.json` as metadata-only input, not a deployed path.
+- Expanded the existing `@napplet/cli` patch changeset note to include this
+  deploy-content safety fix.
+- Verification: `deno fmt --check packages/cli/src/manifest.ts
+  packages/cli/tests/manifest_test.ts
+  .planning/quick/260710-rce-exclude-local-cli-config-and-tooling-sta/PLAN.md`;
+  `deno task --cwd packages/cli check`; `deno lint packages/cli/src
+  packages/cli/tests`; `deno task --cwd packages/cli test:unit`; installed
+  wrapper fixture for `napplet init` + `napplet deploy --dry-run` excluding
+  `.napplet/config.json` and `.env`; `pnpm build`; `pnpm type-check`;
+  `pnpm -r test:unit`; `pnpm lint`; `pnpm check:jsr`; `pnpm test:tutorial`;
+  `pnpm test`; `git diff --check`; `pnpm dlx aislop@0.13.1 scan --changes
+  --json .` (100/100).
+- Commit: `5f28c4e5` (`fix(cli): keep local state out of deploy manifests`).
 
 ### Quick task 260710-opm - COMPLETE
 
@@ -438,6 +460,7 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 
 | Quick ID | Task | Date | Commit | Artifacts |
 |----------|------|------|--------|-----------|
+| 260710-rce | Exclude local CLI config and tooling state from napplet deploy manifest collection | 2026-07-10 | 5f28c4e5 | [260710-rce-exclude-local-cli-config-and-tooling-sta](./quick/260710-rce-exclude-local-cli-config-and-tooling-sta/) |
 | 260710-ng9 | Fix napplet.run conformance to accept NIP-19 napplet manifest pointers | 2026-07-10 | 04606c3a | [260710-ng9-fix-napplet-run-conformance-to-accept-ne](./quick/260710-ng9-fix-napplet-run-conformance-to-accept-ne/) |
 | 260710-mzr | Move Core Concepts to the top of the affected docs section | 2026-07-10 | bc4cd533 | [260710-mzr-move-core-concepts-to-the-top-of-the-aff](./quick/260710-mzr-move-core-concepts-to-the-top-of-the-aff/) |
 | 260710-lai | Add Note Drafts boilerplate and AI-agent tutorials | 2026-07-10 | 39676ba4 | [260710-lai-write-note-drafts-tutorial-variants-upda](./quick/260710-lai-write-note-drafts-tutorial-variants-upda/) |
