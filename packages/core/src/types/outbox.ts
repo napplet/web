@@ -20,8 +20,12 @@ export interface OutboxSubscribeOptions extends OutboxQueryOptions {}
 
 /** Options for an outbox publish. */
 export interface OutboxPublishOptions {
+  /** Explicit relay URL fanout candidates, subject to shell validation. */
   relays?: string[];
-  targetAuthors?: string[];
+  /** Include the shell user's NIP-65 write relays. Defaults to true. */
+  toOutbox?: boolean;
+  /** Recipient pubkeys whose NIP-65 read relays are required fanout targets. */
+  toInboxes?: string[];
 }
 
 /** A read/write target for outbox relay-plan resolution. */

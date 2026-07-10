@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { readFileSync } from 'node:fs';
 
 interface PostedMessage {
   msg: any;
@@ -71,6 +72,21 @@ const RESULT = {
 const RESOURCE_URL = 'https://example.com/a.txt';
 
 describe('@napplet/nap/outbox shim', () => {
+  it('keeps active outbox source free of the stale targetAuthors publish option', () => {
+    const activeOutboxFiles = [
+      './types.ts',
+      './shim.ts',
+      './sdk.ts',
+      '../../../core/src/types/outbox.ts',
+      '../../../core/src/types/global/service-api.ts',
+    ];
+
+    for (const file of activeOutboxFiles) {
+      const source = readFileSync(new URL(file, import.meta.url), 'utf8');
+      expect(source).not.toContain('targetAuthors');
+    }
+  });
+
   it('posts outbox.getEvent and resolves with the event result', async () => {
     const { getEvent, handleOutboxMessage } = await import('./shim.js');
 
@@ -226,15 +242,21 @@ describe('@napplet/nap/outbox shim', () => {
     expect(events).toHaveLength(0);
   });
 
-  it('posts outbox.publish and resolves with the publish result', async () => {
+  it('posts outbox.publish with explicit fanout options and resolves with the publish result', async () => {
     const { publish, handleOutboxMessage } = await import('./shim.js');
 
     const promise = publish({ kind: 1, content: 'hi', tags: [], created_at: 1 }, {
-      targetAuthors: ['ab12'],
+      relays: ['wss://relay.example'],
+      toOutbox: false,
+      toInboxes: ['ab12'],
     });
     const sent = lastPosted('outbox.publish');
     expect(sent.event).toEqual({ kind: 1, content: 'hi', tags: [], created_at: 1 });
-    expect(sent.options).toEqual({ targetAuthors: ['ab12'] });
+    expect(sent.options).toEqual({
+      relays: ['wss://relay.example'],
+      toOutbox: false,
+      toInboxes: ['ab12'],
+    });
 
     handleOutboxMessage({
       type: 'outbox.publish.result',

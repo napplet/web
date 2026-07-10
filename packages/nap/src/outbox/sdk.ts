@@ -103,7 +103,8 @@ export const subscribe = outboxSubscribe;
  * Publish a shell-signed event using outbox-aware relay fanout.
  *
  * @param template  Unsigned event template
- * @param options   Optional publish options
+ * @param options   Optional publish fanout (`relays`, `toOutbox`, `toInboxes`);
+ *                  `toOutbox` defaults to true when omitted
  * @returns Promise resolving to the outbox publish result
  */
 export function outboxPublish(

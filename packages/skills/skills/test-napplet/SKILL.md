@@ -102,7 +102,7 @@ tooling false positive before shipping.
 Exercise the feature against the NAP domains it declares:
 
 - Signed-out path: identity returns `""`; app degrades without publish/list/dm actions.
-- OUTBOX path: current option fields only: `outbox.getEvent` uses `author`, `relays`, `timeoutMs`; `outbox.query` / `outbox.subscribe` use `authors`, `relays`, `limit`, `timeoutMs`; `outbox.publish` uses `relays`, `targetAuthors`. No `strategy`, subscribe `live`, publish `timeoutMs`, or `outbox.eose`.
+- OUTBOX path: current option fields only: `outbox.getEvent` uses `author`, `relays`, `timeoutMs`; `outbox.query` / `outbox.subscribe` use `authors`, `relays`, `limit`, `timeoutMs`; `outbox.publish` uses `relays`, `toOutbox`, `toInboxes`. No `strategy`, subscribe `live`, publish `timeoutMs`, or `outbox.eose`.
 - Optional-domain path: remove an optional domain from the mock runtime and verify fallback UI.
 - Escape hatch path: if `relay` is used, test the explicit relay-local behavior and teardown.
 

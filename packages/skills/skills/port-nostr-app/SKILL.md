@@ -84,7 +84,7 @@ Make a table before editing:
 ```
 feature | existing code path | current direct authority | replacement NAP | hard/optional | notes
 feed reads | RelayPool.subscribe + NIP-65 | relay routing | outbox | hard | author write relays matter
-post note | signer.sign + relay.publish | signing + fanout | outbox.publish | hard | targetAuthors for directed posts
+post note | signer.sign + relay.publish | signing + fanout | outbox.publish | hard | toInboxes for directed posts
 react | build kind 7 + signer + relay | social action | common.react | optional | fallback disables action
 mute pubkey | edit kind 10000 | list mutation | lists.add | optional | preserve list state shell-side
 avatar | fetch(url) | network bytes | resource.bytes | optional | object URL + revoke

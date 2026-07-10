@@ -26,6 +26,7 @@ import type {
   NostrFilter,
   RelayEventResult,
   EventTemplate,
+  OutboxPublishOptions as CoreOutboxPublishOptions,
 } from '@napplet/core';
 
 /** The NAP domain name for outbox messages. */
@@ -56,15 +57,17 @@ export interface OutboxQueryOptions {
 }
 
 /** Options for a live outbox subscription. */
-export interface OutboxSubscribeOptions extends OutboxQueryOptions {}
+export type OutboxSubscribeOptions = OutboxQueryOptions;
 
-/** Options for an outbox publish. */
-export interface OutboxPublishOptions {
-  /** Relay hints; treated as a hint subject to shell validation. */
-  relays?: string[];
-  /** Recipient authors whose inbox relays should be included for directed events. */
-  targetAuthors?: string[];
-}
+/**
+ * Options for an outbox publish.
+ *
+ * `relays` are explicit relay URL fanout candidates subject to shell validation,
+ * `toOutbox` includes the shell user's NIP-65 write relays and defaults to true,
+ * and `toInboxes` names recipient pubkeys whose NIP-65 read relays are required
+ * fanout targets.
+ */
+export type OutboxPublishOptions = CoreOutboxPublishOptions;
 
 /** A read/write target for relay-plan resolution. */
 export interface OutboxTarget {
@@ -279,7 +282,7 @@ export interface OutboxCloseMessage extends OutboxMessage {
  *   type: 'outbox.publish',
  *   id: crypto.randomUUID(),
  *   event: { kind: 1, content: 'hello', tags: [], created_at: now },
- *   options: { targetAuthors: ['ab12...'] },
+ *   options: { toInboxes: ['ab12...'] },
  * };
  * ```
  */

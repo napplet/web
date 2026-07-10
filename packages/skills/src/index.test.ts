@@ -89,11 +89,15 @@ describe('skill registry', () => {
       expect(prose).toContain('Do not add `keys` to `requires`');
     }
 
+    for (const skill of [...affectedSkills, 'test-napplet']) {
+      expect(readSkill(skill)).not.toContain('targetAuthors');
+    }
+
     const makeSkill = readSkill('make-napplet');
     const makeProse = makeSkill.replace(/\s+/g, ' ');
     expect(makeProse).toContain('`outbox.getEvent`: `author`, `relays`, `timeoutMs`');
     expect(makeProse).toContain('`outbox.query` / `outbox.subscribe`: `authors`, `relays`, `limit`, `timeoutMs`');
-    expect(makeProse).toContain('`outbox.publish`: `relays`, `targetAuthors`');
+    expect(makeProse).toContain('`outbox.publish`: `relays`, `toOutbox`, `toInboxes`');
     expect(makeProse).toContain('No `strategy`, subscribe `live`, publish `timeoutMs`, or `outbox.eose`');
 
     expect(packageReadme).toContain('window.napplet?.domain` only for optional-domain fallback checks');
