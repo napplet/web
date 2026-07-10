@@ -11,7 +11,7 @@
  * @packageDocumentation
  */
 
-import { validateManifest } from '../validators/manifest.js';
+import { manifestDisplayName } from '../validators/manifest.js';
 import { CHECKS } from '../checks/catalog.js';
 import type { Check, CheckArea, CheckSeverity, CheckStatus } from '../checks/types.js';
 import type { ConformanceContext } from './context.js';
@@ -41,7 +41,7 @@ export interface RunSummary {
 
 /** The serializable result of a conformance run. */
 export interface ConformanceRun {
-  /** The napplet-type from the manifest, when known. */
+  /** Display name from the resolved manifest event, when known. */
   napplet?: string;
   /** Timestamp (ms) when the run started. */
   startedAt: number;
@@ -99,7 +99,7 @@ export function runConformance(context: ConformanceContext, options: RunOptions 
     warnings: outcomes.filter((o) => o.status === 'fail' && o.severity === 'warning').length,
   };
 
-  const napplet = validateManifest(context.manifestHtml).nappletType;
+  const napplet = context.manifestEvent ? manifestDisplayName(context.manifestEvent) : undefined;
 
   return {
     napplet,

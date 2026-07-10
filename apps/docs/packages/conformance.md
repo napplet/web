@@ -11,11 +11,10 @@ the napplet sandbox at runtime. One engine drives two scopes:
   `napplet-conformance` Playwright runner.
 - **Standalone web runtime** — the single-window `apps/conformance` app.
 
-v1 is **zero-config protocol conformance**: manifest/meta validity, boots under
-`sandbox="allow-scripts"`, receives a runtime-injected `window.napplet`, every
-emitted postMessage envelope validates against the per-NAP validators, graceful
-degradation when a domain is absent, and no forbidden globals / undeclared
-egress.
+v1 is **zero-config protocol conformance**: NIP-5D manifest-event validity, boots
+under `sandbox="allow-scripts"`, receives a runtime-injected `window.napplet`,
+every emitted postMessage envelope validates against the per-NAP validators,
+graceful degradation when a domain is absent, and no forbidden globals.
 
 - **npm:** [`@napplet/conformance`](https://www.npmjs.com/package/@napplet/conformance)
 - **JSR:** [`@napplet/conformance`](https://jsr.io/@napplet/conformance)
@@ -32,9 +31,11 @@ npm install -D @napplet/conformance
 - **`validateEnvelope(msg)`** — runtime validation of any `domain.action` envelope
   a napplet emits, across every NAP domain. Catches malformed payloads, unknown
   types, and napplets that put shell→napplet (inbound) traffic on the wire.
-- **`validateManifest(html)`** — checks the napplet's discovery meta tags
-  (`napplet-type`, `napplet-aggregate-hash`, `napplet-requires`,
-  `napplet-config-schema`) against NIP-5D / NIP-5A.
+- **`validateManifestEvent(event)`** — checks that a resolved Nostr event is a
+  NIP-5D napplet manifest (`5129`, `15129`, or `35129`) with a hashed
+  `/index.html` path and bare known `requires` domains.
+- **`validateManifest(html)`** — compatibility wrapper for older HTML-only
+  harnesses. HTML alone cannot prove a signed NIP-5D manifest event.
 - **Reference mock shell**, **check registry**, and **reporters** that the CLI and
   the web runtime share.
 
@@ -42,7 +43,7 @@ The validator surface is kept in lockstep with `@napplet/nap` by a drift test, s
 a new NAP message type cannot ship without matching conformance coverage.
 
 ```ts
-import { validateEnvelope, validateManifest } from '@napplet/conformance';
+import { validateEnvelope, validateManifestEvent } from '@napplet/conformance';
 
 validateEnvelope({
   type: 'outbox.query',
@@ -50,7 +51,7 @@ validateEnvelope({
   filters: [{ kinds: [1] }],
 }).ok; // true
 
-validateManifest(builtIndexHtml).ok; // true when the manifest is well-formed
+validateManifestEvent(resolvedManifestEvent).ok; // true when the manifest event is well-formed
 ```
 
 ::: tip

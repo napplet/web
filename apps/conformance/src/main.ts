@@ -1,7 +1,7 @@
 /**
  * napplet conformance runtime — a single-window web app that loads a napplet by
- * URL and runs the @napplet/conformance engine live in the browser, rendering a
- * per-check tree, the recorded envelope log, and a manifest inspector.
+ * NIP-19 pointer and runs the @napplet/conformance engine live in the browser,
+ * rendering a per-check tree, the recorded envelope log, and a manifest inspector.
  *
  * It reuses the exact same engine the headless CLI uses, so verdicts match.
  *
@@ -13,11 +13,13 @@
 import {
   bootAndCollect,
   buildContext,
+  manifestDisplayName,
   runConformance,
-  validateManifest,
+  validateManifestEvent,
   type ConformanceRun,
   type RecordedEnvelope,
 } from '@napplet/conformance';
+import { resolveTarget, type ResolvedTarget } from './target.js';
 import './app.css';
 
 const FORBIDDEN_RE = /\bwindow\s*\.\s*nostr\b|\bglobalThis\s*\.\s*nostr\b/;
@@ -38,7 +40,7 @@ function esc(value: unknown): string {
 const app = document.getElementById('app')!;
 
 function shell(): {
-  urlInput: HTMLInputElement;
+  targetInput: HTMLInputElement;
   runButton: HTMLButtonElement;
   rerunButton: HTMLButtonElement;
   liveBadge: HTMLElement;
@@ -48,10 +50,10 @@ function shell(): {
   app.innerHTML = `
     <header class="masthead">
       <h1>napplet conformance ${LIVE ? '<span class="live-badge" id="live-badge">● live</span>' : ''}</h1>
-      <p>Load a napplet by URL and run NAP protocol conformance live. Same engine as <code>napplet-conformance</code> CI.</p>
+      <p>Load a napplet by <code>nevent</code> or <code>naddr</code> and run NAP protocol conformance live. Same engine as <code>napplet-conformance</code> CI.</p>
     </header>
     <form id="run-form" class="runbar">
-      <input id="url" type="url" placeholder="https://localhost:5173/  (a napplet served with permissive CORS)" autocomplete="off" />
+      <input id="target" type="text" placeholder="naddr1… or nevent1… for a NIP-5D napplet manifest" autocomplete="off" spellcheck="false" />
       <button id="run" type="submit">Run conformance</button>
       <button id="rerun" type="button" class="secondary" hidden>Re-run</button>
     </form>
@@ -59,7 +61,7 @@ function shell(): {
     <section id="output" class="output"></section>
   `;
   return {
-    urlInput: app.querySelector<HTMLInputElement>('#url')!,
+    targetInput: app.querySelector<HTMLInputElement>('#target')!,
     runButton: app.querySelector<HTMLButtonElement>('#run')!,
     rerunButton: app.querySelector<HTMLButtonElement>('#rerun')!,
     liveBadge: app.querySelector<HTMLElement>('#live-badge') ?? document.createElement('span'),
@@ -69,7 +71,7 @@ function shell(): {
 }
 
 const ui = shell();
-let currentUrl = '';
+let currentTarget = '';
 let runCount = 0;
 
 function setStatus(text: string, kind: 'info' | 'error' = 'info'): void {
@@ -86,16 +88,6 @@ function clockFromMs(ms: number): string {
   // browser already has on the event. Callers pass run.finishedAt.
   const d = new Date(ms);
   return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
-}
-
-async function fetchManifest(url: string): Promise<{ html: string; forbidden: string[]; fetched: boolean }> {
-  try {
-    const res = await fetch(url, { mode: 'cors' });
-    const html = await res.text();
-    return { html, forbidden: FORBIDDEN_RE.test(html) ? ['window.nostr'] : [], fetched: true };
-  } catch {
-    return { html: '', forbidden: [], fetched: false };
-  }
 }
 
 function renderChecks(run: ConformanceRun): string {
@@ -139,49 +131,69 @@ function renderEnvelopes(emitted: RecordedEnvelope[]): string {
   return `<ul class="envlog">${rows}</ul>`;
 }
 
-function renderManifest(html: string, fetched: boolean): string {
-  if (!fetched) {
-    return `<p class="empty">Couldn't fetch the napplet HTML (likely CORS). Serve it with <code>Access-Control-Allow-Origin: *</code>, or use the CLI for the authoritative manifest checks.</p>`;
-  }
-  const m = validateManifest(html);
+function renderManifest(target: ResolvedTarget): string {
   const row = (k: string, v: unknown) => `<tr><th>${esc(k)}</th><td>${v ? esc(String(v)) : '<em>—</em>'}</td></tr>`;
-  return `
-    <table class="manifest">
-      ${row('napplet-type', m.nappletType)}
-      ${row('requires', m.requires.join(', '))}
-    </table>
-    ${m.errors.length ? `<div class="errs">${m.errors.map((e) => esc(`${e.code}: ${e.message}`)).join('<br>')}</div>` : ''}
-  `;
+  if (target.manifestEvent) {
+    const event = target.manifestEvent;
+    const v = validateManifestEvent(event);
+    const dTag = event.tags.find((tag) => tag[0] === 'd')?.[1];
+    const index = event.tags.find((tag) => tag[0] === 'path' && tag[1] === '/index.html');
+    const servers = event.tags.filter((tag) => tag[0] === 'server').map((tag) => tag[1]).filter(Boolean);
+    return `
+      <table class="manifest">
+        ${row('event', event.id)}
+        ${row('kind', event.kind)}
+        ${row('d', dTag)}
+        ${row('name', manifestDisplayName(event))}
+        ${row('requires', v.requires.join(', '))}
+        ${row('/index.html', index?.[2])}
+        ${row('servers', servers.join(', '))}
+      </table>
+      ${v.errors.length ? `<div class="errs">${v.errors.map((e) => esc(`${e.code}: ${e.message}`)).join('<br>')}</div>` : ''}
+    `;
+  }
+  if (!target.fetched) {
+    return `<p class="empty">Couldn't fetch the local URL HTML, likely because of CORS. Use a NIP-19 <code>nevent</code>/<code>naddr</code> for authoritative manifest checks, or use the CLI for local URL runs.</p>`;
+  }
+  return `<p class="empty">Local URL mode booted raw HTML. It does not include a signed NIP-5D manifest event, so manifest-event checks are skipped.</p>`;
 }
 
-function render(run: ConformanceRun, emitted: RecordedEnvelope[], html: string, fetched: boolean): void {
+function render(run: ConformanceRun, emitted: RecordedEnvelope[], target: ResolvedTarget): void {
   ui.output.innerHTML = `
     ${renderChecks(run)}
     <div class="panels">
       <section class="panel"><h2>Emitted envelopes (${emitted.length})</h2>${renderEnvelopes(emitted)}</section>
-      <section class="panel"><h2>Manifest</h2>${renderManifest(html, fetched)}</section>
+      <section class="panel"><h2>Manifest</h2>${renderManifest(target)}</section>
     </div>
   `;
 }
 
-async function run(url: string): Promise<void> {
-  currentUrl = url;
+async function run(target: string): Promise<void> {
+  currentTarget = target;
   ui.runButton.disabled = true;
   ui.rerunButton.disabled = true;
+  let resolved: ResolvedTarget | null = null;
   try {
-    setStatus(`Fetching manifest for ${url} …`);
-    const { html, forbidden, fetched } = await fetchManifest(url);
+    setStatus(`Resolving ${target} …`);
+    resolved = await resolveTarget(target);
+    const forbidden = FORBIDDEN_RE.test(resolved.html) ? ['window.nostr'] : [];
     setStatus('Booting napplet in a sandboxed iframe …');
-    const boot = await bootAndCollect({ url, readyTimeoutMs: 5000, settleMs: 800, runDegraded: true });
-    const ctx = buildContext({ manifestHtml: html, boot, forbiddenGlobals: forbidden });
+    const boot = await bootAndCollect({ url: resolved.bootUrl, readyTimeoutMs: 5000, settleMs: 800, runDegraded: true });
+    const ctx = buildContext({
+      manifestHtml: resolved.html,
+      manifestEvent: resolved.manifestEvent,
+      boot,
+      forbiddenGlobals: forbidden,
+    });
     const result = runConformance(ctx);
     runCount += 1;
     setStatus(result.ok ? 'Done — conformant.' : 'Done — non-conformant.', result.ok ? 'info' : 'error');
-    render(result, boot.emitted, html, fetched);
+    render(result, boot.emitted, resolved);
     ui.rerunButton.hidden = false;
   } catch (err) {
     setStatus(`Error: ${err instanceof Error ? err.message : String(err)}`, 'error');
   } finally {
+    resolved?.revoke?.();
     ui.runButton.disabled = false;
     ui.rerunButton.disabled = false;
   }
@@ -193,12 +205,12 @@ function connectLive(): void {
   let scheduled = false;
   const source = new EventSource(SSE_PATH);
   source.addEventListener('rerun', () => {
-    if (!currentUrl || scheduled) return;
+    if (!currentTarget || scheduled) return;
     scheduled = true;
     // Coalesce bursts of file events into a single re-run.
     setTimeout(() => {
       scheduled = false;
-      void run(currentUrl);
+      void run(currentTarget);
     }, 50);
   });
   source.addEventListener('open', () => {
@@ -211,24 +223,25 @@ function connectLive(): void {
 
 ui.runButton.parentElement!.addEventListener('submit', (e) => {
   e.preventDefault();
-  const url = ui.urlInput.value.trim();
-  if (url) {
+  const target = ui.targetInput.value.trim();
+  if (target) {
     const next = new URL(location.href);
-    next.searchParams.set('url', url);
+    next.searchParams.set('target', target);
+    next.searchParams.delete('url');
     history.replaceState(null, '', next);
-    void run(url);
+    void run(target);
   }
 });
 
 ui.rerunButton.addEventListener('click', () => {
-  if (currentUrl) void run(currentUrl);
+  if (currentTarget) void run(currentTarget);
 });
 
 connectLive();
 
-// Deep-link support: ?url=… runs immediately.
-const initial = params.get('url');
+// Deep-link support: ?target=… runs immediately. ?url=… remains for local dev links.
+const initial = params.get('target') ?? params.get('url');
 if (initial) {
-  ui.urlInput.value = initial;
+  ui.targetInput.value = initial;
   void run(initial);
 }
