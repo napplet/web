@@ -56,7 +56,15 @@ export default defineConfig({
         text: 'Getting Started',
         items: [
           { text: 'Getting started', link: '/guide/getting-started' },
-          { text: 'Build a note drafts napplet', link: '/guide/build-note-drafts-napplet' },
+          { text: 'Note Drafts from scratch', link: '/guide/build-note-drafts-napplet' },
+          {
+            text: 'Note Drafts from boilerplate',
+            link: '/guide/build-note-drafts-napplet-from-boilerplate',
+          },
+          {
+            text: 'Note Drafts with an AI agent',
+            link: '/guide/build-note-drafts-napplet-with-ai-agent-and-skills',
+          },
           { text: 'Core concepts', link: '/guide/concepts' },
         ],
       },

@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v0.34.0
 milestone_name: NIP-5D Runtime Injection
 status: planning
-last_updated: "2026-07-10T14:51:53+02:00"
-last_activity: 2026-07-10 - Quick task 260710-kmj complete: nsite mirror failures no longer fail the Deploy site workflow.
+last_updated: "2026-07-10T15:27:52+02:00"
+last_activity: 2026-07-10 - Quick task 260710-lai complete: Note Drafts docs now cover from-scratch, boilerplate, and agent-assisted tutorial paths.
 progress:
   total_phases: 0
   completed_phases: 0
@@ -30,7 +30,16 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 Phase: Not started (defining requirements)
 Plan: —
 Status: Defining requirements
-Last activity: 2026-07-10 — Quick task 260710-kmj complete; scoped `continue-on-error` to the optional nsite mirror publish in `Deploy site` so Bunny-backed site deploys stay green when the NIP-46 signer times out.
+Last activity: 2026-07-10 — Quick task 260710-lai complete; renamed the existing Note Drafts tutorial and added boilerplate plus AI-agent variants with docs/sidebar links and validation evidence.
+
+### Quick task 260710-lai — COMPLETE
+
+- Renamed `apps/docs/guide/build-note-drafts-napplet.md` to present itself as the from-scratch tutorial.
+- Added the boilerplate tutorial at `apps/docs/guide/build-note-drafts-napplet-from-boilerplate.md`.
+- Added the AI-agent / `@napplet.skills` tutorial at `apps/docs/guide/build-note-drafts-napplet-with-ai-agent-and-skills.md`.
+- Updated `apps/docs/guide/getting-started.md` and `apps/docs/.vitepress/config.ts` so all three tutorial paths are discoverable.
+- Verification: `pnpm build`; `pnpm type-check`; `pnpm test:tutorial`; `pnpm -r test:unit`; assembled-site `node scripts/check-links.mjs http://localhost:8099`; `git diff --check`; staged `aislop@0.12.0` 98/100 with only the existing `js-yaml` advisory.
+- Remaining goal scope after local work: PR, merge, and production docs deploy verification.
 
 ### Quick task 260710-kmj — COMPLETE
 
@@ -352,6 +361,7 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 
 | Quick ID | Task | Date | Commit | Artifacts |
 |----------|------|------|--------|-----------|
+| 260710-lai | Add Note Drafts boilerplate and AI-agent tutorials | 2026-07-10 | 39676ba4 | [260710-lai-write-note-drafts-tutorial-variants-upda](./quick/260710-lai-write-note-drafts-tutorial-variants-upda/) |
 | 260710-kmj | Treat nsite deploy failures as optional skips in Deploy site | 2026-07-10 | 2248c6c8 | [260710-kmj-treat-nsite-deploy-failures-as-optional-](./quick/260710-kmj-treat-nsite-deploy-failures-as-optional-/) |
 | 260707-hrs | Align RESOURCE htree scheme | 2026-07-07 | 7ec9561f | [260707-hrs-align-resource-htree-scheme](./quick/260707-hrs-align-resource-htree-scheme/) |
 | 260703-ghg | Align napplet packages with NAP RelayEventResult sidecars and updated outbox stream lifecycle | 2026-07-03 | 2ce3e3f2 | [260703-ghg-align-napplet-packages-with-nap-relayeve](./quick/260703-ghg-align-napplet-packages-with-nap-relayeve/) |
