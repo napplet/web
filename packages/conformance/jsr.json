@@ -1,6 +1,6 @@
 {
   "name": "@napplet/conformance",
-  "version": "0.12.6",
+  "version": "0.13.0",
   "license": "MIT",
   "exports": "./src/index.ts",
   "imports": {

@@ -64,7 +64,7 @@ surface. The napplet app imports `@napplet/sdk`; the shell/runtime injects
     "@napplet/sdk": "^0.24.4"
   },
   "devDependencies": {
-    "@napplet/conformance-cli": "^0.2.14",
+    "@napplet/conformance-cli": "^0.2.15",
     "@napplet/vite-plugin": "^0.11.2",
     "typescript": "^5.9.3",
     "vite": "^6.4.3",
