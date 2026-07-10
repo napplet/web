@@ -57,10 +57,13 @@ export async function createDeploySigner(
     return { signer, signing };
   }
   if (signing.type === "stored") {
-    const provider = await requireDeployKeyStore(options);
+    const provider = await getOptionalKeyStore(options);
+    if (!provider) {
+      return await recoverMissingStoredSigner(signing, config, options);
+    }
     const secret = await provider.retrieve(KEY_SERVICE_NAME, signing.keyReference);
     if (!secret) {
-      throw new Error(`No key reference "${signing.keyReference}" found in ${provider.name}`);
+      return await recoverMissingStoredSigner(signing, config, options, provider.name);
     }
     return { signer: await createSigner(secret), signing };
   }
@@ -165,6 +168,44 @@ async function retrieveBunkerSecret(
   return null;
 }
 
+async function recoverMissingStoredSigner(
+  signing: { type: "stored"; source: "config"; keyReference: string },
+  config: NappletConfig,
+  options: DeploySignerOptions,
+  providerName?: string,
+): Promise<DeploySignerResult> {
+  if (!options.required) return { signer: null, signing };
+
+  const expected = configuredSigningPubkey(config);
+  if (expected && options.interactiveConnect) {
+    const print = options.print ?? (() => {});
+    print(
+      `No stored signer "${signing.keyReference}"${
+        providerName ? ` found in ${providerName}` : ""
+      }. Reconnecting to configured bunker ${formatPubkey(expected)}...`,
+    );
+    return await connectAndCreateSigner(config, options, expected, config.signing?.relays);
+  }
+
+  if (expected) {
+    throw new Error(
+      `No key reference "${signing.keyReference}"${
+        providerName ? ` found in ${providerName}` : ""
+      } for configured bunker ${
+        formatPubkey(expected)
+      }. Run napplet deploy in an interactive terminal to reconnect, pass --sec/--prompt-sec, or run napplet keys connect.`,
+    );
+  }
+
+  if (!providerName) {
+    throw new Error(
+      "No native keychain provider is available. Install macOS security, Windows Credential Manager/cmdkey, or Linux libsecret secret-tool with a D-Bus session.",
+    );
+  }
+
+  throw new Error(`No key reference "${signing.keyReference}" found in ${providerName}`);
+}
+
 async function connectAndCreateSigner(
   config: NappletConfig,
   options: DeploySignerOptions,
@@ -176,7 +217,11 @@ async function connectAndCreateSigner(
   const createSigner = options.createSigner ?? createSignerFromSecret;
   const relays = connectRelays(config, preferredRelays);
 
-  print("No deploy signer is configured. Starting Nostr Connect...");
+  print(
+    expectedPubkey
+      ? `Starting Nostr Connect for configured bunker ${formatPubkey(expectedPubkey)}...`
+      : "No deploy signer is configured. Starting Nostr Connect...",
+  );
   const result = await connectRemoteSigner({
     relays,
     appName: "napplet CLI",
@@ -233,16 +278,6 @@ async function storeConnectedSigner(
     print(`Could not store remote signer in ${provider.name}: ${message(error)}`);
     return false;
   }
-}
-
-async function requireDeployKeyStore(options: DeploySignerOptions): Promise<KeyStoreProvider> {
-  const provider = await getOptionalKeyStore(options);
-  if (!provider) {
-    throw new Error(
-      "No native keychain provider is available. Install macOS security, Windows Credential Manager/cmdkey, or Linux libsecret secret-tool with a D-Bus session.",
-    );
-  }
-  return provider;
 }
 
 async function getOptionalKeyStore(

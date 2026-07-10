@@ -4,15 +4,33 @@
  * @module
  */
 
-import { readConfig, setSigningKeyReference, writeConfig } from "./config.ts";
+import { readConfig, setSigningKeyReference, setSigningRemote, writeConfig } from "./config.ts";
 import { collectFlags, first, requiredValue, resolveSecretInput } from "./flags.ts";
-import { KEY_SERVICE_NAME, requireKeyStoreProvider } from "./key-store.ts";
-import { connectRemoteSigner, DEFAULT_CONNECT_RELAYS } from "./nostr-connect.ts";
+import { KEY_SERVICE_NAME, type KeyStoreProvider, requireKeyStoreProvider } from "./key-store.ts";
+import {
+  type ConnectOptions,
+  connectRemoteSigner,
+  type ConnectResult,
+  DEFAULT_CONNECT_RELAYS,
+} from "./nostr-connect.ts";
+import type { NappletConfig } from "./types.ts";
 
-export async function commandKeys(argv: string[], helpText: string): Promise<number> {
+export interface KeysCommandOptions {
+  requireKeyStoreProvider?: () => Promise<KeyStoreProvider>;
+  connectRemoteSigner?: (options: ConnectOptions) => Promise<ConnectResult>;
+  readConfig?: (path?: string) => Promise<NappletConfig | null>;
+  writeConfig?: (config: NappletConfig, path?: string) => Promise<void>;
+}
+
+export async function commandKeys(
+  argv: string[],
+  helpText: string,
+  options: KeysCommandOptions = {},
+): Promise<number> {
   const subcommand = argv[0] ?? "help";
   const rest = argv.slice(1);
   const flags = collectFlags(rest);
+  const loadProvider = options.requireKeyStoreProvider ?? requireKeyStoreProvider;
 
   if (subcommand === "help" || subcommand === "--help" || subcommand === "-h") {
     console.log(helpText);
@@ -20,12 +38,12 @@ export async function commandKeys(argv: string[], helpText: string): Promise<num
   }
 
   if (subcommand === "doctor") {
-    const provider = await requireKeyStoreProvider();
+    const provider = await loadProvider();
     console.log(`Native key storage available: ${provider.name}`);
     return 0;
   }
 
-  const provider = await requireKeyStoreProvider();
+  const provider = await loadProvider();
 
   if (subcommand === "store") {
     const name = requiredValue(flags, "name");
@@ -38,17 +56,26 @@ export async function commandKeys(argv: string[], helpText: string): Promise<num
   if (subcommand === "connect") {
     const name = requiredValue(flags, "name");
     const relays = flags.values.get("relay") ?? DEFAULT_CONNECT_RELAYS.slice();
-    const { nbunksec, pubkey, relays: sessionRelays } = await connectRemoteSigner({
+    const connect = options.connectRemoteSigner ?? connectRemoteSigner;
+    const { nbunksec, pubkey, relays: sessionRelays } = await connect({
       relays,
       appName: "napplet CLI",
     });
     await provider.store({ service: KEY_SERVICE_NAME, account: name, secret: nbunksec });
     const path = first(flags.values.get("config"));
-    const config = await readConfig(path);
+    const config = await (options.readConfig ?? readConfig)(path);
     if (!config) throw new Error(`No .napplet config found${path ? ` at ${path}` : ""}`);
-    await writeConfig(setSigningKeyReference(config, name), path);
+    await (options.writeConfig ?? writeConfig)(
+      setSigningRemote(config, {
+        pubkey,
+        keyReference: name,
+        relays: sessionRelays,
+      }),
+      path,
+    );
     console.log(`Stored remote signer "${name}" in ${provider.name}`);
     console.log(`Configured .napplet signing.keyReference = "${name}"`);
+    console.log(`Configured .napplet bunkerPubkey = "${pubkey}"`);
     console.log(`Remote signer pubkey: ${pubkey}`);
     console.log(`Session relays: ${sessionRelays.join(", ")}`);
     return 0;
