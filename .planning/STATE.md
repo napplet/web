@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v0.34.0
 milestone_name: NIP-5D Runtime Injection
 status: planning
-last_updated: "2026-07-10T12:31:54+02:00"
-last_activity: 2026-07-10 - Quick task 260710-gyt complete: from-scratch Note Drafts napplet tutorial plus executable tutorial extraction/conformance test.
+last_updated: "2026-07-10T12:39:14+02:00"
+last_activity: 2026-07-10 - Quick task 260710-hk2 complete: fixed PR #155 CI by installing Playwright Chromium before root pnpm test.
 progress:
   total_phases: 0
   completed_phases: 0
@@ -30,7 +30,14 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 Phase: Not started (defining requirements)
 Plan: —
 Status: Defining requirements
-Last activity: 2026-07-10 — Quick task 260710-gyt complete; added a from-scratch Note Drafts napplet tutorial and executable tutorial validation that extracts the documented project, type-checks it, builds the single-file artifact, and runs conformance.
+Last activity: 2026-07-10 — Quick task 260710-hk2 complete; fixed PR #155 `CI / ci` failure by adding Playwright Chromium install/cache before root `pnpm test`, which now runs tutorial conformance.
+
+### Quick task 260710-hk2 — COMPLETE
+
+- Diagnosed PR #155 `CI / ci` run `29086732122`, job `86342103545`: `pnpm test` reached `pnpm test:tutorial`, then `napplet-conformance` failed because Playwright Chromium was not installed on the runner.
+- Added Playwright version resolution, `~/.cache/ms-playwright` cache, and `pnpm exec playwright install --with-deps chromium` to `.github/workflows/ci.yml` before `pnpm test`.
+- Kept tutorial conformance active in root `pnpm test`.
+- Verification: CI YAML parsed with Ruby; `pnpm test:tutorial`; `pnpm test`; `git diff --check`.
 
 ### Quick task 260710-gyt — COMPLETE
 
