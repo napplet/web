@@ -147,7 +147,7 @@ layer to generated napplet code.
 - Outbox calls use current option fields only:
   `outbox.getEvent`: `author`, `relays`, `timeoutMs`;
   `outbox.query` / `outbox.subscribe`: `authors`, `relays`, `limit`, `timeoutMs`;
-  `outbox.publish`: `relays`, `targetAuthors`.
+  `outbox.publish`: `relays`, `toOutbox`, `toInboxes`.
   No `strategy`, subscribe `live`, publish `timeoutMs`, or `outbox.eose`.
 - Every optional NAP is gated with a graceful fallback.
 - Every hard requirement is declared with a bare domain name in the manifest

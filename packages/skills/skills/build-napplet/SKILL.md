@@ -188,10 +188,12 @@ if (!result.ok || !result.event) throw new Error(result.error ?? 'publish failed
 console.log('published', result.event.id);
 ```
 
-For directed events, pass `targetAuthors` so the shell can include recipient inbox relays.
+For directed events, pass `toInboxes` so the shell can include recipient inbox relays.
+`toOutbox` defaults to true; pass `relays` only for explicit relay URL fanout
+candidates subject to shell validation.
 
 ```ts
-await outbox.publish(template, { targetAuthors: [recipientPubkey] });
+await outbox.publish(template, { toInboxes: [recipientPubkey] });
 ```
 
 ## Step 5 — Use Higher-Level Social NAPs Before Raw Events

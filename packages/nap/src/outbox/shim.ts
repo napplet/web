@@ -320,14 +320,15 @@ export function subscribe(
  * if the shell never responds.
  *
  * @param template  Unsigned event template; the shell signs before fanout
- * @param options   Optional publish options (relays, targetAuthors)
+ * @param options   Optional publish fanout (`relays`, `toOutbox`, `toInboxes`);
+ *                  `toOutbox` defaults to true when omitted
  * @returns Promise resolving to the outbox publish result
  *
  * @example
  * ```ts
  * const res = await publish(
  *   { kind: 1, content: 'hello', tags: [], created_at: Math.floor(Date.now() / 1000) },
- *   { targetAuthors: ['ab12...'] },
+ *   { toInboxes: ['ab12...'] },
  * );
  * ```
  */
