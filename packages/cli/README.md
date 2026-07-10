@@ -165,7 +165,8 @@ Signing can come from:
 
 - `--sec <hex-or-nsec-or-nbunksec-or-bunker://url>`
 - `--prompt-sec`, which reads hidden terminal input until Enter and still accepts piped stdin in
-  non-interactive runs
+  non-interactive runs. If the project config names a bunker pubkey/npub, the prompted signer must
+  match that identity unless an interactive user explicitly confirms the mismatch.
 - a stored key reference configured by `napplet keys use`
 - a configured bunker pubkey/npub whose `nbunksec` session exists in native key storage
 - an interactive NIP-46 connection flow when no signer is configured and `deploy` is running in a
@@ -314,7 +315,8 @@ The default command is `kehto paja`; override it with `paja.command`.
 - Run `napplet keys doctor` if key commands fail; Linux needs `secret-tool` and an active D-Bus
   session.
 - Use `--prompt-sec` when you need an ad-hoc key without echoing it in shell history; press Enter to
-  submit the hidden prompt.
+  submit the hidden prompt. If `.napplet` is configured for another pubkey, interactive deploys warn
+  before continuing and non-interactive prompt input fails closed.
 - Use `--json` when another program needs to parse `deploy` output.
 - Use `--dry-run` before network deploys; it signs the same manifest events without uploading files
   or publishing to relays.

@@ -62,6 +62,9 @@ napplet deploy --sec nsec1...
 - When no signer flag or stored signer exists, interactive `napplet deploy`
   starts the NIP-46 connection flow and stores the paired remote signer when
   native key storage is available.
+- `--prompt-sec` reads hidden input until Enter; when `.napplet` names a bunker pubkey/npub, a
+  mismatched prompted signer requires interactive confirmation and fails closed in non-interactive
+  runs.
 
 ## Commands
 

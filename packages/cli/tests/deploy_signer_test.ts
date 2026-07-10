@@ -7,14 +7,14 @@ import { assert, assertEquals } from "./assert.ts";
 
 const pubkey = "02".repeat(32);
 
-function fakeSigner(): NappletSigner {
+function fakeSigner(signerPubkey = pubkey): NappletSigner {
   return {
-    pubkey,
+    pubkey: signerPubkey,
     sign(template: NostrEventTemplate): Promise<SignedNostrEvent> {
       return Promise.resolve({
         ...template,
         id: "0".repeat(64),
-        pubkey,
+        pubkey: signerPubkey,
         sig: "0".repeat(128),
       });
     },
@@ -65,6 +65,72 @@ Deno.test("createDeploySigner uses a stored bunker session for configured pubkey
     source: "config",
     keyReference: pubkey,
   });
+});
+
+Deno.test("createDeploySigner accepts prompt secret when configured pubkey matches", async () => {
+  let confirmCalled = false;
+  const result = await createDeploySigner(
+    { type: "prompt", source: "prompt-sec" },
+    defaultConfig({ bunkerPubkey: pubkey }),
+    {
+      promptSecret: () => Promise.resolve("nsec1secret"),
+      createSigner: () => Promise.resolve(fakeSigner(pubkey)),
+      confirmSignerMismatch: () => {
+        confirmCalled = true;
+        return Promise.resolve(true);
+      },
+    },
+  );
+
+  assert(result.signer);
+  assertEquals(result.signer.pubkey, pubkey);
+  assertEquals(confirmCalled, false);
+});
+
+Deno.test("createDeploySigner can continue prompt secret after mismatch confirmation", async () => {
+  const otherPubkey = "03".repeat(32);
+  const confirmations: Array<[string, string]> = [];
+
+  const result = await createDeploySigner(
+    { type: "prompt", source: "prompt-sec" },
+    defaultConfig({ bunkerPubkey: pubkey }),
+    {
+      promptSecret: () => Promise.resolve("nsec1secret"),
+      createSigner: () => Promise.resolve(fakeSigner(otherPubkey)),
+      confirmSignerMismatch(actual, expected) {
+        confirmations.push([actual, expected]);
+        return Promise.resolve(true);
+      },
+    },
+  );
+
+  assert(result.signer);
+  assertEquals(result.signer.pubkey, otherPubkey);
+  assertEquals(confirmations, [[otherPubkey, pubkey]]);
+});
+
+Deno.test("createDeploySigner rejects non-interactive prompt secret pubkey mismatch", async () => {
+  const otherPubkey = "03".repeat(32);
+  const prints: string[] = [];
+  let message = "";
+
+  try {
+    await createDeploySigner(
+      { type: "prompt", source: "prompt-sec" },
+      defaultConfig({ bunkerPubkey: pubkey }),
+      {
+        promptSecret: () => Promise.resolve("nsec1secret"),
+        createSigner: () => Promise.resolve(fakeSigner(otherPubkey)),
+        isTerminalInput: () => false,
+        print: (line) => prints.push(line),
+      },
+    );
+  } catch (error) {
+    message = error instanceof Error ? error.message : String(error);
+  }
+
+  assert(message.includes("does not match configured pubkey"));
+  assert(prints.some((line) => line.includes("This may be the wrong key")));
 });
 
 Deno.test("createDeploySigner starts Nostr Connect when interactive deploy has no signer", async () => {

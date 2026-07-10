@@ -6,8 +6,13 @@ import {
   type ConnectResult,
   DEFAULT_CONNECT_RELAYS,
 } from "./nostr-connect.ts";
-import { promptSecret as promptSigningSecret } from "./prompt.ts";
-import { createSignerFromSecret, encodePublicKey, type NappletSigner } from "./signing.ts";
+import { promptLine, promptSecret as promptSigningSecret } from "./prompt.ts";
+import {
+  createSignerFromSecret,
+  encodePublicKey,
+  type NappletSigner,
+  normalizePublicKey,
+} from "./signing.ts";
 import type { NappletConfig, SigningMethod } from "./types.ts";
 
 export interface DeploySignerResult {
@@ -25,6 +30,8 @@ export interface DeploySignerOptions {
   getKeyStoreProvider?: () => Promise<KeyStoreProvider | null>;
   connectRemoteSigner?: (options: ConnectOptions) => Promise<ConnectResult>;
   createSigner?: (secret: string) => Promise<NappletSigner>;
+  confirmSignerMismatch?: (actualPubkey: string, expectedPubkey: string) => Promise<boolean>;
+  isTerminalInput?: () => boolean;
   writeConfig?: (config: NappletConfig, path?: string) => Promise<void>;
   print?: (line: string) => void;
   writePromptBytes?: (bytes: Uint8Array) => void;
@@ -45,7 +52,9 @@ export async function createDeploySigner(
   }
   if (signing.type === "prompt") {
     const promptSecret = options.promptSecret ?? promptSigningSecret;
-    return { signer: await createSigner(await promptSecret()), signing };
+    const signer = await createSigner(await promptSecret());
+    await confirmPromptSignerIdentity(signer, config, options);
+    return { signer, signing };
   }
   if (signing.type === "stored") {
     const provider = await requireDeployKeyStore(options);
@@ -90,6 +99,57 @@ export async function createDeploySigner(
     );
   }
   return { signer: null, signing };
+}
+
+async function confirmPromptSignerIdentity(
+  signer: NappletSigner,
+  config: NappletConfig,
+  options: DeploySignerOptions,
+): Promise<void> {
+  const expected = configuredSigningPubkey(config);
+  if (!expected || normalizePublicKey(signer.pubkey) === expected) return;
+
+  const allowed = await confirmSignerMismatch(normalizePublicKey(signer.pubkey), expected, options);
+  if (allowed) return;
+
+  throw new Error(
+    `Prompted signing key ${formatPubkey(signer.pubkey)} does not match configured pubkey ${
+      formatPubkey(expected)
+    }`,
+  );
+}
+
+function configuredSigningPubkey(config: NappletConfig): string | null {
+  const pubkey = config.signing?.pubkey ?? config.bunkerPubkey;
+  return pubkey ? normalizePublicKey(pubkey) : null;
+}
+
+async function confirmSignerMismatch(
+  actualPubkey: string,
+  expectedPubkey: string,
+  options: DeploySignerOptions,
+): Promise<boolean> {
+  if (options.confirmSignerMismatch) {
+    return await options.confirmSignerMismatch(actualPubkey, expectedPubkey);
+  }
+
+  const print = options.print ?? console.error;
+  print("");
+  print(
+    `The prompted signing key belongs to ${
+      formatPubkey(actualPubkey)
+    }, but this project is configured for ${formatPubkey(expectedPubkey)}.`,
+  );
+  print("This may be the wrong key.");
+
+  const interactive = options.isTerminalInput?.() ?? (Deno.stdin.isTerminal?.() ?? false);
+  if (!interactive) return false;
+
+  const answer = await promptLine({
+    message: "Continue with this signer?",
+    defaultValue: "no",
+  });
+  return answer.trim().toLowerCase() === "y" || answer.trim().toLowerCase() === "yes";
 }
 
 async function retrieveBunkerSecret(
@@ -206,6 +266,15 @@ function connectRelays(config: NappletConfig, preferredRelays?: readonly string[
 function requireSec(sec: string | undefined): string {
   if (!sec) throw new Error("Missing --sec");
   return sec;
+}
+
+function formatPubkey(pubkey: string): string {
+  try {
+    const npub = encodePublicKey(pubkey);
+    return `${npub.slice(0, 12)}...${npub.slice(-8)}`;
+  } catch {
+    return `${pubkey.slice(0, 8)}...${pubkey.slice(-8)}`;
+  }
 }
 
 function message(error: unknown): string {
