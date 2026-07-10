@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v0.34.0
 milestone_name: NIP-5D Runtime Injection
 status: planning
-last_updated: "2026-07-10T16:35:02+02:00"
-last_activity: 2026-07-10 - Quick task 260710-mzr complete: Core concepts now appears first in the docs Getting Started sidebar group.
+last_updated: "2026-07-10T17:13:25+02:00"
+last_activity: 2026-07-10 - Quick task 260710-ng9 complete: napplet.run conformance now accepts NIP-19 napplet manifest pointers.
 progress:
   total_phases: 0
   completed_phases: 0
@@ -30,7 +30,30 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 Phase: Not started (defining requirements)
 Plan: —
 Status: Defining requirements
-Last activity: 2026-07-10 — Quick task 260710-mzr complete; moved Core concepts to the top of the docs Getting Started sidebar group.
+Last activity: 2026-07-10 — Quick task 260710-ng9 complete; napplet.run conformance now accepts NIP-19 `nevent`/`naddr` napplet manifest pointers.
+
+### Quick task 260710-ng9 — COMPLETE
+
+- Added `nevent`/`naddr` resolution to the conformance web app, using pointer
+  relay hints to resolve NIP-5D napplet manifest events.
+- Verified event signatures, NIP-5D event kind/shape, optional aggregate `x`
+  tags, Blossom `/index.html` blob hashes, and then booted the verified HTML
+  through the existing `srcdoc` sandbox harness.
+- Replaced private HTML `napplet-*` manifest checks in `@napplet/conformance`
+  with resolved manifest-event checks and kept `validateManifest(html)` as a
+  compatibility wrapper.
+- Updated conformance docs, added app-level unit tests, and added a changeset for
+  `@napplet/conformance`.
+- Verification: `pnpm --filter @napplet/conformance test:unit`;
+  `pnpm --filter @napplet/conformance build`;
+  `pnpm --filter @napplet/conformance-web test:unit`;
+  `pnpm --filter @napplet/conformance type-check`;
+  `pnpm --filter @napplet/conformance-web type-check`;
+  `pnpm --filter @napplet/conformance-web build`; `pnpm build`;
+  `pnpm type-check`; `pnpm -r test:unit`; `pnpm lint`; `pnpm test`;
+  `git diff --check`; `pnpm dlx aislop scan --json .` (88/100 from
+  pre-existing warnings outside touched files).
+- Commit: `04606c3a` (`fix(conformance): accept Nostr manifest pointers`).
 
 ### Quick task 260710-mzr — COMPLETE
 
@@ -389,6 +412,7 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 
 | Quick ID | Task | Date | Commit | Artifacts |
 |----------|------|------|--------|-----------|
+| 260710-ng9 | Fix napplet.run conformance to accept NIP-19 napplet manifest pointers | 2026-07-10 | 04606c3a | [260710-ng9-fix-napplet-run-conformance-to-accept-ne](./quick/260710-ng9-fix-napplet-run-conformance-to-accept-ne/) |
 | 260710-mzr | Move Core Concepts to the top of the affected docs section | 2026-07-10 | bc4cd533 | [260710-mzr-move-core-concepts-to-the-top-of-the-aff](./quick/260710-mzr-move-core-concepts-to-the-top-of-the-aff/) |
 | 260710-lai | Add Note Drafts boilerplate and AI-agent tutorials | 2026-07-10 | 39676ba4 | [260710-lai-write-note-drafts-tutorial-variants-upda](./quick/260710-lai-write-note-drafts-tutorial-variants-upda/) |
 | 260710-kmj | Treat nsite deploy failures as optional skips in Deploy site | 2026-07-10 | 2248c6c8 | [260710-kmj-treat-nsite-deploy-failures-as-optional-](./quick/260710-kmj-treat-nsite-deploy-failures-as-optional-/) |
