@@ -49,7 +49,10 @@ napplet deploy --dry-run --sec nsec1...
 napplet deploy --sec nsec1...
 ```
 
-- `napplet init` creates `.napplet/config.json`.
+- `napplet init` creates `.napplet/config.json`. In an interactive terminal it
+  guides setup, shows curated relay defaults plus live NIP-66 discoveries from
+  relays such as `wss://relaypag.es`, and suggests Blossom servers from kind
+  `10063` server-list events.
 - `napplet debug` prints resolved config, discovered napplets, deploy targets,
   manifest templates, and signing readiness without network writes.
 - `napplet deploy --dry-run` builds the same deploy plan and signed manifest

@@ -59,7 +59,7 @@ Deno.test("eventsToBlossomServerSuggestions extracts kind 10063 server tags by f
   assertEquals(servers, ["https://cdn-two.example", "https://cdn-one.example"]);
 });
 
-Deno.test("getRelaySuggestions appends defaults and tolerates relay failures", async () => {
+Deno.test("getRelaySuggestions prefers deploy defaults and appends live discovery", async () => {
   const live = await getRelaySuggestions({
     pool: new FakePool([
       {
@@ -69,10 +69,17 @@ Deno.test("getRelaySuggestions appends defaults and tolerates relay failures", a
       },
     ]),
     relays: ["wss://relaypag.es"],
-    limit: 3,
+    limit: 7,
   });
-  assertEquals(live[0], "wss://live.example");
-  assertEquals(live.length, 3);
+  assertEquals(live.slice(0, 6), [
+    "wss://relay.primal.net",
+    "wss://nos.lol",
+    "wss://relay.damus.io",
+    "wss://nostr.wine",
+    "wss://relay.nostr.band",
+    "wss://nostr-pub.wellorder.net",
+  ]);
+  assertEquals(live[6], "wss://live.example");
 
   const fallback = await getRelaySuggestions({
     pool: new FakePool([], true),

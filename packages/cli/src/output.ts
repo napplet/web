@@ -270,14 +270,25 @@ export function createDeployProgressReporter(
  */
 export function renderInitReport(report: InitReport): string {
   const lines: string[] = [];
-  lines.push(`${report.created ? "Created" : "Found"} ${report.path}`);
+  lines.push(report.created ? "Napplet Init Complete" : "Napplet Init");
+  lines.push(report.created ? "=====================" : "============");
   lines.push("");
-  pushSection(lines, "Napplet config");
+  pushSection(lines, "Project");
+  pushField(lines, "Status", report.created ? "created" : "existing config");
+  pushField(lines, "Config", report.path);
   pushField(lines, "Source", report.config.sourceDir);
   pushField(lines, "Default target", report.config.defaultTarget);
-  pushField(lines, "Named d tags", formatList(report.config.named ?? []));
-  pushField(lines, "Relays", formatList(report.config.relays));
-  pushField(lines, "Blossom servers", formatList(report.config.blossomServers));
+  pushField(lines, "Named d tags", formatCountedList(report.config.named ?? []));
+  pushField(lines, "Relays", formatCountedList(report.config.relays));
+  pushField(lines, "Blossom servers", formatCountedList(report.config.blossomServers));
+  lines.push("");
+  pushSection(lines, "Next");
+  lines.push("Run `napplet deploy --dry-run` to preview the manifest events.");
+  if (report.config.relays.length > 0 && report.config.blossomServers.length > 0) {
+    lines.push("Run `napplet deploy` when signing is configured.");
+  } else {
+    lines.push("Add at least one relay and Blossom server before network deploy.");
+  }
   return lines.join("\n");
 }
 
@@ -288,10 +299,6 @@ function pushSection(lines: string[], title: string): void {
 
 function pushField(lines: string[], label: string, value: string): void {
   lines.push(`${label}: ${value}`);
-}
-
-function formatList(values: readonly string[]): string {
-  return values.length > 0 ? values.join(", ") : "(none)";
 }
 
 function formatCountedList(values: readonly string[]): string {

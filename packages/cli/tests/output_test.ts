@@ -190,9 +190,12 @@ Deno.test("renderInitReport shows resolved config", () => {
     },
   });
 
-  assert(output.includes("Created /repo/.napplet/config.json"));
+  assert(output.includes("Napplet Init Complete"));
+  assert(output.includes("Status: created"));
+  assert(output.includes("Config: /repo/.napplet/config.json"));
   assert(output.includes("Default target: named"));
-  assert(output.includes("Named d tags: feed"));
-  assert(output.includes("wss://relay.example"));
-  assert(output.includes("https://cdn.example"));
+  assert(output.includes("Named d tags: 1 (feed)"));
+  assert(output.includes("Relays: 1 (wss://relay.example)"));
+  assert(output.includes("Blossom servers: 1 (https://cdn.example)"));
+  assert(output.includes("napplet deploy --dry-run"));
 });

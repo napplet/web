@@ -103,10 +103,10 @@ Creates `.napplet/config.json` unless it already exists. Use `--force` to overwr
 In an interactive terminal, `napplet init` guides setup for source directory, root-vs-named target,
 relays, and Blossom servers. Relay suggestions come from best-effort
 [NIP-66](https://nips.nostr.com/66) discovery events on relay discovery relays such as
-`wss://relaypag.es`, with bundled defaults when live discovery is unavailable. Blossom suggestions
-come from best-effort [NIP-B7](https://nips.nostr.com/b7) kind `10063` server-list events, again
-with bundled defaults. Suggestions are advisory; the written config contains only the values you
-accept or type.
+`wss://relaypag.es`; curated general-purpose relays are shown first, followed by live discoveries.
+Blossom suggestions come from best-effort [NIP-B7](https://nips.nostr.com/b7) kind `10063`
+server-list events, with bundled defaults when live discovery is unavailable. Suggestions are
+advisory; the written config contains only the values you accept or type.
 
 ```sh
 napplet init

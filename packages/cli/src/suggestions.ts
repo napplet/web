@@ -81,7 +81,7 @@ export async function getRelaySuggestions(options: SuggestionOptions = {}): Prom
     { kinds: [NIP66_RELAY_DISCOVERY_KIND], limit: options.limit ?? 80 },
     eventsToRelaySuggestions,
   );
-  return unique([...discovered, ...defaults]).slice(0, options.limit ?? 12);
+  return unique([...defaults, ...discovered]).slice(0, options.limit ?? 12);
 }
 
 /**

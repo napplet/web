@@ -117,11 +117,17 @@ async function commandInit(argv: string[]): Promise<number> {
     root: flags.boolean.has("root"),
   };
   let options: InitWizardResult;
-  if (isTerminalInput()) {
+  const interactive = isTerminalInput();
+  if (interactive) {
+    console.error("Discovering relay and Blossom server suggestions...");
     const relaySuggestions = await getRelaySuggestions();
     const blossomSuggestions = await getBlossomServerSuggestions({
       relays: seed.relays.length > 0 ? seed.relays : relaySuggestions.slice(0, 4),
     });
+    console.error(
+      `Suggestions ready: ${relaySuggestions.length} relays, ` +
+        `${blossomSuggestions.length} Blossom servers.`,
+    );
     options = await promptInitWizard({
       seed,
       suggestions: {
