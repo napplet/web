@@ -20,4 +20,14 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm type-check
       - run: pnpm build
+      - name: Resolve Playwright version
+        id: pw
+        run: echo "version=$(node -p "require('playwright/package.json').version")" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ steps.pw.outputs.version }}
+      - name: Install Chromium for Playwright
+        run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test
