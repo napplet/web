@@ -40,6 +40,7 @@ development fallback, including legacy `?url=...` links.
 - `pnpm -r test:unit`
 - `pnpm lint`
 - `pnpm test`
+- `pnpm --filter @napplet/conformance-e2e test:e2e`
 - `git diff --check`
 - `pnpm dlx aislop scan --json .`
 
@@ -54,3 +55,11 @@ touched files.
 - Broader tutorial and vite-plugin documentation may still mention legacy
   `napplet-*` HTML metadata. This change updated the conformance-facing docs and
   package behavior only.
+
+## CI Follow-up
+
+PR #160 initially failed the `Conformance / conformance` check because the e2e
+harness still expected local directory JSON reports to include `napplet` from the
+legacy HTML `napplet-type` meta tag. The e2e expectation now asserts the new
+truth boundary: local fixture mode has no signed manifest event, so manifest
+identity checks skip and JSON omits `napplet`.

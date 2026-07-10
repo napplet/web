@@ -51,8 +51,11 @@ Last activity: 2026-07-10 — Quick task 260710-ng9 complete; napplet.run confor
   `pnpm --filter @napplet/conformance-web type-check`;
   `pnpm --filter @napplet/conformance-web build`; `pnpm build`;
   `pnpm type-check`; `pnpm -r test:unit`; `pnpm lint`; `pnpm test`;
-  `git diff --check`; `pnpm dlx aislop scan --json .` (88/100 from
-  pre-existing warnings outside touched files).
+  `pnpm --filter @napplet/conformance-e2e test:e2e`; `git diff --check`;
+  `pnpm dlx aislop scan --json .` (88/100 from pre-existing warnings outside
+  touched files).
+- CI follow-up: updated the e2e harness so local directory JSON reports assert
+  skipped manifest-event identity rather than legacy `napplet-type` metadata.
 - Commit: `04606c3a` (`fix(conformance): accept Nostr manifest pointers`).
 
 ### Quick task 260710-mzr — COMPLETE

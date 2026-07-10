@@ -40,8 +40,9 @@ describe('napplet-conformance CLI e2e', () => {
   it('passes a resource.bytes data URL fixture with exit 0', async () => {
     const report = JSON.parse((await runCli([fixture('resource-data'), '--reporter', 'json'])).stdout);
     expect(report.ok).toBe(true);
-    expect(report.napplet).toBe('resource-data-fixture');
+    expect(report).not.toHaveProperty('napplet');
     expect(report.checks).toEqual(expect.arrayContaining([
+      expect.objectContaining({ id: 'manifest/event-kind', status: 'skip' }),
       expect.objectContaining({ id: 'boot/no-boot-error', status: 'pass' }),
       expect.objectContaining({ id: 'wire/envelope-well-formed', status: 'pass' }),
       expect.objectContaining({ id: 'degrade/domain-absence', status: 'pass' }),
@@ -58,7 +59,10 @@ describe('napplet-conformance CLI e2e', () => {
   it('emits machine-readable JSON whose ok matches the verdict', async () => {
     const conformant = JSON.parse((await runCli([fixture('conformant'), '--reporter', 'json'])).stdout);
     expect(conformant.ok).toBe(true);
-    expect(conformant.napplet).toBe('conformant-fixture');
+    expect(conformant).not.toHaveProperty('napplet');
+    expect(conformant.checks).toEqual(expect.arrayContaining([
+      expect.objectContaining({ id: 'manifest/event-kind', status: 'skip' }),
+    ]));
 
     const broken = JSON.parse((await runCli([fixture('broken'), '--reporter', 'json'])).stdout);
     expect(broken.ok).toBe(false);
