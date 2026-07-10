@@ -1,0 +1,104 @@
+import {
+  eventsToBlossomServerSuggestions,
+  eventsToRelaySuggestions,
+  getBlossomServerSuggestions,
+  getRelaySuggestions,
+} from "../src/suggestions.ts";
+import { assert, assertEquals } from "./assert.ts";
+
+class FakePool {
+  constructor(private readonly events: unknown[], private readonly fail = false) {}
+
+  querySync(
+    relays: string[],
+    filter: Record<string, unknown>,
+    params?: { maxWait?: number; label?: string },
+  ): Promise<unknown[]> {
+    assert(relays.length > 0);
+    assert(Array.isArray(filter.kinds));
+    assert(params?.label === "napplet-init-suggestions");
+    if (this.fail) throw new Error("offline");
+    return Promise.resolve(this.events);
+  }
+}
+
+Deno.test("eventsToRelaySuggestions extracts and scores NIP-66 relay discovery events", () => {
+  const relays = eventsToRelaySuggestions([
+    {
+      kind: 30166,
+      created_at: 20,
+      tags: [["d", "wss://slow.example/"], ["rtt-open", "900"]],
+    },
+    {
+      kind: 30166,
+      created_at: 10,
+      tags: [["d", "wss://fast.example/"], ["rtt-open", "80"], ["R", "!payment"]],
+    },
+    {
+      kind: 30166,
+      created_at: 30,
+      tags: [["d", "https://not-a-relay.example"]],
+    },
+  ]);
+
+  assertEquals(relays, ["wss://fast.example", "wss://slow.example"]);
+});
+
+Deno.test("eventsToBlossomServerSuggestions extracts kind 10063 server tags by frequency", () => {
+  const servers = eventsToBlossomServerSuggestions([
+    {
+      kind: 10063,
+      tags: [["server", "https://cdn-two.example/"], ["server", "https://cdn-one.example"]],
+    },
+    {
+      kind: 10063,
+      tags: [["server", "https://cdn-two.example"], ["relay", "wss://ignored.example"]],
+    },
+  ]);
+
+  assertEquals(servers, ["https://cdn-two.example", "https://cdn-one.example"]);
+});
+
+Deno.test("getRelaySuggestions appends defaults and tolerates relay failures", async () => {
+  const live = await getRelaySuggestions({
+    pool: new FakePool([
+      {
+        kind: 30166,
+        created_at: 1,
+        tags: [["d", "wss://live.example"], ["rtt-open", "50"]],
+      },
+    ]),
+    relays: ["wss://relaypag.es"],
+    limit: 3,
+  });
+  assertEquals(live[0], "wss://live.example");
+  assertEquals(live.length, 3);
+
+  const fallback = await getRelaySuggestions({
+    pool: new FakePool([], true),
+    relays: ["wss://relaypag.es"],
+    limit: 2,
+  });
+  assertEquals(fallback, ["wss://relay.primal.net", "wss://nos.lol"]);
+});
+
+Deno.test("getBlossomServerSuggestions appends defaults and tolerates relay failures", async () => {
+  const live = await getBlossomServerSuggestions({
+    pool: new FakePool([
+      {
+        kind: 10063,
+        tags: [["server", "https://cdn-live.example"]],
+      },
+    ]),
+    relays: ["wss://relay.example"],
+    limit: 2,
+  });
+  assertEquals(live, ["https://cdn-live.example", "https://cdn.hzrd149.com"]);
+
+  const fallback = await getBlossomServerSuggestions({
+    pool: new FakePool([], true),
+    relays: ["wss://relay.example"],
+    limit: 2,
+  });
+  assertEquals(fallback, ["https://cdn.hzrd149.com", "https://cdn.sovbit.host"]);
+});

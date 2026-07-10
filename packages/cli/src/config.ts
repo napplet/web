@@ -1,4 +1,4 @@
-import { CONFIG_DIR, CONFIG_FILE, type NappletConfig } from "./types.ts";
+import { CONFIG_DIR, CONFIG_FILE, type DeployTargetKind, type NappletConfig } from "./types.ts";
 import { dirname, joinPath, resolvePath } from "./path.ts";
 
 /** DEFAULT_CONFIG constant used by configuration helpers. */
@@ -94,6 +94,7 @@ export async function initConfig(
     relays?: string[];
     blossomServers?: string[];
     named?: string[];
+    defaultTarget?: DeployTargetKind;
   } = {},
 ): Promise<{ path: string; config: NappletConfig; created: boolean }> {
   const cwd = options.cwd ?? Deno.cwd();
@@ -108,6 +109,7 @@ export async function initConfig(
     relays: options.relays ?? [],
     blossomServers: options.blossomServers ?? [],
     named: options.named ?? [],
+    defaultTarget: options.defaultTarget ?? "named",
   });
   await writeConfig(config, path);
   return { path, config, created: true };

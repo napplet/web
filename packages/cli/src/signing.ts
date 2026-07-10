@@ -1,6 +1,6 @@
 import { nip19 } from "nostr-tools";
-import { BunkerSigner } from "nostr-tools/nip46";
-import { finalizeEvent, getPublicKey } from "nostr-tools/pure";
+import { BunkerSigner, parseBunkerInput } from "nostr-tools/nip46";
+import { finalizeEvent, generateSecretKey, getPublicKey } from "nostr-tools/pure";
 import { hexToBytes } from "nostr-tools/utils";
 import type {
   DeployManifestTemplate,
@@ -78,9 +78,7 @@ export async function createSignerFromSecret(secret: string): Promise<NappletSig
   const format = detectSecretFormat(secret);
   if (format === "nsec" || format === "hex") return createPrivateKeySigner(secret);
   if (format === "nbunksec") return await createNbunksecSigner(secret);
-  if (format === "bunker-url") {
-    throw new Error("bunker:// signing is not implemented yet; use nbunksec for CI signing");
-  }
+  if (format === "bunker-url") return await createBunkerUrlSigner(secret);
   throw new Error("Signing requires nsec, nbunksec, bunker:// URL, or 64-character hex input");
 }
 
@@ -179,6 +177,19 @@ export async function createNbunksecSigner(secret: string): Promise<NappletSigne
     },
   );
   await signer.connect();
+  return await createConnectedBunkerSigner(signer);
+}
+
+/** create bunker URL signer helper for one-shot NIP-46 signing. */
+export async function createBunkerUrlSigner(secret: string): Promise<NappletSigner> {
+  const pointer = await parseBunkerInput(secret.trim());
+  if (!pointer) throw new Error("Invalid bunker:// signing URL");
+  const signer = BunkerSigner.fromBunker(generateSecretKey(), pointer);
+  await signer.connect({ name: "napplet CLI" });
+  return await createConnectedBunkerSigner(signer);
+}
+
+async function createConnectedBunkerSigner(signer: BunkerSigner): Promise<NappletSigner> {
   const pubkey = await signer.getPublicKey();
   return {
     pubkey,

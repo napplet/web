@@ -38,6 +38,7 @@ For local development:
 ```sh
 cd packages/cli
 deno task dev --help
+deno task dev init
 deno task dev init --relay wss://relay.example --server https://blossom.example --name demo
 ```
 
@@ -64,25 +65,27 @@ napplet init \
 napplet debug
 napplet deploy --dry-run --sec nsec1...
 napplet deploy --sec nsec1...
+napplet deploy --json --dry-run --sec nsec1...
 ```
 
 What each step does:
 
-- `napplet init` creates `.napplet/config.json`.
+- `napplet init` creates `.napplet/config.json`. In an interactive terminal it prompts for missing
+  fields and shows relay / Blossom server suggestions; in scripts, pass flags explicitly.
 - `napplet debug` prints resolved config, discovered napplets, deploy targets, manifest templates,
   and signing readiness without uploading or publishing.
 - `napplet deploy --dry-run` builds the same deploy plan and signed manifest events without network
-  writes.
+  writes. Interactive terminals get a readable report with copyable NIP-19 pointers.
 - `napplet deploy` uploads files to configured Blossom servers and publishes signed root, named, and
-  optional snapshot manifest events to configured relays.
+  optional snapshot manifest events to configured relays. Use `--json` for CI / machine output.
 
 ## Commands
 
 ```sh
-napplet init [--force] [--source-dir <dir>] [--relay <url>] [--server <url>] [--name <dtag>]
+napplet init [--force] [--root] [--source-dir <dir>] [--relay <url>] [--server <url>] [--name <dtag>]
 napplet discover [--config <file>] [--all]
 napplet debug [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>]
-napplet deploy [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>] [--prompt-sec] [--dry-run]
+napplet deploy [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>] [--prompt-sec] [--dry-run] [--json]
 napplet keys store --name <ref> [--sec <secret> | --prompt-sec]
 napplet keys connect --name <ref> [--relay <url> ...] [--config <file>]
 napplet keys use --name <ref> [--config <file>]
@@ -97,8 +100,18 @@ napplet paja [--config <file>] [-- <args>]
 
 Creates `.napplet/config.json` unless it already exists. Use `--force` to overwrite it.
 
+In an interactive terminal, `napplet init` guides setup for source directory, root-vs-named target,
+relays, and Blossom servers. Relay suggestions come from best-effort
+[NIP-66](https://nips.nostr.com/66) discovery events on relay discovery relays such as
+`wss://relaypag.es`, with bundled defaults when live discovery is unavailable. Blossom suggestions
+come from best-effort [NIP-B7](https://nips.nostr.com/b7) kind `10063` server-list events, again
+with bundled defaults. Suggestions are advisory; the written config contains only the values you
+accept or type.
+
 ```sh
+napplet init
 napplet init --source-dir . --relay wss://relay.example --server https://blossom.example --name feed
+napplet init --root --relay wss://relay.example --server https://blossom.example
 ```
 
 Example config:
@@ -137,20 +150,27 @@ napplet debug --name feed --snapshot
 ### `deploy`
 
 Creates deploy manifest templates, signs them when a signer is available, and optionally performs
-the network deploy.
+the network deploy. Interactive terminals print a human report by default. Non-terminal output and
+explicit `--json` print the full JSON report for CI.
 
 ```sh
 napplet deploy --dry-run --sec nsec1...
 napplet deploy --name feed --snapshot --sec nsec1...
 napplet deploy --all --sec nsec1...
+napplet deploy --json --dry-run --sec nsec1...
 ```
 
 Signing can come from:
 
-- `--sec <hex-or-nsec-or-nbunksec>`
-- `--prompt-sec`
+- `--sec <hex-or-nsec-or-nbunksec-or-bunker://url>`
+- `--prompt-sec`, which reads hidden terminal input until Enter and still accepts piped stdin in
+  non-interactive runs
 - a stored key reference configured by `napplet keys use`
 - `NAPPLET_CI_SIGNING_KEY` or `NAPPLET_CI_KEY_REFERENCE` when `.napplet` uses CI signing mode
+
+The human deploy report includes each signed manifest event's short event id plus a copyable
+`nevent` pointer. Addressable root and named manifests also include copyable `naddr` pointers using
+the configured relay hints.
 
 When a built napplet includes a plugin-generated `.nip5a-manifest.json`, deploy preserves canonical
 `requires` tags from that sidecar on root, named, and companion snapshot manifests.
@@ -167,6 +187,7 @@ available, key commands fail closed rather than writing secrets to plaintext.
 ```sh
 napplet keys doctor
 napplet keys store --name default --sec nsec1...
+napplet keys store --name default --prompt-sec
 napplet keys use --name default
 napplet keys list
 napplet keys delete --name default
@@ -282,6 +303,9 @@ The default command is `kehto paja`; override it with `paja.command`.
   publishing.
 - Run `napplet keys doctor` if key commands fail; Linux needs `secret-tool` and an active D-Bus
   session.
+- Use `--prompt-sec` when you need an ad-hoc key without echoing it in shell history; press Enter to
+  submit the hidden prompt.
+- Use `--json` when another program needs to parse `deploy` output.
 - Use `--dry-run` before network deploys; it signs the same manifest events without uploading files
   or publishing to relays.
 - If `discover --all` finds too much or too little, check `discover.roots` and the built

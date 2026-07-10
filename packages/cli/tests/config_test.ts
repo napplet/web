@@ -23,6 +23,22 @@ Deno.test("initConfig writes .napplet/config.json", async () => {
     const config = await readConfig(result.path);
     assertEquals(config?.sourceDir, "dist");
     assertEquals(config?.named, ["feed"]);
+    assertEquals(config?.defaultTarget, "named");
+  });
+});
+
+Deno.test("initConfig can create a root-target config", async () => {
+  await withTempDir(async (dir) => {
+    const result = await initConfig({
+      cwd: dir,
+      sourceDir: "dist",
+      defaultTarget: "root",
+    });
+    const config = await readConfig(result.path);
+
+    assertEquals(config?.sourceDir, "dist");
+    assertEquals(config?.defaultTarget, "root");
+    assertEquals(config?.named, []);
   });
 });
 

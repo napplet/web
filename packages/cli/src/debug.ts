@@ -177,7 +177,7 @@ export function createSigningDebugInfo(
       requiresSecretLookup: false,
       notes: signing.format === "nbunksec"
         ? ["nbunksec remote signer provided by --sec"]
-        : ["raw bunker:// pairing is not implemented"],
+        : ["bunker:// remote signer provided by --sec"],
     });
   }
   if (signing.type === "prompt") {

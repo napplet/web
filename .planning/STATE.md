@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v0.34.0
 milestone_name: NIP-5D Runtime Injection
 status: planning
-last_updated: "2026-07-10T17:13:25+02:00"
-last_activity: 2026-07-10 - Quick task 260710-ng9 complete: napplet.run conformance now accepts NIP-19 napplet manifest pointers.
+last_updated: "2026-07-10T18:09:12+02:00"
+last_activity: 2026-07-10 - Quick task 260710-opm complete: @napplet/cli now has guided init, hidden secret prompts, human deploy reports, NIP-19 pointers, and raw bunker:// signing.
 progress:
   total_phases: 0
   completed_phases: 0
@@ -30,7 +30,30 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 Phase: Not started (defining requirements)
 Plan: —
 Status: Defining requirements
-Last activity: 2026-07-10 — Quick task 260710-ng9 complete; napplet.run conformance now accepts NIP-19 `nevent`/`naddr` napplet manifest pointers.
+Last activity: 2026-07-10 - Quick task 260710-opm complete; `@napplet/cli` now has guided init, hidden secret prompts, human deploy reports, NIP-19 pointers, and raw `bunker://` signing.
+
+### Quick task 260710-opm - COMPLETE
+
+- Improved `@napplet/cli` interactive deploy/init/signing UX while preserving
+  non-interactive JSON output for CI and scripts.
+- Added hidden Enter-based `--prompt-sec` TTY input with piped stdin fallback.
+- Added terminal deploy reports with config, signer, upload, relay publish,
+  signed event IDs, and NIP-19 `nevent`/`naddr` pointers.
+- Added raw `bunker://` NIP-46 signing support alongside existing `nbunksec`
+  support.
+- Added guided `napplet init` prompts with safe NIP-66 relay suggestions and
+  NIP-B7 Blossom server-list suggestions; fully flagged/non-TTY init remains
+  deterministic.
+- Split CLI implementation into focused helpers for flag parsing, prompts,
+  output rendering, init wizard flow, suggestion discovery, and key commands.
+- Added a patch changeset for `@napplet/cli`.
+- Verification: `deno fmt --check packages/cli/README.md packages/cli/src
+  packages/cli/tests`; `cd packages/cli && deno task check`; `cd packages/cli
+  && deno task test:unit`; CLI smoke test for init, JSON dry-run, piped
+  `--prompt-sec`, and TTY human dry-run with `nevent`/`naddr`; `pnpm build`;
+  `pnpm type-check`; `pnpm -r test:unit`; `pnpm lint`; `pnpm check:jsr`;
+  `pnpm dlx aislop@0.13.1 scan --changes --json .` (100/100);
+  `git diff --check`.
 
 ### Quick task 260710-ng9 — COMPLETE
 
