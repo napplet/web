@@ -2,6 +2,7 @@ import { decodeBase64Url } from "@std/encoding/base64url";
 import {
   createUploadAuthorization,
   executeNetworkDeploy,
+  type NetworkDeployProgress,
   networkDeploySucceeded,
   type RelayPublishResult,
 } from "../src/deploy-network.ts";
@@ -109,12 +110,18 @@ Deno.test("executeNetworkDeploy uploads unique files and publishes signed manife
     const manifests = await manifestsFor(dir);
     const calls: FetchCall[] = [];
     const { publish, events } = fakePublish();
+    const progress: NetworkDeployProgress[] = [];
 
     const result = await executeNetworkDeploy(
       manifests,
       { relays: ["wss://relay.example"], blossomServers: ["https://blob.example"] },
       signer,
-      { fetch: createFakeFetch(calls), publish, now: () => 123 },
+      {
+        fetch: createFakeFetch(calls),
+        publish,
+        now: () => 123,
+        onProgress: (event) => progress.push(event),
+      },
     );
 
     assertEquals(result.uploaded.length, 1);
@@ -133,6 +140,21 @@ Deno.test("executeNetworkDeploy uploads unique files and publishes signed manife
     assertEquals(calls[1].contentType, "text/html; charset=UTF-8");
     assert(calls[1].authorization?.startsWith("Nostr "));
     assertEquals(networkDeploySucceeded(result, manifests), true);
+    assertEquals(progress.map((event) => event.type), [
+      "upload:start",
+      "upload:result",
+      "upload:complete",
+      "publish:start",
+      "publish:event",
+      "publish:event",
+      "publish:complete",
+    ]);
+    assertEquals(progress[0], {
+      type: "upload:start",
+      files: 1,
+      servers: 1,
+      totalUploads: 1,
+    });
   });
 });
 

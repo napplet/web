@@ -1,6 +1,7 @@
 import { nip19 } from "nostr-tools";
 import type { SigningDebugInfo } from "../src/debug.ts";
 import {
+  createDeployProgressReporter,
   createEventPointers,
   isTerminalOutput,
   renderDeployReport,
@@ -88,13 +89,86 @@ Deno.test("renderDeployReport shows deploy summary and copyable pointers", async
     dryRun: true,
   });
 
-  assert(output.includes("Napplet deploy"));
+  assert(output.includes("Napplet Deploy"));
   assert(output.includes("named:feed kind"));
   assert(output.includes("wss://relay.example"));
   assert(output.includes("https://blob.example"));
-  assert(output.includes("nevent1"));
-  assert(output.includes("naddr1"));
+  assert(output.includes("Copy nevent: nevent1"));
+  assert(output.includes("Copy naddr: naddr1"));
   assert(output.includes("Dry run complete"));
+});
+
+Deno.test("renderDeployReport replaces placeholder candidate names with a readable source", () => {
+  const item: DeployPlanItem = {
+    candidate: {
+      name: "..",
+      dir: "/repo/gbcolor-napplet/dist",
+      indexHtml: "/repo/gbcolor-napplet/dist/index.html",
+    },
+    target: "named",
+    kind: NAPPLET_KIND_NAMED,
+    dTag: "gbc-emulator",
+  };
+  const output = renderDeployReport({
+    signing: {
+      type: "none",
+      source: "none",
+      canSignWithoutPrompt: false,
+      requiresSecretLookup: false,
+      notes: [],
+    },
+    plan: {
+      configPath: ".napplet/config.json",
+      items: [item],
+    },
+    manifests: [{
+      item,
+      files: [{ path: "/index.html", sha256: "a".repeat(64) }],
+      aggregateHash: "b".repeat(64),
+      template: {
+        kind: NAPPLET_KIND_NAMED,
+        created_at: 123,
+        tags: [["d", "gbc-emulator"], ["path", "/index.html", "a".repeat(64)]],
+        content: "",
+      },
+    }],
+    relays: ["wss://relay.example"],
+    blossomServers: ["https://blob.example"],
+    dryRun: true,
+  });
+
+  assert(!output.includes("from .."));
+  assert(output.includes("from gbcolor-napplet"));
+});
+
+Deno.test("createDeployProgressReporter renders terminal progress lines", () => {
+  const lines: string[] = [];
+  const report = createDeployProgressReporter({ writeLine: (line) => lines.push(line) });
+
+  report({ type: "upload:start", files: 2, servers: 1, totalUploads: 2 });
+  report({
+    type: "upload:result",
+    completedUploads: 1,
+    totalUploads: 2,
+    result: {
+      server: "https://blob.example",
+      file: "/index.html",
+      sha256: "a".repeat(64),
+      success: true,
+      skipped: false,
+    },
+  });
+  report({
+    type: "publish:event",
+    completedEvents: 1,
+    events: 1,
+    eventId: "b".repeat(64),
+    results: [{ relay: "wss://relay.example", eventId: "b".repeat(64), success: true }],
+  });
+
+  assert(lines[0].includes("Uploading 2 file(s)"));
+  assert(lines[1].includes("upload 1/2 uploaded: https://blob.example/index.html"));
+  assert(lines[2].includes("publish 1/1 1/1 relays accepted"));
 });
 
 Deno.test("isTerminalOutput falls back to false for non-terminal sinks", () => {

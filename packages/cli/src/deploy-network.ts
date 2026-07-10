@@ -52,10 +52,31 @@ export interface NetworkDeployResult {
   uploadSummary: UploadSummary;
 }
 
+export type NetworkDeployProgress =
+  | { type: "upload:start"; files: number; servers: number; totalUploads: number }
+  | {
+    type: "upload:result";
+    completedUploads: number;
+    totalUploads: number;
+    result: ServerUploadResult;
+  }
+  | { type: "upload:complete"; summary: UploadSummary }
+  | { type: "publish:start"; events: number; relays: number; totalPublishes: number }
+  | {
+    type: "publish:event";
+    completedEvents: number;
+    events: number;
+    eventId: string;
+    results: RelayPublishResult[];
+  }
+  | { type: "publish:skipped"; summary: UploadSummary }
+  | { type: "publish:complete"; results: RelayPublishResult[] };
+
 export interface NetworkDeployOptions {
   fetch?: typeof fetch;
   publish?: RelayPublisher;
   now?: () => number;
+  onProgress?: (progress: NetworkDeployProgress) => void;
 }
 
 export type RelayPublisher = (
@@ -80,8 +101,15 @@ export async function executeNetworkDeploy(
     throw new Error("Network deploy requires at least one signed manifest event");
   }
   const files = await collectDeployFilePayloads(manifests);
+  options.onProgress?.({
+    type: "upload:start",
+    files: files.length,
+    servers: config.blossomServers.length,
+    totalUploads: files.length * config.blossomServers.length,
+  });
   const uploaded = await uploadFilesToServers(files, config.blossomServers, signer, options);
   const uploadSummary = summarizeUploads(uploaded, config.blossomServers);
+  options.onProgress?.({ type: "upload:complete", summary: uploadSummary });
   if (uploadSummary.failedUploads > 0) {
     // Publish only when every server holds every blob, so each manifest `server` tag
     // is a real mirror. Report how far we got so operators can tell a single failed
@@ -94,6 +122,7 @@ export async function executeNetworkDeploy(
     for (const failed of uploaded.filter((result) => !result.success)) {
       console.error(`[deploy]   ${failed.server} ${failed.file}: ${failed.error ?? "failed"}`);
     }
+    options.onProgress?.({ type: "publish:skipped", summary: uploadSummary });
     return {
       uploaded,
       published: [],
@@ -102,9 +131,26 @@ export async function executeNetworkDeploy(
   }
   const publish = options.publish ?? publishEventWithSimplePool;
   const published: RelayPublishResult[] = [];
+  options.onProgress?.({
+    type: "publish:start",
+    events: events.length,
+    relays: config.relays.length,
+    totalPublishes: events.length * config.relays.length,
+  });
+  let completedEvents = 0;
   for (const event of events) {
-    published.push(...await publish(config.relays, event));
+    const results = await publish(config.relays, event);
+    completedEvents += 1;
+    published.push(...results);
+    options.onProgress?.({
+      type: "publish:event",
+      completedEvents,
+      events: events.length,
+      eventId: event.id,
+      results,
+    });
   }
+  options.onProgress?.({ type: "publish:complete", results: published });
   return { uploaded, published, uploadSummary };
 }
 
@@ -166,11 +212,12 @@ export async function uploadFilesToServers(
   files: readonly DeployFilePayload[],
   servers: readonly string[],
   signer: NappletSigner,
-  options: Pick<NetworkDeployOptions, "fetch" | "now"> = {},
+  options: Pick<NetworkDeployOptions, "fetch" | "now" | "onProgress"> = {},
 ): Promise<ServerUploadResult[]> {
   const fetcher = options.fetch ?? fetch;
   const blobSha256s = [...new Set(files.map((file) => file.sha256))];
   const results: ServerUploadResult[] = [];
+  const totalUploads = files.length * servers.length;
   for (const server of servers) {
     // BUD-11: scope each token to the target server so a leaked header cannot be
     // replayed against other Blossom servers before it expires.
@@ -181,7 +228,14 @@ export async function uploadFilesToServers(
       serverHost(server),
     );
     for (const file of files) {
-      results.push(await uploadFileToServer(file, server, authHeader, fetcher));
+      const result = await uploadFileToServer(file, server, authHeader, fetcher);
+      results.push(result);
+      options.onProgress?.({
+        type: "upload:result",
+        completedUploads: results.length,
+        totalUploads,
+        result,
+      });
     }
   }
   return results;

@@ -16,7 +16,12 @@ import { collectFlags, first, type FlagBag } from "./flags.ts";
 import { type InitWizardResult, promptInitWizard } from "./init-wizard.ts";
 import { commandKeys } from "./keys-command.ts";
 import { createDeployManifestTemplates } from "./manifest.ts";
-import { isTerminalOutput, renderDeployReport, renderInitReport } from "./output.ts";
+import {
+  createDeployProgressReporter,
+  isTerminalOutput,
+  renderDeployReport,
+  renderInitReport,
+} from "./output.ts";
 import { isTerminalInput } from "./prompt.ts";
 import { runCommand, splitCommand } from "./process.ts";
 import { resolveSigningMethod, signDeployManifestTemplates } from "./signing.ts";
@@ -193,10 +198,17 @@ async function commandDeploy(argv: string[]): Promise<number> {
       if (!signer) {
         throw new Error("Network deploy requires a signer from --sec, --prompt-sec, config, or CI");
       }
-      const deploy = await executeNetworkDeploy(manifests, {
-        relays: config.relays,
-        blossomServers: config.blossomServers,
-      }, signer);
+      const deploy = await executeNetworkDeploy(
+        manifests,
+        {
+          relays: config.relays,
+          blossomServers: config.blossomServers,
+        },
+        signer,
+        {
+          onProgress: jsonOutput ? undefined : createDeployProgressReporter(),
+        },
+      );
       const report = {
         signing: signingInfo,
         plan,
