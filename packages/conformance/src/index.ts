@@ -3,10 +3,11 @@
  *
  * Lets a napplet self-verify protocol conformance before publishing, in two scopes
  * that share this engine: a headless Playwright CLI (CI) and a standalone
- * single-window web runtime. v1 is zero-config protocol conformance — manifest/meta
- * validity, boots under `sandbox="allow-scripts"`, receives runtime-injected `window.napplet`, every
- * emitted postMessage envelope validates against the per-NAP validators here, and
- * graceful degradation when optional domains are absent.
+ * single-window web runtime. v1 is zero-config protocol conformance — NIP-5D
+ * manifest-event validity, boots under `sandbox="allow-scripts"`, receives
+ * runtime-injected `window.napplet`, every emitted postMessage envelope validates
+ * against the per-NAP validators here, and graceful degradation when optional
+ * domains are absent.
  *
  * @packageDocumentation
  */
@@ -25,11 +26,20 @@ export type {
 } from './validators/envelope.js';
 
 export {
+  NAPPLET_KIND_NAMED,
+  NAPPLET_KIND_ROOT,
+  NAPPLET_KIND_SNAPSHOT,
+  NAPPLET_MANIFEST_KINDS,
+  manifestDTag,
+  manifestDisplayName,
+  manifestRequires,
   validateManifest,
+  validateManifestEvent,
 } from './validators/manifest.js';
 export type {
   ManifestError,
   ManifestVerdict,
+  NappletManifestEvent,
   ValidateManifestOptions,
 } from './validators/manifest.js';
 

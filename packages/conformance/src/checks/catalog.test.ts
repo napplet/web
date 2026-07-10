@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { CHECKS } from './catalog.js';
 import { makeContext } from '../run/context.js';
 import { validateEnvelope } from '../validators/envelope.js';
+import { NAPPLET_KIND_NAMED, type NappletManifestEvent } from '../validators/manifest.js';
 import type { RecordedEnvelope } from '../shell/reference-shell.js';
 
 const HASH = 'b'.repeat(64);
@@ -10,11 +11,18 @@ function rec(envelope: unknown): RecordedEnvelope {
   return { envelope, verdict: validateEnvelope(envelope), timestamp: 0 };
 }
 
-function manifest(head: string, body = ''): string {
+function manifest(head = '', body = ''): string {
   return `<!doctype html><html><head>${head}</head><body>${body}</body></html>`;
 }
 
-const goodHead = `<meta name="napplet-type" content="demo"><meta name="napplet-aggregate-hash" content="${HASH}">`;
+const goodEvent: NappletManifestEvent = {
+  kind: NAPPLET_KIND_NAMED,
+  tags: [
+    ['d', 'demo'],
+    ['path', '/index.html', HASH],
+    ['requires', 'storage'],
+  ],
+};
 
 /** Run a single check by id against a context. */
 function run(id: string, ctx: Parameters<(typeof CHECKS)[number]['run']>[0]) {
@@ -36,31 +44,37 @@ describe('check catalog — shape', () => {
 });
 
 describe('manifest checks', () => {
-  it('passes napplet-type / aggregate-hash for a good manifest', () => {
-    const ctx = makeContext({ manifestHtml: manifest(goodHead) });
-    expect(run('manifest/napplet-type', ctx).status).toBe('pass');
+  it('passes event-kind, index, and requires checks for a good manifest event', () => {
+    const ctx = makeContext({ manifestEvent: goodEvent });
+    expect(run('manifest/event-kind', ctx).status).toBe('pass');
+    expect(run('manifest/index-html', ctx).status).toBe('pass');
+    expect(run('manifest/requires', ctx).status).toBe('pass');
   });
 
-  it('fails a missing napplet-type', () => {
-    const ctx = makeContext({ manifestHtml: manifest(`<meta name="napplet-aggregate-hash" content="${HASH}">`) });
-    expect(run('manifest/napplet-type', ctx).status).toBe('fail');
+  it('skips manifest-event checks when no event was resolved', () => {
+    const ctx = makeContext({ manifestHtml: manifest() });
+    expect(run('manifest/event-kind', ctx).status).toBe('skip');
+    expect(run('manifest/index-html', ctx).status).toBe('skip');
+    expect(run('manifest/requires', ctx).status).toBe('skip');
   });
 
-  it('skips optional metas when absent, fails them when invalid', () => {
-    const absent = makeContext({ manifestHtml: manifest(goodHead) });
-    expect(run('manifest/config-schema', absent).status).toBe('skip');
-    expect(run('manifest/declared-naps', absent).status).toBe('skip');
-
-    const badSchema = makeContext({
-      manifestHtml: manifest(`${goodHead}<meta name="napplet-config-schema" content='{"type":"object","properties":{"x":{"type":"string","pattern":"^a"}}}'>`),
+  it('fails invalid manifest event shape', () => {
+    const badKind = makeContext({ manifestEvent: { ...goodEvent, kind: 35128 } });
+    expect(run('manifest/event-kind', badKind).status).toBe('fail');
+    const badPath = makeContext({
+      manifestEvent: { ...goodEvent, tags: [['d', 'demo'], ['path', '/index.html', 'nope']] },
     });
-    expect(run('manifest/config-schema', badSchema).status).toBe('fail');
+    expect(run('manifest/index-html', badPath).status).toBe('fail');
+    const badRequire = makeContext({
+      manifestEvent: { ...goodEvent, tags: [...goodEvent.tags, ['requires', 'nap:relay']] },
+    });
+    expect(run('manifest/requires', badRequire).status).toBe('fail');
   });
 });
 
 describe('boot checks', () => {
   it('passes a clean allow-scripts boot', () => {
-    const ctx = makeContext({ manifestHtml: manifest(goodHead) });
+    const ctx = makeContext({ manifestHtml: manifest() });
     expect(run('boot/sandbox-allow-scripts', ctx).status).toBe('pass');
     expect(run('boot/installs-global', ctx).status).toBe('pass');
     expect(run('boot/no-boot-error', ctx).status).toBe('pass');
@@ -98,15 +112,6 @@ describe('wire checks', () => {
     expect(Array.isArray(r.diagnostics)).toBe(true);
   });
 
-  it('warns when a napplet emits an undeclared NAP domain', () => {
-    const ctx = makeContext({
-      manifestHtml: manifest(`${goodHead}<meta name="napplet-requires" content="storage">`),
-      emitted: [rec({ type: 'relay.query', id: '1', filters: [] })],
-    });
-    const check = CHECKS.find((c) => c.id === 'wire/declared-naps-only')!;
-    expect(check.severity).toBe('warning');
-    expect(check.run(ctx).status).toBe('fail');
-  });
 });
 
 describe('degradation + lifecycle checks', () => {

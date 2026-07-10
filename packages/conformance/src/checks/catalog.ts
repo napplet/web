@@ -10,34 +10,25 @@
  * @packageDocumentation
  */
 
-import { validateManifest, type ManifestError } from '../validators/manifest.js';
+import { validateManifestEvent, type ManifestError } from '../validators/manifest.js';
 import type { Check } from './types.js';
 import { result } from './types.js';
 
 /** Codes that fail a given manifest check. */
-function manifestErrors(html: string, codes: ManifestError['code'][]): ManifestError[] {
-  return validateManifest(html).errors.filter((e) => codes.includes(e.code));
+function manifestErrors(ctx: Parameters<Check['run']>[0], codes: ManifestError['code'][]): ManifestError[] {
+  return validateManifestEvent(ctx.manifestEvent).errors.filter((e) => codes.includes(e.code));
 }
 
-/** Does the html declare a given meta name at all? (controls skip vs run). */
-function hasMeta(html: string, name: string): boolean {
-  return new RegExp(`name\\s*=\\s*["']${name}["']`, 'i').test(html);
-}
-
-/**
- * Build a manifest check that fails when {@link validateManifest} reports any of
- * `codes`. When `skipMeta` is given, the check skips (rather than passing) if that
- * meta tag is absent — so optional features only fail when present-and-invalid.
- */
-function manifestCheck(id: string, title: string, codes: ManifestError['code'][], skipMeta?: string): Check {
+/** Build a NIP-5D manifest-event check. */
+function manifestCheck(id: string, title: string, codes: ManifestError['code'][]): Check {
   return {
     id,
     area: 'manifest',
     severity: 'error',
     title,
     run: (ctx) => {
-      if (skipMeta && !hasMeta(ctx.manifestHtml, skipMeta)) return result.skip(`No ${skipMeta} declared`);
-      const errs = manifestErrors(ctx.manifestHtml, codes);
+      if (!ctx.manifestEvent) return result.skip('No NIP-5D manifest event was resolved');
+      const errs = manifestErrors(ctx, codes);
       return errs.length ? result.fail(errs[0].message, errs) : result.pass();
     },
   };
@@ -46,9 +37,19 @@ function manifestCheck(id: string, title: string, codes: ManifestError['code'][]
 /** The v1 catalog, in display order. */
 export const CHECKS: Check[] = [
   // ── manifest ───────────────────────────────────────────────────────────────
-  manifestCheck('manifest/napplet-type', 'Declares a valid napplet-type', ['missing-napplet-type', 'invalid-napplet-type']),
-  manifestCheck('manifest/declared-naps', 'napplet-requires lists only real NAP domains', ['unknown-required-nap'], 'napplet-requires'),
-  manifestCheck('manifest/config-schema', 'Config schema is a draft-07 core subset', ['invalid-config-schema'], 'napplet-config-schema'),
+  manifestCheck('manifest/event-kind', 'Resolved event is a NIP-5D napplet manifest', [
+    'invalid-napplet-kind',
+    'missing-d-tag',
+    'unexpected-d-tag',
+  ]),
+  manifestCheck('manifest/index-html', 'Manifest declares a hashed /index.html', [
+    'missing-index-html',
+    'invalid-index-html-hash',
+  ]),
+  manifestCheck('manifest/requires', 'requires tags are bare known NAP domains', [
+    'invalid-required-nap',
+    'unknown-required-nap',
+  ]),
 
   // ── boot ─────────────────────────────────────────────────────────────────────
   {
@@ -101,27 +102,6 @@ export const CHECKS: Check[] = [
       return result.fail(`${bad.length}/${ctx.emitted.length} emitted envelope(s) invalid`, diag);
     },
   },
-  {
-    id: 'wire/declared-naps-only',
-    area: 'wire',
-    severity: 'warning',
-    title: 'Only emits NAP domains it declared in napplet-requires',
-    run: (ctx) => {
-      if (ctx.emitted.length === 0) return result.skip('Napplet emitted no envelopes');
-      if (!hasMeta(ctx.manifestHtml, 'napplet-requires')) return result.skip('No napplet-requires to compare against');
-      const declared = new Set(validateManifest(ctx.manifestHtml).requires.map((r) => (r.startsWith('nap:') ? r.slice(4) : r)));
-      const used = new Set(
-        ctx.emitted
-          .map((r) => r.verdict.domain)
-          .filter((d): d is string => typeof d === 'string'),
-      );
-      const undeclared = [...used].filter((d) => !declared.has(d));
-      return undeclared.length
-        ? result.fail(`Emitted undeclared NAP domain(s): ${undeclared.join(', ')}`, undeclared)
-        : result.pass();
-    },
-  },
-
   // ── degradation ───────────────────────────────────────────────────────────────
   {
     id: 'degrade/domain-absence',

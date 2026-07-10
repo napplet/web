@@ -1,163 +1,200 @@
 /**
- * @napplet/conformance -- Manifest / meta-tag validator for built napplets.
+ * NIP-5D napplet manifest event validator.
  *
- * A napplet declares its NIP-5A manifest through `<meta>` tags that the
- * `@napplet/vite-plugin` reads and augments at build time:
- *
- * | Meta name                  | Content                                            |
- * |----------------------------|----------------------------------------------------|
- * | `napplet-type`             | the napplet type / `d` tag                          |
- * | `napplet-requires`         | comma-joined list of required NAP domains           |
- * | `napplet-config-schema`    | inline `JSON.stringify` of the config schema        |
- *
- * {@link validateManifest} reads a napplet's HTML and checks each declaration.
- *
- * Inline `<script>` elements are NOT a conformance failure: per NIP-5D a napplet
- * is a single self-contained `/index.html` loaded via `iframe.srcdoc` with
- * `sandbox="allow-scripts"` (opaque origin), so its executable JS lives inline.
- * A check that rejected inline scripts would fail every spec-faithful napplet.
+ * NIP-5D publishes napplets as Nostr events of kind 5129, 15129, or 35129 with
+ * the NIP-5A `path` tag schema. HTML `<meta name="napplet-*">` tags are not
+ * protocol surface and are intentionally not validated here.
  *
  * @packageDocumentation
  */
 
 import { NAP_DOMAINS } from '@napplet/core';
 
-/** A napplet type/d-tag: lowercase, starts alnum, then alnum or `._:-`. */
-const NAPPLET_TYPE_RE = /^[a-z0-9][a-z0-9._:-]*$/;
+/** Snapshot napplet manifest event kind. */
+export const NAPPLET_KIND_SNAPSHOT = 5129;
+/** Root napplet manifest event kind. */
+export const NAPPLET_KIND_ROOT = 15129;
+/** Named napplet manifest event kind. */
+export const NAPPLET_KIND_NAMED = 35129;
+
+/** All NIP-5D napplet manifest event kinds. */
+export const NAPPLET_MANIFEST_KINDS = [
+  NAPPLET_KIND_SNAPSHOT,
+  NAPPLET_KIND_ROOT,
+  NAPPLET_KIND_NAMED,
+] as const;
+
+/** Minimal Nostr event shape needed for NIP-5D manifest validation. */
+export interface NappletManifestEvent {
+  kind: number;
+  tags: string[][];
+  id?: string;
+  pubkey?: string;
+}
 
 /** A single manifest problem. */
 export interface ManifestError {
   /** Machine-readable code. */
   code:
-    | 'missing-napplet-type'
-    | 'invalid-napplet-type'
-    | 'unknown-required-nap'
-    | 'invalid-config-schema';
+    | 'missing-manifest-event'
+    | 'invalid-napplet-kind'
+    | 'missing-d-tag'
+    | 'unexpected-d-tag'
+    | 'missing-index-html'
+    | 'invalid-index-html-hash'
+    | 'invalid-required-nap'
+    | 'unknown-required-nap';
   /** Human-readable explanation. */
   message: string;
 }
 
-/** Verdict returned by {@link validateManifest}. */
+/** Verdict returned by manifest validators. */
 export interface ManifestVerdict {
   /** True when no `errors` were found. */
   ok: boolean;
-  /** Parsed `napplet-type`, when present. */
-  nappletType?: string;
-  /** Parsed `napplet-requires` (domain names), empty when absent. */
+  /** Napplet manifest event kind, when an event was provided. */
+  kind?: number;
+  /** Parsed `d` tag for named napplet manifests. */
+  dTag?: string;
+  /** Parsed `requires` tags (bare NAP domains), empty when absent. */
   requires: string[];
   /** Hard failures. */
   errors: ManifestError[];
   /** Non-fatal advisories. */
   warnings: ManifestError[];
+  /**
+   * @deprecated NIP-5D uses the event `d` tag, not an HTML `napplet-type` meta.
+   * Kept only so older callers can compile while migrating.
+   */
+  nappletType?: string;
 }
 
-/** Options for {@link validateManifest}. Reserved for future knobs. */
+/** Options for {@link validateManifest}. Reserved for compatibility. */
 export interface ValidateManifestOptions {}
 
-/** Decode the HTML entities a serializer puts in attribute values (notably JSON). */
-function decodeHtmlEntities(value: string): string {
-  return value.replace(/&(#x?[0-9a-fA-F]+|[a-zA-Z]+);/g, (match, entity: string) => {
-    if (entity[0] === '#') {
-      const code = entity[1] === 'x' || entity[1] === 'X' ? parseInt(entity.slice(2), 16) : parseInt(entity.slice(1), 10);
-      return Number.isFinite(code) ? String.fromCodePoint(code) : match;
-    }
-    const named: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'" };
-    return named[entity] ?? match;
-  });
+function firstTag(event: NappletManifestEvent, name: string): string[] | undefined {
+  return event.tags.find((tag) => tag[0] === name);
+}
+
+function isNappletKind(kind: number): boolean {
+  return (NAPPLET_MANIFEST_KINDS as readonly number[]).includes(kind);
+}
+
+function isSha256Hex(value: string | undefined): boolean {
+  return typeof value === 'string' && /^[0-9a-f]{64}$/i.test(value);
+}
+
+/** Return the named-manifest `d` tag value, when present and non-empty. */
+export function manifestDTag(event: NappletManifestEvent): string | undefined {
+  const d = firstTag(event, 'd')?.[1]?.trim();
+  return d || undefined;
+}
+
+/** Return all bare NAP domains declared by `requires` tags. */
+export function manifestRequires(event: NappletManifestEvent): string[] {
+  return event.tags
+    .filter((tag) => tag[0] === 'requires')
+    .map((tag) => tag[1]?.trim() ?? '')
+    .filter(Boolean);
+}
+
+/** Return a compact display label for a resolved manifest event. */
+export function manifestDisplayName(event: NappletManifestEvent): string | undefined {
+  return manifestDTag(event) ?? firstTag(event, 'title')?.[1] ?? event.id;
 }
 
 /**
- * Read the `content` of the first `<meta name="...">` in an HTML string, decoding
- * HTML entities so escaped attribute values (e.g. a JSON config schema serialized
- * with `&quot;`) parse the same way a real `getAttribute('content')` would.
- */
-function readMeta(html: string, name: string): string | undefined {
-  // Match <meta ... name="<name>" ... content="..."> in either attribute order.
-  const tagRe = /<meta\b[^>]*>/gi;
-  let tag: RegExpExecArray | null;
-  while ((tag = tagRe.exec(html)) !== null) {
-    const block = tag[0];
-    const nameMatch = /\bname\s*=\s*(?:"([^"]*)"|'([^']*)')/i.exec(block);
-    const metaName = (nameMatch?.[1] ?? nameMatch?.[2] ?? '').trim();
-    if (metaName !== name) continue;
-    const contentMatch = /\bcontent\s*=\s*(?:"([^"]*)"|'([^']*)')/i.exec(block);
-    return decodeHtmlEntities((contentMatch?.[1] ?? contentMatch?.[2] ?? '').trim());
-  }
-  return undefined;
-}
-
-/** Recursively test whether a JSON Schema fragment uses the forbidden `pattern` keyword. */
-function usesPatternKeyword(node: unknown): boolean {
-  if (Array.isArray(node)) return node.some(usesPatternKeyword);
-  if (node && typeof node === 'object') {
-    const record = node as Record<string, unknown>;
-    if ('pattern' in record) return true;
-    return Object.values(record).some(usesPatternKeyword);
-  }
-  return false;
-}
-
-/**
- * Validate a napplet's HTML manifest declarations.
+ * Validate a NIP-5D napplet manifest event.
  *
- * @param html - The napplet's `index.html` (ideally the built output).
- * @param options - See {@link ValidateManifestOptions}.
+ * @param event - The resolved Nostr manifest event.
  * @returns A {@link ManifestVerdict}.
- *
- * @example
- * ```ts
- * const verdict = validateManifest(htmlString);
- * if (!verdict.ok) console.error(verdict.errors);
- * ```
  */
-export function validateManifest(html: string, _options: ValidateManifestOptions = {}): ManifestVerdict {
+export function validateManifestEvent(event?: NappletManifestEvent | null): ManifestVerdict {
   const errors: ManifestError[] = [];
   const warnings: ManifestError[] = [];
 
-  // ── napplet-type ──────────────────────────────────────────────────────────
-  const nappletType = readMeta(html, 'napplet-type');
-  if (!nappletType) {
-    errors.push({ code: 'missing-napplet-type', message: 'No <meta name="napplet-type"> declared' });
-  } else if (!NAPPLET_TYPE_RE.test(nappletType)) {
-    errors.push({ code: 'invalid-napplet-type', message: `napplet-type "${nappletType}" must match ${NAPPLET_TYPE_RE}` });
+  if (!event) {
+    return {
+      ok: false,
+      requires: [],
+      errors: [{ code: 'missing-manifest-event', message: 'No NIP-5D manifest event was resolved' }],
+      warnings,
+    };
   }
 
-  // ── napplet-requires ───────────────────────────────────────────────────────
-  const requiresRaw = readMeta(html, 'napplet-requires');
-  const requires = requiresRaw
-    ? requiresRaw.split(',').map((s) => s.trim()).filter(Boolean)
-    : [];
+  const dTag = manifestDTag(event);
+  const requires = manifestRequires(event);
+
+  if (!isNappletKind(event.kind)) {
+    errors.push({
+      code: 'invalid-napplet-kind',
+      message: `Manifest event kind ${event.kind} is not a NIP-5D napplet kind`,
+    });
+  }
+
+  if (event.kind === NAPPLET_KIND_NAMED && !dTag) {
+    errors.push({
+      code: 'missing-d-tag',
+      message: 'Named napplet manifest kind 35129 must include a non-empty d tag',
+    });
+  } else if ((event.kind === NAPPLET_KIND_ROOT || event.kind === NAPPLET_KIND_SNAPSHOT) && dTag) {
+    errors.push({
+      code: 'unexpected-d-tag',
+      message: `Napplet manifest kind ${event.kind} must not include a d tag`,
+    });
+  }
+
+  const indexPath = event.tags.find((tag) => tag[0] === 'path' && tag[1] === '/index.html');
+  if (!indexPath) {
+    errors.push({
+      code: 'missing-index-html',
+      message: 'Napplet manifest must include a path tag for /index.html',
+    });
+  } else if (!isSha256Hex(indexPath[2])) {
+    errors.push({
+      code: 'invalid-index-html-hash',
+      message: 'The /index.html path tag must carry a 64-character sha256 hash',
+    });
+  }
+
   for (const req of requires) {
-    const domain = req.startsWith('nap:') ? req.slice('nap:'.length) : req;
-    if (!(NAP_DOMAINS as readonly string[]).includes(domain)) {
-      errors.push({ code: 'unknown-required-nap', message: `napplet-requires lists "${req}" which is not a known NAP domain` });
+    if (req.startsWith('nap:') || req.startsWith('NAP-')) {
+      errors.push({
+        code: 'invalid-required-nap',
+        message: `requires tag "${req}" must be a bare NAP domain such as "relay"`,
+      });
+      continue;
     }
-  }
-
-  // ── napplet-config-schema ──────────────────────────────────────────────────
-  const configSchemaRaw = readMeta(html, 'napplet-config-schema');
-  if (configSchemaRaw) {
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(configSchemaRaw);
-    } catch {
-      parsed = undefined;
-      errors.push({ code: 'invalid-config-schema', message: 'napplet-config-schema is not valid JSON' });
-    }
-    if (parsed !== undefined) {
-      if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
-        errors.push({ code: 'invalid-config-schema', message: 'napplet-config-schema must be a JSON Schema object' });
-      } else if (usesPatternKeyword(parsed)) {
-        errors.push({ code: 'invalid-config-schema', message: 'napplet-config-schema uses the `pattern` keyword, which the draft-07 core subset excludes (CVE-2025-69873)' });
-      }
+    if (!(NAP_DOMAINS as readonly string[]).includes(req)) {
+      errors.push({
+        code: 'unknown-required-nap',
+        message: `requires tag "${req}" is not a known NAP domain`,
+      });
     }
   }
 
   return {
     ok: errors.length === 0,
-    nappletType,
+    kind: event.kind,
+    dTag,
+    nappletType: dTag,
     requires,
     errors,
     warnings,
   };
+}
+
+/**
+ * Compatibility wrapper for older callers that passed HTML.
+ *
+ * NIP-5D manifest validation requires the signed Nostr manifest event. HTML-only
+ * callers cannot prove event kind, `path` tags, `requires` tags, or aggregate
+ * identity, so this wrapper intentionally performs no protocol checks.
+ *
+ * @param _html - Legacy HTML input.
+ * @param _options - Reserved compatibility parameter.
+ * @returns A passing empty verdict.
+ */
+export function validateManifest(_html: string, _options: ValidateManifestOptions = {}): ManifestVerdict {
+  return { ok: true, requires: [], errors: [], warnings: [] };
 }

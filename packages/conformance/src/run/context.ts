@@ -11,6 +11,7 @@
  */
 
 import type { RecordedEnvelope } from '../shell/reference-shell.js';
+import type { NappletManifestEvent } from '../validators/manifest.js';
 
 /** The sandbox attributes a host used to load the napplet iframe. */
 export interface SandboxState {
@@ -33,8 +34,10 @@ export interface BootObservation {
  * directly.
  */
 export interface ConformanceContext {
-  /** The napplet's `index.html` (ideally the built output) for manifest checks. */
+  /** The napplet's `index.html` bytes after resolving/loading. */
   manifestHtml: string;
+  /** Signed NIP-5D manifest event, when the host resolved one. */
+  manifestEvent: NappletManifestEvent | null;
   /** Sandbox attributes the host used. */
   sandbox: SandboxState;
   /** Whether `window.napplet` existed after the primary boot. */
@@ -68,6 +71,8 @@ export interface BootCollectionLike {
 export interface BuildContextInput {
   /** The napplet's `index.html`. */
   manifestHtml: string;
+  /** Signed NIP-5D manifest event, when the host resolved one. */
+  manifestEvent?: NappletManifestEvent | null;
   /** The browser-observable boot result. */
   boot: BootCollectionLike;
   /** Forbidden globals found by static analysis (e.g. `['window.nostr']`). */
@@ -85,6 +90,7 @@ export interface BuildContextInput {
 export function buildContext(input: BuildContextInput): ConformanceContext {
   return {
     manifestHtml: input.manifestHtml,
+    manifestEvent: input.manifestEvent ?? null,
     sandbox: input.sandbox ?? { allowScripts: true, allowSameOrigin: false },
     installedGlobal: input.boot.installedGlobal,
     bootError: input.boot.bootError,
@@ -102,6 +108,7 @@ export function buildContext(input: BuildContextInput): ConformanceContext {
 export function makeContext(overrides: Partial<ConformanceContext> = {}): ConformanceContext {
   return {
     manifestHtml: '',
+    manifestEvent: null,
     sandbox: { allowScripts: true, allowSameOrigin: false },
     installedGlobal: true,
     bootError: null,
