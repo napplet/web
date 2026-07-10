@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v0.34.0
 milestone_name: NIP-5D Runtime Injection
 status: planning
-last_updated: "2026-07-10T12:39:14+02:00"
-last_activity: 2026-07-10 - Quick task 260710-hk2 complete: fixed PR #155 CI by installing Playwright Chromium before root pnpm test.
+last_updated: "2026-07-10T14:51:53+02:00"
+last_activity: 2026-07-10 - Quick task 260710-kmj complete: nsite mirror failures no longer fail the Deploy site workflow.
 progress:
   total_phases: 0
   completed_phases: 0
@@ -30,7 +30,14 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 Phase: Not started (defining requirements)
 Plan: —
 Status: Defining requirements
-Last activity: 2026-07-10 — Quick task 260710-hk2 complete; fixed PR #155 `CI / ci` failure by adding Playwright Chromium install/cache before root `pnpm test`, which now runs tutorial conformance.
+Last activity: 2026-07-10 — Quick task 260710-kmj complete; scoped `continue-on-error` to the optional nsite mirror publish in `Deploy site` so Bunny-backed site deploys stay green when the NIP-46 signer times out.
+
+### Quick task 260710-kmj — COMPLETE
+
+- Diagnosed `Deploy site` run `29087545720`: build, assembly, Bunny config, and Bunny CDN deploy all succeeded; only `Deploy to nsite` failed because `nsyte v0.27.2` timed out establishing a NIP-46 bunker session from the repo's `NBUNK_SECRET`.
+- Updated `.github/workflows/deploy-site.yml` so only the nsite mirror action step is `continue-on-error: true`.
+- Added a warning step keyed on `steps.deploy-nsite.outcome == 'failure'` so skipped nsite mirror failures remain visible in logs.
+- Verification: workflow YAML parse; `actionlint`; `pnpm lint`; `pnpm build`; `pnpm type-check`; `pnpm -r test:unit`; `git diff --check`; changed-file `aislop` 100/100. Full `aislop` remains 88/100 from pre-existing complexity warnings outside this workflow change.
 
 ### Quick task 260710-hk2 — COMPLETE
 
@@ -345,6 +352,7 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 
 | Quick ID | Task | Date | Commit | Artifacts |
 |----------|------|------|--------|-----------|
+| 260710-kmj | Treat nsite deploy failures as optional skips in Deploy site | 2026-07-10 | 2248c6c8 | [260710-kmj-treat-nsite-deploy-failures-as-optional-](./quick/260710-kmj-treat-nsite-deploy-failures-as-optional-/) |
 | 260707-hrs | Align RESOURCE htree scheme | 2026-07-07 | 7ec9561f | [260707-hrs-align-resource-htree-scheme](./quick/260707-hrs-align-resource-htree-scheme/) |
 | 260703-ghg | Align napplet packages with NAP RelayEventResult sidecars and updated outbox stream lifecycle | 2026-07-03 | 2ce3e3f2 | [260703-ghg-align-napplet-packages-with-nap-relayeve](./quick/260703-ghg-align-napplet-packages-with-nap-relayeve/) |
 | 260703-guj | Ignore Playwright MCP local artifacts | 2026-07-03 | f9f34992 | [260703-guj-ignore-playwright-mcp-local-artifacts](./quick/260703-guj-ignore-playwright-mcp-local-artifacts/) |
