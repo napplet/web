@@ -14,6 +14,8 @@ import {
 } from "./prompt.ts";
 import {
   createSignerFromSecret,
+  decodeNbunksec,
+  detectSecretFormat,
   encodePublicKey,
   type NappletSigner,
   normalizePublicKey,
@@ -136,10 +138,23 @@ async function createStoredDeploySigner(args: {
   const createSigner = args.options.createSigner ?? createSignerFromSecret;
   const print = args.options.print ?? (() => {});
   print(`Connecting to stored remote signer "${args.account}"...`);
+  printStoredSignerMetadata(args.secret, print);
+  print("Waiting for stored remote signer response (timeout 30s)...");
   try {
     return { signer: await createSigner(args.secret), signing: args.signing };
   } catch (error) {
     return await recoverFailedStoredSigner(error, args);
+  }
+}
+
+function printStoredSignerMetadata(secret: string, print: (line: string) => void): void {
+  if (detectSecretFormat(secret) !== "nbunksec") return;
+  try {
+    const info = decodeNbunksec(secret);
+    print(`Remote signer pubkey: ${formatPubkey(info.pubkey)}`);
+    print(`Using bunker relay${info.relays.length === 1 ? "" : "s"}: ${info.relays.join(", ")}`);
+  } catch {
+    // createSigner will report the invalid stored secret with the full error.
   }
 }
 

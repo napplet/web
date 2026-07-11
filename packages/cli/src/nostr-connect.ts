@@ -19,8 +19,8 @@ import { NostrConnectSigner, PrivateKeySigner } from "applesauce-signers";
 import type { AbstractSimplePool } from "nostr-tools/abstract-pool";
 import { generateSecretKey } from "nostr-tools/pure";
 import { bytesToHex } from "nostr-tools/utils";
-import { SimplePool } from "nostr-tools/pool";
 import { createApplesaucePool } from "./applesauce-pool.ts";
+import { closeNostrConnectPool, ensureNostrConnectPool } from "./nostr-connect-pool.ts";
 import { encodeNbunksec, type NbunksecInfo } from "./signing.ts";
 
 /** Default relays used to reach a remote signer when none are supplied. */
@@ -46,7 +46,7 @@ export interface ConnectOptions {
   kinds?: number[];
   /** Overall timeout in milliseconds (default 120_000). */
   timeoutMs?: number;
-  /** Injected pool for tests; a real SimplePool is created when absent. */
+  /** Injected nostr-tools pool for tests; real flows use the applesauce RelayPool. */
   pool?: AbstractSimplePool;
   /** Injected stdin for tests; Deno.stdin.readable is used when absent. */
   stdin?: ReadableStream<Uint8Array>;
@@ -177,10 +177,9 @@ interface RemoteSession {
 interface ConnectCleanupOptions {
   abort: AbortController;
   clearOnDone?: boolean;
+  injectedPool?: AbstractSimplePool;
   linesPrinted: number;
-  ownsPool: boolean;
   pasteTask: Promise<RemoteSession>;
-  pool: AbstractSimplePool;
   qrTask: Promise<RemoteSession>;
   reader?: ReadableStreamDefaultReader<string>;
   relays: string[];
@@ -219,7 +218,7 @@ async function awaitScan(
 /** Paste branch: resolve once a bunker:// URL is pasted on stdin. */
 async function awaitPaste(
   clientSk: Uint8Array,
-  pool: AbstractSimplePool,
+  pool: AbstractSimplePool | undefined,
   abort: AbortController,
   source: ReadableStream<Uint8Array>,
   relays: string[],
@@ -246,8 +245,8 @@ async function awaitPaste(
     abort.abort();
     const signer = await NostrConnectSigner.fromBunkerURI(bunker, {
       signer: new PrivateKeySigner(clientSk),
-      pool: createApplesaucePool(pool),
       permissions,
+      ...(pool ? { pool: createApplesaucePool(pool) } : {}),
     });
     const pubkey = await signer.getPublicKey();
     return {
@@ -283,15 +282,15 @@ export async function connectRemoteSigner(options: ConnectOptions): Promise<Conn
   const print = options.print ?? ((line: string) => console.log(line));
   const writeStdout = options.writeStdout ??
     ((bytes: Uint8Array) => Deno.stdout.writeSync(bytes));
-  const pool = options.pool ?? new SimplePool();
-  const ownsPool = options.pool === undefined;
+  const injectedPool = options.pool;
+  if (!injectedPool) ensureNostrConnectPool();
 
   const clientSk = generateSecretKey();
   const permissions = buildPerms(kinds);
   const qrSigner = new NostrConnectSigner({
     relays,
     signer: new PrivateKeySigner(clientSk),
-    pool: createApplesaucePool(pool),
+    ...(injectedPool ? { pool: createApplesaucePool(injectedPool) } : {}),
   });
 
   const uri = qrSigner.getNostrConnectURI({
@@ -310,7 +309,7 @@ export async function connectRemoteSigner(options: ConnectOptions): Promise<Conn
   const qrTask = awaitScan(qrSigner, abort.signal);
   const pasteTask = awaitPaste(
     clientSk,
-    pool,
+    injectedPool,
     abort,
     options.stdin ?? Deno.stdin.readable,
     relays,
@@ -349,10 +348,9 @@ export async function connectRemoteSigner(options: ConnectOptions): Promise<Conn
     await cleanupConnectFlow({
       abort,
       clearOnDone: options.clearOnDone,
+      injectedPool,
       linesPrinted,
-      ownsPool,
       pasteTask,
-      pool,
       qrTask,
       reader,
       relays,
@@ -379,7 +377,7 @@ async function cleanupConnectFlow(options: ConnectCleanupOptions): Promise<void>
     await options.winner?.signer.close();
   } catch { /* best-effort */ }
   try {
-    if (options.ownsPool) options.pool.destroy();
-    else options.pool.close(options.relays);
+    if (options.injectedPool) options.injectedPool.close(options.relays);
+    else closeNostrConnectPool();
   } catch { /* best-effort */ }
 }

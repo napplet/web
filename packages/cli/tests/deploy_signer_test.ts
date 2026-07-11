@@ -2,7 +2,7 @@ import { defaultConfig } from "../src/config.ts";
 import { createDeploySigner } from "../src/deploy-signer.ts";
 import { KEY_SERVICE_NAME, type KeyStoreProvider, type StoredSecret } from "../src/key-store.ts";
 import { DEFAULT_CONNECT_RELAYS } from "../src/nostr-connect.ts";
-import type { NappletSigner } from "../src/signing.ts";
+import { encodeNbunksec, type NappletSigner } from "../src/signing.ts";
 import type { NappletConfig, NostrEventTemplate, SignedNostrEvent } from "../src/types.ts";
 import { assert, assertEquals } from "./assert.ts";
 
@@ -45,6 +45,11 @@ function provider(options: {
 Deno.test("createDeploySigner uses a stored bunker session for configured pubkeys", async () => {
   const createCalls: string[] = [];
   const prints: string[] = [];
+  const storedSecret = encodeNbunksec({
+    pubkey,
+    localKey: "03".repeat(32),
+    relays: ["wss://relay.test"],
+  });
   const result = await createDeploySigner(
     { type: "bunker-pubkey", source: "config", pubkey, relays: ["wss://relay.test"] },
     defaultConfig(),
@@ -52,7 +57,7 @@ Deno.test("createDeploySigner uses a stored bunker session for configured pubkey
       required: true,
       interactiveConnect: false,
       getKeyStoreProvider: () =>
-        Promise.resolve(provider({ retrieve: { [pubkey]: "nbunksec1stored" } })),
+        Promise.resolve(provider({ retrieve: { [pubkey]: storedSecret } })),
       createSigner(secret) {
         createCalls.push(secret);
         return Promise.resolve(fakeSigner());
@@ -64,8 +69,11 @@ Deno.test("createDeploySigner uses a stored bunker session for configured pubkey
   );
 
   assert(result.signer);
-  assertEquals(createCalls, ["nbunksec1stored"]);
+  assertEquals(createCalls, [storedSecret]);
   assert(prints.some((line) => line.includes("Connecting to stored remote signer")));
+  assert(prints.some((line) => line.includes("Remote signer pubkey:")));
+  assert(prints.some((line) => line.includes("Using bunker relay: wss://relay.test")));
+  assert(prints.some((line) => line.includes("Waiting for stored remote signer response")));
   assertEquals(result.signing, {
     type: "stored",
     source: "config",

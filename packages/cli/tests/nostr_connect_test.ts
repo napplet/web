@@ -1,7 +1,9 @@
 import type { AbstractSimplePool } from "nostr-tools/abstract-pool";
+import { NostrConnectSigner } from "applesauce-signers";
 import { decrypt, encrypt, getConversationKey } from "nostr-tools/nip44";
 import { finalizeEvent, generateSecretKey, getPublicKey } from "nostr-tools/pure";
 import { bytesToHex } from "nostr-tools/utils";
+import { closeNostrConnectPool, ensureNostrConnectPool } from "../src/nostr-connect-pool.ts";
 import {
   buildPerms,
   connectRemoteSigner,
@@ -125,6 +127,14 @@ Deno.test("renderQrMatrix renders half-block rows with a quiet zone", () => {
   for (const line of lines) assertEquals(line.length, 6);
   assert(lines[1].includes("▀") || lines[1].includes("▄") || lines[1].includes("█"));
   assertEquals(renderQrMatrix([], 2), []);
+});
+
+Deno.test("ensureNostrConnectPool wires applesauce signer static pool fallback", () => {
+  const pool = ensureNostrConnectPool();
+  assertEquals(NostrConnectSigner.pool, pool);
+  assertEquals(pool.ignoreOffline, false);
+  closeNostrConnectPool();
+  assertEquals(NostrConnectSigner.pool, undefined);
 });
 
 Deno.test("connectRemoteSigner completes via a pasted bunker:// URL", async () => {

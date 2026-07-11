@@ -25,8 +25,7 @@ updated: 2026-07-11
   path, then write a regression around the mismatch.
 - expecting: a protocol/nostr-tools usage difference that prevents signer
   response handling.
-- next_action: complete repo-level verification, reinstall the local CLI, and
-  update the open PR.
+- next_action: merged into PR update after local install verification.
 
 ## Evidence
 
@@ -64,3 +63,26 @@ updated: 2026-07-11
   sessions without replaying the QR secret, add bounded reconnect/public-key
   waits, destroy owned pools on close, print stored-signer reconnect status, and
   re-enter Nostr Connect when an interactive deploy finds a stale stored session.
+
+## Follow-up: stored deploy emits no signer-visible activity
+
+- Symptom: `napplet deploy` prints `Connecting to stored remote signer ...`, but
+  the remote signer logs no NIP-46 activity; the same stored signer path in nsyte
+  produces activity immediately.
+- Evidence: Secret Service contains the configured key reference and decodes to
+  relay `wss://bucket.coracle.social`; the missing activity is not a missing
+  local secret.
+- Root cause: napplet's stored reconnect path used a cold applesauce `RelayPool`
+  through the static `NostrConnectSigner.pool` fallback. `RelayPool.publish()`
+  and `subscription()` ignore relays whose `ready` flag is false by default, so a
+  short-lived CLI process could create an empty relay group and wait without
+  sending anything.
+- Fix: configure the CLI-owned NIP-46 `RelayPool` with `ignoreOffline = false`
+  so the first publish/subscription opens the relay connection and dispatches the
+  connect event.
+- Verification: the stored napplet nbunksec now calls `publish()` for kind
+  `24133` and `wss://bucket.coracle.social` returns `ok: true`. Running nsyte's
+  own `importFromNbunk()` against that exact stored nbunksec produces the same
+  relay publish result and then nsyte's 30s bunker timeout, which means the
+  remaining timeout is the persisted session/relay path rather than napplet
+  failing to send.

@@ -1,8 +1,7 @@
 import { NostrConnectSigner, PrivateKeySigner } from "applesauce-signers";
 import { generateSecretKey } from "nostr-tools/pure";
-import { SimplePool } from "nostr-tools/pool";
 import { hexToBytes } from "nostr-tools/utils";
-import { createApplesaucePool } from "./applesauce-pool.ts";
+import { closeNostrConnectPool, ensureNostrConnectPool } from "./nostr-connect-pool.ts";
 import type { NappletSigner, NbunksecInfo } from "./signing.ts";
 import type { SignedNostrEvent } from "./types.ts";
 
@@ -11,12 +10,11 @@ const REMOTE_SIGNER_PUBLIC_KEY_TIMEOUT_MS = 30_000;
 
 /** Open a stored nbunksec remote signer session. */
 export async function createNbunksecRemoteSigner(info: NbunksecInfo): Promise<NappletSigner> {
-  const pool = new SimplePool();
+  ensureNostrConnectPool();
   const signer = new NostrConnectSigner({
     remote: info.pubkey,
     relays: info.relays,
     signer: new PrivateKeySigner(hexToBytes(info.localKey)),
-    pool: createApplesaucePool(pool),
   });
   try {
     await withRemoteTimeout(
@@ -25,10 +23,10 @@ export async function createNbunksecRemoteSigner(info: NbunksecInfo): Promise<Na
       "Remote signer connection timed out after 30s",
     );
   } catch (error) {
-    await closeRemotePool(signer, pool, info.relays);
+    await closeRemoteSigner(signer);
     throw error;
   }
-  return await createConnectedRemoteSigner(signer, pool, info.relays);
+  return await createConnectedRemoteSigner(signer);
 }
 
 /** Open a one-shot bunker:// remote signer session. */
@@ -39,12 +37,11 @@ export async function createBunkerUrlRemoteSigner(secret: string): Promise<Nappl
   } catch {
     throw new Error("Invalid bunker:// signing URL");
   }
-  const pool = new SimplePool();
+  ensureNostrConnectPool();
   const signer = new NostrConnectSigner({
     remote: pointer.remote,
     relays: pointer.relays,
     signer: new PrivateKeySigner(generateSecretKey()),
-    pool: createApplesaucePool(pool),
   });
   try {
     await withRemoteTimeout(
@@ -53,16 +50,14 @@ export async function createBunkerUrlRemoteSigner(secret: string): Promise<Nappl
       "Remote signer connection timed out after 30s",
     );
   } catch (error) {
-    await closeRemotePool(signer, pool, pointer.relays);
+    await closeRemoteSigner(signer);
     throw error;
   }
-  return await createConnectedRemoteSigner(signer, pool, pointer.relays);
+  return await createConnectedRemoteSigner(signer);
 }
 
 async function createConnectedRemoteSigner(
   signer: NostrConnectSigner,
-  pool: SimplePool,
-  relays: string[],
 ): Promise<NappletSigner> {
   let pubkey: string;
   try {
@@ -72,7 +67,7 @@ async function createConnectedRemoteSigner(
       "Remote signer did not return a public key within 30s",
     );
   } catch (error) {
-    await closeRemotePool(signer, pool, relays);
+    await closeRemoteSigner(signer);
     throw error;
   }
   return {
@@ -88,7 +83,7 @@ async function createConnectedRemoteSigner(
       );
     },
     async close(): Promise<void> {
-      await closeRemotePool(signer, pool, relays);
+      await closeRemoteSigner(signer);
     },
   };
 }
@@ -111,18 +106,13 @@ async function withRemoteTimeout<T>(
   }
 }
 
-async function closeRemotePool(
+async function closeRemoteSigner(
   signer: NostrConnectSigner,
-  pool: SimplePool,
-  relays: string[],
 ): Promise<void> {
   try {
     await signer.close();
   } finally {
-    try {
-      pool.close(relays);
-      pool.destroy();
-    } catch { /* best-effort */ }
+    closeNostrConnectPool();
   }
 }
 

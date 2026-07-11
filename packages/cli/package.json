@@ -18,6 +18,7 @@
     "test:unit": "deno task test:unit"
   },
   "dependencies": {
+    "applesauce-relay": "^5.2.0",
     "applesauce-signers": "^5.2.0",
     "nostr-tools": "^2.23.3"
   },
