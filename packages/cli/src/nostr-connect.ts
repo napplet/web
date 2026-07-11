@@ -15,16 +15,12 @@
 
 import { qrcode } from "@libs/qrcode";
 import { TextLineStream } from "@std/streams";
+import { NostrConnectSigner, PrivateKeySigner } from "applesauce-signers";
 import type { AbstractSimplePool } from "nostr-tools/abstract-pool";
-import {
-  type BunkerPointer,
-  BunkerSigner,
-  createNostrConnectURI,
-  parseBunkerInput,
-} from "nostr-tools/nip46";
-import { generateSecretKey, getPublicKey } from "nostr-tools/pure";
+import { generateSecretKey } from "nostr-tools/pure";
 import { bytesToHex } from "nostr-tools/utils";
 import { SimplePool } from "nostr-tools/pool";
+import { createApplesaucePool } from "./applesauce-pool.ts";
 import { encodeNbunksec, type NbunksecInfo } from "./signing.ts";
 
 /** Default relays used to reach a remote signer when none are supplied. */
@@ -161,10 +157,6 @@ export function renderQrLines(uri: string, border = 2): string[] {
   return renderQrMatrix(matrix, border);
 }
 
-function randomSecret(): string {
-  return bytesToHex(generateSecretKey());
-}
-
 function clearLines(count: number, write: (bytes: Uint8Array) => void): void {
   if (count <= 0) return;
   const encoder = new TextEncoder();
@@ -175,7 +167,7 @@ function clearLines(count: number, write: (bytes: Uint8Array) => void): void {
 
 /** A connected remote-signer session produced by either race branch. */
 interface RemoteSession {
-  signer: BunkerSigner;
+  signer: NostrConnectSigner;
   pubkey: string;
   relays: string[];
   secret?: string;
@@ -198,16 +190,12 @@ function printConnectPrompt(
 
 /** QR branch: resolve once a remote signer scans the nostrconnect:// URI. */
 async function awaitScan(
-  clientSk: Uint8Array,
-  uri: string,
-  pool: AbstractSimplePool,
+  signer: NostrConnectSigner,
   abort: AbortSignal,
-  relays: string[],
-  secret: string,
 ): Promise<RemoteSession> {
-  const signer = await BunkerSigner.fromURI(clientSk, uri, { pool }, abort);
+  await signer.waitForSigner(abort);
   const pubkey = await signer.getPublicKey();
-  return { signer, pubkey, relays, secret };
+  return { signer, pubkey, relays: signer.relays, secret: signer.secret };
 }
 
 /** Paste branch: resolve once a bunker:// URL is pasted on stdin. */
@@ -217,6 +205,7 @@ async function awaitPaste(
   abort: AbortController,
   source: ReadableStream<Uint8Array>,
   relays: string[],
+  permissions: string[],
   onReader: (reader: ReadableStreamDefaultReader<string>) => void,
 ): Promise<RemoteSession> {
   const lines = source
@@ -230,11 +219,18 @@ async function awaitPaste(
     if (value === undefined) continue;
     const bunker = detectBunkerLine(value);
     if (!bunker) continue;
-    const pointer: BunkerPointer | null = await parseBunkerInput(bunker);
-    if (!pointer) continue;
+    let pointer: { remote: string; relays: string[]; secret?: string };
+    try {
+      pointer = NostrConnectSigner.parseBunkerURI(bunker);
+    } catch {
+      continue;
+    }
     abort.abort();
-    const signer = BunkerSigner.fromBunker(clientSk, pointer, { pool });
-    await signer.connect();
+    const signer = await NostrConnectSigner.fromBunkerURI(bunker, {
+      signer: new PrivateKeySigner(clientSk),
+      pool: createApplesaucePool(pool),
+      permissions,
+    });
     const pubkey = await signer.getPublicKey();
     return {
       signer,
@@ -247,9 +243,9 @@ async function awaitPaste(
 
 /**
  * Run the NIP-46 remote-signer login flow. Prints a nostrconnect QR and races
- * a scan (BunkerSigner.fromURI) against a pasted bunker:// URL on stdin —
- * whichever completes first wins, the loser is cancelled, and the QR is
- * cleared. On success the paired session is encoded as an nbunksec.
+ * a scan against a pasted bunker:// URL on stdin. Whichever completes first
+ * wins, the loser is cancelled, and the QR is cleared. On success the paired
+ * session is encoded as an nbunksec.
  *
  * @param options - Relays, app name, timeout, and optional injected pool/stdin.
  * @returns The encoded nbunksec, remote pubkey, and session relays.
@@ -271,15 +267,16 @@ export async function connectRemoteSigner(options: ConnectOptions): Promise<Conn
   const pool = options.pool ?? new SimplePool();
 
   const clientSk = generateSecretKey();
-  const clientPubkey = getPublicKey(clientSk);
-  const secret = randomSecret();
-
-  const uri = createNostrConnectURI({
-    clientPubkey,
+  const permissions = buildPerms(kinds);
+  const qrSigner = new NostrConnectSigner({
     relays,
-    secret,
-    perms: buildPerms(kinds),
+    signer: new PrivateKeySigner(clientSk),
+    pool: createApplesaucePool(pool),
+  });
+
+  const uri = qrSigner.getNostrConnectURI({
     name: options.appName ?? "napplet CLI",
+    permissions,
   });
 
   const qrLines = renderQrLines(uri);
@@ -290,17 +287,23 @@ export async function connectRemoteSigner(options: ConnectOptions): Promise<Conn
   let winner: RemoteSession | undefined;
   let timer: ReturnType<typeof setTimeout> | undefined;
 
-  const qrTask = awaitScan(clientSk, uri, pool, abort.signal, relays, secret);
+  const qrTask = awaitScan(qrSigner, abort.signal);
   const pasteTask = awaitPaste(
     clientSk,
     pool,
     abort,
     options.stdin ?? Deno.stdin.readable,
     relays,
+    permissions,
     (r) => {
       reader = r;
     },
   );
+  const ignoredQrTask = qrTask.catch(() => new Promise<never>(() => {}));
+  const ignoredPasteTask = pasteTask.catch((error) => {
+    if (abort.signal.aborted) return new Promise<never>(() => {});
+    throw error;
+  });
 
   const timeoutTask = new Promise<never>((_, reject) => {
     timer = setTimeout(() => {
@@ -310,7 +313,7 @@ export async function connectRemoteSigner(options: ConnectOptions): Promise<Conn
   });
 
   try {
-    winner = await Promise.race([qrTask, pasteTask, timeoutTask]);
+    winner = await Promise.race([ignoredQrTask, ignoredPasteTask, timeoutTask]);
     const info: NbunksecInfo = {
       pubkey: winner.pubkey,
       localKey: bytesToHex(clientSk),

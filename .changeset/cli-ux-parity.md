@@ -10,3 +10,5 @@ output for CI. Root-source deploys now keep local control state such as
 content. Relay and Blossom suggestions are now Tab-completion candidates instead
 of numbered selections, and Nostr Connect asks for bunker relays separately from
 deploy relays with `wss://bucket.coracle.social` as the default.
+Nostr Connect pairing and remote signing now use applesauce-signers so QR flows
+accept the `ack` responses emitted by common bunkers and match nsyte behavior.

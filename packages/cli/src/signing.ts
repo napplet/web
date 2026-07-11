@@ -1,7 +1,9 @@
+import { NostrConnectSigner, PrivateKeySigner } from "applesauce-signers";
 import { nip19 } from "nostr-tools";
-import { BunkerSigner, parseBunkerInput } from "nostr-tools/nip46";
 import { finalizeEvent, generateSecretKey, getPublicKey } from "nostr-tools/pure";
+import { SimplePool } from "nostr-tools/pool";
 import { hexToBytes } from "nostr-tools/utils";
+import { createApplesaucePool } from "./applesauce-pool.ts";
 import type {
   DeployManifestTemplate,
   NappletConfig,
@@ -197,28 +199,39 @@ export function decodeNbunksec(value: string): NbunksecInfo {
 /** create nbunksec signer helper for Nostr signing. */
 export async function createNbunksecSigner(secret: string): Promise<NappletSigner> {
   const info = decodeNbunksec(secret);
-  const signer = BunkerSigner.fromBunker(
-    hexToBytes(info.localKey),
-    {
-      pubkey: info.pubkey,
-      relays: info.relays,
-      secret: info.secret ?? null,
-    },
-  );
-  await signer.connect();
-  return await createConnectedBunkerSigner(signer);
+  const pool = new SimplePool();
+  const signer = new NostrConnectSigner({
+    remote: info.pubkey,
+    relays: info.relays,
+    signer: new PrivateKeySigner(hexToBytes(info.localKey)),
+    pool: createApplesaucePool(pool),
+    secret: info.secret,
+  });
+  await signer.connect(info.secret);
+  return await createConnectedRemoteSigner(signer, pool, info.relays);
 }
 
 /** create bunker URL signer helper for one-shot NIP-46 signing. */
 export async function createBunkerUrlSigner(secret: string): Promise<NappletSigner> {
-  const pointer = await parseBunkerInput(secret.trim());
-  if (!pointer) throw new Error("Invalid bunker:// signing URL");
-  const signer = BunkerSigner.fromBunker(generateSecretKey(), pointer);
-  await signer.connect({ name: "napplet CLI" });
-  return await createConnectedBunkerSigner(signer);
+  let pointer: { remote: string; relays: string[]; secret?: string };
+  try {
+    pointer = NostrConnectSigner.parseBunkerURI(secret.trim());
+  } catch {
+    throw new Error("Invalid bunker:// signing URL");
+  }
+  const pool = new SimplePool();
+  const signer = await NostrConnectSigner.fromBunkerURI(secret.trim(), {
+    signer: new PrivateKeySigner(generateSecretKey()),
+    pool: createApplesaucePool(pool),
+  });
+  return await createConnectedRemoteSigner(signer, pool, pointer.relays);
 }
 
-async function createConnectedBunkerSigner(signer: BunkerSigner): Promise<NappletSigner> {
+async function createConnectedRemoteSigner(
+  signer: NostrConnectSigner,
+  pool: SimplePool,
+  relays: string[],
+): Promise<NappletSigner> {
   const pubkey = await signer.getPublicKey();
   return {
     pubkey,
@@ -233,7 +246,13 @@ async function createConnectedBunkerSigner(signer: BunkerSigner): Promise<Napple
       );
     },
     async close(): Promise<void> {
-      await signer.close();
+      try {
+        await signer.close();
+      } finally {
+        try {
+          pool.close(relays);
+        } catch { /* best-effort */ }
+      }
     },
   };
 }

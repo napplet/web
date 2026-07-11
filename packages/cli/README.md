@@ -338,6 +338,6 @@ deno task test:unit
 deno task build
 ```
 
-Dependencies are declared in `deno.json` `imports`. The npm dependency (`nostr-tools`) is mirrored
-in `package.json`; JSR-only dependencies such as `@libs/qrcode` and `@std/streams` live in
-`deno.json` only.
+Dependencies are declared in `deno.json` `imports`. The npm dependencies
+(`applesauce-signers`, `nostr-tools`) are mirrored in `package.json`; JSR-only dependencies such
+as `@libs/qrcode` and `@std/streams` live in `deno.json` only.
