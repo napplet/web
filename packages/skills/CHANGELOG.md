@@ -1,5 +1,11 @@
 # @napplet/skills
 
+## 0.2.9
+
+### Patch Changes
+
+- d6291de: Point generated projects to the current skills, remove undocumented build-time config guidance, and keep hard `count` requirements from being dropped by the Vite plugin.
+
 ## 0.2.8
 
 ### Patch Changes
