@@ -6,6 +6,7 @@
 
 import { nip19 } from "nostr-tools";
 import type { SigningDebugInfo } from "./debug.ts";
+import { networkDeploySucceeded } from "./deploy-network.ts";
 import type { NetworkDeployProgress, NetworkDeployResult } from "./deploy-network.ts";
 import type {
   DeployManifestTemplate,
@@ -174,17 +175,8 @@ export function renderDeployReport(report: DeployReport): string {
   }
 
   pushSection(lines, "Result");
-  if (report.dryRun) {
-    lines.push("Dry run complete: no files uploaded and no relay events published.");
-  } else if (report.deploy) {
-    const failures = report.deploy.uploadSummary.failedUploads +
-      report.deploy.published.filter((publish) => !publish.success).length;
-    lines.push(
-      failures === 0
-        ? "Deploy complete: manifests are uploaded and published."
-        : `Deploy finished with ${failures} failure(s).`,
-    );
-  }
+  const result = describeDeployResult(report);
+  if (result) lines.push(result);
   return lines.join("\n");
 }
 
@@ -325,9 +317,85 @@ function short(value: string, length: number): string {
 function describeDeployStatus(report: DeployReport): string {
   if (report.dryRun) return "preview";
   if (!report.deploy) return "planned";
-  const failures = report.deploy.uploadSummary.failedUploads +
-    report.deploy.published.filter((publish) => !publish.success).length;
-  return failures === 0 ? "complete" : `attention needed (${failures} failure(s))`;
+  const outcome = summarizeDeployOutcome(report.deploy, report.manifests);
+  if (!outcome.succeeded) return `failed (${outcome.failures.join("; ")})`;
+  return outcome.warnings.length > 0
+    ? `complete with warnings (${outcome.warnings.join(", ")})`
+    : "complete";
+}
+
+function describeDeployResult(report: DeployReport): string | undefined {
+  if (report.dryRun) {
+    return "Dry run complete: no files uploaded and no relay events published.";
+  }
+  if (!report.deploy) return undefined;
+  const outcome = summarizeDeployOutcome(report.deploy, report.manifests);
+  if (!outcome.succeeded) return `Deploy failed: ${outcome.failures.join("; ")}.`;
+  if (outcome.warnings.length > 0) {
+    return `Deploy complete with warnings: ${outcome.warnings.join("; ")}. ` +
+      "Manifests are uploaded and published.";
+  }
+  return "Deploy complete: manifests are uploaded and published.";
+}
+
+function summarizeDeployOutcome(
+  deploy: NetworkDeployResult,
+  manifests: readonly DeployManifestTemplate[],
+): {
+  succeeded: boolean;
+  failures: string[];
+  warnings: string[];
+} {
+  const succeeded = networkDeploySucceeded(deploy, manifests);
+  const eventIds = manifests.flatMap((manifest) =>
+    manifest.signedEvent ? [manifest.signedEvent.id] : []
+  );
+  const unpublishedEvents =
+    eventIds.filter((eventId) =>
+      !deploy.published.some((publish) => publish.eventId === eventId && publish.success)
+    ).length;
+  const failures: string[] = [];
+  if (deploy.uploadSummary.serversFullyUploaded === 0) {
+    failures.push("no complete Blossom mirror");
+  }
+  if (eventIds.length === 0) {
+    failures.push("no signed manifest events");
+  } else if (unpublishedEvents > 0) {
+    failures.push(
+      formatCount(
+        unpublishedEvents,
+        "manifest event was not published",
+        "manifest events were not published",
+      ),
+    );
+  }
+  if (!succeeded && failures.length === 0) failures.push("deployment requirements not met");
+
+  const warnings: string[] = [];
+  if (succeeded) {
+    const incompleteMirrors = Math.max(
+      0,
+      deploy.uploadSummary.servers - deploy.uploadSummary.serversFullyUploaded,
+    );
+    if (incompleteMirrors > 0) {
+      warnings.push(formatCount(incompleteMirrors, "incomplete Blossom mirror"));
+    }
+    const failedRelayPublishes = deploy.published.filter((publish) => !publish.success).length;
+    if (failedRelayPublishes > 0) {
+      warnings.push(
+        formatCount(
+          failedRelayPublishes,
+          "failed redundant relay publish",
+          "failed redundant relay publishes",
+        ),
+      );
+    }
+  }
+  return { succeeded, failures, warnings };
+}
+
+function formatCount(count: number, singular: string, plural = `${singular}s`): string {
+  return `${count} ${count === 1 ? singular : plural}`;
 }
 
 function summarizePublishes(published: readonly { success: boolean }[]): { success: number } {

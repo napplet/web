@@ -1,8 +1,10 @@
 import { nip19 } from "nostr-tools";
 import type { SigningDebugInfo } from "../src/debug.ts";
+import type { NetworkDeployResult } from "../src/deploy-network.ts";
 import {
   createDeployProgressReporter,
   createEventPointers,
+  type DeployReport,
   isTerminalOutput,
   renderDeployReport,
   renderInitReport,
@@ -140,6 +142,142 @@ Deno.test("renderDeployReport replaces placeholder candidate names with a readab
   assert(!output.includes("from .."));
   assert(output.includes("from gbcolor-napplet"));
 });
+
+Deno.test("renderDeployReport treats a failed redundant mirror as a warning", async () => {
+  const { report, signedEvent } = await createNetworkDeployReport();
+  report.blossomServers = [
+    "https://a.example",
+    "https://b.example",
+    "https://c.example",
+  ];
+  report.deploy = {
+    uploaded: [
+      successfulUpload("https://a.example"),
+      {
+        ...successfulUpload("https://b.example"),
+        success: false,
+        error: "HTTP 502",
+      },
+      successfulUpload("https://c.example"),
+    ],
+    published: [successfulPublish(signedEvent.id)],
+    uploadSummary: {
+      servers: 3,
+      serversFullyUploaded: 2,
+      totalUploads: 3,
+      failedUploads: 1,
+    },
+  };
+
+  const output = renderDeployReport(report);
+
+  assert(output.includes("Status: complete with warnings (1 incomplete Blossom mirror)"));
+  assert(output.includes("Deploy complete with warnings: 1 incomplete Blossom mirror."));
+  assert(!output.includes("Status: attention needed"));
+  assert(!output.includes("Deploy failed"));
+});
+
+Deno.test("renderDeployReport treats a failed redundant relay publish as a warning", async () => {
+  const { report, signedEvent } = await createNetworkDeployReport();
+  const deploy = report.deploy;
+  assert(deploy);
+  deploy.published.push({
+    relay: "wss://backup-relay.example",
+    eventId: signedEvent.id,
+    success: false,
+    error: "relay unavailable",
+  });
+
+  const output = renderDeployReport(report);
+
+  assert(output.includes("complete with warnings (1 failed redundant relay publish)"));
+  assert(!output.includes("Deploy failed"));
+});
+
+Deno.test("renderDeployReport fails when a manifest has no successful relay publish", async () => {
+  const { report } = await createNetworkDeployReport();
+  const deploy = report.deploy;
+  assert(deploy);
+  deploy.published = [];
+
+  const output = renderDeployReport(report);
+
+  assert(output.includes("Status: failed (1 manifest event was not published)"));
+  assert(output.includes("Deploy failed: 1 manifest event was not published."));
+});
+
+async function createNetworkDeployReport(): Promise<{
+  report: DeployReport;
+  signedEvent: Awaited<ReturnType<typeof signer.sign>>;
+}> {
+  const item: DeployPlanItem = {
+    candidate: {
+      name: "feed",
+      dir: "/tmp/feed",
+      indexHtml: "/tmp/feed/index.html",
+    },
+    target: "named",
+    kind: NAPPLET_KIND_NAMED,
+    dTag: "feed",
+  };
+  const signedEvent = await signer.sign({
+    kind: NAPPLET_KIND_NAMED,
+    created_at: 123,
+    tags: [["d", "feed"], ["path", "/index.html", "a".repeat(64)]],
+    content: "",
+  });
+  return {
+    signedEvent,
+    report: {
+      signing: {
+        type: "private-key",
+        source: "sec-flag",
+        format: "nsec",
+        canSignWithoutPrompt: true,
+        requiresSecretLookup: false,
+        notes: [],
+      },
+      plan: {
+        configPath: ".napplet/config.json",
+        items: [item],
+      },
+      manifests: [{
+        item,
+        files: [{ path: "/index.html", sha256: "a".repeat(64) }],
+        aggregateHash: "b".repeat(64),
+        template: signedEvent,
+        signedEvent,
+      }],
+      deploy: {
+        uploaded: [successfulUpload("https://blob.example")],
+        published: [successfulPublish(signedEvent.id)],
+        uploadSummary: {
+          servers: 1,
+          serversFullyUploaded: 1,
+          totalUploads: 1,
+          failedUploads: 0,
+        },
+      },
+      relays: ["wss://relay.example"],
+      blossomServers: ["https://blob.example"],
+      dryRun: false,
+    },
+  };
+}
+
+function successfulUpload(server: string): NetworkDeployResult["uploaded"][number] {
+  return {
+    server,
+    file: "/index.html",
+    sha256: "a".repeat(64),
+    success: true,
+    skipped: false,
+  };
+}
+
+function successfulPublish(eventId: string): NetworkDeployResult["published"][number] {
+  return { relay: "wss://relay.example", eventId, success: true };
+}
 
 Deno.test("createDeployProgressReporter renders terminal progress lines", () => {
   const lines: string[] = [];

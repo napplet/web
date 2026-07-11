@@ -15,3 +15,8 @@ accept the `ack` responses emitted by common bunkers and match nsyte behavior.
 Blossom uploads now keep the BUD-11 scoped base64url token as the first attempt
 but fall back to unscoped and legacy base64 auth for deployed servers that reject
 otherwise valid uploads.
+Network deploys now treat unavailable redundant Blossom mirrors as warnings and
+continue to relay publication whenever at least one server holds every required
+blob, while still failing when no configured server is complete. Human reports
+now share the command's success predicate, so redundant relay misses are also
+warnings whenever every manifest reaches another relay.

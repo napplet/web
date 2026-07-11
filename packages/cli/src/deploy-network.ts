@@ -90,10 +90,10 @@ export async function executeNetworkDeploy(
   const uploaded = await uploadFilesToServers(files, config.blossomServers, signer, options);
   const uploadSummary = summarizeUploads(uploaded, config.blossomServers);
   options.onProgress?.({ type: "upload:complete", summary: uploadSummary });
-  if (uploadSummary.failedUploads > 0) {
-    // Publish only when every server holds every blob, so each manifest `server` tag
-    // is a real mirror. Report how far we got so operators can tell a single failed
-    // mirror apart from a total upload failure.
+  if (uploadSummary.serversFullyUploaded === 0) {
+    // Publish only when at least one server holds every blob referenced by the
+    // manifests. Individual mirror failures reduce redundancy but do not make the
+    // deployed files unavailable.
     console.error(
       `[deploy] skipping relay publish: ${uploadSummary.serversFullyUploaded}/` +
         `${uploadSummary.servers} servers fully uploaded ` +
@@ -157,7 +157,7 @@ export function networkDeploySucceeded(
   manifests: readonly DeployManifestTemplate[],
 ): boolean {
   const eventIds = signedEvents(manifests).map((event) => event.id);
-  return result.uploaded.every((upload) => upload.success) && eventIds.length > 0 &&
+  return result.uploadSummary.serversFullyUploaded > 0 && eventIds.length > 0 &&
     eventIds.every((eventId) =>
       result.published.some((publish) => publish.eventId === eventId && publish.success)
     );
