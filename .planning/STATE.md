@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v0.34.0
 milestone_name: NIP-5D Runtime Injection
 status: planning
-last_updated: "2026-07-10T17:13:25+02:00"
-last_activity: 2026-07-10 - Quick task 260710-ng9 complete: napplet.run conformance now accepts NIP-19 napplet manifest pointers.
+last_updated: "2026-07-11T12:47:38+02:00"
+last_activity: 2026-07-11 - Quick task 260711-hhy complete: @napplet/cli now prompts separately for Nostr Connect bunker relays and uses autocomplete for relay/Blossom suggestions.
 progress:
   total_phases: 0
   completed_phases: 0
@@ -30,7 +30,71 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 Phase: Not started (defining requirements)
 Plan: —
 Status: Defining requirements
-Last activity: 2026-07-10 — Quick task 260710-ng9 complete; napplet.run conformance now accepts NIP-19 `nevent`/`naddr` napplet manifest pointers.
+Last activity: 2026-07-11 - Quick task 260711-hhy complete; `@napplet/cli` now prompts separately for Nostr Connect bunker relays and uses autocomplete for relay/Blossom suggestions.
+
+### Quick task 260711-hhy - COMPLETE
+
+- Added Tab completion to the CLI prompt helper and removed numbered suggestion
+  output from relay / Blossom prompts.
+- Updated `napplet init` to use relay and Blossom suggestions as autocomplete
+  candidates, not numbered menu entries.
+- Raised default relay and Blossom suggestion caps to 1200 and increased Blossom
+  discovery seed relays from 4 to 24.
+- Added shared bunker relay prompting for interactive deploy and
+  `napplet keys connect` before QR rendering.
+- Changed the Nostr Connect default relay to `wss://bucket.coracle.social` and
+  removed the stale `wss://relay.nsec.app` default.
+- Kept `.napplet` deploy relays out of the Nostr Connect fallback path.
+- Verification: `deno task check`; full `@napplet/cli` unit suite (94/94);
+  `pnpm type-check`; `pnpm build`; `pnpm test:unit`; `pnpm lint` (0 tasks);
+  `pnpm dlx aislop@0.12.0 scan --changes --json` (98/100, existing `js-yaml`
+  advisory only); `git diff --cached --check`.
+- Commit: `be89ec7d` (`fix(cli): align Nostr Connect relay prompts with deploy reality`).
+
+### Quick task 260710-rce - COMPLETE
+
+- Fixed `@napplet/cli` deploy manifest collection so source-root deploys skip
+  hidden local/control paths such as `.napplet/config.json`, `.git`, and
+  `.env`, while still allowing intentional `.well-known` content.
+- Added an explicit `node_modules` directory skip so dependency trees are never
+  signed as napplet content.
+- Kept `.nip5a-manifest.json` as metadata-only input, not a deployed path.
+- Expanded the existing `@napplet/cli` patch changeset note to include this
+  deploy-content safety fix.
+- Verification: `deno fmt --check packages/cli/src/manifest.ts
+  packages/cli/tests/manifest_test.ts
+  .planning/quick/260710-rce-exclude-local-cli-config-and-tooling-sta/PLAN.md`;
+  `deno task --cwd packages/cli check`; `deno lint packages/cli/src
+  packages/cli/tests`; `deno task --cwd packages/cli test:unit`; installed
+  wrapper fixture for `napplet init` + `napplet deploy --dry-run` excluding
+  `.napplet/config.json` and `.env`; `pnpm build`; `pnpm type-check`;
+  `pnpm -r test:unit`; `pnpm lint`; `pnpm check:jsr`; `pnpm test:tutorial`;
+  `pnpm test`; `git diff --check`; `pnpm dlx aislop@0.13.1 scan --changes
+  --json .` (100/100).
+- Commit: `5f28c4e5` (`fix(cli): keep local state out of deploy manifests`).
+
+### Quick task 260710-opm - COMPLETE
+
+- Improved `@napplet/cli` interactive deploy/init/signing UX while preserving
+  non-interactive JSON output for CI and scripts.
+- Added hidden Enter-based `--prompt-sec` TTY input with piped stdin fallback.
+- Added terminal deploy reports with config, signer, upload, relay publish,
+  signed event IDs, and NIP-19 `nevent`/`naddr` pointers.
+- Added raw `bunker://` NIP-46 signing support alongside existing `nbunksec`
+  support.
+- Added guided `napplet init` prompts with safe NIP-66 relay suggestions and
+  NIP-B7 Blossom server-list suggestions; fully flagged/non-TTY init remains
+  deterministic.
+- Split CLI implementation into focused helpers for flag parsing, prompts,
+  output rendering, init wizard flow, suggestion discovery, and key commands.
+- Added a patch changeset for `@napplet/cli`.
+- Verification: `deno fmt --check packages/cli/README.md packages/cli/src
+  packages/cli/tests`; `cd packages/cli && deno task check`; `cd packages/cli
+  && deno task test:unit`; CLI smoke test for init, JSON dry-run, piped
+  `--prompt-sec`, and TTY human dry-run with `nevent`/`naddr`; `pnpm build`;
+  `pnpm type-check`; `pnpm -r test:unit`; `pnpm lint`; `pnpm check:jsr`;
+  `pnpm dlx aislop@0.13.1 scan --changes --json .` (100/100);
+  `git diff --check`.
 
 ### Quick task 260710-ng9 — COMPLETE
 
@@ -415,6 +479,8 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 
 | Quick ID | Task | Date | Commit | Artifacts |
 |----------|------|------|--------|-----------|
+| 260711-hhy | Replace numbered relay/server selection with autocomplete and prompt separately for Nostr Connect bunker relays | 2026-07-11 | be89ec7d | [260711-hhy-replace-napplet-cli-numbered-relay-serve](./quick/260711-hhy-replace-napplet-cli-numbered-relay-serve/) |
+| 260710-rce | Exclude local CLI config and tooling state from napplet deploy manifest collection | 2026-07-10 | 5f28c4e5 | [260710-rce-exclude-local-cli-config-and-tooling-sta](./quick/260710-rce-exclude-local-cli-config-and-tooling-sta/) |
 | 260710-ng9 | Fix napplet.run conformance to accept NIP-19 napplet manifest pointers | 2026-07-10 | 04606c3a | [260710-ng9-fix-napplet-run-conformance-to-accept-ne](./quick/260710-ng9-fix-napplet-run-conformance-to-accept-ne/) |
 | 260710-mzr | Move Core Concepts to the top of the affected docs section | 2026-07-10 | bc4cd533 | [260710-mzr-move-core-concepts-to-the-top-of-the-aff](./quick/260710-mzr-move-core-concepts-to-the-top-of-the-aff/) |
 | 260710-lai | Add Note Drafts boilerplate and AI-agent tutorials | 2026-07-10 | 39676ba4 | [260710-lai-write-note-drafts-tutorial-variants-upda](./quick/260710-lai-write-note-drafts-tutorial-variants-upda/) |

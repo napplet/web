@@ -33,7 +33,7 @@ mkdir note-drafts
 cd note-drafts
 pnpm init
 pnpm add @napplet/sdk@^0.24.4
-pnpm add -D @napplet/vite-plugin@^0.11.2 @napplet/conformance-cli@^0.2.14 @kehto/cli@^0.2.11 typescript@^5.9.3 vite@^6.4.3
+pnpm add -D @napplet/vite-plugin@^0.11.2 @napplet/conformance-cli@^0.2.15 @kehto/cli@^0.2.11 typescript@^5.9.3 vite@^6.4.3
 ```
 
 Replace the generated `package.json` with this:
@@ -57,7 +57,7 @@ Replace the generated `package.json` with this:
   },
   "devDependencies": {
     "@kehto/cli": "^0.2.11",
-    "@napplet/conformance-cli": "^0.2.14",
+    "@napplet/conformance-cli": "^0.2.15",
     "@napplet/vite-plugin": "^0.11.2",
     "typescript": "^5.9.3",
     "vite": "^6.4.3"

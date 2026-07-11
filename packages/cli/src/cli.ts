@@ -6,28 +6,34 @@
  * @module
  */
 
-import { initConfig, readConfig, setSigningKeyReference, writeConfig } from "./config.ts";
+import { configPath, initConfig, readConfig } from "./config.ts";
 import { createDebugReport, createSigningDebugInfo } from "./debug.ts";
 import { createDeployPlan } from "./deploy-plan.ts";
+import { createDeploySigner } from "./deploy-signer.ts";
 import { executeNetworkDeploy, networkDeploySucceeded } from "./deploy-network.ts";
 import { discoverNapplets } from "./discover.ts";
-import { KEY_SERVICE_NAME, requireKeyStoreProvider } from "./key-store.ts";
+import { collectFlags, first, type FlagBag } from "./flags.ts";
+import { type InitWizardResult, promptInitWizard } from "./init-wizard.ts";
+import { commandKeys } from "./keys-command.ts";
 import { createDeployManifestTemplates } from "./manifest.ts";
-import { connectRemoteSigner, DEFAULT_CONNECT_RELAYS } from "./nostr-connect.ts";
-import { runCommand, splitCommand } from "./process.ts";
 import {
-  createSignerFromSecret,
-  type NappletSigner,
-  resolveSigningMethod,
-  signDeployManifestTemplates,
-} from "./signing.ts";
-import type { DeploySelection, NappletConfig, SigningMethod } from "./types.ts";
+  createDeployProgressReporter,
+  type InitReport,
+  isTerminalOutput,
+  renderDeployReport,
+  renderInitReport,
+} from "./output.ts";
+import { isTerminalInput } from "./prompt.ts";
+import { runCommand, splitCommand } from "./process.ts";
+import { resolveSigningMethod, signDeployManifestTemplates } from "./signing.ts";
+import { getBlossomServerSuggestions, getRelaySuggestions } from "./suggestions.ts";
+import type { DeploySelection, NappletConfig } from "./types.ts";
 
 const HELP = `@napplet/cli
 
 Usage:
-  napplet init [--force] [--source-dir <dir>] [--relay <url>] [--server <url>] [--name <dtag>]
-  napplet deploy [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>] [--prompt-sec] [--dry-run]
+  napplet init [--force] [--root] [--source-dir <dir>] [--relay <url>] [--server <url>] [--name <dtag>]
+  napplet deploy [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>] [--prompt-sec] [--dry-run] [--json]
   napplet debug [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>]
   napplet keys store --name <ref> [--sec <secret> | --prompt-sec]
   napplet keys connect --name <ref> [--relay <url> ...] [--config <file>]
@@ -41,7 +47,8 @@ Usage:
 
 Current scope:
   deploy uploads files to configured Blossom servers and publishes signed
-  root/named/snapshot manifest events to configured relays for local or nbunksec signers.
+  root/named/snapshot manifest events to configured relays for local or NIP-46 signers.
+  Interactive terminals receive a human deploy report; use --json for CI output.
 `;
 
 interface ParsedArgs {
@@ -73,7 +80,7 @@ export async function main(argv = Deno.args): Promise<number> {
       case "debug":
         return await commandDebug(parsed.rest);
       case "keys":
-        return await commandKeys(parsed.rest);
+        return await commandKeys(parsed.rest, HELP);
       case "conformance":
         return await commandConformance(parsed.rest);
       case "paja":
@@ -89,84 +96,6 @@ export async function main(argv = Deno.args): Promise<number> {
   }
 }
 
-async function commandKeys(argv: string[]): Promise<number> {
-  const subcommand = argv[0] ?? "help";
-  const rest = argv.slice(1);
-  const flags = collectFlags(rest);
-
-  if (subcommand === "help" || subcommand === "--help" || subcommand === "-h") {
-    console.log(HELP);
-    return 0;
-  }
-
-  if (subcommand === "doctor") {
-    const provider = await requireKeyStoreProvider();
-    console.log(`Native key storage available: ${provider.name}`);
-    return 0;
-  }
-
-  const provider = await requireKeyStoreProvider();
-
-  if (subcommand === "store") {
-    const name = requiredValue(flags, "name");
-    const secret = await resolveSecretInput(flags);
-    await provider.store({ service: KEY_SERVICE_NAME, account: name, secret });
-    console.log(`Stored key reference "${name}" in ${provider.name}`);
-    return 0;
-  }
-
-  if (subcommand === "connect") {
-    const name = requiredValue(flags, "name");
-    const relays = flags.values.get("relay") ?? DEFAULT_CONNECT_RELAYS.slice();
-    const { nbunksec, pubkey, relays: sessionRelays } = await connectRemoteSigner({
-      relays,
-      appName: "napplet CLI",
-    });
-    await provider.store({ service: KEY_SERVICE_NAME, account: name, secret: nbunksec });
-    const path = first(flags.values.get("config"));
-    const config = await readConfig(path);
-    if (!config) throw new Error(`No .napplet config found${path ? ` at ${path}` : ""}`);
-    await writeConfig(setSigningKeyReference(config, name), path);
-    console.log(`Stored remote signer "${name}" in ${provider.name}`);
-    console.log(`Configured .napplet signing.keyReference = "${name}"`);
-    console.log(`Remote signer pubkey: ${pubkey}`);
-    console.log(`Session relays: ${sessionRelays.join(", ")}`);
-    return 0;
-  }
-
-  if (subcommand === "list") {
-    const accounts = await provider.list(KEY_SERVICE_NAME);
-    if (accounts.length === 0) {
-      console.log("No stored napplet keys");
-      return 0;
-    }
-    for (const account of accounts) console.log(account);
-    return 0;
-  }
-
-  if (subcommand === "use") {
-    const name = requiredValue(flags, "name");
-    const secret = await provider.retrieve(KEY_SERVICE_NAME, name);
-    if (!secret) throw new Error(`No key reference "${name}" found in ${provider.name}`);
-    const path = first(flags.values.get("config"));
-    const config = await readConfig(path);
-    if (!config) throw new Error(`No .napplet config found${path ? ` at ${path}` : ""}`);
-    await writeConfig(setSigningKeyReference(config, name), path);
-    console.log(`Configured .napplet signing.keyReference = "${name}"`);
-    return 0;
-  }
-
-  if (subcommand === "delete") {
-    const name = requiredValue(flags, "name");
-    const deleted = await provider.delete(KEY_SERVICE_NAME, name);
-    console.log(deleted ? `Deleted key reference "${name}"` : `No key reference "${name}" found`);
-    return deleted ? 0 : 1;
-  }
-
-  console.error(`Unknown keys subcommand: ${subcommand}`);
-  return 2;
-}
-
 function parseCommand(argv: string[]): ParsedArgs {
   if (argv.length === 0) return { command: "help", rest: [] };
   const [command, ...rest] = argv;
@@ -175,15 +104,62 @@ function parseCommand(argv: string[]): ParsedArgs {
 
 async function commandInit(argv: string[]): Promise<number> {
   const flags = collectFlags(argv);
-  const result = await initConfig({
+  const existing = await readConfig();
+  if (existing && !flags.boolean.has("force")) {
+    console.log(renderInitReport({ path: configPath(), config: existing, created: false }));
+    return 0;
+  }
+  const result = await runInitFromFlags(flags);
+  console.log(renderInitReport(result));
+  return 0;
+}
+
+async function runInitFromFlags(flags: FlagBag): Promise<InitReport> {
+  const seed = {
     force: flags.boolean.has("force"),
     sourceDir: first(flags.values.get("source-dir")),
     relays: flags.values.get("relay") ?? [],
     blossomServers: flags.values.get("server") ?? [],
     named: flags.values.get("name") ?? [],
+    root: flags.boolean.has("root"),
+  };
+  let options: InitWizardResult;
+  const interactive = isTerminalInput();
+  if (interactive) {
+    console.error("Discovering relay and Blossom server suggestions...");
+    const relaySuggestions = await getRelaySuggestions();
+    const blossomSuggestions = await getBlossomServerSuggestions({
+      relays: seed.relays.length > 0 ? seed.relays : relaySuggestions.slice(0, 24),
+    });
+    console.error(
+      `Suggestions ready: ${relaySuggestions.length} relays, ` +
+        `${blossomSuggestions.length} Blossom servers.`,
+    );
+    options = await promptInitWizard({
+      seed,
+      suggestions: {
+        relays: relaySuggestions,
+        blossomServers: blossomSuggestions,
+      },
+    });
+  } else {
+    options = {
+      sourceDir: seed.sourceDir ?? ".",
+      relays: seed.relays,
+      blossomServers: seed.blossomServers,
+      named: seed.root ? [] : seed.named,
+      defaultTarget: seed.root ? "root" as const : "named" as const,
+    };
+  }
+  const result = await initConfig({
+    force: seed.force,
+    sourceDir: options.sourceDir,
+    relays: options.relays,
+    blossomServers: options.blossomServers,
+    named: options.named,
+    defaultTarget: options.defaultTarget,
   });
-  console.log(`${result.created ? "Created" : "Found"} ${result.path}`);
-  return 0;
+  return result;
 }
 
 async function commandDiscover(argv: string[]): Promise<number> {
@@ -196,7 +172,8 @@ async function commandDiscover(argv: string[]): Promise<number> {
 
 async function commandDeploy(argv: string[]): Promise<number> {
   const flags = collectFlags(argv);
-  const config = await loadConfig(flags);
+  const jsonOutput = flags.boolean.has("json") || !isTerminalOutput();
+  const config = await loadDeployConfig(flags, jsonOutput);
   const candidates = await discoverNapplets(config, { traverse: flags.boolean.has("all") });
   const selection: Partial<DeploySelection> = {
     root: flags.boolean.has("root") ? true : undefined,
@@ -212,31 +189,100 @@ async function commandDeploy(argv: string[]): Promise<number> {
     traverse: flags.boolean.has("all"),
   });
 
-  const signer = await maybeCreateSigner(signing, flags);
+  const dryRun = flags.boolean.has("dry-run");
+  const { signer, signing: deploySigning } = await createDeploySigner(signing, config, {
+    sec: first(flags.values.get("sec")),
+    required: !dryRun,
+    interactiveConnect: !dryRun && isTerminalInput() && !jsonOutput,
+    configPath: first(flags.values.get("config")),
+    print: (line) => console.error(line),
+    writePromptBytes: (bytes) => Deno.stderr.writeSync(bytes),
+  });
   try {
-    const signingInfo = createSigningDebugInfo(signing);
+    const signingInfo = createSigningDebugInfo(deploySigning);
     const manifests = signer
       ? await signDeployManifestTemplates(
         await createDeployManifestTemplates(plan, config, { sourcePubkey: signer.pubkey }),
         signer,
       )
       : await createDeployManifestTemplates(plan, config);
-    if (!flags.boolean.has("dry-run")) {
+    if (!dryRun) {
       if (!signer) {
         throw new Error("Network deploy requires a signer from --sec, --prompt-sec, config, or CI");
       }
-      const deploy = await executeNetworkDeploy(manifests, {
+      const deploy = await executeNetworkDeploy(
+        manifests,
+        {
+          relays: config.relays,
+          blossomServers: config.blossomServers,
+        },
+        signer,
+        {
+          onProgress: jsonOutput ? undefined : createDeployProgressReporter(),
+        },
+      );
+      const report = {
+        signing: signingInfo,
+        plan,
+        manifests,
+        deploy,
         relays: config.relays,
         blossomServers: config.blossomServers,
-      }, signer);
-      console.log(JSON.stringify({ signing: signingInfo, plan, manifests, deploy }, null, 2));
+        dryRun: false,
+      };
+      console.log(jsonOutput ? JSON.stringify(report, null, 2) : renderDeployReport(report));
       return networkDeploySucceeded(deploy, manifests) ? 0 : 1;
     }
-    console.log(JSON.stringify({ signing: signingInfo, plan, manifests }, null, 2));
+    const report = {
+      signing: signingInfo,
+      plan,
+      manifests,
+      relays: config.relays,
+      blossomServers: config.blossomServers,
+      dryRun: true,
+    };
+    console.log(jsonOutput ? JSON.stringify(report, null, 2) : renderDeployReport(report));
     return 0;
   } finally {
     await signer?.close?.();
   }
+}
+
+export interface DeployConfigLoaderOptions {
+  readConfig?: (path?: string) => Promise<NappletConfig | null>;
+  isTerminalInput?: () => boolean;
+  runInit?: (flags: FlagBag) => Promise<InitReport>;
+  printStatus?: (line: string) => void;
+  printReport?: (report: string) => void;
+}
+
+/**
+ * Resolve deploy configuration, bootstrapping through guided init for first-run terminals.
+ *
+ * @param flags Parsed CLI flags for the deploy invocation.
+ * @param jsonOutput Whether deploy output must remain machine-readable JSON.
+ * @param options Test seams for I/O and initialization.
+ * @returns The loaded or newly initialized config.
+ */
+export async function loadDeployConfig(
+  flags: FlagBag,
+  jsonOutput: boolean,
+  options: DeployConfigLoaderOptions = {},
+): Promise<NappletConfig> {
+  const path = first(flags.values.get("config"));
+  const config = await (options.readConfig ?? readConfig)(path);
+  if (config) return config;
+  const terminalInput = options.isTerminalInput ?? isTerminalInput;
+  if (path || jsonOutput || !terminalInput()) {
+    throw new Error(`No .napplet config found${path ? ` at ${path}` : ""}. Run: napplet init`);
+  }
+
+  const printStatus = options.printStatus ?? console.error;
+  const printReport = options.printReport ?? console.log;
+  printStatus("No .napplet config found. Starting interactive setup...");
+  const result = await (options.runInit ?? runInitFromFlags)(flags);
+  printReport(renderInitReport(result));
+  return result.config;
 }
 
 async function commandDebug(argv: string[]): Promise<number> {
@@ -259,34 +305,6 @@ async function commandDebug(argv: string[]): Promise<number> {
   });
   console.log(JSON.stringify(report, null, 2));
   return 0;
-}
-
-async function maybeCreateSigner(
-  signing: SigningMethod,
-  flags: FlagBag,
-): Promise<NappletSigner | null> {
-  const secret = await resolveSigningSecret(signing, flags);
-  return secret ? await createSignerFromSecret(secret) : null;
-}
-
-async function resolveSigningSecret(
-  signing: SigningMethod,
-  flags: FlagBag,
-): Promise<string | null> {
-  if (signing.type === "private-key") return requiredValue(flags, "sec");
-  if (signing.type === "prompt") return await readSecretFromStdin();
-  if (signing.type === "stored") {
-    const provider = await requireKeyStoreProvider();
-    const secret = await provider.retrieve(KEY_SERVICE_NAME, signing.keyReference);
-    if (!secret) {
-      throw new Error(`No key reference "${signing.keyReference}" found in ${provider.name}`);
-    }
-    return secret;
-  }
-  if (signing.type === "ci-revocable") {
-    return Deno.env.get(signing.keyReference) ?? signing.keyReference;
-  }
-  return null;
 }
 
 async function commandConformance(argv: string[]): Promise<number> {
@@ -321,87 +339,6 @@ async function loadConfig(flags: FlagBag): Promise<NappletConfig> {
     throw new Error(`No .napplet config found${path ? ` at ${path}` : ""}. Run: napplet init`);
   }
   return config;
-}
-
-interface FlagBag {
-  boolean: Set<string>;
-  values: Map<string, string[]>;
-  positional: string[];
-  afterDoubleDash: string[];
-}
-
-function collectFlags(argv: string[]): FlagBag {
-  const flags: FlagBag = {
-    boolean: new Set(),
-    values: new Map(),
-    positional: [],
-    afterDoubleDash: [],
-  };
-  let passthrough = false;
-  for (let i = 0; i < argv.length; i += 1) {
-    const arg = argv[i];
-    if (passthrough) {
-      flags.afterDoubleDash.push(arg);
-      continue;
-    }
-    if (arg === "--") {
-      passthrough = true;
-      continue;
-    }
-    if (!arg.startsWith("--")) {
-      flags.positional.push(arg);
-      continue;
-    }
-    const name = arg.slice(2);
-    if (
-      ["force", "all", "root", "snapshot", "prompt-sec", "dry-run"].includes(name)
-    ) {
-      flags.boolean.add(name);
-      continue;
-    }
-    const value = argv[i + 1];
-    if (value === undefined || value.startsWith("--")) throw new Error(`Missing value for ${arg}`);
-    i += 1;
-    const values = flags.values.get(name) ?? [];
-    values.push(value);
-    flags.values.set(name, values);
-  }
-  return flags;
-}
-
-function first(values: string[] | undefined): string | undefined {
-  return values?.[0];
-}
-
-function requiredValue(flags: FlagBag, name: string): string {
-  const value = first(flags.values.get(name));
-  if (!value) throw new Error(`Missing --${name}`);
-  return value;
-}
-
-async function resolveSecretInput(flags: FlagBag): Promise<string> {
-  const sec = first(flags.values.get("sec"));
-  if (sec) return sec;
-  if (!flags.boolean.has("prompt-sec")) {
-    throw new Error("Provide --sec <secret> or --prompt-sec");
-  }
-  return await readSecretFromStdin();
-}
-
-async function readSecretFromStdin(): Promise<string> {
-  console.error("Enter signing secret, then press Ctrl-D:");
-  const chunks: Uint8Array[] = [];
-  for await (const chunk of Deno.stdin.readable) chunks.push(chunk);
-  const size = chunks.reduce((total, chunk) => total + chunk.length, 0);
-  const all = new Uint8Array(size);
-  let offset = 0;
-  for (const chunk of chunks) {
-    all.set(chunk, offset);
-    offset += chunk.length;
-  }
-  const secret = new TextDecoder().decode(all).trim();
-  if (!secret) throw new Error("No secret provided on stdin");
-  return secret;
 }
 
 if (import.meta.main) {

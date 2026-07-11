@@ -40,6 +40,26 @@ Deno.test("collectManifestFiles hashes dist files and excludes generated manifes
   });
 });
 
+Deno.test("collectManifestFiles skips local control paths but keeps well-known", async () => {
+  await withTempDir(async (dir) => {
+    await Deno.mkdir(`${dir}/.git`, { recursive: true });
+    await Deno.mkdir(`${dir}/.napplet`, { recursive: true });
+    await Deno.mkdir(`${dir}/.well-known`, { recursive: true });
+    await Deno.mkdir(`${dir}/node_modules/pkg`, { recursive: true });
+    await Deno.writeTextFile(`${dir}/index.html`, "index");
+    await Deno.writeTextFile(`${dir}/.env`, "NAPPLET_CI_SIGNING_KEY=secret");
+    await Deno.writeTextFile(`${dir}/.git/config`, "private");
+    await Deno.writeTextFile(`${dir}/.napplet/config.json`, '{"servers":["https://cdn.example"]}');
+    await Deno.writeTextFile(`${dir}/.well-known/nostr.json`, "{}");
+    await Deno.writeTextFile(`${dir}/node_modules/pkg/index.js`, "ignored");
+
+    assertEquals((await collectManifestFiles(dir)).map((file) => file.path), [
+      "/.well-known/nostr.json",
+      "/index.html",
+    ]);
+  });
+});
+
 Deno.test("computeAggregateHash is order-independent and uses only path mappings", async () => {
   const first = await computeAggregateHash(files);
   const second = await computeAggregateHash([...files].reverse());

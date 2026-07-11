@@ -1,4 +1,10 @@
-import { defaultConfig, initConfig, readConfig, setSigningKeyReference } from "../src/config.ts";
+import {
+  defaultConfig,
+  initConfig,
+  readConfig,
+  setSigningKeyReference,
+  setSigningRemote,
+} from "../src/config.ts";
 import { assert, assertEquals, withTempDir } from "./assert.ts";
 
 Deno.test("defaultConfig uses a singular .napplet-style project model", () => {
@@ -23,6 +29,22 @@ Deno.test("initConfig writes .napplet/config.json", async () => {
     const config = await readConfig(result.path);
     assertEquals(config?.sourceDir, "dist");
     assertEquals(config?.named, ["feed"]);
+    assertEquals(config?.defaultTarget, "named");
+  });
+});
+
+Deno.test("initConfig can create a root-target config", async () => {
+  await withTempDir(async (dir) => {
+    const result = await initConfig({
+      cwd: dir,
+      sourceDir: "dist",
+      defaultTarget: "root",
+    });
+    const config = await readConfig(result.path);
+
+    assertEquals(config?.sourceDir, "dist");
+    assertEquals(config?.defaultTarget, "root");
+    assertEquals(config?.named, []);
   });
 });
 
@@ -31,5 +53,21 @@ Deno.test("setSigningKeyReference points config signing at a stored local key", 
   assertEquals(config.signing, {
     mode: "interactive",
     keyReference: "default",
+  });
+});
+
+Deno.test("setSigningRemote records a configured bunker pubkey", () => {
+  const pubkey = "02".repeat(32);
+  const config = setSigningRemote(defaultConfig(), {
+    pubkey,
+    keyReference: pubkey,
+    relays: ["wss://relay.example"],
+  });
+  assertEquals(config.bunkerPubkey, pubkey);
+  assertEquals(config.signing, {
+    mode: "interactive",
+    keyReference: pubkey,
+    pubkey,
+    relays: ["wss://relay.example"],
   });
 });

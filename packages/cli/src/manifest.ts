@@ -335,6 +335,8 @@ const NAP_DOMAINS = new Set([
   "dm",
 ]);
 
+const DEPLOY_IGNORED_DIRECTORY_NAMES = new Set(["node_modules"]);
+
 function isNapDomain(domain: string): boolean {
   return NAP_DOMAINS.has(domain);
 }
@@ -348,15 +350,29 @@ async function collectManifestFilesInto(
   for await (const entry of Deno.readDir(dir)) {
     const relative = relativeDir === "" ? entry.name : `${relativeDir}/${entry.name}`;
     if (entry.isDirectory) {
+      if (shouldSkipManifestDirectory(relative, entry.name)) continue;
       await collectManifestFilesInto(root, relative, files);
       continue;
     }
-    if (!entry.isFile || relative === ".nip5a-manifest.json") continue;
+    if (!entry.isFile || shouldSkipManifestFile(relative, entry.name)) continue;
     files.push({
       path: `/${relative}`,
       sha256: await sha256File(joinPath(root, relative)),
     });
   }
+}
+
+function shouldSkipManifestDirectory(relative: string, name: string): boolean {
+  return DEPLOY_IGNORED_DIRECTORY_NAMES.has(name) || hasHiddenSegment(relative);
+}
+
+function shouldSkipManifestFile(relative: string, name: string): boolean {
+  return name === ".nip5a-manifest.json" || hasHiddenSegment(relative);
+}
+
+function hasHiddenSegment(relative: string): boolean {
+  const segments = relative.replace(/\/$/, "").split("/");
+  return segments.some((segment) => segment.startsWith(".") && segment !== ".well-known");
 }
 
 async function sha256File(path: string): Promise<string> {

@@ -7,6 +7,8 @@ import {
   decodePrivateKey,
   detectSecretFormat,
   encodeNbunksec,
+  encodePublicKey,
+  normalizePublicKey,
   resolveSigningMethod,
   signDeployManifestTemplates,
 } from "../src/signing.ts";
@@ -46,6 +48,29 @@ Deno.test("resolveSigningMethod prefers explicit --sec", () => {
     source: "sec-flag",
     format: "hex",
   });
+});
+
+Deno.test("resolveSigningMethod supports configured bunker npubs", () => {
+  const npub = nip19.npubEncode(publicKeyHex);
+  const method = resolveSigningMethod(
+    defaultConfig({
+      relays: ["wss://relay.example"],
+      bunkerPubkey: npub,
+    }),
+  );
+  assertEquals(method, {
+    type: "bunker-pubkey",
+    source: "config",
+    pubkey: publicKeyHex,
+    relays: ["wss://relay.example"],
+  });
+});
+
+Deno.test("normalizePublicKey supports hex and npub values", () => {
+  const npub = nip19.npubEncode(publicKeyHex);
+  assertEquals(normalizePublicKey(publicKeyHex.toUpperCase()), publicKeyHex);
+  assertEquals(normalizePublicKey(npub), publicKeyHex);
+  assertEquals(encodePublicKey(publicKeyHex), npub);
 });
 
 Deno.test("decodePrivateKey supports hex and nsec local secrets", () => {
@@ -98,7 +123,7 @@ Deno.test("signDeployManifestTemplates signs only built templates", async () => 
   assertEquals(manifests[1].signedEvent, undefined);
 });
 
-Deno.test("decodeNbunksec supports nsyte-compatible bunker info", () => {
+Deno.test("decodeNbunksec stores the remote signer pubkey for reconnect", () => {
   const info = {
     pubkey: "02".repeat(32),
     localKey: "03".repeat(32),

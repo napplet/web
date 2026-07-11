@@ -21,6 +21,7 @@ export interface NappletConfig {
   relays: string[];
   blossomServers: string[];
   defaultTarget: DeployTargetKind;
+  bunkerPubkey?: string;
   named?: string[];
   discover?: {
     enabled: boolean;
@@ -29,6 +30,8 @@ export interface NappletConfig {
   signing?: {
     mode: "interactive" | "ci";
     keyReference?: string;
+    pubkey?: string;
+    relays?: string[];
   };
   conformance?: {
     command: string;
@@ -113,4 +116,5 @@ export type SigningMethod =
   | { type: "bunker"; source: "sec-flag"; format: "nbunksec" | "bunker-url" }
   | { type: "prompt"; source: "prompt-sec" }
   | { type: "stored"; source: "config"; keyReference: string }
+  | { type: "bunker-pubkey"; source: "config"; pubkey: string; relays: string[] }
   | { type: "ci-revocable"; source: "environment"; keyReference: string };
