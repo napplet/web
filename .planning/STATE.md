@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v0.34.0
 milestone_name: NIP-5D Runtime Injection
 status: planning
-last_updated: "2026-07-10T19:43:46+02:00"
-last_activity: 2026-07-10 - Quick task 260710-rce complete: @napplet/cli deploy manifests now exclude local control state when sourceDir is the repo root.
+last_updated: "2026-07-11T12:47:38+02:00"
+last_activity: 2026-07-11 - Quick task 260711-hhy complete: @napplet/cli now prompts separately for Nostr Connect bunker relays and uses autocomplete for relay/Blossom suggestions.
 progress:
   total_phases: 0
   completed_phases: 0
@@ -30,7 +30,26 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 Phase: Not started (defining requirements)
 Plan: —
 Status: Defining requirements
-Last activity: 2026-07-10 - Quick task 260710-rce complete; `@napplet/cli` deploy manifests now exclude local control state when `sourceDir` is the repo root.
+Last activity: 2026-07-11 - Quick task 260711-hhy complete; `@napplet/cli` now prompts separately for Nostr Connect bunker relays and uses autocomplete for relay/Blossom suggestions.
+
+### Quick task 260711-hhy - COMPLETE
+
+- Added Tab completion to the CLI prompt helper and removed numbered suggestion
+  output from relay / Blossom prompts.
+- Updated `napplet init` to use relay and Blossom suggestions as autocomplete
+  candidates, not numbered menu entries.
+- Raised default relay and Blossom suggestion caps to 1200 and increased Blossom
+  discovery seed relays from 4 to 24.
+- Added shared bunker relay prompting for interactive deploy and
+  `napplet keys connect` before QR rendering.
+- Changed the Nostr Connect default relay to `wss://bucket.coracle.social` and
+  removed the stale `wss://relay.nsec.app` default.
+- Kept `.napplet` deploy relays out of the Nostr Connect fallback path.
+- Verification: `deno task check`; full `@napplet/cli` unit suite (94/94);
+  `pnpm type-check`; `pnpm build`; `pnpm test:unit`; `pnpm lint` (0 tasks);
+  `pnpm dlx aislop@0.12.0 scan --changes --json` (98/100, existing `js-yaml`
+  advisory only); `git diff --cached --check`.
+- Commit: `be89ec7d` (`fix(cli): align Nostr Connect relay prompts with deploy reality`).
 
 ### Quick task 260710-rce - COMPLETE
 
@@ -460,6 +479,7 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 
 | Quick ID | Task | Date | Commit | Artifacts |
 |----------|------|------|--------|-----------|
+| 260711-hhy | Replace numbered relay/server selection with autocomplete and prompt separately for Nostr Connect bunker relays | 2026-07-11 | be89ec7d | [260711-hhy-replace-napplet-cli-numbered-relay-serve](./quick/260711-hhy-replace-napplet-cli-numbered-relay-serve/) |
 | 260710-rce | Exclude local CLI config and tooling state from napplet deploy manifest collection | 2026-07-10 | 5f28c4e5 | [260710-rce-exclude-local-cli-config-and-tooling-sta](./quick/260710-rce-exclude-local-cli-config-and-tooling-sta/) |
 | 260710-ng9 | Fix napplet.run conformance to accept NIP-19 napplet manifest pointers | 2026-07-10 | 04606c3a | [260710-ng9-fix-napplet-run-conformance-to-accept-ne](./quick/260710-ng9-fix-napplet-run-conformance-to-accept-ne/) |
 | 260710-mzr | Move Core Concepts to the top of the affected docs section | 2026-07-10 | bc4cd533 | [260710-mzr-move-core-concepts-to-the-top-of-the-aff](./quick/260710-mzr-move-core-concepts-to-the-top-of-the-aff/) |
