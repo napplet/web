@@ -45,7 +45,7 @@ OUTBOX-first access, and hard-only `requires`.
 - Removed undocumented build-time config guidance and fixed Vite handling of
   hard `count` requirements.
 - Verification: full build/type/unit gates; template and generated-app verify;
-  conformance 5 pass / 0 fail / 5 documented skips; exact stale scans;
+  full `pnpm test`; conformance 5 pass / 0 fail / 5 documented skips; exact stale scans;
   `git diff --check`; changed-code AI-slop 100/100.
 - PRs: https://github.com/napplet/web/pull/163 and
   https://github.com/napplet/boilerplate/pull/4.

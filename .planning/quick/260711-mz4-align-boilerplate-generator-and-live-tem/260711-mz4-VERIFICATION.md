@@ -25,6 +25,8 @@ quick_id: 260711-mz4
 - `pnpm build` — 13 successful / 13 total.
 - `pnpm type-check` — 17 successful / 17 total.
 - `pnpm -r test:unit` — all workspace unit suites passed.
+- `pnpm test` — JSR exports, 23 Turbo test tasks, tutorial build, and tutorial
+  conformance passed.
 - Template `pnpm verify` — guidance, type-check, and build passed.
 - Template and generated-app `pnpm test:conformance` — 5 passed, 0 failed,
   5 skipped, `RESULT: CONFORMANT`.

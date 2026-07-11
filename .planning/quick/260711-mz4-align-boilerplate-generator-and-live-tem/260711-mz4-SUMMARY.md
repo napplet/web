@@ -46,6 +46,8 @@ hard-only manifest requirements.
 
 - Monorepo: `pnpm build` (13/13), `pnpm type-check` (17/17), and
   `pnpm -r test:unit` passed.
+- Full `pnpm test` passed, including JSR export checks, all Turbo unit tasks,
+  tutorial assembly/build, and tutorial conformance.
 - Focused suites: boilerplate 2/2, skills 14/14, vite-plugin 23/23.
 - Template and fresh generated app: guidance 5/5, type-check, build, and
   conformance 5 passed / 0 failed / 5 skipped.
@@ -65,3 +67,10 @@ hard-only manifest requirements.
 - Existing package/plugin docs and several NAP proposal headers still contain
   private metadata or stale shim/`shell.supports` wording. This change flags but
   does not sweep those broader package surfaces.
+
+## CI Follow-up
+
+The first PR #163 CI run exposed stale `@napplet/conformance-cli` 0.2.14 pins in
+the tutorial sources while the repository package is 0.2.15. All concrete
+tutorial and boilerplate-integration pins now use 0.2.15; local `pnpm test`
+reproduced the CI command and passed before the follow-up push.

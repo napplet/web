@@ -26,7 +26,7 @@ every future generated napplet then inherits it.
 +    "test:conformance:ui": "napplet-conformance --ui . --exec \"vite build --watch\""
    },
    "devDependencies": {
-+    "@napplet/conformance-cli": "^0.2.10",
++    "@napplet/conformance-cli": "^0.2.15",
      "@napplet/sdk": "^0.x",
      "@napplet/vite-plugin": "^0.x",
      "typescript": "^5.9.3",
