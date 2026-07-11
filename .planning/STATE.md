@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v0.34.0
 milestone_name: NIP-5D Runtime Injection
 status: planning
-last_updated: "2026-07-10T17:13:25+02:00"
-last_activity: 2026-07-10 - Quick task 260710-ng9 complete: napplet.run conformance now accepts NIP-19 napplet manifest pointers.
+last_updated: "2026-07-11T17:33:15+02:00"
+last_activity: "2026-07-11 - Quick task 260711-mz4 complete: generator, skills, Vite requirements, and live template aligned with living protocol guidance."
 progress:
   total_phases: 0
   completed_phases: 0
@@ -30,7 +30,25 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 Phase: Not started (defining requirements)
 Plan: —
 Status: Defining requirements
-Last activity: 2026-07-10 — Quick task 260710-ng9 complete; napplet.run conformance now accepts NIP-19 `nevent`/`naddr` napplet manifest pointers.
+Last activity: 2026-07-11 — Quick task 260711-mz4 complete; generator, skills,
+Vite hard requirements, and the live template align with runtime injection,
+OUTBOX-first access, and hard-only `requires`.
+
+### Quick task 260711-mz4 — COMPLETE
+
+- Replaced stale generator/template bootstrap and capability-probe guidance with
+  runtime injection, `@napplet/sdk` calls, and optional domain-presence checks.
+- Made starter Nostr access OUTBOX-first and retained RELAY only as a documented
+  relay-local escape hatch.
+- Replaced vendored template skill bodies with the `@napplet/skills` pointer and
+  added cross-package drift checks.
+- Removed undocumented build-time config guidance and fixed Vite handling of
+  hard `count` requirements.
+- Verification: full build/type/unit gates; template and generated-app verify;
+  conformance 5 pass / 0 fail / 5 documented skips; exact stale scans;
+  `git diff --check`; changed-code AI-slop 100/100.
+- PRs: https://github.com/napplet/web/pull/163 and
+  https://github.com/napplet/boilerplate/pull/4.
 
 ### Quick task 260710-ng9 — COMPLETE
 
