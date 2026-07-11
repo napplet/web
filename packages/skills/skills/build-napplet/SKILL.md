@@ -122,9 +122,9 @@ change them:
 ## Step 3 — Configure the Vite plugin
 
 The boilerplate already wires `nip5aManifest`. Update its project fields rather
-than replacing the config. `nip5aManifest` hashes build output and writes the
-NIP-5A manifest at build time, injecting a `<meta name="napplet-type">` tag the
-runtime keys on. `nappletType` (the NIP-5D d-tag) is required.
+than replacing the config. `nip5aManifest` hashes build output and can write a
+local NIP-5D manifest using the NIP-5A path and aggregate tags. `nappletType`
+populates the NIP-5D `d` tag.
 
 ```ts
 // vite.config.ts
@@ -137,7 +137,6 @@ export default defineConfig({
       nappletType: 'my-napplet',     // required — NIP-5D d-tag
       artifactMode: 'single-file',   // fold assets + keep inline scripts in one index.html
       // requires: ['outbox', 'storage'], // hard requirements only; omit optional enhancements
-      // configSchema: './config.schema.json', // optional NAP-CONFIG schema
     }),
   ],
 });
@@ -337,15 +336,27 @@ The shell byte-sniffs and classifies the MIME; never trust the upstream `Content
 ```ts
 import { config, themeGet, themeOnChanged } from '@napplet/sdk';
 
-const cfg = await config.get();                   // validated + defaulted snapshot
-const cfgSub = config.subscribe((v) => apply(v)); // live updates
-config.openSettings({ section: 'appearance' });  // deep-link shell settings UI
+if (window.napplet?.config) {
+  await config.registerSchema({
+    type: 'object',
+    properties: { accent: { type: 'string', default: 'blue' } },
+  });
+  const cfg = await config.get();
+  apply(cfg);
+  const cfgSub = config.subscribe((v) => apply(v));
+  config.openSettings();
+}
 
 const colors = await themeGet();
 const themeSub = themeOnChanged((t) => paint(t));
 ```
 
-Declare config schema via the vite-plugin (`configSchema`) so the shell renders settings. Gate both behind `window.napplet?.config` / `window.napplet?.theme`.
+NAP-CONFIG defines runtime `config.registerSchema`, but its current proposal does
+not define a manifest-tag or HTML-meta encoding for build-time schemas. Do not
+treat vite-plugin config metadata as interoperable protocol. Recheck the living
+[NAP-CONFIG proposal](https://github.com/napplet/naps/pull/14) before adding
+settings. Gate config and theme behind `window.napplet?.config` /
+`window.napplet?.theme`.
 
 ## Step 12 — Keyboard shortcuts and actions (keys NAP)
 

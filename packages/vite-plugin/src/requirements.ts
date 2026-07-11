@@ -26,6 +26,7 @@ const NAP_DOMAINS = [
   'ble',
   'webrtc',
   'link',
+  'count',
   'lists',
   'serial',
   'common',
