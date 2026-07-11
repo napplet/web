@@ -1,5 +1,28 @@
 # @napplet/cli
 
+## 0.1.3
+
+### Patch Changes
+
+- faf9763: Improve interactive CLI deploy/init UX with guided init suggestions, hidden
+  Enter-based secret prompts, terminal deploy reports with NIP-19 pointers,
+  configured-bunker reconnects, and raw `bunker://` signing while preserving JSON
+  output for CI. Root-source deploys now keep local control state such as
+  `.napplet/config.json`, hidden files, and `node_modules` out of signed manifest
+  content. Relay and Blossom suggestions are now Tab-completion candidates instead
+  of numbered selections, and Nostr Connect asks for bunker relays separately from
+  deploy relays with `wss://bucket.coracle.social` as the default.
+  Nostr Connect pairing and remote signing now use applesauce-signers so QR flows
+  accept the `ack` responses emitted by common bunkers and match nsyte behavior.
+  Blossom uploads now keep the BUD-11 scoped base64url token as the first attempt
+  but fall back to unscoped and legacy base64 auth for deployed servers that reject
+  otherwise valid uploads.
+  Network deploys now treat unavailable redundant Blossom mirrors as warnings and
+  continue to relay publication whenever at least one server holds every required
+  blob, while still failing when no configured server is complete. Human reports
+  now share the command's success predicate, so redundant relay misses are also
+  warnings whenever every manifest reaches another relay.
+
 ## 0.1.2
 
 ### Patch Changes

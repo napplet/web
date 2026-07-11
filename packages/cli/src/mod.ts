@@ -51,9 +51,16 @@
 
 export * from "./config.ts";
 export * from "./deploy-plan.ts";
+export * from "./deploy-signer.ts";
 export * from "./discover.ts";
+export * from "./flags.ts";
+export * from "./init-wizard.ts";
+export * from "./keys-command.ts";
 export * from "./key-store.ts";
 export * from "./manifest.ts";
+export * from "./output.ts";
+export * from "./prompt.ts";
 export * from "./process.ts";
 export * from "./signing.ts";
+export * from "./suggestions.ts";
 export * from "./types.ts";

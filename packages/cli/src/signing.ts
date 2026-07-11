@@ -1,7 +1,7 @@
 import { nip19 } from "nostr-tools";
-import { BunkerSigner } from "nostr-tools/nip46";
 import { finalizeEvent, getPublicKey } from "nostr-tools/pure";
 import { hexToBytes } from "nostr-tools/utils";
+import { createBunkerUrlRemoteSigner, createNbunksecRemoteSigner } from "./remote-signer.ts";
 import type {
   DeployManifestTemplate,
   NappletConfig,
@@ -22,6 +22,7 @@ export type LocalSigner = NappletSigner;
 
 /** NbunksecInfo shape used by Nostr signing helpers. */
 export interface NbunksecInfo {
+  /** Remote signer pubkey used for NIP-46 requests. */
   pubkey: string;
   localKey: string;
   relays: string[];
@@ -38,6 +39,25 @@ export function detectSecretFormat(
   if (trimmed.startsWith("bunker://")) return "bunker-url";
   if (/^[0-9a-fA-F]{64}$/.test(trimmed)) return "hex";
   return null;
+}
+
+/** normalize public key helper for bunker config values. */
+export function normalizePublicKey(input: string): string {
+  const trimmed = input.trim();
+  if (/^[0-9a-fA-F]{64}$/.test(trimmed)) return trimmed.toLowerCase();
+  if (trimmed.startsWith("npub1")) {
+    const decoded = nip19.decode(trimmed);
+    if (decoded.type !== "npub") throw new Error("Invalid npub public key");
+    if (typeof decoded.data === "string" && /^[0-9a-fA-F]{64}$/.test(decoded.data)) {
+      return decoded.data.toLowerCase();
+    }
+  }
+  throw new Error("Invalid bunker pubkey. Expected npub or 64-character hex.");
+}
+
+/** encode public key helper for key-store alias lookup. */
+export function encodePublicKey(pubkey: string): string {
+  return nip19.npubEncode(normalizePublicKey(pubkey));
 }
 
 /** resolve signing method helper for Nostr signing. */
@@ -70,6 +90,16 @@ export function resolveSigningMethod(
     return { type: "stored", source: "config", keyReference: config.signing.keyReference };
   }
 
+  const bunkerPubkey = config.signing?.pubkey ?? config.bunkerPubkey;
+  if (bunkerPubkey) {
+    return {
+      type: "bunker-pubkey",
+      source: "config",
+      pubkey: normalizePublicKey(bunkerPubkey),
+      relays: [...(config.signing?.relays ?? config.relays)],
+    };
+  }
+
   return { type: "none" };
 }
 
@@ -78,9 +108,7 @@ export async function createSignerFromSecret(secret: string): Promise<NappletSig
   const format = detectSecretFormat(secret);
   if (format === "nsec" || format === "hex") return createPrivateKeySigner(secret);
   if (format === "nbunksec") return await createNbunksecSigner(secret);
-  if (format === "bunker-url") {
-    throw new Error("bunker:// signing is not implemented yet; use nbunksec for CI signing");
-  }
+  if (format === "bunker-url") return await createBunkerUrlSigner(secret);
   throw new Error("Signing requires nsec, nbunksec, bunker:// URL, or 64-character hex input");
 }
 
@@ -169,33 +197,12 @@ export function decodeNbunksec(value: string): NbunksecInfo {
 
 /** create nbunksec signer helper for Nostr signing. */
 export async function createNbunksecSigner(secret: string): Promise<NappletSigner> {
-  const info = decodeNbunksec(secret);
-  const signer = BunkerSigner.fromBunker(
-    hexToBytes(info.localKey),
-    {
-      pubkey: info.pubkey,
-      relays: info.relays,
-      secret: info.secret ?? null,
-    },
-  );
-  await signer.connect();
-  const pubkey = await signer.getPublicKey();
-  return {
-    pubkey,
-    async sign(template: NostrEventTemplate): Promise<SignedNostrEvent> {
-      return toSignedEvent(
-        await signer.signEvent({
-          kind: template.kind,
-          created_at: template.created_at,
-          tags: template.tags.map((tag) => [...tag]),
-          content: template.content,
-        }),
-      );
-    },
-    async close(): Promise<void> {
-      await signer.close();
-    },
-  };
+  return await createNbunksecRemoteSigner(decodeNbunksec(secret));
+}
+
+/** create bunker URL signer helper for one-shot NIP-46 signing. */
+export async function createBunkerUrlSigner(secret: string): Promise<NappletSigner> {
+  return await createBunkerUrlRemoteSigner(secret);
 }
 
 /** encode nbunksec helper for Nostr signing. */
@@ -214,26 +221,6 @@ export function encodeNbunksec(info: NbunksecInfo): string {
     offset += part.length;
   }
   return encodeBech32("nbunksec", bytes);
-}
-
-function toSignedEvent(event: {
-  kind: number;
-  created_at: number;
-  tags: string[][];
-  content: string;
-  id: string;
-  pubkey: string;
-  sig: string;
-}): SignedNostrEvent {
-  return {
-    kind: event.kind,
-    created_at: event.created_at,
-    tags: event.tags.map((tag) => [...tag]),
-    content: event.content,
-    id: event.id,
-    pubkey: event.pubkey,
-    sig: event.sig,
-  };
 }
 
 function tlv(type: number, value: Uint8Array): Uint8Array {

@@ -177,7 +177,7 @@ export function createSigningDebugInfo(
       requiresSecretLookup: false,
       notes: signing.format === "nbunksec"
         ? ["nbunksec remote signer provided by --sec"]
-        : ["raw bunker:// pairing is not implemented"],
+        : ["bunker:// remote signer provided by --sec"],
     });
   }
   if (signing.type === "prompt") {
@@ -195,7 +195,16 @@ export function createSigningDebugInfo(
       notes: ["stored key reference requires native key-store lookup"],
     });
   }
-
+  if (signing.type === "bunker-pubkey") {
+    return baseSigningInfo(signing, {
+      keyReference: signing.pubkey,
+      canSignWithoutPrompt: false,
+      requiresSecretLookup: true,
+      notes: [
+        "configured bunker pubkey requires a stored nbunksec session or interactive connection",
+      ],
+    });
+  }
   const directSecret = detectSecretFormat(signing.keyReference) !== null;
   const envSecret = directSecret ? undefined : env[signing.keyReference];
   return baseSigningInfo(signing, {

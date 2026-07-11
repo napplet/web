@@ -433,6 +433,8 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 
 | Quick ID | Task | Date | Commit | Artifacts |
 |----------|------|------|--------|-----------|
+| 260711-hhy | Replace numbered relay/server selection with autocomplete and prompt separately for Nostr Connect bunker relays | 2026-07-11 | be89ec7d | [260711-hhy-replace-napplet-cli-numbered-relay-serve](./quick/260711-hhy-replace-napplet-cli-numbered-relay-serve/) |
+| 260710-rce | Exclude local CLI config and tooling state from napplet deploy manifest collection | 2026-07-10 | 5f28c4e5 | [260710-rce-exclude-local-cli-config-and-tooling-sta](./quick/260710-rce-exclude-local-cli-config-and-tooling-sta/) |
 | 260710-ng9 | Fix napplet.run conformance to accept NIP-19 napplet manifest pointers | 2026-07-10 | 04606c3a | [260710-ng9-fix-napplet-run-conformance-to-accept-ne](./quick/260710-ng9-fix-napplet-run-conformance-to-accept-ne/) |
 | 260710-mzr | Move Core Concepts to the top of the affected docs section | 2026-07-10 | bc4cd533 | [260710-mzr-move-core-concepts-to-the-top-of-the-aff](./quick/260710-mzr-move-core-concepts-to-the-top-of-the-aff/) |
 | 260710-lai | Add Note Drafts boilerplate and AI-agent tutorials | 2026-07-10 | 39676ba4 | [260710-lai-write-note-drafts-tutorial-variants-upda](./quick/260710-lai-write-note-drafts-tutorial-variants-upda/) |

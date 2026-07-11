@@ -1,7 +1,9 @@
 import type { AbstractSimplePool } from "nostr-tools/abstract-pool";
+import { NostrConnectSigner } from "applesauce-signers";
 import { decrypt, encrypt, getConversationKey } from "nostr-tools/nip44";
-import { generateSecretKey, getPublicKey } from "nostr-tools/pure";
+import { finalizeEvent, generateSecretKey, getPublicKey } from "nostr-tools/pure";
 import { bytesToHex } from "nostr-tools/utils";
+import { closeNostrConnectPool, ensureNostrConnectPool } from "../src/nostr-connect-pool.ts";
 import {
   buildPerms,
   connectRemoteSigner,
@@ -37,14 +39,26 @@ class FakeRemotePool {
   constructor(
     private readonly remoteSk: Uint8Array,
     private readonly remotePubkey: string,
+    private readonly userPubkey = remotePubkey,
+    private readonly options: { autoAck?: boolean; connectResult?: string } = {},
   ) {}
 
   subscribe(
     _relays: string[],
-    _filter: unknown,
+    filter: unknown,
     handlers: { onevent?: EventHandler },
   ): { close(): void } {
     if (handlers?.onevent) this.listeners.push(handlers.onevent);
+    if (handlers?.onevent && this.options.autoAck) {
+      const clientPubkey = extractClientPubkey(filter);
+      if (clientPubkey) {
+        queueMicrotask(() => {
+          handlers.onevent?.(this.responseEvent(clientPubkey, {
+            result: this.options.connectResult ?? "ack",
+          }));
+        });
+      }
+    }
     return { close: () => {} };
   }
 
@@ -54,16 +68,10 @@ class FakeRemotePool {
       id: string;
       method: string;
     };
-    const result = request.method === "get_public_key" ? this.remotePubkey : "ack";
-    const response: RpcEvent = {
-      kind: NOSTR_CONNECT_KIND,
-      pubkey: this.remotePubkey,
-      content: encrypt(JSON.stringify({ id: request.id, result }), convKey),
-      tags: [["p", event.pubkey]],
-      created_at: Math.floor(Date.now() / 1000),
-      id: "0".repeat(64),
-      sig: "0".repeat(128),
-    };
+    const result = request.method === "get_public_key"
+      ? this.userPubkey
+      : this.options.connectResult ?? "ack";
+    const response = this.responseEvent(event.pubkey, { id: request.id, result });
     queueMicrotask(() => {
       for (const listener of this.listeners) listener(response);
     });
@@ -71,6 +79,23 @@ class FakeRemotePool {
   }
 
   close(_relays: string[]): void {}
+
+  private responseEvent(clientPubkey: string, response: { id?: string; result: string }): RpcEvent {
+    const convKey = getConversationKey(this.remoteSk, clientPubkey);
+    return finalizeEvent({
+      kind: NOSTR_CONNECT_KIND,
+      content: encrypt(JSON.stringify(response), convKey),
+      tags: [["p", clientPubkey]],
+      created_at: Math.floor(Date.now() / 1000),
+    }, this.remoteSk);
+  }
+}
+
+function extractClientPubkey(filter: unknown): string | null {
+  if (!filter || typeof filter !== "object") return null;
+  const value = (filter as { "#p"?: unknown })["#p"];
+  if (!Array.isArray(value) || typeof value[0] !== "string") return null;
+  return value[0];
 }
 
 Deno.test("buildPerms lists get_public_key then per-kind sign_event", () => {
@@ -102,6 +127,14 @@ Deno.test("renderQrMatrix renders half-block rows with a quiet zone", () => {
   for (const line of lines) assertEquals(line.length, 6);
   assert(lines[1].includes("▀") || lines[1].includes("▄") || lines[1].includes("█"));
   assertEquals(renderQrMatrix([], 2), []);
+});
+
+Deno.test("ensureNostrConnectPool wires applesauce signer static pool fallback", () => {
+  const pool = ensureNostrConnectPool();
+  assertEquals(NostrConnectSigner.pool, pool);
+  assertEquals(pool.ignoreOffline, false);
+  closeNostrConnectPool();
+  assertEquals(NostrConnectSigner.pool, undefined);
 });
 
 Deno.test("connectRemoteSigner completes via a pasted bunker:// URL", async () => {
@@ -137,5 +170,36 @@ Deno.test("connectRemoteSigner completes via a pasted bunker:// URL", async () =
   assertEquals(decoded.secret, "conn-secret");
   assertEquals(/^[0-9a-f]{64}$/.test(decoded.localKey), true);
   // The stored local key is the ephemeral client key, never the remote key.
+  assert(decoded.localKey !== bytesToHex(remoteSk));
+});
+
+Deno.test("connectRemoteSigner completes QR flow when bunker replies with ack", async () => {
+  const remoteSk = generateSecretKey();
+  const remotePubkey = getPublicKey(remoteSk);
+  const userSk = generateSecretKey();
+  const userPubkey = getPublicKey(userSk);
+  const relays = ["wss://relay.test"];
+  const pool = new FakeRemotePool(remoteSk, remotePubkey, userPubkey, {
+    autoAck: true,
+    connectResult: "ack",
+  });
+  const stdin = new ReadableStream<Uint8Array>();
+
+  const result = await connectRemoteSigner({
+    relays,
+    stdin,
+    pool: pool as unknown as AbstractSimplePool,
+    print: () => {},
+    timeoutMs: 5000,
+  });
+
+  assertEquals(result.pubkey, userPubkey);
+  assertEquals(result.relays, relays);
+
+  const decoded = decodeNbunksec(result.nbunksec);
+  assertEquals(decoded.pubkey, remotePubkey);
+  assertEquals(decoded.relays, relays);
+  assertEquals(typeof decoded.secret, "string");
+  assertEquals(/^[0-9a-f]{64}$/.test(decoded.localKey), true);
   assert(decoded.localKey !== bytesToHex(remoteSk));
 });

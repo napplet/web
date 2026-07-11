@@ -49,13 +49,22 @@ napplet deploy --dry-run --sec nsec1...
 napplet deploy --sec nsec1...
 ```
 
-- `napplet init` creates `.napplet/config.json`.
+- `napplet init` creates `.napplet/config.json`. In an interactive terminal it
+  guides setup, shows curated relay defaults plus live NIP-66 discoveries from
+  relays such as `wss://relaypag.es`, and suggests Blossom servers from kind
+  `10063` server-list events.
 - `napplet debug` prints resolved config, discovered napplets, deploy targets,
   manifest templates, and signing readiness without network writes.
 - `napplet deploy --dry-run` builds the same deploy plan and signed manifest
   events without uploading or publishing.
 - `napplet deploy` uploads files to configured Blossom servers and publishes
   signed root, named, and optional snapshot manifest events to configured relays.
+- When no signer flag or stored signer exists, interactive `napplet deploy`
+  starts the NIP-46 connection flow and stores the paired remote signer when
+  native key storage is available.
+- `--prompt-sec` reads hidden input until Enter; when `.napplet` names a bunker pubkey/npub, a
+  mismatched prompted signer requires interactive confirmation and fails closed in non-interactive
+  runs.
 
 ## Commands
 
