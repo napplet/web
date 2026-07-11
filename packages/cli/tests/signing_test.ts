@@ -123,7 +123,7 @@ Deno.test("signDeployManifestTemplates signs only built templates", async () => 
   assertEquals(manifests[1].signedEvent, undefined);
 });
 
-Deno.test("decodeNbunksec supports nsyte-compatible bunker info", () => {
+Deno.test("decodeNbunksec stores the remote signer pubkey for reconnect", () => {
   const info = {
     pubkey: "02".repeat(32),
     localKey: "03".repeat(32),

@@ -25,7 +25,8 @@ updated: 2026-07-11
   path, then write a regression around the mismatch.
 - expecting: a protocol/nostr-tools usage difference that prevents signer
   response handling.
-- next_action: complete repo-level verification and reinstall the local CLI.
+- next_action: complete repo-level verification, reinstall the local CLI, and
+  update the open PR.
 
 ## Evidence
 
@@ -51,3 +52,15 @@ updated: 2026-07-11
 - Keep Napplet's explicit permission builder because applesauce-signers 5.2.0's
   helper enum still emits the typo `get_pubic_key` for the public-key
   permission.
+
+## Follow-up: stored deploy hang after ack
+
+- Symptom: `keys connect` reaches "Stored remote signer session..." but may not
+  return promptly, and a later `napplet deploy` waits with no status output.
+- Root cause: the QR path encoded the user signing pubkey into `nbunksec`, while
+  stored reconnect needs the remote signer pubkey that sent the `ack`; stored
+  reconnect also replayed the one-time QR secret and had no timeout/status line.
+- Resolution: encode the remote signer pubkey in `nbunksec`, reconnect stored
+  sessions without replaying the QR secret, add bounded reconnect/public-key
+  waits, destroy owned pools on close, print stored-signer reconnect status, and
+  re-enter Nostr Connect when an interactive deploy finds a stale stored session.

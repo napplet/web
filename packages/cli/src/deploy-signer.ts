@@ -73,7 +73,14 @@ export async function createDeploySigner(
     if (!secret) {
       return await recoverMissingStoredSigner(signing, config, options, provider.name);
     }
-    return { signer: await createSigner(secret), signing };
+    return await createStoredDeploySigner({
+      account: signing.keyReference,
+      config,
+      options,
+      preferredRelays: config.signing?.relays,
+      secret,
+      signing,
+    });
   }
   if (signing.type === "ci-revocable") {
     const env = options.env ?? Deno.env.toObject();
@@ -85,10 +92,15 @@ export async function createDeploySigner(
   if (signing.type === "bunker-pubkey") {
     const found = await retrieveBunkerSecret(signing.pubkey, options);
     if (found) {
-      return {
-        signer: await createSigner(found.secret),
+      return await createStoredDeploySigner({
+        account: found.account,
+        config,
+        expectedPubkey: signing.pubkey,
+        options,
+        preferredRelays: signing.relays,
+        secret: found.secret,
         signing: { type: "stored", source: "config", keyReference: found.account },
-      };
+      });
     }
     if (options.required && options.interactiveConnect) {
       return await connectAndCreateSigner(config, options, signing.pubkey, signing.relays);
@@ -110,6 +122,50 @@ export async function createDeploySigner(
     );
   }
   return { signer: null, signing };
+}
+
+async function createStoredDeploySigner(args: {
+  account: string;
+  config: NappletConfig;
+  expectedPubkey?: string;
+  options: DeploySignerOptions;
+  preferredRelays?: readonly string[];
+  secret: string;
+  signing: SigningMethod;
+}): Promise<DeploySignerResult> {
+  const createSigner = args.options.createSigner ?? createSignerFromSecret;
+  const print = args.options.print ?? (() => {});
+  print(`Connecting to stored remote signer "${args.account}"...`);
+  try {
+    return { signer: await createSigner(args.secret), signing: args.signing };
+  } catch (error) {
+    return await recoverFailedStoredSigner(error, args);
+  }
+}
+
+async function recoverFailedStoredSigner(
+  error: unknown,
+  args: {
+    account: string;
+    config: NappletConfig;
+    expectedPubkey?: string;
+    options: DeploySignerOptions;
+    preferredRelays?: readonly string[];
+  },
+): Promise<DeploySignerResult> {
+  if (!args.options.required || !args.options.interactiveConnect) {
+    throw new Error(`Stored remote signer "${args.account}" failed: ${message(error)}`);
+  }
+
+  const print = args.options.print ?? (() => {});
+  const expected = args.expectedPubkey ?? configuredSigningPubkey(args.config) ?? undefined;
+  print(`Stored remote signer "${args.account}" failed: ${message(error)}`);
+  print(
+    expected
+      ? `Reconnecting to configured bunker ${formatPubkey(expected)}...`
+      : "Starting a new Nostr Connect session...",
+  );
+  return await connectAndCreateSigner(args.config, args.options, expected, args.preferredRelays);
 }
 
 async function confirmPromptSignerIdentity(

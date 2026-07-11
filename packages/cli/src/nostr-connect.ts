@@ -169,8 +169,24 @@ function clearLines(count: number, write: (bytes: Uint8Array) => void): void {
 interface RemoteSession {
   signer: NostrConnectSigner;
   pubkey: string;
+  remotePubkey: string;
   relays: string[];
   secret?: string;
+}
+
+interface ConnectCleanupOptions {
+  abort: AbortController;
+  clearOnDone?: boolean;
+  linesPrinted: number;
+  ownsPool: boolean;
+  pasteTask: Promise<RemoteSession>;
+  pool: AbstractSimplePool;
+  qrTask: Promise<RemoteSession>;
+  reader?: ReadableStreamDefaultReader<string>;
+  relays: string[];
+  timer?: ReturnType<typeof setTimeout>;
+  winner?: RemoteSession;
+  writeStdout: (bytes: Uint8Array) => void;
 }
 
 /** Print the QR + prompt block; returns the number of terminal lines written. */
@@ -194,8 +210,10 @@ async function awaitScan(
   abort: AbortSignal,
 ): Promise<RemoteSession> {
   await signer.waitForSigner(abort);
+  const remotePubkey = signer.remote;
+  if (!remotePubkey) throw new Error("Remote signer did not identify itself");
   const pubkey = await signer.getPublicKey();
-  return { signer, pubkey, relays: signer.relays, secret: signer.secret };
+  return { signer, pubkey, remotePubkey, relays: signer.relays, secret: signer.secret };
 }
 
 /** Paste branch: resolve once a bunker:// URL is pasted on stdin. */
@@ -235,6 +253,7 @@ async function awaitPaste(
     return {
       signer,
       pubkey,
+      remotePubkey: pointer.remote,
       relays: pointer.relays.length > 0 ? pointer.relays : relays,
       secret: pointer.secret ?? undefined,
     };
@@ -265,6 +284,7 @@ export async function connectRemoteSigner(options: ConnectOptions): Promise<Conn
   const writeStdout = options.writeStdout ??
     ((bytes: Uint8Array) => Deno.stdout.writeSync(bytes));
   const pool = options.pool ?? new SimplePool();
+  const ownsPool = options.pool === undefined;
 
   const clientSk = generateSecretKey();
   const permissions = buildPerms(kinds);
@@ -315,7 +335,7 @@ export async function connectRemoteSigner(options: ConnectOptions): Promise<Conn
   try {
     winner = await Promise.race([ignoredQrTask, ignoredPasteTask, timeoutTask]);
     const info: NbunksecInfo = {
-      pubkey: winner.pubkey,
+      pubkey: winner.remotePubkey,
       localKey: bytesToHex(clientSk),
       relays: winner.relays,
       secret: winner.secret,
@@ -326,22 +346,40 @@ export async function connectRemoteSigner(options: ConnectOptions): Promise<Conn
       relays: winner.relays,
     };
   } finally {
-    if (timer !== undefined) clearTimeout(timer);
-    abort.abort();
-    // Swallow the losing task so it never surfaces as an unhandled rejection.
-    qrTask.then((r) => {
-      if (r !== winner) void r.signer.close().catch(() => {});
-    }).catch(() => {});
-    pasteTask.catch(() => {});
-    try {
-      await reader?.cancel();
-    } catch { /* best-effort */ }
-    if (options.clearOnDone) clearLines(linesPrinted, writeStdout);
-    try {
-      await winner?.signer.close();
-    } catch { /* best-effort */ }
-    try {
-      pool.close(relays);
-    } catch { /* best-effort */ }
+    await cleanupConnectFlow({
+      abort,
+      clearOnDone: options.clearOnDone,
+      linesPrinted,
+      ownsPool,
+      pasteTask,
+      pool,
+      qrTask,
+      reader,
+      relays,
+      timer,
+      winner,
+      writeStdout,
+    });
   }
+}
+
+async function cleanupConnectFlow(options: ConnectCleanupOptions): Promise<void> {
+  if (options.timer !== undefined) clearTimeout(options.timer);
+  options.abort.abort();
+  // Swallow the losing task so it never surfaces as an unhandled rejection.
+  options.qrTask.then((r) => {
+    if (r !== options.winner) void r.signer.close().catch(() => {});
+  }).catch(() => {});
+  options.pasteTask.catch(() => {});
+  try {
+    await options.reader?.cancel();
+  } catch { /* best-effort */ }
+  if (options.clearOnDone) clearLines(options.linesPrinted, options.writeStdout);
+  try {
+    await options.winner?.signer.close();
+  } catch { /* best-effort */ }
+  try {
+    if (options.ownsPool) options.pool.destroy();
+    else options.pool.close(options.relays);
+  } catch { /* best-effort */ }
 }

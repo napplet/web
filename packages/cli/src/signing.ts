@@ -1,9 +1,7 @@
-import { NostrConnectSigner, PrivateKeySigner } from "applesauce-signers";
 import { nip19 } from "nostr-tools";
-import { finalizeEvent, generateSecretKey, getPublicKey } from "nostr-tools/pure";
-import { SimplePool } from "nostr-tools/pool";
+import { finalizeEvent, getPublicKey } from "nostr-tools/pure";
 import { hexToBytes } from "nostr-tools/utils";
-import { createApplesaucePool } from "./applesauce-pool.ts";
+import { createBunkerUrlRemoteSigner, createNbunksecRemoteSigner } from "./remote-signer.ts";
 import type {
   DeployManifestTemplate,
   NappletConfig,
@@ -24,6 +22,7 @@ export type LocalSigner = NappletSigner;
 
 /** NbunksecInfo shape used by Nostr signing helpers. */
 export interface NbunksecInfo {
+  /** Remote signer pubkey used for NIP-46 requests. */
   pubkey: string;
   localKey: string;
   relays: string[];
@@ -198,63 +197,12 @@ export function decodeNbunksec(value: string): NbunksecInfo {
 
 /** create nbunksec signer helper for Nostr signing. */
 export async function createNbunksecSigner(secret: string): Promise<NappletSigner> {
-  const info = decodeNbunksec(secret);
-  const pool = new SimplePool();
-  const signer = new NostrConnectSigner({
-    remote: info.pubkey,
-    relays: info.relays,
-    signer: new PrivateKeySigner(hexToBytes(info.localKey)),
-    pool: createApplesaucePool(pool),
-    secret: info.secret,
-  });
-  await signer.connect(info.secret);
-  return await createConnectedRemoteSigner(signer, pool, info.relays);
+  return await createNbunksecRemoteSigner(decodeNbunksec(secret));
 }
 
 /** create bunker URL signer helper for one-shot NIP-46 signing. */
 export async function createBunkerUrlSigner(secret: string): Promise<NappletSigner> {
-  let pointer: { remote: string; relays: string[]; secret?: string };
-  try {
-    pointer = NostrConnectSigner.parseBunkerURI(secret.trim());
-  } catch {
-    throw new Error("Invalid bunker:// signing URL");
-  }
-  const pool = new SimplePool();
-  const signer = await NostrConnectSigner.fromBunkerURI(secret.trim(), {
-    signer: new PrivateKeySigner(generateSecretKey()),
-    pool: createApplesaucePool(pool),
-  });
-  return await createConnectedRemoteSigner(signer, pool, pointer.relays);
-}
-
-async function createConnectedRemoteSigner(
-  signer: NostrConnectSigner,
-  pool: SimplePool,
-  relays: string[],
-): Promise<NappletSigner> {
-  const pubkey = await signer.getPublicKey();
-  return {
-    pubkey,
-    async sign(template: NostrEventTemplate): Promise<SignedNostrEvent> {
-      return toSignedEvent(
-        await signer.signEvent({
-          kind: template.kind,
-          created_at: template.created_at,
-          tags: template.tags.map((tag) => [...tag]),
-          content: template.content,
-        }),
-      );
-    },
-    async close(): Promise<void> {
-      try {
-        await signer.close();
-      } finally {
-        try {
-          pool.close(relays);
-        } catch { /* best-effort */ }
-      }
-    },
-  };
+  return await createBunkerUrlRemoteSigner(secret);
 }
 
 /** encode nbunksec helper for Nostr signing. */
@@ -273,26 +221,6 @@ export function encodeNbunksec(info: NbunksecInfo): string {
     offset += part.length;
   }
   return encodeBech32("nbunksec", bytes);
-}
-
-function toSignedEvent(event: {
-  kind: number;
-  created_at: number;
-  tags: string[][];
-  content: string;
-  id: string;
-  pubkey: string;
-  sig: string;
-}): SignedNostrEvent {
-  return {
-    kind: event.kind,
-    created_at: event.created_at,
-    tags: event.tags.map((tag) => [...tag]),
-    content: event.content,
-    id: event.id,
-    pubkey: event.pubkey,
-    sig: event.sig,
-  };
 }
 
 function tlv(type: number, value: Uint8Array): Uint8Array {

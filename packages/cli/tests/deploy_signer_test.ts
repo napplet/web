@@ -44,6 +44,7 @@ function provider(options: {
 
 Deno.test("createDeploySigner uses a stored bunker session for configured pubkeys", async () => {
   const createCalls: string[] = [];
+  const prints: string[] = [];
   const result = await createDeploySigner(
     { type: "bunker-pubkey", source: "config", pubkey, relays: ["wss://relay.test"] },
     defaultConfig(),
@@ -56,11 +57,15 @@ Deno.test("createDeploySigner uses a stored bunker session for configured pubkey
         createCalls.push(secret);
         return Promise.resolve(fakeSigner());
       },
+      print(line) {
+        prints.push(line);
+      },
     },
   );
 
   assert(result.signer);
   assertEquals(createCalls, ["nbunksec1stored"]);
+  assert(prints.some((line) => line.includes("Connecting to stored remote signer")));
   assertEquals(result.signing, {
     type: "stored",
     source: "config",
@@ -129,6 +134,71 @@ Deno.test("createDeploySigner reconnects stale key references with configured bu
   });
   assert(prints.some((line) => line.includes("Reconnecting to configured bunker")));
   assert(prints.some((line) => line.includes("Starting Nostr Connect for configured bunker")));
+});
+
+Deno.test("createDeploySigner reconnects failed stored sessions in interactive deploy", async () => {
+  const stores: StoredSecret[] = [];
+  const written: NappletConfig[] = [];
+  const prints: string[] = [];
+  const createCalls: string[] = [];
+
+  const result = await createDeploySigner(
+    { type: "stored", source: "config", keyReference: "default" },
+    defaultConfig({
+      signing: {
+        mode: "interactive",
+        keyReference: "default",
+        pubkey,
+        relays: ["wss://relay.config"],
+      },
+    }),
+    {
+      required: true,
+      interactiveConnect: true,
+      getKeyStoreProvider: () =>
+        Promise.resolve(provider({
+          retrieve: { default: "nbunksec1stale" },
+          stores,
+        })),
+      promptConnectRelays(defaults) {
+        assertEquals(defaults, ["wss://relay.config"]);
+        return Promise.resolve([...defaults]);
+      },
+      connectRemoteSigner(options) {
+        assertEquals(options.relays, ["wss://relay.config"]);
+        return Promise.resolve({
+          nbunksec: "nbunksec1fresh",
+          pubkey,
+          relays: ["wss://relay.config"],
+        });
+      },
+      createSigner(secret) {
+        createCalls.push(secret);
+        if (secret === "nbunksec1stale") {
+          return Promise.reject(new Error("Remote signer connection timed out after 30s"));
+        }
+        return Promise.resolve(fakeSigner());
+      },
+      writeConfig(config) {
+        written.push(config);
+        return Promise.resolve();
+      },
+      print(line) {
+        prints.push(line);
+      },
+    },
+  );
+
+  assert(result.signer);
+  assertEquals(createCalls, ["nbunksec1stale", "nbunksec1fresh"]);
+  assertEquals(stores, [{
+    service: KEY_SERVICE_NAME,
+    account: pubkey,
+    secret: "nbunksec1fresh",
+  }]);
+  assertEquals(written[0].signing?.keyReference, pubkey);
+  assert(prints.some((line) => line.includes('Stored remote signer "default" failed')));
+  assert(prints.some((line) => line.includes("Reconnecting to configured bunker")));
 });
 
 Deno.test("createDeploySigner fails closed for stale key references outside reconnect mode", async () => {

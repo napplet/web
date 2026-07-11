@@ -37,6 +37,7 @@ class FakeRemotePool {
   constructor(
     private readonly remoteSk: Uint8Array,
     private readonly remotePubkey: string,
+    private readonly userPubkey = remotePubkey,
     private readonly options: { autoAck?: boolean; connectResult?: string } = {},
   ) {}
 
@@ -66,7 +67,7 @@ class FakeRemotePool {
       method: string;
     };
     const result = request.method === "get_public_key"
-      ? this.remotePubkey
+      ? this.userPubkey
       : this.options.connectResult ?? "ack";
     const response = this.responseEvent(event.pubkey, { id: request.id, result });
     queueMicrotask(() => {
@@ -165,8 +166,13 @@ Deno.test("connectRemoteSigner completes via a pasted bunker:// URL", async () =
 Deno.test("connectRemoteSigner completes QR flow when bunker replies with ack", async () => {
   const remoteSk = generateSecretKey();
   const remotePubkey = getPublicKey(remoteSk);
+  const userSk = generateSecretKey();
+  const userPubkey = getPublicKey(userSk);
   const relays = ["wss://relay.test"];
-  const pool = new FakeRemotePool(remoteSk, remotePubkey, { autoAck: true, connectResult: "ack" });
+  const pool = new FakeRemotePool(remoteSk, remotePubkey, userPubkey, {
+    autoAck: true,
+    connectResult: "ack",
+  });
   const stdin = new ReadableStream<Uint8Array>();
 
   const result = await connectRemoteSigner({
@@ -177,7 +183,7 @@ Deno.test("connectRemoteSigner completes QR flow when bunker replies with ack", 
     timeoutMs: 5000,
   });
 
-  assertEquals(result.pubkey, remotePubkey);
+  assertEquals(result.pubkey, userPubkey);
   assertEquals(result.relays, relays);
 
   const decoded = decodeNbunksec(result.nbunksec);
