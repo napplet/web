@@ -434,6 +434,27 @@ describe('nip5aManifest artifact modes', () => {
     expect(manifest.tags.filter((tag) => tag[0] === 'requires')).toEqual([['requires', 'relay']]);
   });
 
+  it('accepts count as an explicit or inferred requirement', async () => {
+    const explicitFixture = makeFixture();
+    fs.writeFileSync(path.join(explicitFixture.dist, 'index.html'), '<!doctype html>');
+    await runCloseBundle(
+      { nappletType: 'explicit-count', requires: ['count'] },
+      explicitFixture,
+      {},
+    );
+    expect(readManifest(explicitFixture.dist).tags).toContainEqual(['requires', 'count']);
+
+    const inferredFixture = makeFixture();
+    fs.writeFileSync(path.join(inferredFixture.dist, 'index.html'), '<!doctype html>');
+    await runCloseBundle(
+      { nappletType: 'inferred-count', requires: { infer: true } },
+      inferredFixture,
+      {},
+      [{ id: path.join(inferredFixture.root, 'src/main.ts'), code: "import '@napplet/nap/count';" }],
+    );
+    expect(readManifest(inferredFixture.dist).tags).toContainEqual(['requires', 'count']);
+  });
+
   it('dedupes explicit and inferred requirements', async () => {
     const fixture = makeFixture();
     fs.writeFileSync(path.join(fixture.dist, 'index.html'), '<!doctype html>');

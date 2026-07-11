@@ -78,6 +78,11 @@ describe('skill registry', () => {
   it('keeps runtime capability guidance aligned with the current SDK contract', () => {
     const affectedSkills = ['design-napplet', 'build-napplet', 'make-napplet', 'port-nostr-app'];
     const packageReadme = readFileSync(new URL('../README.md', import.meta.url), 'utf8');
+    const boilerplateReadme = readFileSync(
+      new URL('../../boilerplate/README.md', import.meta.url),
+      'utf8',
+    );
+    const boilerplateProse = boilerplateReadme.replace(/\s+/g, ' ');
 
     for (const skill of affectedSkills) {
       const markdown = readSkill(skill);
@@ -88,6 +93,12 @@ describe('skill registry', () => {
       expect(prose).toContain('Use `@napplet/sdk` wrappers for calls');
       expect(prose).toContain('Do not add `keys` to `requires`');
     }
+
+    const buildSkill = readSkill('build-napplet');
+    expect(buildSkill).toContain('https://github.com/napplet/naps/pull/14');
+    expect(buildSkill).toContain('config.registerSchema');
+    expect(buildSkill).not.toContain('configSchema');
+    expect(buildSkill).not.toContain('<meta name="napplet-type">');
 
     for (const skill of [...affectedSkills, 'test-napplet']) {
       expect(readSkill(skill)).not.toContain('targetAuthors');
@@ -105,6 +116,15 @@ describe('skill registry', () => {
     expect(packageReadme).toContain('keep optional enhancements such as');
     expect(packageReadme).not.toContain('availability gates');
     expect(packageReadme).not.toContain('capability gating via domain presence');
+
+    expect(boilerplateProse).toContain('npx @napplet/skills install --to codex');
+    expect(boilerplateReadme).toContain('https://github.com/nostr-protocol/nips/pull/2303');
+    expect(boilerplateReadme).toContain('https://github.com/napplet/naps/pull/32');
+    expect(boilerplateReadme).toContain('https://github.com/napplet/naps/pull/2');
+    expect(boilerplateProse).toContain('skills provide non-normative authoring guidance');
+    expect(boilerplateProse).toContain('normal Nostr reads and publishes are OUTBOX-first');
+    expect(boilerplateProse).toContain('RELAY is an explicit relay-local escape hatch');
+    expect(boilerplateProse).toContain('`requires` lists hard requirements only');
   });
 
   it('parses a description from each SKILL.md frontmatter', () => {
