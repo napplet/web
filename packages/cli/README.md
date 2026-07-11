@@ -103,10 +103,10 @@ Creates `.napplet/config.json` unless it already exists. Use `--force` to overwr
 In an interactive terminal, `napplet init` guides setup for source directory, root-vs-named target,
 relays, and Blossom servers. Relay suggestions come from best-effort
 [NIP-66](https://nips.nostr.com/66) discovery events on relay discovery relays such as
-`wss://relaypag.es`; curated general-purpose relays are shown first, followed by live discoveries.
+`wss://relaypag.es`; curated general-purpose relays are completed first, followed by live discoveries.
 Blossom suggestions come from best-effort [NIP-B7](https://nips.nostr.com/b7) kind `10063`
 server-list events, with bundled defaults when live discovery is unavailable. Suggestions are
-advisory; the written config contains only the values you accept or type.
+advisory Tab-completion candidates; the written config contains only the values you accept or type.
 
 ```sh
 napplet init
@@ -204,10 +204,15 @@ napplet keys delete --name default
 app, without pasting a raw `nsec`.
 
 ```sh
-napplet keys connect --name remote --relay wss://relay.nsec.app
+napplet keys connect --name remote
+napplet keys connect --name remote --relay wss://bucket.coracle.social
 ```
 
-The command prints a `nostrconnect://` QR code and waits for either:
+Unless `--relay` is passed, the command asks which bunker relay or relays to use before it prints the
+QR code. Press Enter to use the default `wss://bucket.coracle.social`, or type one or more `ws://` /
+`wss://` relays. These bunker relays are separate from `.napplet` deploy relays.
+
+The command then prints a `nostrconnect://` QR code and waits for either:
 
 - a signer to approve the QR flow, or
 - a `bunker://` URL pasted into stdin
@@ -216,10 +221,11 @@ On success it stores an `nbunksec` in the platform keychain, updates `.napplet`
 `signing.keyReference`, and uses that stored reference for later deploy signing.
 
 Plain interactive `napplet deploy` uses the same NIP-46 flow when no signer flag or stored signer is
-available. It stores the paired session under the remote signer pubkey when native key storage is
-available, writes that pubkey to `.napplet` config, and continues the current deploy. If native key
-storage is unavailable, the current deploy can still proceed after pairing, but the session is not
-persisted for later runs.
+available. It prompts for bunker relays before showing the QR code; deploy relays from `.napplet`
+are not used as the NIP-46 relay default. It stores the paired session under the remote signer pubkey
+when native key storage is available, writes that pubkey and the selected bunker relays to `.napplet`
+config, and continues the current deploy. If native key storage is unavailable, the current deploy
+can still proceed after pairing, but the session is not persisted for later runs.
 
 ## Project Layouts
 

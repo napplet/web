@@ -13,11 +13,16 @@ import {
   type ConnectResult,
   DEFAULT_CONNECT_RELAYS,
 } from "./nostr-connect.ts";
+import type { PromptInput, PromptOutput } from "./prompt.ts";
 import type { NappletConfig } from "./types.ts";
+import { promptBunkerRelays } from "./bunker-relays.ts";
 
 export interface KeysCommandOptions {
   requireKeyStoreProvider?: () => Promise<KeyStoreProvider>;
   connectRemoteSigner?: (options: ConnectOptions) => Promise<ConnectResult>;
+  promptConnectRelays?: (defaults: readonly string[]) => Promise<string[]>;
+  promptInput?: PromptInput;
+  promptOutput?: PromptOutput;
   readConfig?: (path?: string) => Promise<NappletConfig | null>;
   writeConfig?: (config: NappletConfig, path?: string) => Promise<void>;
 }
@@ -55,7 +60,13 @@ export async function commandKeys(
 
   if (subcommand === "connect") {
     const name = requiredValue(flags, "name");
-    const relays = flags.values.get("relay") ?? DEFAULT_CONNECT_RELAYS.slice();
+    const relays = flags.values.get("relay") ?? await promptBunkerRelays({
+      defaults: DEFAULT_CONNECT_RELAYS,
+      promptConnectRelays: options.promptConnectRelays,
+      input: options.promptInput,
+      output: options.promptOutput,
+      print: console.error,
+    });
     const connect = options.connectRemoteSigner ?? connectRemoteSigner;
     const { nbunksec, pubkey, relays: sessionRelays } = await connect({
       relays,

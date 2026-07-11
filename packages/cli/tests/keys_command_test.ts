@@ -1,6 +1,7 @@
 import { commandKeys } from "../src/keys-command.ts";
 import { defaultConfig } from "../src/config.ts";
 import { KEY_SERVICE_NAME, type KeyStoreProvider, type StoredSecret } from "../src/key-store.ts";
+import { DEFAULT_CONNECT_RELAYS } from "../src/nostr-connect.ts";
 import type { NappletConfig } from "../src/types.ts";
 import { assertEquals } from "./assert.ts";
 
@@ -70,4 +71,44 @@ Deno.test("commandKeys connect records remote signer pubkey and relays for recov
     pubkey,
     relays: ["wss://relay.connect"],
   });
+});
+
+Deno.test("commandKeys connect prompts for bunker relays when no relay flags are passed", async () => {
+  const stores: StoredSecret[] = [];
+  const written: Array<{ config: NappletConfig; path?: string }> = [];
+
+  const code = await commandKeys(
+    ["connect", "--name", "default"],
+    "help",
+    {
+      requireKeyStoreProvider: () => Promise.resolve(provider(stores)),
+      promptConnectRelays(defaults) {
+        assertEquals(defaults, [...DEFAULT_CONNECT_RELAYS]);
+        return Promise.resolve([...defaults]);
+      },
+      connectRemoteSigner(options) {
+        assertEquals(options.relays, [...DEFAULT_CONNECT_RELAYS]);
+        return Promise.resolve({
+          nbunksec: "nbunksec1connected",
+          pubkey,
+          relays: [...DEFAULT_CONNECT_RELAYS],
+        });
+      },
+      readConfig() {
+        return Promise.resolve(defaultConfig());
+      },
+      writeConfig(config, path) {
+        written.push({ config, path });
+        return Promise.resolve();
+      },
+    },
+  );
+
+  assertEquals(code, 0);
+  assertEquals(stores[0], {
+    service: KEY_SERVICE_NAME,
+    account: "default",
+    secret: "nbunksec1connected",
+  });
+  assertEquals(written[0].config.signing?.relays, [...DEFAULT_CONNECT_RELAYS]);
 });

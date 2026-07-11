@@ -1,6 +1,7 @@
 import { defaultConfig } from "../src/config.ts";
 import { createDeploySigner } from "../src/deploy-signer.ts";
 import { KEY_SERVICE_NAME, type KeyStoreProvider, type StoredSecret } from "../src/key-store.ts";
+import { DEFAULT_CONNECT_RELAYS } from "../src/nostr-connect.ts";
 import type { NappletSigner } from "../src/signing.ts";
 import type { NappletConfig, NostrEventTemplate, SignedNostrEvent } from "../src/types.ts";
 import { assert, assertEquals } from "./assert.ts";
@@ -87,6 +88,10 @@ Deno.test("createDeploySigner reconnects stale key references with configured bu
       required: true,
       interactiveConnect: true,
       getKeyStoreProvider: () => Promise.resolve(provider({ stores })),
+      promptConnectRelays(defaults) {
+        assertEquals(defaults, ["wss://relay.config"]);
+        return Promise.resolve([...defaults]);
+      },
       connectRemoteSigner(options) {
         assertEquals(options.relays, ["wss://relay.config"]);
         return Promise.resolve({
@@ -178,6 +183,10 @@ Deno.test("createDeploySigner reconnects stale key references without native key
       required: true,
       interactiveConnect: true,
       getKeyStoreProvider: () => Promise.resolve(null),
+      promptConnectRelays(defaults) {
+        assertEquals(defaults, ["wss://relay.config"]);
+        return Promise.resolve([...defaults]);
+      },
       connectRemoteSigner: () =>
         Promise.resolve({
           nbunksec: "nbunksec1session",
@@ -282,12 +291,16 @@ Deno.test("createDeploySigner starts Nostr Connect when interactive deploy has n
       required: true,
       interactiveConnect: true,
       getKeyStoreProvider: () => Promise.resolve(provider({ stores })),
+      promptConnectRelays(defaults) {
+        assertEquals(defaults, [...DEFAULT_CONNECT_RELAYS]);
+        return Promise.resolve([...defaults]);
+      },
       connectRemoteSigner(options) {
-        assertEquals(options.relays, ["wss://relay.project"]);
+        assertEquals(options.relays, [...DEFAULT_CONNECT_RELAYS]);
         return Promise.resolve({
           nbunksec: "nbunksec1connected",
           pubkey,
-          relays: ["wss://relay.project"],
+          relays: [...DEFAULT_CONNECT_RELAYS],
         });
       },
       createSigner(secret) {
@@ -316,7 +329,7 @@ Deno.test("createDeploySigner starts Nostr Connect when interactive deploy has n
     mode: "interactive",
     keyReference: pubkey,
     pubkey,
-    relays: ["wss://relay.project"],
+    relays: [...DEFAULT_CONNECT_RELAYS],
   });
   assert(prints.some((line) => line.includes("Starting Nostr Connect")));
 });
@@ -330,11 +343,15 @@ Deno.test("createDeploySigner continues current deploy when interactive storage 
       required: true,
       interactiveConnect: true,
       getKeyStoreProvider: () => Promise.resolve(null),
+      promptConnectRelays(defaults) {
+        assertEquals(defaults, [...DEFAULT_CONNECT_RELAYS]);
+        return Promise.resolve([...defaults]);
+      },
       connectRemoteSigner: () =>
         Promise.resolve({
           nbunksec: "nbunksec1session",
           pubkey,
-          relays: ["wss://relay.nsec.app"],
+          relays: [...DEFAULT_CONNECT_RELAYS],
         }),
       createSigner: () => Promise.resolve(fakeSigner()),
       writeConfig(config) {
@@ -349,7 +366,7 @@ Deno.test("createDeploySigner continues current deploy when interactive storage 
     type: "bunker-pubkey",
     source: "config",
     pubkey,
-    relays: ["wss://relay.nsec.app"],
+    relays: [...DEFAULT_CONNECT_RELAYS],
   });
   assertEquals(written[0].signing?.keyReference, undefined);
   assertEquals(written[0].signing?.pubkey, pubkey);

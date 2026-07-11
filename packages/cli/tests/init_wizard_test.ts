@@ -40,8 +40,10 @@ const suggestions = {
   blossomServers: ["https://cdn-one.example", "https://cdn-two.example"],
 };
 
-Deno.test("promptInitWizard fills missing fields with prompts and suggestion numbers", async () => {
-  const input = new FakeTerminalInput("\n\nfeed\n1,2\n\n1\n\n");
+Deno.test("promptInitWizard fills missing fields with URL autocomplete", async () => {
+  const input = new FakeTerminalInput(
+    "\n\nfeed\nwss://relay-o\t\nwss://relay-t\t\n\nhttps://cdn-o\t\n\n",
+  );
   const output = new FakeOutput();
 
   const result = await promptInitWizard({
@@ -65,7 +67,8 @@ Deno.test("promptInitWizard fills missing fields with prompts and suggestion num
     defaultTarget: "named",
   });
   assert(output.text.includes("Relay URLs"));
-  assert(output.text.includes("1. wss://relay-one.example"));
+  assert(!output.text.includes("1. wss://relay-one.example"));
+  assert(output.text.includes("wss://relay-one.example"));
 });
 
 Deno.test("promptInitWizard preserves flagged values and root target", async () => {

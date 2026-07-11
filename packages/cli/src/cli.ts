@@ -129,7 +129,7 @@ async function runInitFromFlags(flags: FlagBag): Promise<InitReport> {
     console.error("Discovering relay and Blossom server suggestions...");
     const relaySuggestions = await getRelaySuggestions();
     const blossomSuggestions = await getBlossomServerSuggestions({
-      relays: seed.relays.length > 0 ? seed.relays : relaySuggestions.slice(0, 4),
+      relays: seed.relays.length > 0 ? seed.relays : relaySuggestions.slice(0, 24),
     });
     console.error(
       `Suggestions ready: ${relaySuggestions.length} relays, ` +

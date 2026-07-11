@@ -1,12 +1,17 @@
+import { bunkerRelayDefaults, promptBunkerRelays } from "./bunker-relays.ts";
 import { setSigningRemote, writeConfig as writeNappletConfig } from "./config.ts";
 import { getKeyStoreProvider, KEY_SERVICE_NAME, type KeyStoreProvider } from "./key-store.ts";
 import {
   type ConnectOptions,
   connectRemoteSigner as connectSigner,
   type ConnectResult,
-  DEFAULT_CONNECT_RELAYS,
 } from "./nostr-connect.ts";
-import { promptLine, promptSecret as promptSigningSecret } from "./prompt.ts";
+import {
+  type PromptInput,
+  promptLine,
+  type PromptOutput,
+  promptSecret as promptSigningSecret,
+} from "./prompt.ts";
 import {
   createSignerFromSecret,
   encodePublicKey,
@@ -31,6 +36,9 @@ export interface DeploySignerOptions {
   connectRemoteSigner?: (options: ConnectOptions) => Promise<ConnectResult>;
   createSigner?: (secret: string) => Promise<NappletSigner>;
   confirmSignerMismatch?: (actualPubkey: string, expectedPubkey: string) => Promise<boolean>;
+  promptConnectRelays?: (defaults: readonly string[]) => Promise<string[]>;
+  promptInput?: PromptInput;
+  promptOutput?: PromptOutput;
   isTerminalInput?: () => boolean;
   writeConfig?: (config: NappletConfig, path?: string) => Promise<void>;
   print?: (line: string) => void;
@@ -215,13 +223,21 @@ async function connectAndCreateSigner(
   const print = options.print ?? (() => {});
   const connectRemoteSigner = options.connectRemoteSigner ?? connectSigner;
   const createSigner = options.createSigner ?? createSignerFromSecret;
-  const relays = connectRelays(config, preferredRelays);
+  const relayDefaults = bunkerRelayDefaults(preferredRelays);
 
   print(
     expectedPubkey
       ? `Starting Nostr Connect for configured bunker ${formatPubkey(expectedPubkey)}...`
       : "No deploy signer is configured. Starting Nostr Connect...",
   );
+  const relays = await promptBunkerRelays({
+    defaults: relayDefaults,
+    promptConnectRelays: options.promptConnectRelays,
+    input: options.promptInput,
+    output: options.promptOutput,
+    print,
+  });
+  print(`Using bunker relay${relays.length === 1 ? "" : "s"}: ${relays.join(", ")}`);
   const result = await connectRemoteSigner({
     relays,
     appName: "napplet CLI",
@@ -285,17 +301,6 @@ async function getOptionalKeyStore(
 ): Promise<KeyStoreProvider | null> {
   const load = options.getKeyStoreProvider ?? getKeyStoreProvider;
   return await load();
-}
-
-function connectRelays(config: NappletConfig, preferredRelays?: readonly string[]): string[] {
-  const relays = preferredRelays && preferredRelays.length > 0
-    ? preferredRelays
-    : config.signing?.relays && config.signing.relays.length > 0
-    ? config.signing.relays
-    : config.relays.length > 0
-    ? config.relays
-    : DEFAULT_CONNECT_RELAYS;
-  return [...relays];
 }
 
 function requireSec(sec: string | undefined): string {

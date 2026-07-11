@@ -7,6 +7,7 @@
 import { NAMED_SITE_D_TAG_PATTERN } from "./manifest.ts";
 import { type PromptInput, promptLine, type PromptOutput } from "./prompt.ts";
 import type { DeployTargetKind } from "./types.ts";
+import { promptUrlList, unique } from "./url-prompt.ts";
 
 export interface InitWizardSeed {
   sourceDir?: string;
@@ -56,16 +57,18 @@ export async function promptInitWizard(options: InitWizardOptions): Promise<Init
 
   const defaultTarget = await promptDefaultTarget(options);
   const named = defaultTarget === "named" ? await promptNamedDTags(options) : [];
-  const relays = options.seed.relays.length > 0 ? unique(options.seed.relays) : await promptUrls({
-    message: "Relay URLs",
-    suggestions: options.suggestions.relays,
-    allowedProtocols: ["wss:", "ws:"],
-    input: options.input,
-    output: options.output,
-  });
+  const relays = options.seed.relays.length > 0
+    ? unique(options.seed.relays)
+    : await promptUrlList({
+      message: "Relay URLs",
+      suggestions: options.suggestions.relays,
+      allowedProtocols: ["wss:", "ws:"],
+      input: options.input,
+      output: options.output,
+    });
   const blossomServers = options.seed.blossomServers.length > 0
     ? unique(options.seed.blossomServers)
-    : await promptUrls({
+    : await promptUrlList({
       message: "Blossom server URLs",
       suggestions: options.suggestions.blossomServers,
       allowedProtocols: ["https:", "http:"],
@@ -116,36 +119,6 @@ async function promptNamedDTags(options: InitWizardOptions): Promise<string[]> {
   }
 }
 
-async function promptUrls(options: {
-  message: string;
-  suggestions: string[];
-  allowedProtocols: readonly string[];
-  input?: PromptInput;
-  output?: PromptOutput;
-}): Promise<string[]> {
-  const urls: string[] = [];
-  for (;;) {
-    const value = await promptLine({
-      message: `${options.message} (comma-separated, numbers from suggestions, blank when done)`,
-      suggestions: urls.length === 0 ? options.suggestions : [],
-      input: options.input,
-      output: options.output,
-    });
-    if (value.trim() === "") return urls;
-    for (const entry of splitEntries(value)) {
-      const resolved = resolveSuggestion(entry, options.suggestions);
-      if (!isAllowedUrl(resolved, options.allowedProtocols)) {
-        writeLine(
-          options.output,
-          `Skipping invalid URL "${entry}". Include ${options.allowedProtocols.join(" or ")}.`,
-        );
-        continue;
-      }
-      if (!urls.includes(resolved)) urls.push(resolved);
-    }
-  }
-}
-
 export function normalizeNamedDTags(values: readonly string[]): string[] {
   const normalized = unique(values.map((value) => value.trim()).filter(Boolean));
   if (normalized.length === 0) throw new Error("At least one named d tag is required.");
@@ -159,35 +132,8 @@ export function normalizeNamedDTags(values: readonly string[]): string[] {
   return normalized;
 }
 
-function resolveSuggestion(value: string, suggestions: readonly string[]): string {
-  const index = Number(value);
-  if (Number.isInteger(index) && index >= 1 && index <= suggestions.length) {
-    return suggestions[index - 1];
-  }
-  return value;
-}
-
-function isAllowedUrl(value: string, allowedProtocols: readonly string[]): boolean {
-  try {
-    return allowedProtocols.includes(new URL(value).protocol);
-  } catch {
-    return false;
-  }
-}
-
 function splitEntries(value: string): string[] {
   return value.split(/[,\s]+/).map((entry) => entry.trim()).filter(Boolean);
-}
-
-function unique(values: readonly string[]): string[] {
-  const seen = new Set<string>();
-  const result: string[] = [];
-  for (const value of values) {
-    if (seen.has(value)) continue;
-    seen.add(value);
-    result.push(value);
-  }
-  return result;
 }
 
 function writeLine(output: PromptOutput | undefined, value: string): void {

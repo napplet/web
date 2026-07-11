@@ -11,6 +11,7 @@ import { SimplePool } from "nostr-tools/pool";
 
 export const NIP66_RELAY_DISCOVERY_KIND = 30166;
 export const BLOSSOM_SERVER_LIST_KIND = 10063;
+export const DEFAULT_SUGGESTION_LIMIT = 1200;
 
 export const DEFAULT_RELAY_DISCOVERY_RELAYS = [
   "wss://relaypag.es",
@@ -74,14 +75,15 @@ interface RelayCandidate {
  * ```
  */
 export async function getRelaySuggestions(options: SuggestionOptions = {}): Promise<string[]> {
+  const limit = options.limit ?? DEFAULT_SUGGESTION_LIMIT;
   const defaults = [...DEFAULT_RELAY_SUGGESTIONS];
   const discovered = await querySuggestions(
     options,
     DEFAULT_RELAY_DISCOVERY_RELAYS,
-    { kinds: [NIP66_RELAY_DISCOVERY_KIND], limit: options.limit ?? 80 },
+    { kinds: [NIP66_RELAY_DISCOVERY_KIND], limit },
     eventsToRelaySuggestions,
   );
-  return unique([...defaults, ...discovered]).slice(0, options.limit ?? 12);
+  return unique([...defaults, ...discovered]).slice(0, limit);
 }
 
 /**
@@ -97,15 +99,16 @@ export async function getRelaySuggestions(options: SuggestionOptions = {}): Prom
 export async function getBlossomServerSuggestions(
   options: SuggestionOptions = {},
 ): Promise<string[]> {
+  const limit = options.limit ?? DEFAULT_SUGGESTION_LIMIT;
   const defaults = [...DEFAULT_BLOSSOM_SERVER_SUGGESTIONS];
   const relays = options.relays?.length ? options.relays : DEFAULT_RELAY_SUGGESTIONS.slice(0, 4);
   const discovered = await querySuggestions(
     { ...options, relays },
     relays,
-    { kinds: [BLOSSOM_SERVER_LIST_KIND], limit: options.limit ?? 80 },
+    { kinds: [BLOSSOM_SERVER_LIST_KIND], limit },
     eventsToBlossomServerSuggestions,
   );
-  return unique([...discovered, ...defaults]).slice(0, options.limit ?? 12);
+  return unique([...discovered, ...defaults]).slice(0, limit);
 }
 
 export function eventsToRelaySuggestions(events: readonly unknown[]): string[] {

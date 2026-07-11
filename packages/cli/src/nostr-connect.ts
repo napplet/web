@@ -29,7 +29,6 @@ import { encodeNbunksec, type NbunksecInfo } from "./signing.ts";
 
 /** Default relays used to reach a remote signer when none are supplied. */
 export const DEFAULT_CONNECT_RELAYS = [
-  "wss://relay.nsec.app",
   "wss://bucket.coracle.social",
 ] as const;
 

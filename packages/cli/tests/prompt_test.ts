@@ -96,8 +96,8 @@ Deno.test("promptLine echoes TTY input and accepts defaults", async () => {
   assert(output.text.includes("feed"));
 });
 
-Deno.test("promptLine prints suggestions before the prompt", async () => {
-  const input = new FakeTerminalInput("1\n");
+Deno.test("promptLine uses suggestions for Tab completion without numbered menus", async () => {
+  const input = new FakeTerminalInput("wss://relay\t\n");
   const output = new FakeOutput();
 
   const value = await promptLine({
@@ -107,9 +107,10 @@ Deno.test("promptLine prints suggestions before the prompt", async () => {
     output,
   });
 
-  assertEquals(value, "1");
-  assert(output.text.includes("Suggestions:"));
-  assert(output.text.includes("1. wss://relay.example"));
+  assertEquals(value, "wss://relay.example");
+  assert(!output.text.includes("Suggestions:"));
+  assert(!output.text.includes("1. wss://relay.example"));
+  assert(output.text.includes("wss://relay.example"));
 });
 
 Deno.test("isTerminalInput falls back to false", () => {

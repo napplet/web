@@ -59,7 +59,7 @@ Deno.test("eventsToBlossomServerSuggestions extracts kind 10063 server tags by f
   assertEquals(servers, ["https://cdn-two.example", "https://cdn-one.example"]);
 });
 
-Deno.test("getRelaySuggestions prefers deploy defaults and appends live discovery", async () => {
+Deno.test("getRelaySuggestions prefers static defaults and appends live discovery", async () => {
   const live = await getRelaySuggestions({
     pool: new FakePool([
       {
@@ -89,6 +89,22 @@ Deno.test("getRelaySuggestions prefers deploy defaults and appends live discover
   assertEquals(fallback, ["wss://relay.primal.net", "wss://nos.lol"]);
 });
 
+Deno.test("getRelaySuggestions keeps a large autocomplete pool by default", async () => {
+  const live = await getRelaySuggestions({
+    pool: new FakePool(
+      Array.from({ length: 20 }, (_, index) => ({
+        kind: 30166,
+        created_at: index,
+        tags: [["d", `wss://live-${index}.example`], ["rtt-open", String(50 + index)]],
+      })),
+    ),
+    relays: ["wss://relaypag.es"],
+  });
+
+  assert(live.length > 12);
+  assert(live.includes("wss://live-19.example"));
+});
+
 Deno.test("getBlossomServerSuggestions appends defaults and tolerates relay failures", async () => {
   const live = await getBlossomServerSuggestions({
     pool: new FakePool([
@@ -108,4 +124,19 @@ Deno.test("getBlossomServerSuggestions appends defaults and tolerates relay fail
     limit: 2,
   });
   assertEquals(fallback, ["https://cdn.hzrd149.com", "https://cdn.sovbit.host"]);
+});
+
+Deno.test("getBlossomServerSuggestions keeps a large autocomplete pool by default", async () => {
+  const live = await getBlossomServerSuggestions({
+    pool: new FakePool(
+      Array.from({ length: 20 }, (_, index) => ({
+        kind: 10063,
+        tags: [["server", `https://cdn-${index}.example`]],
+      })),
+    ),
+    relays: ["wss://relay.example"],
+  });
+
+  assert(live.length > 12);
+  assert(live.includes("https://cdn-19.example"));
 });

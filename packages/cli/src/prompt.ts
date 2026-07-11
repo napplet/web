@@ -24,6 +24,7 @@ export interface SecretPromptOptions {
 export interface LinePromptOptions {
   message: string;
   defaultValue?: string;
+  /** Candidate values used for Tab completion. They are not printed as a menu. */
   suggestions?: readonly string[];
   input?: PromptInput;
   output?: PromptOutput;
@@ -56,7 +57,7 @@ export async function promptSecret(options: SecretPromptOptions = {}): Promise<s
   const message = options.message ?? "Enter signing secret (input hidden), then press Enter: ";
   const isTerminal = input.isTerminal?.() ?? false;
   if (isTerminal && input.read && input.setRaw) {
-    return finalizeSecret(await readBytesFromTerminal(input, output, message, false));
+    return finalizeSecret(await readBytesFromTerminal(input, output, message, false, []));
   }
   return await readSecretFromReadable(input.readable ?? Deno.stdin.readable);
 }
@@ -75,10 +76,12 @@ export async function promptLine(options: LinePromptOptions): Promise<string> {
   const input = options.input ?? Deno.stdin;
   const output = options.output ?? Deno.stderr;
   const message = formatPromptMessage(options.message, options.defaultValue);
-  writeSuggestions(output, options.suggestions ?? []);
+  const suggestions = options.suggestions ?? [];
   const isTerminal = input.isTerminal?.() ?? false;
   const line = isTerminal && input.read && input.setRaw
-    ? decoder.decode(new Uint8Array(await readBytesFromTerminal(input, output, message, true)))
+    ? decoder.decode(
+      new Uint8Array(await readBytesFromTerminal(input, output, message, true, suggestions)),
+    )
       .trim()
     : await readLineFromReadable(input.readable ?? Deno.stdin.readable);
   return line === "" && options.defaultValue !== undefined ? options.defaultValue : line;
@@ -107,6 +110,7 @@ async function readBytesFromTerminal(
   output: PromptOutput,
   message: string,
   echo: boolean,
+  suggestions: readonly string[],
 ): Promise<number[]> {
   output.writeSync(encoder.encode(message));
   const bytes: number[] = [];
@@ -130,6 +134,14 @@ async function readBytesFromTerminal(
           if (bytes.length > 0) {
             bytes.pop();
             if (echo) output.writeSync(encoder.encode("\b \b"));
+          }
+          continue;
+        }
+        if (byte === 9 && echo) {
+          const completion = completeSuggestion(bytes, suggestions);
+          if (completion) {
+            bytes.splice(0, bytes.length, ...completion.bytes);
+            output.writeSync(encoder.encode(completion.appended));
           }
           continue;
         }
@@ -182,10 +194,24 @@ function formatPromptMessage(message: string, defaultValue: string | undefined):
   return defaultValue === undefined ? `${message}: ` : `${message} [${defaultValue}]: `;
 }
 
-function writeSuggestions(output: PromptOutput, suggestions: readonly string[]): void {
-  if (suggestions.length === 0) return;
-  output.writeSync(encoder.encode("Suggestions:\n"));
-  suggestions.forEach((suggestion, index) => {
-    output.writeSync(encoder.encode(`  ${index + 1}. ${suggestion}\n`));
-  });
+function completeSuggestion(
+  bytes: readonly number[],
+  suggestions: readonly string[],
+): { bytes: number[]; appended: string } | null {
+  if (suggestions.length === 0 || bytes.length === 0) return null;
+  const current = decoder.decode(new Uint8Array(bytes));
+  const tokenStart = current.lastIndexOf(",") + 1;
+  const leading = current.slice(tokenStart).match(/^\s*/)?.[0] ?? "";
+  const prefixStart = tokenStart + leading.length;
+  const prefix = current.slice(prefixStart);
+  if (!prefix) return null;
+
+  const match = suggestions.find((suggestion) => suggestion.startsWith(prefix));
+  if (!match || match === prefix) return null;
+
+  const completed = `${current.slice(0, prefixStart)}${match}`;
+  return {
+    bytes: [...encoder.encode(completed)],
+    appended: completed.slice(current.length),
+  };
 }
