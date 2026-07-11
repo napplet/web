@@ -12,3 +12,6 @@ of numbered selections, and Nostr Connect asks for bunker relays separately from
 deploy relays with `wss://bucket.coracle.social` as the default.
 Nostr Connect pairing and remote signing now use applesauce-signers so QR flows
 accept the `ack` responses emitted by common bunkers and match nsyte behavior.
+Blossom uploads now keep the BUD-11 scoped base64url token as the first attempt
+but fall back to unscoped and legacy base64 auth for deployed servers that reject
+otherwise valid uploads.

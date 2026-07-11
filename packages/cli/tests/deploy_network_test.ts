@@ -33,6 +33,13 @@ function decodeAuthEvent(header: string): SignedNostrEvent {
   return JSON.parse(json) as SignedNostrEvent;
 }
 
+function decodeStandardAuthEvent(header: string): SignedNostrEvent {
+  const encoded = header.slice("Nostr ".length);
+  const binary = atob(encoded);
+  const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+  return JSON.parse(new TextDecoder().decode(bytes)) as SignedNostrEvent;
+}
+
 interface FakeFetchOptions {
   headStatus?: (url: string) => number;
   putResponse?: (url: string) => Response;
@@ -101,6 +108,16 @@ Deno.test("createUploadAuthorization signs a base64url upload token scoped to th
 
 Deno.test("createUploadAuthorization omits the server tag when unscoped", async () => {
   const event = decodeAuthEvent(await createUploadAuthorization(signer, [sha256], () => 123));
+  assertEquals(event.tags.some((tag) => tag[0] === "server"), false);
+});
+
+Deno.test("createUploadAuthorization can encode legacy standard base64 auth", async () => {
+  const header = await createUploadAuthorization(signer, [sha256], () => 123, undefined, "base64");
+  assert(header.startsWith("Nostr "));
+  const encoded = header.slice("Nostr ".length);
+  assert(/[=+/]/.test(encoded), "legacy auth token should use standard base64");
+  const event = decodeStandardAuthEvent(header);
+  assertEquals(event.kind, 24242);
   assertEquals(event.tags.some((tag) => tag[0] === "server"), false);
 });
 
@@ -232,6 +249,106 @@ Deno.test("executeNetworkDeploy scopes each server's token to its own host", asy
       return event.tags.find((tag) => tag[0] === "server")?.[1];
     });
     assertEquals(hosts, ["a.example", "b.example"]);
+  });
+});
+
+Deno.test("executeNetworkDeploy retries without server scope on server URL mismatch", async () => {
+  await withTempDir(async (dir) => {
+    await Deno.writeTextFile(`${dir}/index.html`, "index");
+    const manifests = await manifestsFor(dir);
+    const calls: FetchCall[] = [];
+    const { publish } = fakePublish();
+    let attempts = 0;
+
+    const result = await executeNetworkDeploy(
+      manifests,
+      { relays: ["wss://relay.example"], blossomServers: ["https://blob.example"] },
+      signer,
+      {
+        fetch: createFakeFetch(calls, {
+          putResponse: () => {
+            attempts += 1;
+            if (attempts === 1) {
+              return new Response(JSON.stringify({ message: "Server URL mismatch" }), {
+                status: 401,
+                headers: { "content-type": "application/json" },
+              });
+            }
+            return new Response(JSON.stringify({ sha256 }), {
+              status: 201,
+              headers: { "content-type": "application/json" },
+            });
+          },
+        }),
+        publish,
+        now: () => 123,
+      },
+    );
+
+    assertEquals(result.uploaded[0].success, true);
+    const puts = calls.filter((call) => call.method === "PUT");
+    assertEquals(puts.length, 2);
+    assertEquals(
+      decodeAuthEvent(puts[0].authorization ?? "").tags.find((tag) => tag[0] === "server")?.[1],
+      "blob.example",
+    );
+    assertEquals(
+      decodeAuthEvent(puts[1].authorization ?? "").tags.some((tag) => tag[0] === "server"),
+      false,
+    );
+  });
+});
+
+Deno.test("executeNetworkDeploy retries with legacy base64 auth when base64url is rejected", async () => {
+  await withTempDir(async (dir) => {
+    await Deno.writeTextFile(`${dir}/index.html`, "index");
+    const manifests = await manifestsFor(dir);
+    const calls: FetchCall[] = [];
+    const { publish } = fakePublish();
+    let attempts = 0;
+
+    const result = await executeNetworkDeploy(
+      manifests,
+      { relays: ["wss://relay.example"], blossomServers: ["https://blob.example"] },
+      signer,
+      {
+        fetch: createFakeFetch(calls, {
+          putResponse: () => {
+            attempts += 1;
+            if (attempts === 1) {
+              return new Response(null, {
+                status: 401,
+                headers: { "x-reason": "Server not in authorization token scope" },
+              });
+            }
+            if (attempts === 2) {
+              return new Response(null, {
+                status: 400,
+                headers: { "x-reason": "Invalid auth string" },
+              });
+            }
+            return new Response(JSON.stringify({ sha256 }), {
+              status: 201,
+              headers: { "content-type": "application/json" },
+            });
+          },
+        }),
+        publish,
+        now: () => 123,
+      },
+    );
+
+    assertEquals(result.uploaded[0].success, true);
+    const puts = calls.filter((call) => call.method === "PUT");
+    assertEquals(puts.length, 3);
+    assertEquals(
+      decodeAuthEvent(puts[1].authorization ?? "").tags.some((tag) => tag[0] === "server"),
+      false,
+    );
+    assertEquals(
+      decodeStandardAuthEvent(puts[2].authorization ?? "").tags.some((tag) => tag[0] === "server"),
+      false,
+    );
   });
 });
 
