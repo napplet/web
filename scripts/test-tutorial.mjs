@@ -6,6 +6,8 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { caretRangeIncludesVersion } from './tutorial-package-versions.mjs';
+
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const tutorialPath = join(root, 'apps/docs/guide/build-note-drafts-napplet.md');
 const tempRoot = await mkdtemp(join(tmpdir(), 'napplet-tutorial-'));
@@ -96,9 +98,10 @@ async function assertPackageVersions(packageJson) {
     const workspacePackage = JSON.parse(await readFile(join(root, packagePath), 'utf8'));
     const declared =
       packageJson.dependencies?.[name] ?? packageJson.devDependencies?.[name] ?? '';
-    if (declared !== `^${workspacePackage.version}`) {
+    if (!caretRangeIncludesVersion(declared, workspacePackage.version)) {
       throw new Error(
-        `Tutorial ${name} version is ${declared}; expected ^${workspacePackage.version}`,
+        `Tutorial ${name} range is ${declared || '(missing)'}; ` +
+          `expected it to include workspace version ${workspacePackage.version}`,
       );
     }
   }

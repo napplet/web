@@ -7,7 +7,7 @@
     "dev:site": "turbo run dev --filter=@napplet/web --filter=@napplet/docs",
     "test": "pnpm check:jsr && turbo run test:unit && pnpm test:tutorial",
     "test:unit": "turbo run test:unit",
-    "test:tutorial": "node scripts/test-tutorial.mjs",
+    "test:tutorial": "node --test scripts/tutorial-package-versions.test.mjs && node scripts/test-tutorial.mjs",
     "test:e2e": "turbo run test:e2e",
     "test:conformance": "node packages/conformance-cli/dist/cli.js tests/fixtures/napplets/conformant",
     "lint": "turbo run lint",
