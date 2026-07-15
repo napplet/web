@@ -41,4 +41,6 @@ workers; all persistent state goes through the shell's proxies.
 > Every package is published to [npm](https://www.npmjs.com/org/napplet); most are
 > also on [JSR](https://jsr.io/@napplet) (`@napplet/boilerplate`,
 > `@napplet/conformance-cli`, and `@napplet/conformance-web` are npm-only).
-> Source lives at [github.com/napplet/napplet](https://github.com/napplet/napplet).
+> Source lives at [github.com/napplet/napplet](https://github.com/napplet/napplet);
+> discussion happens in the
+> [community group chat](https://armada.buzz/invite/naddr1qvzqqqyzz5pzpjk98hj7z978r9xc9d2ymagw6tga0lx0s06y8lhpy9twc2kp8uwdqqqqpwqpw5#BAACAwTDEKKhS9_iA_qOc1n4ljVt).

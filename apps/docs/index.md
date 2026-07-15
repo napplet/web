@@ -13,6 +13,9 @@ hero:
       text: What are napplets?
       link: /guide/
     - theme: alt
+      text: Community
+      link: https://armada.buzz/invite/naddr1qvzqqqyzz5pzpjk98hj7z978r9xc9d2ymagw6tga0lx0s06y8lhpy9twc2kp8uwdqqqqpwqpw5#BAACAwTDEKKhS9_iA_qOc1n4ljVt
+    - theme: alt
       text: napplet.run
       link: https://napplet.run/
 

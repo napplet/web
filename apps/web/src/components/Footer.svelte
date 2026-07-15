@@ -30,6 +30,7 @@
       <div class="col">
         <h4>Ecosystem</h4>
         <a href={LINKS.kehto} target="_blank" rel="noopener">Kehto runtime</a>
+        <a href={LINKS.community} target="_blank" rel="noopener">Community group chat</a>
         <a href={LINKS.github} target="_blank" rel="noopener">GitHub</a>
         <a href={LINKS.githubOrg} target="_blank" rel="noopener">@napplet</a>
       </div>

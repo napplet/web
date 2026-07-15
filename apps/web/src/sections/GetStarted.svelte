@@ -58,6 +58,7 @@
         <div class="links">
           <a class="btn btn-primary" href={LINKS.docs}>Read the docs</a>
           <a class="btn btn-ghost" href={LINKS.spec} target="_blank" rel="noopener">NIP-5D spec ↗</a>
+          <a class="btn btn-ghost" href={LINKS.community} target="_blank" rel="noopener">Group chat ↗</a>
           <a class="btn btn-ghost" href={LINKS.github} target="_blank" rel="noopener">GitHub ↗</a>
         </div>
 
