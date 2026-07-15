@@ -155,6 +155,8 @@ The reference shell/runtime is **Kehto**:
 [github.com/kehto/web](https://github.com/kehto/web).
 You can also find napplet projects under the
 [github.com/napplet](https://github.com/napplet) organization.
+For questions and coordination, join the
+[community group chat](https://armada.buzz/invite/naddr1qvzqqqyzz5pzpjk98hj7z978r9xc9d2ymagw6tga0lx0s06y8lhpy9twc2kp8uwdqqqqpwqpw5#BAACAwTDEKKhS9_iA_qOc1n4ljVt).
 :::
 
 Next, read [Core concepts](./concepts) to understand the envelope, NAPs, the

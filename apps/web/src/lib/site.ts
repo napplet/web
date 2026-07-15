@@ -2,6 +2,8 @@ export const LINKS = {
   github: 'https://github.com/napplet/napplet',
   githubOrg: 'https://github.com/napplet',
   docs: '/docs/',
+  community:
+    'https://armada.buzz/invite/naddr1qvzqqqyzz5pzpjk98hj7z978r9xc9d2ymagw6tga0lx0s06y8lhpy9twc2kp8uwdqqqqpwqpw5#BAACAwTDEKKhS9_iA_qOc1n4ljVt',
   // Canonical, living NIP-5D specification (the source of truth — never a repo copy).
   spec: 'https://github.com/nostr-protocol/nips/pull/2303',
   boilerplate: 'https://github.com/napplet/boilerplate',

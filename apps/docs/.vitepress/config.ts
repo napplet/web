@@ -2,6 +2,8 @@ import { defineConfig } from 'vitepress';
 
 // Single source of truth for the deploy domain.
 const SITE_URL = 'https://napplet.run';
+const COMMUNITY_URL =
+  'https://armada.buzz/invite/naddr1qvzqqqyzz5pzpjk98hj7z978r9xc9d2ymagw6tga0lx0s06y8lhpy9twc2kp8uwdqqqqpwqpw5#BAACAwTDEKKhS9_iA_qOc1n4ljVt';
 
 export default defineConfig({
   base: '/docs/',
@@ -43,6 +45,7 @@ export default defineConfig({
       { text: 'Packages', link: '/packages/' },
       { text: 'NAPs', link: '/naps/' },
       { text: 'Spec', link: '/spec' },
+      { text: 'Community', link: COMMUNITY_URL },
     ],
     sidebar: [
       {

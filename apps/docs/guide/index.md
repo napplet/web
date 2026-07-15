@@ -91,4 +91,5 @@ posture (its own analogue to NIP-5D) rather than reusing the web one.
 - **Protocol tinkerers** exploring what a composable, capability-based Nostr
   client ecosystem looks like.
 
-Ready to build? Head to [Getting Started](./getting-started).
+Ready to build? Head to [Getting Started](./getting-started), or join the
+[community group chat](https://armada.buzz/invite/naddr1qvzqqqyzz5pzpjk98hj7z978r9xc9d2ymagw6tga0lx0s06y8lhpy9twc2kp8uwdqqqqpwqpw5#BAACAwTDEKKhS9_iA_qOc1n4ljVt).

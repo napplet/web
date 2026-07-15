@@ -28,6 +28,9 @@
         <a class="btn btn-ghost" href={LINKS.spec} target="_blank" rel="noopener">
           Read NIP-5D ↗
         </a>
+        <a class="btn btn-ghost" href={LINKS.community} target="_blank" rel="noopener">
+          Join community ↗
+        </a>
         <a class="btn btn-ghost" href={LINKS.docs}>Documentation</a>
       </div>
 

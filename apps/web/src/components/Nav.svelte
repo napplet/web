@@ -24,6 +24,9 @@
         <a href={item.href} onclick={() => (open = false)}>{item.label}</a>
       {/each}
       <a href={LINKS.docs}>Docs</a>
+      <a href={LINKS.community} target="_blank" rel="noopener" onclick={() => (open = false)}>
+        Community
+      </a>
     </nav>
 
     <div class="cta">
@@ -109,7 +112,7 @@
     border-radius: 2px;
   }
 
-  @media (max-width: 820px) {
+  @media (max-width: 980px) {
     .links {
       position: fixed;
       inset: var(--nav-h) 0 auto 0;
