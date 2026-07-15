@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v0.34.0
 milestone_name: NIP-5D Runtime Injection
 status: planning
-last_updated: "2026-07-11T17:33:15+02:00"
-last_activity: "2026-07-11 - Quick task 260711-mz4 complete: generator, skills, Vite requirements, and live template aligned with living protocol guidance."
+last_updated: "2026-07-15T17:42:00+02:00"
+last_activity: "2026-07-15 - Quick task 260715-ogy complete: neutral community/group-chat invite linked from the SPA and docs."
 progress:
   total_phases: 0
   completed_phases: 0
@@ -30,9 +30,21 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 Phase: Not started (defining requirements)
 Plan: —
 Status: Defining requirements
-Last activity: 2026-07-11 — Quick task 260711-mz4 complete; generator, skills,
-Vite hard requirements, and the live template align with runtime injection,
-OUTBOX-first access, and hard-only `requires`.
+Last activity: 2026-07-15 — Quick task 260715-ogy complete; neutral
+community/group-chat invite linked from the SPA and docs.
+
+### Quick task 260715-ogy — COMPLETE
+
+- Added the provided invite to repeated SPA surfaces: primary nav, hero CTAs,
+  get-started links, and footer ecosystem links.
+- Added the invite to VitePress docs navigation plus the docs home, guide
+  overview, getting-started guide, and packages overview.
+- Kept visible copy generic (`Community`, `Join community`, `Group chat`,
+  `community group chat`) and avoided client/protocol-specific chat branding.
+- Verification: targeted SPA/docs builds; full `pnpm build`; full
+  `pnpm type-check`; `pnpm -r test:unit`; `pnpm lint` (0 tasks); changed-code
+  AI-slop 100/100; `git diff --check`; forbidden visible-label scan.
+- Commit: `ccc3796b` (`Surface the community invite where builders look`).
 
 ### Quick task 260711-mz4 — COMPLETE
 
@@ -433,6 +445,7 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 
 | Quick ID | Task | Date | Commit | Artifacts |
 |----------|------|------|--------|-----------|
+| 260715-ogy | Add neutral community and group chat invite links to the SPA and docs | 2026-07-15 | ccc3796b | [260715-ogy-add-neutral-community-and-group-chat-inv](./quick/260715-ogy-add-neutral-community-and-group-chat-inv/) |
 | 260711-hhy | Replace numbered relay/server selection with autocomplete and prompt separately for Nostr Connect bunker relays | 2026-07-11 | be89ec7d | [260711-hhy-replace-napplet-cli-numbered-relay-serve](./quick/260711-hhy-replace-napplet-cli-numbered-relay-serve/) |
 | 260710-rce | Exclude local CLI config and tooling state from napplet deploy manifest collection | 2026-07-10 | 5f28c4e5 | [260710-rce-exclude-local-cli-config-and-tooling-sta](./quick/260710-rce-exclude-local-cli-config-and-tooling-sta/) |
 | 260710-ng9 | Fix napplet.run conformance to accept NIP-19 napplet manifest pointers | 2026-07-10 | 04606c3a | [260710-ng9-fix-napplet-run-conformance-to-accept-ne](./quick/260710-ng9-fix-napplet-run-conformance-to-accept-ne/) |
