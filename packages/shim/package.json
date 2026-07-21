@@ -1,7 +1,7 @@
 {
   "name": "@napplet/shim",
-  "version": "0.3.1",
-  "description": "Side-effect-only window.napplet installer for Nostr-native iframe applications",
+  "version": "0.26.8",
+  "description": "Napplet SDK — subscribe, publish, query, emit, on, nappStorage for Nostr-native iframe applications",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -10,6 +10,14 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./prelude": {
+      "types": "./dist/prelude.d.ts",
+      "import": "./dist/prelude.js",
+      "browser": "./dist/prelude.global.js"
+    },
+    "./prelude.global": {
+      "default": "./dist/prelude.global.js"
     }
   },
   "files": [
@@ -25,12 +33,13 @@
   },
   "devDependencies": {
     "tsup": "^8.5.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.2"
   },
   "scripts": {
     "build": "tsup",
     "type-check": "tsc --noEmit",
-    "test:unit": "echo 'no unit tests'"
+    "test:unit": "vitest run"
   },
   "license": "MIT",
   "repository": {

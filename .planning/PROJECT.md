@@ -1,5 +1,34 @@
 # Napplet Protocol SDK
 
+## Current Milestone: v0.34.0 NIP-5D Runtime Injection
+
+**Goal:** Align the SDK, shim, conformance tooling, docs, skills, and boilerplate guidance with the current NIP-5D draft: runtimes inject `window.napplet` domain objects before napplet scripts run; napplets detect support by property presence, not by `window.napplet.shell.supports()`.
+
+**Target features:**
+- Retire the invented **NAP-SHELL** bootstrap surface from current package and conformance behavior: no `shell.ready`, `shell.init`, `window.napplet.shell`, `supports()`, cached shell environment, or `@napplet/nap/shell` subpath as normative runtime API.
+- Update `@napplet/shim` into a runtime-owned injection payload that can install only the granted NAP domain objects for a napplet; domain absence is the availability signal.
+- Update core/sdk/nap typings so `window.napplet.<domain>` properties are optional, domain-local APIs stay typed, and examples gate with property presence.
+- Update conformance CLI/web/fixtures so boot success means an injected `window.napplet` namespace exists before napplet code and emitted envelopes are valid NAP traffic; no check requires a shell handshake.
+- Update docs, READMEs, skills, and boilerplate guidance to describe runtime injection and napplet-side type/SDK consumption accurately.
+
+**Scope (confirmed):** Source of truth is the current [NIP-5D PR #2303](https://github.com/nostr-protocol/nips/pull/2303) head `6ca5632` (`5D.md`) plus NAP domain specs in [github.com/napplet/naps](https://github.com/napplet/naps). NIP-5D defines only web namespace injection, envelope format, transport, manifest/identity, and domain availability by object presence. Per-domain operations, versioning, diagnostics, and compatibility checks belong to the matching NAP. Breaking change (0.x => minor bumps); changeset per changed package.
+
+**Key context:** v0.33.0 implemented NAP-SHELL from an older draft. The 2026-06-26 PR update explicitly removed that capability query and handshake model. Treat v0.33 NAP-SHELL artifacts as stale implementation to retire, not as precedent.
+
+## Shipped: v0.32.0 Napplet Conformance
+
+**Goal:** Let any napplet self-verify protocol conformance locally — before publishing — via one browser-safe engine consumed by a headless CI CLI and a standalone single-window web runtime.
+
+**Target features:**
+- `@napplet/conformance` — framework-agnostic engine: scriptable reference mock shell, hand-written per-NAP envelope validators + manifest/meta validator, check registry with the v1 zero-config catalog, serializable result model, pretty/JSON/JUnit reporters; happy-dom unit tests with fixtures.
+- Headless CLI (`napplet-conformance` / `test:conformance`) — Playwright driver that serves a napplet build + host page, runs the engine in-page, extracts results, exits non-zero on error-severity failures; reporters; in-repo fixture napplets (passing + deliberately broken) under `tests/fixtures/napplets/*`; e2e harness under `tests/e2e/harness`; CI workflow.
+- `apps/conformance` — standalone single-window web runtime: point at a napplet URL/build, run the engine live, render per-check tree + envelope log + manifest inspector. Own deploy target.
+- Boilerplate integration + release — `test:conformance` wiring + docs; prepared boilerplate-template change (separate repo) delivered in the PR; changesets; NPM + JSR release prep.
+
+**Scope (confirmed):** v1 is **zero-config protocol conformance** — manifest/meta validity, boots under `sandbox="allow-scripts"`, installs `window.napplet`, every emitted postMessage envelope validates against hand-written per-NAP validators, graceful degradation when `shell.supports()` is false, no forbidden globals / no undeclared egress. **Not** in v1: scriptable per-NAP behavioral scenarios, an author-scenario authoring API, shell conformance, schema-generation refactor of NAP types, or a multi-browser matrix. Approved design: `docs/superpowers/specs/2026-06-16-napplet-conformance-design.md`.
+
+**Key context:** Both target environments are browsers (Playwright Chromium for CI; the app's own window), so the engine is browser-safe code and the CLI is a thin Playwright driver. The workspace already globs `tests/fixtures/napplets/*` and `tests/e2e/harness`. Phases group into the four design areas M1 (engine) → M2 (CLI+CI) → M3 (web runtime) → M4 (boilerplate+release), shipping as one coordinated release PR.
+
 ## Shipped: v0.31.0 Cleanup Quality Gate
 
 Closed the current quality-gate cleanup milestone without protocol or runtime behavior changes. Vulnerable tooling dependencies now resolve to patched versions (`vite 6.4.2`, `postcss 8.5.10`, `turbo 2.9.14`); fixable lint and AI-slop scanner categories are cleared; production unsafe type assertions and double assertions are removed or replaced with typed boundaries; NUB boundary smoke tests cover malformed/unknown handler inputs; `normalizeConnectOrigin` and vite-plugin long functions are split into private helpers. Final scanner result: score 89 / Healthy, 0 errors, 0 fixable issues, format 0, lint 0, ai-slop 0, security 0. Remaining debt is limited to four documented public-surface `complexity/file-too-large` deferrals in `packages/core/src/types.ts`, `packages/nub/src/identity/types.ts`, `packages/sdk/src/index.ts`, and `packages/vite-plugin/src/index.ts`. 5 phases shipped 2026-05-24. See [archive](milestones/v0.31.0-ROADMAP.md).

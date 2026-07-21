@@ -1,9 +1,14 @@
 node_modules/
 dist/
-dist-bin/
 *.tsbuildinfo
 .turbo/
 .omx/
 test-results/
 playwright-report/
+.playwright-mcp/
 .claude/
+.aislop/history.jsonl
+
+# Local benchmark outputs
+/benchmark.json
+/benchmark.md

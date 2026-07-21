@@ -1,4 +1,5 @@
 
+import { sendEnvelope } from '@napplet/core';
 import type { NostrEvent, NostrFilter } from '@napplet/core';
 
 interface NostrDbRequestMessage {
@@ -66,7 +67,7 @@ function sendNipdbRequestRaw(
     content,
     ...(subId ? { subId } : {}),
   };
-  window.parent.postMessage(msg, '*');
+  sendEnvelope(window.parent, msg);
 
   return correlationId;
 }

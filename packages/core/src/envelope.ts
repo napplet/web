@@ -7,8 +7,8 @@
  *
  * @example
  * ```ts
- * import type { NappletMessage, NubDomain, ShellSupports } from '@napplet/core';
- * import { NUB_DOMAINS } from '@napplet/core';
+ * import type { NappletMessage, NapDomain } from '@napplet/core';
+ * import { NAP_DOMAINS } from '@napplet/core';
  * ```
  *
  * @packageDocumentation
@@ -38,7 +38,7 @@ export interface NappletMessage {
 }
 
 /**
- * String literal union of the twelve NUB (Napplet Unified Blueprint) domains.
+ * String literal union of the active NAP (Nostr Applet Protocol) domains.
  * Each domain corresponds to a capability namespace that a shell may support.
  *
  * | Domain     | Scope                                              |
@@ -46,104 +46,37 @@ export interface NappletMessage {
  * | `relay`    | NIP-01 relay proxy (subscribe, publish)            |
  * | `identity` | Read-only user identity queries                    |
  * | `storage`  | Scoped key-value storage proxy                     |
- * | `ifc`      | Inter-frame communication (IFC peer bus)           |
+ * | `inc`      | Inter-napplet communication (INC peer bus)           |
  * | `theme`    | Theme tokens and appearance settings               |
  * | `keys`     | Keyboard forwarding and action keybindings         |
  * | `media`    | Media session control and playback                 |
  * | `notify`   | Shell-rendered notifications                       |
  * | `config`   | Per-napplet declarative configuration              |
  * | `resource` | Byte-fetching primitive (URL → Blob)               |
- * | `connect`  | User-gated direct network access (CSP connect-src) |
- * | `class`    | Shell-assigned napplet class / security posture    |
+ * | `ble`      | Runtime-mediated Bluetooth LE/GATT sessions       |
+ * | `webrtc`   | Runtime-mediated WebRTC signaling and data sessions |
+ * | `link`     | Shell-mediated user-visible link opening           |
+ * | `count`    | Runtime-mediated event counts                      |
+ * | `lists`    | Runtime-mediated NIP-51 list mutations            |
+ * | `serial`   | Runtime-mediated serial device access             |
+ * | `common`   | Common social actions                              |
+ * | `dm`       | Runtime-mediated direct messages                  |
  *
  * @example
  * ```ts
- * const domain: NubDomain = 'relay';
- * const isValid = NUB_DOMAINS.includes(domain); // true
+ * const domain: NapDomain = 'relay';
+ * const isValid = NAP_DOMAINS.includes(domain); // true
  * ```
  */
-export type NubDomain = 'relay' | 'identity' | 'storage' | 'ifc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'connect' | 'class';
+export type NapDomain = 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'cvm' | 'outbox' | 'upload' | 'intent' | 'ble' | 'webrtc' | 'link' | 'count' | 'lists' | 'serial' | 'common' | 'dm';
 
 /**
- * Runtime-accessible constant array of all NUB domain names.
- * Useful for iteration, validation, and capability enumeration.
+ * Runtime-accessible constant array of all NAP domain names.
+ * Useful for iteration, validation, and runtime injection configuration.
  *
  * @example
  * ```ts
- * for (const domain of NUB_DOMAINS) {
- *   console.log(`Checking support for: ${domain}`);
- * }
+ * const selected = NAP_DOMAINS.filter((domain) => domain !== 'ble');
  * ```
  */
-export const NUB_DOMAINS: readonly NubDomain[] = ['relay', 'identity', 'storage', 'ifc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'connect', 'class'] as const;
-
-/**
- * Namespaced capability string for {@link ShellSupports.supports}.
- *
- * Accepts two prefix namespaces plus bare NUB domain shorthand:
- *
- * | Prefix  | Example             | Meaning                        |
- * |---------|---------------------|--------------------------------|
- * | `nub:`  | `'nub:relay'`       | Shell implements the relay NUB |
- * | `perm:` | `'perm:popups'`     | Shell grants popup permission  |
- * | `perm:` | `'perm:strict-csp'` | **@deprecated (v0.29.0)** — superseded by `nub:connect` + `nub:class`. Shell enforces strict CSP posture (v0.28.0). |
- * | *(bare)*| `'relay'`           | Shorthand for `'nub:relay'`    |
- *
- * Bare strings are valid only for NUB domains.
- * Permissions MUST use the `perm:` prefix.
- *
- * @example
- * ```ts
- * const cap: NamespacedCapability = 'nub:relay';
- * const bare: NamespacedCapability = 'relay'; // shorthand OK
- * const perm: NamespacedCapability = 'perm:popups';
- * const csp: NamespacedCapability = 'perm:strict-csp';
- * ```
- *
- * @deprecated `perm:strict-csp` — superseded in v0.29.0 by `nub:connect` + `nub:class`.
- * Shells implementing NUB-CONNECT and NUB-CLASS replace the v0.28.0 `perm:strict-csp` model.
- */
-export type NamespacedCapability =
-  | NubDomain
-  | `nub:${NubDomain}`
-  | `perm:${string}`;
-
-/**
- * Interface for the shell capability query API.
- * Allows napplets to check whether the shell supports a NUB domain
- * or a permission at runtime.
- *
- * @example
- * ```ts
- * // NUB domain queries (bare shorthand or prefixed):
- * shell.supports('relay');       // shorthand for 'nub:relay'
- * shell.supports('nub:storage'); // explicit NUB prefix
- *
- * // Permission queries:
- * shell.supports('perm:popups'); // popup permission
- * ```
- */
-export interface ShellSupports {
-  /** Check whether the shell supports a NUB capability or permission. */
-  supports(capability: NamespacedCapability): boolean;
-}
-
-/**
- * Type for the `window.napplet.shell` namespace.
- * Extends {@link ShellSupports} to provide capability queries.
- *
- * @example
- * ```ts
- * // In a napplet iframe:
- * if (window.napplet.shell.supports('nub:relay')) {
- *   const signed = await window.napplet.relay.publish(template);
- * }
- *
- * // Bare NUB domain shorthand also works:
- * if (window.napplet.shell.supports('relay')) { ... }
- *
- * // Permission queries:
- * window.napplet.shell.supports('perm:popups');
- * ```
- */
-export interface NappletGlobalShell extends ShellSupports {}
+export const NAP_DOMAINS: readonly NapDomain[] = ['relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent', 'ble', 'webrtc', 'link', 'count', 'lists', 'serial', 'common', 'dm'] as const;

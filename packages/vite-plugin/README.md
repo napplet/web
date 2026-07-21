@@ -2,23 +2,9 @@
 
 > Vite plugin for napplet local development -- injects aggregate hash meta tags and optionally generates NIP-5A manifests for testing.
 
-**This is a development tool.** For production deployment, run `napplet deploy` with a provider command configured in `.napplet/napplet.json`.
+**This is a development tool.** For production deployment of napplets to nsites, use community deploy tools like [nsyte](https://github.com/nicefarm/nsyte) which handle NIP-5A event creation and relay publishing.
 
 ## Getting Started
-
-For new napplets, start with the CLI instead of hand-writing the plugin config:
-
-```bash
-pnpm add -g @napplet/cli
-napplet init my-napplet
-cd my-napplet
-pnpm install
-napplet doctor
-```
-
-The generated `vite.config.ts` reads `.napplet/napplet.json` and passes `type` / `connect` into `nip5aManifest()`. Edit `.napplet/napplet.json` when metadata changes; keep the Vite config boring.
-
-For an existing Vite app, run `napplet configure`, then make `vite.config.ts` read `.napplet/napplet.json`, and use `napplet doctor` to verify the project is on the supported path.
 
 ### What This Plugin Does
 
@@ -33,13 +19,12 @@ At **build time** (with `VITE_DEV_PRIVKEY_HEX` set), the plugin:
 
 1. Optionally rewrites local JS/CSS build assets into `index.html` when `artifactMode: 'single-file'` is enabled
 2. Walks the final `dist/` artifact set and computes SHA-256 of each file
-3. Computes the aggregate hash per the NIP-5A algorithm
-4. Creates a kind 35128 manifest event and signs it
+3. Computes the aggregate hash per the NIP-5A algorithm (over the `path` tags alone)
+4. Creates a NIP-5D **kind 35129** named-napplet manifest event — NIP-5A tag schema: one `['path', '/abs/path', '<sha256>']` per file plus one aggregate `['x', '<aggregateHash>', 'aggregate']` tag — and signs it
 5. Writes `.nip5a-manifest.json` to `dist/`
 6. Updates the meta tag in `dist/index.html` with the computed hash
 7. Injects `<meta name="napplet-config-schema">` into `dist/index.html` if a `configSchema` is declared or discovered
-8. Embeds the schema as a `['config', ...]` tag on the kind 35128 manifest
-9. Includes the schema bytes in `aggregateHash` via a synthetic `config:schema` path prefix
+8. Embeds the schema as a `['config', ...]` tag on the manifest (NOT folded into `aggregateHash` — the aggregate is `path` tags only, per NIP-5D §Identity)
 
 The build-time manifest is for verifying the hash computation workflow locally, not for deploying to relays.
 
@@ -50,8 +35,8 @@ The build-time manifest is for verifying the hash computation workflow locally, 
 
 ### When NOT to Use This
 
-- Deploying napplets to production (use `napplet deploy` with a configured provider command)
-- Creating NIP-5A events for relay publishing outside a CLI-managed deploy flow
+- Deploying napplets to production (use [nsyte](https://github.com/nicefarm/nsyte) or similar)
+- Creating NIP-5A events for relay publishing (use dedicated deploy tools)
 - Runtime dependencies -- this plugin runs at build/dev time only
 
 ## Installation
@@ -60,11 +45,9 @@ The build-time manifest is for verifying the hash computation workflow locally, 
 npm install -D @napplet/vite-plugin
 ```
 
-Note: This is a **devDependency**. It is not needed at runtime. New projects created with `napplet init` already include it.
+Note: This is a **devDependency**. It is not needed at runtime.
 
 ## Quick Start
-
-Use this only when wiring an existing Vite app manually. New projects should prefer `napplet init`.
 
 ```ts
 // vite.config.ts
@@ -89,18 +72,66 @@ export default defineConfig({
 The napp type identifier (e.g., `'feed'`, `'chat'`, `'profile'`). This value is:
 
 - Injected as the `content` of the `<meta name="napplet-napp-type">` tag
-- Used as the `d` tag in the kind 35128 manifest event
+- Used as the `d` tag in the kind 35129 manifest event
 
 #### requires (optional)
 
-**Type:** `string[]`
+**Type:** `string[] | { infer?: boolean; explicit?: string[]; mode?: 'warn' | 'error' }`
 
-An array of service names this napplet requires from its host shell (e.g., `['audio', 'notifications']`). When set:
+An array of bare NAP domain names this napplet requires from its host shell
+(e.g., `['outbox', 'storage']`), or an opt-in inference config. When set:
 
-- Injects a `<meta name="napplet-requires">` tag into HTML (comma-separated service names)
-- Adds `['requires', 'service-name']` tags to the kind 35128 manifest event
+- Injects a `<meta name="napplet-requires">` tag into HTML (comma-separated domain names)
+- Adds `['requires', 'domain']` tags to the kind 35129 manifest event
 
-If the shell does not support all required capabilities, the napplet can detect this at runtime via `window.napplet.shell.supports()` or the shell can show a compatibility warning.
+With inference enabled, the plugin scans statically visible source usage of
+`@napplet/nap/<domain>`, SDK domain subpath imports, and direct
+`window.napplet.<domain>` access. Explicit requirements remain the
+author-controlled declaration; inferred domains are merged as tooling assistance
+and can warn or fail when explicit config is missing a domain.
+
+If the shell does not support all required domains, the napplet can detect this
+at runtime via `window.napplet?.domain` presence or the shell can show a
+compatibility warning.
+
+#### title (optional)
+
+**Type:** `string`
+
+Human-readable napplet title. When set, the plugin **sets/overrides** the built
+HTML `<title>` element (inserting one after `<head>` if the document has none),
+replacing any author-written title. This is **plain HTML** — NOT a `napplet-*`
+protocol meta tag. When omitted, the author's existing `<title>` is left
+untouched and no empty tag is emitted.
+
+The injected value is HTML-escaped for element-text context (`&`, `<`, `>`). At
+deploy time the napplet CLI reads this back out of the built `index.html` and
+emits it as the NIP-5A `["title", …]` manifest tag.
+
+#### description (optional)
+
+**Type:** `string`
+
+Human-readable napplet description. When set, the plugin **sets/overrides** the
+built HTML `<meta name="description">` element (inserting one after `<head>` if
+absent), replacing any existing description meta. This is **plain HTML** — NOT a
+`napplet-*` protocol meta tag. When omitted, the author's existing description
+meta is left untouched and no empty tag is emitted.
+
+The injected value is HTML-escaped for attribute context (`&`, `"`). At deploy
+time the napplet CLI reads this back out of the built `index.html` and emits it
+as the NIP-5A `["description", …]` manifest tag.
+
+```ts
+nip5aManifest({
+  nappletType: 'my-feed',
+  title: 'My Feed',
+  description: 'A cozy Nostr feed napplet',
+});
+// → built index.html carries <title>My Feed</title>
+// → built index.html carries <meta name="description" content="A cozy Nostr feed napplet">
+// → napplet CLI emits ["title", "My Feed"] and ["description", "A cozy Nostr feed napplet"]
+```
 
 #### configSchema (optional)
 
@@ -109,9 +140,10 @@ If the shell does not support all required capabilities, the napplet can detect 
 Declares a JSON Schema (draft-07+) describing the napplet's per-napplet configuration surface (NAP-CONFIG). At build time, the plugin:
 
 - Validates the schema against the NAP-CONFIG Core Subset (see Build-Time Guards below)
-- Embeds the schema as a `['config', JSON.stringify(schema)]` tag on the kind 35128 manifest event
-- Includes the schema bytes in `aggregateHash` via a synthetic `config:schema` path prefix (any schema edit bumps the hash)
+- Embeds the schema as a `['config', JSON.stringify(schema)]` tag on the kind 35129 manifest event
 - Injects `<meta name="napplet-config-schema" content="{json}">` into `dist/index.html` so the napplet's shim can read it synchronously at install time
+
+  The schema is **not** folded into `aggregateHash`: per NIP-5D §Identity the aggregate is the NIP-5A hash of the `path` tags alone, so a runtime can recompute and verify it. The `config` tag still carries the schema for a shell to act on.
 
 **Accepted forms:**
 
@@ -129,6 +161,27 @@ Declares a JSON Schema (draft-07+) describing the napplet's per-napplet configur
 
 If none of the three paths resolve a schema, manifest/meta emission for the config tag is skipped silently -- build produces bytes identical to a pre-phase-114 napplet.
 
+#### archetypes (optional)
+
+**Type:** `Array<string | { slug: string; naps?: string[]; contracts?: { protocol: string; eventKinds?: number[] }[] }>`
+
+Declares the NAAT archetype roles this napplet fulfills (napplet/naps `ARCHETYPES.md`). Each accepted protocol emits **one** `['archetype', slug, protocol, ...constraints]` tag on the kind 35129 manifest event, where `slug` is the role slug, `protocol` is a single NAP-N wire format, and constraints such as `kind:<number>` are scoped to that protocol. A napplet may declare several archetype roles; a napplet with no archetype tag is fully valid.
+
+```ts
+nip5aManifest({
+  nappletType: 'my-feed',
+  archetypes: [
+    { slug: 'feed', naps: ['NAP-5', 'NAP-6'] },
+    { slug: 'note', contracts: [{ protocol: 'NAP-4', eventKinds: [1, 30023] }] },
+  ],
+});
+// → emits ['archetype', 'feed', 'NAP-5']
+// → emits ['archetype', 'feed', 'NAP-6']
+// → emits ['archetype', 'note', 'NAP-4', 'kind:1', 'kind:30023']
+```
+
+Like the `config` tag, archetype tags are **not** folded into `aggregateHash`: per NIP-5D §Identity the aggregate is the NIP-5A hash of the `path` tags alone, so declaring archetypes never changes the napplet's content address. Blank slugs are skipped.
+
 #### artifactMode (optional, v1.11+)
 
 **Type:** `'external-assets' | 'single-file'`
@@ -138,7 +191,7 @@ Controls the build artifact shape the plugin validates and hashes.
 
 | Value | Behaviour |
 |-------|-----------|
-| `'external-assets'` | Preserve Vite's default `index.html` + JS/CSS asset graph. Inline executable scripts are rejected. |
+| `'external-assets'` | Preserve Vite's default `index.html` + JS/CSS asset graph. Inline executable scripts are allowed. |
 | `'single-file'` | Force Vite toward a single emitted artifact, inline local JS/CSS build asset references into `index.html`, and fail if local external assets remain before aggregate-hash and manifest generation. |
 
 Use `single-file` when the napplet is meant to be served as a production-equivalent NIP-5A gateway artifact: a gateway-portable `index.html` loaded in an opaque-origin NIP-5D iframe without relying on separate local JS/CSS bundle routes.
@@ -160,13 +213,13 @@ export default defineConfig({
 
 In single-file mode:
 
-- The plugin first rejects any inline executable scripts already present in the built HTML.
+- The plugin preserves any inline executable scripts already present in the built HTML.
 - It asks Vite/Rollup for a single-entry artifact shape (`inlineDynamicImports`, no CSS code-split, inline static assets) so ordinary static and dynamic imports are bundled before the close-bundle rewrite.
 - It then rewrites local stylesheet links and local script `src` tags to inline `<style>` / `<script>` blocks and removes those inlined JS/CSS files from `dist/`.
 - It fails the build if any local stylesheet, modulepreload, script `src`, or extra emitted file remains after rewriting.
-- The resulting `index.html` artifact bytes are used for the real `['x', <sha256>, 'index.html']` manifest tag and aggregateHash input.
+- The resulting `index.html` artifact bytes are used for the real `['path', '/index.html', <sha256>]` manifest tag and aggregateHash input.
 - The aggregate hash is computed after inlining and before the self-referential aggregate-hash meta stamp is replaced.
-- `config:schema` and `connect:origins` synthetic inputs continue to participate in aggregateHash and remain excluded from public `['x', ...]` manifest tags.
+- `config` is emitted as its own manifest tag but does NOT participate in `aggregateHash` — the aggregate is the NIP-5A hash of the `path` tags alone.
 
 **Example (inline):**
 
@@ -238,87 +291,6 @@ The plugin validates the resolved schema against the NAP-CONFIG Core Subset at `
 
 The walk recurses into `properties`, `items`, `additionalProperties`, `patternProperties`, `oneOf`, `anyOf`, `allOf`, `not`, `definitions`, and `$defs` -- the guard is wide even though the Core Subset is narrow.
 
-#### strictCsp (deprecated in v0.29.0)
-
-**Type:** `unknown` (accepted-but-warns)
-
-As of v0.29.0, the shell is the sole runtime CSP authority — every napplet receives its Content-Security-Policy from the HTTP response header the shell serves with the napplet's HTML, not from a meta tag emitted by the build. The `strictCsp` option is therefore **deprecated and has no effect on the emitted HTML**.
-
-For back-compat with pre-v0.29.0 `vite.config.ts` files, the option is still accepted at the type level (typed as `unknown`) and emits exactly one `console.warn` per build from `configResolved`:
-
-```
-[nip5a-manifest] `strictCsp` is deprecated and has no effect (v0.29.0+). The shell is now the sole runtime CSP authority. Remove this option from your vite.config.ts to silence this warning. Scheduled for hard-remove in a future milestone (REMOVE-STRICTCSP).
-```
-
-Migration:
-
-- Drop the `strictCsp` key from your `vite.config.ts`. Napplets ship only the HTML + assets; the shell emits the CSP.
-- If your napplet ships inline `<script>` elements (without `src`), fix them before v0.30.0 — the build now hard-fails on inline scripts to mirror the shell's baseline `script-src 'self'` posture. See [Build-Time Diagnostics](#build-time-diagnostics) below.
-- If your napplet needs direct network access (previously implicit under a permissive dev CSP, now explicit), declare the origins via the new [`connect`](#connect-optional-v0290) option and let the shell prompt the user.
-
-See [NAP-CLASS-2.md](https://github.com/napplet/naps) for the shell-side posture that replaces the old in-page strict-CSP baseline, and [`specs/SHELL-CONNECT-POLICY.md`](../../specs/SHELL-CONNECT-POLICY.md) for the deployer-side checklist covering HTTP-responder precondition, residual meta-CSP refusal, and grant-persistence key.
-
-#### connect (optional, v0.29.0+)
-
-**Type:** `string[]`
-
-Declares the origins the napplet needs direct browser-level network access to (`fetch`, `WebSocket`, `SSE`, `EventSource`). Each origin is validated by the shared `normalizeConnectOrigin` function from `@napplet/nap/connect/types` (the single source of truth used by both the build tool and shell implementations), emitted as a `["connect", "<origin>"]` tag in the signed NIP-5A manifest, and folded into `aggregateHash` via a synthetic `connect:origins` xTag so any origin-list change auto-invalidates prior user grants keyed on `(dTag, aggregateHash)`.
-
-**Quick start:**
-
-```ts
-// vite.config.ts
-import { defineConfig } from 'vite';
-import { nip5aManifest } from '@napplet/vite-plugin';
-
-export default defineConfig({
-  plugins: [
-    nip5aManifest({
-      nappletType: 'my-napplet',
-      connect: [
-        'https://api.example.com',
-        'wss://events.example.com',
-        'https://xn--caf-dma.example.com',   // café.example.com in Punycode
-      ],
-    }),
-  ],
-});
-```
-
-**Origin format (accept / reject rules):**
-
-| Rule | Behaviour |
-|------|-----------|
-| Scheme | MUST be one of `https`, `wss`, `http`, `ws`. Closed set. Anything else rejected. |
-| Lowercase | Scheme AND host MUST be lowercase on the wire. Uppercase anywhere rejected. |
-| Host | ASCII DNS labels or already-Punycode IDN (`xn--…`). Non-Punycode non-ASCII rejected — use Punycode in the config string. |
-| IPv4 literal | Accepted (including `127.0.0.1`, `10.x`, `192.168.x`, `172.16.x`). |
-| IPv6 literal | Rejected in v1 (both bracketed `[::1]` and bare). |
-| Port | Explicit non-default OK (e.g. `:8443`). Default port (`:443` on https/wss, `:80` on http/ws) MUST be omitted — explicit default-port forms rejected for aggregateHash determinism. |
-| Path / query / fragment | Rejected. Origin = scheme + host + optional non-default port. `https://foo.com/api`, `https://foo.com?x=1`, `https://foo.com#x` all invalid. |
-| Wildcard | Rejected. Each subdomain is a separate origin. |
-
-Rejected inputs throw at `configResolved` with a diagnostic prefixed `[nip5a-manifest]`, failing the Vite build before `dist/` is written.
-
-**Manifest tag emission:**
-
-One `["connect", "<origin>"]` tag per origin, emitted in **author-declared order** (as supplied in the config array). Tags are placed between the existing `manifestXTags` (file hashes) and `configTags` (config schema) in the signed kind 35128 manifest event.
-
-**aggregateHash fold:**
-
-Origins are fed through a canonical fold procedure (lowercase → ASCII-ascending sort → LF-join with no trailing newline → UTF-8 → SHA-256 → lowercase hex) and the resulting digest is pushed as a synthetic xTag entry `[<hex-digest>, 'connect:origins']` into the manifest's xTag array BEFORE `computeAggregateHash`. The synthetic entry participates in `aggregateHash` but is filtered out of the public `['x', ...]` tag projection via a shared `SYNTHETIC_XTAG_PATHS` set (which also covers the v0.25.0 `config:schema` fold).
-
-Any addition, removal, or reorder-after-normalization of the origin set produces a different `aggregateHash`, which auto-invalidates any prior user grant keyed on `(dTag, aggregateHash)` — guaranteeing the shell re-prompts on a supply-chain origin change.
-
-**Module-load conformance guardrail:**
-
-At ESM import time, the plugin self-checks its fold procedure against the normative NAP-CONNECT conformance fixture (3 origins → SHA-256 `cc7c1b1903fb23ecb909d2427e1dccd7d398a5c63dd65160edb0bb8b231aa742`). A drift in the fold procedure (even a one-byte change to the sort or separator) fires a fatal at plugin-import time, preventing the build from shipping a hash incompatible with shells.
-
-**See also:**
-- [NAP-CONNECT](https://github.com/napplet/naps) — normative spec (origin format, aggregateHash fold, conformance fixture)
-- [`specs/SHELL-CONNECT-POLICY.md`](../../specs/SHELL-CONNECT-POLICY.md) — shell-deployer checklist (HTTP-responder precondition, residual meta-CSP refusal, grant persistence, consent prompt MUSTs, revocation UX)
-- [NAP-CLASS-2.md](https://github.com/napplet/naps) — posture triggered by presence of `connect` tags (CSP shape, shell responsibilities at serve time)
-
 ### Environment Variables
 
 #### VITE_DEV_PRIVKEY_HEX
@@ -334,9 +306,10 @@ If set, the plugin signs the manifest event at build time. If not set, manifest 
 node -e "import('nostr-tools/pure').then(m => console.log(Buffer.from(m.generateSecretKey()).toString('hex')))"
 ```
 
-## Service Dependencies
+## NAP Domain Requirements
 
-Use the `requires` option when your napplet needs specific shell capabilities (like audio playback or push notifications) to function correctly.
+Use the `requires` option when your napplet needs specific NAP domains to
+function correctly.
 
 ```ts
 // vite.config.ts
@@ -346,93 +319,80 @@ import { nip5aManifest } from '@napplet/vite-plugin';
 export default defineConfig({
   plugins: [
     nip5aManifest({
-      nappletType: 'my-music-app',
-      requires: ['audio', 'notifications'],
+      nappletType: 'my-feed',
+      requires: ['outbox', 'storage'],
     }),
   ],
 });
 ```
 
+Inference can be enabled when you want the plugin to check source usage against
+the explicit declaration:
+
+```ts
+nip5aManifest({
+  nappletType: 'feed',
+  requires: {
+    infer: true,
+    explicit: ['relay'],
+    mode: 'warn',
+  },
+});
+```
+
 ### What gets injected
 
-With `requires: ['audio', 'notifications']`, the plugin injects into your HTML `<head>`:
+With `requires: ['outbox', 'storage']`, the plugin injects into your HTML `<head>`:
 
 ```html
 <meta name="napplet-aggregate-hash" content="">
-<meta name="napplet-napp-type" content="my-music-app">
-<meta name="napplet-requires" content="audio,notifications">
+<meta name="napplet-napp-type" content="my-feed">
+<meta name="napplet-requires" content="outbox,storage">
 ```
 
 At build time (with `VITE_DEV_PRIVKEY_HEX` set), the manifest event also includes `requires` tags:
 
 ```json
 {
-  "kind": 35128,
+  "kind": 35129,
   "tags": [
-    ["d", "my-music-app"],
-    ["x", "<sha256>", "index.js"],
-    ["requires", "audio"],
-    ["requires", "notifications"]
+    ["d", "my-feed"],
+    ["path", "/index.html", "<sha256>"],
+    ["x", "<aggregateHash>", "aggregate"],
+    ["requires", "outbox"],
+    ["requires", "storage"]
   ]
 }
 ```
 
 ### Runtime compatibility checking
 
-The host shell reads `<meta name="napplet-requires">` during napplet initialization and compares against its supported capabilities. Napplets can also check at runtime:
+The host shell reads `<meta name="napplet-requires">` during napplet initialization and compares against its supported NAP domains. Napplets can also check at runtime:
 
 ```ts
-import '@napplet/shim';
-
-if (!window.napplet.shell.supports('media')) {
-  console.warn('Media NAP not available — some features disabled');
+if (!window.napplet?.outbox) {
+  console.warn('OUTBOX NAP not available — feed disabled');
 }
 ```
 
 ## Build-Time Diagnostics
 
-v0.29.0 adds two build-time safeguards and one informational warning, all enforced in `closeBundle` or `configResolved` so misconfiguration fails loud before `dist/` reaches a shell.
+v0.29.0 adds a build-time safeguard enforced in `closeBundle` so misconfiguration fails loud before `dist/` reaches a shell.
 
-### Inline-script fail-loud (new in v0.29.0; mode-aware in v1.11)
+### Inline scripts are supported (and expected)
 
-The plugin scans `dist/index.html` after build for any `<script>` element without a non-empty `src` attribute. Such elements are hard-errors — the build throws and exits non-zero with a diagnostic referencing the shell's baseline `script-src 'self'` posture.
+Per NIP-5D a napplet is a single self-contained `/index.html` loaded via
+`iframe.srcdoc` with `sandbox="allow-scripts"` and no `allow-same-origin` — an
+opaque origin with no served URL. Its executable JS therefore lives **inline**;
+there is no origin from which the runtime could fetch an external
+`<script src>`. The plugin does **not** reject inline `<script>` elements. (An
+earlier version did under a loading model that NIP-5D does not define; that was
+removed — see napplet/web#53.)
 
-Allowed script variants (not flagged):
-- `<script src="..."></script>` — external module
-- `<script type="application/json">…</script>` — JSON data island
-- `<script type="application/ld+json">…</script>` — JSON-LD data island
-- `<script type="importmap">…</script>` — import map
-- `<script type="speculationrules">…</script>` — speculation rules
-- HTML comments (stripped before scan)
-
-Rejected:
-- `<script>console.log("hi")</script>` — inline JS without `src`
-- `<script type="module">/* inline */</script>` — inline module
-
-**Why:** The shell is now the sole runtime CSP authority. Every conformant shell serves napplet HTML with a CSP that includes `script-src 'self'` (or tighter, via `'nonce-…'`). Inline `<script>` without `src` violates that policy, so shipping inline JS guarantees the napplet will be partially non-functional at runtime. Surfacing this at build time converts a silent runtime failure into a loud build failure.
-
-Exception: when `artifactMode: 'single-file'` is set, the plugin validates the pre-inline HTML first, then creates the inline module scripts itself from local build assets. Those build-produced inline scripts are intentional and are accepted as part of the explicit single-file NIP-5A artifact contract.
-
-**Fixing:** Move inline JS into a `.js` module under `src/` and import it. For build-time state that needs to reach runtime code (feature flags, config defaults), use a `<script type="application/json" id="data">…</script>` data island and read it at runtime via `document.getElementById('data').textContent`.
-
-### Cleartext origin warning (new in v0.29.0)
-
-When `connect` contains any `http:` or `ws:` origin, the plugin emits one informational `console.log` during `configResolved` explaining browser mixed-content reality:
-
-```
-[nip5a-manifest] cleartext origin declared in `connect`: http://… / ws://…
-HTTPS shells silently drop fetches to http: / ws: origins (except localhost / 127.0.0.1 secure-context exceptions). Approved grants will produce no traffic when the shell is served over https. Prefer https: / wss: end-to-end, or check shell.supports('connect:scheme:http') at runtime.
-```
-
-This is **informational, not an error** — operator policy may explicitly permit cleartext for localhost development or for explicit-opt-out-of-TLS deployments. Shells advertising `shell.supports('connect:scheme:http') === false` refuse cleartext entirely; check at runtime before depending on cleartext grants.
-
-### Dev-mode-only `napplet-connect-requires` meta (new in v0.29.0)
-
-In dev mode (`vite serve`), the plugin injects a `<meta name="napplet-connect-requires" content="<origins>">` tag into the served HTML's `<head>` when `connect` is non-empty. The `content` is the ASCII-sorted origin list, space-separated. This tag is useful for shell-less local-preview workflows that want to simulate a granted state without running a full shell.
-
-**IMPORTANT:** The tag name is `napplet-connect-requires` — deliberately distinct from the shell-authoritative `napplet-connect-granted`, which is what the napplet shim reads at install time and is injected ONLY by a real shell at HTTP-serve time on grant approval. The plugin MUST NEVER emit `napplet-connect-granted`; the plugin has no authority to represent a user's consent decision.
-
-The `-requires` tag is NOT injected in production builds (`vite build`). Production HTML contains neither tag; grants flow through the shell's HTTP response at serve time.
+When `artifactMode: 'single-file'` is set, the plugin additionally folds any
+local `<script src>`/`<link rel="stylesheet">` build assets into `index.html`
+and deletes them, so the single file is the only served artifact. Pre-existing
+inline scripts in your built HTML are preserved verbatim.
 
 ## How It Works
 
@@ -454,9 +414,9 @@ Only runs if `VITE_DEV_PRIVKEY_HEX` is set:
 1. If `artifactMode: 'single-file'` is set, rewrites local JS/CSS references into `index.html` before hashing
 2. Walks `dist/` directory recursively
 3. Computes SHA-256 hash of each file's contents
-4. Creates sorted hash lines: `<sha256hex> <relativePath>\n`
-5. Computes aggregate hash (SHA-256 of sorted concatenation)
-6. Creates kind 35128 manifest event with `x` tags for each file and `requires` tags if configured
+4. Creates sorted hash lines: `<sha256hex> <absolutePath>\n` (NIP-5A: absolute paths, leading `/`)
+5. Computes aggregate hash (SHA-256 of sorted concatenation of the `path`-tag lines)
+6. Creates a kind 35129 manifest event with one `['path', '/abs/path', <sha256>]` tag per file, one aggregate `['x', <aggregateHash>, 'aggregate']` tag, and `requires` tags if configured
 7. Signs with the test private key
 8. Writes `.nip5a-manifest.json` to `dist/`
 9. Updates the `napplet-aggregate-hash` meta tag in `dist/index.html`
@@ -482,8 +442,26 @@ interface Nip5aManifestOptions {
   /** Napplet type/dtag (e.g., 'feed', 'chat') */
   nappletType: string;
 
-  /** Service dependencies this napplet requires (e.g., ['audio', 'notifications']). Optional. */
-  requires?: string[];
+  /** Bare NAP domain requirements this napplet needs, optionally inferred from source usage. */
+  requires?: string[] | {
+    infer?: boolean;
+    explicit?: string[];
+    mode?: 'warn' | 'error';
+  };
+
+  /**
+   * Human-readable title. Sets/overrides the built HTML `<title>` (plain HTML,
+   * not a napplet-* meta). The napplet CLI emits it as the NIP-5A `["title", …]`
+   * manifest tag at deploy.
+   */
+  title?: string;
+
+  /**
+   * Human-readable description. Sets/overrides the built HTML
+   * `<meta name="description">` (plain HTML, not a napplet-* meta). The napplet
+   * CLI emits it as the NIP-5A `["description", …]` manifest tag at deploy.
+   */
+  description?: string;
 
   /**
    * Artifact output contract. Defaults to 'external-assets'. Set to
@@ -499,35 +477,14 @@ interface Nip5aManifestOptions {
    * discovery when omitted.
    */
   configSchema?: NappletConfigSchema | string;
-
-  /**
-   * Origins the napplet needs direct browser-level network access to (v0.29.0+).
-   * Each origin validated via `normalizeConnectOrigin` from
-   * `@napplet/nap/connect/types`, emitted as `["connect", "<origin>"]`
-   * manifest tags, folded into `aggregateHash` via a synthetic `connect:origins`
-   * xTag so any origin change auto-invalidates prior grants.
-   * See NAP-CONNECT for the authoritative origin format.
-   */
-  connect?: string[];
-
-  /**
-   * @deprecated v0.29.0: The shell is now the sole runtime CSP authority.
-   * This option is accepted-but-warns (one console.warn per build) and has
-   * NO effect on the emitted HTML. Scheduled for hard-remove in v0.30.0
-   * (REMOVE-STRICTCSP). Remove this key from vite.config.ts to silence.
-   */
-  strictCsp?: unknown;
 }
 ```
 
 ## Protocol Reference
 
 - [NAP-CONFIG spec (PR #13)](https://github.com/napplet/naps/pull/13) -- per-napplet declarative configuration
-- [NAP-RESOURCE (drafts)](https://github.com/napplet/naps) — sandboxed byte fetching primitive that strict CSP enforces against
-- [NAP-CONNECT (drafts)](https://github.com/napplet/naps) -- user-gated direct network access: origin format, manifest tag shape, canonical `connect:origins` aggregateHash fold, runtime API
-- [NAP-CLASS (drafts)](https://github.com/napplet/naps) + [`NAP-CLASS-1.md`](https://github.com/napplet/naps) + [`NAP-CLASS-2.md`](https://github.com/napplet/naps) -- napplet class track and the two v0.29.0 posture members (strict baseline + user-approved explicit-origin)
-- [`specs/SHELL-CONNECT-POLICY.md`](../../specs/SHELL-CONNECT-POLICY.md) + [`specs/SHELL-CLASS-POLICY.md`](../../specs/SHELL-CLASS-POLICY.md) -- shell-deployer checklists
-- [NIP-5D](../../specs/NIP-5D.md) -- Napplet-shell protocol specification
+- [NAP-RESOURCE (drafts)](https://github.com/napplet/naps) — shell-owned byte fetching primitive for sandboxed napplets
+- [NIP-5D](https://github.com/nostr-protocol/nips/pull/2303) -- Napplet-shell protocol specification
 - [NIP-5A](https://github.com/nostr-protocol/nips/blob/master/5A.md) -- Nsite specification
 - [Aggregate Hash PR](https://github.com/nostr-protocol/nips/pull/2287) -- NIP-5A aggregate hash extension (not yet merged)
 

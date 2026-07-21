@@ -1,0 +1,416 @@
+{
+  "name": "@napplet/nap",
+  "version": "0.28.0",
+  "description": "The active napplet NAP domains (relay, storage, inc, keys, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent, ble, webrtc, link, count, lists, serial, common, dm) as layered subpath exports",
+  "type": "module",
+  "exports": {
+    "./relay": {
+      "types": "./dist/relay/index.d.ts",
+      "import": "./dist/relay/index.js"
+    },
+    "./relay/types": {
+      "types": "./dist/relay/types.d.ts",
+      "import": "./dist/relay/types.js"
+    },
+    "./relay/shim": {
+      "types": "./dist/relay/shim.d.ts",
+      "import": "./dist/relay/shim.js"
+    },
+    "./relay/sdk": {
+      "types": "./dist/relay/sdk.d.ts",
+      "import": "./dist/relay/sdk.js"
+    },
+    "./storage": {
+      "types": "./dist/storage/index.d.ts",
+      "import": "./dist/storage/index.js"
+    },
+    "./storage/types": {
+      "types": "./dist/storage/types.d.ts",
+      "import": "./dist/storage/types.js"
+    },
+    "./storage/shim": {
+      "types": "./dist/storage/shim.d.ts",
+      "import": "./dist/storage/shim.js"
+    },
+    "./storage/sdk": {
+      "types": "./dist/storage/sdk.d.ts",
+      "import": "./dist/storage/sdk.js"
+    },
+    "./inc": {
+      "types": "./dist/inc/index.d.ts",
+      "import": "./dist/inc/index.js"
+    },
+    "./inc/types": {
+      "types": "./dist/inc/types.d.ts",
+      "import": "./dist/inc/types.js"
+    },
+    "./inc/shim": {
+      "types": "./dist/inc/shim.d.ts",
+      "import": "./dist/inc/shim.js"
+    },
+    "./inc/sdk": {
+      "types": "./dist/inc/sdk.d.ts",
+      "import": "./dist/inc/sdk.js"
+    },
+    "./ifc": {
+      "types": "./dist/ifc/index.d.ts",
+      "import": "./dist/ifc/index.js"
+    },
+    "./ifc/types": {
+      "types": "./dist/ifc/types.d.ts",
+      "import": "./dist/ifc/types.js"
+    },
+    "./ifc/shim": {
+      "types": "./dist/ifc/shim.d.ts",
+      "import": "./dist/ifc/shim.js"
+    },
+    "./ifc/sdk": {
+      "types": "./dist/ifc/sdk.d.ts",
+      "import": "./dist/ifc/sdk.js"
+    },
+    "./keys": {
+      "types": "./dist/keys/index.d.ts",
+      "import": "./dist/keys/index.js"
+    },
+    "./keys/types": {
+      "types": "./dist/keys/types.d.ts",
+      "import": "./dist/keys/types.js"
+    },
+    "./keys/shim": {
+      "types": "./dist/keys/shim.d.ts",
+      "import": "./dist/keys/shim.js"
+    },
+    "./keys/sdk": {
+      "types": "./dist/keys/sdk.d.ts",
+      "import": "./dist/keys/sdk.js"
+    },
+    "./theme": {
+      "types": "./dist/theme/index.d.ts",
+      "import": "./dist/theme/index.js"
+    },
+    "./theme/types": {
+      "types": "./dist/theme/types.d.ts",
+      "import": "./dist/theme/types.js"
+    },
+    "./theme/shim": {
+      "types": "./dist/theme/shim.d.ts",
+      "import": "./dist/theme/shim.js"
+    },
+    "./theme/sdk": {
+      "types": "./dist/theme/sdk.d.ts",
+      "import": "./dist/theme/sdk.js"
+    },
+    "./media": {
+      "types": "./dist/media/index.d.ts",
+      "import": "./dist/media/index.js"
+    },
+    "./media/types": {
+      "types": "./dist/media/types.d.ts",
+      "import": "./dist/media/types.js"
+    },
+    "./media/shim": {
+      "types": "./dist/media/shim.d.ts",
+      "import": "./dist/media/shim.js"
+    },
+    "./media/sdk": {
+      "types": "./dist/media/sdk.d.ts",
+      "import": "./dist/media/sdk.js"
+    },
+    "./notify": {
+      "types": "./dist/notify/index.d.ts",
+      "import": "./dist/notify/index.js"
+    },
+    "./notify/types": {
+      "types": "./dist/notify/types.d.ts",
+      "import": "./dist/notify/types.js"
+    },
+    "./notify/shim": {
+      "types": "./dist/notify/shim.d.ts",
+      "import": "./dist/notify/shim.js"
+    },
+    "./notify/sdk": {
+      "types": "./dist/notify/sdk.d.ts",
+      "import": "./dist/notify/sdk.js"
+    },
+    "./identity": {
+      "types": "./dist/identity/index.d.ts",
+      "import": "./dist/identity/index.js"
+    },
+    "./identity/types": {
+      "types": "./dist/identity/types.d.ts",
+      "import": "./dist/identity/types.js"
+    },
+    "./identity/shim": {
+      "types": "./dist/identity/shim.d.ts",
+      "import": "./dist/identity/shim.js"
+    },
+    "./identity/sdk": {
+      "types": "./dist/identity/sdk.d.ts",
+      "import": "./dist/identity/sdk.js"
+    },
+    "./config": {
+      "types": "./dist/config/index.d.ts",
+      "import": "./dist/config/index.js"
+    },
+    "./config/types": {
+      "types": "./dist/config/types.d.ts",
+      "import": "./dist/config/types.js"
+    },
+    "./config/shim": {
+      "types": "./dist/config/shim.d.ts",
+      "import": "./dist/config/shim.js"
+    },
+    "./config/sdk": {
+      "types": "./dist/config/sdk.d.ts",
+      "import": "./dist/config/sdk.js"
+    },
+    "./resource": {
+      "types": "./dist/resource/index.d.ts",
+      "import": "./dist/resource/index.js"
+    },
+    "./resource/types": {
+      "types": "./dist/resource/types.d.ts",
+      "import": "./dist/resource/types.js"
+    },
+    "./resource/shim": {
+      "types": "./dist/resource/shim.d.ts",
+      "import": "./dist/resource/shim.js"
+    },
+    "./resource/sdk": {
+      "types": "./dist/resource/sdk.d.ts",
+      "import": "./dist/resource/sdk.js"
+    },
+    "./cvm": {
+      "types": "./dist/cvm/index.d.ts",
+      "import": "./dist/cvm/index.js"
+    },
+    "./cvm/types": {
+      "types": "./dist/cvm/types.d.ts",
+      "import": "./dist/cvm/types.js"
+    },
+    "./cvm/shim": {
+      "types": "./dist/cvm/shim.d.ts",
+      "import": "./dist/cvm/shim.js"
+    },
+    "./cvm/sdk": {
+      "types": "./dist/cvm/sdk.d.ts",
+      "import": "./dist/cvm/sdk.js"
+    },
+    "./outbox": {
+      "types": "./dist/outbox/index.d.ts",
+      "import": "./dist/outbox/index.js"
+    },
+    "./outbox/types": {
+      "types": "./dist/outbox/types.d.ts",
+      "import": "./dist/outbox/types.js"
+    },
+    "./outbox/shim": {
+      "types": "./dist/outbox/shim.d.ts",
+      "import": "./dist/outbox/shim.js"
+    },
+    "./outbox/sdk": {
+      "types": "./dist/outbox/sdk.d.ts",
+      "import": "./dist/outbox/sdk.js"
+    },
+    "./upload": {
+      "types": "./dist/upload/index.d.ts",
+      "import": "./dist/upload/index.js"
+    },
+    "./upload/types": {
+      "types": "./dist/upload/types.d.ts",
+      "import": "./dist/upload/types.js"
+    },
+    "./upload/shim": {
+      "types": "./dist/upload/shim.d.ts",
+      "import": "./dist/upload/shim.js"
+    },
+    "./upload/sdk": {
+      "types": "./dist/upload/sdk.d.ts",
+      "import": "./dist/upload/sdk.js"
+    },
+    "./intent": {
+      "types": "./dist/intent/index.d.ts",
+      "import": "./dist/intent/index.js"
+    },
+    "./intent/types": {
+      "types": "./dist/intent/types.d.ts",
+      "import": "./dist/intent/types.js"
+    },
+    "./intent/shim": {
+      "types": "./dist/intent/shim.d.ts",
+      "import": "./dist/intent/shim.js"
+    },
+    "./intent/sdk": {
+      "types": "./dist/intent/sdk.d.ts",
+      "import": "./dist/intent/sdk.js"
+    },
+    "./ble": {
+      "types": "./dist/ble/index.d.ts",
+      "import": "./dist/ble/index.js"
+    },
+    "./ble/types": {
+      "types": "./dist/ble/types.d.ts",
+      "import": "./dist/ble/types.js"
+    },
+    "./ble/shim": {
+      "types": "./dist/ble/shim.d.ts",
+      "import": "./dist/ble/shim.js"
+    },
+    "./ble/sdk": {
+      "types": "./dist/ble/sdk.d.ts",
+      "import": "./dist/ble/sdk.js"
+    },
+    "./webrtc": {
+      "types": "./dist/webrtc/index.d.ts",
+      "import": "./dist/webrtc/index.js"
+    },
+    "./webrtc/types": {
+      "types": "./dist/webrtc/types.d.ts",
+      "import": "./dist/webrtc/types.js"
+    },
+    "./webrtc/shim": {
+      "types": "./dist/webrtc/shim.d.ts",
+      "import": "./dist/webrtc/shim.js"
+    },
+    "./webrtc/sdk": {
+      "types": "./dist/webrtc/sdk.d.ts",
+      "import": "./dist/webrtc/sdk.js"
+    },
+    "./link": {
+      "types": "./dist/link/index.d.ts",
+      "import": "./dist/link/index.js"
+    },
+    "./link/types": {
+      "types": "./dist/link/types.d.ts",
+      "import": "./dist/link/types.js"
+    },
+    "./link/shim": {
+      "types": "./dist/link/shim.d.ts",
+      "import": "./dist/link/shim.js"
+    },
+    "./link/sdk": {
+      "types": "./dist/link/sdk.d.ts",
+      "import": "./dist/link/sdk.js"
+    },
+    "./count": {
+      "types": "./dist/count/index.d.ts",
+      "import": "./dist/count/index.js"
+    },
+    "./count/types": {
+      "types": "./dist/count/types.d.ts",
+      "import": "./dist/count/types.js"
+    },
+    "./count/shim": {
+      "types": "./dist/count/shim.d.ts",
+      "import": "./dist/count/shim.js"
+    },
+    "./count/sdk": {
+      "types": "./dist/count/sdk.d.ts",
+      "import": "./dist/count/sdk.js"
+    },
+    "./lists": {
+      "types": "./dist/lists/index.d.ts",
+      "import": "./dist/lists/index.js"
+    },
+    "./lists/types": {
+      "types": "./dist/lists/types.d.ts",
+      "import": "./dist/lists/types.js"
+    },
+    "./lists/shim": {
+      "types": "./dist/lists/shim.d.ts",
+      "import": "./dist/lists/shim.js"
+    },
+    "./lists/sdk": {
+      "types": "./dist/lists/sdk.d.ts",
+      "import": "./dist/lists/sdk.js"
+    },
+    "./common": {
+      "types": "./dist/common/index.d.ts",
+      "import": "./dist/common/index.js"
+    },
+    "./common/types": {
+      "types": "./dist/common/types.d.ts",
+      "import": "./dist/common/types.js"
+    },
+    "./common/shim": {
+      "types": "./dist/common/shim.d.ts",
+      "import": "./dist/common/shim.js"
+    },
+    "./common/sdk": {
+      "types": "./dist/common/sdk.d.ts",
+      "import": "./dist/common/sdk.js"
+    },
+    "./serial": {
+      "types": "./dist/serial/index.d.ts",
+      "import": "./dist/serial/index.js"
+    },
+    "./serial/types": {
+      "types": "./dist/serial/types.d.ts",
+      "import": "./dist/serial/types.js"
+    },
+    "./serial/shim": {
+      "types": "./dist/serial/shim.d.ts",
+      "import": "./dist/serial/shim.js"
+    },
+    "./serial/sdk": {
+      "types": "./dist/serial/sdk.d.ts",
+      "import": "./dist/serial/sdk.js"
+    },
+    "./dm": {
+      "types": "./dist/dm/index.d.ts",
+      "import": "./dist/dm/index.js"
+    },
+    "./dm/types": {
+      "types": "./dist/dm/types.d.ts",
+      "import": "./dist/dm/types.js"
+    },
+    "./dm/shim": {
+      "types": "./dist/dm/shim.d.ts",
+      "import": "./dist/dm/shim.js"
+    },
+    "./dm/sdk": {
+      "types": "./dist/dm/sdk.d.ts",
+      "import": "./dist/dm/sdk.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@napplet/core": "workspace:^"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.2"
+  },
+  "peerDependencies": {
+    "json-schema-to-ts": "^3.1.1"
+  },
+  "peerDependenciesMeta": {
+    "json-schema-to-ts": {
+      "optional": true
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "type-check": "tsc --noEmit",
+    "test:unit": "vitest run"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sandwichfarm/napplet.git",
+    "directory": "packages/nap"
+  },
+  "keywords": [
+    "nostr",
+    "napplet",
+    "nap"
+  ]
+}

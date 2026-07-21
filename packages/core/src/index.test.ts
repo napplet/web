@@ -1,10 +1,18 @@
 import { describe, it, expect } from 'vitest';
 import {
+  NAP_DOMAINS,
   TOPICS,
 } from './index.js';
 
 // Type-level imports (compile check — if this file compiles, types are exported)
-import type { NostrEvent, NostrFilter, TopicKey, TopicValue, NamespacedCapability, ShellSupports } from './index.js';
+import type {
+  NapDomain,
+  NostrEvent,
+  NostrFilter,
+  TopicKey,
+  TopicValue,
+  NappletGlobal,
+} from './index.js';
 
 describe('@napplet/core exports', () => {
   describe('TOPICS', () => {
@@ -31,40 +39,49 @@ describe('@napplet/core exports', () => {
     });
   });
 
-  describe('namespaced capability types', () => {
-    it('NamespacedCapability accepts bare NUB domain shorthand', () => {
-      // Compile check: bare NUB domain strings are valid (per D-02)
-      const _relay: NamespacedCapability = 'relay';
-      const _storage: NamespacedCapability = 'storage';
-      const _ifc: NamespacedCapability = 'ifc';
-      const _theme: NamespacedCapability = 'theme';
-      const _media: NamespacedCapability = 'media';
-      expect(true).toBe(true);
+  describe('runtime-injected domain types', () => {
+    it('exports NAP domain names', () => {
+      const napDomain: NapDomain = 'identity';
+      expect(NAP_DOMAINS).toContain(napDomain);
+      expect(napDomain).toBe('identity');
+      expect(NAP_DOMAINS).toContain('webrtc');
+      expect(NAP_DOMAINS).toContain('ble');
+      expect(NAP_DOMAINS).toContain('serial');
+      expect(NAP_DOMAINS).toContain('lists');
+      expect(NAP_DOMAINS).toContain('common');
+      expect(NAP_DOMAINS).toContain('dm');
+      expect(NAP_DOMAINS).toContain('count');
     });
 
-    it('NamespacedCapability accepts nub: prefixed domains', () => {
-      // Compile check: explicit NUB prefix
-      const _nubRelay: NamespacedCapability = 'nub:relay';
-      const _nubStorage: NamespacedCapability = 'nub:storage';
-      const _nubIfc: NamespacedCapability = 'nub:ifc';
-      const _nubTheme: NamespacedCapability = 'nub:theme';
-      const _nubMedia: NamespacedCapability = 'nub:media';
-      expect(true).toBe(true);
-    });
+    it('NappletGlobal represents domain availability by property presence', () => {
+      const napplet: NappletGlobal = {};
+      expect(napplet.relay).toBeUndefined();
 
-    it('NamespacedCapability accepts perm: prefixed strings', () => {
-      // Compile check: permission prefix (per D-03)
-      const _permSign: NamespacedCapability = 'perm:sign';
-      const _permPopups: NamespacedCapability = 'perm:popups';
-      expect(true).toBe(true);
-    });
-
-    it('ShellSupports.supports() accepts NamespacedCapability', () => {
-      // Compile check: the interface method accepts all forms
-      const shell: ShellSupports = { supports: () => false };
-      expect(shell.supports('relay')).toBe(false);
-      expect(shell.supports('nub:relay')).toBe(false);
-      expect(shell.supports('perm:sign')).toBe(false);
+      const injected: NappletGlobal = {
+        relay: {
+          subscribe: () => ({ close() { /* noop */ } }),
+          publish: async () => ({
+            id: '',
+            pubkey: '',
+            created_at: 0,
+            kind: 1,
+            tags: [],
+            content: '',
+            sig: '',
+          }),
+          publishEncrypted: async () => ({
+            id: '',
+            pubkey: '',
+            created_at: 0,
+            kind: 4,
+            tags: [],
+            content: '',
+            sig: '',
+          }),
+          query: async () => [],
+        } satisfies NonNullable<NappletGlobal['relay']>,
+      };
+      expect(typeof injected.relay?.query).toBe('function');
     });
   });
 });

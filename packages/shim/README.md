@@ -1,21 +1,8 @@
 # @napplet/shim
 
-> Side-effect-only window installer for napplet iframes. Importing `@napplet/shim` installs the `window.napplet` global. No named exports. No cryptographic dependencies -- the shim sends JSON envelope messages and the shell handles identity.
+> Runtime injection helper for napplet iframes. It installs selected `window.napplet` domain objects. No cryptographic dependencies -- the shim sends JSON envelope messages and the shell handles identity.
 
 ## Getting Started
-
-For new napplets, start with the CLI instead of installing this package by hand:
-
-```bash
-pnpm add -g @napplet/cli
-napplet init my-napplet
-cd my-napplet
-pnpm install
-napplet doctor
-napplet skills install
-```
-
-Use the manual setup below only when adapting an existing app. In that case, run `napplet configure` first so `.napplet/napplet.json` owns title, type, class, connect origins, build, and deploy settings.
 
 ### Prerequisites
 
@@ -23,9 +10,9 @@ Use the manual setup below only when adapting an existing app. In that case, run
 
 ### How It Works
 
-1. Import `@napplet/shim` in your napplet's entry point (side-effect only -- no named exports)
-2. The shim registers with the shell via postMessage -- the shell assigns identity based on the iframe's `message.source` Window reference
-3. Once registered, `window.napplet` is populated with relay, ifc, storage, keys, media, notify, identity, config, resource, connect, class, and shell sub-objects
+1. A runtime injects the prelude before napplet scripts execute
+2. The runtime chooses which NAP domain objects to expose
+3. `window.napplet` is populated with the selected domain objects
 4. No `window.nostr` is installed -- signing and encryption are mediated by the shell via `relay.publish()` and `relay.publishEncrypted()`
 
 ### Installation
@@ -36,9 +23,47 @@ npm install @napplet/shim
 
 ## Quick Start
 
+### Host-injected srcdoc prelude
+
+Shells that construct `iframe.srcdoc` should use the npm package's browser
+prelude artifact instead of requiring each napplet bundle to import the shim.
+The prelude requires an explicit domain allowlist and installs only those
+callable `window.napplet.<domain>` objects.
+
 ```ts
-// Side-effect import -- installs window.napplet (no window.nostr)
-import '@napplet/shim';
+import { readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
+import { renderNappletRuntimePreludeCall } from '@napplet/shim/prelude';
+
+const require = createRequire(import.meta.url);
+const preludePath = require.resolve('@napplet/shim/prelude.global');
+const preludeSource = readFileSync(preludePath, 'utf8');
+const activatePrelude = renderNappletRuntimePreludeCall({
+  domains: ['identity', 'storage', 'outbox'],
+});
+
+const srcdoc = html.replace(
+  '<head>',
+  `<head><script>${preludeSource}\n${activatePrelude}</script>`,
+);
+```
+
+The global artifact exposes `globalThis.NappletShimPrelude.install({ domains })`.
+`@napplet/shim/prelude` also exports `installNappletRuntimePrelude()` for
+bundled host runtimes that can import ESM directly. JSR publishes the source ESM
+helpers under `@napplet/shim/prelude`; the generated `prelude.global` artifact
+is npm-only.
+
+### Module import compatibility
+
+The root `@napplet/shim` entry still keeps the older side-effect behavior for
+tests and runtimes that already bundle the shim module.
+
+```ts
+import { installNappletGlobal } from '@napplet/shim';
+
+// Runtime-side injection before napplet scripts execute.
+installNappletGlobal({ domains: ['relay', 'storage', 'identity', 'inc'] });
 
 // Subscribe to kind 1 notes
 const sub = window.napplet.relay.subscribe(
@@ -55,8 +80,8 @@ const signed = await window.napplet.relay.publish({
   created_at: Math.floor(Date.now() / 1000),
 });
 
-// Listen for inter-frame events from other napplets
-const ifcSub = window.napplet.ifc.on('profile:open', (payload) => {
+// Listen for inter-napplet events from other napplets
+const incSub = window.napplet.inc.on('profile:open', (payload) => {
   console.log('Profile requested:', payload);
 });
 
@@ -76,7 +101,8 @@ const keySub = window.napplet.keys.onAction('editor.save', () => {
 
 // Create a media session
 const { sessionId } = await window.napplet.media.createSession({
-  title: 'My Song', artist: 'The Artist',
+  owner: 'napplet',
+  metadata: { title: 'My Song', artist: 'The Artist' },
 });
 
 // Report playback state
@@ -105,6 +131,9 @@ const notifySub = window.napplet.notify.onAction((notifId, actionId) => {
 // Get user identity (read-only)
 const pubkey = await window.napplet.identity.getPublicKey();
 const profile = await window.napplet.identity.getProfile();
+const identitySub = window.napplet.identity.onChanged((nextPubkey) => {
+  console.log(nextPubkey || 'signed out');
+});
 
 // Read per-napplet config (validated + defaulted by the shell)
 const config = await window.napplet.config.get();
@@ -117,29 +146,44 @@ window.napplet.config.openSettings({ section: 'appearance' });
 
 // Fetch external bytes via the shell (CSP blocks direct <img src=externalUrl> / fetch())
 const avatarBlob = await window.napplet.resource.bytes('https://example.com/avatar.png');
+const resourceItems = await window.napplet.resource.bytesMany([
+  'https://example.com/avatar.png',
+  'blossom:sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+]);
 const handle = window.napplet.resource.bytesAsObjectURL('blossom:sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855');
 imgEl.src = handle.url;
 // later: handle.revoke();
 
-// Check the shell-assigned class (undefined if shell doesn't implement nap:class)
-if (window.napplet.shell.supports('nap:class')) {
-  const cls = window.napplet.class;
-  if (cls === 2) { /* user-approved explicit-origin posture */ }
-}
-
-// Use direct network access if the user approved `connect` origins at build time
-if (window.napplet.connect.granted) {
-  const res = await fetch(`${window.napplet.connect.origins[0]}/items`);
-  const data = await res.json();
-}
+// Open a shell-mediated WebRTC data session
+const { session } = await window.napplet.webrtc.open({
+  scope: { type: 'direct', pubkey: 'abc123...' },
+});
+await window.napplet.webrtc.send(session.id, { body: 'hello' });
+// Open a shell-mediated BLE session
+const { session: bleSession } = await window.napplet.ble.open({ acceptAllDevices: true });
+const bleServices = await window.napplet.ble.services(bleSession.id);
+// Open an external URL through shell policy and opener isolation
+await window.napplet.link.open('https://example.com/post/123', { label: 'Read post' });
+// Mutate a supported NIP-51 list through the runtime
+await window.napplet.lists.add({ type: 'mute-list' }, [
+  { itemType: 'pubkey', value: 'abc123...' },
+]);
+// Open a shell-mediated serial session
+const serialSession = await window.napplet.serial.open({ options: { baudRate: 115200 } });
+await window.napplet.serial.write(serialSession.id, [112, 105, 110, 103, 10]);
+const serialSub = window.napplet.serial.onEvent((event) => {
+  console.log('serial event', event);
+});
 
 // Clean up
 sub.close();
-ifcSub.close();
+incSub.close();
+identitySub.close();
 keySub.close();
 mediaSub.close();
 notifySub.close();
 configSub.close();
+serialSub.close();
 ```
 
 ## Wire Format
@@ -148,7 +192,12 @@ The shim communicates with the shell using JSON envelope messages (`{ type: "dom
 
 ### Outbound (napplet → shell)
 
-Messages sent via `window.parent.postMessage(msg, '*')`:
+Messages are posted to the shell through `@napplet/core`'s clone-safe
+`sendEnvelope(window.parent, msg)` boundary. Framework reactive values (Svelte 5
+`$state`, Vue `reactive`, Solid stores) that aren't structured-cloneable are
+snapshotted on the failure path instead of throwing a swallowed `DataCloneError`
+— see [`@napplet/core` boundary helpers](../core/README.md#boundary-helpers-clone-safety).
+The wire payloads are unchanged plain envelopes:
 
 ```ts
 { type: 'relay.subscribe', id: string, subId: string, filters: NostrFilter[] }
@@ -158,6 +207,7 @@ Messages sent via `window.parent.postMessage(msg, '*')`:
 { type: 'relay.unsubscribe', subId: string }
 
 { type: 'identity.getPublicKey', id: string }
+{ type: 'identity.changed', pubkey: string }
 { type: 'identity.getRelays', id: string }
 { type: 'identity.getProfile', id: string }
 { type: 'identity.getFollows', id: string }
@@ -167,24 +217,25 @@ Messages sent via `window.parent.postMessage(msg, '*')`:
 { type: 'identity.getBlocked', id: string }
 { type: 'identity.getBadges', id: string }
 
-{ type: 'ifc.emit', topic: string, payload?: unknown }
-{ type: 'ifc.subscribe', id: string, topic: string }
-{ type: 'ifc.unsubscribe', topic: string }
+{ type: 'inc.emit', topic: string, payload?: unknown }
+{ type: 'inc.subscribe', id: string, topic: string }
+{ type: 'inc.unsubscribe', topic: string }
 
-{ type: 'storage.get', id: string, key: string }
-{ type: 'storage.set', id: string, key: string, value: string }
-{ type: 'storage.remove', id: string, key: string }
-{ type: 'storage.keys', id: string }
+{ type: 'storage.get', id: string, key: string, scope?: 'shared' | 'instance' }
+{ type: 'storage.set', id: string, key: string, value: string, scope?: 'shared' | 'instance' }
+{ type: 'storage.remove', id: string, key: string, scope?: 'shared' | 'instance' }
+{ type: 'storage.keys', id: string, scope?: 'shared' | 'instance' }
 
 { type: 'keys.forward', key: string, code: string, ctrl: boolean, alt: boolean, shift: boolean, meta: boolean }
 { type: 'keys.registerAction', id: string, action: { id: string, label: string, defaultKey?: string } }
 { type: 'keys.unregisterAction', actionId: string }
 
-{ type: 'media.session.create', id: string, sessionId: string, metadata?: object }
+{ type: 'media.session.create', id: string, owner: 'shell' | 'napplet', sessionId?: string, source?: object, metadata?: object, capabilities?: string[], autoplay?: boolean, live?: boolean }
 { type: 'media.session.update', sessionId: string, metadata: object }
 { type: 'media.session.destroy', sessionId: string }
 { type: 'media.state', sessionId: string, status: string, position?: number, duration?: number, volume?: number }
 { type: 'media.capabilities', sessionId: string, actions: string[] }
+{ type: 'media.command', sessionId: string, action: string, value?: number }
 
 { type: 'notify.send', id: string, title: string, body?: string, icon?: string, actions?: object[], channel?: string, priority?: string }
 { type: 'notify.dismiss', notificationId: string }
@@ -199,9 +250,16 @@ Messages sent via `window.parent.postMessage(msg, '*')`:
 { type: 'config.openSettings', section?: string }
 
 { type: 'resource.bytes', id: string, url: string }
+{ type: 'resource.bytesMany', id: string, urls: string[] }
 { type: 'resource.cancel', id: string }
 
-// (NAP-CONNECT has no postMessage wire — grants flow via CSP header + <meta name="napplet-connect-granted">)
+{ type: 'link.open', id: string, url: string, options?: { label?: string } }
+{ type: 'lists.supported', id: string }
+{ type: 'lists.add', id: string, list: object, items: object[], options?: object }
+{ type: 'lists.remove', id: string, list: object, items: object[], options?: object }
+{ type: 'serial.open', id: string, request: object }
+{ type: 'serial.write', id: string, sessionId: string, data: number[] }
+{ type: 'serial.close', id: string, sessionId: string, reason?: string }
 ```
 
 ### Inbound (shell → napplet)
@@ -209,11 +267,11 @@ Messages sent via `window.parent.postMessage(msg, '*')`:
 Messages received via `window.addEventListener('message', ...)`:
 
 ```ts
-{ type: 'relay.event', subId: string, event: NostrEvent }
+{ type: 'relay.event', subId: string, result: RelayEventResult }
 { type: 'relay.eose', subId: string }
 { type: 'relay.publish.result', id: string, ok: boolean, event?: NostrEvent, error?: string }
 { type: 'relay.publishEncrypted.result', id: string, ok: boolean, event?: NostrEvent, error?: string }
-{ type: 'relay.query.result', id: string, events: NostrEvent[], error?: string }
+{ type: 'relay.query.result', id: string, events: RelayEventResult[], error?: string }
 
 { type: 'identity.getPublicKey.result', id: string, pubkey: string }
 { type: 'identity.getRelays.result', id: string, relays: Record<string, { read: boolean, write: boolean }>, error?: string }
@@ -225,7 +283,7 @@ Messages received via `window.addEventListener('message', ...)`:
 { type: 'identity.getBlocked.result', id: string, pubkeys: string[], error?: string }
 { type: 'identity.getBadges.result', id: string, badges: object[], error?: string }
 
-{ type: 'ifc.event', topic: string, payload?: unknown, sender: string }
+{ type: 'inc.event', topic: string, payload?: unknown, sender: string }
 
 { type: 'storage.get.result', id: string, value?: string | null, error?: string }
 { type: 'storage.set.result', id: string, error?: string }
@@ -236,9 +294,11 @@ Messages received via `window.addEventListener('message', ...)`:
 { type: 'keys.bindings', bindings: Array<{ actionId: string, key: string }> }
 { type: 'keys.action', actionId: string }
 
-{ type: 'media.session.create.result', id: string, sessionId: string, error?: string }
+{ type: 'media.session.create.result', id: string, sessionId?: string, owner?: 'shell' | 'napplet', error?: string }
+{ type: 'media.state', sessionId: string, status: string, position?: number, duration?: number, volume?: number }
+{ type: 'media.capabilities', sessionId: string, actions: string[] }
 { type: 'media.command', sessionId: string, action: string, value?: number }
-{ type: 'media.controls', controls: string[] }
+{ type: 'media.controls', sessionId: string, controls: string[] }
 
 { type: 'notify.send.result', id: string, notificationId?: string, error?: string }
 { type: 'notify.permission.result', id: string, granted: boolean }
@@ -252,16 +312,21 @@ Messages received via `window.addEventListener('message', ...)`:
 { type: 'config.schemaError', code: string, error: string }
 
 { type: 'resource.bytes.result', id: string, blob: Blob, mime: string }
-{ type: 'resource.bytes.error', id: string, error: 'not-found' | 'blocked-by-policy' | 'timeout' | 'too-large' | 'unsupported-scheme' | 'decode-failed' | 'network-error' | 'quota-exceeded', message?: string }
+{ type: 'resource.bytes.error', id: string, error: 'invalid-request' | 'not-found' | 'blocked-by-policy' | 'timeout' | 'too-large' | 'unsupported-scheme' | 'decode-failed' | 'network-error' | 'quota-exceeded', message?: string }
+{ type: 'resource.bytesMany.result', id: string, items: ResourceBytesItem[] }
+{ type: 'resource.bytesMany.error', id: string, error: 'invalid-request' | 'not-found' | 'blocked-by-policy' | 'timeout' | 'too-large' | 'unsupported-scheme' | 'decode-failed' | 'network-error' | 'quota-exceeded', message?: string }
 
-{ type: 'class.assigned', id: string, class: number }
+{ type: 'link.open.result', id: string, status: 'opened' | 'denied', error?: string }
+{ type: 'lists.supported.result', id: string, lists?: object[], error?: string }
+{ type: 'lists.add.result', id: string, ok: boolean, eventId?: string, added?: number, skipped?: number, error?: string, reason?: string, supported?: object[] }
+{ type: 'lists.remove.result', id: string, ok: boolean, eventId?: string, removed?: number, skipped?: number, error?: string, reason?: string, supported?: object[] }
 ```
 
 All request/response pairs are correlated by the `id` field. Identity request timeouts after 30 seconds.
 
 ## `window.napplet` Shape
 
-After `import '@napplet/shim'`, the global `window.napplet` object has the following structure:
+After runtime injection, the global `window.napplet` object has the following structure:
 
 ```ts
 window.napplet = {
@@ -269,9 +334,9 @@ window.napplet = {
     subscribe(filters, onEvent, onEose, options?): Subscription;
     publish(template, options?): Promise<NostrEvent>;
     publishEncrypted(template, recipient, encryption?): Promise<NostrEvent>;
-    query(filters): Promise<NostrEvent[]>;
+    query(filters): Promise<RelayEventResult[]>;
   },
-  ifc: {
+  inc: {
     emit(topic, extraTags?, content?): void;
     on(topic, callback): { close(): void };
   },
@@ -280,6 +345,12 @@ window.napplet = {
     setItem(key, value): Promise<void>;
     removeItem(key): Promise<void>;
     keys(): Promise<string[]>;
+    instance: {
+      getItem(key): Promise<string | null>;
+      setItem(key, value): Promise<void>;
+      removeItem(key): Promise<void>;
+      keys(): Promise<string[]>;
+    };
   },
   keys: {
     registerAction(action): Promise<{ actionId: string; binding?: string }>;
@@ -287,12 +358,15 @@ window.napplet = {
     onAction(actionId, callback): { close(): void };
   },
   media: {
-    createSession(metadata?): Promise<{ sessionId: string }>;
+    createSession(options): Promise<{ sessionId?: string; owner?: 'shell' | 'napplet'; error?: string }>;
     updateSession(sessionId, metadata): void;
     destroySession(sessionId): void;
     reportState(sessionId, state): void;
     reportCapabilities(sessionId, actions): void;
+    sendCommand(sessionId, action, value?): void;
     onCommand(sessionId, callback): { close(): void };
+    onState(sessionId, callback): { close(): void };
+    onCapabilities(sessionId, callback): { close(): void };
     onControls(sessionId, callback): { close(): void };
   },
   notify: {
@@ -308,6 +382,7 @@ window.napplet = {
   },
   identity: {
     getPublicKey(): Promise<string>;
+    onChanged(handler): { close(): void };
     getRelays(): Promise<Record<string, { read: boolean; write: boolean }>>;
     getProfile(): Promise<object | null>;
     getFollows(): Promise<string[]>;
@@ -327,18 +402,22 @@ window.napplet = {
   },
   resource: {
     bytes(url, opts?): Promise<Blob>;
+    bytesMany(urls, opts?): Promise<ResourceBytesItem[]>;
     bytesAsObjectURL(url): { url: string; revoke: () => void };
   },
-  connect: {
-    readonly granted: boolean;
-    readonly origins: readonly string[];
+  link: {
+    open(url, options?): Promise<{ status: 'opened' | 'denied' }>;
   },
-  class?: number,   // shell-assigned via class.assigned envelope; undefined on shells without nap:class
-  shell: {
-    supports(capability: NamespacedCapability): boolean;
+  lists: {
+    supported(): Promise<ListSupport[]>;
+    add(list, items, options?): Promise<ListMutationResult>;
+    remove(list, items, options?): Promise<ListMutationResult>;
   },
 };
 ```
+
+No generic `shell` object is installed. Runtime capability is represented by
+which NAP domain properties the host injects.
 
 ### `window.napplet.relay`
 
@@ -346,19 +425,19 @@ Relay operations through the shell's relay pool via JSON envelope (relay.subscri
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| `subscribe(filters, onEvent, onEose, options?)` | `Subscription` | Open a relay subscription via JSON envelope. `options.relay` and `options.group` for NIP-29 scoped relays. |
+| `subscribe(filters, onEvent, onEose, options?)` | `Subscription` | Open a relay subscription via JSON envelope. `onEvent` receives `RelayEventResult`. `options.relay` and `options.group` target scoped relays. |
 | `publish(template, options?)` | `Promise<NostrEvent>` | Send an event template to the shell for signing and broadcast. |
 | `publishEncrypted(template, recipient, encryption?)` | `Promise<NostrEvent>` | Send an event template to the shell for encryption, signing, and broadcast. NIP-44 default. |
-| `query(filters)` | `Promise<NostrEvent[]>` | One-shot query: sends a relay.query envelope, resolves when results arrive. |
+| `query(filters)` | `Promise<RelayEventResult[]>` | One-shot query: sends a relay.query envelope, resolves when result records arrive. |
 
-### `window.napplet.ifc`
+### `window.napplet.inc`
 
-Inter-frame communication between napplets via the shell.
+Inter-napplet communication between napplets via the shell.
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| `emit(topic, extraTags?, content?)` | `void` | Send an `ifc.emit` JSON envelope to the shell for delivery to matching topic subscribers. |
-| `on(topic, callback)` | `{ close(): void }` | Subscribe to `ifc.event` JSON envelopes on a topic. Callback receives `(payload, event)`. |
+| `emit(topic, extraTags?, content?)` | `void` | Send an `inc.emit` JSON envelope to the shell for delivery to matching topic subscribers. |
+| `on(topic, callback)` | `{ close(): void }` | Subscribe to `inc.event` JSON envelopes on a topic. Callback receives `(payload, event)`. |
 
 ### `window.napplet.storage`
 
@@ -370,6 +449,7 @@ Sandboxed key-value storage proxied through the shell. Scoped by napplet identit
 | `setItem(key, value)` | `Promise<void>` | Store a key-value pair. Throws on quota exceeded. |
 | `removeItem(key)` | `Promise<void>` | Remove a stored key. |
 | `keys()` | `Promise<string[]>` | List all keys stored by this napplet. |
+| `instance.getItem/setItem/removeItem/keys` | (same as above) | Per-instance storage scope — same surface, scoped to this napplet instance (sets `scope: "instance"` on the wire). See NAP-STORAGE. |
 
 ### `window.napplet.keys`
 
@@ -391,17 +471,20 @@ Smart forwarding rules:
 
 ### `window.napplet.media`
 
-Media session control. Create sessions, report playback state and metadata, declare capabilities, and receive commands from the shell.
+Ownership-aware media session control. Napplet-owned sessions report playback state and receive shell commands; shell-owned sessions provide a source and receive shell-reported state/capabilities.
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| `createSession(metadata?)` | `Promise<{ sessionId }>` | Create a new media session with optional metadata. |
+| `createSession(options)` | `Promise<{ sessionId?, owner?, error? }>` | Create a napplet- or shell-owned media session. |
 | `updateSession(sessionId, metadata)` | `void` | Update metadata for an existing session. Fire-and-forget. |
 | `destroySession(sessionId)` | `void` | Destroy a session. Fire-and-forget. |
 | `reportState(sessionId, state)` | `void` | Report playback state (status, position, duration, volume). |
 | `reportCapabilities(sessionId, actions)` | `void` | Declare supported media actions (dynamic). |
+| `sendCommand(sessionId, action, value?)` | `void` | Request a control action from the current playback owner. |
 | `onCommand(sessionId, callback)` | `{ close(): void }` | Listen for shell media commands (play, pause, seek, volume, etc.). |
-| `onControls(sessionId, callback)` | `{ close(): void }` | Listen for the shell's supported control list. |
+| `onState(sessionId, callback)` | `{ close(): void }` | Listen for shell-reported state on shell-owned sessions. |
+| `onCapabilities(sessionId, callback)` | `{ close(): void }` | Listen for shell-reported capabilities on shell-owned sessions. |
+| `onControls(sessionId, callback)` | `{ close(): void }` | Listen for the shell's session-scoped supported control list. |
 
 ### `window.napplet.notify`
 
@@ -434,92 +517,43 @@ Per-napplet declarative configuration (NAP-CONFIG). The shell is the sole writer
 
 ### `window.napplet.resource`
 
-Sandboxed byte fetching. The iframe sandbox (no `allow-same-origin`) plus strict CSP (no `connect-src`) means napplets cannot fetch external URLs directly — `<img src="https://...">`, `fetch()`, and `XMLHttpRequest` are all blocked by the browser. Use `resource.bytes(url)` to fetch any external resource through the shell.
+Sandboxed byte fetching. The iframe sandbox (no `allow-same-origin`) plus strict CSP (no `connect-src`) means napplets cannot fetch external URLs directly — `<img src="https://...">`, `fetch()`, and `XMLHttpRequest` are all blocked by the browser. Use `resource.bytes(url)` or `resource.bytesMany(urls)` to fetch external resources through the shell.
 
 | Method | Returns | Description |
 |--------|---------|-------------|
 | `bytes(url, opts?)` | `Promise<Blob>` | Fetch bytes for a URL via the shell. `opts.signal` accepts an `AbortSignal` for cancellation. |
+| `bytesMany(urls, opts?)` | `Promise<ResourceBytesItem[]>` | Fetch many URLs through one envelope. Items preserve input order and length. |
 | `bytesAsObjectURL(url)` | `{ url: string; revoke: () => void }` | Synchronous handle whose `url` resolves to a blob URL once the underlying fetch completes. Caller MUST `revoke()` when done. |
 
-Four canonical schemes: `data:` (decoded in-shim), `https:` (shell-side network with policy), `blossom:sha256:<hex>` (hash-verified), `nostr:<bech32>` (single-hop NIP-19 resolution).
+Canonical schemes: `data:` (decoded in-shim), `https:` (shell-side network with policy), `blossom:sha256:<hex>` (hash-verified), `htree:` (Hashtree-verified), `nostr:<bech32>` (single-hop NIP-19 resolution).
 
 Errors reject the Promise with one of 8 codes: `not-found`, `blocked-by-policy`, `timeout`, `too-large`, `unsupported-scheme`, `decode-failed`, `network-error`, `quota-exceeded`.
 
 Capability detection:
 
 ```ts
-if (window.napplet.shell.supports('nap:resource')) { /* ... */ }
-if (window.napplet.shell.supports('resource:scheme:blossom')) { /* ... */ }
-if (window.napplet.shell.supports('perm:strict-csp')) { /* shell enforces strict CSP */ }
+if (window.napplet?.resource) { /* shell offers the resource NAP */ }
 ```
 
-### `window.napplet.connect`
+### Runtime-injected domains
 
-User-gated direct network access (NAP-CONNECT). NO postMessage wire — the shim reads `<meta name="napplet-connect-granted" content="<space-separated-origins>">` synchronously at install time. Napplets declare required origins at build time via `@napplet/vite-plugin`'s `connect: string[]` option; the user is prompted by the shell at first load per `(dTag, aggregateHash)`; on approval the shell emits a runtime CSP whose `connect-src` contains the approved origins AND injects the discovery meta tag.
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `granted` | `boolean` | `true` when the user approved all declared origins for this `(dTag, aggregateHash)`. `false` on denial, on shells without `nap:connect`, or pre-injection. |
-| `origins` | `readonly string[]` | The user-approved origins (already normalized per the shared `normalizeConnectOrigin` validator). Empty on denial. |
-
-**Graceful-degradation default:** `window.napplet.connect === { granted: false, origins: [] }` on shells that do not advertise `nap:connect` or have not injected the meta tag. The property is NEVER `undefined`.
+Domain properties are the availability signal:
 
 ```ts
-if (window.napplet.shell.supports('nap:connect') && window.napplet.connect.granted) {
-  // Direct fetch / WebSocket to window.napplet.connect.origins is permitted.
-} else {
-  // Fall back to window.napplet.resource.bytes(url) for read-only byte fetches.
-}
+if (window.napplet?.relay) { /* relay API available */ }
+if (window.napplet?.resource) { /* resource API available */ }
+if (!window.napplet?.media) { /* render fallback */ }
 ```
-
-Capability detection (operator-policy refinements):
-
-```ts
-if (window.napplet.shell.supports('connect:scheme:http')) { /* cleartext http: origins permitted */ }
-if (window.napplet.shell.supports('connect:scheme:ws'))   { /* cleartext ws: origins permitted */ }
-```
-
-### `window.napplet.class`
-
-Shell-assigned integer class (NAP-CLASS). The shell sends exactly one `class.assigned` envelope per napplet lifecycle at iframe-ready time; the shim writes the integer to `window.napplet.class` via a `defineProperty` getter.
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `class` | `number \| undefined` | The class integer from the `class.assigned` envelope. `undefined` until the envelope arrives, or permanently `undefined` on shells that do not implement `nap:class`. |
-
-**Graceful-degradation default:** `window.napplet.class === undefined` on shells without `nap:class`, or before the wire envelope arrives. Never `0`, never `null`. Napplets SHOULD check `shell.supports('nap:class')` before branching on the value to distinguish "shell doesn't implement" from "envelope hasn't arrived yet".
-
-v0.29.0 ships two track members:
-- `class: 1` → NAP-CLASS-1 (strict baseline; `connect-src 'none'`)
-- `class: 2` → NAP-CLASS-2 (user-approved explicit-origin; `connect-src <granted-origins>`)
-
-The class integer is informational to the napplet; the shell enforces the posture via the CSP it serves with the HTML. Napplet code MUST NOT attempt to infer its own class from observed CSP or other signals — only `class.assigned` is authoritative.
-
-### `window.napplet.shell`
-
-Namespaced capability query. `supports()` checks whether the shell declared support for a NAP domain or permission.
-
-```ts
-// NAP domains (bare shorthand or nap: prefix)
-window.napplet.shell.supports('relay');         // bare shorthand
-window.napplet.shell.supports('nap:identity');  // explicit prefix
-
-// Permissions
-window.napplet.shell.supports('perm:popups');
-```
-
-Currently returns `false` until the shell populates it at iframe creation time. Use as a feature gate before calling APIs that depend on a specific capability.
 
 ## TypeScript Support
 
-Importing `@napplet/shim` installs `window.napplet` at runtime. The package does
+The runtime installs `window.napplet` before napplet code runs. The package does
 not modify global `Window` types in its published source so it can be accepted by
 JSR. For direct `window.napplet` access, use `NappletGlobal` from
 `@napplet/core` in a local cast or ambient declaration:
 
 ```ts
 import type { NappletGlobal } from '@napplet/core';
-import '@napplet/shim';
 
 const napplet = (window as Window & { napplet: NappletGlobal }).napplet;
 
@@ -527,34 +561,51 @@ napplet.relay.subscribe({ kinds: [1] }, (event) => {
   // event is typed as NostrEvent
 });
 
-napplet.shell.supports('identity'); // typed as (capability: string) => boolean
+if (napplet.identity) {
+  await napplet.identity.getPublicKey();
+}
 ```
 
 For named typed helpers, prefer `@napplet/sdk`; it wraps `window.napplet` without
 requiring global type augmentation.
 
-**Note:** `@napplet/shim` has zero named exports -- `import { anything } from '@napplet/shim'` is a TypeScript error. For named imports, use `@napplet/sdk`.
+For napplet-side named imports, use `@napplet/sdk`.
 
 ## Shim vs SDK
 
 | | `@napplet/shim` | `@napplet/sdk` |
 |---|---|---|
-| **Import style** | `import '@napplet/shim'` (side-effect) | `import { relay, ifc } from '@napplet/sdk'` |
-| **What it does** | Installs `window.napplet` global + shell registration | Named exports wrapping `window.napplet` |
+| **Import style** | `import { installNappletGlobal } from '@napplet/shim'` or `@napplet/shim/prelude` | `import { relay, inc } from '@napplet/sdk'` |
+| **What it does** | Runtime-side injected global installer plus host prelude artifact | Named exports wrapping `window.napplet` |
 | **Dependencies** | `@napplet/nap` (uses `@napplet/nap/<domain>/shim` subpaths internally) | `@napplet/core` (types only) |
-| **When to use** | Always -- required to install the runtime | When you want typed imports in a bundler |
-| **Named exports** | None | `relay`, `ifc`, `storage`, `keys`, `identity`, plus types |
+| **When to use** | In the host runtime before napplet scripts execute | In napplet code when you want typed imports in a bundler |
+| **Named exports** | `installNappletGlobal` | `relay`, `inc`, `storage`, `keys`, `identity`, plus types |
 
-**Typical usage:** Import both -- shim for window installation, SDK for typed API access:
+Runtime usage:
 
 ```ts
-import '@napplet/shim';
-import { relay, ifc, storage, keys, identity } from '@napplet/sdk';
+import { installNappletGlobal } from '@napplet/shim';
+
+installNappletGlobal({ domains: ['relay', 'inc', 'storage', 'identity'] });
+```
+
+Host prelude usage:
+
+```ts
+import { renderNappletRuntimePreludeCall } from '@napplet/shim/prelude';
+
+renderNappletRuntimePreludeCall({ domains: ['relay', 'identity'] });
+```
+
+Napplet usage:
+
+```ts
+import { relay, inc, storage, keys, identity } from '@napplet/sdk';
 ```
 
 ## Protocol Reference
 
-- [NIP-5D](../../specs/NIP-5D.md) -- Napplet-shell protocol specification
+- [NIP-5D](https://github.com/nostr-protocol/nips/pull/2303) -- Napplet-shell protocol specification
 
 ## License
 

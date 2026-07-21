@@ -4,18 +4,6 @@
 
 ## Getting Started
 
-Application developers should not start here. Start with the CLI:
-
-```bash
-pnpm add -g @napplet/cli
-napplet init my-napplet
-cd my-napplet
-pnpm install
-napplet doctor
-```
-
-Use `@napplet/core` directly when implementing shell-side protocol handling, writing NAP packages, or testing envelope dispatch behavior.
-
 ### Package Overview
 
 This package is the single source of truth for all protocol-level definitions in the napplet ecosystem. All other `@napplet/*` packages import their envelope types, dispatch infrastructure, and protocol constants from here.
@@ -32,7 +20,7 @@ npm install @napplet/core
 
 ```ts
 import {
-  type NappletMessage, type NapDomain, type ShellSupports,
+  type NappletMessage, type NapDomain,
   type NapHandler, type NapDispatch,
   NAP_DOMAINS, SHELL_BRIDGE_URI, PROTOCOL_VERSION,
   createDispatch, registerNap, dispatch, getRegisteredDomains,
@@ -69,14 +57,14 @@ interface RelaySubscribe extends NappletMessage {
 }
 ```
 
-The `type` field domain prefix (`relay`, `identity`, `storage`, `ifc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `connect`, `class`) routes messages to the correct NAP handler via `dispatch()`.
+The `type` field domain prefix (`relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `ble`, `webrtc`, `link`, `count`, `lists`, `serial`, `common`, `dm`) routes messages to the correct NAP handler via `dispatch()`.
 
 #### `NapDomain`
 
-String literal union of the twelve NAP capability domains.
+String literal union of the NAP capability domains.
 
 ```ts
-type NapDomain = 'relay' | 'identity' | 'storage' | 'ifc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'connect' | 'class';
+type NapDomain = 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'cvm' | 'outbox' | 'upload' | 'intent' | 'ble' | 'webrtc' | 'link' | 'count' | 'lists' | 'serial' | 'common' | 'dm';
 ```
 
 | Domain    | Scope                                    |
@@ -84,53 +72,55 @@ type NapDomain = 'relay' | 'identity' | 'storage' | 'ifc' | 'theme' | 'keys' | '
 | `relay`    | Relay proxy (subscribe, publish, query)   |
 | `identity` | Read-only user identity queries           |
 | `storage`  | Scoped key-value storage proxy            |
-| `ifc`     | Inter-frame communication (dispatch + channel) |
+| `inc`     | Inter-napplet communication (dispatch + channel) |
 | `theme`   | Theme tokens and appearance settings      |
 | `keys`    | Keyboard forwarding and action keybindings|
-| `media`   | Media session control and playback        |
+| `media`   | Ownership-aware media session control     |
 | `notify`  | Shell-rendered notifications              |
 | `config`  | Per-napplet declarative configuration (JSON Schema-driven) |
 | `resource` | Byte-fetching primitive (URL to Blob) |
-| `connect` | User-gated direct network access |
-| `class`   | Shell-assigned napplet class / security posture |
+| `cvm` | Native ContextVM / MCP-over-Nostr bridge |
+| `outbox` | Outbox-aware relay routing |
+| `upload` | Shell-mediated file/blob upload |
+| `intent` | Archetype intent dispatch |
+| `ble` | Runtime-mediated Bluetooth LE/GATT sessions |
+| `webrtc` | Runtime-mediated WebRTC data sessions |
+| `link` | Shell-mediated external link opening |
+| `count` | Runtime-mediated event counts |
+| `lists` | Runtime-mediated NIP-51 list mutations |
+| `serial`  | Runtime-mediated serial device access |
+| `common`  | Shell-mediated common social actions |
+| `dm`  | Runtime-mediated direct messages |
 
 #### `NAP_DOMAINS`
 
 Runtime constant array of all NAP domain strings. Useful for iteration and validation.
 
 ```ts
-const NAP_DOMAINS: readonly NapDomain[] = ['relay', 'identity', 'storage', 'ifc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'connect', 'class'];
+const NAP_DOMAINS: readonly NapDomain[] = ['relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent', 'ble', 'webrtc', 'link', 'count', 'lists', 'serial', 'common', 'dm'];
 
 for (const domain of NAP_DOMAINS) {
   console.log(`Checking support for: ${domain}`);
 }
 ```
 
-#### `ShellSupports`
+#### `NappletGlobal`
 
-Interface for the shell capability query API.
+Type for the runtime-injected `window.napplet` namespace. Domain properties are
+optional: presence means the runtime exposes that NAP, absence means it is
+unavailable.
 
 ```ts
-interface ShellSupports {
-  supports(capability: NapDomain | string): boolean;
+if (window.napplet?.relay) {
+  await window.napplet.relay.query([{ kinds: [1], limit: 1 }]);
 }
-```
-
-Napplets call `window.napplet.shell.supports(domain)` to check whether the shell declared support for a NAP domain before using that domain's API.
-
-#### `NappletGlobalShell`
-
-Type for the `window.napplet.shell` namespace. Extends `ShellSupports`.
-
-```ts
-interface NappletGlobalShell extends ShellSupports {}
 ```
 
 ---
 
 ### NAP Dispatch Infrastructure
 
-The dispatch system allows NAP modules to self-register at import time. Inbound messages are routed to the correct NAP handler based on the domain prefix extracted from `message.type` (the part before the first `.`).
+The dispatch system allows NAP modules to self-register at import time. Inbound messages are routed to the correct NAP handler based on the domain prefix extracted from `message.type` (the part before the first `.`). The exported helper names (`registerNap`, `NapHandler`, `NapDispatch`) are retained for package compatibility.
 
 #### `createDispatch()`
 
@@ -284,7 +274,7 @@ for (const cap of ALL_CAPABILITIES) {
 
 #### `Subscription`
 
-Handle returned by `relay.subscribe()` and `ifc.on()`.
+Handle returned by `relay.subscribe()` and `inc.on()`.
 
 ```ts
 interface Subscription {
@@ -319,7 +309,7 @@ interface EventTemplate {
 
 ### Topic Constants
 
-The `TOPICS` object contains string constants for IFC topic-based routing. These are legacy constants from the pre-envelope era — with JSON envelope messages, topic strings are passed directly in `ifc.emit` and `ifc.subscribe` payloads.
+The `TOPICS` object contains string constants for INC topic-based routing. These are legacy constants from the pre-envelope era — with JSON envelope messages, topic strings are passed directly in `inc.emit` and `inc.subscribe` payloads.
 
 ```ts
 import { TOPICS } from '@napplet/core';
@@ -330,7 +320,7 @@ TOPICS.WM_FOCUSED_WINDOW_CHANGED // 'wm:focused-window-changed'
 // ... see source for full list
 ```
 
-> **Note:** With JSON envelope wire format (v0.16.0+), state operations use `storage.*` messages directly rather than IFC topic routing. These constants are retained for backward compatibility with shell runtime implementations.
+> **Note:** With JSON envelope wire format (v0.16.0+), state operations use `storage.*` messages directly rather than INC topic routing. These constants are retained for backward compatibility with shell runtime implementations.
 
 ---
 
@@ -338,7 +328,7 @@ TOPICS.WM_FOCUSED_WINDOW_CHANGED // 'wm:focused-window-changed'
 
 ```ts
 import type {
-  NappletMessage, NapDomain, NamespacedCapability, ShellSupports, NappletGlobalShell,
+  NappletMessage, NapDomain,
   NapHandler, NapDispatch,
   NostrEvent, NostrFilter, Capability,
   Subscription, EventTemplate, NappletGlobal,
@@ -348,11 +338,8 @@ import type {
 | Type | Description |
 |------|-------------|
 | `NappletMessage` | Base interface for all JSON envelope messages |
-| `NapDomain` | Union of the twelve NAP domain strings |
-| `NamespacedCapability` | Union of `NapDomain \| nap:* \| perm:*` for `supports()` |
-| `ShellSupports` | Interface with `supports()` capability query method |
-| `NappletGlobalShell` | Type for `window.napplet.shell` (extends `ShellSupports`) |
-| `NapHandler` | Callback type for NAP domain handlers |
+| `NapDomain` | Union of the active NAP domain strings |
+| `NapHandler` | Callback type for domain handlers |
 | `NapDispatch` | Interface returned by `createDispatch()` |
 | `NostrEvent` | Nostr event structure |
 | `NostrFilter` | Subscription filter for relay NAP |
@@ -360,16 +347,45 @@ import type {
 | `Subscription` | Handle with `close()` returned by subscribe/on |
 | `EventTemplate` | Unsigned event template for publishing |
 
+## Boundary Helpers (clone-safety)
+
+NAP shims cross the napplet ⇄ shell boundary by structured-cloning a JSON
+envelope through `postMessage`. Framework reactive values — Svelte 5 `$state`,
+Vue `reactive`, Solid stores — are `Proxy` objects that are **not** structured-
+cloneable, so a naive `postMessage` throws `DataCloneError`, which gets silently
+swallowed in async paths (the envelope never crosses the boundary). These
+helpers make that loud or transparent.
+
+| Export | Description |
+|--------|-------------|
+| `sendEnvelope(target, message, targetOrigin?)` | The single boundary chokepoint shims post through. Per the active mode it posts as-is, snapshot-recovers a non-cloneable arg, or throws a loud, synchronous, actionable error. |
+| `toCloneableSnapshot(value)` | Deep snapshot stripping reactive proxies into plain objects/arrays while preserving binary (`Uint8Array`/`ArrayBuffer`), `Date`, `RegExp`, `Map`, `Set`, and cycles. Lossless for binary (unlike `JSON`); functions/symbols throw. |
+| `setCloneMode(mode)` / `getCloneMode()` | `'auto'` (default: post as-is, snapshot-and-retry on `DataCloneError`, warn once), `'strict'` (throw, never recover), or `'snapshot'` (eagerly snapshot every envelope). |
+| `clearCloneWarnings()` | Reset the once-per-type auto-recovery warnings. |
+
+```ts
+import { setCloneMode, toCloneableSnapshot } from '@napplet/core';
+
+// Default 'auto' handles reactive state transparently on the failure path.
+// Or normalize explicitly:
+napplet.outbox.subscribe(toCloneableSnapshot(filters), { relays });
+// Or globally:
+setCloneMode('snapshot');
+```
+
+These are SDK plumbing only — identical plain envelopes reach the wire, so they
+add no protocol surface.
+
 ## Integration Note
 
 `@napplet/core` is consumed by all packages in the napplet ecosystem for envelope types and NAP dispatch.
 
-- **In this repo:** `@napplet/shim`, `@napplet/sdk`, and `@napplet/vite-plugin` import `NappletMessage`, `NapDomain`, `ShellSupports`, and all shared protocol types from `@napplet/core`.
-- **`@napplet/nap` domain modules** (`@napplet/nap/relay`, `@napplet/nap/identity`, `@napplet/nap/storage`, `@napplet/nap/ifc`, `@napplet/nap/keys`, `@napplet/nap/media`, `@napplet/nap/notify`, `@napplet/nap/config`): extend `NappletMessage` for their domain-specific message types and call `registerNap` at import time. (The `@napplet/nap/theme` barrel is types-only — no `registerNap` side effect.)
+- **In this repo:** `@napplet/shim`, `@napplet/sdk`, and `@napplet/vite-plugin` import `NappletMessage`, `NapDomain`, and all shared protocol types from `@napplet/core`.
+- **`@napplet/nap` domain modules** (`@napplet/nap/relay`, `@napplet/nap/identity`, `@napplet/nap/storage`, `@napplet/nap/inc`, `@napplet/nap/keys`, `@napplet/nap/media`, `@napplet/nap/notify`, `@napplet/nap/config`, `@napplet/nap/link`, `@napplet/nap/lists`, and other active domain subpaths): extend `NappletMessage` for their domain-specific message types and call `registerNap` at import time.
 
 ## Protocol Reference
 
-- [NIP-5D](../../specs/NIP-5D.md) -- Napplet-shell protocol specification
+- [NIP-5D](https://github.com/nostr-protocol/nips/pull/2303) -- Napplet-shell protocol specification
 
 ## License
 

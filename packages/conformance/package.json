@@ -1,0 +1,52 @@
+{
+  "name": "@napplet/conformance",
+  "version": "0.13.0",
+  "description": "Framework-agnostic napplet protocol conformance engine — reference mock shell, per-NAP envelope validators, manifest validator, check registry, and reporters",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@napplet/core": "workspace:^",
+    "@napplet/nap": "workspace:^"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "happy-dom": "^20.10.3",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.2"
+  },
+  "scripts": {
+    "build": "tsup",
+    "type-check": "tsc --noEmit",
+    "test:unit": "vitest run"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sandwichfarm/napplet.git",
+    "directory": "packages/conformance"
+  },
+  "keywords": [
+    "nostr",
+    "napplet",
+    "conformance",
+    "protocol",
+    "nip-5d",
+    "testing"
+  ]
+}

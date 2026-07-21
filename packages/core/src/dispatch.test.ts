@@ -1,20 +1,20 @@
 /**
- * Tests for NUB registration and message dispatch infrastructure.
+ * Tests for NAP registration and message dispatch infrastructure.
  *
- * Covers: registerNub, dispatch, getRegisteredDomains, createDispatch factory.
+ * Covers: registerNap, dispatch, getRegisteredDomains, createDispatch factory.
  */
 
 import { describe, it, expect } from 'vitest';
 
-import { createDispatch, registerNub, dispatch, getRegisteredDomains } from './dispatch.js';
+import { createDispatch, registerNap, dispatch, getRegisteredDomains } from './dispatch.js';
 import type { NappletMessage } from './envelope.js';
 
 // ─── createDispatch Factory ───────────────────────────────────────────────
 
 describe('createDispatch()', () => {
-  it('returns registerNub, dispatch, and getRegisteredDomains', () => {
+  it('returns registerNap, dispatch, and getRegisteredDomains', () => {
     const d = createDispatch();
-    expect(typeof d.registerNub).toBe('function');
+    expect(typeof d.registerNap).toBe('function');
     expect(typeof d.dispatch).toBe('function');
     expect(typeof d.getRegisteredDomains).toBe('function');
   });
@@ -24,7 +24,7 @@ describe('createDispatch()', () => {
     const d2 = createDispatch();
 
     const calls: NappletMessage[] = [];
-    d1.registerNub('relay', (msg) => calls.push(msg));
+    d1.registerNap('relay', (msg) => calls.push(msg));
 
     // d2 should not have relay registered
     expect(d2.dispatch({ type: 'relay.subscribe' })).toBe(false);
@@ -36,13 +36,13 @@ describe('createDispatch()', () => {
   });
 });
 
-// ─── registerNub ──────────────────────────────────────────────────────────
+// ─── registerNap ──────────────────────────────────────────────────────────
 
-describe('registerNub()', () => {
+describe('registerNap()', () => {
   it('stores a handler for the given domain', () => {
     const d = createDispatch();
     let called = false;
-    d.registerNub('relay', () => { called = true; });
+    d.registerNap('relay', () => { called = true; });
 
     d.dispatch({ type: 'relay.subscribe' });
     expect(called).toBe(true);
@@ -50,10 +50,10 @@ describe('registerNub()', () => {
 
   it('throws when domain is already registered', () => {
     const d = createDispatch();
-    d.registerNub('relay', () => {});
+    d.registerNap('relay', () => {});
 
-    expect(() => d.registerNub('relay', () => {})).toThrowError(
-      'NUB domain "relay" is already registered'
+    expect(() => d.registerNap('relay', () => {})).toThrowError(
+      'NAP domain "relay" is already registered'
     );
   });
 });
@@ -64,7 +64,7 @@ describe('dispatch()', () => {
   it('calls the correct handler and returns true', () => {
     const d = createDispatch();
     const received: NappletMessage[] = [];
-    d.registerNub('relay', (msg) => received.push(msg));
+    d.registerNap('relay', (msg) => received.push(msg));
 
     const msg: NappletMessage = { type: 'relay.subscribe' };
     const result = d.dispatch(msg);
@@ -83,7 +83,7 @@ describe('dispatch()', () => {
 
   it('returns false when type has no dot (no domain match)', () => {
     const d = createDispatch();
-    d.registerNub('relay', () => {});
+    d.registerNap('relay', () => {});
 
     const result = d.dispatch({ type: 'malformed' });
     expect(result).toBe(false);
@@ -91,7 +91,7 @@ describe('dispatch()', () => {
 
   it('returns false when type has empty domain prefix', () => {
     const d = createDispatch();
-    d.registerNub('relay', () => {});
+    d.registerNap('relay', () => {});
 
     const result = d.dispatch({ type: '.action' });
     expect(result).toBe(false);
@@ -102,8 +102,8 @@ describe('dispatch()', () => {
     const relayCalls: NappletMessage[] = [];
     const identityCalls: NappletMessage[] = [];
 
-    d.registerNub('relay', (msg) => relayCalls.push(msg));
-    d.registerNub('identity', (msg) => identityCalls.push(msg));
+    d.registerNap('relay', (msg) => relayCalls.push(msg));
+    d.registerNap('identity', (msg) => identityCalls.push(msg));
 
     d.dispatch({ type: 'relay.subscribe' });
     d.dispatch({ type: 'identity.getPublicKey' });
@@ -125,8 +125,8 @@ describe('getRegisteredDomains()', () => {
 
   it('returns array of registered domain strings', () => {
     const d = createDispatch();
-    d.registerNub('relay', () => {});
-    d.registerNub('identity', () => {});
+    d.registerNap('relay', () => {});
+    d.registerNap('identity', () => {});
 
     const domains = d.getRegisteredDomains();
     expect(domains.length).toBe(2);
@@ -138,8 +138,8 @@ describe('getRegisteredDomains()', () => {
 // ─── Module-level singleton ───────────────────────────────────────────────
 
 describe('module-level singleton exports', () => {
-  it('registerNub, dispatch, getRegisteredDomains are functions', () => {
-    expect(typeof registerNub).toBe('function');
+  it('registerNap, dispatch, getRegisteredDomains are functions', () => {
+    expect(typeof registerNap).toBe('function');
     expect(typeof dispatch).toBe('function');
     expect(typeof getRegisteredDomains).toBe('function');
   });

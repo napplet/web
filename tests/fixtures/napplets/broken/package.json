@@ -1,0 +1,7 @@
+{
+  "name": "@napplet-fixture/broken",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Hand-written deliberately non-conformant napplet fixture for @napplet/conformance e2e",
+  "type": "module"
+}

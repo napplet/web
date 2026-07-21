@@ -1,0 +1,147 @@
+name: Deploy site
+
+# Builds the marketing SPA (apps/web) + the VitePress docs (apps/docs), stitches
+# them into a single directory (docs under /docs), then publishes to Bunny (CDN)
+# and nsite (Nostr/Blossom). Configure secrets with scripts/setup-site-secrets.sh.
+
+on:
+  push:
+    branches: [main]
+    # SPA + docs surface only. (The job also assembles the conformance app at
+    # /conformance; a conformance-app- or packages-only change no longer triggers
+    # a deploy — use workflow_dispatch, or it ships on the next SPA/docs change.)
+    paths:
+      - 'apps/web/**'
+      - 'apps/docs/**'
+      - '.github/workflows/deploy-site.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-site-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - uses: denoland/setup-deno@v2
+
+      - run: pnpm install --frozen-lockfile
+
+      # Build workspace package deps the apps may import, then each app.
+      - name: Build packages
+        run: pnpm build
+
+      - name: Build marketing SPA
+        run: pnpm --filter @napplet/web build
+
+      - name: Build docs (base /docs/)
+        run: pnpm --filter @napplet/docs build
+
+      - name: Build conformance runtime (base /conformance/)
+        run: pnpm --filter @napplet/conformance-web build --base=/conformance/
+
+      # Assemble one artifact: SPA at root, docs at /docs, conformance at /conformance.
+      - name: Assemble site
+        run: |
+          set -euo pipefail
+          rm -rf site
+          mkdir -p site
+          cp -r apps/web/dist/. site/
+          mkdir -p site/docs
+          cp -r apps/docs/.vitepress/dist/. site/docs/
+          mkdir -p site/conformance
+          cp -r apps/conformance/dist/. site/conformance/
+          echo "Assembled $(find site -type f | wc -l) files into ./site"
+
+      # ─── Bunny: upload to storage zone, then purge the pull zone ───────────
+      # Storage zone, endpoint, and upload password come from the Bunny dashboard
+      # (Storage → your zone → FTP & API Access). Keep them in secrets so a zone
+      # rename or regional endpoint change does not require a workflow edit.
+      - name: Prepare Bunny storage config
+        id: bunny
+        env:
+          BUNNY_STORAGE_ZONE: ${{ secrets.BUNNY_STORAGE_ZONE }}
+          BUNNY_STORAGE_ENDPOINT: ${{ secrets.BUNNY_STORAGE_ENDPOINT }}
+        run: |
+          set -euo pipefail
+          if [ -z "$BUNNY_STORAGE_ZONE" ]; then
+            echo "BUNNY_STORAGE_ZONE is not configured" >&2
+            exit 1
+          fi
+          if [ -z "$BUNNY_STORAGE_ENDPOINT" ]; then
+            echo "BUNNY_STORAGE_ENDPOINT is not configured" >&2
+            exit 1
+          fi
+
+          endpoint="${BUNNY_STORAGE_ENDPOINT#http://}"
+          endpoint="${endpoint#https://}"
+          endpoint="${endpoint%%/*}"
+          if [ -z "$endpoint" ]; then
+            echo "BUNNY_STORAGE_ENDPOINT did not contain a host" >&2
+            exit 1
+          fi
+
+          {
+            printf 'storage-zone=%s\n' "$BUNNY_STORAGE_ZONE"
+            printf 'storage-endpoint=%s\n' "$endpoint"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Deploy to Bunny CDN
+        uses: ayeressian/bunnycdn-storage-deploy@v2.4.5
+        with:
+          source: site
+          destination: ''
+          storageZoneName: ${{ steps.bunny.outputs.storage-zone }}
+          storagePassword: ${{ secrets.BUNNY_STORAGE_PASSWORD }}
+          storageEndpoint: ${{ steps.bunny.outputs.storage-endpoint }}
+          accessKey: ${{ secrets.BUNNY_API_KEY }}
+          pullZoneId: ${{ secrets.BUNNY_PULLZONE_ID }}
+          upload: 'true'
+          remove: 'false'
+          purgePullZone: 'true'
+
+      # nsite-action splits relays/servers on NEWLINES, but NSITE_RELAYS /
+      # NSITE_SERVERS are stored space-separated. Normalize any whitespace
+      # (spaces or newlines) into one-per-line so the action parses each URL.
+      - name: Prepare nsite targets
+        id: nsite
+        env:
+          RAW_RELAYS: ${{ vars.NSITE_RELAYS || 'wss://relay.nsite.lol' }}
+          RAW_SERVERS: ${{ vars.NSITE_SERVERS || 'https://cdn.hzrd149.com' }}
+        run: |
+          set -f  # no globbing while we word-split the URL lists
+          {
+            echo 'relays<<NSITE_EOF'
+            printf '%s\n' $RAW_RELAYS
+            echo 'NSITE_EOF'
+            echo 'servers<<NSITE_EOF'
+            printf '%s\n' $RAW_SERVERS
+            echo 'NSITE_EOF'
+          } >> "$GITHUB_OUTPUT"
+
+      # ─── nsite: publish to Nostr + Blossom ─────────────────────────────────
+      # Optional mirror: Bunny is the canonical deploy path for this workflow.
+      - name: Deploy to nsite
+        id: deploy-nsite
+        continue-on-error: true
+        uses: sandwichfarm/nsite-action@v0.5.1
+        with:
+          directory: site
+          nbunksec: ${{ secrets.NBUNK_SECRET }}
+          relays: ${{ steps.nsite.outputs.relays }}
+          servers: ${{ steps.nsite.outputs.servers }}
+
+      - name: Report skipped nsite deploy
+        if: ${{ steps.deploy-nsite.outcome == 'failure' }}
+        run: |
+          echo "::warning::nsite deploy failed; Bunny CDN deploy already completed, so skipping the optional nsite mirror failure."

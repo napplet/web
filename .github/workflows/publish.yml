@@ -1,5 +1,9 @@
 name: Publish
 
+# This workflow must run on ordinary main pushes so changesets/action can create
+# or update the Version Packages PR. The registry publish path only runs after
+# that generated PR is merged, when the pending changesets have been consumed and
+# package/jsr versions have been updated.
 on:
   push:
     branches: [main]
@@ -22,6 +26,7 @@ jobs:
           node-version: 22
           cache: pnpm
           registry-url: 'https://registry.npmjs.org'
+      - uses: denoland/setup-deno@v2
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
       - name: Create Release Pull Request or Publish
@@ -34,3 +39,15 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.CHANGESETS_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # Cut a GitHub Release per package whose version is now live on npm.
+      # Runs only when the publish step above succeeded (default `if: success()`),
+      # so a release is never created for a version that failed to deploy. The
+      # script is idempotent — it skips packages that already have a release and
+      # backfills any published version that is still missing one. We publish
+      # with `pnpm publish -r` (not `changeset publish`), so changesets/action's
+      # own release creation can't see what shipped; this derives it from npm.
+      - name: Publish GitHub Releases
+        run: node scripts/github-releases.mjs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

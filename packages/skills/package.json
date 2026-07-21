@@ -1,0 +1,54 @@
+{
+  "name": "@napplet/skills",
+  "version": "0.2.9",
+  "description": "Agent skills (make / design / build / port / test) that let a coding agent create a napplet end-to-end, plus a napplet-skills installer for Claude Code, Codex, Cursor, Windsurf, Amp, Gemini, and Copilot",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "napplet-skills": "./dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./skills/*": "./skills/*"
+  },
+  "files": [
+    "dist",
+    "skills",
+    "README.md"
+  ],
+  "sideEffects": false,
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.2"
+  },
+  "scripts": {
+    "build": "tsup",
+    "type-check": "tsc --noEmit",
+    "test:unit": "vitest run"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/napplet/napplet.git",
+    "directory": "packages/skills"
+  },
+  "keywords": [
+    "nostr",
+    "napplet",
+    "skills",
+    "agent",
+    "claude",
+    "cursor",
+    "nip-5d"
+  ]
+}

@@ -1,6 +1,6 @@
 {
   "name": "@napplet/vite-plugin",
-  "version": "0.4.0",
+  "version": "0.11.3",
   "description": "Vite plugin for napplet development — injects aggregate hash meta tag during dev and optionally generates NIP-5A manifest at build time for local testing",
   "type": "module",
   "main": "./dist/index.js",
@@ -26,11 +26,12 @@
     "nostr-tools": "^2.23.3"
   },
   "devDependencies": {
-    "@napplet/nub": "workspace:*",
+    "@napplet/nap": "workspace:*",
     "@types/node": "^22.15.0",
-    "vite": "^6.4.2",
     "tsup": "^8.5.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vite": "^6.4.3",
+    "vitest": "^4.1.2"
   },
   "scripts": {
     "build": "tsup",

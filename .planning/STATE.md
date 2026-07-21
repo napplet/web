@@ -1,17 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v0.31.0
-milestone_name: Cleanup Quality Gate
-status: Awaiting next milestone
-stopped_at: Milestone v0.31.0 archived
-last_updated: "2026-05-24T15:14:55+02:00"
-last_activity: 2026-05-24 — Completed quick task 260524-l1t: please add a workflow that runs the ai slop scan and produces a badge for the readme that shows the score
+milestone: v0.34.0
+milestone_name: NIP-5D Runtime Injection
+status: planning
+last_updated: "2026-07-15T17:42:00+02:00"
+last_activity: "2026-07-15 - Quick task 260715-ogy complete: neutral community/group-chat invite linked from the SPA and docs."
 progress:
-  total_phases: 5
-  completed_phases: 5
-  total_plans: 5
-  completed_plans: 5
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -22,16 +21,330 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 
 **Core value:** Prove that sandboxed Nostr apps can securely delegate to a host shell over a simple, standardized protocol — and ship the spec + SDK so others can build on it.
 
-**Current focus:** Planning next milestone
+**Current focus:** v0.34.0 NIP-5D Runtime Injection — retire stale NAP-SHELL / `supports()` surfaces and align packages, conformance, docs, skills, and boilerplate guidance with runtime-injected `window.napplet` domain objects.
 
 > **Provenance note:** The "Accumulated Context" section below preserves bullet records from BOTH branches' STATE.md histories. Records tagged "v0.29.0" from main's lineage refer to the milestone NOW renumbered as v0.30.0 (Class-Gated Decrypt — Phases 135-138). Records tagged "v0.29.0" from feat/strict-model refer to NUB-CONNECT (Phases 135-142). Phase number alone is not a unique identifier across the two; cross-reference the topic (decrypt/identity/NIP-07 → v0.30.0; connect/class/CSP-authority → v0.29.0).
 
 ## Current Position
 
-Phase: Milestone v0.31.0 complete
+Phase: Not started (defining requirements)
 Plan: —
-Status: Awaiting next milestone
-Last activity: 2026-05-24 — Completed quick task 260524-l1t: please add a workflow that runs the ai slop scan and produces a badge for the readme that shows the score
+Status: Defining requirements
+Last activity: 2026-07-15 — Quick task 260715-ogy complete; neutral
+community/group-chat invite linked from the SPA and docs.
+
+### Quick task 260715-ogy — COMPLETE
+
+- Added the provided invite to repeated SPA surfaces: primary nav, hero CTAs,
+  get-started links, and footer ecosystem links.
+- Added the invite to VitePress docs navigation plus the docs home, guide
+  overview, getting-started guide, and packages overview.
+- Kept visible copy generic (`Community`, `Join community`, `Group chat`,
+  `community group chat`) and avoided client/protocol-specific chat branding.
+- Verification: targeted SPA/docs builds; full `pnpm build`; full
+  `pnpm type-check`; `pnpm -r test:unit`; `pnpm lint` (0 tasks); changed-code
+  AI-slop 100/100; `git diff --check`; forbidden visible-label scan.
+- Commit: `ccc3796b` (`Surface the community invite where builders look`).
+
+### Quick task 260711-mz4 — COMPLETE
+
+- Replaced stale generator/template bootstrap and capability-probe guidance with
+  runtime injection, `@napplet/sdk` calls, and optional domain-presence checks.
+- Made starter Nostr access OUTBOX-first and retained RELAY only as a documented
+  relay-local escape hatch.
+- Replaced vendored template skill bodies with the `@napplet/skills` pointer and
+  added cross-package drift checks.
+- Removed undocumented build-time config guidance and fixed Vite handling of
+  hard `count` requirements.
+- Verification: full build/type/unit gates; template and generated-app verify;
+  full `pnpm test`; conformance 5 pass / 0 fail / 5 documented skips; exact stale scans;
+  `git diff --check`; changed-code AI-slop 100/100.
+- PRs: https://github.com/napplet/web/pull/163 and
+  https://github.com/napplet/boilerplate/pull/4.
+
+### Quick task 260710-ng9 — COMPLETE
+
+- Added `nevent`/`naddr` resolution to the conformance web app, using pointer
+  relay hints to resolve NIP-5D napplet manifest events.
+- Verified event signatures, NIP-5D event kind/shape, optional aggregate `x`
+  tags, Blossom `/index.html` blob hashes, and then booted the verified HTML
+  through the existing `srcdoc` sandbox harness.
+- Replaced private HTML `napplet-*` manifest checks in `@napplet/conformance`
+  with resolved manifest-event checks and kept `validateManifest(html)` as a
+  compatibility wrapper.
+- Updated conformance docs, added app-level unit tests, and added a changeset for
+  `@napplet/conformance`.
+- Verification: `pnpm --filter @napplet/conformance test:unit`;
+  `pnpm --filter @napplet/conformance build`;
+  `pnpm --filter @napplet/conformance-web test:unit`;
+  `pnpm --filter @napplet/conformance type-check`;
+  `pnpm --filter @napplet/conformance-web type-check`;
+  `pnpm --filter @napplet/conformance-web build`; `pnpm build`;
+  `pnpm type-check`; `pnpm -r test:unit`; `pnpm lint`; `pnpm test`;
+  `pnpm --filter @napplet/conformance-e2e test:e2e`; `git diff --check`;
+  `pnpm dlx aislop scan --json .` (88/100 from pre-existing warnings outside
+  touched files).
+- CI follow-up: updated the e2e harness so local directory JSON reports assert
+  skipped manifest-event identity rather than legacy `napplet-type` metadata.
+- Commit: `04606c3a` (`fix(conformance): accept Nostr manifest pointers`).
+
+### Quick task 260710-mzr — COMPLETE
+
+- Moved `Core concepts` above `Getting started` in the VitePress `Getting Started`
+  sidebar group.
+- Kept the change scoped to docs information architecture; no package runtime or
+  protocol surface changed.
+- Verification: `pnpm --filter @napplet/docs build`; `git diff --check`;
+  `pnpm build`; `pnpm type-check`; `pnpm -r test:unit`; `pnpm lint`
+  (0 tasks); `pnpm dlx aislop@0.12.0 scan --changes --base origin/main .`
+  (98/100 from the existing `js-yaml` advisory).
+- Commit: `bc4cd533` (`Put concepts before tutorials in docs sidebar`).
+
+### Quick task 260710-lsc — COMPLETE
+
+- Shortened the Note Drafts AI-agent tutorial's example prompt to product scope:
+  app title, package name, napplet type, user flow, and verification evidence.
+- Moved the `identity` / `storage` / `outbox` mapping into the "skills should
+  infer" explanation instead of requiring users to paste it into the prompt.
+- Reframed forbidden-surface and metadata checks as review evidence, not
+  first-prompt content.
+- Simplified the repair prompt to rerun `make-napplet` / `build-napplet` /
+  `test-napplet`; recurring boundary misses should be fixed in
+  `@napplet/skills`, not by expanding the tutorial prompt.
+- Verification: `pnpm --filter @napplet/docs build`; `git diff --check`;
+  `pnpm build`; `pnpm type-check`; `pnpm -r test:unit`; `pnpm lint` (no tasks);
+  staged `aislop@0.12.0` 98/100 with only the existing `js-yaml` advisory.
+- Commit: `ab3940a0` (`Clarify that skills own Note Drafts prompt details`).
+
+### Quick task 260710-lai — COMPLETE
+
+- Renamed `apps/docs/guide/build-note-drafts-napplet.md` to present itself as the from-scratch tutorial.
+- Added the boilerplate tutorial at `apps/docs/guide/build-note-drafts-napplet-from-boilerplate.md`.
+- Added the AI-agent / `@napplet.skills` tutorial at `apps/docs/guide/build-note-drafts-napplet-with-ai-agent-and-skills.md`.
+- Updated `apps/docs/guide/getting-started.md` and `apps/docs/.vitepress/config.ts` so all three tutorial paths are discoverable.
+- Verification: `pnpm build`; `pnpm type-check`; `pnpm test:tutorial`; `pnpm -r test:unit`; assembled-site `node scripts/check-links.mjs http://localhost:8099`; `git diff --check`; staged `aislop@0.12.0` 98/100 with only the existing `js-yaml` advisory.
+- Remaining goal scope after local work: PR, merge, and production docs deploy verification.
+
+### Quick task 260710-kmj — COMPLETE
+
+- Diagnosed `Deploy site` run `29087545720`: build, assembly, Bunny config, and Bunny CDN deploy all succeeded; only `Deploy to nsite` failed because `nsyte v0.27.2` timed out establishing a NIP-46 bunker session from the repo's `NBUNK_SECRET`.
+- Updated `.github/workflows/deploy-site.yml` so only the nsite mirror action step is `continue-on-error: true`.
+- Added a warning step keyed on `steps.deploy-nsite.outcome == 'failure'` so skipped nsite mirror failures remain visible in logs.
+- Verification: workflow YAML parse; `actionlint`; `pnpm lint`; `pnpm build`; `pnpm type-check`; `pnpm -r test:unit`; `git diff --check`; changed-file `aislop` 100/100. Full `aislop` remains 88/100 from pre-existing complexity warnings outside this workflow change.
+
+### Quick task 260710-hk2 — COMPLETE
+
+- Diagnosed PR #155 `CI / ci` run `29086732122`, job `86342103545`: `pnpm test` reached `pnpm test:tutorial`, then `napplet-conformance` failed because Playwright Chromium was not installed on the runner.
+- Added Playwright version resolution, `~/.cache/ms-playwright` cache, and `pnpm exec playwright install --with-deps chromium` to `.github/workflows/ci.yml` before `pnpm test`.
+- Kept tutorial conformance active in root `pnpm test`.
+- Verification: CI YAML parsed with Ruby; `pnpm test:tutorial`; `pnpm test`; `git diff --check`.
+
+### Quick task 260710-gyt — COMPLETE
+
+- Added `apps/docs/guide/build-note-drafts-napplet.md`, a hand-written tutorial that grows a Nostr note composer from runtime boundary checks through read-only `identity`, shell-scoped `storage.instance`, `outbox.publish`, Kehto/Paja runtime simulation, and artifact verification.
+- Wired the guide into the VitePress sidebar and getting-started page.
+- Added `scripts/test-tutorial.mjs` plus root `pnpm test:tutorial`; the harness extracts `tutorial-file` blocks and cumulative `tutorial-chunk` blocks, materializes the documented app, blocks stale/forbidden surfaces (`shell.supports`, `window.nostr`, browser storage, direct relay sockets), type-checks, builds, asserts single-file metadata, and runs `napplet-conformance`.
+- Verification: `pnpm test:tutorial` (conformance 7 pass / 0 fail / 4 skip); `pnpm --filter @napplet/docs build`; `pnpm build`; `pnpm type-check`; `pnpm -r test:unit`; `pnpm lint` (no configured lint tasks); `npx --yes aislop scan --changes .` (100/100); `git diff --check`; `pnpm test`.
+- No changeset: docs/test/root-script coverage only; no publishable package output changed.
+
+### Quick task 260709-rwi — COMPLETE
+
+- Audited live JSR scope: `@napplet/cli`, `@napplet/conformance`, `@napplet/core`, `@napplet/nap`, `@napplet/nub`, `@napplet/sdk`, `@napplet/shim`, `@napplet/skills`, and `@napplet/vite-plugin`.
+- Fixed repo-owned sparse JSR package docs by expanding root `@packageDocumentation` for CLI, shim, and vite-plugin, plus expanding the short conformance README.
+- Added `.changeset/fresh-readmes-jump.md` so the changed shipped docs release for `@napplet/cli`, `@napplet/conformance`, `@napplet/shim`, and `@napplet/vite-plugin`.
+- Verification: JSR dry-runs without `--allow-slow-types` for all four affected packages; `pnpm check:jsr`; `pnpm type-check`; `pnpm build`; `pnpm -r test:unit`; `pnpm lint`; `git diff --check`; `aislop` full and changed-file scans.
+- Remaining scope: live JSR pages update after merge/release; `@napplet/nub` remains live on JSR but has no source package in this checkout.
+
+### Quick task 260707-le9 — COMPLETE
+
+- Live JSR score pages and current JSR docs were used to separate local blockers from operator-only settings.
+- Added docs/typing fixes for `@napplet/cli`, `@napplet/conformance`, `@napplet/nap`, `@napplet/sdk`, `@napplet/shim`, and `@napplet/vite-plugin`.
+- Added `.changeset/jsr-score-metadata.md` so changed publishable packages release the source/docs readiness updates.
+- Verification: package type-checks; JSR dry-runs without `--allow-slow-types` for all publishable packages; `pnpm check:jsr`; `pnpm type-check`; `pnpm build`; `pnpm -r test:unit`; `pnpm lint`; `git diff --check`; `aislop` full and changed-file scans.
+- Remaining operator work: set JSR package descriptions, runtime compatibility, and GitHub/OIDC provenance links in JSR settings, then publish from GitHub Actions after merge.
+
+### Quick task 260707-jrh — IN RELEASE FIX
+
+- Root cause: `Publish` workflow run `28862432870` failed during `pnpm build` with `sh: 1: deno: not found` while building `@napplet/cli`, so `changesets/action` never ran and no Version Packages PR could be created after PR #140 merged.
+- Fix: added `denoland/setup-deno@v2` to `.github/workflows/publish.yml` before install/build, matching the CI and JSR workflows that already install Deno for Deno-backed package tasks.
+- Verification: YAML parse for `.github/workflows/publish.yml`; `deno --version`; `git diff --check`; `pnpm build`; `pnpm type-check`; `pnpm -r test:unit`; `pnpm dlx aislop@0.12.0 scan --json .`.
+- Remaining scope: push and merge the fix PR, confirm `Publish` creates/updates the Version Packages PR, merge that PR, then verify live npm/JSR registry state for released packages.
+
+### Quick task 260707-i3h — COMPLETE
+
+- Rewrote `packages/cli/README.md` as user-facing install and usage documentation, removing internal package-slice framing.
+- Added `@napplet/cli` JSR export `./cli` so `deno install ... jsr:@napplet/cli/cli` is a real entrypoint.
+- Added root `benchmark.json` and `benchmark.md` to `.gitignore`; the local benchmark outputs no longer appear in status.
+- Added `.changeset/cli-readme-install.md` as a patch changeset.
+- Verification: `deno fmt --check packages/cli/deno.json`; `deno task check` and `deno task test:unit` in `packages/cli`; `deno task dev --help`; `npx jsr publish --dry-run --allow-slow-types --allow-dirty` in `packages/cli`; `git diff --check`; `pnpm dlx aislop@0.12.0 scan --json .`; `pnpm build`; `pnpm type-check`; `pnpm -r test:unit`.
+- Remaining scope: live install from JSR awaits publishing this branch.
+
+### Quick task 260703-gz0 — COMPLETE
+
+- Added Deno setup to the JSR publish workflow before package publishing.
+- Kept `@napplet/cli` in the JSR publish filter while documenting that it publishes from `deno.json`.
+- Excluded `@napplet/cli` from the npm recursive publish script.
+- Extended `scripts/sync-jsr-versions.mjs` so Deno-first JSR package configs get their `deno.json` version synced from `package.json`.
+- Verification: JSON parse for root/CLI configs; Ruby YAML parse for `.github/workflows/publish-jsr.yml`; `deno --version`; pnpm publish filter help and package-list checks; `node scripts/sync-jsr-versions.mjs`; `npx jsr publish --dry-run --allow-slow-types --allow-dirty` in `packages/cli`; `node --check scripts/sync-jsr-versions.mjs`; `git diff --check`.
+- Commit: `6d98908c` (`Publish the Deno CLI through JSR only`).
+- Remaining scope: live GitHub Actions publish run was not triggered.
+
+### Quick task 260701-cif — COMPLETE
+
+- Fixed live PR #103 failures in `CI / ci` and `Conformance / conformance` caused by `@napplet/cli` root tasks invoking `deno task` on GitHub runners without Deno installed.
+- Added `denoland/setup-deno@v2` to `.github/workflows/ci.yml` and `.github/workflows/conformance.yml`.
+- Verification: workflow YAML parsed with Ruby; `deno --version`; `pnpm type-check`; `pnpm build`; `pnpm test`; `pnpm --filter @napplet/conformance-e2e test:e2e`; `git diff --check`.
+
+### Quick task 260701-m2r — COMPLETE
+
+- Added opt-in NAP requirement inference to `@napplet/vite-plugin` for static `@napplet/nap/<domain>` imports, SDK domain subpath imports, and direct `window.napplet.<domain>` usage.
+- Preserved legacy explicit `requires: string[]`, added object-form `{ infer, explicit, mode }`, deduped merged requirements, ignored type-only imports and dynamic property access, and added warn/error diagnostics for missing explicit declarations.
+- Updated `@napplet/cli` to preserve canonical plugin-emitted `requires` tags from `.nip5a-manifest.json` on root, named, and companion snapshot deploy templates.
+- Verification: `deno fmt packages/cli`; `deno fmt --check packages/cli`; `deno lint packages/cli`; `pnpm --filter @napplet/vite-plugin build`; `pnpm --filter @napplet/vite-plugin type-check`; `pnpm --filter @napplet/vite-plugin test:unit`; `pnpm --filter @napplet/cli build`; `pnpm --filter @napplet/cli test:unit`; `pnpm build`; `pnpm type-check`; `pnpm -r test:unit`; `pnpm dlx aislop@0.12.0 scan --json .`; `git diff --check`.
+- Commit: `69026fe6` (`Infer napplet requires from Vite source usage`).
+- Remaining scope: dynamic whole-program analysis remains out of scope; active-domain lists in vite-plugin/CLI should be kept in sync with `@napplet/core` when domains change.
+
+### Quick task 260701-lvc — COMPLETE
+
+- Added `napplet debug` for local JSON diagnostics over config, discovery, deploy-plan, manifest-template, and signing readiness state.
+- Kept the command read-only: no Blossom upload, relay publish, key-store write, or live network probe.
+- Added sanitized signing diagnostics and switched deploy JSON output to that sanitized shape so direct CI signing material is not echoed.
+- Verification: `deno fmt packages/cli`; `deno fmt --check packages/cli`; `deno lint packages/cli`; `pnpm --filter @napplet/cli build`; `pnpm --filter @napplet/cli test:unit`; `pnpm build`; `pnpm type-check`; `pnpm -r test:unit`; `pnpm dlx aislop@0.12.0 scan --json .`; `git diff --check`.
+- Commit: `09dcbeaf` (`Expose deploy diagnostics without publishing`).
+- Remaining scope: live Blossom/relay status probing, raw `bunker://` pairing, sync/delete flows, and richer progress UI are still pending.
+
+### Quick task 260701-l4f — COMPLETE
+
+- Added nsyte-compatible `nbunksec` signing for `@napplet/cli` deploy using an async signer interface shared by local and remote signers.
+- Implemented narrow local nbunksec bech32/TLV decode/encode helpers without adding a dependency, then wired decoded material to `nostr-tools/nip46` `BunkerSigner`.
+- Updated dry-run manifest signing, Blossom upload authorization signing, and network relay publish paths to await async signers and close signer sessions after deploy.
+- Documented `NAPPLET_CI_SIGNING_KEY` / `NAPPLET_CI_KEY_REFERENCE` usage and kept raw `bunker://` pairing explicitly unsupported.
+- Verification: `deno fmt packages/cli`; `deno fmt --check packages/cli`; `deno lint packages/cli`; `pnpm --filter @napplet/cli build`; `pnpm --filter @napplet/cli test:unit`; `pnpm build`; `pnpm type-check`; `pnpm -r test:unit`; `pnpm dlx aislop@0.12.0 scan --json .`; `git diff --check`.
+- Commit: `50e3872b` (`Support nbunksec CI signing in the CLI`).
+- Remaining scope: live bunker-session proof, raw `bunker://` pairing, relay/server discovery, debug/status/sync/delete flows, and richer progress UI are still pending.
+
+### Quick task 260701-kyb — COMPLETE
+
+- Added local-signer network deploy helpers that upload unique files to configured Blossom servers and publish signed root/named/snapshot manifest events to configured relays.
+- Built Blossom upload authorization events with kind `24242`, `t=upload`, `x` blob hashes, expiration, and `client=napplet`.
+- Wired non-`--dry-run` `napplet deploy` for local hex/`nsec` signers; unsupported signer modes still fail closed for network deploy.
+- Verification: `deno fmt --check packages/cli`; `deno lint packages/cli`; `pnpm --filter @napplet/cli build`; `pnpm --filter @napplet/cli test:unit`; `pnpm build`; `pnpm type-check`; `pnpm -r test:unit`; `git diff --check`; `pnpm dlx aislop@0.12.0 scan --json .`.
+- Commit: `272ff8f7` (`Enable local-signer network deploys`).
+- Remaining scope: live Blossom/relay proof, `nbunksec`/bunker signing, CI revocable-key workflows, relay/server discovery, debug/status/sync/delete flows, and richer progress UI are still pending.
+
+### Quick task 260701-kuy — COMPLETE
+
+- Changed deploy planning so `--snapshot` creates companion snapshot items for each selected root or named deploy target.
+- Added snapshot source metadata and used the local signer pubkey to generate NIP-5A snapshot `a` tags from paired source templates.
+- Extended dry-run local signing so generated snapshot templates receive signed events alongside root/named templates.
+- Verification: `deno fmt --check packages/cli`; `deno lint packages/cli`; `pnpm --filter @napplet/cli build`; `pnpm --filter @napplet/cli test:unit`; temp CLI dry-run with `--root --snapshot --sec`; `pnpm build`; `pnpm type-check`; `pnpm -r test:unit`; `git diff --check`; `pnpm dlx aislop@0.12.0 scan --json .`.
+- Commit: `c7766c7f` (`Generate signed dry-run snapshot manifests`).
+- Remaining scope: network upload/publish, `nbunksec`/bunker signing, CI revocable-key workflows, blob upload, and relay event publish are still pending.
+
+### Quick task 260701-kqi — COMPLETE
+
+- Added local signing primitives for hex and `nsec` private keys using the CLI's declared `nostr-tools` dependency.
+- Extended `napplet deploy --dry-run` to attach `signedEvent` for built root/named manifest templates when signing resolves a local secret from `--sec`, `--prompt-sec`, or the configured native key-store reference.
+- Updated CLI docs and release metadata for the new dry-run signing output.
+- Verification: `deno fmt --check packages/cli`; `deno lint packages/cli`; `pnpm --filter @napplet/cli build`; `pnpm --filter @napplet/cli test:unit`; `pnpm build`; `pnpm type-check`; `pnpm -r test:unit`; `git diff --check`; `pnpm dlx aislop@0.12.0 scan --json .`.
+- Commit: `9c2f6510` (`Sign dry-run manifests with local private keys`).
+- Remaining scope: `nbunksec`/bunker signing, CI revocable-key workflows, relay publishing, blob upload, and snapshot source-address signing are still pending.
+
+### Quick task 260701-kla — COMPLETE
+
+- Corrected CLI deploy constants to canonical NIP-5A values: root `15128`, named `35128`, snapshot `5128`.
+- Added Deno-native manifest/event-template primitives for file hashing, path-only aggregate hashing, root/named templates, and pubkey-backed snapshot templates.
+- Extended `napplet deploy --dry-run` with unsigned manifest template output; snapshot entries remain explicitly skipped until signer pubkey resolution is wired.
+- Verification: `deno fmt --check packages/cli`; `deno lint packages/cli`; `pnpm --filter @napplet/cli build`; `pnpm --filter @napplet/cli test:unit`; `pnpm build`; `pnpm type-check`; `pnpm -r test:unit`; `git diff --check`; `pnpm dlx aislop@0.12.0 scan --json .`.
+- Commit: `e0f96bd2` (`Ground deploy templates in canonical NIP-5A manifests`).
+- Follow-up flagged: `@napplet/vite-plugin` still has older NIP-5D-specific `15129/35129` manifest constants and needs a separate canonical-spec sweep.
+
+### Quick task 260701-kdm — COMPLETE
+
+- Added native key storage providers for macOS Keychain, Windows Credential Manager, and Linux Secret Service.
+- Added `napplet keys store/use/list/delete/doctor` and config support for storing only a local key reference in `.napplet`.
+- Verification: `deno fmt --check packages/cli`; `deno lint packages/cli`; `pnpm --filter @napplet/cli build`; `pnpm --filter @napplet/cli test:unit`; `pnpm build`; `pnpm type-check`; `pnpm -r test:unit`; `git diff --check`; `pnpm dlx aislop@0.12.0 scan --json .`.
+- Commit: `8b2e1e47` (`Support local signing without plaintext key files`).
+
+### v0.34.0 roadmap
+
+- Live source: NIP-5D PR #2303 head `6ca5632` (`5D.md`), fetched 2026-06-26.
+- Runtime injects `window.napplet` before napplet scripts; available NAP domains are present as properties; unsupported domains are absent.
+- Removed old model: `window.napplet.shell`, `shell.supports()`, `shell.ready`, `shell.init`, cached shell environment, and `@napplet/nap/shell` are stale relative to current NIP-5D.
+- Phases: 156 audit/plan, 157 packages, 158 conformance/tooling, 159 docs/skills/boilerplate, 160 release verification and PR.
+- Branch: `feat/nip5d-runtime-injection`.
+
+### Phase 155 record (SHELL-01..06) — COMPLETE
+
+- SHELL-01: validateEnvelope accepts the foundational `shell` domain (FOUNDATIONAL_DOMAINS, NOT in NAP_DOMAINS); `shell.ready` (out) + `shell.init` (in) specs added; reference-shell special-case framing removed. Count invariant 122→124 (61 out/63 in).
+- SHELL-02/03: shim posts `shell.ready`, caches the first `shell.init` into a ShellEnvironment, swaps in makeSupports, exposes services/class/ready()/onReady(); supports() false pre-init/unknown; duplicate init idempotent (first wins). NappletShell typed in @napplet/core.
+- SHELL-04: reference shell replies `{ capabilities:{domains,protocols}, services, class }`; boot harness degraded path `{ domains:[], protocols:{} }`; readiness still detected via shell.ready.
+- SHELL-05: `@napplet/nap/shell` subpath (types/shim/sdk/index) mirroring theme; package.json/jsr.json/tsup wired; re-exports core types + DOMAIN='shell'.
+- SHELL-06: boot/installs-global, boot/no-boot-error, degrade/supports-false re-titled/documented to cite NAP-SHELL (IDs/severities unchanged).
+- Removed `NappletGlobalShell` (sole consumer migrated); `ShellSupports` kept (sdk consumer). Retired the shim's perm:/sandbox path entirely.
+- Deviation (Rule 3): shim/src/shell.test.ts cast `window as unknown as {napplet}` to satisfy package tsc. Out-of-scope: apps/docs/packages/shim.md still lists deferred connect/class rows (logged to deferred-items.md).
+
+### Phase 154 record (DEFER-02..04) — COMPLETE
+
+- DEFER-02: `connect` removed from core (`NAP_DOMAINS`/`NapDomain` → 14 entries, `window.napplet.connect`/`ConnectApi` deleted), `@napplet/nap/connect` subpath + `__fixtures__` + package/jsr/tsup exports deleted, sdk re-exports + shim install removed.
+- DEFER-03: `@napplet/vite-plugin` `connect` option + manifest `connect` tags + `napplet-connect-requires` dev meta + `connect.ts`/`normalizeConnectOptions` + orphaned `strictCsp` deprecation removed; NIP-5A manifest generation still emits path + aggregate `x` + config tags (verified by narrowed aggregate-exclusion test).
+- DEFER-04: conformance `manifest/connect-origins` check + `normalizeConnectOrigin` dependency removed; `validateManifest` no longer validates connect origins; envelope drift guard now asserts every NAP_DOMAINS entry has wire specs.
+- Mirror of shipped NAP-CLASS deferral `9aa4b80`, extended to vite-plugin + conformance-manifest. Cleaned 2 orphaned NAP-CLASS doc refs the class commit missed.
+- nap.md tree-shaking count corrected to the REAL 60 entries / 15 barrels (the package ships a legacy `ifc` subpath beyond the 14 NAP_DOMAINS). ENVELOPE_SPECS count stayed 122/60-out/62-in (connect was wire-less).
+- Commits: 5dcd976 (core), 2441b74 (nap), 9e51727 (vite-plugin), bbfdea4 (conformance), 32f736e (docs), 763b84f (residual fixes). 6 task commits, all on branch `feat/nap-shell`.
+
+### v0.33.0 roadmap
+
+- Highest prior phase = 153 (v0.32.0 conformance UI/watch follow-on); v0.33.0 continues at 154.
+- Phase 154 Defer NAP-CONNECT (DEFER-02..04) MUST precede Phase 155 Implement NAP-SHELL (SHELL-01..06).
+- DEFER-01 (defer NAP-CLASS) already shipped in commit `9aa4b80` — no phase; marked complete in traceability.
+- Staged GREEN at every commit; retire connect/class first so NAP-SHELL lands on the clean `{domains, protocols}` capabilities shape. Branch `feat/nap-shell` off `main`.
+
+### Phase 153 record (UI/watch extension, user-requested follow-on) — COMPLETE
+
+- Goal: start the conformance app via CLI (like `vitest --ui`) + HMR/live re-run, shippable as a boilerplate script; no regression to headless.
+- `napplet-conformance --ui [dir] [--port] [--no-open] [--exec "<cmd>"]`: serves the bundled conformance web app + the napplet (same origin, ACAO, Cache-Control:no-store) + an SSE stream; watches the napplet's served dir; opens the browser; re-runs conformance live on every change. `--exec "vite build --watch"` makes it one turnkey command (edit→rebuild→auto re-run). Headless path untouched (`--ui` additive).
+- One UI codebase: the CLI bundles apps/conformance/dist into dist/ui at build time (scripts/copy-ui.mjs; @napplet/conformance-web added as workspace devDep for build order). Same app served standalone at /conformance.
+- App live mode (`?live=1`): EventSource → re-run on `rerun`, watching badge, run-stamp, manual Re-run button.
+- Shared static.ts (MIME/sendFile/setCors) used by both servers; startUiServer refactored into helpers (handleSse/handleNapplet/handleApp/startWatcher) to clear a function-length finding.
+- Boilerplate doc + READMEs add `test:conformance` (headless) + `test:conformance:ui` (app variant).
+- Verified: live browser loop CONFORMANT → (edit napplet) → auto re-ran → NON-CONFORMANT. cli unit tests 4→8 (ui-server SSE/watch/serve/SPA). Full gate green: build, type-check, test:unit (216), test:e2e (4), test:conformance. aislop 89 (my code clean).
+
+Status: M1+M2+M3+M4 COMPLETE. Final gate green: build(11), type-check(14), test:unit(212), test:e2e(4), test:conformance(CONFORMANT). aislop 89 (only environmental vite/js-yaml dep advisories remain). Changesets authored; new packages at 0.0.0 → first publish 0.1.0.
+
+### Phase 152 record (REL-01..05) — COMPLETE
+
+- REL-01: root `pnpm test:conformance` dogfood green (CLI vs conformant fixture, exit 0).
+- REL-02: boilerplate template change documented at docs/conformance/boilerplate-integration.md (separate napplet/boilerplate repo); also surfaced in PR body.
+- REL-03: root README (packages table + Conformance section + changelog bullet + website list), skills/build-napplet/SKILL.md (Step 13), package READMEs.
+- REL-04: changesets .changeset/napplet-conformance.md + napplet-conformance-cli.md (minor → 0.1.0 first release); engine has jsr.json (npm+JSR), cli npm-only. Versions set to 0.0.0.
+- REL-05: full cross-path gate green; aislop 89/Healthy.
+- NOTE FOR USER: README on main already had a `v0.32.0 — Read-Only NAP-IDENTITY` changelog entry (pre-existing) that collides with this milestone's v0.32.0 label. Left it untouched; added conformance additively. Milestone version label may need reconciliation (this work could be v0.33.0). Surfaced in PR.
+- NOTE: aislop's 1 error = vite (high, upgrade 6.4.3+) + 1 warn = js-yaml — both environmental dependency advisories, not introduced here; out of scope (separate dep-bump like v0.31.0).
+
+Last activity: 2026-06-16 — Phase 150 (b7a7f7e) CLI+fixtures+e2e+CI; Phase 151 apps/conformance web runtime verified live (CONFORMANT, 2 envelopes, manifest inspector) + deploy wiring at /conformance
+
+### Phase 150 record (CLI-01..06) — COMPLETE (b7a7f7e)
+
+- @napplet/conformance-cli (npm-only, playwright). bin napplet-conformance. Loopback ACAO:* server + Playwright Chromium + bootAndCollect + node-side checks + reporters + exit codes. Fixtures (conformant/broken) under tests/fixtures/napplets/*. e2e under tests/e2e/harness (test:e2e). conformance.yml CI with browser cache. Verified: conformant->0, broken->1.
+
+### Phase 151 record (WEB-01..03) — COMPLETE
+
+- apps/conformance (@napplet/conformance-web): vanilla TS + Vite. Loads napplet by ?url= / input, runs engine live (bootAndCollect+runConformance), renders check tree + envelope log + manifest inspector. Reuses @napplet/conformance directly. type-check + build green. Verified live in real browser cross-origin: verdict CONFORMANT, 2 envelopes, manifest-type rendered. Deploy wiring: deploy-site.yml builds with base=/conformance/ and assembles into site/conformance.
+
+### Phase 150 design decisions (in progress)
+
+- Sandbox opacity: a napplet in allow-scripts (no same-origin) iframe is opaque to parent. Observable boot signal = shim's `shell.ready` postMessage. Boot failure = no shell.ready within timeout (also how same-origin reliance manifests). Forbidden-global (window.nostr) access is UNOBSERVABLE across the sandbox → detected via static scan of the built bundle (node-side), fed into ConformanceContext.forbiddenGlobals.
+- Split: `bootAndCollect` (browser-safe DOM harness) lives in the ENGINE (reused by CLI host page AND web runtime). Returns BootCollection { installedGlobal, bootError, emitted, degraded }. `runConformance` runs in node (pure). 
+- NEW PACKAGE `@napplet/conformance-cli` (separate from engine): depends on @napplet/conformance + playwright. Keeps engine zero-heavy-dep + JSR-publishable; CLI is npm-only. Bin `napplet-conformance`. Serves napplet dir + host page on loopback, Playwright chromium runs bootAndCollect, returns BootCollection, node assembles ctx (+manifestHtml +forbiddenGlobals static-scan) and runs checks + reporters + exit code.
+
+### Phase 148 record (ENGINE-01/03/04/05) — COMPLETE
+
+- `@napplet/conformance` v0.1.0 package: ESM-only, deps @napplet/core + @napplet/nap (workspace:^), tsup/type-check/vitest, package.json + jsr.json.
+- `ENVELOPE_SPECS`: single source-of-truth map of all 123 wire discriminants (60 outbound / 63 inbound; connect=0). `validateEnvelope()` returns field-level verdicts (codes: not-an-object, missing-type, malformed-type, unknown-domain, unknown-type, inbound-type-emitted, missing-field, wrong-type).
+- `validateManifest()`: napplet-type (regex), napplet-aggregate-hash (64-hex), napplet-requires (known NAP / nap: prefix), napplet-config-schema (JSON, rejects `pattern` keyword), napplet-connect-requires (canonical `normalizeConnectOrigin` from @napplet/nap/connect/types), no-inline-`<script>` (ported from vite-plugin html.ts).
+- Drift test scans `packages/nap/src/**/*.ts` for `^type: 'domain.action'` literals (excludes JSDoc) → asserts ENVELOPE_SPECS covers every one + no stale entries.
+- DECISION: validators hand-written + drift-guarded (not generated). DECISION: reuse `normalizeConnectOrigin` to avoid origin-validation drift (makes @napplet/nap a runtime dep).
 
 ## Accumulated Context
 
@@ -128,6 +441,34 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 - INFO: Local `specs/NIP-5D.md` may be stale vs napplet/nubs master post-PR-15 (`window.nostr` removal merged 2026-04-21). Phase 138 NIP5D-01 syncs before layering v0.29.0 amendment
 - INFO: `world: 'MAIN'` extension-API bypass acknowledged as residual — no page-side blocking mechanism exists. NUB-CLASS-1 `connect-src 'none'` is the structural mitigation. Phase 136 artifact MUST document this honestly; Phase 137 amendment + Phase 138 NIP-5D amendment MUST NOT claim a fix
 
+### Quick Tasks Completed
+
+| Quick ID | Task | Date | Commit | Artifacts |
+|----------|------|------|--------|-----------|
+| 260715-ogy | Add neutral community and group chat invite links to the SPA and docs | 2026-07-15 | ccc3796b | [260715-ogy-add-neutral-community-and-group-chat-inv](./quick/260715-ogy-add-neutral-community-and-group-chat-inv/) |
+| 260711-hhy | Replace numbered relay/server selection with autocomplete and prompt separately for Nostr Connect bunker relays | 2026-07-11 | be89ec7d | [260711-hhy-replace-napplet-cli-numbered-relay-serve](./quick/260711-hhy-replace-napplet-cli-numbered-relay-serve/) |
+| 260710-rce | Exclude local CLI config and tooling state from napplet deploy manifest collection | 2026-07-10 | 5f28c4e5 | [260710-rce-exclude-local-cli-config-and-tooling-sta](./quick/260710-rce-exclude-local-cli-config-and-tooling-sta/) |
+| 260710-ng9 | Fix napplet.run conformance to accept NIP-19 napplet manifest pointers | 2026-07-10 | 04606c3a | [260710-ng9-fix-napplet-run-conformance-to-accept-ne](./quick/260710-ng9-fix-napplet-run-conformance-to-accept-ne/) |
+| 260710-mzr | Move Core Concepts to the top of the affected docs section | 2026-07-10 | bc4cd533 | [260710-mzr-move-core-concepts-to-the-top-of-the-aff](./quick/260710-mzr-move-core-concepts-to-the-top-of-the-aff/) |
+| 260710-lai | Add Note Drafts boilerplate and AI-agent tutorials | 2026-07-10 | 39676ba4 | [260710-lai-write-note-drafts-tutorial-variants-upda](./quick/260710-lai-write-note-drafts-tutorial-variants-upda/) |
+| 260710-kmj | Treat nsite deploy failures as optional skips in Deploy site | 2026-07-10 | 2248c6c8 | [260710-kmj-treat-nsite-deploy-failures-as-optional-](./quick/260710-kmj-treat-nsite-deploy-failures-as-optional-/) |
+| 260707-hrs | Align RESOURCE htree scheme | 2026-07-07 | 7ec9561f | [260707-hrs-align-resource-htree-scheme](./quick/260707-hrs-align-resource-htree-scheme/) |
+| 260703-ghg | Align napplet packages with NAP RelayEventResult sidecars and updated outbox stream lifecycle | 2026-07-03 | 2ce3e3f2 | [260703-ghg-align-napplet-packages-with-nap-relayeve](./quick/260703-ghg-align-napplet-packages-with-nap-relayeve/) |
+| 260703-guj | Ignore Playwright MCP local artifacts | 2026-07-03 | f9f34992 | [260703-guj-ignore-playwright-mcp-local-artifacts](./quick/260703-guj-ignore-playwright-mcp-local-artifacts/) |
+| 260703-jrx | Finish RelayEventResult sidecar doc cleanup | 2026-07-03 | e1aceaed | [260703-jrx-finish-relayeventresult-sidecar-doc-cleanup](./quick/260703-jrx-finish-relayeventresult-sidecar-doc-cleanup/) |
+| 260703-ver | Chase NAP-OUTBOX eose removal | 2026-07-03 | 851d7ba2 | [260703-ver-chase-nap-outbox-eose-removal](./quick/260703-ver-chase-nap-outbox-eose-removal/) |
+| 260706-hhx | Add Codex as an installation target for @napplet/skills skills installer | 2026-07-06 | e74946d6 | [260706-hhx-add-codex-as-an-installation-target-for-](./quick/260706-hhx-add-codex-as-an-installation-target-for-/) |
+| 260706-lc6 | Resolve napplet/web#119 conformance reference resource.bytes support | 2026-07-06 | 5ca864bc | [260706-lc6-resolve-napplet-web-119-conformance-refe](./quick/260706-lc6-resolve-napplet-web-119-conformance-refe/) |
+| 260706-l3j | Audit local skill scaffolding workflow so new napplets start from boilerplate | 2026-07-06 | 829b3121 | [260706-l3j-audit-local-skill-scaffolding-workflow-s](./quick/260706-l3j-audit-local-skill-scaffolding-workflow-s/) |
+| 260706-qdq | Make napplet authoring skills SDK-first | 2026-07-06 | f8ea69a7 | [260706-qdq-make-napplet-authoring-skills-sdk-first-](./quick/260706-qdq-make-napplet-authoring-skills-sdk-first-/) |
+| 260706-lst | Align NAP-LISTS add/remove result envelope fields | 2026-07-06 | 76f5c4d5 | [260706-lst-align-lists-result-fields](./quick/260706-lst-align-lists-result-fields/) |
+| 260706-med | Align NAP-MEDIA session context with context links | 2026-07-06 | fa383a7f | [260706-med-align-media-session-context](./quick/260706-med-align-media-session-context/) |
+| 260706-cmn | Align NAP-COMMON profile result with RelayEventResult | 2026-07-06 | ef8365f6 | [260706-cmn-align-common-profile-result](./quick/260706-cmn-align-common-profile-result/) |
+| 260706-cvr | Align NAP-CVM registry surface with napplet/naps PR #31 | 2026-07-06 | 0a0a7327 | [260706-cvr-align-nap-cvm-registry-surface](./quick/260706-cvr-align-nap-cvm-registry-surface/) |
+| 260706-lsr | Align napplet authoring skills with implemented package NAP domains | 2026-07-06 | 986299aa | [260706-lsr-task-ensure-napplet-skills-include-all-a](./quick/260706-lsr-task-ensure-napplet-skills-include-all-a/) |
+| 260706-psu | Resolve napplet/web#126 with @napplet/shim host prelude | 2026-07-06 | 4e726171 | [260706-psu-task-resolve-napplet-web-126-by-adding-a](./quick/260706-psu-task-resolve-napplet-web-126-by-adding-a/) |
+| 260706-dmu | Align NAP-DM result envelope unions | 2026-07-07 | ac9c32e0 | [260706-dmu-align-dm-result-envelope-unions](./quick/260706-dmu-align-dm-result-envelope-unions/) |
+| 260706-via | Harden napplet skills against direct browser network and storage APIs in sandboxed napplets | 2026-07-06 | e781e436 | [260706-via-harden-napplet-skills-against-direct-bro](./quick/260706-via-harden-napplet-skills-against-direct-bro/) |
 ## Deferred Items
 
 Items acknowledged and deferred at v0.31.0 milestone close on 2026-05-24:
@@ -160,9 +501,9 @@ Items acknowledged and deferred at v0.31.0 milestone close on 2026-05-24:
 
 ## Session Continuity
 
-Last session: 2026-04-23T15:19:18.662Z
-Stopped at: Completed 138-02-PLAN.md (parallel wave 1)
-Resume: `/gsd:plan-phase 135` to plan first-party types + SDK plumbing. Phase 136 may be planned in parallel.
+Last session: 2026-06-17T04:30:00.000Z
+Stopped at: Completed 155-01-PLAN.md (Implement NAP-SHELL — SHELL-01..06)
+Resume: Phase 155 COMPLETE. All v0.33.0 SHELL requirements satisfied; both phases (154, 155) done. Next: orchestrator verify_phase_goal for Phase 155, then `/gsd:audit-milestone v0.33.0` → `/gsd:ship`.
 
 - v0.26.0: Consolidated `@napplet/nub-*` packages into single `@napplet/nub` with 34 subpath exports; deprecated packages ship as 1-line re-export shims for one release cycle
 - v0.27.0: Runtime API surface uses IFC terminology (`window.napplet.ifc`, `@napplet/sdk` `ifc` export); hard break, no backward-compat alias
@@ -211,6 +552,28 @@ Surfaced by research (informational — each belongs to a specific phase plan):
 | 260424-o1k | Implement default shell.supports() in shim so napplets can be tested without a shell | 2026-04-24 | 5ad9cdb | [260424-o1k-implement-default-shell-supports-in-shim](./quick/260424-o1k-implement-default-shell-supports-in-shim/) |
 | 260524-kxa | please add badges to the README for github workflows, as well as badges for both npm and jsr | 2026-05-24 | 8f4662b | [260524-kxa-please-add-badges-to-the-readme-for-gith](./quick/260524-kxa-please-add-badges-to-the-readme-for-gith/) |
 | 260524-l1t | please add a workflow that runs the ai slop scan and produces a badge for the readme that shows the score | 2026-05-24 | 2835356 | [260524-l1t-please-add-a-workflow-that-runs-the-ai-s](./quick/260524-l1t-please-add-a-workflow-that-runs-the-ai-s/) |
+| 260615-fast | fix docs 404s: .html doc URLs (cleanUrls:false + SPA links) so they resolve on Bunny/nsite static hosting | 2026-06-15 | 025d4d9 | — (inline /gsd:fast) |
+| 260615-u78 | add CI link checker for SPA + docs (Playwright crawl over static-host-served assembly) to catch the cleanUrls 404 class | 2026-06-15 | 80586c3 | [260615-u78-add-ci-link-checker-for-spa-docs](./quick/260615-u78-add-ci-link-checker-for-spa-docs/) |
+| 260617-83q | Fix napplet/web#53: remove anti-spec assertNoInlineScripts (vite-plugin) + the no-inline-scripts conformance check — inline JS is mandatory under NIP-5D srcdoc/opaque-origin loading. Harden AGENTS.md protocol-fidelity guardrails | 2026-06-17 | 44cf48c | [260617-83q-fix-napplet-web-53-remove-anti-spec-asse](./quick/260617-83q-fix-napplet-web-53-remove-anti-spec-asse/) |
+| 260617-mym | Resolve #57 (NAP-STORAGE per-instance scope) and #58 (NAAT archetype manifest tag) | 2026-06-17 | e63ee78 | [260617-mym-resolve-57-nap-storage-per-instance-scop](./quick/260617-mym-resolve-57-nap-storage-per-instance-scop/) |
+| 260617-qmu | Retire deferred NAP-CLASS / NAP-CONNECT surface from docs/specs AND the residual opaque `class` field re-homed into NAP-SHELL `shell.init` (canonical NAP-SHELL has no class) — AGENTS.md rule 8 | 2026-06-17 | 9ffa822 | [260617-qmu-retire-deferred-nap-class-nap-connect-su](./quick/260617-qmu-retire-deferred-nap-class-nap-connect-su/) |
+| 260617-rel | Publish per-package GitHub Releases (CHANGELOG body) after npm deploy — idempotent scripts/github-releases.mjs + Publish-workflow step (fast) | 2026-06-17 | 6a49f80 | — (inline /gsd:fast) |
+| 260619-qvr | Clarify alpha status in the bottom packages and boilerplate install sections | 2026-06-19 | 2a9d6b3 | [260619-qvr-clarify-alpha-status-notices-in-bottom-p](./quick/260619-qvr-clarify-alpha-status-notices-in-bottom-p/) |
+| 260622-oxt | Implement NAP-LISTS from napplet/naps PR #68 | 2026-06-22 | 891af42 | [260622-oxt-implement-nap-lists-from-napplet-naps-pr](./quick/260622-oxt-implement-nap-lists-from-napplet-naps-pr/) |
+| 260623-8j8 | implement bytesMany from updated NAP-RESOURCE | 2026-06-23 | 3bc214c | [260623-8j8-implement-bytesmany-from-updated-nap-res](./quick/260623-8j8-implement-bytesmany-from-updated-nap-res/) |
+| 260626-mt6 | Implement NAP-DM from napplet/naps PR #74 and prepare release PR with tests and changeset | 2026-06-26 | c451810 | [260626-mt6-implement-nap-dm-from-napplet-naps-74-an](./quick/260626-mt6-implement-nap-dm-from-napplet-naps-74-an/) |
+| 260626-nkv | Resolve napplet/web#91: guard relay query result events and open PR | 2026-06-26 | 9d23f6c | [260626-nkv-resolve-napplet-web-91-if-valid-guard-re](./quick/260626-nkv-resolve-napplet-web-91-if-valid-guard-re/) |
+| 260701-k68 | Scaffold @napplet/cli Deno package with init, discovery staging, deploy plan, signing mode parsing, and wrapper command surfaces | 2026-07-01 | 4bec5648 | [260701-k68-scaffold-napplet-cli-deno-package-with-i](./quick/260701-k68-scaffold-napplet-cli-deno-package-with-i/) |
+| 260702-820 | Implement NAP-COUNT from napplet/naps PR #69 using current count.query surface | 2026-07-02 | 48a89ac5 | [260702-820-implement-nap-count](./quick/260702-820-implement-nap-count/) |
+| 260703-ghg | Align napplet packages with NAP RelayEventResult sidecars and updated outbox stream lifecycle | 2026-07-03 | 2ce3e3f2 | [260703-ghg-align-napplet-packages-with-nap-relayeve](./quick/260703-ghg-align-napplet-packages-with-nap-relayeve/) |
+| 260703-guj | Ignore Playwright MCP local artifacts | 2026-07-03 | f9f34992 | [260703-guj-ignore-playwright-mcp-local-artifacts](./quick/260703-guj-ignore-playwright-mcp-local-artifacts/) |
+| 260703-gz0 | Add @napplet/cli to the JSR-only publish workflow | 2026-07-03 | 6d98908c | [260703-gz0-add-napplet-cli-to-jsr-only-publish-work](./quick/260703-gz0-add-napplet-cli-to-jsr-only-publish-work/) |
+| 260703-jrx | Finish RelayEventResult sidecar doc cleanup | 2026-07-03 | e1aceaed | [260703-jrx-finish-relayeventresult-sidecar-doc-cleanup](./quick/260703-jrx-finish-relayeventresult-sidecar-doc-cleanup/) |
+| 260703-ver | Chase NAP-OUTBOX eose removal | 2026-07-03 | 851d7ba2 | [260703-ver-chase-nap-outbox-eose-removal](./quick/260703-ver-chase-nap-outbox-eose-removal/) |
+| 260704-fb4 | Add `napplet keys connect` NIP-46 remote-signer login (nostrconnect QR + bunker:// paste race) | 2026-07-04 | fdc0f80 | [260704-fb4-napplet-keys-connect-nip-46-remote-signe](./quick/260704-fb4-napplet-keys-connect-nip-46-remote-signe/) |
+| 260706-hhx | Add Codex as an installation target for @napplet/skills skills installer | 2026-07-06 | e74946d6 | [260706-hhx-add-codex-as-an-installation-target-for-](./quick/260706-hhx-add-codex-as-an-installation-target-for-/) |
+| 260706-eh0 | Populate NIP-5A title/description manifest tags from built HTML (vite-plugin options + CLI index.html parsing) | 2026-07-06 | 838efa5 | [260706-eh0-populate-nip-5a-title-description-manife](./quick/260706-eh0-populate-nip-5a-title-description-manife/) |
+| 260706-rm2 | Fix Publish to JSR failure for @napplet/shim missing prelude.global source export | 2026-07-06 | 6cb6b6b5 | [260706-rm2-fix-publish-to-jsr-failure-for-napplet-s](./quick/260706-rm2-fix-publish-to-jsr-failure-for-napplet-s/) |
 
 Last session: 2026-04-21T20:46:00.000Z
 Stopped at: Completed 142-03-PLAN.md (Phase 142 TERMINAL-COMPLETE)
@@ -218,4 +581,4 @@ Resume: Phase 142 TERMINAL-COMPLETE — all 13 VER-IDs (VER-01..13) verified PAS
 
 ## Operator Next Steps
 
-- Start the next milestone with /gsd-new-milestone
+- Phase 155 (Implement NAP-SHELL) COMPLETE. Run `/gsd:audit-milestone v0.33.0`, then `/gsd:ship`.

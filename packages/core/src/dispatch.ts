@@ -1,21 +1,21 @@
 /**
- * @napplet/core -- NUB registration and message dispatch infrastructure.
+ * @napplet/core -- NAP registration and message dispatch infrastructure.
  *
- * Provides a NUB-agnostic mechanism for NUB modules (relay, identity, storage, ifc)
+ * Provides a NAP-agnostic mechanism for NAP modules (relay, identity, storage, inc)
  * to register their domain string and a message handler function. Inbound messages
- * are dispatched to the correct NUB handler based on the domain prefix extracted
+ * are dispatched to the correct NAP handler based on the domain prefix extracted
  * from `message.type` (the part before the first `.`).
  *
  * Use the {@link createDispatch} factory for isolated registries (testing,
- * multi-instance), or the module-level singleton exports ({@link registerNub},
+ * multi-instance), or the module-level singleton exports ({@link registerNap},
  * {@link dispatch}, {@link getRegisteredDomains}) for the common single-registry case.
  *
  * @example
  * ```ts
- * import { registerNub, dispatch } from '@napplet/core';
+ * import { registerNap, dispatch } from '@napplet/core';
  *
- * // NUB module registers its domain:
- * registerNub('relay', (msg) => {
+ * // NAP module registers its domain:
+ * registerNap('relay', (msg) => {
  *   console.log('relay handler received:', msg.type);
  * });
  *
@@ -30,26 +30,26 @@
 import type { NappletMessage } from './envelope.js';
 
 /**
- * Callback that a NUB module provides to handle messages in its domain.
+ * Callback that a NAP module provides to handle messages in its domain.
  *
  * @param message - The envelope message whose `type` matched this handler's domain.
  *
  * @example
  * ```ts
- * const handler: NubHandler = (msg) => {
+ * const handler: NapHandler = (msg) => {
  *   console.log('Received:', msg.type);
  * };
  * ```
  */
-export type NubHandler = (message: NappletMessage) => void;
+export type NapHandler = (message: NappletMessage) => void;
 
 /**
  * Shape returned by {@link createDispatch}. Contains the three dispatch
  * operations backed by a shared, isolated handler registry.
  */
-export interface NubDispatch {
-  /** Register a NUB domain handler. Throws if the domain is already registered. */
-  registerNub: (domain: string, handler: NubHandler) => void;
+export interface NapDispatch {
+  /** Register a NAP domain handler. Throws if the domain is already registered. */
+  registerNap: (domain: string, handler: NapHandler) => void;
   /** Dispatch a message to the handler matching its domain prefix. Returns `true` if handled. */
   dispatch: (message: NappletMessage) => boolean;
   /** Return all currently registered domain strings. */
@@ -57,10 +57,10 @@ export interface NubDispatch {
 }
 
 /**
- * Create an isolated NUB dispatch registry.
+ * Create an isolated NAP dispatch registry.
  *
- * Each call returns a fresh `{ registerNub, dispatch, getRegisteredDomains }`
- * backed by its own `Map<string, NubHandler>`. Use this factory for
+ * Each call returns a fresh `{ registerNap, dispatch, getRegisteredDomains }`
+ * backed by its own `Map<string, NapHandler>`. Use this factory for
  * testability or when multiple independent dispatch registries are needed.
  *
  * @returns A fresh dispatch instance with its own handler map.
@@ -69,16 +69,16 @@ export interface NubDispatch {
  * ```ts
  * import { createDispatch } from '@napplet/core';
  *
- * const { registerNub, dispatch } = createDispatch();
- * registerNub('relay', handleRelayMessage);
+ * const { registerNap, dispatch } = createDispatch();
+ * registerNap('relay', handleRelayMessage);
  * dispatch({ type: 'relay.subscribe' }); // true
  * ```
  */
-export function createDispatch(): NubDispatch {
-  const handlers = new Map<string, NubHandler>();
+export function createDispatch(): NapDispatch {
+  const handlers = new Map<string, NapHandler>();
 
   /**
-   * Register a handler for the given NUB domain.
+   * Register a handler for the given NAP domain.
    *
    * @param domain - The domain string (e.g., `'relay'`, `'identity'`).
    * @param handler - Callback invoked for messages in this domain.
@@ -86,12 +86,12 @@ export function createDispatch(): NubDispatch {
    *
    * @example
    * ```ts
-   * registerNub('identity', (msg) => { /* handle identity.* messages *\/ });
+   * registerNap('identity', (msg) => { /* handle identity.* messages *\/ });
    * ```
    */
-  function registerNub(domain: string, handler: NubHandler): void {
+  function registerNap(domain: string, handler: NapHandler): void {
     if (handlers.has(domain)) {
-      throw new Error(`NUB domain "${domain}" is already registered`);
+      throw new Error(`NAP domain "${domain}" is already registered`);
     }
     handlers.set(domain, handler);
   }
@@ -139,13 +139,13 @@ export function createDispatch(): NubDispatch {
     return Array.from(handlers.keys());
   }
 
-  return { registerNub, dispatch, getRegisteredDomains };
+  return { registerNap, dispatch, getRegisteredDomains };
 }
 
 const _default = createDispatch();
 
 /**
- * Register a handler for the given NUB domain on the default registry.
+ * Register a handler for the given NAP domain on the default registry.
  *
  * @param domain - The domain string (e.g., `'relay'`, `'identity'`).
  * @param handler - Callback invoked for messages in this domain.
@@ -153,11 +153,11 @@ const _default = createDispatch();
  *
  * @example
  * ```ts
- * import { registerNub } from '@napplet/core';
- * registerNub('relay', (msg) => console.log(msg));
+ * import { registerNap } from '@napplet/core';
+ * registerNap('relay', (msg) => console.log(msg));
  * ```
  */
-export const registerNub: NubDispatch['registerNub'] = _default.registerNub;
+export const registerNap: NapDispatch['registerNap'] = _default.registerNap;
 
 /**
  * Dispatch a message on the default registry.
@@ -171,7 +171,7 @@ export const registerNub: NubDispatch['registerNub'] = _default.registerNub;
  * dispatch({ type: 'relay.subscribe' }); // true if relay handler registered
  * ```
  */
-export const dispatch: NubDispatch['dispatch'] = _default.dispatch;
+export const dispatch: NapDispatch['dispatch'] = _default.dispatch;
 
 /**
  * Return all registered domain strings from the default registry.
@@ -184,4 +184,4 @@ export const dispatch: NubDispatch['dispatch'] = _default.dispatch;
  * getRegisteredDomains(); // ['relay', 'identity']
  * ```
  */
-export const getRegisteredDomains: NubDispatch['getRegisteredDomains'] = _default.getRegisteredDomains;
+export const getRegisteredDomains: NapDispatch['getRegisteredDomains'] = _default.getRegisteredDomains;

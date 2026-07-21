@@ -4,26 +4,29 @@
   "type": "module",
   "scripts": {
     "build": "turbo run build",
-    "test": "turbo run test:unit",
+    "dev:site": "turbo run dev --filter=@napplet/web --filter=@napplet/docs",
+    "test": "pnpm check:jsr && turbo run test:unit && pnpm test:tutorial",
     "test:unit": "turbo run test:unit",
+    "test:tutorial": "node --test scripts/tutorial-package-versions.test.mjs && node scripts/test-tutorial.mjs",
+    "test:e2e": "turbo run test:e2e",
+    "test:conformance": "node packages/conformance-cli/dist/cli.js tests/fixtures/napplets/conformant",
     "lint": "turbo run lint",
     "type-check": "turbo run type-check",
+    "check:links": "node scripts/check-links.mjs",
+    "check:jsr": "node scripts/check-jsr-exports.mjs",
     "version-packages": "changeset version && node scripts/sync-jsr-versions.mjs",
-    "publish-packages": "turbo run build && pnpm publish -r --access public --no-git-checks",
-    "publish-jsr": "node scripts/sync-jsr-versions.mjs && pnpm -r --filter @napplet/core --filter @napplet/nap --filter @napplet/sdk --filter @napplet/shim --filter @napplet/vite-plugin exec npx jsr publish --allow-slow-types --allow-dirty"
+    "publish-packages": "turbo run build && pnpm -r --filter='!@napplet/cli' publish --access public --no-git-checks",
+    "publish-jsr": "node scripts/sync-jsr-versions.mjs && pnpm -r --filter='./packages/*' --filter='!@napplet/boilerplate' --filter='!@napplet/conformance-cli' exec npx jsr publish --allow-slow-types --allow-dirty"
   },
   "devDependencies": {
     "@changesets/cli": "^2.30.0",
+    "happy-dom": "^20.10.3",
     "nostr-tools": "^2.23.3",
+    "playwright": "^1.59.1",
     "turbo": "^2.9.14",
     "typescript": "^5.9.3",
-    "vite": "^6.4.2",
+    "vite": "^6.4.3",
     "vitest": "^4.1.2"
-  },
-  "pnpm": {
-    "overrides": {
-      "postcss": "8.5.10"
-    }
   },
   "packageManager": "pnpm@10.8.0"
 }

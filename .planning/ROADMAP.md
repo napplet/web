@@ -33,6 +33,9 @@
 - ✅ **v0.29.0 NUB-CONNECT + Shell as CSP Authority** — Phases 135-142 (shipped 2026-04-21) — [Archive](milestones/v0.29.0-ROADMAP.md)
 - ✅ **v0.30.0 Class-Gated Decrypt Surface** — Phases 135-138 (shipped 2026-04-23) — [Archive](milestones/v0.30.0-ROADMAP.md)
 - ✅ **v0.31.0 Cleanup Quality Gate** — Phases 143-147 (shipped 2026-05-24) — [Archive](milestones/v0.31.0-ROADMAP.md)
+- ✅ **v0.32.0 Napplet Conformance** — Phases 148-153 (shipped 2026-06-16)
+- ✅ **v0.33.0 NAP-SHELL Alignment** — Phases 154-155 (superseded by v0.34.0 NIP-5D runtime-injection update)
+- 🔨 **v0.34.0 NIP-5D Runtime Injection** — Phases 156-160 (in progress)
 
 ## Phases
 
@@ -41,6 +44,237 @@
 - Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
 
 Note: Phase 45 (IPC terminology cleanup) was completed as a quick task during v0.8.0 and is not part of the v0.9.0 roadmap. Phases 57–60 were deprecated after v0.11.0 and archived under `milestones/v0.12.0-phases/deprecated/`.
+
+### 🔨 v0.34.0 NIP-5D Runtime Injection (Phases 156-160) — IN PROGRESS
+
+**Milestone Goal:** Align the SDK, shim, conformance tooling, docs, skills, and
+boilerplate guidance with the current NIP-5D PR #2303 head `6ca5632`: runtimes
+inject `window.napplet` before any napplet script runs; each available NAP
+domain is present as a property; unsupported domains are absent; `shell.ready`,
+`shell.init`, `window.napplet.shell`, and `shell.supports()` are not normative
+protocol.
+
+**Phase groups:** Phase 156 source audit and plan lock -> Phase 157 package
+runtime-injection migration (4 plans) -> Phase 158 conformance/tooling
+migration (2 plans) -> Phase 159 docs/skills/boilerplate migration (2 plans)
+-> Phase 160 release verification and PR.
+Ships as one coordinated release PR off branch `feat/nip5d-runtime-injection`.
+
+- [ ] **Phase 156: Source Audit and Plan Lock** — Capture the live NIP-5D delta,
+  audit old NAP-SHELL/supports surfaces, and write checked execution plans.
+  Requirements: NIP5D-01.
+- [ ] **Phase 157: Packages Runtime-Injection Migration** — Update
+  `@napplet/core`, `@napplet/shim`, `@napplet/nap`, and `@napplet/sdk` so
+  domain objects are optional/injected, the shim can install selected domains,
+  and NAP-SHELL surfaces are retired from active package APIs. Requirements:
+  NIP5D-01, NIP5D-02, NIP5D-03, PKG-01..05.
+- [ ] **Phase 158: Conformance and Fixture Migration** — Update
+  `@napplet/conformance`, `@napplet/conformance-cli`, web conformance runtime,
+  and fixtures so boot and degradation checks use injected namespace/domain
+  presence rather than shell handshake/supports traffic. Requirements:
+  NIP5D-01, NIP5D-02, CONF-01..05.
+- [ ] **Phase 159: Docs, Skills, and Boilerplate Guidance** — Rewrite root docs,
+  apps docs, package READMEs, skills, and boilerplate guidance around
+  runtime-owned injection and napplet-side types/SDK consumption. Requirements:
+  NIP5D-01, NIP5D-03, NIP5D-04, DOC-01..04.
+- [ ] **Phase 160: Release Verification and PR** — Add changesets, run full
+  gates, prove stale-surface grep clean, push, and open the PR. Requirements:
+  REL-01..04.
+
+## Phase Details — v0.34.0 NIP-5D Runtime Injection
+
+### Phase 156: Source Audit and Plan Lock
+**Goal**: The milestone is grounded in live NIP-5D PR #2303 head `6ca5632`, with
+repo impact audited and executable plans checked before implementation.
+**Depends on**: Nothing.
+**Requirements**: NIP5D-01
+**Success Criteria** (what must be TRUE):
+  1. The requirements cite NIP-5D runtime injection, domain-object presence, and
+     removal of generic shell capability query/handshake.
+  2. Code/docs/skills/conformance audit identifies the live surfaces to change.
+  3. Phase plans exist for packages, conformance/tooling, docs/skills, and
+     release verification.
+**Plans:** 1 plan
+- [ ] 156-01-PLAN.md — Record source audit, impact matrix, and checked phase plan.
+
+### Phase 157: Packages Runtime-Injection Migration
+**Goal**: First-party package surfaces align with runtime-injected domain
+objects and no longer require the NAP-SHELL handshake or `supports()` API.
+**Depends on**: Phase 156.
+**Requirements**: NIP5D-01, NIP5D-02, NIP5D-03, PKG-01, PKG-02, PKG-03, PKG-04, PKG-05
+**Success Criteria** (what must be TRUE):
+  1. `NappletGlobal` domain properties are optional and `shell` is gone from the
+     active global type.
+  2. `@napplet/shim` exposes a runtime injection installer that can select
+     domains and emits no `shell.ready` / waits for no `shell.init`.
+  3. `@napplet/nap/shell` and shell helpers are removed or made unavailable from
+     active exports.
+  4. `@napplet/sdk` helpers fail clearly when a domain object is absent and
+     examples gate by property presence.
+**Plans:** 4 plans
+- [ ] 157-01-PLAN.md — Core global/domain type migration.
+- [ ] 157-02-PLAN.md — Remove `@napplet/nap/shell` package subpath.
+- [ ] 157-03-PLAN.md — Shim runtime injection installer.
+- [ ] 157-04-PLAN.md — SDK guards and package verification.
+
+### Phase 158: Conformance and Fixture Migration
+**Goal**: Conformance proves the current NIP-5D bootstrap boundary: injected
+`window.napplet` exists before napplet code, and all observed protocol traffic is
+valid domain traffic.
+**Depends on**: Phase 157.
+**Requirements**: NIP5D-01, NIP5D-02, CONF-01, CONF-02, CONF-03, CONF-04, CONF-05
+**Success Criteria** (what must be TRUE):
+  1. Boot collection injects the shim/runtime namespace before subject scripts.
+  2. No conformance check, validator, drift guard, or fixture treats
+     `shell.ready` / `shell.init` as required protocol.
+  3. Fixtures pass/fail for domain traffic behavior, not shell handshake behavior.
+**Plans:** 2 plans
+- [ ] 158-01-PLAN.md — Conformance engine/runtime migration.
+- [ ] 158-02-PLAN.md — CLI, web runner, and fixture migration.
+
+### Phase 159: Docs, Skills, and Boilerplate Guidance
+**Goal**: Author-facing and agent-facing guidance matches the current model:
+runtimes inject, napplets use types/SDK, and domain absence means unavailable.
+**Depends on**: Phase 157, Phase 158.
+**Requirements**: NIP5D-01, NIP5D-03, NIP5D-04, DOC-01, DOC-02, DOC-03, DOC-04
+**Success Criteria** (what must be TRUE):
+  1. Root docs, package READMEs, and apps docs no longer present `supports()` or
+     NAP-SHELL as current generic runtime API.
+  2. Skills tell agents to build napplets against injected `window.napplet`
+     domains, install types/SDK as needed, and avoid napplet-owned shim imports.
+  3. Boilerplate docs/package guidance is checked and aligned.
+**Plans:** 2 plans
+- [ ] 159-01-PLAN.md — Root, package, and app docs migration.
+- [ ] 159-02-PLAN.md — Skills and boilerplate guidance migration.
+
+### Phase 160: Release Verification and PR
+**Goal**: The migration is release-ready and publicly reviewable.
+**Depends on**: Phase 157, Phase 158, Phase 159.
+**Requirements**: REL-01, REL-02, REL-03, REL-04
+**Success Criteria** (what must be TRUE):
+  1. Changesets exist for every changed shipped package.
+  2. Full verification gates pass and are recorded.
+  3. Stale-surface grep is clean for live first-party surfaces.
+  4. Branch is pushed and a PR is open.
+**Plans:** 1 plan
+- [ ] 160-01-PLAN.md — Changesets, verification, stale-surface audit, PR.
+
+<details>
+<summary>✅ v0.33.0 NAP-SHELL Alignment (Phases 154-155) — SUPERSEDED 2026-06-26</summary>
+
+The v0.33.0 work completed against an older NIP-5D/NAP-SHELL draft, but NIP-5D
+PR #2303 head `6ca5632` removed that generic shell bootstrap/capability-query
+surface in favor of runtime injection and domain-object presence. Its artifacts
+are historical context only and are retired by v0.34.0.
+
+**Milestone Goal:** Align the SDK to the updated NAPs track ([github.com/napplet/naps](https://github.com/napplet/naps), `naps/NAP-SHELL.md` + README domain table; [NIP-5D PR #2303](https://github.com/nostr-protocol/nips/pull/2303)). Implement the mandatory **NAP-SHELL** bootstrap handshake (`shell.ready` → `shell.init`; `shell` is a foundational, non-`supports()`-discoverable domain whose `shell.init` carries `{ capabilities: { domains, protocols }, services, class }`), and defer the now-inactive **NAP-CONNECT** domain (NAP-CLASS already deferred in commit `9aa4b80`). Breaking change (0.x ⇒ minor bumps); never invent protocol surface. Staged GREEN at every commit: retire `connect` first (clearing the `perm:`/`sandbox` capability tokens) so NAP-SHELL lands on the clean `{domains, protocols}` capabilities shape.
+
+**Phase groups:** Phase 154 Defer NAP-CONNECT → Phase 155 Implement NAP-SHELL. Phase 154 MUST precede Phase 155. Ships as one coordinated release PR off branch `feat/nap-shell`.
+
+- [x] **Phase 154: Defer NAP-CONNECT** — Remove the `connect` (NAP-CONNECT) domain from the runtime surface (`NAP_DOMAINS`/`NapDomain`, `window.napplet.connect`, the `@napplet/nap/connect` subpath incl. `__fixtures__` + package/jsr/tsup exports, sdk re-exports, conformance connect envelopes), from `@napplet/vite-plugin`'s build/manifest surface (the `connect` option, manifest `connect` tags, `napplet-connect-requires` dev meta, `connect.ts`/`normalizeConnectOptions`, the now-orphaned `strictCsp` deprecation), and from conformance (`manifest/connect-origins` check + `normalizeConnectOrigin` dependency) — while NIP-5A manifest generation still works. Requirements: DEFER-02, DEFER-03, DEFER-04.
+- [ ] **Phase 155: Implement NAP-SHELL** — Implement the mandatory foundational handshake: `@napplet/shim` posts `shell.ready` and caches the `shell.init` environment `{ capabilities: { domains, protocols }, services, class }`, then answers `supports(domain, protocol?)` synchronously/locally; `window.napplet.shell` exposes `supports()`, `services: string[]`, `class: number | null`, `ready()`, `onReady()` typed in `@napplet/core`; a `@napplet/nap/shell` subpath exposes NAP-SHELL types/surface; the conformance envelope validator recognizes `shell.*` (dropping the special-case) and registers `shell` as the foundational domain; the reference shell replies with the `{ capabilities, services, class }` shape; and the boot/degrade checks cite NAP-SHELL. Requirements: SHELL-01, SHELL-02, SHELL-03, SHELL-04, SHELL-05, SHELL-06.
+
+## Phase Details — v0.33.0 NAP-SHELL Alignment
+
+### Phase 154: Defer NAP-CONNECT
+**Goal**: The `connect` (NAP-CONNECT) domain is fully retired from the active runtime, build/manifest, and conformance surfaces — clearing the `perm:`/`sandbox` capability tokens — while the workspace stays green and NIP-5A manifest generation still works, so Phase 155 can land NAP-SHELL on the clean `{domains, protocols}` capabilities shape.
+**Depends on**: Nothing (first phase of milestone; NAP-CLASS already deferred in `9aa4b80`).
+**Requirements**: DEFER-02, DEFER-03, DEFER-04
+**Success Criteria** (what must be TRUE):
+  1. `window.napplet.connect` no longer exists, `connect` is gone from `NAP_DOMAINS`/`NapDomain`, the `@napplet/nap/connect` subpath (incl. `__fixtures__`) and its package/jsr/tsup exports + sdk re-exports are removed, and the workspace type-checks (`pnpm -r build` + `pnpm -r type-check` exit 0 across all packages).
+  2. `@napplet/vite-plugin` no longer exposes the `connect` option, emits no `connect` manifest tags or `napplet-connect-requires` meta, and `connect.ts`/`normalizeConnectOptions`/the orphaned `strictCsp` deprecation are deleted — yet a build still emits a valid NIP-5A manifest.
+  3. The conformance engine no longer references connect: the `manifest/connect-origins` check and the `normalizeConnectOrigin` dependency are removed, `validateManifest` no longer validates connect origins, and the connect envelope validators are gone.
+  4. A repo-wide grep for the retired connect surface (`window.napplet.connect`, `normalizeConnectOrigin`, `napplet-connect-requires`, `connect-origins`) returns zero first-party matches outside historical changelog/spec records.
+
+**Plans:** 1 plan
+- [x] 154-01-PLAN.md — Remove the connect domain from core/nap/sdk/shim, vite-plugin build+manifest, and conformance; keep build/type-check/test green and NIP-5A manifest generation working (mirrors NAP-CLASS deferral 9aa4b80).
+
+### Phase 155: Implement NAP-SHELL
+**Goal**: NAP-SHELL is implemented as the mandatory, foundational (non-`supports()`-discoverable) bootstrap handshake — the shim performs `shell.ready` → `shell.init`, caches the `{ capabilities: { domains, protocols }, services, class }` environment, and answers `supports(domain, protocol?)` synchronously and locally; the public `window.napplet.shell` API, a `@napplet/nap/shell` subpath, and the conformance engine all recognize `shell.*` as a first-class NAP rather than a private special-case.
+**Depends on**: Phase 154 (connect/class retired so capabilities land on the clean `{domains, protocols}` shape).
+**Requirements**: SHELL-01, SHELL-02, SHELL-03, SHELL-04, SHELL-05, SHELL-06
+**Success Criteria** (what must be TRUE):
+  1. After `import '@napplet/shim'`, the shim posts `shell.ready` (no payload) and caches the inbound `shell.init` environment `{ capabilities: { domains, protocols }, services, class }`; `window.napplet.shell.supports('relay', 'NAP-2')` answers synchronously from the cached environment, returning `false` before init and for any unknown domain/protocol.
+  2. `window.napplet.shell` exposes `supports(domain, protocol?)`, `services: string[]`, `class: number | null` (opaque), `ready(): Promise<ShellEnvironment>`, and `onReady(handler)`, all typed in `@napplet/core`; `pnpm -r build` + `pnpm -r type-check` exit 0 across all packages.
+  3. `import '@napplet/nap/shell'` resolves NAP-SHELL types (and any shim/sdk surface) consistent with the other domains' subpath layout (package/jsr/tsup exports present).
+  4. The conformance envelope validator recognizes `shell.ready` (outbound) and `shell.init` (inbound) as NAP-SHELL envelopes with the reference-shell special-case removed, `shell` registered as the foundational non-`supports()`-discoverable domain, the reference shell replying in the `{ capabilities, services, class }` shape (migrated off `{ naps, sandbox }`) with boot-readiness still detected, and the `boot/installs-global`, `boot/no-boot-error`, and graceful-degradation checks re-titled/documented to cite NAP-SHELL.
+**Plans:** 1 plan
+- [x] 155-01-PLAN.md — Implement NAP-SHELL across core (ShellEnvironment/NappletShell types), a new @napplet/nap/shell subpath, the shim (post shell.ready + cache shell.init {capabilities:{domains,protocols},services,class} + supports/services/class/ready/onReady), and conformance (validator recognizes shell.*, reference shell sends the new shape, boot/degrade checks cite NAP-SHELL); green at every commit.
+
+</details>
+
+### 🔨 v0.32.0 Napplet Conformance (Phases 148-152) — IN PROGRESS
+
+**Milestone Goal:** Let any napplet self-verify protocol conformance locally, before publishing, via one browser-safe engine (`@napplet/conformance`) consumed by a headless Playwright CLI (CI) and a standalone single-window web runtime (`apps/conformance`). v1 is zero-config protocol conformance: manifest/meta validity, boots under `sandbox="allow-scripts"`, installs `window.napplet`, every emitted postMessage envelope validates against hand-written per-NAP validators, graceful degradation when `shell.supports()` is false, no forbidden globals / no undeclared egress. Approved design: `docs/superpowers/specs/2026-06-16-napplet-conformance-design.md`.
+
+**Phase groups:** M1 Engine (148-149) → M2 CLI+CI (150) → M3 Web runtime (151, parallelizable with 150) → M4 Boilerplate+Release (152). Ships as one coordinated NPM + JSR release PR.
+
+- [ ] **Phase 148: Conformance Package + Validators** — Scaffold `@napplet/conformance` (ESM-only, tsup/type-check/vitest, package.json + jsr.json per workspace conventions). Hand-write a runtime envelope validator for all 16 NAP domains (`validateEnvelope`), a manifest/meta validator (`validateManifest`: napplet-type, aggregateHash, config schema draft-07 core subset, connect origins via `normalizeConnectOrigin`, no-inline-scripts), and a drift test asserting every `NapDomain` + exported `*Message` type has validator coverage. Requirements: ENGINE-01, ENGINE-03, ENGINE-04, ENGINE-05.
+- [ ] **Phase 149: Reference Shell, Check Registry, Runner & Reporters** — Scriptable reference mock shell (`createReferenceShell`) that answers `shell.supports()`, responds to each NAP with spec-valid canned data, and records every inbound envelope with verdict. v1 check registry/catalog (manifest, boot, wire, degradation, lifecycle). Serializable `ConformanceRun` model + `toPretty`/`toJson`/`toJUnit` reporters. `runConformance(ctx)` orchestrator. happy-dom unit tests with fixtures. Requirements: ENGINE-02, ENGINE-06, ENGINE-07, ENGINE-08, ENGINE-09.
+- [ ] **Phase 150: Headless CLI + Fixtures + e2e + CI** — `napplet-conformance` bin: Playwright headless Chromium serves a napplet build + host harness page, runs the engine in-page, extracts the run; `--reporter pretty|json|junit`, `--out`, non-zero exit on error-severity failures. In-repo fixture napplets under `tests/fixtures/napplets/*` (one conformant exercising several NAPs, one deliberately broken). e2e harness under `tests/e2e/harness` asserting pass/fail + exit codes. `conformance` CI workflow with browser caching. Requirements: CLI-01, CLI-02, CLI-03, CLI-04, CLI-05, CLI-06.
+- [ ] **Phase 151: Standalone Web Runtime (apps/conformance)** — New single-window app (vanilla/minimal-Svelte) that accepts a napplet URL/build, runs the engine live in-browser, and renders a per-check pass/fail tree, the recorded envelope log with verdicts, and a manifest inspector. Reuses `@napplet/conformance` directly; builds + type-checks in the monorepo; deploy wiring. Depends only on the M1 engine (148-149) — parallelizable with Phase 150. Requirements: WEB-01, WEB-02, WEB-03.
+- [ ] **Phase 152: Boilerplate Integration, Docs, Changesets & Release Prep** — Document + dogfood a package-manager-agnostic `test:conformance` invocation; author the boilerplate-template change (separate repo) as a documented diff in the PR body; update root README + new package README(s) + relevant skills; author changesets for every package whose shipped output changes and sync `jsr.json`; final cross-path gate (engine unit, CLI headless, web build, fixtures pass/fail, `pnpm build`/`type-check`/`test:unit`, AI-slop). Requirements: REL-01, REL-02, REL-03, REL-04, REL-05.
+
+## Phase Details — v0.32.0 Napplet Conformance
+
+### Phase 148: Conformance Package + Validators
+
+**Goal**: `@napplet/conformance` exists as a buildable, type-checked, testable workspace package, and the runtime validation foundation (per-NAP envelope validators + manifest/meta validator + drift coverage) is in place.
+**Depends on**: Nothing (M1 foundation).
+**Requirements**: ENGINE-01, ENGINE-03, ENGINE-04, ENGINE-05
+
+**Success Criteria** (what must be TRUE):
+  1. `pnpm --filter @napplet/conformance build` and `type-check` exit 0; the package is ESM-only with `package.json` + `jsr.json` matching workspace publish conventions.
+  2. `validateEnvelope(msg)` returns a structured verdict for every one of the 16 NAP domains; valid spec envelopes pass and malformed ones report field-level errors.
+  3. `validateManifest(doc)` validates napplet-type, aggregateHash, config schema (draft-07 core subset), connect origins (via `normalizeConnectOrigin`), and rejects inline `<script>` without `src`.
+  4. A drift test fails if any `NapDomain` or exported `@napplet/nap` `*Message` type lacks validator coverage.
+
+### Phase 149: Reference Shell, Check Registry, Runner & Reporters
+
+**Goal**: The engine can boot a napplet against a recording reference shell, run the v1 check catalog, and emit a serializable run in three reporter formats — all unit-tested under happy-dom.
+**Depends on**: Phase 148.
+**Requirements**: ENGINE-02, ENGINE-06, ENGINE-07, ENGINE-08, ENGINE-09
+
+**Success Criteria** (what must be TRUE):
+  1. `createReferenceShell` answers `shell.supports()`, responds to each NAP domain with spec-valid data, and exposes a recorded log of inbound envelopes each carrying a validation verdict.
+  2. The check registry implements the v1 catalog (manifest, boot, wire, degradation, lifecycle); each check returns pass/fail/skip with diagnostics, and a no-op napplet correctly skips untouched-NAP wire checks.
+  3. `runConformance(ctx)` returns a `ConformanceRun` that round-trips through `toJson` and renders via `toPretty` and `toJUnit`.
+  4. happy-dom unit tests cover validators, reference-shell recording, the registry, and reporters; `pnpm -r test:unit` is green.
+
+### Phase 150: Headless CLI + Fixtures + e2e + CI
+
+**Goal**: `test:conformance` works headlessly end-to-end against real fixture napplets and is enforced in CI.
+**Depends on**: Phase 149.
+**Requirements**: CLI-01, CLI-02, CLI-03, CLI-04, CLI-05, CLI-06
+
+**Success Criteria** (what must be TRUE):
+  1. `napplet-conformance <dir|url>` launches headless Chromium, serves the napplet + host page, runs the engine in-page, and prints the selected reporter (`pretty|json|junit`).
+  2. The CLI exits 0 for the conformant fixture and non-zero for the deliberately broken fixture.
+  3. `tests/fixtures/napplets/*` contains a conformant fixture exercising multiple NAPs and a non-conformant fixture; the `tests/e2e/harness` suite asserts both verdicts and exit codes.
+  4. A `conformance` CI workflow builds the fixtures and runs the CLI headless with the Playwright browser cached.
+
+### Phase 151: Standalone Web Runtime (apps/conformance)
+
+**Goal**: A deployable single-window app runs the same conformance engine live in-browser with a visual report.
+**Depends on**: Phase 149 (engine). Parallelizable with Phase 150.
+**Requirements**: WEB-01, WEB-02, WEB-03
+
+**Success Criteria** (what must be TRUE):
+  1. `apps/conformance` accepts a napplet URL (querystring or field) or local build and runs the engine live in its own window.
+  2. The app renders a per-check pass/fail tree, the recorded envelope log with verdicts, and a manifest inspector.
+  3. The app imports `@napplet/conformance` directly (no duplicated logic) and `pnpm --filter @napplet/conformance-web... build`/`type-check` succeed; deploy wiring is present.
+
+### Phase 152: Boilerplate Integration, Docs, Changesets & Release Prep
+
+**Goal**: The capability is dogfooded, documented, and release-ready across NPM + JSR, with the boilerplate-template change prepared for its separate repo.
+**Depends on**: Phase 150, Phase 151.
+**Requirements**: REL-01, REL-02, REL-03, REL-04, REL-05
+
+**Success Criteria** (what must be TRUE):
+  1. A package-manager-agnostic `test:conformance` invocation is documented and dogfooded green against an in-repo fixture.
+  2. The boilerplate-template change (script + minimal config + CI step) is authored as a documented diff in the PR body for the separate repo.
+  3. Root README, new package README(s), and relevant skills document the conformance capability; changesets exist for every package whose shipped output changed and `jsr.json` versions/exports are synced.
+  4. The final cross-path gate is green: engine unit tests, CLI headless run, web-runtime build, fixtures passing/failing as designed, `pnpm build` + `pnpm type-check` + `pnpm -r test:unit`, and the AI-slop gate.
 
 <details>
 <summary>✅ v0.31.0 Cleanup Quality Gate (Phases 143-147) — SHIPPED 2026-05-24</summary>
@@ -515,8 +749,22 @@ Note: Phase 45 (IPC terminology cleanup) was completed as a quick task during v0
 
 ## Progress
 
-**Execution Order:**
-Phase 135 and Phase 136 are independent and MAY execute in parallel (Phase 135 ships first-party types/SDK; Phase 136 runs an empirical Playwright fixture — no shared artifact). Phase 137 blocks on BOTH (amendment cites the shipped surface from 135 and the observed CSP-block shape from 136). Phase 138 blocks on 135 (SDK surface to document) and 137 (amendment drafts to cite by filename). All v0.30.0 enforcement invariants (shell-side enforcement, filename citation discipline, public-repo hygiene) are cross-phase invariants and NOT optional per-phase add-ons.
+**Execution Order (v0.34.0 NIP-5D Runtime Injection):**
+Phase 156 locks source and plan evidence, Phase 157 migrates package APIs in
+four bounded plans, Phase 158 migrates conformance/runtime evidence, Phase 159
+updates docs/skills/boilerplate guidance, and Phase 160 runs release gates and
+opens the PR. Runtime-injection work supersedes v0.33 NAP-SHELL artifacts.
+
+| Phase | Milestone | Plans Complete | Status | Completed |
+|-------|-----------|----------------|--------|-----------|
+| 156. Source Audit and Plan Lock | v0.34.0 | 0/1 | In Progress | |
+| 157. Packages Runtime-Injection Migration | v0.34.0 | 0/4 | Planned | |
+| 158. Conformance and Fixture Migration | v0.34.0 | 0/2 | Planned | |
+| 159. Docs, Skills, and Boilerplate Guidance | v0.34.0 | 0/2 | Planned | |
+| 160. Release Verification and PR | v0.34.0 | 0/1 | Planned | |
+
+<details>
+<summary>Archived progress — v0.30.0 Class-Gated Decrypt Surface (Phases 135-138) — SHIPPED 2026-04-23</summary>
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -524,3 +772,5 @@ Phase 135 and Phase 136 are independent and MAY execute in parallel (Phase 135 s
 | 136. Empirical CSP Injection-Block Verification | 2/2 | Complete    | 2026-04-23 |
 | 137. Public `napplet/nubs` Amendments (NUB-IDENTITY + NUB-CLASS-1 bundled) | 4/4 | Complete    | 2026-04-23 |
 | 138. In-Repo NIP-5D Amendment + Docs + Final Verification | 2/2 | Complete    | 2026-04-23 |
+
+</details>

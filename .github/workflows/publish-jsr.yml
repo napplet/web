@@ -6,9 +6,10 @@ name: Publish to JSR
 # is linked under the @napplet scope on jsr.io.
 #
 # Trigger model:
-# - Fires on push to main (every Version Packages PR merge lands here, plus
-#   any direct main push). JSR's own version-already-published check makes
-#   re-runs a no-op when no new version is staged.
+# - Fires on push to main, but the publish job only runs for Version Packages
+#   merge commits. Ordinary feature PR merges still contain unconsumed
+#   changesets and may have stale jsr.json dependency pins until the generated
+#   Version Packages PR lands.
 # - Manual workflow_dispatch is also wired for one-off bootstrap publishes
 #   (e.g. the first @napplet/core@0.3.0 push after the scope was created).
 
@@ -23,6 +24,7 @@ concurrency:
 
 jobs:
   publish-jsr:
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'Version Packages')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -33,6 +35,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
+      - uses: denoland/setup-deno@v2
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -40,23 +43,34 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       # Idempotent — copies each packages/*/package.json#version into the
-      # sibling jsr.json#version. Catches the case where someone bumped
-      # package.json by hand without re-running `pnpm version-packages`.
+      # sibling JSR package config version. Most packages use jsr.json;
+      # @napplet/cli is Deno-first and publishes from deno.json. Catches
+      # the case where someone bumped package.json by hand without
+      # re-running `pnpm version-packages`.
       - name: Sync jsr.json versions
         run: node scripts/sync-jsr-versions.mjs
 
       # `pnpm -r exec` runs in topological order (respects workspace deps),
       # so @napplet/core publishes before @napplet/nap, which publishes before
       # @napplet/sdk + @napplet/shim, which publish before @napplet/vite-plugin.
-      # @napplet/cli is npm-only and intentionally excluded because it has no
-      # jsr.json manifest.
       # Each package's `npx jsr publish` resolves prior packages from JSR's
-      # newly-populated registry. Do NOT use --parallel here — JSR will reject
-      # dependents whose dependencies aren't yet on the registry.
+      # newly-populated registry.
+      #
+      # --workspace-concurrency=1 is REQUIRED: pnpm's default recursive
+      # concurrency runs the `npx jsr` invocations in parallel, which both
+      # (a) lets JSR reject dependents whose dependencies aren't on the registry
+      # yet, and (b) makes concurrent `npx jsr` processes race on the shared npx
+      # binary-download cache (ENOENT renaming the deno .zip.part). Serializing
+      # to concurrency 1 runs packages strictly in topological order and fixes both.
       #
       # --allow-slow-types: relaxes JSR's strict type-inference checks until
       # we tighten public type exports later (tracked separately).
       # --allow-dirty: tolerates the sync step's jsr.json edits without
       # requiring a follow-up commit.
+      # @napplet/cli publishes to JSR from deno.json only; it is intentionally
+      # excluded from npm publishing in the Publish workflow. @napplet/boilerplate
+      # (npx CLI generator) and @napplet/conformance-cli (Playwright-backed runner)
+      # are published to npm only, so they are excluded from the JSR publish set.
+      # The pure @napplet/conformance engine still publishes to JSR.
       - name: Publish to JSR (topologically ordered)
-        run: pnpm -r --filter @napplet/core --filter @napplet/nap --filter @napplet/sdk --filter @napplet/shim --filter @napplet/vite-plugin exec npx jsr publish --allow-slow-types --allow-dirty
+        run: pnpm -r --workspace-concurrency=1 --filter='./packages/*' --filter='!@napplet/boilerplate' --filter='!@napplet/conformance-cli' exec npx jsr publish --allow-slow-types --allow-dirty

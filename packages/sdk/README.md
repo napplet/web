@@ -4,61 +4,54 @@
 
 ## Getting Started
 
-New napplet projects should start with the CLI:
-
-```bash
-pnpm add -g @napplet/cli
-napplet init my-napplet
-cd my-napplet
-pnpm install
-napplet doctor
-napplet skills install
-```
-
-The generated app imports `@napplet/shim` once, reads `.napplet/napplet.json` for metadata, and uses `@napplet/sdk` for typed runtime calls. Use the manual setup below only when adapting an existing app.
-
 ### Prerequisites
 
-- `@napplet/shim` must be imported (side-effect) to install `window.napplet` before SDK methods are called
+- A NIP-5D runtime injects `window.napplet` before SDK methods are called
 - A shell host running a napplet protocol shell implementation
 
 ### How It Works
 
-1. Import `@napplet/shim` in your entry point to install the `window.napplet` global
-2. Import named exports from `@napplet/sdk` -- `relay`, `ifc`, `storage`, `keys`
-3. Each SDK method delegates to its `window.napplet.*` counterpart at call time
-4. If `window.napplet` is not installed when a method is called, a descriptive error is thrown
+1. Import named exports from `@napplet/sdk` -- `outbox`, `common`, `relay`, `inc`, `storage`, `keys`, `ble`, `count`, `lists`
+2. Each SDK method delegates to its injected `window.napplet.*` counterpart at call time
+3. If `window.napplet` or a requested domain is unavailable when a method is called, a descriptive error is thrown
 
 ### Installation
 
 ```bash
-npm install @napplet/sdk @napplet/shim
+npm install @napplet/sdk
 ```
 
 ## Quick Start
 
 ```ts
-import '@napplet/shim';
-import { relay, ifc, storage, keys, media, notify, config, resource, type NappletConnect, type NostrEvent } from '@napplet/sdk';
+import { outbox, common, inc, storage, keys, media, notify, config, resource, ble, webrtc, link, count, lists } from '@napplet/sdk';
 
-// Subscribe to kind 1 notes
-const sub = relay.subscribe(
-  { kinds: [1], limit: 20 },
-  (event) => console.log('New note:', event.content),
-  () => console.log('End of stored events'),
+// Read kind 1 notes through outbox-aware routing
+const { events } = await outbox.query(
+  [{ kinds: [1], limit: 20 }],
+  { timeoutMs: 3000 },
 );
+for (const result of events) console.log('Note:', result.event.content);
 
-// Publish a signed note
-const signed = await relay.publish({
+// Subscribe to live updates through the same outbox boundary
+const sub = outbox.subscribe([{ kinds: [1], limit: 20 }], { timeoutMs: 3000 });
+sub.on('event', (result) => console.log('New note:', result.event.content));
+
+// Publish a signed note through the user's outbox/write relays
+const published = await outbox.publish({
   kind: 1,
   content: 'Hello from my napplet!',
   tags: [],
   created_at: Math.floor(Date.now() / 1000),
 });
+if (!published.ok || !published.event) throw new Error(published.error ?? 'publish failed');
 
-// Inter-frame messaging
-ifc.emit('chat:message', [], JSON.stringify({ text: 'hi' }));
-const ifcSub = ifc.on('bot:response', (payload) => {
+// Common social actions keep consent, event construction, signing, and relay routing in the shell
+await common.react(published.event.id, '+');
+
+// Inter-napplet messaging
+inc.emit('chat:message', [], JSON.stringify({ text: 'hi' }));
+const incSub = inc.on('bot:response', (payload) => {
   console.log('Bot says:', payload);
 });
 
@@ -78,7 +71,8 @@ const keySub = keys.onAction('editor.save', () => {
 
 // Create a media session
 const { sessionId } = await media.createSession({
-  title: 'My Song', artist: 'The Artist',
+  owner: 'napplet',
+  metadata: { title: 'My Song', artist: 'The Artist' },
 });
 media.reportState(sessionId, { status: 'playing', position: 42.5, duration: 240 });
 
@@ -102,26 +96,28 @@ config.openSettings({ section: 'appearance' });
 
 // Fetch external bytes via the shell (the iframe sandbox + strict CSP block direct fetch)
 const avatarBlob = await resource.bytes('https://example.com/avatar.png');
+const resourceItems = await resource.bytesMany([
+  'https://example.com/avatar.png',
+  'blossom:sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+]);
 const handle = resource.bytesAsObjectURL('blossom:sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855');
 imgEl.src = handle.url;
 // handle.revoke() when done
 
-// Check shell-assigned class (v0.29.0, NAP-CLASS)
-import { getClass, CLASS_DOMAIN } from '@napplet/sdk';
-if (window.napplet.shell.supports(`nap:${CLASS_DOMAIN}`)) {
-  const cls = getClass();   // number | undefined
-  if (cls === 2) { /* NAP-CLASS-2 posture */ }
-}
-
-// Use direct network access if the user approved `connect` origins (v0.29.0, NAP-CONNECT)
-import { connectGranted, connectOrigins } from '@napplet/sdk';
-if (connectGranted()) {
-  const res = await fetch(`${connectOrigins()[0]}/items`);
-}
+// Open a shell-mediated WebRTC data session
+const { session } = await webrtc.open({ scope: { type: 'direct', pubkey: 'abc123...' } });
+await webrtc.send(session.id, { body: 'hello' });
+// Open a shell-mediated BLE session and inspect exposed services
+const { session: bleSession } = await ble.open({ acceptAllDevices: true });
+const bleServices = await ble.services(bleSession.id);
+// Open an external URL through the shell
+await link.open('https://example.com/post/123', { label: 'Read post' });
+// Add an item to a supported NIP-51 list through the runtime
+await lists.add({ type: 'mute-list' }, [{ itemType: 'pubkey', value: 'abc123...' }]);
 
 // Clean up
 sub.close();
-ifcSub.close();
+incSub.close();
 keySub.close();
 configSub.close();
 ```
@@ -130,26 +126,55 @@ configSub.close();
 
 ### `relay`
 
-Relay operations through the shell's relay pool. Mirrors `window.napplet.relay`.
+Low-level relay operations through the shell's relay pool. Mirrors `window.napplet.relay`.
+Use this for explicit relay-local behavior such as group relays, diagnostics,
+and protocol tooling. For normal social reads/publishes, prefer `outbox` or a
+higher-level domain such as `common`, `lists`, `count`, or `dm`.
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| `subscribe(filters, onEvent, onEose, options?)` | `Subscription` | Open a live relay subscription through the shell's relay pool |
+| `subscribe(filters, onEvent, onEose, options?)` | `Subscription` | Open a live relay subscription through the shell's relay pool; `onEvent` receives `RelayEventResult` |
 | `publish(template, options?)` | `Promise<NostrEvent>` | Send event template to the shell for signing and broadcast |
 | `publishEncrypted(template, recipient, encryption?)` | `Promise<NostrEvent>` | Send event template for encryption, signing, and broadcast |
-| `query(filters)` | `Promise<NostrEvent[]>` | One-shot query: subscribe, collect until EOSE, resolve |
+| `query(filters)` | `Promise<RelayEventResult[]>` | One-shot query: collect `RelayEventResult` records until EOSE, resolve |
 
-### `ifc`
+### `outbox`
 
-Inter-frame communication between napplets. Mirrors `window.napplet.ifc`.
-
-Messages are sent as JSON envelope objects (`{ type: 'ifc.emit', topic, payload }`) and received as
-(`{ type: 'ifc.event', topic, payload, sender }`).
+Outbox-aware relay routing. Mirrors `window.napplet.outbox`. The napplet supplies
+filters, event ids, templates, and intent; the shell owns NIP-65 relay discovery,
+fallback, deduplication, signature validation, signing, and publish fanout.
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| `emit(topic, extraTags?, content?)` | `void` | Broadcast an IFC event to other napplets via the shell |
-| `on(topic, callback)` | `{ close(): void }` | Subscribe to IFC events on a topic |
+| `getEvent(eventId, options?)` | `Promise<OutboxEventResult>` | Fetch one event through author/relay-aware routing |
+| `query(filters, options?)` | `Promise<OutboxResult>` | One-shot outbox-aware query returning `RelayEventResult[]` |
+| `subscribe(filters, options?)` | `OutboxSubscription` | Live outbox-aware stream with `on('event')` and `close()` |
+| `publish(template, options?)` | `Promise<OutboxPublishResult>` | Shell-sign and fan out through the user's write relays and directed inbox relays |
+| `resolveRelays(target)` | `Promise<OutboxRelayPlan>` | Diagnostic/advisory relay plan; prefer query/subscribe/publish for app behavior |
+
+### `common`
+
+Common social actions. Mirrors `window.napplet.common`. Use it for NIP-19
+helpers, profile lookup, follows, follow/unfollow, reactions, and reports so the
+shell owns consent, event construction, signing, publishing, and lookup policy.
+
+### `inc`
+
+Inter-napplet communication between napplets. Mirrors `window.napplet.inc`.
+
+Messages are sent as JSON envelope objects (`{ type: 'inc.emit', topic, payload }`) and received as
+(`{ type: 'inc.event', topic, payload, sender }`).
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `emit(topic, extraTags?, content?)` | `void` | Broadcast an INC event to other napplets via the shell |
+| `on(topic, callback)` | `{ close(): void }` | Subscribe to INC events on a topic |
+
+Deprecated IFC compatibility exports are available as migration aliases:
+`ifc`, `ifcEmit`, `ifcOn`, `IFC_DOMAIN`, `installIfcShim`, and the `Ifc*`
+message types. They forward to the INC implementation and resolve to the
+canonical `inc` domain; new code should use `inc`, `incEmit`, `incOn`,
+`INC_DOMAIN`, `installIncShim`, and `Inc*` names.
 
 ### `storage`
 
@@ -161,19 +186,23 @@ Sandboxed key-value storage. Mirrors `window.napplet.storage`. 512 KB quota per 
 | `setItem(key, value)` | `Promise<void>` | Store a key-value pair |
 | `removeItem(key)` | `Promise<void>` | Remove a stored key |
 | `keys()` | `Promise<string[]>` | List all stored keys |
+| `instance.getItem/setItem/removeItem/keys` | (same as above) | Per-instance storage scope — same surface, scoped to this napplet instance (sets `scope: "instance"` on the wire). See NAP-STORAGE. |
 
 ### `media`
 
-Media session control. Mirrors `window.napplet.media`.
+Ownership-aware media sessions. Napplet-owned sessions let your app play media and report state to the shell; shell-owned sessions provide a `source` so the shell fetches, plays, and reports state back.
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| `createSession(metadata?)` | `Promise<{ sessionId }>` | Create a new media session with optional metadata |
+| `createSession(options)` | `Promise<{ sessionId?, owner?, error? }>` | Create a napplet- or shell-owned media session |
 | `updateSession(sessionId, metadata)` | `void` | Update metadata for an existing session |
 | `destroySession(sessionId)` | `void` | Destroy a session |
 | `reportState(sessionId, state)` | `void` | Report playback state |
 | `reportCapabilities(sessionId, actions)` | `void` | Declare supported media actions |
+| `sendCommand(sessionId, action, value?)` | `void` | Request a control action from the current playback owner |
 | `onCommand(sessionId, callback)` | `{ close(): void }` | Listen for shell media commands |
+| `onState(sessionId, callback)` | `{ close(): void }` | Listen for shell-reported state on shell-owned sessions |
+| `onCapabilities(sessionId, callback)` | `{ close(): void }` | Listen for shell-reported capabilities on shell-owned sessions |
 | `onControls(sessionId, callback)` | `{ close(): void }` | Listen for the shell's supported control list |
 
 ### `notify`
@@ -210,7 +239,6 @@ Per-napplet declarative configuration (NAP-CONFIG). Mirrors `window.napplet.conf
 `json-schema-to-ts` is declared as an optional `peerDependency` of `@napplet/nap` (scoped to the `@napplet/nap/config` domain's `FromSchema` typing). Install it in your napplet to get `FromSchema<typeof schema>` typing for your `config.subscribe` callback -- the `values` parameter is inferred directly from your schema (enums, required fields, defaults all flow through). Authors who skip `json-schema-to-ts` pay no install cost and `config.subscribe` still works with the default `Record<string, unknown>` typing.
 
 ```ts
-import '@napplet/shim';
 import { config } from '@napplet/sdk';
 import type { FromSchema } from 'json-schema-to-ts';
 
@@ -241,71 +269,23 @@ Sandboxed byte fetching (NAP-RESOURCE). Mirrors `window.napplet.resource`. Requi
 
 | Method | Returns | Description |
 |--------|---------|-------------|
+| `info()` | `Promise<ResourceInfo>` | Inspect advisory schemes and coarse policy limits. Not required before fetching. |
 | `bytes(url, opts?)` | `Promise<Blob>` | Fetch bytes through the shell. `opts.signal` accepts an `AbortSignal`. |
+| `bytesMany(urls, opts?)` | `Promise<ResourceBytesItem[]>` | Fetch many URLs through one envelope. Items preserve input order and length. |
 | `bytesAsObjectURL(url)` | `{ url: string; revoke: () => void }` | Synchronous handle whose `url` resolves to a blob URL once the fetch completes. |
 
-Four canonical schemes: `data:` (in-shim), `https:` (shell-side under policy), `blossom:sha256:<hex>` (hash-verified), `nostr:<bech32>` (single-hop NIP-19).
+Canonical schemes: `data:` (in-shim), `https:` (shell-side under policy), `blossom:sha256:<hex>` (hash-verified), `htree:` (Hashtree-verified), `nostr:<bech32>` (single-hop NIP-19).
 
 Bare helper aliases are also re-exported for consumers that prefer functional imports:
 
 ```ts
-import { resourceBytes, resourceBytesAsObjectURL } from '@napplet/sdk';
+import { resourceInfo, resourceBytes, resourceBytesMany, resourceBytesAsObjectURL } from '@napplet/sdk';
 
+const info = await resourceInfo();
 const blob = await resourceBytes('https://example.com/avatar.png');
+const items = await resourceBytesMany(['https://example.com/a.png']);
 const handle = resourceBytesAsObjectURL('blossom:sha256:...');
 ```
-
-### `connect` (v0.29.0)
-
-User-gated direct network access (NAP-CONNECT). State-only — no method namespace, no wire messages. The SDK re-exports the `NappletConnect` type, the `CONNECT_DOMAIN` constant, the `installConnectShim` installer, and the `connectGranted` / `connectOrigins` / `normalizeConnectOrigin` helper functions.
-
-```ts
-import type { NappletConnect } from '@napplet/sdk';
-import { CONNECT_DOMAIN, installConnectShim, connectGranted, connectOrigins, normalizeConnectOrigin } from '@napplet/sdk';
-
-// Napplet-side runtime (window.napplet.connect is populated by the shim at install)
-if (connectGranted()) {
-  const origins: readonly string[] = connectOrigins();
-  const res = await fetch(`${origins[0]}/items`);
-}
-
-// Build-side / shell-side shared origin validator
-const normalized = normalizeConnectOrigin('https://api.example.com');   // returns input byte-identical on success; throws on invalid
-```
-
-| Export | Kind | Source | Description |
-|--------|------|--------|-------------|
-| `NappletConnect` | type | `@napplet/nap/connect` | `{ readonly granted: boolean; readonly origins: readonly string[] }` |
-| `CONNECT_DOMAIN` | const | `@napplet/nap/connect` | The domain identifier string `'connect'` |
-| `installConnectShim` | function | `@napplet/nap/connect` | Side-effect installer — reads the discovery meta tag and mounts `window.napplet.connect` |
-| `connectGranted()` | function | `@napplet/nap/connect` | `() => boolean` — readonly helper; safer than direct `window.napplet.connect.granted` access |
-| `connectOrigins()` | function | `@napplet/nap/connect` | `() => readonly string[]` — readonly helper |
-| `normalizeConnectOrigin(origin)` | function | `@napplet/nap/connect` | Shared origin validator (used by vite-plugin AND shell implementations); throws on invalid input with `[@napplet/nap/connect]`-prefixed messages |
-
-### `class` (v0.29.0)
-
-Shell-assigned integer class (NAP-CLASS). Wire-only — the shell sends exactly one `class.assigned` envelope per napplet lifecycle; the shim writes the integer to `window.napplet.class`. The SDK re-exports the wire type, the domain constant, the installer, and a `getClass()` helper.
-
-```ts
-import type { ClassAssignedMessage, NappletClass, ClassNapMessage } from '@napplet/sdk';
-import { CLASS_DOMAIN, installClassShim, getClass } from '@napplet/sdk';
-
-if (window.napplet.shell.supports(`nap:${CLASS_DOMAIN}`)) {
-  const cls = getClass();   // number | undefined
-  // cls === 1 → NAP-CLASS-1 (strict baseline)
-  // cls === 2 → NAP-CLASS-2 (user-approved explicit-origin)
-  // cls === undefined → shell doesn't implement nap:class OR envelope hasn't arrived yet
-}
-```
-
-| Export | Kind | Source | Description |
-|--------|------|--------|-------------|
-| `ClassAssignedMessage` | type | `@napplet/nap/class` | `{ type: 'class.assigned'; id: string; class: number }` |
-| `NappletClass` | type | `@napplet/nap/class` | `{ readonly class: number \| undefined }` |
-| `ClassMessage` / `ClassNapMessage` | type | `@napplet/nap/class` | Discriminated union alias (class.assigned is the only member in v1) |
-| `CLASS_DOMAIN` | const | `@napplet/nap/class` | The domain identifier string `'class'` |
-| `installClassShim` | function | `@napplet/nap/class` | Side-effect installer — registers the `class.assigned` dispatcher handler and mounts `window.napplet.class` |
-| `getClass()` | function | `@napplet/nap/class` | `() => number \| undefined` — readonly helper |
 
 ### `keys`
 
@@ -319,52 +299,42 @@ Keyboard forwarding and action keybindings. Mirrors `window.napplet.keys`.
 
 ### `identity`
 
-Read-only user queries and class-gated decrypt (NAP-IDENTITY). The identity namespace
-is NOT exported as a top-level SDK object — use `window.napplet.identity.*` directly
-after importing `@napplet/shim`, or use the bare-name helpers below.
+Read-only user identity queries (NAP-IDENTITY). Use the exported `identity`
+object, `window.napplet.identity.*` directly after runtime injection, or the
+bare-name helpers below.
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| `window.napplet.identity.getPublicKey()` | `Promise<string>` | Shell-owned user pubkey; never the napplet's own key |
-| `window.napplet.identity.decrypt(event)` | `Promise<{ rumor: Rumor; sender: string }>` | Class-gated decrypt (NIP-04 / NIP-44 / NIP-17 auto-detect); `sender` is shell-authenticated |
+| `identity.getPublicKey()` | `Promise<string>` | Shell-user pubkey, or `""` when no user/signer is connected |
+| `identity.onChanged(handler)` | `{ close(): void }` | Listen for shell-pushed identity changes; handler receives a pubkey or `""` |
 
 Bare helper aliases are also re-exported for consumers that prefer functional imports:
 
 ```ts
-import { identityGetPublicKey, identityDecrypt } from '@napplet/sdk';
-import type { Rumor } from '@napplet/sdk';
+import { identity, identityGetPublicKey, identityOnChanged } from '@napplet/sdk';
 
-const pubkey = await identityGetPublicKey();
-const { rumor, sender } = await identityDecrypt(giftWrapEvent);
+const pubkey = await identity.getPublicKey();
+const sub = identityOnChanged((nextPubkey) => {
+  console.log(nextPubkey || 'signed out');
+});
 ```
 
-`identity.decrypt` is legal only for napplets assigned `class: 1` per NAP-CLASS-1
-(strict baseline posture with `connect-src 'none'`). Other classes receive a
-`class-forbidden` error. See the [@napplet/nap identity section](../nap/README.md#identity-nap-v0290)
-for the 8-code error vocabulary, auto-detect behavior, and the rationale for
-class-gating this API.
+NAP-IDENTITY is strictly read-only. Signing remains delegated through
+`outbox.publish()` or higher-level action domains (`common`, `lists`, `dm`).
+Use `relay.publish()` only for explicit low-level relay escape hatches.
+Identity changes arrive through `identity.changed` rather than polling.
 
-### `shell`
+### Runtime-Injected Domains
 
-Namespaced capability query. Access via `window.napplet.shell.supports()` after importing `@napplet/shim`.
-
-> Note: The SDK does not export a top-level `shell` object. Use `window.napplet.shell.supports()` directly.
-
-| Method | Returns | Description |
-|--------|---------|-------------|
-| `supports(capability)` | `boolean` | Check shell support for a NAP (`nap:relay`) or permission (`perm:popups`). Bare NAP names also accepted (`relay`). |
-
-**Example:**
+NIP-5D runtimes inject `window.napplet` before napplet code runs. Available NAP
+domains are present as properties; unavailable domains are absent. Gate optional
+behavior with property presence:
 
 ```ts
-import '@napplet/shim';
-
-// NAP domains (bare shorthand or nap: prefix)
-if (window.napplet.shell.supports('relay')) { /* ... */ }
-if (window.napplet.shell.supports('nap:identity')) { /* ... */ }
-
-// Permissions
-if (window.napplet.shell.supports('perm:popups')) { /* ... */ }
+if (window.napplet?.outbox) { /* outbox API is available */ }
+if (window.napplet?.relay) { /* low-level relay API is available */ }
+if (window.napplet?.identity) { /* identity API is available */ }
+if (window.napplet?.inc) { /* inter-napplet channel API is available */ }
 ```
 
 ### Namespace Import
@@ -374,7 +344,7 @@ if (window.napplet.shell.supports('perm:popups')) { /* ... */ }
 ```ts
 import * as napplet from '@napplet/sdk';
 
-napplet.relay.subscribe({ kinds: [1] }, (e) => console.log(e));
+const { events } = await napplet.outbox.query([{ kinds: [1], limit: 20 }]);
 napplet.storage.setItem('key', 'value');
 napplet.config.subscribe((v) => console.log(v));
 ```
@@ -392,14 +362,14 @@ import type {
   EventTemplate,
   NappletMessage,
   NapDomain,
-  NamespacedCapability,
-  ShellSupports,
   // NAP message types (re-exported from NAP packages)
   RelayNapMessage,
   IdentityNapMessage,
   StorageNapMessage,
-  IfcNapMessage,
+  IncNapMessage,
   KeysNapMessage,
+  BleNapMessage,
+  ListsNapMessage,
   Action,
 } from '@napplet/sdk';
 ```
@@ -411,11 +381,9 @@ import type {
 | `NostrEvent` | Standard Nostr event object |
 | `NostrFilter` | Relay subscription filter |
 | `Subscription` | Handle with `close()` method |
-| `EventTemplate` | Unsigned event for `relay.publish()` |
+| `EventTemplate` | Unsigned event template for shell-mediated publish domains such as `outbox.publish()` |
 | `NappletMessage` | Base JSON envelope type for all protocol messages |
 | `NapDomain` | String literal union of NAP domain names |
-| `NamespacedCapability` | Union of `NapDomain \| nap:* \| perm:*` for `supports()` |
-| `ShellSupports` | Interface for the shell capability query API |
 
 ### NAP Message Types
 
@@ -427,16 +395,17 @@ handlers in shell implementations or protocol-aware code.
 | `RelayNapMessage` | `@napplet/nap/relay` | Discriminated union of all relay domain messages |
 | `IdentityNapMessage` | `@napplet/nap/identity` | Discriminated union of all identity domain messages |
 | `StorageNapMessage` | `@napplet/nap/storage` | Discriminated union of all storage domain messages |
-| `IfcNapMessage` | `@napplet/nap/ifc` | Discriminated union of all IFC domain messages |
+| `IncNapMessage` | `@napplet/nap/inc` | Discriminated union of all INC domain messages |
 | `KeysNapMessage` | `@napplet/nap/keys` | Discriminated union of all keys domain messages |
 | `MediaNapMessage` | `@napplet/nap/media` | Discriminated union of all media domain messages |
 | `NotifyNapMessage` | `@napplet/nap/notify` | Discriminated union of all notify domain messages |
 | `ConfigNapMessage` | `@napplet/nap/config` | Discriminated union of all config domain messages |
 | `ResourceNapMessage` | `@napplet/nap/resource` | Discriminated union of all resource domain messages |
-| `ConnectNapMessage` * | `@napplet/nap/connect` | State-only NAP — no wire messages. The `NappletConnect` runtime state type is the consumer-facing import. |
-| `ClassNapMessage`   | `@napplet/nap/class`   | Discriminated union of all class domain messages (v1: only `ClassAssignedMessage`) |
-
-\* There is no `ConnectNapMessage` type; NAP-CONNECT has no postMessage wire. The consumer-facing import is the `NappletConnect` runtime state interface.
+| `BleNapMessage` | `@napplet/nap/ble` | Discriminated union of all BLE domain messages |
+| `CountNapMessage` | `@napplet/nap/count` | Discriminated union of all count domain messages |
+| `ListsNapMessage` | `@napplet/nap/lists` | Discriminated union of all lists domain messages |
+| `CommonNapMessage` | `@napplet/nap/common` | Discriminated union of all common domain messages |
+| `SerialNapMessage` | `@napplet/nap/serial` | Discriminated union of all serial domain messages |
 
 Individual message types (e.g., `RelaySubscribeMessage`, `IdentityGetPublicKeyMessage`) are also re-exported from
 `@napplet/sdk` for fine-grained typing.
@@ -446,76 +415,65 @@ Individual message types (e.g., `RelaySubscribeMessage`, `IdentityGetPublicKeyMe
 Each NAP domain has a string constant re-exported from its package:
 
 ```ts
-import { RELAY_DOMAIN, IDENTITY_DOMAIN, STORAGE_DOMAIN, IFC_DOMAIN, THEME_DOMAIN, KEYS_DOMAIN, MEDIA_DOMAIN, NOTIFY_DOMAIN, CONFIG_DOMAIN, RESOURCE_DOMAIN, CONNECT_DOMAIN, CLASS_DOMAIN } from '@napplet/sdk';
-// Values: 'relay', 'identity', 'storage', 'ifc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'connect', 'class'
+import { RELAY_DOMAIN, IDENTITY_DOMAIN, STORAGE_DOMAIN, INC_DOMAIN, THEME_DOMAIN, KEYS_DOMAIN, MEDIA_DOMAIN, NOTIFY_DOMAIN, CONFIG_DOMAIN, RESOURCE_DOMAIN, CVM_DOMAIN, OUTBOX_DOMAIN, UPLOAD_DOMAIN, INTENT_DOMAIN, BLE_DOMAIN, WEBRTC_DOMAIN, LINK_DOMAIN, COUNT_DOMAIN, LISTS_DOMAIN, COMMON_DOMAIN, SERIAL_DOMAIN, DM_DOMAIN } from '@napplet/sdk';
+// Values: 'relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent', 'ble', 'webrtc', 'link', 'count', 'lists', 'common', 'serial', 'dm'
 ```
 
-These constants are re-exported from the individual NAP packages. Use them with the shell capability query
-API for type-safe conditional logic:
+These constants are re-exported from the individual domain packages. Use
+property presence for type-safe conditional logic:
 
 ```ts
-if (window.napplet.shell.supports('nap:relay')) {
+if (window.napplet?.relay) {
   // relay operations are available
 }
 
-if (window.napplet.shell.supports('nap:identity')) {
+if (window.napplet?.identity) {
   // identity queries are available
 }
 
-if (window.napplet.shell.supports('nap:config')) {
+if (window.napplet?.config) {
   // NAP-CONFIG is available -- schema registration and subscribe()
 }
 
-if (window.napplet.shell.supports('nap:resource')) {
-  // resource.bytes(url) is available; check per-scheme too:
-  if (window.napplet.shell.supports('resource:scheme:blossom')) { /* ... */ }
-}
-
-if (window.napplet.shell.supports('nap:connect')) {
-  // NAP-CONNECT is available — window.napplet.connect reflects shell grant state
-  // Check per-scheme operator policy:
-  if (window.napplet.shell.supports('connect:scheme:http')) { /* cleartext http: origins permitted */ }
-  if (window.napplet.shell.supports('connect:scheme:ws'))   { /* cleartext ws: origins permitted */ }
-}
-
-if (window.napplet.shell.supports('nap:class')) {
-  // NAP-CLASS is available — window.napplet.class will be populated by class.assigned
+if (window.napplet?.resource) {
+  // resource.bytes(url) is available.
 }
 ```
 
 ## Runtime Guard
 
-If `window.napplet` is not installed when an SDK method is called, a clear error is thrown:
+If `window.napplet` or a requested domain is unavailable when an SDK method is
+called, a clear error is thrown:
 
 ```
-Error: window.napplet not installed -- import @napplet/shim first
+Error: window.napplet.relay is unavailable -- runtime did not inject this domain
 ```
 
-This protects against importing `@napplet/sdk` without the side-effect shim import.
+This protects napplets from assuming optional domains are always present.
 
 ## SDK vs Shim
 
 | | `@napplet/sdk` | `@napplet/shim` |
 |---|---|---|
-| **Import style** | `import { relay } from '@napplet/sdk'` | `import '@napplet/shim'` (side-effect) |
-| **What it does** | Named exports wrapping `window.napplet` | Installs `window.napplet` + shell registration |
+| **Import style** | `import { relay } from '@napplet/sdk'` | `import { installNappletGlobal } from '@napplet/shim'` |
+| **What it does** | Named exports wrapping injected domains | Runtime-side global installer |
 | **Dependencies** | `@napplet/core` (types only) | None (types from `@napplet/core`) |
-| **Side effects** | None | Yes -- installs globals, registers with shell |
-| **Required** | Optional convenience | Required in every napplet |
+| **Side effects** | None | Yes -- installs globals on a target window |
+| **Required** | Optional convenience for napplets | Runtime implementation detail |
 
-**Typical usage:** Import both -- shim for runtime, SDK for developer API:
+**Typical napplet usage:** import the SDK for typed API access:
 
 ```ts
-import '@napplet/shim';                                                  // required: installs window.napplet
-import { relay, ifc, storage, keys, media, notify } from '@napplet/sdk';  // optional: typed API
+import { relay, inc, storage, keys, media, notify } from '@napplet/sdk';
 ```
 
-If you are writing a vanilla napplet with no build step, use `window.napplet.*` directly after importing the shim -- the SDK is not required.
+If you are writing a vanilla napplet with no build step, use the injected
+`window.napplet.*` namespace directly -- the SDK is not required.
 
 ## Protocol Reference
 
-- [NIP-5D](../../specs/NIP-5D.md) -- Napplet-shell protocol specification
-- [@napplet/shim](../shim/) -- Window installer package
+- [NIP-5D](https://github.com/nostr-protocol/nips/pull/2303) -- Napplet-shell protocol specification
+- [@napplet/shim](../shim/) -- Runtime-side injected global installer
 - [@napplet/core](../core/) -- Shared protocol types
 
 ## License

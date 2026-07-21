@@ -1,6 +1,6 @@
 # @napplet/nap
 
-> All 12 napplet NAP domains (relay, storage, ifc, keys, theme, media, notify, identity, config, resource, connect, class) as layered subpath exports.
+> Every active napplet NAP domain (relay, storage, inc, keys, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent, ble, webrtc, link, count, lists, serial, common, dm) as layered subpath exports. The package name remains `@napplet/nap` for compatibility.
 
 ## Install
 
@@ -8,34 +8,24 @@
 pnpm add @napplet/nap
 ```
 
-`@napplet/nap` has no root export — consumers MUST import from a domain subpath. See [Subpath Patterns](#subpath-patterns) for the three available entry-point shapes per domain.
-
-For a new app, use `@napplet/cli` first:
-
-```bash
-pnpm add -g @napplet/cli
-napplet init my-napplet
-cd my-napplet
-pnpm install
-napplet doctor
-napplet skills install
-```
-
-The CLI-created boilerplate depends on `@napplet/shim` and `@napplet/sdk`. Reach for `@napplet/nap` subpaths when you need granular domain imports, shell-side installers, or protocol types.
+`@napplet/nap` has no root export — consumers MUST import from a domain subpath. See [Subpath Patterns](#subpath-patterns) for the available entry-point shapes per domain.
 
 ## Quick Start
 
 ```ts
 // Barrel — types + shim installer + sdk helper together
-import { installRelayShim, relaySubscribe, RelaySubscribeMessage } from '@napplet/nap/relay';
+import { installOutboxShim, outboxQuery, OutboxQueryMessage } from '@napplet/nap/outbox';
 ```
 
 ```ts
 // Granular — types only (zero runtime cost)
-import type { IfcEventMessage } from '@napplet/nap/ifc/types';
+import type { IncEventMessage } from '@napplet/nap/inc/types';
 ```
 
-Shells that only need to mount a NAP import the shim subpath directly:
+Runtime code that needs only a domain shim imports the shim subpath directly.
+Napplet application code should not call shim installers; it consumes the
+runtime-injected `window.napplet.<domain>` object through `@napplet/sdk` or the
+domain SDK helpers.
 
 ```ts
 // Granular — shim installer only (no SDK helpers bundled)
@@ -49,51 +39,59 @@ Napplet authors that want a typed wrapper over `window.napplet` without the inst
 import { notifySend } from '@napplet/nap/notify/sdk';
 ```
 
-End-to-end: a napplet subscribes to a relay stream using the SDK helper, while the shell mounts the matching installer on the napplet window:
+End-to-end: a napplet queries outbox-aware event data using the SDK helper. The
+runtime must inject `window.napplet.outbox` before app code runs; the napplet does
+not construct that object itself.
 
 ```ts
 // In the napplet (runs inside the sandboxed iframe)
-import { relaySubscribe } from '@napplet/nap/relay/sdk';
+import { outboxQuery, outboxSubscribe } from '@napplet/nap/outbox/sdk';
 
-const sub = relaySubscribe(
+const { events } = await outboxQuery(
   [{ kinds: [1], limit: 20 }],
-  {
-    onEvent: (event) => console.log('note', event),
-    onEose: () => console.log('caught up'),
-  },
+  { timeoutMs: 3000 },
 );
+for (const result of events) console.log('note', result.event);
 
-// Later, tear down the subscription
+const sub = outboxSubscribe([{ kinds: [1], limit: 20 }], { timeoutMs: 3000 });
+sub.on('event', (result) => console.log('new note', result.event));
 sub.close();
 ```
 
-```ts
-// In the shell (runs on the host page)
-import { installRelayShim } from '@napplet/nap/relay/shim';
-
-installRelayShim(nappletWindow, {
-  // shell-provided relay pool, ACL, etc.
-});
-```
-
-## 12 Domains
+## 22 Active Domains
 
 Each domain is an independent subpath. Barrel imports bundle types + shim installer + SDK helpers; granular subpaths isolate each surface.
 
 | Domain | Barrel | Types | Shim | SDK | Purpose |
 |--------|--------|-------|------|-----|---------|
-| relay | `@napplet/nap/relay` | `@napplet/nap/relay/types` | `@napplet/nap/relay/shim` | `@napplet/nap/relay/sdk` | Nostr relay proxy (subscribe/publish/query) |
+| relay | `@napplet/nap/relay` | `@napplet/nap/relay/types` | `@napplet/nap/relay/shim` | `@napplet/nap/relay/sdk` | Low-level Nostr relay proxy for explicit relay-local behavior (subscribe/publish/query) |
 | storage | `@napplet/nap/storage` | `@napplet/nap/storage/types` | `@napplet/nap/storage/shim` | `@napplet/nap/storage/sdk` | Scoped key-value storage |
-| ifc | `@napplet/nap/ifc` | `@napplet/nap/ifc/types` | `@napplet/nap/ifc/shim` | `@napplet/nap/ifc/sdk` | Inter-frame communication (topic pub/sub) |
+| inc | `@napplet/nap/inc` | `@napplet/nap/inc/types` | `@napplet/nap/inc/shim` | `@napplet/nap/inc/sdk` | Inter-napplet communication (topic pub/sub) |
 | keys | `@napplet/nap/keys` | `@napplet/nap/keys/types` | `@napplet/nap/keys/shim` | `@napplet/nap/keys/sdk` | Keyboard bindings + action registration |
 | theme | `@napplet/nap/theme` | `@napplet/nap/theme/types` | — | — | Read-only shell theme access (types-only today) |
-| media | `@napplet/nap/media` | `@napplet/nap/media/types` | `@napplet/nap/media/shim` | `@napplet/nap/media/sdk` | Media sessions + playback |
+| media | `@napplet/nap/media` | `@napplet/nap/media/types` | `@napplet/nap/media/shim` | `@napplet/nap/media/sdk` | Ownership-aware media sessions with context links + playback |
 | notify | `@napplet/nap/notify` | `@napplet/nap/notify/types` | `@napplet/nap/notify/shim` | `@napplet/nap/notify/sdk` | Shell-rendered notifications |
 | identity | `@napplet/nap/identity` | `@napplet/nap/identity/types` | `@napplet/nap/identity/shim` | `@napplet/nap/identity/sdk` | Read-only user queries (pubkey, metadata) |
 | config | `@napplet/nap/config` | `@napplet/nap/config/types` | `@napplet/nap/config/shim` | `@napplet/nap/config/sdk` | Declarative per-napplet config (schema-driven) |
 | resource | `@napplet/nap/resource` | `@napplet/nap/resource/types` | `@napplet/nap/resource/shim` | `@napplet/nap/resource/sdk` | Sandboxed byte fetching (https/blossom/nostr/data) via `bytes(url) → Blob` |
-| connect | `@napplet/nap/connect` | `@napplet/nap/connect/types` | `@napplet/nap/connect/shim` | `@napplet/nap/connect/sdk` | User-gated direct network access (state-only; no wire — grants flow via CSP + discovery meta tag) |
-| class | `@napplet/nap/class` | `@napplet/nap/class/types` | `@napplet/nap/class/shim` | `@napplet/nap/class/sdk` | Shell-assigned integer class via `class.assigned` wire envelope; exposes `window.napplet.class` |
+| cvm | `@napplet/nap/cvm` | `@napplet/nap/cvm/types` | `@napplet/nap/cvm/shim` | `@napplet/nap/cvm/sdk` | Native ContextVM bridge — MCP-over-Nostr (`discover`/`listTools`/`callTool`/`listResources`/`readResource`/`registry.*`); shell owns transport, registry selection, and tool policy |
+| outbox | `@napplet/nap/outbox` | `@napplet/nap/outbox/types` | `@napplet/nap/outbox/shim` | `@napplet/nap/outbox/sdk` | Outbox-aware relay routing — `getEvent`/`query`/`subscribe`/`publish`/`resolveRelays`; shell owns NIP-65 relay discovery, dedup, and fanout |
+| upload | `@napplet/nap/upload` | `@napplet/nap/upload/types` | `@napplet/nap/upload/shim` | `@napplet/nap/upload/sdk` | Shell-mediated file/blob upload — `info`/`upload`/`status`/`onStatus` over NIP-96 + Blossom rails; shell signs auth, returns NIP-94 metadata |
+| intent | `@napplet/nap/intent` | `@napplet/nap/intent/types` | `@napplet/nap/intent/shim` | `@napplet/nap/intent/sdk` | Archetype intent dispatch — `invoke`/`open`/`available`/`handlers`/`onChanged`; invoke another napplet by role, shell resolves the default handler |
+| ble | `@napplet/nap/ble` | `@napplet/nap/ble/types` | `@napplet/nap/ble/shim` | `@napplet/nap/ble/sdk` | Runtime-mediated Bluetooth LE/GATT sessions — `open`/`services`/`read`/`write`/`subscribe`/`unsubscribe`/`close`/`onEvent`; shell owns chooser UI, permissions, device handles, and lifecycle |
+| webrtc | `@napplet/nap/webrtc` | `@napplet/nap/webrtc/types` | `@napplet/nap/webrtc/shim` | `@napplet/nap/webrtc/sdk` | Runtime-mediated WebRTC data sessions — `open`/`send`/`close`/`onEvent`; shell owns signaling, SDP, ICE, and peer-connection lifecycle |
+| link | `@napplet/nap/link` | `@napplet/nap/link/types` | `@napplet/nap/link/shim` | `@napplet/nap/link/sdk` | Shell-mediated external link opening — `open(url, options?)`; shell owns navigation, policy, prompting, and opener isolation |
+| count | `@napplet/nap/count` | `@napplet/nap/count/types` | `@napplet/nap/count/shim` | `@napplet/nap/count/sdk` | Runtime-mediated event counts — `query(filters, options?)`; shell owns relay COUNT support, indexes, aggregation, approximation, and refusal policy |
+| lists | `@napplet/nap/lists` | `@napplet/nap/lists/types` | `@napplet/nap/lists/shim` | `@napplet/nap/lists/sdk` | Runtime-mediated NIP-51 list mutations — `supported`/`add`/`remove`; runtime owns lookup, merge, encryption, signing, and publishing |
+| common | `@napplet/nap/common` | `@napplet/nap/common/types` | `@napplet/nap/common/shim` | `@napplet/nap/common/sdk` | Common social actions — public NIP-19 helpers, profile lookup returning `RelayEventResult`, follows, follow/unfollow, reactions, and reports; shell owns identity/signing/publishing |
+| serial | `@napplet/nap/serial` | `@napplet/nap/serial/types` | `@napplet/nap/serial/shim` | `@napplet/nap/serial/sdk` | Runtime-mediated serial device access — `open`/`write`/`close`/`onEvent`; shell owns permissions, port handles, streams, and lifecycle |
+| dm | `@napplet/nap/dm` | `@napplet/nap/dm/types` | `@napplet/nap/dm/shim` | `@napplet/nap/dm/sdk` | Runtime-mediated direct messages — `status`/`conversations`/`messages`/`send`/`subscribe`/`unsubscribe`/`onMessage`; shell owns signing, encryption, relay routing, storage, and policy |
+
+### Deprecated IFC Compatibility
+
+NAP-IFC was renamed to NAP-INC because the surface is inter-napplet communication, not generic inter-frame communication. New code must use `@napplet/nap/inc`, `window.napplet.inc`, the `inc.*` wire messages, and the `Inc*` TypeScript names.
+
+The old `@napplet/nap/ifc`, `@napplet/nap/ifc/types`, `@napplet/nap/ifc/shim`, and `@napplet/nap/ifc/sdk` subpaths remain as deprecated thin wrappers. They re-export the INC implementation and aliases only; they do not define a separate `ifc` domain or `ifc.*` wire protocol.
 
 ## Subpath Patterns
 
@@ -107,32 +105,45 @@ Each domain exposes up to three patterns (four including the barrel). Pick the s
 ## Tree-Shaking Contract
 
 - `@napplet/nap` publishes with `sideEffects: false`
-- Every subpath in the `exports` map is a discrete entry point; a bundler importing only `@napplet/nap/relay/types` produces zero bytes from the other 8 domains
+- Every subpath in the `exports` map is a discrete entry point; a bundler importing only `@napplet/nap/relay/types` produces zero bytes from unrelated domains
 - Verified end-to-end in Phase 121 with a minimal-consumer smoke test
 
-The `exports` map in `package.json` declares 46 entry points:
+The `exports` map in `package.json` declares 92 entry points:
 
-- 12 domain barrels (`@napplet/nap/<domain>`)
-- 12 granular types entries (`@napplet/nap/<domain>/types`)
-- 11 granular shim entries (theme omitted — see [Theme Exception](#theme-exception))
-- 11 granular sdk entries (theme omitted — see [Theme Exception](#theme-exception))
+- 22 domain barrels (`@napplet/nap/<domain>`)
+- 22 granular types entries (`@napplet/nap/<domain>/types`)
+- 22 granular shim entries (`@napplet/nap/<domain>/shim`)
+- 22 granular sdk entries (`@napplet/nap/<domain>/sdk`)
+- 1 deprecated compatibility wrapper (`ifc`) with matching `types`, `shim`,
+  and `sdk` entries
 
 Each entry maps to its own pre-built `.js` + `.d.ts` pair under `dist/<domain>/<surface>.{js,d.ts}`. No root `.` key exists, and there is no top-level `main`/`module`/`types` field — attempting `import '@napplet/nap'` fails with `ERR_PACKAGE_PATH_NOT_EXPORTED` by design.
 
-## Theme Exception
+## Compatibility Subpaths
 
-Theme is types-only today — only `@napplet/nap/theme` (barrel, re-exports `./types`) and `@napplet/nap/theme/types` exist. There is no `@napplet/nap/theme/shim` or `@napplet/nap/theme/sdk` entry in the exports map. Shell-side theme handling stays in the host shell; this may change in a future milestone if a theme shim/sdk surface is added upstream.
+`ifc` is a deprecated compatibility wrapper for `inc`. It remains exported so
+older consumers keep working, but new napplet capability checks should use the
+active NAP domains.
 
 ## Resource NAP (v0.28.0)
 
 The `resource` domain ships in v0.28.0 alongside the milestone of browser-enforced
-resource isolation. It defines a single scheme-pluggable byte-fetching primitive:
+resource isolation. It defines scheme-pluggable byte-fetching primitives:
 
 ```ts
-import { bytes, bytesAsObjectURL } from '@napplet/nap/resource/sdk';
+import { info, bytes, bytesMany, bytesAsObjectURL } from '@napplet/nap/resource/sdk';
+
+// Advisory schemes and coarse policy limits. Not required before fetching.
+const resourceInfo = await info();
 
 // Fetch any URL the shell accepts under its policy. URL space is scheme-pluggable.
 const blob: Blob = await bytes('https://example.com/avatar.png');
+
+// Fetch many URLs in one envelope. Items preserve input order and length.
+const items = await bytesMany([
+  'https://example.com/avatar.png',
+  'blossom:sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+]);
 
 // Synchronous handle for <img src> use; revoke when done.
 const handle = bytesAsObjectURL('blossom:sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855');
@@ -141,11 +152,12 @@ imgEl.src = handle.url;
 handle.revoke();
 ```
 
-Four canonical schemes are defined in the spec:
+Canonical schemes are defined in the spec:
 
 - `data:` — RFC 2397, decoded inside the napplet shim with zero shell round-trip
 - `https:` — shell-side network fetch under the default resource policy (private-IP block list at DNS time, MIME byte-sniffing, size cap, timeout, rate limit, redirect cap)
 - `blossom:sha256:<hex>` — Blossom hash → bytes; shell verifies hash before delivery
+- `htree:` — Hashtree reference; shell verifies every Hashtree hash before delivery
 - `nostr:<bech32>` — single-hop NIP-19 resolution against the shell's relay pool
 
 Errors arrive as one of 8 typed codes: `not-found`, `blocked-by-policy`, `timeout`,
@@ -154,115 +166,43 @@ Errors arrive as one of 8 typed codes: `not-found`, `blocked-by-policy`, `timeou
 See [NAP-RESOURCE](https://github.com/napplet/naps) for the normative spec, the
 default shell resource policy, and the SVG rasterization MUSTs.
 
-## Identity NAP (v0.29.0)
+## Identity NAP
 
-The `identity` domain gains a class-gated receive-side decrypt primitive in v0.29.0 —
-`identity.decrypt(event)` — closing the NIP-17 / NIP-59 gift-wrap gap. The shell
-owns NIP-04 / direct NIP-44 / NIP-17 gift-wrap unwrap logic; napplets receive a
-validated `{ rumor, sender }` shape where `sender` is shell-authenticated from the
-seal signature (not napplet-derived from `rumor.pubkey`).
-
-```ts
-import '@napplet/shim';
-import type { Rumor } from '@napplet/nap/identity';
-
-// Given an incoming NIP-17 kind-1059 gift-wrap, NIP-44 ciphertext, or NIP-04 event:
-const { rumor, sender } = await window.napplet.identity.decrypt(giftWrapEvent);
-
-// `rumor` is UnsignedEvent & { id: string } — nostr-tools canonical type, no sig field
-// `sender` is the shell-authenticated pubkey from the seal signature
-console.log(`${sender} says: ${rumor.content}`);
-```
-
-**Shape auto-detection.** The shell accepts NIP-04 (kind-4 content), direct NIP-44
-(kind-44 or other with NIP-44 payload shape), and NIP-17 / NIP-59 gift-wrap (kind-1059
-→ kind-13 seal → rumor). Napplets do NOT select the encryption mode — a single entry
-point serves all three.
-
-**Class gating (shell-enforced).** `identity.decrypt` is legal only for napplets
-assigned `class: 1` per `NAP-CLASS-1.md` (strict baseline posture: `connect-src 'none'`,
-zero direct network egress, so plaintext is trapped in the frame). Napplets of other
-classes — including undefined-class napplets and NAP-CLASS-2 napplets with approved
-direct-origin access — are refused at the shell boundary with a `class-forbidden`
-error. Enforcement runs shell-side; shim-side class observability is defense-in-depth
-only, never the trust boundary.
-
-**Errors** (typed `IdentityDecryptErrorCode` discriminator, 8 values):
-
-| Code | Meaning |
-|------|---------|
-| `class-forbidden` | Calling napplet is not assigned class: 1 per NAP-CLASS-1 |
-| `signer-denied` | User declined the decrypt operation at the shell prompt |
-| `signer-unavailable` | Shell signer is not available (no signed-in identity) |
-| `decrypt-failed` | Cryptographic decrypt failed (wrong key, corrupted payload) |
-| `malformed-wrap` | Outer wrap signature failed validation or payload shape is invalid |
-| `impersonation` | NIP-17 seal.pubkey !== rumor.pubkey (spec MUST per NAP-IDENTITY) |
-| `unsupported-encryption` | Event's encryption shape is not NIP-04 / NIP-44 / NIP-17 |
-| `policy-denied` | Shell policy rejects this napplet's subsequent decrypt requests |
-
-Napplets MUST NOT attempt to call `window.nostr.*` for decrypt — even if a NIP-07
-browser extension injects `window.nostr` into the iframe (see NIP-5D §Security
-Considerations), that path is architecturally forbidden and the shell enforces the
-ban at the `identity.decrypt` boundary.
-
-See the [NAP-IDENTITY](https://github.com/napplet/naps) draft spec on `napplet/naps`
-for the full envelope + conformance table + shell MUSTs.
-
-## Connect + Class NAPs (v0.29.0)
-
-v0.29.0 adds two subpaths that work together to express user-gated direct network access and shell-assigned security class.
-
-### `@napplet/nap/connect`
-
-State-only NAP — NO postMessage wire. Grants flow through the runtime CSP the shell serves with the napplet HTML, plus a shell-injected `<meta name="napplet-connect-granted" content="<space-separated-origins>">` tag read synchronously by the napplet shim at install time.
+The `identity` domain is read-only. It exposes the shell-user pubkey and public
+identity data, but it does not sign, encrypt, or decrypt. Startup code should
+take one snapshot with `getPublicKey()` and then subscribe to shell-pushed
+`identity.changed` updates instead of polling while a signer connects.
 
 ```ts
-import type { NappletConnect } from '@napplet/nap/connect/types';
-import { installConnectShim, normalizeConnectOrigin } from '@napplet/nap/connect';
+const pubkey = await window.napplet.identity.getPublicKey(); // "" when signed out
 
-// Napplet-side (runs inside the sandboxed iframe)
-// The shim populates window.napplet.connect synchronously at install time.
-if (window.napplet.connect.granted) {
-  const res = await fetch(`${window.napplet.connect.origins[0]}/items`, { method: 'POST', body: '{}' });
-}
-
-// Build-side / shell-side (shared origin validator; throws on invalid input)
-const o = normalizeConnectOrigin('https://api.example.com');   // 'https://api.example.com'
+const sub = window.napplet.identity.onChanged((nextPubkey) => {
+  if (nextPubkey === '') {
+    // signed out or signer disconnected
+    return;
+  }
+  // identity-dependent work can refresh here
+});
 ```
 
-`NappletConnect` is `{ readonly granted: boolean; readonly origins: readonly string[] }`. Default on shells that do not implement `nap:connect`, on denied prompts, or pre-injection: `{ granted: false, origins: [] }` (never `undefined`).
+The wire surface includes `identity.changed` as a shell-to-napplet push message
+with `{ pubkey }` and no correlation `id`. The public key shape matches
+`identity.getPublicKey.result`: a hex pubkey when connected, or `""` when no
+user/signer is connected.
 
-### `@napplet/nap/class`
-
-Wire-driven NAP with a single shell → napplet envelope `class.assigned` (`{ type: 'class.assigned'; id: string; class: number }`). Sent at iframe-ready time, exactly once per napplet lifecycle. The napplet shim writes the received integer to `window.napplet.class` via a `defineProperty` getter.
-
-```ts
-import type { ClassAssignedMessage, NappletClass } from '@napplet/nap/class/types';
-import { installClassShim, getClass } from '@napplet/nap/class';
-
-// Napplet-side (runs inside the sandboxed iframe)
-// installClassShim() registers the class.assigned dispatcher handler via registerNap.
-// Before the envelope arrives, or if the shell does not implement nap:class:
-// window.napplet.class === undefined (never 0, never null).
-if (window.napplet.shell.supports('nap:class') && getClass() === 2) {
-  // NAP-CLASS-2 posture — user approved direct network access.
-}
-```
-
-The class integer is an identifier into the `NAP-CLASS-$N` sub-track (1 = strict baseline, 2 = user-approved explicit-origin). See the NAP-CLASS specs at `napplet/naps` for posture semantics.
-
-See [NAP-CONNECT](https://github.com/napplet/naps) and [NAP-CLASS](https://github.com/napplet/naps) for the normative specs, the canonical `connect:origins` aggregateHash fold, the origin format rules, the consent-flow MUSTs, and the at-most-one-terminal-envelope-per-lifecycle constraint.
+See the [NAP-IDENTITY](https://github.com/napplet/naps/pull/12) draft spec for
+the current read-only contract.
 
 ## Package Surface
 
-`@napplet/nap` is the canonical package for every NAP domain. Import each domain through the package subpath:
+`@napplet/nap` is the compatibility package for every NAP domain. Import each domain through the package subpath:
 
 ```ts
 import { mediaCreateSession } from '@napplet/nap/media/sdk';
 import type { MediaNapMessage } from '@napplet/nap/media/types';
 ```
 
-Domain barrels are also available at `@napplet/nap/relay`, `@napplet/nap/storage`, `@napplet/nap/ifc`, `@napplet/nap/keys`, `@napplet/nap/theme`, `@napplet/nap/media`, `@napplet/nap/notify`, `@napplet/nap/identity`, `@napplet/nap/config`, `@napplet/nap/resource`, `@napplet/nap/connect`, and `@napplet/nap/class`.
+Domain barrels are also available at `@napplet/nap/relay`, `@napplet/nap/storage`, `@napplet/nap/inc`, `@napplet/nap/keys`, `@napplet/nap/theme`, `@napplet/nap/media`, `@napplet/nap/notify`, `@napplet/nap/identity`, `@napplet/nap/config`, `@napplet/nap/resource`, `@napplet/nap/cvm`, `@napplet/nap/outbox`, `@napplet/nap/upload`, `@napplet/nap/intent`, `@napplet/nap/ble`, `@napplet/nap/webrtc`, `@napplet/nap/link`, `@napplet/nap/count`, `@napplet/nap/lists`, `@napplet/nap/common`, `@napplet/nap/serial`, and `@napplet/nap/dm`.
 
 ## Optional Peer Dependency
 
@@ -290,7 +230,7 @@ configSubscribe<FromSchema<typeof schema>>((values) => {
 
 ## Protocol Reference
 
-- [NIP-5D](../../specs/NIP-5D.md) — Napplet-shell protocol specification (JSON envelope + NAP negotiation)
+- [NIP-5D](https://github.com/nostr-protocol/nips/pull/2303) — Napplet-shell protocol specification (JSON envelope + NAP negotiation)
 
 ## License
 

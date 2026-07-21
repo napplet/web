@@ -1,0 +1,91 @@
+/**
+ * Purple Nostr-native theme for the napplet docs.
+ * CSS variable overrides shared with the napplet.run SPA.
+ */
+
+:root {
+  /* Backgrounds — deep aubergine canvas */
+  --vp-c-bg: #120820;
+  --vp-c-bg-alt: #190d2b;
+  --vp-c-bg-soft: #1d1031;
+  --vp-c-bg-elv: #1d1031;
+
+  /* Brand — ostrich purple accents */
+  --vp-c-brand-1: #c98bff;
+  --vp-c-brand-2: #b06bff;
+  --vp-c-brand-3: #7b2ff7;
+  --vp-c-brand-soft: rgba(176, 107, 255, 0.16);
+
+  /* Borders / dividers — on-brand aubergine */
+  --vp-c-divider: #34225a;
+  --vp-c-border: #34225a;
+  --vp-c-gutter: #34225a;
+
+  /* Default + text accents wired to the brand */
+  --vp-c-default-1: #b06bff;
+  --vp-c-default-2: #c98bff;
+  --vp-c-text-1: #f2ecff;
+  --vp-c-text-2: #cdbfe6;
+  --vp-c-text-3: #968aac;
+
+  /* Home hero brand gradient */
+  --vp-home-hero-name-color: transparent;
+  --vp-home-hero-name-background: linear-gradient(
+    120deg,
+    #fff,
+    #c98bff 60%,
+    #b06bff
+  );
+  --vp-home-hero-image-background-image: linear-gradient(
+    135deg,
+    rgba(123, 47, 247, 0.45),
+    rgba(201, 139, 255, 0.25)
+  );
+  --vp-home-hero-image-filter: blur(56px);
+
+  /* Buttons */
+  --vp-button-brand-bg: var(--vp-c-brand-3);
+  --vp-button-brand-hover-bg: var(--vp-c-brand-2);
+  --vp-button-brand-active-bg: var(--vp-c-brand-1);
+  --vp-button-brand-border: var(--vp-c-brand-2);
+  --vp-button-brand-hover-border: var(--vp-c-brand-1);
+}
+
+/* Code blocks — on-brand surface + borders */
+:root {
+  --vp-code-block-bg: #160b27;
+  --vp-code-block-divider-color: #34225a;
+  --vp-code-line-highlight-color: rgba(176, 107, 255, 0.12);
+  --vp-code-copy-code-border-color: #34225a;
+  --vp-code-tab-divider: #34225a;
+}
+
+.vp-doc div[class*='language-'],
+.vp-doc pre {
+  border: 1px solid #34225a;
+}
+
+/* Inline code chips */
+.vp-doc :not(pre) > code {
+  background-color: rgba(176, 107, 255, 0.12);
+  color: #d8c2ff;
+}
+
+/* Custom blocks (tip/warning/etc) get a soft purple tint */
+.vp-doc .custom-block {
+  border-color: #34225a;
+}
+
+/* Feature cards on the home page */
+.VPFeature {
+  border: 1px solid #34225a;
+  background-color: var(--vp-c-bg-soft);
+}
+.VPFeature:hover {
+  border-color: var(--vp-c-brand-2);
+}
+
+/* Soft glow on the hero name */
+.VPHero .name .clip {
+  filter: drop-shadow(0 0 28px rgba(176, 107, 255, 0.25));
+}

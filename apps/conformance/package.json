@@ -1,0 +1,23 @@
+{
+  "name": "@napplet/conformance-web",
+  "version": "0.0.14",
+  "private": true,
+  "type": "module",
+  "description": "Standalone single-window web runtime for napplet conformance testing",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "type-check": "tsc --noEmit",
+    "test:unit": "vitest run"
+  },
+  "dependencies": {
+    "@napplet/conformance": "workspace:^",
+    "nostr-tools": "^2.23.3"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vite": "^6.4.3",
+    "vitest": "^4.1.2"
+  }
+}
