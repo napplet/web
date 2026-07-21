@@ -1,4 +1,5 @@
 import { joinPath } from "./path.ts";
+import { readManifestMetadataTags } from "./manifest-metadata.ts";
 import {
   type DeployManifestTemplate,
   type DeployPlan,
@@ -123,11 +124,9 @@ export async function createDeployManifestTemplates(
       await collectManifestFiles(item.candidate.dir);
     filesByDir.set(item.candidate.dir, files);
     const metadataTags = metadataByDir.get(item.candidate.dir) ??
-      mergeConfigMetadataTags(
-        dedupeTags([
-          ...await readIndexHtmlMetadataTags(item.candidate.indexHtml),
-          ...await readPluginManifestMetadataTags(item.candidate.manifestPath),
-        ]),
+      await readManifestMetadataTags(
+        item.candidate.indexHtml,
+        item.candidate.manifestPath,
         config,
       );
     metadataByDir.set(item.candidate.dir, metadataTags);
@@ -197,148 +196,6 @@ function deploySourceKey(candidateDir: string, source: SnapshotDeploySource): st
   return `${candidateDir}\0${source.kind}\0${source.dTag ?? ""}`;
 }
 
-async function readPluginManifestMetadataTags(
-  manifestPath: string | undefined,
-): Promise<string[][]> {
-  if (!manifestPath) return [];
-  try {
-    const raw = await Deno.readTextFile(manifestPath);
-    const value = JSON.parse(raw) as { tags?: unknown };
-    if (!Array.isArray(value.tags)) return [];
-    const tags: string[][] = [];
-    for (const tag of value.tags) {
-      if (!Array.isArray(tag) || typeof tag[0] !== "string") continue;
-      if (tag[0] === "requires" && typeof tag[1] === "string") {
-        const domain = tag[1].trim();
-        if (isNapDomain(domain)) tags.push(["requires", domain]);
-      }
-      if (isCanonicalArchetypeTag(tag)) {
-        tags.push(tag.map((value) => String(value).trim()));
-      }
-    }
-    return dedupeTags(tags);
-  } catch (error) {
-    if (error instanceof Deno.errors.NotFound || error instanceof SyntaxError) return [];
-    throw error;
-  }
-}
-
-function mergeConfigMetadataTags(tags: readonly string[][], config: NappletConfig): string[][] {
-  const metadata = config.metadata;
-  if (!metadata) return dedupeTags(tags);
-  const replaced = new Set<string>();
-  if (metadata.title) replaced.add("title");
-  if (metadata.description) replaced.add("description");
-  if (metadata.archetypes !== undefined) replaced.add("archetype");
-  const result = tags.filter((tag) => !replaced.has(tag[0]));
-  if (metadata.title) result.push(["title", metadata.title]);
-  if (metadata.description) result.push(["description", metadata.description]);
-  for (const contract of metadata.archetypes ?? []) {
-    result.push([
-      "archetype",
-      contract.slug,
-      contract.protocol,
-      ...(contract.eventKinds ?? []).map((kind) => `kind:${kind}`),
-    ]);
-  }
-  return dedupeTags(result);
-}
-
-function isCanonicalArchetypeTag(tag: unknown[]): tag is string[] {
-  if (
-    tag[0] !== "archetype" || typeof tag[1] !== "string" ||
-    typeof tag[2] !== "string"
-  ) return false;
-  const slug = tag[1].trim();
-  const protocol = tag[2].trim();
-  if (!/^[a-z0-9][a-z0-9-]*$/.test(slug) || !/^NAP-[1-9][0-9]*$/.test(protocol)) {
-    return false;
-  }
-  return tag.slice(3).every((value) =>
-    typeof value === "string" && /^kind:(0|[1-9][0-9]*)$/.test(value.trim())
-  );
-}
-
-/**
- * Read the NIP-5A single-value `title` / `description` manifest tags out of a
- * built `index.html`. These come from PLAIN HTML — the `<title>` element and a
- * `<meta name="description">` element (as authored by @napplet/vite-plugin's
- * title/description options) — NOT from any `napplet-*` protocol meta tag.
- *
- * Returns at most one `["title", value]` and one `["description", value]` tag.
- * Values are entity-decoded and trimmed; empty/whitespace-only values emit no
- * tag. A missing/unreadable file yields `[]` (mirrors readPluginManifestMetadataTags).
- */
-async function readIndexHtmlMetadataTags(indexHtmlPath: string | undefined): Promise<string[][]> {
-  if (!indexHtmlPath) return [];
-  let html: string;
-  try {
-    html = await Deno.readTextFile(indexHtmlPath);
-  } catch (error) {
-    if (error instanceof Deno.errors.NotFound) return [];
-    throw error;
-  }
-  const tags: string[][] = [];
-  const title = extractHtmlTitle(html);
-  if (title) tags.push(["title", title]);
-  const description = extractHtmlDescription(html);
-  if (description) tags.push(["description", description]);
-  return tags;
-}
-
-/** Inner text of the FIRST `<title>…</title>`, decoded + trimmed; null if empty. */
-function extractHtmlTitle(html: string): string | null {
-  const match = /<title\b[^>]*>([\s\S]*?)<\/title>/i.exec(html);
-  if (!match) return null;
-  const value = decodeHtmlEntities(match[1]).trim();
-  return value.length > 0 ? value : null;
-}
-
-/** `content` of the FIRST non-empty `<meta name="description">`, decoded + trimmed. */
-function extractHtmlDescription(html: string): string | null {
-  const metaRe = /<meta\b[^>]*>/gi;
-  let match: RegExpExecArray | null;
-  while ((match = metaRe.exec(html)) !== null) {
-    const tag = match[0];
-    const name = getHtmlTagAttr(tag, "name");
-    if (name === null || name.toLowerCase() !== "description") continue;
-    const content = getHtmlTagAttr(tag, "content");
-    if (content === null) continue;
-    const value = decodeHtmlEntities(content).trim();
-    if (value.length > 0) return value;
-  }
-  return null;
-}
-
-/** Read one HTML attribute value off a tag (single/double/unquoted); null if absent. */
-function getHtmlTagAttr(tag: string, name: string): string | null {
-  const re = new RegExp(`\\b${name}\\s*=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s>]+))`, "i");
-  const match = re.exec(tag);
-  return match ? (match[1] ?? match[2] ?? match[3] ?? "") : null;
-}
-
-/** Decode the standard HTML entities. `&amp;` is decoded LAST to avoid double-decoding. */
-function decodeHtmlEntities(value: string): string {
-  return value
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&amp;/g, "&");
-}
-
-function dedupeTags(tags: readonly string[][]): string[][] {
-  const seen = new Set<string>();
-  const result: string[][] = [];
-  for (const tag of tags) {
-    const key = tag.join("\0");
-    if (seen.has(key)) continue;
-    seen.add(key);
-    result.push([...tag]);
-  }
-  return result;
-}
-
 /** site address helper for manifest construction. */
 export function siteAddress(ref: SnapshotSourceRef): string {
   if (!/^[0-9a-f]{64}$/.test(ref.pubkey)) throw new Error("pubkey must be 64 lowercase hex chars");
@@ -355,35 +212,7 @@ export function normalizeDTag(value: string | undefined): string {
   return dTag;
 }
 
-const NAP_DOMAINS = new Set([
-  "relay",
-  "identity",
-  "storage",
-  "inc",
-  "theme",
-  "keys",
-  "media",
-  "notify",
-  "config",
-  "resource",
-  "cvm",
-  "outbox",
-  "upload",
-  "intent",
-  "ble",
-  "webrtc",
-  "link",
-  "lists",
-  "serial",
-  "common",
-  "dm",
-]);
-
 const DEPLOY_IGNORED_DIRECTORY_NAMES = new Set(["node_modules"]);
-
-function isNapDomain(domain: string): boolean {
-  return NAP_DOMAINS.has(domain);
-}
 
 async function collectManifestFilesInto(
   root: string,
