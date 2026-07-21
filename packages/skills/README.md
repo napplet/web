@@ -1,6 +1,6 @@
 # @napplet/skills
 
-> Agent skills that let a coding agent make, design, build, port, and test a [napplet](https://github.com/napplet/napplet) end-to-end — plus a `napplet-skills` installer that drops them into whatever location your agent reads.
+> Agent skills that let a coding agent make, design, build, port, and test a [napplet](https://github.com/napplet/napplet) end-to-end, installed through `napplet skills`.
 
 A **napplet** is a sandboxed Nostr iframe app (NIP-5D). These skills carry the
 exact, verified API surface and protocol constraints an agent needs so that one
@@ -22,7 +22,7 @@ as `outbox`, `common`, `lists`, `count`, and `dm`.
 | --- | --- | --- |
 | `make-napplet` | One-prompt end-to-end builds | Orchestrates port/design/build/test, keeps social reads/publishes OUTBOX-first, blocks fake package surfaces, covers every implemented package NAP domain, and defines the final completion checklist. |
 | `design-napplet` | First — plan before code | Sandbox/loading constraints, OUTBOX-first NAP selection, package-implemented NAP inventory, hard-vs-optional requirements, **responsive layout for any viewport** (full-screen → tiny widget), the build spec to hand off. |
-| `build-napplet` | Implementation | Start from `@napplet/boilerplate`, preserve its Vite/package/script/conformance substrate, then implement calls through `@napplet/sdk` helpers while using runtime-injected `window.napplet?.domain` only for optional-domain fallback checks, OUTBOX-first event access, relay as an explicit low-level escape hatch, all implemented package domains (`relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `ble`, `webrtc`, `link`, `count`, `lists`, `serial`, `common`, `dm`), no `shell.ready()` / `shell.supports(...)` API, hard-vs-optional `requires`, and the single-file artifact rule. |
+| `build-napplet` | Implementation | Start with `napplet create` and `napplet init`, preserve the starter substrate, then implement calls through `@napplet/sdk` helpers while using runtime-injected `window.napplet?.domain` only for optional-domain fallback checks, OUTBOX-first event access, relay as an explicit low-level escape hatch, all implemented package domains, no `shell.ready()` / `shell.supports(...)` API, hard-vs-optional `requires`, and the single-file artifact rule. |
 | `port-nostr-app` | Migrating an existing Nostr app | Replace direct relay pools, `window.nostr`, local storage, direct fetch/media loads, app-owned shortcut plumbing, and app-owned signing/routing with shell-owned NAP boundaries and SDK helper imports before building. |
 | `test-napplet` | Before publishing | Protocol conformance via `napplet-conformance` (real Chromium + reference shell), forbidden browser-authority scans, interpreting failures, the runtime guard, CI wiring. |
 
@@ -32,10 +32,11 @@ Each skill is a self-contained `SKILL.md` with YAML frontmatter (`name`,
 ## Scaffolding substrate
 
 For new napplet projects, `build-napplet` and the top-level `make-napplet`
-workflow treat [`@napplet/boilerplate`](../boilerplate) as authoritative. Agents
-should scaffold with the generator, keep its package manager pin, Vite config,
+workflow treat `napplet create` and its maintained
+[`@napplet/boilerplate`](../boilerplate) implementation as authoritative. Agents
+should scaffold through the CLI, run `napplet init` for deployment metadata, keep its package manager pin, Vite config,
 scripts, file layout, README/docs structure, and conformance wiring, then edit
-only project-specific surfaces such as `nappletType`, `requires`, config schema,
+only project-specific application surfaces such as hard `requires`, config schema,
 `src/main.ts`, `src/styles.css`, title/root markup, and README content.
 
 Current package guidance is SDK-first. Napplet code should use `@napplet/sdk`
@@ -59,8 +60,7 @@ retrofits, and should mirror the boilerplate contract.
 No build step needed — the CLI ships the Markdown and places it for you.
 
 ```bash
-# one-off, no install:
-npx @napplet/skills install --to claude
+napplet skills install --to claude
 ```
 
 | `--to` | Destination | Layout |
@@ -81,26 +81,26 @@ duplicating it. The rest of the file is untouched.
 ### Custom locations
 
 ```bash
-napplet-skills install --dir vendor/skills        # writes <dir>/<skill>/SKILL.md
-napplet-skills install --out CONTRIBUTING.md       # appends the managed block
-napplet-skills install --to claude --symlink       # symlink instead of copy
-napplet-skills install --to codex                  # writes .codex/skills
-napplet-skills install make-napplet --to agents    # one-prompt workflow only
-napplet-skills print build-napplet > skill.md      # raw markdown to stdout
+napplet skills install --dir vendor/skills        # writes <dir>/<skill>/SKILL.md
+napplet skills install --out CONTRIBUTING.md      # appends the managed block
+napplet skills install --to claude --symlink      # symlink instead of copy
+napplet skills install --to codex                 # writes .codex/skills
+napplet skills install make-napplet --to agents   # one-prompt workflow only
+napplet skills print build-napplet > skill.md     # raw markdown to stdout
 ```
 
 Install a single skill by naming it:
 
 ```bash
-napplet-skills install build-napplet --to gemini
+napplet skills install build-napplet --to gemini
 ```
 
 ## CLI
 
 ```
-napplet-skills list                       List shipped skills
-napplet-skills print [skill]              Print SKILL.md to stdout (all, or one)
-napplet-skills install [skill] [options]  Install into an agent location
+napplet skills list                       List shipped skills
+napplet skills print [skill]              Print SKILL.md to stdout (all, or one)
+napplet skills install [skill] [options]  Install into an agent location
 ```
 
 ## Programmatic API

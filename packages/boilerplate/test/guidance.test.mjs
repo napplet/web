@@ -7,7 +7,7 @@ const readme = await readFile(readmeUrl, 'utf8');
 const prose = readme.replace(/\s+/g, ' ');
 
 test('points generated projects to the shipped skills', () => {
-  assert.match(prose, /npx @napplet\/skills install --to codex/);
+  assert.match(prose, /napplet skills install --to codex/);
   assert.match(readme, /https:\/\/github\.com\/nostr-protocol\/nips\/pull\/2303/);
   assert.match(readme, /https:\/\/github\.com\/napplet\/naps\/pull\/32/);
   assert.match(readme, /https:\/\/github\.com\/napplet\/naps\/pull\/2/);

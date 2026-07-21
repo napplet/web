@@ -1,30 +1,28 @@
 # @napplet/boilerplate
 
-Interactive generator for the `github.com/napplet/boilerplate` template.
+Project scaffold generator behind `napplet create`. It clones the maintained
+`github.com/napplet/boilerplate` Vite + TypeScript template and derives the
+`package.json` name from the destination directory.
 
 ```bash
-npx @napplet/boilerplate
+napplet create my-napplet
 ```
 
-The generator asks where to create the napplet, which package name to use, and
-which NIP-5D napplet type to write into the Vite manifest config. It currently
-ships one variant, `basic`; the CLI keeps a variant option so future templates
-can be added without changing the command shape.
+Deployment name, title, description, and archetype contracts belong to
+`napplet init`; this generator does not prompt for or mutate them. It currently
+ships one variant, `basic`.
 
 ## Options
 
 ```bash
-npx @napplet/boilerplate ./my-napplet --package-name my-napplet --napplet-type my-napplet
+napplet create my-napplet
 ```
 
 | Option | Purpose |
 | --- | --- |
 | `--variant <name>` | Template variant. Currently `basic`. |
 | `--template <path-or-url>` | Override the template source. Useful for local verification. |
-| `--package-name <name>` | `package.json` package name. |
-| `--napplet-type <type>` | `nappletType` written to `vite.config.ts`. |
-| `--title <title>` | App title written to `index.html` and README heading. |
-| `--yes`, `-y` | Accept defaults and skip prompts. |
+| `--yes`, `-y` | Use `./my-napplet` when the destination is omitted. |
 | `--force` | Allow generation into a non-empty directory. |
 
 By default, the CLI clones:
@@ -34,10 +32,11 @@ By default, the CLI clones:
 ## Agent guidance
 
 The template intentionally does not vendor independent agent skill bodies.
-Install the current `@napplet/skills` package in the generated project instead:
+Initialize deployment metadata, then install the current skills in the project:
 
 ```bash
-npx @napplet/skills install --to codex
+napplet init
+napplet skills install --to codex
 ```
 
 Treat the [living NIP-5D proposal](https://github.com/nostr-protocol/nips/pull/2303),

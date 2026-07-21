@@ -69,19 +69,18 @@ objects inside napplet code. The SDK wrappers still delegate to the injected
 runtime at call time, but they keep examples typed, current, and aligned with
 the package surface agents actually import.
 
-## Step 1 — Start From The Boilerplate
+## Step 1 — Start From The CLI Scaffold
 
-For a new napplet, scaffold with `@napplet/boilerplate` first. The generator
-clones the canonical `github.com/napplet/boilerplate` template and preserves the
-package manager pin, Vite config, single-file build plumbing, scripts,
-conformance wiring, docs layout, and starter source structure.
+For a new napplet, scaffold and initialize through the primary CLI. `create`
+delegates to the canonical `github.com/napplet/boilerplate` template and
+preserves the package manager pin, Vite config, single-file build plumbing, scripts,
+conformance wiring, docs layout, and starter source structure. `init` owns the
+deployment d-tag, title, optional description, and canonical archetype contracts.
 
 ```bash
-npx @napplet/boilerplate ./my-napplet \
-  --package-name my-napplet \
-  --napplet-type my-napplet \
-  --title "My Napplet" \
-  --yes
+napplet create my-napplet
+cd my-napplet
+napplet init
 ```
 
 Do not recreate `package.json`, `pnpm-lock.yaml`, `vite.config.ts`, TypeScript
@@ -99,7 +98,10 @@ project-specific edits the generator/template expects:
 
 - `package.json`: package name only, plus dependencies only when the feature
   truly needs them.
-- `vite.config.ts`: `nappletType`, hard `requires`, and optional config schema.
+- `.napplet/config.json`: inspect the CLI-owned deployment metadata; do not
+  duplicate it elsewhere.
+- `vite.config.ts`: hard `requires` and optional config schema; preserve the
+  template d-tag fallback.
 - `index.html`: title/root markup that the UI needs.
 - `src/main.ts` and `src/styles.css`: application behavior and presentation.
 - `README.md` and `docs/*`: project-specific usage, boundaries, and verification
@@ -119,12 +121,12 @@ change them:
 }
 ```
 
-## Step 3 — Configure the Vite plugin
+## Step 3 — Configure build requirements
 
-The boilerplate already wires `nip5aManifest`. Update its project fields rather
-than replacing the config. `nip5aManifest` hashes build output and can write a
-local NIP-5D manifest using the NIP-5A path and aggregate tags. `nappletType`
-populates the NIP-5D `d` tag.
+The boilerplate already wires `nip5aManifest`. Update hard `requires` rather
+than replacing the config. `nip5aManifest` hashes build output and writes a
+local sidecar. Its required `nappletType` is a build-local fallback; the CLI's
+validated `.napplet/config.json` metadata takes precedence during deploy.
 
 ```ts
 // vite.config.ts
@@ -134,7 +136,7 @@ import { nip5aManifest } from '@napplet/vite-plugin';
 export default defineConfig({
   plugins: [
     nip5aManifest({
-      nappletType: 'my-napplet',     // required — NIP-5D d-tag
+      nappletType: 'my-napplet',     // template fallback; deploy metadata comes from napplet init
       artifactMode: 'single-file',   // fold assets + keep inline scripts in one index.html
       // requires: ['outbox', 'storage'], // hard requirements only; omit optional enhancements
     }),

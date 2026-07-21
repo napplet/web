@@ -1,6 +1,6 @@
 # @napplet/cli
 
-> Deno CLI for discovering, inspecting, testing, and deploying built napplets.
+> Standalone CLI for creating, configuring, inspecting, and deploying napplets.
 
 `@napplet/cli` is the command-line deploy and diagnostics tool for built
 napplets. It creates `.napplet/config.json`, discovers built `index.html`
@@ -14,7 +14,22 @@ conformance and Paja.
 
 ## Install
 
-Install the runnable CLI from JSR:
+Install a checksum-verified standalone binary without Deno:
+
+```bash
+# macOS or Linux
+curl -fsSL https://raw.githubusercontent.com/napplet/napplet/main/scripts/install-napplet-cli.sh | sh
+```
+
+```powershell
+# Windows PowerShell
+irm https://raw.githubusercontent.com/napplet/napplet/main/scripts/install-napplet-cli.ps1 | iex
+```
+
+The installers verify the downloaded asset against the release's
+`SHA256SUMS`. Linux and macOS support x64 and ARM64; Windows supports x64.
+
+### JSR/Deno alternative
 
 ```bash
 deno install --global \
@@ -36,23 +51,26 @@ to remote signers.
 
 ## Quick start
 
-Run these commands from a repository or workspace that contains a built napplet:
+Run the same path for every new project:
 
 ```bash
-napplet init \
-  --relay wss://relay.example \
-  --server https://blossom.example \
-  --name my-napplet
-
-napplet debug
-napplet deploy --dry-run --sec nsec1...
-napplet deploy --sec nsec1...
+napplet create my-napplet
+cd my-napplet
+napplet init
+napplet skills install --to codex
+pnpm install
+# Ask your agent to build the napplet.
+pnpm verify
+napplet deploy --dry-run
+napplet deploy
 ```
 
-- `napplet init` creates `.napplet/config.json`. In an interactive terminal it
-  guides setup, shows curated relay defaults plus live NIP-66 discoveries from
+- `napplet create` delegates to the maintained starter generator without setting deploy metadata.
+- `napplet init` owns name, title, optional description, canonical archetype contracts, and network
+  targets in `.napplet/config.json`. In an interactive terminal it guides setup and shows live suggestions from
   relays such as `wss://relaypag.es`, and suggests Blossom servers from kind
   `10063` server-list events.
+- `napplet skills` delegates to the shipped agent-skill installer and preserves its target arguments.
 - `napplet debug` prints resolved config, discovered napplets, deploy targets,
   manifest templates, and signing readiness without network writes.
 - `napplet deploy --dry-run` builds the same deploy plan and signed manifest
@@ -69,7 +87,9 @@ napplet deploy --sec nsec1...
 ## Commands
 
 ```bash
-napplet init [--force] [--source-dir <dir>] [--relay <url>] [--server <url>] [--name <dtag>]
+napplet create <directory> [--template <path-or-url>] [--force]
+napplet init [--force] [--root] [--source-dir <dir>] [--name <dtag>] [--title <title>] [--description <text>] [--archetype <slug:NAP-N>] [--relay <url>] [--server <url>]
+napplet skills <list|print|install> [args]
 napplet discover [--config <file>] [--all]
 napplet debug [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>]
 napplet deploy [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>] [--prompt-sec] [--dry-run]

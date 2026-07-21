@@ -10,6 +10,7 @@
     "test:tutorial": "node --test scripts/tutorial-package-versions.test.mjs && node scripts/test-tutorial.mjs",
     "test:e2e": "turbo run test:e2e",
     "test:installers": "node scripts/test-install-napplet-cli.mjs",
+    "test:onboarding-contracts": "node --test scripts/onboarding-contracts.test.mjs",
     "test:workflow-contracts": "node --test scripts/workflow-contracts.test.mjs",
     "test:conformance": "node packages/conformance-cli/dist/cli.js tests/fixtures/napplets/conformant",
     "lint": "turbo run lint",

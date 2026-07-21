@@ -117,7 +117,7 @@ describe('skill registry', () => {
     expect(packageReadme).not.toContain('availability gates');
     expect(packageReadme).not.toContain('capability gating via domain presence');
 
-    expect(boilerplateProse).toContain('npx @napplet/skills install --to codex');
+    expect(boilerplateProse).toContain('napplet skills install --to codex');
     expect(boilerplateReadme).toContain('https://github.com/nostr-protocol/nips/pull/2303');
     expect(boilerplateReadme).toContain('https://github.com/napplet/naps/pull/32');
     expect(boilerplateReadme).toContain('https://github.com/napplet/naps/pull/2');

@@ -50,7 +50,8 @@ Before any design or code, treat the iframe sandbox as a hard boundary:
 Write a small build brief before editing:
 
 ```
-nappletType:
+deployment name / d-tag:
+CLI metadata initialized:
 new build or port:
 boilerplate substrate:
 single-purpose job:
@@ -94,9 +95,10 @@ using `relay` is wrong.
 
 1. For ports, run `port-nostr-app` and produce its inventory/handoff.
 2. Run `design-napplet` and produce the build spec.
-3. For new projects, scaffold with `@napplet/boilerplate` before implementation
-   and preserve the generated package manager config, Vite config, scripts,
-   layout, README/docs structure, and conformance wiring.
+3. For new projects, run `napplet create <directory>`, enter it, and run
+   `napplet init` before implementation. Preserve the generated package manager
+   config, Vite config, scripts, layout, README/docs structure, conformance
+   wiring, and CLI-owned deployment metadata.
 4. Run `build-napplet` against that spec, editing only project-specific files
    such as `src/main.ts`, `src/styles.css`, `vite.config.ts` fields,
    `index.html` title/root markup, config schema, and README/docs.

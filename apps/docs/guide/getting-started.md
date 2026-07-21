@@ -1,32 +1,84 @@
 # Getting started
 
-This page walks you from zero to a running napplet. You'll need a recent Node.js
-and a package manager (npm, pnpm, or yarn). To actually *run* a napplet you also
-need a host shell — see [running in a shell](#running-in-a-shell) at the end.
+This page walks you from zero to a deployable napplet. The standalone `napplet`
+CLI does not require Deno. You will need Node.js 20+ and a package manager for
+the generated Vite project and the package-backed create/skills commands. To
+actually *run* a napplet you also need a host shell — see
+[running in a shell](#running-in-a-shell) at the end.
 
-## Scaffold a napplet
+## 1. Install the CLI
 
-The fastest start is the interactive generator. It clones the
+```bash
+# macOS or Linux
+curl -fsSL https://raw.githubusercontent.com/napplet/napplet/main/scripts/install-napplet-cli.sh | sh
+```
+
+```powershell
+# Windows PowerShell
+irm https://raw.githubusercontent.com/napplet/napplet/main/scripts/install-napplet-cli.ps1 | iex
+```
+
+Each installer downloads the platform binary and verifies it against the
+release's `SHA256SUMS` before replacing `napplet`. The
+[`@napplet/cli`](/packages/cli) page documents the JSR/Deno alternative.
+
+## 2. Create the project
+
+```bash
+napplet create my-napplet
+cd my-napplet
+```
+
+`napplet create` delegates to the maintained
 [`github.com/napplet/boilerplate`](https://github.com/napplet/boilerplate)
-template — a Vite + TypeScript starter — and wires up the package name and
-napplet type for you:
+template. The generator creates the project and derives only its package name;
+it does not own deployment name, title, or archetype metadata.
+
+## 3. Initialize deployment metadata
 
 ```bash
-npx @napplet/boilerplate
+napplet init
 ```
 
-The generator asks where to create the napplet, which package name to use, and
-which NIP-5D napplet type to write into the Vite manifest config. You can also
-pass everything as flags to skip the prompts:
+The wizard writes `.napplet/config.json` with the named-manifest d-tag, title,
+optional description, canonical `slug:NAP-N` archetype contracts, relays, and
+Blossom servers. Automation can provide the same values explicitly:
 
 ```bash
-npx @napplet/boilerplate ./my-napplet \
-  --package-name my-napplet \
-  --napplet-type my-napplet \
-  --yes
+napplet init --name my-napplet --title "My Napplet" \
+  --archetype note:NAP-4 \
+  --relay wss://relay.example --server https://blossom.example
 ```
 
-See [`@napplet/boilerplate`](/packages/boilerplate) for the full option list.
+## 4. Install agent skills
+
+```bash
+napplet skills install --to codex
+```
+
+Replace `codex` with `claude`, `cursor`, `windsurf`, `agents`, `gemini`, or
+`copilot`. The CLI installs the shipped protocol-aware build skills into the
+location that agent reads.
+
+## 5. Build and verify
+
+```bash
+pnpm install
+# Ask your agent to build the napplet.
+pnpm verify
+pnpm test:conformance
+```
+
+## 6. Preview, then deploy
+
+```bash
+napplet deploy --dry-run
+napplet deploy
+```
+
+The dry run resolves the same config, files, metadata, and manifest events
+without uploading or publishing. Configure a local or remote signer before the
+live deploy; see [`@napplet/cli`](/packages/cli#deploy).
 
 Choose the Note Drafts path that matches how you want to learn:
 

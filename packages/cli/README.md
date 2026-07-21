@@ -1,6 +1,7 @@
 # @napplet/cli
 
-Deno CLI for discovering, inspecting, testing, and deploying built napplets.
+Standalone CLI for creating, configuring, building with agents, inspecting,
+testing, and deploying napplets. The binary does not require Deno.
 
 Use it to create a `.napplet/config.json`, find built `index.html` artifacts, inspect the deploy
 plan, sign manifest events, upload files to Blossom servers, publish to relays, and run local
@@ -8,7 +9,23 @@ napplet tooling such as conformance and Paja.
 
 ## Install
 
-### From JSR
+### Standalone binary
+
+```sh
+# macOS or Linux
+curl -fsSL https://raw.githubusercontent.com/napplet/napplet/main/scripts/install-napplet-cli.sh | sh
+```
+
+```powershell
+# Windows PowerShell
+irm https://raw.githubusercontent.com/napplet/napplet/main/scripts/install-napplet-cli.ps1 | iex
+```
+
+The installers select a supported release asset and verify it against
+`SHA256SUMS` before replacing the executable. Supported assets are Linux x64 /
+ARM64, macOS x64 / ARM64, and Windows x64.
+
+### JSR/Deno alternative
 
 ```sh
 deno install --global \
@@ -54,24 +71,26 @@ deno task build
 
 ## Quick Start
 
-Run these commands from the repository or workspace that contains your built napplet.
+The primary developer path is ordered and composable:
 
 ```sh
-napplet init \
-  --relay wss://relay.example \
-  --server https://blossom.example \
-  --name my-napplet
-
-napplet debug
-napplet deploy --dry-run --sec nsec1...
-napplet deploy --sec nsec1...
-napplet deploy --json --dry-run --sec nsec1...
+napplet create my-napplet
+cd my-napplet
+napplet init
+napplet skills install --to codex
+pnpm install
+# Ask your agent to build the napplet.
+pnpm verify
+napplet deploy --dry-run
+napplet deploy
 ```
 
 What each step does:
 
-- `napplet init` creates `.napplet/config.json`. In an interactive terminal it prompts for missing
-  fields and shows relay / Blossom server suggestions; in scripts, pass flags explicitly.
+- `napplet create` delegates to `@napplet/boilerplate` and creates the starter only.
+- `napplet init` owns deployment name, title, description, archetype contracts, relays, and Blossom
+  servers in `.napplet/config.json`; scripts can pass the same fields explicitly.
+- `napplet skills` delegates to `@napplet/skills`, preserving every target and custom-location flag.
 - `napplet debug` prints resolved config, discovered napplets, deploy targets, manifest templates,
   and signing readiness without uploading or publishing.
 - `napplet deploy --dry-run` builds the same deploy plan and signed manifest events without network
@@ -82,7 +101,9 @@ What each step does:
 ## Commands
 
 ```sh
-napplet init [--force] [--root] [--source-dir <dir>] [--relay <url>] [--server <url>] [--name <dtag>]
+napplet create <directory> [--template <path-or-url>] [--force]
+napplet init [--force] [--root] [--source-dir <dir>] [--name <dtag>] [--title <title>] [--description <text>] [--archetype <slug:NAP-N>] [--relay <url>] [--server <url>]
+napplet skills <list|print|install> [args]
 napplet discover [--config <file>] [--all]
 napplet debug [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>]
 napplet deploy [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>] [--prompt-sec] [--dry-run] [--json]
@@ -98,10 +119,12 @@ napplet paja [--config <file>] [-- <args>]
 
 ### `init`
 
-Creates `.napplet/config.json` unless it already exists. Use `--force` to overwrite it.
+Creates `.napplet/config.json` unless it already exists. Use `--force` to overwrite it. For named
+deployments, the NIP-5A d-tag must match `^[a-z0-9-]{1,13}$` and cannot end in `-`. Archetype values
+use canonical `slug:NAP-N` contracts; there is no generic `type` manifest tag.
 
 In an interactive terminal, `napplet init` guides setup for source directory, root-vs-named target,
-relays, and Blossom servers. Relay suggestions come from best-effort
+name, title, optional description, archetype contracts, relays, and Blossom servers. Relay suggestions come from best-effort
 [NIP-66](https://nips.nostr.com/66) discovery events on relay discovery relays such as
 `wss://relaypag.es`; curated general-purpose relays are completed first, followed by live discoveries.
 Blossom suggestions come from best-effort [NIP-B7](https://nips.nostr.com/b7) kind `10063`
@@ -110,7 +133,7 @@ advisory Tab-completion candidates; the written config contains only the values 
 
 ```sh
 napplet init
-napplet init --source-dir . --relay wss://relay.example --server https://blossom.example --name feed
+napplet init --source-dir . --name feed --title Feed --archetype note:NAP-4 --relay wss://relay.example --server https://blossom.example
 napplet init --root --relay wss://relay.example --server https://blossom.example
 ```
 
@@ -123,9 +146,18 @@ Example config:
   "relays": ["wss://relay.example"],
   "blossomServers": ["https://blossom.example"],
   "defaultTarget": "named",
-  "named": ["feed"]
+  "named": ["feed"],
+  "metadata": {
+    "name": "feed",
+    "title": "Feed",
+    "description": "A focused feed reader",
+    "archetypes": [{ "slug": "note", "protocol": "NAP-4" }]
+  }
 }
 ```
+
+Valid config metadata takes precedence over title/description/archetype defaults found in built HTML
+or the Vite plugin sidecar. Legacy configs without `metadata` retain their existing fallback behavior.
 
 ### `discover`
 
