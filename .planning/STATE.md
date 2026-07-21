@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v0.34.0
 milestone_name: NIP-5D Runtime Injection
 status: planning
-last_updated: "2026-07-15T17:42:00+02:00"
-last_activity: "2026-07-15 - Quick task 260715-ogy complete: neutral community/group-chat invite linked from the SPA and docs."
+last_updated: "2026-07-21T22:36:31.976Z"
+last_activity: 2026-07-15 — Quick task 260715-ogy complete; neutral
 progress:
-  total_phases: 0
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  total_phases: 150
+  completed_phases: 2
+  total_plans: 12
+  completed_plans: 2
+  percent: 1
 ---
 
 # Project State
@@ -27,9 +27,9 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
+Phase: 159.1 — CLI-first developer onboarding flow
+Plan: Not planned
+Status: Planning
 Last activity: 2026-07-15 — Quick task 260715-ogy complete; neutral
 community/group-chat invite linked from the SPA and docs.
 
@@ -37,28 +37,37 @@ community/group-chat invite linked from the SPA and docs.
 
 - Added the provided invite to repeated SPA surfaces: primary nav, hero CTAs,
   get-started links, and footer ecosystem links.
+
 - Added the invite to VitePress docs navigation plus the docs home, guide
   overview, getting-started guide, and packages overview.
+
 - Kept visible copy generic (`Community`, `Join community`, `Group chat`,
   `community group chat`) and avoided client/protocol-specific chat branding.
+
 - Verification: targeted SPA/docs builds; full `pnpm build`; full
   `pnpm type-check`; `pnpm -r test:unit`; `pnpm lint` (0 tasks); changed-code
   AI-slop 100/100; `git diff --check`; forbidden visible-label scan.
+
 - Commit: `ccc3796b` (`Surface the community invite where builders look`).
 
 ### Quick task 260711-mz4 — COMPLETE
 
 - Replaced stale generator/template bootstrap and capability-probe guidance with
   runtime injection, `@napplet/sdk` calls, and optional domain-presence checks.
+
 - Made starter Nostr access OUTBOX-first and retained RELAY only as a documented
   relay-local escape hatch.
+
 - Replaced vendored template skill bodies with the `@napplet/skills` pointer and
   added cross-package drift checks.
+
 - Removed undocumented build-time config guidance and fixed Vite handling of
   hard `count` requirements.
+
 - Verification: full build/type/unit gates; template and generated-app verify;
   full `pnpm test`; conformance 5 pass / 0 fail / 5 documented skips; exact stale scans;
   `git diff --check`; changed-code AI-slop 100/100.
+
 - PRs: https://github.com/napplet/web/pull/163 and
   https://github.com/napplet/boilerplate/pull/4.
 
@@ -66,14 +75,18 @@ community/group-chat invite linked from the SPA and docs.
 
 - Added `nevent`/`naddr` resolution to the conformance web app, using pointer
   relay hints to resolve NIP-5D napplet manifest events.
+
 - Verified event signatures, NIP-5D event kind/shape, optional aggregate `x`
   tags, Blossom `/index.html` blob hashes, and then booted the verified HTML
   through the existing `srcdoc` sandbox harness.
+
 - Replaced private HTML `napplet-*` manifest checks in `@napplet/conformance`
   with resolved manifest-event checks and kept `validateManifest(html)` as a
   compatibility wrapper.
+
 - Updated conformance docs, added app-level unit tests, and added a changeset for
   `@napplet/conformance`.
+
 - Verification: `pnpm --filter @napplet/conformance test:unit`;
   `pnpm --filter @napplet/conformance build`;
   `pnpm --filter @napplet/conformance-web test:unit`;
@@ -84,36 +97,46 @@ community/group-chat invite linked from the SPA and docs.
   `pnpm --filter @napplet/conformance-e2e test:e2e`; `git diff --check`;
   `pnpm dlx aislop scan --json .` (88/100 from pre-existing warnings outside
   touched files).
+
 - CI follow-up: updated the e2e harness so local directory JSON reports assert
   skipped manifest-event identity rather than legacy `napplet-type` metadata.
+
 - Commit: `04606c3a` (`fix(conformance): accept Nostr manifest pointers`).
 
 ### Quick task 260710-mzr — COMPLETE
 
 - Moved `Core concepts` above `Getting started` in the VitePress `Getting Started`
   sidebar group.
+
 - Kept the change scoped to docs information architecture; no package runtime or
   protocol surface changed.
+
 - Verification: `pnpm --filter @napplet/docs build`; `git diff --check`;
   `pnpm build`; `pnpm type-check`; `pnpm -r test:unit`; `pnpm lint`
   (0 tasks); `pnpm dlx aislop@0.12.0 scan --changes --base origin/main .`
   (98/100 from the existing `js-yaml` advisory).
+
 - Commit: `bc4cd533` (`Put concepts before tutorials in docs sidebar`).
 
 ### Quick task 260710-lsc — COMPLETE
 
 - Shortened the Note Drafts AI-agent tutorial's example prompt to product scope:
   app title, package name, napplet type, user flow, and verification evidence.
+
 - Moved the `identity` / `storage` / `outbox` mapping into the "skills should
   infer" explanation instead of requiring users to paste it into the prompt.
+
 - Reframed forbidden-surface and metadata checks as review evidence, not
   first-prompt content.
+
 - Simplified the repair prompt to rerun `make-napplet` / `build-napplet` /
   `test-napplet`; recurring boundary misses should be fixed in
   `@napplet/skills`, not by expanding the tutorial prompt.
+
 - Verification: `pnpm --filter @napplet/docs build`; `git diff --check`;
   `pnpm build`; `pnpm type-check`; `pnpm -r test:unit`; `pnpm lint` (no tasks);
   staged `aislop@0.12.0` 98/100 with only the existing `js-yaml` advisory.
+
 - Commit: `ab3940a0` (`Clarify that skills own Note Drafts prompt details`).
 
 ### Quick task 260710-lai — COMPLETE
@@ -348,6 +371,10 @@ Last activity: 2026-06-16 — Phase 150 (b7a7f7e) CLI+fixtures+e2e+CI; Phase 151
 
 ## Accumulated Context
 
+### Roadmap Evolution
+
+- Phase 159.1 inserted after Phase 159: CLI-first developer onboarding flow (URGENT)
+
 ### Decisions
 
 Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting current work:
@@ -469,6 +496,7 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 | 260706-psu | Resolve napplet/web#126 with @napplet/shim host prelude | 2026-07-06 | 4e726171 | [260706-psu-task-resolve-napplet-web-126-by-adding-a](./quick/260706-psu-task-resolve-napplet-web-126-by-adding-a/) |
 | 260706-dmu | Align NAP-DM result envelope unions | 2026-07-07 | ac9c32e0 | [260706-dmu-align-dm-result-envelope-unions](./quick/260706-dmu-align-dm-result-envelope-unions/) |
 | 260706-via | Harden napplet skills against direct browser network and storage APIs in sandboxed napplets | 2026-07-06 | e781e436 | [260706-via-harden-napplet-skills-against-direct-bro](./quick/260706-via-harden-napplet-skills-against-direct-bro/) |
+
 ## Deferred Items
 
 Items acknowledged and deferred at v0.31.0 milestone close on 2026-05-24:

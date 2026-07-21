@@ -147,9 +147,22 @@ runtimes inject, napplets use types/SDK, and domain absence means unavailable.
 - [ ] 159-01-PLAN.md — Root, package, and app docs migration.
 - [ ] 159-02-PLAN.md — Skills and boilerplate guidance migration.
 
+### Phase 159.1: CLI-first developer onboarding flow (INSERTED)
+
+**Goal:** Deliver one coherent developer path from installing a standalone
+`napplet` binary through scaffolding, deploy metadata setup, agent-skill
+installation, build/verification, and deployment, with the SPA and docs routing
+builders through the same commands.
+**Requirements**: ONB-01, ONB-02, ONB-03, ONB-04, ONB-05, ONB-06, ONB-07, ONB-08
+**Depends on:** Phase 159
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd-plan-phase 159.1 to break down)
+
 ### Phase 160: Release Verification and PR
 **Goal**: The migration is release-ready and publicly reviewable.
-**Depends on**: Phase 157, Phase 158, Phase 159.
+**Depends on**: Phase 157, Phase 158, Phase 159, Phase 159.1.
 **Requirements**: REL-01, REL-02, REL-03, REL-04
 **Success Criteria** (what must be TRUE):
   1. Changesets exist for every changed shipped package.
