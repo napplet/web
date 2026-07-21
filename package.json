@@ -9,6 +9,8 @@
     "test:unit": "turbo run test:unit",
     "test:tutorial": "node --test scripts/tutorial-package-versions.test.mjs && node scripts/test-tutorial.mjs",
     "test:e2e": "turbo run test:e2e",
+    "test:installers": "node scripts/test-install-napplet-cli.mjs",
+    "test:workflow-contracts": "node --test scripts/workflow-contracts.test.mjs",
     "test:conformance": "node packages/conformance-cli/dist/cli.js tests/fixtures/napplets/conformant",
     "lint": "turbo run lint",
     "type-check": "turbo run type-check",
