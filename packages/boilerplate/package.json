@@ -1,7 +1,7 @@
 {
   "name": "@napplet/boilerplate",
   "version": "0.2.1",
-  "description": "Interactive generator for the napplet boilerplate template",
+  "description": "Project scaffold generator for the napplet boilerplate template",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -31,7 +31,7 @@
   "scripts": {
     "build": "tsup",
     "type-check": "tsc --noEmit",
-    "test:unit": "node dist/index.js --help >/dev/null && node --test test/guidance.test.mjs"
+    "test:unit": "node dist/index.js --help >/dev/null && node --test test/*.test.mjs"
   },
   "license": "MIT",
   "repository": {
