@@ -171,7 +171,7 @@ builders through the same commands.
 Plans:
 - [x] 159.1-01-PLAN.md — CLI composition and deploy-metadata ownership.
 - [x] 159.1-02-PLAN.md — Boilerplate simplification and standalone binaries.
-- [ ] 159.1-03-PLAN.md — CLI-first documentation, tutorials, and skills.
+- [x] 159.1-03-PLAN.md — CLI-first documentation, tutorials, and skills.
 - [ ] 159.1-04-PLAN.md — SPA onboarding surface and release verification.
 
 ### Phase 160: Release Verification and PR
