@@ -2,16 +2,15 @@
 gsd_state_version: 1.0
 milestone: v0.34.0
 milestone_name: NIP-5D Runtime Injection
-status: ready_to_plan
-last_updated: 2026-07-21T23:29:39.761Z
-last_activity: 2026-07-15 — Quick task 260715-ogy complete; neutral
+status: "Phase 159.1 shipped — PR #171"
+last_updated: "2026-07-21T23:32:10.549Z"
+last_activity: "2026-07-21 — Phase 159.1 shipped in PR #171; PR #170 closed as superseded"
 progress:
   total_phases: 150
   completed_phases: 2
   total_plans: 12
   completed_plans: 6
   percent: 1
-stopped_at: Phase 159.1 complete (4/4) — ready to discuss Phase 160
 ---
 
 # Project State
@@ -30,8 +29,8 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 
 Phase: 160
 Plan: Not started
-Status: Ready to plan
-Last activity: 2026-07-21
+Status: Phase 159.1 shipped — PR #171
+Last activity: 2026-07-21 — Phase 159.1 shipped in PR #171; PR #170 closed as superseded
 community/group-chat invite linked from the SPA and docs.
 
 ### Quick task 260715-ogy — COMPLETE
