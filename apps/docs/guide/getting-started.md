@@ -10,12 +10,12 @@ actually *run* a napplet you also need a host shell — see
 
 ```bash
 # macOS or Linux
-curl -fsSL https://raw.githubusercontent.com/napplet/napplet/main/scripts/install-napplet-cli.sh | sh
+curl -fsSL https://raw.githubusercontent.com/napplet/web/main/scripts/install-napplet-cli.sh | sh
 ```
 
 ```powershell
 # Windows PowerShell
-irm https://raw.githubusercontent.com/napplet/napplet/main/scripts/install-napplet-cli.ps1 | iex
+irm https://raw.githubusercontent.com/napplet/web/main/scripts/install-napplet-cli.ps1 | iex
 ```
 
 Each installer downloads the platform binary and verifies it against the

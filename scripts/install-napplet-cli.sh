@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-RELEASE_BASE="${NAPPLET_CLI_RELEASE_BASE:-https://github.com/napplet/napplet/releases/download/napplet-cli}"
+RELEASE_BASE="${NAPPLET_CLI_RELEASE_BASE:-https://github.com/napplet/web/releases/download/napplet-cli}"
 INSTALL_DIR="${NAPPLET_CLI_INSTALL_DIR:-$HOME/.local/bin}"
 PLATFORM="${NAPPLET_CLI_PLATFORM:-$(uname -s)}"
 ARCH="${NAPPLET_CLI_ARCH:-$(uname -m)}"

@@ -4,7 +4,7 @@
  * Use `@napplet/cli/cli` when you want the `napplet` executable:
  *
  * ```sh
- * curl -fsSL https://raw.githubusercontent.com/napplet/napplet/main/scripts/install-napplet-cli.sh | sh
+ * curl -fsSL https://raw.githubusercontent.com/napplet/web/main/scripts/install-napplet-cli.sh | sh
  * # Deno alternative:
  * deno install --global \
  *   --allow-read --allow-write --allow-run --allow-env --allow-net \

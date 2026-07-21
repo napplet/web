@@ -15,11 +15,11 @@
   const platforms: Platform[] = ['macOS', 'Linux', 'Windows'];
   const installCommands: Record<Platform, string> = {
     macOS:
-      'curl -fsSL https://raw.githubusercontent.com/napplet/napplet/main/scripts/install-napplet-cli.sh | sh',
+      'curl -fsSL https://raw.githubusercontent.com/napplet/web/main/scripts/install-napplet-cli.sh | sh',
     Linux:
-      'curl -fsSL https://raw.githubusercontent.com/napplet/napplet/main/scripts/install-napplet-cli.sh | sh',
+      'curl -fsSL https://raw.githubusercontent.com/napplet/web/main/scripts/install-napplet-cli.sh | sh',
     Windows:
-      'irm https://raw.githubusercontent.com/napplet/napplet/main/scripts/install-napplet-cli.ps1 | iex',
+      'irm https://raw.githubusercontent.com/napplet/web/main/scripts/install-napplet-cli.ps1 | iex',
   };
   const steps: WorkflowStep[] = [
     {

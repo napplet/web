@@ -13,12 +13,12 @@ napplet tooling such as conformance and Paja.
 
 ```sh
 # macOS or Linux
-curl -fsSL https://raw.githubusercontent.com/napplet/napplet/main/scripts/install-napplet-cli.sh | sh
+curl -fsSL https://raw.githubusercontent.com/napplet/web/main/scripts/install-napplet-cli.sh | sh
 ```
 
 ```powershell
 # Windows PowerShell
-irm https://raw.githubusercontent.com/napplet/napplet/main/scripts/install-napplet-cli.ps1 | iex
+irm https://raw.githubusercontent.com/napplet/web/main/scripts/install-napplet-cli.ps1 | iex
 ```
 
 The installers select a supported release asset and verify it against
