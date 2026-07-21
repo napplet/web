@@ -57,7 +57,7 @@ const PACKAGE_SOURCES: ReadonlyArray<{ name: string; blurb: string; jsr: boolean
   {
     name: '@napplet/cli',
     blurb:
-      'Deno CLI for discovering, inspecting, testing, and deploying built napplets. Publishes NIP-5A manifests to Blossom and Nostr relays.',
+      'Standalone CLI for creating projects, owning deploy metadata, installing agent skills, and publishing NIP-5A manifests to Blossom and Nostr relays.',
     jsr: true,
   },
   {
@@ -81,13 +81,13 @@ const PACKAGE_SOURCES: ReadonlyArray<{ name: string; blurb: string; jsr: boolean
   {
     name: '@napplet/boilerplate',
     blurb:
-      'Interactive npx generator. Clones the boilerplate template and prepares a Vite + TypeScript napplet starter in seconds.',
+      'Project scaffold behind napplet create. Clones the maintained Vite + TypeScript starter without owning deployment metadata.',
     jsr: false,
   },
   {
     name: '@napplet/skills',
     blurb:
-      'Agent skills — design, build, and test a napplet end-to-end from one prompt. The napplet-skills CLI installs them into Claude Code, Cursor, Windsurf, AGENTS.md, Gemini, or Copilot.',
+      'Agent skills for designing, building, and testing a napplet end to end. Install them through napplet skills for Codex, Claude, Cursor, AGENTS.md, Gemini, or Copilot.',
     jsr: true,
   },
 ];

@@ -68,3 +68,21 @@ test('shipped build skills preserve CLI metadata ownership', async () => {
     assert.match(source, /\.napplet\/config\.json|CLI-owned deployment metadata/);
   }
 });
+
+test('SPA renders the full workflow without the retired alpha gate', async () => {
+  const source = await readFile(path.join(root, 'apps/web/src/sections/GetStarted.svelte'), 'utf8');
+  for (const text of [
+    'One path from install to deploy',
+    'macOS',
+    'Linux',
+    'Windows',
+    'napplet create my-napplet',
+    'napplet init',
+    'napplet skills install --to codex',
+    'pnpm verify',
+    'napplet deploy --dry-run',
+  ]) {
+    assert.match(source, new RegExp(text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  }
+  assert.doesNotMatch(source, /acceptedAlpha|alpha-gate|npx @napplet\/boilerplate/);
+});

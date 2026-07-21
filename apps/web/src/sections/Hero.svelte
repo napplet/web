@@ -75,6 +75,10 @@
     gap: clamp(28px, 5vw, 64px);
     align-items: center;
   }
+  .hero-copy,
+  .hero-card {
+    min-width: 0;
+  }
   .badge {
     display: inline-flex;
     align-items: center;
