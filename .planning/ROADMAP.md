@@ -166,13 +166,13 @@ builders through the same commands.
   4. SPA, docs, tutorials, and skills present one responsive, executable
      install -> create -> init -> skills -> build -> deploy path.
   5. Package changesets and all repository verification gates pass.
-**Plans:** 4 plans
+**Plans:** 4/4 plans complete
 
 Plans:
 - [x] 159.1-01-PLAN.md — CLI composition and deploy-metadata ownership.
 - [x] 159.1-02-PLAN.md — Boilerplate simplification and standalone binaries.
 - [x] 159.1-03-PLAN.md — CLI-first documentation, tutorials, and skills.
-- [ ] 159.1-04-PLAN.md — SPA onboarding surface and release verification.
+- [x] 159.1-04-PLAN.md — SPA onboarding surface and release verification.
 
 ### Phase 160: Release Verification and PR
 **Goal**: The migration is release-ready and publicly reviewable.
@@ -788,7 +788,7 @@ opens the PR. Runtime-injection work supersedes v0.33 NAP-SHELL artifacts.
 | 157. Packages Runtime-Injection Migration | v0.34.0 | 0/4 | Planned | |
 | 158. Conformance and Fixture Migration | v0.34.0 | 0/2 | Planned | |
 | 159. Docs, Skills, and Boilerplate Guidance | v0.34.0 | 0/2 | Planned | |
-| 159.1 CLI-first Developer Onboarding | v0.34.0 | 0/4 | Planned | |
+| 159.1 CLI-first Developer Onboarding | v0.34.0 | 4/4 | Complete    | 2026-07-21 |
 | 160. Release Verification and PR | v0.34.0 | 0/1 | Planned | |
 
 <details>

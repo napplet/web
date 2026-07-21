@@ -85,30 +85,30 @@ external source.
 
 ### Developer onboarding (ONB)
 
-- [ ] **ONB-01**: Developers can install a checksum-verified standalone
+- [x] **ONB-01**: Developers can install a checksum-verified standalone
   `napplet` binary for supported Linux, macOS, and Windows targets without
   installing Deno; the existing JSR/Deno installation remains available.
-- [ ] **ONB-02**: `napplet create <directory>` delegates to the maintained
+- [x] **ONB-02**: `napplet create <directory>` delegates to the maintained
   boilerplate scaffold with only project-location input, and the underlying
   boilerplate generator no longer prompts for deployment name, title, or type.
-- [ ] **ONB-03**: `napplet init` owns named-manifest `d` tag, human title,
+- [x] **ONB-03**: `napplet init` owns named-manifest `d` tag, human title,
   optional description, and canonical NAAT archetype contracts in
   `.napplet/config.json`; deploy manifest generation gives valid config metadata
   precedence over template HTML/plugin defaults without inventing protocol tags.
-- [ ] **ONB-04**: `napplet skills ...` exposes the shipped
+- [x] **ONB-04**: `napplet skills ...` exposes the shipped
   `@napplet/skills` installer through the primary CLI and preserves passthrough
   arguments for every supported agent target.
-- [ ] **ONB-05**: CLI help, first-run prompts, scaffold completion, and init
+- [x] **ONB-05**: CLI help, first-run prompts, scaffold completion, and init
   completion all route the developer to the next real command in the workflow
   and retain non-interactive flags for automation.
-- [ ] **ONB-06**: The SPA get-started surface visibly presents the same ordered
+- [x] **ONB-06**: The SPA get-started surface visibly presents the same ordered
   install -> create -> init -> skills -> build -> deploy path, uses copyable
   real commands, and remains usable without overlap or overflow on mobile and
   desktop viewports.
-- [ ] **ONB-07**: Root/package READMEs, VitePress getting-started/package pages,
+- [x] **ONB-07**: Root/package READMEs, VitePress getting-started/package pages,
   tutorials, and shipped skills use the same CLI-first workflow; stale primary
   `npx @napplet/boilerplate` and Deno-only onboarding funnels are removed.
-- [ ] **ONB-08**: Changed CLI/generator behavior has unit coverage, binary and
+- [x] **ONB-08**: Changed CLI/generator behavior has unit coverage, binary and
   installer workflows have static/smoke validation, publishable packages have
   changesets, and full build/type/unit/docs/slop/diff gates pass before shipping.
 
@@ -149,13 +149,13 @@ external source.
 | REL-02 | Phase 160 | Planned |
 | REL-03 | Phase 160 | Planned |
 | REL-04 | Phase 160 | Planned |
-| ONB-01 | Phase 159.1 | Planned |
-| ONB-02 | Phase 159.1 | Planned |
-| ONB-03 | Phase 159.1 | Planned |
-| ONB-04 | Phase 159.1 | Planned |
-| ONB-05 | Phase 159.1 | Planned |
-| ONB-06 | Phase 159.1 | Planned |
-| ONB-07 | Phase 159.1 | Planned |
-| ONB-08 | Phase 159.1 | Planned |
+| ONB-01 | Phase 159.1 | Complete |
+| ONB-02 | Phase 159.1 | Complete |
+| ONB-03 | Phase 159.1 | Complete |
+| ONB-04 | Phase 159.1 | Complete |
+| ONB-05 | Phase 159.1 | Complete |
+| ONB-06 | Phase 159.1 | Complete |
+| ONB-07 | Phase 159.1 | Complete |
+| ONB-08 | Phase 159.1 | Complete |
 
 **Coverage:** 30/30 v0.34.0 requirements mapped.

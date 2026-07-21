@@ -2,15 +2,16 @@
 gsd_state_version: 1.0
 milestone: v0.34.0
 milestone_name: NIP-5D Runtime Injection
-status: planning
-last_updated: "2026-07-21T22:36:31.976Z"
+status: ready_to_plan
+last_updated: 2026-07-21T23:29:39.761Z
 last_activity: 2026-07-15 — Quick task 260715-ogy complete; neutral
 progress:
   total_phases: 150
   completed_phases: 2
   total_plans: 12
-  completed_plans: 2
+  completed_plans: 6
   percent: 1
+stopped_at: Phase 159.1 complete (4/4) — ready to discuss Phase 160
 ---
 
 # Project State
@@ -21,16 +22,16 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 
 **Core value:** Prove that sandboxed Nostr apps can securely delegate to a host shell over a simple, standardized protocol — and ship the spec + SDK so others can build on it.
 
-**Current focus:** v0.34.0 NIP-5D Runtime Injection — retire stale NAP-SHELL / `supports()` surfaces and align packages, conformance, docs, skills, and boilerplate guidance with runtime-injected `window.napplet` domain objects.
+**Current focus:** Phase 160 — release verification pr
 
 > **Provenance note:** The "Accumulated Context" section below preserves bullet records from BOTH branches' STATE.md histories. Records tagged "v0.29.0" from main's lineage refer to the milestone NOW renumbered as v0.30.0 (Class-Gated Decrypt — Phases 135-138). Records tagged "v0.29.0" from feat/strict-model refer to NUB-CONNECT (Phases 135-142). Phase number alone is not a unique identifier across the two; cross-reference the topic (decrypt/identity/NIP-07 → v0.30.0; connect/class/CSP-authority → v0.29.0).
 
 ## Current Position
 
-Phase: 159.1 — CLI-first developer onboarding flow
-Plan: Not planned
-Status: Planning
-Last activity: 2026-07-15 — Quick task 260715-ogy complete; neutral
+Phase: 160
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-07-21
 community/group-chat invite linked from the SPA and docs.
 
 ### Quick task 260715-ogy — COMPLETE
