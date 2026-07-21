@@ -155,10 +155,24 @@ installation, build/verification, and deployment, with the SPA and docs routing
 builders through the same commands.
 **Requirements**: ONB-01, ONB-02, ONB-03, ONB-04, ONB-05, ONB-06, ONB-07, ONB-08
 **Depends on:** Phase 159
-**Plans:** 0 plans
+**Success Criteria** (what must be TRUE):
+  1. A checksum-verified standalone `napplet` binary can drive the documented
+     onboarding path without requiring Deno.
+  2. `napplet create`, `napplet init`, and `napplet skills` compose the shipped
+     generator and skill installer while keeping deployment metadata in the CLI
+     config and preserving non-interactive operation.
+  3. Generated manifests prefer valid `.napplet/config.json` name, title,
+     description, and canonical archetype contracts over template defaults.
+  4. SPA, docs, tutorials, and skills present one responsive, executable
+     install -> create -> init -> skills -> build -> deploy path.
+  5. Package changesets and all repository verification gates pass.
+**Plans:** 4 plans
 
 Plans:
-- [ ] TBD (run /gsd-plan-phase 159.1 to break down)
+- [ ] 159.1-01-PLAN.md — CLI composition and deploy-metadata ownership.
+- [ ] 159.1-02-PLAN.md — Boilerplate simplification and standalone binaries.
+- [ ] 159.1-03-PLAN.md — CLI-first documentation, tutorials, and skills.
+- [ ] 159.1-04-PLAN.md — SPA onboarding surface and release verification.
 
 ### Phase 160: Release Verification and PR
 **Goal**: The migration is release-ready and publicly reviewable.
@@ -774,6 +788,7 @@ opens the PR. Runtime-injection work supersedes v0.33 NAP-SHELL artifacts.
 | 157. Packages Runtime-Injection Migration | v0.34.0 | 0/4 | Planned | |
 | 158. Conformance and Fixture Migration | v0.34.0 | 0/2 | Planned | |
 | 159. Docs, Skills, and Boilerplate Guidance | v0.34.0 | 0/2 | Planned | |
+| 159.1 CLI-first Developer Onboarding | v0.34.0 | 0/4 | Planned | |
 | 160. Release Verification and PR | v0.34.0 | 0/1 | Planned | |
 
 <details>
