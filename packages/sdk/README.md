@@ -4,6 +4,19 @@
 
 ## Getting Started
 
+New napplet projects should start with the CLI:
+
+```bash
+pnpm add -g @napplet/cli
+napplet init my-napplet
+cd my-napplet
+pnpm install
+napplet doctor
+napplet skills install
+```
+
+The generated app imports `@napplet/shim` once, reads `.napplet/napplet.json` for metadata, and uses `@napplet/sdk` for typed runtime calls. Use the manual setup below only when adapting an existing app.
+
 ### Prerequisites
 
 - `@napplet/shim` must be imported (side-effect) to install `window.napplet` before SDK methods are called
@@ -93,14 +106,14 @@ const handle = resource.bytesAsObjectURL('blossom:sha256:e3b0c44298fc1c149afbf4c
 imgEl.src = handle.url;
 // handle.revoke() when done
 
-// Check shell-assigned class (v0.29.0, NUB-CLASS)
+// Check shell-assigned class (v0.29.0, NAP-CLASS)
 import { getClass, CLASS_DOMAIN } from '@napplet/sdk';
-if (window.napplet.shell.supports(`nub:${CLASS_DOMAIN}`)) {
+if (window.napplet.shell.supports(`nap:${CLASS_DOMAIN}`)) {
   const cls = getClass();   // number | undefined
-  if (cls === 2) { /* NUB-CLASS-2 posture */ }
+  if (cls === 2) { /* NAP-CLASS-2 posture */ }
 }
 
-// Use direct network access if the user approved `connect` origins (v0.29.0, NUB-CONNECT)
+// Use direct network access if the user approved `connect` origins (v0.29.0, NAP-CONNECT)
 import { connectGranted, connectOrigins } from '@napplet/sdk';
 if (connectGranted()) {
   const res = await fetch(`${connectOrigins()[0]}/items`);
@@ -181,7 +194,7 @@ Shell-rendered notifications. Mirrors `window.napplet.notify`.
 
 ### `config`
 
-Per-napplet declarative configuration (NUB-CONFIG). Mirrors `window.napplet.config`.
+Per-napplet declarative configuration (NAP-CONFIG). Mirrors `window.napplet.config`.
 
 | Method | Returns | Description |
 |--------|---------|-------------|
@@ -192,9 +205,9 @@ Per-napplet declarative configuration (NUB-CONFIG). Mirrors `window.napplet.conf
 | `onSchemaError(callback)` | `() => void` | Listen for `config.schemaError` pushes (returns plain teardown fn) |
 | `schema` (accessor) | `Record<string, unknown> \| null` | Readonly current schema |
 
-### FromSchema type inference (NUB-CONFIG)
+### FromSchema type inference (NAP-CONFIG)
 
-`json-schema-to-ts` is declared as an optional `peerDependency` of `@napplet/nub` (scoped to the `@napplet/nub/config` domain's `FromSchema` typing). Install it in your napplet to get `FromSchema<typeof schema>` typing for your `config.subscribe` callback -- the `values` parameter is inferred directly from your schema (enums, required fields, defaults all flow through). Authors who skip `json-schema-to-ts` pay no install cost and `config.subscribe` still works with the default `Record<string, unknown>` typing.
+`json-schema-to-ts` is declared as an optional `peerDependency` of `@napplet/nap` (scoped to the `@napplet/nap/config` domain's `FromSchema` typing). Install it in your napplet to get `FromSchema<typeof schema>` typing for your `config.subscribe` callback -- the `values` parameter is inferred directly from your schema (enums, required fields, defaults all flow through). Authors who skip `json-schema-to-ts` pay no install cost and `config.subscribe` still works with the default `Record<string, unknown>` typing.
 
 ```ts
 import '@napplet/shim';
@@ -224,7 +237,7 @@ npm install --save-dev json-schema-to-ts
 
 ### `resource`
 
-Sandboxed byte fetching (NUB-RESOURCE). Mirrors `window.napplet.resource`. Required because the iframe sandbox + strict CSP block direct `fetch()` / `<img src=externalUrl>` / `XMLHttpRequest`.
+Sandboxed byte fetching (NAP-RESOURCE). Mirrors `window.napplet.resource`. Required because the iframe sandbox + strict CSP block direct `fetch()` / `<img src=externalUrl>` / `XMLHttpRequest`.
 
 | Method | Returns | Description |
 |--------|---------|-------------|
@@ -244,7 +257,7 @@ const handle = resourceBytesAsObjectURL('blossom:sha256:...');
 
 ### `connect` (v0.29.0)
 
-User-gated direct network access (NUB-CONNECT). State-only — no method namespace, no wire messages. The SDK re-exports the `NappletConnect` type, the `CONNECT_DOMAIN` constant, the `installConnectShim` installer, and the `connectGranted` / `connectOrigins` / `normalizeConnectOrigin` helper functions.
+User-gated direct network access (NAP-CONNECT). State-only — no method namespace, no wire messages. The SDK re-exports the `NappletConnect` type, the `CONNECT_DOMAIN` constant, the `installConnectShim` installer, and the `connectGranted` / `connectOrigins` / `normalizeConnectOrigin` helper functions.
 
 ```ts
 import type { NappletConnect } from '@napplet/sdk';
@@ -262,37 +275,37 @@ const normalized = normalizeConnectOrigin('https://api.example.com');   // retur
 
 | Export | Kind | Source | Description |
 |--------|------|--------|-------------|
-| `NappletConnect` | type | `@napplet/nub/connect` | `{ readonly granted: boolean; readonly origins: readonly string[] }` |
-| `CONNECT_DOMAIN` | const | `@napplet/nub/connect` | The domain identifier string `'connect'` |
-| `installConnectShim` | function | `@napplet/nub/connect` | Side-effect installer — reads the discovery meta tag and mounts `window.napplet.connect` |
-| `connectGranted()` | function | `@napplet/nub/connect` | `() => boolean` — readonly helper; safer than direct `window.napplet.connect.granted` access |
-| `connectOrigins()` | function | `@napplet/nub/connect` | `() => readonly string[]` — readonly helper |
-| `normalizeConnectOrigin(origin)` | function | `@napplet/nub/connect` | Shared origin validator (used by vite-plugin AND shell implementations); throws on invalid input with `[@napplet/nub/connect]`-prefixed messages |
+| `NappletConnect` | type | `@napplet/nap/connect` | `{ readonly granted: boolean; readonly origins: readonly string[] }` |
+| `CONNECT_DOMAIN` | const | `@napplet/nap/connect` | The domain identifier string `'connect'` |
+| `installConnectShim` | function | `@napplet/nap/connect` | Side-effect installer — reads the discovery meta tag and mounts `window.napplet.connect` |
+| `connectGranted()` | function | `@napplet/nap/connect` | `() => boolean` — readonly helper; safer than direct `window.napplet.connect.granted` access |
+| `connectOrigins()` | function | `@napplet/nap/connect` | `() => readonly string[]` — readonly helper |
+| `normalizeConnectOrigin(origin)` | function | `@napplet/nap/connect` | Shared origin validator (used by vite-plugin AND shell implementations); throws on invalid input with `[@napplet/nap/connect]`-prefixed messages |
 
 ### `class` (v0.29.0)
 
-Shell-assigned integer class (NUB-CLASS). Wire-only — the shell sends exactly one `class.assigned` envelope per napplet lifecycle; the shim writes the integer to `window.napplet.class`. The SDK re-exports the wire type, the domain constant, the installer, and a `getClass()` helper.
+Shell-assigned integer class (NAP-CLASS). Wire-only — the shell sends exactly one `class.assigned` envelope per napplet lifecycle; the shim writes the integer to `window.napplet.class`. The SDK re-exports the wire type, the domain constant, the installer, and a `getClass()` helper.
 
 ```ts
-import type { ClassAssignedMessage, NappletClass, ClassNubMessage } from '@napplet/sdk';
+import type { ClassAssignedMessage, NappletClass, ClassNapMessage } from '@napplet/sdk';
 import { CLASS_DOMAIN, installClassShim, getClass } from '@napplet/sdk';
 
-if (window.napplet.shell.supports(`nub:${CLASS_DOMAIN}`)) {
+if (window.napplet.shell.supports(`nap:${CLASS_DOMAIN}`)) {
   const cls = getClass();   // number | undefined
-  // cls === 1 → NUB-CLASS-1 (strict baseline)
-  // cls === 2 → NUB-CLASS-2 (user-approved explicit-origin)
-  // cls === undefined → shell doesn't implement nub:class OR envelope hasn't arrived yet
+  // cls === 1 → NAP-CLASS-1 (strict baseline)
+  // cls === 2 → NAP-CLASS-2 (user-approved explicit-origin)
+  // cls === undefined → shell doesn't implement nap:class OR envelope hasn't arrived yet
 }
 ```
 
 | Export | Kind | Source | Description |
 |--------|------|--------|-------------|
-| `ClassAssignedMessage` | type | `@napplet/nub/class` | `{ type: 'class.assigned'; id: string; class: number }` |
-| `NappletClass` | type | `@napplet/nub/class` | `{ readonly class: number \| undefined }` |
-| `ClassMessage` / `ClassNubMessage` | type | `@napplet/nub/class` | Discriminated union alias (class.assigned is the only member in v1) |
-| `CLASS_DOMAIN` | const | `@napplet/nub/class` | The domain identifier string `'class'` |
-| `installClassShim` | function | `@napplet/nub/class` | Side-effect installer — registers the `class.assigned` dispatcher handler and mounts `window.napplet.class` |
-| `getClass()` | function | `@napplet/nub/class` | `() => number \| undefined` — readonly helper |
+| `ClassAssignedMessage` | type | `@napplet/nap/class` | `{ type: 'class.assigned'; id: string; class: number }` |
+| `NappletClass` | type | `@napplet/nap/class` | `{ readonly class: number \| undefined }` |
+| `ClassMessage` / `ClassNapMessage` | type | `@napplet/nap/class` | Discriminated union alias (class.assigned is the only member in v1) |
+| `CLASS_DOMAIN` | const | `@napplet/nap/class` | The domain identifier string `'class'` |
+| `installClassShim` | function | `@napplet/nap/class` | Side-effect installer — registers the `class.assigned` dispatcher handler and mounts `window.napplet.class` |
+| `getClass()` | function | `@napplet/nap/class` | `() => number \| undefined` — readonly helper |
 
 ### `keys`
 
@@ -306,7 +319,7 @@ Keyboard forwarding and action keybindings. Mirrors `window.napplet.keys`.
 
 ### `identity`
 
-Read-only user queries and class-gated decrypt (NUB-IDENTITY). The identity namespace
+Read-only user queries and class-gated decrypt (NAP-IDENTITY). The identity namespace
 is NOT exported as a top-level SDK object — use `window.napplet.identity.*` directly
 after importing `@napplet/shim`, or use the bare-name helpers below.
 
@@ -325,9 +338,9 @@ const pubkey = await identityGetPublicKey();
 const { rumor, sender } = await identityDecrypt(giftWrapEvent);
 ```
 
-`identity.decrypt` is legal only for napplets assigned `class: 1` per NUB-CLASS-1
+`identity.decrypt` is legal only for napplets assigned `class: 1` per NAP-CLASS-1
 (strict baseline posture with `connect-src 'none'`). Other classes receive a
-`class-forbidden` error. See the [@napplet/nub identity section](../nub/README.md#identity-nub-v0290)
+`class-forbidden` error. See the [@napplet/nap identity section](../nap/README.md#identity-nap-v0290)
 for the 8-code error vocabulary, auto-detect behavior, and the rationale for
 class-gating this API.
 
@@ -339,16 +352,16 @@ Namespaced capability query. Access via `window.napplet.shell.supports()` after 
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| `supports(capability)` | `boolean` | Check shell support for a NUB (`nub:relay`) or permission (`perm:popups`). Bare NUB names also accepted (`relay`). |
+| `supports(capability)` | `boolean` | Check shell support for a NAP (`nap:relay`) or permission (`perm:popups`). Bare NAP names also accepted (`relay`). |
 
 **Example:**
 
 ```ts
 import '@napplet/shim';
 
-// NUB domains (bare shorthand or nub: prefix)
+// NAP domains (bare shorthand or nap: prefix)
 if (window.napplet.shell.supports('relay')) { /* ... */ }
-if (window.napplet.shell.supports('nub:identity')) { /* ... */ }
+if (window.napplet.shell.supports('nap:identity')) { /* ... */ }
 
 // Permissions
 if (window.napplet.shell.supports('perm:popups')) { /* ... */ }
@@ -368,7 +381,7 @@ napplet.config.subscribe((v) => console.log(v));
 
 ## Types
 
-All protocol types are re-exported from `@napplet/core` and the NUB packages:
+All protocol types are re-exported from `@napplet/core` and the NAP packages:
 
 ```ts
 import type {
@@ -378,15 +391,15 @@ import type {
   Subscription,
   EventTemplate,
   NappletMessage,
-  NubDomain,
+  NapDomain,
   NamespacedCapability,
   ShellSupports,
-  // NUB message types (re-exported from NUB packages)
-  RelayNubMessage,
-  IdentityNubMessage,
-  StorageNubMessage,
-  IfcNubMessage,
-  KeysNubMessage,
+  // NAP message types (re-exported from NAP packages)
+  RelayNapMessage,
+  IdentityNapMessage,
+  StorageNapMessage,
+  IfcNapMessage,
+  KeysNapMessage,
   Action,
 } from '@napplet/sdk';
 ```
@@ -400,73 +413,73 @@ import type {
 | `Subscription` | Handle with `close()` method |
 | `EventTemplate` | Unsigned event for `relay.publish()` |
 | `NappletMessage` | Base JSON envelope type for all protocol messages |
-| `NubDomain` | String literal union of NUB domain names |
-| `NamespacedCapability` | Union of `NubDomain \| nub:* \| perm:*` for `supports()` |
+| `NapDomain` | String literal union of NAP domain names |
+| `NamespacedCapability` | Union of `NapDomain \| nap:* \| perm:*` for `supports()` |
 | `ShellSupports` | Interface for the shell capability query API |
 
-### NUB Message Types
+### NAP Message Types
 
-These are discriminated union types covering all messages in each NUB domain. Useful for writing typed message
+These are discriminated union types covering all messages in each NAP domain. Useful for writing typed message
 handlers in shell implementations or protocol-aware code.
 
-| Type | NUB Package | Description |
+| Type | NAP Package | Description |
 |------|-------------|-------------|
-| `RelayNubMessage` | `@napplet/nub/relay` | Discriminated union of all relay domain messages |
-| `IdentityNubMessage` | `@napplet/nub/identity` | Discriminated union of all identity domain messages |
-| `StorageNubMessage` | `@napplet/nub/storage` | Discriminated union of all storage domain messages |
-| `IfcNubMessage` | `@napplet/nub/ifc` | Discriminated union of all IFC domain messages |
-| `KeysNubMessage` | `@napplet/nub/keys` | Discriminated union of all keys domain messages |
-| `MediaNubMessage` | `@napplet/nub/media` | Discriminated union of all media domain messages |
-| `NotifyNubMessage` | `@napplet/nub/notify` | Discriminated union of all notify domain messages |
-| `ConfigNubMessage` | `@napplet/nub/config` | Discriminated union of all config domain messages |
-| `ResourceNubMessage` | `@napplet/nub/resource` | Discriminated union of all resource domain messages |
-| `ConnectNubMessage` * | `@napplet/nub/connect` | State-only NUB — no wire messages. The `NappletConnect` runtime state type is the consumer-facing import. |
-| `ClassNubMessage`   | `@napplet/nub/class`   | Discriminated union of all class domain messages (v1: only `ClassAssignedMessage`) |
+| `RelayNapMessage` | `@napplet/nap/relay` | Discriminated union of all relay domain messages |
+| `IdentityNapMessage` | `@napplet/nap/identity` | Discriminated union of all identity domain messages |
+| `StorageNapMessage` | `@napplet/nap/storage` | Discriminated union of all storage domain messages |
+| `IfcNapMessage` | `@napplet/nap/ifc` | Discriminated union of all IFC domain messages |
+| `KeysNapMessage` | `@napplet/nap/keys` | Discriminated union of all keys domain messages |
+| `MediaNapMessage` | `@napplet/nap/media` | Discriminated union of all media domain messages |
+| `NotifyNapMessage` | `@napplet/nap/notify` | Discriminated union of all notify domain messages |
+| `ConfigNapMessage` | `@napplet/nap/config` | Discriminated union of all config domain messages |
+| `ResourceNapMessage` | `@napplet/nap/resource` | Discriminated union of all resource domain messages |
+| `ConnectNapMessage` * | `@napplet/nap/connect` | State-only NAP — no wire messages. The `NappletConnect` runtime state type is the consumer-facing import. |
+| `ClassNapMessage`   | `@napplet/nap/class`   | Discriminated union of all class domain messages (v1: only `ClassAssignedMessage`) |
 
-\* There is no `ConnectNubMessage` type; NUB-CONNECT has no postMessage wire. The consumer-facing import is the `NappletConnect` runtime state interface.
+\* There is no `ConnectNapMessage` type; NAP-CONNECT has no postMessage wire. The consumer-facing import is the `NappletConnect` runtime state interface.
 
 Individual message types (e.g., `RelaySubscribeMessage`, `IdentityGetPublicKeyMessage`) are also re-exported from
 `@napplet/sdk` for fine-grained typing.
 
-## NUB Domain Constants
+## NAP Domain Constants
 
-Each NUB domain has a string constant re-exported from its package:
+Each NAP domain has a string constant re-exported from its package:
 
 ```ts
 import { RELAY_DOMAIN, IDENTITY_DOMAIN, STORAGE_DOMAIN, IFC_DOMAIN, THEME_DOMAIN, KEYS_DOMAIN, MEDIA_DOMAIN, NOTIFY_DOMAIN, CONFIG_DOMAIN, RESOURCE_DOMAIN, CONNECT_DOMAIN, CLASS_DOMAIN } from '@napplet/sdk';
 // Values: 'relay', 'identity', 'storage', 'ifc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'connect', 'class'
 ```
 
-These constants are re-exported from the individual NUB packages. Use them with the shell capability query
+These constants are re-exported from the individual NAP packages. Use them with the shell capability query
 API for type-safe conditional logic:
 
 ```ts
-if (window.napplet.shell.supports('nub:relay')) {
+if (window.napplet.shell.supports('nap:relay')) {
   // relay operations are available
 }
 
-if (window.napplet.shell.supports('nub:identity')) {
+if (window.napplet.shell.supports('nap:identity')) {
   // identity queries are available
 }
 
-if (window.napplet.shell.supports('nub:config')) {
-  // NUB-CONFIG is available -- schema registration and subscribe()
+if (window.napplet.shell.supports('nap:config')) {
+  // NAP-CONFIG is available -- schema registration and subscribe()
 }
 
-if (window.napplet.shell.supports('nub:resource')) {
+if (window.napplet.shell.supports('nap:resource')) {
   // resource.bytes(url) is available; check per-scheme too:
   if (window.napplet.shell.supports('resource:scheme:blossom')) { /* ... */ }
 }
 
-if (window.napplet.shell.supports('nub:connect')) {
-  // NUB-CONNECT is available — window.napplet.connect reflects shell grant state
+if (window.napplet.shell.supports('nap:connect')) {
+  // NAP-CONNECT is available — window.napplet.connect reflects shell grant state
   // Check per-scheme operator policy:
   if (window.napplet.shell.supports('connect:scheme:http')) { /* cleartext http: origins permitted */ }
   if (window.napplet.shell.supports('connect:scheme:ws'))   { /* cleartext ws: origins permitted */ }
 }
 
-if (window.napplet.shell.supports('nub:class')) {
-  // NUB-CLASS is available — window.napplet.class will be populated by class.assigned
+if (window.napplet.shell.supports('nap:class')) {
+  // NAP-CLASS is available — window.napplet.class will be populated by class.assigned
 }
 ```
 

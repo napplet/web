@@ -1,0 +1,49 @@
+{
+  "name": "@napplet/cli",
+  "version": "0.1.0",
+  "description": "CLI for creating, configuring, building, and deploying napplets",
+  "type": "module",
+  "bin": {
+    "napplet": "./dist/bin.js"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.3",
+    "vite": "^6.4.2",
+    "vitest": "^4.1.2"
+  },
+  "scripts": {
+    "build": "tsup",
+    "type-check": "tsc --noEmit",
+    "test:unit": "vitest run --config vitest.config.ts",
+    "package:binary": "pnpm build && mkdir -p dist-bin && npx -y @yao-pkg/pkg@6.6.0 dist/bin.cjs --targets node20-macos-arm64 --output dist-bin/napplet-macos-arm64 && npx -y @yao-pkg/pkg@6.6.0 dist/bin.cjs --targets node20-macos-x64 --output dist-bin/napplet-macos-x64 && npx -y @yao-pkg/pkg@6.6.0 dist/bin.cjs --targets node20-linux-x64 --output dist-bin/napplet-linux-x64 && npx -y @yao-pkg/pkg@6.6.0 dist/bin.cjs --targets node20-win-x64 --output dist-bin/napplet-win-x64.exe"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sandwichfarm/napplet.git",
+    "directory": "packages/cli"
+  },
+  "keywords": [
+    "nostr",
+    "napplet",
+    "cli",
+    "nip-5d"
+  ]
+}

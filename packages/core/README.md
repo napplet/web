@@ -1,8 +1,20 @@
 # @napplet/core
 
-> JSON envelope types and NUB dispatch infrastructure for the napplet ecosystem.
+> JSON envelope types and NAP dispatch infrastructure for the napplet ecosystem.
 
 ## Getting Started
+
+Application developers should not start here. Start with the CLI:
+
+```bash
+pnpm add -g @napplet/cli
+napplet init my-napplet
+cd my-napplet
+pnpm install
+napplet doctor
+```
+
+Use `@napplet/core` directly when implementing shell-side protocol handling, writing NAP packages, or testing envelope dispatch behavior.
 
 ### Package Overview
 
@@ -20,10 +32,10 @@ npm install @napplet/core
 
 ```ts
 import {
-  type NappletMessage, type NubDomain, type ShellSupports,
-  type NubHandler, type NubDispatch,
-  NUB_DOMAINS, SHELL_BRIDGE_URI, PROTOCOL_VERSION,
-  createDispatch, registerNub, dispatch, getRegisteredDomains,
+  type NappletMessage, type NapDomain, type ShellSupports,
+  type NapHandler, type NapDispatch,
+  NAP_DOMAINS, SHELL_BRIDGE_URI, PROTOCOL_VERSION,
+  createDispatch, registerNap, dispatch, getRegisteredDomains,
   ALL_CAPABILITIES, TOPICS,
 } from '@napplet/core';
 ```
@@ -57,14 +69,14 @@ interface RelaySubscribe extends NappletMessage {
 }
 ```
 
-The `type` field domain prefix (`relay`, `identity`, `storage`, `ifc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `connect`, `class`) routes messages to the correct NUB handler via `dispatch()`.
+The `type` field domain prefix (`relay`, `identity`, `storage`, `ifc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `connect`, `class`) routes messages to the correct NAP handler via `dispatch()`.
 
-#### `NubDomain`
+#### `NapDomain`
 
-String literal union of the twelve NUB capability domains.
+String literal union of the twelve NAP capability domains.
 
 ```ts
-type NubDomain = 'relay' | 'identity' | 'storage' | 'ifc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'connect' | 'class';
+type NapDomain = 'relay' | 'identity' | 'storage' | 'ifc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'connect' | 'class';
 ```
 
 | Domain    | Scope                                    |
@@ -82,14 +94,14 @@ type NubDomain = 'relay' | 'identity' | 'storage' | 'ifc' | 'theme' | 'keys' | '
 | `connect` | User-gated direct network access |
 | `class`   | Shell-assigned napplet class / security posture |
 
-#### `NUB_DOMAINS`
+#### `NAP_DOMAINS`
 
-Runtime constant array of all NUB domain strings. Useful for iteration and validation.
+Runtime constant array of all NAP domain strings. Useful for iteration and validation.
 
 ```ts
-const NUB_DOMAINS: readonly NubDomain[] = ['relay', 'identity', 'storage', 'ifc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'connect', 'class'];
+const NAP_DOMAINS: readonly NapDomain[] = ['relay', 'identity', 'storage', 'ifc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'connect', 'class'];
 
-for (const domain of NUB_DOMAINS) {
+for (const domain of NAP_DOMAINS) {
   console.log(`Checking support for: ${domain}`);
 }
 ```
@@ -100,11 +112,11 @@ Interface for the shell capability query API.
 
 ```ts
 interface ShellSupports {
-  supports(capability: NubDomain | string): boolean;
+  supports(capability: NapDomain | string): boolean;
 }
 ```
 
-Napplets call `window.napplet.shell.supports(domain)` to check whether the shell declared support for a NUB domain before using that domain's API.
+Napplets call `window.napplet.shell.supports(domain)` to check whether the shell declared support for a NAP domain before using that domain's API.
 
 #### `NappletGlobalShell`
 
@@ -116,38 +128,38 @@ interface NappletGlobalShell extends ShellSupports {}
 
 ---
 
-### NUB Dispatch Infrastructure
+### NAP Dispatch Infrastructure
 
-The dispatch system allows NUB modules to self-register at import time. Inbound messages are routed to the correct NUB handler based on the domain prefix extracted from `message.type` (the part before the first `.`).
+The dispatch system allows NAP modules to self-register at import time. Inbound messages are routed to the correct NAP handler based on the domain prefix extracted from `message.type` (the part before the first `.`).
 
 #### `createDispatch()`
 
-Factory that returns an isolated `{ registerNub, dispatch, getRegisteredDomains }` backed by its own `Map<string, NubHandler>`. Use for testing or multi-instance scenarios.
+Factory that returns an isolated `{ registerNap, dispatch, getRegisteredDomains }` backed by its own `Map<string, NapHandler>`. Use for testing or multi-instance scenarios.
 
 ```ts
-function createDispatch(): NubDispatch;
+function createDispatch(): NapDispatch;
 ```
 
 ```ts
 import { createDispatch } from '@napplet/core';
 
-const { registerNub, dispatch } = createDispatch();
-registerNub('relay', handleRelayMessage);
+const { registerNap, dispatch } = createDispatch();
+registerNap('relay', handleRelayMessage);
 dispatch({ type: 'relay.subscribe' }); // true
 ```
 
-#### `registerNub(domain, handler)`
+#### `registerNap(domain, handler)`
 
-Register a handler for a NUB domain on the module-level singleton registry. NUB modules call this at import time.
+Register a handler for a NAP domain on the module-level singleton registry. NAP modules call this at import time.
 
 ```ts
-const registerNub: (domain: string, handler: NubHandler) => void;
+const registerNap: (domain: string, handler: NapHandler) => void;
 ```
 
 ```ts
-import { registerNub } from '@napplet/core';
+import { registerNap } from '@napplet/core';
 
-registerNub('relay', (msg) => {
+registerNap('relay', (msg) => {
   // handles all relay.* messages
   console.log('relay message:', msg.type);
 });
@@ -187,21 +199,21 @@ import { getRegisteredDomains } from '@napplet/core';
 getRegisteredDomains(); // ['relay', 'identity', 'storage']
 ```
 
-#### `NubHandler`
+#### `NapHandler`
 
-Callback type for NUB message handlers.
+Callback type for NAP message handlers.
 
 ```ts
-type NubHandler = (message: NappletMessage) => void;
+type NapHandler = (message: NappletMessage) => void;
 ```
 
-#### `NubDispatch`
+#### `NapDispatch`
 
 Interface returned by `createDispatch()`.
 
 ```ts
-interface NubDispatch {
-  registerNub: (domain: string, handler: NubHandler) => void;
+interface NapDispatch {
+  registerNap: (domain: string, handler: NapHandler) => void;
   dispatch: (message: NappletMessage) => boolean;
   getRegisteredDomains: () => string[];
 }
@@ -215,7 +227,7 @@ Types shared by all napplet packages for Nostr event structures and the capabili
 
 #### `NostrEvent`
 
-Standard Nostr event structure (used by relay NUB and identity NUB).
+Standard Nostr event structure (used by relay NAP and identity NAP).
 
 ```ts
 interface NostrEvent {
@@ -231,7 +243,7 @@ interface NostrEvent {
 
 #### `NostrFilter`
 
-Subscription filter (used by relay NUB for `relay.subscribe` and `relay.query`).
+Subscription filter (used by relay NAP for `relay.subscribe` and `relay.query`).
 
 ```ts
 interface NostrFilter {
@@ -326,8 +338,8 @@ TOPICS.WM_FOCUSED_WINDOW_CHANGED // 'wm:focused-window-changed'
 
 ```ts
 import type {
-  NappletMessage, NubDomain, NamespacedCapability, ShellSupports, NappletGlobalShell,
-  NubHandler, NubDispatch,
+  NappletMessage, NapDomain, NamespacedCapability, ShellSupports, NappletGlobalShell,
+  NapHandler, NapDispatch,
   NostrEvent, NostrFilter, Capability,
   Subscription, EventTemplate, NappletGlobal,
 } from '@napplet/core';
@@ -336,24 +348,24 @@ import type {
 | Type | Description |
 |------|-------------|
 | `NappletMessage` | Base interface for all JSON envelope messages |
-| `NubDomain` | Union of the twelve NUB domain strings |
-| `NamespacedCapability` | Union of `NubDomain \| nub:* \| perm:*` for `supports()` |
+| `NapDomain` | Union of the twelve NAP domain strings |
+| `NamespacedCapability` | Union of `NapDomain \| nap:* \| perm:*` for `supports()` |
 | `ShellSupports` | Interface with `supports()` capability query method |
 | `NappletGlobalShell` | Type for `window.napplet.shell` (extends `ShellSupports`) |
-| `NubHandler` | Callback type for NUB domain handlers |
-| `NubDispatch` | Interface returned by `createDispatch()` |
+| `NapHandler` | Callback type for NAP domain handlers |
+| `NapDispatch` | Interface returned by `createDispatch()` |
 | `NostrEvent` | Nostr event structure |
-| `NostrFilter` | Subscription filter for relay NUB |
+| `NostrFilter` | Subscription filter for relay NAP |
 | `Capability` | Human-readable capability string union |
 | `Subscription` | Handle with `close()` returned by subscribe/on |
 | `EventTemplate` | Unsigned event template for publishing |
 
 ## Integration Note
 
-`@napplet/core` is consumed by all packages in the napplet ecosystem for envelope types and NUB dispatch.
+`@napplet/core` is consumed by all packages in the napplet ecosystem for envelope types and NAP dispatch.
 
-- **In this repo:** `@napplet/shim`, `@napplet/sdk`, and `@napplet/vite-plugin` import `NappletMessage`, `NubDomain`, `ShellSupports`, and all shared protocol types from `@napplet/core`.
-- **`@napplet/nub` domain modules** (`@napplet/nub/relay`, `@napplet/nub/identity`, `@napplet/nub/storage`, `@napplet/nub/ifc`, `@napplet/nub/keys`, `@napplet/nub/media`, `@napplet/nub/notify`, `@napplet/nub/config`): extend `NappletMessage` for their domain-specific message types and call `registerNub` at import time. (The `@napplet/nub/theme` barrel is types-only — no `registerNub` side effect.)
+- **In this repo:** `@napplet/shim`, `@napplet/sdk`, and `@napplet/vite-plugin` import `NappletMessage`, `NapDomain`, `ShellSupports`, and all shared protocol types from `@napplet/core`.
+- **`@napplet/nap` domain modules** (`@napplet/nap/relay`, `@napplet/nap/identity`, `@napplet/nap/storage`, `@napplet/nap/ifc`, `@napplet/nap/keys`, `@napplet/nap/media`, `@napplet/nap/notify`, `@napplet/nap/config`): extend `NappletMessage` for their domain-specific message types and call `registerNap` at import time. (The `@napplet/nap/theme` barrel is types-only — no `registerNap` side effect.)
 
 ## Protocol Reference
 

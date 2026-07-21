@@ -46,8 +46,10 @@ jobs:
         run: node scripts/sync-jsr-versions.mjs
 
       # `pnpm -r exec` runs in topological order (respects workspace deps),
-      # so @napplet/core publishes before @napplet/nub, which publishes before
+      # so @napplet/core publishes before @napplet/nap, which publishes before
       # @napplet/sdk + @napplet/shim, which publish before @napplet/vite-plugin.
+      # @napplet/cli is npm-only and intentionally excluded because it has no
+      # jsr.json manifest.
       # Each package's `npx jsr publish` resolves prior packages from JSR's
       # newly-populated registry. Do NOT use --parallel here — JSR will reject
       # dependents whose dependencies aren't yet on the registry.
@@ -57,4 +59,4 @@ jobs:
       # --allow-dirty: tolerates the sync step's jsr.json edits without
       # requiring a follow-up commit.
       - name: Publish to JSR (topologically ordered)
-        run: pnpm -r --filter='./packages/*' exec npx jsr publish --allow-slow-types --allow-dirty
+        run: pnpm -r --filter @napplet/core --filter @napplet/nap --filter @napplet/sdk --filter @napplet/shim --filter @napplet/vite-plugin exec npx jsr publish --allow-slow-types --allow-dirty
