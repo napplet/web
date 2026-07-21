@@ -327,6 +327,58 @@ Deno.test("createDeployManifestTemplates dedupes title/description and coexists 
   });
 });
 
+Deno.test("config metadata overrides template metadata with canonical archetype tags", async () => {
+  await withTempDir(async (dir) => {
+    await Deno.writeTextFile(
+      `${dir}/index.html`,
+      '<html><head><title>Template title</title><meta name="description" content="Template description"></head></html>',
+    );
+    await Deno.writeTextFile(
+      `${dir}/.nip5a-manifest.json`,
+      JSON.stringify({
+        tags: [
+          ["requires", "relay"],
+          ["archetype", "feed", "NAP-5"],
+          ["archetype", "bad", "not-a-nap"],
+          ["type", "invented"],
+        ],
+      }),
+    );
+    const candidate: NappletCandidate = {
+      name: "notes",
+      dir,
+      indexHtml: `${dir}/index.html`,
+      manifestPath: `${dir}/.nip5a-manifest.json`,
+    };
+    const config = defaultConfig({
+      metadata: {
+        name: "notes",
+        title: "Notes",
+        description: "CLI-owned description",
+        archetypes: [{ slug: "note", protocol: "NAP-4", eventKinds: [1, 30023] }],
+      },
+    });
+    const plan = createDeployPlan(config, [candidate], {});
+    const manifests = await createDeployManifestTemplates(plan, config, { createdAt: 123 });
+    const tags = manifests[0].template?.tags ?? [];
+
+    assertEquals(tags.filter((tag) => tag[0] === "d"), [["d", "notes"]]);
+    assertEquals(tags.filter((tag) => tag[0] === "title"), [["title", "Notes"]]);
+    assertEquals(tags.filter((tag) => tag[0] === "description"), [[
+      "description",
+      "CLI-owned description",
+    ]]);
+    assertEquals(tags.filter((tag) => tag[0] === "archetype"), [[
+      "archetype",
+      "note",
+      "NAP-4",
+      "kind:1",
+      "kind:30023",
+    ]]);
+    assertEquals(tags.some((tag) => tag[0] === "type"), false);
+  });
+});
+
 Deno.test("siteAddress renders root and named NIP-5D addresses", () => {
   assertEquals(siteAddress({ kind: NAPPLET_KIND_ROOT, pubkey }), `${NAPPLET_KIND_ROOT}:${pubkey}:`);
   assertEquals(

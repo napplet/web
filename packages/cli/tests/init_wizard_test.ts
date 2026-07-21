@@ -42,7 +42,7 @@ const suggestions = {
 
 Deno.test("promptInitWizard fills missing fields with URL autocomplete", async () => {
   const input = new FakeTerminalInput(
-    "\n\nfeed\nwss://relay-o\t\nwss://relay-t\t\n\nhttps://cdn-o\t\n\n",
+    "\n\nfeed\n\nA focused feed\nnote:NAP-4\nwss://relay-o\t\nwss://relay-t\t\n\nhttps://cdn-o\t\n\n",
   );
   const output = new FakeOutput();
 
@@ -52,6 +52,9 @@ Deno.test("promptInitWizard fills missing fields with URL autocomplete", async (
       relays: [],
       blossomServers: [],
       named: [],
+      title: undefined,
+      description: undefined,
+      archetypes: [],
       root: false,
     },
     suggestions,
@@ -64,6 +67,9 @@ Deno.test("promptInitWizard fills missing fields with URL autocomplete", async (
     relays: ["wss://relay-one.example", "wss://relay-two.example"],
     blossomServers: ["https://cdn-one.example"],
     named: ["feed"],
+    title: "Feed",
+    description: "A focused feed",
+    archetypes: [{ slug: "note", protocol: "NAP-4", eventKinds: undefined }],
     defaultTarget: "named",
   });
   assert(output.text.includes("Relay URLs"));
@@ -78,6 +84,9 @@ Deno.test("promptInitWizard preserves flagged values and root target", async () 
       relays: ["wss://relay.flagged"],
       blossomServers: ["https://cdn.flagged"],
       named: ["ignored"],
+      title: "Root App",
+      description: "Root description",
+      archetypes: ["feed:NAP-5"],
       root: true,
     },
     suggestions,
@@ -90,6 +99,9 @@ Deno.test("promptInitWizard preserves flagged values and root target", async () 
     relays: ["wss://relay.flagged"],
     blossomServers: ["https://cdn.flagged"],
     named: [],
+    title: "Root App",
+    description: "Root description",
+    archetypes: [{ slug: "feed", protocol: "NAP-5", eventKinds: undefined }],
     defaultTarget: "root",
   });
 });

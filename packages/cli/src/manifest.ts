@@ -94,7 +94,7 @@ export function createSnapshotManifestTemplate(
   for (const tag of source.tags) {
     if (
       tag[0] === "path" || tag[0] === "server" || tag[0] === "title" || tag[0] === "description" ||
-      tag[0] === "source" || tag[0] === "requires"
+      tag[0] === "source" || tag[0] === "requires" || tag[0] === "archetype"
     ) {
       tags.push([...tag]);
     }
@@ -123,10 +123,13 @@ export async function createDeployManifestTemplates(
       await collectManifestFiles(item.candidate.dir);
     filesByDir.set(item.candidate.dir, files);
     const metadataTags = metadataByDir.get(item.candidate.dir) ??
-      dedupeTags([
-        ...await readIndexHtmlMetadataTags(item.candidate.indexHtml),
-        ...await readPluginManifestMetadataTags(item.candidate.manifestPath),
-      ]);
+      mergeConfigMetadataTags(
+        dedupeTags([
+          ...await readIndexHtmlMetadataTags(item.candidate.indexHtml),
+          ...await readPluginManifestMetadataTags(item.candidate.manifestPath),
+        ]),
+        config,
+      );
     metadataByDir.set(item.candidate.dir, metadataTags);
     const aggregateHash = await computeAggregateHash(files);
     if (item.target === "snapshot") {
@@ -204,15 +207,56 @@ async function readPluginManifestMetadataTags(
     if (!Array.isArray(value.tags)) return [];
     const tags: string[][] = [];
     for (const tag of value.tags) {
-      if (!Array.isArray(tag) || tag[0] !== "requires" || typeof tag[1] !== "string") continue;
-      const domain = tag[1].trim();
-      if (isNapDomain(domain)) tags.push(["requires", domain]);
+      if (!Array.isArray(tag) || typeof tag[0] !== "string") continue;
+      if (tag[0] === "requires" && typeof tag[1] === "string") {
+        const domain = tag[1].trim();
+        if (isNapDomain(domain)) tags.push(["requires", domain]);
+      }
+      if (isCanonicalArchetypeTag(tag)) {
+        tags.push(tag.map((value) => String(value).trim()));
+      }
     }
     return dedupeTags(tags);
   } catch (error) {
     if (error instanceof Deno.errors.NotFound || error instanceof SyntaxError) return [];
     throw error;
   }
+}
+
+function mergeConfigMetadataTags(tags: readonly string[][], config: NappletConfig): string[][] {
+  const metadata = config.metadata;
+  if (!metadata) return dedupeTags(tags);
+  const replaced = new Set<string>();
+  if (metadata.title) replaced.add("title");
+  if (metadata.description) replaced.add("description");
+  if (metadata.archetypes !== undefined) replaced.add("archetype");
+  const result = tags.filter((tag) => !replaced.has(tag[0]));
+  if (metadata.title) result.push(["title", metadata.title]);
+  if (metadata.description) result.push(["description", metadata.description]);
+  for (const contract of metadata.archetypes ?? []) {
+    result.push([
+      "archetype",
+      contract.slug,
+      contract.protocol,
+      ...(contract.eventKinds ?? []).map((kind) => `kind:${kind}`),
+    ]);
+  }
+  return dedupeTags(result);
+}
+
+function isCanonicalArchetypeTag(tag: unknown[]): tag is string[] {
+  if (
+    tag[0] !== "archetype" || typeof tag[1] !== "string" ||
+    typeof tag[2] !== "string"
+  ) return false;
+  const slug = tag[1].trim();
+  const protocol = tag[2].trim();
+  if (!/^[a-z0-9][a-z0-9-]*$/.test(slug) || !/^NAP-[1-9][0-9]*$/.test(protocol)) {
+    return false;
+  }
+  return tag.slice(3).every((value) =>
+    typeof value === "string" && /^kind:(0|[1-9][0-9]*)$/.test(value.trim())
+  );
 }
 
 /**

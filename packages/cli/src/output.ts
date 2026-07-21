@@ -271,13 +271,26 @@ export function renderInitReport(report: InitReport): string {
   pushField(lines, "Source", report.config.sourceDir);
   pushField(lines, "Default target", report.config.defaultTarget);
   pushField(lines, "Named d tags", formatCountedList(report.config.named ?? []));
+  if (report.config.metadata?.title) pushField(lines, "Title", report.config.metadata.title);
+  if (report.config.metadata?.description) {
+    pushField(lines, "Description", report.config.metadata.description);
+  }
+  pushField(
+    lines,
+    "Archetypes",
+    formatCountedList(
+      report.config.metadata?.archetypes?.map(({ slug, protocol }) => `${slug}:${protocol}`) ?? [],
+    ),
+  );
   pushField(lines, "Relays", formatCountedList(report.config.relays));
   pushField(lines, "Blossom servers", formatCountedList(report.config.blossomServers));
   lines.push("");
   pushSection(lines, "Next");
-  lines.push("Run `napplet deploy --dry-run` to preview the manifest events.");
+  lines.push("1. Install agent guidance: `napplet skills install --to codex` (or another target).");
+  lines.push("2. Build and verify the project: `pnpm install && pnpm verify`.");
+  lines.push("3. Preview manifest events: `napplet deploy --dry-run`.");
   if (report.config.relays.length > 0 && report.config.blossomServers.length > 0) {
-    lines.push("Run `napplet deploy` when signing is configured.");
+    lines.push("4. Publish when signing is configured: `napplet deploy`.");
   } else {
     lines.push("Add at least one relay and Blossom server before network deploy.");
   }

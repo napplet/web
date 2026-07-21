@@ -1,5 +1,13 @@
-import { CONFIG_DIR, CONFIG_FILE, type DeployTargetKind, type NappletConfig } from "./types.ts";
+import {
+  CONFIG_DIR,
+  CONFIG_FILE,
+  type DeployTargetKind,
+  type NappletArchetypeContract,
+  type NappletConfig,
+  type NappletDeployMetadata,
+} from "./types.ts";
 import { dirname, joinPath, resolvePath } from "./path.ts";
+import { normalizeDTag } from "./manifest.ts";
 
 /** DEFAULT_CONFIG constant used by configuration helpers. */
 export const DEFAULT_CONFIG: NappletConfig = {
@@ -26,12 +34,22 @@ export const DEFAULT_CONFIG: NappletConfig = {
 
 /** default config helper for configuration. */
 export function defaultConfig(overrides: Partial<NappletConfig> = {}): NappletConfig {
+  const metadata = overrides.metadata
+    ? {
+      ...overrides.metadata,
+      archetypes: overrides.metadata.archetypes?.map((contract) => ({
+        ...contract,
+        eventKinds: contract.eventKinds ? [...contract.eventKinds] : undefined,
+      })),
+    }
+    : undefined;
   return {
     ...DEFAULT_CONFIG,
     ...overrides,
     relays: overrides.relays ?? [...DEFAULT_CONFIG.relays],
     blossomServers: overrides.blossomServers ?? [...DEFAULT_CONFIG.blossomServers],
-    named: overrides.named ?? [...(DEFAULT_CONFIG.named ?? [])],
+    named: metadata?.name ? [metadata.name] : overrides.named ?? [...(DEFAULT_CONFIG.named ?? [])],
+    metadata,
     discover: {
       ...DEFAULT_CONFIG.discover,
       ...overrides.discover,
@@ -95,6 +113,7 @@ export async function initConfig(
     blossomServers?: string[];
     named?: string[];
     defaultTarget?: DeployTargetKind;
+    metadata?: NappletDeployMetadata;
   } = {},
 ): Promise<{ path: string; config: NappletConfig; created: boolean }> {
   const cwd = options.cwd ?? Deno.cwd();
@@ -110,6 +129,7 @@ export async function initConfig(
     blossomServers: options.blossomServers ?? [],
     named: options.named ?? [],
     defaultTarget: options.defaultTarget ?? "named",
+    metadata: options.metadata,
   });
   await writeConfig(config, path);
   return { path, config, created: true };
@@ -127,6 +147,8 @@ export function normalizeConfig(input: unknown): NappletConfig {
   if (value.defaultTarget && !["root", "named", "snapshot"].includes(value.defaultTarget)) {
     throw new Error(`Invalid defaultTarget: ${value.defaultTarget}`);
   }
+  const metadata = normalizeMetadata(value.metadata);
+  const named = metadata?.name ? [metadata.name] : stringArray(value.named, "named");
   return defaultConfig({
     ...value,
     version: 1,
@@ -134,7 +156,8 @@ export function normalizeConfig(input: unknown): NappletConfig {
     relays: stringArray(value.relays, "relays"),
     blossomServers: stringArray(value.blossomServers, "blossomServers"),
     bunkerPubkey: typeof value.bunkerPubkey === "string" ? value.bunkerPubkey : undefined,
-    named: stringArray(value.named, "named"),
+    named,
+    metadata,
     discover: value.discover
       ? {
         enabled: value.discover.enabled ?? true,
@@ -154,6 +177,94 @@ export function normalizeConfig(input: unknown): NappletConfig {
       }
       : undefined,
   });
+}
+
+/** Normalize and validate one `slug:protocol` automation value. */
+export function parseArchetypeContract(value: string): NappletArchetypeContract {
+  const separator = value.indexOf(":");
+  const slug = separator === -1 ? "" : value.slice(0, separator).trim();
+  const protocol = separator === -1 ? "" : value.slice(separator + 1).trim();
+  return normalizeArchetypeContract({ slug, protocol }, "archetype");
+}
+
+/** Normalize and deduplicate CLI archetype values. */
+export function parseArchetypeContracts(values: readonly string[]): NappletArchetypeContract[] {
+  const contracts = values.map(parseArchetypeContract);
+  const seen = new Set<string>();
+  return contracts.filter((contract) => {
+    const key = `${contract.slug}\0${contract.protocol}\0${contract.eventKinds?.join(",") ?? ""}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function normalizeMetadata(value: unknown): NappletDeployMetadata | undefined {
+  if (value === undefined) return undefined;
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error("metadata must be an object");
+  }
+  const metadata = value as Partial<NappletDeployMetadata>;
+  const name = optionalString(metadata.name, "metadata.name");
+  const title = optionalString(metadata.title, "metadata.title");
+  const description = optionalString(metadata.description, "metadata.description", true);
+  if (name) normalizeDTag(name);
+  let archetypes: NappletArchetypeContract[] | undefined;
+  if (metadata.archetypes !== undefined) {
+    if (!Array.isArray(metadata.archetypes)) {
+      throw new Error("metadata.archetypes must be an array");
+    }
+    archetypes = metadata.archetypes.map((contract, index) =>
+      normalizeArchetypeContract(contract, `metadata.archetypes[${index}]`)
+    );
+  }
+  return {
+    name,
+    title,
+    description,
+    archetypes,
+  };
+}
+
+function normalizeArchetypeContract(
+  value: unknown,
+  field: string,
+): NappletArchetypeContract {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error(`${field} must use slug:protocol (for example note:NAP-4)`);
+  }
+  const contract = value as Partial<NappletArchetypeContract>;
+  const slug = optionalString(contract.slug, `${field}.slug`);
+  const protocol = optionalString(contract.protocol, `${field}.protocol`);
+  if (!slug || !/^[a-z0-9][a-z0-9-]*$/.test(slug)) {
+    throw new Error(`${field} slug must contain lowercase letters, numbers, and hyphens`);
+  }
+  if (!protocol || !/^NAP-[1-9][0-9]*$/.test(protocol)) {
+    throw new Error(`${field} protocol must be a canonical NAP-N identifier`);
+  }
+  let eventKinds: number[] | undefined;
+  if (contract.eventKinds !== undefined) {
+    if (!Array.isArray(contract.eventKinds)) {
+      throw new Error(`${field}.eventKinds must be an array`);
+    }
+    eventKinds = [
+      ...new Set(contract.eventKinds.map((kind) => {
+        if (!Number.isSafeInteger(kind) || kind < 0) {
+          throw new Error(`${field}.eventKinds must contain non-negative integers`);
+        }
+        return kind;
+      })),
+    ];
+  }
+  return { slug, protocol, eventKinds };
+}
+
+function optionalString(value: unknown, field: string, allowEmpty = false): string | undefined {
+  if (value === undefined) return undefined;
+  if (typeof value !== "string") throw new Error(`${field} must be a string`);
+  const normalized = value.trim();
+  if (!allowEmpty && normalized === "") throw new Error(`${field} cannot be empty`);
+  return normalized === "" ? undefined : normalized;
 }
 
 /** resolve configured source helper for configuration. */
