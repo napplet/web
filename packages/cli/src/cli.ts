@@ -115,6 +115,11 @@ export interface PackageCliRunOptions {
   os?: typeof Deno.build.os;
 }
 
+export interface ResolvedCommand {
+  command: string;
+  args: string[];
+}
+
 /** Run one maintained package CLI without interpreting user arguments as shell source. */
 export async function runPackageCli(
   packageName: "@napplet/boilerplate" | "@napplet/skills",
@@ -136,6 +141,27 @@ export async function runPackageCli(
   if (result.stdout) (options.writeStdout ?? console.log)(result.stdout.replace(/\n$/, ""));
   if (result.stderr) (options.writeStderr ?? console.error)(result.stderr.replace(/\n$/, ""));
   return result.code;
+}
+
+/** Resolve the default conformance runner through npm instead of requiring a global binary. */
+export function resolveConformanceCommand(
+  configuredCommand: string | undefined,
+  os: typeof Deno.build.os = Deno.build.os,
+): ResolvedCommand {
+  const command = configuredCommand?.trim() || "napplet-conformance";
+  if (command === "napplet-conformance") {
+    return {
+      command: os === "windows" ? "npx.cmd" : "npx",
+      args: ["--yes", "@napplet/conformance-cli"],
+    };
+  }
+  return splitCommand(command);
+}
+
+/** Preserve Kehto options while restoring the separator before a bare managed command. */
+export function resolvePajaArgs(args: readonly string[]): string[] {
+  if (args.length === 0 || args[0].startsWith("-") || args.includes("--")) return [...args];
+  return ["--", ...args];
 }
 
 function parseCommand(argv: string[]): ParsedArgs {
@@ -365,7 +391,7 @@ async function commandConformance(argv: string[]): Promise<number> {
   const flags = collectFlags(argv);
   const config = await loadConfig(flags);
   const candidates = await discoverNapplets(config, { traverse: flags.boolean.has("all") });
-  const base = splitCommand(config.conformance?.command ?? "napplet-conformance");
+  const base = resolveConformanceCommand(config.conformance?.command);
   const passthrough = flags.afterDoubleDash;
   for (const candidate of candidates) {
     const result = await runCommand(base.command, [...base.args, candidate.dir, ...passthrough]);
@@ -380,7 +406,11 @@ async function commandPaja(argv: string[]): Promise<number> {
   const flags = collectFlags(argv);
   const config = await loadConfig(flags);
   const base = splitCommand(config.paja?.command ?? "kehto");
-  const result = await runCommand(base.command, [...base.args, "paja", ...flags.afterDoubleDash]);
+  const result = await runCommand(base.command, [
+    ...base.args,
+    "paja",
+    ...resolvePajaArgs(flags.afterDoubleDash),
+  ]);
   Deno.stdout.writeSync(new TextEncoder().encode(result.stdout));
   Deno.stderr.writeSync(new TextEncoder().encode(result.stderr));
   return result.code;

@@ -337,16 +337,19 @@ napplet conformance
 napplet conformance --all -- --verbose
 ```
 
-The default command is `napplet-conformance`; override it in `.napplet/config.json` with
-`conformance.command`.
+The default `napplet-conformance` setting runs `@napplet/conformance-cli` through `npx`, so the
+standalone `napplet` binary does not require a global conformance executable. Override it in
+`.napplet/config.json` with `conformance.command` when using another runner.
 
 `napplet paja` forwards to the configured Paja command:
 
 ```sh
 napplet paja -- --port 5173
+napplet paja -- pnpm vite --host 127.0.0.1
 ```
 
-The default command is `kehto paja`; override it with `paja.command`.
+The default command is `kehto paja`; override it with `paja.command`. A bare command after the
+separator is passed to Kehto as its managed app server command.
 
 ## Troubleshooting
 
