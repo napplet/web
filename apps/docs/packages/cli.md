@@ -118,6 +118,7 @@ deploys under its own folder name as the named `d` tag.
 - [`@napplet/vite-plugin`](./vite-plugin) — emits build-side manifest metadata
   the CLI preserves during deploy.
 - [`@napplet/conformance-cli`](./conformance-cli) — the default command behind
-  `napplet conformance`.
+  `napplet conformance`; the standalone CLI resolves it through `npx`, without requiring a global
+  `napplet-conformance` executable.
 - [Getting started](/guide/getting-started) — scaffold, build, and verify a
   napplet before deploying.

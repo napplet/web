@@ -1,4 +1,9 @@
-import { loadDeployConfig, runPackageCli } from "../src/cli.ts";
+import {
+  loadDeployConfig,
+  resolveConformanceCommand,
+  resolvePajaArgs,
+  runPackageCli,
+} from "../src/cli.ts";
 import { defaultConfig } from "../src/config.ts";
 import { collectFlags } from "../src/flags.ts";
 import { assert, assertEquals } from "./assert.ts";
@@ -168,4 +173,37 @@ Deno.test("runPackageCli preserves skills target passthrough on Windows", async 
     command: "npx.cmd",
     args: ["--yes", "@napplet/skills", "install", "--to", "agents"],
   }]);
+});
+
+Deno.test("resolveConformanceCommand runs the package-backed CLI without a global binary", () => {
+  assertEquals(resolveConformanceCommand("napplet-conformance", "darwin"), {
+    command: "npx",
+    args: ["--yes", "@napplet/conformance-cli"],
+  });
+  assertEquals(resolveConformanceCommand(undefined, "windows"), {
+    command: "npx.cmd",
+    args: ["--yes", "@napplet/conformance-cli"],
+  });
+});
+
+Deno.test("resolveConformanceCommand preserves an explicit custom runner", () => {
+  assertEquals(resolveConformanceCommand("pnpm exec custom-conformance", "linux"), {
+    command: "pnpm",
+    args: ["exec", "custom-conformance"],
+  });
+});
+
+Deno.test("resolvePajaArgs restores the managed-command separator", () => {
+  assertEquals(resolvePajaArgs(["pnpm", "vite", "--host", "127.0.0.1"]), [
+    "--",
+    "pnpm",
+    "vite",
+    "--host",
+    "127.0.0.1",
+  ]);
+  assertEquals(resolvePajaArgs(["--port", "5173"]), ["--port", "5173"]);
+  assertEquals(
+    resolvePajaArgs(["--target-url", "http://127.0.0.1:5173", "--", "pnpm", "vite"]),
+    ["--target-url", "http://127.0.0.1:5173", "--", "pnpm", "vite"],
+  );
 });
