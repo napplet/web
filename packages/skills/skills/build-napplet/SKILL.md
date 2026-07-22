@@ -353,6 +353,41 @@ const colors = await themeGet();
 const themeSub = themeOnChanged((t) => paint(t));
 ```
 
+### Apply NAP-THEME to the entire surface
+
+Theme support is incomplete if only controls or accent colors change. Use CSS
+custom properties and apply the runtime theme to the page background, text,
+surfaces, borders, primary color, and muted content. Set the background on
+`:root`, `html`, `body`, and the app root when those elements are present so the
+host never exposes a browser-white canvas around a dark UI.
+
+```ts
+import { themeGet, themeOnChanged, type Theme } from '@napplet/sdk';
+
+function applyTheme(theme: Theme): void {
+  const root = document.documentElement;
+  const body = document.body;
+  root.style.setProperty('--nap-bg', theme.colors.background);
+  root.style.setProperty('--nap-fg', theme.colors.text);
+  root.style.setProperty('--nap-primary', theme.colors.primary);
+  root.style.backgroundColor = theme.colors.background;
+  body.style.backgroundColor = theme.colors.background;
+  body.style.color = theme.colors.text;
+}
+
+if (window.napplet?.theme) {
+  themeGet().then(applyTheme);
+  themeOnChanged(applyTheme);
+} else {
+  applyTheme(LOCAL_FALLBACK_THEME); // explicit background, never browser default
+}
+```
+
+Use the exact `Theme` fields exported by the installed package version. Derive
+surface, border, and muted tokens from those documented colors in one local
+function when the payload does not expose them. Verify a dark and a light
+runtime theme and inspect empty margins and loading/error states too.
+
 NAP-CONFIG defines runtime `config.registerSchema`, but its current proposal does
 not define a manifest-tag or HTML-meta encoding for build-time schemas. Do not
 treat vite-plugin config metadata as interoperable protocol. Recheck the living
@@ -410,11 +445,24 @@ Use `window.napplet?.domain` only for optional-domain fallback checks after
 runtime injection. Declare bare domain names in `requires` only for hard
 requirements.
 
-## Runtime guard & standalone dev
+## Runtime Preview With Paja
 
 Runtime injection belongs to the shell. Napplet application code should consume
 typed helpers from `@napplet/sdk` for calls and the injected `window.napplet`
 namespace for capability checks; do not add napplet-owned bootstrap plumbing.
+
+Do not report the Vite server as the napplet preview. Vite only serves the
+artifact; Paja supplies the runtime that injects `window.napplet` and exercises
+the shell boundary. From the initialized project, use:
+
+```bash
+napplet paja -- pnpm vite --host 127.0.0.1
+```
+
+Copy the URL printed by Paja into the completion report. If `napplet` or the
+configured Kehto/Paja binary is missing, report that prerequisite and use
+conformance for automated verification; do not claim a raw Vite URL can load
+the finished napplet.
 
 ## Boilerplate Validation
 

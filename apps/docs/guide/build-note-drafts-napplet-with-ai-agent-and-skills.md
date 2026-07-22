@@ -61,6 +61,12 @@ that tells the agent to check NIP-5D and NAPs, preserve the `napplet create`
 scaffold and `napplet init` metadata, use shipped `@napplet/*` package exports,
 and stop instead of inventing missing protocol surface.
 
+Before implementation, the agent should inspect the project state and available
+tools. An empty directory, a maintained boilerplate, an initialized napplet, a
+boilerplate-based brownfield app, and an unrelated brownfield app require
+different paths. It should also check whether `napplet` and Kehto/Paja are
+installed rather than assuming either binary exists.
+
 ## 3. Give the agent a small product prompt
 
 Paste a prompt like this into your coding agent:
@@ -176,8 +182,18 @@ manifest fields.
 
 ## 7. Run a shell smoke test
 
-Use the shell/runtime you target for local testing. In Paja or another compatible
-runtime:
+Use the shell/runtime you target for local testing. Start the project through
+Paja, not as a raw Vite page:
+
+```bash
+napplet paja -- pnpm vite --host 127.0.0.1
+```
+
+Report the URL printed by Paja. The underlying Vite URL is only an asset server
+and is not a valid napplet preview. If Paja is unavailable, report that manual
+runtime verification is pending instead of linking to Vite.
+
+In Paja or another compatible runtime:
 
 1. Load the built or dev Note Drafts napplet through the shell, not as a raw Vite
    page.
@@ -190,6 +206,12 @@ runtime:
 
 Do not treat a raw browser preview as proof. The app only proves the napplet
 boundary when a shell injects the required NAP domains.
+
+The visual implementation should also use NAP-THEME when available. Apply
+`theme.colors.background` to `html`, `body`, and the app root, apply
+`theme.colors.text` and `theme.colors.primary` to the design tokens, and update
+the full surface from `themeOnChanged`. A dark component palette on a white page
+is not themed; test both dark and light backgrounds.
 
 ## 8. Ask the agent for a completion report
 

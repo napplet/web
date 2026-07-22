@@ -83,6 +83,18 @@ The deprecated `ifc` package subpath is an INC compatibility alias; choose
 `inc` for new work. Every NAP is **voluntary**: assume a domain may be absent and
 degrade gracefully unless it is a hard manifest requirement.
 
+### NAP-THEME is a whole-surface concern
+
+If the napplet has a visual UI, plan theme integration even when it is optional.
+Do not stop after coloring buttons or accents. The build spec must include a
+theme application function that maps `theme.colors.background` and
+`theme.colors.text` onto `:root`, `html`, `body`, and the app root as appropriate,
+then maps primary, surface, border, and muted tokens to the component system.
+Subscribe to `themeOnChanged` and repaint all of those tokens. The fallback
+palette must set an explicit page background, so a dark design never falls back
+to a white body with dark cards. Preserve readable contrast in dark and light
+themes.
+
 ## Step 1.5 — Choose The Right Nostr Boundary
 
 Default to the highest-level NAP that owns the user intent:
@@ -134,6 +146,7 @@ optional domains and fallbacks: resource -> show initials when avatar fetch unav
 SDK helpers: outbox.query, outbox.subscribe, common.getProfile, storage.getItem, resource.bytes
 config schema: <fields or "none">
 layout: <tiny state> / <large state>, responsive strategy
+theme: NAP-THEME optional/required; root background, text, surface, border, primary, muted mappings; fallback palette; change subscription
 data flow: <outbox queries/subscriptions/publishes, social actions, stored keys>
 relay escape hatches: <none, or exact reason + why outbox/common/lists/count/dm do not apply>
 ```

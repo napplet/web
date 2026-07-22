@@ -61,10 +61,20 @@ describe('skill registry', () => {
     const makeSkill = readSkill('make-napplet');
     expect(makeSkill).toContain('Implementation code is SDK-first');
     expect(makeSkill).toContain('Do not ship a napplet that "mostly works"');
+    expect(makeSkill).toContain('Triage The Project And Toolchain');
+    expect(makeSkill).toContain('Never finish');
+    expect(makeSkill).toContain('raw Vite URL presented as a working napplet preview');
 
     const designSkill = readSkill('design-napplet');
     expect(designSkill).toContain('SDK helpers:');
     expect(designSkill).toContain('Design as if direct browser authority does not exist');
+    expect(designSkill).toContain('NAP-THEME is a whole-surface concern');
+    expect(designSkill).toContain('theme.colors.background');
+
+    const themeBuild = readSkill('build-napplet');
+    expect(themeBuild).toContain('Apply NAP-THEME to the entire surface');
+    expect(themeBuild).toContain('root.style.backgroundColor');
+    expect(themeBuild).toContain('napplet paja -- pnpm vite --host 127.0.0.1');
 
     const portSkill = readSkill('port-nostr-app');
     expect(portSkill).toContain('with `@napplet/sdk` imports');
@@ -73,6 +83,8 @@ describe('skill registry', () => {
     const testSkill = readSkill('test-napplet');
     expect(testSkill).toContain('Testing is not green if the napplet still owns browser authority');
     expect(testSkill).toContain('grep -RInE "fetch\\\\s*\\\\(');
+    expect(testSkill).toContain('A dark card on a');
+    expect(testSkill).toContain('The final preview link must be the Paja/runtime URL');
   });
 
   it('keeps runtime capability guidance aligned with the current SDK contract', () => {
@@ -111,7 +123,7 @@ describe('skill registry', () => {
     expect(makeProse).toContain('`outbox.publish`: `relays`, `toOutbox`, `toInboxes`');
     expect(makeProse).toContain('No `strategy`, subscribe `live`, publish `timeoutMs`, or `outbox.eose`');
 
-    expect(packageReadme).toContain('window.napplet?.domain` only for optional-domain fallback checks');
+    expect(packageReadme).toContain('`window.napplet?.domain` only for optional');
     expect(packageReadme).toContain('no `shell.ready()` / `shell.supports(...)` API');
     expect(packageReadme).toContain('keep optional enhancements such as');
     expect(packageReadme).not.toContain('availability gates');

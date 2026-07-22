@@ -20,9 +20,9 @@ as `outbox`, `common`, `lists`, `count`, and `dm`.
 
 | Skill | When | Covers |
 | --- | --- | --- |
-| `make-napplet` | One-prompt end-to-end builds | Orchestrates port/design/build/test, keeps social reads/publishes OUTBOX-first, blocks fake package surfaces, covers every implemented package NAP domain, and defines the final completion checklist. |
-| `design-napplet` | First — plan before code | Sandbox/loading constraints, OUTBOX-first NAP selection, package-implemented NAP inventory, hard-vs-optional requirements, **responsive layout for any viewport** (full-screen → tiny widget), the build spec to hand off. |
-| `build-napplet` | Implementation | Start with `napplet create` and `napplet init`, preserve the starter substrate, then implement calls through `@napplet/sdk` helpers while using runtime-injected `window.napplet?.domain` only for optional-domain fallback checks, OUTBOX-first event access, relay as an explicit low-level escape hatch, all implemented package domains, no `shell.ready()` / `shell.supports(...)` API, hard-vs-optional `requires`, and the single-file artifact rule. |
+| `make-napplet` | One-prompt end-to-end builds | Orchestrates project-state triage, port/design/build/test, NAP-THEME whole-surface application, Paja runtime preview, OUTBOX-first social behavior, and the final evidence checklist. |
+| `design-napplet` | First — plan before code | Sandbox/loading constraints, OUTBOX-first NAP selection, package-implemented NAP inventory, hard-vs-optional requirements, NAP-THEME mappings including the page background, **responsive layout for any viewport** (full-screen → tiny widget), and the build spec to hand off. |
+| `build-napplet` | Implementation | Starts from the correct project state, preserves the starter substrate, applies NAP-THEME to the full surface including `html`/`body` backgrounds, uses `@napplet/sdk`, and previews through Paja rather than reporting a raw Vite URL. |
 | `port-nostr-app` | Migrating an existing Nostr app | Replace direct relay pools, `window.nostr`, local storage, direct fetch/media loads, app-owned shortcut plumbing, and app-owned signing/routing with shell-owned NAP boundaries and SDK helper imports before building. |
 | `test-napplet` | Before publishing | Protocol conformance via `napplet-conformance` (real Chromium + reference shell), forbidden browser-authority scans, interpreting failures, the runtime guard, CI wiring. |
 
@@ -44,6 +44,9 @@ wrappers for domain calls, use `window.napplet?.domain` only for optional
 fallback checks after runtime injection, and keep optional enhancements such as
 shell-managed key reservation out of `requires` unless the napplet cannot
 function without them.
+
+There is no `shell.ready()` / `shell.supports(...)` API; use injected domain
+presence for optional fallbacks and do not invent a generic capability probe.
 
 The expected generated-project validation is:
 

@@ -16,9 +16,9 @@ well-scoped prompt produces a working, conformant napplet.
 
 | Skill | When | Covers |
 | --- | --- | --- |
-| `make-napplet` | One-prompt end-to-end builds | Orchestrates port/design/build/test, keeps social reads/publishes OUTBOX-first, blocks fake package surfaces, and defines the final completion checklist. |
-| `design-napplet` | First — plan before code | Sandbox/loading constraints, OUTBOX-first NAP selection, hard-vs-optional requirements, responsive layout for any viewport (full-screen → tiny widget), the build spec to hand off. |
-| `build-napplet` | Implementation | Start with `napplet create` and `napplet init`, preserve the starter substrate, then implement calls through `@napplet/sdk`, keep reads/publishes OUTBOX-first, use relay only as an explicit escape hatch, expose no `shell.ready()` / `shell.supports(...)` API, declare hard `requires`, and preserve the single-file artifact rule. |
+| `make-napplet` | One-prompt end-to-end builds | Orchestrates project-state triage, port/design/build/test, NAP-THEME whole-surface application, Paja runtime preview, OUTBOX-first behavior, and the final evidence checklist. |
+| `design-napplet` | First — plan before code | Sandbox/loading constraints, OUTBOX-first NAP selection, hard-vs-optional shell domains, NAP-THEME mappings including the page background, responsive layout for any viewport (full-screen → tiny widget), and the build spec to hand off. |
+| `build-napplet` | Implementation | Starts from the correct project state, preserves the starter substrate, applies NAP-THEME to the full surface including `html`/`body` backgrounds, uses `@napplet/sdk`, and previews through Paja rather than reporting a raw Vite URL. |
 | `port-nostr-app` | Migrating an existing Nostr app | Replace direct relay pools, `window.nostr`, local storage, direct fetch/media loads, and app-owned signing/routing with shell-owned NAP boundaries and SDK helper imports before building. |
 | `test-napplet` | Before publishing | Protocol conformance via `napplet-conformance` (real Chromium + reference shell), interpreting failures, the runtime guard, CI wiring. |
 
