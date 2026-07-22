@@ -38,6 +38,23 @@ try {
   assert.equal(executed.status, 0);
   assert.equal(executed.stdout, 'napplet fixture\n');
 
+  const existingPathDir = path.join(fixtureRoot, 'existing-bin');
+  await mkdir(existingPathDir, { recursive: true });
+  await writeFile(path.join(existingPathDir, 'napplet'), 'old binary\n');
+  await chmod(path.join(existingPathDir, 'napplet'), 0o755);
+  const upgradeEnv = {
+    ...env,
+    NAPPLET_CLI_INSTALL_DIR: undefined,
+    PATH: `${existingPathDir}:${process.env.PATH ?? ''}`,
+  };
+  const upgraded = spawnSync('sh', ['scripts/install-napplet-cli.sh'], {
+    cwd: root,
+    env: upgradeEnv,
+    encoding: 'utf8',
+  });
+  assert.equal(upgraded.status, 0, upgraded.stderr);
+  assert.equal(await readFile(path.join(existingPathDir, 'napplet'), 'utf8'), payload);
+
   await writeFile(path.join(release, asset), `${payload}# tampered\n`);
   const rejected = spawnSync('sh', ['scripts/install-napplet-cli.sh'], {
     cwd: root,
