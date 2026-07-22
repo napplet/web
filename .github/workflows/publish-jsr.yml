@@ -6,10 +6,12 @@ name: Publish to JSR
 # is linked under the @napplet scope on jsr.io.
 #
 # Trigger model:
-# - JSR publishing runs only for Version Packages commits. Stable CLI binaries
-#   run on every main push so install.sh never points at a missing release while
-#   waiting for the generated Version Packages PR.
-# - Manual workflow_dispatch is also wired for one-off bootstrap publishes.
+# - Fires on push to main, but the publish job only runs for Version Packages
+#   merge commits. Ordinary feature PR merges still contain unconsumed
+#   changesets and may have stale jsr.json dependency pins until the generated
+#   Version Packages PR lands.
+# - Manual workflow_dispatch is also wired for one-off bootstrap publishes
+#   (e.g. the first @napplet/core@0.3.0 push after the scope was created).
 
 on:
   push:
@@ -74,7 +76,7 @@ jobs:
         run: pnpm -r --workspace-concurrency=1 --filter='./packages/*' --filter='!@napplet/boilerplate' --filter='!@napplet/conformance-cli' exec npx jsr publish --allow-slow-types --allow-dirty
 
   build-cli-binaries:
-    if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'Version Packages')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -104,7 +106,7 @@ jobs:
           if-no-files-found: error
 
   release-cli-binaries:
-    if: always() && (github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main')
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'Version Packages')
     needs: [publish-jsr, build-cli-binaries]
     runs-on: ubuntu-latest
     permissions:
