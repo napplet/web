@@ -1,5 +1,13 @@
 # @napplet/cli
 
+## 0.2.1
+
+### Patch Changes
+
+- b335c40: Run the default conformance tool through its npm package instead of requiring a
+  global `napplet-conformance` executable, and preserve Kehto's managed-command
+  separator when `napplet paja` wraps a local app server.
+
 ## 0.2.0
 
 ### Minor Changes
