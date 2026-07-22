@@ -13,10 +13,6 @@ export function renderGuide(): string {
   return `Napplet Guide
 =============
 
-1. Install the standalone CLI
-   curl -fsSL https://napplet.run/install.sh | sh
-   Docs: ${DOCS_BASE}/packages/cli.html
-
 2. Create the starter
    napplet create my-napplet
    cd my-napplet

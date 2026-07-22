@@ -4,7 +4,6 @@ import { assertEquals } from "./assert.ts";
 Deno.test("napplet guide presents the workflow with contextual and closing docs links", () => {
   const output = renderGuide();
   const commands = [
-    "curl -fsSL https://napplet.run/install.sh | sh",
     "napplet create my-napplet",
     "napplet init",
     "napplet skills install --to codex",
@@ -21,6 +20,7 @@ Deno.test("napplet guide presents the workflow with contextual and closing docs 
     }
     offset = next;
   }
+  assertEquals(output.includes("curl -fsSL https://napplet.run/install.sh | sh"), false);
   for (
     const url of [
       "https://napplet.run/docs/packages/boilerplate.html",
