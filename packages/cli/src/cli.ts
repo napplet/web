@@ -6,14 +6,20 @@
  * @module
  */
 
-import { configPath, initConfig, readConfig } from "./config.ts";
+import { configPath, initConfig, parseArchetypeContracts, readConfig } from "./config.ts";
 import { createDebugReport, createSigningDebugInfo } from "./debug.ts";
 import { createDeployPlan } from "./deploy-plan.ts";
 import { createDeploySigner } from "./deploy-signer.ts";
 import { executeNetworkDeploy, networkDeploySucceeded } from "./deploy-network.ts";
 import { discoverNapplets } from "./discover.ts";
 import { collectFlags, first, type FlagBag } from "./flags.ts";
-import { type InitWizardResult, promptInitWizard } from "./init-wizard.ts";
+import { commandGuide } from "./guide.ts";
+import {
+  type InitWizardResult,
+  normalizeNamedDTags,
+  promptInitWizard,
+  titleFromName,
+} from "./init-wizard.ts";
 import { commandKeys } from "./keys-command.ts";
 import { createDeployManifestTemplates } from "./manifest.ts";
 import {
@@ -24,7 +30,7 @@ import {
   renderInitReport,
 } from "./output.ts";
 import { isTerminalInput } from "./prompt.ts";
-import { runCommand, splitCommand } from "./process.ts";
+import { type CommandRunner, runCommand, splitCommand } from "./process.ts";
 import { resolveSigningMethod, signDeployManifestTemplates } from "./signing.ts";
 import { getBlossomServerSuggestions, getRelaySuggestions } from "./suggestions.ts";
 import type { DeploySelection, NappletConfig } from "./types.ts";
@@ -32,7 +38,10 @@ import type { DeploySelection, NappletConfig } from "./types.ts";
 const HELP = `@napplet/cli
 
 Usage:
-  napplet init [--force] [--root] [--source-dir <dir>] [--relay <url>] [--server <url>] [--name <dtag>]
+  napplet guide
+  napplet create <directory> [--template <path-or-url>] [--force]
+  napplet init [--force] [--root] [--source-dir <dir>] [--name <dtag>] [--title <title>] [--description <text>] [--archetype <slug:NAP-N>] [--relay <url>] [--server <url>]
+  napplet skills <list|print|install> [args]
   napplet deploy [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>] [--prompt-sec] [--dry-run] [--json]
   napplet debug [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>]
   napplet keys store --name <ref> [--sec <secret> | --prompt-sec]
@@ -45,10 +54,7 @@ Usage:
   napplet conformance [--config <file>] [--all] [-- <args>]
   napplet paja [--config <file>] [-- <args>]
 
-Current scope:
-  deploy uploads files to configured Blossom servers and publishes signed
-  root/named/snapshot manifest events to configured relays for local or NIP-46 signers.
-  Interactive terminals receive a human deploy report; use --json for CI output.
+Run "napplet guide" for the complete developer workflow and documentation.
 `;
 
 interface ParsedArgs {
@@ -73,6 +79,12 @@ export async function main(argv = Deno.args): Promise<number> {
         return 0;
       case "init":
         return await commandInit(parsed.rest);
+      case "guide":
+        return commandGuide();
+      case "create":
+        return await runPackageCli("@napplet/boilerplate", parsed.rest);
+      case "skills":
+        return await runPackageCli("@napplet/skills", parsed.rest);
       case "discover":
         return await commandDiscover(parsed.rest);
       case "deploy":
@@ -94,6 +106,36 @@ export async function main(argv = Deno.args): Promise<number> {
     console.error(error instanceof Error ? error.message : String(error));
     return 1;
   }
+}
+
+export interface PackageCliRunOptions {
+  runner?: CommandRunner;
+  writeStdout?: (value: string) => void;
+  writeStderr?: (value: string) => void;
+  os?: typeof Deno.build.os;
+}
+
+/** Run one maintained package CLI without interpreting user arguments as shell source. */
+export async function runPackageCli(
+  packageName: "@napplet/boilerplate" | "@napplet/skills",
+  args: readonly string[],
+  options: PackageCliRunOptions = {},
+): Promise<number> {
+  const executable = (options.os ?? Deno.build.os) === "windows" ? "npx.cmd" : "npx";
+  let result;
+  try {
+    result = await (options.runner ?? runCommand)(executable, ["--yes", packageName, ...args]);
+  } catch (error) {
+    if (error instanceof Deno.errors.NotFound) {
+      throw new Error(
+        `Cannot run ${packageName}: install Node.js 20+ so the bundled npm package runner is available.`,
+      );
+    }
+    throw error;
+  }
+  if (result.stdout) (options.writeStdout ?? console.log)(result.stdout.replace(/\n$/, ""));
+  if (result.stderr) (options.writeStderr ?? console.error)(result.stderr.replace(/\n$/, ""));
+  return result.code;
 }
 
 function parseCommand(argv: string[]): ParsedArgs {
@@ -121,6 +163,9 @@ async function runInitFromFlags(flags: FlagBag): Promise<InitReport> {
     relays: flags.values.get("relay") ?? [],
     blossomServers: flags.values.get("server") ?? [],
     named: flags.values.get("name") ?? [],
+    title: first(flags.values.get("title")),
+    description: first(flags.values.get("description")),
+    archetypes: flags.values.get("archetype") ?? [],
     root: flags.boolean.has("root"),
   };
   let options: InitWizardResult;
@@ -147,7 +192,10 @@ async function runInitFromFlags(flags: FlagBag): Promise<InitReport> {
       sourceDir: seed.sourceDir ?? ".",
       relays: seed.relays,
       blossomServers: seed.blossomServers,
-      named: seed.root ? [] : seed.named,
+      named: seed.root ? [] : normalizeNamedDTags(seed.named.length > 0 ? seed.named : ["default"]),
+      title: seed.title ?? titleFromName(seed.named[0] ?? "default"),
+      description: seed.description?.trim() || undefined,
+      archetypes: parseArchetypeContracts(seed.archetypes),
       defaultTarget: seed.root ? "root" as const : "named" as const,
     };
   }
@@ -158,6 +206,12 @@ async function runInitFromFlags(flags: FlagBag): Promise<InitReport> {
     blossomServers: options.blossomServers,
     named: options.named,
     defaultTarget: options.defaultTarget,
+    metadata: {
+      name: options.defaultTarget === "named" ? options.named[0] : undefined,
+      title: options.title,
+      description: options.description,
+      archetypes: options.archetypes,
+    },
   });
   return result;
 }

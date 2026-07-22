@@ -6,6 +6,7 @@ import { stdin as input, stdout as output } from 'node:process';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import * as os from 'node:os';
+import { fileURLToPath } from 'node:url';
 
 const DEFAULT_TEMPLATE_URL = 'https://github.com/napplet/boilerplate.git';
 const DEFAULT_VARIANT = 'basic';
@@ -18,29 +19,24 @@ const SKIPPED_TEMPLATE_ENTRIES = new Set([
   'coverage',
 ]);
 
-interface CliOptions {
+export interface CliOptions {
   target?: string;
   variant: string;
   template?: string;
-  packageName?: string;
-  nappletType?: string;
-  title?: string;
   yes: boolean;
   force: boolean;
   help: boolean;
 }
 
-interface GeneratorConfig {
+export interface GeneratorConfig {
   targetDir: string;
   variant: string;
   template: string;
   packageName: string;
-  nappletType: string;
-  title: string;
   force: boolean;
 }
 
-function parseArgs(argv: string[]): CliOptions {
+export function parseArgs(argv: string[]): CliOptions {
   const options: CliOptions = {
     variant: DEFAULT_VARIANT,
     yes: false,
@@ -85,18 +81,6 @@ function parseArgs(argv: string[]): CliOptions {
       options.template = readValue(arg);
       continue;
     }
-    if (arg === '--package-name') {
-      options.packageName = readValue(arg);
-      continue;
-    }
-    if (arg === '--napplet-type') {
-      options.nappletType = readValue(arg);
-      continue;
-    }
-    if (arg === '--title') {
-      options.title = readValue(arg);
-      continue;
-    }
     if (arg.startsWith('--')) {
       throw new Error(`Unknown option: ${arg}`);
     }
@@ -119,21 +103,17 @@ Options:
   --target <path>           Destination directory
   --variant <name>          Template variant (default: basic)
   --template <path-or-url>  Template source override
-  --package-name <name>     package.json name
-  --napplet-type <type>     NIP-5D napplet type/d tag
-  --title <title>           Human-readable app title
-  --yes, -y                 Accept defaults and skip prompts
+  --yes, -y                 Use ./my-napplet when target is omitted
   --force                   Allow non-empty destination
   --help, -h                Show this help
 
 Examples:
-  npx @napplet/boilerplate
-  npx @napplet/boilerplate ./hello-napplet --napplet-type hello-napplet
+  npx @napplet/boilerplate ./hello-napplet
   npx @napplet/boilerplate --template ~/Develop/napplet-boilerplate --yes ./hello
 `);
 }
 
-async function main(argv = process.argv.slice(2)): Promise<void> {
+export async function main(argv = process.argv.slice(2)): Promise<void> {
   const options = parseArgs(argv);
   if (options.help) {
     printHelp();
@@ -151,7 +131,7 @@ async function main(argv = process.argv.slice(2)): Promise<void> {
   printSuccess(config);
 }
 
-async function resolveConfig(options: CliOptions): Promise<GeneratorConfig> {
+export async function resolveConfig(options: CliOptions): Promise<GeneratorConfig> {
   const canPrompt = Boolean(input.isTTY && output.isTTY && !options.yes);
   const rl = canPrompt ? createInterface({ input, output }) : null;
 
@@ -167,13 +147,7 @@ async function resolveConfig(options: CliOptions): Promise<GeneratorConfig> {
       options.target ?? './my-napplet',
     );
     const targetDir = path.resolve(process.cwd(), expandHome(targetAnswer));
-    const defaultPackageName = toPackageName(path.basename(targetDir));
-    const packageName = options.packageName ?? await ask('Package name', defaultPackageName);
-    const nappletType = options.nappletType ?? await ask(
-      'Napplet type',
-      toNappletType(packageName),
-    );
-    const title = options.title ?? await ask('App title', toTitle(nappletType));
+    const packageName = toPackageName(path.basename(targetDir));
     const template = normalizeTemplateSource(
       options.template
         ?? process.env.NAPPLET_BOILERPLATE_TEMPLATE
@@ -181,15 +155,12 @@ async function resolveConfig(options: CliOptions): Promise<GeneratorConfig> {
     );
 
     validatePackageName(packageName);
-    validateNappletType(nappletType);
 
     return {
       targetDir,
       variant: options.variant,
       template,
       packageName,
-      nappletType,
-      title,
       force: options.force,
     };
   } finally {
@@ -197,7 +168,7 @@ async function resolveConfig(options: CliOptions): Promise<GeneratorConfig> {
   }
 }
 
-async function generate(config: GeneratorConfig): Promise<void> {
+export async function generate(config: GeneratorConfig): Promise<void> {
   await prepareTarget(config.targetDir, config.force);
 
   const tmpRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'napplet-boilerplate-'));
@@ -270,24 +241,6 @@ async function applyTemplateData(config: GeneratorConfig): Promise<void> {
   packageJson.name = config.packageName;
   await fs.writeFile(packagePath, `${JSON.stringify(packageJson, null, 2)}\n`);
 
-  await replaceInFile(path.join(config.targetDir, 'vite.config.ts'), [
-    ["nappletType: 'my-napplet'", `nappletType: '${config.nappletType}'`],
-  ]);
-  await replaceInFile(path.join(config.targetDir, 'index.html'), [
-    ['<title>My Napplet</title>', `<title>${escapeHtml(config.title)}</title>`],
-    ['<h1 id="app-title">My Napplet</h1>', `<h1 id="app-title">${escapeHtml(config.title)}</h1>`],
-  ]);
-  await replaceInFile(path.join(config.targetDir, 'README.md'), [
-    ['# my-napplet', `# ${config.title}`],
-  ]);
-}
-
-async function replaceInFile(filePath: string, replacements: Array<[string, string]>): Promise<void> {
-  let contents = await fs.readFile(filePath, 'utf8');
-  for (const [from, to] of replacements) {
-    contents = contents.split(from).join(to);
-  }
-  await fs.writeFile(filePath, contents);
 }
 
 async function run(command: string, args: string[]): Promise<void> {
@@ -360,23 +313,6 @@ function toPackageName(value: string): string {
     || 'my-napplet';
 }
 
-function toNappletType(packageName: string): string {
-  return packageName
-    .replace(/^@[^/]+\//, '')
-    .replace(/[^a-z0-9._:-]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    || 'my-napplet';
-}
-
-function toTitle(nappletType: string): string {
-  return nappletType
-    .split(/[-_:./]+/)
-    .filter(Boolean)
-    .map((part) => `${part.charAt(0).toUpperCase()}${part.slice(1)}`)
-    .join(' ')
-    || 'My Napplet';
-}
-
 function validatePackageName(packageName: string): void {
   const valid = /^(?:@[a-z0-9][a-z0-9._-]*\/)?[a-z0-9][a-z0-9._-]*$/.test(packageName);
   if (!valid) {
@@ -384,25 +320,14 @@ function validatePackageName(packageName: string): void {
   }
 }
 
-function validateNappletType(nappletType: string): void {
-  const valid = /^[a-z0-9][a-z0-9._:-]*$/.test(nappletType);
-  if (!valid) {
-    throw new Error(`Invalid napplet type: ${nappletType}`);
-  }
-}
-
-function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
-
 function printSuccess(config: GeneratorConfig): void {
+  output.write(renderSuccess(config));
+}
+
+export function renderSuccess(config: GeneratorConfig): string {
   const relativeTarget = path.relative(process.cwd(), config.targetDir) || '.';
-  output.write(`
-Created ${config.title}
+  return `
+Created napplet project
 
 Location: ${relativeTarget}
 Variant:  ${config.variant}
@@ -411,11 +336,13 @@ Template: ${config.template}
 Next:
   cd ${shellEscape(relativeTarget)}
   pnpm install
-  pnpm dev
-
-Verify:
+  napplet init
+  napplet skills install --to codex
+  # Ask your agent to build the napplet, then verify it:
   pnpm verify
-`);
+  napplet deploy --dry-run
+  napplet deploy
+`;
 }
 
 function shellEscape(value: string): string {
@@ -423,9 +350,11 @@ function shellEscape(value: string): string {
   return `'${value.replace(/'/g, "'\\''")}'`;
 }
 
-main().catch((error: unknown) => {
-  const message = error instanceof Error ? error.message : String(error);
-  console.error(`@napplet/boilerplate: ${message}`);
-  process.exitCode = 1;
-});
-
+const entrypoint = process.argv[1] ? path.resolve(process.argv[1]) : undefined;
+if (entrypoint === fileURLToPath(import.meta.url)) {
+  main().catch((error: unknown) => {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`@napplet/boilerplate: ${message}`);
+    process.exitCode = 1;
+  });
+}

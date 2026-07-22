@@ -22,15 +22,14 @@ Protocol references used here:
 
 ## 1. Scaffold the starter
 
-Run the generator with explicit values so the tutorial is repeatable:
+Create the starter, then let the CLI own deployment metadata:
 
 ```bash
-npx @napplet/boilerplate ./note-drafts \
-  --package-name note-drafts \
-  --napplet-type notedrafts \
-  --title "Note Drafts" \
-  --yes
+napplet create note-drafts
 cd note-drafts
+napplet init --name notedrafts --title "Note Drafts" \
+  --description "Draft and publish short Nostr notes from a sandboxed napplet." \
+  --archetype note:NAP-4
 pnpm install
 ```
 
@@ -84,10 +83,12 @@ pnpm install
 What this teaches: the boilerplate gives you a valid project shape; the app
 still declares only the packages and NAP domains it actually uses.
 
-## 3. Configure the manifest for Note Drafts
+## 3. Configure hard runtime requirements
 
 Open `vite.config.ts`. Keep the generated single-file plugin and manifest plugin
-shape, but change the project-specific fields:
+shape, but change only the hard runtime requirements. Keep the template's
+build-local `nappletType` fallback; `.napplet/config.json` owns the d-tag,
+title, description, and archetype metadata used by `napplet deploy`.
 
 ```ts
 import { defineConfig } from 'vite';
@@ -98,9 +99,7 @@ export default defineConfig({
   plugins: [
     viteSingleFile(),
     nip5aManifest({
-      nappletType: 'notedrafts',
-      title: 'Note Drafts',
-      description: 'Draft and publish short Nostr notes from a sandboxed napplet.',
+      nappletType: 'my-napplet', // build-local fallback; deploy uses .napplet/config.json
       requires: ['identity', 'storage', 'outbox'],
     }),
   ],
@@ -541,9 +540,13 @@ grep -n "napplet-type\\|napplet-requires" dist/index.html
 Expected metadata:
 
 ```html
-<meta name="napplet-type" content="notedrafts">
+<meta name="napplet-type" content="my-napplet">
 <meta name="napplet-requires" content="identity,outbox,storage">
 ```
+
+`napplet-type` is the template's build-local fallback. The following deploy
+preview must show the CLI-owned `notedrafts` d-tag and the title, description,
+and archetype from `.napplet/config.json`.
 
 Open the app in your target shell or Paja runtime and verify:
 
@@ -555,3 +558,10 @@ Open the app in your target shell or Paja runtime and verify:
 
 That proves the boilerplate substrate stayed intact while the app boundary
 became a focused Note Drafts napplet.
+
+Preview the CLI-owned deployment plan before publishing:
+
+```bash
+napplet deploy --dry-run
+napplet deploy
+```

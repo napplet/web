@@ -104,9 +104,27 @@ Exercise the feature against the NAP domains it declares:
 - Signed-out path: identity returns `""`; app degrades without publish/list/dm actions.
 - OUTBOX path: current option fields only: `outbox.getEvent` uses `author`, `relays`, `timeoutMs`; `outbox.query` / `outbox.subscribe` use `authors`, `relays`, `limit`, `timeoutMs`; `outbox.publish` uses `relays`, `toOutbox`, `toInboxes`. No `strategy`, subscribe `live`, publish `timeoutMs`, or `outbox.eose`.
 - Optional-domain path: remove an optional domain from the mock runtime and verify fallback UI.
+- Theme path: run with dark and light themes, verify `html`/`body`/app-root
+  backgrounds as well as text, surfaces, borders, and primary colors, then
+  emit a theme change and verify the whole surface repaints. A dark card on a
+  white page is a failed theme integration.
 - Escape hatch path: if `relay` is used, test the explicit relay-local behavior and teardown.
 
-## Step 7 — CI
+## Step 7 — Runtime Preview
+
+Conformance is not a user preview. When a local shell is available, launch the
+project through Paja and report its URL:
+
+```bash
+napplet paja -- pnpm vite --host 127.0.0.1
+```
+
+The final preview link must be the Paja/runtime URL, not the underlying Vite
+server URL. If `napplet`, Kehto, or Paja is not installed, report the exact
+missing prerequisite and leave the manual runtime check open; never present
+the raw Vite URL as a valid napplet preview.
+
+## Step 8 — CI
 
 Run conformance headless in CI: cache Playwright's Chromium, build, then run the CLI. See `.github/workflows/conformance.yml` in the napplet monorepo for the reference pattern.
 

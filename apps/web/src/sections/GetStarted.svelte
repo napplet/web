@@ -4,7 +4,7 @@
 
   let copied = $state(false);
   let acceptedAlpha = $state(false);
-  const cmd = 'npx @napplet/boilerplate';
+  const cmd = 'curl -fsSL https://napplet.run/install.sh | sh';
 
   async function copy() {
     try {
@@ -23,11 +23,11 @@
       {#if !acceptedAlpha}
         <div class="alpha-gate" role="dialog" aria-modal="true" aria-labelledby="alpha-gate-title">
           <div class="gate-card">
-            <span class="gate-kicker">Alpha boilerplate</span>
-            <h3 id="alpha-gate-title">Before you scaffold</h3>
+            <span class="gate-kicker">Alpha software</span>
+            <h3 id="alpha-gate-title">Before you install</h3>
             <p>
-              The boilerplate is alpha, it could be broken, some tooling paths could be
-              broken or not complete. The spec could drift
+              napplet is alpha. The CLI and tooling could be broken or incomplete, and the living
+              specification could drift as it evolves.
             </p>
             <button class="btn btn-primary gate-action" onclick={() => (acceptedAlpha = true)}>
               I Understand
@@ -43,13 +43,13 @@
         inert={!acceptedAlpha}
       >
         <span class="eyebrow">Get started</span>
-        <h2 class="section-title">Scaffold a napplet in one command</h2>
+        <h2 class="section-title">Install napplet in one command</h2>
         <p class="section-lead">
-          The generator clones the template and sets up a Vite + TypeScript napplet, wired to
-          the shim. Point it at a compatible shell and you’re live.
+          Install the standalone CLI, then run <code>napplet guide</code> for the current path from
+          scaffold to deployment.
         </p>
 
-        <button class="cmd" onclick={copy} aria-label="Copy command">
+        <button class="cmd" onclick={copy} aria-label="Copy install command">
           <span class="prompt">$</span>
           <code>{cmd}</code>
           <span class="copy">{copied ? 'copied ✓' : 'copy'}</span>
@@ -140,30 +140,44 @@
   .panel .section-title,
   .panel .section-lead { margin-inline: auto; }
   .section-lead { max-width: 56ch; }
+  .section-lead code {
+    color: var(--text);
+    font-family: var(--font-mono);
+  }
 
   .cmd {
-    display: inline-flex;
+    display: flex;
     align-items: center;
     gap: 12px;
+    width: fit-content;
+    max-width: 100%;
     margin: 32px auto 28px;
     padding: 14px 18px;
     border-radius: 12px;
     background: #100719;
     border: 1px solid var(--border);
     font-family: var(--font-mono);
+    text-align: left;
     cursor: pointer;
     transition: border-color 0.2s ease;
   }
   .cmd:hover { border-color: var(--accent); }
   .prompt { color: var(--accent); }
-  .cmd code { color: var(--text); font-size: 0.98rem; }
+  .cmd code {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    color: var(--text);
+    font-size: 0.98rem;
+  }
   .copy {
-    font-size: 0.74rem;
-    color: var(--accent-bright);
-    border-left: 1px solid var(--border);
+    flex: 0 0 auto;
     padding-left: 12px;
-    text-transform: uppercase;
+    border-left: 1px solid var(--border);
+    color: var(--accent-bright);
+    font-size: 0.74rem;
     letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
   }
 
   .links {

@@ -19,17 +19,18 @@ Protocol references the agent must defer to:
 - [NAPs](https://github.com/napplet/naps), the capability-domain specs for
   `identity`, `storage`, and `outbox`
 
-## 1. Start with an empty working directory
+## 1. Create and initialize the project
 
-Create a parent directory for the agent run:
+Start from the maintained scaffold and record deployment metadata before the
+agent edits application code:
 
 ```bash
-mkdir note-drafts-agent-run
-cd note-drafts-agent-run
+napplet create note-drafts
+cd note-drafts
+napplet init --name notedrafts --title "Note Drafts" \
+  --description "Draft and publish short Nostr notes from a sandboxed napplet." \
+  --archetype note:NAP-4
 ```
-
-The agent can scaffold the project itself, but an empty parent directory keeps
-the run easy to review and delete if the first attempt goes wrong.
 
 ## 2. Install the napplet skills for your agent
 
@@ -37,28 +38,34 @@ the run easy to review and delete if the first attempt goes wrong.
 target your tool reads:
 
 ```bash
-npx @napplet/skills install make-napplet --to agents
+napplet skills install make-napplet --to agents
 ```
 
 Common targets:
 
 ```bash
-npx @napplet/skills install make-napplet --to claude
-npx @napplet/skills install make-napplet --to cursor
-npx @napplet/skills install make-napplet --to gemini
-npx @napplet/skills install make-napplet --to copilot
+napplet skills install make-napplet --to claude
+napplet skills install make-napplet --to cursor
+napplet skills install make-napplet --to gemini
+napplet skills install make-napplet --to copilot
 ```
 
 If your agent supports local skills directly, install the full set instead:
 
 ```bash
-npx @napplet/skills install --to agents
+napplet skills install --to agents
 ```
 
 What this teaches: the skill file is not a protocol spec. It is a build guide
-that tells the agent to check NIP-5D and NAPs, scaffold from
-`@napplet/boilerplate`, use shipped `@napplet/*` package exports, and stop
-instead of inventing missing protocol surface.
+that tells the agent to check NIP-5D and NAPs, preserve the `napplet create`
+scaffold and `napplet init` metadata, use shipped `@napplet/*` package exports,
+and stop instead of inventing missing protocol surface.
+
+Before implementation, the agent should inspect the project state and available
+tools. An empty directory, a maintained boilerplate, an initialized napplet, a
+boilerplate-based brownfield app, and an unrelated brownfield app require
+different paths. It should also check whether `napplet` and Kehto/Paja are
+installed rather than assuming either binary exists.
 
 ## 3. Give the agent a small product prompt
 
@@ -71,18 +78,14 @@ Build a Note Drafts napplet in this directory using the installed
 The app should let a user write one short Nostr note, autosave the draft, and
 publish it through the host shell.
 
-Use:
-- app title: Note Drafts
-- package name: note-drafts
-- nappletType: notedrafts
-
-Follow the skills end to end and report the changed files plus verification
-evidence.
+The project is already scaffolded and its deployment metadata is in
+.napplet/config.json. Follow the skills end to end and report the changed files
+plus verification evidence.
 ```
 
 This prompt is intentionally short. The installed `make-napplet` guidance is
 responsible for routing the work through the `build-napplet` and `test-napplet`
-skills, starting from `@napplet/boilerplate`, choosing the shell-mediated
+skills, preserving the `napplet create` scaffold, choosing the shell-mediated
 domains, preserving the generated scripts, and refusing direct browser or
 signing authority.
 
@@ -110,8 +113,10 @@ The diff should look like this:
 - `package.json` preserves the generated scripts and uses current
   `@napplet/sdk`, `@napplet/vite-plugin`, and `@napplet/conformance-cli`
   versions.
-- `vite.config.ts` declares `nappletType: 'notedrafts'` and
-  `requires: ['identity', 'storage', 'outbox']`.
+- `.napplet/config.json` still owns `notedrafts`, title, description, and the
+  canonical `note:NAP-4` archetype contract.
+- `vite.config.ts` declares `requires: ['identity', 'storage', 'outbox']` and
+  does not become a second source of deployment metadata.
 - `src/main.ts` imports `identity`, `storage`, and `outbox` from
   `@napplet/sdk`.
 - Draft persistence goes through `storage.instance`.
@@ -177,8 +182,18 @@ manifest fields.
 
 ## 7. Run a shell smoke test
 
-Use the shell/runtime you target for local testing. In Paja or another compatible
-runtime:
+Use the shell/runtime you target for local testing. Start the project through
+Paja, not as a raw Vite page:
+
+```bash
+napplet paja -- pnpm vite --host 127.0.0.1
+```
+
+Report the URL printed by Paja. The underlying Vite URL is only an asset server
+and is not a valid napplet preview. If Paja is unavailable, report that manual
+runtime verification is pending instead of linking to Vite.
+
+In Paja or another compatible runtime:
 
 1. Load the built or dev Note Drafts napplet through the shell, not as a raw Vite
    page.
@@ -191,6 +206,12 @@ runtime:
 
 Do not treat a raw browser preview as proof. The app only proves the napplet
 boundary when a shell injects the required NAP domains.
+
+The visual implementation should also use NAP-THEME when available. Apply
+`theme.colors.background` to `html`, `body`, and the app root, apply
+`theme.colors.text` and `theme.colors.primary` to the design tokens, and update
+the full surface from `themeOnChanged`. A dark component palette on a white page
+is not themed; test both dark and light backgrounds.
 
 ## 8. Ask the agent for a completion report
 
@@ -216,7 +237,8 @@ project or PR so future edits can tell which claims were verified.
 The skills do not make the agent authoritative. They make the default path
 better:
 
-- Start from `@napplet/boilerplate` instead of recreating build plumbing.
+- Preserve the `napplet create` scaffold and `napplet init` deployment metadata
+  instead of recreating build plumbing.
 - Use current shipped `@napplet/sdk` helpers instead of imagined APIs.
 - Prefer `outbox` for social reads/publishes instead of direct relay ownership.
 - Keep browser storage, direct network, private keys, and external runtime

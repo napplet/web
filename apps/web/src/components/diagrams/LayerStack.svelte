@@ -150,4 +150,19 @@
   @media (prefers-reduced-motion: reduce) {
     .conn-dot { animation: none; }
   }
+  @media (max-width: 420px) {
+    .layer {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+    .layer-main,
+    .layer-link {
+      min-width: 0;
+      max-width: 100%;
+    }
+    .layer-link {
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
+  }
 </style>

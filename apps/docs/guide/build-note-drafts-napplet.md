@@ -24,13 +24,18 @@ Protocol references used here:
 - [NAPs](https://github.com/napplet/naps), the capability-domain specs for
   `identity`, `storage`, and `outbox`
 
-## 1. Create the project
+## 1. Create the project manually and initialize deployment
 
-Start from an empty directory:
+This is the advanced manual-wiring path. New projects should normally use
+`napplet create`; this tutorial starts empty so each build file is visible, but
+still uses `napplet init` as the deployment metadata authority.
 
 ```bash
 mkdir note-drafts
 cd note-drafts
+napplet init --name notedrafts --title "Note Drafts" \
+  --description "Draft and publish short Nostr notes from a sandboxed napplet." \
+  --archetype note:NAP-4
 pnpm init
 pnpm add @napplet/sdk@^0.24.4
 pnpm add -D @napplet/vite-plugin@^0.11.2 @napplet/conformance-cli@^0.2.15 @kehto/cli@^0.2.11 typescript@^5.9.3 vite@^6.4.3
@@ -679,6 +684,14 @@ Expected metadata:
 The built `dist/index.html` is the file you test and publish. Do not point
 conformance or deploy tooling at source `index.html`; it still contains the Vite
 `/src/main.ts` module reference.
+
+Preview the CLI-owned metadata and manifest before any network write:
+
+```bash
+napplet deploy --dry-run
+```
+
+Run `napplet deploy` only after the preview is correct and signing is configured.
 
 ## What stayed outside the napplet
 

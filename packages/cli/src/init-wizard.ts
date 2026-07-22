@@ -5,8 +5,9 @@
  */
 
 import { NAMED_SITE_D_TAG_PATTERN } from "./manifest.ts";
+import { parseArchetypeContracts } from "./config.ts";
 import { type PromptInput, promptLine, type PromptOutput } from "./prompt.ts";
-import type { DeployTargetKind } from "./types.ts";
+import type { DeployTargetKind, NappletArchetypeContract } from "./types.ts";
 import { promptUrlList, unique } from "./url-prompt.ts";
 
 export interface InitWizardSeed {
@@ -14,6 +15,9 @@ export interface InitWizardSeed {
   relays: string[];
   blossomServers: string[];
   named: string[];
+  title?: string;
+  description?: string;
+  archetypes: string[];
   root: boolean;
 }
 
@@ -27,6 +31,9 @@ export interface InitWizardResult {
   relays: string[];
   blossomServers: string[];
   named: string[];
+  title?: string;
+  description?: string;
+  archetypes: NappletArchetypeContract[];
   defaultTarget: DeployTargetKind;
 }
 
@@ -57,6 +64,21 @@ export async function promptInitWizard(options: InitWizardOptions): Promise<Init
 
   const defaultTarget = await promptDefaultTarget(options);
   const named = defaultTarget === "named" ? await promptNamedDTags(options) : [];
+  const name = named[0];
+  const title = options.seed.title ?? await promptLine({
+    message: "Human-readable title",
+    defaultValue: name ? titleFromName(name) : "My Napplet",
+    input: options.input,
+    output: options.output,
+  });
+  const description = options.seed.description ?? await promptLine({
+    message: "Description (optional)",
+    input: options.input,
+    output: options.output,
+  });
+  const archetypes = options.seed.archetypes.length > 0
+    ? parseArchetypeContracts(options.seed.archetypes)
+    : await promptArchetypes(options);
   const relays = options.seed.relays.length > 0
     ? unique(options.seed.relays)
     : await promptUrlList({
@@ -81,8 +103,33 @@ export async function promptInitWizard(options: InitWizardOptions): Promise<Init
     relays,
     blossomServers,
     named,
+    title: title.trim() || undefined,
+    description: description.trim() || undefined,
+    archetypes,
     defaultTarget,
   };
+}
+
+async function promptArchetypes(options: InitWizardOptions): Promise<NappletArchetypeContract[]> {
+  for (;;) {
+    const value = await promptLine({
+      message: "Archetype contracts (slug:NAP-N, comma separated, optional)",
+      input: options.input,
+      output: options.output,
+    });
+    if (value.trim() === "") return [];
+    try {
+      return parseArchetypeContracts(splitEntries(value));
+    } catch (error) {
+      writeLine(options.output, error instanceof Error ? error.message : String(error));
+    }
+  }
+}
+
+export function titleFromName(value: string): string {
+  return value.split("-").filter(Boolean).map((part) =>
+    `${part.charAt(0).toUpperCase()}${part.slice(1)}`
+  ).join(" ") || "My Napplet";
 }
 
 async function promptDefaultTarget(options: InitWizardOptions): Promise<DeployTargetKind> {

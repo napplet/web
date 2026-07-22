@@ -68,6 +68,10 @@ jobs:
           cp -r apps/web/dist/. site/
           mkdir -p site/docs
           cp -r apps/docs/.vitepress/dist/. site/docs/
+          test -s site/install.sh
+          test -s site/install.ps1
+          cmp apps/web/public/install.sh site/install.sh
+          cmp apps/web/public/install.ps1 site/install.ps1
           echo "Assembled $(find site -type f | wc -l) files into ./site"
 
       - name: Install Chromium for Playwright

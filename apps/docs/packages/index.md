@@ -12,12 +12,12 @@ dependency for manifest generation.
 | [`@napplet/sdk`](./sdk) | Named TypeScript exports wrapping `window.napplet` for bundler consumers — `relay`, `inc`, `storage`, `keys`, and more, plus type re-exports. |
 | [`@napplet/nap`](./nap) | All active domain subpaths as layered exports (barrel / types / shim / sdk per active NAP domain, plus ifc compatibility). Tree-shakable. |
 | [`@napplet/vite-plugin`](./vite-plugin) | Vite plugin for napplet manifest generation: per-file `path` hashes, a signed NIP-5D kind 35129 event (NIP-5A tag schema), and `requires` / `connect` / `config` tags at build time. |
-| [`@napplet/cli`](./cli) | Deno CLI for discovering, inspecting, testing, and deploying built napplets to Blossom servers and Nostr relays. |
+| [`@napplet/cli`](./cli) | Standalone CLI for creating projects, owning deploy metadata, installing skills, and deploying to Blossom servers and Nostr relays. |
 | [`@napplet/conformance`](./conformance) | Framework-agnostic protocol conformance engine — reference mock shell, per-NAP envelope validators, manifest validator, and reporters. A dev/test tool, not loaded in the sandbox. |
 | [`@napplet/conformance-cli`](./conformance-cli) | The headless `napplet-conformance` runner — drives the conformance engine against a napplet in real Chromium via Playwright. Wire it up as `test:conformance`. |
 | [`@napplet/conformance-web`](./conformance-web) | Browser conformance runtime deployed at `/conformance` and bundled by the CLI UI/watch mode. |
 | [`@napplet/boilerplate`](./boilerplate) | Interactive `npx` generator that clones the `github.com/napplet/boilerplate` template into a Vite + TypeScript starter. |
-| [`@napplet/skills`](./skills) | Agent skills (make / design / build / port / test) that let a coding agent create or port a napplet end-to-end with OUTBOX-first event access, plus a `napplet-skills` installer for Claude Code, Cursor, Windsurf, Codex/Amp, Gemini, and Copilot. |
+| [`@napplet/skills`](./skills) | Agent skills (make / design / build / port / test), installed through `napplet skills` for Claude Code, Cursor, Windsurf, Codex/Amp, Gemini, and Copilot. |
 
 ## Dependency graph
 

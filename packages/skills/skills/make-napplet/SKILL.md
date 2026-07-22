@@ -50,7 +50,8 @@ Before any design or code, treat the iframe sandbox as a hard boundary:
 Write a small build brief before editing:
 
 ```
-nappletType:
+deployment name / d-tag:
+CLI metadata initialized:
 new build or port:
 boilerplate substrate:
 single-purpose job:
@@ -63,6 +64,36 @@ known protocol/package gaps:
 If the request is a full app, split it into focused napplets unless the user
 explicitly requires one compound napplet and that shape is still usable in a
 small iframe.
+
+## Step 1.5 - Triage The Project And Toolchain
+
+Before choosing commands, inspect the directory and available tools. Do not
+assume the CLI, Kehto/Paja, or the boilerplate exists.
+
+```bash
+pwd
+command -v napplet || true
+command -v kehto || command -v paja || true
+test -f package.json && cat package.json
+test -f .napplet/config.json && cat .napplet/config.json
+test -f vite.config.ts && sed -n '1,220p' vite.config.ts
+find . -maxdepth 2 -type f | sort | sed -n '1,160p'
+```
+
+Choose one starting state:
+
+| State | Action |
+| --- | --- |
+| `napplet` unavailable | Stop and tell the user to install the standalone CLI, or use the repository's documented local CLI path. Do not pretend `create`, `init`, or `paja` ran. |
+| Empty directory | Run `napplet create <directory>`, enter it, then run `napplet init`. |
+| Boilerplate directory with no product work | Preserve the substrate, run `napplet init` if metadata is absent, then implement the product. |
+| Existing napplet with `.napplet/config.json` and generated scripts | Treat it as initialized; inspect metadata and scripts, then edit product surfaces. |
+| Brownfield app based on the boilerplate | Preserve compatible generated scripts/config and port only app-specific code; do not scaffold over it. |
+| Brownfield app with no boilerplate | Run `port-nostr-app` first, then add only the equivalent current build, single-file, metadata, and conformance wiring required. Document the retrofit. |
+
+If Kehto/Paja is unavailable, continue automated build/conformance work but
+report the missing runtime as an unverified manual-preview gap. Never finish
+with a raw Vite URL presented as a working napplet preview.
 
 ## Step 2 - Pick The Boundary Before Code
 
@@ -94,13 +125,23 @@ using `relay` is wrong.
 
 1. For ports, run `port-nostr-app` and produce its inventory/handoff.
 2. Run `design-napplet` and produce the build spec.
-3. For new projects, scaffold with `@napplet/boilerplate` before implementation
-   and preserve the generated package manager config, Vite config, scripts,
-   layout, README/docs structure, and conformance wiring.
+3. For new projects, run `napplet create <directory>`, enter it, and run
+   `napplet init` before implementation. Preserve the generated package manager
+   config, Vite config, scripts, layout, README/docs structure, conformance
+   wiring, and CLI-owned deployment metadata.
 4. Run `build-napplet` against that spec, editing only project-specific files
    such as `src/main.ts`, `src/styles.css`, `vite.config.ts` fields,
    `index.html` title/root markup, config schema, and README/docs.
 5. Run `test-napplet` before reporting completion.
+
+For a human preview, run the app through Paja:
+
+```bash
+napplet paja -- pnpm vite --host 127.0.0.1
+```
+
+Use the Paja URL printed by the runtime in the final report. A raw Vite URL is
+only an asset server and is not a valid runtime preview.
 
 Do not claim "done" after design or code alone. Done means the built artifact
 passes the boilerplate validation (`pnpm verify`, `pnpm test:conformance`), any
@@ -150,6 +191,11 @@ layer to generated napplet code.
   `outbox.publish`: `relays`, `toOutbox`, `toInboxes`.
   No `strategy`, subscribe `live`, publish `timeoutMs`, or `outbox.eose`.
 - Every optional NAP is gated with a graceful fallback.
+- Implement NAP-THEME across the whole surface: map background and text onto
+  `html`, `body`, and the app root, then map primary, surface, border, and muted
+  tokens intentionally. Subscribe with `themeOnChanged` so runtime changes
+  repaint the whole UI. If theme is absent, use an explicit local fallback
+  palette, including a page background; test both dark and light backgrounds.
 - Every hard requirement is declared with a bare domain name in the manifest
   `requires` list, not `NAP-*`.
 - Do not add `keys` to `requires` when local buttons, menus, text input, or
@@ -159,6 +205,9 @@ layer to generated napplet code.
   than app-owned global shortcut plumbing.
 - The final answer includes the commands/checks that passed and any live-shell
   interoperability gap that was not tested.
+- The final answer links to the Paja runtime preview, or explicitly says Paja
+  was unavailable and no runtime preview was claimed. Never substitute a raw
+  Vite URL.
 
 Stop only when the napplet is implemented, verified, and does not own authority
 that belongs to the shell.

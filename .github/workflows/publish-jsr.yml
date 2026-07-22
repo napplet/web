@@ -74,3 +74,65 @@ jobs:
       # The pure @napplet/conformance engine still publishes to JSR.
       - name: Publish to JSR (topologically ordered)
         run: pnpm -r --workspace-concurrency=1 --filter='./packages/*' --filter='!@napplet/boilerplate' --filter='!@napplet/conformance-cli' exec npx jsr publish --allow-slow-types --allow-dirty
+
+  build-cli-binaries:
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'Version Packages')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - task: compile:linux-x86_64
+            asset: napplet-linux-x86_64
+          - task: compile:linux-aarch64
+            asset: napplet-linux-aarch64
+          - task: compile:darwin-x86_64
+            asset: napplet-darwin-x86_64
+          - task: compile:darwin-aarch64
+            asset: napplet-darwin-aarch64
+          - task: compile:windows-x86_64
+            asset: napplet-windows-x86_64.exe
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+      - name: Compile ${{ matrix.asset }}
+        run: deno task --config packages/cli/deno.json ${{ matrix.task }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cli-${{ strategy.job-index }}
+          path: packages/cli/dist/${{ matrix.asset }}
+          if-no-files-found: error
+
+  release-cli-binaries:
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'Version Packages')
+    needs: [publish-jsr, build-cli-binaries]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: cli-*
+          path: cli-dist
+          merge-multiple: true
+      - name: Create checksum manifest
+        working-directory: cli-dist
+        run: sha256sum napplet-* | sort > SHA256SUMS
+      - name: Publish versioned and stable CLI assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version=$(node -p "require('./packages/cli/package.json').version")
+          version_tag="@napplet/cli@${version}"
+          if ! gh release view "$version_tag" >/dev/null 2>&1; then
+            gh release create "$version_tag" --title "$version_tag" --notes "Standalone napplet CLI ${version}."
+          fi
+          gh release upload "$version_tag" cli-dist/napplet-* cli-dist/SHA256SUMS --clobber
+
+          if ! gh release view napplet-cli >/dev/null 2>&1; then
+            gh release create napplet-cli --title "napplet CLI (stable)" --notes "Rolling checksum-verified standalone CLI binaries." --latest=false
+          fi
+          gh release upload napplet-cli cli-dist/napplet-* cli-dist/SHA256SUMS --clobber
