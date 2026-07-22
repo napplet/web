@@ -35,57 +35,97 @@ try {
     await section.scrollIntoViewIfNeeded();
     await page.waitForTimeout(150);
 
-    const issues = await page.evaluate(() => {
-      const results = [];
-      if (document.documentElement.scrollWidth > window.innerWidth) {
-        const offenders = [...document.querySelectorAll('body *')]
-          .map((element) => ({ element, bounds: element.getBoundingClientRect() }))
-          .filter(({ bounds }) => bounds.right > window.innerWidth + 0.5 || bounds.left < -0.5)
-          .slice(0, 6)
-          .map(({ element, bounds }) =>
-            `${element.tagName.toLowerCase()}.${[...element.classList].join('.')}[${Math.round(bounds.left)},${Math.round(bounds.right)}]`
-          );
-        results.push(
-          `page overflow ${document.documentElement.scrollWidth} > ${window.innerWidth}: ${offenders.join(', ')}`,
-        );
-      }
-      if (document.querySelector('.alpha-gate')) results.push('retired alpha gate is present');
-      for (const [index, row] of [...document.querySelectorAll('.command-row')].entries()) {
-        const code = row.querySelector('code')?.getBoundingClientRect();
-        const button = row.querySelector('button')?.getBoundingClientRect();
-        const bounds = row.getBoundingClientRect();
-        if (!code || !button) {
-          results.push(`command row ${index} is incomplete`);
-          continue;
-        }
-        if (code.right > button.left + 0.5) results.push(`command row ${index} overlaps its copy button`);
-        if (bounds.right > window.innerWidth + 0.5 || bounds.left < -0.5) {
-          results.push(`command row ${index} leaves the viewport`);
-        }
-      }
-      for (const [index, button] of [...document.querySelectorAll('#start button')].entries()) {
-        const bounds = button.getBoundingClientRect();
-        if (bounds.width < 1 || bounds.height < 1) results.push(`button ${index} has no stable size`);
-      }
-      return results;
+    await assertGateState(page);
+    assert.equal(await page.locator('.burger').getAttribute('aria-expanded'), 'false');
+    assert.deepEqual(await collectLayoutIssues(page), [], `${viewport.name}: gated layout`);
+    await page.locator('header.nav').evaluate((element) => {
+      element.style.visibility = 'hidden';
     });
+    const warningScreenshot = path.join(
+      outputDir,
+      `napplet-onboarding-${viewport.name}-warning.png`,
+    );
+    await section.screenshot({ path: warningScreenshot, animations: 'disabled' });
+
+    await page.getByRole('button', { name: 'I Understand' }).click();
+    await assertMainState(page);
+    const issues = await collectLayoutIssues(page);
     assert.deepEqual(issues, [], `${viewport.name}: ${issues.join('; ')}`);
 
     const screenshot = path.join(outputDir, `napplet-onboarding-${viewport.name}.png`);
     await section.screenshot({ path: screenshot, animations: 'disabled' });
 
     if (viewport.name === 'desktop') {
-      await page.getByRole('button', { name: 'Windows' }).click();
-      await assertVisibleText(page, 'install-napplet-cli.ps1');
-      await page.getByRole('button', { name: 'macOS' }).click();
-      await assertVisibleText(page, 'install-napplet-cli.sh');
+      await assertVisibleText(page, 'https://napplet.run/install.sh');
+      await assertVisibleText(page, 'napplet guide');
+      for (const label of ['Read the docs', 'NIP-5D spec', 'Group chat', 'GitHub']) {
+        assert.ok(await section.getByRole('link', { name: new RegExp(label) }).isVisible());
+      }
     }
     await page.close();
+    console.log(`${viewport.name}: ${warningScreenshot}`);
     console.log(`${viewport.name}: ${screenshot}`);
   }
 } finally {
   await browser?.close();
   server.kill('SIGTERM');
+}
+
+async function assertGateState(page) {
+  assert.ok(await page.getByRole('dialog').isVisible());
+  await assertVisibleText(page, 'Before you install');
+  await assertVisibleText(page, 'could be broken or incomplete');
+  assert.equal(await page.locator('.panel-content.locked').count(), 1);
+}
+
+async function assertMainState(page) {
+  assert.equal(await page.locator('.alpha-gate').count(), 0);
+  assert.equal(await page.locator('.panel-content.locked').count(), 0);
+  assert.equal(await page.locator('.cmd').count(), 1);
+  assert.equal(await page.locator('.command-row').count(), 0);
+  assert.ok(await page.getByRole('button', { name: 'Copy install command' }).isVisible());
+}
+
+async function collectLayoutIssues(page) {
+  return await page.evaluate(() => {
+    const results = [];
+    if (document.documentElement.scrollWidth > window.innerWidth) {
+      const offenders = [...document.querySelectorAll('body *')]
+        .map((element) => ({ element, bounds: element.getBoundingClientRect() }))
+        .filter(({ bounds }) => bounds.right > window.innerWidth + 0.5 || bounds.left < -0.5)
+        .slice(0, 6)
+        .map(({ element, bounds }) =>
+          `${element.tagName.toLowerCase()}.${[...element.classList].join('.')}[${Math.round(bounds.left)},${Math.round(bounds.right)}]`
+        );
+      results.push(
+        `page overflow ${document.documentElement.scrollWidth} > ${window.innerWidth}: ${offenders.join(', ')}`,
+      );
+    }
+
+    const command = document.querySelector('.cmd');
+    if (command) {
+      const code = command.querySelector('code')?.getBoundingClientRect();
+      const copy = command.querySelector('.copy')?.getBoundingClientRect();
+      const bounds = command.getBoundingClientRect();
+      if (!code || !copy) {
+        results.push('install command is incomplete');
+      } else if (code.right > copy.left + 0.5) {
+        results.push('install command overlaps its copy label');
+      }
+      if (command.scrollWidth > command.clientWidth + 1) {
+        results.push('install command has internal overflow');
+      }
+      if (bounds.right > window.innerWidth + 0.5 || bounds.left < -0.5) {
+        results.push('install command leaves the viewport');
+      }
+    }
+
+    for (const [index, button] of [...document.querySelectorAll('#start button')].entries()) {
+      const bounds = button.getBoundingClientRect();
+      if (bounds.width < 1 || bounds.height < 1) results.push(`button ${index} has no stable size`);
+    }
+    return results;
+  });
 }
 
 async function waitForServer(url) {

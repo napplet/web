@@ -69,20 +69,44 @@ test('shipped build skills preserve CLI metadata ownership', async () => {
   }
 });
 
-test('SPA renders the full workflow without the retired alpha gate', async () => {
+test('onboarding surfaces use the hosted installers', async () => {
+  for (const file of [
+    'README.md',
+    'apps/docs/guide/getting-started.md',
+    'packages/cli/README.md',
+    'apps/docs/packages/cli.md',
+    'packages/cli/src/mod.ts',
+    'apps/web/src/sections/GetStarted.svelte',
+  ]) {
+    const source = await readFile(path.join(root, file), 'utf8');
+    assert.match(source, /https:\/\/napplet\.run\/install\.sh/, file);
+    assert.doesNotMatch(source, /raw\.githubusercontent\.com.*install-napplet-cli/, file);
+  }
+
+  for (const file of [
+    'README.md',
+    'apps/docs/guide/getting-started.md',
+    'packages/cli/README.md',
+    'apps/docs/packages/cli.md',
+  ]) {
+    const source = await readFile(path.join(root, file), 'utf8');
+    assert.match(source, /https:\/\/napplet\.run\/install\.ps1/, file);
+  }
+});
+
+test('SPA keeps the alpha gate and presents one installer command', async () => {
   const source = await readFile(path.join(root, 'apps/web/src/sections/GetStarted.svelte'), 'utf8');
   for (const text of [
-    'One path from install to deploy',
-    'macOS',
-    'Linux',
-    'Windows',
-    'napplet create my-napplet',
-    'napplet init',
-    'napplet skills install --to codex',
-    'pnpm verify',
-    'napplet deploy --dry-run',
+    'Install napplet in one command',
+    'curl -fsSL https://napplet.run/install.sh | sh',
+    'napplet guide',
+    'acceptedAlpha',
+    'alpha-gate',
+    'class:locked',
+    'Before you install',
   ]) {
     assert.match(source, new RegExp(text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   }
-  assert.doesNotMatch(source, /acceptedAlpha|alpha-gate|npx @napplet\/boilerplate/);
+  assert.equal(source.match(/const cmd =/g)?.length, 1);
+  assert.doesNotMatch(source, /command-row|napplet create my-napplet|npx @napplet\/boilerplate/);
 });
