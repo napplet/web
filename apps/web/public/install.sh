@@ -2,7 +2,17 @@
 set -eu
 
 RELEASE_BASE="${NAPPLET_CLI_RELEASE_BASE:-https://github.com/napplet/web/releases/download/napplet-cli}"
-INSTALL_DIR="${NAPPLET_CLI_INSTALL_DIR:-$HOME/.local/bin}"
+if [ "${NAPPLET_CLI_INSTALL_DIR+x}" = x ]; then
+  INSTALL_DIR=$NAPPLET_CLI_INSTALL_DIR
+else
+  # Upgrade the binary the shell already resolves when one exists. This avoids
+  # silently leaving an older napplet earlier on PATH (for example ~/.deno/bin).
+  existing_napplet=$(command -v napplet 2>/dev/null || true)
+  case "$existing_napplet" in
+    */napplet) INSTALL_DIR=${existing_napplet%/napplet} ;;
+    *) INSTALL_DIR="$HOME/.local/bin" ;;
+  esac
+fi
 PLATFORM="${NAPPLET_CLI_PLATFORM:-$(uname -s)}"
 ARCH="${NAPPLET_CLI_ARCH:-$(uname -m)}"
 
