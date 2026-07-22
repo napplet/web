@@ -18,12 +18,12 @@ Install a checksum-verified standalone binary without Deno:
 
 ```bash
 # macOS or Linux
-curl -fsSL https://raw.githubusercontent.com/napplet/web/main/scripts/install-napplet-cli.sh | sh
+curl -fsSL https://napplet.run/install.sh | sh
 ```
 
 ```powershell
 # Windows PowerShell
-irm https://raw.githubusercontent.com/napplet/web/main/scripts/install-napplet-cli.ps1 | iex
+irm https://napplet.run/install.ps1 | iex
 ```
 
 The installers verify the downloaded asset against the release's
@@ -38,9 +38,10 @@ deno install --global \
   jsr:@napplet/cli/cli
 ```
 
-Then check the binary:
+Then open the developer guide or check the command reference:
 
 ```bash
+napplet guide
 napplet --help
 ```
 
@@ -87,6 +88,7 @@ napplet deploy
 ## Commands
 
 ```bash
+napplet guide
 napplet create <directory> [--template <path-or-url>] [--force]
 napplet init [--force] [--root] [--source-dir <dir>] [--name <dtag>] [--title <title>] [--description <text>] [--archetype <slug:NAP-N>] [--relay <url>] [--server <url>]
 napplet skills <list|print|install> [args]

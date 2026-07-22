@@ -32,6 +32,7 @@ try {
     encoding: 'utf8',
   });
   assert.equal(installed.status, 0, installed.stderr);
+  assert.equal(installed.stdout.trim().split('\n').at(-1), "try running 'napplet guide'");
   assert.equal(await readFile(path.join(installDir, 'napplet'), 'utf8'), payload);
   const executed = spawnSync(path.join(installDir, 'napplet'), [], { encoding: 'utf8' });
   assert.equal(executed.status, 0);
@@ -47,9 +48,16 @@ try {
   assert.match(rejected.stderr, /checksum verification failed/);
   assert.equal(await readFile(path.join(installDir, 'napplet'), 'utf8'), payload);
 
+  const shell = await readFile(path.join(root, 'scripts/install-napplet-cli.sh'), 'utf8');
   const powershell = await readFile(path.join(root, 'scripts/install-napplet-cli.ps1'), 'utf8');
+  assert.equal(await readFile(path.join(root, 'apps/web/public/install.sh'), 'utf8'), shell);
+  assert.equal(await readFile(path.join(root, 'apps/web/public/install.ps1'), 'utf8'), powershell);
+  assert.match(shell, /\\033\[1;36mtry running/);
+  assert.match(shell, /\\033\[1;97m.*napplet guide/);
   assert.match(powershell, /Get-FileHash -Algorithm SHA256/);
   assert.match(powershell, /checksum verification failed/);
+  assert.match(powershell, /\[1;36mtry running/);
+  assert.match(powershell, /\[1;97m'napplet guide'/);
 
   console.log('installer smoke tests passed');
 } finally {

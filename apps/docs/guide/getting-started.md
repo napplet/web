@@ -10,17 +10,20 @@ actually *run* a napplet you also need a host shell — see
 
 ```bash
 # macOS or Linux
-curl -fsSL https://raw.githubusercontent.com/napplet/web/main/scripts/install-napplet-cli.sh | sh
+curl -fsSL https://napplet.run/install.sh | sh
 ```
 
 ```powershell
 # Windows PowerShell
-irm https://raw.githubusercontent.com/napplet/web/main/scripts/install-napplet-cli.ps1 | iex
+irm https://napplet.run/install.ps1 | iex
 ```
 
 Each installer downloads the platform binary and verifies it against the
 release's `SHA256SUMS` before replacing `napplet`. The
 [`@napplet/cli`](/packages/cli) page documents the JSR/Deno alternative.
+
+Run `napplet guide` at any point for the complete command sequence and links to
+the documentation for each stage.
 
 ## 2. Create the project
 

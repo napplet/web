@@ -13,6 +13,7 @@ import { createDeploySigner } from "./deploy-signer.ts";
 import { executeNetworkDeploy, networkDeploySucceeded } from "./deploy-network.ts";
 import { discoverNapplets } from "./discover.ts";
 import { collectFlags, first, type FlagBag } from "./flags.ts";
+import { commandGuide } from "./guide.ts";
 import {
   type InitWizardResult,
   normalizeNamedDTags,
@@ -37,6 +38,7 @@ import type { DeploySelection, NappletConfig } from "./types.ts";
 const HELP = `@napplet/cli
 
 Usage:
+  napplet guide
   napplet create <directory> [--template <path-or-url>] [--force]
   napplet init [--force] [--root] [--source-dir <dir>] [--name <dtag>] [--title <title>] [--description <text>] [--archetype <slug:NAP-N>] [--relay <url>] [--server <url>]
   napplet skills <list|print|install> [args]
@@ -52,10 +54,7 @@ Usage:
   napplet conformance [--config <file>] [--all] [-- <args>]
   napplet paja [--config <file>] [-- <args>]
 
-Developer path:
-  install -> create -> init -> skills -> build -> deploy --dry-run -> deploy
-  The standalone binary does not require Deno. create/skills require Node.js
-  because they run the maintained @napplet/boilerplate and @napplet/skills packages.
+Run "napplet guide" for the complete developer workflow and documentation.
 `;
 
 interface ParsedArgs {
@@ -80,6 +79,8 @@ export async function main(argv = Deno.args): Promise<number> {
         return 0;
       case "init":
         return await commandInit(parsed.rest);
+      case "guide":
+        return commandGuide();
       case "create":
         return await runPackageCli("@napplet/boilerplate", parsed.rest);
       case "skills":

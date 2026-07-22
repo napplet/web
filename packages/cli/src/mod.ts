@@ -4,13 +4,14 @@
  * Use `@napplet/cli/cli` when you want the `napplet` executable:
  *
  * ```sh
- * curl -fsSL https://raw.githubusercontent.com/napplet/web/main/scripts/install-napplet-cli.sh | sh
+ * curl -fsSL https://napplet.run/install.sh | sh
  * # Deno alternative:
  * deno install --global \
  *   --allow-read --allow-write --allow-run --allow-env --allow-net \
  *   --name napplet \
  *   jsr:@napplet/cli/cli
  *
+ * napplet guide
  * napplet create feed
  * cd feed
  * napplet init --relay wss://relay.example --server https://blossom.example --name feed --title Feed --archetype note:NAP-4

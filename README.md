@@ -17,13 +17,14 @@ Install the standalone CLI; Deno is not required:
 
 ```bash
 # macOS or Linux
-curl -fsSL https://raw.githubusercontent.com/napplet/web/main/scripts/install-napplet-cli.sh | sh
+curl -fsSL https://napplet.run/install.sh | sh
 
 # Windows PowerShell
-irm https://raw.githubusercontent.com/napplet/web/main/scripts/install-napplet-cli.ps1 | iex
+irm https://napplet.run/install.ps1 | iex
 ```
 
-Then follow one path from scaffold to deploy:
+Run `napplet guide` for the current workflow and links to the relevant docs, or
+follow the same path directly:
 
 ```bash
 napplet create my-napplet

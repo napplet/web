@@ -13,12 +13,12 @@ napplet tooling such as conformance and Paja.
 
 ```sh
 # macOS or Linux
-curl -fsSL https://raw.githubusercontent.com/napplet/web/main/scripts/install-napplet-cli.sh | sh
+curl -fsSL https://napplet.run/install.sh | sh
 ```
 
 ```powershell
 # Windows PowerShell
-irm https://raw.githubusercontent.com/napplet/web/main/scripts/install-napplet-cli.ps1 | iex
+irm https://napplet.run/install.ps1 | iex
 ```
 
 The installers select a supported release asset and verify it against
@@ -42,9 +42,10 @@ The permission set is intentionally explicit:
 - `--allow-env` reads signing and CI environment variables.
 - `--allow-net` uploads to Blossom servers, publishes to relays, and connects to remote signers.
 
-After installing, check the binary:
+After installing, open the developer guide or check the command reference:
 
 ```sh
+napplet guide
 napplet --help
 ```
 
@@ -101,6 +102,7 @@ What each step does:
 ## Commands
 
 ```sh
+napplet guide
 napplet create <directory> [--template <path-or-url>] [--force]
 napplet init [--force] [--root] [--source-dir <dir>] [--name <dtag>] [--title <title>] [--description <text>] [--archetype <slug:NAP-N>] [--relay <url>] [--server <url>]
 napplet skills <list|print|install> [args]
