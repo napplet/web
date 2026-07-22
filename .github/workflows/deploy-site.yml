@@ -61,6 +61,13 @@ jobs:
           cp -r apps/docs/.vitepress/dist/. site/docs/
           mkdir -p site/conformance
           cp -r apps/conformance/dist/. site/conformance/
+          # Bunny receives this directory verbatim. Keep the installer as a
+          # root-level static object so https://napplet.run/install.sh resolves
+          # without SPA fallback or extension rewriting.
+          test -s site/install.sh
+          test -s site/install.ps1
+          cmp apps/web/public/install.sh site/install.sh
+          cmp apps/web/public/install.ps1 site/install.ps1
           echo "Assembled $(find site -type f | wc -l) files into ./site"
 
       # ─── Bunny: upload to storage zone, then purge the pull zone ───────────
