@@ -4,10 +4,12 @@ import { assertEquals } from "./assert.ts";
 Deno.test("napplet guide presents the workflow with contextual and closing docs links", () => {
   const output = renderGuide();
   const commands = [
+    "curl -fsSL https://napplet.run/install.sh | sh",
     "napplet create my-napplet",
     "napplet init",
     "napplet skills install --to codex",
     "pnpm verify",
+    "napplet paja -- pnpm vite --host 127.0.0.1",
     "napplet deploy --dry-run",
     "napplet deploy",
   ];
