@@ -101,9 +101,11 @@ external source.
 - [x] **ONB-05**: CLI help, first-run prompts, scaffold completion, and init
   completion all route the developer to the next real command in the workflow
   and retain non-interactive flags for automation.
-- [x] **ONB-06**: The SPA get-started surface visibly presents the same ordered
-  install -> create -> init -> skills -> build -> deploy path, uses copyable
-  real commands, and remains usable without overlap or overflow on mobile and
+- [x] **ONB-06**: The SPA get-started surface retains the alpha warning and blur
+  acknowledgement, then presents one copyable hosted installer command and
+  directs developers to `napplet guide`. The guide presents the ordered create
+  -> init -> skills -> build -> deploy path with contextual and closing docs
+  links, and the SPA remains usable without overlap or overflow on mobile and
   desktop viewports.
 - [x] **ONB-07**: Root/package READMEs, VitePress getting-started/package pages,
   tutorials, and shipped skills use the same CLI-first workflow; stale primary

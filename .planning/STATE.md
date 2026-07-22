@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v0.34.0
 milestone_name: NIP-5D Runtime Injection
-status: "Phase 159.1 shipped — PR #171"
-last_updated: "2026-07-21T23:32:10.549Z"
-last_activity: "2026-07-21 — Phase 159.1 shipped in PR #171; PR #170 closed as superseded"
+status: "Phase 159.1 review feedback verified — PR #171"
+last_updated: "2026-07-22T00:19:07Z"
+last_activity: "2026-07-22 — PR #171 restored the gated one-command SPA and added hosted installers plus napplet guide"
 progress:
   total_phases: 150
   completed_phases: 2
@@ -29,8 +29,8 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 
 Phase: 160
 Plan: Not started
-Status: Phase 159.1 shipped — PR #171
-Last activity: 2026-07-21 — Phase 159.1 shipped in PR #171; PR #170 closed as superseded
+Status: Phase 159.1 review feedback verified — PR #171
+Last activity: 2026-07-22 — PR #171 restored the gated one-command SPA and added hosted installers plus `napplet guide`
 community/group-chat invite linked from the SPA and docs.
 
 ### Quick task 260715-ogy — COMPLETE
