@@ -67,8 +67,9 @@ describe('createReferenceShell — record + respond', () => {
 
   it('accepts a normalized invoke before delivering the endpoint-attested target payload', () => {
     const shell = createReferenceShell();
+    const sourceAtAcceptance: ReferenceEndpoint = { dTag: 'source-at-acceptance' };
 
-    expect(shell.handleFrom(authenticatedSource, {
+    expect(shell.handleFrom(sourceAtAcceptance, {
       type: 'intent.invoke',
       id: 'intent-1',
       request: {
@@ -92,11 +93,13 @@ describe('createReferenceShell — record + respond', () => {
       },
     ]);
 
+    sourceAtAcceptance.dTag = 'source-after-acceptance';
+
     expect(shell.takeDeliveries('reference-handler')).toEqual([
       {
         type: 'intent.deliver',
         delivery: {
-          sender: 'authenticated-source',
+          sender: 'source-at-acceptance',
           archetype: 'note',
           action: 'open',
           convention: 'napplet:note/open',
