@@ -341,7 +341,7 @@ export const upload: SdkDomain<'upload'> = {
  * Archetype intent dispatch (NAP-INTENT): invoke another napplet by its role
  * without addressing it directly. The shell resolves the role to an installed
  * napplet (honoring the user's default), opens/focuses its window, and delivers
- * the payload using the named NAP-N protocol. The shell owns resolution, default
+ * the payload using an opaque convention. The shell owns resolution, default
  * handling, window lifecycle, and the cross-napplet trust boundary.
  *
  * @example
@@ -366,8 +366,8 @@ export const intent: SdkDomain<'intent'> = {
   /**
    * Open a napplet by archetype (sugar for `action: "open"`).
    * @param archetype  Role slug to open
-   * @param payload    Opaque payload (typed by the resolved protocol)
-   * @param opts       Extra request fields (protocol, handler, behavior)
+   * @param payload    Opaque payload whose meaning is defined by the selected convention
+   * @param opts       Extra request fields (convention, handler, behavior)
    * @returns Promise resolving to the invocation result
    */
   open(
@@ -380,7 +380,7 @@ export const intent: SdkDomain<'intent'> = {
 
   /**
    * Check whether the runtime can currently satisfy an archetype and expose the
-   * manifest-derived contracts each candidate serves.
+   * manifest-derived conventions each candidate serves.
    * @param archetype  Role slug to check
    * @returns Promise resolving to the archetype availability
    */
