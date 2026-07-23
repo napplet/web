@@ -108,10 +108,11 @@ Default social/event boundary:
 - User pubkey/current-user snapshots use `identity`.
 - Local app state uses `storage`.
 - External bytes use `resource`; uploads use `upload`.
-- Cross-napplet handoff uses `inc` or `intent`. Record one opaque convention
-  name such as `napplet:note/open`, `napplet:profile/open`, or
-  `napplet:dm/open`; archetype metadata emits exactly
-  `["archetype", slug, convention]`.
+- Cross-napplet handoff uses `inc` or `intent`. Record one stable, queryless
+  convention identity such as `napplet:note/open`, `napplet:profile/open`, or
+  `napplet:dm/open`; archetype metadata emits one stable, queryless convention
+  identity in `['archetype', slug, convention, ...kindFields]`. Optional
+  `eventKinds?: number[]` becomes same-tag `kind:<number>` discovery metadata.
 - Keyboard shortcuts/action keybindings use `keys`.
 - Playback/now-playing uses `media`; notifications/badges use `notify`.
 - Settings/theme use `config` and `theme`.
@@ -136,12 +137,25 @@ This is outbound emit preprocessing, not a routing rule. Literal `+` stays
 plus after percent decoding. Fragments, malformed percent encoding, repeated
 decoded names, and a query with explicit payload throw synchronously; use a
 queryless topic with explicit payload for structured or non-text data.
-NAP-INTENT and manifest conventions remain opaque, while subscriptions and shell
-routing keep exact matching without query parsing, prefix, wildcard,
-canonicalization, or multi-convention behavior. See [NAP-INC draft PR #89 at
-its exact
-head](https://github.com/napplet/naps/blob/34ec29fc4039384a83dbd6b476f83c4fa0d038e6/naps/NAP-INC.md)
-for the living normative contract.
+
+NAP-INTENT accepts the same developer-facing URI through `invoke(uri, options?)`
+and `open(uri, options?)`. It derives a stable, queryless convention identity
+and optional text payload before handler resolution. Target apps register
+`onDelivery` during startup, validate received opaque payloads against that
+convention, and treat `delivery.sender` as runtime-attested sender provenance.
+`ok: true` says only that the runtime accepted delivery responsibility; it says
+nothing about target receipt or processing. Intent delivery is carrier-neutral,
+does not require INC, and must not be coupled to the source staying alive or to
+source/target overlap. Never add public intent or delivery identifiers and never
+supply `sender` from the caller.
+
+The object-shaped Vite and CLI metadata accept `eventKinds?: number[]`; CLI
+string inputs remain convention-only, with no kind delimiter or extra flag.
+Never put query text in manifest metadata. Subscriptions, manifest discovery,
+and routing keep exact matching without query parsing, prefix, wildcard,
+canonicalization, or multi-convention behavior. See [NAP-INC draft PR #89](https://github.com/napplet/naps/pull/89)
+and [NAP-INTENT draft PR #91](https://github.com/napplet/naps/pull/91) for the
+living normative contract.
 
 ## Step 3 - Run The Specialized Skills
 

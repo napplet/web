@@ -50,11 +50,13 @@ presence for optional fallbacks and do not invent a generic capability probe.
 
 ## Cross-napplet conventions
 
-For archetype-enabled napplets, use one opaque convention per exact
-three-element manifest tag: `["archetype", slug, convention]`, such as
-`["archetype", "note", "napplet:note/open"]`. A convention name advertises an
-interaction; it does not supply a payload schema, event-kind constraint, version,
-or negotiation mechanism.
+For archetype-enabled napplets, use a stable, queryless convention identity per
+manifest contract: `["archetype", slug, convention, ...kindFields]`, such as
+`["archetype", "note", "napplet:note/open", "kind:1"]`. The optional
+`eventKinds?: number[]` object metadata emits same-tag `kind:<number>` discovery
+fields. It is not a payload schema, and runtimes do not infer kinds from payload
+content. CLI string inputs remain convention-only; use object-shaped Vite or CLI
+metadata when event kinds are needed.
 
 INC topics use the same opaque names, including `napplet:note/open`,
 `napplet:profile/open`, and `napplet:dm/open`. For outbound NAP-INC only,
@@ -70,11 +72,23 @@ stable queryless topic, which subscribers use exactly. Fragments, malformed
 percent encoding, repeated decoded names, and query plus explicit payload throw
 synchronously; structured or non-text data uses explicit payload with a
 queryless topic. Validate every received payload against a real upstream
-convention when one exists. NAP-INTENT and manifest conventions remain opaque,
-and subscriptions/shell routing do not parse query text or introduce prefix,
-wildcard, canonicalization, payload-schema, or multi-convention matching. This
-non-normative guidance defers to [NAP-INC draft PR #89 at its exact
-head](https://github.com/napplet/naps/blob/34ec29fc4039384a83dbd6b476f83c4fa0d038e6/naps/NAP-INC.md).
+convention when one exists.
+
+NAP-INTENT uses the same URI boundary: `invoke(uri, options?)` and
+`open(uri, options?)` derive archetype, action, stable, queryless convention
+identity, and optional text payload. Target apps register `onDelivery` at
+startup, validate a delivery against its convention, and use the
+runtime-attested sender only as provenance. `ok: true` means the runtime has
+accepted delivery responsibility; it is not a target-receipt or processing
+signal. Intent delivery is carrier-neutral, independent of INC and source
+lifetime, and does not expose public intent or delivery identifiers. Callers
+never provide `sender`.
+
+Subscriptions, manifest discovery, and routing do not parse query text or
+introduce prefix, wildcard, canonicalization, payload-schema, or
+multi-convention matching. This non-normative guidance defers to [NAP-INC draft
+PR #89](https://github.com/napplet/naps/pull/89) and [NAP-INTENT draft PR
+#91](https://github.com/napplet/naps/pull/91).
 
 The expected generated-project validation is:
 

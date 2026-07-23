@@ -50,7 +50,7 @@ first-party installer. Current packages do not expose `window.napplet.shell`,
 `shell.ready()`, or `shell.supports(...)`; do not add a napplet-owned readiness
 handshake, generic capability probe, or synthetic shell namespace. A missing
 optional domain means "feature unavailable for this load"; a missing hard
-requirement should have been handled by the manifest load gate.
+requirement belongs to the manifest load gate.
 
 Napplet implementation code is **SDK-first**. Use `@napplet/sdk` wrappers for
 calls: import named, typed wrappers from `@napplet/sdk` for every domain call
@@ -146,25 +146,26 @@ export default defineConfig({
 
 The aggregate hash is computed into the manifest (`.nip5a-manifest.json`) and the signed event — it is **not** injected as a meta tag. Set `VITE_DEV_PRIVKEY_HEX` (hex 32-byte key) to produce a signed manifest in CI; dev builds work without it.
 
-### Describe archetypes with opaque conventions
+### Describe archetypes with stable conventions
 
 When the napplet fulfills an archetype role, use the current `archetypes` option
-and one opaque convention per entry. The emitted manifest tag is exactly
-`["archetype", slug, convention]`; for example,
-`["archetype", "note", "napplet:note/open"]`. The role and convention name
-advertise an accepted interaction name, not a payload schema or negotiation
-contract.
+and one stable, queryless convention identity per entry. The convention must use
+`napplet:<archetype>/<intent>` and its archetype segment must match `slug`.
+Optional `eventKinds?: number[]` values produce same-tag `kind:<number>`
+discovery metadata; they do not describe payload data and runtimes must not
+infer a kind from a payload.
 
 ```ts
 archetypes: [
-  { slug: 'note', convention: 'napplet:note/open' },
+  { slug: 'note', convention: 'napplet:note/open', eventKinds: [1, 30023] },
 ]
 ```
 
-Do not add event-kind, payload, version, or constraint fields to an archetype
-entry. Keep a convention string opaque after the documented boundary validation;
-if an app needs a convention that upstream has not defined, flag the gap rather
-than inventing a local wire contract.
+This emits `["archetype", "note", "napplet:note/open", "kind:1", "kind:30023"]`.
+The object-shaped Vite and CLI metadata accept `eventKinds`; a CLI string input
+remains convention-only, with no delimiter or extra flag for kinds. Never put a
+query in manifest discovery metadata, add a second archetype tag for a kind, or
+invent payload, version, or negotiation fields.
 
 ## Step 4 — Read And Publish Nostr Events Through Outbox First
 
@@ -288,7 +289,7 @@ sub.close();
 
 Also available: `getProfile()`, `getFollows()`, `getList(type)`, `getRelays()`, `getMutes()`, `getBlocked()`, `getBadges()`, `getZaps()`. Use `common` for profile lookup and social actions when available; `identity` is for the current shell user snapshot.
 
-## Step 9 — Inter-napplet events
+## Step 9 — Inter-napplet events and intents
 
 `inc.emit` broadcasts to topic subscribers; `inc.on` subscribes. Use exact,
 opaque convention topics such as `napplet:note/open`, `napplet:profile/open`,
@@ -307,19 +308,45 @@ const sub = inc.on('napplet:profile/open', (payload: unknown, event) => {
 sub.close();
 ```
 
-Only NAP-INC `emit(topic, payload?)` may use a queried convention URI. The
-runtime turns its shallow text query into payload and routes the stable queryless
-topic; subscribe to that stable queryless topic. Literal `+` stays plus and
+NAP-INC `emit(topic, payload?)` may use a queried convention URI. The runtime
+turns its shallow text query into payload and routes the stable queryless topic;
+subscribe to that stable queryless topic. Literal `+` stays plus and
 percent-decoding applies only to the emitted query text. A fragment, malformed
 percent encoding, repeated decoded name, or query plus explicit payload throws
 synchronously; use a queryless topic plus explicit payload for structured or
-non-text data. Payload choices remain local to a real upstream convention, so
-validate every received value and do not recreate numbered schemas. NAP-INTENT
-and manifest conventions remain opaque. Subscriptions and shell routing stay
-exact: do not parse a query there or add prefix, wildcard, canonicalization, or
-multi-convention matching. See [NAP-INC draft PR #89 at its exact
-head](https://github.com/napplet/naps/blob/34ec29fc4039384a83dbd6b476f83c4fa0d038e6/naps/NAP-INC.md)
-for the living normative contract.
+non-text data.
+
+NAP-INTENT uses the same URI boundary: `invoke(uri, options?)` and
+`open(uri, options?)` derive the archetype, action, stable, queryless convention
+identity, and optional text payload from the URI. Register `onDelivery` during
+startup, before application work can depend on an incoming intent:
+
+```ts
+import { intent } from '@napplet/sdk';
+
+const deliveries = intent.onDelivery((delivery) => {
+  // delivery.sender is runtime-attested sender provenance, not payload validation.
+  if (delivery.convention !== 'napplet:profile/open') return;
+  if (!isValidProfileOpenPayload(delivery.payload)) return;
+  openProfile(delivery.payload);
+});
+
+const accepted = await intent.open('napplet:profile/open?pubkey=abc123');
+if (!accepted.ok) showIntentError(accepted.error);
+```
+
+`ok: true` means the runtime accepted responsibility for delivery, not that a
+target has received or processed it. Delivery is carrier-neutral and does not
+depend on INC, the caller remaining alive, or any source/target overlap. The
+runtime owns retry, replacement, persistence, and lifecycle policy. Do not add
+public intent or delivery identifiers, and never provide `sender` yourself.
+
+Payload choices remain local to a real upstream convention, so validate every
+received value. Subscriptions, manifest discovery, and routing stay exact on the
+stable, queryless convention identity: do not parse queries there or add prefix,
+wildcard, canonicalization, or multi-convention matching. See [NAP-INC draft PR
+#89](https://github.com/napplet/naps/pull/89) and [NAP-INTENT draft PR
+#91](https://github.com/napplet/naps/pull/91) for the living normative contract.
 
 ## Step 10 — Domain availability
 
