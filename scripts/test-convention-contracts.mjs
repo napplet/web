@@ -10,21 +10,16 @@ import { basename, dirname, extname, join, relative } from 'node:path';
 const ACTIVE_ROOTS = ['README.md', 'packages', 'apps/docs', 'apps/conformance'];
 const TEXT_EXTENSIONS = new Set(['.json', '.md', '.mjs', '.ts', '.tsx']);
 const SKIPPED_DIRECTORIES = new Set(['dist', 'dist-bin', 'node_modules']);
-const REJECTION_TEST_PATHS = new Set([
-  'packages/vite-plugin/src/index.test.ts',
-  'packages/cli/tests/config_test.ts',
-  'packages/cli/tests/manifest_test.ts',
-]);
-const REJECTION_ASSERTION = /\b(?:assertThrows|toThrow|throws|catch)\b/;
-const REMOVED_INTENT_TYPE_TEST_PATHS = new Set([
-  'packages/nap/src/intent/shim.test.ts',
-]);
-const RETIRED_INTENT_PATTERN = /\bIntentContract\b|\b(?:protocols|contracts)\??\s*:/g;
-const RETIRED_PROTOCOL_FIELD_PATTERN = /\bprotocol\??\s*:/g;
 const NUMBERED_CONVENTION_PATTERN = /\bNAP-\d+\b/g;
 const SLUG_NUMBER_PATTERN = /\b[a-z][a-z0-9-]*:NAP-\d+\b/g;
-const ARCHETYPE_KIND_PATTERN = /\bkind:\d+\b/g;
 const INC_QUERY_DENIAL_PATTERN = /\b(?:convention\s+quer(?:y|ies)\s+(?:are|remain)\s+(?:forbidden|unresolved|unsupported)|(?:do not|does not)\s+(?:add|introduce|specify|use|allow|support|prescribe)[^.\n]{0,120}\bquery(?:\s*,\s*(?:prefix|wildcard|canonicalization))?|(?:query|encoding\/matching)\s+(?:\w+\s+){0,6}unresolved|web#183)\b/gi;
+const TEST_FILE_PATTERN = /(?:^|\/)(?:[^/]+\.test\.[cm]?[jt]sx?|tests\/.+\.[cm]?[jt]sx?)$/;
+const COMPLETED_SUMMARY_PATTERN = /(?:^|\/)\d+-\d+-SUMMARY\.md$/;
+const INTENT_RESULT_LIFECYCLE_PATTERN = /\b(?:handled|windowId)\s*:|\b(?:handled|windowId)\b\s+(?:result|field|property)\b|\bbehavior(?:\s*\.\s*newWindow|\s*:\s*\{[^}\n]*\bnewWindow\s*:)/g;
+const INTENT_DELIVERY_ID_PATTERN = /\b(?:deliveryId|intentId)\b|\btype\s*:\s*['"]intent\.deliver['"][^}\n]{0,240}\bid\s*:/gi;
+const QUERY_BEARING_HANDLER_METADATA_PATTERN = /\b(?:archetype|contracts?|handlers?)\b[^\n]{0,160}\bnapplet:[a-z0-9-]+\/[a-z0-9-]+\?[^'"\s`)\]}]+/gi;
+const INTENT_DELIVERY_INC_COUPLING_PATTERN = /\b(?:intent(?:\s+delivery|\.deliver)|delivery)\b[^.\n]{0,120}\b(?:requires?|depends?\s+on|uses?|is\s+coupled\s+to|through)\s+(?:public\s+)?(?:NAP-)?INC\b/gi;
+const FIXED_ARCHETYPE_TAG_SHAPE_PATTERN = /\barchetype\s+tags?\b[^.\n]{0,100}\b(?:must|should|can)\s+(?:contain|have|use)\s+(?:only\s+)?(?:exactly\s+)?three\s+(?:fields?|elements?|values?)\b|\b(?:only|exactly)\s+three[-\s](?:field|element|value)s?\b[^.\n]{0,100}\barchetype\s+tags?\b/gi;
 
 /**
  * Recursively collects text files below an active root without following links.
@@ -51,39 +46,27 @@ async function collectFiles(path) {
 }
 
 /**
- * Returns whether a legacy literal is part of one of the exact negative tests
- * that proves the Vite or CLI boundary rejects it.
+ * Returns whether a file contains test-only rejection fixtures rather than
+ * active authoring or package-contract guidance.
  *
  * @param {string} filePath - Repository-relative POSIX path.
- * @param {string} contents - Entire test file.
- * @returns {boolean} Whether the file is a dedicated rejection test.
+ * @returns {boolean} Whether the file is test-only.
  */
-function isDedicatedRejectionTest(filePath, contents) {
-  return REJECTION_TEST_PATHS.has(filePath) && REJECTION_ASSERTION.test(contents);
+function isTestFile(filePath) {
+  return TEST_FILE_PATTERN.test(filePath);
 }
 
 /**
- * Leaves the intentional type-level assertion for the removed IntentContract
- * export outside the active authoring guidance scan.
+ * Identifies active intent contract surfaces without treating generic terms
+ * such as "handled" as protocol guidance.
  *
  * @param {string} filePath - Repository-relative POSIX path.
  * @param {string} contents - Entire test file.
- * @returns {boolean} Whether the file proves the retired type stays absent.
+ * @returns {boolean} Whether the file owns intent contract behavior.
  */
-function isRemovedIntentTypeTest(filePath, contents) {
-  return REMOVED_INTENT_TYPE_TEST_PATHS.has(filePath)
-    && contents.includes('@ts-expect-error IntentContract is intentionally removed');
-}
-
-/**
- * Limits the retired singular `protocol` field check to intent contracts so
- * generic protocol properties (such as URLs or WebRTC) stay outside this guard.
- *
- * @param {string} filePath - Repository-relative POSIX path.
- * @returns {boolean} Whether the path owns an intent contract.
- */
-function isIntentContractPath(filePath) {
-  return filePath.includes('/intent/') || filePath.endsWith('/intent.ts');
+function isIntentContractSurface(filePath, contents) {
+  return /(?:^|\/)intent(?:[-_/\.]|s?\.md$)/i.test(filePath)
+    || /\b(?:NAP-INTENT|Intent(?:Result|Delivery|Contract|Candidate|Request)|intent\.(?:invoke|open|deliver))\b/.test(contents);
 }
 
 /**
@@ -168,17 +151,17 @@ export async function scanConventionContracts(root) {
       if (error && typeof error === 'object' && error.code === 'ENOENT') continue;
       throw error;
     }
-    if (isDedicatedRejectionTest(filePath, contents) || isRemovedIntentTypeTest(filePath, contents)) continue;
+    if (isTestFile(filePath) || COMPLETED_SUMMARY_PATTERN.test(filePath)) continue;
 
-    addMatches(violations, filePath, contents, 'intent-contract', RETIRED_INTENT_PATTERN);
-    if (isIntentContractPath(filePath)) {
-      addMatches(violations, filePath, contents, 'intent-contract', RETIRED_PROTOCOL_FIELD_PATTERN);
+    if (isIntentContractSurface(filePath, contents)) {
+      addMatches(violations, filePath, contents, 'intent-result-lifecycle', INTENT_RESULT_LIFECYCLE_PATTERN);
+      addMatches(violations, filePath, contents, 'intent-delivery-id', INTENT_DELIVERY_ID_PATTERN);
     }
     addMatches(violations, filePath, contents, 'numbered-convention', NUMBERED_CONVENTION_PATTERN);
     addMatches(violations, filePath, contents, 'slug-number-example', SLUG_NUMBER_PATTERN);
-    if (/\barchetype\b/i.test(contents)) {
-      addMatches(violations, filePath, contents, 'archetype-kind-constraint', ARCHETYPE_KIND_PATTERN);
-    }
+    addMatches(violations, filePath, contents, 'query-bearing-handler-metadata', QUERY_BEARING_HANDLER_METADATA_PATTERN);
+    addMatches(violations, filePath, contents, 'intent-delivery-inc-coupling', INTENT_DELIVERY_INC_COUPLING_PATTERN);
+    addMatches(violations, filePath, contents, 'fixed-archetype-tag-shape', FIXED_ARCHETYPE_TAG_SHAPE_PATTERN);
     if (isActiveIncGuidance(filePath, contents)) {
       addMatches(violations, filePath, contents, 'inc-query-transposition-denial', INC_QUERY_DENIAL_PATTERN);
     }
