@@ -3,8 +3,11 @@ import {
   createReferenceShell,
   attachReferenceShell,
   REFERENCE_PUBKEY,
+  type ReferenceEndpoint,
   type MessageWindowLike,
 } from './reference-shell.js';
+
+const authenticatedSource: ReferenceEndpoint = { dTag: 'authenticated-source' };
 
 describe('createReferenceShell — record + respond', () => {
   it('records each inbound envelope with a verdict and timestamp', () => {
@@ -37,7 +40,7 @@ describe('createReferenceShell — record + respond', () => {
     ]);
   });
 
-  it('advertises the reference intent handler through an opaque convention', () => {
+  it('advertises the reference intent handler through queryless contracts', () => {
     const shell = createReferenceShell();
 
     expect(shell.handle({ type: 'intent.available', id: 'intent-1', archetype: 'note' })).toEqual([
@@ -52,6 +55,7 @@ describe('createReferenceShell — record + respond', () => {
               dTag: 'reference-handler',
               actions: ['open'],
               conventions: ['napplet:note/open'],
+              contracts: [{ convention: 'napplet:note/open', eventKinds: [1, 30023] }],
               isDefault: true,
             },
           ],
@@ -59,6 +63,101 @@ describe('createReferenceShell — record + respond', () => {
         },
       },
     ]);
+  });
+
+  it('accepts a normalized invoke before delivering the endpoint-attested target payload', () => {
+    const shell = createReferenceShell();
+
+    expect(shell.handleFrom(authenticatedSource, {
+      type: 'intent.invoke',
+      id: 'intent-1',
+      request: {
+        archetype: 'note',
+        action: 'open',
+        convention: 'napplet:note/open',
+        payload: { event: 'abc123' },
+        sender: 'forged-source',
+      },
+    })).toEqual([
+      {
+        type: 'intent.invoke.result',
+        id: 'intent-1',
+        result: {
+          ok: true,
+          archetype: 'note',
+          action: 'open',
+          convention: 'napplet:note/open',
+          handler: 'reference-handler',
+        },
+      },
+    ]);
+
+    expect(shell.takeDeliveries('reference-handler')).toEqual([
+      {
+        type: 'intent.deliver',
+        delivery: {
+          sender: 'authenticated-source',
+          archetype: 'note',
+          action: 'open',
+          convention: 'napplet:note/open',
+          payload: { event: 'abc123' },
+        },
+      },
+    ]);
+    expect(shell.takeDeliveries('reference-handler')).toEqual([]);
+  });
+
+  it('rejects normalized intent conflicts before handler resolution or target delivery', () => {
+    const shell = createReferenceShell();
+
+    expect(shell.handleFrom(authenticatedSource, {
+      type: 'intent.invoke',
+      id: 'intent-conflict',
+      request: {
+        archetype: 'note',
+        action: 'edit',
+        convention: 'napplet:note/open?event=abc123',
+      },
+    })).toEqual([
+      {
+        type: 'intent.invoke.result',
+        id: 'intent-conflict',
+        result: { ok: false, error: expect.any(String) },
+      },
+    ]);
+    expect(shell.takeDeliveries('reference-handler')).toEqual([]);
+  });
+
+  it('routes INC only to the exact stable subscriber and derives sender from its endpoint', () => {
+    const shell = createReferenceShell();
+
+    expect(shell.handleFrom(authenticatedSource, {
+      type: 'inc.emit',
+      topic: 'napplet:note/open',
+      payload: { event: 'abc123' },
+    })).toEqual([]);
+    expect(shell.takeDeliveries('reference-subscriber')).toEqual([
+      {
+        type: 'inc.event',
+        topic: 'napplet:note/open',
+        sender: 'authenticated-source',
+        payload: { event: 'abc123' },
+      },
+    ]);
+
+    shell.handleFrom(authenticatedSource, {
+      type: 'inc.emit',
+      topic: 'napplet:note/open?event=abc123',
+      payload: { event: 'abc123' },
+    });
+    expect(shell.takeDeliveries('reference-subscriber')).toEqual([]);
+
+    shell.handleFrom(authenticatedSource, {
+      type: 'inc.emit',
+      topic: 'napplet:note/open',
+      sender: 'forged-source',
+    });
+    expect(shell.takeDeliveries('reference-subscriber')).toEqual([]);
   });
 
   it('decodes data URLs for resource.bytes responses without fetch', async () => {
