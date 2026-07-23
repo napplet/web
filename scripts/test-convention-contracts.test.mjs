@@ -24,7 +24,7 @@ async function writeFixture(root, relativePath, contents) {
  * Creates an isolated active-tree fixture for the scanner tests.
  *
  * @param {(root: string) => Promise<void>} arrange - Fixture setup callback.
- * @returns {Promise<ReturnType<typeof scanConventionContracts>>}
+ * @returns {Promise<Awaited<ReturnType<typeof scanConventionContracts>>>}
  */
 async function scanFixture(arrange) {
   const root = await mkdtemp(join(tmpdir(), 'napplet-convention-contracts-'));
@@ -37,117 +37,81 @@ async function scanFixture(arrange) {
   }
 }
 
-test('fails for every retired convention vocabulary family in active files', async () => {
+test('permits adopted intent contracts and optional same-tag event kinds', async () => {
   const violations = await scanFixture(async (root) => {
     await writeFixture(root, 'packages/core/src/types/intent.ts', `
-      export interface IntentContract { protocol: string; }
-      export const candidate = { protocols: ['NAP-4'], contracts: [] };
+      export interface IntentContract { convention: string; eventKinds?: number[]; }
+      export const candidate = { contracts: [{ convention: 'napplet:note/open', eventKinds: [1] }] };
+      export const delivery = { type: 'intent.deliver', delivery: { sender: 'runtime' } };
     `);
-    await writeFixture(root, 'apps/docs/guide/conventions.md', `
-      Configure note:NAP-4 before invoking an intent.
+    await writeFixture(root, 'apps/docs/guide/intents.md', `
+      An archetype tag may include optional same-tag kind:1 fields.
+      Intent invocation accepts napplet:note/open?target=abc, while handler metadata stays queryless.
+    `);
+  });
+
+  assert.deepEqual(violations, []);
+});
+
+test('rejects superseded intent result, delivery, metadata, INC-coupling, and tag-shape guidance', async () => {
+  const violations = await scanFixture(async (root) => {
+    await writeFixture(root, 'packages/core/src/types/intent.ts', `
+      const result = { handled: true, windowId: 'window-1', behavior: { newWindow: true } };
+      const message = { type: 'intent.deliver', id: 'delivery-1' };
     `);
     await writeFixture(root, 'packages/vite-plugin/src/manifest.ts', `
-      const tag = ['archetype', 'note', 'kind:1'];
+      const tag = ['archetype', 'note', 'napplet:note/open?kind=1'];
+    `);
+    await writeFixture(root, 'apps/docs/guide/intents.md', `
+      Intent delivery requires NAP-INC.
+      Archetype tags must contain exactly three fields.
     `);
   });
+  const families = new Set(violations.map(({ family }) => family));
 
-  assert.equal(violations.some(({ family }) => family === 'intent-contract'), true);
-  assert.equal(violations.some(({ family }) => family === 'numbered-convention'), true);
-  assert.equal(violations.some(({ family }) => family === 'slug-number-example'), true);
-  assert.equal(violations.some(({ family }) => family === 'archetype-kind-constraint'), true);
+  assert.deepEqual(families, new Set([
+    'intent-result-lifecycle',
+    'intent-delivery-id',
+    'query-bearing-handler-metadata',
+    'intent-delivery-inc-coupling',
+    'fixed-archetype-tag-shape',
+  ]));
 });
 
-test('passes current convention fields and opaque convention examples', async () => {
+test('retains numbered-NAP retirement and exact-routing guidance checks', async () => {
   const violations = await scanFixture(async (root) => {
-    await writeFixture(root, 'packages/core/src/types/intent.ts', `
-      export interface IntentRequest { convention?: string; }
-      export const candidate = { conventions: ['napplet:note/open'] };
+    await writeFixture(root, 'packages/core/src/legacy.ts', `
+      export const convention = 'note:NAP-4';
     `);
-    await writeFixture(root, 'apps/docs/guide/conventions.md', `
-      Use napplet:note/open as an opaque convention name.
-    `);
-  });
-
-  assert.deepEqual(violations, []);
-});
-
-test('excludes changelogs, archived planning, and the root skills symlink', async () => {
-  const violations = await scanFixture(async (root) => {
-    await writeFixture(root, 'CHANGELOG.md', 'The old note:NAP-4 contract shipped previously.');
-    await writeFixture(root, '.planning/phases/160/PLAN.md', 'protocols: [NAP-4]');
-    await writeFixture(root, 'packages/skills/skills/build-napplet/SKILL.md', 'current convention');
-    await symlink('packages/skills/skills', join(root, 'skills'));
-  });
-
-  assert.deepEqual(violations, []);
-});
-
-test('allows unrelated WebRTC, URL, Nostr-kind, and workspace dependency uses', async () => {
-  const violations = await scanFixture(async (root) => {
-    await writeFixture(root, 'packages/core/src/types/webrtc.ts', `
-      export const config = { iceTransportPolicy: 'relay' };
-      export const url = new URL('wss://relay.example');
-    `);
-    await writeFixture(root, 'packages/core/src/types/events.ts', `
-      export const event = { kind: 1, protocol: 'NIP-5D', label: 'kind:1' };
-    `);
-    await writeFixture(root, 'packages/core/package.json', `
-      { "dependencies": { "@napplet/nap": "workspace:*" } }
-    `);
-  });
-
-  assert.deepEqual(violations, []);
-});
-
-test('allows legacy literals only in dedicated Vite and CLI rejection tests', async () => {
-  const violations = await scanFixture(async (root) => {
-    await writeFixture(root, 'packages/vite-plugin/src/index.test.ts', `
-      expect(() => validate('note:NAP-4')).toThrow();
-      expect(() => validate('kind:1')).toThrow();
-    `);
-    await writeFixture(root, 'packages/cli/tests/config_test.ts', `
-      assertThrows(() => parseArchetypeContract('note:NAP-4'));
-      assertThrows(() => parseArchetypeContract('kind:1'));
-    `);
-  });
-
-  assert.deepEqual(violations, []);
-});
-
-test('allows the intentional removed IntentContract type assertion', async () => {
-  const violations = await scanFixture(async (root) => {
-    await writeFixture(root, 'packages/nap/src/intent/shim.test.ts', `
-      // @ts-expect-error IntentContract is intentionally removed from the NAP intent barrel.
-      import type { IntentContract } from './index.js';
-    `);
-  });
-
-  assert.deepEqual(violations, []);
-});
-
-test('rejects obsolete INC convention-query denial guidance in active authoring prose', async () => {
-  const violations = await scanFixture(async (root) => {
-    await writeFixture(root, 'packages/skills/skills/build-napplet/SKILL.md', `
+    await writeFixture(root, 'apps/docs/guide/inc.md', `
       INC convention queries are forbidden because topic routing is exact.
     `);
   });
+  const families = new Set(violations.map(({ family }) => family));
 
-  assert.equal(
-    violations.some(({ family }) => family === 'inc-query-transposition-denial'),
-    true,
-  );
+  assert.equal(families.has('numbered-convention'), true);
+  assert.equal(families.has('slug-number-example'), true);
+  assert.equal(families.has('inc-query-transposition-denial'), true);
 });
 
-test('allows NAP-INC emit transposition and unrelated query APIs', async () => {
+test('excludes unrelated language, historical records, negative tests, and the root skills symlink', async () => {
   const violations = await scanFixture(async (root) => {
-    await writeFixture(root, 'packages/nap/README.md', `
-      NAP-INC emit('napplet:profile/open?pubkey=abc123') transposes a shallow
-      text payload before it routes the stable topic exactly. NAP-INTENT and
-      manifest conventions remain opaque.
+    await writeFixture(root, 'packages/core/src/dispatch.ts', `
+      export function dispatch() { return { handled: true, kind: 1, label: 'kind:1' }; }
     `);
-    await writeFixture(root, 'packages/core/src/url.ts', `
-      const query = new URL('https://example.com/?page=1').searchParams;
+    await writeFixture(root, 'packages/core/CHANGELOG.md', `
+      Intent delivery requires INC and archetype tags have exactly three fields.
     `);
+    await writeFixture(root, 'apps/docs/guide/161-24-SUMMARY.md', `
+      Intent delivery requires INC and archetype tags have exactly three fields.
+    `);
+    await writeFixture(root, 'packages/core/src/intent-contract.test.ts', `
+      // @ts-expect-error IntentResult does not expose handled or windowId.
+      const message = { type: 'intent.deliver', id: 'delivery-1' };
+      const tag = ['archetype', 'note', 'napplet:note/open?kind=1'];
+    `);
+    await writeFixture(root, 'packages/skills/skills/build-napplet/SKILL.md', 'valid guidance');
+    await symlink('packages/skills/skills', join(root, 'skills'));
   });
 
   assert.deepEqual(violations, []);
