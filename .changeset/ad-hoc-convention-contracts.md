@@ -4,10 +4,13 @@
 "@napplet/core": minor
 "@napplet/nap": minor
 "@napplet/sdk": minor
+"@napplet/shim": minor
 "@napplet/vite-plugin": minor
 ---
 
-Replace retired numbered convention contracts with opaque archetype conventions
-through the public Core, NAP, SDK, Vite, CLI, and conformance surfaces. NAP-INC
-now exposes `emit(topic, payload?)` and transposes queried convention URIs only
-at outbound emit time before exact stable-topic routing.
+Adopt the draft PR #89-#91 convention and intent contracts across the public
+types, bindings, runtime injection, manifest tooling, CLI, and reference shell:
+queryless exact identities with URI-to-text-payload transposition at `emit` and
+`invoke`/`open`, runtime-attested sender, immediate acceptance followed by
+source-independent no-ID target delivery, and optional same-tag event-kind
+discovery metadata.
