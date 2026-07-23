@@ -373,6 +373,7 @@ Last activity: 2026-06-16 — Phase 150 (b7a7f7e) CLI+fixtures+e2e+CI; Phase 151
 
 ### Roadmap Evolution
 
+- Phase 161 added: Ad-hoc Convention Package Contracts — chase `napplet/naps@6461e4b` across package types, manifest tooling, CLI, conformance, docs, skills, and tests.
 - Phase 159.1 inserted after Phase 159: CLI-first developer onboarding flow (URGENT)
 
 ### Decisions

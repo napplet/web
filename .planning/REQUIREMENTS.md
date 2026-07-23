@@ -114,6 +114,29 @@ external source.
   installer workflows have static/smoke validation, publishable packages have
   changesets, and full build/type/unit/docs/slop/diff gates pass before shipping.
 
+## Ad-hoc Convention Requirements
+
+- [ ] **CONV-PKG-01**: `@napplet/core` and `@napplet/nap/intent` expose only
+  current NAP-INTENT `convention` / `conventions` fields; active public types,
+  exports, shims, tests, and examples contain no numbered-protocol or
+  non-spec `IntentContract` / `contracts` compatibility surface.
+- [ ] **CONV-PKG-02**: Vite archetype metadata accepts opaque convention
+  strings and emits exactly `["archetype", "<slug>", "<convention>"]`,
+  rejecting numbered `NAP-N` identifiers and omitting non-spec `kind:<n>`
+  constraints.
+- [ ] **CONV-PKG-03**: CLI config, parsing, prompts, output, and manifest
+  emission use opaque ad-hoc conventions and reject the removed numbered
+  protocol form.
+- [ ] **CONV-PKG-04**: Active INC constants and examples use the advisory
+  `napplet:<archetype>/<intent>` namespace while preserving exact opaque topic
+  routing and adding no wildcard, prefix, or query-normalization semantics.
+- [ ] **CONV-PKG-05**: Conformance, current author documentation, and shipped
+  skills use the unnumbered convention model; changelogs and archived planning
+  retain their historical meaning.
+- [ ] **CONV-PKG-06**: Every changed publishable package has an appropriate
+  changeset, and build, type-check, unit, conformance, docs/link, AI-slop,
+  active-surface, and diff gates pass.
+
 ## Out of Scope
 
 - Defining a replacement generic bootstrap, version negotiation, diagnostics, or
@@ -159,5 +182,11 @@ external source.
 | ONB-06 | Phase 159.1 | Complete |
 | ONB-07 | Phase 159.1 | Complete |
 | ONB-08 | Phase 159.1 | Complete |
+| CONV-PKG-01 | Phase 161 | Planned |
+| CONV-PKG-02 | Phase 161 | Planned |
+| CONV-PKG-03 | Phase 161 | Planned |
+| CONV-PKG-04 | Phase 161 | Planned |
+| CONV-PKG-05 | Phase 161 | Planned |
+| CONV-PKG-06 | Phase 161 | Planned |
 
-**Coverage:** 30/30 v0.34.0 requirements mapped.
+**Coverage:** 36/36 requirements mapped.
