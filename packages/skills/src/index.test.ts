@@ -111,6 +111,9 @@ describe('skill registry', () => {
     expect(buildSkill).toContain('config.registerSchema');
     expect(buildSkill).not.toContain('configSchema');
     expect(buildSkill).not.toContain('<meta name="napplet-type">');
+    const testSkill = readSkill('test-napplet');
+    expect(testSkill).not.toContain('napplet-type');
+    expect(testSkill).toContain('signed manifest tags');
 
     for (const skill of [...affectedSkills, 'test-napplet']) {
       expect(readSkill(skill)).not.toContain('targetAuthors');

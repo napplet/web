@@ -685,23 +685,25 @@ pnpm verify
 That command type-checks the app, builds the single-file artifact, and runs
 `napplet-conformance` against `dist/index.html`.
 
-Inspect the metadata the shell will read:
+Inspect the generated signed manifest tags:
 
 ```bash
 pnpm build
-grep -n "napplet-type\\|napplet-requires" dist/index.html
+grep -n '"d"\\|"requires"' dist/.nip5a-manifest.json
 ```
 
-Expected metadata:
+Expected manifest tags include:
 
-```html
-<meta name="napplet-type" content="notedrafts">
-<meta name="napplet-requires" content="identity,outbox,storage">
+```json
+["d", "notedrafts"]
+["requires", "identity"]
+["requires", "outbox"]
+["requires", "storage"]
 ```
 
-The built `dist/index.html` is the file you test and publish. Do not point
-conformance or deploy tooling at source `index.html`; it still contains the Vite
-`/src/main.ts` module reference.
+The built `dist/index.html` is the file you test and publish, and its signed
+manifest carries the protocol metadata. Do not point conformance or deploy tooling
+at source `index.html`; it still contains the Vite `/src/main.ts` module reference.
 
 Preview the CLI-owned metadata and manifest before any network write:
 

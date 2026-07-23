@@ -1,12 +1,11 @@
 /**
- * @napplet/vite-plugin — manifest resolution, dev meta tags, and bundle writing.
+ * @napplet/vite-plugin — manifest resolution and bundle writing.
  *
- * Wires together schema discovery/validation, dev-mode meta-tag injection, and
- * the build-time napplet manifest pipeline (NIP-5A aggregateHash computation,
- * NIP-5D kind `35129` signing, artifact rewrites, meta-tag injection).
+ * Wires together schema discovery/validation and the build-time napplet manifest
+ * pipeline (NIP-5A aggregateHash computation, NIP-5D kind `35129` signing, and
+ * artifact rewrites).
  */
 
-import type { HtmlTagDescriptor } from 'vite';
 import type { NappletConfigSchema } from '@napplet/nap/config/types';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -48,53 +47,6 @@ function validateResolvedSchema(schema: NappletConfigSchema | null, source: stri
     const body = validation.errors.map((e) => `  - ${e}`).join('\n');
     throw new Error(`${header}\n${body}`);
   }
-}
-
-/**
- * Build the `transformIndexHtml` tag set: the napplet-type meta and optional
- * requires / config-schema meta tags.
- *
- * No `napplet-aggregate-hash` meta is emitted: a file cannot contain a hash that
- * covers itself, so the aggregate hash lives only in the external
- * `.nip5a-manifest.json` (and the signed kind-35129 event), where the shell /
- * relay reads it. It is not a NIP-5D/5A index.html artifact.
- *
- * @param options - the plugin options.
- * @param state - resolved plugin state (schema).
- * @param _isDev - true when Vite is serving (dev). Currently unused.
- * @returns Vite index-html transform descriptors injected into `<head>`.
- */
-export function buildIndexHtmlTags(
-  options: Nip5aManifestOptions,
-  state: ManifestPluginState,
-  _isDev: boolean,
-): HtmlTagDescriptor[] {
-  const tags: HtmlTagDescriptor[] = [
-    {
-      tag: 'meta',
-      attrs: { name: 'napplet-type', content: options.nappletType },
-      injectTo: 'head' as const,
-    },
-  ];
-
-  const requires = resolvedRequirements(options.requires, state);
-  if (requires.length > 0) {
-    tags.push({
-      tag: 'meta',
-      attrs: { name: 'napplet-requires', content: requires.join(',') },
-      injectTo: 'head' as const,
-    });
-  }
-
-  if (state.resolvedSchema !== null) {
-    tags.push({
-      tag: 'meta',
-      attrs: { name: 'napplet-config-schema', content: JSON.stringify(state.resolvedSchema) },
-      injectTo: 'head' as const,
-    });
-  }
-
-  return tags;
 }
 
 /**

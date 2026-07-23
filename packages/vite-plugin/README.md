@@ -1,19 +1,12 @@
 # @napplet/vite-plugin
 
-> Vite plugin for napplet local development -- injects aggregate hash meta tags and optionally generates NIP-5A manifests for testing.
+> Vite plugin for napplet local development that optionally generates NIP-5A manifests for testing.
 
 **This is a development tool.** For production deployment of napplets to nsites, use community deploy tools like [nsyte](https://github.com/nicefarm/nsyte) which handle NIP-5A event creation and relay publishing.
 
 ## Getting Started
 
 ### What This Plugin Does
-
-During **dev mode**, the plugin injects empty meta tags into your HTML so the napplet shim can find them:
-
-```html
-<meta name="napplet-aggregate-hash" content="">
-<meta name="napplet-napp-type" content="my-napp">
-```
 
 At **build time** (with `VITE_DEV_PRIVKEY_HEX` set), the plugin:
 
@@ -22,9 +15,7 @@ At **build time** (with `VITE_DEV_PRIVKEY_HEX` set), the plugin:
 3. Computes the aggregate hash per the NIP-5A algorithm (over the `path` tags alone)
 4. Creates a NIP-5D **kind 35129** named-napplet manifest event — NIP-5A tag schema: one `['path', '/abs/path', '<sha256>']` per file plus one aggregate `['x', '<aggregateHash>', 'aggregate']` tag — and signs it
 5. Writes `.nip5a-manifest.json` to `dist/`
-6. Updates the meta tag in `dist/index.html` with the computed hash
-7. Injects `<meta name="napplet-config-schema">` into `dist/index.html` if a `configSchema` is declared or discovered
-8. Embeds the schema as a `['config', ...]` tag on the manifest (NOT folded into `aggregateHash` — the aggregate is `path` tags only, per NIP-5D §Identity)
+6. Embeds an optional schema as a `['config', ...]` tag on the manifest (NOT folded into `aggregateHash` — the aggregate is `path` tags only, per NIP-5D §Identity)
 
 The build-time manifest is for verifying the hash computation workflow locally, not for deploying to relays.
 
@@ -71,7 +62,6 @@ export default defineConfig({
 
 The napp type identifier (e.g., `'feed'`, `'chat'`, `'profile'`). This value is:
 
-- Injected as the `content` of the `<meta name="napplet-napp-type">` tag
 - Used as the `d` tag in the kind 35129 manifest event
 
 #### requires (optional)
@@ -81,7 +71,6 @@ The napp type identifier (e.g., `'feed'`, `'chat'`, `'profile'`). This value is:
 An array of bare NAP domain names this napplet requires from its host shell
 (e.g., `['outbox', 'storage']`), or an opt-in inference config. When set:
 
-- Injects a `<meta name="napplet-requires">` tag into HTML (comma-separated domain names)
 - Adds `['requires', 'domain']` tags to the kind 35129 manifest event
 
 With inference enabled, the plugin scans statically visible source usage of
@@ -141,7 +130,6 @@ Declares a JSON Schema (draft-07+) describing the napplet's per-napplet configur
 
 - Validates the schema against the NAP-CONFIG Core Subset (see Build-Time Guards below)
 - Embeds the schema as a `['config', JSON.stringify(schema)]` tag on the kind 35129 manifest event
-- Injects `<meta name="napplet-config-schema" content="{json}">` into `dist/index.html` so the napplet's shim can read it synchronously at install time
 
   The schema is **not** folded into `aggregateHash`: per NIP-5D §Identity the aggregate is the NIP-5A hash of the `path` tags alone, so a runtime can recompute and verify it. The `config` tag still carries the schema for a shell to act on.
 
@@ -159,7 +147,7 @@ Declares a JSON Schema (draft-07+) describing the napplet's per-napplet configur
 2. `config.schema.json` at the project root -- convention file
 3. `napplet.config.ts` / `napplet.config.js` / `napplet.config.mjs` at the project root, exporting a `configSchema` named export (or on the default export) -- dynamic import fallback
 
-If none of the three paths resolve a schema, manifest/meta emission for the config tag is skipped silently -- build produces bytes identical to a pre-phase-114 napplet.
+If none of the three paths resolve a schema, manifest emission for the config tag is skipped silently.
 
 #### archetypes (optional)
 
@@ -353,17 +341,10 @@ nip5aManifest({
 });
 ```
 
-### What gets injected
+### Manifest capability declaration
 
-With `requires: ['outbox', 'storage']`, the plugin injects into your HTML `<head>`:
-
-```html
-<meta name="napplet-aggregate-hash" content="">
-<meta name="napplet-napp-type" content="my-feed">
-<meta name="napplet-requires" content="outbox,storage">
-```
-
-At build time (with `VITE_DEV_PRIVKEY_HEX` set), the manifest event also includes `requires` tags:
+With `requires: ['outbox', 'storage']`, the signed manifest event includes
+the corresponding `requires` tags:
 
 ```json
 {
@@ -380,7 +361,7 @@ At build time (with `VITE_DEV_PRIVKEY_HEX` set), the manifest event also include
 
 ### Runtime compatibility checking
 
-The host shell reads `<meta name="napplet-requires">` during napplet initialization and compares against its supported NAP domains. Napplets can also check at runtime:
+The host shell reads the signed manifest `requires` tags during napplet initialization and compares them against its supported NAP domains. Napplets can also check at runtime:
 
 ```ts
 if (!window.napplet?.outbox) {
@@ -409,16 +390,13 @@ inline scripts in your built HTML are preserved verbatim.
 
 ## How It Works
 
-### Dev Mode (`transformIndexHtml`)
+### HTML transforms (`transformIndexHtml`)
 
-Injects two meta tags into the HTML `<head>`:
+The plugin leaves protocol metadata out of `index.html`. Its only HTML transforms
+are the optional plain `<title>` and `<meta name="description">` values.
 
-```html
-<meta name="napplet-aggregate-hash" content="">
-<meta name="napplet-napp-type" content="<nappletType>">
-```
-
-The empty aggregate hash tells the shell this is a development build. The shell reads these tags during napplet registration to resolve the aggregate hash for ACL scoping.
+The shell resolves napplet identity and capability metadata from the signed
+manifest event, not from `index.html` protocol meta tags.
 
 ### Build Mode (`closeBundle`)
 
@@ -432,7 +410,6 @@ Only runs if `VITE_DEV_PRIVKEY_HEX` is set:
 6. Creates a kind 35129 manifest event with one `['path', '/abs/path', <sha256>]` tag per file, one aggregate `['x', <aggregateHash>, 'aggregate']` tag, and `requires` tags if configured
 7. Signs with the test private key
 8. Writes `.nip5a-manifest.json` to `dist/`
-9. Updates the `napplet-aggregate-hash` meta tag in `dist/index.html`
 
 ## API Reference
 

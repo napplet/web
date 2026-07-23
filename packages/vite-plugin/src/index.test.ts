@@ -673,11 +673,18 @@ describe('nip5aManifest title/description HTML metadata', () => {
     expect(out).toContain('<head><meta name="description" content="A cool napplet"></head>');
   });
 
-  it('leaves author HTML untouched and emits only tags when neither option is set', () => {
+  it('leaves spec-faithful author HTML untouched without injecting napplet protocol meta', () => {
     const html = '<!doctype html><html><head><title>Author</title></head><body></body></html>';
     const result = transformIndexHtml({ nappletType: 'feed' }, html);
-    // No html-string transform form — only the meta tag descriptors.
-    expect(Array.isArray(result)).toBe(true);
+    expect(result).toEqual([]);
+  });
+
+  it('keeps title and description transforms free of napplet protocol meta', () => {
+    const result = transformIndexHtml(
+      { nappletType: 'feed', title: 'My Napp', requires: ['storage'] },
+      '<!doctype html><html><head></head><body></body></html>',
+    );
+    expect(result).toMatchObject({ tags: [] });
   });
 
   it('HTML-escapes injected title (element text) and description (attribute) values', () => {

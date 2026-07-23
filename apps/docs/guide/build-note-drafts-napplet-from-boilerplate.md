@@ -547,22 +547,23 @@ pnpm build
 pnpm test:conformance
 ```
 
-Inspect the emitted metadata:
+Inspect the generated signed manifest tags:
 
 ```bash
-grep -n "napplet-type\\|napplet-requires" dist/index.html
+grep -n '"d"\\|"requires"' dist/.nip5a-manifest.json
 ```
 
-Expected metadata:
+Expected manifest tags include:
 
-```html
-<meta name="napplet-type" content="my-napplet">
-<meta name="napplet-requires" content="identity,outbox,storage">
+```json
+["d", "my-napplet"]
+["requires", "identity"]
+["requires", "outbox"]
+["requires", "storage"]
 ```
 
-`napplet-type` is the template's build-local fallback. The following deploy
-preview must show the CLI-owned `notedrafts` d-tag and the title, description,
-and archetype from `.napplet/config.json`.
+The deploy preview must show the CLI-owned `notedrafts` d-tag and the title,
+description, and archetype from `.napplet/config.json`.
 
 Open the app in your target shell or Paja runtime and verify:
 

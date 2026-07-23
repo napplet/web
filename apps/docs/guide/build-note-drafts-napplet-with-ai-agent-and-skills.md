@@ -181,22 +181,24 @@ pnpm build
 pnpm test:conformance
 ```
 
-Then inspect the built metadata:
+Then inspect the generated signed manifest tags:
 
 ```bash
-grep -n "napplet-type\\|napplet-requires" dist/index.html
+grep -n '"d"\\|"requires"' dist/.nip5a-manifest.json
 ```
 
-Expected metadata:
+Expected manifest tags include:
 
-```html
-<meta name="napplet-type" content="notedrafts">
-<meta name="napplet-requires" content="identity,outbox,storage">
+```json
+["d", "notedrafts"]
+["requires", "identity"]
+["requires", "outbox"]
+["requires", "storage"]
 ```
 
-The metadata check matters because the shell loads the built artifact. A source
-file can look correct while the generated `dist/index.html` still carries stale
-manifest fields.
+The manifest check matters because the shell reads the signed capability
+declaration. A source file can look correct while generated manifest tags remain
+stale.
 
 ## 7. Run a shell smoke test
 

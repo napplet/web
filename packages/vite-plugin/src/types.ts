@@ -48,7 +48,7 @@ export type Nip5aRequiresOption = string[] | Nip5aRequiresOptions;
 
 /** Public configuration for {@link import('./index.js').nip5aManifest}. */
 export interface Nip5aManifestOptions {
-  /** Napplet type/dtag identifier (e.g., 'feed', 'chat'). Used as the NIP-5A 'd' tag and injected as napplet-type meta attribute. */
+  /** Napplet type/dtag identifier (e.g., 'feed', 'chat'). Used as the NIP-5A `d` tag. */
   nappletType: string;
   /** NAP domains this napplet requires, optionally inferred from source usage. */
   requires?: Nip5aRequiresOption;
@@ -91,10 +91,9 @@ export interface Nip5aManifestOptions {
    * 1. `config.schema.json` at the Vite project root (convention file).
    * 2. `napplet.config.ts` / `.js` / `.mjs` exporting a `configSchema` named export.
    *
-   * If no schema is found via any of these paths, the plugin emits NO config
-   * tag on the NIP-5A manifest and NO `<meta name="napplet-config-schema">` tag
-   * in index.html — fully backward compatible with napplets that declare no
-   * config surface.
+   * If no schema is found via any of these paths, the plugin emits no `config`
+   * tag on the NIP-5A manifest — fully backward compatible with napplets that
+   * declare no config surface.
    *
    * Schemas are structurally validated at build time against the NAP-CONFIG
    * Core Subset; root must be `{ type: "object" }`; external `$ref` is forbidden;
