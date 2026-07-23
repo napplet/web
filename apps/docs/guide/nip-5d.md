@@ -108,21 +108,41 @@ This is what makes the protocol modular: NAP contracts live in the
 [NAPs track](https://github.com/napplet/naps); see the
 [NAP domain reference](/naps/) for the domains this SDK ships.
 
-## Convention metadata and INC emission
+## Convention URI projection
 
-Archetype manifest values and NAP-INTENT conventions are opaque strings, for
-example `napplet:note/open`; neither this guide nor the runtime assigns them a
-payload schema. NAP-INC separately permits a developer to call
-`emit('napplet:profile/open?pubkey=abc123')`. At that outgoing boundary, the
-runtime transposes the query into a shallow decoded text payload and emits the
-stable topic `napplet:profile/open`.
+The stable convention identity is the complete queryless
+`napplet:<archetype>/<intent>` string. Archetype manifest tags, subscriptions,
+handler discovery, normalized messages, and routing contain that identity and
+use exact equality. Optional same-tag `kind:<number>` fields describe one
+handler contract; payload content never determines an event kind.
 
-Subscriptions and delivered events use that stable queryless topic with exact
-string routing. The emit-time convenience does not create query-aware,
-normalized, wildcard, or prefix matching, and structured data belongs in an
-explicit payload with a queryless topic. This is non-normative guidance; defer
-to [NAP-INC at PR #89's exact draft head](https://github.com/napplet/naps/blob/34ec29fc4039384a83dbd6b476f83c4fa0d038e6/naps/NAP-INC.md)
-for the full boundary and rejection rules.
+The web binding normalizes developer-facing URI input before `postMessage` for
+the two operations that accept it: INC `emit(topic, payload?)` and intent
+`invoke/open(uri, options?)`. Unique percent-decoded query pairs become text
+payload fields, literal `+` remains `+`, and the outgoing topic or convention is
+queryless. Fragments, malformed percent encoding, repeated decoded names, and a
+query combined with explicit payload reject. Structured/non-text data uses a
+queryless URI with an explicit payload.
+
+NAP-INTENT returns an immediate result whose ordinary wire `id` correlates only
+the invocation request and result. `ok: true` means the runtime accepted
+delivery responsibility, not that a target received or handled anything. The
+later target-only `intent.deliver` push has no request, intent, or delivery ID.
+It is carrier-neutral and has no public NAP-INC dependency.
+
+At this web projection's trust boundary, the host authenticates the source
+iframe with `MessageEvent.source` and derives the NAP-level `sender` from that
+endpoint. A napplet does not provide sender. On other carriers the endpoint
+mechanism differs, while the runtime-attested sender contract stays the same.
+Receivers treat sender as provenance and payload as untrusted.
+
+This is non-normative guidance following the exact draft heads of [NAP-INC PR
+#89
+(`4593ce9`)](https://github.com/napplet/naps/pull/89/commits/4593ce9e301ce098fd3dad64206fcd6f144fa7af),
+[the governance/web projection PR #90
+(`896c32c`)](https://github.com/napplet/naps/pull/90/commits/896c32c92deee68dc4d10fc1132b62df20cccb6f),
+and [NAP-INTENT PR #91
+(`a718915`)](https://github.com/napplet/naps/pull/91/commits/a718915ddefa2f03a0126579601f59d8bd86f7c4).
 
 ## Security model
 
