@@ -149,12 +149,12 @@ external source.
   `behavior.newWindow`, caller-supplied sender, INC coupling, and lifecycle
   guarantees are absent.
 
-- [ ] **CONV-PKG-02**: Vite archetype metadata accepts object-shaped
+- [x] **CONV-PKG-02**: Vite archetype metadata accepts object-shaped
   `{ slug, convention, eventKinds? }`, requires a queryless convention, emits
   optional same-tag `kind:<number>` discovery fields, preserves path-only
   aggregate hashing, and never infers kinds from payload.
 
-- [ ] **CONV-PKG-03**: CLI object config and template metadata preserve and
+- [x] **CONV-PKG-03**: CLI object config and template metadata preserve and
   emit optional per-contract `eventKinds`; convention-only flags/prompts remain
   unchanged and no delimiter or kinds flag is invented.
 
@@ -167,13 +167,13 @@ external source.
   names/query-plus-payload reject before emission, subscriptions/shell matching
   remain exact, and runtime sender identity is endpoint-attested.
 
-- [ ] **CONV-PKG-05**: Conformance, the authenticated reference-shell fixture,
+- [x] **CONV-PKG-05**: Conformance, the authenticated reference-shell fixture,
   every current author document/example, shipped skills, and the active guard
   match the three adopted heads: intent acceptance precedes independent
   delivery, metadata is queryless with optional same-tag kinds, delivery has no
   ID or INC dependency, and changelogs/completed summaries retain history.
 
-- [ ] **CONV-PKG-06**: The partially written Phase 161 changesets are revised so
+- [x] **CONV-PKG-06**: The partially written Phase 161 changesets are revised so
   every changed publishable package has an appropriate
   changeset, and build, type-check, unit, conformance, docs/link, AI-slop,
   active-surface, and diff gates pass.
@@ -225,11 +225,11 @@ external source.
 | ONB-06 | Phase 159.1 | Complete |
 | ONB-07 | Phase 159.1 | Complete |
 | ONB-08 | Phase 159.1 | Complete |
-| CONV-PKG-01 | Phase 161 | Planned |
-| CONV-PKG-02 | Phase 161 | Planned |
-| CONV-PKG-03 | Phase 161 | Planned |
-| CONV-PKG-04 | Phase 161 | Planned |
-| CONV-PKG-05 | Phase 161 | Planned |
-| CONV-PKG-06 | Phase 161 | Planned |
+| CONV-PKG-01 | Phase 161 | Complete |
+| CONV-PKG-02 | Phase 161 | Complete |
+| CONV-PKG-03 | Phase 161 | Complete |
+| CONV-PKG-04 | Phase 161 | Complete |
+| CONV-PKG-05 | Phase 161 | Complete |
+| CONV-PKG-06 | Phase 161 | Complete |
 
 **Coverage:** 36/36 requirements mapped.

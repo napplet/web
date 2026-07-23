@@ -4,17 +4,17 @@ milestone: v0.34.0
 milestone_name: NIP-5D Runtime Injection
 current_phase: 161
 current_phase_name: ad-hoc-convention-package-contracts
-status: executing
-stopped_at: Completed 161-16-PLAN.md
-last_updated: "2026-07-23T15:44:08.790Z"
+status: complete
+stopped_at: Phase 161 complete; PR #186 open
+last_updated: "2026-07-23T17:55:49.613Z"
 last_activity: 2026-07-23
-last_activity_desc: Phase 161 execution started
+last_activity_desc: Phase 161 verified and published as PR #186
 progress:
   total_phases: 8
-  completed_phases: 3
-  total_plans: 16
-  completed_plans: 6
-  percent: 38
+  completed_phases: 4
+  total_plans: 42
+  completed_plans: 32
+  percent: 76
 ---
 
 # Project State
@@ -31,10 +31,10 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 
 ## Current Position
 
-Phase: 161 (ad-hoc-convention-package-contracts) — EXECUTING
-Plan: 14 of 14
-Status: Ready to execute Plan 161-10
-Last activity: 2026-07-23 — Phase 161 execution started
+Phase: 161 (ad-hoc-convention-package-contracts) — COMPLETE
+Plan: 26 of 26
+Status: Verified; PR #186 open
+Last activity: 2026-07-23 — Phase 161 verified and published as PR #186
 community/group-chat invite linked from the SPA and docs.
 
 ### Quick task 260715-ogy — COMPLETE
