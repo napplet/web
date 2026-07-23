@@ -155,6 +155,28 @@ describe('INC topic routing', () => {
     ]);
   });
 
+  it.each([
+    'napplet:profile/open?pubkey=abc123',
+    'napplet:profile/open#details',
+  ])('rejects a non-stable convention subscription before postMessage: %s', (topic) => {
+    expect(() => on(topic, vi.fn())).toThrow(/stable queryless topic/);
+    expect(window.parent.postMessage).not.toHaveBeenCalled();
+  });
+
+  it('keeps non-convention subscription topics opaque even when they contain a query', () => {
+    const subscription = on('custom:topic?name=value', vi.fn());
+
+    expect(window.parent.postMessage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'inc.subscribe',
+        topic: 'custom:topic?name=value',
+      }),
+      '*',
+    );
+
+    subscription.close();
+  });
+
   it('does not normalize, parse, prefix-match, wildcard-match, or case-fold topics', () => {
     const handler = vi.fn();
     on('napplet:profile/caf\u00e9', handler);
