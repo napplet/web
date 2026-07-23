@@ -173,8 +173,8 @@ canonicalization behavior.
 | `emit(topic, payload?)` | `void` | Broadcast an INC event to other napplets via the shell |
 | `on(topic, callback)` | `{ close(): void }` | Subscribe to INC events on a topic |
 
-This non-normative SDK reference follows [NAP-INC draft PR #89 at its exact
-head](https://github.com/napplet/naps/blob/34ec29fc4039384a83dbd6b476f83c4fa0d038e6/naps/NAP-INC.md).
+This non-normative SDK reference follows [NAP-INC draft PR #89 at its adopted
+head](https://github.com/napplet/naps/blob/4593ce9e301ce098fd3dad64206fcd6f144fa7af/naps/NAP-INC.md).
 For outbound INC only, a queried convention URI is runtime shorthand for a
 stable topic plus a shallow text payload:
 
@@ -190,16 +190,45 @@ inc.on('napplet:profile/open', (payload) => {
 The runtime percent-decodes the query text (`+` remains `+`) before exact topic
 routing. A fragment, malformed percent encoding, repeated decoded name, or a
 query paired with an explicit payload throws before emission. Pass structured or
-non-text data through `emit`'s explicit payload with a queryless topic.
-NAP-INTENT and manifest convention strings stay opaque; subscriptions and shell
-routing do not parse queries or perform wildcard, prefix, or normalization
-matching.
+non-text data through `emit`'s explicit payload with a queryless topic. This is
+an INC `emit` input rule; subscriptions and shell routing do not parse queries
+or perform wildcard, prefix, or normalization matching.
 
 Deprecated IFC compatibility exports are available as migration aliases:
 `ifc`, `ifcEmit`, `ifcOn`, `IFC_DOMAIN`, `installIfcShim`, and the `Ifc*`
 message types. They forward to the INC implementation and resolve to the
 canonical `inc` domain; new code should use `inc`, `incEmit`, `incOn`,
 `INC_DOMAIN`, `installIncShim`, and `Inc*` names.
+
+### `intent`
+
+Archetype intent dispatch. Mirrors `window.napplet.intent`. The URI passed to
+`invoke`/`open` is authoritative: that binding derives a queryless convention,
+archetype, action, and any shallow text query payload. Queryless manifest
+contracts and exact INC subscriptions do not normalize URI queries.
+
+```ts
+import { intent } from '@napplet/sdk';
+
+// Register this during target startup. `sender` is runtime-attested provenance;
+// validate the opaque payload before using it.
+intent.onDelivery((delivery) => {
+  showProfile(delivery.payload);
+});
+
+const result = await intent.open('napplet:profile/open?pubkey=abc123');
+if (!result.ok) throw new Error(result.error);
+console.log(`Runtime accepted delivery for ${result.handler}`);
+```
+
+`ok: true` means the runtime accepted responsibility to deliver, not that a
+target is running or has received the payload. Delivery is a separate target-only
+push, and runtime policy controls target lifecycle, retries, and persistence.
+Do not assume source/target overlap. `available()` and `handlers()` expose
+queryless `IntentContract` entries with optional same-contract `eventKinds`
+metadata; kinds are never inferred from payloads. NAP-INTENT has no public
+NAP-INC dependency. This non-normative reference follows [NAP-INTENT draft PR
+#91 at its adopted head](https://github.com/napplet/naps/blob/a718915ddefa2f03a0126579601f59d8bd86f7c4/naps/NAP-INTENT.md).
 
 ### `storage`
 

@@ -130,6 +130,38 @@ Shell runtime                              @napplet/shim
 
 The iframe sandbox requires only `allow-scripts` -- **no `allow-same-origin`**. Shells MAY add additional tokens (`allow-forms`, `allow-popups`, etc.) per shell policy. Napplets cannot access the host shell's DOM, cookies, localStorage, or service workers. All persistent state goes through the shell's proxies.
 
+### Intent delivery
+
+NAP-INTENT calls use an authoritative convention URI such as
+`napplet:profile/open?pubkey=abc123`. The runtime binding normalizes that URI
+at `intent.invoke`/`intent.open` only: it derives the archetype, action,
+queryless convention, and shallow text payload before requesting acceptance.
+Manifest discovery and INC subscriptions remain queryless/exact; they do not
+parse a URI query.
+
+An accepted invocation means the runtime has accepted delivery responsibility,
+not that a target has started or received the payload. A target should register
+`onDelivery` during startup and validate the payload before using it:
+
+```ts
+window.napplet.intent?.onDelivery((delivery) => {
+  // `sender` is runtime-attested provenance; `payload` remains untrusted.
+  renderProfile(delivery.payload);
+});
+
+const result = await window.napplet.intent?.open(
+  'napplet:profile/open?pubkey=abc123',
+);
+if (!result?.ok) throw new Error(result?.error ?? 'intent rejected');
+```
+
+The target may already be running or start later; the protocol does not promise
+source/target overlap, retries, or persistence. NAP-INTENT has no public
+NAP-INC dependency. This repository's adopted draft references are
+[NAP-INC #89 at `4593ce9`](https://github.com/napplet/naps/blob/4593ce9e301ce098fd3dad64206fcd6f144fa7af/naps/NAP-INC.md),
+[URI terminology #90 at `896c32c`](https://github.com/napplet/naps/commit/896c32c92deee68dc4d10fc1132b62df20cccb6f),
+and [NAP-INTENT #91 at `a718915`](https://github.com/napplet/naps/blob/a718915ddefa2f03a0126579601f59d8bd86f7c4/naps/NAP-INTENT.md).
+
 ## Origin
 
 The napplet protocol is defined by the living [NIP-5D specification](https://github.com/nostr-protocol/nips/pull/2303); the NAP capability domains are defined on the [NAPs track](https://github.com/napplet/naps). Any shell can host napplets by injecting `window.napplet` before napplet scripts run. Napplet application code consumes injected domains directly or through `@napplet/sdk`.

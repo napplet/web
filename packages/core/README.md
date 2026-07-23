@@ -116,6 +116,44 @@ if (window.napplet?.relay) {
 }
 ```
 
+#### `IntentApi`
+
+NAP-INTENT targets an archetype through an authoritative convention URI, not a
+specific running surface. `invoke(uri, options?)` and the `open(uri, options?)`
+sugar normalize URI input at that boundary only: the binding derives the
+archetype, action, and queryless convention. Use `options.payload` for
+structured data with a queryless URI; queryless manifest contracts and exact
+INC topic routing do not parse query text.
+
+```ts
+window.napplet.intent?.onDelivery((delivery) => {
+  // Sender provenance is attested by the runtime. Validate opaque payload data.
+  openProfile(delivery.payload);
+});
+
+const result = await window.napplet.intent?.open(
+  'napplet:profile/open?pubkey=abc123',
+);
+if (result?.ok) {
+  console.log(`Accepted for ${result.handler}: ${result.convention}`);
+} else {
+  throw new Error(result?.error ?? 'intent rejected');
+}
+```
+
+`ok: true` reports that the runtime accepted delivery responsibility. It does
+not report target receipt, completion, or a target identity; delivery is the
+later, target-only `onDelivery` push. Register that listener during target startup.
+The runtime may start a target later and owns lifecycle, retry, and persistence
+policy, so callers must not assume source/target overlap or persistence.
+
+Handler discovery exposes queryless `IntentContract` entries, each with a
+`convention` and optional `eventKinds` metadata. Event kinds are discovery
+metadata only and are never inferred from payloads. NAP-INTENT has no public
+NAP-INC dependency. See the adopted [NAP-INTENT #91 draft
+head](https://github.com/napplet/naps/blob/a718915ddefa2f03a0126579601f59d8bd86f7c4/naps/NAP-INTENT.md)
+for the living contract.
+
 ---
 
 ### NAP Dispatch Infrastructure
