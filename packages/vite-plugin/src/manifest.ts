@@ -1,12 +1,11 @@
 /**
- * @napplet/vite-plugin — manifest resolution, dev meta tags, and bundle writing.
+ * @napplet/vite-plugin — manifest resolution and bundle writing.
  *
- * Wires together schema discovery/validation, dev-mode meta-tag injection, and
- * the build-time napplet manifest pipeline (NIP-5A aggregateHash computation,
- * NIP-5D kind `35129` signing, artifact rewrites, meta-tag injection).
+ * Wires together schema discovery/validation and the build-time napplet manifest
+ * pipeline (NIP-5A aggregateHash computation, NIP-5D kind `35129` signing, and
+ * artifact rewrites).
  */
 
-import type { HtmlTagDescriptor } from 'vite';
 import type { NappletConfigSchema } from '@napplet/nap/config/types';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -48,53 +47,6 @@ function validateResolvedSchema(schema: NappletConfigSchema | null, source: stri
     const body = validation.errors.map((e) => `  - ${e}`).join('\n');
     throw new Error(`${header}\n${body}`);
   }
-}
-
-/**
- * Build the `transformIndexHtml` tag set: the napplet-type meta and optional
- * requires / config-schema meta tags.
- *
- * No `napplet-aggregate-hash` meta is emitted: a file cannot contain a hash that
- * covers itself, so the aggregate hash lives only in the external
- * `.nip5a-manifest.json` (and the signed kind-35129 event), where the shell /
- * relay reads it. It is not a NIP-5D/5A index.html artifact.
- *
- * @param options - the plugin options.
- * @param state - resolved plugin state (schema).
- * @param _isDev - true when Vite is serving (dev). Currently unused.
- * @returns Vite index-html transform descriptors injected into `<head>`.
- */
-export function buildIndexHtmlTags(
-  options: Nip5aManifestOptions,
-  state: ManifestPluginState,
-  _isDev: boolean,
-): HtmlTagDescriptor[] {
-  const tags: HtmlTagDescriptor[] = [
-    {
-      tag: 'meta',
-      attrs: { name: 'napplet-type', content: options.nappletType },
-      injectTo: 'head' as const,
-    },
-  ];
-
-  const requires = resolvedRequirements(options.requires, state);
-  if (requires.length > 0) {
-    tags.push({
-      tag: 'meta',
-      attrs: { name: 'napplet-requires', content: requires.join(',') },
-      injectTo: 'head' as const,
-    });
-  }
-
-  if (state.resolvedSchema !== null) {
-    tags.push({
-      tag: 'meta',
-      attrs: { name: 'napplet-config-schema', content: JSON.stringify(state.resolvedSchema) },
-      injectTo: 'head' as const,
-    });
-  }
-
-  return tags;
 }
 
 /**
@@ -152,7 +104,7 @@ function buildManifestTemplate(
     state.resolvedSchema !== null ? [['config', JSON.stringify(state.resolvedSchema)]] : [];
   const requiresTags = resolvedRequirements(options.requires, state).map((name) => ['requires', name]);
   // Archetype tags (NAAT, napplet/naps `ARCHETYPES.md`): one
-  // `['archetype', slug, protocol, ...constraints]` per contract. Like
+  // `['archetype', slug, convention, ...kindFields]` per declared convention. Like
   // config/requires they are NOT passed to computeAggregateHash — only pathPairs
   // feed the aggregate.
   const archetypeTags = buildArchetypeTags(options.archetypes);
@@ -174,9 +126,8 @@ function buildManifestTemplate(
 }
 
 /**
- * Normalize the `archetypes` option into one `['archetype', slug, protocol]`
- * tag per protocol. Optional event-kind constraints are emitted as
- * `kind:<number>` tokens scoped to the protocol in the same tag.
+ * Serialize each archetype contract into one queryless convention tag with
+ * optional same-tag `kind:<number>` discovery fields.
  */
 function buildArchetypeTags(
   archetypes: Nip5aManifestOptions['archetypes'],
@@ -184,19 +135,36 @@ function buildArchetypeTags(
   if (!archetypes) return [];
   const tags: string[][] = [];
   for (const entry of archetypes) {
-    const slug = (typeof entry === 'string' ? entry : entry.slug).trim();
-    if (slug === '') continue;
-    if (typeof entry === 'string') continue;
-    for (const protocol of entry.naps ?? []) {
-      const trimmedProtocol = protocol.trim();
-      if (trimmedProtocol !== '') tags.push(['archetype', slug, trimmedProtocol]);
+    const slug = entry.slug.trim();
+    if (slug === '' || !/^[a-z0-9][a-z0-9-]*$/.test(slug)) {
+      throw new Error('[nip5a-manifest] archetype slug must contain lowercase letters, numbers, and hyphens');
     }
-    for (const contract of entry.contracts ?? []) {
-      const protocol = contract.protocol.trim();
-      if (protocol === '') continue;
-      const kinds = (contract.eventKinds ?? []).map((kind) => `kind:${kind}`);
-      tags.push(['archetype', slug, protocol, ...kinds]);
+    const convention = entry.convention.trim();
+    if (convention === '') {
+      throw new Error('[nip5a-manifest] archetype convention must be a non-empty string');
     }
+    if (/^NAP-\d+$/.test(convention)) {
+      throw new Error('[nip5a-manifest] numbered NAP identifier is not a convention');
+    }
+    const conventionMatch = /^napplet:([^/?#\s]+)\/([^/?#\s]+)$/.exec(convention);
+    if (!conventionMatch) {
+      throw new Error('[nip5a-manifest] archetype convention must be a queryless napplet:<archetype>/<intent> identity');
+    }
+    if (conventionMatch[1] !== slug) {
+      throw new Error('[nip5a-manifest] archetype slug must match the convention archetype');
+    }
+    const eventKinds = entry.eventKinds ?? [];
+    for (const kind of eventKinds) {
+      if (!Number.isSafeInteger(kind) || kind < 0) {
+        throw new Error('[nip5a-manifest] archetype eventKinds must contain unsigned integers');
+      }
+    }
+    tags.push([
+      'archetype',
+      slug,
+      convention,
+      ...eventKinds.map((kind) => `kind:${kind}`),
+    ]);
   }
   return tags;
 }

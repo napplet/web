@@ -1,30 +1,26 @@
-/**
- * @napplet/core — Topic constants for the napplet INC-PEER event bus.
- *
- * These constants define the topic strings used in INC-PEER
- * events for shell commands, state operations, audio,
- * and UI coordination.
- */
+/** Topic constants used by the napplet INC event bus. */
 
 /**
- * Built-in topic constants for the napplet shell INC-PEER protocol.
+ * Built-in topic constants for the napplet INC event bus.
  *
  * @example
  * ```ts
  * import { TOPICS } from '@napplet/core';
  *
- * // Open a profile view via INC-PEER
- * shim.publish({ kind: 29003, tags: [['t', TOPICS.PROFILE_OPEN]], content: '{}' });
+ * // Address a profile napplet using its advisory open convention.
+ * emit(TOPICS.PROFILE_OPEN);
  * ```
  *
  * ## Topic Prefix Conventions
  *
- * Topic strings follow a prefix convention that signals message direction:
+ * Topic strings follow advisory direction and scope conventions. Convention
+ * topic strings are opaque: their names do not prescribe a payload schema or
+ * Nostr event kind.
  *
  * | Prefix | Direction | Meaning |
  * |--------|-----------|---------|
  * | `shell:*` | napplet → shell | Commands sent by a napplet to the shell |
- * | `napplet:*` | shell → napplet | Responses/notifications sent by shell to napplet |
+ * | `napplet:<archetype>/<intent>` | bidirectional | Advisory convention names between napplets |
  * | `{service}:*` | bidirectional | Service-scoped messages; direction is per-topic |
  *
  * Examples of `{service}:*` prefixes: `auth:*`, `stream:*`, `profile:*`,
@@ -35,7 +31,9 @@ export const TOPICS = {
   STREAM_CURRENT_CONTEXT_GET: 'stream:current-context-get',
   STREAM_CURRENT_CONTEXT: 'stream:current-context',
 
-  PROFILE_OPEN: 'profile:open',
+  NOTE_OPEN: 'napplet:note/open',
+  PROFILE_OPEN: 'napplet:profile/open',
+  DM_OPEN: 'napplet:dm/open',
 
   KEYBINDS_GET: 'keybinds:get-all',
   KEYBINDS_ALL: 'keybinds:all',
@@ -45,8 +43,6 @@ export const TOPICS = {
   KEYBINDS_CAPTURE_END: 'keybinds:capture-end',
 
   WM_FOCUSED_WINDOW_CHANGED: 'wm:focused-window-changed',
-
-  CHAT_OPEN_DM: 'chat:open-dm',
 
 } as const;
 

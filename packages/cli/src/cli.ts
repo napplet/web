@@ -6,7 +6,7 @@
  * @module
  */
 
-import { configPath, initConfig, parseArchetypeContracts, readConfig } from "./config.ts";
+import { configPath, initConfig, parseArchetypeConventions, readConfig } from "./config.ts";
 import { createDebugReport, createSigningDebugInfo } from "./debug.ts";
 import { createDeployPlan } from "./deploy-plan.ts";
 import { createDeploySigner } from "./deploy-signer.ts";
@@ -40,7 +40,7 @@ const HELP = `@napplet/cli
 Usage:
   napplet guide
   napplet create <directory> [--template <path-or-url>] [--force]
-  napplet init [--force] [--root] [--source-dir <dir>] [--name <dtag>] [--title <title>] [--description <text>] [--archetype <slug:NAP-N>] [--relay <url>] [--server <url>]
+  napplet init [--force] [--root] [--source-dir <dir>] [--name <dtag>] [--title <title>] [--description <text>] [--archetype <slug:napplet:<archetype>/<intent>>] [--relay <url>] [--server <url>]
   napplet skills <list|print|install> [args]
   napplet deploy [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>] [--prompt-sec] [--dry-run] [--json]
   napplet debug [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>]
@@ -221,7 +221,7 @@ async function runInitFromFlags(flags: FlagBag): Promise<InitReport> {
       named: seed.root ? [] : normalizeNamedDTags(seed.named.length > 0 ? seed.named : ["default"]),
       title: seed.title ?? titleFromName(seed.named[0] ?? "default"),
       description: seed.description?.trim() || undefined,
-      archetypes: parseArchetypeContracts(seed.archetypes),
+      archetypes: parseArchetypeConventions(seed.archetypes),
       defaultTarget: seed.root ? "root" as const : "named" as const,
     };
   }

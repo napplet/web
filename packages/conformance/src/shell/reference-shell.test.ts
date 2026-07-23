@@ -3,8 +3,11 @@ import {
   createReferenceShell,
   attachReferenceShell,
   REFERENCE_PUBKEY,
+  type ReferenceEndpoint,
   type MessageWindowLike,
 } from './reference-shell.js';
+
+const authenticatedSource: ReferenceEndpoint = { dTag: 'authenticated-source' };
 
 describe('createReferenceShell — record + respond', () => {
   it('records each inbound envelope with a verdict and timestamp', () => {
@@ -35,6 +38,140 @@ describe('createReferenceShell — record + respond', () => {
     expect(shell.handle({ type: 'relay.subscribe', id: 'Z', subId: 'sub', filters: [] })).toEqual([
       { type: 'relay.eose', subId: 'sub' },
     ]);
+  });
+
+  it('advertises the reference intent handler through queryless contracts', () => {
+    const shell = createReferenceShell();
+
+    expect(shell.handle({ type: 'intent.available', id: 'intent-1', archetype: 'note' })).toEqual([
+      {
+        type: 'intent.available.result',
+        id: 'intent-1',
+        availability: {
+          archetype: 'note',
+          available: true,
+          candidates: [
+            {
+              dTag: 'reference-handler',
+              actions: ['open'],
+              conventions: ['napplet:note/open'],
+              contracts: [{ convention: 'napplet:note/open', eventKinds: [1, 30023] }],
+              isDefault: true,
+            },
+          ],
+          hasDefault: true,
+        },
+      },
+    ]);
+  });
+
+  it('accepts a normalized invoke before delivering the endpoint-attested target payload', () => {
+    const shell = createReferenceShell();
+    const sourceAtAcceptance: ReferenceEndpoint = { dTag: 'source-at-acceptance' };
+
+    expect(shell.handleFrom(sourceAtAcceptance, {
+      type: 'intent.invoke',
+      id: 'intent-1',
+      request: {
+        archetype: 'note',
+        action: 'open',
+        convention: 'napplet:note/open',
+        payload: { event: 'abc123' },
+      },
+    })).toEqual([
+      {
+        type: 'intent.invoke.result',
+        id: 'intent-1',
+        result: {
+          ok: true,
+          archetype: 'note',
+          action: 'open',
+          convention: 'napplet:note/open',
+          handler: 'reference-handler',
+        },
+      },
+    ]);
+
+    sourceAtAcceptance.dTag = 'source-after-acceptance';
+
+    expect(shell.takeDeliveries('reference-handler')).toEqual([
+      {
+        type: 'intent.deliver',
+        delivery: {
+          sender: 'source-at-acceptance',
+          archetype: 'note',
+          action: 'open',
+          convention: 'napplet:note/open',
+          payload: { event: 'abc123' },
+        },
+      },
+    ]);
+    expect(shell.takeDeliveries('reference-handler')).toEqual([]);
+  });
+
+  it('records forged intent sender data as invalid and does not deliver it', () => {
+    const shell = createReferenceShell();
+
+    expect(shell.handleFrom(authenticatedSource, {
+      type: 'intent.invoke',
+      id: 'intent-forged-sender',
+      request: {
+        archetype: 'note',
+        action: 'open',
+        convention: 'napplet:note/open',
+        sender: 'forged-source',
+      },
+    })).toEqual([]);
+    expect(shell.records.at(-1)?.verdict.ok).toBe(false);
+    expect(shell.takeDeliveries('reference-handler')).toEqual([]);
+  });
+
+  it('rejects normalized intent conflicts before handler resolution or target delivery', () => {
+    const shell = createReferenceShell();
+
+    expect(shell.handleFrom(authenticatedSource, {
+      type: 'intent.invoke',
+      id: 'intent-conflict',
+      request: {
+        archetype: 'note',
+        action: 'edit',
+        convention: 'napplet:note/open?event=abc123',
+      },
+    })).toEqual([]);
+    expect(shell.records.at(-1)?.verdict.ok).toBe(false);
+    expect(shell.takeDeliveries('reference-handler')).toEqual([]);
+  });
+
+  it('routes INC only to the exact stable subscriber and derives sender from its endpoint', () => {
+    const shell = createReferenceShell();
+
+    expect(shell.handleFrom(authenticatedSource, {
+      type: 'inc.emit',
+      topic: 'napplet:note/open',
+      payload: { event: 'abc123' },
+    })).toEqual([]);
+    expect(shell.takeDeliveries('reference-subscriber')).toEqual([
+      {
+        type: 'inc.event',
+        topic: 'napplet:note/open',
+        sender: 'authenticated-source',
+        payload: { event: 'abc123' },
+      },
+    ]);
+
+    shell.handleFrom(authenticatedSource, {
+      type: 'inc.emit',
+      topic: 'napplet:note/open?event=abc123',
+      payload: { event: 'abc123' },
+    });
+    expect(shell.takeDeliveries('reference-subscriber')).toEqual([]);
+
+    shell.handleFrom(authenticatedSource, {
+      type: 'inc.emit',
+      topic: 'napplet:note/open',
+      sender: 'forged-source',
+    });
+    expect(shell.takeDeliveries('reference-subscriber')).toEqual([]);
   });
 
   it('decodes data URLs for resource.bytes responses without fetch', async () => {

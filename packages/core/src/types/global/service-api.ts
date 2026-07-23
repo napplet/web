@@ -28,7 +28,12 @@ import type {
   OutboxTarget,
 } from '../outbox.js';
 import type { UploadInfo, UploadRequest, UploadResult, UploadStatus } from '../upload.js';
-import type { IntentAvailability, IntentRequest, IntentResult } from '../intent.js';
+import type {
+  IntentAvailability,
+  IntentDelivery,
+  IntentInvokeOptions,
+  IntentResult,
+} from '../intent.js';
 import type { LinkOpenOptions, LinkOpenResult } from '../link.js';
 import type { SerialEvent, SerialOpenRequest, SerialOpenResult } from '../serial.js';
 import type { ListItem, ListMutationResult, ListOptions, ListRef, ListSupport } from '../lists.js';
@@ -288,43 +293,51 @@ export interface UploadApi {
 }
 
 /**
- * Archetype intent dispatch (NAP-INTENT): invoke another napplet by its role
- * (archetype) without addressing it directly. The napplet names a role +
- * action + payload; the shell resolves the role to an installed napplet
- * (honoring the user's default-handler preference), creates or focuses the
- * window, and delivers the payload using the named NAP-N protocol. Routing
- * (`archetype`) and payload format (`protocol`) are orthogonal. The shell owns
- * resolution, default handling, window lifecycle, and the trust boundary —
- * napplets never learn or address other napplets except through this resolution.
+ * Archetype intent dispatch (NAP-INTENT): invoke another napplet through an
+ * authoritative convention URI without addressing it directly. The runtime
+ * derives the archetype, action, queryless convention identity, and any
+ * query-derived payload before resolving an installed, user-authorized handler.
+ * An accepted result means the runtime accepted delivery responsibility; target
+ * delivery follows independently once the target is ready. The runtime owns
+ * handler selection, lifecycle, retry, persistence, and the trust boundary.
  *
  * @example
  * ```ts
  * if (window.napplet.intent) {
  *   const { available } = await window.napplet.intent.available('note');
- *   if (available) await window.napplet.intent.open('note', { target: { type: 'event', id } });
+ *   if (available) {
+ *     window.napplet.intent.onDelivery((delivery) => {
+ *       // Validate opaque payload against delivery.convention before use.
+ *       showProfile(delivery.payload);
+ *     });
+ *     await window.napplet.intent.open('napplet:profile/open?pubkey=abc123');
+ *   }
  * }
  * ```
  */
 export interface IntentApi {
   /**
-   * Dispatch an action (default `open`) to a napplet of `request.archetype`.
-   * Resolves with the structured result (including `ok: false`/`handled: false`
-   * on failure); rejects only on a top-level error.
-   * @param request  The intent request (archetype + action + payload + routing)
-   * @returns Promise resolving to the invocation result
+   * Normalize a convention URI and ask the runtime to accept delivery
+   * responsibility. `uri` is authoritative: options cannot override its derived
+   * archetype, action, or queryless convention identity. An `ok: true` result
+   * does not mean the target has received or handled the payload.
+   * @param uri  A `napplet:<archetype>/<intent>[...?params]` convention URI
+   * @param options  Optional opaque payload, handler preference, and behavior hints
+   * @returns Promise resolving to immediate acceptance or pre-acceptance rejection
    */
-  invoke(request: IntentRequest): Promise<IntentResult>;
+  invoke(uri: string, options?: IntentInvokeOptions): Promise<IntentResult>;
   /**
-   * Convenience sugar for `invoke({ archetype, action: 'open', payload, ...opts })`.
-   * @param archetype  Role slug to open
-   * @param payload    Opaque payload (typed by the resolved protocol)
-   * @param opts       Extra request fields (protocol, handler, behavior)
-   * @returns Promise resolving to the invocation result
+   * Convenience sugar for `invoke` whose convention URI intent is `open`.
+   * The runtime rejects a URI whose intent is not `open`; options cannot override
+   * identity derived from the URI.
+   * @param uri  An `napplet:<archetype>/open[...?params]` convention URI
+   * @param options  Optional opaque payload, handler preference, and behavior hints
+   * @returns Promise resolving to immediate acceptance or pre-acceptance rejection
    */
-  open(archetype: string, payload?: unknown, opts?: Omit<IntentRequest, 'archetype' | 'action' | 'payload'>): Promise<IntentResult>;
+  open(uri: string, options?: IntentInvokeOptions): Promise<IntentResult>;
   /**
    * Whether the runtime can currently satisfy `archetype`, with candidates and
-   * the actions/protocols/contracts each supports. Sourced from the installed
+   * the actions and conventions each supports. Sourced from the installed
    * catalog.
    * @param archetype  Role slug to check
    * @returns Promise resolving to the archetype availability
@@ -341,6 +354,15 @@ export interface IntentApi {
    * @returns A Subscription with `close()` to stop listening
    */
   onChanged(handler: (availability: IntentAvailability) => void): Subscription;
+  /**
+   * Register for target-only runtime deliveries after the target is ready.
+   * The runtime attests `delivery.sender`; it is provenance rather than proof
+   * that the opaque payload is safe. Incoming deliveries are retained until a
+   * handler is registered. Delivery lifecycle and persistence are runtime policy.
+   * @param handler  Called with each runtime-delivered intent
+   * @returns A Subscription with `close()` to stop listening
+   */
+  onDelivery(handler: (delivery: IntentDelivery) => void): Subscription;
 }
 
 /**

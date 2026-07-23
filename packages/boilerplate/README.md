@@ -8,9 +8,29 @@ Project scaffold generator behind `napplet create`. It clones the maintained
 napplet create my-napplet
 ```
 
-Deployment name, title, description, and archetype contracts belong to
+Deployment name, title, description, and archetype roles plus conventions belong to
 `napplet init`; this generator does not prompt for or mutate them. It currently
 ships one variant, `basic`.
+
+An archetype declaration pairs one role slug with one queryless convention, such
+as `note:napplet:note/open`. When deployment metadata is later written, one
+object represents one manifest tag and may carry optional same-tag event-kind
+metadata:
+
+```jsonc
+{ "slug": "note", "convention": "napplet:note/open", "eventKinds": [1] }
+// → ["archetype", "note", "napplet:note/open", "kind:1"]
+```
+
+The convention names a local payload choice; this generator does not define its
+payload shape or infer event kinds. `napplet init` keeps its convention-only
+input, while template manifest metadata preserves any optional trailing
+`kind:<number>` fields unless deployment metadata replaces archetype tags.
+For the living contract, see the adopted [NAP-INC #89
+`4593ce9`](https://github.com/napplet/naps/blob/4593ce9e301ce098fd3dad64206fcd6f144fa7af/naps/NAP-INC.md),
+[URI terminology #90 `896c32c`](https://github.com/napplet/naps/commit/896c32c92deee68dc4d10fc1132b62df20cccb6f),
+and [NAP-INTENT #91
+`a718915`](https://github.com/napplet/naps/blob/a718915ddefa2f03a0126579601f59d8bd86f7c4/naps/NAP-INTENT.md).
 
 ## Options
 

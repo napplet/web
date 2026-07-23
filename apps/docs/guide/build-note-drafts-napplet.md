@@ -23,6 +23,10 @@ Protocol references used here:
   manifest and aggregate-hash model
 - [NAPs](https://github.com/napplet/naps), the capability-domain specs for
   `identity`, `storage`, and `outbox`
+- [NAP-INC PR #89 at `4593ce9`](https://github.com/napplet/naps/pull/89/commits/4593ce9e301ce098fd3dad64206fcd6f144fa7af),
+  [governance/web PR #90 at `896c32c`](https://github.com/napplet/naps/pull/90/commits/896c32c92deee68dc4d10fc1132b62df20cccb6f),
+  and [NAP-INTENT PR #91 at `a718915`](https://github.com/napplet/naps/pull/91/commits/a718915ddefa2f03a0126579601f59d8bd86f7c4),
+  the exact draft heads adopted for convention URI and intent semantics
 
 ## 1. Create the project manually and initialize deployment
 
@@ -35,7 +39,7 @@ mkdir note-drafts
 cd note-drafts
 napplet init --name notedrafts --title "Note Drafts" \
   --description "Draft and publish short Nostr notes from a sandboxed napplet." \
-  --archetype note:NAP-4
+  --archetype note:napplet:note/open
 pnpm init
 pnpm add @napplet/sdk@^0.24.4
 pnpm add -D @napplet/vite-plugin@^0.11.2 @napplet/conformance-cli@^0.2.15 @kehto/cli@^0.2.11 typescript@^5.9.3 vite@^6.4.3
@@ -72,6 +76,20 @@ Replace the generated `package.json` with this:
 
 What this teaches: napplet application code uses `@napplet/sdk`; local runtime
 testing uses Kehto/Paja; conformance tests the built artifact, not source files.
+
+This tutorial declares the queryless convention `napplet:note/open`, so its
+manifest tag is `['archetype', 'note', 'napplet:note/open']`. A contract that
+genuinely serves specific Nostr event kinds may append same-tag `kind:<number>`
+discovery fields through object-form `eventKinds`; this app declares none. The
+runtime never infers a kind or payload schema from payload content.
+
+If the app later uses INC `emit` or intent `invoke/open`, those two bindings may
+accept a queried convention URI and transpose its unique decoded pairs into a
+shallow text payload before sending the stable queryless identity. Subscriptions,
+manifest discovery, and handler resolution still use exact equality on the
+queryless identity. Successful intent invocation means accepted delivery
+responsibility; a later target `onDelivery` is separate, source-independent,
+runtime-attested, and has no public INC dependency or delivery ID.
 
 ## 2. Configure TypeScript and the manifest plugin
 
@@ -667,23 +685,25 @@ pnpm verify
 That command type-checks the app, builds the single-file artifact, and runs
 `napplet-conformance` against `dist/index.html`.
 
-Inspect the metadata the shell will read:
+Inspect the generated signed manifest tags:
 
 ```bash
 pnpm build
-grep -n "napplet-type\\|napplet-requires" dist/index.html
+grep -n '"d"\\|"requires"' dist/.nip5a-manifest.json
 ```
 
-Expected metadata:
+Expected manifest tags include:
 
-```html
-<meta name="napplet-type" content="notedrafts">
-<meta name="napplet-requires" content="identity,outbox,storage">
+```json
+["d", "notedrafts"]
+["requires", "identity"]
+["requires", "outbox"]
+["requires", "storage"]
 ```
 
-The built `dist/index.html` is the file you test and publish. Do not point
-conformance or deploy tooling at source `index.html`; it still contains the Vite
-`/src/main.ts` module reference.
+The built `dist/index.html` is the file you test and publish, and its signed
+manifest carries the protocol metadata. Do not point conformance or deploy tooling
+at source `index.html`; it still contains the Vite `/src/main.ts` module reference.
 
 Preview the CLI-owned metadata and manifest before any network write:
 

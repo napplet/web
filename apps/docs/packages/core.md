@@ -23,6 +23,8 @@ npm install @napplet/core
 import {
   type NappletMessage, type NapDomain, type NappletGlobal,
   type NapHandler, type NapDispatch,
+  type IntentContract, type IntentDelivery, type IntentInvokeOptions,
+  type IntentResult,
   NAP_DOMAINS, SHELL_BRIDGE_URI, PROTOCOL_VERSION,
   createDispatch, registerNap, dispatch, getRegisteredDomains,
   ALL_CAPABILITIES, TOPICS,
@@ -98,6 +100,50 @@ plain envelopes, so they add no protocol surface.
   (`relay:read`, `relay:write`, `sign:event`, `sign:nip44`, `state:read`, …).
 - **`PROTOCOL_VERSION`** (`'4.0.0'`), **`SHELL_BRIDGE_URI`** (`'napplet://shell'`),
   **`REPLAY_WINDOW_SECONDS`** (`30`), and the legacy **`TOPICS`** routing constants.
+
+### Convention boundaries
+
+The stable identity is the complete, queryless
+`napplet:<archetype>/<intent>` string. Manifest contracts advertise that
+identity, optionally with same-tag `kind:<number>` discovery metadata exposed
+as `IntentContract.eventKinds`. Routing and handler resolution use exact
+equality: subscriptions, metadata, and normalized wire messages never contain
+the query and never use prefix, wildcard, or query-aware matching.
+
+The two developer-facing URI boundaries are INC `emit(topic, payload?)` and
+intent `invoke/open(uri, options?)`. At either boundary, unique percent-decoded
+query pairs become a shallow string-to-string payload before `postMessage`;
+literal `+` remains `+`. The normalized topic or convention is queryless:
+
+```ts
+napplet.inc.emit('napplet:profile/open?pubkey=abc123');
+napplet.inc.on('napplet:profile/open', (payload) => validateLocally(payload));
+
+const accepted = await napplet.intent.open(
+  'napplet:profile/open?pubkey=abc123',
+);
+if (!accepted.ok) throw new Error(accepted.error);
+
+napplet.intent.onDelivery((delivery) => {
+  // sender is runtime-attested provenance; payload remains untrusted.
+  validateLocally(delivery.payload);
+});
+```
+
+An `ok: true` result means the runtime accepted responsibility for delivery,
+not that a target received or handled it. Target delivery is a later,
+carrier-neutral `intent.deliver` push, independent of the source lifetime and
+with no public NAP-INC dependency or delivery identifier. Fragments, malformed
+percent encoding, repeated decoded names, and query parameters combined with an
+explicit payload reject before posting. Structured or non-text data belongs in
+an explicit payload with a queryless URI.
+
+This package follows the exact draft heads for [NAP-INC PR #89
+(`4593ce9`)](https://github.com/napplet/naps/pull/89/commits/4593ce9e301ce098fd3dad64206fcd6f144fa7af),
+[the web projection PR #90
+(`896c32c`)](https://github.com/napplet/naps/pull/90/commits/896c32c92deee68dc4d10fc1132b62df20cccb6f),
+and [NAP-INTENT PR #91
+(`a718915`)](https://github.com/napplet/naps/pull/91/commits/a718915ddefa2f03a0126579601f59d8bd86f7c4).
 
 ## Usage
 

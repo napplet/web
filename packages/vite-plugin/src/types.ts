@@ -33,12 +33,6 @@ export const NAPPLET_KIND_NAMED = 35129;
 /** Configuration options for the NIP-5A manifest plugin. */
 export type Nip5aArtifactMode = 'external-assets' | 'single-file';
 
-/** One NAAT archetype contract emitted as an `archetype` manifest tag. */
-export interface Nip5aArchetypeContract {
-  protocol: string;
-  eventKinds?: number[];
-}
-
 /** Requirement inference and explicit-domain options. */
 export interface Nip5aRequiresOptions {
   /** Infer required NAP domains from static source usage. */
@@ -54,7 +48,7 @@ export type Nip5aRequiresOption = string[] | Nip5aRequiresOptions;
 
 /** Public configuration for {@link import('./index.js').nip5aManifest}. */
 export interface Nip5aManifestOptions {
-  /** Napplet type/dtag identifier (e.g., 'feed', 'chat'). Used as the NIP-5A 'd' tag and injected as napplet-type meta attribute. */
+  /** Napplet type/dtag identifier (e.g., 'feed', 'chat'). Used as the NIP-5A `d` tag. */
   nappletType: string;
   /** NAP domains this napplet requires, optionally inferred from source usage. */
   requires?: Nip5aRequiresOption;
@@ -97,10 +91,9 @@ export interface Nip5aManifestOptions {
    * 1. `config.schema.json` at the Vite project root (convention file).
    * 2. `napplet.config.ts` / `.js` / `.mjs` exporting a `configSchema` named export.
    *
-   * If no schema is found via any of these paths, the plugin emits NO config
-   * tag on the NIP-5A manifest and NO `<meta name="napplet-config-schema">` tag
-   * in index.html — fully backward compatible with napplets that declare no
-   * config surface.
+   * If no schema is found via any of these paths, the plugin emits no `config`
+   * tag on the NIP-5A manifest — fully backward compatible with napplets that
+   * declare no config surface.
    *
    * Schemas are structurally validated at build time against the NAP-CONFIG
    * Core Subset; root must be `{ type: "object" }`; external `$ref` is forbidden;
@@ -113,22 +106,21 @@ export interface Nip5aManifestOptions {
   /**
    * NAAT archetype roles this napplet fulfills (napplet/naps `ARCHETYPES.md`).
    *
-   * Each protocol emits one `["archetype", slug, protocol, ...constraints]`
-   * NIP-5A manifest tag, where `slug` is the role slug, `protocol` is one
-   * accepted NAP-N wire format, and optional `kind:<number>` constraints are
-   * scoped to that protocol. A napplet may declare several archetype roles; a
-   * napplet with no archetype tag is fully valid.
+   * Each entry emits one
+   * `["archetype", slug, convention, ...kindFields]` NIP-5A manifest tag,
+   * where `convention` is a stable, queryless convention identity and optional
+   * `eventKinds` become same-tag `kind:<number>` discovery fields. A napplet may
+   * declare several archetype roles; a napplet with no archetype tag is valid.
    *
-   * Accepts the object form `{ slug, naps? }` for protocol-only contracts,
-   * `{ slug, contracts? }` for per-protocol constraints, or the string shorthand
-   * where `"feed"` is equivalent to `{ slug: "feed" }` (no emitted protocol
-   * contract). Blank slugs and blank protocols are skipped.
+   * Each entry requires both a slug and convention. The convention archetype
+   * must equal the slug. Event kinds are unsigned integer metadata only; the
+   * plugin never inspects payload content to infer them.
    *
    * Like the `config` tag, archetype tags are excluded from the aggregate `x`
    * hash (NIP-5D §Identity: the aggregate is recomputed from `path` tags
    * alone). Non-normative summary — defer to `ARCHETYPES.md` (napplet/naps).
    */
-  archetypes?: Array<string | { slug: string; naps?: string[]; contracts?: Nip5aArchetypeContract[] }>;
+  archetypes?: Array<{ slug: string; convention: string; eventKinds?: number[] }>;
 }
 
 /** Internal: resolved per-plugin-instance build state shared across hooks. */

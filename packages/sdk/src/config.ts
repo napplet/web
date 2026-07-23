@@ -58,8 +58,7 @@ export const config: SdkDomain<'config'> = {
   },
 
   /**
-   * Register a napplet configuration schema at runtime (escape hatch;
-   * prefer manifest-declared via @napplet/vite-plugin's configSchema option).
+   * Register a napplet configuration schema with the shell at runtime.
    * @param schema   JSON Schema (draft-07+) describing the config surface.
    * @param version  Optional `$version` migration hint.
    */
@@ -83,9 +82,8 @@ export const config: SdkDomain<'config'> = {
   },
 
   /**
-   * Current schema snapshot (readonly). Populated from the
-   * `<meta name="napplet-config-schema">` manifest tag at shim install,
-   * updated on successful registerSchema responses.
+   * Current schema snapshot (readonly). Updated after successful
+   * registerSchema responses.
    * @returns The registered schema, or null if none.
    */
   get schema(): Record<string, unknown> | null {

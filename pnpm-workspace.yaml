@@ -9,7 +9,12 @@ packages:
 # package.json, so they live here. esbuild/vite are pinned to patched releases
 # to clear the security advisories surfaced by the AI-slop scan.
 overrides:
-  postcss: 8.5.10
+  # Preserve read-yaml-file's js-yaml 3 API while pinning both dependency lines
+  # to releases that fix merge-key CPU exhaustion advisories.
+  "read-yaml-file>js-yaml": 3.15.0
+  "@changesets/parse>js-yaml": 4.3.0
+  # PostCSS 8.5.12+ rejects unsafe on-disk source-map annotation paths.
+  postcss: 8.5.22
   # esbuild 0.28.1 clears the dev-server advisories; capped to 0.28.x.
   esbuild: ^0.28.1
   # Pin to vite 6.x — clears the advisory on the vitepress-bundled vite 5 while

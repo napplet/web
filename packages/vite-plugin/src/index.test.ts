@@ -299,12 +299,10 @@ describe('nip5aManifest artifact modes', () => {
     }
   });
 
-  it('emits one ["archetype", slug, protocol] tag per contract without changing the aggregate', async () => {
-    // NAAT (napplet/naps ARCHETYPES.md): a napplet declares the roles it
-    // fulfills as one ['archetype', slug, protocol, ...constraints] tag per
-    // protocol. Per NIP-5D §Identity these are excluded from the aggregate `x`
-    // hash (same as `config`) — declaring archetypes over identical dist bytes
-    // MUST NOT change the content address.
+  it('emits exactly one queryless archetype contract without optional event kinds', async () => {
+    // NAAT (napplet/naps ARCHETYPES.md): a napplet declares each fulfilled
+    // role with one convention. Per NIP-5D §Identity these tags are excluded
+    // from the aggregate `x` hash (same as `config`).
     const baseFixture = makeFixture();
     const archetypeFixture = makeFixture();
     const html = '<!doctype html><script type="module" src="./assets/index.js"></script>';
@@ -322,12 +320,127 @@ describe('nip5aManifest artifact modes', () => {
       {
         nappletType: 'archetype-roles',
         artifactMode: 'single-file',
-        // Legacy protocol list plus explicit constrained contracts.
+        archetypes: [{ slug: 'note', convention: 'napplet:note/open' }],
+      },
+      archetypeFixture,
+    );
+
+    const base = readManifest(baseFixture.dist);
+    const withArchetypes = readManifest(archetypeFixture.dist);
+
+    const archetypeTags = withArchetypes.tags.filter((tag) => tag[0] === 'archetype');
+    expect(archetypeTags).toEqual([['archetype', 'note', 'napplet:note/open']]);
+  });
+
+  it('rejects numbered convention identifiers before writing a manifest', async () => {
+    const fixture = makeFixture();
+    fs.writeFileSync(path.join(fixture.dist, 'index.html'), '<!doctype html>');
+
+    await expect(
+      runCloseBundle(
+        {
+          nappletType: 'numbered-archetype',
+          archetypes: [{ slug: 'note', convention: 'NAP-4' }],
+        },
+        fixture,
+      ),
+    ).rejects.toThrow(/numbered NAP identifier/i);
+
+    expect(fs.existsSync(path.join(fixture.dist, '.nip5a-manifest.json'))).toBe(false);
+  });
+
+  it('emits optional event kinds on the same tag and keeps contracts isolated', async () => {
+    const fixture = makeFixture();
+    fs.writeFileSync(path.join(fixture.dist, 'index.html'), '<!doctype html>');
+
+    await runCloseBundle(
+      {
+        nappletType: 'contract-archetypes',
         archetypes: [
-          { slug: 'feed', naps: ['NAP-5', 'NAP-6'] },
-          { slug: 'note', contracts: [{ protocol: 'NAP-4', eventKinds: [1, 30023] }] },
-          'profile',
+          {
+            slug: 'note',
+            convention: 'napplet:note/open',
+            eventKinds: [1, 30023],
+          },
+          {
+            slug: 'note',
+            convention: 'napplet:note/edit',
+            eventKinds: [30023],
+          },
         ],
+      },
+      fixture,
+    );
+
+    const archetypeTags = readManifest(fixture.dist).tags.filter((tag) => tag[0] === 'archetype');
+    expect(archetypeTags).toEqual([
+      ['archetype', 'note', 'napplet:note/open', 'kind:1', 'kind:30023'],
+      ['archetype', 'note', 'napplet:note/edit', 'kind:30023'],
+    ]);
+  });
+
+  it.each([
+    {
+      name: 'query-bearing convention metadata',
+      entry: { slug: 'note', convention: 'napplet:note/open?kind=1' },
+      error: /queryless/i,
+    },
+    {
+      name: 'fragment-bearing convention metadata',
+      entry: { slug: 'note', convention: 'napplet:note/open#fragment' },
+      error: /queryless/i,
+    },
+    {
+      name: 'convention whose archetype conflicts with the tag slug',
+      entry: { slug: 'profile', convention: 'napplet:note/open' },
+      error: /must match/i,
+    },
+    {
+      name: 'negative event kind',
+      entry: { slug: 'note', convention: 'napplet:note/open', eventKinds: [-1] },
+      error: /unsigned integer/i,
+    },
+    {
+      name: 'fractional event kind',
+      entry: { slug: 'note', convention: 'napplet:note/open', eventKinds: [1.5] },
+      error: /unsigned integer/i,
+    },
+  ])('rejects $name', async ({ entry, error }) => {
+    const fixture = makeFixture();
+    fs.writeFileSync(path.join(fixture.dist, 'index.html'), '<!doctype html>');
+
+    await expect(
+      runCloseBundle(
+        {
+          nappletType: 'invalid-archetype-contract',
+          archetypes: [entry],
+        },
+        fixture,
+      ),
+    ).rejects.toThrow(error);
+
+    expect(fs.existsSync(path.join(fixture.dist, '.nip5a-manifest.json'))).toBe(false);
+  });
+
+  it('keeps archetype tags outside the aggregate hash path-tag fold', async () => {
+    const baseFixture = makeFixture();
+    const archetypeFixture = makeFixture();
+    const html = '<!doctype html><script type="module" src="./assets/index.js"></script>';
+
+    for (const fixture of [baseFixture, archetypeFixture]) {
+      fs.writeFileSync(path.join(fixture.dist, 'index.html'), html);
+      fs.writeFileSync(path.join(fixture.dist, 'assets', 'index.js'), 'console.log("same");');
+    }
+
+    await runCloseBundle(
+      { nappletType: 'archetype-base', artifactMode: 'single-file' },
+      baseFixture,
+    );
+    await runCloseBundle(
+      {
+        nappletType: 'archetype-roles',
+        artifactMode: 'single-file',
+        archetypes: [{ slug: 'note', convention: 'napplet:note/open' }],
       },
       archetypeFixture,
     );
@@ -337,15 +450,6 @@ describe('nip5aManifest artifact modes', () => {
 
     // Identical dist bytes → identical aggregate, regardless of archetype tags.
     expect(withArchetypes.aggregateHash).toBe(base.aggregateHash);
-
-    // One tag per protocol, in author-declared order. String shorthand without a
-    // protocol remains accepted but emits no invalid protocol-less tag.
-    const archetypeTags = withArchetypes.tags.filter((tag) => tag[0] === 'archetype');
-    expect(archetypeTags).toEqual([
-      ['archetype', 'feed', 'NAP-5'],
-      ['archetype', 'feed', 'NAP-6'],
-      ['archetype', 'note', 'NAP-4', 'kind:1', 'kind:30023'],
-    ]);
 
     // The base build (no archetypes) emits no archetype tag at all.
     expect(base.tags.some((tag) => tag[0] === 'archetype')).toBe(false);
@@ -569,11 +673,18 @@ describe('nip5aManifest title/description HTML metadata', () => {
     expect(out).toContain('<head><meta name="description" content="A cool napplet"></head>');
   });
 
-  it('leaves author HTML untouched and emits only tags when neither option is set', () => {
+  it('leaves spec-faithful author HTML untouched without injecting napplet protocol meta', () => {
     const html = '<!doctype html><html><head><title>Author</title></head><body></body></html>';
     const result = transformIndexHtml({ nappletType: 'feed' }, html);
-    // No html-string transform form — only the meta tag descriptors.
-    expect(Array.isArray(result)).toBe(true);
+    expect(result).toEqual([]);
+  });
+
+  it('keeps title and description transforms free of napplet protocol meta', () => {
+    const result = transformIndexHtml(
+      { nappletType: 'feed', title: 'My Napp', requires: ['storage'] },
+      '<!doctype html><html><head></head><body></body></html>',
+    );
+    expect(result).toMatchObject({ tags: [] });
   });
 
   it('HTML-escapes injected title (element text) and description (attribute) values', () => {

@@ -18,6 +18,10 @@ Protocol references the agent must defer to:
   manifest and aggregate-hash model
 - [NAPs](https://github.com/napplet/naps), the capability-domain specs for
   `identity`, `storage`, and `outbox`
+- [NAP-INC PR #89 at `4593ce9`](https://github.com/napplet/naps/pull/89/commits/4593ce9e301ce098fd3dad64206fcd6f144fa7af),
+  [governance/web PR #90 at `896c32c`](https://github.com/napplet/naps/pull/90/commits/896c32c92deee68dc4d10fc1132b62df20cccb6f),
+  and [NAP-INTENT PR #91 at `a718915`](https://github.com/napplet/naps/pull/91/commits/a718915ddefa2f03a0126579601f59d8bd86f7c4),
+  the exact draft heads adopted for convention URI and intent semantics
 
 ## 1. Create and initialize the project
 
@@ -29,7 +33,7 @@ napplet create note-drafts
 cd note-drafts
 napplet init --name notedrafts --title "Note Drafts" \
   --description "Draft and publish short Nostr notes from a sandboxed napplet." \
-  --archetype note:NAP-4
+  --archetype note:napplet:note/open
 ```
 
 ## 2. Install the napplet skills for your agent
@@ -66,6 +70,20 @@ tools. An empty directory, a maintained boilerplate, an initialized napplet, a
 boilerplate-based brownfield app, and an unrelated brownfield app require
 different paths. It should also check whether `napplet` and Kehto/Paja are
 installed rather than assuming either binary exists.
+
+The configured queryless contract emits
+`['archetype', 'note', 'napplet:note/open']`. Optional same-tag
+`kind:<number>` fields may be declared through object-form `eventKinds` when a
+contract genuinely serves those Nostr kinds; this tutorial declares none. The
+agent must not infer a kind or payload schema from payload content.
+
+If a feature needs INC `emit` or intent `invoke/open`, those two bindings may
+transpose a queried convention URI into the stable queryless identity and a
+shallow text payload. Subscriptions, manifest discovery, and handler resolution
+stay queryless and exact. The agent must treat successful intent invocation as
+acceptance only: later target `onDelivery` is source-independent, carries
+runtime-attested sender with untrusted payload, and exposes no public INC
+dependency or delivery ID.
 
 ## 3. Give the agent a small product prompt
 
@@ -114,7 +132,7 @@ The diff should look like this:
   `@napplet/sdk`, `@napplet/vite-plugin`, and `@napplet/conformance-cli`
   versions.
 - `.napplet/config.json` still owns `notedrafts`, title, description, and the
-  canonical `note:NAP-4` archetype contract.
+  queryless `note:napplet:note/open` archetype convention.
 - `vite.config.ts` declares `requires: ['identity', 'storage', 'outbox']` and
   does not become a second source of deployment metadata.
 - `src/main.ts` imports `identity`, `storage`, and `outbox` from
@@ -163,22 +181,24 @@ pnpm build
 pnpm test:conformance
 ```
 
-Then inspect the built metadata:
+Then inspect the generated signed manifest tags:
 
 ```bash
-grep -n "napplet-type\\|napplet-requires" dist/index.html
+grep -n '"d"\\|"requires"' dist/.nip5a-manifest.json
 ```
 
-Expected metadata:
+Expected manifest tags include:
 
-```html
-<meta name="napplet-type" content="notedrafts">
-<meta name="napplet-requires" content="identity,outbox,storage">
+```json
+["d", "notedrafts"]
+["requires", "identity"]
+["requires", "outbox"]
+["requires", "storage"]
 ```
 
-The metadata check matters because the shell loads the built artifact. A source
-file can look correct while the generated `dist/index.html` still carries stale
-manifest fields.
+The manifest check matters because the shell reads the signed capability
+declaration. A source file can look correct while generated manifest tags remain
+stale.
 
 ## 7. Run a shell smoke test
 

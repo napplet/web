@@ -279,7 +279,7 @@ export function renderInitReport(report: InitReport): string {
     lines,
     "Archetypes",
     formatCountedList(
-      report.config.metadata?.archetypes?.map(({ slug, protocol }) => `${slug}:${protocol}`) ?? [],
+      report.config.metadata?.archetypes?.map(({ slug, convention }) => `${slug}:${convention}`) ?? [],
     ),
   );
   pushField(lines, "Relays", formatCountedList(report.config.relays));

@@ -62,7 +62,9 @@ Failures map to a NIP-5D / NAP requirement — fix the napplet, not the check. C
 
 - **Boot failure** — the runtime did not inject `window.napplet` before app code ran, or a top-level throw blocked boot.
 - **Malformed envelope** — a message that isn't a valid `{ type: "domain.action", … }` for its NAP. Re-check arguments to the `window.napplet.*` call.
-- **Manifest problem** — missing/invalid `napplet-type` meta or manifest tags. Confirm the vite-plugin ran and `nappletType` is set.
+- **Manifest problem** — missing or invalid signed manifest tags. Confirm the
+  build/deploy tool emitted the NIP-5A `d`, `path`, and aggregate `x` tags;
+  required capabilities belong in `requires` tags on that manifest event.
 - **Forbidden global** — the bundle references `fetch`, `localStorage`, `window.nostr`, `XMLHttpRequest`, `WebSocket`, etc. Replace with `resource.bytes` / `storage` / `relay`. (Static scan — even unreachable references flag.)
 
 A check that fails a spec-faithful napplet but passes only this toolchain is a tooling bug — flag it; do not work around it.
@@ -95,7 +97,7 @@ tooling false positive before shipping.
 ## Step 5 — Confirm the artifact & guard
 
 - **Single file:** the published napplet is one `index.html` with inline JS (opaque-origin `srcdoc`, no external `<script src>`). Use `artifactMode: 'single-file'`. Verify `dist/index.html` is self-contained.
-- **Runtime guard:** opened without a runtime it shows an explanatory modal rather than failing silently. For standalone manual testing, opt out before the shim loads via `window.__NAPPLET_ALLOW_STANDALONE__ = true` or `<meta name="napplet-allow-standalone">`.
+- **Runtime guard:** opened without a runtime it shows an explanatory modal rather than failing silently. For standalone manual testing, opt out before the shim loads via `window.__NAPPLET_ALLOW_STANDALONE__ = true`.
 
 ## Step 6 — Scenario Smoke Tests
 

@@ -22,21 +22,20 @@ function requireInc(): NonNullable<NappletGlobal['inc']> {
 }
 
 /**
- * Broadcast an INC-PEER event to other napplets via the shell.
+ * Broadcast an INC message to other napplets via the shell.
  *
- * @param topic      The 't' tag value (e.g., 'profile:open')
- * @param extraTags  Additional NIP-01 tags beyond the 't' tag (default: [])
- * @param content    Event content (default: empty string)
+ * @param topic    An opaque stable topic or convention URI
+ * @param payload  Optional opaque payload for a queryless topic
  *
  * @example
  * ```ts
  * import { incEmit } from '@napplet/nap/inc';
  *
- * incEmit('profile:open', [], JSON.stringify({ pubkey: '...' }));
+ * incEmit('napplet:profile/open', { pubkey: '...' });
  * ```
  */
-export function incEmit(topic: string, extraTags?: string[][], content?: string): void {
-  requireInc().emit(topic, extraTags, content);
+export function incEmit(topic: string, payload?: unknown): void {
+  requireInc().emit(topic, payload);
 }
 
 /**
@@ -50,7 +49,7 @@ export function incEmit(topic: string, extraTags?: string[][], content?: string)
  * ```ts
  * import { incOn } from '@napplet/nap/inc';
  *
- * const sub = incOn('profile:open', (payload) => {
+ * const sub = incOn('napplet:profile/open', (payload) => {
  *   console.log('Profile requested:', payload);
  * });
  * // Later: sub.close();

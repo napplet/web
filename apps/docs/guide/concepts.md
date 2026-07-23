@@ -44,6 +44,51 @@ dispatcher routes inbound messages to the right handler by domain prefix via
 
 See the [NAP domain reference](/naps/) for the full list.
 
+## Convention identities and URI bindings
+
+`napplet:<archetype>/<intent>` is the stable convention identity. Manifest
+contracts, subscriptions, handler metadata, discovery, normalized wire
+messages, and routing use the complete queryless string with exact equality.
+Optional same-tag `kind:<number>` fields are discovery metadata for one
+manifest contract; they are not part of the identity, and runtimes never infer
+a kind from payload content.
+
+INC `emit(topic, payload?)` and intent `invoke/open(uri, options?)` are the two
+developer-facing URI boundaries. A queried URI such as
+`napplet:profile/open?pubkey=abc123` is normalized before `postMessage`: unique
+percent-decoded pairs become text payload fields, while literal `+` remains
+`+`. Fragments, malformed encoding, repeated decoded names, and a query
+combined with an explicit payload reject. Structured data uses an explicit
+payload with a queryless URI.
+
+INC subscribers use the normalized topic with exact matching. NAP-INTENT
+invocation returns immediate acceptance or rejection; `ok: true` means the
+runtime accepted responsibility, not that a target received or handled the
+intent. The target later receives a separate, no-ID carrier-neutral delivery:
+
+```ts
+window.napplet.intent.onDelivery((delivery) => {
+  // The runtime attests sender provenance; receivers validate payload.
+  validateIntentPayload(delivery.convention, delivery.payload);
+});
+
+const result = await window.napplet.intent.open(
+  'napplet:profile/open?pubkey=abc123',
+);
+```
+
+Delivery does not depend on the source staying alive or on NAP-INC. Target
+startup/reuse, overlap, replacement, retry, and persistence remain runtime
+policy.
+
+This is a non-normative orientation following the exact draft heads of
+[NAP-INC PR #89
+(`4593ce9`)](https://github.com/napplet/naps/pull/89/commits/4593ce9e301ce098fd3dad64206fcd6f144fa7af),
+[the governance/web projection PR #90
+(`896c32c`)](https://github.com/napplet/naps/pull/90/commits/896c32c92deee68dc4d10fc1132b62df20cccb6f),
+and [NAP-INTENT PR #91
+(`a718915`)](https://github.com/napplet/naps/pull/91/commits/a718915ddefa2f03a0126579601f59d8bd86f7c4).
+
 ## The shell
 
 The **shell** is the trusted host application. It brokers signing — to a remote

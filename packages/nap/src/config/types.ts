@@ -167,7 +167,7 @@ export interface ConfigMessage extends NappletMessage {
 }
 
 /**
- * Register a napplet config schema at runtime (escape hatch; prefer manifest-declared).
+ * Register a napplet config schema with the shell at runtime.
  *
  * @example
  * ```ts

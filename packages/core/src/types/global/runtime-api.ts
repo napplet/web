@@ -115,7 +115,7 @@ export interface ThemeApi {
  *
  * @example
  * ```ts
- * // Register a schema at runtime (escape hatch; prefer manifest-declared):
+ * // Register a schema with the shell:
  * await window.napplet.config.registerSchema({
  *   type: 'object',
  *   properties: { theme: { type: 'string', enum: ['light', 'dark'], default: 'dark' } },
@@ -132,8 +132,7 @@ export interface ThemeApi {
  */
 export interface ConfigApi {
   /**
-   * Register a napplet configuration schema at runtime (runtime escape hatch).
-   * Prefer manifest-declared via @napplet/vite-plugin's `configSchema` option.
+   * Register a napplet configuration schema with the shell at runtime.
    * Correlated via UUID; resolves on positive ACK, rejects with
    * `Error(code + ': ' + reason)` on shell rejection.
    * @param schema   JSON Schema (draft-07+) describing the config surface.
@@ -175,9 +174,8 @@ export interface ConfigApi {
   ): () => void;
   /**
    * Readonly accessor for the currently-registered JSON Schema.
-   * Populated synchronously from the `<meta name="napplet-config-schema">`
-   * manifest tag at install time, then updated on successful
-   * `registerSchema` responses. `null` until a schema is registered.
+   * Updated on successful `registerSchema` responses. `null` until a schema is
+   * registered.
    */
   readonly schema: Record<string, unknown> | null;
 }

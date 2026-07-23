@@ -26,6 +26,21 @@ degradation when domains are absent, and no forbidden globals.
 The validator surface is kept in lockstep with `@napplet/nap` by a drift test, so a
 new NAP message type cannot ship without matching conformance coverage.
 
+For `intent` envelopes, conformance checks carriers rather than payload schemas:
+an invocation has its immediate request/result carrier, while `intent.deliver`
+is a separate inbound target delivery with no correlation identifier. Convention
+strings and payloads remain opaque local choices. The reference shell accepts
+from an authenticated endpoint fixture, returns acceptance before a target
+delivery, and derives delivery sender provenance from that endpoint rather than
+caller payload. Targets must still treat payload data as untrusted.
+
+Manifest archetype validation preserves one queryless convention per tag with
+optional trailing same-tag `kind:<number>` discovery fields. It does not infer
+kinds from payloads. This non-normative description follows the adopted
+[NAP-INC #89 `4593ce9`](https://github.com/napplet/naps/blob/4593ce9e301ce098fd3dad64206fcd6f144fa7af/naps/NAP-INC.md),
+[URI terminology #90 `896c32c`](https://github.com/napplet/naps/commit/896c32c92deee68dc4d10fc1132b62df20cccb6f),
+and [NAP-INTENT #91 `a718915`](https://github.com/napplet/naps/blob/a718915ddefa2f03a0126579601f59d8bd86f7c4/naps/NAP-INTENT.md).
+
 ```ts
 import { validateEnvelope, validateManifestEvent } from '@napplet/conformance';
 

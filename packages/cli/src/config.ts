@@ -2,7 +2,7 @@ import {
   CONFIG_DIR,
   CONFIG_FILE,
   type DeployTargetKind,
-  type NappletArchetypeContract,
+  type NappletArchetypeConvention,
   type NappletConfig,
   type NappletDeployMetadata,
 } from "./types.ts";
@@ -37,9 +37,11 @@ export function defaultConfig(overrides: Partial<NappletConfig> = {}): NappletCo
   const metadata = overrides.metadata
     ? {
       ...overrides.metadata,
-      archetypes: overrides.metadata.archetypes?.map((contract) => ({
-        ...contract,
-        eventKinds: contract.eventKinds ? [...contract.eventKinds] : undefined,
+      archetypes: overrides.metadata.archetypes?.map((convention) => ({
+        ...convention,
+        eventKinds: convention.eventKinds === undefined
+          ? undefined
+          : [...convention.eventKinds],
       })),
     }
     : undefined;
@@ -179,20 +181,20 @@ export function normalizeConfig(input: unknown): NappletConfig {
   });
 }
 
-/** Normalize and validate one `slug:protocol` automation value. */
-export function parseArchetypeContract(value: string): NappletArchetypeContract {
+/** Normalize and validate one `slug:convention` automation value. */
+export function parseArchetypeConvention(value: string): NappletArchetypeConvention {
   const separator = value.indexOf(":");
   const slug = separator === -1 ? "" : value.slice(0, separator).trim();
-  const protocol = separator === -1 ? "" : value.slice(separator + 1).trim();
-  return normalizeArchetypeContract({ slug, protocol }, "archetype");
+  const convention = separator === -1 ? "" : value.slice(separator + 1).trim();
+  return normalizeArchetypeConvention({ slug, convention }, "archetype");
 }
 
 /** Normalize and deduplicate CLI archetype values. */
-export function parseArchetypeContracts(values: readonly string[]): NappletArchetypeContract[] {
-  const contracts = values.map(parseArchetypeContract);
+export function parseArchetypeConventions(values: readonly string[]): NappletArchetypeConvention[] {
+  const conventions = values.map(parseArchetypeConvention);
   const seen = new Set<string>();
-  return contracts.filter((contract) => {
-    const key = `${contract.slug}\0${contract.protocol}\0${contract.eventKinds?.join(",") ?? ""}`;
+  return conventions.filter((convention) => {
+    const key = `${convention.slug}\0${convention.convention}`;
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
@@ -209,13 +211,13 @@ function normalizeMetadata(value: unknown): NappletDeployMetadata | undefined {
   const title = optionalString(metadata.title, "metadata.title");
   const description = optionalString(metadata.description, "metadata.description", true);
   if (name) normalizeDTag(name);
-  let archetypes: NappletArchetypeContract[] | undefined;
+  let archetypes: NappletArchetypeConvention[] | undefined;
   if (metadata.archetypes !== undefined) {
     if (!Array.isArray(metadata.archetypes)) {
       throw new Error("metadata.archetypes must be an array");
     }
-    archetypes = metadata.archetypes.map((contract, index) =>
-      normalizeArchetypeContract(contract, `metadata.archetypes[${index}]`)
+    archetypes = metadata.archetypes.map((convention, index) =>
+      normalizeArchetypeConvention(convention, `metadata.archetypes[${index}]`)
     );
   }
   return {
@@ -226,37 +228,48 @@ function normalizeMetadata(value: unknown): NappletDeployMetadata | undefined {
   };
 }
 
-function normalizeArchetypeContract(
+function normalizeArchetypeConvention(
   value: unknown,
   field: string,
-): NappletArchetypeContract {
+): NappletArchetypeConvention {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
-    throw new Error(`${field} must use slug:protocol (for example note:NAP-4)`);
+    throw new Error(`${field} must use slug:convention (for example note:napplet:note/open)`);
   }
-  const contract = value as Partial<NappletArchetypeContract>;
-  const slug = optionalString(contract.slug, `${field}.slug`);
-  const protocol = optionalString(contract.protocol, `${field}.protocol`);
+  const conventionValue = value as Partial<NappletArchetypeConvention>;
+  const slug = optionalString(conventionValue.slug, `${field}.slug`);
+  const convention = optionalString(conventionValue.convention, `${field}.convention`);
   if (!slug || !/^[a-z0-9][a-z0-9-]*$/.test(slug)) {
     throw new Error(`${field} slug must contain lowercase letters, numbers, and hyphens`);
   }
-  if (!protocol || !/^NAP-[1-9][0-9]*$/.test(protocol)) {
-    throw new Error(`${field} protocol must be a canonical NAP-N identifier`);
+  if (convention && /^NAP-[1-9][0-9]*$/.test(convention)) {
+    throw new Error(`${field} convention must use napplet:<archetype>/<intent>, not a numbered NAP identifier`);
   }
-  let eventKinds: number[] | undefined;
-  if (contract.eventKinds !== undefined) {
-    if (!Array.isArray(contract.eventKinds)) {
-      throw new Error(`${field}.eventKinds must be an array`);
+  if (!convention || !/^napplet:[^/\s]+\/[^\s]+$/.test(convention)) {
+    throw new Error(`${field} convention must use napplet:<archetype>/<intent>`);
+  }
+  const conventionMatch = /^napplet:([^/?#\s]+)\/([^/?#\s]+)$/.exec(convention);
+  if (!conventionMatch || conventionMatch[1] !== slug) {
+    throw new Error(
+      `${field} convention must use napplet:<archetype>/<intent> with an archetype matching its slug`,
+    );
+  }
+  const eventKinds = normalizeEventKinds(conventionValue.eventKinds, `${field}.eventKinds`);
+  return {
+    slug,
+    convention,
+    ...(eventKinds === undefined ? {} : { eventKinds }),
+  };
+}
+
+function normalizeEventKinds(value: unknown, field: string): number[] | undefined {
+  if (value === undefined) return undefined;
+  if (!Array.isArray(value)) throw new Error(`${field} must be an array`);
+  for (const kind of value) {
+    if (typeof kind !== "number" || !Number.isSafeInteger(kind) || kind < 0) {
+      throw new Error(`${field} must contain only unsigned integers`);
     }
-    eventKinds = [
-      ...new Set(contract.eventKinds.map((kind) => {
-        if (!Number.isSafeInteger(kind) || kind < 0) {
-          throw new Error(`${field}.eventKinds must contain non-negative integers`);
-        }
-        return kind;
-      })),
-    ];
   }
-  return { slug, protocol, eventKinds };
+  return [...value];
 }
 
 function optionalString(value: unknown, field: string, allowEmpty = false): string | undefined {

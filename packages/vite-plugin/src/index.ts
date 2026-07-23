@@ -24,14 +24,14 @@
  * });
  * ```
  *
- * During dev, the plugin injects napplet metadata tags so local shells can
- * identify the napplet type and declared requirements. During build it can:
+ * During build it can:
  *
  * - rewrite local JS/CSS assets into `index.html` for single-file artifacts
  * - compute per-file SHA-256 hashes and the NIP-5A aggregate hash
  * - write `.nip5a-manifest.json` containing a signed NIP-5D kind 35129 manifest
- * - inject optional title, description, required-domain, config-schema, and
- *   archetype metadata from plugin options
+ * - inject optional plain-HTML title and description metadata
+ * - record required domains, config schema, and archetype metadata in the
+ *   signed manifest event
  *
  * Set `VITE_DEV_PRIVKEY_HEX` to a hex-encoded 32-byte private key when you want
  * the build-time manifest signed. Without it, manifest signing is skipped while
@@ -48,7 +48,6 @@ import type { Plugin, IndexHtmlTransformResult } from 'vite';
 import type { ManifestPluginState, Nip5aManifestOptions } from './types.js';
 import { applyHtmlMetadata, singleFileBuildConfig } from './html.js';
 import {
-  buildIndexHtmlTags,
   resolvePluginConfig,
   writeBundleManifest,
 } from './manifest.js';
@@ -66,8 +65,8 @@ export type { Nip5aArtifactMode, Nip5aManifestOptions, Nip5aRequiresOptions } fr
  *
  * @param options - manifest options (napplet type, requires, artifact mode,
  *                   config schema).
- * @returns A Vite {@link Plugin} that injects napplet meta tags in dev and
- *          generates the signed NIP-5A manifest at build time.
+ * @returns A Vite {@link Plugin} that optionally updates plain HTML metadata
+ *          and generates the signed NIP-5A manifest at build time.
  * @example
  * import { nip5aManifest } from '@napplet/vite-plugin';
  *
@@ -105,18 +104,17 @@ export function nip5aManifest(options: Nip5aManifestOptions): Plugin {
       return null;
     },
 
-    transformIndexHtml(html: string, ctx?: { server?: unknown }): IndexHtmlTransformResult {
-      const tags = buildIndexHtmlTags(options, state, !!ctx?.server);
+    transformIndexHtml(html: string): IndexHtmlTransformResult {
       // When title/description are set they must OVERRIDE any existing
       // `<title>` / description meta — Vite tag descriptors only append, so we
       // return the html-string transform form to rewrite the document in place.
       if (options.title !== undefined || options.description !== undefined) {
         return {
           html: applyHtmlMetadata(html, { title: options.title, description: options.description }),
-          tags,
+          tags: [],
         };
       }
-      return tags;
+      return [];
     },
 
     async closeBundle() {

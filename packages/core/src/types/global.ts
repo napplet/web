@@ -273,23 +273,12 @@ export interface NappletGlobal {
    */
   upload?: UploadApi;
   /**
-   * Archetype intent dispatch (NAP-INTENT): invoke another napplet by its role
-   * (archetype) without addressing it directly. The napplet names a role +
-   * action + payload; the shell resolves the role to an installed napplet
-   * (honoring the user's default-handler preference), creates or focuses the
-   * window, and delivers the payload using the named NAP-N protocol. Routing
-   * (`archetype`) and payload format (`protocol`) are orthogonal. The shell owns
-   * resolution, default handling, window lifecycle, and the trust boundary —
-   * napplets never learn or address other napplets except through this resolution.
-   *
-   * @example
-   * ```ts
-   * if (window.napplet.intent) {
-   *   const { available } = await window.napplet.intent.available('note');
-   *   if (available) await window.napplet.intent.open('note', { target: { type: 'event', id } });
-   * }
-   * ```
-  */
+   * Archetype intent dispatch (NAP-INTENT): the authoritative convention URI
+   * derives handler-resolution identity, while an accepted result only transfers
+   * delivery responsibility to the runtime. Register `onDelivery` early to
+   * receive target-only deliveries with runtime-attested sender provenance.
+   * Handler selection and lifecycle policy remain runtime-controlled.
+   */
   intent?: IntentApi;
   /**
    * Runtime-mediated Bluetooth LE/GATT sessions (NAP-BLE): the napplet asks

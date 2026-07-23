@@ -90,28 +90,27 @@ export const relay: SdkDomain<'relay'> = {
 };
 
 /**
- * Inter-napplet pubsub: broadcast and receive INC-PEER events through the shell.
+ * Inter-napplet pubsub: broadcast and receive INC events through the shell.
  *
  * @example
  * ```ts
  * import { inc } from '@napplet/sdk';
  *
- * inc.emit('profile:open', [], JSON.stringify({ pubkey: '...' }));
+ * inc.emit('napplet:profile/open', { pubkey: '...' });
  *
- * const sub = inc.on('profile:open', (payload) => {
+ * const sub = inc.on('napplet:profile/open', (payload) => {
  *   console.log('Profile requested:', payload);
  * });
  * ```
  */
 export const inc: SdkDomain<'inc'> = {
   /**
-   * Broadcast an INC-PEER event to other napplets via the shell.
-   * @param topic      The 't' tag value (e.g., 'profile:open')
-   * @param extraTags  Additional NIP-01 tags beyond the 't' tag (default: [])
-   * @param content    Event content (default: empty string)
+   * Broadcast an INC message to other napplets via the shell.
+   * @param topic    An opaque stable topic or convention URI
+   * @param payload  Optional opaque payload for a queryless topic
    */
-  emit(topic: string, extraTags?: string[][], content?: string): void {
-    requireDomain('inc').emit(topic, extraTags, content);
+  emit(topic: string, payload?: unknown): void {
+    requireDomain('inc').emit(topic, payload);
   },
 
   /**

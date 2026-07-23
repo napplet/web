@@ -123,33 +123,14 @@ function assertMainSource(mainSource) {
   }
 }
 
-function getHtmlAttribute(attrs, name) {
-  const pattern = new RegExp(`\\b${name}\\s*=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s>]+))`, 'i');
-  const match = pattern.exec(attrs);
-  return match ? (match[1] ?? match[2] ?? match[3] ?? '') : null;
-}
-
-function getMetaContent(html, name) {
-  for (const match of html.matchAll(/<meta\b([^>]*)>/gi)) {
-    const attrs = match[1];
-    if (getHtmlAttribute(attrs, 'name') === name) {
-      return getHtmlAttribute(attrs, 'content');
-    }
-  }
-  return null;
-}
-
 async function assertOutput() {
   const dist = join(tempRoot, 'dist');
   const htmlPath = join(dist, 'index.html');
   const html = await readFile(htmlPath, 'utf8');
   const files = await readdir(dist);
 
-  if (getMetaContent(html, 'napplet-type') !== 'notedrafts') {
-    throw new Error('Built HTML is missing the notedrafts napplet type meta tag');
-  }
-  if (getMetaContent(html, 'napplet-requires') !== 'identity,outbox,storage') {
-    throw new Error('Built HTML is missing the expected required NAP domains');
+  if (/<meta\b[^>]*\bname=["']napplet-[^"']+["']/i.test(html)) {
+    throw new Error('Built HTML must not contain invented napplet-* protocol metadata');
   }
   if (/<script[^>]+src=/.test(html) || /<link[^>]+rel="stylesheet"/.test(html)) {
     throw new Error('Built HTML still references local external JS/CSS assets');

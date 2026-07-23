@@ -83,6 +83,48 @@ The deprecated `ifc` package subpath is an INC compatibility alias; choose
 `inc` for new work. Every NAP is **voluntary**: assume a domain may be absent and
 degrade gracefully unless it is a hard manifest requirement.
 
+### Cross-napplet roles and messages
+
+For an `intent` feature, record the role slug and stable, queryless convention
+identity that callers use: `napplet:<archetype>/<intent>`. A published archetype
+advertises one contract in an `['archetype', slug, convention, ...kindFields]`
+manifest tag, for example
+`['archetype', 'note', 'napplet:note/open', 'kind:1']`. The optional
+`eventKinds?: number[]` metadata becomes same-tag `kind:<number>` fields for
+discovery only; it never declares a payload schema or lets a runtime infer an
+event kind from payload content. Keep CLI string inputs convention-only; use
+object-shaped Vite or CLI metadata when event kinds are needed.
+
+For `inc`, name the exact opaque topic the feature emits or subscribes to, such
+as `napplet:note/open`, `napplet:profile/open`, or `napplet:dm/open`. NAP-INC
+`emit(topic, payload?)` may use `napplet:profile/open?pubkey=abc123` as
+developer-facing shorthand: the runtime transposes its shallow text query into
+payload and routes the stable queryless topic `napplet:profile/open`. Specify
+subscriptions against that stable queryless topic. The build must treat incoming
+payloads as untrusted and validate them against a real upstream convention when
+one exists.
+
+This query rule applies to outbound NAP-INC `emit(topic, payload?)` and the
+NAP-INTENT URI calls `invoke(uri, options?)` and `open(uri, options?)`. Literal
+`+` remains a plus after percent decoding; fragments, malformed percent encoding,
+repeated decoded names, and query plus explicit payload reject synchronously.
+Plan a queryless URI with explicit payload for structured or non-text data.
+
+For intent targets, require startup registration through `onDelivery`, then
+validate each opaque payload against its stable, queryless convention identity.
+`delivery.sender` is runtime-attested sender provenance, not proof that a
+payload is safe. An `ok: true` invoke result transfers delivery responsibility
+to the runtime; it does not confirm target receipt or processing. Intent
+delivery is not INC, and product designs must not assume a particular source or
+target lifetime or overlap. Do not design public intent or delivery identifiers,
+or a caller-supplied sender field.
+
+Subscriptions, manifest discovery, and routing retain exact matching without
+query parsing, prefix, wildcard, canonicalization, payload-schema, or
+multi-convention behavior. Defer to [NAP-INC draft PR #89](https://github.com/napplet/naps/pull/89)
+and [NAP-INTENT draft PR #91](https://github.com/napplet/naps/pull/91) for the
+living normative contract.
+
 ### NAP-THEME is a whole-surface concern
 
 If the napplet has a visual UI, plan theme integration even when it is optional.
@@ -145,6 +187,9 @@ requires: []        # hard requirements only; keep optional enhancements out
 optional domains and fallbacks: resource -> show initials when avatar fetch unavailable; keys -> use buttons/menu when shell key reservation is absent
 SDK helpers: outbox.query, outbox.subscribe, common.getProfile, storage.getItem, resource.bytes
 config schema: <fields or "none">
+archetype metadata: <none, or slug + stable queryless convention identity + optional eventKinds?: number[] on the same archetype tag>
+INC topics and payload validation: <none, or exact opaque topic + upstream convention/local validation boundary>
+intent delivery: <none, or early onDelivery registration + convention-specific payload validation; no lifecycle/receipt assumption>
 layout: <tiny state> / <large state>, responsive strategy
 theme: NAP-THEME optional/required; root background, text, surface, border, primary, muted mappings; fallback palette; change subscription
 data flow: <outbox queries/subscriptions/publishes, social actions, stored keys>

@@ -39,7 +39,7 @@ napplet deploy
 ```
 
 `napplet create` clones the maintained Vite + TypeScript starter. `napplet init`
-owns deployment name, title, description, canonical archetype contracts, relays,
+owns deployment name, title, description, archetype roles and conventions, relays,
 and Blossom servers in `.napplet/config.json`. Node.js 20+ is needed by the
 generated project and by the package-backed `create` and `skills` commands.
 
@@ -51,10 +51,10 @@ generated project and by the package-backed `create` and `skills` commands.
 | [@napplet/shim](packages/shim) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fshim?label=npm)](https://www.npmjs.com/package/@napplet/shim) | [![JSR](https://jsr.io/badges/@napplet/shim)](https://jsr.io/@napplet/shim) | Runtime-side helper for injecting selected `window.napplet.<domain>` objects before napplet code runs. Sends JSON envelope messages via postMessage. |
 | [@napplet/sdk](packages/sdk) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fsdk?label=npm)](https://www.npmjs.com/package/@napplet/sdk) | [![JSR](https://jsr.io/badges/@napplet/sdk)](https://jsr.io/@napplet/sdk) | Named TypeScript exports wrapping `window.napplet` for bundler consumers. Provides domain wrapper objects and NAP message type re-exports, including `relay`, `inc`, `storage`, `cvm`, `outbox`, `upload`, `intent`, `ble`, `webrtc`, `link`, `count`, `lists`, `common`, `serial`, and `dm`. |
 | [@napplet/nap](packages/nap) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fnap?label=npm)](https://www.npmjs.com/package/@napplet/nap) | [![JSR](https://jsr.io/badges/@napplet/nap)](https://jsr.io/@napplet/nap) | Compatibility package for active NAP domain subpaths (relay, storage, inc, ifc, keys, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent, ble, webrtc, link, count, lists, common, serial, dm) with barrel + granular (types/shim/sdk) exports. Tree-shakable (`sideEffects: false`). Includes ownership-aware `media` and `resource`, the ContextVM `cvm` bridge with registry helpers, outbox-aware `outbox` relay routing, shell-mediated `upload`, archetype `intent` dispatch, runtime-mediated BLE/WebRTC, link opening, event counts, list mutations, common social actions, serial device access, direct messages, and read-only `identity` helpers. See [packages/nap/README.md](packages/nap/README.md) for the full subpath reference. |
-| [@napplet/vite-plugin](packages/vite-plugin) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fvite-plugin?label=npm)](https://www.npmjs.com/package/@napplet/vite-plugin) | [![JSR](https://jsr.io/badges/@napplet/vite-plugin)](https://jsr.io/@napplet/vite-plugin) | Vite plugin for NIP-5D manifest generation. Computes per-file SHA-256 hashes, signs a kind 35129 napplet manifest event (NIP-5A `path` + aggregate `x` tag schema) at build time, and injects `requires` meta tags. Options: required `nappletType` (the `d` tag), optional bare NAP domain `requires`, an `artifactMode` (`external-assets` default or `single-file`), an optional `configSchema` (NAP-CONFIG), and NAAT archetype role tags. |
+| [@napplet/vite-plugin](packages/vite-plugin) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fvite-plugin?label=npm)](https://www.npmjs.com/package/@napplet/vite-plugin) | [![JSR](https://jsr.io/badges/@napplet/vite-plugin)](https://jsr.io/@napplet/vite-plugin) | Vite plugin for NIP-5D manifest generation. Computes per-file SHA-256 hashes and signs a kind 35129 napplet manifest event (NIP-5A `path` + aggregate `x` tag schema) at build time. Options: required `nappletType` (the `d` tag), optional bare NAP domain `requires`, an `artifactMode` (`external-assets` default or `single-file`), an optional `configSchema` (NAP-CONFIG), and NAAT archetype role tags. |
 | [@napplet/cli](packages/cli) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fcli?label=npm)](https://www.npmjs.com/package/@napplet/cli) | [![JSR](https://jsr.io/badges/@napplet/cli)](https://jsr.io/@napplet/cli) | Standalone CLI for creating projects, owning deploy metadata, installing agent skills, discovering builds, and deploying signed manifests. JSR/Deno remains an alternative install route. |
 | [@napplet/boilerplate](packages/boilerplate) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fboilerplate?label=npm)](https://www.npmjs.com/package/@napplet/boilerplate) | — | Project-only generator behind `napplet create`; clones the maintained Vite + TypeScript starter and derives its package name without setting deployment metadata. |
-| [@napplet/conformance](packages/conformance) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fconformance?label=npm)](https://www.npmjs.com/package/@napplet/conformance) | [![JSR](https://jsr.io/badges/@napplet/conformance)](https://jsr.io/@napplet/conformance) | Framework-agnostic conformance engine: hand-written envelope validators for the active NAP wire domains, a manifest/meta validator, a scriptable reference mock shell, the zero-config check catalog, and pretty/JSON/JUnit reporters. Browser-safe; reused by both the CLI and the web runtime. |
+| [@napplet/conformance](packages/conformance) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fconformance?label=npm)](https://www.npmjs.com/package/@napplet/conformance) | [![JSR](https://jsr.io/badges/@napplet/conformance)](https://jsr.io/@napplet/conformance) | Framework-agnostic conformance engine: hand-written envelope validators for the active NAP wire domains, a signed manifest-event validator, a scriptable reference mock shell, the zero-config check catalog, and pretty/JSON/JUnit reporters. Browser-safe; reused by both the CLI and the web runtime. |
 | [@napplet/conformance-cli](packages/conformance-cli) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fconformance-cli?label=npm)](https://www.npmjs.com/package/@napplet/conformance-cli) | — | Headless `napplet-conformance` runner. Drives the engine against a napplet in real Chromium (Playwright) and sets a CI exit code — wire it up as `test:conformance`. npm-only (Playwright dependency). |
 | [@napplet/conformance-web](apps/conformance) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fconformance-web?label=npm)](https://www.npmjs.com/package/@napplet/conformance-web) | — | Browser conformance runtime deployed at `/conformance` and bundled into `napplet-conformance --ui`. Runs the conformance engine live in the page with a check tree, envelope log, and manifest inspector. |
 | [@napplet/skills](packages/skills) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fskills?label=npm)](https://www.npmjs.com/package/@napplet/skills) | [![JSR](https://jsr.io/badges/@napplet/skills)](https://jsr.io/@napplet/skills) | Agent skills (`make-napplet`, `design-napplet`, `build-napplet`, `port-nostr-app`, `test-napplet`) installed through `napplet skills` for Claude Code, Codex, Cursor, Windsurf, `AGENTS.md`, Gemini, or Copilot. |
@@ -86,7 +86,7 @@ npx napplet-conformance --ui . --exec "vite build --watch"
 
 The same web runtime ships standalone (`apps/conformance`, deployed at `/conformance`)
 and runs the checks live in the browser with a visual report. v1 is zero-config protocol
-conformance: manifest/meta validity, boots under `sandbox="allow-scripts"`, receives
+conformance: signed manifest-event validity, boots under `sandbox="allow-scripts"`, receives
 a runtime-injected `window.napplet`, every emitted envelope is well-formed,
 graceful degradation when a domain is absent, and no forbidden globals.
 
@@ -129,6 +129,38 @@ Shell runtime                              @napplet/shim
 ```
 
 The iframe sandbox requires only `allow-scripts` -- **no `allow-same-origin`**. Shells MAY add additional tokens (`allow-forms`, `allow-popups`, etc.) per shell policy. Napplets cannot access the host shell's DOM, cookies, localStorage, or service workers. All persistent state goes through the shell's proxies.
+
+### Intent delivery
+
+NAP-INTENT calls use an authoritative convention URI such as
+`napplet:profile/open?pubkey=abc123`. The runtime binding normalizes that URI
+at `intent.invoke`/`intent.open` only: it derives the archetype, action,
+queryless convention, and shallow text payload before requesting acceptance.
+Manifest discovery and INC subscriptions remain queryless/exact; they do not
+parse a URI query.
+
+An accepted invocation means the runtime has accepted delivery responsibility,
+not that a target has started or received the payload. A target should register
+`onDelivery` during startup and validate the payload before using it:
+
+```ts
+window.napplet.intent?.onDelivery((delivery) => {
+  // `sender` is runtime-attested provenance; `payload` remains untrusted.
+  renderProfile(delivery.payload);
+});
+
+const result = await window.napplet.intent?.open(
+  'napplet:profile/open?pubkey=abc123',
+);
+if (!result?.ok) throw new Error(result?.error ?? 'intent rejected');
+```
+
+The target may already be running or start later; the protocol does not promise
+source/target overlap, retries, or persistence. NAP-INTENT has no public
+NAP-INC dependency. This repository's adopted draft references are
+[NAP-INC #89 at `4593ce9`](https://github.com/napplet/naps/blob/4593ce9e301ce098fd3dad64206fcd6f144fa7af/naps/NAP-INC.md),
+[URI terminology #90 at `896c32c`](https://github.com/napplet/naps/commit/896c32c92deee68dc4d10fc1132b62df20cccb6f),
+and [NAP-INTENT #91 at `a718915`](https://github.com/napplet/naps/blob/a718915ddefa2f03a0126579601f59d8bd86f7c4/naps/NAP-INTENT.md).
 
 ## Origin
 

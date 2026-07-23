@@ -13,10 +13,11 @@ export const NAPPLET_KIND_NAMED = 35129;
 /** DeployTargetKind union used by shared CLI type helpers. */
 export type DeployTargetKind = "root" | "named" | "snapshot";
 
-/** One canonical NAAT archetype contract emitted as a manifest tag. */
-export interface NappletArchetypeContract {
+/** One canonical NAAT archetype convention emitted as a manifest tag. */
+export interface NappletArchetypeConvention {
   slug: string;
-  protocol: string;
+  convention: string;
+  /** Optional unsigned event-kind discovery metadata for this convention. */
   eventKinds?: number[];
 }
 
@@ -25,7 +26,7 @@ export interface NappletDeployMetadata {
   name?: string;
   title?: string;
   description?: string;
-  archetypes?: NappletArchetypeContract[];
+  archetypes?: NappletArchetypeConvention[];
 }
 
 /** NappletConfig shape used by shared CLI type helpers. */

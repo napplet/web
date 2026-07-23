@@ -1,10 +1,8 @@
 # @napplet/vite-plugin
 
-> Vite plugin for napplet local development — injects aggregate-hash meta tags and
-> generates NIP-5A manifests for testing.
+> Vite plugin for napplet local development that generates NIP-5A manifests for testing.
 
-`@napplet/vite-plugin` is a **development tool**. In dev mode it injects the
-discovery meta tags the shim looks for; at build time (with a test private key) it
+`@napplet/vite-plugin` is a **development tool**. At build time (with a test private key) it
 walks `dist/`, computes per-file SHA-256 hashes and the NIP-5A aggregate hash,
 signs a NIP-5D **kind 35129** named-napplet manifest event (NIP-5A tag schema:
 `path` tags + one aggregate `x` tag), and emits the `requires` / `config`
@@ -46,25 +44,17 @@ export default defineConfig({
 
 | Option | Type | Purpose |
 | --- | --- | --- |
-| `nappletType` *(required)* | `string` | The napp type / `d` tag; injected as `<meta name="napplet-napp-type">` and used as the manifest `d` tag. |
-| `requires` | `string[]` | Bare NAP domain names this napplet needs, such as `outbox` or `storage`. Injects a `napplet-requires` meta tag and `["requires", …]` manifest tags. |
+| `nappletType` *(required)* | `string` | The napp type / manifest `d` tag. |
+| `requires` | `string[]` | Bare NAP domain names this napplet needs, such as `outbox` or `storage`. Emits `["requires", …]` manifest tags. |
 | `title` | `string` | Human-readable title. Sets/overrides the built HTML `<title>` (plain HTML, not a `napplet-*` meta; untouched when omitted). The napplet CLI reads it back out of the built `index.html` and emits the NIP-5A `["title", …]` manifest tag. |
 | `description` | `string` | Human-readable description. Sets/overrides the built HTML `<meta name="description">` (plain HTML, not a `napplet-*` meta; untouched when omitted). The napplet CLI reads it back out and emits the NIP-5A `["description", …]` manifest tag. |
 | `configSchema` | `NappletConfigSchema \| string` | A JSON Schema (draft-07+) for the napplet's NAP-CONFIG surface. Inline object or path; falls through to `config.schema.json` then `napplet.config.*` discovery. |
 | `artifactMode` | `'external-assets' \| 'single-file'` | Default `'external-assets'`. `'single-file'` inlines local JS/CSS into `index.html` before hashing — for gateway-portable NIP-5A artifacts. |
 
-## What gets injected
-
-In **dev mode**, two meta tags so the shim can find them:
-
-```html
-<meta name="napplet-aggregate-hash" content="">
-<meta name="napplet-napp-type" content="my-napp">
-```
+## Generated manifest
 
 At **build time** (with `VITE_DEV_PRIVKEY_HEX` set), the plugin walks `dist/`,
-computes hashes, signs the kind 35129 event, writes `.nip5a-manifest.json`, and
-stamps the real aggregate hash into the meta tag:
+computes hashes, signs the kind 35129 event, and writes `.nip5a-manifest.json`:
 
 ```json
 {

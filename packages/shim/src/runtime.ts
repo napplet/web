@@ -78,6 +78,7 @@ import {
   available as intentAvailable,
   handlers as intentHandlers,
   onChanged as intentOnChanged,
+  onDelivery as intentOnDelivery,
 } from '@napplet/nap/intent/shim';
 import {
   installWebrtcShim,
@@ -361,6 +362,7 @@ function createNappletGlobal(domains: ReadonlySet<NapDomain>): NappletGlobal {
       available: intentAvailable,
       handlers: intentHandlers,
       onChanged: intentOnChanged,
+      onDelivery: intentOnDelivery,
     };
   }
 

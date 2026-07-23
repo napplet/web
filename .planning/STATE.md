@@ -2,15 +2,19 @@
 gsd_state_version: 1.0
 milestone: v0.34.0
 milestone_name: NIP-5D Runtime Injection
-status: "Phase 159.1 review feedback verified — PR #171"
-last_updated: "2026-07-22T00:19:07Z"
-last_activity: "2026-07-22 — PR #171 restored the gated one-command SPA and added hosted installers plus napplet guide"
+current_phase: 161
+current_phase_name: ad-hoc-convention-package-contracts
+status: complete
+stopped_at: Phase 161 complete; PR #186 open
+last_updated: "2026-07-23T17:55:49.613Z"
+last_activity: 2026-07-23
+last_activity_desc: Phase 161 verified and published as PR #186
 progress:
-  total_phases: 150
-  completed_phases: 2
-  total_plans: 12
-  completed_plans: 6
-  percent: 1
+  total_phases: 8
+  completed_phases: 4
+  total_plans: 42
+  completed_plans: 32
+  percent: 76
 ---
 
 # Project State
@@ -21,16 +25,16 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 
 **Core value:** Prove that sandboxed Nostr apps can securely delegate to a host shell over a simple, standardized protocol — and ship the spec + SDK so others can build on it.
 
-**Current focus:** Phase 160 — release verification pr
+**Current focus:** Phase 161 — ad-hoc-convention-package-contracts
 
 > **Provenance note:** The "Accumulated Context" section below preserves bullet records from BOTH branches' STATE.md histories. Records tagged "v0.29.0" from main's lineage refer to the milestone NOW renumbered as v0.30.0 (Class-Gated Decrypt — Phases 135-138). Records tagged "v0.29.0" from feat/strict-model refer to NUB-CONNECT (Phases 135-142). Phase number alone is not a unique identifier across the two; cross-reference the topic (decrypt/identity/NIP-07 → v0.30.0; connect/class/CSP-authority → v0.29.0).
 
 ## Current Position
 
-Phase: 160
-Plan: Not started
-Status: Phase 159.1 review feedback verified — PR #171
-Last activity: 2026-07-22 — PR #171 restored the gated one-command SPA and added hosted installers plus `napplet guide`
+Phase: 161 (ad-hoc-convention-package-contracts) — COMPLETE
+Plan: 26 of 26
+Status: Verified; PR #186 open
+Last activity: 2026-07-23 — Phase 161 verified and published as PR #186
 community/group-chat invite linked from the SPA and docs.
 
 ### Quick task 260715-ogy — COMPLETE
@@ -373,6 +377,7 @@ Last activity: 2026-06-16 — Phase 150 (b7a7f7e) CLI+fixtures+e2e+CI; Phase 151
 
 ### Roadmap Evolution
 
+- Phase 161 added: Ad-hoc Convention Package Contracts — chase `napplet/naps@6461e4b` across package types, manifest tooling, CLI, conformance, docs, skills, and tests.
 - Phase 159.1 inserted after Phase 159: CLI-first developer onboarding flow (URGENT)
 
 ### Decisions
@@ -440,6 +445,33 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 - [Phase 138]: [Phase 138]: Plan 01 — VER-06 grep gate GREEN (/tmp/napplet-138-ver-06.log VER06_EXIT=0): all_frames=1, script-src/script-src-elem=3, world: 'MAIN'=1, connect-src 'none'=3, NUB-IDENTITY.md=1, NUB-CLASS-1.md=2, subsection heading=1, free-standing Class 1=0
 - [Phase 138]: [Phase 138]: Plan 01 — Parallel-execution commit hygiene: used --no-verify on commit f1c236b to avoid pre-commit hook contention with 138-02 (which landed ade7b65 ahead for docs surfaces); territory discipline held strict — only specs/NIP-5D.md staged
 - [Phase 138]: Plan 138-02: Single atomic commit used for DOC-01..04 docs sweep — mirrors v0.28.0 Phase 133 precedent; --no-verify required due to parallel wave with 138-01
+- [Phase ?]: Convention values remain opaque strings; the guard detects retired vocabulary without normalizing replacements.
+- [Phase ?]: The root convention guard runs fixture tests before its live active-tree scan; live red is expected until downstream migration completes.
+- [Phase ?]: Use only convention/conventions fields from the pinned NAP-INTENT contract; retain no IntentContract alias.
+- [Phase ?]: Forward convention strings and unknown payloads unchanged; handler selection, authorization, and validation remain shell/receiver responsibilities.
+- [Phase ?]: INC convention topics remain opaque exact strings; no query, prefix, wildcard, case, or Unicode normalization semantics were added.
+- [Phase ?]: Active open-topic constants use napplet:note/open, napplet:profile/open, and napplet:dm/open without payload or event-kind schemas.
+- [Phase ?]: Serialize each archetype as exactly ["archetype", slug, convention], with convention retained as an opaque string.
+- [Phase ?]: Reject numbered NAP identifiers at the Vite option boundary and emit no event-kind or payload constraints.
+- [Phase ?]: Leave multi-convention encoding outside this contract; web#183 semantics were not added.
+- [Phase ?]: CLI archetype metadata uses opaque conventions and exact three-element tags; numbered NAP identifiers and event-kind constraints are retired.
+- [Phase ?]: Interactive wizard and non-interactive --archetype input share parseArchetypeConventions().
+- [Phase ?]: Reference intent availability exposes only opaque conventions; envelope validation does not parse convention or payload semantics.
+- [Phase ?]: Skills document only opaque convention tags and exact INC topics; web#183 remains unresolved.
+- [Phase ?]: The root skills directory is a verified symlink to packages/skills/skills and is never edited separately.
+- [Phase ?]: Package READMEs document one opaque convention per archetype role; payload and matching semantics remain local.
+- [Phase ?]: Use raw pair splitting and decodeURIComponent so INC convention URI transposition preserves literal plus without form decoding.
+- [Phase ?]: Keep convention URI preprocessing confined to outbound INC emit; subscription and inbound routing remain exact string lookups.
+- [Phase ?]: Document NAP-INC query transposition only at emit(topic, payload?), while subscriptions use exact stable topics.
+- [Phase ?]: Scope stale INC query-denial scanning to active Markdown INC or napplet guidance and preserve intentional negative tests.
+- [Phase ?]: Teach convention URI query transposition only through INC emit(topic, payload?), followed by exact stable-topic routing.
+- [Phase ?]: Publish CLI archetype examples as opaque slug:convention metadata and preserve NAP-INTENT and manifest opacity.
+- [Phase ?]: Document only the exact three-element archetype manifest tag and keep convention values opaque.
+- [Phase ?]: Confine NAP-INC query transposition to emit, then route the stable topic exactly.
+- [Phase ?]: Use one internal convention URI normalizer with raw decoding and literal-plus semantics for adopted boundaries.
+- [Phase ?]: Keep INC query parsing outbound-only and preserve exact opaque receive routing.
+- [Phase ?]: IntentResult now distinguishes immediate runtime acceptance from pre-acceptance rejection; post-acceptance delivery remains runtime policy.
+- [Phase ?]: IntentApi derives identity from convention URIs and exposes no-ID runtime-attested target delivery through onDelivery.
 
 ### Decisions (napplet/nubs state snapshot, 2026-04-23)
 
@@ -529,8 +561,10 @@ Items acknowledged and deferred at v0.31.0 milestone close on 2026-05-24:
 
 ## Session Continuity
 
-Last session: 2026-06-17T04:30:00.000Z
-Stopped at: Completed 155-01-PLAN.md (Implement NAP-SHELL — SHELL-01..06)
+**Resume file:** None
+
+Last session: 2026-07-23T15:44:08.781Z
+Stopped at: Completed 161-16-PLAN.md
 Resume: Phase 155 COMPLETE. All v0.33.0 SHELL requirements satisfied; both phases (154, 155) done. Next: orchestrator verify_phase_goal for Phase 155, then `/gsd:audit-milestone v0.33.0` → `/gsd:ship`.
 
 - v0.26.0: Consolidated `@napplet/nub-*` packages into single `@napplet/nub` with 34 subpath exports; deprecated packages ship as 1-line re-export shims for one release cycle
@@ -610,3 +644,22 @@ Resume: Phase 142 TERMINAL-COMPLETE — all 13 VER-IDs (VER-01..13) verified PAS
 ## Operator Next Steps
 
 - Phase 155 (Implement NAP-SHELL) COMPLETE. Run `/gsd:audit-milestone v0.33.0`, then `/gsd:ship`.
+
+## Performance Metrics
+
+| Plan | Duration | Tasks | Files |
+|------|----------|-------|-------|
+| Phase 161 P06 | 1min | 2 tasks | 3 files |
+| Phase 161 P01 | 5min | 2 tasks | 9 files |
+| Phase 161 P02 | 6m | 2 tasks | 4 files |
+| Phase 161 P03 | 2m | 1 tasks | 4 files |
+| Phase 161 P04 | 6 min | 3 tasks | 10 files |
+| Phase 161 P05 | 3 min | 3 tasks | 3 files |
+| Phase 161 P09 | 5min | 2 tasks | 5 files |
+| Phase 161 P08 | 12min | 1 tasks | 10 files |
+| Phase 161 P13 | 5min | 2 tasks | 6 files |
+| Phase 161 P14 | 7min | 3 tasks | 10 files |
+| Phase 161 P11 | 3min | 2 tasks | 8 files |
+| Phase 161 P12 | 4min | 1 tasks | 5 files |
+| Phase 161-ad-hoc-convention-package-contracts P15 | 2min | 1 tasks | 4 files |
+| Phase 161 P16 | 4 min | 2 tasks | 5 files |

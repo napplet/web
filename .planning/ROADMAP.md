@@ -35,17 +35,18 @@
 - ✅ **v0.31.0 Cleanup Quality Gate** — Phases 143-147 (shipped 2026-05-24) — [Archive](milestones/v0.31.0-ROADMAP.md)
 - ✅ **v0.32.0 Napplet Conformance** — Phases 148-153 (shipped 2026-06-16)
 - ✅ **v0.33.0 NAP-SHELL Alignment** — Phases 154-155 (superseded by v0.34.0 NIP-5D runtime-injection update)
-- 🔨 **v0.34.0 NIP-5D Runtime Injection** — Phases 156-160 (in progress)
+- 🔨 **v0.34.0 NIP-5D Runtime Injection** — Phases 156-161 (in progress)
 
 ## Phases
 
 **Phase Numbering:**
+
 - Integer phases (1, 2, 3): Planned milestone work
 - Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
 
 Note: Phase 45 (IPC terminology cleanup) was completed as a quick task during v0.8.0 and is not part of the v0.9.0 roadmap. Phases 57–60 were deprecated after v0.11.0 and archived under `milestones/v0.12.0-phases/deprecated/`.
 
-### 🔨 v0.34.0 NIP-5D Runtime Injection (Phases 156-160) — IN PROGRESS
+### 🔨 v0.34.0 NIP-5D Runtime Injection (Phases 156-161) — IN PROGRESS
 
 **Milestone Goal:** Align the SDK, shim, conformance tooling, docs, skills, and
 boilerplate guidance with the current NIP-5D PR #2303 head `6ca5632`: runtimes
@@ -57,26 +58,31 @@ protocol.
 **Phase groups:** Phase 156 source audit and plan lock -> Phase 157 package
 runtime-injection migration (4 plans) -> Phase 158 conformance/tooling
 migration (2 plans) -> Phase 159 docs/skills/boilerplate migration (2 plans)
--> Phase 160 release verification and PR.
+-> Phase 160 release verification and PR -> Phase 161 ad-hoc convention and
+intent contract alignment.
 Ships as one coordinated release PR off branch `feat/nip5d-runtime-injection`.
 
 - [ ] **Phase 156: Source Audit and Plan Lock** — Capture the live NIP-5D delta,
   audit old NAP-SHELL/supports surfaces, and write checked execution plans.
   Requirements: NIP5D-01.
+
 - [ ] **Phase 157: Packages Runtime-Injection Migration** — Update
   `@napplet/core`, `@napplet/shim`, `@napplet/nap`, and `@napplet/sdk` so
   domain objects are optional/injected, the shim can install selected domains,
   and NAP-SHELL surfaces are retired from active package APIs. Requirements:
   NIP5D-01, NIP5D-02, NIP5D-03, PKG-01..05.
+
 - [ ] **Phase 158: Conformance and Fixture Migration** — Update
   `@napplet/conformance`, `@napplet/conformance-cli`, web conformance runtime,
   and fixtures so boot and degradation checks use injected namespace/domain
   presence rather than shell handshake/supports traffic. Requirements:
   NIP5D-01, NIP5D-02, CONF-01..05.
+
 - [ ] **Phase 159: Docs, Skills, and Boilerplate Guidance** — Rewrite root docs,
   apps docs, package READMEs, skills, and boilerplate guidance around
   runtime-owned injection and napplet-side types/SDK consumption. Requirements:
   NIP5D-01, NIP5D-03, NIP5D-04, DOC-01..04.
+
 - [ ] **Phase 160: Release Verification and PR** — Add changesets, run full
   gates, prove stale-surface grep clean, push, and open the PR. Requirements:
   REL-01..04.
@@ -84,66 +90,87 @@ Ships as one coordinated release PR off branch `feat/nip5d-runtime-injection`.
 ## Phase Details — v0.34.0 NIP-5D Runtime Injection
 
 ### Phase 156: Source Audit and Plan Lock
+
 **Goal**: The milestone is grounded in live NIP-5D PR #2303 head `6ca5632`, with
 repo impact audited and executable plans checked before implementation.
 **Depends on**: Nothing.
 **Requirements**: NIP5D-01
 **Success Criteria** (what must be TRUE):
+
   1. The requirements cite NIP-5D runtime injection, domain-object presence, and
      removal of generic shell capability query/handshake.
+
   2. Code/docs/skills/conformance audit identifies the live surfaces to change.
   3. Phase plans exist for packages, conformance/tooling, docs/skills, and
      release verification.
 **Plans:** 1 plan
+
 - [ ] 156-01-PLAN.md — Record source audit, impact matrix, and checked phase plan.
 
 ### Phase 157: Packages Runtime-Injection Migration
+
 **Goal**: First-party package surfaces align with runtime-injected domain
 objects and no longer require the NAP-SHELL handshake or `supports()` API.
 **Depends on**: Phase 156.
 **Requirements**: NIP5D-01, NIP5D-02, NIP5D-03, PKG-01, PKG-02, PKG-03, PKG-04, PKG-05
 **Success Criteria** (what must be TRUE):
+
   1. `NappletGlobal` domain properties are optional and `shell` is gone from the
      active global type.
+
   2. `@napplet/shim` exposes a runtime injection installer that can select
      domains and emits no `shell.ready` / waits for no `shell.init`.
+
   3. `@napplet/nap/shell` and shell helpers are removed or made unavailable from
      active exports.
+
   4. `@napplet/sdk` helpers fail clearly when a domain object is absent and
      examples gate by property presence.
 **Plans:** 4 plans
+
 - [ ] 157-01-PLAN.md — Core global/domain type migration.
 - [ ] 157-02-PLAN.md — Remove `@napplet/nap/shell` package subpath.
 - [ ] 157-03-PLAN.md — Shim runtime injection installer.
 - [ ] 157-04-PLAN.md — SDK guards and package verification.
 
 ### Phase 158: Conformance and Fixture Migration
+
 **Goal**: Conformance proves the current NIP-5D bootstrap boundary: injected
 `window.napplet` exists before napplet code, and all observed protocol traffic is
 valid domain traffic.
 **Depends on**: Phase 157.
 **Requirements**: NIP5D-01, NIP5D-02, CONF-01, CONF-02, CONF-03, CONF-04, CONF-05
 **Success Criteria** (what must be TRUE):
+
   1. Boot collection injects the shim/runtime namespace before subject scripts.
   2. No conformance check, validator, drift guard, or fixture treats
      `shell.ready` / `shell.init` as required protocol.
+
   3. Fixtures pass/fail for domain traffic behavior, not shell handshake behavior.
+
 **Plans:** 2 plans
+
 - [ ] 158-01-PLAN.md — Conformance engine/runtime migration.
 - [ ] 158-02-PLAN.md — CLI, web runner, and fixture migration.
 
 ### Phase 159: Docs, Skills, and Boilerplate Guidance
+
 **Goal**: Author-facing and agent-facing guidance matches the current model:
 runtimes inject, napplets use types/SDK, and domain absence means unavailable.
 **Depends on**: Phase 157, Phase 158.
 **Requirements**: NIP5D-01, NIP5D-03, NIP5D-04, DOC-01, DOC-02, DOC-03, DOC-04
 **Success Criteria** (what must be TRUE):
+
   1. Root docs, package READMEs, and apps docs no longer present `supports()` or
      NAP-SHELL as current generic runtime API.
+
   2. Skills tell agents to build napplets against injected `window.napplet`
      domains, install types/SDK as needed, and avoid napplet-owned shim imports.
+
   3. Boilerplate docs/package guidance is checked and aligned.
+
 **Plans:** 2 plans
+
 - [ ] 159-01-PLAN.md — Root, package, and app docs migration.
 - [ ] 159-02-PLAN.md — Skills and boilerplate guidance migration.
 
@@ -156,34 +183,45 @@ builders through the same commands.
 **Requirements**: ONB-01, ONB-02, ONB-03, ONB-04, ONB-05, ONB-06, ONB-07, ONB-08
 **Depends on:** Phase 159
 **Success Criteria** (what must be TRUE):
+
   1. A checksum-verified standalone `napplet` binary can drive the documented
      onboarding path without requiring Deno.
+
   2. `napplet create`, `napplet init`, and `napplet skills` compose the shipped
      generator and skill installer while keeping deployment metadata in the CLI
      config and preserving non-interactive operation.
+
   3. Generated manifests prefer valid `.napplet/config.json` name, title,
      description, and canonical archetype contracts over template defaults.
+
   4. SPA, docs, tutorials, and skills present one responsive, executable
      install -> create -> init -> skills -> build -> deploy path.
+
   5. Package changesets and all repository verification gates pass.
+
 **Plans:** 4/4 plans complete
 
 Plans:
+
 - [x] 159.1-01-PLAN.md — CLI composition and deploy-metadata ownership.
 - [x] 159.1-02-PLAN.md — Boilerplate simplification and standalone binaries.
 - [x] 159.1-03-PLAN.md — CLI-first documentation, tutorials, and skills.
 - [x] 159.1-04-PLAN.md — SPA onboarding surface and release verification.
 
 ### Phase 160: Release Verification and PR
+
 **Goal**: The migration is release-ready and publicly reviewable.
 **Depends on**: Phase 157, Phase 158, Phase 159, Phase 159.1.
 **Requirements**: REL-01, REL-02, REL-03, REL-04
 **Success Criteria** (what must be TRUE):
+
   1. Changesets exist for every changed shipped package.
   2. Full verification gates pass and are recorded.
   3. Stale-surface grep is clean for live first-party surfaces.
   4. Branch is pushed and a PR is open.
+
 **Plans:** 1 plan
+
 - [ ] 160-01-PLAN.md — Changesets, verification, stale-surface audit, PR.
 
 <details>
@@ -204,28 +242,35 @@ are historical context only and are retired by v0.34.0.
 ## Phase Details — v0.33.0 NAP-SHELL Alignment
 
 ### Phase 154: Defer NAP-CONNECT
+
 **Goal**: The `connect` (NAP-CONNECT) domain is fully retired from the active runtime, build/manifest, and conformance surfaces — clearing the `perm:`/`sandbox` capability tokens — while the workspace stays green and NIP-5A manifest generation still works, so Phase 155 can land NAP-SHELL on the clean `{domains, protocols}` capabilities shape.
 **Depends on**: Nothing (first phase of milestone; NAP-CLASS already deferred in `9aa4b80`).
 **Requirements**: DEFER-02, DEFER-03, DEFER-04
 **Success Criteria** (what must be TRUE):
+
   1. `window.napplet.connect` no longer exists, `connect` is gone from `NAP_DOMAINS`/`NapDomain`, the `@napplet/nap/connect` subpath (incl. `__fixtures__`) and its package/jsr/tsup exports + sdk re-exports are removed, and the workspace type-checks (`pnpm -r build` + `pnpm -r type-check` exit 0 across all packages).
   2. `@napplet/vite-plugin` no longer exposes the `connect` option, emits no `connect` manifest tags or `napplet-connect-requires` meta, and `connect.ts`/`normalizeConnectOptions`/the orphaned `strictCsp` deprecation are deleted — yet a build still emits a valid NIP-5A manifest.
   3. The conformance engine no longer references connect: the `manifest/connect-origins` check and the `normalizeConnectOrigin` dependency are removed, `validateManifest` no longer validates connect origins, and the connect envelope validators are gone.
   4. A repo-wide grep for the retired connect surface (`window.napplet.connect`, `normalizeConnectOrigin`, `napplet-connect-requires`, `connect-origins`) returns zero first-party matches outside historical changelog/spec records.
 
 **Plans:** 1 plan
+
 - [x] 154-01-PLAN.md — Remove the connect domain from core/nap/sdk/shim, vite-plugin build+manifest, and conformance; keep build/type-check/test green and NIP-5A manifest generation working (mirrors NAP-CLASS deferral 9aa4b80).
 
 ### Phase 155: Implement NAP-SHELL
+
 **Goal**: NAP-SHELL is implemented as the mandatory, foundational (non-`supports()`-discoverable) bootstrap handshake — the shim performs `shell.ready` → `shell.init`, caches the `{ capabilities: { domains, protocols }, services, class }` environment, and answers `supports(domain, protocol?)` synchronously and locally; the public `window.napplet.shell` API, a `@napplet/nap/shell` subpath, and the conformance engine all recognize `shell.*` as a first-class NAP rather than a private special-case.
 **Depends on**: Phase 154 (connect/class retired so capabilities land on the clean `{domains, protocols}` shape).
 **Requirements**: SHELL-01, SHELL-02, SHELL-03, SHELL-04, SHELL-05, SHELL-06
 **Success Criteria** (what must be TRUE):
+
   1. After `import '@napplet/shim'`, the shim posts `shell.ready` (no payload) and caches the inbound `shell.init` environment `{ capabilities: { domains, protocols }, services, class }`; `window.napplet.shell.supports('relay', 'NAP-2')` answers synchronously from the cached environment, returning `false` before init and for any unknown domain/protocol.
   2. `window.napplet.shell` exposes `supports(domain, protocol?)`, `services: string[]`, `class: number | null` (opaque), `ready(): Promise<ShellEnvironment>`, and `onReady(handler)`, all typed in `@napplet/core`; `pnpm -r build` + `pnpm -r type-check` exit 0 across all packages.
   3. `import '@napplet/nap/shell'` resolves NAP-SHELL types (and any shim/sdk surface) consistent with the other domains' subpath layout (package/jsr/tsup exports present).
   4. The conformance envelope validator recognizes `shell.ready` (outbound) and `shell.init` (inbound) as NAP-SHELL envelopes with the reference-shell special-case removed, `shell` registered as the foundational non-`supports()`-discoverable domain, the reference shell replying in the `{ capabilities, services, class }` shape (migrated off `{ naps, sandbox }`) with boot-readiness still detected, and the `boot/installs-global`, `boot/no-boot-error`, and graceful-degradation checks re-titled/documented to cite NAP-SHELL.
+
 **Plans:** 1 plan
+
 - [x] 155-01-PLAN.md — Implement NAP-SHELL across core (ShellEnvironment/NappletShell types), a new @napplet/nap/shell subpath, the shim (post shell.ready + cache shell.init {capabilities:{domains,protocols},services,class} + supports/services/class/ready/onReady), and conformance (validator recognizes shell.*, reference shell sends the new shape, boot/degrade checks cite NAP-SHELL); green at every commit.
 
 </details>
@@ -251,6 +296,7 @@ are historical context only and are retired by v0.34.0.
 **Requirements**: ENGINE-01, ENGINE-03, ENGINE-04, ENGINE-05
 
 **Success Criteria** (what must be TRUE):
+
   1. `pnpm --filter @napplet/conformance build` and `type-check` exit 0; the package is ESM-only with `package.json` + `jsr.json` matching workspace publish conventions.
   2. `validateEnvelope(msg)` returns a structured verdict for every one of the 16 NAP domains; valid spec envelopes pass and malformed ones report field-level errors.
   3. `validateManifest(doc)` validates napplet-type, aggregateHash, config schema (draft-07 core subset), connect origins (via `normalizeConnectOrigin`), and rejects inline `<script>` without `src`.
@@ -263,6 +309,7 @@ are historical context only and are retired by v0.34.0.
 **Requirements**: ENGINE-02, ENGINE-06, ENGINE-07, ENGINE-08, ENGINE-09
 
 **Success Criteria** (what must be TRUE):
+
   1. `createReferenceShell` answers `shell.supports()`, responds to each NAP domain with spec-valid data, and exposes a recorded log of inbound envelopes each carrying a validation verdict.
   2. The check registry implements the v1 catalog (manifest, boot, wire, degradation, lifecycle); each check returns pass/fail/skip with diagnostics, and a no-op napplet correctly skips untouched-NAP wire checks.
   3. `runConformance(ctx)` returns a `ConformanceRun` that round-trips through `toJson` and renders via `toPretty` and `toJUnit`.
@@ -275,6 +322,7 @@ are historical context only and are retired by v0.34.0.
 **Requirements**: CLI-01, CLI-02, CLI-03, CLI-04, CLI-05, CLI-06
 
 **Success Criteria** (what must be TRUE):
+
   1. `napplet-conformance <dir|url>` launches headless Chromium, serves the napplet + host page, runs the engine in-page, and prints the selected reporter (`pretty|json|junit`).
   2. The CLI exits 0 for the conformant fixture and non-zero for the deliberately broken fixture.
   3. `tests/fixtures/napplets/*` contains a conformant fixture exercising multiple NAPs and a non-conformant fixture; the `tests/e2e/harness` suite asserts both verdicts and exit codes.
@@ -287,6 +335,7 @@ are historical context only and are retired by v0.34.0.
 **Requirements**: WEB-01, WEB-02, WEB-03
 
 **Success Criteria** (what must be TRUE):
+
   1. `apps/conformance` accepts a napplet URL (querystring or field) or local build and runs the engine live in its own window.
   2. The app renders a per-check pass/fail tree, the recorded envelope log with verdicts, and a manifest inspector.
   3. The app imports `@napplet/conformance` directly (no duplicated logic) and `pnpm --filter @napplet/conformance-web... build`/`type-check` succeed; deploy wiring is present.
@@ -298,6 +347,7 @@ are historical context only and are retired by v0.34.0.
 **Requirements**: REL-01, REL-02, REL-03, REL-04, REL-05
 
 **Success Criteria** (what must be TRUE):
+
   1. A package-manager-agnostic `test:conformance` invocation is documented and dogfooded green against an in-repo fixture.
   2. The boilerplate-template change (script + minimal config + CI step) is authored as a documented diff in the PR body for the separate repo.
   3. Root README, new package README(s), and relevant skills document the conformance capability; changesets exist for every package whose shipped output changed and `jsr.json` versions/exports are synced.
@@ -325,6 +375,7 @@ are historical context only and are retired by v0.34.0.
 **Requirements**: SEC-01, SEC-02, SEC-03, SEC-04
 
 **Success Criteria** (what must be TRUE):
+
   1. `pnpm why vite`, `pnpm why postcss`, and `pnpm why turbo` show `vite >=6.4.2`, `postcss >=8.5.10`, and `turbo >=2.9.14`.
   2. `package.json` and `pnpm-lock.yaml` are the only required dependency graph edits unless a verification failure proves package-local changes are needed.
   3. The security scanner reports no vulnerable-dependency findings for `vite`, `postcss`, or `turbo`.
@@ -339,6 +390,7 @@ are historical context only and are retired by v0.34.0.
 **Requirements**: LINT-01, LINT-02, LINT-03, LINT-04, SLOP-01, SLOP-02, SLOP-03
 
 **Success Criteria** (what must be TRUE):
+
   1. Duplicate `@napplet/core` imports in `packages/nub/src/relay/types.ts` and `packages/shim/src/index.ts` are merged.
   2. The unused type imports named in the kickoff report are gone, with workspace type-check still green.
   3. Production source has no reported `console.log`, `console.debug`, or `console.info` leftovers; vite-plugin user-facing diagnostics are removed, converted to warnings/errors, or routed through an existing Vite hook surface.
@@ -354,6 +406,7 @@ are historical context only and are retired by v0.34.0.
 **Requirements**: TYPE-01, TYPE-02, TYPE-03, TYPE-04
 
 **Success Criteria** (what must be TRUE):
+
   1. `window.napplet` and global mount code in production uses typed helpers or explicit structural types instead of broad `as any`.
   2. Message-handler double assertions are replaced by discriminated-union narrowing, small runtime guards, or a single isolated dispatcher-boundary adapter with verification evidence.
   3. Touched shims have invalid-message or mount-behavior tests proving rejected inputs stay rejected and valid inputs still update the same public surface.
@@ -368,6 +421,7 @@ are historical context only and are retired by v0.34.0.
 **Requirements**: QUAL-01, QUAL-02, QUAL-03, QUAL-04
 
 **Success Criteria** (what must be TRUE):
+
   1. `normalizeConnectOrigin` is factored into focused helpers while preserving its 28-case smoke coverage and the canonical `connect:origins` aggregateHash fixture behavior.
   2. Long functions in `packages/shim/src/nipdb-shim.ts` and `packages/vite-plugin/src/index.ts` are split or narrowed with tests/build checks proving behavior preservation.
   3. Oversized type/barrel files are reduced where existing internal boundaries make the split low risk; public import paths remain compatible.
@@ -382,6 +436,7 @@ are historical context only and are retired by v0.34.0.
 **Requirements**: GATE-01, GATE-02, GATE-03, GATE-04
 
 **Success Criteria** (what must be TRUE):
+
   1. The same scanner class used in the kickoff report reports zero security errors.
   2. Formatting, linting, code-quality, and AI-slop findings from the kickoff report are closed or explicitly deferred with rationale.
   3. `pnpm -r type-check`, `pnpm -r build`, and `pnpm -r test:unit` exit 0 after all cleanup edits.
@@ -703,24 +758,26 @@ are historical context only and are retired by v0.34.0.
 
 </details>
 
-
 ## v0.30.0 Phase Details
-
 
 <details>
 <summary>v0.30.0 phase details (archived — see milestones/v0.30.0-ROADMAP.md for canonical)</summary>
 
 ### Phase 135: First-Party Types + SDK Plumbing
+
 **Goal**: The `@napplet/nub/identity` package ships the complete wire + SDK surface for `identity.decrypt` — type additions, shim handler, SDK helper, and central re-exports — so the public amendment PR in Phase 137 can cite a shipped (not hypothetical) first-party surface. Workspace type-check stays green and the identity-types-only tree-shake contract is preserved.
 **Depends on**: Nothing (first phase of milestone; v0.28.0 Phase 134 shipped)
 **Requirements**: TYPES-01, TYPES-02, TYPES-03, TYPES-04, TYPES-05, TYPES-06, SHIM-01, SHIM-02, SHIM-03, SDK-01, SDK-02, VER-01, VER-05
 **Success Criteria** (what must be TRUE):
+
   1. `import { type IdentityDecryptMessage, type IdentityDecryptResultMessage, type IdentityDecryptErrorMessage, type IdentityDecryptErrorCode, type Rumor } from '@napplet/nub/identity'` resolves; the existing `IdentityMessage` / `IdentityInbound` / `IdentityOutbound` discriminated unions include the 3 new message types, and a `never`-fallback assertion in the shim handler enforces exhaustiveness at compile time.
   2. After `import '@napplet/shim'` (assuming SHIM-03 requires no central-shim edit — verified empirically during the phase), calling `window.napplet.identity.decrypt(event)` returns a `Promise<{ rumor: Rumor, sender: string }>` that resolves on `identity.decrypt.result` envelopes and rejects with a typed `IdentityDecryptError` on `identity.decrypt.error`; pending-request correlation by `id` cleans up on both paths.
   3. `import { identityDecrypt } from '@napplet/sdk'` resolves the bare-name helper wrapping `window.napplet.identity.decrypt` with a `requireNapplet()` guard; `@napplet/sdk` re-exports the 3 new identity types via the 4-surgical-edit pattern (namespace, type re-exports, DOMAIN const unchanged, helper re-export).
   4. `pnpm -r build` and `pnpm -r type-check` exit 0 across all 14 workspace packages (VER-01 shipping gate).
   5. A consumer importing only `@napplet/nub/identity/types` produces a tree-shaken bundle that does NOT pull shim/sdk runtime symbols, and the relay-types-only tree-shake bundle remains ≤ 100 bytes (matching v0.28.0 VER-07 74-byte precedent).
+
 **Plans:** 5/5 plans complete
+
 - [x] 135-01-PLAN.md — Types in @napplet/core + @napplet/nub/identity (TYPES-01..05)
 - [x] 135-02-PLAN.md — Shim runtime (decrypt function + handler branch) + central shim mount (SHIM-01..03)
 - [x] 135-03-PLAN.md — SDK identityDecrypt helper + central SDK 4-surgical-edits (SDK-01..02)
@@ -728,23 +785,29 @@ are historical context only and are retired by v0.34.0.
 - [x] 135-05-PLAN.md — Gap closure: Rumor re-export from @napplet/nub/identity + never-fallback exhaustiveness in shim handler (TYPES-01, TYPES-03, TYPES-05)
 
 ### Phase 136: Empirical CSP Injection-Block Verification
+
 **Goal**: Empirically prove on Chromium that a test napplet served under the NUB-CLASS-1 CSP posture (`connect-src 'none'`; `script-src 'nonce-XXX'`; `report-to` directive) blocks a simulated legacy `<script>`-tag content-script injection AND fires a `securitypolicyviolation` event the shell can receive. Lock the observed-shape of `world: 'MAIN'` extension-API residual honestly (no browser-layer block possible from page side). The empirical result backs DETECT-01..04's spec language in Phase 137's amendment — the PR cites behavior we've actually observed, not assumed.
 **Depends on**: Nothing (independent of Phase 135; empirical fixture only)
 **Requirements**: DETECT-01, DETECT-02, DETECT-03, DETECT-04, VER-04
 **Success Criteria** (what must be TRUE):
+
   1. A Playwright fixture serves a napplet HTML page under the NUB-CLASS-1 CSP baseline (`default-src 'none'`, `connect-src 'none'`, `script-src 'nonce-XXX' 'self'`, `report-to <shell-owned-endpoint>`) with matching `Report-To` response header; mock-injects a legacy `<script>` tag without the valid nonce; observes Chromium blocking the injection with a CSP-violation console message AND firing a `securitypolicyviolation` event whose `violatedDirective` is `script-src`.
   2. The same fixture records the shape of the violation report that would be POSTed to the `report-to` endpoint (directive, blocked URI, document URL, source file); the observed shape is documented as the input the shell MUST process per DETECT-02, correlating to napplet identity via `(dTag, aggregateHash)` through the napplet HTML URL path.
   3. The `world: 'MAIN'` extension-API residual is documented honestly in the phase artifact: extensions using `chrome.scripting.executeScript({world:'MAIN'})` bypass page CSP entirely → no `securitypolicyviolation` fires → no report to the shell. The structural mitigation is NUB-CLASS-1's `connect-src 'none'` trapping any plaintext inside the frame regardless of how it was obtained.
   4. The phase artifact names the shell's policy latitude explicitly: shell MAY (not MUST) refuse-to-serve subsequent loads of an offending napplet, reject subsequent `identity.decrypt` envelopes from it, or surface the event to the user — spec defines the mechanism, not the response (DETECT-03).
+
 **Plans:** 2/2 plans complete
+
 - [x] 136-01-PLAN.md — Playwright CJS fixture: empirical CSP legacy-injection block + violation-report shape capture (DETECT-01, VER-04)
 - [x] 136-02-PLAN.md — Synthesize 136-PHASE-NOTES.md from Plan 01 evidence + DETECT-02/03/04 documentation gates (DETECT-02, DETECT-03, DETECT-04)
 
 ### Phase 137: Public `napplet/nubs` Amendments (NUB-IDENTITY + NUB-CLASS-1 bundled)
+
 **Goal**: A single draft PR on public `napplet/nubs` amends `NUB-IDENTITY.md` with the `identity.decrypt` envelope triad (request + result + error) plus Security Considerations, AND amends `NUB-CLASS-1.md` with the `report-to` SHOULD row and violation-correlation MUST. The PR is opened by the human; this milestone authors the diff. Public-repo hygiene is verified clean: zero `@napplet/*`, zero `kehto`, zero `hyprgate` in diff, commit messages, or PR body. Filename citations (`NUB-CLASS-1.md`) replace abstract phrases (`Class 1`) as primary references per NUB-CLASS §Citation.
 **Depends on**: Phase 135 (shipped first-party surface to cite honestly), Phase 136 (empirical `securitypolicyviolation` shape observed on Chromium)
 **Requirements**: DEC-01, DEC-02, DEC-03, DEC-04, DEC-05, DEC-06, DEC-07, DEC-08, GATE-01, GATE-02, GATE-03, GATE-04, NUB-IDENTITY-01, NUB-IDENTITY-02, NUB-IDENTITY-03, NUB-IDENTITY-04, NUB-IDENTITY-05, NUB-IDENTITY-06, NUB-IDENTITY-07, CLASS1-01, CLASS1-02, CLASS1-03, VER-02, VER-03
 **Success Criteria** (what must be TRUE):
+
   1. The NUB-IDENTITY amendment draft at `~/Develop/nubs/` contains the `identity.decrypt` / `.result` / `.error` envelope triad with full payload shapes (DEC-01..03), the 8-code `IdentityDecryptErrorCode` vocabulary enumerated with a one-sentence failure-surface description per code (DEC-04, NUB-IDENTITY-03), the shape-auto-detection clause covering NIP-04 / direct NIP-44 / NIP-17 gift-wrap (DEC-05), and the 4 shell MUSTs — class-gating, outer-sig-verify, impersonation-check (seal.pubkey === rumor.pubkey), outer-created_at-hiding (DEC-06..08, GATE-01..03, NUB-IDENTITY-02).
   2. The amendment enforces filename citation discipline: `NUB-CLASS-1.md` appears at least once as a primary reference; prose says "napplets assigned `class: 1`" or "NUB-CLASS-1 napplets"; the abstract phrase "Class 1" does NOT appear as a primary reference (NUB-IDENTITY-04; grep-verifiable per VER-03).
   3. The amendment's Security Considerations subsection names three distinct concerns: (a) the NIP-17/59 gift-wrap flow and the spec MUSTs that prevent impersonation; (b) NIP-07 extension `all_frames: true` content-script injection + the fact that NUB-CLASS-1 strict-CSP nonce-based `script-src` blocks legacy `<script>` injection; (c) the `world: 'MAIN'` extension-API residual with NUB-CLASS-1 `connect-src 'none'` as structural mitigation (NUB-IDENTITY-05).
@@ -752,23 +815,29 @@ are historical context only and are retired by v0.34.0.
   5. Cross-repo public-hygiene grep is clean across the amendment diff, commit messages, and PR description: zero matches for `@napplet/*`, zero matches for `kehto`, zero matches for `hyprgate` (NUB-IDENTITY-06, VER-02; matches v0.28.0 VER-06 pattern).
   6. The shim-side defense-in-depth behavior is documented in the amendment as OBSERVABILITY not trust boundary: shell still enforces `class-forbidden` authoritatively per GATE-01..03 regardless of whether the shim short-circuits locally (GATE-04).
   7. The PR is branched from the existing `nub-identity` branch as `nub-identity-decrypt` (or similar); per in-repo convention, the user opens the PR — this phase's ship gate is "diff authored and hygiene-clean on branch" (NUB-IDENTITY-07, CLASS1-03).
+
 **Plans:** 4/4 plans complete
+
 - [x] 137-01-PLAN.md — Branch setup: create nub-identity-decrypt from nub-identity + merge nub-class-1 (NUB-IDENTITY-07, CLASS1-03)
 - [x] 137-02-PLAN.md — NUB-CLASS-1 amendment: report-to SHOULD + violation-correlation MUST + Security Considerations subsection (CLASS1-01, CLASS1-02)
 - [x] 137-03-PLAN.md — NUB-IDENTITY amendment: identity.decrypt envelope triad + error vocabulary + 4 shell MUSTs + Security Considerations (DEC-01..08, GATE-01..04, NUB-IDENTITY-01..05)
 - [x] 137-04-PLAN.md — Verification: VER-02 hygiene grep + VER-03 conformance grep + 137-PHASE-NOTES.md synthesis (NUB-IDENTITY-06, NUB-IDENTITY-07, VER-02, VER-03)
 
 ### Phase 138: In-Repo NIP-5D Amendment + Docs + Final Verification
+
 **Goal**: Sync local `specs/NIP-5D.md` against `napplet/nubs` master post-PR-15 (`window.nostr` removal merged 2026-04-21), then layer the v0.30.0 NIP-07 Security Considerations subsection referencing the Phase 137 amendment. Update package READMEs + root README + napplet-author skill for the `identity.decrypt` surface. Run the final VER-06 grep gate. Spec branch hygiene observed per `feedback_spec_branch_hygiene`: in-repo `specs/NIP-5D.md` changes land on master (or their own PR) — never bundled into a NUB-WORD branch.
 **Depends on**: Phase 135 (SDK surface to document), Phase 137 (amendment drafts to cite by filename)
 **Requirements**: NIP5D-01, NIP5D-02, NIP5D-03, NIP5D-04, DOC-01, DOC-02, DOC-03, DOC-04, VER-06
 **Success Criteria** (what must be TRUE):
+
   1. Local `specs/NIP-5D.md` is synced against `napplet/nubs` master post-PR-15: any stale prose about `window.nostr` or napplet-performed encryption that drifted before the 2026-04-21 merge is reconciled before the v0.30.0 amendment layers on top (NIP5D-01).
   2. `specs/NIP-5D.md` Security Considerations gains a NIP-07 subsection naming: the `all_frames: true` content-script injection vector; CSP nonce-based `script-src` as the mitigation for legacy `<script>` injection; the `world: 'MAIN'` extension-API residual documented honestly (no page-side block); NUB-CLASS-1 `connect-src 'none'` as the structural mitigation trapping plaintext inside the frame; `identity.decrypt` on NUB-IDENTITY as the spec-legal receive-side decrypt path for NUB-CLASS-1 napplets (NIP5D-02).
   3. Cross-references cite `NUB-IDENTITY.md` and `NUB-CLASS-1.md` by filename (per NUB-CLASS §Citation); the NIP-5D amendment commit is independent of the Phase 137 cross-repo PR diff (NIP5D-03, NIP5D-04).
   4. `packages/nub/README.md` documents `identity.decrypt()` under the identity NUB section (API shape, class-gating expectation, error handling, NIP-17 auto-detect behavior); `packages/sdk/README.md` adds an `identityDecrypt()` entry alongside existing identity SDK helpers; root `README.md` gains a one-line v0.30.0 changelog bullet; `skills/build-napplet/SKILL.md` is updated with a one-paragraph guidance block: NIP-17 DM / kind-1059 handling uses `window.napplet.identity.decrypt(event)`; requires NUB-CLASS-1; napplets MUST NOT attempt `window.nostr.*` decrypt; shell enforces (DOC-01..04).
   5. VER-06 grep gate: `specs/NIP-5D.md` NIP-07 Security Considerations subsection is present, non-empty, cites both `NUB-IDENTITY.md` and `NUB-CLASS-1.md` by filename, and names the `world: 'MAIN'` residual honestly (grep-verifiable).
+
 **Plans:** 2/2 plans complete
+
 - [x] 138-01-PLAN.md — NIP-5D sync verification + NIP-07 Extension Injection Residual subsection + VER-06 grep gate (NIP5D-01..04, VER-06)
 - [x] 138-02-PLAN.md — Docs sweep across 4 surfaces: packages/nub README, packages/sdk README, root README, skills/build-napplet SKILL.md (DOC-01..04)
 
@@ -790,6 +859,7 @@ opens the PR. Runtime-injection work supersedes v0.33 NAP-SHELL artifacts.
 | 159. Docs, Skills, and Boilerplate Guidance | v0.34.0 | 0/2 | Planned | |
 | 159.1 CLI-first Developer Onboarding | v0.34.0 | 4/4 | Complete    | 2026-07-21 |
 | 160. Release Verification and PR | v0.34.0 | 0/1 | Planned | |
+| 161. Ad-hoc Convention Package Contracts | v0.34.0 | 26/26 | Complete | 2026-07-23 |
 
 <details>
 <summary>Archived progress — v0.30.0 Class-Gated Decrypt Surface (Phases 135-138) — SHIPPED 2026-04-23</summary>
@@ -802,3 +872,49 @@ opens the PR. Runtime-injection work supersedes v0.33 NAP-SHELL artifacts.
 | 138. In-Repo NIP-5D Amendment + Docs + Final Verification | 2/2 | Complete    | 2026-04-23 |
 
 </details>
+
+### Phase 161: Ad-hoc Convention Package Contracts
+
+**Goal:** Align every active package, runtime binding, manifest producer, CLI reader, conformance fixture, document, example, skill, guard, and release artifact with adopted NAP-INC PR #89 head `4593ce9e301ce098fd3dad64206fcd6f144fa7af`, web-projection PR #90 head `896c32c92deee68dc4d10fc1132b62df20cccb6f`, and NAP-INTENT PR #91 head `a718915ddefa2f03a0126579601f59d8bd86f7c4`.
+**Requirements**: CONV-PKG-01, CONV-PKG-02, CONV-PKG-03, CONV-PKG-04, CONV-PKG-05, CONV-PKG-06
+**Depends on:** Nothing (the exact adopted draft heads above are the implementation contract)
+**Completed:** 2026-07-23
+**Success Criteria** (what must be TRUE):
+
+  1. Intent callers use authoritative convention URIs; required normalized wire identity, acceptance-only results, `IntentContract` discovery, and no-ID `onDelivery` are consistent across core, NAP, SDK, and shim.
+  2. Every pre-registration delivery is retained in internal FIFO order; delivery is carrier-neutral, endpoint-attested, target-only, lifecycle-independent, and never requires public INC.
+  3. Vite and CLI object metadata emit queryless per-contract archetype tags with optional same-tag `kind:<number>` fields; no kinds delimiter/flag or payload inference exists.
+  4. Conformance validates the adopted carriers and its reference shell proves an authenticated source, acceptance before separate delivery, and forged sender rejection.
+  5. Every active document, example, skill, and guard teaches the adopted split while historical changelogs and completed summaries retain semantic history.
+  6. Revised changesets cover every shipped package change and the complete build/type/unit/conformance/docs/link/slop/guard/diff chain passes.
+
+**Plans:** 26/26 plans executed
+
+Plans:
+
+- [x] 161-01-PLAN.md — Migrate core and NAP-INTENT to convention fields
+- [x] 161-02-PLAN.md — Enforce exact advisory INC convention topics
+- [x] 161-03-PLAN.md — Emit convention-only Vite archetype metadata
+- [x] 161-04-PLAN.md — Migrate CLI archetype inputs and output
+- [x] 161-05-PLAN.md — Align conformance shell and validators
+- [x] 161-06-PLAN.md — Add the active-surface convention contract guard
+- [x] 161-07-PLAN.md — Propagate conventions through SDK, shim, and conformance apps
+- [x] 161-08-PLAN.md — Update root/package READMEs and package-reference docs
+- [x] 161-09-PLAN.md — Update shipped napplet skill guidance
+- [x] 161-10-PLAN.md — Add release metadata and run repository gates
+- [x] 161-11-PLAN.md — Update active guides, tutorials, and the NAP index
+- [x] 161-12-PLAN.md — Update package-reference documentation
+- [x] 161-13-PLAN.md — Clean-break INC emit and implement convention-URI query transposition
+- [x] 161-14-PLAN.md — Correct shipped query-sugar guidance and guard the clarified boundary
+- [x] 161-15-PLAN.md — Share the adopted convention-URI normalization primitive
+- [x] 161-16-PLAN.md — Define the adopted core intent contract and public URI API
+- [x] 161-17-PLAN.md — Implement NAP intent normalization, acceptance, and FIFO delivery
+- [x] 161-18-PLAN.md — Propagate intent URI and delivery APIs through NAP and SDK exports
+- [x] 161-19-PLAN.md — Inject and route onDelivery through the runtime shim
+- [x] 161-20-PLAN.md — Emit Vite intent contracts with optional event kinds
+- [x] 161-21-PLAN.md — Preserve CLI config/template event-kind metadata
+- [x] 161-22-PLAN.md — Validate intent carriers and authenticated reference delivery
+- [x] 161-23-PLAN.md — Correct root and package README contract guidance
+- [x] 161-24-PLAN.md — Correct active docs, tutorials, and examples
+- [x] 161-25-PLAN.md — Correct shipped skill guidance and mirror assertions
+- [x] 161-26-PLAN.md — Reverse stale guard rules and enforce adopted intent boundaries

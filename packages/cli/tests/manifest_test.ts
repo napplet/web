@@ -327,7 +327,7 @@ Deno.test("createDeployManifestTemplates dedupes title/description and coexists 
   });
 });
 
-Deno.test("config metadata overrides template metadata with canonical archetype tags", async () => {
+Deno.test("config metadata overrides template metadata with same-tag contract kinds", async () => {
   await withTempDir(async (dir) => {
     await Deno.writeTextFile(
       `${dir}/index.html`,
@@ -338,8 +338,9 @@ Deno.test("config metadata overrides template metadata with canonical archetype 
       JSON.stringify({
         tags: [
           ["requires", "relay"],
-          ["archetype", "feed", "NAP-5"],
-          ["archetype", "bad", "not-a-nap"],
+          ["archetype", "feed", "napplet:feed/open"],
+          ["archetype", "bad", "not-a-convention"],
+          ["archetype", "feed", "napplet:feed/open", "kind:1"],
           ["type", "invented"],
         ],
       }),
@@ -355,7 +356,11 @@ Deno.test("config metadata overrides template metadata with canonical archetype 
         name: "notes",
         title: "Notes",
         description: "CLI-owned description",
-        archetypes: [{ slug: "note", protocol: "NAP-4", eventKinds: [1, 30023] }],
+        archetypes: [{
+          slug: "note",
+          convention: "napplet:note/open",
+          eventKinds: [1, 30023],
+        }],
       },
     });
     const plan = createDeployPlan(config, [candidate], {});
@@ -371,11 +376,48 @@ Deno.test("config metadata overrides template metadata with canonical archetype 
     assertEquals(tags.filter((tag) => tag[0] === "archetype"), [[
       "archetype",
       "note",
-      "NAP-4",
+      "napplet:note/open",
       "kind:1",
       "kind:30023",
     ]]);
     assertEquals(tags.some((tag) => tag[0] === "type"), false);
+  });
+});
+
+Deno.test("template metadata preserves only canonical same-tag event kinds", async () => {
+  await withTempDir(async (dir) => {
+    await Deno.writeTextFile(`${dir}/index.html`, "<html></html>");
+    await Deno.writeTextFile(
+      `${dir}/.nip5a-manifest.json`,
+      JSON.stringify({
+        tags: [
+          ["archetype", "note", "napplet:note/open", "kind:1", "kind:30023"],
+          ["archetype", "profile", "napplet:profile/open"],
+          ["archetype", "note", "napplet:note/open?kind=1", "kind:1"],
+          ["archetype", "note", "napplet:note/open", "kind:-1"],
+          ["archetype", "note", "napplet:note/open", "kind:1.5"],
+          ["archetype", "note", "napplet:note/open", "event:1"],
+          ["archetype", "profile", "napplet:note/open", "kind:0"],
+        ],
+      }),
+    );
+    const candidate: NappletCandidate = {
+      name: "notes",
+      dir,
+      indexHtml: `${dir}/index.html`,
+      manifestPath: `${dir}/.nip5a-manifest.json`,
+    };
+    const config = defaultConfig({ named: ["notes"] });
+    const plan = createDeployPlan(config, [candidate], {});
+    const manifests = await createDeployManifestTemplates(plan, config, { createdAt: 123 });
+
+    assertEquals(
+      manifests[0].template?.tags.filter((tag) => tag[0] === "archetype"),
+      [
+        ["archetype", "note", "napplet:note/open", "kind:1", "kind:30023"],
+        ["archetype", "profile", "napplet:profile/open"],
+      ],
+    );
   });
 });
 

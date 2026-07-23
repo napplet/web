@@ -7,21 +7,18 @@
 /**
  * @napplet/nap/intent -- Archetype intent dispatcher NAP module (NAP-INTENT).
  *
- * Invoke another napplet by its archetype (role) without addressing it directly.
- * A napplet names a role + action + payload; the shell resolves the role to an
- * installed napplet (honoring the user's default-handler preference), creates or
- * focuses the window, and delivers the payload using the named NAP-N protocol.
- * The shell owns archetype resolution, default handling, window lifecycle, and
- * payload delivery; routing (`archetype`) and payload format (`protocol`) are
- * orthogonal.
+ * Invoke another napplet through an authoritative convention URI without
+ * addressing a target instance. The binding derives the stable queryless
+ * identity and payload, while the runtime resolves an installed handler and
+ * accepts responsibility for a later target-only delivery.
  *
  * Exports typed message definitions for the intent domain, shim installer,
  * SDK helpers, and registers the 'intent' domain with core dispatch on import.
  *
  * @example
  * ```ts
- * import type { IntentRequest, IntentResult } from '@napplet/nap/intent';
- * import { DOMAIN, installIntentShim, intentOpen } from '@napplet/nap/intent';
+ * import type { IntentDelivery, IntentResult } from '@napplet/nap/intent';
+ * import { DOMAIN, installIntentShim, intentOpen, intentOnDelivery } from '@napplet/nap/intent';
  * ```
  *
  * @packageDocumentation
@@ -32,14 +29,17 @@ export { DOMAIN } from './types.js';
 export type {
   IntentHandlerPreference,
   IntentBehavior,
+  IntentInvokeOptions,
   IntentRequest,
   IntentContract,
   IntentCandidate,
   IntentAvailability,
   IntentResult,
+  IntentDelivery,
   IntentMessage,
   IntentInvokeMessage,
   IntentInvokeResultMessage,
+  IntentDeliveryMessage,
   IntentAvailableMessage,
   IntentAvailableResultMessage,
   IntentHandlersMessage,
@@ -58,6 +58,7 @@ export {
   available,
   handlers,
   onChanged,
+  onDelivery,
 } from './shim.js';
 
 export {
@@ -66,6 +67,7 @@ export {
   intentAvailable,
   intentHandlers,
   intentOnChanged,
+  intentOnDelivery,
 } from './sdk.js';
 
 import { registerNap } from '@napplet/core';

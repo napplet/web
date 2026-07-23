@@ -13,6 +13,7 @@
     "test:onboarding-contracts": "node --test scripts/onboarding-contracts.test.mjs",
     "test:spa-onboarding": "node scripts/check-spa-onboarding.mjs",
     "test:workflow-contracts": "node --test scripts/workflow-contracts.test.mjs",
+    "test:convention-contracts": "node --test scripts/test-convention-contracts.test.mjs && node scripts/test-convention-contracts.mjs",
     "test:conformance": "node packages/conformance-cli/dist/cli.js tests/fixtures/napplets/conformant",
     "lint": "turbo run lint",
     "type-check": "turbo run type-check",

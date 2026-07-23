@@ -13,9 +13,10 @@
 
 import type { NappletGlobal, Subscription } from '@napplet/core';
 import type {
-  IntentRequest,
-  IntentResult,
   IntentAvailability,
+  IntentDelivery,
+  IntentInvokeOptions,
+  IntentResult,
 } from './types.js';
 
 function requireIntent(): NonNullable<NappletGlobal['intent']> {
@@ -27,43 +28,45 @@ function requireIntent(): NonNullable<NappletGlobal['intent']> {
 }
 
 /**
- * Invoke a napplet by archetype.
+ * Ask the runtime to accept responsibility for a convention-URI delivery.
  *
- * @param request  The intent request (archetype + action + payload + routing)
- * @returns Promise resolving to the invocation result
+ * @param uri      Authoritative `napplet:<archetype>/<intent>[...?params]` URI
+ * @param options  Optional explicit payload, handler preference, and behavior hints
+ * @returns Promise resolving to immediate acceptance or pre-acceptance rejection
  *
  * @example
  * ```ts
  * import { intentInvoke } from '@napplet/nap/intent';
  *
- * const r = await intentInvoke({ archetype: 'note', payload: { target: { type: 'event', id } } });
+ * const r = await intentInvoke(`napplet:note/open?event=${encodeURIComponent(id)}`);
  * ```
  */
-export function intentInvoke(request: IntentRequest): Promise<IntentResult> {
-  return requireIntent().invoke(request);
+export function intentInvoke(
+  uri: string,
+  options?: IntentInvokeOptions,
+): Promise<IntentResult> {
+  return requireIntent().invoke(uri, options);
 }
 
 /**
- * Open a napplet by archetype (sugar for `action: "open"`).
+ * Invoke a convention URI whose intent is `open`.
  *
- * @param archetype  Role slug to open
- * @param payload    Opaque payload (typed by the resolved protocol)
- * @param opts       Extra request fields (protocol, handler, behavior)
- * @returns Promise resolving to the invocation result
+ * @param uri      Authoritative `napplet:<archetype>/open[...?params]` URI
+ * @param options  Optional explicit payload, handler preference, and behavior hints
+ * @returns Promise resolving to immediate acceptance or pre-acceptance rejection
  *
  * @example
  * ```ts
  * import { intentOpen } from '@napplet/nap/intent';
  *
- * await intentOpen('emoji-list', { seed: ['🤙'] });
+ * await intentOpen('napplet:emoji-list/open', { payload: { seed: ['🤙'] } });
  * ```
  */
 export function intentOpen(
-  archetype: string,
-  payload?: unknown,
-  opts?: Omit<IntentRequest, 'archetype' | 'action' | 'payload'>,
+  uri: string,
+  options?: IntentInvokeOptions,
 ): Promise<IntentResult> {
-  return requireIntent().open(archetype, payload, opts);
+  return requireIntent().open(uri, options);
 }
 
 /**
@@ -93,4 +96,17 @@ export function intentHandlers(): Promise<IntentAvailability[]> {
  */
 export function intentOnChanged(handler: (availability: IntentAvailability) => void): Subscription {
   return requireIntent().onChanged(handler);
+}
+
+/**
+ * Register for target-only deliveries accepted earlier by the runtime.
+ *
+ * Delivery is independent of the source lifetime and carries runtime-attested
+ * sender provenance. It is not a completion notification for the invoke call.
+ *
+ * @param handler  Called with each carrier-neutral delivery
+ * @returns A Subscription with `close()` to stop listening
+ */
+export function intentOnDelivery(handler: (delivery: IntentDelivery) => void): Subscription {
+  return requireIntent().onDelivery(handler);
 }

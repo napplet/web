@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { mkdtempSync, rmSync, existsSync, readFileSync, lstatSync } from 'node:fs';
+import { mkdtempSync, rmSync, existsSync, readFileSync, lstatSync, readlinkSync, realpathSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { listSkills, readSkill, install, TARGETS } from './index.js';
+import { listSkills, readSkill, install, skillsRoot, TARGETS } from './index.js';
 
 describe('skill registry', () => {
   it('ships the napplet skills', () => {
@@ -111,6 +111,9 @@ describe('skill registry', () => {
     expect(buildSkill).toContain('config.registerSchema');
     expect(buildSkill).not.toContain('configSchema');
     expect(buildSkill).not.toContain('<meta name="napplet-type">');
+    const testSkill = readSkill('test-napplet');
+    expect(testSkill).not.toContain('napplet-type');
+    expect(testSkill).toContain('signed manifest tags');
 
     for (const skill of [...affectedSkills, 'test-napplet']) {
       expect(readSkill(skill)).not.toContain('targetAuthors');
@@ -137,6 +140,38 @@ describe('skill registry', () => {
     expect(boilerplateProse).toContain('normal Nostr reads and publishes are OUTBOX-first');
     expect(boilerplateProse).toContain('RELAY is an explicit relay-local escape hatch');
     expect(boilerplateProse).toContain('`requires` lists hard requirements only');
+  });
+
+  it('ships canonical URI and discovery guidance from the skills directory', () => {
+    const canonicalSkills = ['build-napplet', 'design-napplet', 'make-napplet'];
+
+    for (const skill of canonicalSkills) {
+      const markdown = readSkill(skill);
+      expect(markdown).toContain('napplet:note/open');
+      expect(markdown).toContain('napplet:profile/open');
+      expect(markdown).toContain('napplet:dm/open');
+      expect(markdown).toContain('emit(topic, payload?)');
+      expect(markdown).toContain('napplet:profile/open?pubkey=abc123');
+      expect(markdown).toMatch(/stable queryless\s+topic/);
+      expect(markdown).toContain('invoke(uri, options?)');
+      expect(markdown).toContain('open(uri, options?)');
+      expect(markdown).toContain('onDelivery');
+      expect(markdown).toContain('ok: true');
+      expect(markdown).toContain('eventKinds?: number[]');
+      expect(markdown).toContain('kind:<number>');
+      expect(markdown).toMatch(/stable, queryless convention identity/);
+      expect(markdown).toMatch(/runtime-attested sender/);
+      expect(markdown).not.toContain('web#183');
+      expect(markdown).not.toContain('do not add query, prefix, wildcard, canonicalization');
+      expect(markdown).not.toMatch(/\bNAP-[1-5]\b/);
+      expect(markdown).not.toMatch(/\b(?:handled|windowId|newWindow|intentId|deliveryId)\b/);
+    }
+
+    const rootSkills = new URL('../../../skills', import.meta.url);
+    expect(lstatSync(rootSkills).isSymbolicLink()).toBe(true);
+    expect(readlinkSync(rootSkills)).toBe('packages/skills/skills');
+    expect(realpathSync(rootSkills)).toBe(realpathSync(skillsRoot()));
+    expect(realpathSync(rootSkills)).toMatch(/packages\/skills\/skills$/);
   });
 
   it('parses a description from each SKILL.md frontmatter', () => {

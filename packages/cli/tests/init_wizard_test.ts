@@ -42,7 +42,7 @@ const suggestions = {
 
 Deno.test("promptInitWizard fills missing fields with URL autocomplete", async () => {
   const input = new FakeTerminalInput(
-    "\n\nfeed\n\nA focused feed\nnote:NAP-4\nwss://relay-o\t\nwss://relay-t\t\n\nhttps://cdn-o\t\n\n",
+    "\n\nfeed\n\nA focused feed\nnote:napplet:note/open\nwss://relay-o\t\nwss://relay-t\t\n\nhttps://cdn-o\t\n\n",
   );
   const output = new FakeOutput();
 
@@ -69,7 +69,7 @@ Deno.test("promptInitWizard fills missing fields with URL autocomplete", async (
     named: ["feed"],
     title: "Feed",
     description: "A focused feed",
-    archetypes: [{ slug: "note", protocol: "NAP-4", eventKinds: undefined }],
+    archetypes: [{ slug: "note", convention: "napplet:note/open" }],
     defaultTarget: "named",
   });
   assert(output.text.includes("Relay URLs"));
@@ -86,7 +86,7 @@ Deno.test("promptInitWizard preserves flagged values and root target", async () 
       named: ["ignored"],
       title: "Root App",
       description: "Root description",
-      archetypes: ["feed:NAP-5"],
+      archetypes: ["feed:napplet:feed/open"],
       root: true,
     },
     suggestions,
@@ -101,7 +101,7 @@ Deno.test("promptInitWizard preserves flagged values and root target", async () 
     named: [],
     title: "Root App",
     description: "Root description",
-    archetypes: [{ slug: "feed", protocol: "NAP-5", eventKinds: undefined }],
+    archetypes: [{ slug: "feed", convention: "napplet:feed/open" }],
     defaultTarget: "root",
   });
 });

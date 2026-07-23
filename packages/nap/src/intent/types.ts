@@ -7,27 +7,32 @@
 /**
  * @napplet/nap/intent -- Archetype intent dispatcher message types for the JSON envelope wire protocol.
  *
- * NAP-INTENT lets a napplet invoke *another* napplet by its archetype (a shared
- * role name such as `note`, `profile`, `emoji-list`) without addressing it
- * directly. A napplet describes the role, action, and payload; the shell resolves
- * the role to an installed napplet (honoring the user's default-handler
- * preference), creates or focuses the window, and delivers the payload using the
- * named NAP-N `protocol`. NAP-INTENT standardizes the envelope (routing + default
- * handling + window lifecycle), not the payload — `protocol` (a numbered NAP-N
- * wire format) and `archetype` (the routing role) are orthogonal (N:M).
+ * NAP-INTENT lets a napplet invoke another napplet through an authoritative
+ * `napplet:<archetype>/<intent>[...?params]` URI. The binding derives the
+ * archetype, action, and stable queryless convention identity before asking the
+ * runtime to accept responsibility for delivery. Query parameters are invocation
+ * payload sugar only; target delivery is a later carrier-neutral push with
+ * runtime-attested sender provenance. Runtime lifecycle policy is not exposed by
+ * this envelope.
  *
  * Defines the message types exchanged between napplet and shell:
  * - Napplet -> Shell: invoke, available, handlers
- * - Shell -> Napplet: invoke.result, available.result, handlers.result, changed
+ * - Shell -> Napplet: invoke.result, available.result, handlers.result, changed, deliver
  *
  * All types form a discriminated union on the `type` field.
  */
 
 import type {
   NappletMessage,
-  IntentHandlerPreference,
+  IntentAvailability,
   IntentBehavior,
+  IntentCandidate,
   IntentContract,
+  IntentDelivery,
+  IntentHandlerPreference,
+  IntentInvokeOptions,
+  IntentRequest,
+  IntentResult,
 } from '@napplet/core';
 
 /** The NAP domain name for intent messages. */
@@ -39,77 +44,17 @@ export const DOMAIN = 'intent' as const;
  * - `choose`  -- prompt the user with an "open with…" chooser
  * - a specific napplet `dTag` -- target that napplet (subject to user authorization)
  */
-export type { IntentHandlerPreference };
-
-/** Window behavior hints for an invoke. */
-export type { IntentBehavior };
-
-/** One manifest-derived contract this candidate serves for the archetype. */
-export type { IntentContract };
-
-/** A request to dispatch an action to a napplet of a given archetype. */
-export interface IntentRequest {
-  /** Role slug, e.g. `note` (see ARCHETYPES.md). */
-  archetype: string;
-  /** Verb; defaults to `open` (e.g. `open` | `edit` | `pick` | `share`). */
-  action?: string;
-  /** NAP-N id shaping `payload`; omit for the archetype's recommended default. */
-  protocol?: string;
-  /** Opaque payload, typed by `protocol`. */
-  payload?: unknown;
-  /** Handler selection: user default, an "open with…" prompt, or a specific dTag. */
-  handler?: IntentHandlerPreference;
-  /** Window behavior hints. */
-  behavior?: IntentBehavior;
-}
-
-/** A napplet that can fulfill an archetype, sourced from the manifest catalog. */
-export interface IntentCandidate {
-  /** The napplet that can fulfill the archetype. */
-  dTag: string;
-  /** Display title. */
-  title?: string;
-  /** Verbs this candidate supports for the archetype. */
-  actions: string[];
-  /** NAP-N ids this candidate accepts for the archetype. */
-  protocols: string[];
-  /** Action/protocol contracts parsed from archetype manifest tags. */
-  contracts: IntentContract[];
-  /** Whether this candidate is the user/runtime default. */
-  isDefault?: boolean;
-}
-
-/** Availability of an archetype, sourced from the installed-napplet catalog. */
-export interface IntentAvailability {
-  /** The archetype this availability describes. */
-  archetype: string;
-  /** Whether at least one installed napplet fulfills it. */
-  available: boolean;
-  /** Candidate napplets (from manifests, not running instances). */
-  candidates: IntentCandidate[];
-  /** Whether a user/runtime default is set for this archetype. */
-  hasDefault: boolean;
-}
-
-/** The result of an intent invocation. */
-export interface IntentResult {
-  /** Whether the invoke succeeded. */
-  ok: boolean;
-  /** The archetype that was requested. */
-  archetype: string;
-  /** The action that was dispatched. */
-  action: string;
-  /** Whether a handler actually handled it. */
-  handled: boolean;
-  /** dTag of the napplet that handled it. */
-  handler?: string;
-  /** Window the handler was opened/focused in. */
-  windowId?: string;
-  /** The wire format actually used. */
-  protocol?: string;
-  /** Error reason when the invoke failed. */
-  error?: string;
-}
+export type {
+  IntentAvailability,
+  IntentBehavior,
+  IntentCandidate,
+  IntentContract,
+  IntentDelivery,
+  IntentHandlerPreference,
+  IntentInvokeOptions,
+  IntentRequest,
+  IntentResult,
+};
 
 /**
  * Base interface for all intent NAP messages.
@@ -121,18 +66,16 @@ export interface IntentMessage extends NappletMessage {
 }
 
 /**
- * Dispatch `action` (default `open`) to a napplet of `archetype` with `payload`.
- * The shell resolves the archetype to a handler, creates/focuses its window, and
- * delivers the payload using the named `protocol` (or the archetype default).
- * `action` is a field, never part of the message type, so new actions never
- * expand the wire surface.
+ * Dispatch a URI-normalized request to a napplet. The binding derives the stable
+ * queryless convention identity and all routing fields before this message is
+ * posted; the runtime only accepts delivery responsibility here.
  *
  * @example
  * ```ts
  * const msg: IntentInvokeMessage = {
  *   type: 'intent.invoke',
  *   id: crypto.randomUUID(),
- *   request: { archetype: 'note', action: 'open', protocol: 'NAP-4', payload: { target: { type: 'event', id: 'abc' } } },
+ *   request: { archetype: 'note', action: 'open', convention: 'napplet:note/open', payload: { target: { type: 'event', id: 'abc' } } },
  * };
  * ```
  */
@@ -140,7 +83,7 @@ export interface IntentInvokeMessage extends IntentMessage {
   type: 'intent.invoke';
   /** Correlation ID for this request. */
   id: string;
-  /** The intent request (archetype + action + payload + routing). */
+  /** The normalized intent request derived from the authoritative URI. */
   request: IntentRequest;
 }
 
@@ -153,6 +96,16 @@ export interface IntentInvokeResultMessage extends IntentMessage {
   result?: IntentResult;
   /** Top-level error when the request could not be processed at all. */
   error?: string;
+}
+
+/**
+ * A carrier-neutral target delivery, separate from the immediate invoke result.
+ * It intentionally has no request, delivery, handling, or window identifier.
+ */
+export interface IntentDeliveryMessage extends IntentMessage {
+  type: 'intent.deliver';
+  /** Runtime-attested target delivery. */
+  delivery: IntentDelivery;
 }
 
 /** Query whether the runtime can currently satisfy an archetype. */
@@ -215,7 +168,8 @@ export type IntentInboundMessage =
   | IntentInvokeResultMessage
   | IntentAvailableResultMessage
   | IntentHandlersResultMessage
-  | IntentChangedMessage;
+  | IntentChangedMessage
+  | IntentDeliveryMessage;
 
 /** All intent NAP message types (discriminated union on `type` field). */
 export type IntentNapMessage = IntentOutboundMessage | IntentInboundMessage;

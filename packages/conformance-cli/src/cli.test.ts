@@ -17,7 +17,7 @@ describe('resolveNappletDir', () => {
     const root = await projectDir();
     await writeFile(join(root, 'index.html'), '<!doctype html><script type="module" src="/src/main.ts"></script>');
     await mkdir(join(root, 'dist'), { recursive: true });
-    await writeFile(join(root, 'dist', 'index.html'), '<!doctype html><meta name="napplet-type" content="x"><script type="module">/*built*/</script>');
+    await writeFile(join(root, 'dist', 'index.html'), '<!doctype html><script type="module">/*built*/</script>');
 
     const resolved = await resolveNappletDir(root);
     expect(resolved.dir).toBe(join(root, 'dist'));
