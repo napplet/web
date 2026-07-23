@@ -12,17 +12,10 @@ export interface IntentBehavior {
 export interface IntentRequest {
   archetype: string;
   action?: string;
-  protocol?: string;
+  convention?: string;
   payload?: unknown;
   handler?: IntentHandlerPreference;
   behavior?: IntentBehavior;
-}
-
-/** One manifest-derived contract a napplet serves for an archetype. */
-export interface IntentContract {
-  action: string;
-  protocol: string;
-  eventKinds?: number[];
 }
 
 /** A napplet that can fulfill an archetype (from the manifest catalog). */
@@ -30,8 +23,7 @@ export interface IntentCandidate {
   dTag: string;
   title?: string;
   actions: string[];
-  protocols: string[];
-  contracts: IntentContract[];
+  conventions: string[];
   isDefault?: boolean;
 }
 
@@ -51,6 +43,6 @@ export interface IntentResult {
   handled: boolean;
   handler?: string;
   windowId?: string;
-  protocol?: string;
+  convention?: string;
   error?: string;
 }

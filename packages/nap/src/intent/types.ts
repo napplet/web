@@ -11,10 +11,10 @@
  * role name such as `note`, `profile`, `emoji-list`) without addressing it
  * directly. A napplet describes the role, action, and payload; the shell resolves
  * the role to an installed napplet (honoring the user's default-handler
- * preference), creates or focuses the window, and delivers the payload using the
- * named NAP-N `protocol`. NAP-INTENT standardizes the envelope (routing + default
- * handling + window lifecycle), not the payload — `protocol` (a numbered NAP-N
- * wire format) and `archetype` (the routing role) are orthogonal (N:M).
+ * preference), creates or focuses the window, and delivers the payload using its
+ * named convention. NAP-INTENT standardizes the envelope (routing + default
+ * handling + window lifecycle), not the payload — `convention` (an opaque payload
+ * shape identifier) and `archetype` (the routing role) are orthogonal (N:M).
  *
  * Defines the message types exchanged between napplet and shell:
  * - Napplet -> Shell: invoke, available, handlers
@@ -27,7 +27,6 @@ import type {
   NappletMessage,
   IntentHandlerPreference,
   IntentBehavior,
-  IntentContract,
 } from '@napplet/core';
 
 /** The NAP domain name for intent messages. */
@@ -44,18 +43,15 @@ export type { IntentHandlerPreference };
 /** Window behavior hints for an invoke. */
 export type { IntentBehavior };
 
-/** One manifest-derived contract this candidate serves for the archetype. */
-export type { IntentContract };
-
 /** A request to dispatch an action to a napplet of a given archetype. */
 export interface IntentRequest {
   /** Role slug, e.g. `note` (see ARCHETYPES.md). */
   archetype: string;
   /** Verb; defaults to `open` (e.g. `open` | `edit` | `pick` | `share`). */
   action?: string;
-  /** NAP-N id shaping `payload`; omit for the archetype's recommended default. */
-  protocol?: string;
-  /** Opaque payload, typed by `protocol`. */
+  /** Opaque convention shaping `payload`; omit for the archetype's recommended default. */
+  convention?: string;
+  /** Opaque payload, typed by `convention` when present. */
   payload?: unknown;
   /** Handler selection: user default, an "open with…" prompt, or a specific dTag. */
   handler?: IntentHandlerPreference;
@@ -71,10 +67,8 @@ export interface IntentCandidate {
   title?: string;
   /** Verbs this candidate supports for the archetype. */
   actions: string[];
-  /** NAP-N ids this candidate accepts for the archetype. */
-  protocols: string[];
-  /** Action/protocol contracts parsed from archetype manifest tags. */
-  contracts: IntentContract[];
+  /** Opaque conventions this candidate accepts for the archetype. */
+  conventions: string[];
   /** Whether this candidate is the user/runtime default. */
   isDefault?: boolean;
 }
@@ -105,8 +99,8 @@ export interface IntentResult {
   handler?: string;
   /** Window the handler was opened/focused in. */
   windowId?: string;
-  /** The wire format actually used. */
-  protocol?: string;
+  /** The payload convention actually used. */
+  convention?: string;
   /** Error reason when the invoke failed. */
   error?: string;
 }
@@ -123,7 +117,7 @@ export interface IntentMessage extends NappletMessage {
 /**
  * Dispatch `action` (default `open`) to a napplet of `archetype` with `payload`.
  * The shell resolves the archetype to a handler, creates/focuses its window, and
- * delivers the payload using the named `protocol` (or the archetype default).
+ * delivers the payload using the named `convention` (or the archetype default).
  * `action` is a field, never part of the message type, so new actions never
  * expand the wire surface.
  *
@@ -132,7 +126,7 @@ export interface IntentMessage extends NappletMessage {
  * const msg: IntentInvokeMessage = {
  *   type: 'intent.invoke',
  *   id: crypto.randomUUID(),
- *   request: { archetype: 'note', action: 'open', protocol: 'NAP-4', payload: { target: { type: 'event', id: 'abc' } } },
+ *   request: { archetype: 'note', action: 'open', convention: 'napplet:note/open', payload: { target: { type: 'event', id: 'abc' } } },
  * };
  * ```
  */
