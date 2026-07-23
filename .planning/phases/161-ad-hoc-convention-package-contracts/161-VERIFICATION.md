@@ -1,10 +1,17 @@
 ---
 phase: 161-ad-hoc-convention-package-contracts
-verified: 2026-07-23T17:48:10Z
+verified: 2026-07-23T17:54:43Z
 status: passed
-score: 11/11 must-haves verified
+score: 12/12 must-haves verified
 behavior_unverified: 0
 overrides_applied: 0
+re_verification:
+  previous_status: gaps_found
+  previous_score: 11/12
+  gaps_closed:
+    - "Current HEAD 55183f38 is now pushed to origin and is the head of PR #186."
+  gaps_remaining: []
+  regressions: []
 prohibitions_resolved:
   accepted_by: developer
   accepted_at: 2026-07-23T17:48:10Z
@@ -15,13 +22,13 @@ prohibitions_resolved:
 # Phase 161: Ad-hoc Convention Package Contracts Verification Report
 
 **Phase Goal:** Align every active package, runtime binding, manifest producer, CLI reader, conformance fixture, document, example, skill, guard, and release artifact with adopted NAP-INC PR #89, web-projection PR #90, and NAP-INTENT PR #91.
-**Verified:** 2026-07-23T17:48:10Z
+**Verified:** 2026-07-23T17:54:43Z
 **Status:** passed
-**Re-verification:** Yes — explicit developer-authority resolution
+**Re-verification:** Yes — publication gap closed
 
 ## Goal Achievement
 
-This report treats the summaries and both review reports as non-evidence. The live tree at `0319dac8` was compared directly with the adopted draft heads: [NAP-INC #89](https://github.com/napplet/naps/blob/4593ce9e301ce098fd3dad64206fcd6f144fa7af/naps/NAP-INC.md), [web projection #90](https://github.com/napplet/naps/blob/896c32c92deee68dc4d10fc1132b62df20cccb6f/projections/web.md), and [NAP-INTENT #91](https://github.com/napplet/naps/blob/a718915ddefa2f03a0126579601f59d8bd86f7c4/naps/NAP-INTENT.md).
+This report treats the summaries and both review reports as non-evidence. The implementation is unchanged since the passed 11/11 audit at `0319dac8`; the live tree is now `55183f38`, which adds only the Plan 161-10 summary. The implementation was compared directly with the adopted draft heads: [NAP-INC #89](https://github.com/napplet/naps/blob/4593ce9e301ce098fd3dad64206fcd6f144fa7af/naps/NAP-INC.md), [web projection #90](https://github.com/napplet/naps/blob/896c32c92deee68dc4d10fc1132b62df20cccb6f/projections/web.md), and [NAP-INTENT #91](https://github.com/napplet/naps/blob/a718915ddefa2f03a0126579601f59d8bd86f7c4/naps/NAP-INTENT.md).
 
 ### Observable Truths
 
@@ -38,8 +45,9 @@ This report treats the summaries and both review reports as non-evidence. The li
 | 9 | Active docs, examples, skills, and the guard teach the adopted split rather than retired lifecycle/metadata rules. | ✓ VERIFIED | 31 active documentation/skill files changed versus `origin/main`; `skills` is the canonical `packages/skills/skills` symlink. The live active-surface scanner passes its positive, negative, history, and false-positive fixtures. |
 | 10 | Invented active `napplet-*` HTML manifest metadata is retired. | ✓ VERIFIED | Direct active-source scan found no use of `<meta name="napplet-*">`; the three remaining mentions are AGENTS policy, a conformance validator's negative policy statement, and a negative test. Vite writes protocol data only to signed manifest tags. |
 | 11 | Release coverage and the required repository gates are present. | ✓ VERIFIED | The two phase changesets cover all ten packages changed versus `origin/main`; `pnpm changeset status` reports the expected bumps. `git diff --check origin/main...HEAD` passes. The user-provided just-passed full build/type/unit/conformance/docs/link/slop/audit/diff chain applies to this unchanged HEAD. |
+| 12 | The final Plan 161-10 evidence summary is published with the reviewed PR state. | ✓ VERIFIED | `HEAD`, `origin/feat/ad-hoc-nap-schemes`, and open PR #186 all resolve to `55183f38`; the final summary is now published. |
 
-**Score:** 11/11 truths verified (0 present, behavior-unverified)
+**Score:** 12/12 truths verified (0 present, behavior-unverified)
 
 ### Required Artifacts
 
@@ -101,7 +109,7 @@ Step 7c: SKIPPED — no phase-declared or conventional `scripts/**/tests/probe-*
 | CONV-PKG-03 | 04, 21 | ✓ SATISFIED | CLI validates/preserves object `eventKinds`; the convention-only flag/wizard input has no invented kinds syntax. |
 | CONV-PKG-04 | 02, 13–15, 22 | ✓ SATISFIED | Exact INC routing, query transposition, literal-plus behavior, pre-send rejection, and endpoint sender derivation are implemented and tested. |
 | CONV-PKG-05 | 05–09, 11–12, 22–26 | ✓ SATISFIED | Conformance, reference shell, active docs/skills, and the guard implement the adopted split; active HTML protocol metadata is retired. |
-| CONV-PKG-06 | 06, 10, 26 | ✓ SATISFIED | Changed public packages have release metadata; changeset status, active guard, and diff check pass. |
+| CONV-PKG-06 | 06, 10, 26 | ✓ SATISFIED | Changed public packages have release metadata; changeset status, active guard, and diff check pass; the final summary is published in PR #186. |
 
 No requirements mapped to Phase 161 are orphaned. There are no later milestone phases clearly and specifically covering an unmet Phase 161 contract, so no items were deferred.
 
@@ -121,9 +129,9 @@ The developer explicitly accepted all seven judgment-tier interpretations in thi
 
 ### Gaps Summary
 
-No code, requirement, or unresolved judgment gap blocks the Phase 161 goal.
+No code, requirement, publication, or unresolved judgment gap blocks the Phase 161 goal. The publication re-check confirms that `HEAD`, `origin/feat/ad-hoc-nap-schemes`, and PR #186 now resolve to `55183f38`.
 
 ---
 
-_Verified: 2026-07-23T17:48:10Z_
+_Verified: 2026-07-23T17:54:43Z_
 _Verifier: the agent (gsd-verifier)_
