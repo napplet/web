@@ -1,7 +1,7 @@
 # Phase 161: Ad-hoc Convention Package Contracts - Pattern Map
 
-**Mapped:** 2026-07-23  
-**Files analyzed:** 57 active source, test, documentation, skill, and release files  
+**Mapped:** 2026-07-23
+**Files analyzed:** 57 active source, test, documentation, skill, and release files
 **Analogs found:** 57 / 57 (grouped where a family follows one implementation pattern)
 
 ## File Classification
@@ -248,6 +248,6 @@ Create a focused regression scan/test that excludes `CHANGELOG.md` and `.plannin
 
 ## Metadata
 
-**Analog search scope:** `packages/{core,nap,vite-plugin,cli,conformance,conformance-cli,sdk,shim,skills,boilerplate}`, `apps/{docs,conformance}`, root documentation, phase inputs; historical paths excluded.  
-**Files scanned:** 60+ relevant source/test/doc files via active-contract token search.  
+**Analog search scope:** `packages/{core,nap,vite-plugin,cli,conformance,conformance-cli,sdk,shim,skills,boilerplate}`, `apps/{docs,conformance}`, root documentation, phase inputs; historical paths excluded.
+**Files scanned:** 60+ relevant source/test/doc files via active-contract token search.
 **Pattern extraction date:** 2026-07-23

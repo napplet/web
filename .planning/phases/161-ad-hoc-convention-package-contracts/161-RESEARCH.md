@@ -1,6 +1,6 @@
 # Phase 161: Ad-hoc Convention Package Contracts - Research
 
-**Researched:** 2026-07-23  
+**Researched:** 2026-07-23
 **Domain:** NAP-INTENT contract migration, NAP-INC convention-URI transposition, NIP-5A archetype metadata, package and authoring-surface alignment
 **Confidence:** HIGH
 
@@ -279,7 +279,7 @@ behavior; VERIFIED: PR #89 literal-plus rule]
 ## Common Pitfalls
 
 ### Pitfall 1: Treating `convention` as a cosmetic rename
-**What goes wrong:** A compatibility `protocol` field, `contracts` array, `eventKinds`, or two-argument negotiation remains in the public API.  
+**What goes wrong:** A compatibility `protocol` field, `contracts` array, `eventKinds`, or two-argument negotiation remains in the public API.
 **How to avoid:** Type-check exported barrels and grep active sources for the removed contract vocabulary after the migration. [VERIFIED: Phase 161 CONTEXT.md]
 
 ### Pitfall 2: Putting PR #89 transposition in the matcher
@@ -301,11 +301,11 @@ type-check built declarations across core, NAP, and SDK. [VERIFIED: current
 `packages/nap/src/inc/{shim,sdk}.ts`, and `packages/sdk/src/relay.ts`]
 
 ### Pitfall 4: Moving old payload constraints into a new manifest form
-**What goes wrong:** `kind:<n>` survives under a renamed convention property, implicitly preserving removed NAP-N semantics.  
+**What goes wrong:** `kind:<n>` survives under a renamed convention property, implicitly preserving removed NAP-N semantics.
 **How to avoid:** Emit exactly `['archetype', slug, convention]` and reject the old input forms in both Vite and CLI tests. [VERIFIED: napplet/naps@6461e4b `ARCHETYPES.md`; VERIFIED: Phase 161 CONTEXT.md]
 
 ### Pitfall 5: Editing immutable history or missing live documentation
-**What goes wrong:** A broad replacement alters changelogs/archived planning while a CLI prompt or tutorial still teaches `note:NAP-4`.  
+**What goes wrong:** A broad replacement alters changelogs/archived planning while a CLI prompt or tutorial still teaches `note:NAP-4`.
 **How to avoid:** Use the active inventory above and run two scans: one excluding history must be clean, while historic files remain unchanged. [VERIFIED: Phase 161 CONTEXT.md; VERIFIED: repository source scan]
 
 ## Code Examples
@@ -468,5 +468,5 @@ All findings are verified against the supplied authoritative upstream checkout o
   D-01. [VERIFIED: napplet/naps@6461e4b; PR #89 head `34ec29f`; Phase 161
   CONTEXT.md]
 
-**Research date:** 2026-07-23  
+**Research date:** 2026-07-23
 **Valid until:** The upstream NAP track is living; re-check its head and the cited commit before implementation if planning is delayed beyond 7 days. [VERIFIED: AGENTS.md]
