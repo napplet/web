@@ -48,7 +48,7 @@ export function normalizeConventionUri(
   }
 
   const names = new Set<string>();
-  const payload: Record<string, string> = {};
+  const entries: Array<[string, string]> = [];
   const query = uri.slice(queryIndex + 1);
 
   if (query) {
@@ -64,9 +64,9 @@ export function normalizeConventionUri(
         throw new Error('Convention URI query parameter names must be unique');
       }
       names.add(name);
-      payload[name] = value;
+      entries.push([name, value]);
     }
   }
 
-  return { archetype, action, convention, payload };
+  return { archetype, action, convention, payload: Object.fromEntries(entries) };
 }

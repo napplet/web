@@ -31,6 +31,18 @@ describe('normalizeConventionUri', () => {
     });
   });
 
+  it('preserves prototype-shaped query names as ordinary own text fields', () => {
+    const result = normalizeConventionUri(
+      'napplet:note/open?__proto__=literal&constructor=text',
+    );
+
+    expect(result.payload).toEqual(Object.fromEntries([
+      ['__proto__', 'literal'],
+      ['constructor', 'text'],
+    ]));
+    expect(Object.prototype.hasOwnProperty.call(result.payload, '__proto__')).toBe(true);
+  });
+
   it.each([
     ['fragment', 'napplet:profile/open#details', undefined],
     ['malformed name escape', 'napplet:profile/open?%E0%A4=value', undefined],
