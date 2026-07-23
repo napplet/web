@@ -66,7 +66,7 @@ function isTestFile(filePath) {
  * @returns {boolean} Whether the file owns intent contract behavior.
  */
 function isIntentContractSurface(filePath, contents) {
-  return /(?:^|\/)intent(?:[-_/\.]|s?\.md$)/i.test(filePath)
+  return /(?:^|\/)intent(?:[-_/.]|s?\.md$)/i.test(filePath)
     || /\b(?:NAP-INTENT|Intent(?:Result|Delivery|Contract|Candidate|Request)|intent\.(?:invoke|open|deliver))\b/.test(contents);
 }
 
