@@ -46,7 +46,7 @@ status: complete
 
 ## Performance
 
-- **Duration:** 2 min
+- **Duration:** 3 min
 - **Started:** 2026-07-23T15:58:00Z
 - **Completed:** 2026-07-23T16:00:07Z
 - **Tasks:** 1/1
@@ -60,7 +60,7 @@ status: complete
 
 ## Task Commits
 
-1. **Task 1: Inject onDelivery and route one push without INC** - `9f08fd79` (test), `9a5b5841` (feat)
+1. **Task 1: Inject onDelivery and route one push without INC** - `9f08fd79` (RED test), `9a5b5841` (feat), `8e770d99` (isolated-domain regression)
 
 ## Files Created/Modified
 
@@ -90,6 +90,7 @@ status: complete
 
 - RED: `packages/shim/src/shell.test.ts` failed as expected because the injected intent API lacked `onDelivery` (`9f08fd79`).
 - GREEN: Runtime wiring made the selected-domain delivery test and full shim gate pass (`9a5b5841`).
+- Follow-up: the regression imports the runtime entrypoint directly, preventing the root auto-installer from pre-installing INC (`8e770d99`).
 
 ## Issues Encountered
 
@@ -111,6 +112,6 @@ None - no external service configuration required.
 ## Self-Check: PASSED
 
 - Confirmed `packages/shim/src/runtime.ts` and `packages/shim/src/shell.test.ts` exist.
-- Confirmed task commits `9f08fd79` and `9a5b5841` exist in git history.
+- Confirmed task commits `9f08fd79`, `9a5b5841`, and `8e770d99` exist in git history.
 - Confirmed `@napplet/nap` exports `onDelivery` declarations and the generated shim bundle wires the method.
 - Confirmed `pnpm --filter @napplet/shim test:unit`, `build`, and `type-check` all pass.
