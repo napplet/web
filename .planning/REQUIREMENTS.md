@@ -140,7 +140,7 @@ external source.
 
 ## Ad-hoc Convention Requirements
 
-- [ ] **CONV-PKG-01**: At NAP-INTENT PR #91 head
+- [x] **CONV-PKG-01**: At NAP-INTENT PR #91 head
   `a718915ddefa2f03a0126579601f59d8bd86f7c4`, `@napplet/core`,
   `@napplet/nap/intent`, `@napplet/sdk`, and `@napplet/shim` expose the
   authoritative URI invoke/open APIs, required normalized request identity,
@@ -158,7 +158,7 @@ external source.
   emit optional per-contract `eventKinds`; convention-only flags/prompts remain
   unchanged and no delimiter or kinds flag is invented.
 
-- [ ] **CONV-PKG-04**: Active INC constants and examples use the advisory
+- [x] **CONV-PKG-04**: Active INC constants and examples use the advisory
   `napplet:<archetype>/<intent>` namespace; the clean-break public API is
   `emit(topic, payload?)`; and adopted NAP-INC PR #89 head
   `4593ce9e301ce098fd3dad64206fcd6f144fa7af` convention-URI queries transpose

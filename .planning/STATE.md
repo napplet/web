@@ -5,8 +5,8 @@ milestone_name: NIP-5D Runtime Injection
 current_phase: 161
 current_phase_name: ad-hoc-convention-package-contracts
 status: executing
-stopped_at: Completed 161-12-PLAN.md
-last_updated: "2026-07-23T15:10:16.880Z"
+stopped_at: Completed 161-15-PLAN.md
+last_updated: "2026-07-23T15:41:35.382Z"
 last_activity: 2026-07-23
 last_activity_desc: Phase 161 execution started
 progress:
@@ -32,7 +32,7 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 ## Current Position
 
 Phase: 161 (ad-hoc-convention-package-contracts) — EXECUTING
-Plan: 13 of 14
+Plan: 14 of 14
 Status: Ready to execute Plan 161-10
 Last activity: 2026-07-23 — Phase 161 execution started
 community/group-chat invite linked from the SPA and docs.
@@ -468,6 +468,8 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 - [Phase ?]: Publish CLI archetype examples as opaque slug:convention metadata and preserve NAP-INTENT and manifest opacity.
 - [Phase ?]: Document only the exact three-element archetype manifest tag and keep convention values opaque.
 - [Phase ?]: Confine NAP-INC query transposition to emit, then route the stable topic exactly.
+- [Phase ?]: Use one internal convention URI normalizer with raw decoding and literal-plus semantics for adopted boundaries.
+- [Phase ?]: Keep INC query parsing outbound-only and preserve exact opaque receive routing.
 
 ### Decisions (napplet/nubs state snapshot, 2026-04-23)
 
@@ -559,8 +561,8 @@ Items acknowledged and deferred at v0.31.0 milestone close on 2026-05-24:
 
 **Resume file:** None
 
-Last session: 2026-07-23T15:10:16.871Z
-Stopped at: Completed 161-12-PLAN.md
+Last session: 2026-07-23T15:41:35.372Z
+Stopped at: Completed 161-15-PLAN.md
 Resume: Phase 155 COMPLETE. All v0.33.0 SHELL requirements satisfied; both phases (154, 155) done. Next: orchestrator verify_phase_goal for Phase 155, then `/gsd:audit-milestone v0.33.0` → `/gsd:ship`.
 
 - v0.26.0: Consolidated `@napplet/nub-*` packages into single `@napplet/nub` with 34 subpath exports; deprecated packages ship as 1-line re-export shims for one release cycle
@@ -657,3 +659,4 @@ Resume: Phase 142 TERMINAL-COMPLETE — all 13 VER-IDs (VER-01..13) verified PAS
 | Phase 161 P14 | 7min | 3 tasks | 10 files |
 | Phase 161 P11 | 3min | 2 tasks | 8 files |
 | Phase 161 P12 | 4min | 1 tasks | 5 files |
+| Phase 161-ad-hoc-convention-package-contracts P15 | 2min | 1 tasks | 4 files |
