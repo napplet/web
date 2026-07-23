@@ -155,8 +155,13 @@ external source.
   protocol form.
 
 - [x] **CONV-PKG-04**: Active INC constants and examples use the advisory
-  `napplet:<archetype>/<intent>` namespace while preserving exact opaque topic
-  routing and adding no wildcard, prefix, or query-normalization semantics.
+  `napplet:<archetype>/<intent>` namespace; the clean-break public API is
+  `emit(topic, payload?)`; and draft NAP-INC PR #89 head
+  `34ec29fc4039384a83dbd6b476f83c4fa0d038e6` convention-URI queries transpose
+  into a shallow text payload before exact routing. Literal plus and percent
+  decoding are preserved, fragments/malformed escapes/decoded duplicate
+  names/query-plus-payload reject before emission, and subscriptions/shell
+  matching remain exact with no wildcard or prefix behavior.
 
 - [x] **CONV-PKG-05**: Conformance, current author documentation, and shipped
   skills use the unnumbered convention model; changelogs and archived planning

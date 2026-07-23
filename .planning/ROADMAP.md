@@ -873,19 +873,19 @@ opens the PR. Runtime-injection work supersedes v0.33 NAP-SHELL artifacts.
 
 ### Phase 161: Ad-hoc Convention Package Contracts
 
-**Goal:** Chase `napplet/naps` commit `6461e4b37c29dc09a20dff35d9515889c4433874` through every active package, CLI, conformance, documentation, and skill surface: numbered NAP protocol identifiers and negotiation disappear; NAP-INTENT exposes `convention`/`conventions`; archetype manifests advertise `napplet:<archetype>/<intent>` conventions without invented constraint fields; and INC examples use the new namespace without claiming an unspecified payload schema or query-matching rule.
+**Goal:** Chase `napplet/naps` commit `6461e4b37c29dc09a20dff35d9515889c4433874` and draft NAP-INC PR #89 head `34ec29fc4039384a83dbd6b476f83c4fa0d038e6` through every active package, CLI, conformance, documentation, and skill surface: numbered NAP protocol identifiers and negotiation disappear; NAP-INTENT exposes opaque `convention`/`conventions`; archetype manifests advertise `napplet:<archetype>/<intent>` conventions without invented constraint fields; and NAP-INC clean-breaks to `emit(topic, payload?)`, transposes convention-URI query text before exact routing, and rejects the draft's ambiguous/malformed forms before emission.
 **Requirements**: CONV-PKG-01, CONV-PKG-02, CONV-PKG-03, CONV-PKG-04, CONV-PKG-05, CONV-PKG-06
-**Depends on:** Nothing (authoritative source is `napplet/naps` master at `6461e4b`)
+**Depends on:** Nothing (authoritative sources are `napplet/naps@6461e4b` for the numbered-contract removal and draft PR #89 exact head `34ec29f` for NAP-INC transposition)
 **Success Criteria** (what must be TRUE):
 
   1. `@napplet/core` and `@napplet/nap/intent` expose only the current NAP-INTENT fields: `IntentRequest.convention?`, `IntentCandidate.conventions`, and `IntentResult.convention?`; removed `protocol`, `protocols`, and non-spec `contracts` fields are absent from active public types, exports, shims, tests, and examples.
   2. Vite-plugin and CLI archetype inputs emit `["archetype", "<slug>", "napplet:<archetype>/<intent>"]` tags, reject numbered `NAP-N` identifiers, and do not emit the old non-spec `kind:<n>` contract extensions.
-  3. Active INC topic constants, examples, docs, and skills use the advisory `napplet:<archetype>/<intent>` namespace. They preserve payloads as an explicitly local convention choice and do not invent wildcard/query-normalization behavior absent from NAP-INC.
+  3. Active INC APIs, constants, examples, docs, and skills use `emit(topic, payload?)` and the advisory `napplet:<archetype>/<intent>` namespace. Queried convention URIs transpose to a queryless stable topic plus a shallow percent-decoded text payload with literal `+`; fragments, malformed escapes, decoded duplicate names, and query plus explicit payload reject before emission. Subscription and shell routing remain exact-string only.
   4. The conformance reference shell and fixtures use `convention`/`conventions` and no active check or example negotiates a numbered protocol.
   5. Historical changelogs and archived planning retain semantic history, while all current author-facing docs and code are free of numbered-NAP contract guidance.
   6. Changesets cover every package with shipped output changes, and build, type-check, unit tests, docs/link checks, and the AI-slop gate pass.
 
-**Plans:** 7/12 plans executed
+**Plans:** 7/14 plans executed
 
 Plans:
 
@@ -901,3 +901,5 @@ Plans:
 - [ ] 161-10-PLAN.md — Add release metadata and run repository gates
 - [ ] 161-11-PLAN.md — Update active guides, tutorials, and the NAP index
 - [ ] 161-12-PLAN.md — Update package-reference documentation
+- [ ] 161-13-PLAN.md — Clean-break INC emit and implement convention-URI query transposition
+- [ ] 161-14-PLAN.md — Correct shipped query-sugar guidance and guard the clarified boundary

@@ -6,10 +6,14 @@
 <domain>
 ## Phase Boundary
 
-Chase the removal of numbered NAPs from `napplet/naps` master commit
-`6461e4b37c29dc09a20dff35d9515889c4433874` through the active Napplet package
-contracts, manifest tooling, CLI, conformance fixtures, docs, skills, and tests.
-Historical changelogs and archived planning remain historical.
+Chase the removal of numbered NAPs from `napplet/naps` commit
+`6461e4b37c29dc09a20dff35d9515889c4433874` and the follow-up NAP-INC
+clarification in draft PR
+[`napplet/naps#89`](https://github.com/napplet/naps/pull/89) at exact head
+[`34ec29fc4039384a83dbd6b476f83c4fa0d038e6`](https://github.com/napplet/naps/blob/34ec29fc4039384a83dbd6b476f83c4fa0d038e6/naps/NAP-INC.md)
+through the active Napplet package contracts, manifest tooling, CLI, conformance
+fixtures, docs, skills, and tests. Historical changelogs, completed plan
+histories, and archived planning remain historical.
 
 </domain>
 
@@ -28,8 +32,21 @@ Historical changelogs and archived planning remain historical.
 ### INC conventions
 - Migrate standard examples and constants to the `napplet:<archetype>/<intent>`
   namespace.
-- Keep payload examples as explicitly local convention choices. Do not implement
-  wildcard, prefix, or query normalization: upstream does not define it.
+- **D-01:** Implement NAP-INC convention-URI query transposition exactly as
+  specified by draft PR #89 at head
+  `34ec29fc4039384a83dbd6b476f83c4fa0d038e6`: the runtime-facing clean-break
+  API is `emit(topic, payload?)`; a queried
+  `napplet:<archetype>/<intent>?name=value` call emits the queryless stable topic
+  plus a shallow text-to-text payload map. Percent decoding preserves literal
+  `+`; fragments, malformed percent encoding, repeated decoded names, and query
+  plus explicit payload are rejected before `postMessage`.
+- Query transposition is an `emit` preprocessing rule, not topic matching.
+  Subscriptions, shell routing, and delivered `inc.event.topic` continue to use
+  exact complete-string equality with no wildcard, prefix, case, Unicode, or
+  routing-time query normalization.
+- Keep NAP-INTENT `convention`/`conventions` and NIP-5A archetype metadata opaque.
+  PR #89 does not authorize query parsing in intent discovery, invocation,
+  manifest producers, CLI metadata, or shell matching.
 
 ### History and coverage
 - Preserve changelog and archived-planning references that describe released
@@ -67,16 +84,22 @@ Historical changelogs and archived planning remain historical.
 ## Specific Ideas
 
 Use `napplet:note/open`, `napplet:profile/open`, and `napplet:dm/open` as the
-canonical examples published by the upstream archetype registry. Treat them as
-opaque convention names, not as restored versions of the removed NAP-1..5 payload
-specifications.
+canonical stable-topic examples published by the upstream archetype registry.
+For a per-message text value, use the PR #89 developer-facing convention-URI
+form such as `napplet:profile/open?pubkey=abc123`, which the runtime transposes
+before exact routing. Treat the names as conventions, not as restored versions
+of the removed NAP-1..5 payload specifications.
 
 </specifics>
 
 <deferred>
 ## Deferred Ideas
 
-Concrete convention payload specifications are absent upstream. Do not recreate
-the removed NAP-1..5 schemas locally; that requires new upstream convention specs.
+Concrete convention payload specifications remain absent upstream. PR #89
+defines only generic shallow text query transposition for NAP-INC `emit`; it does
+not define the meaning of `pubkey` or any other convention field. Do not recreate
+the removed NAP-1..5 schemas locally; semantic payload contracts still require
+new upstream convention specifications. NAP-INTENT query behavior remains
+deferred because PR #89 changes NAP-INC only.
 
 </deferred>
