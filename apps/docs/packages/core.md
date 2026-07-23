@@ -23,6 +23,8 @@ npm install @napplet/core
 import {
   type NappletMessage, type NapDomain, type NappletGlobal,
   type NapHandler, type NapDispatch,
+  type IntentContract, type IntentDelivery, type IntentInvokeOptions,
+  type IntentResult,
   NAP_DOMAINS, SHELL_BRIDGE_URI, PROTOCOL_VERSION,
   createDispatch, registerNap, dispatch, getRegisteredDomains,
   ALL_CAPABILITIES, TOPICS,
@@ -101,25 +103,47 @@ plain envelopes, so they add no protocol surface.
 
 ### Convention boundaries
 
-Intent types expose `convention` / `conventions` as opaque advertised strings;
-they do not define payload schemas or interpret query parameters. The global
-INC API is `emit(topic, payload?)`, with an optional opaque payload for a
-queryless topic.
+The stable identity is the complete, queryless
+`napplet:<archetype>/<intent>` string. Manifest contracts advertise that
+identity, optionally with same-tag `kind:<number>` discovery metadata exposed
+as `IntentContract.eventKinds`. Routing and handler resolution use exact
+equality: subscriptions, metadata, and normalized wire messages never contain
+the query and never use prefix, wildcard, or query-aware matching.
 
-Only NAP-INC gives a queried `napplet:<archetype>/<intent>?name=value` special
-outbound meaning. At `emit` time, the runtime transposes its query into a
-shallow decoded text map and sends the queryless stable topic. Subscribers and
-receivers still use that exact stable topic; there is no query-aware, prefix, or
-wildcard routing. For example, `pubkey` below is a local convention choice, not
-a package-defined schema:
+The two developer-facing URI boundaries are INC `emit(topic, payload?)` and
+intent `invoke/open(uri, options?)`. At either boundary, unique percent-decoded
+query pairs become a shallow string-to-string payload before `postMessage`;
+literal `+` remains `+`. The normalized topic or convention is queryless:
 
 ```ts
 napplet.inc.emit('napplet:profile/open?pubkey=abc123');
 napplet.inc.on('napplet:profile/open', (payload) => validateLocally(payload));
+
+const accepted = await napplet.intent.open(
+  'napplet:profile/open?pubkey=abc123',
+);
+if (!accepted.ok) throw new Error(accepted.error);
+
+napplet.intent.onDelivery((delivery) => {
+  // sender is runtime-attested provenance; payload remains untrusted.
+  validateLocally(delivery.payload);
+});
 ```
 
-This non-normative package guidance follows [NAP-INC draft PR #89 at
-`34ec29fc4039384a83dbd6b476f83c4fa0d038e6`](https://github.com/napplet/naps/blob/34ec29fc4039384a83dbd6b476f83c4fa0d038e6/naps/NAP-INC.md).
+An `ok: true` result means the runtime accepted responsibility for delivery,
+not that a target received or handled it. Target delivery is a later,
+carrier-neutral `intent.deliver` push, independent of the source lifetime and
+with no public NAP-INC dependency or delivery identifier. Fragments, malformed
+percent encoding, repeated decoded names, and query parameters combined with an
+explicit payload reject before posting. Structured or non-text data belongs in
+an explicit payload with a queryless URI.
+
+This package follows the exact draft heads for [NAP-INC PR #89
+(`4593ce9`)](https://github.com/napplet/naps/pull/89/commits/4593ce9e301ce098fd3dad64206fcd6f144fa7af),
+[the web projection PR #90
+(`896c32c`)](https://github.com/napplet/naps/pull/90/commits/896c32c92deee68dc4d10fc1132b62df20cccb6f),
+and [NAP-INTENT PR #91
+(`a718915`)](https://github.com/napplet/naps/pull/91/commits/a718915ddefa2f03a0126579601f59d8bd86f7c4).
 
 ## Usage
 
