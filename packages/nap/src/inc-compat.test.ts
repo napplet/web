@@ -92,6 +92,18 @@ describe('INC topic routing', () => {
     });
 
     it.each([
+      'custom:topic?name=value',
+      'napplet:profile/open/extra?name=value',
+    ])('forwards non-documented topic text unchanged: %s', (topic) => {
+      emit(topic);
+
+      expect(window.parent.postMessage).toHaveBeenCalledWith({
+        type: 'inc.emit',
+        topic,
+      }, '*');
+    });
+
+    it.each([
       { name: 'fragment', topic: 'napplet:profile/open#details', payload: undefined },
       { name: 'malformed name escape', topic: 'napplet:profile/open?%E0%A4=value', payload: undefined },
       { name: 'malformed value escape', topic: 'napplet:profile/open?name=%E0%A4', payload: undefined },

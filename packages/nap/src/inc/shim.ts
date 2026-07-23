@@ -8,9 +8,9 @@
 // Inter-napplet communication via topic pub/sub over postMessage.
 
 import { postToShell } from '../boundary.js';
+import { normalizeConventionUri } from '../convention-uri.js';
 import type { NostrEvent } from '@napplet/core';
 import type {
-  IncEmitMessage,
   IncSubscribeMessage,
   IncUnsubscribeMessage,
   IncEventMessage,
@@ -20,17 +20,17 @@ import type {
 const incTopicHandlers = new Map<string, Array<(payload: unknown, sender: string) => void>>();
 
 /**
- * Transpose a queried convention URI into the stable topic and text payload the
- * shell routes. All non-convention topics remain opaque to the runtime.
+ * Normalize documented convention URIs before emission. All other topics remain
+ * opaque to INC and retain their exact caller-provided text.
  */
-function transposeConventionUri(topic: string, payload: unknown): IncEmitMessage {
+function transposeConventionUri(topic: string, payload: unknown) {
   const queryIndex = topic.indexOf('?');
   const fragmentIndex = topic.indexOf('#');
   const pathEnd = [queryIndex, fragmentIndex]
     .filter((index) => index >= 0)
     .reduce((end, index) => Math.min(end, index), topic.length);
-  const stableTopic = topic.slice(0, pathEnd);
-  const isConventionUri = /^napplet:[^/?#]+\/[^/?#]+$/.test(stableTopic);
+  const convention = topic.slice(0, pathEnd);
+  const isConventionUri = /^napplet:[^/?#]+\/[^/?#]+$/.test(convention);
 
   if (!isConventionUri) {
     return {
@@ -40,47 +40,12 @@ function transposeConventionUri(topic: string, payload: unknown): IncEmitMessage
     };
   }
 
-  if (fragmentIndex >= 0) {
-    throw new Error('Convention URI fragments are not supported by inc.emit');
-  }
-
-  if (queryIndex < 0) {
-    return {
-      type: 'inc.emit',
-      topic,
-      ...(payload !== undefined ? { payload } : {}),
-    };
-  }
-
-  if (payload !== undefined) {
-    throw new Error('Convention URI queries cannot be combined with an explicit payload');
-  }
-
-  const entries: Array<[string, string]> = [];
-  const names = new Set<string>();
-  const query = topic.slice(queryIndex + 1);
-
-  if (query) {
-    for (const pair of query.split('&')) {
-      const separator = pair.indexOf('=');
-      if (separator < 0) {
-        throw new Error('Convention URI query parameters must use name=value form');
-      }
-
-      const name = decodeURIComponent(pair.slice(0, separator));
-      const value = decodeURIComponent(pair.slice(separator + 1));
-      if (names.has(name)) {
-        throw new Error('Convention URI query parameter names must be unique');
-      }
-      names.add(name);
-      entries.push([name, value]);
-    }
-  }
+  const normalized = normalizeConventionUri(topic, payload);
 
   return {
     type: 'inc.emit',
-    topic: stableTopic,
-    payload: Object.fromEntries(entries),
+    topic: normalized.convention,
+    ...(normalized.payload !== undefined ? { payload: normalized.payload } : {}),
   };
 }
 
