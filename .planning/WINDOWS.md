@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 4
+open_count: 5
 waived_count: 0
 fixed_count: 0
-total_count: 4
-last_updated: 2026-07-23T14:17:38.934Z
+total_count: 5
+last_updated: 2026-07-23T15:08:40.729Z
 ---
 
 # Broken Windows Ledger
@@ -19,6 +19,7 @@ last_updated: 2026-07-23T14:17:38.934Z
 | 2 | 161 | deviation | packages/sdk/src/nap-types.ts | 351 | Full build/type-check blocked by stale IntentContract import outside 161-02 scope. | open |  | 2026-07-23T13:48:43.296Z |  |
 | 3 | 161 | deviation | packages/conformance/src/validators/envelope.test.ts | 86 | Corrected a malformed-request test assertion to match the established validator error shape. | open |  | 2026-07-23T14:10:44.449Z |  |
 | 4 | 161 | deviation | packages/skills/README.md |  | Phase-wide convention guard remains red on active CLI/docs/SDK surfaces outside Plan 161-09 ownership. | open |  | 2026-07-23T14:17:38.934Z |  |
+| 5 | 161 | deviation | .planning/phases/161-ad-hoc-convention-package-contracts/161-11-PLAN.md |  | Plan-wide convention guard was deferred from tracer verification until Task 2 migrated its scanned tutorial files. | open |  | 2026-07-23T15:08:40.729Z |  |
 
 ````json
 [
@@ -68,6 +69,18 @@ last_updated: 2026-07-23T14:17:38.934Z
     "status": "open",
     "reason": "",
     "recorded_at": "2026-07-23T14:17:38.934Z",
+    "resolved_at": null
+  },
+  {
+    "id": 5,
+    "kind": "deviation",
+    "phase": "161",
+    "file": ".planning/phases/161-ad-hoc-convention-package-contracts/161-11-PLAN.md",
+    "line": null,
+    "description": "Plan-wide convention guard was deferred from tracer verification until Task 2 migrated its scanned tutorial files.",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-07-23T15:08:40.729Z",
     "resolved_at": null
   }
 ]
