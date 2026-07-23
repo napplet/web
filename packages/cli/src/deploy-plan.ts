@@ -99,7 +99,7 @@ function assertFolderDTag(candidate: NappletCandidate): void {
   if (!NAMED_SITE_D_TAG_PATTERN.test(name) || name.endsWith("-")) {
     throw new Error(
       `Napplet folder "${name}" (${candidate.dir}) is not a valid d tag; folder names ` +
-        `used as d tags must match ^[a-z0-9-]{1,13}$ and not end with '-'`,
+        `used as d tags must match ^[a-z0-9-]+$ and not end with '-'`,
     );
   }
 }
