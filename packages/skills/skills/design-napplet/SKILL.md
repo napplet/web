@@ -92,12 +92,24 @@ convention in each `['archetype', slug, convention]` manifest tag, for example
 schema, event-kind constraint, version, or negotiation rule.
 
 For `inc`, name the exact opaque topic the feature emits or subscribes to, such
-as `napplet:note/open`, `napplet:profile/open`, or `napplet:dm/open`. The build
-must treat incoming payloads as untrusted and validate them against a real
-upstream convention when one exists. Do not specify query, prefix, wildcard,
-canonicalization, payload-schema, or multi-convention behavior: those semantics
-are not defined here. Keep the apparent encoding/matching edge unresolved and
-refer it to [web#183](https://github.com/napplet/web/issues/183).
+as `napplet:note/open`, `napplet:profile/open`, or `napplet:dm/open`. NAP-INC
+`emit(topic, payload?)` may use `napplet:profile/open?pubkey=abc123` as
+developer-facing shorthand: the runtime transposes its shallow text query into
+payload and routes the stable queryless topic `napplet:profile/open`. Specify
+subscriptions against that stable queryless topic. The build must treat incoming
+payloads as untrusted and validate them against a real upstream convention when
+one exists.
+
+This query rule belongs only to outbound NAP-INC `emit`. Literal `+` remains a
+plus after percent decoding; fragments, malformed percent encoding, repeated
+decoded names, and query plus explicit payload reject synchronously. Plan a
+queryless topic with explicit payload for structured or non-text data.
+NAP-INTENT and manifest conventions remain opaque, and subscriptions and shell
+routing retain exact matching without query parsing, prefix, wildcard,
+canonicalization, payload-schema, or multi-convention behavior. Defer to
+[NAP-INC draft PR #89 at its exact
+head](https://github.com/napplet/naps/blob/34ec29fc4039384a83dbd6b476f83c4fa0d038e6/naps/NAP-INC.md)
+for the living normative contract.
 
 ### NAP-THEME is a whole-surface concern
 

@@ -292,13 +292,13 @@ Also available: `getProfile()`, `getFollows()`, `getList(type)`, `getRelays()`, 
 
 `inc.emit` broadcasts to topic subscribers; `inc.on` subscribes. Use exact,
 opaque convention topics such as `napplet:note/open`, `napplet:profile/open`,
-or `napplet:dm/open`. A topic is an identifier, not a query language or a
-payload schema.
+or `napplet:dm/open`. A topic is an identifier, not a payload schema.
 
 ```ts
 import { inc } from '@napplet/sdk';
 
-inc.emit('napplet:profile/open', [], JSON.stringify({ localSelection: 'example' }));
+inc.emit('napplet:profile/open?pubkey=abc123');
+// Runtime emits { type: 'inc.emit', topic: 'napplet:profile/open', payload: { pubkey: 'abc123' } }.
 
 const sub = inc.on('napplet:profile/open', (payload: unknown, event) => {
   if (!isValidProfileOpenPayload(payload)) return;
@@ -307,14 +307,19 @@ const sub = inc.on('napplet:profile/open', (payload: unknown, event) => {
 sub.close();
 ```
 
-Payload choices are local to a real upstream convention when one exists. Always
-validate an untrusted `payload` before using it; do not recreate numbered
-payload schemas, infer a schema from the topic, or treat a role tag as proof
-that a payload is valid. Topics remain exact opaque strings: do not add query,
-prefix, wildcard, canonicalization, or multi-convention behavior. The apparent
-upstream encoding/matching edge is unresolved in
-[web#183](https://github.com/napplet/web/issues/183); flag it instead of
-selecting an implementation rule.
+Only NAP-INC `emit(topic, payload?)` may use a queried convention URI. The
+runtime turns its shallow text query into payload and routes the stable queryless
+topic; subscribe to that stable queryless topic. Literal `+` stays plus and
+percent-decoding applies only to the emitted query text. A fragment, malformed
+percent encoding, repeated decoded name, or query plus explicit payload throws
+synchronously; use a queryless topic plus explicit payload for structured or
+non-text data. Payload choices remain local to a real upstream convention, so
+validate every received value and do not recreate numbered schemas. NAP-INTENT
+and manifest conventions remain opaque. Subscriptions and shell routing stay
+exact: do not parse a query there or add prefix, wildcard, canonicalization, or
+multi-convention matching. See [NAP-INC draft PR #89 at its exact
+head](https://github.com/napplet/naps/blob/34ec29fc4039384a83dbd6b476f83c4fa0d038e6/naps/NAP-INC.md)
+for the living normative contract.
 
 ## Step 10 — Domain availability
 

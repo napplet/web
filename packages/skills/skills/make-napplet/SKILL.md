@@ -127,11 +127,21 @@ using `relay` is wrong.
 For cross-napplet features, payloads are local choices and inbound values are
 untrusted. Validate each received payload against a real upstream convention
 when one exists; do not recreate numbered payload contracts or infer a payload
-schema from an opaque convention name. INC topics are exact opaque strings, so
-do not add query, prefix, wildcard, canonicalization, or multi-convention
-matching. The upstream encoding/matching question remains unresolved in
-[web#183](https://github.com/napplet/web/issues/183); report the gap instead of
-choosing a local rule.
+schema from an opaque convention name. NAP-INC `emit(topic, payload?)` may send
+`napplet:profile/open?pubkey=abc123`; the runtime transposes that shallow text
+query into payload and routes the stable queryless topic
+`napplet:profile/open`, which subscribers use exactly.
+
+This is outbound emit preprocessing, not a routing rule. Literal `+` stays
+plus after percent decoding. Fragments, malformed percent encoding, repeated
+decoded names, and a query with explicit payload throw synchronously; use a
+queryless topic with explicit payload for structured or non-text data.
+NAP-INTENT and manifest conventions remain opaque, while subscriptions and shell
+routing keep exact matching without query parsing, prefix, wildcard,
+canonicalization, or multi-convention behavior. See [NAP-INC draft PR #89 at
+its exact
+head](https://github.com/napplet/naps/blob/34ec29fc4039384a83dbd6b476f83c4fa0d038e6/naps/NAP-INC.md)
+for the living normative contract.
 
 ## Step 3 - Run The Specialized Skills
 

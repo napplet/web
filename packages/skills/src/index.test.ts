@@ -149,8 +149,8 @@ describe('skill registry', () => {
       expect(markdown).toContain('napplet:dm/open');
       expect(markdown).toContain('emit(topic, payload?)');
       expect(markdown).toContain('napplet:profile/open?pubkey=abc123');
-      expect(markdown).toContain('stable queryless topic');
-      expect(markdown).toContain('NAP-INTENT and manifest conventions remain opaque');
+      expect(markdown).toMatch(/stable queryless\s+topic/);
+      expect(markdown).toMatch(/NAP-INTENT\s+and manifest conventions remain opaque/);
       expect(markdown).not.toContain('web#183');
       expect(markdown).not.toContain('do not add query, prefix, wildcard, canonicalization');
       expect(markdown).not.toMatch(/\bNAP-[1-5]\b/);

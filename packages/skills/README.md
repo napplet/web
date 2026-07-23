@@ -57,12 +57,24 @@ interaction; it does not supply a payload schema, event-kind constraint, version
 or negotiation mechanism.
 
 INC topics use the same opaque names, including `napplet:note/open`,
-`napplet:profile/open`, and `napplet:dm/open`. Treat topic identity as exact and
-validate every received payload against a real upstream convention when one
-exists. Do not introduce query, prefix, wildcard, canonicalization,
-payload-schema, or multi-convention semantics. The upstream encoding/matching
-question remains unresolved in [web#183](https://github.com/napplet/web/issues/183);
-flag it instead of resolving it in generated code.
+`napplet:profile/open`, and `napplet:dm/open`. For outbound NAP-INC only,
+`emit(topic, payload?)` may receive a queried convention URI:
+
+```ts
+inc.emit('napplet:profile/open?pubkey=abc123');
+// -> { type: 'inc.emit', topic: 'napplet:profile/open', payload: { pubkey: 'abc123' } }
+```
+
+The runtime percent-decodes shallow text values (`+` stays plus) and routes the
+stable queryless topic, which subscribers use exactly. Fragments, malformed
+percent encoding, repeated decoded names, and query plus explicit payload throw
+synchronously; structured or non-text data uses explicit payload with a
+queryless topic. Validate every received payload against a real upstream
+convention when one exists. NAP-INTENT and manifest conventions remain opaque,
+and subscriptions/shell routing do not parse query text or introduce prefix,
+wildcard, canonicalization, payload-schema, or multi-convention matching. This
+non-normative guidance defers to [NAP-INC draft PR #89 at its exact
+head](https://github.com/napplet/naps/blob/34ec29fc4039384a83dbd6b476f83c4fa0d038e6/naps/NAP-INC.md).
 
 The expected generated-project validation is:
 
