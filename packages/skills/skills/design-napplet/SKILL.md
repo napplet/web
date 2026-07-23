@@ -83,6 +83,22 @@ The deprecated `ifc` package subpath is an INC compatibility alias; choose
 `inc` for new work. Every NAP is **voluntary**: assume a domain may be absent and
 degrade gracefully unless it is a hard manifest requirement.
 
+### Cross-napplet roles and messages
+
+For an `intent` feature, record the role slug and optional `convention` field
+that the caller will use. A published archetype advertises exactly one opaque
+convention in each `['archetype', slug, convention]` manifest tag, for example
+`['archetype', 'note', 'napplet:note/open']`. It does not declare a payload
+schema, event-kind constraint, version, or negotiation rule.
+
+For `inc`, name the exact opaque topic the feature emits or subscribes to, such
+as `napplet:note/open`, `napplet:profile/open`, or `napplet:dm/open`. The build
+must treat incoming payloads as untrusted and validate them against a real
+upstream convention when one exists. Do not specify query, prefix, wildcard,
+canonicalization, payload-schema, or multi-convention behavior: those semantics
+are not defined here. Keep the apparent encoding/matching edge unresolved and
+refer it to [web#183](https://github.com/napplet/web/issues/183).
+
 ### NAP-THEME is a whole-surface concern
 
 If the napplet has a visual UI, plan theme integration even when it is optional.
@@ -145,6 +161,8 @@ requires: []        # hard requirements only; keep optional enhancements out
 optional domains and fallbacks: resource -> show initials when avatar fetch unavailable; keys -> use buttons/menu when shell key reservation is absent
 SDK helpers: outbox.query, outbox.subscribe, common.getProfile, storage.getItem, resource.bytes
 config schema: <fields or "none">
+archetype metadata: <none, or slug + one opaque convention; emits ["archetype", slug, convention]>
+INC topics and payload validation: <none, or exact opaque topic + upstream convention/local validation boundary>
 layout: <tiny state> / <large state>, responsive strategy
 theme: NAP-THEME optional/required; root background, text, surface, border, primary, muted mappings; fallback palette; change subscription
 data flow: <outbox queries/subscriptions/publishes, social actions, stored keys>

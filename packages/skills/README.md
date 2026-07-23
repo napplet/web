@@ -48,6 +48,22 @@ function without them.
 There is no `shell.ready()` / `shell.supports(...)` API; use injected domain
 presence for optional fallbacks and do not invent a generic capability probe.
 
+## Cross-napplet conventions
+
+For archetype-enabled napplets, use one opaque convention per exact
+three-element manifest tag: `["archetype", slug, convention]`, such as
+`["archetype", "note", "napplet:note/open"]`. A convention name advertises an
+interaction; it does not supply a payload schema, event-kind constraint, version,
+or negotiation mechanism.
+
+INC topics use the same opaque names, including `napplet:note/open`,
+`napplet:profile/open`, and `napplet:dm/open`. Treat topic identity as exact and
+validate every received payload against a real upstream convention when one
+exists. Do not introduce query, prefix, wildcard, canonicalization,
+payload-schema, or multi-convention semantics. The upstream encoding/matching
+question remains unresolved in [web#183](https://github.com/napplet/web/issues/183);
+flag it instead of resolving it in generated code.
+
 The expected generated-project validation is:
 
 ```bash

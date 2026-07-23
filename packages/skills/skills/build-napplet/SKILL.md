@@ -75,7 +75,7 @@ For a new napplet, scaffold and initialize through the primary CLI. `create`
 delegates to the canonical `github.com/napplet/boilerplate` template and
 preserves the package manager pin, Vite config, single-file build plumbing, scripts,
 conformance wiring, docs layout, and starter source structure. `init` owns the
-deployment d-tag, title, optional description, and canonical archetype contracts.
+deployment d-tag, title, optional description, and canonical archetype metadata.
 
 ```bash
 napplet create my-napplet
@@ -145,6 +145,26 @@ export default defineConfig({
 ```
 
 The aggregate hash is computed into the manifest (`.nip5a-manifest.json`) and the signed event — it is **not** injected as a meta tag. Set `VITE_DEV_PRIVKEY_HEX` (hex 32-byte key) to produce a signed manifest in CI; dev builds work without it.
+
+### Describe archetypes with opaque conventions
+
+When the napplet fulfills an archetype role, use the current `archetypes` option
+and one opaque convention per entry. The emitted manifest tag is exactly
+`["archetype", slug, convention]`; for example,
+`["archetype", "note", "napplet:note/open"]`. The role and convention name
+advertise an accepted interaction name, not a payload schema or negotiation
+contract.
+
+```ts
+archetypes: [
+  { slug: 'note', convention: 'napplet:note/open' },
+]
+```
+
+Do not add event-kind, payload, version, or constraint fields to an archetype
+entry. Keep a convention string opaque after the documented boundary validation;
+if an app needs a convention that upstream has not defined, flag the gap rather
+than inventing a local wire contract.
 
 ## Step 4 — Read And Publish Nostr Events Through Outbox First
 
@@ -270,20 +290,31 @@ Also available: `getProfile()`, `getFollows()`, `getList(type)`, `getRelays()`, 
 
 ## Step 9 — Inter-napplet events
 
-`inc.emit` broadcasts to topic subscribers; `inc.on` subscribes. `emit(topic, extraTags?, content?)` returns nothing and does not confirm delivery.
+`inc.emit` broadcasts to topic subscribers; `inc.on` subscribes. Use exact,
+opaque convention topics such as `napplet:note/open`, `napplet:profile/open`,
+or `napplet:dm/open`. A topic is an identifier, not a query language or a
+payload schema.
 
 ```ts
 import { inc } from '@napplet/sdk';
 
-inc.emit('profile:open', [], JSON.stringify({ pubkey: '3bf0c63…' }));
+inc.emit('napplet:profile/open', [], JSON.stringify({ localSelection: 'example' }));
 
-const sub = inc.on('profile:open', (payload: unknown, event) => {
-  const { pubkey } = payload as { pubkey: string };
+const sub = inc.on('napplet:profile/open', (payload: unknown, event) => {
+  if (!isValidProfileOpenPayload(payload)) return;
+  openProfile(payload);
 });
 sub.close();
 ```
 
-Always type-check `payload` (it is `unknown`).
+Payload choices are local to a real upstream convention when one exists. Always
+validate an untrusted `payload` before using it; do not recreate numbered
+payload schemas, infer a schema from the topic, or treat a role tag as proof
+that a payload is valid. Topics remain exact opaque strings: do not add query,
+prefix, wildcard, canonicalization, or multi-convention behavior. The apparent
+upstream encoding/matching edge is unresolved in
+[web#183](https://github.com/napplet/web/issues/183); flag it instead of
+selecting an implementation rule.
 
 ## Step 10 — Domain availability
 

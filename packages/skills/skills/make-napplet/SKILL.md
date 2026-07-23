@@ -108,7 +108,10 @@ Default social/event boundary:
 - User pubkey/current-user snapshots use `identity`.
 - Local app state uses `storage`.
 - External bytes use `resource`; uploads use `upload`.
-- Cross-napplet handoff uses `inc` or `intent`.
+- Cross-napplet handoff uses `inc` or `intent`. Record one opaque convention
+  name such as `napplet:note/open`, `napplet:profile/open`, or
+  `napplet:dm/open`; archetype metadata emits exactly
+  `["archetype", slug, convention]`.
 - Keyboard shortcuts/action keybindings use `keys`.
 - Playback/now-playing uses `media`; notifications/badges use `notify`.
 - Settings/theme use `config` and `theme`.
@@ -120,6 +123,15 @@ Default social/event boundary:
 
 Record every relay escape hatch in the build brief. If no exact reason exists,
 using `relay` is wrong.
+
+For cross-napplet features, payloads are local choices and inbound values are
+untrusted. Validate each received payload against a real upstream convention
+when one exists; do not recreate numbered payload contracts or infer a payload
+schema from an opaque convention name. INC topics are exact opaque strings, so
+do not add query, prefix, wildcard, canonicalization, or multi-convention
+matching. The upstream encoding/matching question remains unresolved in
+[web#183](https://github.com/napplet/web/issues/183); report the gap instead of
+choosing a local rule.
 
 ## Step 3 - Run The Specialized Skills
 
