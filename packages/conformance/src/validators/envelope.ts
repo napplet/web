@@ -8,8 +8,8 @@
  * {@link validateEnvelope}.
  *
  * Each entry records the envelope's **direction** (`out` = napplet→shell, `in` =
- * shell→napplet) and the required fields a *napplet-emitted* (outbound) envelope
- * must carry. A drift test (envelope.drift.test.ts) cross-checks this map against
+ * shell→napplet) and any required carrier fields. A drift test
+ * (envelope.drift.test.ts) cross-checks this map against
  * the `type:` discriminants declared in `@napplet/nap` source so a newly added
  * message type cannot ship without a matching spec here.
  *
@@ -32,8 +32,10 @@ export type FieldKind = 'string' | 'number' | 'boolean' | 'array' | 'object' | '
 export interface EnvelopeSpec {
   /** `out` = sent by the napplet to the shell; `in` = sent by the shell to the napplet. */
   dir: EnvelopeDirection;
-  /** Required fields (name → kind) for an outbound envelope. Optional fields are omitted. */
+  /** Required carrier fields (name → kind). Optional fields are omitted. */
   fields?: Record<string, FieldKind>;
+  /** Fields a napplet-emitted carrier must never supply. */
+  forbiddenFields?: readonly string[];
 }
 
 const ID = { id: 'string' } as const;
@@ -88,7 +90,7 @@ export const ENVELOPE_SPECS: Record<string, EnvelopeSpec> = {
   'storage.keys.result': { dir: 'in' },
 
   // ── inc (inter-napplet communication) ─────────────────────────────────────
-  'inc.emit': { dir: 'out', fields: { topic: 'string' } },
+  'inc.emit': { dir: 'out', fields: { topic: 'string' }, forbiddenFields: ['sender'] },
   'inc.subscribe': { dir: 'out', fields: { ...ID, topic: 'string' } },
   'inc.unsubscribe': { dir: 'out', fields: { topic: 'string' } },
   'inc.channel.open': { dir: 'out', fields: { ...ID, target: 'string' } },
@@ -97,7 +99,7 @@ export const ENVELOPE_SPECS: Record<string, EnvelopeSpec> = {
   'inc.channel.list': { dir: 'out', fields: { ...ID } },
   'inc.channel.close': { dir: 'out', fields: { channelId: 'string' } },
   'inc.subscribe.result': { dir: 'in' },
-  'inc.event': { dir: 'in' },
+  'inc.event': { dir: 'in', fields: { topic: 'string', sender: 'string' } },
   'inc.channel.open.result': { dir: 'in' },
   'inc.channel.event': { dir: 'in' },
   'inc.channel.list.result': { dir: 'in' },
@@ -212,6 +214,7 @@ export const ENVELOPE_SPECS: Record<string, EnvelopeSpec> = {
   'intent.available.result': { dir: 'in' },
   'intent.handlers.result': { dir: 'in' },
   'intent.changed': { dir: 'in' },
+  'intent.deliver': { dir: 'in', fields: { delivery: 'object' } },
 
   // ── ble ──────────────────────────────────────────────────────────────────
   'ble.open': { dir: 'out', fields: { ...ID, request: 'object' } },
@@ -305,7 +308,8 @@ export interface EnvelopeError {
     | 'unknown-type'
     | 'inbound-type-emitted'
     | 'missing-field'
-    | 'wrong-type';
+    | 'wrong-type'
+    | 'forbidden-field';
   /** Human-readable explanation. */
   message: string;
   /** Field name, when the error concerns a specific field. */
@@ -389,16 +393,6 @@ export function validateEnvelope(message: unknown): EnvelopeVerdict {
     return { ok: false, type, domain, errors: [{ code: 'unknown-type', message: `"${type}" is not a known ${domain} message type` }] };
   }
 
-  if (spec.dir === 'in') {
-    return {
-      ok: false,
-      type,
-      domain,
-      direction: 'in',
-      errors: [{ code: 'inbound-type-emitted', message: `"${type}" is a shell→napplet message; a napplet must not emit it` }],
-    };
-  }
-
   for (const [field, kind] of Object.entries(spec.fields ?? {})) {
     if (!(field in record) || record[field] === undefined) {
       errors.push({ code: 'missing-field', message: `Required field "${field}" is missing`, field });
@@ -408,6 +402,29 @@ export function validateEnvelope(message: unknown): EnvelopeVerdict {
       errors.push({
         code: 'wrong-type',
         message: `Field "${field}" should be ${kind} but is ${kindOf(record[field])}`,
+        field,
+      });
+    }
+  }
+
+  if (spec.dir === 'in') {
+    return {
+      ok: false,
+      type,
+      domain,
+      direction: 'in',
+      errors: [
+        { code: 'inbound-type-emitted', message: `"${type}" is a shell→napplet message; a napplet must not emit it` },
+        ...errors,
+      ],
+    };
+  }
+
+  for (const field of spec.forbiddenFields ?? []) {
+    if (field in record) {
+      errors.push({
+        code: 'forbidden-field',
+        message: `Field "${field}" must be runtime-derived and cannot be emitted by a napplet`,
         field,
       });
     }
