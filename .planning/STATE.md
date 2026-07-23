@@ -5,8 +5,8 @@ milestone_name: NIP-5D Runtime Injection
 current_phase: 161
 current_phase_name: ad-hoc-convention-package-contracts
 status: executing
-stopped_at: Completed 161-05-PLAN.md
-last_updated: "2026-07-23T14:10:20.548Z"
+stopped_at: Completed 161-09-PLAN.md
+last_updated: "2026-07-23T14:18:01.118Z"
 last_activity: 2026-07-23
 last_activity_desc: Phase 161 execution started
 progress:
@@ -32,7 +32,7 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 ## Current Position
 
 Phase: 161 (ad-hoc-convention-package-contracts) — EXECUTING
-Plan: 7 of 12
+Plan: 8 of 12
 Status: Ready to execute
 Last activity: 2026-07-23 — Phase 161 execution started
 community/group-chat invite linked from the SPA and docs.
@@ -457,6 +457,8 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 - [Phase ?]: CLI archetype metadata uses opaque conventions and exact three-element tags; numbered NAP identifiers and event-kind constraints are retired.
 - [Phase ?]: Interactive wizard and non-interactive --archetype input share parseArchetypeConventions().
 - [Phase ?]: Reference intent availability exposes only opaque conventions; envelope validation does not parse convention or payload semantics.
+- [Phase ?]: Skills document only opaque convention tags and exact INC topics; web#183 remains unresolved.
+- [Phase ?]: The root skills directory is a verified symlink to packages/skills/skills and is never edited separately.
 
 ### Decisions (napplet/nubs state snapshot, 2026-04-23)
 
@@ -548,8 +550,8 @@ Items acknowledged and deferred at v0.31.0 milestone close on 2026-05-24:
 
 **Resume file:** None
 
-Last session: 2026-07-23T14:10:20.539Z
-Stopped at: Completed 161-05-PLAN.md
+Last session: 2026-07-23T14:17:39.294Z
+Stopped at: Completed 161-09-PLAN.md
 Resume: Phase 155 COMPLETE. All v0.33.0 SHELL requirements satisfied; both phases (154, 155) done. Next: orchestrator verify_phase_goal for Phase 155, then `/gsd:audit-milestone v0.33.0` → `/gsd:ship`.
 
 - v0.26.0: Consolidated `@napplet/nub-*` packages into single `@napplet/nub` with 34 subpath exports; deprecated packages ship as 1-line re-export shims for one release cycle
@@ -640,3 +642,4 @@ Resume: Phase 142 TERMINAL-COMPLETE — all 13 VER-IDs (VER-01..13) verified PAS
 | Phase 161 P03 | 2m | 1 tasks | 4 files |
 | Phase 161 P04 | 6 min | 3 tasks | 10 files |
 | Phase 161 P05 | 3 min | 3 tasks | 3 files |
+| Phase 161 P09 | 5min | 2 tasks | 5 files |

@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 3
+open_count: 4
 waived_count: 0
 fixed_count: 0
-total_count: 3
-last_updated: 2026-07-23T14:10:44.449Z
+total_count: 4
+last_updated: 2026-07-23T14:17:38.934Z
 ---
 
 # Broken Windows Ledger
@@ -18,6 +18,7 @@ last_updated: 2026-07-23T14:10:44.449Z
 | 1 | 161 | stub | packages/nap/src/intent/index.ts | 75 | Pre-existing no-op dispatch registration placeholder; it was not altered by this plan and does not affect the shim's request/result forwarding path. | open |  | 2026-07-23T13:38:39.872Z |  |
 | 2 | 161 | deviation | packages/sdk/src/nap-types.ts | 351 | Full build/type-check blocked by stale IntentContract import outside 161-02 scope. | open |  | 2026-07-23T13:48:43.296Z |  |
 | 3 | 161 | deviation | packages/conformance/src/validators/envelope.test.ts | 86 | Corrected a malformed-request test assertion to match the established validator error shape. | open |  | 2026-07-23T14:10:44.449Z |  |
+| 4 | 161 | deviation | packages/skills/README.md |  | Phase-wide convention guard remains red on active CLI/docs/SDK surfaces outside Plan 161-09 ownership. | open |  | 2026-07-23T14:17:38.934Z |  |
 
 ````json
 [
@@ -55,6 +56,18 @@ last_updated: 2026-07-23T14:10:44.449Z
     "status": "open",
     "reason": "",
     "recorded_at": "2026-07-23T14:10:44.449Z",
+    "resolved_at": null
+  },
+  {
+    "id": 4,
+    "kind": "deviation",
+    "phase": "161",
+    "file": "packages/skills/README.md",
+    "line": null,
+    "description": "Phase-wide convention guard remains red on active CLI/docs/SDK surfaces outside Plan 161-09 ownership.",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-07-23T14:17:38.934Z",
     "resolved_at": null
   }
 ]
