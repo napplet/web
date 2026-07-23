@@ -29,7 +29,7 @@ function requireIntent(): NonNullable<NappletGlobal['intent']> {
 /**
  * Invoke a napplet by archetype.
  *
- * @param request  The intent request (archetype + action + payload + routing)
+ * @param request  The intent request (archetype + action + convention + payload)
  * @returns Promise resolving to the invocation result
  *
  * @example
@@ -47,8 +47,8 @@ export function intentInvoke(request: IntentRequest): Promise<IntentResult> {
  * Open a napplet by archetype (sugar for `action: "open"`).
  *
  * @param archetype  Role slug to open
- * @param payload    Opaque payload (typed by the resolved protocol)
- * @param opts       Extra request fields (protocol, handler, behavior)
+ * @param payload    Opaque payload, shaped by the selected convention
+ * @param opts       Extra request fields (convention, handler, behavior)
  * @returns Promise resolving to the invocation result
  *
  * @example

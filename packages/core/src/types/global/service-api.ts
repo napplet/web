@@ -292,8 +292,8 @@ export interface UploadApi {
  * (archetype) without addressing it directly. The napplet names a role +
  * action + payload; the shell resolves the role to an installed napplet
  * (honoring the user's default-handler preference), creates or focuses the
- * window, and delivers the payload using the named NAP-N protocol. Routing
- * (`archetype`) and payload format (`protocol`) are orthogonal. The shell owns
+ * window, and delivers the payload using an opaque convention. Routing
+ * (`archetype`) and payload format (`convention`) are orthogonal. The shell owns
  * resolution, default handling, window lifecycle, and the trust boundary —
  * napplets never learn or address other napplets except through this resolution.
  *
@@ -310,21 +310,21 @@ export interface IntentApi {
    * Dispatch an action (default `open`) to a napplet of `request.archetype`.
    * Resolves with the structured result (including `ok: false`/`handled: false`
    * on failure); rejects only on a top-level error.
-   * @param request  The intent request (archetype + action + payload + routing)
+   * @param request  The intent request (archetype + action + convention + payload)
    * @returns Promise resolving to the invocation result
    */
   invoke(request: IntentRequest): Promise<IntentResult>;
   /**
    * Convenience sugar for `invoke({ archetype, action: 'open', payload, ...opts })`.
    * @param archetype  Role slug to open
-   * @param payload    Opaque payload (typed by the resolved protocol)
-   * @param opts       Extra request fields (protocol, handler, behavior)
+   * @param payload    Opaque payload, shaped by the selected convention
+   * @param opts       Extra request fields (convention, handler, behavior)
    * @returns Promise resolving to the invocation result
    */
   open(archetype: string, payload?: unknown, opts?: Omit<IntentRequest, 'archetype' | 'action' | 'payload'>): Promise<IntentResult>;
   /**
    * Whether the runtime can currently satisfy `archetype`, with candidates and
-   * the actions/protocols/contracts each supports. Sourced from the installed
+   * the actions and conventions each supports. Sourced from the installed
    * catalog.
    * @param archetype  Role slug to check
    * @returns Promise resolving to the archetype availability

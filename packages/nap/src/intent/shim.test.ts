@@ -115,19 +115,31 @@ describe('@napplet/nap/intent shim', () => {
     await expect(promise).resolves.toMatchObject({ ok: true, handled: true, handler: 'noteview', convention });
   });
 
-  it('open() is sugar for an action:"open" invoke carrying opts', async () => {
+  it('open() forwards an opaque convention and payload without selecting a handler', async () => {
     const { open, handleIntentMessage } = await import('./shim.js');
 
-    const promise = open('emoji-list', { seed: ['🤙'] }, { behavior: { focus: true } });
+    const convention = 'napplet:emoji-list/open?source=palette';
+    const payload: unknown = { seed: ['🤙'], source: 'palette' };
+    const promise = open('emoji-list', payload, {
+      convention,
+      behavior: { focus: true },
+    });
     const sent = lastPosted('intent.invoke');
-    expect(sent.request).toEqual({ archetype: 'emoji-list', action: 'open', payload: { seed: ['🤙'] }, behavior: { focus: true } });
+    expect(sent.request).toEqual({
+      archetype: 'emoji-list',
+      action: 'open',
+      convention,
+      payload,
+      behavior: { focus: true },
+    });
+    expect(sent.request).not.toHaveProperty('handler');
 
     handleIntentMessage({
       type: 'intent.invoke.result',
       id: sent.id,
-      result: { ok: true, archetype: 'emoji-list', action: 'open', handled: true, handler: 'emojilistr', windowId: 'win-12', convention: 'napplet:emoji-list/open' },
+      result: { ok: true, archetype: 'emoji-list', action: 'open', handled: true, handler: 'emojilistr', windowId: 'win-12', convention },
     });
-    await expect(promise).resolves.toMatchObject({ handler: 'emojilistr', convention: 'napplet:emoji-list/open' });
+    await expect(promise).resolves.toMatchObject({ handler: 'emojilistr', convention });
   });
 
   it('resolves with ok:false results (no handler) without rejecting', async () => {

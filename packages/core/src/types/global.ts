@@ -277,8 +277,8 @@ export interface NappletGlobal {
    * (archetype) without addressing it directly. The napplet names a role +
    * action + payload; the shell resolves the role to an installed napplet
    * (honoring the user's default-handler preference), creates or focuses the
-   * window, and delivers the payload using the named NAP-N protocol. Routing
-   * (`archetype`) and payload format (`protocol`) are orthogonal. The shell owns
+   * window, and delivers the payload using an opaque convention. Routing
+   * (`archetype`) and payload format (`convention`) are orthogonal. The shell owns
    * resolution, default handling, window lifecycle, and the trust boundary —
    * napplets never learn or address other napplets except through this resolution.
    *

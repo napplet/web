@@ -121,11 +121,12 @@ export function handleIntentMessage(msg: { type: string; [key: string]: unknown 
  * Invoke a napplet by archetype. The shell resolves the archetype to a handler
  * (the user's default, the napplet named in `request.handler`, or a user choice
  * when `handler: "choose"`), creates or focuses its window, and delivers the
- * payload using `request.protocol` (or the archetype's default). Resolves with
+ * payload using `request.convention` (or the archetype's recommended default).
+ * Resolves with
  * the structured result (including `ok: false` / `handled: false` on resolution
  * or delivery failure); rejects only when the shell returns a top-level error.
  *
- * @param request  The intent request (archetype + action + payload + routing)
+ * @param request  The intent request (archetype + action + convention + payload)
  * @returns Promise resolving to the invocation result
  *
  * @example
@@ -156,8 +157,8 @@ export function invoke(request: IntentRequest): Promise<IntentResult> {
  * Equivalent to `invoke({ archetype, action: 'open', payload, ...opts })`.
  *
  * @param archetype  Role slug to open
- * @param payload    Opaque payload (typed by the resolved protocol)
- * @param opts       Extra request fields (protocol, handler, behavior)
+ * @param payload    Opaque payload, shaped by the selected convention
+ * @param opts       Extra request fields (convention, handler, behavior)
  * @returns Promise resolving to the invocation result
  *
  * @example
@@ -175,7 +176,7 @@ export function open(
 
 /**
  * Check whether the runtime can currently satisfy `archetype`, with the
- * candidate napplets and the actions/protocols/contracts each supports. Sourced
+ * candidate napplets and the actions and conventions each supports. Sourced
  * from the installed catalog, so it reports `true` for an installed handler that
  * is not yet running. Use as a pre-flight guardrail before showing an affordance.
  *
