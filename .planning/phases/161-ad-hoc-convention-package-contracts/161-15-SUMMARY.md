@@ -11,7 +11,7 @@ requires:
 provides:
   - One internal normalizer for adopted convention-URI call boundaries.
   - INC outbound preprocessing delegated to the shared normalizer.
-  - Regression coverage preserving opaque inbound and non-documented topic routing.
+  - Queryless convention subscriptions with opaque non-convention topic routing.
 affects: [intent-shim, nap-inc, convention-uri-consumers]
 tech-stack:
   added: []
@@ -73,17 +73,19 @@ status: complete
 - Added the internal `normalizeConventionUri` primitive, deriving archetype, action, queryless convention, and an optional shallow text payload.
 - Moved INC's raw query splitting and percent decoding into that shared primitive without changing the `inc.emit` wire envelope.
 - Locked literal-plus, malformed-escape, duplicate-name, fragment, explicit-payload, exact-routing, and opaque-topic behavior in focused Vitest coverage.
+- Preserved prototype-shaped decoded names as ordinary own payload fields and rejected query- or fragment-bearing convention subscriptions before `postMessage`.
 
 ## Task Commits
 
 1. **Task 1: Trace one queried convention through the shared primitive and INC envelope** - `a136dda9` (test, RED), `8d1f2270` (feat, GREEN)
+2. **Follow-up contract hardening** - `3e5db3e7` (prototype-shaped fields), `09667f00` (subscription RED), `bdace03d` (queryless subscription GREEN)
 
 ## Files Created/Modified
 
 - `packages/nap/src/convention-uri.ts` - Internal shared convention-URI normalizer.
 - `packages/nap/src/convention-uri.test.ts` - Cross-operation normalization and rejection matrix.
-- `packages/nap/src/inc/shim.ts` - Delegates documented outbound convention input to the normalizer.
-- `packages/nap/src/inc-compat.test.ts` - Confirms exact opaque handling remains unchanged for non-documented topics.
+- `packages/nap/src/inc/shim.ts` - Delegates documented outbound convention input to the normalizer and keeps convention subscriptions queryless.
+- `packages/nap/src/inc-compat.test.ts` - Confirms query-bearing convention subscriptions reject while non-convention topics remain opaque.
 
 ## Decisions Made
 
@@ -97,7 +99,9 @@ status: complete
 
 ## Deviations from Plan
 
-None - plan executed exactly as written.
+The post-plan review added prototype-key payload safety and explicit enforcement
+of the adopted queryless subscription rule; both stay within the planned URI
+and exact-routing contract.
 
 ## Issues Encountered
 
