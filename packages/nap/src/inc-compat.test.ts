@@ -18,7 +18,10 @@ import {
 } from './ifc/index.js';
 
 beforeEach(() => {
-  vi.stubGlobal('window', { parent: { postMessage: vi.fn() } });
+  vi.stubGlobal('window', {
+    parent: { postMessage: vi.fn() },
+    napplet: { inc: { emit: vi.fn() } },
+  });
 });
 
 afterEach(() => {
@@ -52,6 +55,41 @@ describe('deprecated IFC compatibility wrapper', () => {
 });
 
 describe('INC topic routing', () => {
+  describe('emit convention URI transposition', () => {
+    it('posts a stable topic with a shallow decoded text payload', () => {
+      emit('napplet:profile/open?pubkey=abc%20123&marker=a+b');
+
+      expect(window.parent.postMessage).toHaveBeenCalledWith({
+        type: 'inc.emit',
+        topic: 'napplet:profile/open',
+        payload: { pubkey: 'abc 123', marker: 'a+b' },
+      }, '*');
+    });
+
+    it.each([
+      { payload: { pubkey: 'abc123' } },
+      { payload: 'opaque text' },
+      { payload: ['one', 'two'] },
+      { payload: 42 },
+      { payload: null },
+    ])('forwards a queryless opaque payload unchanged: $payload', ({ payload }) => {
+      emit('napplet:profile/open', payload);
+
+      expect(window.parent.postMessage).toHaveBeenCalledWith({
+        type: 'inc.emit',
+        topic: 'napplet:profile/open',
+        payload,
+      }, '*');
+    });
+
+    it('forwards the clean-break incEmit payload without legacy arguments', () => {
+      incEmit('napplet:note/open', { body: 'hello' });
+
+      expect((window as { napplet: { inc: { emit: ReturnType<typeof vi.fn> } } }).napplet.inc.emit)
+        .toHaveBeenCalledWith('napplet:note/open', { body: 'hello' });
+    });
+  });
+
   it('delivers a byte-identical topic with its payload and sender', () => {
     const received: Array<{ payload: unknown; sender: string; content: string }> = [];
 
