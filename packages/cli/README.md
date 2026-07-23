@@ -126,6 +126,11 @@ deployments, the NIP-5A d-tag must match `^[a-z0-9-]{1,13}$` and cannot end in `
 value pairs a role slug with one convention, for example `note:napplet:note/open`; there is no generic
 `type` manifest tag.
 
+The `--archetype` flag and interactive wizard intentionally remain
+`slug:convention` input only; there is no CLI kinds flag or delimiter. Optional
+event-kind discovery metadata belongs in the object-shaped config entry, not in
+the convention URI.
+
 In an interactive terminal, `napplet init` guides setup for source directory, root-vs-named target,
 name, title, optional description, archetype roles and conventions, relays, and Blossom servers. Relay suggestions come from best-effort
 [NIP-66](https://nips.nostr.com/66) discovery events on relay discovery relays such as
@@ -154,15 +159,31 @@ Example config:
     "name": "feed",
     "title": "Feed",
     "description": "A focused feed reader",
-    "archetypes": [{ "slug": "note", "convention": "napplet:note/open" }]
+    "archetypes": [{
+      "slug": "note",
+      "convention": "napplet:note/open",
+      "eventKinds": [1, 30023]
+    }]
   }
 }
 ```
 
 Valid config metadata takes precedence over title/description/archetype defaults found in built HTML
 or the Vite plugin sidecar. Legacy configs without `metadata` retain their existing fallback behavior.
-The convention string is retained as an opaque value after configuration validation: it names a local
-payload choice and does not select a payload schema, query rule, or matching rule.
+Each object emits one queryless manifest tag:
+`["archetype", "note", "napplet:note/open", "kind:1", "kind:30023"]`.
+The trailing `kind:<number>` fields apply only to that tag and are optional
+unsigned discovery metadata. A metadata-free template keeps its existing
+archetype tags, including optional same-tag kind fields; providing
+`metadata.archetypes` replaces those tags with the configured objects.
+
+The convention string remains queryless after validation: it does not select a
+payload schema, query rule, matching rule, or inferred event kind. This
+non-normative guide follows the adopted [NAP-INC #89
+`4593ce9`](https://github.com/napplet/naps/blob/4593ce9e301ce098fd3dad64206fcd6f144fa7af/naps/NAP-INC.md),
+[URI terminology #90 `896c32c`](https://github.com/napplet/naps/commit/896c32c92deee68dc4d10fc1132b62df20cccb6f),
+and [NAP-INTENT #91
+`a718915`](https://github.com/napplet/naps/blob/a718915ddefa2f03a0126579601f59d8bd86f7c4/naps/NAP-INTENT.md).
 
 ### `discover`
 

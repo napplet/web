@@ -163,32 +163,37 @@ If none of the three paths resolve a schema, manifest/meta emission for the conf
 
 #### archetypes (optional)
 
-**Type:** `Array<{ slug: string; convention: string }>`
+**Type:** `Array<{ slug: string; convention: string; eventKinds?: number[] }>`
 
 Declares the NAAT archetype roles this napplet fulfills ([living archetype
 registry](https://github.com/napplet/naps/blob/master/ARCHETYPES.md)). Each entry
-emits **one** `['archetype', slug, convention]` tag on the kind 35129 manifest
-event, where `slug` is the role slug and `convention` is an opaque convention
-name the napplet accepts. A napplet may declare several archetype roles; a
-napplet with no archetype tag is fully valid.
+emits **one** `['archetype', slug, convention, ...kindFields]` tag on the kind
+35129 manifest event. `convention` is a queryless stable identity and every
+optional `eventKinds` value becomes a trailing same-tag `kind:<number>` field.
+A napplet may declare several archetype roles; a napplet with no archetype tag
+is fully valid.
 
 ```ts
 nip5aManifest({
   nappletType: 'my-feed',
   archetypes: [
-    { slug: 'note', convention: 'napplet:note/open' },
+    { slug: 'note', convention: 'napplet:note/open', eventKinds: [1, 30023] },
     { slug: 'profile', convention: 'napplet:profile/open' },
   ],
 });
-// → emits ['archetype', 'note', 'napplet:note/open']
+// → emits ['archetype', 'note', 'napplet:note/open', 'kind:1', 'kind:30023']
 // → emits ['archetype', 'profile', 'napplet:profile/open']
 ```
 
 Like the `config` tag, archetype tags are **not** folded into `aggregateHash`: per NIP-5D §Identity the aggregate is the NIP-5A hash of the `path` tags alone, so declaring archetypes never changes the napplet's content address. Blank slugs are skipped.
 
-The convention example above is an author-selected local payload choice. The
-plugin serializes the string without defining payload, query, wildcard, prefix,
-canonicalization, or multi-convention semantics.
+One object always represents one convention contract; repeat objects for several
+conventions. The plugin rejects query-bearing metadata and does not define a
+payload schema or infer an event kind from payload content. `eventKinds` is
+unsigned discovery metadata only. This non-normative guide follows the adopted
+[NAP-INC #89 `4593ce9`](https://github.com/napplet/naps/blob/4593ce9e301ce098fd3dad64206fcd6f144fa7af/naps/NAP-INC.md),
+[URI terminology #90 `896c32c`](https://github.com/napplet/naps/commit/896c32c92deee68dc4d10fc1132b62df20cccb6f),
+and [NAP-INTENT #91 `a718915`](https://github.com/napplet/naps/blob/a718915ddefa2f03a0126579601f59d8bd86f7c4/naps/NAP-INTENT.md).
 
 #### artifactMode (optional, v1.11+)
 
@@ -485,6 +490,16 @@ interface Nip5aManifestOptions {
    * discovery when omitted.
    */
   configSchema?: NappletConfigSchema | string;
+
+  /**
+   * One queryless intent contract per archetype tag. Optional event kinds are
+   * serialized as trailing `kind:<number>` fields on that same tag.
+   */
+  archetypes?: Array<{
+    slug: string;
+    convention: string;
+    eventKinds?: number[];
+  }>;
 }
 ```
 

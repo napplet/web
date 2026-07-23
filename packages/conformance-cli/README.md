@@ -5,8 +5,19 @@ The headless `napplet-conformance` runner. It drives the
 Chromium (via Playwright), so a napplet can prove it conforms to the NAP protocol
 **before** publishing — locally and in CI.
 
-The runner validates NIP-5D/NAP envelope and manifest requirements. It does not
-define payload schemas or matching behavior for an archetype convention.
+The runner validates NIP-5D/NAP envelope and manifest carriers. It does not
+define payload schemas or matching behavior for an archetype convention. Intent
+acceptance and target delivery are distinct: the reference shell uses an
+authenticated endpoint fixture for sender provenance, returns acceptance first,
+and queues a separate no-ID target delivery. Payloads remain untrusted.
+
+Archetype metadata is one queryless convention per tag with optional trailing
+same-tag `kind:<number>` discovery fields; kinds are not inferred from payloads.
+This non-normative description follows the adopted [NAP-INC #89
+`4593ce9`](https://github.com/napplet/naps/blob/4593ce9e301ce098fd3dad64206fcd6f144fa7af/naps/NAP-INC.md),
+[URI terminology #90 `896c32c`](https://github.com/napplet/naps/commit/896c32c92deee68dc4d10fc1132b62df20cccb6f),
+and [NAP-INTENT #91
+`a718915`](https://github.com/napplet/naps/blob/a718915ddefa2f03a0126579601f59d8bd86f7c4/naps/NAP-INTENT.md).
 
 ```bash
 # Build your napplet first, then:
