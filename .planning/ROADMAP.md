@@ -885,7 +885,7 @@ opens the PR. Runtime-injection work supersedes v0.33 NAP-SHELL artifacts.
   5. Every active document, example, skill, and guard teaches the adopted split while historical changelogs and completed summaries retain semantic history.
   6. Revised changesets cover every shipped package change and the complete build/type/unit/conformance/docs/link/slop/guard/diff chain passes.
 
-**Plans:** 15/26 plans executed
+**Plans:** 17/26 plans executed
 
 Plans:
 
@@ -904,12 +904,12 @@ Plans:
 - [x] 161-13-PLAN.md — Clean-break INC emit and implement convention-URI query transposition
 - [x] 161-14-PLAN.md — Correct shipped query-sugar guidance and guard the clarified boundary
 - [x] 161-15-PLAN.md — Share the adopted convention-URI normalization primitive
-- [ ] 161-16-PLAN.md — Define the adopted core intent contract and public URI API
+- [x] 161-16-PLAN.md — Define the adopted core intent contract and public URI API
 - [ ] 161-17-PLAN.md — Implement NAP intent normalization, acceptance, and FIFO delivery
 - [ ] 161-18-PLAN.md — Propagate intent URI and delivery APIs through NAP and SDK exports
 - [ ] 161-19-PLAN.md — Inject and route onDelivery through the runtime shim
 - [x] 161-20-PLAN.md — Emit Vite intent contracts with optional event kinds
-- [ ] 161-21-PLAN.md — Preserve CLI config/template event-kind metadata
+- [x] 161-21-PLAN.md — Preserve CLI config/template event-kind metadata
 - [ ] 161-22-PLAN.md — Validate intent carriers and authenticated reference delivery
 - [ ] 161-23-PLAN.md — Correct root and package README contract guidance
 - [ ] 161-24-PLAN.md — Correct active docs, tutorials, and examples
