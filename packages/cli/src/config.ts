@@ -37,7 +37,12 @@ export function defaultConfig(overrides: Partial<NappletConfig> = {}): NappletCo
   const metadata = overrides.metadata
     ? {
       ...overrides.metadata,
-      archetypes: overrides.metadata.archetypes?.map((convention) => ({ ...convention })),
+      archetypes: overrides.metadata.archetypes?.map((convention) => ({
+        ...convention,
+        eventKinds: convention.eventKinds === undefined
+          ? undefined
+          : [...convention.eventKinds],
+      })),
     }
     : undefined;
   return {
@@ -242,7 +247,29 @@ function normalizeArchetypeConvention(
   if (!convention || !/^napplet:[^/\s]+\/[^\s]+$/.test(convention)) {
     throw new Error(`${field} convention must use napplet:<archetype>/<intent>`);
   }
-  return { slug, convention };
+  const conventionMatch = /^napplet:([^/?#\s]+)\/([^/?#\s]+)$/.exec(convention);
+  if (!conventionMatch || conventionMatch[1] !== slug) {
+    throw new Error(
+      `${field} convention must use napplet:<archetype>/<intent> with an archetype matching its slug`,
+    );
+  }
+  const eventKinds = normalizeEventKinds(conventionValue.eventKinds, `${field}.eventKinds`);
+  return {
+    slug,
+    convention,
+    ...(eventKinds === undefined ? {} : { eventKinds }),
+  };
+}
+
+function normalizeEventKinds(value: unknown, field: string): number[] | undefined {
+  if (value === undefined) return undefined;
+  if (!Array.isArray(value)) throw new Error(`${field} must be an array`);
+  for (const kind of value) {
+    if (typeof kind !== "number" || !Number.isSafeInteger(kind) || kind < 0) {
+      throw new Error(`${field} must contain only unsigned integers`);
+    }
+  }
+  return [...value];
 }
 
 function optionalString(value: unknown, field: string, allowEmpty = false): string | undefined {

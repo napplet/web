@@ -17,6 +17,8 @@ export type DeployTargetKind = "root" | "named" | "snapshot";
 export interface NappletArchetypeConvention {
   slug: string;
   convention: string;
+  /** Optional unsigned event-kind discovery metadata for this convention. */
+  eventKinds?: number[];
 }
 
 /** Deployment metadata owned by `napplet init`. */

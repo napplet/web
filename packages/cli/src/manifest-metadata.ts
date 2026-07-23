@@ -79,6 +79,7 @@ function mergeConfigMetadataTags(tags: readonly string[][], config: NappletConfi
       "archetype",
       convention.slug,
       convention.convention,
+      ...(convention.eventKinds ?? []).map((kind) => `kind:${kind}`),
     ]);
   }
   return dedupeTags(result);
@@ -91,9 +92,19 @@ function isCanonicalArchetypeTag(tag: unknown[]): tag is string[] {
   ) return false;
   const slug = tag[1].trim();
   const convention = tag[2].trim();
-  return tag.length === 3 &&
-    /^[a-z0-9][a-z0-9-]*$/.test(slug) &&
-    /^napplet:[^/\s]+\/[^\s]+$/.test(convention);
+  const conventionMatch = /^napplet:([^/?#\s]+)\/([^/?#\s]+)$/.exec(convention);
+  if (
+    !/^[a-z0-9][a-z0-9-]*$/.test(slug) ||
+    !conventionMatch ||
+    conventionMatch[1] !== slug
+  ) return false;
+  return tag.slice(3).every((field) => {
+    if (typeof field !== "string") return false;
+    const match = /^kind:(0|[1-9][0-9]*)$/.exec(field.trim());
+    if (!match) return false;
+    const kind = Number(match[1]);
+    return Number.isSafeInteger(kind);
+  });
 }
 
 async function readIndexHtmlMetadataTags(indexHtmlPath: string | undefined): Promise<string[][]> {
