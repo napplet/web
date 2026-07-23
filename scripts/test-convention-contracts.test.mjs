@@ -89,7 +89,7 @@ test('allows unrelated WebRTC, URL, Nostr-kind, and workspace dependency uses', 
       export const url = new URL('wss://relay.example');
     `);
     await writeFixture(root, 'packages/core/src/types/events.ts', `
-      export const event = { kind: 1, protocol: 'NIP-5D' };
+      export const event = { kind: 1, protocol: 'NIP-5D', label: 'kind:1' };
     `);
     await writeFixture(root, 'packages/core/package.json', `
       { "dependencies": { "@napplet/nap": "workspace:*" } }
