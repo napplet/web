@@ -152,7 +152,7 @@ function buildManifestTemplate(
     state.resolvedSchema !== null ? [['config', JSON.stringify(state.resolvedSchema)]] : [];
   const requiresTags = resolvedRequirements(options.requires, state).map((name) => ['requires', name]);
   // Archetype tags (NAAT, napplet/naps `ARCHETYPES.md`): one
-  // `['archetype', slug, convention]` per declared convention. Like
+  // `['archetype', slug, convention, ...kindFields]` per declared convention. Like
   // config/requires they are NOT passed to computeAggregateHash — only pathPairs
   // feed the aggregate.
   const archetypeTags = buildArchetypeTags(options.archetypes);
@@ -174,8 +174,8 @@ function buildManifestTemplate(
 }
 
 /**
- * Serialize the `archetypes` option into one `['archetype', slug, convention]`
- * tag per declared convention.
+ * Serialize each archetype contract into one queryless convention tag with
+ * optional same-tag `kind:<number>` discovery fields.
  */
 function buildArchetypeTags(
   archetypes: Nip5aManifestOptions['archetypes'],
@@ -184,7 +184,9 @@ function buildArchetypeTags(
   const tags: string[][] = [];
   for (const entry of archetypes) {
     const slug = entry.slug.trim();
-    if (slug === '') continue;
+    if (slug === '' || !/^[a-z0-9][a-z0-9-]*$/.test(slug)) {
+      throw new Error('[nip5a-manifest] archetype slug must contain lowercase letters, numbers, and hyphens');
+    }
     const convention = entry.convention.trim();
     if (convention === '') {
       throw new Error('[nip5a-manifest] archetype convention must be a non-empty string');
@@ -192,7 +194,25 @@ function buildArchetypeTags(
     if (/^NAP-\d+$/.test(convention)) {
       throw new Error('[nip5a-manifest] numbered NAP identifier is not a convention');
     }
-    tags.push(['archetype', slug, convention]);
+    const conventionMatch = /^napplet:([^/?#\s]+)\/([^/?#\s]+)$/.exec(convention);
+    if (!conventionMatch) {
+      throw new Error('[nip5a-manifest] archetype convention must be a queryless napplet:<archetype>/<intent> identity');
+    }
+    if (conventionMatch[1] !== slug) {
+      throw new Error('[nip5a-manifest] archetype slug must match the convention archetype');
+    }
+    const eventKinds = entry.eventKinds ?? [];
+    for (const kind of eventKinds) {
+      if (!Number.isSafeInteger(kind) || kind < 0) {
+        throw new Error('[nip5a-manifest] archetype eventKinds must contain unsigned integers');
+      }
+    }
+    tags.push([
+      'archetype',
+      slug,
+      convention,
+      ...eventKinds.map((kind) => `kind:${kind}`),
+    ]);
   }
   return tags;
 }
