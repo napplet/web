@@ -472,6 +472,7 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 
 | Quick ID | Task | Date | Commit | Artifacts |
 |----------|------|------|--------|-----------|
+| 260723-kgz | Remove the invented 13-character length cap on napplet `d` tags in @napplet/cli | 2026-07-23 | 5d798639 | [260723-kgz-remove-cli-d-tag-length-limit](./quick/260723-kgz-remove-cli-d-tag-length-limit/) |
 | 260715-ogy | Add neutral community and group chat invite links to the SPA and docs | 2026-07-15 | ccc3796b | [260715-ogy-add-neutral-community-and-group-chat-inv](./quick/260715-ogy-add-neutral-community-and-group-chat-inv/) |
 | 260711-hhy | Replace numbered relay/server selection with autocomplete and prompt separately for Nostr Connect bunker relays | 2026-07-11 | be89ec7d | [260711-hhy-replace-napplet-cli-numbered-relay-serve](./quick/260711-hhy-replace-napplet-cli-numbered-relay-serve/) |
 | 260710-rce | Exclude local CLI config and tooling state from napplet deploy manifest collection | 2026-07-10 | 5f28c4e5 | [260710-rce-exclude-local-cli-config-and-tooling-sta](./quick/260710-rce-exclude-local-cli-config-and-tooling-sta/) |
