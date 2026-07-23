@@ -37,6 +37,30 @@ describe('createReferenceShell — record + respond', () => {
     ]);
   });
 
+  it('advertises the reference intent handler through an opaque convention', () => {
+    const shell = createReferenceShell();
+
+    expect(shell.handle({ type: 'intent.available', id: 'intent-1', archetype: 'note' })).toEqual([
+      {
+        type: 'intent.available.result',
+        id: 'intent-1',
+        availability: {
+          archetype: 'note',
+          available: true,
+          candidates: [
+            {
+              dTag: 'reference-handler',
+              actions: ['open'],
+              conventions: ['napplet:note/open'],
+              isDefault: true,
+            },
+          ],
+          hasDefault: true,
+        },
+      },
+    ]);
+  });
+
   it('decodes data URLs for resource.bytes responses without fetch', async () => {
     const shell = createReferenceShell();
     const [response] = shell.handle({
