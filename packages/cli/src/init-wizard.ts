@@ -5,9 +5,9 @@
  */
 
 import { NAMED_SITE_D_TAG_PATTERN } from "./manifest.ts";
-import { parseArchetypeContracts } from "./config.ts";
+import { parseArchetypeConventions } from "./config.ts";
 import { type PromptInput, promptLine, type PromptOutput } from "./prompt.ts";
-import type { DeployTargetKind, NappletArchetypeContract } from "./types.ts";
+import type { DeployTargetKind, NappletArchetypeConvention } from "./types.ts";
 import { promptUrlList, unique } from "./url-prompt.ts";
 
 export interface InitWizardSeed {
@@ -33,7 +33,7 @@ export interface InitWizardResult {
   named: string[];
   title?: string;
   description?: string;
-  archetypes: NappletArchetypeContract[];
+  archetypes: NappletArchetypeConvention[];
   defaultTarget: DeployTargetKind;
 }
 
@@ -77,7 +77,7 @@ export async function promptInitWizard(options: InitWizardOptions): Promise<Init
     output: options.output,
   });
   const archetypes = options.seed.archetypes.length > 0
-    ? parseArchetypeContracts(options.seed.archetypes)
+    ? parseArchetypeConventions(options.seed.archetypes)
     : await promptArchetypes(options);
   const relays = options.seed.relays.length > 0
     ? unique(options.seed.relays)
@@ -110,16 +110,16 @@ export async function promptInitWizard(options: InitWizardOptions): Promise<Init
   };
 }
 
-async function promptArchetypes(options: InitWizardOptions): Promise<NappletArchetypeContract[]> {
+async function promptArchetypes(options: InitWizardOptions): Promise<NappletArchetypeConvention[]> {
   for (;;) {
     const value = await promptLine({
-      message: "Archetype contracts (slug:NAP-N, comma separated, optional)",
+      message: "Archetype conventions (slug:napplet:<archetype>/<intent>, comma separated, optional)",
       input: options.input,
       output: options.output,
     });
     if (value.trim() === "") return [];
     try {
-      return parseArchetypeContracts(splitEntries(value));
+      return parseArchetypeConventions(splitEntries(value));
     } catch (error) {
       writeLine(options.output, error instanceof Error ? error.message : String(error));
     }
