@@ -228,6 +228,86 @@ describe('@napplet/nap/intent shim', () => {
     await expect(promise).rejects.toThrow('invoke failed');
   });
 
+  it('retains early target deliveries and drains them once in FIFO order', async () => {
+    const { handleIntentMessage, onDelivery } = await import('./shim.js');
+
+    handleIntentMessage({
+      type: 'intent.deliver',
+      delivery: {
+        sender: 'runtime-source',
+        archetype: 'profile',
+        action: 'open',
+        convention: 'napplet:profile/open',
+        payload: { pubkey: 'first' },
+      },
+    });
+    handleIntentMessage({
+      type: 'intent.deliver',
+      delivery: {
+        sender: 'runtime-source',
+        archetype: 'profile',
+        action: 'open',
+        convention: 'napplet:profile/open',
+        payload: { pubkey: 'second' },
+      },
+    });
+    handleIntentMessage({
+      type: 'intent.deliver',
+      delivery: {
+        sender: 'runtime-source',
+        archetype: 'profile',
+        action: 'open',
+        convention: 'napplet:profile/open',
+        payload: { pubkey: 'third' },
+      },
+    });
+
+    const received: IntentDelivery[] = [];
+    onDelivery((delivery) => received.push(delivery));
+
+    expect(received.map((delivery) => delivery.payload)).toEqual([
+      { pubkey: 'first' },
+      { pubkey: 'second' },
+      { pubkey: 'third' },
+    ]);
+    expect(received.every((delivery) => !('id' in delivery))).toBe(true);
+
+    const laterHandler = vi.fn();
+    onDelivery(laterHandler);
+    expect(laterHandler).not.toHaveBeenCalled();
+  });
+
+  it('delivers live target pushes, stops closed listeners, and clears retained state on cleanup', async () => {
+    const { handleIntentMessage, installIntentShim, onDelivery } = await import('./shim.js');
+    const cleanup = installIntentShim();
+    const received: IntentDelivery[] = [];
+    const sub = onDelivery((delivery) => received.push(delivery));
+
+    const liveDelivery = {
+      type: 'intent.deliver',
+      delivery: {
+        sender: 'runtime-source',
+        archetype: 'note',
+        action: 'open',
+        convention: 'napplet:note/open',
+        payload: { id: 'live' },
+      },
+    } as const;
+    handleIntentMessage(liveDelivery);
+    sub.close();
+    handleIntentMessage({
+      ...liveDelivery,
+      delivery: { ...liveDelivery.delivery, payload: { id: 'closed' } },
+    });
+
+    expect(received).toEqual([liveDelivery.delivery]);
+
+    cleanup();
+    const afterCleanup: IntentDelivery[] = [];
+    onDelivery((delivery) => afterCleanup.push(delivery));
+    expect(afterCleanup).toEqual([]);
+  });
+
   it('available() posts intent.available and resolves the availability', async () => {
     const { available, handleIntentMessage } = await import('./shim.js');
 

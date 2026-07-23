@@ -4,7 +4,7 @@ import { handleConfigMessage } from './config/shim.js';
 import { handleCvmMessage } from './cvm/shim.js';
 import { handleIdentityMessage } from './identity/shim.js';
 import { handleIncEvent, installIncShim, on } from './inc/shim.js';
-import { handleIntentMessage } from './intent/shim.js';
+import { handleIntentMessage, onDelivery } from './intent/shim.js';
 import { handleKeysMessage } from './keys/shim.js';
 import { handleMediaMessage } from './media/shim.js';
 import { handleNotifyMessage } from './notify/shim.js';
@@ -73,5 +73,32 @@ describe('shim message boundary guards', () => {
     }
 
     expect(received).toEqual(topics.map((topic) => ({ topic, payload: { local: true } })));
+  });
+
+  it('routes carrier-neutral intent delivery without using INC', () => {
+    const received: unknown[] = [];
+    const sub = onDelivery((delivery) => received.push(delivery));
+
+    handleIntentMessage({
+      type: 'intent.deliver',
+      delivery: {
+        sender: 'runtime-attested-source',
+        archetype: 'profile',
+        action: 'open',
+        convention: 'napplet:profile/open',
+        payload: { pubkey: 'abc123' },
+      },
+    });
+
+    expect(received).toEqual([
+      {
+        sender: 'runtime-attested-source',
+        archetype: 'profile',
+        action: 'open',
+        convention: 'napplet:profile/open',
+        payload: { pubkey: 'abc123' },
+      },
+    ]);
+    sub.close();
   });
 });
