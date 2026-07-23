@@ -133,6 +133,7 @@ export {
   intentAvailable,
   intentHandlers,
   intentOnChanged,
+  intentOnDelivery,
 } from '@napplet/nap/intent';
 export {
   bleOpen,
