@@ -69,6 +69,26 @@ describe('validateEnvelope — outbound field checks', () => {
     expect(v.ok).toBe(true);
   });
 
+  it('accepts opaque intent convention and payload values', () => {
+    const v = validateEnvelope({
+      type: 'intent.invoke',
+      id: 'intent-1',
+      request: {
+        archetype: 'note',
+        convention: 'local.example/anything-goes',
+        payload: { nested: ['opaque', { values: true }] },
+      },
+    });
+    expect(v.ok).toBe(true);
+
+    const malformed = validateEnvelope({ type: 'intent.invoke', id: 'intent-2', request: [] });
+    expect(malformed.ok).toBe(false);
+    expect(malformed.errors).toContainEqual(expect.objectContaining({
+      code: 'wrong-type',
+      field: 'request',
+    }));
+  });
+
   it('treats `present` fields as required-but-untyped (outbox.query filters union)', () => {
     expect(validateEnvelope({ type: 'outbox.query', id: 'a', filters: { kinds: [1] } }).ok).toBe(true);
     expect(validateEnvelope({ type: 'outbox.query', id: 'a', filters: [{ kinds: [1] }] }).ok).toBe(true);
