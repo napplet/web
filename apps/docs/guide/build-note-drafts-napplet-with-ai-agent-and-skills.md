@@ -18,6 +18,8 @@ Protocol references the agent must defer to:
   manifest and aggregate-hash model
 - [NAPs](https://github.com/napplet/naps), the capability-domain specs for
   `identity`, `storage`, and `outbox`
+- [NAP-INC at PR #89's pinned head](https://github.com/napplet/naps/blob/34ec29fc4039384a83dbd6b476f83c4fa0d038e6/naps/NAP-INC.md), the narrow
+  convention-URI rule for `emit`
 
 ## 1. Create and initialize the project
 
@@ -29,7 +31,7 @@ napplet create note-drafts
 cd note-drafts
 napplet init --name notedrafts --title "Note Drafts" \
   --description "Draft and publish short Nostr notes from a sandboxed napplet." \
-  --archetype note:NAP-4
+  --archetype note:napplet:note/open
 ```
 
 ## 2. Install the napplet skills for your agent
@@ -66,6 +68,15 @@ tools. An empty directory, a maintained boilerplate, an initialized napplet, a
 boilerplate-based brownfield app, and an unrelated brownfield app require
 different paths. It should also check whether `napplet` and Kehto/Paja are
 installed rather than assuming either binary exists.
+
+The CLI deploys `note:napplet:note/open` as the tested three-element manifest
+tag `['archetype', 'note', 'napplet:note/open']`. That convention is opaque; it
+does not give the agent a payload schema to invent. If a feature needs INC, the
+agent may provide a queried convention URI only to `emit(topic, payload?)`.
+The runtime transposes it to the stable queryless topic with a shallow decoded
+text payload before exact routing; subscriptions use that stable topic. NAP-INTENT
+and manifest convention values remain opaque, as described by the pinned
+NAP-INC draft above.
 
 ## 3. Give the agent a small product prompt
 
@@ -114,7 +125,7 @@ The diff should look like this:
   `@napplet/sdk`, `@napplet/vite-plugin`, and `@napplet/conformance-cli`
   versions.
 - `.napplet/config.json` still owns `notedrafts`, title, description, and the
-  canonical `note:NAP-4` archetype contract.
+  opaque `note:napplet:note/open` archetype convention.
 - `vite.config.ts` declares `requires: ['identity', 'storage', 'outbox']` and
   does not become a second source of deployment metadata.
 - `src/main.ts` imports `identity`, `storage`, and `outbox` from

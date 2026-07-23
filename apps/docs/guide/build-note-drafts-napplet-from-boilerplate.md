@@ -19,6 +19,8 @@ Protocol references used here:
   manifest and aggregate-hash model
 - [NAPs](https://github.com/napplet/naps), the capability-domain specs for
   `identity`, `storage`, and `outbox`
+- [NAP-INC at PR #89's pinned head](https://github.com/napplet/naps/blob/34ec29fc4039384a83dbd6b476f83c4fa0d038e6/naps/NAP-INC.md), the narrow
+  convention-URI rule for `emit`
 
 ## 1. Scaffold the starter
 
@@ -29,7 +31,7 @@ napplet create note-drafts
 cd note-drafts
 napplet init --name notedrafts --title "Note Drafts" \
   --description "Draft and publish short Nostr notes from a sandboxed napplet." \
-  --archetype note:NAP-4
+  --archetype note:napplet:note/open
 pnpm install
 ```
 
@@ -37,6 +39,14 @@ The generated repository includes broad starter examples and context docs. For
 this tutorial, treat them as a substrate, not as app requirements. The Note
 Drafts app does not need direct relay queries, notifications, config settings,
 resource loading, or a napplet-side shell probe.
+
+The CLI deploys the opaque convention as the tested manifest tag
+`['archetype', 'note', 'napplet:note/open']`; the convention itself does not
+declare payload semantics. If a future feature adds INC, only
+`emit(topic, payload?)` may receive a queried convention URI. The runtime turns
+that input into a stable queryless topic plus a shallow decoded text payload,
+then subscribers use the stable topic with exact routing. NAP-INTENT and
+manifest convention values stay opaque; defer to the pinned NAP-INC draft above.
 
 ## 2. Tighten package metadata
 

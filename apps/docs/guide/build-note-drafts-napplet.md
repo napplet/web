@@ -23,6 +23,8 @@ Protocol references used here:
   manifest and aggregate-hash model
 - [NAPs](https://github.com/napplet/naps), the capability-domain specs for
   `identity`, `storage`, and `outbox`
+- [NAP-INC at PR #89's pinned head](https://github.com/napplet/naps/blob/34ec29fc4039384a83dbd6b476f83c4fa0d038e6/naps/NAP-INC.md), the narrow
+  convention-URI rule for `emit`
 
 ## 1. Create the project manually and initialize deployment
 
@@ -35,7 +37,7 @@ mkdir note-drafts
 cd note-drafts
 napplet init --name notedrafts --title "Note Drafts" \
   --description "Draft and publish short Nostr notes from a sandboxed napplet." \
-  --archetype note:NAP-4
+  --archetype note:napplet:note/open
 pnpm init
 pnpm add @napplet/sdk@^0.24.4
 pnpm add -D @napplet/vite-plugin@^0.11.2 @napplet/conformance-cli@^0.2.15 @kehto/cli@^0.2.11 typescript@^5.9.3 vite@^6.4.3
@@ -72,6 +74,14 @@ Replace the generated `package.json` with this:
 
 What this teaches: napplet application code uses `@napplet/sdk`; local runtime
 testing uses Kehto/Paja; conformance tests the built artifact, not source files.
+
+The CLI treats `napplet:note/open` as opaque convention metadata and deploys the
+tested three-element manifest tag `['archetype', 'note', 'napplet:note/open']`.
+It does not infer a payload schema from that string. If this app later uses INC,
+only `emit(topic, payload?)` may accept a queried convention URI; the runtime
+then sends the stable queryless topic with a shallow decoded text payload.
+Subscribers use that stable topic and routing remains exact. NAP-INTENT and
+manifest convention values remain opaque; see the pinned NAP-INC draft above.
 
 ## 2. Configure TypeScript and the manifest plugin
 
