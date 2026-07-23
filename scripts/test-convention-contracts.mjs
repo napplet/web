@@ -21,6 +21,7 @@ const QUERY_BEARING_HANDLER_METADATA_PATTERN = /\b(?:archetype|contracts?|handle
 const QUERY_BEARING_ARCHETYPE_TAG_PATTERN = /['"]archetype['"][\s\S]{0,160}\bnapplet:[a-z0-9-]+\/[a-z0-9-]+\?[^'"\s`)\]}]+/gi;
 const INTENT_DELIVERY_INC_COUPLING_PATTERN = /\b(?:intent(?:\s+delivery|\.deliver)|delivery)\b[^.\n]{0,120}\b(?:requires?|depends?\s+on|uses?|is\s+coupled\s+to|through)\s+(?:public\s+)?(?:NAP-)?INC\b/gi;
 const FIXED_ARCHETYPE_TAG_SHAPE_PATTERN = /\barchetype\s+tags?\b[^.\n]{0,100}\b(?:must|should|can)\s+(?:contain|have|use)\s+(?:only\s+)?(?:exactly\s+)?three\s+(?:fields?|elements?|values?)\b|\b(?:only|exactly)\s+three[-\s](?:field|element|value)s?\b[^.\n]{0,100}\barchetype\s+tags?\b/gi;
+const INC_TOPIC_EXAMPLE_PATTERN = /\b(?:inc\.emit|incEmit|emit)\(\s*(['"])([^'"]+)\1[\s\S]{0,500}?\b(?:inc\.on|incOn|on)\(\s*(['"])([^'"]+)\3/g;
 
 /**
  * Recursively collects text files below an active root without following links.
@@ -117,6 +118,28 @@ function addMatches(violations, filePath, contents, family, pattern) {
 }
 
 /**
+ * Flags paired INC examples that emit one exact topic while subscribing to another.
+ *
+ * @param {Array<{path: string, line: number, family: string, match: string}>} violations - Results accumulator.
+ * @param {string} filePath - Repository-relative POSIX path.
+ * @param {string} contents - Source text.
+ * @returns {void}
+ */
+function addMismatchedIncTopicExamples(violations, filePath, contents) {
+  INC_TOPIC_EXAMPLE_PATTERN.lastIndex = 0;
+  for (const match of contents.matchAll(INC_TOPIC_EXAMPLE_PATTERN)) {
+    if (match[2].includes('?') || match[2].includes('#')) continue;
+    if (match[2] === match[4]) continue;
+    violations.push({
+      path: filePath,
+      line: lineNumber(contents, match.index),
+      family: 'inc-exact-topic-mismatch',
+      match: match[0],
+    });
+  }
+}
+
+/**
  * Scans the current convention contract surface rooted at a repository path.
  *
  * @param {string} root - Repository root or fixture root.
@@ -164,6 +187,7 @@ export async function scanConventionContracts(root) {
     addMatches(violations, filePath, contents, 'query-bearing-handler-metadata', QUERY_BEARING_ARCHETYPE_TAG_PATTERN);
     addMatches(violations, filePath, contents, 'intent-delivery-inc-coupling', INTENT_DELIVERY_INC_COUPLING_PATTERN);
     addMatches(violations, filePath, contents, 'fixed-archetype-tag-shape', FIXED_ARCHETYPE_TAG_SHAPE_PATTERN);
+    addMismatchedIncTopicExamples(violations, filePath, contents);
     if (isActiveIncGuidance(filePath, contents)) {
       addMatches(violations, filePath, contents, 'inc-query-transposition-denial', INC_QUERY_DENIAL_PATTERN);
     }

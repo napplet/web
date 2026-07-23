@@ -98,6 +98,17 @@ test('retains numbered-NAP retirement and exact-routing guidance checks', async 
   assert.equal(families.has('inc-query-transposition-denial'), true);
 });
 
+test('rejects paired INC examples with mismatched exact topics', async () => {
+  const violations = await scanFixture(async (root) => {
+    await writeFixture(root, 'packages/sdk/src/relay.ts', `
+      inc.emit('napplet:profile/open', { pubkey: '...' });
+      const sub = inc.on('profile:open', () => {});
+    `);
+  });
+
+  assert.deepEqual(violations.map(({ family }) => family), ['inc-exact-topic-mismatch']);
+});
+
 test('excludes unrelated language, historical records, negative tests, and the root skills symlink', async () => {
   const violations = await scanFixture(async (root) => {
     await writeFixture(root, 'packages/core/src/dispatch.ts', `

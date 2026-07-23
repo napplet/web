@@ -98,7 +98,7 @@ export const relay: SdkDomain<'relay'> = {
  *
  * inc.emit('napplet:profile/open', { pubkey: '...' });
  *
- * const sub = inc.on('profile:open', (payload) => {
+ * const sub = inc.on('napplet:profile/open', (payload) => {
  *   console.log('Profile requested:', payload);
  * });
  * ```

@@ -49,7 +49,7 @@ export function incEmit(topic: string, payload?: unknown): void {
  * ```ts
  * import { incOn } from '@napplet/nap/inc';
  *
- * const sub = incOn('profile:open', (payload) => {
+ * const sub = incOn('napplet:profile/open', (payload) => {
  *   console.log('Profile requested:', payload);
  * });
  * // Later: sub.close();

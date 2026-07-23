@@ -103,7 +103,7 @@ export function emit(topic: string, payload?: unknown): void {
  *
  * @example
  * ```ts
- * const sub = on('profile:open', (payload) => {
+ * const sub = on('napplet:profile/open', (payload) => {
  *   console.log('Profile requested:', payload.pubkey);
  * });
  * // Later: sub.close();
