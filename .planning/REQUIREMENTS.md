@@ -154,7 +154,7 @@ external source.
   emission use opaque ad-hoc conventions and reject the removed numbered
   protocol form.
 
-- [ ] **CONV-PKG-04**: Active INC constants and examples use the advisory
+- [x] **CONV-PKG-04**: Active INC constants and examples use the advisory
   `napplet:<archetype>/<intent>` namespace while preserving exact opaque topic
   routing and adding no wildcard, prefix, or query-normalization semantics.
 

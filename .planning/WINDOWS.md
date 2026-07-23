@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 1
+open_count: 2
 waived_count: 0
 fixed_count: 0
-total_count: 1
-last_updated: 2026-07-23T13:38:39.872Z
+total_count: 2
+last_updated: 2026-07-23T13:48:43.296Z
 ---
 
 # Broken Windows Ledger
@@ -16,6 +16,7 @@ last_updated: 2026-07-23T13:38:39.872Z
 | id | phase | kind | file | line | description | status | reason | recorded_at | resolved_at |
 |----|-------|------|------|------|-------------|--------|--------|-------------|-------------|
 | 1 | 161 | stub | packages/nap/src/intent/index.ts | 75 | Pre-existing no-op dispatch registration placeholder; it was not altered by this plan and does not affect the shim's request/result forwarding path. | open |  | 2026-07-23T13:38:39.872Z |  |
+| 2 | 161 | deviation | packages/sdk/src/nap-types.ts | 351 | Full build/type-check blocked by stale IntentContract import outside 161-02 scope. | open |  | 2026-07-23T13:48:43.296Z |  |
 
 ````json
 [
@@ -29,6 +30,18 @@ last_updated: 2026-07-23T13:38:39.872Z
     "status": "open",
     "reason": "",
     "recorded_at": "2026-07-23T13:38:39.872Z",
+    "resolved_at": null
+  },
+  {
+    "id": 2,
+    "kind": "deviation",
+    "phase": "161",
+    "file": "packages/sdk/src/nap-types.ts",
+    "line": 351,
+    "description": "Full build/type-check blocked by stale IntentContract import outside 161-02 scope.",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-07-23T13:48:43.296Z",
     "resolved_at": null
   }
 ]
