@@ -50,6 +50,26 @@ function transposeConventionUri(topic: string, payload: unknown) {
 }
 
 /**
+ * Convention consumers subscribe only to the stable routed identity. Query
+ * transposition belongs exclusively to emit; receive-side matching stays exact.
+ */
+function assertStableSubscriptionTopic(topic: string): void {
+  const queryIndex = topic.indexOf('?');
+  const fragmentIndex = topic.indexOf('#');
+  if (queryIndex < 0 && fragmentIndex < 0) return;
+
+  const pathEnd = [queryIndex, fragmentIndex]
+    .filter((index) => index >= 0)
+    .reduce((end, index) => Math.min(end, index), topic.length);
+  const stableTopic = topic.slice(0, pathEnd);
+  if (/^napplet:[^/?#]+\/[^/?#]+$/.test(stableTopic)) {
+    throw new Error(
+      'Convention subscriptions must use the stable queryless topic',
+    );
+  }
+}
+
+/**
  * Broadcast an INC message to other napplets via the shell.
  *
  * Sends an `inc.emit` envelope message to the shell for delivery
@@ -93,6 +113,8 @@ export function on(
   topic: string,
   callback: (payload: unknown, event: NostrEvent) => void,
 ): { close(): void } {
+  assertStableSubscriptionTopic(topic);
+
   // Register local handler -- construct a synthetic NostrEvent-like wrapper
   // from INC envelope for backward compatibility with the window.napplet type
   const handler = (payload: unknown, sender: string) => {
