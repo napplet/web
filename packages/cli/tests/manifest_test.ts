@@ -327,7 +327,7 @@ Deno.test("createDeployManifestTemplates dedupes title/description and coexists 
   });
 });
 
-Deno.test("config metadata overrides template metadata with canonical archetype tags", async () => {
+Deno.test("config metadata overrides template metadata with exact convention archetype tags", async () => {
   await withTempDir(async (dir) => {
     await Deno.writeTextFile(
       `${dir}/index.html`,
@@ -338,8 +338,9 @@ Deno.test("config metadata overrides template metadata with canonical archetype 
       JSON.stringify({
         tags: [
           ["requires", "relay"],
-          ["archetype", "feed", "NAP-5"],
-          ["archetype", "bad", "not-a-nap"],
+          ["archetype", "feed", "napplet:feed/open"],
+          ["archetype", "bad", "not-a-convention"],
+          ["archetype", "feed", "napplet:feed/open", "kind:1"],
           ["type", "invented"],
         ],
       }),
@@ -355,7 +356,7 @@ Deno.test("config metadata overrides template metadata with canonical archetype 
         name: "notes",
         title: "Notes",
         description: "CLI-owned description",
-        archetypes: [{ slug: "note", protocol: "NAP-4", eventKinds: [1, 30023] }],
+        archetypes: [{ slug: "note", convention: "napplet:note/open" }],
       },
     });
     const plan = createDeployPlan(config, [candidate], {});
@@ -371,9 +372,7 @@ Deno.test("config metadata overrides template metadata with canonical archetype 
     assertEquals(tags.filter((tag) => tag[0] === "archetype"), [[
       "archetype",
       "note",
-      "NAP-4",
-      "kind:1",
-      "kind:30023",
+      "napplet:note/open",
     ]]);
     assertEquals(tags.some((tag) => tag[0] === "type"), false);
   });
