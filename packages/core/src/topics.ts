@@ -1,9 +1,4 @@
-/**
- * @napplet/core — Topic constants for the napplet INC-PEER event bus.
- *
- * These constants define topic strings used by the INC event bus for shell
- * commands, local coordination, and advisory napplet conventions.
- */
+/** Topic constants used by the napplet INC event bus. */
 
 /**
  * Built-in topic constants for the napplet INC event bus.
