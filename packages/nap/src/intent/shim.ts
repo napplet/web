@@ -4,13 +4,16 @@
  * @module
  */
 
-// @napplet/nap/intent -- Archetype intent dispatcher shim (invoke / open / available / handlers / changed push).
-// Correlates intent.* request/result envelopes; routes intent.changed pushes to listeners.
-// The shell owns archetype resolution, default handling, window lifecycle, and payload delivery.
+// @napplet/nap/intent -- URI-shaped intent dispatcher shim.
+// Correlates immediate acceptance results and routes independent target deliveries.
+// The runtime owns handler resolution and delivery lifecycle policy.
 
 import { postToShell } from '../boundary.js';
+import { normalizeConventionUri } from '../convention-uri.js';
 import type { Subscription } from '@napplet/core';
 import type {
+  IntentDelivery,
+  IntentInvokeOptions,
   IntentRequest,
   IntentResult,
   IntentAvailability,
@@ -21,6 +24,7 @@ import type {
   IntentAvailableResultMessage,
   IntentHandlersResultMessage,
   IntentChangedMessage,
+  IntentDeliveryMessage,
 } from './types.js';
 
 /** Default timeout for intent request-responses (30s; aligns with other NAPs). */
@@ -49,6 +53,12 @@ const pendingHandlers = new Map<string, {
 
 /** Availability-change listeners (each receives every intent.changed). */
 const changedHandlers = new Set<(availability: IntentAvailability) => void>();
+
+/** Target-delivery handlers registered by the receiving napplet. */
+const deliveryHandlers = new Set<(delivery: IntentDelivery) => void>();
+
+/** Runtime deliveries retained until the first target handler registers. */
+const retainedDeliveries: IntentDelivery[] = [];
 
 /** Guard against double-install. */
 let installed = false;
@@ -101,12 +111,53 @@ function handleChanged(msg: IntentChangedMessage): void {
   for (const cb of changedHandlers) cb(msg.availability);
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function hasOwn(value: Record<string, unknown>, key: string): boolean {
+  return Object.prototype.hasOwnProperty.call(value, key);
+}
+
+/** Drop unexpected carrier fields before exposing a runtime delivery to app code. */
+function normalizeIntentDelivery(value: unknown): IntentDelivery | undefined {
+  if (!isRecord(value)
+    || typeof value.sender !== 'string'
+    || typeof value.archetype !== 'string'
+    || typeof value.action !== 'string'
+    || typeof value.convention !== 'string') {
+    return undefined;
+  }
+
+  return {
+    sender: value.sender,
+    archetype: value.archetype,
+    action: value.action,
+    convention: value.convention,
+    ...(hasOwn(value, 'payload') ? { payload: value.payload } : {}),
+  };
+}
+
+function handleDelivery(msg: IntentDeliveryMessage): void {
+  const delivery = normalizeIntentDelivery(msg.delivery);
+  if (!delivery) return;
+
+  if (deliveryHandlers.size === 0) {
+    retainedDeliveries.push(delivery);
+    return;
+  }
+
+  for (const handler of deliveryHandlers) handler(delivery);
+}
+
 /**
  * Handle intent.* messages from the shell via the central message listener.
  * Covers invoke/available/handlers results plus the changed push.
  */
 export function handleIntentMessage(msg: { type: string; [key: string]: unknown }): void {
-  if (isMessageType<IntentInvokeResultMessage>(msg, 'intent.invoke.result')) {
+  if (isMessageType<IntentDeliveryMessage>(msg, 'intent.deliver')) {
+    handleDelivery(msg);
+  } else if (isMessageType<IntentInvokeResultMessage>(msg, 'intent.invoke.result')) {
     handleInvokeResult(msg);
   } else if (isMessageType<IntentAvailableResultMessage>(msg, 'intent.available.result')) {
     handleAvailableResult(msg);
@@ -117,25 +168,31 @@ export function handleIntentMessage(msg: { type: string; [key: string]: unknown 
   }
 }
 
-/**
- * Invoke a napplet by archetype. The shell resolves the archetype to a handler
- * (the user's default, the napplet named in `request.handler`, or a user choice
- * when `handler: "choose"`), creates or focuses its window, and delivers the
- * payload using `request.convention` (or the archetype's recommended default).
- * Resolves with
- * the structured result (including `ok: false` / `handled: false` on resolution
- * or delivery failure); rejects only when the shell returns a top-level error.
- *
- * @param request  The intent request (archetype + action + convention + payload)
- * @returns Promise resolving to the invocation result
- *
- * @example
- * ```ts
- * const r = await invoke({ archetype: 'note', action: 'open', payload: { target: { type: 'event', id } } });
- * if (!r.handled) showFallback(r.error);
- * ```
- */
-export function invoke(request: IntentRequest): Promise<IntentResult> {
+function normalizeIntentRequest(uri: string, options?: IntentInvokeOptions): IntentRequest {
+  const normalized = normalizeConventionUri(uri, options?.payload);
+  const supplied = options as (IntentInvokeOptions & Record<string, unknown>) | undefined;
+
+  if (supplied && hasOwn(supplied, 'sender')) {
+    throw new Error('Intent callers cannot supply sender');
+  }
+
+  for (const field of ['archetype', 'action', 'convention'] as const) {
+    if (supplied && hasOwn(supplied, field) && supplied[field] !== normalized[field]) {
+      throw new Error(`Intent options cannot override URI-derived ${field}`);
+    }
+  }
+
+  return {
+    archetype: normalized.archetype,
+    action: normalized.action,
+    convention: normalized.convention,
+    ...(normalized.payload !== undefined ? { payload: normalized.payload } : {}),
+    ...(options?.handler !== undefined ? { handler: options.handler } : {}),
+    ...(options?.behavior !== undefined ? { behavior: options.behavior } : {}),
+  };
+}
+
+function invokeNormalized(request: IntentRequest): Promise<IntentResult> {
   const id = crypto.randomUUID();
   return new Promise<IntentResult>((resolve, reject) => {
     const timeout = setTimeout(() => {
@@ -153,25 +210,67 @@ export function invoke(request: IntentRequest): Promise<IntentResult> {
 }
 
 /**
- * Convenience sugar for the common `action: "open"` case.
- * Equivalent to `invoke({ archetype, action: 'open', payload, ...opts })`.
+ * Ask the runtime to accept responsibility for an intent delivery. The URI is
+ * authoritative: its archetype, action, and queryless convention identity are
+ * normalized before postMessage. `ok: true` does not mean the target has already
+ * received or handled the delivery.
  *
- * @param archetype  Role slug to open
- * @param payload    Opaque payload, shaped by the selected convention
- * @param opts       Extra request fields (convention, handler, behavior)
- * @returns Promise resolving to the invocation result
+ * @param uri  A `napplet:<archetype>/<intent>[...?params]` convention URI
+ * @param options  Optional payload, handler preference, and behavior hints
+ * @returns Promise resolving to immediate acceptance or pre-acceptance rejection
  *
  * @example
  * ```ts
- * await open('emoji-list', { seed: ['🤙', '⚡'] }, { behavior: { focus: true } });
+ * const r = await invoke('napplet:note/open?event=abc123');
+ * if (!r.ok) showFallback(r.error);
  * ```
  */
-export function open(
-  archetype: string,
-  payload?: unknown,
-  opts?: Omit<IntentRequest, 'archetype' | 'action' | 'payload'>,
-): Promise<IntentResult> {
-  return invoke({ archetype, action: 'open', payload, ...opts });
+export function invoke(uri: string, options?: IntentInvokeOptions): Promise<IntentResult> {
+  return invokeNormalized(normalizeIntentRequest(uri, options));
+}
+
+/**
+ * Convenience sugar for a convention URI whose intent is `open`.
+ *
+ * @param uri  An `napplet:<archetype>/open[...?params]` convention URI
+ * @param options  Optional payload, handler preference, and behavior hints
+ * @returns Promise resolving to immediate acceptance or pre-acceptance rejection
+ *
+ * @example
+ * ```ts
+ * await open('napplet:emoji-list/open', { behavior: { focus: true } });
+ * ```
+ */
+export function open(uri: string, options?: IntentInvokeOptions): Promise<IntentResult> {
+  const request = normalizeIntentRequest(uri, options);
+  if (request.action !== 'open') {
+    throw new Error('intent.open requires a convention URI with an open intent');
+  }
+  return invokeNormalized(request);
+}
+
+/**
+ * Register a target-only listener for runtime-delivered intents. Deliveries that
+ * arrived before the first registration drain once in FIFO order. The carrier
+ * has no delivery identifier and is independent of INC or source lifetime.
+ *
+ * @param handler  Called with each runtime-attested target delivery
+ * @returns A Subscription with `close()` to stop receiving later deliveries
+ */
+export function onDelivery(handler: (delivery: IntentDelivery) => void): Subscription {
+  const wasEmpty = deliveryHandlers.size === 0;
+  deliveryHandlers.add(handler);
+
+  if (wasEmpty) {
+    const earlyDeliveries = retainedDeliveries.splice(0);
+    for (const delivery of earlyDeliveries) handler(delivery);
+  }
+
+  return {
+    close(): void {
+      deliveryHandlers.delete(handler);
+    },
+  };
 }
 
 /**
@@ -243,7 +342,7 @@ export function onChanged(handler: (availability: IntentAvailability) => void): 
  * Install the intent shim. Registration-only -- intents are issued on demand,
  * not at install time.
  *
- * @returns cleanup function that rejects pending requests and clears all state
+ * @returns cleanup function that clears pending requests and retained deliveries
  */
 export function installIntentShim(): () => void {
   if (installed) {
@@ -258,6 +357,8 @@ export function installIntentShim(): () => void {
     pendingAvailable.clear();
     pendingHandlers.clear();
     changedHandlers.clear();
+    deliveryHandlers.clear();
+    retainedDeliveries.length = 0;
     installed = false;
   };
 }
