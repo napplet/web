@@ -49,7 +49,7 @@ describe('validateManifestEvent — happy path', () => {
 });
 
 describe('validateManifestEvent — failures', () => {
-  it('skips HTML-only callers through the compatibility wrapper', () => {
+  it('accepts HTML-only callers without deriving manifest protocol state', () => {
     const v = validateManifest('<!doctype html><title>legacy</title>');
     expect(v.ok).toBe(true);
     expect(v.errors).toEqual([]);

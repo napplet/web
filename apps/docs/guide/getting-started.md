@@ -123,8 +123,8 @@ Install the napplet-side SDK:
 npm install @napplet/sdk
 ```
 
-And the build-time Vite plugin as a dev dependency, which generates the NIP-5A
-manifest and injects the discovery meta tags:
+And the build-time Vite plugin as a dev dependency, which generates the signed
+NIP-5A manifest event:
 
 ```bash
 npm install -D @napplet/vite-plugin

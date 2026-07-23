@@ -35,10 +35,7 @@ function isMessageType<T extends { type: string }>(
 /** Default timeout for correlated requests (30 seconds). */
 const REQUEST_TIMEOUT_MS = 30_000;
 
-/** Meta tag name carrying the manifest-declared JSON-escaped schema. */
-const SCHEMA_META_NAME = 'napplet-config-schema';
-
-/** Currently-registered schema (from manifest meta tag or config.registerSchema). null until set. */
+/** Currently-registered schema. null until config.registerSchema is accepted. */
 let currentSchema: NappletConfigSchema | null = null;
 
 /** Latest config.values snapshot (populated by every push OR correlated response). null until first delivery. */
@@ -152,28 +149,10 @@ function handleSchemaError(msg: ConfigSchemaErrorMessage): void {
 }
 
 /**
- * Read the manifest-declared schema from <meta name="napplet-config-schema"> if present.
- * Silent on any failure (missing tag, missing content, invalid JSON) -- schema remains null.
- */
-function readManifestSchema(): NappletConfigSchema | null {
-  if (typeof document === 'undefined') return null;
-  const el = document.querySelector(`meta[name="${SCHEMA_META_NAME}"]`);
-  if (!el) return null;
-  const raw = el.getAttribute('content');
-  if (!raw) return null;
-  try {
-    return JSON.parse(raw) as NappletConfigSchema;
-  } catch {
-    return null;
-  }
-}
-
-/**
  * Register a napplet configuration schema at runtime.
  *
- * Prefer the manifest-declared path (via @napplet/vite-plugin's configSchema
- * option) for static schemas -- this is the runtime escape hatch for schemas
- * that genuinely cannot be known at build time.
+ * The local schema snapshot is populated only after the shell accepts this
+ * explicit registration; the shim never discovers protocol state from HTML.
  *
  * Correlates via UUID; resolves on `config.registerSchema.result { ok: true }`;
  * rejects with `Error(code + ': ' + error)` on `{ ok: false }`.
@@ -317,8 +296,7 @@ export function onSchemaError(
 }
 
 /**
- * Install the config shim: read the manifest-declared schema (if any) from
- * `<meta name="napplet-config-schema">` and mount `window.napplet.config`.
+ * Install the config shim and mount `window.napplet.config`.
  *
  * Idempotent: a second call is a no-op and returns a no-op cleanup.
  *
@@ -329,11 +307,7 @@ export function installConfigShim(): () => void {
     return () => undefined; // already installed: no-op cleanup
   }
 
-  // 1. Read manifest-declared schema synchronously so the `schema` accessor
-  //    has a value from the first microtask of napplet execution.
-  currentSchema = readManifestSchema();
-
-  // 2. Mount window.napplet.config. Use Object.defineProperty for the readonly
+  // Mount window.napplet.config. Use Object.defineProperty for the readonly
   //    `schema` accessor so authors reading window.napplet.config.schema at any
   //    point in time get the current cached value (updated by successful
   //    registerSchema responses).

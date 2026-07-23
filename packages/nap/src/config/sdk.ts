@@ -110,8 +110,7 @@ export function openSettings(options?: { section?: string }): void {
 }
 
 /**
- * Register a configuration schema at runtime (escape hatch; prefer the
- * manifest-declared schema via @napplet/vite-plugin's configSchema option).
+ * Register a configuration schema with the shell at runtime.
  *
  * @param schema   JSON Schema (draft-07+) describing the config surface.
  * @param version  Optional `$version` migration hint.

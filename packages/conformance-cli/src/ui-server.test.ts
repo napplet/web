@@ -16,7 +16,7 @@ async function makeDirs(): Promise<{ app: string; nap: string }> {
   await mkdir(join(app, 'assets'));
   await writeFile(join(app, 'assets', 'x.js'), 'export const a = 1;');
   const nap = await mkdtemp(join(tmpdir(), 'napplet-ui-nap-'));
-  await writeFile(join(nap, 'index.html'), '<!doctype html><meta name="napplet-type" content="t">');
+  await writeFile(join(nap, 'index.html'), '<!doctype html><title>napplet fixture</title>');
   return { app, nap };
 }
 
@@ -33,7 +33,7 @@ describe('startUiServer', () => {
     expect(await appRes.text()).toContain('<title>conformance app</title>');
 
     const napRes = await fetch(`${server.origin}/__napplet__/`);
-    expect(await napRes.text()).toContain('napplet-type');
+    expect(await napRes.text()).toContain('<title>napplet fixture</title>');
 
     const asset = await fetch(`${server.origin}/assets/x.js`);
     expect(asset.headers.get('content-type')).toContain('javascript');
@@ -55,7 +55,7 @@ describe('startUiServer', () => {
 
     // Subscribe, then change the napplet.
     await new Promise((r) => setTimeout(r, 50));
-    await writeFile(join(nap, 'index.html'), '<!doctype html><meta name="napplet-type" content="t2">');
+    await writeFile(join(nap, 'index.html'), '<!doctype html><title>changed fixture</title>');
 
     const sawRerun = await Promise.race([
       (async () => {

@@ -62,11 +62,6 @@ export interface ManifestVerdict {
   errors: ManifestError[];
   /** Non-fatal advisories. */
   warnings: ManifestError[];
-  /**
-   * @deprecated NIP-5D uses the event `d` tag, not an HTML `napplet-type` meta.
-   * Kept only so older callers can compile while migrating.
-   */
-  nappletType?: string;
 }
 
 /** Options for {@link validateManifest}. Reserved for compatibility. */
@@ -177,7 +172,6 @@ export function validateManifestEvent(event?: NappletManifestEvent | null): Mani
     ok: errors.length === 0,
     kind: event.kind,
     dTag,
-    nappletType: dTag,
     requires,
     errors,
     warnings,
