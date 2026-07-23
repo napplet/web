@@ -20,38 +20,89 @@ import type {
 const incTopicHandlers = new Map<string, Array<(payload: unknown, sender: string) => void>>();
 
 /**
- * Broadcast an INC event to other napplets via the shell.
+ * Transpose a queried convention URI into the stable topic and text payload the
+ * shell routes. All non-convention topics remain opaque to the runtime.
+ */
+function transposeConventionUri(topic: string, payload: unknown): IncEmitMessage {
+  const queryIndex = topic.indexOf('?');
+  const fragmentIndex = topic.indexOf('#');
+  const pathEnd = [queryIndex, fragmentIndex]
+    .filter((index) => index >= 0)
+    .reduce((end, index) => Math.min(end, index), topic.length);
+  const stableTopic = topic.slice(0, pathEnd);
+  const isConventionUri = /^napplet:[^/?#]+\/[^/?#]+$/.test(stableTopic);
+
+  if (!isConventionUri) {
+    return {
+      type: 'inc.emit',
+      topic,
+      ...(payload !== undefined ? { payload } : {}),
+    };
+  }
+
+  if (fragmentIndex >= 0) {
+    throw new Error('Convention URI fragments are not supported by inc.emit');
+  }
+
+  if (queryIndex < 0) {
+    return {
+      type: 'inc.emit',
+      topic,
+      ...(payload !== undefined ? { payload } : {}),
+    };
+  }
+
+  if (payload !== undefined) {
+    throw new Error('Convention URI queries cannot be combined with an explicit payload');
+  }
+
+  const entries: Array<[string, string]> = [];
+  const names = new Set<string>();
+  const query = topic.slice(queryIndex + 1);
+
+  if (query) {
+    for (const pair of query.split('&')) {
+      const separator = pair.indexOf('=');
+      if (separator < 0) {
+        throw new Error('Convention URI query parameters must use name=value form');
+      }
+
+      const name = decodeURIComponent(pair.slice(0, separator));
+      const value = decodeURIComponent(pair.slice(separator + 1));
+      if (names.has(name)) {
+        throw new Error('Convention URI query parameter names must be unique');
+      }
+      names.add(name);
+      entries.push([name, value]);
+    }
+  }
+
+  return {
+    type: 'inc.emit',
+    topic: stableTopic,
+    payload: Object.fromEntries(entries),
+  };
+}
+
+/**
+ * Broadcast an INC message to other napplets via the shell.
  *
  * Sends an `inc.emit` envelope message to the shell for delivery
  * to matching topic subscribers.
  *
- * @param topic     The topic string (e.g., 'profile:open', 'stream:channel-switch')
- * @param extraTags Additional tags (legacy parameter -- ignored in envelope format)
- * @param content   Event content string (sent as payload)
+ * A queried `napplet:<archetype>/<intent>` convention URI is transposed into a
+ * stable topic plus shallow text payload before the shell receives it.
+ *
+ * @param topic    An opaque stable topic or convention URI
+ * @param payload  Optional opaque payload for a queryless topic
  *
  * @example
  * ```ts
- * emit('profile:open', [], JSON.stringify({ pubkey: '...' }));
+ * emit('napplet:profile/open', { pubkey: '...' });
  * ```
  */
-export function emit(
-  topic: string,
-  extraTags: string[][] = [],
-  content: string = '',
-): void {
-  let payload: unknown;
-  try {
-    payload = content ? JSON.parse(content) : undefined;
-  } catch {
-    payload = content || undefined;
-  }
-
-  const msg: IncEmitMessage = {
-    type: 'inc.emit',
-    topic,
-    ...(payload !== undefined ? { payload } : {}),
-  };
-  postToShell(msg);
+export function emit(topic: string, payload?: unknown): void {
+  postToShell(transposeConventionUri(topic, payload));
 }
 
 /**

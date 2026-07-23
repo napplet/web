@@ -44,16 +44,16 @@ export interface RelayApi {
 }
 
 /**
- * Inter-napplet pubsub: broadcast and receive INC-PEER events through the shell.
+ * Inter-napplet pubsub: broadcast and receive INC events through the shell.
  */
 export interface IncApi {
   /**
-   * Broadcast an INC-PEER event to other napplets via the shell.
-   * @param topic      The 't' tag value (e.g., 'profile:open')
-   * @param extraTags  Additional NIP-01 tags beyond the 't' tag (default: [])
-   * @param content    Event content (default: empty string)
+   * Broadcast an INC message to other napplets via the shell.
+   * @param topic    An opaque stable topic or a convention URI such as
+   *                 `napplet:profile/open?pubkey=abc123`
+   * @param payload  Optional opaque message payload
    */
-  emit(topic: string, extraTags?: string[][], content?: string): void;
+  emit(topic: string, payload?: unknown): void;
   /**
    * Subscribe to INC-PEER events on a specific topic.
    * @param topic     The 't' tag value to listen for

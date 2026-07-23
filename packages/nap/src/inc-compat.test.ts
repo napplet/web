@@ -17,10 +17,13 @@ import {
   installIfcShim,
 } from './ifc/index.js';
 
+let incEmitSpy: ReturnType<typeof vi.fn>;
+
 beforeEach(() => {
+  incEmitSpy = vi.fn();
   vi.stubGlobal('window', {
     parent: { postMessage: vi.fn() },
-    napplet: { inc: { emit: vi.fn() } },
+    napplet: { inc: { emit: incEmitSpy } },
   });
 });
 
@@ -85,8 +88,7 @@ describe('INC topic routing', () => {
     it('forwards the clean-break incEmit payload without legacy arguments', () => {
       incEmit('napplet:note/open', { body: 'hello' });
 
-      expect((window as { napplet: { inc: { emit: ReturnType<typeof vi.fn> } } }).napplet.inc.emit)
-        .toHaveBeenCalledWith('napplet:note/open', { body: 'hello' });
+      expect(incEmitSpy).toHaveBeenCalledWith('napplet:note/open', { body: 'hello' });
     });
   });
 
