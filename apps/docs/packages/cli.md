@@ -67,7 +67,7 @@ napplet deploy
 ```
 
 - `napplet create` delegates to the maintained starter generator without setting deploy metadata.
-- `napplet init` owns name, title, optional description, canonical archetype contracts, and network
+- `napplet init` owns name, title, optional description, canonical archetype conventions, and network
   targets in `.napplet/config.json`. In an interactive terminal it guides setup and shows live suggestions from
   relays such as `wss://relaypag.es`, and suggests Blossom servers from kind
   `10063` server-list events.
@@ -90,7 +90,7 @@ napplet deploy
 ```bash
 napplet guide
 napplet create <directory> [--template <path-or-url>] [--force]
-napplet init [--force] [--root] [--source-dir <dir>] [--name <dtag>] [--title <title>] [--description <text>] [--archetype <slug:NAP-N>] [--relay <url>] [--server <url>]
+napplet init [--force] [--root] [--source-dir <dir>] [--name <dtag>] [--title <title>] [--description <text>] [--archetype <slug:napplet:archetype/intent>] [--relay <url>] [--server <url>]
 napplet skills <list|print|install> [args]
 napplet discover [--config <file>] [--all]
 napplet debug [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>]
@@ -112,6 +112,31 @@ For a single napplet repository, discovery checks `sourceDir` and prefers
 
 For workspaces, set `discover.roots` and use `--all`. Each discovered napplet
 deploys under its own folder name as the named `d` tag.
+
+## Archetype conventions
+
+Pass each `--archetype` option as `slug:napplet:<archetype>/<intent>`, for
+example `profile:napplet:profile/open`. The resulting configuration preserves
+the two public fields and deploy emits exactly one three-element manifest tag:
+
+```json
+{
+  "metadata": {
+    "archetypes": [
+      { "slug": "profile", "convention": "napplet:profile/open" }
+    ]
+  }
+}
+```
+
+```json
+["archetype", "profile", "napplet:profile/open"]
+```
+
+The CLI treats `convention` as an opaque advertised value: it does not infer a
+payload schema or query behavior for NAP-INTENT or manifest metadata. The
+NAP-INC-only convention-URI rule is defined by [NAP-INC draft PR #89 at
+`34ec29fc4039384a83dbd6b476f83c4fa0d038e6`](https://github.com/napplet/naps/blob/34ec29fc4039384a83dbd6b476f83c4fa0d038e6/naps/NAP-INC.md).
 
 ## See also
 

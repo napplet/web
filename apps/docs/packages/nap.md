@@ -92,6 +92,34 @@ import { notifySend } from '@napplet/nap/notify/sdk';
   `open`/`write`/`close`/`onEvent`; the shell owns permissions, raw port
   handles, streams, OS paths, and lifecycle policy.
 
+### INC convention URIs
+
+NAP-INC exposes `emit(topic, payload?)` and `on(topic, callback)`. It is the
+only convention surface here that accepts a queried convention URI when
+emitting. For `emit('napplet:profile/open?pubkey=abc123')`, the runtime
+transposes the query at the outgoing boundary into the shallow decoded text
+payload `{ pubkey: 'abc123' }` and posts the stable topic
+`napplet:profile/open`.
+
+Subscribe with the stable, queryless topic and keep routing exact afterward:
+
+```ts
+import { emit, on } from '@napplet/nap/inc/sdk';
+
+emit('napplet:profile/open?pubkey=abc123');
+const sub = on('napplet:profile/open', (payload) => {
+  // `pubkey` is a local convention choice; validate received payloads here.
+  console.log(payload);
+});
+```
+
+Fragments, malformed percent escapes, repeated decoded names, and a query with
+an explicit payload reject before emission. Structured or non-text data belongs
+in the explicit payload of a queryless topic. NAP-INTENT `convention` /
+`conventions` values and manifest convention values remain opaque; this rule
+does not parse or route them. See [NAP-INC draft PR #89 at
+`34ec29fc4039384a83dbd6b476f83c4fa0d038e6`](https://github.com/napplet/naps/blob/34ec29fc4039384a83dbd6b476f83c4fa0d038e6/naps/NAP-INC.md).
+
 See the [NAP domain reference](/naps/) for the full list with one-line purposes.
 
 ## Optional peer dependency

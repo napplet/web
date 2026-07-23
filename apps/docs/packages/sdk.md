@@ -82,8 +82,8 @@ if (!published.ok || !published.event) throw new Error(published.error ?? 'publi
 // Common social actions keep consent, event construction, signing, and relay routing in the shell
 await common.react(published.event.id, '+');
 
-// Inter-napplet messaging
-inc.emit('chat:message', [], JSON.stringify({ text: 'hi' }));
+// Inter-napplet messaging: payload is a local convention choice.
+inc.emit('chat:message', { text: 'hi' });
 
 // Scoped storage
 await storage.setItem('theme', 'dark');
@@ -98,6 +98,30 @@ const avatarItems = await resource.bytesMany([
   'blossom:sha256:abc123...',
 ]);
 ```
+
+### INC convention URIs
+
+`inc.emit(topic, payload?)` accepts a queried convention URI only for NAP-INC.
+The runtime transposes a call such as
+`inc.emit('napplet:profile/open?pubkey=abc123')` into the queryless stable topic
+`napplet:profile/open` plus a shallow decoded text payload. `pubkey` is a local
+convention choice; receiving code owns payload validation.
+
+Subscribe using the stable topic, not the queried developer-facing URI:
+
+```ts
+inc.emit('napplet:profile/open?pubkey=abc123');
+const profileOpen = inc.on('napplet:profile/open', (payload) => {
+  validateProfileOpenPayload(payload);
+});
+```
+
+Routing remains exact after transposition, with no query-aware, prefix, or
+wildcard matching. Fragments, malformed percent encoding, repeated decoded
+names, and a query combined with an explicit payload reject before emission.
+NAP-INTENT and manifest convention values stay opaque. This non-normative
+guidance follows [NAP-INC draft PR #89 at
+`34ec29fc4039384a83dbd6b476f83c4fa0d038e6`](https://github.com/napplet/naps/blob/34ec29fc4039384a83dbd6b476f83c4fa0d038e6/naps/NAP-INC.md).
 
 ### Typed config with `FromSchema`
 

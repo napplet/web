@@ -99,6 +99,28 @@ plain envelopes, so they add no protocol surface.
 - **`PROTOCOL_VERSION`** (`'4.0.0'`), **`SHELL_BRIDGE_URI`** (`'napplet://shell'`),
   **`REPLAY_WINDOW_SECONDS`** (`30`), and the legacy **`TOPICS`** routing constants.
 
+### Convention boundaries
+
+Intent types expose `convention` / `conventions` as opaque advertised strings;
+they do not define payload schemas or interpret query parameters. The global
+INC API is `emit(topic, payload?)`, with an optional opaque payload for a
+queryless topic.
+
+Only NAP-INC gives a queried `napplet:<archetype>/<intent>?name=value` special
+outbound meaning. At `emit` time, the runtime transposes its query into a
+shallow decoded text map and sends the queryless stable topic. Subscribers and
+receivers still use that exact stable topic; there is no query-aware, prefix, or
+wildcard routing. For example, `pubkey` below is a local convention choice, not
+a package-defined schema:
+
+```ts
+napplet.inc.emit('napplet:profile/open?pubkey=abc123');
+napplet.inc.on('napplet:profile/open', (payload) => validateLocally(payload));
+```
+
+This non-normative package guidance follows [NAP-INC draft PR #89 at
+`34ec29fc4039384a83dbd6b476f83c4fa0d038e6`](https://github.com/napplet/naps/blob/34ec29fc4039384a83dbd6b476f83c4fa0d038e6/naps/NAP-INC.md).
+
 ## Usage
 
 Register a handler and dispatch a message through an isolated registry:
