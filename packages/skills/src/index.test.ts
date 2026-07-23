@@ -139,7 +139,7 @@ describe('skill registry', () => {
     expect(boilerplateProse).toContain('`requires` lists hard requirements only');
   });
 
-  it('ships canonical INC query-transposition guidance from the skills directory', () => {
+  it('ships canonical URI and discovery guidance from the skills directory', () => {
     const canonicalSkills = ['build-napplet', 'design-napplet', 'make-napplet'];
 
     for (const skill of canonicalSkills) {
@@ -150,17 +150,25 @@ describe('skill registry', () => {
       expect(markdown).toContain('emit(topic, payload?)');
       expect(markdown).toContain('napplet:profile/open?pubkey=abc123');
       expect(markdown).toMatch(/stable queryless\s+topic/);
-      expect(markdown).toMatch(/NAP-INTENT\s+and manifest conventions remain opaque/);
+      expect(markdown).toContain('invoke(uri, options?)');
+      expect(markdown).toContain('open(uri, options?)');
+      expect(markdown).toContain('onDelivery');
+      expect(markdown).toContain('ok: true');
+      expect(markdown).toContain('eventKinds?: number[]');
+      expect(markdown).toContain('kind:<number>');
+      expect(markdown).toMatch(/stable, queryless convention identity/);
+      expect(markdown).toMatch(/runtime-attested sender/);
       expect(markdown).not.toContain('web#183');
       expect(markdown).not.toContain('do not add query, prefix, wildcard, canonicalization');
       expect(markdown).not.toMatch(/\bNAP-[1-5]\b/);
-      expect(markdown).not.toContain('kind:<n>');
+      expect(markdown).not.toMatch(/\b(?:handled|windowId|newWindow|intentId|deliveryId)\b/);
     }
 
     const rootSkills = new URL('../../../skills', import.meta.url);
     expect(lstatSync(rootSkills).isSymbolicLink()).toBe(true);
     expect(readlinkSync(rootSkills)).toBe('packages/skills/skills');
     expect(realpathSync(rootSkills)).toBe(realpathSync(skillsRoot()));
+    expect(realpathSync(rootSkills)).toMatch(/packages\/skills\/skills$/);
   });
 
   it('parses a description from each SKILL.md frontmatter', () => {
