@@ -5,6 +5,9 @@ The headless `napplet-conformance` runner. It drives the
 Chromium (via Playwright), so a napplet can prove it conforms to the NAP protocol
 **before** publishing — locally and in CI.
 
+The runner validates NIP-5D/NAP envelope and manifest requirements. It does not
+define payload schemas or matching behavior for an archetype convention.
+
 ```bash
 # Build your napplet first, then:
 npx napplet-conformance ./dist

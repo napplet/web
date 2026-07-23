@@ -26,6 +26,9 @@ degradation when domains are absent, and no forbidden globals.
 The validator surface is kept in lockstep with `@napplet/nap` by a drift test, so a
 new NAP message type cannot ship without matching conformance coverage.
 
+For `intent` envelopes, conformance checks the request carrier. Convention strings
+and payloads remain opaque local choices, rather than conformance-defined schemas.
+
 ```ts
 import { validateEnvelope, validateManifestEvent } from '@napplet/conformance';
 

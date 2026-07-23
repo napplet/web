@@ -89,7 +89,7 @@ napplet deploy
 What each step does:
 
 - `napplet create` delegates to `@napplet/boilerplate` and creates the starter only.
-- `napplet init` owns deployment name, title, description, archetype contracts, relays, and Blossom
+- `napplet init` owns deployment name, title, description, archetype roles and conventions, relays, and Blossom
   servers in `.napplet/config.json`; scripts can pass the same fields explicitly.
 - `napplet skills` delegates to `@napplet/skills`, preserving every target and custom-location flag.
 - `napplet debug` prints resolved config, discovered napplets, deploy targets, manifest templates,
@@ -104,7 +104,7 @@ What each step does:
 ```sh
 napplet guide
 napplet create <directory> [--template <path-or-url>] [--force]
-napplet init [--force] [--root] [--source-dir <dir>] [--name <dtag>] [--title <title>] [--description <text>] [--archetype <slug:NAP-N>] [--relay <url>] [--server <url>]
+napplet init [--force] [--root] [--source-dir <dir>] [--name <dtag>] [--title <title>] [--description <text>] [--archetype <slug:convention>] [--relay <url>] [--server <url>]
 napplet skills <list|print|install> [args]
 napplet discover [--config <file>] [--all]
 napplet debug [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>]
@@ -122,11 +122,12 @@ napplet paja [--config <file>] [-- <args>]
 ### `init`
 
 Creates `.napplet/config.json` unless it already exists. Use `--force` to overwrite it. For named
-deployments, the NIP-5A d-tag must match `^[a-z0-9-]{1,13}$` and cannot end in `-`. Archetype values
-use canonical `slug:NAP-N` contracts; there is no generic `type` manifest tag.
+deployments, the NIP-5A d-tag must match `^[a-z0-9-]{1,13}$` and cannot end in `-`. Each archetype
+value pairs a role slug with one convention, for example `note:napplet:note/open`; there is no generic
+`type` manifest tag.
 
 In an interactive terminal, `napplet init` guides setup for source directory, root-vs-named target,
-name, title, optional description, archetype contracts, relays, and Blossom servers. Relay suggestions come from best-effort
+name, title, optional description, archetype roles and conventions, relays, and Blossom servers. Relay suggestions come from best-effort
 [NIP-66](https://nips.nostr.com/66) discovery events on relay discovery relays such as
 `wss://relaypag.es`; curated general-purpose relays are completed first, followed by live discoveries.
 Blossom suggestions come from best-effort [NIP-B7](https://nips.nostr.com/b7) kind `10063`
@@ -135,7 +136,7 @@ advisory Tab-completion candidates; the written config contains only the values 
 
 ```sh
 napplet init
-napplet init --source-dir . --name feed --title Feed --archetype note:NAP-4 --relay wss://relay.example --server https://blossom.example
+napplet init --source-dir . --name feed --title Feed --archetype note:napplet:note/open --relay wss://relay.example --server https://blossom.example
 napplet init --root --relay wss://relay.example --server https://blossom.example
 ```
 
@@ -153,13 +154,15 @@ Example config:
     "name": "feed",
     "title": "Feed",
     "description": "A focused feed reader",
-    "archetypes": [{ "slug": "note", "protocol": "NAP-4" }]
+    "archetypes": [{ "slug": "note", "convention": "napplet:note/open" }]
   }
 }
 ```
 
 Valid config metadata takes precedence over title/description/archetype defaults found in built HTML
 or the Vite plugin sidecar. Legacy configs without `metadata` retain their existing fallback behavior.
+The convention string is retained as an opaque value after configuration validation: it names a local
+payload choice and does not select a payload schema, query rule, or matching rule.
 
 ### `discover`
 

@@ -49,10 +49,10 @@ if (!published.ok || !published.event) throw new Error(published.error ?? 'publi
 // Common social actions keep consent, event construction, signing, and relay routing in the shell
 await common.react(published.event.id, '+');
 
-// Inter-napplet messaging
-inc.emit('chat:message', [], JSON.stringify({ text: 'hi' }));
-const incSub = inc.on('bot:response', (payload) => {
-  console.log('Bot says:', payload);
+// Inter-napplet messaging. The payload is this application's local choice.
+inc.emit('napplet:note/open', [], JSON.stringify({ targetId: 'local-note-id' }));
+const incSub = inc.on('napplet:note/open', (payload) => {
+  console.log('Local note-open payload:', payload);
 });
 
 // Scoped storage
@@ -164,6 +164,9 @@ Inter-napplet communication between napplets. Mirrors `window.napplet.inc`.
 
 Messages are sent as JSON envelope objects (`{ type: 'inc.emit', topic, payload }`) and received as
 (`{ type: 'inc.event', topic, payload, sender }`).
+Topics are opaque strings: a sender and subscriber use the same complete value.
+The package does not prescribe convention payload schemas, query handling,
+wildcards, prefixes, or canonicalization.
 
 | Method | Returns | Description |
 |--------|---------|-------------|

@@ -309,18 +309,24 @@ interface EventTemplate {
 
 ### Topic Constants
 
-The `TOPICS` object contains string constants for INC topic-based routing. These are legacy constants from the pre-envelope era — with JSON envelope messages, topic strings are passed directly in `inc.emit` and `inc.subscribe` payloads.
+The `TOPICS` object contains string constants for INC topic-based routing. Its
+archetype-open entries use the current advisory convention names; topic strings
+are passed directly in `inc.emit` and `inc.subscribe` payloads.
 
 ```ts
 import { TOPICS } from '@napplet/core';
 
-TOPICS.STATE_GET                // 'shell:state-get'
-TOPICS.SHELL_CONFIG_GET         // 'shell:config-get'
+TOPICS.NOTE_OPEN                // 'napplet:note/open'
+TOPICS.PROFILE_OPEN             // 'napplet:profile/open'
+TOPICS.DM_OPEN                  // 'napplet:dm/open'
 TOPICS.WM_FOCUSED_WINDOW_CHANGED // 'wm:focused-window-changed'
 // ... see source for full list
 ```
 
-> **Note:** With JSON envelope wire format (v0.16.0+), state operations use `storage.*` messages directly rather than INC topic routing. These constants are retained for backward compatibility with shell runtime implementations.
+Convention topic strings are opaque and route only when the sender and subscriber
+use the same string. They do not define a payload schema, Nostr event kind, query,
+wildcard, prefix, or canonicalization rule; receivers validate any local payload
+choice themselves.
 
 ---
 

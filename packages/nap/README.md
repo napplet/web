@@ -93,6 +93,19 @@ NAP-IFC was renamed to NAP-INC because the surface is inter-napplet communicatio
 
 The old `@napplet/nap/ifc`, `@napplet/nap/ifc/types`, `@napplet/nap/ifc/shim`, and `@napplet/nap/ifc/sdk` subpaths remain as deprecated thin wrappers. They re-export the INC implementation and aliases only; they do not define a separate `ifc` domain or `ifc.*` wire protocol.
 
+### Intent and INC conventions
+
+NAP-INTENT routes to an archetype role. A handler advertises opaque
+`conventions`, and a caller can pass one `convention` with its request; the shell
+selects the handler. The convention name identifies a local payload choice, not a
+payload schema supplied by this package.
+
+NAP-INC topics use the same opaque-string boundary. Use the current advisory
+open names such as `napplet:note/open`, `napplet:profile/open`, and
+`napplet:dm/open` when they fit the receiving napplet's documented local choice.
+Topic delivery uses the complete string and does not add query, wildcard, prefix,
+or canonicalization behavior.
+
 ## Subpath Patterns
 
 Each domain exposes up to three patterns (four including the barrel). Pick the shape that matches what your code actually needs:

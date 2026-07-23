@@ -80,9 +80,9 @@ const signed = await window.napplet.relay.publish({
   created_at: Math.floor(Date.now() / 1000),
 });
 
-// Listen for inter-napplet events from other napplets
-const incSub = window.napplet.inc.on('profile:open', (payload) => {
-  console.log('Profile requested:', payload);
+// Listen for a local profile-open convention payload from other napplets
+const incSub = window.napplet.inc.on('napplet:profile/open', (payload) => {
+  console.log('Local profile-open payload:', payload);
 });
 
 // Use scoped storage (proxied through the shell)
@@ -432,11 +432,15 @@ Relay operations through the shell's relay pool via JSON envelope (relay.subscri
 
 ### `window.napplet.inc`
 
-Inter-napplet communication between napplets via the shell.
+Inter-napplet communication between napplets via the shell. Topics are opaque
+strings, so delivery uses the complete value supplied by the sender and
+subscriber. A topic such as `napplet:profile/open` names a local convention; the
+shim does not define its payload schema or add query, wildcard, prefix, or
+canonicalization behavior.
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| `emit(topic, extraTags?, content?)` | `void` | Send an `inc.emit` JSON envelope to the shell for delivery to matching topic subscribers. |
+| `emit(topic, extraTags?, content?)` | `void` | Send an `inc.emit` JSON envelope to the shell for delivery to subscribers using the same topic string. |
 | `on(topic, callback)` | `{ close(): void }` | Subscribe to `inc.event` JSON envelopes on a topic. Callback receives `(payload, event)`. |
 
 ### `window.napplet.storage`

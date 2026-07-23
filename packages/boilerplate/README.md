@@ -8,9 +8,13 @@ Project scaffold generator behind `napplet create`. It clones the maintained
 napplet create my-napplet
 ```
 
-Deployment name, title, description, and archetype contracts belong to
+Deployment name, title, description, and archetype roles plus conventions belong to
 `napplet init`; this generator does not prompt for or mutate them. It currently
 ships one variant, `basic`.
+
+An archetype declaration pairs one role slug with one opaque convention, such as
+`note:napplet:note/open`. The convention names a local payload choice; its payload
+shape is not defined by this generator.
 
 ## Options
 

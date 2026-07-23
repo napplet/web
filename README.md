@@ -39,7 +39,7 @@ napplet deploy
 ```
 
 `napplet create` clones the maintained Vite + TypeScript starter. `napplet init`
-owns deployment name, title, description, canonical archetype contracts, relays,
+owns deployment name, title, description, archetype roles and conventions, relays,
 and Blossom servers in `.napplet/config.json`. Node.js 20+ is needed by the
 generated project and by the package-backed `create` and `skills` commands.
 

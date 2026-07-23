@@ -165,7 +165,12 @@ If none of the three paths resolve a schema, manifest/meta emission for the conf
 
 **Type:** `Array<{ slug: string; convention: string }>`
 
-Declares the NAAT archetype roles this napplet fulfills (napplet/naps `ARCHETYPES.md`). Each entry emits **one** `['archetype', slug, convention]` tag on the kind 35129 manifest event, where `slug` is the role slug and `convention` is an opaque convention name the napplet accepts. A napplet may declare several archetype roles; a napplet with no archetype tag is fully valid.
+Declares the NAAT archetype roles this napplet fulfills ([living archetype
+registry](https://github.com/napplet/naps/blob/master/ARCHETYPES.md)). Each entry
+emits **one** `['archetype', slug, convention]` tag on the kind 35129 manifest
+event, where `slug` is the role slug and `convention` is an opaque convention
+name the napplet accepts. A napplet may declare several archetype roles; a
+napplet with no archetype tag is fully valid.
 
 ```ts
 nip5aManifest({
@@ -180,6 +185,10 @@ nip5aManifest({
 ```
 
 Like the `config` tag, archetype tags are **not** folded into `aggregateHash`: per NIP-5D §Identity the aggregate is the NIP-5A hash of the `path` tags alone, so declaring archetypes never changes the napplet's content address. Blank slugs are skipped.
+
+The convention example above is an author-selected local payload choice. The
+plugin serializes the string without defining payload, query, wildcard, prefix,
+canonicalization, or multi-convention semantics.
 
 #### artifactMode (optional, v1.11+)
 
