@@ -22,8 +22,21 @@ import { validateEnvelope, type EnvelopeVerdict } from '../validators/envelope.j
 /** A 64-hex reference user pubkey the shell reports for identity queries. */
 export const REFERENCE_PUBKEY: string = 'f'.repeat(64);
 
+/** A source identity supplied by the reference runtime's authenticated endpoint fixture. */
+export interface ReferenceEndpoint {
+  /** The authenticated source napplet dTag. */
+  dTag: string;
+}
+
+/** Default authenticated source used by the backwards-compatible {@link ReferenceShell.handle} helper. */
+export const REFERENCE_ENDPOINT: ReferenceEndpoint = { dTag: 'reference-source' };
+
 /** A placeholder blob URL for canned upload responses. `.invalid` is reserved (RFC 2606) and never resolves. */
 const REFERENCE_BLOB_URL = 'https://reference.invalid/blob';
+const REFERENCE_HANDLER = 'reference-handler';
+const REFERENCE_SUBSCRIBER = 'reference-subscriber';
+const REFERENCE_CONVENTION = 'napplet:note/open';
+const REFERENCE_CONTRACT = { convention: REFERENCE_CONVENTION, eventKinds: [1, 30023] };
 
 /** One recorded inbound envelope from the napplet, with its validation verdict. */
 export interface RecordedEnvelope {
@@ -205,27 +218,6 @@ const RESPONDERS: Record<string, Responder> = {
   'upload.upload': (e) => ok({ type: 'upload.upload.result', id: e.id, result: { url: REFERENCE_BLOB_URL } }),
   'upload.status': (e) => ok({ type: 'upload.status.result', id: e.id, status: {} }),
 
-  // intent
-  'intent.invoke': (e) => ok({ type: 'intent.invoke.result', id: e.id, result: { ok: true, archetype: 'reference', action: 'open', handled: true } }),
-  'intent.available': (e) => ok({
-    type: 'intent.available.result',
-    id: e.id,
-    availability: {
-      archetype: e.archetype,
-      available: true,
-      candidates: [
-        {
-          dTag: 'reference-handler',
-          actions: ['open'],
-          conventions: ['napplet:note/open'],
-          isDefault: true,
-        },
-      ],
-      hasDefault: true,
-    },
-  }),
-  'intent.handlers': (e) => ok({ type: 'intent.handlers.result', id: e.id, handlers: [] }),
-
   // ble
   'ble.open': (e) => ok({
     type: 'ble.open.result',
@@ -290,6 +282,13 @@ export interface ReferenceShell {
    * Unknown/fire-and-forget messages return `[]`.
    */
   handle(envelope: unknown): unknown[];
+  /**
+   * Process one inbound envelope from an explicitly authenticated source endpoint.
+   * The endpoint, never envelope fields, determines delivered sender provenance.
+   */
+  handleFrom(endpoint: ReferenceEndpoint, envelope: unknown): unknown[];
+  /** Drain retained target deliveries for one resolved reference target. */
+  takeDeliveries(target: string): unknown[];
   /** Clear recorded envelopes. */
   reset(): void;
 }
@@ -307,18 +306,117 @@ export interface ReferenceShell {
 export function createReferenceShell(options: ReferenceShellOptions = {}): ReferenceShell {
   const now = options.now ?? (() => Date.now());
   const records: RecordedEnvelope[] = [];
+  const targetQueues = new Map<string, unknown[]>();
 
-  function handle(envelope: unknown): unknown[] {
+  function queueDelivery(target: string, delivery: unknown): void {
+    const queue = targetQueues.get(target);
+    if (queue) {
+      queue.push(delivery);
+      return;
+    }
+    targetQueues.set(target, [delivery]);
+  }
+
+  function takeDeliveries(target: string): unknown[] {
+    const queue = targetQueues.get(target) ?? [];
+    targetQueues.delete(target);
+    return queue;
+  }
+
+  function unavailableIntent(id: unknown, error: string): unknown[] {
+    return ok({ type: 'intent.invoke.result', id, result: { ok: false, error } });
+  }
+
+  function handleIntentInvoke(endpoint: ReferenceEndpoint, env: Record<string, unknown>): unknown[] {
+    const request = env.request;
+    if (typeof request !== 'object' || request === null || Array.isArray(request)) {
+      return unavailableIntent(env.id, 'invalid intent request');
+    }
+
+    const normalized = request as Record<string, unknown>;
+    const { archetype, action, convention } = normalized;
+    if (typeof archetype !== 'string' || typeof action !== 'string' || typeof convention !== 'string') {
+      return unavailableIntent(env.id, 'intent request must carry normalized identity');
+    }
+
+    const parsed = /^napplet:([^/?#\s]+)\/([^/?#\s]+)$/.exec(convention);
+    if (!parsed || parsed[1] !== archetype || parsed[2] !== action) {
+      return unavailableIntent(env.id, 'intent request conflicts with its convention');
+    }
+    if (convention !== REFERENCE_CONVENTION) {
+      return unavailableIntent(env.id, 'no reference handler for convention');
+    }
+
+    const delivery: Record<string, unknown> = {
+      sender: endpoint.dTag,
+      archetype,
+      action,
+      convention,
+    };
+    if ('payload' in normalized) delivery.payload = normalized.payload;
+    queueDelivery(REFERENCE_HANDLER, { type: 'intent.deliver', delivery });
+
+    return ok({
+      type: 'intent.invoke.result',
+      id: env.id,
+      result: { ok: true, archetype, action, convention, handler: REFERENCE_HANDLER },
+    });
+  }
+
+  function intentAvailability(archetype: unknown): Record<string, unknown> {
+    if (archetype !== 'note') {
+      return { archetype, available: false, candidates: [], hasDefault: false };
+    }
+    return {
+      archetype,
+      available: true,
+      candidates: [{
+        dTag: REFERENCE_HANDLER,
+        actions: ['open'],
+        conventions: [REFERENCE_CONVENTION],
+        contracts: [REFERENCE_CONTRACT],
+        isDefault: true,
+      }],
+      hasDefault: true,
+    };
+  }
+
+  function handleFrom(endpoint: ReferenceEndpoint, envelope: unknown): unknown[] {
     const type =
       envelope && typeof envelope === 'object' && typeof (envelope as Record<string, unknown>).type === 'string'
         ? ((envelope as Record<string, unknown>).type as string)
         : undefined;
 
-    records.push({ envelope, verdict: validateEnvelope(envelope), timestamp: now() });
+    const verdict = validateEnvelope(envelope);
+    records.push({ envelope, verdict, timestamp: now() });
 
-    if (!type) return [];
+    if (!type || !verdict.ok) return [];
+    const env = envelope as Record<string, unknown>;
+    if (type === 'intent.invoke') return handleIntentInvoke(endpoint, env);
+    if (type === 'intent.available') {
+      return ok({ type: 'intent.available.result', id: env.id, availability: intentAvailability(env.archetype) });
+    }
+    if (type === 'intent.handlers') {
+      return ok({ type: 'intent.handlers.result', id: env.id, handlers: [intentAvailability('note')] });
+    }
+    if (type === 'inc.emit') {
+      if (env.topic === REFERENCE_CONVENTION) {
+        const event: Record<string, unknown> = {
+          type: 'inc.event',
+          topic: env.topic,
+          sender: endpoint.dTag,
+        };
+        if ('payload' in env) event.payload = env.payload;
+        queueDelivery(REFERENCE_SUBSCRIBER, event);
+      }
+      return [];
+    }
     const responder = RESPONDERS[type];
-    return responder ? responder(envelope as Record<string, unknown>) : [];
+    return responder ? responder(env) : [];
+  }
+
+  function handle(envelope: unknown): unknown[] {
+    return handleFrom(REFERENCE_ENDPOINT, envelope);
   }
 
   return {
@@ -326,8 +424,11 @@ export function createReferenceShell(options: ReferenceShellOptions = {}): Refer
       return records;
     },
     handle,
+    handleFrom,
+    takeDeliveries,
     reset() {
       records.length = 0;
+      targetQueues.clear();
     },
   };
 }
@@ -355,6 +456,8 @@ export interface AttachOptions {
    * message events are handled (useful with isolated MessageChannel tests).
    */
   expectedSource?: unknown;
+  /** Authenticated endpoint identity for messages that pass the web source guard. */
+  endpoint?: ReferenceEndpoint;
 }
 
 /**
@@ -364,7 +467,7 @@ export interface AttachOptions {
 export function attachReferenceShell(shell: ReferenceShell, options: AttachOptions): () => void {
   const listener = (event: MessageEvent): void => {
     if (options.expectedSource !== undefined && event.source !== options.expectedSource) return;
-    for (const response of shell.handle(event.data)) {
+    for (const response of shell.handleFrom(options.endpoint ?? REFERENCE_ENDPOINT, event.data)) {
       options.target.postMessage(response, '*');
     }
   };
