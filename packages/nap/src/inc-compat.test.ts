@@ -90,6 +90,34 @@ describe('INC topic routing', () => {
 
       expect(incEmitSpy).toHaveBeenCalledWith('napplet:note/open', { body: 'hello' });
     });
+
+    it.each([
+      { name: 'fragment', topic: 'napplet:profile/open#details', payload: undefined },
+      { name: 'malformed name escape', topic: 'napplet:profile/open?%E0%A4=value', payload: undefined },
+      { name: 'malformed value escape', topic: 'napplet:profile/open?name=%E0%A4', payload: undefined },
+      { name: 'repeated raw name', topic: 'napplet:profile/open?a=one&a=two', payload: undefined },
+      { name: 'repeated decoded name', topic: 'napplet:profile/open?%61=one&a=two', payload: undefined },
+      { name: 'query with explicit payload', topic: 'napplet:profile/open?pubkey=abc123', payload: {} },
+    ])('rejects a $name before postMessage', ({ topic, payload }) => {
+      expect(() => emit(topic, payload)).toThrow();
+      expect(window.parent.postMessage).not.toHaveBeenCalled();
+    });
+
+    it('preserves plus signs and keeps every query value as text', () => {
+      emit('napplet:profile/open?literal=a+b&escaped=%2B&boolean=true&number=42&null=null');
+
+      expect(window.parent.postMessage).toHaveBeenCalledWith({
+        type: 'inc.emit',
+        topic: 'napplet:profile/open',
+        payload: {
+          literal: 'a+b',
+          escaped: '+',
+          boolean: 'true',
+          number: '42',
+          null: 'null',
+        },
+      }, '*');
+    });
   });
 
   it('delivers a byte-identical topic with its payload and sender', () => {

@@ -52,7 +52,10 @@ export interface IncMessage extends NappletMessage {
  */
 export interface IncEmitMessage extends IncMessage {
   type: 'inc.emit';
-  /** Opaque topic string for the message. */
+  /**
+   * Stable opaque topic routed on the wire. A developer-facing queried
+   * convention URI is transposed by `emit` before this envelope is created.
+   */
   topic: string;
   /** Optional opaque payload; receiving handlers validate their local convention. */
   payload?: unknown;
@@ -95,7 +98,7 @@ export interface IncUnsubscribeMessage extends IncMessage {
  */
 export interface IncEventMessage extends IncMessage {
   type: 'inc.event';
-  /** Opaque topic the event was emitted on. */
+  /** Stable opaque topic emitted by the shell after any client-side transposition. */
   topic: string;
   /** Identity of the sending napplet. */
   sender: string;
