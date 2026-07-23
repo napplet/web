@@ -217,8 +217,7 @@ const RESPONDERS: Record<string, Responder> = {
         {
           dTag: 'reference-handler',
           actions: ['open'],
-          protocols: ['NAP-4'],
-          contracts: [{ action: 'open', protocol: 'NAP-4', eventKinds: [1] }],
+          conventions: ['napplet:note/open'],
           isDefault: true,
         },
       ],
