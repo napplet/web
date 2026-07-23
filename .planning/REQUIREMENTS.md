@@ -140,7 +140,7 @@ external source.
 
 ## Ad-hoc Convention Requirements
 
-- [ ] **CONV-PKG-01**: `@napplet/core` and `@napplet/nap/intent` expose only
+- [x] **CONV-PKG-01**: `@napplet/core` and `@napplet/nap/intent` expose only
   current NAP-INTENT `convention` / `conventions` fields; active public types,
   exports, shims, tests, and examples contain no numbered-protocol or
   non-spec `IntentContract` / `contracts` compatibility surface.

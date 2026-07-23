@@ -885,11 +885,11 @@ opens the PR. Runtime-injection work supersedes v0.33 NAP-SHELL artifacts.
   5. Historical changelogs and archived planning retain semantic history, while all current author-facing docs and code are free of numbered-NAP contract guidance.
   6. Changesets cover every package with shipped output changes, and build, type-check, unit tests, docs/link checks, and the AI-slop gate pass.
 
-**Plans:** 1/12 plans executed
+**Plans:** 2/12 plans executed
 
 Plans:
 
-- [ ] 161-01-PLAN.md — Migrate core and NAP-INTENT to convention fields
+- [x] 161-01-PLAN.md — Migrate core and NAP-INTENT to convention fields
 - [ ] 161-02-PLAN.md — Enforce exact advisory INC convention topics
 - [ ] 161-03-PLAN.md — Emit convention-only Vite archetype metadata
 - [ ] 161-04-PLAN.md — Migrate CLI archetype inputs and output
