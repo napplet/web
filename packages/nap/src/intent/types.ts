@@ -7,18 +7,17 @@
 /**
  * @napplet/nap/intent -- Archetype intent dispatcher message types for the JSON envelope wire protocol.
  *
- * NAP-INTENT lets a napplet invoke *another* napplet by its archetype (a shared
- * role name such as `note`, `profile`, `emoji-list`) without addressing it
- * directly. A napplet describes the role, action, and payload; the shell resolves
- * the role to an installed napplet (honoring the user's default-handler
- * preference), creates or focuses the window, and delivers the payload using its
- * named convention. NAP-INTENT standardizes the envelope (routing + default
- * handling + window lifecycle), not the payload — `convention` (an opaque payload
- * shape identifier) and `archetype` (the routing role) are orthogonal (N:M).
+ * NAP-INTENT lets a napplet invoke another napplet through an authoritative
+ * `napplet:<archetype>/<intent>[...?params]` URI. The binding derives the
+ * archetype, action, and stable queryless convention identity before asking the
+ * runtime to accept responsibility for delivery. Query parameters are invocation
+ * payload sugar only; target delivery is a later carrier-neutral push with
+ * runtime-attested sender provenance. Runtime lifecycle policy is not exposed by
+ * this envelope.
  *
  * Defines the message types exchanged between napplet and shell:
  * - Napplet -> Shell: invoke, available, handlers
- * - Shell -> Napplet: invoke.result, available.result, handlers.result, changed
+ * - Shell -> Napplet: invoke.result, available.result, handlers.result, changed, deliver
  *
  * All types form a discriminated union on the `type` field.
  */
