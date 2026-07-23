@@ -122,7 +122,7 @@ napplet paja [--config <file>] [-- <args>]
 ### `init`
 
 Creates `.napplet/config.json` unless it already exists. Use `--force` to overwrite it. For named
-deployments, the NIP-5A d-tag must match `^[a-z0-9-]{1,13}$` and cannot end in `-`. Archetype values
+deployments, the NIP-5A d-tag must match `^[a-z0-9-]+$` and cannot end in `-`. Archetype values
 use canonical `slug:NAP-N` contracts; there is no generic `type` manifest tag.
 
 In an interactive terminal, `napplet init` guides setup for source directory, root-vs-named target,
@@ -324,7 +324,7 @@ napplet deploy --all --name feed --sec nsec1...
 Notes for workspace mode:
 
 - `--name` and `config.named` filter discovered folder names.
-- Folder names used as `d` tags must match `^[a-z0-9-]{1,13}$` and must not end in `-`.
+- Folder names used as `d` tags must match `^[a-z0-9-]+$` and must not end in `-`.
 - Discovery skips `.git`, `.napplet`, `.turbo`, `node_modules`, and `coverage`.
 - `--root` is usually the wrong target for `--all` because the root site is singular per pubkey.
 

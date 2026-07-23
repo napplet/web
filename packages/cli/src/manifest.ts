@@ -14,7 +14,7 @@ import {
 } from "./types.ts";
 
 /** NAMED_SITE_D_TAG_PATTERN constant used by manifest construction helpers. */
-export const NAMED_SITE_D_TAG_PATTERN = /^[a-z0-9-]{1,13}$/;
+export const NAMED_SITE_D_TAG_PATTERN = /^[a-z0-9-]+$/;
 
 /** ManifestBuildOptions shape used by manifest construction helpers. */
 export interface ManifestBuildOptions {
@@ -207,7 +207,7 @@ export function siteAddress(ref: SnapshotSourceRef): string {
 export function normalizeDTag(value: string | undefined): string {
   const dTag = value?.trim() ?? "";
   if (!NAMED_SITE_D_TAG_PATTERN.test(dTag) || dTag.endsWith("-")) {
-    throw new Error("Named napplet d tag must match ^[a-z0-9-]{1,13}$ and not end with '-'");
+    throw new Error("Named napplet d tag must match ^[a-z0-9-]+$ and not end with '-'");
   }
   return dTag;
 }

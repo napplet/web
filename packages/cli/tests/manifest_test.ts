@@ -111,6 +111,20 @@ Deno.test("createSiteManifestTemplate rejects invalid named d tags", async () =>
   assert(message.includes("Named napplet d tag"));
 });
 
+Deno.test("createSiteManifestTemplate accepts named d tags longer than 13 characters", async () => {
+  const dTag = "my-very-long-napplet-name";
+  const named = await createSiteManifestTemplate(
+    {
+      candidate: { name: dTag, dir: `/tmp/${dTag}`, indexHtml: `/tmp/${dTag}/index.html` },
+      target: "named",
+      dTag,
+      kind: NAPPLET_KIND_NAMED,
+    },
+    files,
+  );
+  assertEquals(named.tags[0], ["d", dTag]);
+});
+
 Deno.test("createSnapshotManifestTemplate copies source paths and exact aggregate", async () => {
   const source = await createSiteManifestTemplate(
     {

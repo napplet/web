@@ -172,7 +172,7 @@ export function normalizeNamedDTags(values: readonly string[]): string[] {
   for (const value of normalized) {
     if (!NAMED_SITE_D_TAG_PATTERN.test(value) || value.endsWith("-")) {
       throw new Error(
-        `Named napplet d tag "${value}" must match ^[a-z0-9-]{1,13}$ and not end with '-'.`,
+        `Named napplet d tag "${value}" must match ^[a-z0-9-]+$ and not end with '-'.`,
       );
     }
   }
