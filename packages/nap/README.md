@@ -103,8 +103,36 @@ payload schema supplied by this package.
 NAP-INC topics use the same opaque-string boundary. Use the current advisory
 open names such as `napplet:note/open`, `napplet:profile/open`, and
 `napplet:dm/open` when they fit the receiving napplet's documented local choice.
-Topic delivery uses the complete string and does not add query, wildcard, prefix,
-or canonicalization behavior.
+
+### NAP-INC convention URI emission
+
+This non-normative package guide follows [NAP-INC draft PR #89 at its exact
+head](https://github.com/napplet/naps/blob/34ec29fc4039384a83dbd6b476f83c4fa0d038e6/naps/NAP-INC.md).
+`emit(topic, payload?)` accepts a stable topic and optional opaque payload. It
+also accepts a queried `napplet:<archetype>/<intent>` convention URI as
+developer-facing shorthand:
+
+```ts
+import { emit, on } from '@napplet/nap/inc';
+
+emit('napplet:profile/open?pubkey=abc123');
+// -> { type: 'inc.emit', topic: 'napplet:profile/open', payload: { pubkey: 'abc123' } }
+
+on('napplet:profile/open', (payload) => {
+  console.log(payload);
+});
+```
+
+The runtime preprocesses that query before routing: it percent-decodes shallow
+text pairs (`+` remains a literal plus) and emits the queryless stable topic.
+Fragments, malformed percent encoding, repeated decoded names, and a query with
+an explicit payload throw synchronously before emission. Use a queryless topic
+with the explicit payload argument for structured or non-text data.
+
+This rule applies only to outbound NAP-INC `emit`. NAP-INTENT and manifest
+conventions remain opaque, while subscriptions and shell delivery keep exact
+complete-string routing with no query, wildcard, prefix, or canonicalization
+matching.
 
 ## Subpath Patterns
 

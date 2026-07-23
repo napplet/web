@@ -337,7 +337,7 @@ window.napplet = {
     query(filters): Promise<RelayEventResult[]>;
   },
   inc: {
-    emit(topic, extraTags?, content?): void;
+    emit(topic, payload?): void;
     on(topic, callback): { close(): void };
   },
   storage: {
@@ -435,13 +435,34 @@ Relay operations through the shell's relay pool via JSON envelope (relay.subscri
 Inter-napplet communication between napplets via the shell. Topics are opaque
 strings, so delivery uses the complete value supplied by the sender and
 subscriber. A topic such as `napplet:profile/open` names a local convention; the
-shim does not define its payload schema or add query, wildcard, prefix, or
+shim does not define its payload schema or add wildcard, prefix, or
 canonicalization behavior.
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| `emit(topic, extraTags?, content?)` | `void` | Send an `inc.emit` JSON envelope to the shell for delivery to subscribers using the same topic string. |
+| `emit(topic, payload?)` | `void` | Send an `inc.emit` JSON envelope to the shell for delivery to subscribers using the same topic string. |
 | `on(topic, callback)` | `{ close(): void }` | Subscribe to `inc.event` JSON envelopes on a topic. Callback receives `(payload, event)`. |
+
+This non-normative shim reference follows [NAP-INC draft PR #89 at its exact
+head](https://github.com/napplet/naps/blob/34ec29fc4039384a83dbd6b476f83c4fa0d038e6/naps/NAP-INC.md).
+The injected runtime preprocesses a queried convention URI only when it is sent
+through `emit`:
+
+```ts
+window.napplet.inc.emit('napplet:profile/open?pubkey=abc123');
+// -> { type: 'inc.emit', topic: 'napplet:profile/open', payload: { pubkey: 'abc123' } }
+
+window.napplet.inc.on('napplet:profile/open', (payload) => {
+  console.log(payload);
+});
+```
+
+Query values are shallow percent-decoded text (`+` remains a literal plus) before
+exact routing. Fragments, malformed percent encoding, repeated decoded names,
+and a query combined with an explicit payload throw before postMessage. Use a
+queryless topic plus the explicit payload argument for structured or non-text
+data. NAP-INTENT and manifest conventions remain opaque; subscriptions and shell
+routing never parse query text or add wildcard, prefix, or normalization matching.
 
 ### `window.napplet.storage`
 

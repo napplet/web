@@ -50,7 +50,7 @@ if (!published.ok || !published.event) throw new Error(published.error ?? 'publi
 await common.react(published.event.id, '+');
 
 // Inter-napplet messaging. The payload is this application's local choice.
-inc.emit('napplet:note/open', [], JSON.stringify({ targetId: 'local-note-id' }));
+inc.emit('napplet:note/open', { targetId: 'local-note-id' });
 const incSub = inc.on('napplet:note/open', (payload) => {
   console.log('Local note-open payload:', payload);
 });
@@ -165,13 +165,35 @@ Inter-napplet communication between napplets. Mirrors `window.napplet.inc`.
 Messages are sent as JSON envelope objects (`{ type: 'inc.emit', topic, payload }`) and received as
 (`{ type: 'inc.event', topic, payload, sender }`).
 Topics are opaque strings: a sender and subscriber use the same complete value.
-The package does not prescribe convention payload schemas, query handling,
-wildcards, prefixes, or canonicalization.
+The package does not prescribe convention payload schemas, wildcard, prefix, or
+canonicalization behavior.
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| `emit(topic, extraTags?, content?)` | `void` | Broadcast an INC event to other napplets via the shell |
+| `emit(topic, payload?)` | `void` | Broadcast an INC event to other napplets via the shell |
 | `on(topic, callback)` | `{ close(): void }` | Subscribe to INC events on a topic |
+
+This non-normative SDK reference follows [NAP-INC draft PR #89 at its exact
+head](https://github.com/napplet/naps/blob/34ec29fc4039384a83dbd6b476f83c4fa0d038e6/naps/NAP-INC.md).
+For outbound INC only, a queried convention URI is runtime shorthand for a
+stable topic plus a shallow text payload:
+
+```ts
+inc.emit('napplet:profile/open?pubkey=abc123');
+// -> { type: 'inc.emit', topic: 'napplet:profile/open', payload: { pubkey: 'abc123' } }
+
+inc.on('napplet:profile/open', (payload) => {
+  console.log(payload);
+});
+```
+
+The runtime percent-decodes the query text (`+` remains `+`) before exact topic
+routing. A fragment, malformed percent encoding, repeated decoded name, or a
+query paired with an explicit payload throws before emission. Pass structured or
+non-text data through `emit`'s explicit payload with a queryless topic.
+NAP-INTENT and manifest convention strings stay opaque; subscriptions and shell
+routing do not parse queries or perform wildcard, prefix, or normalization
+matching.
 
 Deprecated IFC compatibility exports are available as migration aliases:
 `ifc`, `ifcEmit`, `ifcOn`, `IFC_DOMAIN`, `installIfcShim`, and the `Ifc*`
