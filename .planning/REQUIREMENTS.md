@@ -145,7 +145,7 @@ external source.
   exports, shims, tests, and examples contain no numbered-protocol or
   non-spec `IntentContract` / `contracts` compatibility surface.
 
-- [ ] **CONV-PKG-02**: Vite archetype metadata accepts opaque convention
+- [x] **CONV-PKG-02**: Vite archetype metadata accepts opaque convention
   strings and emits exactly `["archetype", "<slug>", "<convention>"]`,
   rejecting numbered `NAP-N` identifiers and omitting non-spec `kind:<n>`
   constraints.
