@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 2
+open_count: 3
 waived_count: 0
 fixed_count: 0
-total_count: 2
-last_updated: 2026-07-23T13:48:43.296Z
+total_count: 3
+last_updated: 2026-07-23T14:10:44.449Z
 ---
 
 # Broken Windows Ledger
@@ -17,6 +17,7 @@ last_updated: 2026-07-23T13:48:43.296Z
 |----|-------|------|------|------|-------------|--------|--------|-------------|-------------|
 | 1 | 161 | stub | packages/nap/src/intent/index.ts | 75 | Pre-existing no-op dispatch registration placeholder; it was not altered by this plan and does not affect the shim's request/result forwarding path. | open |  | 2026-07-23T13:38:39.872Z |  |
 | 2 | 161 | deviation | packages/sdk/src/nap-types.ts | 351 | Full build/type-check blocked by stale IntentContract import outside 161-02 scope. | open |  | 2026-07-23T13:48:43.296Z |  |
+| 3 | 161 | deviation | packages/conformance/src/validators/envelope.test.ts | 86 | Corrected a malformed-request test assertion to match the established validator error shape. | open |  | 2026-07-23T14:10:44.449Z |  |
 
 ````json
 [
@@ -42,6 +43,18 @@ last_updated: 2026-07-23T13:48:43.296Z
     "status": "open",
     "reason": "",
     "recorded_at": "2026-07-23T13:48:43.296Z",
+    "resolved_at": null
+  },
+  {
+    "id": 3,
+    "kind": "deviation",
+    "phase": "161",
+    "file": "packages/conformance/src/validators/envelope.test.ts",
+    "line": 86,
+    "description": "Corrected a malformed-request test assertion to match the established validator error shape.",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-07-23T14:10:44.449Z",
     "resolved_at": null
   }
 ]
