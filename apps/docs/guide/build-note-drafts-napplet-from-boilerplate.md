@@ -19,8 +19,10 @@ Protocol references used here:
   manifest and aggregate-hash model
 - [NAPs](https://github.com/napplet/naps), the capability-domain specs for
   `identity`, `storage`, and `outbox`
-- [NAP-INC at PR #89's pinned head](https://github.com/napplet/naps/blob/34ec29fc4039384a83dbd6b476f83c4fa0d038e6/naps/NAP-INC.md), the narrow
-  convention-URI rule for `emit`
+- [NAP-INC PR #89 at `4593ce9`](https://github.com/napplet/naps/pull/89/commits/4593ce9e301ce098fd3dad64206fcd6f144fa7af),
+  [governance/web PR #90 at `896c32c`](https://github.com/napplet/naps/pull/90/commits/896c32c92deee68dc4d10fc1132b62df20cccb6f),
+  and [NAP-INTENT PR #91 at `a718915`](https://github.com/napplet/naps/pull/91/commits/a718915ddefa2f03a0126579601f59d8bd86f7c4),
+  the exact draft heads adopted for convention URI and intent semantics
 
 ## 1. Scaffold the starter
 
@@ -40,13 +42,17 @@ this tutorial, treat them as a substrate, not as app requirements. The Note
 Drafts app does not need direct relay queries, notifications, config settings,
 resource loading, or a napplet-side shell probe.
 
-The CLI deploys the opaque convention as the tested manifest tag
-`['archetype', 'note', 'napplet:note/open']`; the convention itself does not
-declare payload semantics. If a future feature adds INC, only
-`emit(topic, payload?)` may receive a queried convention URI. The runtime turns
-that input into a stable queryless topic plus a shallow decoded text payload,
-then subscribers use the stable topic with exact routing. NAP-INTENT and
-manifest convention values stay opaque; defer to the pinned NAP-INC draft above.
+This tutorial's queryless contract emits
+`['archetype', 'note', 'napplet:note/open']`. Contracts may append configured
+same-tag `kind:<number>` discovery fields, but this app declares none. The
+runtime never infers a kind or payload schema from payload content.
+
+If a future feature adds INC `emit` or intent `invoke/open`, those two bindings
+may transpose a queried URI to its stable queryless identity plus a shallow text
+payload. Subscriptions, manifest discovery, and handler resolution still use
+exact equality on the queryless identity. Intent acceptance is not completed
+handling: target `onDelivery` is a later source-independent, runtime-attested
+delivery with no public INC dependency or delivery identifier.
 
 ## 2. Tighten package metadata
 

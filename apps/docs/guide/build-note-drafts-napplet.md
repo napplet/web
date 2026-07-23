@@ -23,8 +23,10 @@ Protocol references used here:
   manifest and aggregate-hash model
 - [NAPs](https://github.com/napplet/naps), the capability-domain specs for
   `identity`, `storage`, and `outbox`
-- [NAP-INC at PR #89's pinned head](https://github.com/napplet/naps/blob/34ec29fc4039384a83dbd6b476f83c4fa0d038e6/naps/NAP-INC.md), the narrow
-  convention-URI rule for `emit`
+- [NAP-INC PR #89 at `4593ce9`](https://github.com/napplet/naps/pull/89/commits/4593ce9e301ce098fd3dad64206fcd6f144fa7af),
+  [governance/web PR #90 at `896c32c`](https://github.com/napplet/naps/pull/90/commits/896c32c92deee68dc4d10fc1132b62df20cccb6f),
+  and [NAP-INTENT PR #91 at `a718915`](https://github.com/napplet/naps/pull/91/commits/a718915ddefa2f03a0126579601f59d8bd86f7c4),
+  the exact draft heads adopted for convention URI and intent semantics
 
 ## 1. Create the project manually and initialize deployment
 
@@ -75,13 +77,19 @@ Replace the generated `package.json` with this:
 What this teaches: napplet application code uses `@napplet/sdk`; local runtime
 testing uses Kehto/Paja; conformance tests the built artifact, not source files.
 
-The CLI treats `napplet:note/open` as opaque convention metadata and deploys the
-tested three-element manifest tag `['archetype', 'note', 'napplet:note/open']`.
-It does not infer a payload schema from that string. If this app later uses INC,
-only `emit(topic, payload?)` may accept a queried convention URI; the runtime
-then sends the stable queryless topic with a shallow decoded text payload.
-Subscribers use that stable topic and routing remains exact. NAP-INTENT and
-manifest convention values remain opaque; see the pinned NAP-INC draft above.
+This tutorial declares the queryless convention `napplet:note/open`, so its
+manifest tag is `['archetype', 'note', 'napplet:note/open']`. A contract that
+genuinely serves specific Nostr event kinds may append same-tag `kind:<number>`
+discovery fields through object-form `eventKinds`; this app declares none. The
+runtime never infers a kind or payload schema from payload content.
+
+If the app later uses INC `emit` or intent `invoke/open`, those two bindings may
+accept a queried convention URI and transpose its unique decoded pairs into a
+shallow text payload before sending the stable queryless identity. Subscriptions,
+manifest discovery, and handler resolution still use exact equality on the
+queryless identity. Successful intent invocation means accepted delivery
+responsibility; a later target `onDelivery` is separate, source-independent,
+runtime-attested, and has no public INC dependency or delivery ID.
 
 ## 2. Configure TypeScript and the manifest plugin
 
