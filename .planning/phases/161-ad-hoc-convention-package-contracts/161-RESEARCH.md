@@ -127,6 +127,57 @@ README/skill/guard corrections and release metadata before the final phase gate.
 
 **Installation:** None. This phase needs no new external package. [VERIFIED: repository package inventory]
 
+## Adopted PR #89-#91 Amendment (2026-07-23)
+
+The developer adopted exact heads NAP-INC PR #89
+`4593ce9e301ce098fd3dad64206fcd6f144fa7af`, web projection PR #90
+`896c32c92deee68dc4d10fc1132b62df20cccb6f`, and NAP-INTENT PR #91
+`a718915ddefa2f03a0126579601f59d8bd86f7c4`. The implementation delta is
+catalogued in `161-PR89-91-DELTA.md`; where the earlier research conflicts, this
+amendment controls.
+
+- Share URI syntax/rejection mechanics between INC emit and intent invoke/open,
+  while preserving operation-specific output and exact queryless routing.
+- Restore `IntentContract`/candidate `contracts`, add optional unsigned
+  `eventKinds`, make normalized request identity required, and use a strict
+  accepted/rejected result union.
+- Deliver `IntentDelivery` through no-ID `intent.deliver`/`onDelivery`, retaining
+  all pre-registration deliveries in an internal FIFO. Do not expose capacity,
+  use INC as public transport, or encode window/lifecycle policy.
+- Derive sender from an authenticated endpoint; caller payload cannot choose it.
+- Evolve Vite/CLI object metadata with `eventKinds?: number[]`; serialize
+  same-tag `kind:<number>` fields, preserve template kinds, and add no CLI
+  delimiter or flag.
+- Upgrade conformance carrier validation and the reference shell rather than
+  treating immediate acceptance as target handling.
+
+No package install is required, so the package-legitimacy gate is not triggered.
+
+## PR #89-#91 Multi-Source Coverage Audit
+
+| SOURCE | ID | Feature / requirement | Plan | Status | Notes |
+|---|---|---|---|---|---|
+| GOAL | — | Align all active surfaces to the three adopted heads | 15-26, 10 | COVERED | Code, tooling, conformance, guidance, guard, and release are mapped. |
+| REQ | CONV-PKG-01 | Intent public/runtime/SDK/shim contract | 15-19 | COVERED | URI, result, delivery, FIFO, and carrier independence. |
+| REQ | CONV-PKG-02 | Vite per-contract kinds | 20 | COVERED | Queryless same-tag serialization and hash isolation. |
+| REQ | CONV-PKG-03 | CLI config/template kinds | 21 | COVERED | No delimiter/flag per D-08. |
+| REQ | CONV-PKG-04 | INC normalization and attested sender boundary | 15, 22 | COVERED | Existing exact routing retained. |
+| REQ | CONV-PKG-05 | Conformance, docs, skills, guard | 22-26 | COVERED | Historical summaries/changelogs excluded. |
+| REQ | CONV-PKG-06 | Correct changesets and full release gate | 10, 26 | COVERED | Plan 10 resumes after gap plans. |
+| RESEARCH | — | Shared URI rejection matrix | 15, 17 | COVERED | One internal helper, two adopted operations only. |
+| RESEARCH | — | Acceptance, delivery, endpoint provenance | 16, 17, 19, 22 | COVERED | No handling/window/ID/INC coupling. |
+| RESEARCH | — | Manifest contract discovery and kinds | 16, 20, 21, 22 | COVERED | One tag maps to one contract. |
+| RESEARCH | — | Exhaustive active-surface correction | 23-26 | COVERED | README/docs/tutorial/skills/guard inventory. |
+| CONTEXT | D-01 | NAP-INC query transposition | 15 | COVERED | Updated PR #89 head per D-02. |
+| CONTEXT | D-02 | Adopt exact heads | 15-26, 10 | COVERED | Each plan cites governing heads/decisions. |
+| CONTEXT | D-03 | Shared, narrowly scoped URI normalization | 15, 17 | COVERED | Receive/discovery matching remains exact. |
+| CONTEXT | D-04 | Public contract and acceptance semantics | 16-18 | COVERED | Retired result/lifecycle fields removed. |
+| CONTEXT | D-05 | Lossless pre-registration FIFO delivery | 17, 19 | COVERED | Internal cardinality only; no INC. |
+| CONTEXT | D-06 | Endpoint-attested sender | 16, 17, 22 | COVERED | Caller sender cannot select provenance. |
+| CONTEXT | D-07 | IntentContract and optional event kinds | 16, 20-22 | COVERED | No payload inference. |
+| CONTEXT | D-08 | Object metadata; no CLI syntax invention | 20, 21, 23-25 | COVERED | Config/template only. |
+| CONTEXT | D-09 | Authenticated reference fixture | 22 | COVERED | Acceptance and delivery are separate. |
+
 ## Architecture Patterns
 
 ### System Architecture Diagram

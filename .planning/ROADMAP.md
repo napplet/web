@@ -873,19 +873,19 @@ opens the PR. Runtime-injection work supersedes v0.33 NAP-SHELL artifacts.
 
 ### Phase 161: Ad-hoc Convention Package Contracts
 
-**Goal:** Chase `napplet/naps` commit `6461e4b37c29dc09a20dff35d9515889c4433874` and draft NAP-INC PR #89 head `34ec29fc4039384a83dbd6b476f83c4fa0d038e6` through every active package, CLI, conformance, documentation, and skill surface: numbered NAP protocol identifiers and negotiation disappear; NAP-INTENT exposes opaque `convention`/`conventions`; archetype manifests advertise `napplet:<archetype>/<intent>` conventions without invented constraint fields; and NAP-INC clean-breaks to `emit(topic, payload?)`, transposes convention-URI query text before exact routing, and rejects the draft's ambiguous/malformed forms before emission.
+**Goal:** Align every active package, runtime binding, manifest producer, CLI reader, conformance fixture, document, example, skill, guard, and release artifact with adopted NAP-INC PR #89 head `4593ce9e301ce098fd3dad64206fcd6f144fa7af`, web-projection PR #90 head `896c32c92deee68dc4d10fc1132b62df20cccb6f`, and NAP-INTENT PR #91 head `a718915ddefa2f03a0126579601f59d8bd86f7c4`.
 **Requirements**: CONV-PKG-01, CONV-PKG-02, CONV-PKG-03, CONV-PKG-04, CONV-PKG-05, CONV-PKG-06
-**Depends on:** Nothing (authoritative sources are `napplet/naps@6461e4b` for the numbered-contract removal and draft PR #89 exact head `34ec29f` for NAP-INC transposition)
+**Depends on:** Nothing (the exact adopted draft heads above are the implementation contract)
 **Success Criteria** (what must be TRUE):
 
-  1. `@napplet/core` and `@napplet/nap/intent` expose only the current NAP-INTENT fields: `IntentRequest.convention?`, `IntentCandidate.conventions`, and `IntentResult.convention?`; removed `protocol`, `protocols`, and non-spec `contracts` fields are absent from active public types, exports, shims, tests, and examples.
-  2. Vite-plugin and CLI archetype inputs emit `["archetype", "<slug>", "napplet:<archetype>/<intent>"]` tags, reject numbered `NAP-N` identifiers, and do not emit the old non-spec `kind:<n>` contract extensions.
-  3. Active INC APIs, constants, examples, docs, and skills use `emit(topic, payload?)` and the advisory `napplet:<archetype>/<intent>` namespace. Queried convention URIs transpose to a queryless stable topic plus a shallow percent-decoded text payload with literal `+`; fragments, malformed escapes, decoded duplicate names, and query plus explicit payload reject before emission. Subscription and shell routing remain exact-string only.
-  4. The conformance reference shell and fixtures use `convention`/`conventions` and no active check or example negotiates a numbered protocol.
-  5. Historical changelogs and archived planning retain semantic history, while all current author-facing docs and code are free of numbered-NAP contract guidance.
-  6. Changesets cover every package with shipped output changes, and build, type-check, unit tests, docs/link checks, and the AI-slop gate pass.
+  1. Intent callers use authoritative convention URIs; required normalized wire identity, acceptance-only results, `IntentContract` discovery, and no-ID `onDelivery` are consistent across core, NAP, SDK, and shim.
+  2. Every pre-registration delivery is retained in internal FIFO order; delivery is carrier-neutral, endpoint-attested, target-only, lifecycle-independent, and never requires public INC.
+  3. Vite and CLI object metadata emit queryless per-contract archetype tags with optional same-tag `kind:<number>` fields; no kinds delimiter/flag or payload inference exists.
+  4. Conformance validates the adopted carriers and its reference shell proves an authenticated source, acceptance before separate delivery, and forged sender rejection.
+  5. Every active document, example, skill, and guard teaches the adopted split while historical changelogs and completed summaries retain semantic history.
+  6. Revised changesets cover every shipped package change and the complete build/type/unit/conformance/docs/link/slop/guard/diff chain passes.
 
-**Plans:** 13/14 plans executed
+**Plans:** 13/26 plans executed
 
 Plans:
 
@@ -903,3 +903,15 @@ Plans:
 - [x] 161-12-PLAN.md — Update package-reference documentation
 - [x] 161-13-PLAN.md — Clean-break INC emit and implement convention-URI query transposition
 - [x] 161-14-PLAN.md — Correct shipped query-sugar guidance and guard the clarified boundary
+- [ ] 161-15-PLAN.md — Share the adopted convention-URI normalization primitive
+- [ ] 161-16-PLAN.md — Define the adopted core intent contract and public URI API
+- [ ] 161-17-PLAN.md — Implement NAP intent normalization, acceptance, and FIFO delivery
+- [ ] 161-18-PLAN.md — Propagate intent URI and delivery APIs through NAP and SDK exports
+- [ ] 161-19-PLAN.md — Inject and route onDelivery through the runtime shim
+- [ ] 161-20-PLAN.md — Emit Vite intent contracts with optional event kinds
+- [ ] 161-21-PLAN.md — Preserve CLI config/template event-kind metadata
+- [ ] 161-22-PLAN.md — Validate intent carriers and authenticated reference delivery
+- [ ] 161-23-PLAN.md — Correct root and package README contract guidance
+- [ ] 161-24-PLAN.md — Correct active docs, tutorials, and examples
+- [ ] 161-25-PLAN.md — Correct shipped skill guidance and mirror assertions
+- [ ] 161-26-PLAN.md — Reverse stale guard rules and enforce adopted intent boundaries

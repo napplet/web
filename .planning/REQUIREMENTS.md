@@ -140,34 +140,41 @@ external source.
 
 ## Ad-hoc Convention Requirements
 
-- [x] **CONV-PKG-01**: `@napplet/core` and `@napplet/nap/intent` expose only
-  current NAP-INTENT `convention` / `conventions` fields; active public types,
-  exports, shims, tests, and examples contain no numbered-protocol or
-  non-spec `IntentContract` / `contracts` compatibility surface.
+- [ ] **CONV-PKG-01**: At NAP-INTENT PR #91 head
+  `a718915ddefa2f03a0126579601f59d8bd86f7c4`, `@napplet/core`,
+  `@napplet/nap/intent`, `@napplet/sdk`, and `@napplet/shim` expose the
+  authoritative URI invoke/open APIs, required normalized request identity,
+  `IntentContract`/candidate `contracts`, acceptance-result discriminant, and
+  no-ID carrier-neutral `onDelivery`; `handled`, `windowId`,
+  `behavior.newWindow`, caller-supplied sender, INC coupling, and lifecycle
+  guarantees are absent.
 
-- [x] **CONV-PKG-02**: Vite archetype metadata accepts opaque convention
-  strings and emits exactly `["archetype", "<slug>", "<convention>"]`,
-  rejecting numbered `NAP-N` identifiers and omitting non-spec `kind:<n>`
-  constraints.
+- [ ] **CONV-PKG-02**: Vite archetype metadata accepts object-shaped
+  `{ slug, convention, eventKinds? }`, requires a queryless convention, emits
+  optional same-tag `kind:<number>` discovery fields, preserves path-only
+  aggregate hashing, and never infers kinds from payload.
 
-- [x] **CONV-PKG-03**: CLI config, parsing, prompts, output, and manifest
-  emission use opaque ad-hoc conventions and reject the removed numbered
-  protocol form.
+- [ ] **CONV-PKG-03**: CLI object config and template metadata preserve and
+  emit optional per-contract `eventKinds`; convention-only flags/prompts remain
+  unchanged and no delimiter or kinds flag is invented.
 
-- [x] **CONV-PKG-04**: Active INC constants and examples use the advisory
+- [ ] **CONV-PKG-04**: Active INC constants and examples use the advisory
   `napplet:<archetype>/<intent>` namespace; the clean-break public API is
-  `emit(topic, payload?)`; and draft NAP-INC PR #89 head
-  `34ec29fc4039384a83dbd6b476f83c4fa0d038e6` convention-URI queries transpose
+  `emit(topic, payload?)`; and adopted NAP-INC PR #89 head
+  `4593ce9e301ce098fd3dad64206fcd6f144fa7af` convention-URI queries transpose
   into a shallow text payload before exact routing. Literal plus and percent
   decoding are preserved, fragments/malformed escapes/decoded duplicate
-  names/query-plus-payload reject before emission, and subscriptions/shell
-  matching remain exact with no wildcard or prefix behavior.
+  names/query-plus-payload reject before emission, subscriptions/shell matching
+  remain exact, and runtime sender identity is endpoint-attested.
 
-- [x] **CONV-PKG-05**: Conformance, current author documentation, and shipped
-  skills use the unnumbered convention model; changelogs and archived planning
-  retain their historical meaning.
+- [ ] **CONV-PKG-05**: Conformance, the authenticated reference-shell fixture,
+  every current author document/example, shipped skills, and the active guard
+  match the three adopted heads: intent acceptance precedes independent
+  delivery, metadata is queryless with optional same-tag kinds, delivery has no
+  ID or INC dependency, and changelogs/completed summaries retain history.
 
-- [x] **CONV-PKG-06**: Every changed publishable package has an appropriate
+- [ ] **CONV-PKG-06**: The partially written Phase 161 changesets are revised so
+  every changed publishable package has an appropriate
   changeset, and build, type-check, unit, conformance, docs/link, AI-slop,
   active-surface, and diff gates pass.
 

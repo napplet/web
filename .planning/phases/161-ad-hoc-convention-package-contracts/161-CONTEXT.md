@@ -1,7 +1,7 @@
 # Phase 161: Ad-hoc Convention Package Contracts - Context
 
 **Gathered:** 2026-07-23
-**Status:** Ready for planning
+**Status:** Amended for adopted PR #89-#91 draft heads
 
 <domain>
 ## Phase Boundary
@@ -47,6 +47,39 @@ histories, and archived planning remain historical.
 - Keep NAP-INTENT `convention`/`conventions` and NIP-5A archetype metadata opaque.
   PR #89 does not authorize query parsing in intent discovery, invocation,
   manifest producers, CLI metadata, or shell matching.
+
+### Adopted PR #89-#91 amendment
+- **D-02:** Adopt and pin the proposed contract texts at NAP-INC PR #89 head
+  `4593ce9e301ce098fd3dad64206fcd6f144fa7af`, web-projection PR #90 head
+  `896c32c92deee68dc4d10fc1132b62df20cccb6f`, and NAP-INTENT PR #91 head
+  `a718915ddefa2f03a0126579601f59d8bd86f7c4`. These heads supersede the
+  earlier Phase 161 intent and manifest decisions where they conflict.
+- **D-03:** Share one convention-URI normalizer between the two explicitly
+  adopted developer boundaries: INC `emit(topic, payload?)` and intent
+  `invoke/open(uri, options?)`. Queryless routing, subscriptions, manifest
+  matching, and every other NAP remain exact and unparsed.
+- **D-04:** Restore the adopted public `IntentContract` and candidate
+  `contracts` surface; make URI-derived request identity required; expose
+  acceptance (`ok: true`) separately from eventual delivery. Remove
+  `handled`, `windowId`, `behavior.newWindow`, and every public delivery ID.
+- **D-05:** Add carrier-neutral `intent.deliver` and `onDelivery`. Retain every
+  delivery received before listener registration in internal FIFO order and
+  drain it losslessly when the first handler registers. Queue cardinality is
+  not public contract surface. Delivery must not depend on INC or on a
+  particular source/target window lifecycle.
+- **D-06:** Derive INC and intent delivery senders from the authenticated
+  runtime endpoint. Ignore or reject caller-supplied sender data; never copy it
+  into a delivery.
+- **D-07:** Treat each queryless manifest archetype tag as one
+  `IntentContract { convention, eventKinds? }`; parse same-tag
+  `kind:<number>` fields only as optional unsigned discovery metadata. Never
+  inspect payloads to infer kinds.
+- **D-08:** Add `eventKinds?: number[]` to the existing object-shaped Vite and
+  CLI metadata. Do not invent a kinds delimiter, wizard spelling, or CLI flag;
+  preserve and emit kinds through config and template metadata.
+- **D-09:** Upgrade the reference shell with an explicit authenticated endpoint
+  fixture. Invocation returns an accepted result first; target delivery is a
+  separate no-ID push whose sender comes only from that endpoint fixture.
 
 ### History and coverage
 - Preserve changelog and archived-planning references that describe released
@@ -99,7 +132,9 @@ Concrete convention payload specifications remain absent upstream. PR #89
 defines only generic shallow text query transposition for NAP-INC `emit`; it does
 not define the meaning of `pubkey` or any other convention field. Do not recreate
 the removed NAP-1..5 schemas locally; semantic payload contracts still require
-new upstream convention specifications. NAP-INTENT query behavior remains
-deferred because PR #89 changes NAP-INC only.
+new upstream convention specifications. The former deferral of NAP-INTENT query
+behavior is superseded only by D-02 through D-05 at the adopted PR #91 head;
+payload meaning, lifecycle policy, retry policy, persistence policy, and
+INC-coupled delivery remain deferred.
 
 </deferred>
