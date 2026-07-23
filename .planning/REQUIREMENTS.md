@@ -150,7 +150,7 @@ external source.
   rejecting numbered `NAP-N` identifiers and omitting non-spec `kind:<n>`
   constraints.
 
-- [ ] **CONV-PKG-03**: CLI config, parsing, prompts, output, and manifest
+- [x] **CONV-PKG-03**: CLI config, parsing, prompts, output, and manifest
   emission use opaque ad-hoc conventions and reject the removed numbered
   protocol form.
 

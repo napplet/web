@@ -1,11 +1,9 @@
 # Deferred Items
 
-## 2026-07-23 — Repository-wide SDK build failure
+## 2026-07-23 — AI-slop gate findings outside Plan 161-04 scope
 
-- **Found during:** 161-02 overall verification
-- **Scope:** `packages/sdk/src/nap-types.ts:351`
-- **Issue:** `@napplet/sdk` still imports the removed `IntentContract` export from
-  `@napplet/nap/intent`, so `pnpm build` stops during SDK declaration generation.
-- **Disposition:** Out of scope for 161-02. This plan owns only INC convention
-  constants, type documentation, and boundary smoke coverage; the active SDK
-  migration is owned by a subsequent Phase 161 plan.
+- `packages/core/src/types/global/service-api.ts`: existing 612-line file exceeds the 400-line quality threshold.
+- `packages/core/src/topics.ts`: existing narrative-comment warning.
+- Root `package.json` / `pnpm-lock.yaml`: existing high-severity `js-yaml` dependency advisory.
+
+These files were not modified by Plan 161-04. The plan's CLI convention migration remains verified by its Deno suite and contract scan.
