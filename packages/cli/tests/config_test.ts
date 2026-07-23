@@ -1,6 +1,7 @@
 import {
   defaultConfig,
   initConfig,
+  normalizeConfig,
   parseArchetypeConventions,
   readConfig,
   setSigningKeyReference,
@@ -43,7 +44,11 @@ Deno.test("initConfig persists CLI-owned deploy metadata", async () => {
         name: "note-editor",
         title: "Note Editor",
         description: "Edits long-form notes",
-        archetypes: [{ slug: "note", convention: "napplet:note/open" }],
+        archetypes: [{
+          slug: "note",
+          convention: "napplet:note/open",
+          eventKinds: [1, 30023],
+        }],
       },
     });
     const config = await readConfig(result.path);
@@ -53,7 +58,11 @@ Deno.test("initConfig persists CLI-owned deploy metadata", async () => {
       name: "note-editor",
       title: "Note Editor",
       description: "Edits long-form notes",
-      archetypes: [{ slug: "note", convention: "napplet:note/open" }],
+      archetypes: [{
+        slug: "note",
+        convention: "napplet:note/open",
+        eventKinds: [1, 30023],
+      }],
     });
   });
 });
@@ -78,22 +87,76 @@ Deno.test("readConfig preserves legacy named configs without metadata", async ()
   });
 });
 
-Deno.test("parseArchetypeConventions preserves opaque convention strings and rejects numbered input", () => {
+Deno.test("parseArchetypeConventions accepts stable identities and rejects discovery payloads", () => {
   assertEquals(parseArchetypeConventions([
     "note:napplet:note/open",
     "note:napplet:note/open",
-    "feed:napplet:feed/open?source=following",
+    "feed:napplet:feed/open",
   ]), [
     { slug: "note", convention: "napplet:note/open" },
-    { slug: "feed", convention: "napplet:feed/open?source=following" },
+    { slug: "feed", convention: "napplet:feed/open" },
   ]);
-  let message = "";
-  try {
-    parseArchetypeConventions(["note:NAP-4"]);
-  } catch (error) {
-    message = error instanceof Error ? error.message : String(error);
+
+  for (const value of [
+    "note:NAP-4",
+    "feed:napplet:feed/open?source=following",
+    "feed:napplet:feed/open#fragment",
+    "feed:napplet:profile/open",
+  ]) {
+    let message = "";
+    try {
+      parseArchetypeConventions([value]);
+    } catch (error) {
+      message = error instanceof Error ? error.message : String(error);
+    }
+    assert(message.includes("napplet:<archetype>/<intent>"));
   }
-  assert(message.includes("napplet:<archetype>/<intent>"));
+});
+
+Deno.test("normalizeConfig accepts only unsigned integer contract event kinds", () => {
+  const normalized = normalizeConfig({
+    version: 1,
+    metadata: {
+      archetypes: [
+        { slug: "note", convention: "napplet:note/open" },
+        { slug: "article", convention: "napplet:article/open", eventKinds: [] },
+        {
+          slug: "profile",
+          convention: "napplet:profile/open",
+          eventKinds: [0, 30023],
+        },
+      ],
+    },
+  });
+
+  assertEquals(normalized.metadata?.archetypes, [
+    { slug: "note", convention: "napplet:note/open" },
+    { slug: "article", convention: "napplet:article/open", eventKinds: [] },
+    {
+      slug: "profile",
+      convention: "napplet:profile/open",
+      eventKinds: [0, 30023],
+    },
+  ]);
+
+  for (const eventKinds of [[-1], [1.5], [Number.NaN], ["1"], "kind:1"]) {
+    let message = "";
+    try {
+      normalizeConfig({
+        version: 1,
+        metadata: {
+          archetypes: [{
+            slug: "note",
+            convention: "napplet:note/open",
+            eventKinds,
+          }],
+        },
+      });
+    } catch (error) {
+      message = error instanceof Error ? error.message : String(error);
+    }
+    assert(message.includes("eventKinds"));
+  }
 });
 
 Deno.test("initConfig can create a root-target config", async () => {
