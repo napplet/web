@@ -55,14 +55,23 @@ const keys = await window.napplet.storage.keys();
 Inter-napplet communication — topic-based publish/subscribe between napplets.
 
 ```ts
-// One napplet broadcasts:
-window.napplet.inc.emit('profile:open', [['p', pubkey]]);
+// One napplet may use a convention URI only when emitting:
+window.napplet.inc.emit('napplet:profile/open?pubkey=abc123');
 
-// Another napplet listens:
-const sub = window.napplet.inc.on('profile:open', (payload, event) => {
-  const target = event.tags.find((t) => t[0] === 'p')?.[1];
+// The runtime sends topic `napplet:profile/open` with { pubkey: 'abc123' }.
+// Another napplet subscribes to that exact stable topic:
+const sub = window.napplet.inc.on('napplet:profile/open', (payload, sender) => {
+  const target = (payload as { pubkey?: string }).pubkey;
 });
 ```
+
+Only `emit(topic, payload?)` accepts the queried convention URI. It transposes
+unique decoded query pairs into a shallow text payload before routing; consumers
+subscribe to the stable queryless topic and routing then uses exact equality.
+Routing has no query-aware, wildcard, or prefix matching. Use an explicit
+payload with a queryless topic for structured data, and keep NAP-INTENT and
+manifest convention values opaque. See [NAP-INC at PR #89's pinned head](https://github.com/napplet/naps/blob/34ec29fc4039384a83dbd6b476f83c4fa0d038e6/naps/NAP-INC.md)
+for the normative convention-URI rules.
 
 ### keys
 

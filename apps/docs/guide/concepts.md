@@ -44,6 +44,24 @@ dispatcher routes inbound messages to the right handler by domain prefix via
 
 See the [NAP domain reference](/naps/) for the full list.
 
+## Conventions and INC topics
+
+Archetype metadata and NAP-INTENT advertise opaque convention strings such as
+`napplet:note/open`; they do not negotiate a version or define a payload schema.
+The meaning of an explicit payload remains local to the communicating
+napplets.
+
+NAP-INC has one narrow convenience at its outgoing `emit(topic, payload?)`
+boundary. It accepts a queried convention URI such as
+`napplet:profile/open?pubkey=abc123`, decodes its unique query pairs into a
+shallow text payload, and sends the stable topic `napplet:profile/open`.
+Consumers subscribe to that stable queryless topic, and shell delivery remains
+an exact topic match afterward; this is not query-aware, wildcard, or prefix
+matching. Structured data uses an explicit payload with a queryless topic.
+
+This is a non-normative orientation. For the rejection boundary and authoritative
+wire example, see [NAP-INC at PR #89's pinned head](https://github.com/napplet/naps/blob/34ec29fc4039384a83dbd6b476f83c4fa0d038e6/naps/NAP-INC.md).
+
 ## The shell
 
 The **shell** is the trusted host application. It brokers signing — to a remote

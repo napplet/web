@@ -54,6 +54,13 @@ are negotiated declaratively via manifest `requires` tags and queried at runtime
 with `window.napplet?.domain`. Read the full
 [NIP-5D explanation](./nip-5d).
 
+Archetype roles use opaque conventions such as `napplet:note/open`. A queried
+convention URI is only NAP-INC `emit` input: the runtime sends its stable
+queryless topic plus a shallow text payload, then routing stays exact. Read the
+[pinned NAP-INC draft](https://github.com/napplet/naps/blob/34ec29fc4039384a83dbd6b476f83c4fa0d038e6/naps/NAP-INC.md)
+for that non-generic exception; intent and manifest convention values remain
+opaque.
+
 ## A bigger pool of builders
 
 Because the hard, security-sensitive Nostr machinery — relay pools, NIP-46

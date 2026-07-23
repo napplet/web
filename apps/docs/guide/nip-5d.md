@@ -108,6 +108,22 @@ This is what makes the protocol modular: NAP contracts live in the
 [NAPs track](https://github.com/napplet/naps); see the
 [NAP domain reference](/naps/) for the domains this SDK ships.
 
+## Convention metadata and INC emission
+
+Archetype manifest values and NAP-INTENT conventions are opaque strings, for
+example `napplet:note/open`; neither this guide nor the runtime assigns them a
+payload schema. NAP-INC separately permits a developer to call
+`emit('napplet:profile/open?pubkey=abc123')`. At that outgoing boundary, the
+runtime transposes the query into a shallow decoded text payload and emits the
+stable topic `napplet:profile/open`.
+
+Subscriptions and delivered events use that stable queryless topic with exact
+string routing. The emit-time convenience does not create query-aware,
+normalized, wildcard, or prefix matching, and structured data belongs in an
+explicit payload with a queryless topic. This is non-normative guidance; defer
+to [NAP-INC at PR #89's exact draft head](https://github.com/napplet/naps/blob/34ec29fc4039384a83dbd6b476f83c4fa0d038e6/naps/NAP-INC.md)
+for the full boundary and rejection rules.
+
 ## Security model
 
 - Napplets are **untrusted**; the shell is **trusted**; the **browser** enforces

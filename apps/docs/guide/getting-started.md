@@ -44,14 +44,18 @@ napplet init
 ```
 
 The wizard writes `.napplet/config.json` with the named-manifest d-tag, title,
-optional description, canonical `slug:NAP-N` archetype contracts, relays, and
+optional description, opaque `slug:convention` archetype metadata, relays, and
 Blossom servers. Automation can provide the same values explicitly:
 
 ```bash
 napplet init --name my-napplet --title "My Napplet" \
-  --archetype note:NAP-4 \
+  --archetype note:napplet:note/open \
   --relay wss://relay.example --server https://blossom.example
 ```
+
+The CLI validates the documented `slug:convention` shape, then deploys the
+convention string as opaque archetype metadata. It does not define or parse the
+meaning of that convention's payload.
 
 ## 4. Install agent skills
 
