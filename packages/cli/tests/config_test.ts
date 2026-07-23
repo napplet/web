@@ -1,7 +1,7 @@
 import {
   defaultConfig,
   initConfig,
-  parseArchetypeContracts,
+  parseArchetypeConventions,
   readConfig,
   setSigningKeyReference,
   setSigningRemote,
@@ -43,7 +43,7 @@ Deno.test("initConfig persists CLI-owned deploy metadata", async () => {
         name: "note-editor",
         title: "Note Editor",
         description: "Edits long-form notes",
-        archetypes: [{ slug: "note", protocol: "NAP-4", eventKinds: [1, 30023] }],
+        archetypes: [{ slug: "note", convention: "napplet:note/open" }],
       },
     });
     const config = await readConfig(result.path);
@@ -53,7 +53,7 @@ Deno.test("initConfig persists CLI-owned deploy metadata", async () => {
       name: "note-editor",
       title: "Note Editor",
       description: "Edits long-form notes",
-      archetypes: [{ slug: "note", protocol: "NAP-4", eventKinds: [1, 30023] }],
+      archetypes: [{ slug: "note", convention: "napplet:note/open" }],
     });
   });
 });
@@ -78,18 +78,22 @@ Deno.test("readConfig preserves legacy named configs without metadata", async ()
   });
 });
 
-Deno.test("parseArchetypeContracts accepts canonical contracts and rejects invented types", () => {
-  assertEquals(parseArchetypeContracts(["note:NAP-4", "note:NAP-4", "feed:NAP-5"]), [
-    { slug: "note", protocol: "NAP-4", eventKinds: undefined },
-    { slug: "feed", protocol: "NAP-5", eventKinds: undefined },
+Deno.test("parseArchetypeConventions preserves opaque convention strings and rejects numbered input", () => {
+  assertEquals(parseArchetypeConventions([
+    "note:napplet:note/open",
+    "note:napplet:note/open",
+    "feed:napplet:feed/open?source=following",
+  ]), [
+    { slug: "note", convention: "napplet:note/open" },
+    { slug: "feed", convention: "napplet:feed/open?source=following" },
   ]);
   let message = "";
   try {
-    parseArchetypeContracts(["note:custom-type"]);
+    parseArchetypeConventions(["note:NAP-4"]);
   } catch (error) {
     message = error instanceof Error ? error.message : String(error);
   }
-  assert(message.includes("canonical NAP-N"));
+  assert(message.includes("napplet:<archetype>/<intent>"));
 });
 
 Deno.test("initConfig can create a root-target config", async () => {
