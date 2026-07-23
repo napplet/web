@@ -114,6 +114,17 @@ test('allows legacy literals only in dedicated Vite and CLI rejection tests', as
   assert.deepEqual(violations, []);
 });
 
+test('allows the intentional removed IntentContract type assertion', async () => {
+  const violations = await scanFixture(async (root) => {
+    await writeFixture(root, 'packages/nap/src/intent/shim.test.ts', `
+      // @ts-expect-error IntentContract is intentionally removed from the NAP intent barrel.
+      import type { IntentContract } from './index.js';
+    `);
+  });
+
+  assert.deepEqual(violations, []);
+});
+
 test('rejects obsolete INC convention-query denial guidance in active authoring prose', async () => {
   const violations = await scanFixture(async (root) => {
     await writeFixture(root, 'packages/skills/skills/build-napplet/SKILL.md', `

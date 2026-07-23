@@ -15,12 +15,16 @@ const REJECTION_TEST_PATHS = new Set([
   'packages/cli/tests/config_test.ts',
   'packages/cli/tests/manifest_test.ts',
 ]);
-const REJECTION_ASSERTION = /\b(?:assertThrows|toThrow|throws)\b/;
+const REJECTION_ASSERTION = /\b(?:assertThrows|toThrow|throws|catch)\b/;
+const REMOVED_INTENT_TYPE_TEST_PATHS = new Set([
+  'packages/nap/src/intent/shim.test.ts',
+]);
 const RETIRED_INTENT_PATTERN = /\bIntentContract\b|\b(?:protocols|contracts)\??\s*:/g;
 const RETIRED_PROTOCOL_FIELD_PATTERN = /\bprotocol\??\s*:/g;
 const NUMBERED_CONVENTION_PATTERN = /\bNAP-\d+\b/g;
 const SLUG_NUMBER_PATTERN = /\b[a-z][a-z0-9-]*:NAP-\d+\b/g;
 const ARCHETYPE_KIND_PATTERN = /\bkind:\d+\b/g;
+const INC_QUERY_DENIAL_PATTERN = /\b(?:convention\s+quer(?:y|ies)\s+(?:are|remain)\s+(?:forbidden|unresolved|unsupported)|(?:do not|does not)\s+(?:add|introduce|specify|use|allow|support|prescribe)[^.\n]{0,120}\bquery(?:\s*,\s*(?:prefix|wildcard|canonicalization))?|(?:query|encoding\/matching)\s+(?:\w+\s+){0,6}unresolved|web#183)\b/gi;
 
 /**
  * Recursively collects text files below an active root without following links.
@@ -59,6 +63,19 @@ function isDedicatedRejectionTest(filePath, contents) {
 }
 
 /**
+ * Leaves the intentional type-level assertion for the removed IntentContract
+ * export outside the active authoring guidance scan.
+ *
+ * @param {string} filePath - Repository-relative POSIX path.
+ * @param {string} contents - Entire test file.
+ * @returns {boolean} Whether the file proves the retired type stays absent.
+ */
+function isRemovedIntentTypeTest(filePath, contents) {
+  return REMOVED_INTENT_TYPE_TEST_PATHS.has(filePath)
+    && contents.includes('@ts-expect-error IntentContract is intentionally removed');
+}
+
+/**
  * Limits the retired singular `protocol` field check to intent contracts so
  * generic protocol properties (such as URLs or WebRTC) stay outside this guard.
  *
@@ -67,6 +84,19 @@ function isDedicatedRejectionTest(filePath, contents) {
  */
 function isIntentContractPath(filePath) {
   return filePath.includes('/intent/') || filePath.endsWith('/intent.ts');
+}
+
+/**
+ * Limits the superseded query-denial guidance check to active Markdown that
+ * teaches INC or napplet conventions, excluding source APIs and history.
+ *
+ * @param {string} filePath - Repository-relative POSIX path.
+ * @param {string} contents - Entire Markdown file.
+ * @returns {boolean} Whether the file is active INC authoring guidance.
+ */
+function isActiveIncGuidance(filePath, contents) {
+  return filePath.endsWith('.md')
+    && (/\b(?:NAP-)?INC\b/i.test(contents) || /\bnapplet:[^\s`'"\])}]+/i.test(contents));
 }
 
 /**
@@ -138,7 +168,7 @@ export async function scanConventionContracts(root) {
       if (error && typeof error === 'object' && error.code === 'ENOENT') continue;
       throw error;
     }
-    if (isDedicatedRejectionTest(filePath, contents)) continue;
+    if (isDedicatedRejectionTest(filePath, contents) || isRemovedIntentTypeTest(filePath, contents)) continue;
 
     addMatches(violations, filePath, contents, 'intent-contract', RETIRED_INTENT_PATTERN);
     if (isIntentContractPath(filePath)) {
@@ -148,6 +178,9 @@ export async function scanConventionContracts(root) {
     addMatches(violations, filePath, contents, 'slug-number-example', SLUG_NUMBER_PATTERN);
     if (/\barchetype\b/i.test(contents)) {
       addMatches(violations, filePath, contents, 'archetype-kind-constraint', ARCHETYPE_KIND_PATTERN);
+    }
+    if (isActiveIncGuidance(filePath, contents)) {
+      addMatches(violations, filePath, contents, 'inc-query-transposition-denial', INC_QUERY_DENIAL_PATTERN);
     }
   }
 
