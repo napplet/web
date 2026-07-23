@@ -82,7 +82,8 @@ describe('validateEnvelope — outbound field checks', () => {
       id: 'intent-1',
       request: {
         archetype: 'note',
-        convention: 'local.example/anything-goes',
+        action: 'open',
+        convention: 'napplet:note/open',
         payload: { nested: ['opaque', { values: true }] },
       },
     });
@@ -103,7 +104,7 @@ describe('validateEnvelope — outbound field checks', () => {
         sender: 'runtime-attested-source',
         archetype: 'note',
         action: 'open',
-        convention: 'local.example/anything-goes',
+        convention: 'napplet:note/open',
         payload: { nested: ['opaque', { values: true }] },
       },
     });
