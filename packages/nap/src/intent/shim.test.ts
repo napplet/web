@@ -1,4 +1,48 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type {
+  IntentCandidate as CoreIntentCandidate,
+  IntentRequest as CoreIntentRequest,
+  IntentResult as CoreIntentResult,
+} from '@napplet/core';
+import type {
+  IntentCandidate,
+  IntentRequest,
+  IntentResult,
+} from './index.js';
+
+// @ts-expect-error IntentContract is intentionally removed from the core barrel.
+import type { IntentContract as RemovedCoreIntentContract } from '@napplet/core';
+// @ts-expect-error IntentContract is intentionally removed from the NAP intent barrel.
+import type { IntentContract as RemovedNapIntentContract } from './index.js';
+
+void (undefined as unknown as RemovedCoreIntentContract);
+void (undefined as unknown as RemovedNapIntentContract);
+
+const coreConventionRequest: CoreIntentRequest = {
+  archetype: 'note',
+  convention: 'napplet:note/open?view=full',
+  payload: { target: { type: 'event', id: 'abc' } },
+};
+
+const napConventionRequest: IntentRequest = coreConventionRequest;
+const coreConventionResult: CoreIntentResult = {
+  ok: true,
+  archetype: 'note',
+  action: 'open',
+  handled: true,
+  convention: 'napplet:note/open?view=full',
+};
+const napConventionResult: IntentResult = coreConventionResult;
+const coreConventionCandidate: CoreIntentCandidate = {
+  dTag: 'noteview',
+  actions: ['open'],
+  conventions: ['napplet:note/open?view=full'],
+};
+const napConventionCandidate: IntentCandidate = coreConventionCandidate;
+
+void napConventionRequest;
+void napConventionResult;
+void napConventionCandidate;
 
 interface PostedMessage {
   msg: any;
@@ -54,20 +98,21 @@ function lastPosted(type: string): any {
 }
 
 describe('@napplet/nap/intent shim', () => {
-  it('posts intent.invoke and resolves with the result', async () => {
+  it('round-trips an opaque convention unchanged through the correlated invocation', async () => {
     const { invoke, handleIntentMessage } = await import('./shim.js');
 
-    const promise = invoke({ archetype: 'note', action: 'open', protocol: 'NAP-4', payload: { x: 1 } });
+    const convention = 'napplet:note/open?view=full';
+    const promise = invoke({ archetype: 'note', action: 'open', convention, payload: { x: 1 } });
     const sent = lastPosted('intent.invoke');
-    expect(sent.request).toEqual({ archetype: 'note', action: 'open', protocol: 'NAP-4', payload: { x: 1 } });
+    expect(sent.request).toEqual({ archetype: 'note', action: 'open', convention, payload: { x: 1 } });
 
     handleIntentMessage({
       type: 'intent.invoke.result',
       id: sent.id,
-      result: { ok: true, archetype: 'note', action: 'open', handled: true, handler: 'noteview', windowId: 'win-13', protocol: 'NAP-4' },
+      result: { ok: true, archetype: 'note', action: 'open', handled: true, handler: 'noteview', windowId: 'win-13', convention },
     });
 
-    await expect(promise).resolves.toMatchObject({ ok: true, handled: true, handler: 'noteview' });
+    await expect(promise).resolves.toMatchObject({ ok: true, handled: true, handler: 'noteview', convention });
   });
 
   it('open() is sugar for an action:"open" invoke carrying opts', async () => {
@@ -80,9 +125,9 @@ describe('@napplet/nap/intent shim', () => {
     handleIntentMessage({
       type: 'intent.invoke.result',
       id: sent.id,
-      result: { ok: true, archetype: 'emoji-list', action: 'open', handled: true, handler: 'emojilistr', windowId: 'win-12', protocol: 'NAP-7' },
+      result: { ok: true, archetype: 'emoji-list', action: 'open', handled: true, handler: 'emojilistr', windowId: 'win-12', convention: 'napplet:emoji-list/open' },
     });
-    await expect(promise).resolves.toMatchObject({ handler: 'emojilistr', protocol: 'NAP-7' });
+    await expect(promise).resolves.toMatchObject({ handler: 'emojilistr', convention: 'napplet:emoji-list/open' });
   });
 
   it('resolves with ok:false results (no handler) without rejecting', async () => {
@@ -126,8 +171,7 @@ describe('@napplet/nap/intent shim', () => {
           {
             dTag: 'emojilistr',
             actions: ['open'],
-            protocols: ['NAP-7'],
-            contracts: [{ action: 'open', protocol: 'NAP-7' }],
+            conventions: ['napplet:emoji-list/open'],
             isDefault: true,
           },
         ],
@@ -138,7 +182,7 @@ describe('@napplet/nap/intent shim', () => {
     await expect(promise).resolves.toMatchObject({
       archetype: 'emoji-list',
       available: true,
-      candidates: [{ contracts: [{ action: 'open', protocol: 'NAP-7' }] }],
+      candidates: [{ conventions: ['napplet:emoji-list/open'] }],
       hasDefault: true,
     });
   });
@@ -159,8 +203,7 @@ describe('@napplet/nap/intent shim', () => {
             {
               dTag: 'noteview',
               actions: ['open'],
-              protocols: ['NAP-4'],
-              contracts: [{ action: 'open', protocol: 'NAP-4', eventKinds: [1] }],
+              conventions: ['napplet:note/open'],
             },
           ],
           hasDefault: true,
@@ -176,8 +219,7 @@ describe('@napplet/nap/intent shim', () => {
           {
             dTag: 'noteview',
             actions: ['open'],
-            protocols: ['NAP-4'],
-            contracts: [{ action: 'open', protocol: 'NAP-4', eventKinds: [1] }],
+            conventions: ['napplet:note/open'],
           },
         ],
         hasDefault: true,
