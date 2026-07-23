@@ -884,7 +884,8 @@ opens the PR. Runtime-injection work supersedes v0.33 NAP-SHELL artifacts.
   4. The conformance reference shell and fixtures use `convention`/`conventions` and no active check or example negotiates a numbered protocol.
   5. Historical changelogs and archived planning retain semantic history, while all current author-facing docs and code are free of numbered-NAP contract guidance.
   6. Changesets cover every package with shipped output changes, and build, type-check, unit tests, docs/link checks, and the AI-slop gate pass.
-**Plans:** 12 plans
+
+**Plans:** 1/12 plans executed
 
 Plans:
 
@@ -893,7 +894,7 @@ Plans:
 - [ ] 161-03-PLAN.md — Emit convention-only Vite archetype metadata
 - [ ] 161-04-PLAN.md — Migrate CLI archetype inputs and output
 - [ ] 161-05-PLAN.md — Align conformance shell and validators
-- [ ] 161-06-PLAN.md — Add the active-surface convention contract guard
+- [x] 161-06-PLAN.md — Add the active-surface convention contract guard
 - [ ] 161-07-PLAN.md — Propagate conventions through SDK, shim, and conformance apps
 - [ ] 161-08-PLAN.md — Update root/package READMEs and package-reference docs
 - [ ] 161-09-PLAN.md — Update shipped napplet skill guidance

@@ -2,15 +2,19 @@
 gsd_state_version: 1.0
 milestone: v0.34.0
 milestone_name: NIP-5D Runtime Injection
-status: "Phase 159.1 review feedback verified — PR #171"
-last_updated: "2026-07-22T00:19:07Z"
-last_activity: "2026-07-22 — PR #171 restored the gated one-command SPA and added hosted installers plus napplet guide"
+current_phase: 161
+current_phase_name: ad-hoc-convention-package-contracts
+status: executing
+stopped_at: Completed 161-06-PLAN.md
+last_updated: "2026-07-23T13:29:17.977Z"
+last_activity: 2026-07-23
+last_activity_desc: Phase 161 execution started
 progress:
-  total_phases: 150
-  completed_phases: 2
-  total_plans: 12
+  total_phases: 8
+  completed_phases: 3
+  total_plans: 16
   completed_plans: 6
-  percent: 1
+  percent: 38
 ---
 
 # Project State
@@ -21,16 +25,16 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 
 **Core value:** Prove that sandboxed Nostr apps can securely delegate to a host shell over a simple, standardized protocol — and ship the spec + SDK so others can build on it.
 
-**Current focus:** Phase 160 — release verification pr
+**Current focus:** Phase 161 — ad-hoc-convention-package-contracts
 
 > **Provenance note:** The "Accumulated Context" section below preserves bullet records from BOTH branches' STATE.md histories. Records tagged "v0.29.0" from main's lineage refer to the milestone NOW renumbered as v0.30.0 (Class-Gated Decrypt — Phases 135-138). Records tagged "v0.29.0" from feat/strict-model refer to NUB-CONNECT (Phases 135-142). Phase number alone is not a unique identifier across the two; cross-reference the topic (decrypt/identity/NIP-07 → v0.30.0; connect/class/CSP-authority → v0.29.0).
 
 ## Current Position
 
-Phase: 160
-Plan: Not started
-Status: Phase 159.1 review feedback verified — PR #171
-Last activity: 2026-07-22 — PR #171 restored the gated one-command SPA and added hosted installers plus `napplet guide`
+Phase: 161 (ad-hoc-convention-package-contracts) — EXECUTING
+Plan: 2 of 12
+Status: Ready to execute
+Last activity: 2026-07-23 — Phase 161 execution started
 community/group-chat invite linked from the SPA and docs.
 
 ### Quick task 260715-ogy — COMPLETE
@@ -441,6 +445,8 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 - [Phase 138]: [Phase 138]: Plan 01 — VER-06 grep gate GREEN (/tmp/napplet-138-ver-06.log VER06_EXIT=0): all_frames=1, script-src/script-src-elem=3, world: 'MAIN'=1, connect-src 'none'=3, NUB-IDENTITY.md=1, NUB-CLASS-1.md=2, subsection heading=1, free-standing Class 1=0
 - [Phase 138]: [Phase 138]: Plan 01 — Parallel-execution commit hygiene: used --no-verify on commit f1c236b to avoid pre-commit hook contention with 138-02 (which landed ade7b65 ahead for docs surfaces); territory discipline held strict — only specs/NIP-5D.md staged
 - [Phase 138]: Plan 138-02: Single atomic commit used for DOC-01..04 docs sweep — mirrors v0.28.0 Phase 133 precedent; --no-verify required due to parallel wave with 138-01
+- [Phase ?]: Convention values remain opaque strings; the guard detects retired vocabulary without normalizing replacements.
+- [Phase ?]: The root convention guard runs fixture tests before its live active-tree scan; live red is expected until downstream migration completes.
 
 ### Decisions (napplet/nubs state snapshot, 2026-04-23)
 
@@ -530,8 +536,10 @@ Items acknowledged and deferred at v0.31.0 milestone close on 2026-05-24:
 
 ## Session Continuity
 
-Last session: 2026-06-17T04:30:00.000Z
-Stopped at: Completed 155-01-PLAN.md (Implement NAP-SHELL — SHELL-01..06)
+**Resume file:** None
+
+Last session: 2026-07-23T13:29:17.969Z
+Stopped at: Completed 161-06-PLAN.md
 Resume: Phase 155 COMPLETE. All v0.33.0 SHELL requirements satisfied; both phases (154, 155) done. Next: orchestrator verify_phase_goal for Phase 155, then `/gsd:audit-milestone v0.33.0` → `/gsd:ship`.
 
 - v0.26.0: Consolidated `@napplet/nub-*` packages into single `@napplet/nub` with 34 subpath exports; deprecated packages ship as 1-line re-export shims for one release cycle
@@ -611,3 +619,9 @@ Resume: Phase 142 TERMINAL-COMPLETE — all 13 VER-IDs (VER-01..13) verified PAS
 ## Operator Next Steps
 
 - Phase 155 (Implement NAP-SHELL) COMPLETE. Run `/gsd:audit-milestone v0.33.0`, then `/gsd:ship`.
+
+## Performance Metrics
+
+| Plan | Duration | Tasks | Files |
+|------|----------|-------|-------|
+| Phase 161 P06 | 1min | 2 tasks | 3 files |
