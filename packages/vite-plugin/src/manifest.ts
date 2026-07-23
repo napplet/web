@@ -152,7 +152,7 @@ function buildManifestTemplate(
     state.resolvedSchema !== null ? [['config', JSON.stringify(state.resolvedSchema)]] : [];
   const requiresTags = resolvedRequirements(options.requires, state).map((name) => ['requires', name]);
   // Archetype tags (NAAT, napplet/naps `ARCHETYPES.md`): one
-  // `['archetype', slug, protocol, ...constraints]` per contract. Like
+  // `['archetype', slug, convention]` per declared convention. Like
   // config/requires they are NOT passed to computeAggregateHash — only pathPairs
   // feed the aggregate.
   const archetypeTags = buildArchetypeTags(options.archetypes);
@@ -174,9 +174,8 @@ function buildManifestTemplate(
 }
 
 /**
- * Normalize the `archetypes` option into one `['archetype', slug, protocol]`
- * tag per protocol. Optional event-kind constraints are emitted as
- * `kind:<number>` tokens scoped to the protocol in the same tag.
+ * Serialize the `archetypes` option into one `['archetype', slug, convention]`
+ * tag per declared convention.
  */
 function buildArchetypeTags(
   archetypes: Nip5aManifestOptions['archetypes'],
@@ -184,19 +183,16 @@ function buildArchetypeTags(
   if (!archetypes) return [];
   const tags: string[][] = [];
   for (const entry of archetypes) {
-    const slug = (typeof entry === 'string' ? entry : entry.slug).trim();
+    const slug = entry.slug.trim();
     if (slug === '') continue;
-    if (typeof entry === 'string') continue;
-    for (const protocol of entry.naps ?? []) {
-      const trimmedProtocol = protocol.trim();
-      if (trimmedProtocol !== '') tags.push(['archetype', slug, trimmedProtocol]);
+    const convention = entry.convention.trim();
+    if (convention === '') {
+      throw new Error('[nip5a-manifest] archetype convention must be a non-empty string');
     }
-    for (const contract of entry.contracts ?? []) {
-      const protocol = contract.protocol.trim();
-      if (protocol === '') continue;
-      const kinds = (contract.eventKinds ?? []).map((kind) => `kind:${kind}`);
-      tags.push(['archetype', slug, protocol, ...kinds]);
+    if (/^NAP-\d+$/.test(convention)) {
+      throw new Error('[nip5a-manifest] numbered NAP identifier is not a convention');
     }
+    tags.push(['archetype', slug, convention]);
   }
   return tags;
 }
