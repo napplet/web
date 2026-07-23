@@ -64,12 +64,19 @@ describe('validateEnvelope — outbound field checks', () => {
     expect(v.errors.some((e) => e.code === 'wrong-type' && e.field === 'filters')).toBe(true);
   });
 
-  it('accepts a fire-and-forget inc.emit with only a topic', () => {
+  it('accepts a fire-and-forget inc.emit with only a topic and rejects caller sender data', () => {
     const v = validateEnvelope({ type: 'inc.emit', topic: 'room' });
     expect(v.ok).toBe(true);
+
+    const forged = validateEnvelope({ type: 'inc.emit', topic: 'room', sender: 'forged-source' });
+    expect(forged.ok).toBe(false);
+    expect(forged.errors).toContainEqual(expect.objectContaining({
+      code: 'forbidden-field',
+      field: 'sender',
+    }));
   });
 
-  it('accepts opaque intent convention and payload values', () => {
+  it('accepts a normalized intent request while leaving convention and payload values opaque', () => {
     const v = validateEnvelope({
       type: 'intent.invoke',
       id: 'intent-1',
@@ -86,6 +93,38 @@ describe('validateEnvelope — outbound field checks', () => {
     expect(malformed.errors).toContainEqual(expect.objectContaining({
       code: 'wrong-type',
       field: 'request',
+    }));
+  });
+
+  it('records adopted inbound INC and intent delivery carriers without correlation identifiers', () => {
+    const delivered = validateEnvelope({
+      type: 'intent.deliver',
+      delivery: {
+        sender: 'runtime-attested-source',
+        archetype: 'note',
+        action: 'open',
+        convention: 'local.example/anything-goes',
+        payload: { nested: ['opaque', { values: true }] },
+      },
+    });
+    expect(delivered.ok).toBe(false);
+    expect(delivered.direction).toBe('in');
+    expect(delivered.errors).toContainEqual(expect.objectContaining({ code: 'inbound-type-emitted' }));
+    expect(delivered.errors).not.toContainEqual(expect.objectContaining({
+      code: 'missing-field',
+      field: 'delivery',
+    }));
+
+    const missingDelivery = validateEnvelope({ type: 'intent.deliver' });
+    expect(missingDelivery.errors).toContainEqual(expect.objectContaining({
+      code: 'missing-field',
+      field: 'delivery',
+    }));
+
+    const missingSender = validateEnvelope({ type: 'inc.event', topic: 'room' });
+    expect(missingSender.errors).toContainEqual(expect.objectContaining({
+      code: 'missing-field',
+      field: 'sender',
     }));
   });
 
@@ -152,20 +191,23 @@ describe('validateEnvelope — no generic shell domain', () => {
 });
 
 describe('ENVELOPE_SPECS invariants', () => {
-  it('has 207 discriminants split 100 outbound / 107 inbound', () => {
+  it('has 208 discriminants split 100 outbound / 108 inbound', () => {
     const all = knownEnvelopeTypes();
-    expect(all).toHaveLength(207);
+    expect(all).toHaveLength(208);
     const out = all.filter((t) => ENVELOPE_SPECS[t].dir === 'out');
     const inbound = all.filter((t) => ENVELOPE_SPECS[t].dir === 'in');
     expect(out).toHaveLength(100);
-    expect(inbound).toHaveLength(107);
+    expect(inbound).toHaveLength(108);
   });
 
-  it('only outbound specs declare required fields', () => {
-    for (const [type, spec] of Object.entries(ENVELOPE_SPECS)) {
-      if (spec.dir === 'in') {
-        expect(spec.fields, `${type} is inbound and should not declare fields`).toBeUndefined();
-      }
-    }
+  it('declares the adopted inbound carrier fields without delivery identifiers', () => {
+    expect(ENVELOPE_SPECS['inc.event']).toEqual({
+      dir: 'in',
+      fields: { topic: 'string', sender: 'string' },
+    });
+    expect(ENVELOPE_SPECS['intent.deliver']).toEqual({
+      dir: 'in',
+      fields: { delivery: 'object' },
+    });
   });
 });
