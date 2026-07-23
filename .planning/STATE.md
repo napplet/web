@@ -5,8 +5,8 @@ milestone_name: NIP-5D Runtime Injection
 current_phase: 161
 current_phase_name: ad-hoc-convention-package-contracts
 status: executing
-stopped_at: Completed 161-13-PLAN.md
-last_updated: "2026-07-23T14:55:05.851Z"
+stopped_at: Completed 161-14-PLAN.md
+last_updated: "2026-07-23T15:04:02.912Z"
 last_activity: 2026-07-23
 last_activity_desc: Phase 161 execution started
 progress:
@@ -32,7 +32,7 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 ## Current Position
 
 Phase: 161 (ad-hoc-convention-package-contracts) — EXECUTING
-Plan: 10 of 12
+Plan: 11 of 12
 Status: Ready to execute
 Last activity: 2026-07-23 — Phase 161 execution started
 community/group-chat invite linked from the SPA and docs.
@@ -462,6 +462,8 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 - [Phase ?]: Package READMEs document one opaque convention per archetype role; payload and matching semantics remain local.
 - [Phase ?]: Use raw pair splitting and decodeURIComponent so INC convention URI transposition preserves literal plus without form decoding.
 - [Phase ?]: Keep convention URI preprocessing confined to outbound INC emit; subscription and inbound routing remain exact string lookups.
+- [Phase ?]: Document NAP-INC query transposition only at emit(topic, payload?), while subscriptions use exact stable topics.
+- [Phase ?]: Scope stale INC query-denial scanning to active Markdown INC or napplet guidance and preserve intentional negative tests.
 
 ### Decisions (napplet/nubs state snapshot, 2026-04-23)
 
@@ -553,8 +555,8 @@ Items acknowledged and deferred at v0.31.0 milestone close on 2026-05-24:
 
 **Resume file:** None
 
-Last session: 2026-07-23T14:55:05.843Z
-Stopped at: Completed 161-13-PLAN.md
+Last session: 2026-07-23T15:04:02.903Z
+Stopped at: Completed 161-14-PLAN.md
 Resume: Phase 155 COMPLETE. All v0.33.0 SHELL requirements satisfied; both phases (154, 155) done. Next: orchestrator verify_phase_goal for Phase 155, then `/gsd:audit-milestone v0.33.0` → `/gsd:ship`.
 
 - v0.26.0: Consolidated `@napplet/nub-*` packages into single `@napplet/nub` with 34 subpath exports; deprecated packages ship as 1-line re-export shims for one release cycle
@@ -648,3 +650,4 @@ Resume: Phase 142 TERMINAL-COMPLETE — all 13 VER-IDs (VER-01..13) verified PAS
 | Phase 161 P09 | 5min | 2 tasks | 5 files |
 | Phase 161 P08 | 12min | 1 tasks | 10 files |
 | Phase 161 P13 | 5min | 2 tasks | 6 files |
+| Phase 161 P14 | 7min | 3 tasks | 10 files |
