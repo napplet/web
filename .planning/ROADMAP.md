@@ -885,7 +885,7 @@ opens the PR. Runtime-injection work supersedes v0.33 NAP-SHELL artifacts.
   5. Historical changelogs and archived planning retain semantic history, while all current author-facing docs and code are free of numbered-NAP contract guidance.
   6. Changesets cover every package with shipped output changes, and build, type-check, unit tests, docs/link checks, and the AI-slop gate pass.
 
-**Plans:** 12/14 plans executed
+**Plans:** 13/14 plans executed
 
 Plans:
 
@@ -900,6 +900,6 @@ Plans:
 - [x] 161-09-PLAN.md — Update shipped napplet skill guidance
 - [ ] 161-10-PLAN.md — Add release metadata and run repository gates
 - [x] 161-11-PLAN.md — Update active guides, tutorials, and the NAP index
-- [ ] 161-12-PLAN.md — Update package-reference documentation
+- [x] 161-12-PLAN.md — Update package-reference documentation
 - [x] 161-13-PLAN.md — Clean-break INC emit and implement convention-URI query transposition
 - [x] 161-14-PLAN.md — Correct shipped query-sugar guidance and guard the clarified boundary
