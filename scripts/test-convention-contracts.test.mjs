@@ -60,7 +60,11 @@ test('rejects superseded intent result, delivery, metadata, INC-coupling, and ta
       const message = { type: 'intent.deliver', id: 'delivery-1' };
     `);
     await writeFixture(root, 'packages/vite-plugin/src/manifest.ts', `
-      const tag = ['archetype', 'note', 'napplet:note/open?kind=1'];
+      const tag = [
+        'archetype',
+        'note',
+        'napplet:note/open?kind=1',
+      ];
     `);
     await writeFixture(root, 'apps/docs/guide/intents.md', `
       Intent delivery requires NAP-INC.
