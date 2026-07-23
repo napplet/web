@@ -18,6 +18,7 @@ const COMPLETED_SUMMARY_PATTERN = /(?:^|\/)\d+-\d+-SUMMARY\.md$/;
 const INTENT_RESULT_LIFECYCLE_PATTERN = /\b(?:handled|windowId)\s*:|\b(?:handled|windowId)\b\s+(?:result|field|property)\b|\bbehavior(?:\s*\.\s*newWindow|\s*:\s*\{[^}\n]*\bnewWindow\s*:)/g;
 const INTENT_DELIVERY_ID_PATTERN = /\b(?:deliveryId|intentId)\b|\btype\s*:\s*['"]intent\.deliver['"][^}\n]{0,240}\bid\s*:/gi;
 const QUERY_BEARING_HANDLER_METADATA_PATTERN = /\b(?:archetype|contracts?|handlers?)\b[^\n]{0,160}\bnapplet:[a-z0-9-]+\/[a-z0-9-]+\?[^'"\s`)\]}]+/gi;
+const QUERY_BEARING_ARCHETYPE_TAG_PATTERN = /['"]archetype['"][\s\S]{0,160}\bnapplet:[a-z0-9-]+\/[a-z0-9-]+\?[^'"\s`)\]}]+/gi;
 const INTENT_DELIVERY_INC_COUPLING_PATTERN = /\b(?:intent(?:\s+delivery|\.deliver)|delivery)\b[^.\n]{0,120}\b(?:requires?|depends?\s+on|uses?|is\s+coupled\s+to|through)\s+(?:public\s+)?(?:NAP-)?INC\b/gi;
 const FIXED_ARCHETYPE_TAG_SHAPE_PATTERN = /\barchetype\s+tags?\b[^.\n]{0,100}\b(?:must|should|can)\s+(?:contain|have|use)\s+(?:only\s+)?(?:exactly\s+)?three\s+(?:fields?|elements?|values?)\b|\b(?:only|exactly)\s+three[-\s](?:field|element|value)s?\b[^.\n]{0,100}\barchetype\s+tags?\b/gi;
 
@@ -160,6 +161,7 @@ export async function scanConventionContracts(root) {
     addMatches(violations, filePath, contents, 'numbered-convention', NUMBERED_CONVENTION_PATTERN);
     addMatches(violations, filePath, contents, 'slug-number-example', SLUG_NUMBER_PATTERN);
     addMatches(violations, filePath, contents, 'query-bearing-handler-metadata', QUERY_BEARING_HANDLER_METADATA_PATTERN);
+    addMatches(violations, filePath, contents, 'query-bearing-handler-metadata', QUERY_BEARING_ARCHETYPE_TAG_PATTERN);
     addMatches(violations, filePath, contents, 'intent-delivery-inc-coupling', INTENT_DELIVERY_INC_COUPLING_PATTERN);
     addMatches(violations, filePath, contents, 'fixed-archetype-tag-shape', FIXED_ARCHETYPE_TAG_SHAPE_PATTERN);
     if (isActiveIncGuidance(filePath, contents)) {
