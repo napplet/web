@@ -21,9 +21,8 @@
  *     near-instantly. We wait briefly; if no envelope arrives from the parent,
  *     the embedder is not a napplet runtime and we fail loudly.
  *
- * Opt-out (for local standalone development) — either is honored:
- *   - `window.__NAPPLET_ALLOW_STANDALONE__ = true` set before the shim loads.
- *   - `<meta name="napplet-allow-standalone">` in the document head.
+ * Opt-out (for local standalone development): set
+ * `window.__NAPPLET_ALLOW_STANDALONE__ = true` before the shim loads.
  *
  * @packageDocumentation
  */
@@ -102,9 +101,6 @@ function isStandaloneAllowed(): boolean {
   try {
     const w = window as Window & typeof globalThis & { __NAPPLET_ALLOW_STANDALONE__?: unknown };
     if (w.__NAPPLET_ALLOW_STANDALONE__ === true) {
-      return true;
-    }
-    if (typeof document !== 'undefined' && document.querySelector('meta[name="napplet-allow-standalone"]')) {
       return true;
     }
   } catch {

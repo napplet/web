@@ -97,7 +97,7 @@ tooling false positive before shipping.
 ## Step 5 — Confirm the artifact & guard
 
 - **Single file:** the published napplet is one `index.html` with inline JS (opaque-origin `srcdoc`, no external `<script src>`). Use `artifactMode: 'single-file'`. Verify `dist/index.html` is self-contained.
-- **Runtime guard:** opened without a runtime it shows an explanatory modal rather than failing silently. For standalone manual testing, opt out before the shim loads via `window.__NAPPLET_ALLOW_STANDALONE__ = true` or `<meta name="napplet-allow-standalone">`.
+- **Runtime guard:** opened without a runtime it shows an explanatory modal rather than failing silently. For standalone manual testing, opt out before the shim loads via `window.__NAPPLET_ALLOW_STANDALONE__ = true`.
 
 ## Step 6 — Scenario Smoke Tests
 

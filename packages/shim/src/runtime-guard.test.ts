@@ -83,12 +83,14 @@ describe('runtime guard', () => {
     expect(host()).toBeNull();
   });
 
-  it('respects the standalone opt-out meta tag', () => {
+  it('does not use HTML metadata as a standalone opt-out', () => {
     const meta = document.createElement('meta');
     meta.setAttribute('name', 'napplet-allow-standalone');
     document.head.appendChild(meta);
+
     installRuntimeGuard();
-    expect(host()).toBeNull();
+
+    expect(host()).not.toBeNull();
   });
 
   it('never renders the modal more than once', () => {
