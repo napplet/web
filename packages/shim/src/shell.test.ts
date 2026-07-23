@@ -1,14 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import type { NappletGlobal } from '@napplet/core';
-import { installNappletGlobal } from '../src/index.js';
-
-function napplet(): NappletGlobal {
-  return (window as unknown as { napplet: NappletGlobal }).napplet;
-}
+import { installNappletGlobal } from '../src/runtime.js';
 
 describe('@napplet/shim — runtime injection', () => {
-  it('installs domain objects without a generic shell API', () => {
-    const installed = napplet();
+  it('installs selected domain objects without a generic shell API', () => {
+    const installed = installNappletGlobal({ domains: ['relay', 'storage', 'cvm'] });
     expect(installed.relay).toBeDefined();
     expect(installed.storage).toBeDefined();
     expect(installed.cvm?.registry).toBeDefined();
