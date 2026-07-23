@@ -77,7 +77,6 @@ describe('createReferenceShell — record + respond', () => {
         action: 'open',
         convention: 'napplet:note/open',
         payload: { event: 'abc123' },
-        sender: 'forged-source',
       },
     })).toEqual([
       {
@@ -110,6 +109,23 @@ describe('createReferenceShell — record + respond', () => {
     expect(shell.takeDeliveries('reference-handler')).toEqual([]);
   });
 
+  it('records forged intent sender data as invalid and does not deliver it', () => {
+    const shell = createReferenceShell();
+
+    expect(shell.handleFrom(authenticatedSource, {
+      type: 'intent.invoke',
+      id: 'intent-forged-sender',
+      request: {
+        archetype: 'note',
+        action: 'open',
+        convention: 'napplet:note/open',
+        sender: 'forged-source',
+      },
+    })).toEqual([]);
+    expect(shell.records.at(-1)?.verdict.ok).toBe(false);
+    expect(shell.takeDeliveries('reference-handler')).toEqual([]);
+  });
+
   it('rejects normalized intent conflicts before handler resolution or target delivery', () => {
     const shell = createReferenceShell();
 
@@ -121,13 +137,8 @@ describe('createReferenceShell — record + respond', () => {
         action: 'edit',
         convention: 'napplet:note/open?event=abc123',
       },
-    })).toEqual([
-      {
-        type: 'intent.invoke.result',
-        id: 'intent-conflict',
-        result: { ok: false, error: expect.any(String) },
-      },
-    ]);
+    })).toEqual([]);
+    expect(shell.records.at(-1)?.verdict.ok).toBe(false);
     expect(shell.takeDeliveries('reference-handler')).toEqual([]);
   });
 

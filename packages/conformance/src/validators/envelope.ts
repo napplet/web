@@ -299,7 +299,7 @@ export const ENVELOPE_SPECS: Record<string, EnvelopeSpec> = {
 
 /** A single problem found while validating an envelope. */
 export interface EnvelopeError {
-  /** Machine-readable code: not-an-object | missing-type | malformed-type | unknown-domain | unknown-type | inbound-type-emitted | missing-field | wrong-type */
+  /** Machine-readable code: not-an-object | missing-type | malformed-type | unknown-domain | unknown-type | inbound-type-emitted | missing-field | wrong-type | invalid-intent-request */
   code:
     | 'not-an-object'
     | 'missing-type'
@@ -309,7 +309,8 @@ export interface EnvelopeError {
     | 'inbound-type-emitted'
     | 'missing-field'
     | 'wrong-type'
-    | 'forbidden-field';
+    | 'forbidden-field'
+    | 'invalid-intent-request';
   /** Human-readable explanation. */
   message: string;
   /** Field name, when the error concerns a specific field. */
@@ -343,6 +344,49 @@ function kindOf(value: unknown): FieldKind | 'undefined' | 'null' {
 function matchesKind(value: unknown, kind: FieldKind): boolean {
   if (kind === 'present') return value !== undefined && value !== null;
   return kindOf(value) === kind;
+}
+
+/** Validate the adopted normalized wire identity for an outbound intent invoke. */
+function validateIntentInvokeRequest(request: unknown, errors: EnvelopeError[]): void {
+  if (typeof request !== 'object' || request === null || Array.isArray(request)) return;
+
+  const normalized = request as Record<string, unknown>;
+  for (const field of ['archetype', 'action', 'convention'] as const) {
+    const value = normalized[field];
+    if (value === undefined) {
+      errors.push({
+        code: 'missing-field',
+        message: `Intent request requires a string "${field}" field`,
+        field: `request.${field}`,
+      });
+    } else if (typeof value !== 'string') {
+      errors.push({
+        code: 'wrong-type',
+        message: `Intent request field "${field}" must be a string`,
+        field: `request.${field}`,
+      });
+    }
+  }
+
+  if ('sender' in normalized) {
+    errors.push({
+      code: 'forbidden-field',
+      message: 'Intent request sender is runtime-derived and cannot be emitted by a napplet',
+      field: 'request.sender',
+    });
+  }
+
+  const { archetype, action, convention } = normalized;
+  if (typeof archetype !== 'string' || typeof action !== 'string' || typeof convention !== 'string') return;
+
+  const parsed = /^napplet:([^/?#\s]+)\/([^/?#\s]+)$/.exec(convention);
+  if (!parsed || parsed[1] !== archetype || parsed[2] !== action) {
+    errors.push({
+      code: 'invalid-intent-request',
+      message: 'Intent convention must be queryless and match request archetype and action',
+      field: 'request.convention',
+    });
+  }
 }
 
 /**
@@ -428,6 +472,10 @@ export function validateEnvelope(message: unknown): EnvelopeVerdict {
         field,
       });
     }
+  }
+
+  if (type === 'intent.invoke') {
+    validateIntentInvokeRequest(record.request, errors);
   }
 
   return { ok: errors.length === 0, type, domain, direction: 'out', errors };

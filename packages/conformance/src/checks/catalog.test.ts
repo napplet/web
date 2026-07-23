@@ -112,6 +112,22 @@ describe('wire checks', () => {
     expect(Array.isArray(r.diagnostics)).toBe(true);
   });
 
+  it('fails when an emitted intent request forges its sender', () => {
+    const r = run('wire/envelope-well-formed', makeContext({
+      emitted: [rec({
+        type: 'intent.invoke',
+        id: 'intent-1',
+        request: {
+          archetype: 'note',
+          action: 'open',
+          convention: 'napplet:note/open',
+          sender: 'forged-source',
+        },
+      })],
+    }));
+    expect(r.status).toBe('fail');
+  });
+
 });
 
 describe('degradation + lifecycle checks', () => {

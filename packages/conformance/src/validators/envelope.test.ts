@@ -97,6 +97,24 @@ describe('validateEnvelope — outbound field checks', () => {
     }));
   });
 
+  it('rejects malformed or forged normalized intent identities', () => {
+    const base = {
+      type: 'intent.invoke',
+      id: 'intent-3',
+      request: { archetype: 'note', action: 'open', convention: 'napplet:note/open' },
+    };
+    const invalidRequests = [
+      { ...base.request, convention: 'napplet:note/open?event=abc' },
+      { ...base.request, convention: 'napplet:note/open#preview' },
+      { ...base.request, action: 'edit' },
+      { ...base.request, sender: 'forged-source' },
+    ];
+
+    for (const request of invalidRequests) {
+      expect(validateEnvelope({ ...base, request }).ok).toBe(false);
+    }
+  });
+
   it('records adopted inbound INC and intent delivery carriers without correlation identifiers', () => {
     const delivered = validateEnvelope({
       type: 'intent.deliver',
