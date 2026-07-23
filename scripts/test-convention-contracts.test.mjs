@@ -113,3 +113,31 @@ test('allows legacy literals only in dedicated Vite and CLI rejection tests', as
 
   assert.deepEqual(violations, []);
 });
+
+test('rejects obsolete INC convention-query denial guidance in active authoring prose', async () => {
+  const violations = await scanFixture(async (root) => {
+    await writeFixture(root, 'packages/skills/skills/build-napplet/SKILL.md', `
+      INC convention queries are forbidden because topic routing is exact.
+    `);
+  });
+
+  assert.equal(
+    violations.some(({ family }) => family === 'inc-query-transposition-denial'),
+    true,
+  );
+});
+
+test('allows NAP-INC emit transposition and unrelated query APIs', async () => {
+  const violations = await scanFixture(async (root) => {
+    await writeFixture(root, 'packages/nap/README.md', `
+      NAP-INC emit('napplet:profile/open?pubkey=abc123') transposes a shallow
+      text payload before it routes the stable topic exactly. NAP-INTENT and
+      manifest conventions remain opaque.
+    `);
+    await writeFixture(root, 'packages/core/src/url.ts', `
+      const query = new URL('https://example.com/?page=1').searchParams;
+    `);
+  });
+
+  assert.deepEqual(violations, []);
+});
