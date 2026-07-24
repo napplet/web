@@ -1,6 +1,6 @@
 {
   "name": "@napplet/cli",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Standalone CLI for creating, configuring, testing, and deploying napplets",
   "license": "MIT",
   "exports": {
