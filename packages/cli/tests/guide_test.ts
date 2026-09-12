@@ -6,7 +6,7 @@ Deno.test("napplet guide presents the workflow with contextual and closing docs 
   const commands = [
     "napplet create my-napplet",
     "napplet init",
-    "napplet skills install --to codex",
+    "npx skills add napplet/napplet",
     "pnpm verify",
     "napplet paja -- pnpm vite --host 127.0.0.1",
     "napplet deploy --dry-run",
@@ -24,7 +24,7 @@ Deno.test("napplet guide presents the workflow with contextual and closing docs 
   for (
     const url of [
       "https://napplet.run/docs/packages/boilerplate.html",
-      "https://napplet.run/docs/packages/skills.html",
+      "https://napplet.run/docs/guide/agent-skills.html",
       "https://napplet.run/docs/guide/getting-started.html",
       "https://napplet.run/docs/",
     ]

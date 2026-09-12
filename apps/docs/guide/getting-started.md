@@ -2,7 +2,8 @@
 
 This page walks you from zero to a deployable napplet. The standalone `napplet`
 CLI does not require Deno. You will need Node.js 20+ and a package manager for
-the generated Vite project and the package-backed create/skills commands. To
+the generated Vite project, the package-backed `create` command, and the
+skills.sh CLI. To
 actually *run* a napplet you also need a host shell — see
 [running in a shell](#running-in-a-shell) at the end.
 
@@ -64,12 +65,10 @@ not parse queries and use exact equality.
 ## 4. Install agent skills
 
 ```bash
-napplet skills install --to codex
+npx skills add napplet/napplet
 ```
 
-Replace `codex` with `claude`, `cursor`, `windsurf`, `agents`, `gemini`, or
-`copilot`. The CLI installs the shipped protocol-aware build skills into the
-location that agent reads.
+The open [skills CLI](https://skills.sh) detects the coding agents on your machine (Claude Code, Codex, Cursor, Gemini CLI, Copilot, and many more) and installs the `napplet-*` skills where each agent reads them. Add `-g` for a global install, `--skill napplet-make` for a single skill, or `-a claude-code` to target one agent. See [Agent skills](./agent-skills) for what each skill does.
 
 ## 5. Build and verify
 
@@ -98,7 +97,7 @@ Choose the Note Drafts path that matches how you want to learn:
 - [Build a Note Drafts napplet from boilerplate](./build-note-drafts-napplet-from-boilerplate)
   starts from the generator, preserves its project substrate, and replaces the
   starter demo with the same note composer.
-- [Build a Note Drafts napplet with an AI Agent and @napplet.skills](./build-note-drafts-napplet-with-ai-agent-and-skills)
+- [Build a Note Drafts napplet with an AI agent and the napplet skills](./build-note-drafts-napplet-with-ai-agent-and-skills)
   shows the prompt, review loop, and verification commands for agent-assisted
   authoring.
 

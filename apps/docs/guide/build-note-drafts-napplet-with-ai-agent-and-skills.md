@@ -1,10 +1,10 @@
-# Tutorial: build a Note Drafts napplet with an AI Agent and @napplet/skills
+# Tutorial: build a Note Drafts napplet with an AI agent and the napplet skills
 
 This tutorial builds the Note Drafts napplet with a coding agent instead of
-typing every file yourself. It uses `@napplet/skills`, the packaged authoring
-guidance that teaches agents the current napplet package surface, the
-boilerplate-first project shape, the sandbox boundary, and the verification
-checklist.
+typing every file yourself. It uses the [`napplet-*` agent skills](./agent-skills),
+the authoring guidance that teaches agents the current napplet package surface,
+the boilerplate-first project shape, the sandbox boundary, the applet UI
+contract, and the verification checklist.
 
 Use this path when you want the agent to do the implementation work, while you
 keep control of scope, review, and release evidence.
@@ -38,27 +38,21 @@ napplet init --name notedrafts --title "Note Drafts" \
 
 ## 2. Install the napplet skills for your agent
 
-`@napplet/skills` can install the guidance into several agent surfaces. Pick the
-target your tool reads:
+The skills live in the napplet repository and install with the open [skills CLI](https://skills.sh), which detects your coding agents and places each skill where that agent reads it:
 
 ```bash
-napplet skills install make-napplet --to agents
+npx skills add napplet/napplet
 ```
 
-Common targets:
+Useful variants:
 
 ```bash
-napplet skills install make-napplet --to claude
-napplet skills install make-napplet --to cursor
-napplet skills install make-napplet --to gemini
-napplet skills install make-napplet --to copilot
+npx skills add napplet/napplet -a claude-code          # one agent
+npx skills add napplet/napplet -g                      # global, all projects
+npx skills add napplet/napplet --skill napplet-make    # a single skill
 ```
 
-If your agent supports local skills directly, install the full set instead:
-
-```bash
-napplet skills install --to agents
-```
+Install the full set for this tutorial; `napplet-make` routes the work through the others.
 
 What this teaches: the skill file is not a protocol spec. It is a build guide
 that tells the agent to check NIP-5D and NAPs, preserve the `napplet create`
@@ -84,7 +78,7 @@ Paste a prompt like this into your coding agent:
 
 ```text
 Build a Note Drafts napplet in this directory using the installed
-@napplet/skills guidance.
+napplet-make skill.
 
 The app should let a user write one short Nostr note, autosave the draft, and
 publish it through the host shell.
@@ -94,10 +88,11 @@ The project is already scaffolded and its deployment metadata is in
 plus verification evidence.
 ```
 
-This prompt is intentionally short. The installed `make-napplet` guidance is
-responsible for routing the work through the `build-napplet` and `test-napplet`
-skills, preserving the `napplet create` scaffold, choosing the shell-mediated
-domains, preserving the generated scripts, and refusing direct browser or
+This prompt is intentionally short. The installed `napplet-make` skill is
+responsible for routing the work through `napplet-design`, `napplet-ui`,
+`napplet-build`, and `napplet-test`, preserving the `napplet create` scaffold,
+choosing the shell-mediated domains, keeping the UI compact and usable at any
+frame size, preserving the generated scripts, and refusing direct browser or
 signing authority.
 
 For this app, the skills should infer:
@@ -154,14 +149,15 @@ use a focused repair prompt:
 ```text
 The first pass drifted from the installed napplet skills.
 
-Re-run the make-napplet/build-napplet/test-napplet guidance, repair any boundary
-or verification failures, and keep the Note Drafts product scope unchanged.
+Re-run the napplet-make workflow (napplet-ui, napplet-build, napplet-test),
+repair any boundary, layout, or verification failures, and keep the Note Drafts
+product scope unchanged.
 ```
 
 Keep repair prompts narrow. Do not ask the agent to redesign the whole app after
 you already have a working structure. If the same boundary detail must be added
-to every user prompt, treat that as a `@napplet/skills` bug and update the
-relevant skill instead of growing the prompt.
+to every user prompt, treat that as a skill bug and update the relevant
+`skills/napplet-*/SKILL.md` instead of growing the prompt.
 
 ## 6. Verify the artifact, not just the source
 

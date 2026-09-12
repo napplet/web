@@ -8,7 +8,7 @@ artifacts, inspects deploy plans, signs manifest events, uploads files to
 Blossom servers, publishes to relays, and runs local napplet tooling such as
 conformance and Paja.
 
-The standalone binary runs `napplet create` and `napplet skills` through bundled package code, so those onboarding commands do not need Node.js or an npm package resolver at runtime.
+The standalone binary runs `napplet create` through bundled package code, so scaffolding does not need Node.js or an npm package resolver at runtime. Agent skills are installed separately with the open skills CLI — see [Agent skills](/guide/agent-skills).
 
 - **npm:** [`@napplet/cli`](https://www.npmjs.com/package/@napplet/cli)
 - **JSR:** [`@napplet/cli`](https://jsr.io/@napplet/cli)
@@ -60,7 +60,7 @@ Run the same path for every new project:
 napplet create my-napplet
 cd my-napplet
 napplet init
-napplet skills install --to codex
+npx skills add napplet/napplet
 pnpm install
 # Ask your agent to build the napplet.
 pnpm verify
@@ -73,7 +73,7 @@ napplet deploy
   targets in `.napplet/config.json`. In an interactive terminal it guides setup and shows live suggestions from
   relays such as `wss://relaypag.es`, and suggests Blossom servers from kind
   `10063` server-list events.
-- `napplet skills` delegates to the shipped agent-skill installer and preserves its target arguments.
+- `npx skills add napplet/napplet` installs the `napplet-*` agent skills for whichever coding agents you use; it is the skills.sh CLI, not a `napplet` subcommand.
 - `napplet debug` prints resolved config, discovered napplets, deploy targets,
   manifest templates, and signing readiness without network writes.
 - `napplet deploy --dry-run` builds the same deploy plan and signed manifest
@@ -93,7 +93,6 @@ napplet deploy
 napplet guide
 napplet create <directory> [--template <path-or-url>] [--force]
 napplet init [--force] [--root] [--source-dir <dir>] [--name <dtag>] [--title <title>] [--description <text>] [--archetype <slug:napplet:archetype/intent>] [--relay <url>] [--server <url>]
-napplet skills <list|print|install> [args]
 napplet discover [--config <file>] [--all]
 napplet debug [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>]
 napplet deploy [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>] [--prompt-sec] [--dry-run]

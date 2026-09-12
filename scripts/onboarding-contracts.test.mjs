@@ -15,7 +15,7 @@ test('primary onboarding docs use the same ordered CLI workflow', async () => {
   const commands = [
     'napplet create',
     'napplet init',
-    'napplet skills install',
+    'npx skills add napplet/napplet',
     'pnpm verify',
     'napplet deploy --dry-run',
     'napplet deploy',
@@ -33,7 +33,7 @@ test('primary onboarding docs use the same ordered CLI workflow', async () => {
 });
 
 test('live guidance has no retired metadata flags or primary package bypass', async () => {
-  const roots = ['README.md', 'apps/docs', 'packages/skills', 'packages/boilerplate/README.md', 'packages/cli/README.md'];
+  const roots = ['README.md', 'apps/docs', 'skills', 'packages/boilerplate/README.md', 'packages/cli/README.md'];
   const files = [];
   for (const entry of roots) {
     const absolute = path.join(root, entry);
@@ -54,13 +54,14 @@ test('live guidance has no retired metadata flags or primary package bypass', as
       assert.doesNotMatch(source, /npx @napplet\/boilerplate/, relative);
     }
     assert.doesNotMatch(source, /npx @napplet\/skills/, relative);
+    assert.doesNotMatch(source, /napplet skills (?:install|list|print)|@napplet\/skills/, relative);
   }
 });
 
 test('shipped build skills preserve CLI metadata ownership', async () => {
   for (const file of [
-    'packages/skills/skills/build-napplet/SKILL.md',
-    'packages/skills/skills/make-napplet/SKILL.md',
+    'skills/napplet-build/SKILL.md',
+    'skills/napplet-make/SKILL.md',
   ]) {
     const source = await readFile(path.join(root, file), 'utf8');
     assert.match(source, /napplet create/);

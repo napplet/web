@@ -15,13 +15,12 @@ function text(bytes: Uint8Array): string {
   return new TextDecoder().decode(bytes);
 }
 
-Deno.test("compiled napplet creates and installs skills without a package resolver", async () => {
+Deno.test("compiled napplet creates projects without a package resolver", async () => {
   const root = await Deno.makeTempDir({ prefix: "napplet-resolver-free-" });
   try {
     const binary = `${root}/napplet`;
     const template = `${root}/template`;
     const created = `${root}/created`;
-    const installed = `${root}/installed`;
     const emptyPath = `${root}/empty-path`;
     await Deno.mkdir(template);
     await Deno.mkdir(emptyPath);
@@ -31,8 +30,6 @@ Deno.test("compiled napplet creates and installs skills without a package resolv
       "compile",
       "--no-check",
       "--node-modules-dir=none",
-      "--include",
-      "../skills/skills",
       "--allow-read",
       "--allow-write",
       "--allow-run",
@@ -60,31 +57,9 @@ Deno.test("compiled napplet creates and installs skills without a package resolv
       private: true,
     });
 
-    const listed = await run(binary, ["skills", "list"], { env: environment, cwd: root });
-    assertEquals(listed.code, 0, text(listed.stderr));
-    assert(text(listed.stdout).includes("make-napplet"));
-
-    const skillsHelp = await run(binary, ["skills", "--help"], { env: environment, cwd: root });
-    assertEquals(skillsHelp.code, 0, text(skillsHelp.stderr));
-    assert(text(skillsHelp.stdout).includes("Install options:"));
-    assert(text(skillsHelp.stdout).includes("Targets (--to):"));
-    assert(text(skillsHelp.stdout).includes("Examples:"));
-
-    const install = await run(binary, ["skills", "install", "make-napplet", "--dir", installed], {
-      env: environment,
-      cwd: root,
-    });
-    assertEquals(install.code, 0, text(install.stderr));
-    assert(
-      (await Deno.readTextFile(`${installed}/make-napplet/SKILL.md`)).includes("Making A Napplet"),
-    );
-
-    const invalidSkills = await run(binary, ["skills", "--unknown"], {
-      env: environment,
-      cwd: root,
-    });
-    assertEquals(invalidSkills.code, 2);
-    assert(text(invalidSkills.stderr).includes("unknown option: --unknown"));
+    const skills = await run(binary, ["skills", "list"], { env: environment, cwd: root });
+    assertEquals(skills.code, 2);
+    assert(text(skills.stderr).includes("Unknown command: skills"));
 
     const invalidCreate = await run(binary, ["create", "--variant", "unsupported", "--yes"], {
       env: environment,

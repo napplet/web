@@ -23,9 +23,8 @@ export function renderGuide(): string {
    CLI docs: ${DOCS_BASE}/packages/cli.html
 
 4. Equip your agent
-   napplet skills list
-   napplet skills install --to codex
-   Skills docs: ${DOCS_BASE}/packages/skills.html
+   npx skills add napplet/napplet
+   Skills docs: ${DOCS_BASE}/guide/agent-skills.html
 
 5. Build and verify
    pnpm install

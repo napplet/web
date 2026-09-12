@@ -158,9 +158,9 @@ Deno.test("runPackageCli preserves create arguments as an explicit argv array", 
   assertEquals(stdout, ["created"]);
 });
 
-Deno.test("runPackageCli preserves skills target passthrough on Windows", async () => {
+Deno.test("runPackageCli uses npx.cmd on Windows and forwards the package exit code", async () => {
   const calls: Array<{ command: string; args: string[] }> = [];
-  const code = await runPackageCli("@napplet/skills", ["install", "--to", "agents"], {
+  const code = await runPackageCli("@napplet/boilerplate", ["project", "--force"], {
     runner(command, args) {
       calls.push({ command, args });
       return Promise.resolve({ code: 3, stdout: "", stderr: "failed\n" });
@@ -172,7 +172,7 @@ Deno.test("runPackageCli preserves skills target passthrough on Windows", async 
   assertEquals(code, 3);
   assertEquals(calls, [{
     command: "npx.cmd",
-    args: ["--yes", "@napplet/skills", "install", "--to", "agents"],
+    args: ["--yes", "@napplet/boilerplate", "project", "--force"],
   }]);
 });
 
@@ -183,18 +183,23 @@ Deno.test("main accepts standalone package runner injection without changing def
       calls.push({ command: "create", args });
       return Promise.resolve(7);
     },
-    runSkills(args: readonly string[]) {
-      calls.push({ command: "skills", args });
-      return 8;
-    },
   };
 
   assertEquals(await main(["create", "project", "--force"], options), 7);
-  assertEquals(await main(["skills", "install", "--to", "codex"], options), 8);
-  assertEquals(calls, [
-    { command: "create", args: ["project", "--force"] },
-    { command: "skills", args: ["install", "--to", "codex"] },
-  ]);
+  assertEquals(calls, [{ command: "create", args: ["project", "--force"] }]);
+});
+
+Deno.test("skills is no longer a CLI command; agents install skills through skills.sh", async () => {
+  const errors: string[] = [];
+  const original = console.error;
+  console.error = (value: unknown) => errors.push(String(value));
+  try {
+    assertEquals(await main(["skills", "install", "--to", "codex"]), 2);
+  } finally {
+    console.error = original;
+  }
+  assert(errors.some((line) => line.includes("Unknown command: skills")));
+  assert(!errors.join("\n").includes("napplet skills"));
 });
 
 Deno.test("published CLI entrypoint excludes standalone-only workspace imports", async () => {
@@ -207,9 +212,8 @@ Deno.test("published CLI entrypoint excludes standalone-only workspace imports",
   ) as { publish?: { exclude?: string[] } };
 
   assert(!cliSource.includes('from "@napplet/boilerplate"'));
-  assert(!cliSource.includes('from "@napplet/skills/cli"'));
   assert(standaloneSource.includes('from "@napplet/boilerplate"'));
-  assert(standaloneSource.includes('from "@napplet/skills/cli"'));
+  assert(!standaloneSource.includes("@napplet/skills"));
   assert(config.publish?.exclude?.includes("src/standalone.ts"));
 });
 
