@@ -354,7 +354,7 @@ Next:
   cd ${shellEscape(relativeTarget)}
   pnpm install
   napplet init
-  napplet skills install --to codex
+  npx skills add napplet/napplet
   # Ask your agent to build the napplet, then verify it:
   pnpm verify
   napplet deploy --dry-run

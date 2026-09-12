@@ -1,6 +1,6 @@
 # @napplet/cli
 
-Standalone CLI for creating, configuring, building with agents, inspecting, testing, and deploying napplets. The binary does not require Deno, Node.js, or an npm package resolver for `napplet create` and `napplet skills`: those commands call bundled package code directly.
+Standalone CLI for creating, configuring, inspecting, testing, and deploying napplets. The binary does not require Deno, Node.js, or an npm package resolver for `napplet create`: it calls the bundled generator directly. Agent skills are installed with the open skills CLI (`npx skills add napplet/napplet`), not by this binary.
 
 Use it to create a `.napplet/config.json`, find built `index.html` artifacts, inspect the deploy plan, sign manifest events, upload files to Blossom servers, publish to relays, and run local napplet tooling such as conformance and Paja.
 
@@ -73,7 +73,7 @@ The primary developer path is ordered and composable:
 napplet create my-napplet
 cd my-napplet
 napplet init
-napplet skills install --to codex
+npx skills add napplet/napplet
 pnpm install
 # Ask your agent to build the napplet.
 pnpm verify
@@ -85,7 +85,7 @@ What each step does:
 
 - `napplet create` delegates to `@napplet/boilerplate` and creates the starter only.
 - `napplet init` owns deployment name, title, description, archetype roles and conventions, relays, and Blossom servers in `.napplet/config.json`; scripts can pass the same fields explicitly.
-- `napplet skills` delegates to `@napplet/skills`, preserving every target and custom-location flag.
+- `npx skills add napplet/napplet` installs the `napplet-*` agent skills through the skills.sh CLI (Claude Code, Codex, Cursor, and 70+ other agents); it is not a `napplet` subcommand.
 - `napplet debug` prints resolved config, discovered napplets, deploy targets, manifest templates, and signing readiness without uploading or publishing.
 - `napplet deploy --dry-run` builds the same deploy plan and signed manifest events without network writes. Interactive terminals get a readable report with copyable NIP-19 pointers.
 - `napplet deploy` uploads files to configured Blossom servers and publishes signed root, named, and optional snapshot manifest events to configured relays. Use `--json` for CI / machine output.
@@ -96,7 +96,6 @@ What each step does:
 napplet guide
 napplet create <directory> [--template <path-or-url>] [--force]
 napplet init [--force] [--root] [--source-dir <dir>] [--name <dtag>] [--title <title>] [--description <text>] [--archetype <slug:convention>] [--relay <url>] [--server <url>]
-napplet skills <list|print|install> [args]
 napplet discover [--config <file>] [--all]
 napplet debug [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>]
 napplet deploy [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>] [--prompt-sec] [--dry-run] [--json]

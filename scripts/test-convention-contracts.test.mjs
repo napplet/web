@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtemp, mkdir, rm, symlink, writeFile } from 'node:fs/promises';
+import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import test from 'node:test';
@@ -109,7 +109,7 @@ test('rejects paired INC examples with mismatched exact topics', async () => {
   assert.deepEqual(violations.map(({ family }) => family), ['inc-exact-topic-mismatch']);
 });
 
-test('excludes unrelated language, historical records, negative tests, and the root skills symlink', async () => {
+test('excludes unrelated language, historical records, and negative tests while scanning root skills', async () => {
   const violations = await scanFixture(async (root) => {
     await writeFixture(root, 'packages/core/src/dispatch.ts', `
       export function dispatch() { return { handled: true, kind: 1, label: 'kind:1' }; }
@@ -125,8 +125,7 @@ test('excludes unrelated language, historical records, negative tests, and the r
       const message = { type: 'intent.deliver', id: 'delivery-1' };
       const tag = ['archetype', 'note', 'napplet:note/open?kind=1'];
     `);
-    await writeFixture(root, 'packages/skills/skills/build-napplet/SKILL.md', 'valid guidance');
-    await symlink('packages/skills/skills', join(root, 'skills'));
+    await writeFixture(root, 'skills/napplet-build/SKILL.md', 'valid guidance');
   });
 
   assert.deepEqual(violations, []);

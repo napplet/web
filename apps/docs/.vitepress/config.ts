@@ -69,6 +69,7 @@ export default defineConfig({
             text: 'Note Drafts with an AI agent',
             link: '/guide/build-note-drafts-napplet-with-ai-agent-and-skills',
           },
+          { text: 'Agent skills', link: '/guide/agent-skills' },
         ],
       },
       {
@@ -85,7 +86,6 @@ export default defineConfig({
           { text: '@napplet/conformance-cli', link: '/packages/conformance-cli' },
           { text: '@napplet/conformance-web', link: '/packages/conformance-web' },
           { text: '@napplet/boilerplate', link: '/packages/boilerplate' },
-          { text: '@napplet/skills', link: '/packages/skills' },
         ],
       },
       {

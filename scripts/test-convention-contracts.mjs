@@ -7,7 +7,7 @@ import { readdir, readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { basename, dirname, extname, join, relative } from 'node:path';
 
-const ACTIVE_ROOTS = ['README.md', 'packages', 'apps/docs', 'apps/conformance'];
+const ACTIVE_ROOTS = ['README.md', 'packages', 'apps/docs', 'apps/conformance', 'skills'];
 const TEXT_EXTENSIONS = new Set(['.json', '.md', '.mjs', '.ts', '.tsx']);
 const SKIPPED_DIRECTORIES = new Set(['dist', 'dist-bin', 'node_modules']);
 const NUMBERED_CONVENTION_PATTERN = /\bNAP-\d+\b/g;
@@ -166,7 +166,7 @@ export async function scanConventionContracts(root) {
     if (basename(file) === 'CHANGELOG.md') continue;
 
     const filePath = relative(root, file).split('\\').join('/');
-    if (filePath === 'skills' || filePath.startsWith('.planning/')) continue;
+    if (filePath.startsWith('.planning/')) continue;
 
     let contents;
     try {

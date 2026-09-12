@@ -52,6 +52,19 @@
         </a>
       {/each}
     </div>
+
+    <aside class="skills-note" aria-label="Agent skills" use:reveal={{ delay: 120 }}>
+      <span class="notice-kicker">Agent skills</span>
+      <div>
+        <p>
+          Building with a coding agent? The <code>napplet-*</code> skills teach it the sandbox
+          boundary, the SDK surface, and the applet UI contract. Install them with the
+          open skills CLI:
+        </p>
+        <pre><code>npx skills add napplet/napplet</code></pre>
+        <a class="skills-link" href="/docs/guide/agent-skills.html">Skill reference ↗</a>
+      </div>
+    </aside>
   </div>
 </section>
 
@@ -87,6 +100,30 @@
     grid-template-columns: repeat(3, 1fr);
     gap: 18px;
   }
+  .skills-note {
+    display: grid;
+    grid-template-columns: minmax(130px, 0.25fr) 1fr;
+    gap: 18px;
+    align-items: start;
+    margin-top: 28px;
+    padding: 18px 22px;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: rgba(16, 7, 25, 0.72);
+  }
+  .skills-note p { color: var(--text-muted); font-size: 0.95rem; }
+  .skills-note pre {
+    margin: 12px 0;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.35);
+    font-family: var(--font-mono);
+    font-size: 0.88rem;
+    color: var(--accent-bright);
+    overflow-x: auto;
+  }
+  .skills-link { color: var(--text-muted); font-size: 0.88rem; }
+  .skills-link:hover { color: var(--accent-bright); }
   .pkg {
     padding: 26px;
     display: flex;
@@ -126,7 +163,8 @@
     .grid { grid-template-columns: repeat(2, 1fr); }
   }
   @media (max-width: 600px) {
-    .alpha-notice {
+    .alpha-notice,
+    .skills-note {
       grid-template-columns: 1fr;
       gap: 8px;
     }

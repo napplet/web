@@ -29,7 +29,7 @@ Run `napplet guide` for the current workflow and links to the relevant docs, or 
 napplet create my-napplet
 cd my-napplet
 napplet init
-napplet skills install --to codex # claude, cursor, agents, gemini, and others are supported
+npx skills add napplet/napplet     # agent skills via skills.sh (Claude Code, Codex, Cursor, …)
 pnpm install
 # Ask your agent to build the napplet, then verify and preview it.
 pnpm verify
@@ -37,7 +37,7 @@ napplet deploy --dry-run
 napplet deploy
 ```
 
-`napplet create` clones the maintained Vite + TypeScript starter. `napplet init` owns deployment name, title, description, archetype roles and conventions, relays, and Blossom servers in `.napplet/config.json`. Node.js 20+ is needed by the generated project and by the package-backed `create` and `skills` commands.
+`napplet create` clones the maintained Vite + TypeScript starter. `napplet init` owns deployment name, title, description, archetype roles and conventions, relays, and Blossom servers in `.napplet/config.json`. Node.js 20+ is needed by the generated project, by the package-backed `create` command, and by the skills.sh CLI.
 
 ## Packages
 
@@ -48,12 +48,11 @@ napplet deploy
 | [@napplet/sdk](packages/sdk) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fsdk?label=npm)](https://www.npmjs.com/package/@napplet/sdk) | [![JSR](https://jsr.io/badges/@napplet/sdk)](https://jsr.io/@napplet/sdk) | Named TypeScript exports wrapping `window.napplet` for bundler consumers. Provides domain wrapper objects and NAP message type re-exports, including `relay`, `inc`, `storage`, `cvm`, `outbox`, `upload`, `intent`, `ble`, `webrtc`, `link`, `count`, `lists`, `common`, `serial`, `fs`, and `dm`. |
 | [@napplet/nap](packages/nap) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fnap?label=npm)](https://www.npmjs.com/package/@napplet/nap) | [![JSR](https://jsr.io/badges/@napplet/nap)](https://jsr.io/@napplet/nap) | Compatibility package for active NAP domain subpaths (relay, storage, inc, ifc, keys, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent, ble, webrtc, link, count, lists, common, serial, fs, dm) with barrel + granular (types/shim/sdk) exports. Tree-shakable (`sideEffects: false`). Includes ownership-aware `media` and `resource`, the ContextVM `cvm` bridge with registry helpers, outbox-aware `outbox` relay routing, shell-mediated `upload`, archetype `intent` dispatch, runtime-mediated BLE/WebRTC, link opening, event counts, list mutations, common social actions, serial device access, shell-mediated virtual filesystem access, direct messages, and read-only `identity` helpers. See [packages/nap/README.md](packages/nap/README.md) for the full subpath reference. |
 | [@napplet/vite-plugin](packages/vite-plugin) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fvite-plugin?label=npm)](https://www.npmjs.com/package/@napplet/vite-plugin) | [![JSR](https://jsr.io/badges/@napplet/vite-plugin)](https://jsr.io/@napplet/vite-plugin) | Vite plugin for NIP-5D manifest generation. Computes per-file SHA-256 hashes and signs a kind 35129 napplet manifest event (NIP-5A `path` + aggregate `x` tag schema) at build time. Options: required `nappletType` (the `d` tag), optional bare NAP domain `requires`, an `artifactMode` (`external-assets` default or `single-file`), an optional `configSchema` (NAP-CONFIG), and NAAT archetype role tags. |
-| [@napplet/cli](packages/cli) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fcli?label=npm)](https://www.npmjs.com/package/@napplet/cli) | [![JSR](https://jsr.io/badges/@napplet/cli)](https://jsr.io/@napplet/cli) | Standalone CLI for creating projects, owning deploy metadata, installing agent skills, discovering builds, and deploying signed manifests. JSR/Deno remains an alternative install route. |
+| [@napplet/cli](packages/cli) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fcli?label=npm)](https://www.npmjs.com/package/@napplet/cli) | [![JSR](https://jsr.io/badges/@napplet/cli)](https://jsr.io/@napplet/cli) | Standalone CLI for creating projects, owning deploy metadata, discovering builds, and deploying signed manifests. JSR/Deno remains an alternative install route. |
 | [@napplet/boilerplate](packages/boilerplate) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fboilerplate?label=npm)](https://www.npmjs.com/package/@napplet/boilerplate) | — | Project-only generator behind `napplet create`; clones the maintained Vite + TypeScript starter and derives its package name without setting deployment metadata. |
 | [@napplet/conformance](packages/conformance) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fconformance?label=npm)](https://www.npmjs.com/package/@napplet/conformance) | [![JSR](https://jsr.io/badges/@napplet/conformance)](https://jsr.io/@napplet/conformance) | Framework-agnostic conformance engine: hand-written envelope validators for the active NAP wire domains, a signed manifest-event validator, a scriptable reference mock shell, the zero-config check catalog, and pretty/JSON/JUnit reporters. Browser-safe; reused by both the CLI and the web runtime. |
 | [@napplet/conformance-cli](packages/conformance-cli) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fconformance-cli?label=npm)](https://www.npmjs.com/package/@napplet/conformance-cli) | — | Headless `napplet-conformance` runner. Drives the engine against a napplet in real Chromium (Playwright) and sets a CI exit code — wire it up as `test:conformance`. npm-only (Playwright dependency). |
 | [@napplet/conformance-web](apps/conformance) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fconformance-web?label=npm)](https://www.npmjs.com/package/@napplet/conformance-web) | — | Browser conformance runtime deployed at `/conformance` and bundled into `napplet-conformance --ui`. Runs the conformance engine live in the page with a check tree, envelope log, and manifest inspector. |
-| [@napplet/skills](packages/skills) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fskills?label=npm)](https://www.npmjs.com/package/@napplet/skills) | [![JSR](https://jsr.io/badges/@napplet/skills)](https://jsr.io/@napplet/skills) | Agent skills (`make-napplet`, `design-napplet`, `build-napplet`, `port-nostr-app`, `test-napplet`) installed through `napplet skills` for Claude Code, Codex, Cursor, Windsurf, `AGENTS.md`, Gemini, or Copilot. |
 
 ## Conformance testing
 
