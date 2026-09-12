@@ -15,7 +15,7 @@
  * napplet create feed
  * cd feed
  * napplet init --relay wss://relay.example --server https://blossom.example --name feed --title Feed --archetype note:napplet:note/open
- * napplet skills install --to codex
+ * npx skills add napplet/napplet
  * napplet debug
  * napplet deploy --dry-run --sec nsec1...
  * ```

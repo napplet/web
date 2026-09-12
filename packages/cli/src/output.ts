@@ -286,7 +286,7 @@ export function renderInitReport(report: InitReport): string {
   pushField(lines, "Blossom servers", formatCountedList(report.config.blossomServers));
   lines.push("");
   pushSection(lines, "Next");
-  lines.push("1. Install agent guidance: `napplet skills install --to codex` (or another target).");
+  lines.push("1. Install agent guidance: `npx skills add napplet/napplet`.");
   lines.push("2. Build and verify the project: `pnpm install && pnpm verify`.");
   lines.push("3. Preview manifest events: `napplet deploy --dry-run`.");
   if (report.config.relays.length > 0 && report.config.blossomServers.length > 0) {

@@ -65,21 +65,14 @@ jobs:
       # we tighten public type exports later (tracked separately).
       # --allow-dirty: tolerates the sync step's jsr.json edits without
       # requiring a follow-up commit.
-      # @napplet/cli publishes to JSR from deno.json only; @napplet/skills has
-      # both a Deno CLI config and a JSR config, so it is published separately
-      # below with an explicit config. @napplet/boilerplate (npx CLI generator)
-      # and @napplet/conformance-cli (Playwright-backed runner) are published to
-      # npm only, so they are excluded from the JSR publish set. The pure
-      # @napplet/conformance engine still publishes to JSR.
+      # @napplet/cli publishes to JSR from deno.json only. @napplet/boilerplate
+      # (npx CLI generator) and @napplet/conformance-cli (Playwright-backed
+      # runner) are published to npm only, so they are excluded from the JSR
+      # publish set. The pure @napplet/conformance engine still publishes to JSR.
+      # Agent skills live in the repo-root skills/ directory and are installed
+      # with the skills.sh CLI, so they are not published as a package.
       - name: Publish to JSR (topologically ordered)
-        run: pnpm -r --workspace-concurrency=1 --filter='./packages/*' --filter='!@napplet/boilerplate' --filter='!@napplet/conformance-cli' --filter='!@napplet/skills' exec npx jsr publish --allow-slow-types --allow-dirty
-
-      # The Deno CLI's deno.json intentionally differs from the publish metadata
-      # in jsr.json. JSR's implicit config discovery picks deno.json, so select
-      # jsr.json explicitly to publish the synchronized version and license.
-      - name: Publish @napplet/skills to JSR
-        working-directory: packages/skills
-        run: npx jsr publish --config jsr.json --allow-slow-types --allow-dirty
+        run: pnpm -r --workspace-concurrency=1 --filter='./packages/*' --filter='!@napplet/boilerplate' --filter='!@napplet/conformance-cli' exec npx jsr publish --allow-slow-types --allow-dirty
 
   build-cli-binaries:
     if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
@@ -112,7 +105,7 @@ jobs:
       - name: Install workspace dependencies
         run: pnpm install --frozen-lockfile
       - name: Build standalone CLI package dependencies
-        run: pnpm --filter @napplet/boilerplate build && pnpm --filter @napplet/skills build
+        run: pnpm --filter @napplet/boilerplate build
       - uses: denoland/setup-deno@v2
       - name: Compile ${{ matrix.asset }}
         run: deno task --config packages/cli/deno.json ${{ matrix.task }}

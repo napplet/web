@@ -41,7 +41,6 @@ Usage:
   napplet guide
   napplet create <directory> [--template <path-or-url>] [--force]
   napplet init [--force] [--root] [--source-dir <dir>] [--name <dtag>] [--title <title>] [--description <text>] [--archetype <slug:napplet:<archetype>/<intent>>] [--relay <url>] [--server <url>]
-  napplet skills <list|print|install> [args]
   napplet deploy [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>] [--prompt-sec] [--dry-run] [--json]
   napplet debug [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>]
   napplet keys store --name <ref> [--sec <secret> | --prompt-sec]
@@ -68,7 +67,6 @@ export type PackageCliRunner = (args: readonly string[]) => number | Promise<num
 /** Optional maintained-package runners used by standalone builds. */
 export interface CliMainOptions {
   runCreate?: PackageCliRunner;
-  runSkills?: PackageCliRunner;
 }
 
 /**
@@ -93,10 +91,6 @@ export async function main(argv = Deno.args, options: CliMainOptions = {}): Prom
         return commandGuide();
       case "create":
         return await (options.runCreate ?? ((args) => runPackageCli("@napplet/boilerplate", args)))(
-          parsed.rest,
-        );
-      case "skills":
-        return await (options.runSkills ?? ((args) => runPackageCli("@napplet/skills", args)))(
           parsed.rest,
         );
       case "discover":
@@ -139,7 +133,7 @@ export interface PackageCliRunOptions {
  * @returns Process exit code from the maintained package CLI.
  */
 export async function runPackageCli(
-  packageName: "@napplet/boilerplate" | "@napplet/skills",
+  packageName: "@napplet/boilerplate",
   args: readonly string[],
   options: PackageCliRunOptions = {},
 ): Promise<number> {

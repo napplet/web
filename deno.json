@@ -1,7 +1,6 @@
 {
   "workspace": [
     "./packages/boilerplate",
-    "./packages/skills",
     "./packages/cli",
     "./packages/conformance",
     "./packages/core",

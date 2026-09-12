@@ -19,7 +19,6 @@
   },
   "dependencies": {
     "@napplet/boilerplate": "workspace:^",
-    "@napplet/skills": "workspace:^",
     "@scure/base": "^1.2.6",
     "applesauce-relay": "^5.2.0",
     "applesauce-signers": "^5.2.0",
