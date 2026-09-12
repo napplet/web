@@ -37,7 +37,7 @@ Keep these scripts as generated:
 | `index.html` | Keep `<title>`, `<meta viewport>`, `#app` root. **Delete the starter `masthead` / `eyebrow` / `<h1>`** and the demo panels; add only the product's markup (`napplet-ui` Rule 1) |
 | `src/styles.css` | Replace the starter's page layout (`.app-shell { padding: 2rem }`, `.workspace { width: min(1040px, 100%) }`, `body { min-width: 320px }`) with the compact, full-frame, container-query layout from `napplet-ui` |
 | `src/main.ts` | Product behavior; SDK-first calls; keep `domain-availability.ts`'s `runtimeHasDomain` pattern for optional-domain gating |
-| `tests/guidance.test.mjs` | The template's own guard runs under `pnpm verify`. It encodes *demo* expectations (starter control ids, no `requires:` in `vite.config.ts`, the `.codex/skills/README.md` pointer). When you replace the demo, update those product-specific lines to your product — keep the script, the forbidden-surface scans, and the OUTBOX-first assertions |
+| `tests/guidance.test.mjs` | The template's own guard runs under `pnpm verify`: forbidden-surface scans, OUTBOX-first, optional-domain gating, and the applet layout contract. Keep it. Older scaffolds also encode *demo* expectations (starter control ids, no `requires:` in `vite.config.ts`); if yours does, update those product-specific lines rather than deleting the script |
 | `README.md`, `docs/*` | Product usage, NAP boundaries, verification notes |
 
 `package.json`: rename the package; add dependencies only when the feature truly needs them, and prove they carry no dormant network/storage paths into the bundle.
