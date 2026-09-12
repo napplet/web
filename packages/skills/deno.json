@@ -1,9 +1,0 @@
-{
-  "extends": "../../deno.json",
-  "name": "@napplet/skills",
-  "version": "0.3.1",
-  "exports": {
-    ".": "./src/index.ts",
-    "./cli": "./src/deno-cli.ts"
-  }
-}
