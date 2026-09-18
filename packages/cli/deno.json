@@ -1,7 +1,7 @@
 {
   "extends": "../../deno.json",
   "name": "@napplet/cli",
-  "version": "0.5.2",
+  "version": "0.6.0",
   "description": "Standalone CLI for creating, configuring, testing, and deploying napplets",
   "license": "MIT",
   "exports": {

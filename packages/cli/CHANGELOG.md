@@ -1,5 +1,16 @@
 # @napplet/cli
 
+## 0.6.0
+
+### Minor Changes
+
+- 976ad05: Remove the `napplet skills` subcommand and the bundled `@napplet/skills` installer. Agent skills now live in the repository's `skills/` directory as `napplet-*` skills and install with the open skills.sh CLI: `npx skills add napplet/napplet`. `napplet guide`, `napplet init` output, and the `napplet create` next-steps point at that command.
+
+### Patch Changes
+
+- Updated dependencies [976ad05]
+  - @napplet/boilerplate@0.3.3
+
 ## 0.5.2
 
 ### Patch Changes
