@@ -1,9 +1,4 @@
-/**
- * @napplet/vite-plugin — filesystem walking and SHA-256 hashing primitives.
- *
- * Pure helpers used by the manifest builder to enumerate dist artifacts and
- * compute SHA-256 hashes for the artifact manifest.
- */
+/** Filesystem traversal and artifact hashing. */
 
 import * as crypto from 'crypto';
 import * as fs from 'fs';

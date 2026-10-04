@@ -83,8 +83,7 @@ function setHtmlDescription(html: string, description: string): string {
  * value containing a quote or angle bracket cannot break out of the tag.
  *
  * These are PLAIN HTML elements, NOT `napplet-*` protocol meta tags. The napplet
- * CLI reads them back out of the built index.html to emit NIP-5A
- * `["title", …]` / `["description", …]` manifest tags at deploy time.
+ * CLI reads them from index.html for the manifest title and description content.
  *
  * @param html - the source index.html string.
  * @param options - `title` and/or `description` values to inject.

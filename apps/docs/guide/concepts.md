@@ -110,31 +110,16 @@ browser enforces the boundary — it is not a matter of the napplet behaving.
 
 The shell assigns each napplet an identity **at iframe creation time**, with no
 handshake. It maps the iframe's `Window` reference to the napplet's
-`(dTag, aggregateHash)` tuple from the NIP-5A manifest and verifies
+`(dTag, artifactHash)` tuple verified against the NIP-5D manifest and verifies
 `MessageEvent.source` on **every** inbound message. `MessageEvent.source` is
 unforgeable, so this is how the shell knows which napplet a message came from.
 Messages from unmapped windows are silently dropped.
 
-## ACL — capabilities
+## ACL and storage
 
-The shell enforces an Access Control List keyed on `(dTag, aggregateHash)`. This
-controls what a given napplet build is allowed to do: signing, storage access,
-relay read/write, and so on. Because the key includes the **aggregate hash**, a
-different build of the same napplet type is treated as a distinct subject — any
-change to the build (or to declared `connect` origins / config schema, which fold
-into the hash) re-triggers the shell's consent and re-scopes prior grants.
+Shells enforce capability, consent and storage policy using the verified napplet identity and each NAP's contract. NIP-5D's current identity is `(dTag, artifactHash)`, where `artifactHash` covers the artifact bytes alone. Metadata does not participate in that digest. Domain declarations do not grant authority.
 
-The human-readable capability strings are exported from `@napplet/core` as the
-[`Capability`](/packages/core) union (`relay:read`, `relay:write`, `sign:event`,
-`state:read`, …).
-
-## Storage scoping
-
-Storage is proxied through the shell and **scoped by `dTag:aggregateHash`**, so
-different napplet types — and different versions of the same type — have isolated
-storage and cannot read each other's data. There is a per-napplet quota (the shim
-documents 512 KB). Access is via `window.napplet.storage` (`getItem`, `setItem`,
-`removeItem`, `keys`).
+Moving from legacy aggregate hashes changes identity keys even when artifact bytes stay the same. Shell maintainers need an explicit migration policy for existing saved data and grants; the SDK does not silently copy them. See [event migration](/guide/event-migration) and the living [NAP contracts](https://github.com/napplet/naps) for domain-specific behavior.
 
 ## Domain Presence
 
@@ -150,5 +135,5 @@ if (window.napplet?.inc) { /* … */ }
 ```
 
 This pairs with declarative negotiation: declare what you need in the manifest
-(`requires` tags via [`@napplet/vite-plugin`](/packages/vite-plugin)), and gate at
+(`R` tags via [`@napplet/vite-plugin`](/packages/vite-plugin)), and gate at
 runtime with property presence. Always degrade gracefully when a capability is absent.

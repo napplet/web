@@ -16,6 +16,7 @@ const EXPECTED_SKILLS = [
   'napplet-interop',
   'napplet-port',
   'napplet-test',
+  'napplet-migrate',
 ];
 
 function parseFrontmatter(markdown) {

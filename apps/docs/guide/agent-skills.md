@@ -38,6 +38,7 @@ Agents that read skills by name can then invoke `/napplet-make`, `/napplet-ui`, 
 | `napplet-interop` | Only for cross-napplet features | NAP-INC topics, NAP-INTENT dispatch, archetype manifest metadata, the stable queryless convention rule. |
 | `napplet-port` | Migrating an existing Nostr app | Inventory of app-owned relay/signing/storage/network layers, migration map, monolith splitting, removing site chrome, the hand-off. |
 | `napplet-test` | Before publishing | Conformance, failure interpretation, boundary audit, single-file artifact, applet UI checks, smoke scenarios, Paja preview, CI. |
+| `napplet-migrate` | When upgrading event formats | Signed-event previews, current/legacy deployment choices, hash and pointer compatibility. |
 
 ## Usage patterns
 

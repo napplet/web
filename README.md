@@ -39,6 +39,10 @@ napplet deploy
 
 `napplet create` clones the maintained Vite + TypeScript starter. `napplet init` owns deployment name, title, description, archetype roles and conventions, relays, and Blossom servers in `.napplet/config.json`. Node.js 20+ is needed by the generated project, by the package-backed `create` command, and by the skills.sh CLI.
 
+## Event schema compatibility
+
+Current event defaults begin at **CLI 0.7.0**, **Vite plugin 0.15.0**, **conformance 0.18.0**, and **conformance-cli 0.3.0**. Earlier release series use legacy path/aggregate manifests. The event kinds remain 5129/15129/35129; current events use the artifact SHA-256 in `x`, a description in `content`, and `R`/`O` plus `z`/`i` metadata. CLI deployments offer temporary `--format legacy` support; unattended deployments default to current. See the [migration guide](apps/docs/guide/event-migration.md) for event conversion, legacy pointers and shell storage/ACL implications.
+
 ## Packages
 
 | Package | npm | JSR | Description |
@@ -47,7 +51,7 @@ napplet deploy
 | [@napplet/shim](packages/shim) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fshim?label=npm)](https://www.npmjs.com/package/@napplet/shim) | [![JSR](https://jsr.io/badges/@napplet/shim)](https://jsr.io/@napplet/shim) | Runtime-side helper for injecting selected `window.napplet.<domain>` objects before napplet code runs. Sends JSON envelope messages via postMessage. |
 | [@napplet/sdk](packages/sdk) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fsdk?label=npm)](https://www.npmjs.com/package/@napplet/sdk) | [![JSR](https://jsr.io/badges/@napplet/sdk)](https://jsr.io/@napplet/sdk) | Named TypeScript exports wrapping `window.napplet` for bundler consumers. Provides domain wrapper objects and NAP message type re-exports, including `relay`, `inc`, `storage`, `cvm`, `outbox`, `upload`, `intent`, `ble`, `webrtc`, `link`, `count`, `lists`, `common`, `serial`, `fs`, and `dm`. |
 | [@napplet/nap](packages/nap) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fnap?label=npm)](https://www.npmjs.com/package/@napplet/nap) | [![JSR](https://jsr.io/badges/@napplet/nap)](https://jsr.io/@napplet/nap) | Compatibility package for active NAP domain subpaths (relay, storage, inc, ifc, keys, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent, ble, webrtc, link, count, lists, common, serial, fs, dm) with barrel + granular (types/shim/sdk) exports. Tree-shakable (`sideEffects: false`). Includes ownership-aware `media` and `resource`, the ContextVM `cvm` bridge with registry helpers, outbox-aware `outbox` relay routing, shell-mediated `upload`, archetype `intent` dispatch, runtime-mediated BLE/WebRTC, link opening, event counts, list mutations, common social actions, serial device access, shell-mediated virtual filesystem access, direct messages, and read-only `identity` helpers. See [packages/nap/README.md](packages/nap/README.md) for the full subpath reference. |
-| [@napplet/vite-plugin](packages/vite-plugin) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fvite-plugin?label=npm)](https://www.npmjs.com/package/@napplet/vite-plugin) | [![JSR](https://jsr.io/badges/@napplet/vite-plugin)](https://jsr.io/@napplet/vite-plugin) | Vite plugin for NIP-5D manifest generation. Computes per-file SHA-256 hashes and signs a kind 35129 napplet manifest event (NIP-5A `path` + aggregate `x` tag schema) at build time. Options: required `nappletType` (the `d` tag), optional bare NAP domain `requires`, an `artifactMode` (`external-assets` default or `single-file`), an optional `configSchema` (NAP-CONFIG), and NAAT archetype role tags. |
+| [@napplet/vite-plugin](packages/vite-plugin) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fvite-plugin?label=npm)](https://www.npmjs.com/package/@napplet/vite-plugin) | [![JSR](https://jsr.io/badges/@napplet/vite-plugin)](https://jsr.io/@napplet/vite-plugin) | Vite plugin for current NIP-5D manifests: hashes the final index.html artifact, emits description content and capability/intent metadata, and defaults to single-file output. |
 | [@napplet/cli](packages/cli) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fcli?label=npm)](https://www.npmjs.com/package/@napplet/cli) | [![JSR](https://jsr.io/badges/@napplet/cli)](https://jsr.io/@napplet/cli) | Standalone CLI for creating projects, owning deploy metadata, discovering builds, and deploying signed manifests. JSR/Deno remains an alternative install route. |
 | [@napplet/boilerplate](packages/boilerplate) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fboilerplate?label=npm)](https://www.npmjs.com/package/@napplet/boilerplate) | — | Project-only generator behind `napplet create`; clones the maintained Vite + TypeScript starter and derives its package name without setting deployment metadata. |
 | [@napplet/conformance](packages/conformance) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fconformance?label=npm)](https://www.npmjs.com/package/@napplet/conformance) | [![JSR](https://jsr.io/badges/@napplet/conformance)](https://jsr.io/@napplet/conformance) | Framework-agnostic conformance engine: hand-written envelope validators for the active NAP wire domains, a signed manifest-event validator, a scriptable reference mock shell, the zero-config check catalog, and pretty/JSON/JUnit reporters. Browser-safe; reused by both the CLI and the web runtime. |
@@ -115,10 +119,10 @@ Shell runtime                              @napplet/shim
 ◄────────── postMessage: { type: 'outbox.event', subId, result }   ─────────►
 
 @napplet/vite-plugin (build time)
-  └── NIP-5D manifest generation + requires tag injection
+  └── NIP-5D manifest generation + R/O capability advertisements
 ```
 
-The iframe sandbox requires only `allow-scripts` -- **no `allow-same-origin`**. Shells MAY add additional tokens (`allow-forms`, `allow-popups`, etc.) per shell policy. Napplets cannot access the host shell's DOM, cookies, localStorage, or service workers. All persistent state goes through the shell's proxies.
+The iframe uses `sandbox="allow-scripts"`, without `allow-same-origin`, as specified by [NIP-5D Transport](https://github.com/dskvr/nips/blob/nip/5d/5D.md#transport). Napplets cannot access the host shell's DOM, cookies, localStorage, or service workers. All persistent state goes through the shell's proxies.
 
 ### Intent dispatch
 

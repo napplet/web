@@ -57,7 +57,8 @@ manifest archetype tag advertises one complete queryless
 `napplet:<archetype>/<intent>` identity:
 
 ```json
-["archetype", "profile", "napplet:profile/open"]
+["z", "profile"]
+["i", "napplet:profile/open"]
 ```
 
 URI queries are per-invocation payload sugar at INC `emit`. They never appear in manifest discovery or subscriptions. Intent dispatch uses `invoke(request)` or `open(archetype, payload?, opts?)` and returns the canonical result with `handled`, handler, and window information.

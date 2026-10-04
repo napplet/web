@@ -95,7 +95,7 @@ napplet create <directory> [--template <path-or-url>] [--force]
 napplet init [--force] [--root] [--source-dir <dir>] [--name <dtag>] [--title <title>] [--description <text>] [--archetype <slug:napplet:archetype/intent>] [--relay <url>] [--server <url>]
 napplet discover [--config <file>] [--all]
 napplet debug [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>]
-napplet deploy [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>] [--prompt-sec] [--dry-run]
+napplet deploy [--format current|legacy] [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>] [--prompt-sec] [--dry-run]
 napplet keys store --name <ref> [--sec <secret> | --prompt-sec]
 napplet keys connect --name <ref> [--relay <url> ...] [--config <file>]
 napplet keys use --name <ref> [--config <file>]
@@ -134,7 +134,8 @@ the queryless convention:
 ```
 
 ```json
-["archetype", "profile", "napplet:profile/open"]
+["z", "profile"]
+["i", "napplet:profile/open"]
 ```
 
 Each tag advertises one stable convention identity. The role slug and convention's own archetype segment are independent under [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md). Query parameters are rejected in metadata.
@@ -160,3 +161,16 @@ at those exact draft heads.
   `napplet-conformance` executable.
 - [Getting started](/guide/getting-started) — scaffold, build, and verify a
   napplet before deploying.
+
+
+## Current and legacy event formats
+
+From CLI **0.7.0**, deployments default to the current NIP-5D artifact-hash schema. Interactive deploys ask for `current` or `legacy`; scripts can choose with `--format current|legacy`. A non-empty description is required for current event content. Legacy output remains isolated in a temporary serializer; 0.6.x and earlier defaulted to legacy events.
+
+```sh
+napplet deploy --dry-run --format current
+napplet deploy --format legacy
+napplet migrate signed-event.json --optional theme --output migration-preview.json
+```
+
+`migrate` verifies the source signature and writes an unsigned preview with provenance. It does not publish or modify the artifact, and refuses to overwrite an existing output file. Review description, required/optional choices and pointers before signing. See the [migration guide](https://napplet.run/docs/guide/event-migration) for format differences and shell data/consent implications.

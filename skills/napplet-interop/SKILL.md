@@ -23,7 +23,7 @@ A napplet that fulfils an archetype role advertises one contract per entry throu
 archetypes: [{ slug: 'note', convention: 'napplet:note/open' }],
 ```
 
-This emits the manifest tag `["archetype", "note", "napplet:note/open"]`. The role `slug` and the convention's archetype segment are independent under NAP-INTENT. Do not add payload, version, or negotiation fields.
+This emits the manifest tag `["z", "note"]` and `["i", "napplet:note/open"]`. The role `slug` and the convention's archetype segment are independent under NAP-INTENT. Do not add payload, version, or negotiation fields.
 
 ## NAP-INC — broadcast between napplets
 

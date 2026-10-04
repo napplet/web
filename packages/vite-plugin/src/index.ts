@@ -17,6 +17,7 @@
  *   plugins: [
  *     nip5aManifest({
  *       nappletType: "feed",
+ *       description: "Read a Nostr feed",
  *       requires: ["outbox", "storage"],
  *       artifactMode: "single-file",
  *     }),
@@ -27,7 +28,7 @@
  * During build it can:
  *
  * - rewrite local JS/CSS assets into `index.html` for single-file artifacts
- * - compute per-file SHA-256 hashes and the NIP-5A aggregate hash
+ * - compute the SHA-256 of the final index.html artifact
  * - write `.nip5a-manifest.json` containing a NIP-5D kind 35129 manifest template
  * - inject optional plain-HTML title and description metadata
  * - record required domains, config schema, and archetype metadata in the
@@ -59,17 +60,17 @@ export { NAPPLET_KIND_NAMED, NAPPLET_KIND_ROOT, NAPPLET_KIND_SNAPSHOT } from './
 export type { Nip5aArtifactMode, Nip5aManifestOptions, Nip5aRequiresOptions } from './types.js';
 
 /**
- * Create the NIP-5A manifest Vite plugin.
+ * Create the NIP-5D manifest Vite plugin (historical helper name retained).
  *
  * @param options - manifest options (napplet type, requires, artifact mode,
  *                   config schema).
  * @returns A Vite {@link Plugin} that optionally updates plain HTML metadata
- *          and generates the NIP-5A manifest template at build time.
+ *          and generates the NIP-5D manifest template at build time.
  * @example
  * import { nip5aManifest } from '@napplet/vite-plugin';
  *
  * export default {
- *   plugins: [nip5aManifest({ nappletType: 'feed' })],
+ *   plugins: [nip5aManifest({ nappletType: 'feed', description: 'Read a feed' })],
  * };
  */
 export function nip5aManifest(options: Nip5aManifestOptions): Plugin {

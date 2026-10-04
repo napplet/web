@@ -1,81 +1,75 @@
 # @napplet/vite-plugin
 
-> Vite build plugin that generates NIP-5A manifest sidecars for verification and deploy metadata handoff.
+Vite build integration for current NIP-5D manifests. This package is a development dependency; shells provide the runtime namespace.
 
-`@napplet/vite-plugin` runs at build time and is **not** a runtime dependency. It walks `dist/`, computes per-file SHA-256 hashes and the NIP-5A aggregate hash, and writes a NIP-5D **kind 35129** named-napplet manifest sidecar containing the `path`, aggregate `x`, `requires`, `config`, and `archetype` tags. A development key may sign that sidecar for local verification, but signing is not required for metadata handoff.
+This is non-normative package guidance. [NIP-5D](https://github.com/nostr-protocol/nips/pull/2303) defines event format and loading; [NAPs](https://github.com/napplet/naps) define capability contracts.
 
-::: tip
-Use `napplet deploy` for production signing, Blossom upload, and relay publication. It reads build-owned metadata from `.nip5a-manifest.json` and constructs the event it publishes; the sidecar itself is not published as-is.
-:::
+## Install and configure
 
-- **npm:** [`@napplet/vite-plugin`](https://www.npmjs.com/package/@napplet/vite-plugin)
-- **JSR:** [`@napplet/vite-plugin`](https://jsr.io/@napplet/vite-plugin)
-- **Source:** [packages/vite-plugin](https://github.com/napplet/napplet/tree/main/packages/vite-plugin)
-
-## Install
-
-```bash
-npm install -D @napplet/vite-plugin
+```sh
+pnpm add -D @napplet/vite-plugin
 ```
 
-## Quick start
-
 ```ts
-// vite.config.ts
 import { defineConfig } from 'vite';
 import { nip5aManifest } from '@napplet/vite-plugin';
 
 export default defineConfig({
-  plugins: [nip5aManifest({ nappletType: 'my-napp' })],
+  plugins: [nip5aManifest({
+    nappletType: 'notes',
+    title: 'Notes',
+    description: 'Read and write personal notes',
+    requires: ['outbox', 'storage'],
+    optional: ['theme'],
+    archetypes: [{ slug: 'note', convention: 'napplet:note/open', params: ['id'] }],
+    artifactMode: 'single-file',
+  })],
 });
 ```
 
+`nip5aManifest` and `.nip5a-manifest.json` retain their existing names for package and tool compatibility. Their output is a NIP-5D manifest, not an nsite manifest. From **0.15.0**, the output uses the direct artifact hash; **0.14.x and earlier** generated legacy path/aggregate events.
+
+## Build output
+
+The default `single-file` mode inlines local JS/CSS into `index.html`. After rewriting, the plugin hashes the final artifact bytes and writes a kind `35129` event template. Its single `x` tag is that SHA-256, and `content` is the description. No `path` tags or aggregate hash are emitted. Metadata does not participate in the artifact hash. The hash is never injected back into the bytes it covers.
+
+Set `description`, or supply an ordinary HTML `<meta name="description" content="…">`. A missing or empty description fails manifest generation because NIP-5D §Manifest requires non-empty content. `title` and `description` options also update their ordinary HTML counterparts. These are authoring conveniences, not protocol `napplet-*` meta tags.
+
+Without `VITE_DEV_PRIVKEY_HEX`, the sidecar is unsigned. With a development key, it contains a signed event. `artifactHash` is local sidecar metadata, not a Nostr tag. Use `napplet deploy` for production signing, Blossom upload and relay publication; it builds fresh events from the artifact and metadata.
+
 ## Options
 
-`nip5aManifest(options)` returns a Vite `Plugin`. The options:
+| Option | Behavior |
+| --- | --- |
+| `nappletType: string` | Named-event `d` identifier. |
+| `description?: string` | Plain-text event content; falls back to HTML description metadata. |
+| `title?: string` | Optional display title and HTML title override. |
+| `requires?: string[]` | Required domains, serialized as `R` tags. |
+| `requires?: { infer?, explicit?, mode? }` | Opt-in inference from static SDK/NAP imports and direct namespace access. `mode` is `warn` or `error` for missing explicit declarations. |
+| `optional?: string[]` | Optional integrations, serialized as `O` tags and excluded from inferred required domains. |
+| `archetypes?: Array<{ slug, convention, params? }>` | Existing ergonomic option; emits independent `z` role and `i` intent tags. `params` names advertised intent parameters. |
+| `intents?: Array<{ intent, params? }>` | Advertise intents without coupling them to a role option. |
+| `source?: string` | Source URL metadata. |
+| `servers?: string[]` | Blossom server hints. |
+| `icon?: { sha256, mimeType }` | Optional content-addressed icon; upload the matching PNG, JPEG or WebP blob separately. |
+| `configSchema?: NappletConfigSchema \| string` | Inline NAP-CONFIG schema or project-relative schema file. Discovery falls back to `config.schema.json`, then `napplet.config.ts`/`.js`/`.mjs`. |
+| `artifactMode?: 'single-file' \| 'external-assets'` | `single-file` is the default. The explicit external-assets option preserves Vite output for existing tooling; external runtime assets need rebundling before deployment as a self-contained napplet. |
 
-| Option | Type | Purpose |
-| --- | --- | --- |
-| `nappletType` *(required)* | `string` | The napp type / manifest `d` tag. |
-| `requires` | `string[]` | Bare NAP domain names this napplet needs, such as `outbox` or `storage`. Emits `["requires", …]` manifest tags. |
-| `title` | `string` | Human-readable title. Sets/overrides the built HTML `<title>` (plain HTML, not a `napplet-*` meta; untouched when omitted). The napplet CLI reads it back out of the built `index.html` and emits the NIP-5A `["title", …]` manifest tag. |
-| `description` | `string` | Human-readable description. Sets/overrides the built HTML `<meta name="description">` (plain HTML, not a `napplet-*` meta; untouched when omitted). The napplet CLI reads it back out and emits the NIP-5A `["description", …]` manifest tag. |
-| `configSchema` | `NappletConfigSchema \| string` | A JSON Schema (draft-07+) for the napplet's NAP-CONFIG surface. Inline object or path; falls through to `config.schema.json` then `napplet.config.*` discovery. |
-| `artifactMode` | `'external-assets' \| 'single-file'` | Default `'external-assets'`. `'single-file'` inlines local JS/CSS into `index.html` before hashing — for gateway-portable NIP-5A artifacts. |
+Known-domain inference is best effort. Explicit domains are retained even when absent from this package's registry; they still need a published NAP contract and support from the target shell. An `R` or `O` declaration never grants authority. Runtime code checks `window.napplet?.<domain>` and handles missing domains.
 
-## Generated manifest
+Config schema discovery and validation remain package features. A resolved schema is carried in its NAP-defined `config` tag and is not folded into `x`. See the [NAP track](https://github.com/napplet/naps) for schema semantics.
 
-At **build time**, the plugin walks `dist/`, computes hashes, and writes `.nip5a-manifest.json`. With `VITE_DEV_PRIVKEY_HEX` set it also signs the kind 35129 event; without a key it writes the unsigned template so deploy tooling can preserve its metadata:
-
-```json
-{
-  "kind": 35129,
-  "tags": [
-    ["d", "my-music-app"],
-    ["path", "/index.html", "<sha256>"],
-    ["x", "<aggregateHash>", "aggregate"],
-    ["requires", "outbox"],
-    ["requires", "storage"]
-  ]
-}
+```ts
+nip5aManifest({
+  nappletType: 'notes',
+  description: 'Read and write notes',
+  requires: { infer: true, explicit: ['outbox', 'storage'], mode: 'warn' },
+  optional: ['theme'],
+});
 ```
 
-## Build-time guards & diagnostics
+## Migration
 
-- **Config schema validation** — the resolved schema is checked against the
-  NAP-CONFIG Core Subset; `pattern`, `$ref`, a non-object root, or a
-  `x-napplet-secret` with a `default` abort the build.
-- **Inline scripts are supported** — NIP-5D loads a napplet as a single
-  self-contained `/index.html` via `iframe.srcdoc` (opaque origin), so its JS is
-  inline by design. The plugin does not reject inline `<script>` elements. With
-  `artifactMode: 'single-file'` it folds local script/style assets into the HTML
-  and leaves any pre-existing inline scripts intact.
+New builds emit only the current schema. For a legacy-only shell, use CLI 0.7.0+ with `napplet deploy --format legacy` during the compatibility window. That serializer is isolated in the CLI and can be removed without changing current readers. Existing immutable event pointers and shell ACL/storage keys need separate rollout planning; rebuilding does not migrate saved data.
 
-## Environment
-
-- **`VITE_DEV_PRIVKEY_HEX`** — hex-encoded 32-byte test private key. If set, the plugin signs the manifest at build time; if unset, the plugin still writes the unsigned manifest template. **Never use a real key** — generate a dedicated test key.
-
-## See also
-
-- [NIP-5D explained](/guide/nip-5d) — manifest & NAP negotiation
-- [Core concepts](/guide/concepts#acl-capabilities) — how the aggregate hash keys ACL
+See the [event migration guide](/guide/event-migration).

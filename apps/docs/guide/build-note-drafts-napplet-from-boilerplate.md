@@ -16,7 +16,7 @@ Protocol references used here:
   projection: sandboxed iframe, `postMessage` envelope, and runtime-injected
   domains
 - [NIP-5A](https://github.com/nostr-protocol/nips/blob/master/5A.md), the
-  manifest and aggregate-hash model
+  manifest and artifact-hash model
 - [NAPs](https://github.com/napplet/naps), the capability-domain specs for
   `identity`, `storage`, and `outbox`
 - [NAP-INC PR #89 at `4593ce9`](https://github.com/napplet/naps/pull/89/commits/4593ce9e301ce098fd3dad64206fcd6f144fa7af),
@@ -42,7 +42,7 @@ this tutorial, treat them as a substrate, not as app requirements. The Note
 Drafts app does not need direct relay queries, notifications, config settings,
 resource loading, or a napplet-side shell probe.
 
-This tutorial's queryless convention emits `['archetype', 'note', 'napplet:note/open']`. The runtime never infers a kind or payload schema from payload content.
+This tutorial's queryless convention emits `['z', 'note']` and `['i', 'napplet:note/open']`. The runtime never infers a kind or payload schema from payload content.
 
 If a future feature adds INC `emit` or intent `invoke/open`, those two bindings
 may transpose a queried URI to its stable queryless identity plus a shallow text
