@@ -5,14 +5,14 @@ milestone_name: NIP-5D Runtime Injection
 current_phase: 161
 current_phase_name: ad-hoc-convention-package-contracts
 status: complete
-stopped_at: Quick task 260728-nbn complete; PR #189 conflicts resolved
-last_updated: "2026-08-26T13:09:09Z"
+stopped_at: "Quick task 260728-nbn complete; PR #189 conflicts resolved"
+last_updated: "2026-10-04T18:30:42.697Z"
 last_activity: 2026-09-04
-last_activity_desc: Completed quick task 260904-g1f — add the MIT license and open a pull request
+last_activity_desc: "Completed quick task 260904-g1f: add the MIT license and open a pull request"
 progress:
   total_phases: 8
   completed_phases: 4
-  total_plans: 42
+  total_plans: 16
   completed_plans: 32
   percent: 76
 ---

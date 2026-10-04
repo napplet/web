@@ -918,3 +918,14 @@ Plans:
 - [x] 161-24-PLAN.md — Correct active docs, tutorials, and examples
 - [x] 161-25-PLAN.md — Correct shipped skill guidance and mirror assertions
 - [x] 161-26-PLAN.md — Reverse stale guard rules and enforce adopted intent boundaries
+
+### Phase 162: NIP-5D event schema migration
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 161
+**Plans:** 0 plans
+
+Plans:
+
+- [ ] TBD (run /gsd-plan-phase 162 to break down)
