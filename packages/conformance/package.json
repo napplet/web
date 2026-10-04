@@ -1,6 +1,6 @@
 {
   "name": "@napplet/conformance",
-  "version": "0.17.0",
+  "version": "0.18.0",
   "description": "Framework-agnostic napplet protocol conformance engine — reference mock shell, per-NAP envelope validators, manifest validator, check registry, and reporters",
   "type": "module",
   "main": "./dist/index.js",
@@ -28,7 +28,7 @@
     "happy-dom": "^20.10.3",
     "tsup": "^8.5.0",
     "typescript": "^5.9.3",
-    "vitest": "^4.1.2"
+    "vitest": "^4.1.11"
   },
   "scripts": {
     "build": "tsup",

@@ -18,8 +18,7 @@
     "npm:tsup@^8.5.0": "8.5.1_typescript@5.9.3_esbuild@0.27.7",
     "npm:turbo@^2.9.14": "2.10.8",
     "npm:typescript@^5.9.3": "5.9.3",
-    "npm:vite@^6.4.3": "6.4.3_picomatch@4.0.5",
-    "npm:vitest@^4.1.2": "4.1.10_happy-dom@20.11.1_vite@6.4.3__picomatch@4.0.5"
+    "npm:vite@^6.4.3": "6.4.3_picomatch@4.0.5"
   },
   "jsr": {
     "@libs/qrcode@3.1.0": {
@@ -1832,7 +1831,7 @@
         "npm:turbo@^2.9.14",
         "npm:typescript@^5.9.3",
         "npm:vite@^6.4.3",
-        "npm:vitest@^4.1.2"
+        "npm:vitest@^4.1.11"
       ]
     },
     "members": {
@@ -1875,7 +1874,7 @@
             "npm:happy-dom@^20.10.3",
             "npm:tsup@^8.5.0",
             "npm:typescript@^5.9.3",
-            "npm:vitest@^4.1.2"
+            "npm:vitest@^4.1.11"
           ]
         }
       },
@@ -1884,7 +1883,7 @@
           "dependencies": [
             "npm:tsup@^8.5.0",
             "npm:typescript@^5.9.3",
-            "npm:vitest@^4.1.2"
+            "npm:vitest@^4.1.11"
           ]
         }
       },
@@ -1894,7 +1893,7 @@
             "npm:@types/node@^22.15.0",
             "npm:tsup@^8.5.0",
             "npm:typescript@^5.9.3",
-            "npm:vitest@^4.1.2"
+            "npm:vitest@^4.1.11"
           ]
         }
       },
@@ -1911,7 +1910,7 @@
           "dependencies": [
             "npm:tsup@^8.5.0",
             "npm:typescript@^5.9.3",
-            "npm:vitest@^4.1.2"
+            "npm:vitest@^4.1.11"
           ]
         }
       },
@@ -1923,7 +1922,7 @@
             "npm:tsup@^8.5.0",
             "npm:typescript@^5.9.3",
             "npm:vite@^6.4.3",
-            "npm:vitest@^4.1.2"
+            "npm:vitest@^4.1.11"
           ]
         }
       }
