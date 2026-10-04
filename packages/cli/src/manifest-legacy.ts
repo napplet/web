@@ -1,7 +1,12 @@
 /** Temporary pre-artifact-hash serializer. Remove with CLI --format legacy. */
 import type { ManifestFileMapping, NostrEventTemplate } from "./types.ts";
 
-/** Compute the historical NIP-5A path aggregate for explicitly legacy output. */
+/**
+ * Compute the historical NIP-5A path aggregate for explicitly legacy output.
+ * @param files Artifact paths and their SHA-256 hashes.
+ * @returns The lowercase SHA-256 of the sorted legacy path records.
+ * @example await computeAggregateHash([{ path: "/index.html", sha256: artifactHash }])
+ */
 export async function computeAggregateHash(files: readonly ManifestFileMapping[]): Promise<string> {
   if (!files.length) throw new Error("Manifest must include at least one path tag");
   const lines = files.map((file) => {
@@ -14,6 +19,14 @@ export async function computeAggregateHash(files: readonly ManifestFileMapping[]
     .map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
+/**
+ * Serialize deployment metadata using the temporary legacy format.
+ * @param files Files to advertise through legacy path tags.
+ * @param metadata Resolved author metadata, including any explicit legacy pairs.
+ * @param description Human-readable description for the legacy description tag.
+ * @returns Legacy tags and empty event content.
+ * @example await buildLegacyManifestFields(files, metadata, "Read notes")
+ */
 export async function buildLegacyManifestFields(
   files: readonly ManifestFileMapping[],
   metadata: readonly string[][],

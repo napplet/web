@@ -2,6 +2,12 @@
 import { collectFlags, first } from "./flags.ts";
 import { migrateManifestEvent } from "./migrate.ts";
 
+/**
+ * Write an offline event migration preview without overwriting existing files.
+ * @param argv Input filename and migration options.
+ * @returns Zero when the preview is written; throws on invalid input or output.
+ * @example await commandMigrate(["source.json", "--output", "preview.json"])
+ */
 export async function commandMigrate(argv: string[]): Promise<number> {
   const flags = collectFlags(argv);
   const source = first(flags.values.get("input")) ?? flags.positional[0];

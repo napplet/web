@@ -13,7 +13,7 @@ export const NAPPLET_KIND_NAMED = 35129;
 /** DeployTargetKind union used by shared CLI type helpers. */
 export type DeployTargetKind = "root" | "named" | "snapshot";
 
-/** One canonical NAAT archetype convention emitted as a manifest tag. */
+/** Authoring pair emitted as independent z/i advertisements in current events. */
 export interface NappletArchetypeConvention {
   slug: string;
   convention: string;

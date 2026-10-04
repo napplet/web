@@ -2,7 +2,14 @@
 import { promptLine } from "./prompt.ts";
 export type ManifestFormat = "current" | "legacy";
 
-/** Select the deployment format, prompting only for interactive deployments. */
+/**
+ * Select the deployment format, prompting only for interactive deployments.
+ * @param value Explicit --format value, when supplied.
+ * @param interactive Whether prompting is available.
+ * @param ask Prompt implementation; defaults to the terminal line prompt.
+ * @returns The explicitly selected format or current by default.
+ * @example await selectManifestFormat(undefined, false) // "current"
+ */
 export async function selectManifestFormat(
   value: string | undefined,
   interactive: boolean,

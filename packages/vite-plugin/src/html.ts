@@ -300,7 +300,12 @@ export function singleFileBuildConfig(config: UserConfig): UserConfig {
   };
 }
 
-/** Read ordinary author-supplied HTML metadata for manifest display fields. */
+/**
+ * Read ordinary author-supplied HTML metadata for manifest display fields.
+ * @param html Final HTML artifact text.
+ * @returns Optional decoded title and description values.
+ * @example readHtmlMetadata('<title>Notes</title>') // { title: 'Notes', description: undefined }
+ */
 export function readHtmlMetadata(html: string): { title?: string; description?: string } {
   const decode = (value: string): string => value.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&');
   const title = /<title\b[^>]*>([\s\S]*?)<\/title>/i.exec(html)?.[1];
