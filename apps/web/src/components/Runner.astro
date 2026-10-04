@@ -1,0 +1,38 @@
+<dialog id="napplet-player" aria-labelledby="player-title" aria-describedby="player-note">
+  <div class="player-heading">
+    <div><span class="player-eyebrow">Quick play</span><h2 id="player-title">Napplet preview</h2></div>
+    <form method="dialog"><button class="player-close" aria-label="Close preview">Close <span aria-hidden="true">×</span></button></form>
+  </div>
+  <p id="player-note">Try it here. Open the full shell for account features and saved progress.</p>
+  <p id="player-status" role="status" aria-live="polite"></p>
+  <div id="player-stage" aria-busy="false"></div>
+  <div class="player-footer">
+    <button id="player-retry" type="button" hidden>Try again</button>
+    <a id="player-original" href="https://napplet.soy/" target="_blank" rel="noopener noreferrer">Open in napplet.soy ↗</a>
+    <a href="/showcase/NOTICE.txt" target="_blank" rel="noopener">Credits &amp; licenses</a>
+  </div>
+</dialog>
+<script>
+  import { setupPlayer } from '../lib/player/controller';
+  setupPlayer();
+</script>
+<style>
+  dialog { color: #f1ecfb; background: #190d2b; border: 1px solid #6d4b96; border-radius: 20px; padding: 22px; width: min(1120px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); }
+  dialog::backdrop { background: #080410df; backdrop-filter: blur(8px); }
+  .player-heading { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+  h2 { margin: 3px 0; font-size: 1.5rem; }
+  .player-eyebrow { color: #c98bff; font: .7rem ui-monospace, monospace; text-transform: uppercase; letter-spacing: .12em; }
+  button { border: 1px solid #6d4b96; background: #251440; color: #f1ecfb; border-radius: 8px; padding: 10px 15px; cursor: pointer; font: inherit; min-height: 44px; }
+  #player-note, #player-status { font-size: .85rem; color: #c8bcdf; margin: 12px 0; }
+  #player-stage { height: min(62dvh, 650px); min-height: 360px; background: #0b0613; border-radius: 10px; overflow: hidden; }
+  #player-stage :global(iframe) { border: 0; display: block; width: 100%; height: 100%; background: white; }
+  .player-footer { display: flex; gap: 20px; flex-wrap: wrap; align-items: center; margin-top: 16px; font-size: .82rem; }
+  .player-footer a { color: #d2a0ff; text-underline-offset: 4px; }
+  :focus-visible { outline: 2px solid #4fd6e0; outline-offset: 4px; }
+  @media (max-width: 600px) {
+    dialog { padding: 12px; width: 100vw; max-width: 100vw; max-height: 100dvh; border: 0; border-radius: 0; }
+    .player-heading { position: sticky; top: -12px; z-index: 1; background: #190d2b; padding-block: 8px; }
+    #player-stage { height: max(360px, calc(100dvh - 225px)); }
+    .player-footer { gap: 12px; }
+  }
+</style>

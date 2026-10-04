@@ -1,0 +1,24 @@
+---
+import ProtocolLayout from '../../layouts/ProtocolLayout.astro';
+import data from '../../data/protocol.json';
+const guide = data.contribution;
+---
+<ProtocolLayout title="Propose a NAP" description="Decide whether your idea belongs in a NAP, a convention, an archetype, or a projection. Follow the upstream template and join the proposal process.">
+  <a class="protocol-back" href="/protocol/">← All NAPs</a>
+  <div class="protocol-hero"><p class="eyebrow">Contribute / Start with the boundary</p><h1>One capability.<br /><span>A shared contract.</span></h1><p class="protocol-lead">A new NAP makes sense when napplets need a runtime-provided API that the existing capability contracts do not cover.</p><p class="protocol-source-note">The decision guide below is editorial guidance inferred from the upstream <a href={guide.readmeUrl}>boundary rule</a>. The repository’s current guidance takes precedence.</p></div>
+  <section class="contribution-section"><h2>Does this need a NAP?</h2><div class="decision-grid">
+    <article><p class="eyebrow">Runtime provides an API</p><h3>Propose a capability.</h3><p>First check the <a href="/protocol/">merged and proposed NAPs</a>. Extend an existing domain when it already owns the operation. For a distinct runtime capability, start a NAP proposal.</p><a href={guide.templateUrl}>NAP interface template ↗</a></article>
+    <article><p class="eyebrow">Napplets agree on a payload</p><h3>Write a convention.</h3><p>If the idea describes what napplets say to one another rather than a runtime API, use a convention. A shared message shape does not by itself need a new NAP.</p><a href={guide.conventionUrl}>Convention template ↗</a></article>
+    <article><p class="eyebrow">A role needs a name</p><h3>Propose an archetype.</h3><p>If the idea names what kind of napplet this is and where its responsibility ends, it belongs in the NAAT registry. An archetype owns neither an API nor a payload.</p><a href={guide.archetypeUrl}>Archetype template ↗</a></article>
+    <article><p class="eyebrow">A host carries the contract</p><h3>Discuss the projection.</h3><p>Transport and host bindings belong to a projection. Keep the capability contract separate from how a browser or another host delivers it.</p><a href={guide.projectionUrl}>Web projection ↗</a></article>
+  </div></section>
+  <section class="contribution-section"><h2>From idea to pull request</h2><ol class="contribution-steps">
+    <li><h3>Check the current conversation.</h3><p>Search the directory and open PRs for overlap. Describe the missing capability, which napplets need it, and what the runtime would provide.</p></li>
+    <li><h3>Start from the upstream template.</h3><p>Fork <a href={data.repository}>napplet/naps</a>, make a branch for the spec, and add <code>naps/NAP-WORD.md</code> using the <a href={guide.templateUrl}>current interface template</a>. Keep one spec concern in the PR.</p></li>
+    <li><h3>Make the contract reviewable.</h3><p>Describe operations, schemas, errors, dependencies, runtime behavior, and security boundaries. Follow the template’s language-neutral tables and link to the living projection specifications. Read the <a href={guide.contributorUrl}>contributor guide</a> for the current dependency and changelog rules.</p></li>
+    <li><h3>Open the discussion.</h3><p>Use a title such as <code>NAP-WORD: Add a focused capability</code>. Explain the motivation and concrete changes. Keep the registry entry and related docs consistent, and link an implementation when available.</p></li>
+    <li><h3>Refine it with the community.</h3><p>Discuss the proposal in PR comments, respond to interoperability concerns, and update the spec as the design stabilizes. Maintainers decide when to merge; an open PR is not acceptance.</p></li>
+  </ol><p class="protocol-source-note">Based on upstream <a href={guide.governanceUrl}>governance</a> and the <a href={guide.contributorUrl}>contributor guide</a>. Names and acceptance are maintained by that repository.</p></section>
+  <section class="contribution-section template-section"><div><p class="eyebrow">Refreshed from upstream</p><h2>The current template</h2><p>These are the headings in the current interface template. Open it for the latest instructions and examples.</p><a class="button button-secondary" href={guide.templateUrl}>Use the NAP template ↗</a></div><ul class="spec-outline">{guide.templateSections.map(section => <li>{section}</li>)}</ul></section>
+  <details class="upstream-guidance"><summary>Current upstream boundary and governance notes</summary><p>{guide.boundary}</p><ul>{guide.governance.map(note => <li>{note}</li>)}</ul><a href={guide.governanceUrl}>Read these in context on GitHub ↗</a></details>
+</ProtocolLayout>

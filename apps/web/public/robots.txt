@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://napplet.run/sitemap-index.xml

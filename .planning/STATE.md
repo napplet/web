@@ -19,6 +19,18 @@ progress:
 
 # Project State
 
+## Quick task 261003-tih — COMPLETE
+
+NAP detail pages now render complete upstream specifications, replacing excerpts and outlines at the user’s request. All 38 documents, source links, code examples, responsive layouts and workspace checks pass. Preview is rebuilt on port 8101; PR #222 contains the correction. Evidence: `.planning/quick/261003-tih-render-complete-upstream-nap-specificati/SUMMARY.md`.
+
+## Quick task 261003-sof — COMPLETE
+
+Generated protocol directory, per-NAP pages, contribution guide and daily refresh/deploy workflow implemented on `feat/protocol-directory`. Local gates, all 38 routes, responsive/no-JS browser checks, hosted generation and link checks pass. PR #222 is stacked on #221. Evidence: `.planning/quick/261003-sof-generated-protocol-directory-with-nap-de/SUMMARY.md`.
+
+## Quick task 261003-isf — COMPLETE
+
+Astro ecosystem showcase implemented on `feat/astro-ecosystem-showcase`. Local build, type, unit, tutorial, browser, links, SEO/accessibility, and Bunny artifact checks pass. PR #221 is open and mergeable; hosted CI, conformance, link/browser, and AI-slop checks pass. Evidence: `.planning/quick/261003-isf-astro-ecosystem-showcase-with-extracted-/SUMMARY.md`.
+
 ## Project Reference
 
 See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
@@ -511,6 +523,11 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 
 | Quick ID | Task | Date | Commit | Artifacts |
 |----------|------|------|--------|-----------|
+| 261003-uwf | Simplify Develop to skills and Kehto in one viewport | 2026-10-03 | PR #222 | [261003-uwf-simplify-develop-section-to-napplet-skil](./quick/261003-uwf-simplify-develop-section-to-napplet-skil/) |
+| 261003-ukp | Split final Build section into napplet and shell paths | 2026-10-03 | PR #222 | [261003-ukp-split-final-build-section-into-napplet-a](./quick/261003-ukp-split-final-build-section-into-napplet-a/) |
+| 261003-uii | Sort NAP directory by Merged, Open PR, Draft PR | 2026-10-03 | PR #222 | [261003-uii-sort-nap-directory-by-merged-open-and-dr](./quick/261003-uii-sort-nap-directory-by-merged-open-and-dr/) |
+| 261003-tih | Render full upstream specifications on NAP detail pages | 2026-10-03 | PR #222 | [261003-tih-render-complete-upstream-nap-specificati](./quick/261003-tih-render-complete-upstream-nap-specificati/) |
+| 261003-sof | Generated protocol directory, NAP detail pages, contribution guide and daily refresh/deploy | 2026-10-03 | 9d4a1420 | [261003-sof-generated-protocol-directory-with-nap-de](./quick/261003-sof-generated-protocol-directory-with-nap-de/) |
 | 260912-wr8 | Restructure napplet skills for the skills.sh installer (napplet-* names, napplet-ui contract, custom installer removed) | 2026-09-12 | 2d3556c9 | [260912-wr8-restructure-napplet-skills-for-the-skill](./quick/260912-wr8-restructure-napplet-skills-for-the-skill/) |
 | 260904-g1f | Add the MIT license and open a pull request | 2026-09-04 | 7b82fe08 | [260904-g1f-add-the-mit-license-and-open-a-pull-requ](./quick/260904-g1f-add-the-mit-license-and-open-a-pull-requ/) |
 | 260826-jex | Split NAP-RESOURCE server hints from PR #205 into a dedicated PR | 2026-08-26 | 11fdf896 | [260826-jex-split-nap-resource-server-hints-from-pr-](./quick/260826-jex-split-nap-resource-server-hints-from-pr-/) |

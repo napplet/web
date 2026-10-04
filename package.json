@@ -5,7 +5,10 @@
   "scripts": {
     "build": "turbo run build",
     "dev:site": "turbo run dev --filter=@napplet/web --filter=@napplet/docs",
-    "test": "pnpm check:jsr && pnpm test:release-tooling && pnpm test:skills-contracts && turbo run test:unit && pnpm test:tutorial",
+    "refresh:protocol": "node scripts/generate-protocol.mjs",
+    "generate:protocol": "pnpm refresh:protocol && pnpm --filter @napplet/web build",
+    "test:protocol": "node --test scripts/generate-protocol.test.mjs",
+    "test": "pnpm check:jsr && pnpm test:protocol && pnpm test:release-tooling && pnpm test:skills-contracts && turbo run test:unit && pnpm test:tutorial",
     "test:unit": "turbo run test:unit",
     "test:tutorial": "node --test scripts/tutorial-package-versions.test.mjs && node scripts/test-tutorial.mjs",
     "test:release-tooling": "node --test scripts/sync-jsr-versions.test.mjs scripts/sync-tutorial-package-versions.test.mjs scripts/jsr-workspace-membership.test.mjs",
@@ -34,7 +37,7 @@
     "turbo": "^2.9.14",
     "typescript": "^5.9.3",
     "vite": "^6.4.3",
-    "vitest": "^4.1.2"
+    "vitest": "^4.1.11"
   },
   "packageManager": "pnpm@10.8.0"
 }

@@ -14,7 +14,7 @@
 
 <header class="nav" class:scrolled>
   <div class="container nav-inner">
-    <a class="brand" href="#top" aria-label="napplet home" onclick={() => (open = false)}>
+    <a class="brand" href="/" aria-label="napplet home" onclick={() => (open = false)}>
       <Logo size={26} />
       <span>napplet</span>
     </a>

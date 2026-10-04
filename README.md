@@ -163,17 +163,17 @@ pnpm version-packages   # Apply changesets, bump versions
 
 The informational site and package documentation live in `apps/`:
 
-- `apps/web` -- Svelte + Vite marketing/education SPA explaining NIP-5D and the paradigm.
+- `apps/web` -- Astro ecosystem showcase with runnable napplets, shells, and developer tools; `/protocol/` lists merged NAPs and open proposals with detail pages and contribution guidance. The original Svelte explainer lives at `/explainer/`. Run `pnpm generate:protocol` to refresh the NAP directory and build the website; the deployment workflow also refreshes it daily. See [website development and verification](apps/web/README.md).
 - `apps/docs` -- VitePress documentation, served under `/docs`.
 - `apps/conformance` -- the standalone conformance web runtime, served under `/conformance`.
 
 ```bash
-pnpm --filter @napplet/web dev             # marketing SPA
+pnpm --filter @napplet/web dev             # showcase and explainer
 pnpm --filter @napplet/docs dev            # documentation
 pnpm --filter @napplet/conformance-web dev # conformance runtime
 ```
 
-`.github/workflows/deploy-site.yml` builds all three, stitches docs under `/docs` and the conformance runtime under `/conformance`, and deploys to Bunny + nsite. Configure deploy secrets with `scripts/setup-site-secrets.sh`.
+`scripts/assemble-site.mjs` creates the same static artifact for link checks and `.github/workflows/deploy-site.yml`: showcase at `/`, original explainer at `/explainer/`, docs at `/docs/`, and conformance at `/conformance/`. Bunny is the canonical deployment target; nsite is an optional mirror. Configure deploy secrets with `scripts/setup-site-secrets.sh`.
 
 ## Related
 

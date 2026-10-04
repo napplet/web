@@ -17,7 +17,7 @@ const viewports = [
 
 const server = spawn(
   'pnpm',
-  ['--filter', '@napplet/web', 'exec', 'vite', '--host', '127.0.0.1', '--port', String(port), '--strictPort'],
+  ['--filter', '@napplet/web', 'exec', 'astro', 'dev', '--host', '127.0.0.1', '--port', String(port)],
   { cwd: root, stdio: ['ignore', 'pipe', 'pipe'] },
 );
 let serverOutput = '';
@@ -26,11 +26,12 @@ server.stderr.on('data', (chunk) => (serverOutput += chunk));
 
 let browser;
 try {
-  await waitForServer(`${baseUrl}/`);
+  await waitForServer(`${baseUrl}/explainer/`);
   browser = await chromium.launch({ headless: true });
   for (const viewport of viewports) {
     const page = await browser.newPage({ viewport });
-    await page.goto(`${baseUrl}/#start`, { waitUntil: 'networkidle' });
+    await page.goto(`${baseUrl}/explainer/#start`, { waitUntil: 'domcontentloaded' });
+    await page.locator('.alpha-gate').waitFor({ state: 'visible' });
     const section = page.locator('#start');
     await section.scrollIntoViewIfNeeded();
     await page.waitForTimeout(150);
@@ -135,9 +136,9 @@ async function waitForServer(url) {
       const response = await fetch(url);
       if (response.ok) return;
     } catch {
-      // The Vite process is still starting.
+      // The Astro process is still starting.
     }
-    if (server.exitCode !== null) throw new Error(`Vite exited early:\n${serverOutput}`);
+    if (server.exitCode !== null) throw new Error(`Astro exited early:\n${serverOutput}`);
     await new Promise((resolve) => setTimeout(resolve, 100));
   }
   throw new Error(`Timed out waiting for ${url}:\n${serverOutput}`);

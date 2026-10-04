@@ -1,0 +1,135 @@
+---
+import SiteLayout from '../layouts/SiteLayout.astro';
+import Runner from '../components/Runner.astro';
+import Composition from '../components/showcase/Composition.astro';
+import { NAPPLETS, SHELLS, LINKS } from '../lib/showcase';
+import '../styles/showcase.css';
+
+const navigation = [
+  { href: '#napplets', label: 'Napplets' },
+  { href: '#shells', label: 'Shells' },
+  { href: '#protocol', label: 'Protocol' },
+  { href: '#build', label: 'Build' },
+];
+---
+
+<SiteLayout title="napplet — Small apps. A bigger Nostr." description="Discover and run Nostr applets. Explore shells, the NIP-5D proposal, and open-source tools for building napplets and runtimes.">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <a class="wordmark" href="#top" aria-label="napplet home"><img src="/favicon.svg" width="28" height="28" alt="" />napplet<span class="wordmark-dot">.</span></a>
+    <nav class="desktop-nav" aria-label="Main navigation">
+      {navigation.map(item => <a href={item.href}>{item.label}</a>)}
+    </nav>
+    <a class="header-docs" href={LINKS.docs}>Docs <span aria-hidden="true">↗</span></a>
+    <details class="mobile-nav">
+      <summary>Menu <span aria-hidden="true">＋</span></summary>
+      <nav aria-label="Mobile navigation">
+        {navigation.map(item => <a href={item.href}>{item.label}</a>)}
+        <a href="#build-napplets">Build napplets</a>
+        <a href="#runtimes">Build shells</a>
+        <a href="/explainer/">The explainer</a>
+      </nav>
+    </details>
+  </header>
+
+  <main id="main">
+    <section id="top" class="scene hero-scene" aria-labelledby="hero-title">
+      <div class="section-wrap hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow"><span class="status-dot" aria-hidden="true"></span> The Nostr applet ecosystem</p>
+          <h1 id="hero-title">Small apps.<br />A bigger <span>Nostr.</span></h1>
+          <p class="hero-lead">A napplet is a small, focused app that runs inside a <strong>shell</strong>. The shell brings the connection to Nostr. You bring the idea.</p>
+          <div class="hero-actions">
+            <a class="button button-primary" href="#napplets">Try a napplet <span aria-hidden="true">↗</span></a>
+            <a class="button button-secondary" href="#build">Build something <span aria-hidden="true">→</span></a>
+          </div>
+          <a class="quiet-link" href="/explainer/">New here? Explore how napplets work <span aria-hidden="true">→</span></a>
+        </div>
+        <Composition />
+      </div>
+      <div class="hero-baseline section-wrap"><span>Independent apps. Shared possibilities.</span><a href="#napplets">Explore the ecosystem <span aria-hidden="true">↓</span></a></div>
+    </section>
+
+    <section id="napplets" class="scene" aria-labelledby="napplets-title">
+      <div class="section-wrap">
+        <div class="section-heading">
+          <div><p class="eyebrow"><span class="section-number">01 /</span> Made to be used</p><h2 id="napplets-title">Small in scope.<br /><span>Ready to open.</span></h2></div>
+          <p class="section-intro">A few things people are making with napplets. Pick one and give it a spin.</p>
+        </div>
+        <div class="napplet-grid">
+          {NAPPLETS.map((item, index) => <article class="napplet-card" data-card>
+            <div class:list={['napplet-preview', `preview-${index % 3}`]}>
+              {item.image ? <img src={item.image} srcset={`${item.image.replace('.webp', '-480.webp')} 480w, ${item.image} 960w`} sizes="(max-width: 600px) calc(100vw - 80px), (max-width: 900px) 50vw, 400px" alt={`${item.name} interface`} width="1440" height="900" loading="lazy" decoding="async" /> : <div class="preview-placeholder" aria-hidden="true"><span>{item.name.slice(0, 1)}</span><div class="preview-lines"><i></i><i></i><i></i></div></div>}
+              <span class="preview-index" aria-hidden="true">0{index + 1}</span>
+            </div>
+            <div class="napplet-details"><p class="card-category">{item.category}</p><h3>{item.name}</h3><p>{item.description}</p><div class="card-links"><a class="run-link" href={item.href} data-launch={item.id}><span class="play-symbol" aria-hidden="true">▶</span> Run {item.name}</a>{item.source && <a href={item.source} class="source-link" aria-label={`${item.name} source code`}>Source <span aria-hidden="true">↗</span></a>}</div></div>
+          </article>)}
+        </div>
+        <div class="section-note"><span class="note-mark" aria-hidden="true">↳</span><p>A curated selection, with source code to explore.</p><a href={LINKS.community}>Share what you’re building <span aria-hidden="true">↗</span></a></div>
+      </div>
+    </section>
+
+    <section id="shells" class="scene shells-scene" aria-labelledby="shells-title">
+      <div class="section-wrap">
+        <div class="section-heading"><div><p class="eyebrow"><span class="section-number">02 /</span> A place for your apps</p><h2 id="shells-title">Find your<br /><span>shell.</span></h2></div><p class="section-intro">Shells host napplets and provide the capabilities they use. Explore different ways to put small apps together.</p></div>
+        <div class="shell-grid">
+          {SHELLS.map((item, index) => <article class="shell-card" data-shell-card>
+            <a href={item.href} class:list={['shell-preview', `shell-preview-${index % 2}`]} aria-label={`Explore ${item.name}`}>
+              <div class="browser-bar" aria-hidden="true"><span></span><span></span><span></span><small>{item.name}</small><span class="browser-arrow">↗</span></div>
+              {item.image ? <img src={item.image} srcset={`${item.image.replace('.webp', '-480.webp')} 480w, ${item.image} 960w`} sizes="(max-width: 600px) calc(100vw - 80px), (max-width: 900px) 50vw, 400px" alt={`${item.name} shell interface`} width="1440" height="900" loading="lazy" decoding="async" /> : <div class="shell-miniature" aria-hidden="true"><div class="mini-sidebar"><i></i><i></i><i></i></div><div class="mini-app"><span>your apps,<br />your space.</span><div class="mini-tiles"><i></i><i></i><i></i></div></div></div>}
+            </a>
+            <div class="shell-description"><div><p class="card-category">{item.category}</p><h3><a href={item.href}>{item.name} <span aria-hidden="true">↗</span></a></h3><p>{item.description}</p></div>{item.source && <a class="source-link" href={item.source} aria-label={`${item.name} source code`}>Source ↗</a>}</div>
+          </article>)}
+        </div>
+        <a class="quiet-link shell-build-link" href="#runtimes">Have your own idea for a shell? Start here <span aria-hidden="true">→</span></a>
+      </div>
+    </section>
+
+    <section id="protocol" class="scene protocol-scene" aria-labelledby="protocol-title">
+      <div class="section-wrap protocol-grid">
+        <div><p class="eyebrow"><span class="section-number">03 /</span> An open foundation</p><h2 id="protocol-title">A shared<br /><span>language.</span></h2><p class="section-intro">NIP-5D proposes how napplets and shells communicate. NAPs define the individual capabilities. The conversation is open, and the protocol is still evolving.</p><a class="proposal-status" href={LINKS.spec}><span class="status-dot" aria-hidden="true"></span> NIP-5D · Open proposal <span aria-hidden="true">↗</span></a><p class="protocol-note">This is a non-normative introduction. The living specifications are the source of truth.</p></div>
+        <div class="protocol-stack">
+          <a class="protocol-layer" href={LINKS.spec}><span class="layer-index">01</span><div><span class="card-category">Web applet protocol</span><h3>NIP-5D</h3><p>The connection between napplet and shell.</p></div><span class="layer-arrow" aria-hidden="true">↗</span></a>
+          <div class="stack-connector" aria-hidden="true"><i></i><span>built on</span></div>
+          <a class="protocol-layer" href="https://github.com/nostr-protocol/nips/blob/master/5A.md"><span class="layer-index">02</span><div><span class="card-category">Manifest format</span><h3>NIP-5A</h3><p>Describing and identifying the app’s files.</p></div><span class="layer-arrow" aria-hidden="true">↗</span></a>
+          <div class="stack-connector" aria-hidden="true"><i></i><span>extended by</span></div>
+          <a class="protocol-layer" href={LINKS.naps}><span class="layer-index">03</span><div><span class="card-category">Capability specifications</span><h3>NAPs</h3><p>The individual domains apps can use.</p></div><span class="layer-arrow" aria-hidden="true">↗</span></a>
+        </div>
+      </div>
+    </section>
+
+    <section id="build" class="scene build-scene" aria-labelledby="build-title">
+      <div class="section-wrap">
+        <div class="section-heading"><div><p class="eyebrow"><span class="section-number">04 /</span> For builders</p><h2 id="build-title">Develop<span>.</span></h2></div></div>
+        <div class="build-paths">
+          <section id="build-napplets" class="build-path" aria-labelledby="build-napplets-title">
+            <h3 id="build-napplets-title">Build napplets</h3>
+            <p>Skills for your coding agent to design, build, and verify a napplet.</p>
+            <a class="button button-primary" href="/docs/guide/agent-skills.html">Explore the skills <span aria-hidden="true">↗</span></a>
+          </section>
+          <section id="runtimes" class="build-path" aria-labelledby="runtimes-title">
+            <h3 id="runtimes-title">Build shells with Kehto</h3>
+            <p>A runtime, browser integration, service handlers, and permissions for your own shell.</p>
+            <a class="button button-primary" href={LINKS.kehto}>Kehto on GitHub <span aria-hidden="true">↗</span></a>
+          </section>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer section-wrap"><a class="wordmark" href="#top"><img src="/favicon.svg" width="24" height="24" alt="" />napplet<span class="wordmark-dot">.</span></a><p>Small apps. Open possibilities.</p><nav aria-label="Footer"><a href="/explainer/">The explainer</a><a href={LINKS.docs}>Docs</a><a href={LINKS.github}>GitHub ↗</a><a href={LINKS.community}>Community ↗</a></nav></footer>
+  <Runner />
+</SiteLayout>
+
+<script>
+  import { initShowcaseAnimations } from '../lib/animations';
+  initShowcaseAnimations();
+  const menu = document.querySelector<HTMLDetailsElement>('.mobile-nav');
+  menu?.querySelectorAll('a').forEach(link => link.addEventListener('click', () => { menu.open = false; }));
+  menu?.addEventListener('keydown', event => {
+    if (event.key === 'Escape') {
+      menu.open = false;
+      menu.querySelector('summary')?.focus();
+    }
+  });
+</script>
