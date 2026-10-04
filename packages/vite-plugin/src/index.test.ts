@@ -265,7 +265,7 @@ describe('nip5aManifest artifact modes', () => {
   });
 
   it('excludes config from the NIP-5A aggregate but still emits its tag', async () => {
-    // NIP-5D §Identity: the runtime recomputes artifactHash from the `path`
+    // NIP-5D §Identity: the runtime recomputes artifactHash from the artifact
     // tags ALONE and asserts it equals the `x` tag. The `config` capability
     // declaration is emitted as its own tag but MUST NOT feed the aggregate —
     // otherwise a conformant runtime would reject the napplet.
@@ -414,7 +414,7 @@ describe('nip5aManifest artifact modes', () => {
     expect(fs.existsSync(path.join(fixture.dist, '.nip5a-manifest.json'))).toBe(false);
   });
 
-  it('keeps archetype tags outside the aggregate hash path-tag fold', async () => {
+  it('keeps archetype metadata outside artifact identity', async () => {
     const baseFixture = makeFixture();
     const archetypeFixture = makeFixture();
     const html = '<!doctype html><script type="module" src="./assets/index.js"></script>';
@@ -440,7 +440,7 @@ describe('nip5aManifest artifact modes', () => {
     const base = readManifest(baseFixture.dist);
     const withArchetypes = readManifest(archetypeFixture.dist);
 
-    // Identical dist bytes → identical aggregate, regardless of archetype tags.
+    // Identical artifact bytes retain the same hash regardless of archetype metadata.
     expect(withArchetypes.artifactHash).toBe(base.artifactHash);
 
     // The base build (no archetypes) emits no archetype tag at all.
@@ -714,4 +714,12 @@ describe('current manifest metadata', () => {
     expect(JSON.parse(fs.readFileSync(path.join(fixture.dist, '.nip5a-manifest.json'), 'utf8')).content).toBe('Read & write');
     await expect(runCloseBundle({ nappletType: 'metadata', description: '' }, fixture)).rejects.toThrow(/description/);
   });
+});
+
+it('rejects query-bearing independent intent advertisements and preserves parameter names', async () => {
+  const fixture = makeFixture();
+  fs.writeFileSync(path.join(fixture.dist, 'index.html'), '<!doctype html>');
+  await expect(runCloseBundle({ nappletType: 'note', intents: [{ intent: 'napplet:note/open?id=1' }] }, fixture)).rejects.toThrow('queryless');
+  await runCloseBundle({ nappletType: 'note', intents: [{ intent: 'napplet:note/open', params: ['id'] }] }, fixture);
+  expect(readManifest(fixture.dist).tags).toContainEqual(['i', 'napplet:note/open', 'id']);
 });

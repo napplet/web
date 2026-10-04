@@ -136,7 +136,12 @@ function convertTags(
         throw new Error("Ambiguous legacy archetype tag; review its intent before migration");
       }
       tags.push(["z", tag[1]], ["i", tag[2]]);
-    } else tags.push([...tag]);
+    } else {
+      if (tag[0] === "i" && (!tag[1]?.trim() || tag[1].includes("?"))) {
+        throw new Error("Intent advertisements must be non-empty queryless identities");
+      }
+      tags.push([...tag]);
+    }
   }
   return tags.filter((tag, index) =>
     tags.findIndex((other) => JSON.stringify(tag) === JSON.stringify(other)) === index

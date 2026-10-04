@@ -1,4 +1,5 @@
 import { finalizeEvent } from "nostr-tools";
+import { main } from "../src/cli.ts";
 import { defaultConfig } from "../src/config.ts";
 import { createDeployPlan } from "../src/deploy-plan.ts";
 import {
@@ -166,4 +167,91 @@ Deno.test("migrating current events preserves semantic fields and invalid icons 
     createdAt: 2,
   });
   assertEquals(roundTrip.template, result.template);
+});
+
+Deno.test("migration command writes a preview, preserves input and refuses overwrites", async () => {
+  await withTempDir(async (dir) => {
+    const source = `${dir}/source.json`;
+    const output = `${dir}/preview.json`;
+    const original = JSON.stringify(signed([
+      ["path", "/index.html", hash],
+      ["description", "Read notes"],
+      ["requires", "theme"],
+    ]));
+    await Deno.writeTextFile(source, original);
+    const args = ["migrate", source, "--optional", "theme", "--output", output];
+    assertEquals(await main(args), 0);
+    const previewText = await Deno.readTextFile(output);
+    const preview = JSON.parse(previewText);
+    assertEquals(preview.template.content, "Read notes");
+    assert(preview.template.tags.some((tag: string[]) => tag[0] === "O" && tag[1] === "theme"));
+    assertEquals(preview.sourceId, JSON.parse(original).id);
+    assertEquals("sig" in preview.template, false);
+    const errors: string[] = [];
+    const originalError = console.error;
+    console.error = (value: unknown) => errors.push(String(value));
+    try {
+      assertEquals(await main(args), 1);
+      assertEquals(await main(["migrate", source, "--output", source]), 1);
+    } finally {
+      console.error = originalError;
+    }
+    assert(errors.length > 0);
+    assertEquals(await Deno.readTextFile(source), original);
+    assertEquals(await Deno.readTextFile(output), previewText);
+  });
+});
+
+Deno.test("legacy deployment requires explicit pairs for ambiguous z/i metadata", async () => {
+  const item = {
+    candidate: { name: "notes", dir: "/tmp", indexHtml: "/tmp/index.html" },
+    target: "root" as const,
+    kind: 15129,
+  };
+  let message = "";
+  try {
+    await createSiteManifestTemplate(item, [{ path: "/index.html", sha256: hash }], {
+      format: "legacy",
+      content: "Notes",
+      metadataTags: [
+        ["z", "note"],
+        ["z", "profile"],
+        ["i", "napplet:note/open"],
+        ["i", "napplet:profile/edit"],
+      ],
+    });
+  } catch (error) {
+    message = String(error);
+  }
+  assert(message.includes("explicit metadata.archetypes"));
+  const legacy = await createSiteManifestTemplate(item, [{ path: "/index.html", sha256: hash }], {
+    format: "legacy",
+    content: "Notes",
+    metadataTags: [["archetype", "note", "napplet:note/open"]],
+  });
+  assert(legacy.tags.some((tag) => tag[0] === "archetype" && tag[1] === "note"));
+});
+
+Deno.test("current deployment and migration reject query-bearing intent advertisements", async () => {
+  const metadata = [["i", "napplet:note/open?id=123"]];
+  let failures = 0;
+  try {
+    migrateManifestEvent(signed([["x", hash], ...metadata], "Notes"));
+  } catch {
+    failures++;
+  }
+  try {
+    await createSiteManifestTemplate(
+      {
+        candidate: { name: "notes", dir: "/tmp", indexHtml: "/tmp/index.html" },
+        target: "root",
+        kind: 15129,
+      },
+      [{ path: "/index.html", sha256: hash }],
+      { content: "Notes", metadataTags: metadata },
+    );
+  } catch {
+    failures++;
+  }
+  assertEquals(failures, 2);
 });

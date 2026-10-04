@@ -19,6 +19,13 @@ export async function buildLegacyManifestFields(
   metadata: readonly string[][],
   description: string,
 ): Promise<Pick<NostrEventTemplate, "tags" | "content">> {
+  const roles = [...new Set(metadata.filter((tag) => tag[0] === "z").map((tag) => tag[1]))];
+  const intents = metadata.filter((tag) => tag[0] === "i");
+  if (intents.length && roles.length !== 1) {
+    throw new Error(
+      "Legacy output needs explicit metadata.archetypes pairs when z/i advertisements have multiple or no roles",
+    );
+  }
   const tags: string[][] = files.map((file) => ["path", file.path, file.sha256]);
   tags.push(["x", await computeAggregateHash(files), "aggregate"]);
   if (description) tags.push(["description", description]);

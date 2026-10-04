@@ -113,7 +113,7 @@ function buildManifestTemplate(
       ...required.map((name) => ['R', name]),
       ...optional.map((name) => ['O', name]),
       ...buildArchetypeTags(options.archetypes),
-      ...(options.intents ?? []).map((entry) => ['i', entry.intent, ...(entry.params ?? [])]),
+      ...buildIntentTags(options.intents),
     ],
     content: description,
     artifactHash,
@@ -148,6 +148,16 @@ function buildArchetypeTags(
     tags.push(['z', slug], ['i', convention, ...(entry.params ?? [])]);
   }
   return tags.filter((tag, index) => tags.findIndex((other) => JSON.stringify(other) === JSON.stringify(tag)) === index);
+}
+
+// NIP-5D §Archetypes and Intents requires queryless advertisement identities.
+function buildIntentTags(intents: Nip5aManifestOptions['intents']): string[][] {
+  return (intents ?? []).map((entry) => {
+    if (!entry.intent.trim() || entry.intent.includes('?')) {
+      throw new Error('[nip5a-manifest] advertised intents must be non-empty queryless identities');
+    }
+    return ['i', entry.intent, ...(entry.params ?? [])];
+  });
 }
 
 async function writeManifestFile(

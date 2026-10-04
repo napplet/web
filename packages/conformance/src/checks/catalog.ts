@@ -47,7 +47,7 @@ export const CHECKS: Check[] = [
     'missing-description',
     'invalid-metadata',
   ]),
-  manifestCheck('manifest/requires', 'R/O tags are bare known NAP domains', [
+  manifestCheck('manifest/requires', 'R/O tags name bare NAP domains', [
     'invalid-required-nap',
     'invalid-optional-nap',
   ]),

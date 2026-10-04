@@ -125,3 +125,10 @@ describe('current schema cardinality and fallback', () => {
     expect(validateManifestEvent(event({ tags: [['d', 'demo'], ...tags] })).ok).toBe(false);
   });
 });
+
+it('preserves exact identifier bytes and checks queryless intent advertisements', () => {
+  const valid = event({ tags: [['d', ' My Identifier '], ['x', HASH], ['i', 'napplet:note/open', 'id']] });
+  expect(validateManifestEvent(valid).dTag).toBe(' My Identifier ');
+  expect(validateManifestEvent(valid).ok).toBe(true);
+  expect(validateManifestEvent(event({ tags: [['d', 'demo'], ['x', HASH], ['i', 'napplet:note/open?id=1']] })).ok).toBe(false);
+});

@@ -87,7 +87,7 @@ function isSha256Hex(value: string | undefined): boolean {
 
 /** Return the named-manifest `d` tag value, when present and non-empty. */
 export function manifestDTag(event: NappletManifestEvent): string | undefined {
-  const d = firstTag(event, 'd')?.[1]?.trim();
+  const d = firstTag(event, 'd')?.[1];
   return d || undefined;
 }
 
@@ -196,6 +196,12 @@ function validateMetadata(event: NappletManifestEvent, errors: ManifestError[], 
     const tags = event.tags.filter((tag) => tag[0] === name);
     if (tags.length > 1 || (tags.length && (name === 'a' || name === 'A') && event.kind !== NAPPLET_KIND_SNAPSHOT)) {
       errors.push({ code: 'invalid-metadata', message: `Invalid ${name} tag cardinality for kind ${event.kind}` });
+    }
+  }
+  // NIP-5D §Archetypes and Intents: advertisements use queryless identities.
+  for (const tag of event.tags.filter((tag) => tag[0] === 'i')) {
+    if (!tag[1]?.trim() || tag[1].includes('?')) {
+      errors.push({ code: 'invalid-metadata', message: 'Intent advertisements must be non-empty queryless identities' });
     }
   }
   const icons = event.tags.filter((tag) => tag[0] === 'icon');

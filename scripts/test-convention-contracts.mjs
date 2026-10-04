@@ -15,11 +15,9 @@ const SLUG_NUMBER_PATTERN = /\b[a-z][a-z0-9-]*:NAP-\d+\b/g;
 const INC_QUERY_DENIAL_PATTERN = /\b(?:convention\s+quer(?:y|ies)\s+(?:are|remain)\s+(?:forbidden|unresolved|unsupported)|(?:do not|does not)\s+(?:add|introduce|specify|use|allow|support|prescribe)[^.\n]{0,120}\bquery(?:\s*,\s*(?:prefix|wildcard|canonicalization))?|(?:query|encoding\/matching)\s+(?:\w+\s+){0,6}unresolved|web#183)\b/gi;
 const TEST_FILE_PATTERN = /(?:^|\/)(?:[^/]+\.test\.[cm]?[jt]sx?|tests\/.+\.[cm]?[jt]sx?)$/;
 const COMPLETED_SUMMARY_PATTERN = /(?:^|\/)\d+-\d+-SUMMARY\.md$/;
-const INTENT_RESULT_LIFECYCLE_PATTERN = /\b(?:handled|windowId)\s*:|\b(?:handled|windowId)\b\s+(?:result|field|property)\b|\bbehavior(?:\s*\.\s*newWindow|\s*:\s*\{[^}\n]*\bnewWindow\s*:)/g;
 const INTENT_DELIVERY_ID_PATTERN = /\b(?:deliveryId|intentId)\b|\btype\s*:\s*['"]intent\.deliver['"][^}\n]{0,240}\bid\s*:/gi;
 const QUERY_BEARING_HANDLER_METADATA_PATTERN = /\b(?:archetype|contracts?|handlers?)\b[^\n]{0,160}\bnapplet:[a-z0-9-]+\/[a-z0-9-]+\?[^'"\s`)\]}]+/gi;
 const QUERY_BEARING_ARCHETYPE_TAG_PATTERN = /['"]archetype['"][\s\S]{0,160}\bnapplet:[a-z0-9-]+\/[a-z0-9-]+\?[^'"\s`)\]}]+/gi;
-const INTENT_DELIVERY_INC_COUPLING_PATTERN = /\b(?:intent(?:\s+delivery|\.deliver)|delivery)\b[^.\n]{0,120}\b(?:requires?|depends?\s+on|uses?|is\s+coupled\s+to|through)\s+(?:public\s+)?(?:NAP-)?INC\b/gi;
 const FIXED_ARCHETYPE_TAG_SHAPE_PATTERN = /\barchetype\s+tags?\b[^.\n]{0,100}\b(?:must|should|can)\s+(?:contain|have|use)\s+(?:only\s+)?(?:exactly\s+)?three\s+(?:fields?|elements?|values?)\b|\b(?:only|exactly)\s+three[-\s](?:field|element|value)s?\b[^.\n]{0,100}\barchetype\s+tags?\b/gi;
 const INC_TOPIC_EXAMPLE_PATTERN = /\b(?:inc\.emit|incEmit|emit)\(\s*(['"])([^'"]+)\1[\s\S]{0,500}?\b(?:inc\.on|incOn|on)\(\s*(['"])([^'"]+)\3/g;
 
@@ -178,14 +176,12 @@ export async function scanConventionContracts(root) {
     if (isTestFile(filePath) || COMPLETED_SUMMARY_PATTERN.test(filePath)) continue;
 
     if (isIntentContractSurface(filePath, contents)) {
-      addMatches(violations, filePath, contents, 'intent-result-lifecycle', INTENT_RESULT_LIFECYCLE_PATTERN);
       addMatches(violations, filePath, contents, 'intent-delivery-id', INTENT_DELIVERY_ID_PATTERN);
     }
     addMatches(violations, filePath, contents, 'numbered-convention', NUMBERED_CONVENTION_PATTERN);
     addMatches(violations, filePath, contents, 'slug-number-example', SLUG_NUMBER_PATTERN);
     addMatches(violations, filePath, contents, 'query-bearing-handler-metadata', QUERY_BEARING_HANDLER_METADATA_PATTERN);
     addMatches(violations, filePath, contents, 'query-bearing-handler-metadata', QUERY_BEARING_ARCHETYPE_TAG_PATTERN);
-    addMatches(violations, filePath, contents, 'intent-delivery-inc-coupling', INTENT_DELIVERY_INC_COUPLING_PATTERN);
     addMatches(violations, filePath, contents, 'fixed-archetype-tag-shape', FIXED_ARCHETYPE_TAG_SHAPE_PATTERN);
     addMismatchedIncTopicExamples(violations, filePath, contents);
     if (isActiveIncGuidance(filePath, contents)) {

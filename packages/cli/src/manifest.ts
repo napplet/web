@@ -288,6 +288,12 @@ function buildCurrentManifestFields(
       throw new Error("Capability tags must name one bare NAP domain");
     }
   }
+  // NIP-5D §Archetypes and Intents: parameters are separate i-tag elements.
+  for (const tag of metadata.filter((tag) => tag[0] === "i")) {
+    if (!tag[1]?.trim() || tag[1].includes("?")) {
+      throw new Error("Intent advertisements must be non-empty queryless identities");
+    }
+  }
   return {
     tags: [
       ["x", index[0].sha256],
