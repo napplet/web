@@ -921,11 +921,11 @@ Plans:
 
 ### Phase 162: NIP-5D event schema migration
 
-**Goal:** [To be planned]
-**Requirements**: TBD
+**Goal:** Adopt the live NIP-5D event schema, retain an isolated temporary CLI legacy writer, document migration and release cutoffs, and open a verified draft PR with hzrd149 requested.
+**Requirements:** Current writers/readers, explicit CLI format selection, migration preview and skill, compatibility guide, package releases, verification and draft PR.
 **Depends on:** Phase 161
-**Plans:** 0 plans
+**Plans:** 2/3 complete; local shipment checks passed.
 
-Plans:
-
-- [ ] TBD (run /gsd-plan-phase 162 to break down)
+- [x] 162-01-PLAN.md — Current-schema writer and readers
+- [x] 162-02-PLAN.md — CLI format boundary and event migration
+- [ ] 162-03-PLAN.md — Docs, release metadata and draft PR shipment
