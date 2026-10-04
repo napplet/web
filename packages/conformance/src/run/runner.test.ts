@@ -8,11 +8,12 @@ import { toJson } from '../report/reporters.js';
 const HASH = 'c'.repeat(64);
 const goodHtml = '<!doctype html><html><head><script type="module" src="/app.js"></script></head><body></body></html>';
 const goodEvent: NappletManifestEvent = {
+  content: 'A test napplet',
   kind: NAPPLET_KIND_NAMED,
   id: 'event-id',
   tags: [
     ['d', 'demo'],
-    ['path', '/index.html', HASH],
+    ['x', HASH],
   ],
 };
 

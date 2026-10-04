@@ -16,11 +16,12 @@ function manifest(head = '', body = ''): string {
 }
 
 const goodEvent: NappletManifestEvent = {
+  content: 'A test napplet',
   kind: NAPPLET_KIND_NAMED,
   tags: [
     ['d', 'demo'],
-    ['path', '/index.html', HASH],
-    ['requires', 'storage'],
+    ['x', HASH],
+    ['R', 'storage'],
   ],
 };
 
@@ -62,11 +63,11 @@ describe('manifest checks', () => {
     const badKind = makeContext({ manifestEvent: { ...goodEvent, kind: 35128 } });
     expect(run('manifest/event-kind', badKind).status).toBe('fail');
     const badPath = makeContext({
-      manifestEvent: { ...goodEvent, tags: [['d', 'demo'], ['path', '/index.html', 'nope']] },
+      manifestEvent: { ...goodEvent, tags: [['d', 'demo'], ['x', 'nope']] },
     });
     expect(run('manifest/index-html', badPath).status).toBe('fail');
     const badRequire = makeContext({
-      manifestEvent: { ...goodEvent, tags: [...goodEvent.tags, ['requires', 'nap:relay']] },
+      manifestEvent: { ...goodEvent, tags: [...goodEvent.tags, ['R', 'nap:relay']] },
     });
     expect(run('manifest/requires', badRequire).status).toBe('fail');
   });

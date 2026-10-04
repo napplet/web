@@ -2,7 +2,7 @@
  * @napplet/vite-plugin — manifest resolution and bundle writing.
  *
  * Wires together schema discovery/validation and the build-time napplet manifest
- * pipeline (NIP-5A aggregateHash computation, NIP-5D kind `35129` signing, and
+ * pipeline (artifact hashing, NIP-5D kind `35129` signing, and
  * artifact rewrites).
  */
 
@@ -11,9 +11,9 @@ import * as fs from 'fs';
 import * as path from 'path';
 import type { ManifestPluginState, ManifestTemplate, Nip5aManifestOptions } from './types.js';
 import { NAPPLET_KIND_NAMED } from './types.js';
-import { computeAggregateHash, sha256File, walkDir } from './hashing.js';
+import { sha256File } from './hashing.js';
 import { discoverConfigSchema, validateConfigSchema } from './config-schema.js';
-import { inlineSingleFileBuildAssets } from './html.js';
+import { inlineSingleFileBuildAssets, readHtmlMetadata } from './html.js';
 import { resolvedRequirements } from './requirements.js';
 
 /**
@@ -51,10 +51,10 @@ function validateResolvedSchema(schema: NappletConfigSchema | null, source: stri
 
 /**
  * Build-only entry point: rewrite dist artifacts as configured, compute the
- * NIP-5A aggregateHash, and write `.nip5a-manifest.json`. When a signing key is
+ * artifact hash, and write `.nip5a-manifest.json`. When a signing key is
  * present, the NIP-5D kind `35129` manifest is signed before it is written.
  *
- * The aggregate hash is written ONLY to the external manifest file — never back
+ * The artifact hash is written ONLY to the external manifest file — never back
  * into index.html (a file cannot advertise a hash that covers itself).
  *
  * @param options - the plugin options.
@@ -90,36 +90,33 @@ function buildManifestTemplate(
   distPath: string,
   state: ManifestPluginState,
 ): ManifestTemplate {
-  // pathPairs are `[sha256hex, absolutePath]`, the sole input to the NIP-5A
-  // aggregate hash (NIP-5D §Identity: the runtime recomputes the aggregate from
-  // the `path` tags alone and asserts it equals the `x` tag). The `config`
-  // capability is emitted as its own tag but MUST NOT feed the aggregate, or a
-  // conformant runtime would reject the napplet.
-  const pathPairs = buildPathPairs(distPath);
-  const aggregateHash = computeAggregateHash(pathPairs);
-  const pathTags = pathPairs.map(([hash, absPath]) => ['path', absPath, hash]);
-  const configTags =
-    state.resolvedSchema !== null ? [['config', JSON.stringify(state.resolvedSchema)]] : [];
-  const requiresTags = resolvedRequirements(options.requires, state).map((name) => ['requires', name]);
-  // Archetype tags (NAAT, napplet/naps `ARCHETYPES.md`): one
-  // `['archetype', slug, convention, ...kindFields]` per declared convention. Like
-  // config/requires they are NOT passed to computeAggregateHash — only pathPairs
-  // feed the aggregate.
-  const archetypeTags = buildArchetypeTags(options.archetypes);
-
+  const indexPath = path.join(distPath, 'index.html');
+  const artifactHash = sha256File(indexPath);
+  const metadata = readHtmlMetadata(fs.readFileSync(indexPath, 'utf-8'));
+  const description = options.description ?? metadata.description;
+  // NIP-5D §Manifest requires non-empty plain-text content.
+  if (!description?.trim()) throw new Error('[nip5a-manifest] Set description or an HTML description meta for NIP-5D manifest content');
+  const optional = [...new Set(options.optional ?? [])];
+  const required = resolvedRequirements(options.requires, state).filter((name) => !optional.includes(name));
+  const title = options.title ?? metadata.title;
   return {
     kind: NAPPLET_KIND_NAMED,
     created_at: Math.floor(Date.now() / 1000),
     tags: [
       ['d', options.nappletType],
-      ...pathTags,
-      ['x', aggregateHash, 'aggregate'],
-      ...configTags,
-      ...requiresTags,
-      ...archetypeTags,
+      ['x', artifactHash],
+      ...(title ? [['title', title]] : []),
+      ...(options.source ? [['source', options.source]] : []),
+      ...(options.servers ?? []).map((server) => ['server', server]),
+      ...(options.icon ? [['icon', options.icon.sha256, options.icon.mimeType]] : []),
+      ...(state.resolvedSchema !== null ? [['config', JSON.stringify(state.resolvedSchema)]] : []),
+      ...required.map((name) => ['R', name]),
+      ...optional.map((name) => ['O', name]),
+      ...buildArchetypeTags(options.archetypes),
+      ...(options.intents ?? []).map((entry) => ['i', entry.intent, ...(entry.params ?? [])]),
     ],
-    content: '',
-    aggregateHash,
+    content: description,
+    artifactHash,
   };
 }
 
@@ -148,24 +145,9 @@ function buildArchetypeTags(
     if (!conventionMatch) {
       throw new Error('[nip5a-manifest] archetype convention must be a queryless napplet:<archetype>/<intent> identity');
     }
-    tags.push(['archetype', slug, convention]);
+    tags.push(['z', slug], ['i', convention, ...(entry.params ?? [])]);
   }
-  return tags;
-}
-
-/**
- * Enumerate dist artifacts as NIP-5A `path`-tag pairs: `[sha256hex, absolutePath]`,
- * where the path is the dist-relative path made absolute (leading `/`, forward
- * slashes on every platform). The signed manifest itself is excluded.
- */
-function buildPathPairs(distPath: string): Array<[string, string]> {
-  const pairs: Array<[string, string]> = [];
-  for (const relativePath of walkDir(distPath)) {
-    if (relativePath === '.nip5a-manifest.json') continue;
-    const absPath = '/' + relativePath.split(path.sep).join('/');
-    pairs.push([sha256File(path.join(distPath, relativePath)), absPath]);
-  }
-  return pairs;
+  return tags.filter((tag, index) => tags.findIndex((other) => JSON.stringify(other) === JSON.stringify(tag)) === index);
 }
 
 async function writeManifestFile(
@@ -191,7 +173,7 @@ async function writeManifestFile(
       content: manifest.content,
     }, privkeyBytes);
 
-    const manifestWithMeta = { ...signedEvent, aggregateHash: manifest.aggregateHash, pubkey };
+    const manifestWithMeta = { ...signedEvent, artifactHash: manifest.artifactHash, pubkey };
     fs.writeFileSync(manifestPath, JSON.stringify(manifestWithMeta, null, 2));
   } catch {
     fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));

@@ -43,12 +43,13 @@ export const CHECKS: Check[] = [
     'unexpected-d-tag',
   ]),
   manifestCheck('manifest/index-html', 'Manifest declares a hashed /index.html', [
-    'missing-index-html',
-    'invalid-index-html-hash',
+    'invalid-artifact-hash',
+    'missing-description',
+    'invalid-metadata',
   ]),
-  manifestCheck('manifest/requires', 'requires tags are bare known NAP domains', [
+  manifestCheck('manifest/requires', 'R/O tags are bare known NAP domains', [
     'invalid-required-nap',
-    'unknown-required-nap',
+    'invalid-optional-nap',
   ]),
 
   // ── boot ─────────────────────────────────────────────────────────────────────

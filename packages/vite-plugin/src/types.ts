@@ -52,6 +52,16 @@ export interface Nip5aManifestOptions {
   nappletType: string;
   /** NAP domains this napplet requires, optionally inferred from source usage. */
   requires?: Nip5aRequiresOption;
+  /** Optional NAP integrations, emitted as O tags and excluded from inferred requirements. */
+  optional?: string[];
+  /** Accepted queryless intent identities and advertised parameter names. */
+  intents?: Array<{ intent: string; params?: string[] }>;
+  /** Source repository URL. */
+  source?: string;
+  /** Blossom origins holding the artifact and icon blobs. */
+  servers?: string[];
+  /** Content-addressed icon metadata; upload the blob separately. */
+  icon?: { sha256: string; mimeType: 'image/png' | 'image/jpeg' | 'image/webp' };
   /**
    * Human-readable napplet title. When set, the plugin sets/overrides the built
    * HTML `<title>` element (inserting one after `<head>` if absent). This is
@@ -118,7 +128,7 @@ export interface Nip5aManifestOptions {
    * hash (NIP-5D §Identity: the aggregate is recomputed from `path` tags
    * alone). Non-normative summary — defer to `ARCHETYPES.md` (napplet/naps).
    */
-  archetypes?: Array<{ slug: string; convention: string }>;
+  archetypes?: Array<{ slug: string; convention: string; params?: string[] }>;
 }
 
 /** Internal: resolved per-plugin-instance build state shared across hooks. */
@@ -138,6 +148,6 @@ export interface ManifestTemplate {
   kind: typeof NAPPLET_KIND_NAMED;
   created_at: number;
   tags: string[][];
-  content: '';
-  aggregateHash: string;
+  content: string;
+  artifactHash: string;
 }

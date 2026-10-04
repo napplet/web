@@ -300,3 +300,12 @@ export function singleFileBuildConfig(config: UserConfig): UserConfig {
     },
   };
 }
+
+/** Read ordinary author-supplied HTML metadata for manifest display fields. */
+export function readHtmlMetadata(html: string): { title?: string; description?: string } {
+  const decode = (value: string): string => value.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&');
+  const title = /<title\b[^>]*>([\s\S]*?)<\/title>/i.exec(html)?.[1];
+  const descriptionTag = [...html.matchAll(/<meta\b[^>]*>/gi)].find(([tag]) => getAttr(tag, 'name')?.toLowerCase() === 'description');
+  const description = descriptionTag ? getAttr(descriptionTag[0], 'content') : null;
+  return { title: title ? decode(title).trim() : undefined, description: description ? decode(description).trim() : undefined };
+}

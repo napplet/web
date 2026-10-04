@@ -77,7 +77,7 @@ export function nip5aManifest(options: Nip5aManifestOptions): Plugin {
     outDir: 'dist',
     projectRoot: process.cwd(),
     base: '/',
-    artifactMode: options.artifactMode ?? 'external-assets',
+    artifactMode: options.artifactMode ?? 'single-file',
     resolvedSchema: null,
     resolvedSchemaSource: null,
     inferredRequires: new Set(),

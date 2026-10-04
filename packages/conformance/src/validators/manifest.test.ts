@@ -16,12 +16,13 @@ function event(overrides: Partial<NappletManifestEvent> = {}): NappletManifestEv
   return {
     id: 'event-id',
     pubkey: 'pubkey',
+    content: 'A test napplet',
     kind: NAPPLET_KIND_NAMED,
     tags: [
       ['d', 'demo'],
-      ['path', '/index.html', HASH],
-      ['requires', 'relay'],
-      ['requires', 'storage'],
+      ['x', HASH],
+      ['R', 'relay'],
+      ['R', 'storage'],
     ],
     ...overrides,
   };
@@ -37,12 +38,12 @@ describe('validateManifestEvent — happy path', () => {
   });
 
   it('accepts root and snapshot napplet manifests without d tags', () => {
-    expect(validateManifestEvent(event({ kind: NAPPLET_KIND_ROOT, tags: [['path', '/index.html', HASH]] })).ok).toBe(true);
-    expect(validateManifestEvent(event({ kind: NAPPLET_KIND_SNAPSHOT, tags: [['path', '/index.html', HASH]] })).ok).toBe(true);
+    expect(validateManifestEvent(event({ kind: NAPPLET_KIND_ROOT, tags: [['x', HASH]] })).ok).toBe(true);
+    expect(validateManifestEvent(event({ kind: NAPPLET_KIND_SNAPSHOT, tags: [['x', HASH]] })).ok).toBe(true);
   });
 
   it('returns display metadata from the event', () => {
-    const e = event({ tags: [['path', '/index.html', HASH], ['title', 'Demo Napplet']] });
+    const e = event({ tags: [['x', HASH], ['title', 'Demo Napplet']] });
     expect(manifestDisplayName(e)).toBe('Demo Napplet');
     expect(manifestRequires(event())).toEqual(['relay', 'storage']);
   });
@@ -67,7 +68,7 @@ describe('validateManifestEvent — failures', () => {
   });
 
   it('enforces d tag rules by event kind', () => {
-    const missing = validateManifestEvent(event({ tags: [['path', '/index.html', HASH]] }));
+    const missing = validateManifestEvent(event({ tags: [['x', HASH]] }));
     expect(missing.errors.some((e) => e.code === 'missing-d-tag')).toBe(true);
 
     const unexpected = validateManifestEvent(event({ kind: NAPPLET_KIND_ROOT }));
@@ -76,22 +77,51 @@ describe('validateManifestEvent — failures', () => {
 
   it('requires a hashed /index.html path tag', () => {
     const missing = validateManifestEvent(event({ tags: [['d', 'demo']] }));
-    expect(missing.errors.some((e) => e.code === 'missing-index-html')).toBe(true);
+    expect(missing.errors.some((e) => e.code === 'invalid-artifact-hash')).toBe(true);
 
-    const invalid = validateManifestEvent(event({ tags: [['d', 'demo'], ['path', '/index.html', 'nope']] }));
-    expect(invalid.errors.some((e) => e.code === 'invalid-index-html-hash')).toBe(true);
+    const invalid = validateManifestEvent(event({ tags: [['d', 'demo'], ['x', 'nope']] }));
+    expect(invalid.errors.some((e) => e.code === 'invalid-artifact-hash')).toBe(true);
   });
 
   it('requires bare known NAP domains in requires tags', () => {
     const v = validateManifestEvent(event({
       tags: [
         ['d', 'demo'],
-        ['path', '/index.html', HASH],
-        ['requires', 'nap:relay'],
-        ['requires', 'telepathy'],
+        ['x', HASH],
+        ['R', 'nap:relay'],
+        ['R', 'telepathy'],
       ],
     }));
     expect(v.errors.some((e) => e.code === 'invalid-required-nap')).toBe(true);
-    expect(v.errors.some((e) => e.code === 'unknown-required-nap')).toBe(true);
+    expect(v.warnings.some((e) => e.code === 'unknown-required-nap')).toBe(true);
+  });
+});
+
+
+describe('current schema cardinality and fallback', () => {
+  it('rejects duplicate x, aggregate x and uppercase hashes', () => {
+    for (const hashes of [[['x', HASH], ['x', HASH]], [['x', HASH, 'aggregate']], [['x', HASH.toUpperCase()]]]) {
+      expect(validateManifestEvent(event({ tags: [['d', 'demo'], ...hashes] })).ok).toBe(false);
+    }
+  });
+  it('checks empty d tags on root and duplicate identifiers on named events', () => {
+    expect(validateManifestEvent(event({ kind: NAPPLET_KIND_ROOT, tags: [['d', ''], ['x', HASH]] })).ok).toBe(false);
+    expect(validateManifestEvent(event({ tags: [['d', 'a'], ['d', 'b'], ['x', HASH]] })).ok).toBe(false);
+  });
+  it('requires description content but treats markup-like punctuation as plain text', () => {
+    expect(validateManifestEvent(event({ content: '  ' })).ok).toBe(false);
+    expect(validateManifestEvent(event({ content: '<b>literal</b> **text**' })).ok).toBe(true);
+  });
+  it('allows optional domains absent from this tool and uses fallback for invalid icons', () => {
+    const v = validateManifestEvent(event({ tags: [['d', 'demo'], ['x', HASH], ['O', 'external-domain'], ['icon', 'bad', 'image/svg+xml']] }));
+    expect(v.ok).toBe(true);
+    expect(v.requires).toEqual([]);
+    expect(v.optional).toEqual(['external-domain']);
+    expect(v.warnings.some((warning) => warning.code === 'invalid-icon')).toBe(true);
+  });
+  it('limits lineage to snapshots without requiring a parent lookup', () => {
+    const tags = [['x', HASH], ['a', `35129:${HASH}:parent`], ['A', `35129:${HASH}:root`]];
+    expect(validateManifestEvent(event({ kind: NAPPLET_KIND_SNAPSHOT, tags })).ok).toBe(true);
+    expect(validateManifestEvent(event({ tags: [['d', 'demo'], ...tags] })).ok).toBe(false);
   });
 });
