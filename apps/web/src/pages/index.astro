@@ -2,7 +2,7 @@
 import SiteLayout from '../layouts/SiteLayout.astro';
 import Runner from '../components/Runner.astro';
 import Composition from '../components/showcase/Composition.astro';
-import { NAPPLETS, SHELLS, APP_TOOLS, SHELL_TOOLS, LINKS } from '../lib/showcase';
+import { NAPPLETS, SHELLS, LINKS } from '../lib/showcase';
 import '../styles/showcase.css';
 
 const navigation = [
@@ -25,7 +25,8 @@ const navigation = [
       <summary>Menu <span aria-hidden="true">＋</span></summary>
       <nav aria-label="Mobile navigation">
         {navigation.map(item => <a href={item.href}>{item.label}</a>)}
-        <a href="#runtimes">Build a shell</a>
+        <a href="#build-napplets">Build napplets</a>
+        <a href="#runtimes">Build shells</a>
         <a href="/explainer/">The explainer</a>
       </nav>
     </details>
@@ -99,17 +100,19 @@ const navigation = [
 
     <section id="build" class="scene build-scene" aria-labelledby="build-title">
       <div class="section-wrap">
-        <div class="section-heading"><div><p class="eyebrow"><span class="section-number">04 /</span> For app builders</p><h2 id="build-title">Bring one<br /><span>good idea.</span></h2></div><p class="section-intro">Start with a focused app. Use the tools below to scaffold, connect, and test it.</p></div>
-        <div class="builder-grid"><div class="build-illustration" aria-hidden="true"><div class="blueprint-corner corner-one"></div><div class="blueprint-corner corner-two"></div><span class="blueprint-label">your next napplet</span><div class="build-tile"><span>✳</span></div><div class="build-steps"><span>idea</span><i></i><span>app</span><i></i><span>napplet</span></div><span class="blueprint-caption">Small enough to make your own.</span></div><div class="tool-list">{APP_TOOLS.map((item, index) => <a class="tool-row" href={item.href} data-tool-row><span class="tool-index">0{index + 1}</span><div><p class="card-category">{item.category}</p><h3>{item.name}</h3><p>{item.description}</p></div><span class="tool-arrow" aria-hidden="true">↗</span></a>)}</div></div>
-        <div class="section-note"><span class="note-mark" aria-hidden="true">↳</span><p>Early tooling, actively evolving. Start with the docs.</p><a href={LINKS.docs}>Open the documentation <span aria-hidden="true">↗</span></a></div>
-      </div>
-    </section>
-
-    <section id="runtimes" class="scene runtimes-scene" aria-labelledby="runtimes-title">
-      <div class="section-wrap">
-        <div class="section-heading"><div><p class="eyebrow"><span class="section-number">05 /</span> For shell builders</p><h2 id="runtimes-title">Make room<br /><span>for more.</span></h2></div><p class="section-intro">Build the place where napplets run. Explore runtime implementations and tools for integrating the protocol into your own shell.</p></div>
-        <div class="runtime-grid">{SHELL_TOOLS.map((item, index) => <a class="runtime-card" href={item.href} data-runtime-card><div class="runtime-symbol" aria-hidden="true"><span>{['⌘', '⟷', '✓'][index % 3]}</span><i></i><i></i></div><p class="card-category">{item.category}</p><h3>{item.name} <span aria-hidden="true">↗</span></h3><p>{item.description}</p></a>)}</div>
-        <div class="closing-line"><p>Something small can<br /><span>start something bigger.</span></p><a class="button button-primary" href={LINKS.community}>Meet the builders <span aria-hidden="true">↗</span></a></div>
+        <div class="section-heading"><div><p class="eyebrow"><span class="section-number">04 /</span> For builders</p><h2 id="build-title">Develop<span>.</span></h2></div></div>
+        <div class="build-paths">
+          <section id="build-napplets" class="build-path" aria-labelledby="build-napplets-title">
+            <h3 id="build-napplets-title">Build napplets</h3>
+            <p>Skills for your coding agent to design, build, and verify a napplet.</p>
+            <a class="button button-primary" href="/docs/guide/agent-skills.html">Explore the skills <span aria-hidden="true">↗</span></a>
+          </section>
+          <section id="runtimes" class="build-path" aria-labelledby="runtimes-title">
+            <h3 id="runtimes-title">Build shells with Kehto</h3>
+            <p>A runtime, browser integration, service handlers, and permissions for your own shell.</p>
+            <a class="button button-primary" href={LINKS.kehto}>Kehto on GitHub <span aria-hidden="true">↗</span></a>
+          </section>
+        </div>
       </div>
     </section>
   </main>

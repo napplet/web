@@ -11,6 +11,9 @@ async function fixture(t) {
   const files = {
     'apps/web/dist/index.html': 'showcase',
     'apps/web/dist/explainer/index.html': 'explainer',
+    'apps/web/dist/protocol/index.html': 'protocol directory',
+    'apps/web/dist/protocol/contribute/index.html': 'contribution guide',
+    'apps/web/dist/protocol/nap-shell/index.html': 'shell detail',
     'apps/web/dist/og.png': 'image',
     'apps/web/dist/robots.txt': 'robots',
     'apps/web/dist/sitemap-index.xml': 'sitemap index',
@@ -37,6 +40,7 @@ test('assembles real directory routes, nested assets and exact installers, remov
   const output = await assembleSite(root);
   for (const [file, expected] of Object.entries({
     'index.html': 'showcase', 'explainer/index.html': 'explainer',
+    'protocol/index.html': 'protocol directory', 'protocol/nap-shell/index.html': 'shell detail',
     'docs/index.html': 'docs', 'docs/guide/index.html': 'guide',
     'conformance/assets/app.js': 'conformance',
     'install.sh': 'shell installer', 'install.ps1': 'powershell installer',
@@ -44,8 +48,8 @@ test('assembles real directory routes, nested assets and exact installers, remov
   await assert.rejects(readFile(path.join(output, 'stale.txt')), { code: 'ENOENT' });
 });
 
-test('missing explainer or social image fails before touching prior output', async (t) => {
-  for (const missing of ['explainer/index.html', 'og.png']) {
+test('missing required pages or social image fails before touching prior output', async (t) => {
+  for (const missing of ['explainer/index.html', 'protocol/index.html', 'protocol/contribute/index.html', 'og.png']) {
     const root = await fixture(t);
     await rm(path.join(root, 'apps/web/dist', missing));
     await assert.rejects(assembleSite(root), { code: 'ENOENT' });

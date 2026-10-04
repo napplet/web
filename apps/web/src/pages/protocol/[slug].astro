@@ -1,0 +1,34 @@
+---
+import { renderSpec } from '../../lib/render-spec';
+import ProtocolLayout from '../../layouts/ProtocolLayout.astro';
+import data from '../../data/protocol.json';
+import { domainPath, entryState, type NapEntry } from '../../lib/protocol';
+export function getStaticPaths() { return data.entries.map(entry => ({ params: { slug: entry.slug }, props: { entry } })); }
+interface Props { entry: NapEntry; }
+const { entry } = Astro.props;
+const specification = renderSpec(entry.markdown, entry.documentUrl);
+const related = data.entries.filter(other => other.id === entry.id && other.slug !== entry.slug);
+const deferred = entry.registryStatus?.toLowerCase() === 'deferred';
+---
+<ProtocolLayout title={`${entry.id} — ${entry.title}`} description={`${entryState(entry)}: ${entry.title}. Read the complete upstream specification, with API tables and wire examples.`}>
+  <a class="protocol-back" href="/protocol/">← All NAPs</a>
+  <article class="nap-detail">
+    <header><p class="eyebrow">{entry.id} {entry.pr ? `/ PR #${entry.pr}` : '/ Merged specification'}</p><h1>{entry.title}</h1><div class="nap-status-line"><span class:list={['nap-badge', `state-${entry.state}`]}>{entryState(entry)}</span>{entry.change === 'amendment' && <span>Proposed amendment</span>}{entry.change === 'removal' && <span>Proposed removal</span>}{deferred && <span class="nap-badge state-deferred">Deferred upstream</span>}</div></header>
+    {deferred && <aside class="protocol-notice">The registry marks {entry.statusSource} as deferred. This proposal is dormant and should not be treated as an available protocol capability.</aside>}
+    {entry.state !== 'merged' && <aside class="protocol-notice">This is an unmerged proposal. Its API and scope may change during discussion. Participate on the pull request before depending on it.</aside>}
+    <div class="nap-detail-grid">
+      <div>
+        <p class="protocol-source-note spec-provenance">Full specification from <a href={entry.documentUrl}>the fetched upstream revision ↗</a>. The document below is rendered from its original Markdown. <a href={entry.sourceUrl}>Follow the latest source on GitHub ↗</a>.</p>
+        {entry.change === 'removal' && <p class="protocol-notice">This proposal removes the document below. The text shown is the version before removal.</p>}
+        <div class="spec-body" set:html={specification.html} />
+        <div class="protocol-actions"><a class="button button-primary" href={entry.discussionUrl ?? entry.sourceUrl}>{entry.state === 'merged' ? 'Read specification on GitHub ↗' : `Join the discussion · PR #${entry.pr} ↗`}</a>{entry.discussionUrl && <a class="button button-secondary" href={entry.sourceUrl}>Read proposed changes ↗</a>}</div>
+      </div>
+      <aside class="nap-facts spec-sidebar" aria-label="Specification metadata">
+        <details class="spec-contents" open><summary>On this page</summary><nav aria-label="Specification contents"><ul>{specification.headings.filter(heading => heading.depth <= 2).map(heading => <li><a href={`#${heading.id}`}>{heading.text}</a></li>)}</ul></nav></details>
+        <details class="spec-metadata"><summary>Specification metadata</summary><dl><dt>Capability domain</dt><dd><code>{entry.domain ?? 'Not declared'}</code></dd><dt>Repository state</dt><dd>{entryState(entry)}</dd><dt>Registry status</dt><dd>{entry.registryStatus ?? 'Not listed in the registry'}</dd><dt>Document marker</dt><dd>{entry.declaredStatus ?? 'Not declared'}</dd><dt>Declared dependencies</dt><dd>{entry.dependencies.length ? <ul>{entry.dependencies.map(domain => <li>{domainPath(domain) ? <a href={domainPath(domain)}>{domain}</a> : <code>{domain}</code>}</li>)}</ul> : 'None declared in the preamble'}</dd><dt>Source revision</dt><dd><code>{entry.revision.slice(0, 12)}</code></dd></dl>
+        <a href={entry.sourceUrl}>View source on GitHub ↗</a></details>
+      </aside>
+    </div>
+    {related.length > 0 && <section class="nap-section"><h2>Also under this NAP</h2><ul class="related-naps">{related.map(other => <li><a href={`/protocol/${other.slug}/`}>{other.title} <span>{entryState(other)} {other.pr ? `· #${other.pr}` : ''} →</span></a></li>)}</ul></section>}
+  </article>
+</ProtocolLayout>

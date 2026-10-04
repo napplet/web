@@ -9,9 +9,8 @@ export const LINKS = {
   boilerplate: 'https://github.com/napplet/boilerplate',
   // Kehto — the reference web runtime / shell implementation.
   kehto: 'https://github.com/kehto/web',
-  // The NAPs track — public repo where NAP capability domains are proposed,
-  // drafted, and extended.
-  naps: 'https://github.com/napplet/naps',
+  // Non-normative directory with links to each living NAP specification or PR.
+  naps: '/protocol/',
 } as const;
 
 export interface PackageInfo {

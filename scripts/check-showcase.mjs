@@ -14,7 +14,7 @@ try {
     page.on('pageerror', error => errors.push(error.message));
     await page.goto(base, { waitUntil: 'networkidle' });
     assert.equal(await page.locator('h1').count(), 1);
-    assert.equal(await page.locator('main > section').count(), 6);
+    assert.equal(await page.locator('main > section').count(), 5);
     for (const section of await page.locator('main > section').all()) {
       await section.scrollIntoViewIfNeeded();
       const box = await section.boundingBox();
@@ -23,6 +23,21 @@ try {
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'no horizontal page overflow');
     await page.goto(`${base}/#napplets`, { waitUntil: 'networkidle' });
     await page.screenshot({ path: `${screenshots}/${viewport.width}-page.png`, fullPage: true });
+    const paths = page.locator('#build .build-path');
+    assert.equal(await paths.count(), 2);
+    assert.equal(await page.locator('#build a').count(), 2);
+    assert.equal(await page.getByRole('link', { name: 'Explore the skills' }).getAttribute('href'), '/docs/guide/agent-skills.html');
+    assert.equal(await page.getByRole('link', { name: 'Kehto on GitHub' }).getAttribute('href'), 'https://github.com/kehto/web');
+    const buildBox = await page.locator('#build').boundingBox();
+    assert.ok(Math.abs(buildBox.height - viewport.height) <= 1, 'develop section fits one viewport');
+    await page.goto(`${base}/#build`, { waitUntil: 'networkidle' });
+    for (const link of await page.locator('#build a').all()) {
+      const box = await link.boundingBox();
+      assert.ok(box.y >= 0 && box.y + box.height <= viewport.height, 'both develop links fit in the viewport after anchor navigation');
+    }
+    const appPath = await paths.nth(0).boundingBox();
+    const shellPath = await paths.nth(1).boundingBox();
+    assert.ok(viewport.width > 760 ? Math.abs(appPath.y - shellPath.y) < 1 : shellPath.y >= appPath.y + appPath.height, 'build paths share a row on desktop and stack on mobile');
     const runLinks = page.locator('[data-launch]');
     assert.equal(await runLinks.count(), 3);
     for (let i = 0; i < 3; i++) {
@@ -59,7 +74,7 @@ try {
   }
   const noJs = await browser.newPage({ javaScriptEnabled: false });
   await noJs.goto(base);
-  assert.equal(await noJs.locator('main > section').count(), 6);
+  assert.equal(await noJs.locator('main > section').count(), 5);
   assert.equal(await noJs.locator('[data-launch]').count(), 3);
   assert.ok(await noJs.locator('h1').isVisible());
   assert.ok((await noJs.locator('[data-launch]').first().getAttribute('href')).startsWith('https://napplet.soy/'));

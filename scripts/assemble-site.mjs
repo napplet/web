@@ -4,7 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const requiredWebFiles = [
-  'index.html', 'explainer/index.html', 'og.png', 'robots.txt',
+  'index.html', 'explainer/index.html', 'protocol/index.html', 'protocol/contribute/index.html', 'og.png', 'robots.txt',
   'sitemap-index.xml', 'sitemap-0.xml', 'install.sh', 'install.ps1',
 ];
 

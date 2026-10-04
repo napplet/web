@@ -163,7 +163,7 @@ pnpm version-packages   # Apply changesets, bump versions
 
 The informational site and package documentation live in `apps/`:
 
-- `apps/web` -- Astro ecosystem showcase with runnable napplets, shells, protocol status, and developer tools; the original Svelte explainer lives at `/explainer/`. See [website development and verification](apps/web/README.md).
+- `apps/web` -- Astro ecosystem showcase with runnable napplets, shells, and developer tools; `/protocol/` lists merged NAPs and open proposals with detail pages and contribution guidance. The original Svelte explainer lives at `/explainer/`. Run `pnpm generate:protocol` to refresh the NAP directory and build the website; the deployment workflow also refreshes it daily. See [website development and verification](apps/web/README.md).
 - `apps/docs` -- VitePress documentation, served under `/docs`.
 - `apps/conformance` -- the standalone conformance web runtime, served under `/conformance`.
 

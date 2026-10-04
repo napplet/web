@@ -28,7 +28,7 @@ export function initShowcaseAnimations(): () => void {
       });
 
       // Trigger each card independently so long mobile sections remain immediately readable.
-      section.querySelectorAll<HTMLElement>('[data-card], [data-shell-card], [data-tool-row], [data-runtime-card]').forEach(card => {
+      section.querySelectorAll<HTMLElement>('[data-card], [data-shell-card], [data-tool-row]').forEach(card => {
         const isTool = card.hasAttribute('data-tool-row');
         gsap.from(card, {
           y: isTool ? 0 : 24, x: isTool ? 12 : 0,
@@ -49,19 +49,6 @@ export function initShowcaseAnimations(): () => void {
             y: 18, scale: 0.96, duration: 0.7,
             ease: 'power3.out', clearProps: 'transform',
             scrollTrigger: { trigger: shell, start: 'top 85%', once: true },
-          });
-        });
-      }
-      if (section.id === 'build') {
-        gsap.timeline({ scrollTrigger: { trigger: '.build-illustration', start: 'top 85%', once: true }, defaults: { ease: 'power3.out', duration: 0.65 } })
-          .from('.build-tile', { rotation: -12, scale: 0.8, clearProps: 'transform' })
-          .from('.build-steps i', { scaleX: 0, stagger: 0.2 }, 0.2);
-      }
-      if (section.id === 'runtimes') {
-        section.querySelectorAll<HTMLElement>('.runtime-symbol').forEach(symbol => {
-          gsap.from(symbol.querySelectorAll('i'), {
-            x: -12, y: -8, duration: 0.7, stagger: 0.15, ease: 'power3.out', clearProps: 'transform',
-            scrollTrigger: { trigger: symbol, start: 'top 90%', once: true },
           });
         });
       }

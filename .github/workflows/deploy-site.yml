@@ -14,16 +14,32 @@ on:
       - 'package.json'
       - 'scripts/assemble-site.mjs'
       - 'scripts/assemble-site.test.mjs'
+      - 'scripts/generate-protocol*'
+      - 'scripts/lib/protocol-data.mjs'
+      - 'scripts/check-protocol.mjs'
       - '.github/workflows/deploy-site.yml'
+  schedule:
+    - cron: '17 5 * * *'
   workflow_dispatch:
+    inputs:
+      deploy:
+        description: 'Deploy the verified artifact (main branch only)'
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
 
 concurrency:
-  group: deploy-site-${{ github.ref }}
-  cancel-in-progress: true
+  group: deploy-site
+  cancel-in-progress: false
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      DEPLOY_SITE: ${{ github.ref == 'refs/heads/main' && (github.event_name != 'workflow_dispatch' || inputs.deploy) }}
     steps:
       - uses: actions/checkout@v4
 
@@ -37,6 +53,16 @@ jobs:
       - uses: denoland/setup-deno@v2
 
       - run: pnpm install --frozen-lockfile
+
+      - name: Test protocol generation
+        run: pnpm test:protocol
+
+      # Read the live registry on every deploy, including cron. Failure stops the
+      # job before upload; no partial snapshot or bot commit reaches production.
+      - name: Generate current protocol pages
+        run: pnpm generate:protocol
+        env:
+          GH_TOKEN: ${{ github.token }}
 
       # Build workspace package deps the apps may import, then each app.
       - name: Build packages
@@ -57,11 +83,24 @@ jobs:
       - name: Assemble site
         run: node scripts/assemble-site.mjs
 
+      - name: Verify every generated protocol route
+        run: node scripts/check-protocol.mjs
+
+      - name: Preserve verified site and source provenance
+        uses: actions/upload-artifact@v4
+        with:
+          name: protocol-site
+          path: |
+            site/
+            apps/web/src/data/protocol.json
+          retention-days: 7
+
       # ─── Bunny: upload to storage zone, then purge the pull zone ───────────
       # Storage zone, endpoint, and upload password come from the Bunny dashboard
       # (Storage → your zone → FTP & API Access). Keep them in secrets so a zone
       # rename or regional endpoint change does not require a workflow edit.
       - name: Prepare Bunny storage config
+        if: env.DEPLOY_SITE == 'true'
         id: bunny
         env:
           BUNNY_STORAGE_ZONE: ${{ secrets.BUNNY_STORAGE_ZONE }}
@@ -91,6 +130,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Deploy to Bunny CDN
+        if: env.DEPLOY_SITE == 'true'
         uses: ayeressian/bunnycdn-storage-deploy@v2.4.5
         with:
           source: site
@@ -108,6 +148,7 @@ jobs:
       # NSITE_SERVERS are stored space-separated. Normalize any whitespace
       # (spaces or newlines) into one-per-line so the action parses each URL.
       - name: Prepare nsite targets
+        if: env.DEPLOY_SITE == 'true'
         id: nsite
         env:
           RAW_RELAYS: ${{ vars.NSITE_RELAYS || 'wss://relay.nsite.lol' }}
@@ -126,6 +167,7 @@ jobs:
       # ─── nsite: publish to Nostr + Blossom ─────────────────────────────────
       # Optional mirror: Bunny is the canonical deploy path for this workflow.
       - name: Deploy to nsite
+        if: env.DEPLOY_SITE == 'true'
         id: deploy-nsite
         continue-on-error: true
         uses: sandwichfarm/nsite-action@v0.5.1
@@ -136,6 +178,6 @@ jobs:
           servers: ${{ steps.nsite.outputs.servers }}
 
       - name: Report skipped nsite deploy
-        if: ${{ steps.deploy-nsite.outcome == 'failure' }}
+        if: ${{ env.DEPLOY_SITE == 'true' && steps.deploy-nsite.outcome == 'failure' }}
         run: |
           echo "::warning::nsite deploy failed; Bunny CDN deploy already completed, so skipping the optional nsite mirror failure."

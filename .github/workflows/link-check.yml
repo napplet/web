@@ -14,6 +14,10 @@ on:
       - 'package.json'
       - 'scripts/check-links.mjs'
       - 'scripts/check-showcase.mjs'
+      - 'scripts/check-protocol.mjs'
+      - 'scripts/check-protocol-browser.mjs'
+      - 'scripts/generate-protocol*'
+      - 'scripts/lib/protocol-data.mjs'
       - 'scripts/assemble-site.mjs'
       - 'scripts/assemble-site.test.mjs'
       - '.github/workflows/link-check.yml'
@@ -28,6 +32,10 @@ on:
       - 'package.json'
       - 'scripts/check-links.mjs'
       - 'scripts/check-showcase.mjs'
+      - 'scripts/check-protocol.mjs'
+      - 'scripts/check-protocol-browser.mjs'
+      - 'scripts/generate-protocol*'
+      - 'scripts/lib/protocol-data.mjs'
       - 'scripts/assemble-site.mjs'
       - 'scripts/assemble-site.test.mjs'
       - '.github/workflows/link-check.yml'
@@ -74,6 +82,9 @@ jobs:
       - name: Assemble site
         run: node scripts/assemble-site.mjs
 
+      - name: Verify every protocol route
+        run: node scripts/check-protocol.mjs
+
       - name: Install Chromium for Playwright
         run: pnpm exec playwright install --with-deps chromium
 
@@ -99,3 +110,4 @@ jobs:
 
           node scripts/check-links.mjs http://localhost:8099
           node scripts/check-showcase.mjs http://localhost:8099
+          node scripts/check-protocol-browser.mjs http://localhost:8099
