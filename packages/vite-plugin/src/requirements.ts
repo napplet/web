@@ -71,11 +71,12 @@ export function reportRequirementDiagnostics(
   option: Nip5aRequiresOption | undefined,
   state: ManifestPluginState,
   warn: (message: string) => void,
+  optional: readonly string[] = [],
 ): void {
   if (!option || Array.isArray(option) || !option.infer || !option.explicit) return;
 
   const explicit = new Set(dedupeRequirements(option.explicit));
-  const missing = [...state.inferredRequires].filter((domain) => !explicit.has(domain)).sort();
+  const missing = [...state.inferredRequires].filter((domain) => !explicit.has(domain) && !optional.includes(domain)).sort();
   if (missing.length === 0) return;
 
   const message = `[nip5a-manifest] missing explicit requires for inferred NAP domain(s): ${missing.join(', ')}`;
@@ -108,7 +109,8 @@ function domainFromSpecifier(specifier: string | undefined): string | null {
 }
 
 function isNapDomain(domain: string): boolean {
-  return NAP_DOMAIN_SET.has(domain);
+  if (!domain || /[:\s]/.test(domain) || domain.startsWith("NAP-")) throw new Error(`NAP requirement must be a bare domain: ${domain}`);
+  return true;
 }
 
 function isSourceFile(id: string): boolean {

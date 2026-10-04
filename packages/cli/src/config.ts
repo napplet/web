@@ -220,6 +220,8 @@ function normalizeMetadata(value: unknown): NappletDeployMetadata | undefined {
     title,
     description,
     archetypes,
+    requires: metadata.requires === undefined ? undefined : stringArray(metadata.requires, "metadata.requires"),
+    optional: metadata.optional === undefined ? undefined : stringArray(metadata.optional, "metadata.optional"),
   };
 }
 
@@ -246,7 +248,7 @@ function normalizeArchetypeConvention(
   if (!conventionMatch) {
     throw new Error(`${field} convention must use queryless napplet:<archetype>/<intent>`);
   }
-  return { slug, convention };
+  return { slug, convention, ...(conventionValue.params === undefined ? {} : { params: stringArray(conventionValue.params, `${field}.params`) }) };
 }
 
 function optionalString(value: unknown, field: string, allowEmpty = false): string | undefined {

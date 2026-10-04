@@ -21,6 +21,8 @@ import {
   titleFromName,
 } from "./init-wizard.ts";
 import { commandKeys } from "./keys-command.ts";
+import { commandMigrate } from "./migrate-command.ts";
+import { selectManifestFormat } from "./manifest-format.ts";
 import { createDeployManifestTemplates } from "./manifest.ts";
 import {
   createDeployProgressReporter,
@@ -41,7 +43,8 @@ Usage:
   napplet guide
   napplet create <directory> [--template <path-or-url>] [--force]
   napplet init [--force] [--root] [--source-dir <dir>] [--name <dtag>] [--title <title>] [--description <text>] [--archetype <slug:napplet:<archetype>/<intent>>] [--relay <url>] [--server <url>]
-  napplet deploy [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>] [--prompt-sec] [--dry-run] [--json]
+  napplet deploy [--format current|legacy] [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>] [--prompt-sec] [--dry-run] [--json]
+  napplet migrate <signed-event.json> [--description <text>] [--optional <domain>] [--output <preview.json>]
   napplet debug [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>]
   napplet keys store --name <ref> [--sec <secret> | --prompt-sec]
   napplet keys connect --name <ref> [--relay <url> ...] [--config <file>]
@@ -85,6 +88,8 @@ export async function main(argv = Deno.args, options: CliMainOptions = {}): Prom
       case "-h":
         console.log(HELP);
         return 0;
+      case "migrate":
+        return await commandMigrate(parsed.rest);
       case "init":
         return await commandInit(parsed.rest);
       case "guide":
@@ -270,6 +275,7 @@ async function commandDeploy(argv: string[]): Promise<number> {
   const flags = collectFlags(argv);
   const jsonOutput = flags.boolean.has("json") || !isTerminalOutput();
   const config = await loadDeployConfig(flags, jsonOutput);
+  const format = await selectManifestFormat(first(flags.values.get("format")), isTerminalInput() && !jsonOutput);
   const candidates = await discoverNapplets(config, { traverse: flags.boolean.has("all") });
   const selection: Partial<DeploySelection> = {
     root: flags.boolean.has("root") ? true : undefined,
@@ -298,10 +304,10 @@ async function commandDeploy(argv: string[]): Promise<number> {
     const signingInfo = createSigningDebugInfo(deploySigning);
     const manifests = signer
       ? await signDeployManifestTemplates(
-        await createDeployManifestTemplates(plan, config, { sourcePubkey: signer.pubkey }),
+        await createDeployManifestTemplates(plan, config, { sourcePubkey: signer.pubkey, format }),
         signer,
       )
-      : await createDeployManifestTemplates(plan, config);
+      : await createDeployManifestTemplates(plan, config, { format });
     if (!dryRun) {
       if (!signer) {
         throw new Error("Network deploy requires a signer from --sec, --prompt-sec, config, or CI");

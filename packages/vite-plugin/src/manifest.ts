@@ -96,7 +96,7 @@ function buildManifestTemplate(
   const description = options.description ?? metadata.description;
   // NIP-5D §Manifest requires non-empty plain-text content.
   if (!description?.trim()) throw new Error('[nip5a-manifest] Set description or an HTML description meta for NIP-5D manifest content');
-  const optional = [...new Set(options.optional ?? [])];
+  const optional = resolvedRequirements(options.optional ?? [], state);
   const required = resolvedRequirements(options.requires, state).filter((name) => !optional.includes(name));
   const title = options.title ?? metadata.title;
   return {

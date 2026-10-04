@@ -9,7 +9,7 @@ Deno.test("createDebugReport summarizes config discovery deploy and manifests", 
     await Deno.writeTextFile(`${dir}/dist/index.html`, "<!doctype html>");
     await Deno.writeTextFile(`${dir}/dist/app.js`, "console.log('napplet');");
 
-    const config = defaultConfig({
+    const config = defaultConfig({ metadata: { description: "Debug fixture napplet" },
       sourceDir: "dist",
       relays: ["wss://relay.example"],
       blossomServers: ["https://cdn.example"],

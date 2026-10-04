@@ -1,3 +1,6 @@
+import { buildLegacyManifestFields, computeAggregateHash } from "./manifest-legacy.ts";
+import type { ManifestFormat } from "./manifest-format.ts";
+export { computeAggregateHash } from "./manifest-legacy.ts";
 import { joinPath } from "./path.ts";
 import { readManifestMetadataTags } from "./manifest-metadata.ts";
 import {
@@ -22,6 +25,8 @@ export interface ManifestBuildOptions {
   servers?: string[];
   sourcePubkey?: string;
   metadataTags?: string[][];
+  content?: string;
+  format?: ManifestFormat;
 }
 
 /** SnapshotSourceRef shape used by manifest construction helpers. */
@@ -40,18 +45,6 @@ export async function collectManifestFiles(dir: string): Promise<ManifestFileMap
   return files;
 }
 
-/** compute aggregate hash helper for manifest construction. */
-export async function computeAggregateHash(
-  files: readonly ManifestFileMapping[],
-): Promise<string> {
-  if (files.length === 0) throw new Error("Manifest must include at least one path tag");
-  const lines = files.map((file) => {
-    assertManifestFile(file);
-    return `${file.sha256} ${file.path}\n`;
-  }).sort();
-  return await sha256Text(lines.join(""));
-}
-
 /** create site manifest template helper for manifest construction. */
 export async function createSiteManifestTemplate(
   item: DeployPlanItem,
@@ -61,18 +54,22 @@ export async function createSiteManifestTemplate(
   if (item.target === "snapshot") {
     throw new Error("Use createSnapshotManifestTemplate for snapshot manifests");
   }
-  const aggregateHash = await computeAggregateHash(files);
+  const format = options.format ?? "current";
+  const metadataTags = options.metadataTags ?? [];
+  const content = options.content ?? metadataTags.find((tag) => tag[0] === "description")?.[1] ??
+    "";
+  const fields = format === "legacy"
+    ? await buildLegacyManifestFields(files, metadataTags, content)
+    : buildCurrentManifestFields(files, metadataTags, content);
   const tags: string[][] = [];
   if (item.target === "named") tags.push(["d", normalizeDTag(item.dTag)]);
-  for (const file of files) tags.push(["path", file.path, file.sha256]);
-  tags.push(["x", aggregateHash, "aggregate"]);
+  tags.push(...fields.tags);
   for (const server of options.servers ?? []) tags.push(["server", server]);
-  for (const tag of options.metadataTags ?? []) tags.push([...tag]);
   return {
     kind: item.target === "root" ? NAPPLET_KIND_ROOT : NAPPLET_KIND_NAMED,
     created_at: options.createdAt ?? nowSeconds(),
     tags,
-    content: "",
+    content: fields.content,
   };
 }
 
@@ -85,27 +82,21 @@ export function createSnapshotManifestTemplate(
   if (source.kind !== NAPPLET_KIND_ROOT && source.kind !== NAPPLET_KIND_NAMED) {
     throw new Error("Snapshots can only copy root or named site manifests");
   }
-  const aggregateTags = source.tags.filter((tag) => tag[0] === "x" && tag[2] === "aggregate");
-  if (aggregateTags.length !== 1 || !aggregateTags[0][1]) {
-    throw new Error("Snapshot source must include exactly one aggregate x tag");
+  const hashTags = source.tags.filter((tag) => tag[0] === "x");
+  if (hashTags.length !== 1 || !/^[0-9a-f]{64}$/.test(hashTags[0][1])) {
+    throw new Error("Snapshot source must include exactly one valid x tag");
   }
   const tags: string[][] = [["a", siteAddress(sourceRef)]];
   const originTag = source.tags.find((tag) => tag[0] === "A");
   if (originTag) tags.push([...originTag]);
   for (const tag of source.tags) {
-    if (
-      tag[0] === "path" || tag[0] === "server" || tag[0] === "title" || tag[0] === "description" ||
-      tag[0] === "source" || tag[0] === "requires" || tag[0] === "archetype"
-    ) {
-      tags.push([...tag]);
-    }
+    if (!["d", "a", "A"].includes(tag[0])) tags.push([...tag]);
   }
-  tags.push(["x", aggregateTags[0][1], "aggregate"]);
   return {
     kind: NAPPLET_KIND_SNAPSHOT,
     created_at: options.createdAt ?? nowSeconds(),
     tags,
-    content: "",
+    content: source.content,
   };
 }
 
@@ -113,7 +104,7 @@ export function createSnapshotManifestTemplate(
 export async function createDeployManifestTemplates(
   plan: DeployPlan,
   config: NappletConfig,
-  options: Pick<ManifestBuildOptions, "createdAt" | "sourcePubkey"> = {},
+  options: Pick<ManifestBuildOptions, "createdAt" | "sourcePubkey" | "format"> = {},
 ): Promise<DeployManifestTemplate[]> {
   const result: DeployManifestTemplate[] = [];
   const filesByDir = new Map<string, ManifestFileMapping[]>();
@@ -128,14 +119,27 @@ export async function createDeployManifestTemplates(
         item.candidate.indexHtml,
         item.candidate.manifestPath,
         config,
+        options.format,
       );
     metadataByDir.set(item.candidate.dir, metadataTags);
-    const aggregateHash = await computeAggregateHash(files);
+    const format = options.format ?? "current";
+    const index = files.find((file) => file.path === "/index.html");
+    if (!index) throw new Error("NIP-5D requires /index.html");
+    const artifactHash = index.sha256;
+    const aggregateHash = format === "legacy" ? await computeAggregateHash(files) : undefined;
+    const uploadFiles = format === "legacy"
+      ? files
+      : files.filter((file) =>
+        file.path === "/index.html" ||
+        metadataTags.some((tag) => tag[0] === "icon" && tag[1] === file.sha256)
+      );
     if (item.target === "snapshot") {
       const snapshot = createDeploySnapshotTemplate(item, sourceTemplates, options);
       result.push({
         item,
-        files,
+        files: uploadFiles,
+        format,
+        artifactHash,
         aggregateHash,
         ...snapshot,
       });
@@ -145,6 +149,7 @@ export async function createDeployManifestTemplates(
       createdAt: options.createdAt,
       servers: config.blossomServers,
       metadataTags,
+      format,
     });
     sourceTemplates.set(
       deploySourceKey(item.candidate.dir, {
@@ -156,7 +161,9 @@ export async function createDeployManifestTemplates(
     );
     result.push({
       item,
-      files,
+      files: uploadFiles,
+      format,
+      artifactHash,
       aggregateHash,
       template,
     });
@@ -173,7 +180,7 @@ function createDeploySnapshotTemplate(
     return { skippedReason: "snapshot template requires a root or named source target" };
   }
   if (!options.sourcePubkey) {
-    return { skippedReason: "snapshot template requires the signer pubkey for its NIP-5A a tag" };
+    return { skippedReason: "snapshot template requires the signer pubkey for its NIP-5D a tag" };
   }
   const source = sourceTemplates.get(deploySourceKey(item.candidate.dir, item.snapshotSource));
   if (!source) {
@@ -254,24 +261,40 @@ async function sha256File(path: string): Promise<string> {
   return hex(new Uint8Array(digest));
 }
 
-async function sha256Text(text: string): Promise<string> {
-  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
-  return hex(new Uint8Array(digest));
-}
-
 function hex(bytes: Uint8Array): string {
   return [...bytes].map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
-function assertManifestFile(file: ManifestFileMapping): void {
-  if (!file.path.startsWith("/") || file.path.endsWith("/")) {
-    throw new Error(`Manifest path must be an absolute file path: ${file.path}`);
-  }
-  if (!/^[0-9a-f]{64}$/.test(file.sha256)) {
-    throw new Error(`Manifest sha256 must be lowercase hex: ${file.path}`);
-  }
-}
-
 function nowSeconds(): number {
   return Math.floor(Date.now() / 1000);
+}
+
+function buildCurrentManifestFields(
+  files: readonly ManifestFileMapping[],
+  metadata: readonly string[][],
+  content: string,
+): Pick<NostrEventTemplate, "tags" | "content"> {
+  const index = files.filter((file) => file.path === "/index.html");
+  if (index.length !== 1 || !/^[0-9a-f]{64}$/.test(index[0].sha256)) {
+    throw new Error("NIP-5D requires one /index.html artifact hash");
+  }
+  if (!content.trim()) {
+    throw new Error(
+      "Set metadata.description in .napplet/config.json or an HTML description meta before deploying current NIP-5D events",
+    );
+  }
+  for (const tag of metadata.filter((tag) => tag[0] === "R" || tag[0] === "O")) {
+    if (tag.length !== 2 || !tag[1] || /[:\s]/.test(tag[1]) || tag[1].startsWith("NAP-")) {
+      throw new Error("Capability tags must name one bare NAP domain");
+    }
+  }
+  return {
+    tags: [
+      ["x", index[0].sha256],
+      ...metadata.filter((tag) =>
+        !["description", "x", "path", "d", "a", "A", "server"].includes(tag[0])
+      ).map((tag) => [...tag]),
+    ],
+    content,
+  };
 }
