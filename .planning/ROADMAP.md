@@ -924,8 +924,8 @@ Plans:
 **Goal:** Adopt the live NIP-5D event schema, retain an isolated temporary CLI legacy writer, document migration and release cutoffs, and open a verified draft PR with hzrd149 requested.
 **Requirements:** Current writers/readers, explicit CLI format selection, migration preview and skill, compatibility guide, package releases, verification and draft PR.
 **Depends on:** Phase 161
-**Plans:** 2/3 complete; local shipment checks passed.
+**Plans:** 3/3 complete; local checks passed and [draft PR #224](https://github.com/napplet/web/pull/224) opened with hzrd149 requested.
 
 - [x] 162-01-PLAN.md — Current-schema writer and readers
 - [x] 162-02-PLAN.md — CLI format boundary and event migration
-- [ ] 162-03-PLAN.md — Docs, release metadata and draft PR shipment
+- [x] 162-03-PLAN.md — Docs, release metadata and draft PR shipment

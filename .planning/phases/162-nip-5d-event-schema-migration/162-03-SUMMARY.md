@@ -8,4 +8,4 @@ Pinned AI-slop 0.12.0 score: 89/100, passing the unchanged CI minimum of 70 with
 
 Protocol findings: the live NAP-INTENT defines handled/windowId/newWindow, so the contrary contract guard was corrected. Current NIP-5D and the older NAP archetype registry disagree on manifest tags and namespace availability; documentation flags the drift. CLI deployment name restrictions remain an existing tool limitation, not a NIP rule. Ambiguous independent z/i advertisements require explicit legacy pairings rather than an invented cross product.
 
-Shipment: local verification complete; draft PR creation and reviewer assignment pending. Original checkout main was fast-forwarded to origin/main; unrelated local changes were restored and the recovery stash retained.
+Shipment: [draft PR #224](https://github.com/napplet/web/pull/224) is open against main with hzrd149 requested as reviewer, verified through the GitHub API. Assembled-site link crawl passed all 24 internal URLs. Original checkout main was fast-forwarded to origin/main; unrelated local changes were restored and the recovery stash retained.

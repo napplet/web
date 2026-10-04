@@ -24,4 +24,3 @@ export function sha256File(filePath: string): string {
   const data = fs.readFileSync(filePath);
   return crypto.createHash('sha256').update(data).digest('hex');
 }
-
