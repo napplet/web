@@ -180,7 +180,22 @@ function removeEmptyParentDirs(filePath: string, stopDir: string): void {
   }
 }
 
-function listSingleFileArtifactViolations(html: string, distPath: string): string[] {
+/**
+ * List local external asset references in `index.html` and every dist file
+ * other than `index.html` and `.nip5a-manifest.json`.
+ *
+ * Local stylesheet/modulepreload `<link>` tags and local `<script src>` tags
+ * are reported as their full tag text; leftover dist files as dist-relative
+ * paths. An empty result means `index.html` is the only served artifact.
+ *
+ * @param html - the built index.html string.
+ * @param distPath - absolute path to the build output directory.
+ * @returns tag strings and dist-relative paths for each local asset found.
+ * @example
+ * listLocalArtifactAssets('<script type="module" src="/assets/index.js"></script>', '/app/dist');
+ * // → ['<script type="module" src="/assets/index.js">', 'assets/index.js']
+ */
+export function listLocalArtifactAssets(html: string, distPath: string): string[] {
   const violations: string[] = [];
 
   html.replace(/<link\b([^>]*?)>/gi, (tag, attrs: string) => {
@@ -214,7 +229,7 @@ function listSingleFileArtifactViolations(html: string, distPath: string): strin
 }
 
 function assertSingleFileArtifact(html: string, distPath: string): void {
-  const violations = listSingleFileArtifactViolations(html, distPath);
+  const violations = listLocalArtifactAssets(html, distPath);
   if (violations.length === 0) return;
 
   const list = violations.map((violation) => `  - ${violation}`).join('\n');

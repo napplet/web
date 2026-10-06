@@ -96,7 +96,9 @@ function shouldInfer(option: Nip5aRequiresOption | undefined): boolean {
 }
 
 function dedupeRequirements(domains: readonly string[]): string[] {
-  return [...new Set(domains.map((domain) => domain.trim()).filter(isNapDomain))].sort();
+  const trimmed = domains.map((domain) => domain.trim());
+  for (const domain of trimmed) assertBareNapDomain(domain);
+  return [...new Set(trimmed)].sort();
 }
 
 function domainFromSpecifier(specifier: string | undefined): string | null {
@@ -108,9 +110,8 @@ function domainFromSpecifier(specifier: string | undefined): string | null {
   return null;
 }
 
-function isNapDomain(domain: string): boolean {
+function assertBareNapDomain(domain: string): void {
   if (!domain || /[:\s]/.test(domain) || domain.startsWith("NAP-")) throw new Error(`NAP requirement must be a bare domain: ${domain}`);
-  return true;
 }
 
 function isSourceFile(id: string): boolean {

@@ -13,7 +13,7 @@ import type { ManifestPluginState, ManifestTemplate, Nip5aManifestOptions } from
 import { NAPPLET_KIND_NAMED } from './types.js';
 import { sha256File } from './hashing.js';
 import { discoverConfigSchema, validateConfigSchema } from './config-schema.js';
-import { inlineSingleFileBuildAssets, readHtmlMetadata } from './html.js';
+import { inlineSingleFileBuildAssets, listLocalArtifactAssets, readHtmlMetadata } from './html.js';
 import { resolvedRequirements } from './requirements.js';
 
 /**
@@ -76,12 +76,28 @@ export async function writeBundleManifest(options: Nip5aManifestOptions, state: 
 
 function prepareDistIndexHtml(distPath: string, state: ManifestPluginState): void {
   const indexPath = path.join(distPath, 'index.html');
-  if (!fs.existsSync(indexPath)) return;
+  // NIP-5D §Manifest: "A napplet is a single self-contained /index.html".
+  if (!fs.existsSync(indexPath)) {
+    throw new Error(
+      `[nip5a-manifest] dist/index.html not found in ${distPath}. A NIP-5D napplet is a single self-contained /index.html, so the build must emit index.html at the outDir root.`,
+    );
+  }
 
   let html = fs.readFileSync(indexPath, 'utf-8');
   if (state.artifactMode === 'single-file') {
     html = inlineSingleFileBuildAssets(html, distPath, state.base);
     fs.writeFileSync(indexPath, html);
+    return;
+  }
+
+  // external-assets is an explicit opt-in that needs rebundling before deployment
+  // (see README), so leftover assets warn rather than fail the build.
+  const assets = listLocalArtifactAssets(html, distPath);
+  if (assets.length > 0) {
+    const list = assets.map((asset) => `  - ${asset}`).join('\n');
+    console.warn(
+      `[nip5a-manifest] artifactMode 'external-assets': the manifest x tag hashes only dist/index.html. These local assets are not part of the NIP-5D artifact and need rebundling before deployment:\n${list}`,
+    );
   }
 }
 

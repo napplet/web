@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as os from 'os';
@@ -70,6 +70,7 @@ function readManifest(dist: string): { kind: number; artifactHash: string; tags:
 }
 
 afterEach(() => {
+  vi.restoreAllMocks();
   delete process.env.VITE_DEV_PRIVKEY_HEX;
   while (tempRoots.length > 0) {
     fs.rmSync(tempRoots.pop()!, { recursive: true, force: true });
@@ -262,6 +263,48 @@ describe('nip5aManifest artifact modes', () => {
         fixture,
       ),
     ).rejects.toThrow('local external assets remain');
+  });
+
+  it('fails with a clear error when dist/index.html is missing', async () => {
+    const fixture = makeFixture();
+    fs.writeFileSync(path.join(fixture.dist, 'assets', 'index.js'), 'console.log("app");');
+
+    const error = await runCloseBundle({ nappletType: 'missing-index' }, fixture).catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(Error);
+    expect((error as Error).message).toContain('[nip5a-manifest] dist/index.html not found');
+    expect((error as Error).message).not.toContain('ENOENT');
+  });
+
+  it('warns that external-assets manifests hash only index.html', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const fixture = makeFixture();
+    const html = '<!doctype html><script type="module" src="/assets/index.js"></script>';
+    fs.writeFileSync(path.join(fixture.dist, 'index.html'), html);
+    fs.writeFileSync(path.join(fixture.dist, 'assets', 'index.js'), 'console.log("app");');
+
+    await runCloseBundle({ nappletType: 'external', artifactMode: 'external-assets' }, fixture);
+
+    const messages = warn.mock.calls.map((call) => String(call[0]));
+    const pluginWarnings = messages.filter((message) => message.includes('[nip5a-manifest]'));
+    expect(pluginWarnings).toHaveLength(1);
+    expect(pluginWarnings[0]).toContain('hashes only dist/index.html');
+    expect(pluginWarnings[0]).toContain('assets/index.js');
+    expect(readManifest(fixture.dist).tags).toContainEqual(['x', sha256(html)]);
+    expect(fs.existsSync(path.join(fixture.dist, 'assets', 'index.js'))).toBe(true);
+  });
+
+  it('does not warn for a self-contained external-assets build', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const fixture = makeFixture();
+    fs.writeFileSync(
+      path.join(fixture.dist, 'index.html'),
+      '<!doctype html><script type="module">console.log("inline")</script>',
+    );
+
+    await runCloseBundle({ nappletType: 'self-contained', artifactMode: 'external-assets' }, fixture);
+
+    const messages = warn.mock.calls.map((call) => String(call[0]));
+    expect(messages.some((message) => message.includes('[nip5a-manifest]'))).toBe(false);
   });
 
   it('excludes config from the NIP-5A aggregate but still emits its tag', async () => {
