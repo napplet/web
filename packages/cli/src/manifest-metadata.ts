@@ -7,14 +7,24 @@ export async function readManifestMetadataTags(
   config: NappletConfig,
   format: ManifestFormat = "current",
 ): Promise<string[][]> {
-  return mergeConfigMetadataTags(
+  return preferOptionalDomains(mergeConfigMetadataTags(
     dedupeTags([
       ...await readIndexHtmlMetadataTags(indexHtmlPath),
       ...await readPluginManifestMetadataTags(manifestPath, format),
     ]),
     config,
     format,
-  );
+  ));
+}
+
+/**
+ * Drop `R` tags for domains that also appear in an `O` tag, mirroring @napplet/vite-plugin
+ * `buildManifestTemplate` (required filtered by optional). NIP-5D's tag table does not make
+ * R/O overlap an error, so this is tooling consistency only, not a validator rule.
+ */
+function preferOptionalDomains(tags: readonly string[][]): string[][] {
+  const optional = new Set(tags.filter((tag) => tag[0] === "O").map((tag) => tag[1]));
+  return tags.filter((tag) => !(tag[0] === "R" && optional.has(tag[1]))).map((tag) => [...tag]);
 }
 
 async function readPluginManifestMetadataTags(

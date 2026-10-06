@@ -8,6 +8,7 @@ import {
   createSnapshotManifestTemplate,
 } from "../src/manifest.ts";
 import { selectManifestFormat } from "../src/manifest-format.ts";
+import { readManifestMetadataTags } from "../src/manifest-metadata.ts";
 import { migrateManifestEvent } from "../src/migrate.ts";
 import { assert, assertEquals, withTempDir } from "./assert.ts";
 
@@ -172,6 +173,61 @@ Deno.test("current deploy keeps the icon blob referenced by an icon tag", async 
     );
     const [manifest] = await rootDeploy(dir);
     assertEquals(manifest.files.map((file) => file.path), ["/icon.png", "/index.html"]);
+  });
+});
+
+function domainTags(tags: string[][], name: "R" | "O"): string[][] {
+  return tags.filter((tag) => tag[0] === name);
+}
+
+Deno.test("metadata merge lets sidecar optional domains win over config requirements", async () => {
+  await withTempDir(async (dir) => {
+    await Deno.writeTextFile(`${dir}/index.html`, html);
+    await Deno.writeTextFile(
+      `${dir}/.nip5a-manifest.json`,
+      JSON.stringify({ tags: [["O", "theme"], ["R", "relay"]] }),
+    );
+    const config = defaultConfig({
+      metadata: { description: "Notes", requires: ["relay", "theme"] },
+    });
+    const tags = await readManifestMetadataTags(
+      `${dir}/index.html`,
+      `${dir}/.nip5a-manifest.json`,
+      config,
+      "current",
+    );
+    assertEquals(domainTags(tags, "R"), [["R", "relay"]]);
+    assertEquals(domainTags(tags, "O"), [["O", "theme"]]);
+  });
+});
+
+Deno.test("metadata merge emits a domain listed as required and optional only as O", async () => {
+  await withTempDir(async (dir) => {
+    await Deno.writeTextFile(`${dir}/index.html`, html);
+    const config = defaultConfig({
+      metadata: { description: "Notes", requires: ["theme"], optional: ["theme"] },
+    });
+    const tags = await readManifestMetadataTags(`${dir}/index.html`, undefined, config, "current");
+    assertEquals(domainTags(tags, "R"), []);
+    assertEquals(domainTags(tags, "O"), [["O", "theme"]]);
+  });
+});
+
+Deno.test("metadata merge drops sidecar R duplicates of O without config metadata", async () => {
+  await withTempDir(async (dir) => {
+    await Deno.writeTextFile(`${dir}/index.html`, html);
+    await Deno.writeTextFile(
+      `${dir}/.nip5a-manifest.json`,
+      JSON.stringify({ tags: [["R", "theme"], ["O", "theme"]] }),
+    );
+    const tags = await readManifestMetadataTags(
+      `${dir}/index.html`,
+      `${dir}/.nip5a-manifest.json`,
+      defaultConfig(),
+      "current",
+    );
+    assertEquals(domainTags(tags, "R"), []);
+    assertEquals(domainTags(tags, "O"), [["O", "theme"]]);
   });
 });
 
