@@ -202,6 +202,18 @@ Deno.test("skills is no longer a CLI command; agents install skills through skil
   assert(!errors.join("\n").includes("napplet skills"));
 });
 
+Deno.test("debug validates --format before loading config", async () => {
+  const errors: string[] = [];
+  const original = console.error;
+  console.error = (value: unknown) => errors.push(String(value));
+  try {
+    assert(await main(["debug", "--format", "bogus"]) !== 0);
+  } finally {
+    console.error = original;
+  }
+  assert(errors.some((line) => line.includes("--format must be current or legacy")));
+});
+
 Deno.test("published CLI entrypoint excludes standalone-only workspace imports", async () => {
   const cliSource = await Deno.readTextFile(new URL("../src/cli.ts", import.meta.url));
   const standaloneSource = await Deno.readTextFile(

@@ -1,7 +1,7 @@
 import { defaultConfig } from "../src/config.ts";
 import { createDebugReport, createSigningDebugInfo } from "../src/debug.ts";
 import { resolveSigningMethod } from "../src/signing.ts";
-import { assertEquals, withTempDir } from "./assert.ts";
+import { assert, assertEquals, withTempDir } from "./assert.ts";
 
 Deno.test("createDebugReport summarizes config discovery deploy and manifests", async () => {
   await withTempDir(async (dir) => {
@@ -38,6 +38,8 @@ Deno.test("createDebugReport summarizes config discovery deploy and manifests", 
     assertEquals(report.manifests.count, 2);
     assertEquals(report.manifests.buildable, 1);
     assertEquals(report.manifests.skipped, 1);
+    assertEquals(report.manifests.format, "current");
+    assertEquals(report.manifests.error, undefined);
     assertEquals(report.signing, {
       type: "ci-revocable",
       source: "environment",
@@ -47,6 +49,34 @@ Deno.test("createDebugReport summarizes config discovery deploy and manifests", 
       requiresSecretLookup: true,
       notes: ["CI signing secret available through referenced environment variable"],
     });
+  });
+});
+
+Deno.test("createDebugReport records current manifest errors instead of throwing", async () => {
+  await withTempDir(async (dir) => {
+    await Deno.mkdir(`${dir}/dist`, { recursive: true });
+    await Deno.writeTextFile(`${dir}/dist/index.html`, "<!doctype html>");
+    const config = defaultConfig({ sourceDir: "dist" });
+
+    const report = await createDebugReport(config, { cwd: dir });
+
+    assertEquals(report.manifests.format, "current");
+    assertEquals(report.manifests.count, 0);
+    assert(report.manifests.error?.includes("description"), report.manifests.error);
+  });
+});
+
+Deno.test("createDebugReport inspects legacy manifests when requested", async () => {
+  await withTempDir(async (dir) => {
+    await Deno.mkdir(`${dir}/dist`, { recursive: true });
+    await Deno.writeTextFile(`${dir}/dist/index.html`, "<!doctype html>");
+    const config = defaultConfig({ sourceDir: "dist" });
+
+    const report = await createDebugReport(config, { cwd: dir, format: "legacy" });
+
+    assertEquals(report.manifests.format, "legacy");
+    assertEquals(report.manifests.error, undefined);
+    assert(report.manifests.buildable >= 1);
   });
 });
 

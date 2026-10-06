@@ -45,7 +45,7 @@ Usage:
   napplet init [--force] [--root] [--source-dir <dir>] [--name <dtag>] [--title <title>] [--description <text>] [--archetype <slug:napplet:<archetype>/<intent>>] [--relay <url>] [--server <url>]
   napplet deploy [--format current|legacy] [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>] [--prompt-sec] [--dry-run] [--json]
   napplet migrate <signed-event.json> [--description <text>] [--optional <domain>] [--output <preview.json>]
-  napplet debug [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>]
+  napplet debug [--format current|legacy] [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>]
   napplet keys store --name <ref> [--sec <secret> | --prompt-sec]
   napplet keys connect --name <ref> [--relay <url> ...] [--config <file>]
   napplet keys use --name <ref> [--config <file>]
@@ -389,6 +389,8 @@ export async function loadDeployConfig(
 
 async function commandDebug(argv: string[]): Promise<number> {
   const flags = collectFlags(argv);
+  // Debug emits JSON non-interactively: never prompt; reject bad values before config load.
+  const format = await selectManifestFormat(first(flags.values.get("format")), false);
   const config = await loadConfig(flags);
   const selection: Partial<DeploySelection> = {
     root: flags.boolean.has("root") ? true : undefined,
@@ -404,8 +406,12 @@ async function commandDebug(argv: string[]): Promise<number> {
     traverse: flags.boolean.has("all"),
     selection,
     signing,
+    format,
   });
   console.log(JSON.stringify(report, null, 2));
+  if (report.manifests.error) {
+    console.error(`Manifest templates could not be built: ${report.manifests.error}`);
+  }
   return 0;
 }
 
