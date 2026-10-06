@@ -8,6 +8,10 @@
 
   CLI deployment defaults to current output and offers temporary explicit legacy serialization. Add offline signed-event migration previews without altering source events or publishing. Vite builds default to a self-contained artifact; compatibility helper and sidecar names remain available. See the event migration guide for package cutoffs, immutable pointers and shell ACL/storage implications.
 
+### Patch Changes
+
+- Builds without `dist/index.html` fail with a clear `[nip5a-manifest]` error instead of a raw ENOENT, and `artifactMode: 'external-assets'` builds warn that the manifest `x` hash covers only `index.html` and list the remaining local assets.
+
 ## 0.14.1
 
 ### Patch Changes

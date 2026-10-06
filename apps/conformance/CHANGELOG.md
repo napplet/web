@@ -8,6 +8,7 @@
 
   CLI deployment defaults to current output and offers temporary explicit legacy serialization. Add offline signed-event migration previews without altering source events or publishing. Vite builds default to a self-contained artifact; compatibility helper and sidecar names remain available. See the event migration guide for package cutoffs, immutable pointers and shell ACL/storage implications.
 
+- The manifest inspector shows the artifact `x` hash and optional `O` domains instead of reading a `path` tag current events never carry.
 - Updated dependencies
   - @napplet/conformance@0.18.0
 
