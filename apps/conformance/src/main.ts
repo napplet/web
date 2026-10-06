@@ -13,12 +13,12 @@
 import {
   bootAndCollect,
   buildContext,
-  manifestDisplayName,
   runConformance,
   validateManifestEvent,
   type ConformanceRun,
   type RecordedEnvelope,
 } from '@napplet/conformance';
+import { manifestRows } from './manifest-view.js';
 import { resolveTarget, type ResolvedTarget } from './target.js';
 import './app.css';
 
@@ -136,18 +136,9 @@ function renderManifest(target: ResolvedTarget): string {
   if (target.manifestEvent) {
     const event = target.manifestEvent;
     const v = validateManifestEvent(event);
-    const dTag = event.tags.find((tag) => tag[0] === 'd')?.[1];
-    const index = event.tags.find((tag) => tag[0] === 'path' && tag[1] === '/index.html');
-    const servers = event.tags.filter((tag) => tag[0] === 'server').map((tag) => tag[1]).filter(Boolean);
     return `
       <table class="manifest">
-        ${row('event', event.id)}
-        ${row('kind', event.kind)}
-        ${row('d', dTag)}
-        ${row('name', manifestDisplayName(event))}
-        ${row('requires', v.requires.join(', '))}
-        ${row('/index.html', index?.[2])}
-        ${row('servers', servers.join(', '))}
+        ${manifestRows(event, v).map(([label, value]) => row(label, value)).join('')}
       </table>
       ${v.errors.length ? `<div class="errs">${v.errors.map((e) => esc(`${e.code}: ${e.message}`)).join('<br>')}</div>` : ''}
     `;
