@@ -7,7 +7,6 @@ Deno.test("createDebugReport summarizes config discovery deploy and manifests", 
   await withTempDir(async (dir) => {
     await Deno.mkdir(`${dir}/dist`, { recursive: true });
     await Deno.writeTextFile(`${dir}/dist/index.html`, "<!doctype html>");
-    await Deno.writeTextFile(`${dir}/dist/app.js`, "console.log('napplet');");
 
     const config = defaultConfig({ metadata: { description: "Debug fixture napplet" },
       sourceDir: "dist",
@@ -77,6 +76,24 @@ Deno.test("createDebugReport inspects legacy manifests when requested", async ()
     assertEquals(report.manifests.format, "legacy");
     assertEquals(report.manifests.error, undefined);
     assert(report.manifests.buildable >= 1);
+  });
+});
+
+Deno.test("createDebugReport reports built files a current deploy would drop", async () => {
+  await withTempDir(async (dir) => {
+    await Deno.mkdir(`${dir}/dist`, { recursive: true });
+    await Deno.writeTextFile(`${dir}/dist/index.html`, "<!doctype html>");
+    await Deno.writeTextFile(`${dir}/dist/app.js`, "console.log('napplet');");
+    const config = defaultConfig({
+      metadata: { description: "Debug fixture napplet" },
+      sourceDir: "dist",
+    });
+
+    const current = await createDebugReport(config, { cwd: dir });
+    assert(current.manifests.error?.includes("/app.js"), current.manifests.error);
+
+    const legacy = await createDebugReport(config, { cwd: dir, format: "legacy" });
+    assertEquals(legacy.manifests.error, undefined);
   });
 });
 

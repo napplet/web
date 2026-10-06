@@ -129,10 +129,7 @@ export async function createDeployManifestTemplates(
     const aggregateHash = format === "legacy" ? await computeAggregateHash(files) : undefined;
     const uploadFiles = format === "legacy"
       ? files
-      : files.filter((file) =>
-        file.path === "/index.html" ||
-        metadataTags.some((tag) => tag[0] === "icon" && tag[1] === file.sha256)
-      );
+      : selectCurrentUploadFiles(item.candidate.dir, files, metadataTags);
     if (item.target === "snapshot") {
       const snapshot = createDeploySnapshotTemplate(item, sourceTemplates, options);
       result.push({
@@ -169,6 +166,34 @@ export async function createDeployManifestTemplates(
     });
   }
   return result;
+}
+
+/**
+ * NIP-5D §Manifest: "A napplet is a single self-contained /index.html", so current deploys
+ * publish only /index.html plus the blob an icon tag references. Any other collected file
+ * would be silently dropped, so fail loudly instead. `.well-known` files count too because
+ * legacy deploys would publish them and current events cannot carry them.
+ */
+function selectCurrentUploadFiles(
+  dir: string,
+  files: readonly ManifestFileMapping[],
+  metadataTags: readonly string[][],
+): ManifestFileMapping[] {
+  const kept: ManifestFileMapping[] = [];
+  const dropped: string[] = [];
+  for (const file of files) {
+    const isIcon = metadataTags.some((tag) => tag[0] === "icon" && tag[1] === file.sha256);
+    if (file.path === "/index.html" || isIcon) kept.push(file);
+    else dropped.push(file.path);
+  }
+  if (dropped.length > 0) {
+    throw new Error([
+      `Current NIP-5D deploys publish one self-contained /index.html (plus its icon blob); these built files in ${dir} would not be deployed:`,
+      ...dropped.map((path) => `  - ${path}`),
+      "Build a single-file artifact (the @napplet/vite-plugin default artifactMode: 'single-file') or deploy with --format legacy.",
+    ].join("\n"));
+  }
+  return kept;
 }
 
 function createDeploySnapshotTemplate(

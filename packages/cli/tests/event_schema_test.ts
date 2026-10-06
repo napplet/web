@@ -42,7 +42,6 @@ Deno.test("current is the unattended and interactive deployment default; legacy 
 Deno.test("current deploy hashes index bytes and preserves plugin metadata in snapshots", async () => {
   await withTempDir(async (dir) => {
     await Deno.writeTextFile(`${dir}/index.html`, html);
-    await Deno.writeTextFile(`${dir}/unused.txt`, "unused");
     await Deno.writeTextFile(
       `${dir}/.nip5a-manifest.json`,
       JSON.stringify({
@@ -106,6 +105,74 @@ Deno.test("current root output has no identifier and rejects empty descriptions"
     rejected = true;
   }
   assert(rejected);
+});
+
+async function rootDeploy(dir: string, format?: "current" | "legacy") {
+  const candidate = {
+    name: "notes",
+    dir,
+    indexHtml: `${dir}/index.html`,
+    manifestPath: `${dir}/.nip5a-manifest.json`,
+  };
+  const config = defaultConfig();
+  const plan = createDeployPlan(config, [candidate], { root: true });
+  return await createDeployManifestTemplates(plan, config, { createdAt: 1, format });
+}
+
+async function writeExtraFiles(dir: string): Promise<void> {
+  await Deno.writeTextFile(`${dir}/index.html`, html);
+  await Deno.mkdir(`${dir}/assets`);
+  await Deno.writeTextFile(`${dir}/assets/app.js`, "console.log('app');");
+  await Deno.writeTextFile(`${dir}/robots.txt`, "User-agent: *");
+  await Deno.mkdir(`${dir}/.well-known`);
+  await Deno.writeTextFile(`${dir}/.well-known/nostr.json`, "{}");
+  await Deno.writeTextFile(`${dir}/.env`, "SECRET=1");
+  await Deno.mkdir(`${dir}/node_modules/pkg`, { recursive: true });
+  await Deno.writeTextFile(`${dir}/node_modules/pkg/index.js`, "export {};");
+  await Deno.writeTextFile(`${dir}/.nip5a-manifest.json`, JSON.stringify({ tags: [] }));
+}
+
+Deno.test("current deploy fails instead of dropping built files", async () => {
+  await withTempDir(async (dir) => {
+    await writeExtraFiles(dir);
+    let message = "";
+    try {
+      await rootDeploy(dir);
+    } catch (error) {
+      message = error instanceof Error ? error.message : String(error);
+    }
+    assert(message.includes("/assets/app.js"), message);
+    assert(message.includes("/robots.txt"), message);
+    assert(message.includes("/.well-known/nostr.json"), message);
+    assert(message.includes("--format legacy"), message);
+    assert(!message.includes(".env"), message);
+    assert(!message.includes("node_modules"), message);
+    assert(!message.includes(".nip5a-manifest.json"), message);
+  });
+});
+
+Deno.test("legacy deploy still uploads every collected file", async () => {
+  await withTempDir(async (dir) => {
+    await writeExtraFiles(dir);
+    const [manifest] = await rootDeploy(dir, "legacy");
+    assert(manifest.files.some((file) => file.path === "/assets/app.js"));
+  });
+});
+
+Deno.test("current deploy keeps the icon blob referenced by an icon tag", async () => {
+  await withTempDir(async (dir) => {
+    const icon = new Uint8Array([137, 80, 78, 71, 1, 2, 3]);
+    const iconHash = [...new Uint8Array(await crypto.subtle.digest("SHA-256", icon))]
+      .map((byte) => byte.toString(16).padStart(2, "0")).join("");
+    await Deno.writeTextFile(`${dir}/index.html`, html);
+    await Deno.writeFile(`${dir}/icon.png`, icon);
+    await Deno.writeTextFile(
+      `${dir}/.nip5a-manifest.json`,
+      JSON.stringify({ tags: [["icon", iconHash, "image/png"]] }),
+    );
+    const [manifest] = await rootDeploy(dir);
+    assertEquals(manifest.files.map((file) => file.path), ["/icon.png", "/index.html"]);
+  });
 });
 
 function signed(tags: string[][], content = "") {
