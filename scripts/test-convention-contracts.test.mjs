@@ -37,15 +37,16 @@ async function scanFixture(arrange) {
   }
 }
 
-test('permits adopted intent contracts and optional same-tag event kinds', async () => {
+test('permits live NAP-INTENT lifecycle fields and NIP-5D z/i advertisements', async () => {
   const violations = await scanFixture(async (root) => {
     await writeFixture(root, 'packages/core/src/types/intent.ts', `
-      export interface IntentContract { convention: string; eventKinds?: number[]; }
-      export const candidate = { contracts: [{ convention: 'napplet:note/open', eventKinds: [1] }] };
-      export const delivery = { type: 'intent.deliver', delivery: { sender: 'runtime' } };
+      // https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md#api
+      export interface IntentResult { ok: boolean; handled: boolean; windowId?: string; }
+      export const request = { archetype: 'note', behavior: { newWindow: true } };
+      export const tags = [['z', 'note'], ['i', 'napplet:note/open', 'target']];
     `);
     await writeFixture(root, 'apps/docs/guide/intents.md', `
-      An archetype tag may include optional same-tag kind:1 fields.
+      Intent delivery uses INC where the convention specifies it.
       Intent invocation accepts napplet:note/open?target=abc, while handler metadata stays queryless.
     `);
   });
@@ -53,10 +54,9 @@ test('permits adopted intent contracts and optional same-tag event kinds', async
   assert.deepEqual(violations, []);
 });
 
-test('rejects superseded intent result, delivery, metadata, INC-coupling, and tag-shape guidance', async () => {
+test('rejects unsupported delivery IDs, query-bearing legacy metadata and fixed tag-shape guidance', async () => {
   const violations = await scanFixture(async (root) => {
     await writeFixture(root, 'packages/core/src/types/intent.ts', `
-      const result = { handled: true, windowId: 'window-1', behavior: { newWindow: true } };
       const message = { type: 'intent.deliver', id: 'delivery-1' };
     `);
     await writeFixture(root, 'packages/vite-plugin/src/manifest.ts', `
@@ -67,17 +67,14 @@ test('rejects superseded intent result, delivery, metadata, INC-coupling, and ta
       ];
     `);
     await writeFixture(root, 'apps/docs/guide/intents.md', `
-      Intent delivery requires NAP-INC.
       Archetype tags must contain exactly three fields.
     `);
   });
   const families = new Set(violations.map(({ family }) => family));
 
   assert.deepEqual(families, new Set([
-    'intent-result-lifecycle',
     'intent-delivery-id',
     'query-bearing-handler-metadata',
-    'intent-delivery-inc-coupling',
     'fixed-archetype-tag-shape',
   ]));
 });

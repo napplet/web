@@ -1,11 +1,10 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import type { IndexHtmlTransformResult } from 'vite';
 import { nip5aManifest, NAPPLET_KIND_NAMED, type Nip5aManifestOptions } from './index';
-import { computeAggregateHash } from './hashing';
 
 const TEST_PRIVKEY = '01'.repeat(32);
 const tempRoots: string[] = [];
@@ -37,7 +36,7 @@ async function runCloseBundle(
   }
   const warnings: string[] = [];
   try {
-    const plugin = nip5aManifest(options);
+    const plugin = nip5aManifest({ description: 'A test napplet', ...options });
     await (plugin.configResolved as (config: unknown) => unknown)?.({
       ...viteConfig,
       root: fixture.root,
@@ -64,37 +63,18 @@ async function runCloseBundle(
   }
 }
 
-function readManifest(dist: string): { kind: number; aggregateHash: string; tags: string[][] } {
+function readManifest(dist: string): { kind: number; artifactHash: string; tags: string[][] } {
   return JSON.parse(
     fs.readFileSync(path.join(dist, '.nip5a-manifest.json'), 'utf-8'),
-  ) as { kind: number; aggregateHash: string; tags: string[][] };
+  ) as { kind: number; artifactHash: string; tags: string[][] };
 }
 
 afterEach(() => {
+  vi.restoreAllMocks();
   delete process.env.VITE_DEV_PRIVKEY_HEX;
   while (tempRoots.length > 0) {
     fs.rmSync(tempRoots.pop()!, { recursive: true, force: true });
   }
-});
-
-describe('NIP-5A aggregate hash', () => {
-  it('matches the NIP-5A §Aggregate Hash worked example digest', () => {
-    // 5A.md §Aggregate Hash worked example: two `path` tags → sorted
-    // `<sha256> <absolute-path>\n` lines → UTF-8 → SHA-256, lowercase hex.
-    const pairs: Array<[string, string]> = [
-      ['186ea5fd14e88fd1ac49351759e7ab906fa94892002b60bf7f5a428f28ca1c99', '/index.html'],
-      ['fedcba0987654321fedcba0987654321fedcba0987654321fedcba0987654321', '/favicon.ico'],
-    ];
-    expect(computeAggregateHash(pairs)).toBe(
-      'c2ff582b672a4c689c5e1753528f03dd31b95ec1fdcc3d82d25e7d91e8769638',
-    );
-  });
-
-  it('ignores path-tag order (sorts lines before hashing)', () => {
-    const a: [string, string] = ['aa'.repeat(32), '/a.html'];
-    const b: [string, string] = ['bb'.repeat(32), '/b.html'];
-    expect(computeAggregateHash([a, b])).toBe(computeAggregateHash([b, a]));
-  });
 });
 
 describe('nip5aManifest artifact modes', () => {
@@ -117,17 +97,18 @@ describe('nip5aManifest artifact modes', () => {
     const manifest = JSON.parse(
       fs.readFileSync(path.join(fixture.dist, '.nip5a-manifest.json'), 'utf-8'),
     ) as Record<string, unknown> & { tags: string[][] };
-    expect(manifest.tags.filter((tag) => tag[0] === 'requires')).toEqual([
-      ['requires', 'count'],
-      ['requires', 'outbox'],
+    expect(manifest.tags.filter((tag) => tag[0] === 'R')).toEqual([
+      ['R', 'count'],
+      ['R', 'outbox'],
     ]);
-    expect(manifest.tags).toContainEqual(['archetype', 'note', 'napplet:note/open']);
+    expect(manifest.tags).toContainEqual(['z', 'note']);
+    expect(manifest.tags).toContainEqual(['i', 'napplet:note/open']);
     expect(manifest).not.toHaveProperty('id');
     expect(manifest).not.toHaveProperty('sig');
     expect(manifest).not.toHaveProperty('pubkey');
   });
 
-  it('preserves inline executable scripts in the default external-assets mode', async () => {
+  it('preserves inline executable scripts in the default single-file mode', async () => {
     // NIP-5D loads a napplet as a single self-contained `/index.html` via
     // `iframe.srcdoc` with `sandbox="allow-scripts"` (opaque origin), so inline
     // JS is the norm — it MUST NOT be rejected at build time. (Regression guard
@@ -176,7 +157,7 @@ describe('nip5aManifest artifact modes', () => {
     expect(fs.existsSync(path.join(fixture.dist, 'assets', 'index.js'))).toBe(false);
   });
 
-  it('emits a NIP-5D kind 35129 named manifest with NIP-5A path + aggregate x tags', async () => {
+  it('emits a NIP-5D kind 35129 named manifest with a direct artifact x tag', async () => {
     const fixture = makeFixture();
     fs.writeFileSync(
       path.join(fixture.dist, 'index.html'),
@@ -204,7 +185,7 @@ describe('nip5aManifest artifact modes', () => {
     // input — no meta to strip.
     expect(html).not.toContain('napplet-aggregate-hash');
     const indexHash = sha256(html);
-    const expected = computeAggregateHash([[indexHash, '/index.html']]);
+    const expected = indexHash;
 
     expect(html).toContain('<style>.app { color: red; }</style>');
     expect(html).toContain('<script type="module">console.log("single");</script>');
@@ -215,12 +196,12 @@ describe('nip5aManifest artifact modes', () => {
     // NIP-5D kind + NIP-5A manifest shape.
     expect(manifest.kind).toBe(NAPPLET_KIND_NAMED);
     expect(manifest.kind).toBe(35129);
-    expect(manifest.aggregateHash).toBe(expected);
+    expect(manifest.artifactHash).toBe(expected);
     // Per-file `path` tags carry ABSOLUTE paths and the file sha256.
-    expect(manifest.tags).toContainEqual(['path', '/index.html', indexHash]);
+    expect(manifest.tags.some((tag) => tag[0] === 'path')).toBe(false);
     // Exactly one aggregate `x` tag carrying the recomputable aggregate hash.
     const xTags = manifest.tags.filter((tag) => tag[0] === 'x');
-    expect(xTags).toEqual([['x', manifest.aggregateHash, 'aggregate']]);
+    expect(xTags).toEqual([['x', manifest.artifactHash]]);
   });
 
   it('resolves single-file asset references against Vite base variants', async () => {
@@ -284,8 +265,50 @@ describe('nip5aManifest artifact modes', () => {
     ).rejects.toThrow('local external assets remain');
   });
 
+  it('fails with a clear error when dist/index.html is missing', async () => {
+    const fixture = makeFixture();
+    fs.writeFileSync(path.join(fixture.dist, 'assets', 'index.js'), 'console.log("app");');
+
+    const error = await runCloseBundle({ nappletType: 'missing-index' }, fixture).catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(Error);
+    expect((error as Error).message).toContain('[nip5a-manifest] dist/index.html not found');
+    expect((error as Error).message).not.toContain('ENOENT');
+  });
+
+  it('warns that external-assets manifests hash only index.html', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const fixture = makeFixture();
+    const html = '<!doctype html><script type="module" src="/assets/index.js"></script>';
+    fs.writeFileSync(path.join(fixture.dist, 'index.html'), html);
+    fs.writeFileSync(path.join(fixture.dist, 'assets', 'index.js'), 'console.log("app");');
+
+    await runCloseBundle({ nappletType: 'external', artifactMode: 'external-assets' }, fixture);
+
+    const messages = warn.mock.calls.map((call) => String(call[0]));
+    const pluginWarnings = messages.filter((message) => message.includes('[nip5a-manifest]'));
+    expect(pluginWarnings).toHaveLength(1);
+    expect(pluginWarnings[0]).toContain('hashes only dist/index.html');
+    expect(pluginWarnings[0]).toContain('assets/index.js');
+    expect(readManifest(fixture.dist).tags).toContainEqual(['x', sha256(html)]);
+    expect(fs.existsSync(path.join(fixture.dist, 'assets', 'index.js'))).toBe(true);
+  });
+
+  it('does not warn for a self-contained external-assets build', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const fixture = makeFixture();
+    fs.writeFileSync(
+      path.join(fixture.dist, 'index.html'),
+      '<!doctype html><script type="module">console.log("inline")</script>',
+    );
+
+    await runCloseBundle({ nappletType: 'self-contained', artifactMode: 'external-assets' }, fixture);
+
+    const messages = warn.mock.calls.map((call) => String(call[0]));
+    expect(messages.some((message) => message.includes('[nip5a-manifest]'))).toBe(false);
+  });
+
   it('excludes config from the NIP-5A aggregate but still emits its tag', async () => {
-    // NIP-5D §Identity: the runtime recomputes aggregateHash from the `path`
+    // NIP-5D §Identity: the runtime recomputes artifactHash from the artifact
     // tags ALONE and asserts it equals the `x` tag. The `config` capability
     // declaration is emitted as its own tag but MUST NOT feed the aggregate —
     // otherwise a conformant runtime would reject the napplet.
@@ -318,7 +341,7 @@ describe('nip5aManifest artifact modes', () => {
     const withConfig = readManifest(configFixture.dist);
 
     // Identical dist bytes → identical aggregate, regardless of capabilities.
-    expect(withConfig.aggregateHash).toBe(base.aggregateHash);
+    expect(withConfig.artifactHash).toBe(base.artifactHash);
 
     // Capability tags are still present on the manifest.
     expect(withConfig.tags.some((tag) => tag[0] === 'config')).toBe(true);
@@ -327,7 +350,7 @@ describe('nip5aManifest artifact modes', () => {
     // capability bytes leak into the content address under any disguise.
     for (const manifest of [base, withConfig]) {
       expect(manifest.tags.filter((tag) => tag[0] === 'x')).toEqual([
-        ['x', manifest.aggregateHash, 'aggregate'],
+        ['x', manifest.artifactHash],
       ]);
       expect(manifest.tags.some((tag) => tag[1] === 'config:schema')).toBe(false);
     }
@@ -362,8 +385,8 @@ describe('nip5aManifest artifact modes', () => {
     const base = readManifest(baseFixture.dist);
     const withArchetypes = readManifest(archetypeFixture.dist);
 
-    const archetypeTags = withArchetypes.tags.filter((tag) => tag[0] === 'archetype');
-    expect(archetypeTags).toEqual([['archetype', 'note', 'napplet:note/open']]);
+    const archetypeTags = withArchetypes.tags.filter((tag) => tag[0] === 'z' || tag[0] === 'i');
+    expect(archetypeTags).toEqual([['z', 'note'], ['i', 'napplet:note/open']]);
   });
 
   it('rejects numbered convention identifiers before writing a manifest', async () => {
@@ -399,11 +422,10 @@ describe('nip5aManifest artifact modes', () => {
       fixture,
     );
 
-    const archetypeTags = readManifest(fixture.dist).tags.filter((tag) => tag[0] === 'archetype');
+    const archetypeTags = readManifest(fixture.dist).tags.filter((tag) => tag[0] === 'z' || tag[0] === 'i');
     expect(archetypeTags).toEqual([
-      ['archetype', 'note', 'napplet:note/open'],
-      ['archetype', 'note', 'napplet:note/edit'],
-      ['archetype', 'profile', 'napplet:note/open'],
+      ['z', 'note'], ['i', 'napplet:note/open'],
+      ['i', 'napplet:note/edit'], ['z', 'profile'],
     ]);
   });
 
@@ -435,7 +457,7 @@ describe('nip5aManifest artifact modes', () => {
     expect(fs.existsSync(path.join(fixture.dist, '.nip5a-manifest.json'))).toBe(false);
   });
 
-  it('keeps archetype tags outside the aggregate hash path-tag fold', async () => {
+  it('keeps archetype metadata outside artifact identity', async () => {
     const baseFixture = makeFixture();
     const archetypeFixture = makeFixture();
     const html = '<!doctype html><script type="module" src="./assets/index.js"></script>';
@@ -461,16 +483,16 @@ describe('nip5aManifest artifact modes', () => {
     const base = readManifest(baseFixture.dist);
     const withArchetypes = readManifest(archetypeFixture.dist);
 
-    // Identical dist bytes → identical aggregate, regardless of archetype tags.
-    expect(withArchetypes.aggregateHash).toBe(base.aggregateHash);
+    // Identical artifact bytes retain the same hash regardless of archetype metadata.
+    expect(withArchetypes.artifactHash).toBe(base.artifactHash);
 
     // The base build (no archetypes) emits no archetype tag at all.
-    expect(base.tags.some((tag) => tag[0] === 'archetype')).toBe(false);
+    expect(base.tags.some((tag) => tag[0] === 'z' || tag[0] === 'i')).toBe(false);
 
     // The ONLY `x` tag on each manifest stays the path-tags aggregate.
     for (const manifest of [base, withArchetypes]) {
       expect(manifest.tags.filter((tag) => tag[0] === 'x')).toEqual([
-        ['x', manifest.aggregateHash, 'aggregate'],
+        ['x', manifest.artifactHash],
       ]);
     }
   });
@@ -487,7 +509,7 @@ describe('nip5aManifest artifact modes', () => {
     );
 
     const manifest = readManifest(fixture.dist);
-    expect(manifest.tags).toContainEqual(['requires', 'relay']);
+    expect(manifest.tags).toContainEqual(['R', 'relay']);
   });
 
   it('infers requires tags from SDK subpath imports and direct window.napplet usage', async () => {
@@ -508,9 +530,9 @@ describe('nip5aManifest artifact modes', () => {
     );
 
     const manifest = readManifest(fixture.dist);
-    expect(manifest.tags.filter((tag) => tag[0] === 'requires')).toEqual([
-      ['requires', 'identity'],
-      ['requires', 'storage'],
+    expect(manifest.tags.filter((tag) => tag[0] === 'R')).toEqual([
+      ['R', 'identity'],
+      ['R', 'storage'],
     ]);
   });
 
@@ -533,7 +555,7 @@ describe('nip5aManifest artifact modes', () => {
     );
 
     const manifest = readManifest(fixture.dist);
-    expect(manifest.tags.some((tag) => tag[0] === 'requires')).toBe(false);
+    expect(manifest.tags.some((tag) => tag[0] === 'R')).toBe(false);
   });
 
   it('preserves explicit array requirements without inference', async () => {
@@ -548,7 +570,7 @@ describe('nip5aManifest artifact modes', () => {
     );
 
     const manifest = readManifest(fixture.dist);
-    expect(manifest.tags.filter((tag) => tag[0] === 'requires')).toEqual([['requires', 'relay']]);
+    expect(manifest.tags.filter((tag) => tag[0] === 'R')).toEqual([['R', 'relay']]);
   });
 
   it('emits explicit requirements outside the known NAP list and warns', async () => {
@@ -561,9 +583,9 @@ describe('nip5aManifest artifact modes', () => {
       {},
     );
 
-    expect(readManifest(fixture.dist).tags.filter((tag) => tag[0] === 'requires')).toEqual([
-      ['requires', 'mesh'],
-      ['requires', 'relay'],
+    expect(readManifest(fixture.dist).tags.filter((tag) => tag[0] === 'R')).toEqual([
+      ['R', 'mesh'],
+      ['R', 'relay'],
     ]);
     expect(result.warnings.filter((warning) => warning.includes('not in the known NAP list'))).toEqual([
       '[nip5a-manifest] requires domain(s) not in the known NAP list, emitted as declared: mesh',
@@ -581,7 +603,32 @@ describe('nip5aManifest artifact modes', () => {
       [{ id: path.join(fixture.root, 'src/main.ts'), code: 'window.napplet.mesh?.info();' }],
     );
 
-    expect(readManifest(fixture.dist).tags.some((tag) => tag[0] === 'requires')).toBe(false);
+    expect(readManifest(fixture.dist).tags.some((tag) => tag[0] === 'R')).toBe(false);
+  });
+
+  it.each(['nap:relay', 'NAP-RELAY', 'relay.subscribe', 'relay storage'])('rejects a non-bare explicit requirement %j', async (domain) => {
+    const fixture = makeFixture();
+    fs.writeFileSync(path.join(fixture.dist, 'index.html'), '<!doctype html>');
+    await expect(runCloseBundle({ nappletType: 'invalid-domain', requires: [domain] }, fixture))
+      .rejects.toThrow('NAP requirement must be a bare domain');
+  });
+
+  it('warns once across transforms and keeps explicitly optional inference out of missing requirements', async () => {
+    const fixture = makeFixture();
+    fs.writeFileSync(path.join(fixture.dist, 'index.html'), '<!doctype html>');
+    const result = await runCloseBundle({
+      nappletType: 'optional-inference',
+      requires: { infer: true, explicit: ['mesh'], mode: 'error' },
+      optional: ['theme'],
+    }, fixture, {}, [
+      { id: 'main.ts', code: 'window.napplet.theme;' },
+      { id: 'other.ts', code: 'window.napplet.theme;' },
+    ]);
+    expect(result.warnings).toHaveLength(1);
+    expect(result.warnings[0]).toContain('emitted as declared: mesh');
+    const tags = readManifest(fixture.dist).tags;
+    expect(tags.filter((tag) => tag[0] === 'R')).toEqual([['R', 'mesh']]);
+    expect(tags.filter((tag) => tag[0] === 'O')).toEqual([['O', 'theme']]);
   });
 
   it('accepts count as an explicit or inferred requirement', async () => {
@@ -592,7 +639,7 @@ describe('nip5aManifest artifact modes', () => {
       explicitFixture,
       {},
     );
-    expect(readManifest(explicitFixture.dist).tags).toContainEqual(['requires', 'count']);
+    expect(readManifest(explicitFixture.dist).tags).toContainEqual(['R', 'count']);
 
     const inferredFixture = makeFixture();
     fs.writeFileSync(path.join(inferredFixture.dist, 'index.html'), '<!doctype html>');
@@ -602,7 +649,7 @@ describe('nip5aManifest artifact modes', () => {
       {},
       [{ id: path.join(inferredFixture.root, 'src/main.ts'), code: "import '@napplet/nap/count';" }],
     );
-    expect(readManifest(inferredFixture.dist).tags).toContainEqual(['requires', 'count']);
+    expect(readManifest(inferredFixture.dist).tags).toContainEqual(['R', 'count']);
   });
 
   it('dedupes explicit and inferred requirements', async () => {
@@ -617,7 +664,7 @@ describe('nip5aManifest artifact modes', () => {
     );
 
     const manifest = readManifest(fixture.dist);
-    expect(manifest.tags.filter((tag) => tag[0] === 'requires')).toEqual([['requires', 'relay']]);
+    expect(manifest.tags.filter((tag) => tag[0] === 'R')).toEqual([['R', 'relay']]);
   });
 
   it('warns but builds when inference finds a requirement missing from explicit config', async () => {
@@ -633,9 +680,9 @@ describe('nip5aManifest artifact modes', () => {
 
     expect(result.warnings.some((warning) => warning.includes('missing explicit requires'))).toBe(true);
     const manifest = readManifest(fixture.dist);
-    expect(manifest.tags.filter((tag) => tag[0] === 'requires')).toEqual([
-      ['requires', 'relay'],
-      ['requires', 'storage'],
+    expect(manifest.tags.filter((tag) => tag[0] === 'R')).toEqual([
+      ['R', 'relay'],
+      ['R', 'storage'],
     ]);
   });
 
@@ -744,4 +791,36 @@ describe('nip5aManifest title/description HTML metadata', () => {
     expect(out).toContain('content="A &quot;cool&quot; &amp; <napplet>"');
     expect(out).not.toContain('stale');
   });
+});
+
+
+describe('current manifest metadata', () => {
+  it('keeps optional inferred domains optional and advertises intent parameters', async () => {
+    const fixture = makeFixture();
+    fs.writeFileSync(path.join(fixture.dist, 'index.html'), '<!doctype html>');
+    await runCloseBundle({ nappletType: 'metadata', description: '<text> is plain text', requires: { infer: true }, optional: ['theme'], archetypes: [{ slug: 'feed', convention: 'napplet:feed/edit', params: ['filters', 'relays'] }] }, fixture, {}, [{ id: 'main.ts', code: "import '@napplet/nap/theme'; import '@napplet/nap/relay';" }]);
+    const manifest = JSON.parse(fs.readFileSync(path.join(fixture.dist, '.nip5a-manifest.json'), 'utf8'));
+    expect(manifest.content).toBe('<text> is plain text');
+    expect(manifest.tags).toContainEqual(['R', 'relay']);
+    expect(manifest.tags).toContainEqual(['O', 'theme']);
+    expect(manifest.tags).not.toContainEqual(['R', 'theme']);
+    expect(manifest.tags).toContainEqual(['i', 'napplet:feed/edit', 'filters', 'relays']);
+    expect(manifest.tags.some((tag: string[]) => ['path', 'requires', 'description', 'archetype'].includes(tag[0]))).toBe(false);
+  });
+
+  it('uses the author HTML description and rejects missing descriptions', async () => {
+    const fixture = makeFixture();
+    fs.writeFileSync(path.join(fixture.dist, 'index.html'), '<meta name="description" content="Read &amp; write">');
+    await runCloseBundle({ nappletType: 'metadata', description: undefined }, fixture);
+    expect(JSON.parse(fs.readFileSync(path.join(fixture.dist, '.nip5a-manifest.json'), 'utf8')).content).toBe('Read & write');
+    await expect(runCloseBundle({ nappletType: 'metadata', description: '' }, fixture)).rejects.toThrow(/description/);
+  });
+});
+
+it('rejects query-bearing independent intent advertisements and preserves parameter names', async () => {
+  const fixture = makeFixture();
+  fs.writeFileSync(path.join(fixture.dist, 'index.html'), '<!doctype html>');
+  await expect(runCloseBundle({ nappletType: 'note', intents: [{ intent: 'napplet:note/open?id=1' }] }, fixture)).rejects.toThrow('queryless');
+  await runCloseBundle({ nappletType: 'note', intents: [{ intent: 'napplet:note/open', params: ['id'] }] }, fixture);
+  expect(readManifest(fixture.dist).tags).toContainEqual(['i', 'napplet:note/open', 'id']);
 });

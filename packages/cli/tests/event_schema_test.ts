@@ -1,0 +1,393 @@
+import { finalizeEvent } from "nostr-tools";
+import { main } from "../src/cli.ts";
+import { defaultConfig } from "../src/config.ts";
+import { createDeployPlan } from "../src/deploy-plan.ts";
+import {
+  createDeployManifestTemplates,
+  createSiteManifestTemplate,
+  createSnapshotManifestTemplate,
+} from "../src/manifest.ts";
+import { selectManifestFormat } from "../src/manifest-format.ts";
+import { readManifestMetadataTags } from "../src/manifest-metadata.ts";
+import { migrateManifestEvent } from "../src/migrate.ts";
+import { assert, assertEquals, withTempDir } from "./assert.ts";
+
+const html = '<!doctype html><meta name="description" content="Read &amp; write notes">';
+const key = new Uint8Array(32).fill(1);
+const hash = [
+  ...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(html))),
+].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+
+Deno.test("current is the unattended and interactive deployment default; legacy is explicit", async () => {
+  assertEquals(await selectManifestFormat(undefined, false), "current");
+  let prompted = false;
+  assertEquals(
+    await selectManifestFormat(undefined, true, (options) => {
+      prompted = true;
+      assertEquals(options.defaultValue, "current");
+      return Promise.resolve("current");
+    }),
+    "current",
+  );
+  assert(prompted);
+  assertEquals(await selectManifestFormat("legacy", false), "legacy");
+  let rejected = false;
+  try {
+    await selectManifestFormat("invalid", false);
+  } catch {
+    rejected = true;
+  }
+  assert(rejected);
+});
+
+Deno.test("current deploy hashes index bytes and preserves plugin metadata in snapshots", async () => {
+  await withTempDir(async (dir) => {
+    await Deno.writeTextFile(`${dir}/index.html`, html);
+    await Deno.writeTextFile(
+      `${dir}/.nip5a-manifest.json`,
+      JSON.stringify({
+        content: "Read & write notes",
+        tags: [["R", "relay"], ["O", "theme"], ["z", "note"], ["i", "napplet:note/open", "id"], [
+          "source",
+          "https://example.com/source",
+        ]],
+      }),
+    );
+    const candidate = {
+      name: "notes",
+      dir,
+      indexHtml: `${dir}/index.html`,
+      manifestPath: `${dir}/.nip5a-manifest.json`,
+    };
+    const config = defaultConfig({ named: ["notes"] });
+    const plan = createDeployPlan(config, [candidate], { names: ["notes"], snapshot: true });
+    const deployed = await createDeployManifestTemplates(plan, config, {
+      sourcePubkey: "a".repeat(64),
+      createdAt: 12,
+    });
+    for (const manifest of deployed) {
+      assertEquals(manifest.format, "current");
+      assertEquals(manifest.artifactHash, hash);
+      assertEquals(manifest.aggregateHash, undefined);
+      assertEquals(manifest.files, [{ path: "/index.html", sha256: hash }]);
+      assertEquals(manifest.template?.content, "Read & write notes");
+      assert(
+        manifest.template?.tags.some((tag) =>
+          JSON.stringify(tag) === JSON.stringify(["i", "napplet:note/open", "id"])
+        ),
+      );
+      assertEquals(manifest.template?.tags.filter((tag) => tag[0] === "x"), [["x", hash]]);
+      assertEquals(
+        manifest.template?.tags.some((tag) =>
+          ["path", "description", "requires", "archetype"].includes(tag[0])
+        ),
+        false,
+      );
+    }
+    assertEquals(deployed[1].template?.kind, 5129);
+    assertEquals(deployed[1].template?.tags.some((tag) => tag[0] === "d"), false);
+  });
+});
+
+Deno.test("current root output has no identifier and rejects empty descriptions", async () => {
+  const candidate = { name: "notes", dir: "/tmp", indexHtml: "/tmp/index.html" };
+  const item = { candidate, target: "root" as const, kind: 15129 };
+  const files = [{ path: "/index.html", sha256: hash }];
+  const event = await createSiteManifestTemplate(item, files, { content: "Notes" });
+  assertEquals(event.tags, [["x", hash]]);
+  assertEquals(
+    createSnapshotManifestTemplate(event, { kind: 15129, pubkey: "a".repeat(64) }).content,
+    "Notes",
+  );
+  let rejected = false;
+  try {
+    await createSiteManifestTemplate(item, files);
+  } catch {
+    rejected = true;
+  }
+  assert(rejected);
+});
+
+async function rootDeploy(dir: string, format?: "current" | "legacy") {
+  const candidate = {
+    name: "notes",
+    dir,
+    indexHtml: `${dir}/index.html`,
+    manifestPath: `${dir}/.nip5a-manifest.json`,
+  };
+  const config = defaultConfig();
+  const plan = createDeployPlan(config, [candidate], { root: true });
+  return await createDeployManifestTemplates(plan, config, { createdAt: 1, format });
+}
+
+async function writeExtraFiles(dir: string): Promise<void> {
+  await Deno.writeTextFile(`${dir}/index.html`, html);
+  await Deno.mkdir(`${dir}/assets`);
+  await Deno.writeTextFile(`${dir}/assets/app.js`, "console.log('app');");
+  await Deno.writeTextFile(`${dir}/robots.txt`, "User-agent: *");
+  await Deno.mkdir(`${dir}/.well-known`);
+  await Deno.writeTextFile(`${dir}/.well-known/nostr.json`, "{}");
+  await Deno.writeTextFile(`${dir}/.env`, "SECRET=1");
+  await Deno.mkdir(`${dir}/node_modules/pkg`, { recursive: true });
+  await Deno.writeTextFile(`${dir}/node_modules/pkg/index.js`, "export {};");
+  await Deno.writeTextFile(`${dir}/.nip5a-manifest.json`, JSON.stringify({ tags: [] }));
+}
+
+Deno.test("current deploy fails instead of dropping built files", async () => {
+  await withTempDir(async (dir) => {
+    await writeExtraFiles(dir);
+    let message = "";
+    try {
+      await rootDeploy(dir);
+    } catch (error) {
+      message = error instanceof Error ? error.message : String(error);
+    }
+    assert(message.includes("/assets/app.js"), message);
+    assert(message.includes("/robots.txt"), message);
+    assert(message.includes("/.well-known/nostr.json"), message);
+    assert(message.includes("--format legacy"), message);
+    assert(!message.includes(".env"), message);
+    assert(!message.includes("node_modules"), message);
+    assert(!message.includes(".nip5a-manifest.json"), message);
+  });
+});
+
+Deno.test("legacy deploy still uploads every collected file", async () => {
+  await withTempDir(async (dir) => {
+    await writeExtraFiles(dir);
+    const [manifest] = await rootDeploy(dir, "legacy");
+    assert(manifest.files.some((file) => file.path === "/assets/app.js"));
+  });
+});
+
+Deno.test("current deploy keeps the icon blob referenced by an icon tag", async () => {
+  await withTempDir(async (dir) => {
+    const icon = new Uint8Array([137, 80, 78, 71, 1, 2, 3]);
+    const iconHash = [...new Uint8Array(await crypto.subtle.digest("SHA-256", icon))]
+      .map((byte) => byte.toString(16).padStart(2, "0")).join("");
+    await Deno.writeTextFile(`${dir}/index.html`, html);
+    await Deno.writeFile(`${dir}/icon.png`, icon);
+    await Deno.writeTextFile(
+      `${dir}/.nip5a-manifest.json`,
+      JSON.stringify({ tags: [["icon", iconHash, "image/png"]] }),
+    );
+    const [manifest] = await rootDeploy(dir);
+    assertEquals(manifest.files.map((file) => file.path), ["/icon.png", "/index.html"]);
+  });
+});
+
+function domainTags(tags: string[][], name: "R" | "O"): string[][] {
+  return tags.filter((tag) => tag[0] === name);
+}
+
+Deno.test("current deploy preserves required and optional domains outside the registry", async () => {
+  await withTempDir(async (dir) => {
+    await Deno.writeTextFile(`${dir}/index.html`, html);
+    await Deno.writeTextFile(
+      `${dir}/.nip5a-manifest.json`,
+      JSON.stringify({ tags: [["R", "mesh"], ["O", "mesh-ui"]] }),
+    );
+    const [manifest] = await rootDeploy(dir);
+    assertEquals(domainTags(manifest.template!.tags, "R"), [["R", "mesh"]]);
+    assertEquals(domainTags(manifest.template!.tags, "O"), [["O", "mesh-ui"]]);
+  });
+});
+
+Deno.test("metadata merge lets sidecar optional domains win over config requirements", async () => {
+  await withTempDir(async (dir) => {
+    await Deno.writeTextFile(`${dir}/index.html`, html);
+    await Deno.writeTextFile(
+      `${dir}/.nip5a-manifest.json`,
+      JSON.stringify({ tags: [["O", "theme"], ["R", "relay"]] }),
+    );
+    const config = defaultConfig({
+      metadata: { description: "Notes", requires: ["relay", "theme"] },
+    });
+    const tags = await readManifestMetadataTags(
+      `${dir}/index.html`,
+      `${dir}/.nip5a-manifest.json`,
+      config,
+      "current",
+    );
+    assertEquals(domainTags(tags, "R"), [["R", "relay"]]);
+    assertEquals(domainTags(tags, "O"), [["O", "theme"]]);
+  });
+});
+
+Deno.test("metadata merge emits a domain listed as required and optional only as O", async () => {
+  await withTempDir(async (dir) => {
+    await Deno.writeTextFile(`${dir}/index.html`, html);
+    const config = defaultConfig({
+      metadata: { description: "Notes", requires: ["theme"], optional: ["theme"] },
+    });
+    const tags = await readManifestMetadataTags(`${dir}/index.html`, undefined, config, "current");
+    assertEquals(domainTags(tags, "R"), []);
+    assertEquals(domainTags(tags, "O"), [["O", "theme"]]);
+  });
+});
+
+Deno.test("metadata merge drops sidecar R duplicates of O without config metadata", async () => {
+  await withTempDir(async (dir) => {
+    await Deno.writeTextFile(`${dir}/index.html`, html);
+    await Deno.writeTextFile(
+      `${dir}/.nip5a-manifest.json`,
+      JSON.stringify({ tags: [["R", "theme"], ["O", "theme"]] }),
+    );
+    const tags = await readManifestMetadataTags(
+      `${dir}/index.html`,
+      `${dir}/.nip5a-manifest.json`,
+      defaultConfig(),
+      "current",
+    );
+    assertEquals(domainTags(tags, "R"), []);
+    assertEquals(domainTags(tags, "O"), [["O", "theme"]]);
+  });
+});
+
+function signed(tags: string[][], content = "") {
+  return finalizeEvent(
+    { kind: 35129, created_at: 1, content, tags: [["d", "notes"], ...tags] },
+    key,
+  );
+}
+
+Deno.test("migration preserves source and direct artifact hash with explicit optional classification", () => {
+  const event = signed([
+    ["path", "/index.html", hash],
+    ["x", "b".repeat(64), "aggregate"],
+    ["description", "Read notes"],
+    ["requires", "relay"],
+    ["requires", "theme"],
+    ["archetype", "note", "napplet:note/open"],
+    ["custom", "retained"],
+  ]);
+  const before = JSON.stringify(event);
+  const result = migrateManifestEvent(event, { optional: ["theme"], createdAt: 2 });
+  assertEquals(JSON.stringify(event), before);
+  assertEquals(result.sourceId, event.id);
+  assertEquals(result.template.content, "Read notes");
+  assertEquals(result.template.tags.filter((tag) => tag[0] === "x"), [["x", hash]]);
+  assert(result.template.tags.some((tag) => tag[0] === "O" && tag[1] === "theme"));
+  assert(result.template.tags.some((tag) => tag[0] === "custom"));
+  assertEquals("sig" in result.template, false);
+});
+
+Deno.test("migration rejects tampering, ambiguous artifacts and absent descriptions", () => {
+  const valid = signed([["path", "/index.html", hash], ["description", "Notes"]]);
+  const cases = [
+    { ...valid, content: "tampered" },
+    signed([["path", "/index.html", hash], ["path", "/app.js", hash], ["description", "Notes"]]),
+    signed([["x", "b".repeat(64), "aggregate"], ["description", "Notes"]]),
+    signed([["x", hash]]),
+  ];
+  for (const event of cases) {
+    let rejected = false;
+    try {
+      migrateManifestEvent(event);
+    } catch {
+      rejected = true;
+    }
+    assert(rejected);
+  }
+});
+
+Deno.test("migrating current events preserves semantic fields and invalid icons fall back", () => {
+  const event = signed([["x", hash], ["O", "theme"], ["i", "napplet:note/open", "id"], [
+    "icon",
+    "bad",
+    "image/svg+xml",
+  ]], "Notes");
+  const result = migrateManifestEvent(event, { createdAt: 2 });
+  assertEquals(result.template.tags.some((tag) => tag[0] === "icon"), false);
+  const roundTrip = migrateManifestEvent(finalizeEvent(structuredClone(result.template), key), {
+    createdAt: 2,
+  });
+  assertEquals(roundTrip.template, result.template);
+});
+
+Deno.test("migration command writes a preview, preserves input and refuses overwrites", async () => {
+  await withTempDir(async (dir) => {
+    const source = `${dir}/source.json`;
+    const output = `${dir}/preview.json`;
+    const original = JSON.stringify(signed([
+      ["path", "/index.html", hash],
+      ["description", "Read notes"],
+      ["requires", "theme"],
+    ]));
+    await Deno.writeTextFile(source, original);
+    const args = ["migrate", source, "--optional", "theme", "--output", output];
+    assertEquals(await main(args), 0);
+    const previewText = await Deno.readTextFile(output);
+    const preview = JSON.parse(previewText);
+    assertEquals(preview.template.content, "Read notes");
+    assert(preview.template.tags.some((tag: string[]) => tag[0] === "O" && tag[1] === "theme"));
+    assertEquals(preview.sourceId, JSON.parse(original).id);
+    assertEquals("sig" in preview.template, false);
+    const errors: string[] = [];
+    const originalError = console.error;
+    console.error = (value: unknown) => errors.push(String(value));
+    try {
+      assertEquals(await main(args), 1);
+      assertEquals(await main(["migrate", source, "--output", source]), 1);
+    } finally {
+      console.error = originalError;
+    }
+    assert(errors.length > 0);
+    assertEquals(await Deno.readTextFile(source), original);
+    assertEquals(await Deno.readTextFile(output), previewText);
+  });
+});
+
+Deno.test("legacy deployment requires explicit pairs for ambiguous z/i metadata", async () => {
+  const item = {
+    candidate: { name: "notes", dir: "/tmp", indexHtml: "/tmp/index.html" },
+    target: "root" as const,
+    kind: 15129,
+  };
+  let message = "";
+  try {
+    await createSiteManifestTemplate(item, [{ path: "/index.html", sha256: hash }], {
+      format: "legacy",
+      content: "Notes",
+      metadataTags: [
+        ["z", "note"],
+        ["z", "profile"],
+        ["i", "napplet:note/open"],
+        ["i", "napplet:profile/edit"],
+      ],
+    });
+  } catch (error) {
+    message = String(error);
+  }
+  assert(message.includes("explicit metadata.archetypes"));
+  const legacy = await createSiteManifestTemplate(item, [{ path: "/index.html", sha256: hash }], {
+    format: "legacy",
+    content: "Notes",
+    metadataTags: [["archetype", "note", "napplet:note/open"]],
+  });
+  assert(legacy.tags.some((tag) => tag[0] === "archetype" && tag[1] === "note"));
+});
+
+Deno.test("current deployment and migration reject query-bearing intent advertisements", async () => {
+  const metadata = [["i", "napplet:note/open?id=123"]];
+  let failures = 0;
+  try {
+    migrateManifestEvent(signed([["x", hash], ...metadata], "Notes"));
+  } catch {
+    failures++;
+  }
+  try {
+    await createSiteManifestTemplate(
+      {
+        candidate: { name: "notes", dir: "/tmp", indexHtml: "/tmp/index.html" },
+        target: "root",
+        kind: 15129,
+      },
+      [{ path: "/index.html", sha256: hash }],
+      { content: "Notes", metadataTags: metadata },
+    );
+  } catch {
+    failures++;
+  }
+  assertEquals(failures, 2);
+});

@@ -83,8 +83,7 @@ function setHtmlDescription(html: string, description: string): string {
  * value containing a quote or angle bracket cannot break out of the tag.
  *
  * These are PLAIN HTML elements, NOT `napplet-*` protocol meta tags. The napplet
- * CLI reads them back out of the built index.html to emit NIP-5A
- * `["title", …]` / `["description", …]` manifest tags at deploy time.
+ * CLI reads them from index.html for the manifest title and description content.
  *
  * @param html - the source index.html string.
  * @param options - `title` and/or `description` values to inject.
@@ -181,7 +180,22 @@ function removeEmptyParentDirs(filePath: string, stopDir: string): void {
   }
 }
 
-function listSingleFileArtifactViolations(html: string, distPath: string): string[] {
+/**
+ * List local external asset references in `index.html` and every dist file
+ * other than `index.html` and `.nip5a-manifest.json`.
+ *
+ * Local stylesheet/modulepreload `<link>` tags and local `<script src>` tags
+ * are reported as their full tag text; leftover dist files as dist-relative
+ * paths. An empty result means `index.html` is the only served artifact.
+ *
+ * @param html - the built index.html string.
+ * @param distPath - absolute path to the build output directory.
+ * @returns tag strings and dist-relative paths for each local asset found.
+ * @example
+ * listLocalArtifactAssets('<script type="module" src="/assets/index.js"></script>', '/app/dist');
+ * // → ['<script type="module" src="/assets/index.js">', 'assets/index.js']
+ */
+export function listLocalArtifactAssets(html: string, distPath: string): string[] {
   const violations: string[] = [];
 
   html.replace(/<link\b([^>]*?)>/gi, (tag, attrs: string) => {
@@ -215,7 +229,7 @@ function listSingleFileArtifactViolations(html: string, distPath: string): strin
 }
 
 function assertSingleFileArtifact(html: string, distPath: string): void {
-  const violations = listSingleFileArtifactViolations(html, distPath);
+  const violations = listLocalArtifactAssets(html, distPath);
   if (violations.length === 0) return;
 
   const list = violations.map((violation) => `  - ${violation}`).join('\n');
@@ -299,4 +313,18 @@ export function singleFileBuildConfig(config: UserConfig): UserConfig {
       },
     },
   };
+}
+
+/**
+ * Read ordinary author-supplied HTML metadata for manifest display fields.
+ * @param html Final HTML artifact text.
+ * @returns Optional decoded title and description values.
+ * @example readHtmlMetadata('<title>Notes</title>') // { title: 'Notes', description: undefined }
+ */
+export function readHtmlMetadata(html: string): { title?: string; description?: string } {
+  const decode = (value: string): string => value.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&');
+  const title = /<title\b[^>]*>([\s\S]*?)<\/title>/i.exec(html)?.[1];
+  const descriptionTag = [...html.matchAll(/<meta\b[^>]*>/gi)].find(([tag]) => getAttr(tag, 'name')?.toLowerCase() === 'description');
+  const description = descriptionTag ? getAttr(descriptionTag[0], 'content') : null;
+  return { title: title ? decode(title).trim() : undefined, description: description ? decode(description).trim() : undefined };
 }

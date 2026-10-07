@@ -86,7 +86,7 @@ What each step does:
 - `napplet create` delegates to `@napplet/boilerplate` and creates the starter only.
 - `napplet init` owns deployment name, title, description, archetype roles and conventions, relays, and Blossom servers in `.napplet/config.json`; scripts can pass the same fields explicitly.
 - `npx skills add napplet/napplet` installs the `napplet-*` agent skills through the skills.sh CLI (Claude Code, Codex, Cursor, and 70+ other agents); it is not a `napplet` subcommand.
-- `napplet debug` prints resolved config, discovered napplets, deploy targets, manifest templates, and signing readiness without uploading or publishing.
+- `napplet debug` prints resolved config, discovered napplets, deploy targets, manifest templates, and signing readiness without uploading or publishing. Manifest template failures (for example a missing description, or built files a current deploy would drop) are reported in `manifests.error` instead of aborting, and `--format current|legacy` selects the event format inspected.
 - `napplet deploy --dry-run` builds the same deploy plan and signed manifest events without network writes. Interactive terminals get a readable report with copyable NIP-19 pointers.
 - `napplet deploy` uploads files to configured Blossom servers and publishes signed root, named, and optional snapshot manifest events to configured relays. Use `--json` for CI / machine output.
 
@@ -97,8 +97,8 @@ napplet guide
 napplet create <directory> [--template <path-or-url>] [--force]
 napplet init [--force] [--root] [--source-dir <dir>] [--name <dtag>] [--title <title>] [--description <text>] [--archetype <slug:convention>] [--relay <url>] [--server <url>]
 napplet discover [--config <file>] [--all]
-napplet debug [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>]
-napplet deploy [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>] [--prompt-sec] [--dry-run] [--json]
+napplet debug [--format current|legacy] [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>]
+napplet deploy [--format current|legacy] [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>] [--prompt-sec] [--dry-run] [--json]
 napplet keys store --name <ref> [--sec <secret> | --prompt-sec]
 napplet keys connect --name <ref> [--relay <url> ...] [--config <file>]
 napplet keys use --name <ref> [--config <file>]
@@ -145,7 +145,7 @@ Example config:
 }
 ```
 
-Valid config metadata takes precedence over title/description/archetype defaults found in built HTML or the Vite plugin sidecar. Legacy configs without `metadata` retain their existing fallback behavior. Each object emits one queryless manifest tag: `["archetype", "note", "napplet:note/open"]`. The role slug and convention's own archetype segment are independent under [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md). A metadata-free template keeps its canonical archetype tags; providing `metadata.archetypes` replaces those tags with the configured objects.
+Valid config metadata takes precedence over title/description/archetype defaults found in built HTML or the Vite plugin sidecar. Legacy configs without `metadata` retain their existing fallback behavior. Each object emits independent current tags: `["z", "note"]` and `["i", "napplet:note/open"]`; optional `params` lists advertised parameter names. The role slug and convention's own archetype segment are independent under [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md). A metadata-free template keeps its canonical archetype tags; providing `metadata.archetypes` replaces those tags with the configured objects. A domain listed as both required and optional is emitted only as `O`, matching the Vite plugin.
 
 The convention string remains queryless after validation: it does not select a payload schema, query rule, matching rule, or inferred event kind. This non-normative guide follows the adopted [NAP-INC #89 `4593ce9`](https://github.com/napplet/naps/blob/4593ce9e301ce098fd3dad64206fcd6f144fa7af/naps/NAP-INC.md), [URI terminology #90 `896c32c`](https://github.com/napplet/naps/commit/896c32c92deee68dc4d10fc1132b62df20cccb6f), and [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md).
 
@@ -190,9 +190,9 @@ Signing can come from:
 
 The human deploy report includes each signed manifest event's short event id plus a copyable `nevent` pointer. Addressable root and named manifests also include copyable `naddr` pointers using the configured relay hints.
 
-When a built napplet includes a plugin-generated `.nip5a-manifest.json`, signed or unsigned, deploy preserves canonical `requires` and `archetype` tags from that sidecar on root, named, and companion snapshot manifests.
+When a built napplet includes a plugin-generated `.nip5a-manifest.json`, signed or unsigned, deploy preserves capability and intent metadata from that sidecar, translating legacy `requires`/`archetype` to current `R` and `z`/`i` tags on root, named, and companion snapshot manifests.
 
-Deploy also reads the built `index.html` and emits single `title` and `description` manifest tags from its plain HTML `<title>` and `<meta name="description">` values when present.
+Deploy also reads the built `index.html` and uses its plain HTML `<title>` as the `title` tag and `<meta name="description">` as event `content` when no override is present. Current output requires a non-empty description.
 
 ## Signing And Keys
 
@@ -327,3 +327,20 @@ deno task build
 ```
 
 Dependencies are declared in `deno.json` `imports`. The npm dependencies (`applesauce-signers`, `nostr-tools`) are mirrored in `package.json`; JSR-only dependencies such as `@libs/qrcode` and `@std/streams` live in `deno.json` only.
+
+
+## Current and legacy event formats
+
+From CLI **0.7.0**, deployments default to the current NIP-5D artifact-hash schema. Interactive deploys ask for `current` or `legacy`; scripts can choose with `--format current|legacy`. A non-empty description is required for current event content. Legacy output remains isolated in a temporary serializer; 0.6.x and earlier defaulted to legacy events. Current deploys upload only `/index.html` plus the blob referenced by an `icon` tag; any other built file in the deploy directory makes deploy fail with the list of those files (build a single-file artifact or use `--format legacy`).
+
+```sh
+napplet deploy --dry-run --format current
+napplet deploy --format legacy
+napplet migrate signed-event.json --optional theme --output migration-preview.json
+```
+
+`migrate` verifies the source signature and writes an unsigned preview with provenance. It does not publish or modify the artifact, and refuses to overwrite an existing output file. Review description, required/optional choices and pointers before signing. See the [migration guide](https://napplet.run/docs/guide/event-migration) for format differences and shell data/consent implications.
+
+### Removing temporary legacy output
+
+Legacy serialization lives in `src/manifest-legacy.ts`; `manifest-format.ts` owns the format choice. When retiring legacy deployment, remove that serializer, the selection prompt/flag, and the `format === "legacy"` branches in manifest construction and metadata conversion. Keep signed legacy input conversion in `migrate.ts` if old-event migration remains supported. Current-schema conformance readers have no fallback to remove.

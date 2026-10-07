@@ -31,9 +31,7 @@ npm install -D @napplet/conformance
 - **`validateEnvelope(msg)`** — runtime validation of any `domain.action` envelope
   a napplet emits, across every NAP domain. Catches malformed payloads, unknown
   types, and napplets that put shell→napplet (inbound) traffic on the wire.
-- **`validateManifestEvent(event)`** — checks that a resolved Nostr event is a
-  NIP-5D napplet manifest (`5129`, `15129`, or `35129`) with a hashed
-  `/index.html` path and bare `requires` domains (a domain outside the known NAP list is a warning, not an error).
+- **`validateManifestEvent(event)`** — checks that a resolved Nostr event is a NIP-5D napplet manifest (`5129`, `15129`, or `35129`) with a single `/index.html` artifact `x` hash, non-empty description, and bare `R`/`O` domains. Domains outside the toolchain registry produce an advisory `manifest/requires-known` warning without failing the run or implying runtime support.
 - **`validateManifest(html)`** — compatibility wrapper for older HTML-only
   harnesses. HTML alone cannot prove a signed NIP-5D manifest event.
 - **Reference mock shell**, **check registry**, and **reporters** that the CLI and

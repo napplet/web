@@ -13,10 +13,11 @@ export const NAPPLET_KIND_NAMED = 35129;
 /** DeployTargetKind union used by shared CLI type helpers. */
 export type DeployTargetKind = "root" | "named" | "snapshot";
 
-/** One canonical NAAT archetype convention emitted as a manifest tag. */
+/** Authoring pair emitted as independent z/i advertisements in current events. */
 export interface NappletArchetypeConvention {
   slug: string;
   convention: string;
+  params?: string[];
 }
 
 /** Deployment metadata owned by `napplet init`. */
@@ -25,6 +26,8 @@ export interface NappletDeployMetadata {
   title?: string;
   description?: string;
   archetypes?: NappletArchetypeConvention[];
+  requires?: string[];
+  optional?: string[];
 }
 
 /** NappletConfig shape used by shared CLI type helpers. */
@@ -118,7 +121,10 @@ export interface ManifestFileMapping {
 export interface DeployManifestTemplate {
   item: DeployPlanItem;
   files: ManifestFileMapping[];
-  aggregateHash: string;
+  /** Only populated for explicitly legacy output. */
+  aggregateHash?: string;
+  artifactHash?: string;
+  format?: import("./manifest-format.ts").ManifestFormat;
   template?: NostrEventTemplate;
   signedEvent?: SignedNostrEvent;
   skippedReason?: string;

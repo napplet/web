@@ -16,11 +16,12 @@ function manifest(head = '', body = ''): string {
 }
 
 const goodEvent: NappletManifestEvent = {
+  content: 'A test napplet',
   kind: NAPPLET_KIND_NAMED,
   tags: [
     ['d', 'demo'],
-    ['path', '/index.html', HASH],
-    ['requires', 'storage'],
+    ['x', HASH],
+    ['R', 'storage'],
   ],
 };
 
@@ -62,18 +63,18 @@ describe('manifest checks', () => {
     const badKind = makeContext({ manifestEvent: { ...goodEvent, kind: 35128 } });
     expect(run('manifest/event-kind', badKind).status).toBe('fail');
     const badPath = makeContext({
-      manifestEvent: { ...goodEvent, tags: [['d', 'demo'], ['path', '/index.html', 'nope']] },
+      manifestEvent: { ...goodEvent, tags: [['d', 'demo'], ['x', 'nope']] },
     });
     expect(run('manifest/index-html', badPath).status).toBe('fail');
     const badRequire = makeContext({
-      manifestEvent: { ...goodEvent, tags: [...goodEvent.tags, ['requires', 'nap:relay']] },
+      manifestEvent: { ...goodEvent, tags: [...goodEvent.tags, ['R', 'nap:relay']] },
     });
     expect(run('manifest/requires', badRequire).status).toBe('fail');
   });
 
   it('reports an unknown requires domain as a warning-severity finding only', () => {
     const ctx = makeContext({
-      manifestEvent: { ...goodEvent, tags: [...goodEvent.tags, ['requires', 'mesh']] },
+      manifestEvent: { ...goodEvent, tags: [...goodEvent.tags, ['R', 'mesh']] },
     });
     expect(run('manifest/requires', ctx).status).toBe('pass');
     expect(run('manifest/requires-known', ctx).status).toBe('fail');
@@ -84,7 +85,7 @@ describe('manifest checks', () => {
     'fails manifest/requires for malformed value %j without a known-domain advisory',
     (req) => {
       const ctx = makeContext({
-        manifestEvent: { ...goodEvent, tags: [...goodEvent.tags, ['requires', req]] },
+        manifestEvent: { ...goodEvent, tags: [...goodEvent.tags, ['R', req]] },
       });
       expect(run('manifest/requires', ctx).status).toBe('fail');
       expect(run('manifest/requires-known', ctx).status).toBe('pass');

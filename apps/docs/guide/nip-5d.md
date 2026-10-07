@@ -27,8 +27,8 @@ this page, the packages, or any test.
 | --- | --- |
 | **Shell** | The trusted hosting web application that contains napplet iframes. |
 | **Napplet** | A sandboxed iframe application that communicates via `postMessage`. |
-| **dTag** | The napplet type identifier from its NIP-5A manifest. |
-| **Aggregate hash** | A SHA-256 over the napplet's build files; identifies an exact build. |
+| **dTag** | The napplet type identifier from its NIP-5D manifest. |
+| **Artifact hash** | SHA-256 of the final `/index.html` bytes. |
 | **NAP** | *Nostr Applet Protocol* — one capability contract between a napplet and its runtime, defining the protocol messages for a capability domain. |
 
 > In this SDK, each NAP is a **domain** that owns one message domain (`relay`,
@@ -74,8 +74,8 @@ gracefully.
 
 - The shell assigns a napplet's identity **at iframe creation time**, with no
   negotiation or handshake.
-- It maps the iframe's `Window` reference to the napplet's `(dTag, aggregateHash)`
-  tuple, read from the NIP-5A manifest.
+- It maps the iframe's `Window` reference to the napplet's `(dTag, artifactHash)`
+  tuple, verified against the signed NIP-5D manifest and artifact bytes.
 - The shell MUST verify `MessageEvent.source` on **every** inbound message.
   `MessageEvent.source` is an **unforgeable** sender identity — origin validation
   uses `source`, not `event.origin`.
@@ -83,18 +83,9 @@ gracefully.
 
 ## Manifest and NAP negotiation
 
-- A napplet's manifest is a NIP-5D **kind 35129** named-napplet event (adopting
-  the NIP-5A `path` + aggregate `x` tag schema). It declares the capabilities it
-  needs with `requires` tags: `["requires", "<nap-name>"]`.
-- The shell checks those `requires` tags against its own capabilities at load
-  time and can warn on a mismatch.
-- At runtime, a napplet detects support from domain object presence:
-  `if (window.napplet?.relay) { ... }`.
-- Napplets MUST **gracefully degrade** when a capability is absent.
+The current manifest kinds are 5129, 15129, and 35129. The manifest carries one direct artifact hash in `x`, description text in `content`, required domains in `R`, and optional integrations in `O`. Archetype advertisements use `z`; accepted intents and parameter names use `i`. See [NIP-5D §Manifest](https://github.com/dskvr/nips/blob/nip/5d/5D.md#manifest) for the complete living contract.
 
-The [`@napplet/vite-plugin`](/packages/vite-plugin) generates this manifest at
-build time — computing per-file SHA-256 hashes, the aggregate hash, and the
-`requires` / `connect` / `config` tags.
+The plugin generates current events and the CLI offers temporary legacy output. See [event migration](/guide/event-migration) for release cutoffs and rollout implications. Runtime availability still comes from injected domain presence, such as `window.napplet?.relay`.
 
 ## NAP extension framework
 

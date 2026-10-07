@@ -53,6 +53,7 @@ export default defineConfig({
   build: { modulePreload: { polyfill: false } },
   plugins: [
     nip5aManifest({
+      description: 'Describe the napplet purpose in plain text',
       nappletType: 'my-napplet',        // build-local fallback; deploy metadata comes from napplet init
       artifactMode: 'single-file',      // fold assets, keep inline scripts, one index.html
       requires: ['outbox', 'storage'],  // hard requirements only, bare domain names
@@ -62,7 +63,7 @@ export default defineConfig({
 });
 ```
 
-The aggregate hash lands in `.nip5a-manifest.json` and the signed event, not in a meta tag. `VITE_DEV_PRIVKEY_HEX` produces a signed manifest in CI; dev builds work without it.
+The artifact hash lands in `.nip5a-manifest.json` and the signed event, not in a meta tag. `VITE_DEV_PRIVKEY_HEX` produces a signed manifest in CI; dev builds work without it.
 
 ## Step 4 — Implement
 

@@ -8,11 +8,12 @@ import { toJson } from '../report/reporters.js';
 const HASH = 'c'.repeat(64);
 const goodHtml = '<!doctype html><html><head><script type="module" src="/app.js"></script></head><body></body></html>';
 const goodEvent: NappletManifestEvent = {
+  content: 'A test napplet',
   kind: NAPPLET_KIND_NAMED,
   id: 'event-id',
   tags: [
     ['d', 'demo'],
-    ['path', '/index.html', HASH],
+    ['x', HASH],
   ],
 };
 
@@ -40,6 +41,18 @@ describe('runConformance', () => {
     expect(run.ok).toBe(false);
     expect(run.summary.errors).toBeGreaterThan(0);
     expect(run.checks.find((c) => c.id === 'manifest/event-kind')!.status).toBe('fail');
+  });
+
+  it.each(['R', 'O'])('keeps an unknown %s domain advisory without failing the run', (tag) => {
+    const run = runConformance(makeContext({
+      manifestEvent: { ...goodEvent, tags: [...goodEvent.tags, [tag, 'mesh']] },
+    }));
+    expect(run.ok).toBe(true);
+    expect(run.summary.errors).toBe(0);
+    expect(run.summary.warnings).toBe(1);
+    expect(run.checks.find((check) => check.id === 'manifest/requires-known')).toMatchObject({
+      status: 'fail', severity: 'warning',
+    });
   });
 
   it('produces a JSON-serializable run', () => {

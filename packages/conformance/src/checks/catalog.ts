@@ -49,13 +49,16 @@ export const CHECKS: Check[] = [
     'unexpected-d-tag',
   ]),
   manifestCheck('manifest/index-html', 'Manifest declares a hashed /index.html', [
-    'missing-index-html',
-    'invalid-index-html-hash',
+    'invalid-artifact-hash',
+    'missing-description',
+    'invalid-metadata',
   ]),
-  manifestCheck('manifest/requires', 'requires tags are bare NAP domains', [
+  manifestCheck('manifest/requires', 'R/O tags name bare NAP domains', [
     'invalid-required-nap',
+    'invalid-optional-nap',
   ]),
-  manifestCheck('manifest/requires-known', 'requires tags name NAP domains this toolchain knows', [
+  // Registry coverage is a tooling advisory, not a protocol requirement.
+  manifestCheck('manifest/requires-known', 'R/O domains are in this toolchain registry (advisory)', [
     'unknown-required-nap',
   ], 'warning'),
 

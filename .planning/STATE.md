@@ -2,19 +2,17 @@
 gsd_state_version: 1.0
 milestone: v0.34.0
 milestone_name: NIP-5D Runtime Injection
-current_phase: 161
-current_phase_name: ad-hoc-convention-package-contracts
+current_phase: 162
+current_phase_name: nip-5d-event-schema-migration
 status: complete
-stopped_at: Quick task 260728-nbn complete; PR #189 conflicts resolved
-last_updated: "2026-08-26T13:09:09Z"
-last_activity: 2026-09-04
-last_activity_desc: Completed quick task 260904-g1f — add the MIT license and open a pull request
+stopped_at: "Phase 162 verified; draft PR #224 open with hzrd149 requested"
+last_updated: "2026-10-04T19:00:16.967369+00:00"
+last_activity: 2026-10-04
+last_activity_desc: "Completed NIP-5D event schema migration; draft PR #224"
 progress:
-  total_phases: 8
-  completed_phases: 4
-  total_plans: 42
-  completed_plans: 32
-  percent: 76
+  total_plans: 3
+  completed_plans: 3
+  percent: 100
 ---
 
 # Project State
@@ -25,17 +23,18 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 
 **Core value:** Prove that sandboxed Nostr apps can securely delegate to a host shell over a simple, standardized protocol — and ship the spec + SDK so others can build on it.
 
-**Current focus:** Phase 161 — ad-hoc-convention-package-contracts
+**Current focus:** Phase 162 — NIP-5D event schema migration; draft PR #224 awaiting review
 
 > **Provenance note:** The "Accumulated Context" section below preserves bullet records from BOTH branches' STATE.md histories. Records tagged "v0.29.0" from main's lineage refer to the milestone NOW renumbered as v0.30.0 (Class-Gated Decrypt — Phases 135-138). Records tagged "v0.29.0" from feat/strict-model refer to NUB-CONNECT (Phases 135-142). Phase number alone is not a unique identifier across the two; cross-reference the topic (decrypt/identity/NIP-07 → v0.30.0; connect/class/CSP-authority → v0.29.0).
 
 ## Current Position
 
-Phase: 161 (ad-hoc-convention-package-contracts) — COMPLETE
-Plan: 26 of 26
-Status: Verified; PR #186 open
-Last activity: 2026-09-04 — Completed quick task 260904-g1f: add the MIT license and open a pull request
-community/group-chat invite linked from the SPA and docs.
+Phase: 162 (nip-5d-event-schema-migration) — COMPLETE
+Plan: 3 of 3
+Status: Verified; [draft PR #224](https://github.com/napplet/web/pull/224) open, hzrd149 requested
+Last activity: 2026-10-07 - Completed quick task 261007-aae: Resolve PR #224 conflicts after #223
+
+See phase 162 VERIFICATION.md for evidence and disclosed compatibility/tooling findings. Earlier phase and quick-task records below are historical.
 
 ### Quick task 260726-ft1 — COMPLETE
 
@@ -511,6 +510,7 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 
 | Quick ID | Task | Date | Commit | Artifacts |
 |----------|------|------|--------|-----------|
+| 261006-ij3 | Fix verified PR #224 review findings (conformance x-hash panel, deploy/plugin dropped-asset guards, CLI R/O overlap, debug crash) | 2026-10-06 | a4f1c8b4 | [261006-ij3-fix-verified-pr-224-review-findings-conf](./quick/261006-ij3-fix-verified-pr-224-review-findings-conf/) |
 | 260912-wr8 | Restructure napplet skills for the skills.sh installer (napplet-* names, napplet-ui contract, custom installer removed) | 2026-09-12 | 2d3556c9 | [260912-wr8-restructure-napplet-skills-for-the-skill](./quick/260912-wr8-restructure-napplet-skills-for-the-skill/) |
 | 260904-g1f | Add the MIT license and open a pull request | 2026-09-04 | 7b82fe08 | [260904-g1f-add-the-mit-license-and-open-a-pull-requ](./quick/260904-g1f-add-the-mit-license-and-open-a-pull-requ/) |
 | 260826-jex | Split NAP-RESOURCE server hints from PR #205 into a dedicated PR | 2026-08-26 | 11fdf896 | [260826-jex-split-nap-resource-server-hints-from-pr-](./quick/260826-jex-split-nap-resource-server-hints-from-pr-/) |
@@ -626,6 +626,7 @@ Surfaced by research (informational — each belongs to a specific phase plan):
 
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
+| 261007-aae | Resolve PR #224 conflicts after #223 | 2026-10-07 | cc741b8f | [261007-aae-resolve-pr-224-conflicts-after-merging-p](./quick/261007-aae-resolve-pr-224-conflicts-after-merging-p/) |
 | 260421-u87 | Create cross-repo PRs in napplet/nubs from the 4 v0.29.0 drafts | 2026-04-21 | c28d8e4 | [260421-u87-create-cross-repo-prs-in-napplet-nubs-fr](./quick/260421-u87-create-cross-repo-prs-in-napplet-nubs-fr/) |
 | 260424-o1k | Implement default shell.supports() in shim so napplets can be tested without a shell | 2026-04-24 | 5ad9cdb | [260424-o1k-implement-default-shell-supports-in-shim](./quick/260424-o1k-implement-default-shell-supports-in-shim/) |
 | 260524-kxa | please add badges to the README for github workflows, as well as badges for both npm and jsr | 2026-05-24 | 8f4662b | [260524-kxa-please-add-badges-to-the-readme-for-gith](./quick/260524-kxa-please-add-badges-to-the-readme-for-gith/) |

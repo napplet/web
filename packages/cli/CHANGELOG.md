@@ -1,5 +1,18 @@
 # @napplet/cli
 
+## 0.7.0
+
+### Minor Changes
+
+- Adopt the current NIP-5D artifact-hash manifest schema for kinds 5129, 15129 and 35129. Writers emit one direct artifact `x` hash, description content, required/optional `R`/`O` domains and independent `z`/`i` advertisements. Readers verify current events and raw artifact bytes; legacy events require migration or older readers.
+
+  CLI deployment defaults to current output and offers temporary explicit legacy serialization. Add offline signed-event migration previews without altering source events or publishing. Vite builds default to a self-contained artifact; compatibility helper and sidecar names remain available. See the event migration guide for package cutoffs, immutable pointers and shell ACL/storage implications.
+
+### Patch Changes
+
+- Preserve unknown required domains from plugin sidecars in both current and legacy deployments, including trimmed non-empty requirements from legacy sidecars (#223).
+- Current deploys fail with the list of built files they would drop instead of silently uploading only `/index.html`; `napplet debug` reports manifest template errors in `manifests.error` instead of crashing and accepts `--format current|legacy`; a domain listed as both required and optional is emitted only as `O`.
+
 ## 0.6.0
 
 ### Minor Changes

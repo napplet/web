@@ -2,20 +2,13 @@
  * NIP-5D napplet manifest event validator.
  *
  * NIP-5D publishes napplets as Nostr events of kind 5129, 15129, or 35129 with
- * the NIP-5A `path` tag schema. HTML `<meta name="napplet-*">` tags are not
- * protocol surface and are intentionally not validated here.
+ * the artifact-hash schema in NIP-5D §Manifest. Optional HTML publishing metadata
+ * does not override the signed event and is not validated here.
  *
  * @packageDocumentation
  */
 
 import { NAP_DOMAINS } from '@napplet/core';
-
-/**
- * Bare NAP domain form: a lowercase identifier such as `relay` or `outbox`.
- * Prefixed (`nap:relay`, `NAP-RELAY`), dotted, spaced, or otherwise
- * punctuated values are malformed regardless of whether the domain is known.
- */
-const BARE_NAP_DOMAIN = /^[a-z][a-z0-9-]*$/;
 
 /** Snapshot napplet manifest event kind. */
 export const NAPPLET_KIND_SNAPSHOT = 5129;
@@ -34,6 +27,7 @@ export const NAPPLET_MANIFEST_KINDS = [
 /** Minimal Nostr event shape needed for NIP-5D manifest validation. */
 export interface NappletManifestEvent {
   kind: number;
+  content?: string;
   tags: string[][];
   id?: string;
   pubkey?: string;
@@ -47,10 +41,13 @@ export interface ManifestError {
     | 'invalid-napplet-kind'
     | 'missing-d-tag'
     | 'unexpected-d-tag'
-    | 'missing-index-html'
-    | 'invalid-index-html-hash'
+    | 'invalid-artifact-hash'
+    | 'missing-description'
+    | 'invalid-metadata'
+    | 'invalid-icon'
     | 'invalid-required-nap'
-    | 'unknown-required-nap';
+    | 'unknown-required-nap'
+    | 'invalid-optional-nap';
   /** Human-readable explanation. */
   message: string;
 }
@@ -63,8 +60,10 @@ export interface ManifestVerdict {
   kind?: number;
   /** Parsed `d` tag for named napplet manifests. */
   dTag?: string;
-  /** Parsed `requires` tags (bare NAP domains), empty when absent. */
+  /** Parsed `R` tags (bare NAP domains), empty when absent. */
   requires: string[];
+  /** Optional domains declared through O tags. */
+  optional: string[];
   /** Hard failures. */
   errors: ManifestError[];
   /** Non-fatal advisories. */
@@ -83,19 +82,19 @@ function isNappletKind(kind: number): boolean {
 }
 
 function isSha256Hex(value: string | undefined): boolean {
-  return typeof value === 'string' && /^[0-9a-f]{64}$/i.test(value);
+  return typeof value === 'string' && /^[0-9a-f]{64}$/.test(value);
 }
 
 /** Return the named-manifest `d` tag value, when present and non-empty. */
 export function manifestDTag(event: NappletManifestEvent): string | undefined {
-  const d = firstTag(event, 'd')?.[1]?.trim();
+  const d = firstTag(event, 'd')?.[1];
   return d || undefined;
 }
 
-/** Return all bare NAP domains declared by `requires` tags. */
+/** Return all bare NAP domains declared by `R` tags. */
 export function manifestRequires(event: NappletManifestEvent): string[] {
   return event.tags
-    .filter((tag) => tag[0] === 'requires')
+    .filter((tag) => tag[0] === 'R')
     .map((tag) => tag[1]?.trim() ?? '')
     .filter(Boolean);
 }
@@ -119,6 +118,7 @@ export function validateManifestEvent(event?: NappletManifestEvent | null): Mani
     return {
       ok: false,
       requires: [],
+      optional: [],
       errors: [{ code: 'missing-manifest-event', message: 'No NIP-5D manifest event was resolved' }],
       warnings,
     };
@@ -134,55 +134,30 @@ export function validateManifestEvent(event?: NappletManifestEvent | null): Mani
     });
   }
 
-  if (event.kind === NAPPLET_KIND_NAMED && !dTag) {
-    errors.push({
-      code: 'missing-d-tag',
-      message: 'Named napplet manifest kind 35129 must include a non-empty d tag',
-    });
-  } else if ((event.kind === NAPPLET_KIND_ROOT || event.kind === NAPPLET_KIND_SNAPSHOT) && dTag) {
-    errors.push({
-      code: 'unexpected-d-tag',
-      message: `Napplet manifest kind ${event.kind} must not include a d tag`,
-    });
+  const identifiers = event.tags.filter((tag) => tag[0] === 'd');
+  if (event.kind === NAPPLET_KIND_NAMED && (identifiers.length !== 1 || !dTag)) {
+    errors.push({ code: 'missing-d-tag', message: 'Named manifests require exactly one non-empty d tag' });
+  } else if (event.kind !== NAPPLET_KIND_NAMED && identifiers.length > 0) {
+    errors.push({ code: 'unexpected-d-tag', message: 'Only named manifests carry a d tag' });
   }
 
-  const indexPath = event.tags.find((tag) => tag[0] === 'path' && tag[1] === '/index.html');
-  if (!indexPath) {
-    errors.push({
-      code: 'missing-index-html',
-      message: 'Napplet manifest must include a path tag for /index.html',
-    });
-  } else if (!isSha256Hex(indexPath[2])) {
-    errors.push({
-      code: 'invalid-index-html-hash',
-      message: 'The /index.html path tag must carry a 64-character sha256 hash',
-    });
+  const hashes = event.tags.filter((tag) => tag[0] === 'x');
+  if (hashes.length !== 1 || hashes[0].length !== 2 || !isSha256Hex(hashes[0][1])) {
+    errors.push({ code: 'invalid-artifact-hash', message: 'Manifest requires exactly one x tag with the lowercase sha256 of /index.html' });
+  }
+  if (typeof event.content !== 'string' || !event.content.trim()) {
+    errors.push({ code: 'missing-description', message: 'Manifest content must contain a non-empty plain-text description' });
   }
 
-  for (const req of requires) {
-    if (!BARE_NAP_DOMAIN.test(req)) {
-      errors.push({
-        code: 'invalid-required-nap',
-        message: `requires tag "${req}" must be a bare NAP domain such as "relay"`,
-      });
-      continue;
-    }
-    // NIP-5D leaves the capability check to the shell at load time ("a shell
-    // MAY support any subset of NAPs"), so a domain outside the known list is
-    // an advisory, not a malformed manifest.
-    if (!(NAP_DOMAINS as readonly string[]).includes(req)) {
-      warnings.push({
-        code: 'unknown-required-nap',
-        message: `requires tag "${req}" is not a known NAP domain`,
-      });
-    }
-  }
+  validateCapabilities(event, errors, warnings);
+  validateMetadata(event, errors, warnings);
 
   return {
     ok: errors.length === 0,
     kind: event.kind,
     dTag,
     requires,
+    optional: event.tags.filter((tag) => tag[0] === 'O').map((tag) => tag[1]).filter(Boolean),
     errors,
     warnings,
   };
@@ -192,7 +167,7 @@ export function validateManifestEvent(event?: NappletManifestEvent | null): Mani
  * Compatibility wrapper for older callers that passed HTML.
  *
  * NIP-5D manifest validation requires the signed Nostr manifest event. HTML-only
- * callers cannot prove event kind, `path` tags, `requires` tags, or aggregate
+ * callers cannot prove event kind, artifact `x` tags, `R` tags, or artifact
  * identity, so this wrapper intentionally performs no protocol checks.
  *
  * @param _html - Legacy HTML input.
@@ -200,5 +175,37 @@ export function validateManifestEvent(event?: NappletManifestEvent | null): Mani
  * @returns A passing empty verdict.
  */
 export function validateManifest(_html: string, _options: ValidateManifestOptions = {}): ManifestVerdict {
-  return { ok: true, requires: [], errors: [], warnings: [] };
+  return { ok: true, requires: [], optional: [], errors: [], warnings: [] };
+}
+
+// NIP-5D §Required and Optional Capabilities: registry knowledge is not a grant
+// or a complete list of independently specified NAP domains.
+function validateCapabilities(event: NappletManifestEvent, errors: ManifestError[], warnings: ManifestError[]): void {
+  for (const tag of event.tags.filter((tag) => tag[0] === 'R' || tag[0] === 'O')) {
+    const domain = tag[1];
+    if (tag.length !== 2 || !domain || /[.:\s]/.test(domain) || domain.startsWith('NAP-')) {
+      errors.push({ code: tag[0] === 'R' ? 'invalid-required-nap' : 'invalid-optional-nap', message: `${tag[0]} must name one bare NAP domain` });
+    } else if (!(NAP_DOMAINS as readonly string[]).includes(domain)) {
+      warnings.push({ code: 'unknown-required-nap', message: `Domain "${domain}" is not in this tool's registry; check its NAP and runtime availability` });
+    }
+  }
+}
+
+function validateMetadata(event: NappletManifestEvent, errors: ManifestError[], warnings: ManifestError[]): void {
+  for (const name of ['title', 'source', 'a', 'A']) {
+    const tags = event.tags.filter((tag) => tag[0] === name);
+    if (tags.length > 1 || (tags.length && (name === 'a' || name === 'A') && event.kind !== NAPPLET_KIND_SNAPSHOT)) {
+      errors.push({ code: 'invalid-metadata', message: `Invalid ${name} tag cardinality for kind ${event.kind}` });
+    }
+  }
+  // NIP-5D §Archetypes and Intents: advertisements use queryless identities.
+  for (const tag of event.tags.filter((tag) => tag[0] === 'i')) {
+    if (!tag[1]?.trim() || tag[1].includes('?')) {
+      errors.push({ code: 'invalid-metadata', message: 'Intent advertisements must be non-empty queryless identities' });
+    }
+  }
+  const icons = event.tags.filter((tag) => tag[0] === 'icon');
+  if (icons.length > 1 || icons.some((tag) => tag.length !== 3 || !isSha256Hex(tag[1]) || !['image/png', 'image/jpeg', 'image/webp'].includes(tag[2]))) {
+    warnings.push({ code: 'invalid-icon', message: 'Ignore invalid icon metadata and use generic artwork (NIP-5D §Icon)' });
+  }
 }

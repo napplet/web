@@ -64,27 +64,28 @@ export function resolvedRequirements(
 ): string[] {
   const explicit = explicitRequirements(option);
   const inferred = shouldInfer(option) ? [...state.inferredRequires] : [];
-  return normalizeRequirements([...explicit, ...inferred]);
+  return dedupeRequirements([...explicit, ...inferred]);
 }
 
 export function reportRequirementDiagnostics(
   option: Nip5aRequiresOption | undefined,
   state: ManifestPluginState,
   warn: (message: string) => void,
+  optional: readonly string[] = [],
 ): void {
   // Explicit requirements are the author's declaration and are emitted as
   // written. The shell decides at load whether it provides each domain, so a
   // domain this plugin does not know (a drafted or runtime-specific NAP) is
   // passed through with a warning rather than dropped.
-  const unknown = normalizeRequirements(explicitRequirements(option)).filter((domain) => !isNapDomain(domain));
+  const unknown = dedupeRequirements(explicitRequirements(option)).filter((domain) => !NAP_DOMAIN_SET.has(domain));
   if (unknown.length > 0) {
     warnOnce(state, warn, `[nip5a-manifest] requires domain(s) not in the known NAP list, emitted as declared: ${unknown.join(', ')}`);
   }
 
   if (!option || Array.isArray(option) || !option.infer || !option.explicit) return;
 
-  const explicit = new Set(normalizeRequirements(option.explicit));
-  const missing = [...state.inferredRequires].filter((domain) => !explicit.has(domain)).sort();
+  const explicit = new Set(dedupeRequirements(option.explicit));
+  const missing = [...state.inferredRequires].filter((domain) => !explicit.has(domain) && !optional.includes(domain)).sort();
   if (missing.length === 0) return;
 
   const message = `[nip5a-manifest] missing explicit requires for inferred NAP domain(s): ${missing.join(', ')}`;
@@ -107,8 +108,10 @@ function shouldInfer(option: Nip5aRequiresOption | undefined): boolean {
   return !Array.isArray(option) && option?.infer === true;
 }
 
-function normalizeRequirements(domains: readonly string[]): string[] {
-  return [...new Set(domains.map((domain) => domain.trim()).filter((domain) => domain.length > 0))].sort();
+function dedupeRequirements(domains: readonly string[]): string[] {
+  const trimmed = domains.map((domain) => domain.trim());
+  for (const domain of trimmed) assertBareNapDomain(domain);
+  return [...new Set(trimmed)].sort();
 }
 
 function domainFromSpecifier(specifier: string | undefined): string | null {
@@ -120,8 +123,8 @@ function domainFromSpecifier(specifier: string | undefined): string | null {
   return null;
 }
 
-function isNapDomain(domain: string): boolean {
-  return NAP_DOMAIN_SET.has(domain);
+function assertBareNapDomain(domain: string): void {
+  if (!domain || /[.:\s]/.test(domain) || domain.startsWith("NAP-")) throw new Error(`NAP requirement must be a bare domain: ${domain}`);
 }
 
 function isSourceFile(id: string): boolean {
