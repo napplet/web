@@ -1,31 +1,5 @@
 import type { NappletConfig } from "./types.ts";
 
-const NAP_DOMAINS = new Set([
-  "relay",
-  "identity",
-  "storage",
-  "inc",
-  "theme",
-  "keys",
-  "media",
-  "notify",
-  "config",
-  "resource",
-  "cvm",
-  "outbox",
-  "upload",
-  "intent",
-  "ble",
-  "webrtc",
-  "link",
-  "count",
-  "lists",
-  "serial",
-  "fs",
-  "common",
-  "dm",
-]);
-
 export async function readManifestMetadataTags(
   indexHtmlPath: string | undefined,
   manifestPath: string | undefined,
@@ -52,8 +26,11 @@ async function readPluginManifestMetadataTags(
     for (const tag of value.tags) {
       if (!Array.isArray(tag) || typeof tag[0] !== "string") continue;
       if (tag[0] === "requires" && typeof tag[1] === "string") {
+        // The plugin's requires tags are the author's declaration; the shell
+        // checks them against its own capabilities at load, so keep domains
+        // this CLI does not know rather than silently dropping them.
         const domain = tag[1].trim();
-        if (NAP_DOMAINS.has(domain)) tags.push(["requires", domain]);
+        if (domain) tags.push(["requires", domain]);
       }
       if (isCanonicalArchetypeTag(tag)) {
         tags.push(tag.map((value) => String(value).trim()));

@@ -241,6 +241,30 @@ Deno.test("createDeployManifestTemplates preserves plugin-emitted requires tags"
   });
 });
 
+Deno.test("createDeployManifestTemplates keeps requires domains outside the known NAP list", async () => {
+  await withTempDir(async (dir) => {
+    await Deno.writeTextFile(`${dir}/index.html`, "index");
+    await Deno.writeTextFile(
+      `${dir}/.nip5a-manifest.json`,
+      JSON.stringify({ tags: [["requires", "mesh"], ["requires", " relay "], ["requires", ""]] }),
+    );
+    const candidate: NappletCandidate = {
+      name: "dingdong",
+      dir,
+      indexHtml: `${dir}/index.html`,
+      manifestPath: `${dir}/.nip5a-manifest.json`,
+    };
+    const config = defaultConfig({ named: ["dingdong"] });
+    const plan = createDeployPlan(config, [candidate], {});
+    const manifests = await createDeployManifestTemplates(plan, config, { createdAt: 123 });
+
+    assertEquals(manifests[0].template?.tags.filter((tag) => tag[0] === "requires"), [
+      ["requires", "mesh"],
+      ["requires", "relay"],
+    ]);
+  });
+});
+
 Deno.test("plugin manifest requirements cover every active @napplet/nap domain", async () => {
   await withTempDir(async (dir) => {
     const napPackage = JSON.parse(

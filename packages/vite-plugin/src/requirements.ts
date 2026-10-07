@@ -64,7 +64,7 @@ export function resolvedRequirements(
 ): string[] {
   const explicit = explicitRequirements(option);
   const inferred = shouldInfer(option) ? [...state.inferredRequires] : [];
-  return dedupeRequirements([...explicit, ...inferred]);
+  return normalizeRequirements([...explicit, ...inferred]);
 }
 
 export function reportRequirementDiagnostics(
@@ -72,16 +72,29 @@ export function reportRequirementDiagnostics(
   state: ManifestPluginState,
   warn: (message: string) => void,
 ): void {
+  // Explicit requirements are the author's declaration and are emitted as
+  // written. The shell decides at load whether it provides each domain, so a
+  // domain this plugin does not know (a drafted or runtime-specific NAP) is
+  // passed through with a warning rather than dropped.
+  const unknown = normalizeRequirements(explicitRequirements(option)).filter((domain) => !isNapDomain(domain));
+  if (unknown.length > 0) {
+    warnOnce(state, warn, `[nip5a-manifest] requires domain(s) not in the known NAP list, emitted as declared: ${unknown.join(', ')}`);
+  }
+
   if (!option || Array.isArray(option) || !option.infer || !option.explicit) return;
 
-  const explicit = new Set(dedupeRequirements(option.explicit));
+  const explicit = new Set(normalizeRequirements(option.explicit));
   const missing = [...state.inferredRequires].filter((domain) => !explicit.has(domain)).sort();
   if (missing.length === 0) return;
 
   const message = `[nip5a-manifest] missing explicit requires for inferred NAP domain(s): ${missing.join(', ')}`;
   if (option.mode === 'error') throw new Error(message);
-  if (state.reportedMissingRequires.has(message)) return;
-  state.reportedMissingRequires.add(message);
+  warnOnce(state, warn, message);
+}
+
+function warnOnce(state: ManifestPluginState, warn: (message: string) => void, message: string): void {
+  if (state.reportedRequirementWarnings.has(message)) return;
+  state.reportedRequirementWarnings.add(message);
   warn(message);
 }
 
@@ -94,8 +107,8 @@ function shouldInfer(option: Nip5aRequiresOption | undefined): boolean {
   return !Array.isArray(option) && option?.infer === true;
 }
 
-function dedupeRequirements(domains: readonly string[]): string[] {
-  return [...new Set(domains.map((domain) => domain.trim()).filter(isNapDomain))].sort();
+function normalizeRequirements(domains: readonly string[]): string[] {
+  return [...new Set(domains.map((domain) => domain.trim()).filter((domain) => domain.length > 0))].sort();
 }
 
 function domainFromSpecifier(specifier: string | undefined): string | null {

@@ -31,7 +31,7 @@ describe('runConformance', () => {
     expect(run.summary.errors).toBe(0);
     expect(run.startedAt).toBe(1);
     expect(run.finishedAt).toBeGreaterThan(run.startedAt);
-    expect(run.checks.length).toBe(10);
+    expect(run.checks.length).toBe(11);
   });
 
   it('is not ok when an error-severity check fails', () => {

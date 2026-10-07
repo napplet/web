@@ -43,17 +43,17 @@ async function runCloseBundle(
       root: fixture.root,
       build: { outDir: fixture.dist },
     });
+    const context = {
+      warn(message: string) {
+        warnings.push(message);
+      },
+    };
     if (typeof plugin.transform === 'function') {
-      const context = {
-        warn(message: string) {
-          warnings.push(message);
-        },
-      };
       for (const source of sources) {
         await plugin.transform.call(context as never, source.code, source.id);
       }
     }
-    await (plugin.closeBundle as () => unknown)?.();
+    await (plugin.closeBundle as (this: typeof context) => unknown)?.call(context);
     return { warnings };
   } finally {
     if (previousPrivkey === undefined) {
@@ -549,6 +549,39 @@ describe('nip5aManifest artifact modes', () => {
 
     const manifest = readManifest(fixture.dist);
     expect(manifest.tags.filter((tag) => tag[0] === 'requires')).toEqual([['requires', 'relay']]);
+  });
+
+  it('emits explicit requirements outside the known NAP list and warns', async () => {
+    const fixture = makeFixture();
+    fs.writeFileSync(path.join(fixture.dist, 'index.html'), '<!doctype html>');
+
+    const result = await runCloseBundle(
+      { nappletType: 'explicit-unknown', requires: ['mesh', 'relay'] },
+      fixture,
+      {},
+    );
+
+    expect(readManifest(fixture.dist).tags.filter((tag) => tag[0] === 'requires')).toEqual([
+      ['requires', 'mesh'],
+      ['requires', 'relay'],
+    ]);
+    expect(result.warnings.filter((warning) => warning.includes('not in the known NAP list'))).toEqual([
+      '[nip5a-manifest] requires domain(s) not in the known NAP list, emitted as declared: mesh',
+    ]);
+  });
+
+  it('does not infer requirements from window.napplet reads outside the known NAP list', async () => {
+    const fixture = makeFixture();
+    fs.writeFileSync(path.join(fixture.dist, 'index.html'), '<!doctype html>');
+
+    await runCloseBundle(
+      { nappletType: 'infer-unknown', requires: { infer: true } },
+      fixture,
+      {},
+      [{ id: path.join(fixture.root, 'src/main.ts'), code: 'window.napplet.mesh?.info();' }],
+    );
+
+    expect(readManifest(fixture.dist).tags.some((tag) => tag[0] === 'requires')).toBe(false);
   });
 
   it('accepts count as an explicit or inferred requirement', async () => {

@@ -82,7 +82,7 @@ describe('validateManifestEvent — failures', () => {
     expect(invalid.errors.some((e) => e.code === 'invalid-index-html-hash')).toBe(true);
   });
 
-  it('requires bare known NAP domains in requires tags', () => {
+  it('requires bare NAP domains in requires tags and flags unknown ones as advisories', () => {
     const v = validateManifestEvent(event({
       tags: [
         ['d', 'demo'],
@@ -92,6 +92,37 @@ describe('validateManifestEvent — failures', () => {
       ],
     }));
     expect(v.errors.some((e) => e.code === 'invalid-required-nap')).toBe(true);
-    expect(v.errors.some((e) => e.code === 'unknown-required-nap')).toBe(true);
+    expect(v.errors.some((e) => e.code === 'unknown-required-nap')).toBe(false);
+    expect(v.warnings.some((e) => e.code === 'unknown-required-nap')).toBe(true);
+  });
+
+  it.each(['relay.subscribe', 'perm:popups', 'relay storage', 'Relay', 'nap:relay', 'NAP-RELAY'])(
+    'rejects malformed requires value %j as an error, not an advisory',
+    (req) => {
+      const v = validateManifestEvent(event({
+        tags: [
+          ['d', 'demo'],
+          ['path', '/index.html', HASH],
+          ['requires', req],
+        ],
+      }));
+      expect(v.ok).toBe(false);
+      expect(v.errors.map((e) => e.code)).toEqual(['invalid-required-nap']);
+      expect(v.warnings).toEqual([]);
+    },
+  );
+
+  it('accepts a manifest whose only unusual requires tag is an unknown domain', () => {
+    const v = validateManifestEvent(event({
+      tags: [
+        ['d', 'demo'],
+        ['path', '/index.html', HASH],
+        ['requires', 'mesh'],
+      ],
+    }));
+    expect(v.ok).toBe(true);
+    expect(v.warnings).toEqual([
+      { code: 'unknown-required-nap', message: 'requires tag "mesh" is not a known NAP domain' },
+    ]);
   });
 });

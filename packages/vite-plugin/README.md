@@ -71,6 +71,7 @@ The napp type identifier (e.g., `'feed'`, `'chat'`, `'profile'`). This value is:
 An array of bare NAP domain names this napplet requires from its host shell (e.g., `['outbox', 'storage']`), or an opt-in inference config. When set:
 
 - Adds `['requires', 'domain']` tags to the kind 35129 manifest event
+- Emits explicit domains as declared, including ones the plugin does not know yet (a drafted or runtime-specific NAP), with a build warning; the shell decides at load whether it provides each domain
 
 With inference enabled, the plugin scans statically visible source usage of `@napplet/nap/<domain>`, SDK domain subpath imports, and direct `window.napplet.<domain>` access. Explicit requirements remain the author-controlled declaration; inferred domains are merged as tooling assistance and can warn or fail when explicit config is missing a domain.
 

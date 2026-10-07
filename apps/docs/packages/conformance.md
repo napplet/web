@@ -33,7 +33,7 @@ npm install -D @napplet/conformance
   types, and napplets that put shell→napplet (inbound) traffic on the wire.
 - **`validateManifestEvent(event)`** — checks that a resolved Nostr event is a
   NIP-5D napplet manifest (`5129`, `15129`, or `35129`) with a hashed
-  `/index.html` path and bare known `requires` domains.
+  `/index.html` path and bare `requires` domains (a domain outside the known NAP list is a warning, not an error).
 - **`validateManifest(html)`** — compatibility wrapper for older HTML-only
   harnesses. HTML alone cannot prove a signed NIP-5D manifest event.
 - **Reference mock shell**, **check registry**, and **reporters** that the CLI and

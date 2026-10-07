@@ -81,7 +81,7 @@ export function nip5aManifest(options: Nip5aManifestOptions): Plugin {
     resolvedSchema: null,
     resolvedSchemaSource: null,
     inferredRequires: new Set(),
-    reportedMissingRequires: new Set(),
+    reportedRequirementWarnings: new Set(),
   };
 
   return {
