@@ -70,8 +70,19 @@ export async function executeNetworkDeploy(
   signer: NappletSigner,
   options: NetworkDeployOptions = {},
 ): Promise<NetworkDeployResult> {
-  if (config.blossomServers.length === 0) {
-    throw new Error("Network deploy requires at least one blossom server in .napplet config");
+  const servers = config.blossomServers.length ? config.blossomServers : [
+    ...new Set(
+      manifests.flatMap((m) =>
+        (m.signedEvent ?? m.template)?.tags.filter((tag) => tag[0] === "server").map((tag) =>
+          tag[1]
+        ) ?? []
+      ),
+    ),
+  ];
+  if (servers.length === 0) {
+    throw new Error(
+      "Network deploy requires at least one blossom server in .napplet config or manifest hints",
+    );
   }
   if (config.relays.length === 0) {
     throw new Error("Network deploy requires at least one relay in .napplet config");
@@ -84,11 +95,11 @@ export async function executeNetworkDeploy(
   options.onProgress?.({
     type: "upload:start",
     files: files.length,
-    servers: config.blossomServers.length,
-    totalUploads: files.length * config.blossomServers.length,
+    servers: servers.length,
+    totalUploads: files.length * servers.length,
   });
-  const uploaded = await uploadFilesToServers(files, config.blossomServers, signer, options);
-  const uploadSummary = summarizeUploads(uploaded, config.blossomServers);
+  const uploaded = await uploadFilesToServers(files, servers, signer, options);
+  const uploadSummary = summarizeUploads(uploaded, servers);
   options.onProgress?.({ type: "upload:complete", summary: uploadSummary });
   if (uploadSummary.serversFullyUploaded === 0) {
     // Publish only when at least one server holds every blob referenced by the

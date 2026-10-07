@@ -60,8 +60,8 @@ export interface Nip5aManifestOptions {
   source?: string;
   /** Blossom origins holding the artifact and icon blobs. */
   servers?: string[];
-  /** Content-addressed icon metadata; upload the blob separately. */
-  icon?: { sha256: string; mimeType: 'image/png' | 'image/jpeg' | 'image/webp' };
+  /** Icon bytes are embedded for standalone recovery; hash-only callers upload the blob separately. */
+  icon?: { sha256?: string; data?: Uint8Array; mimeType: 'image/png' | 'image/jpeg' | 'image/webp' };
   /** Display label; also overrides the ordinary HTML title. */
   title?: string;
   /** Plain-text manifest content, falling back to ordinary HTML description metadata. */

@@ -1,17 +1,22 @@
+import { readHtmlPublishingFile } from "./html-metadata.ts";
 import type { ManifestFormat } from "./manifest-format.ts";
 import type { NappletConfig } from "./types.ts";
 
 export async function readManifestMetadataTags(
   indexHtmlPath: string | undefined,
   manifestPath: string | undefined,
-  config: NappletConfig,
+  config: Pick<NappletConfig, "metadata">,
   format: ManifestFormat = "current",
 ): Promise<string[][]> {
+  const html = (await readHtmlPublishingFile(indexHtmlPath)).tags;
+  const htmlTags = format === "legacy"
+    ? html.filter((t) => ["title", "description"].includes(t[0])).map((t) => [t[0], t[1].trim()])
+    : html;
   return preferOptionalDomains(mergeConfigMetadataTags(
-    dedupeTags([
-      ...await readIndexHtmlMetadataTags(indexHtmlPath),
-      ...await readPluginManifestMetadataTags(manifestPath, format),
-    ]),
+    overlayTags(
+      htmlTags,
+      await readPluginManifestMetadataTags(manifestPath, format),
+    ),
     config,
     format,
   ));
@@ -51,8 +56,14 @@ async function readPluginManifestMetadataTags(
       } else if (isCanonicalArchetypeTag(tag)) {
         if (format === "legacy") tags.push([...tag]);
         else tags.push(["z", tag[1]], ["i", tag[2]]);
-      } else if (["R", "O", "z", "i", "icon", "title", "source", "config"].includes(tag[0])) {
-        tags.push([...tag]);
+      } else if (
+        ["R", "O", "z", "i", "icon", "title", "source", "config", "d", "server", "a", "A"].includes(
+          tag[0],
+        )
+      ) {
+        if (format === "current" || !["d", "server", "a", "A"].includes(tag[0])) {
+          tags.push([...tag]);
+        }
       } else if (tag[0] === "description" && !value.content) tags.push([...tag]);
     }
     return dedupeTags(tags);
@@ -64,7 +75,7 @@ async function readPluginManifestMetadataTags(
 
 function mergeConfigMetadataTags(
   tags: readonly string[][],
-  config: NappletConfig,
+  config: Pick<NappletConfig, "metadata">,
   format: ManifestFormat,
 ): string[][] {
   const metadata = config.metadata;
@@ -110,58 +121,9 @@ function isCanonicalArchetypeTag(tag: unknown[]): tag is string[] {
   return tag.length === 3;
 }
 
-async function readIndexHtmlMetadataTags(indexHtmlPath: string | undefined): Promise<string[][]> {
-  if (!indexHtmlPath) return [];
-  let html: string;
-  try {
-    html = await Deno.readTextFile(indexHtmlPath);
-  } catch (error) {
-    if (error instanceof Deno.errors.NotFound) return [];
-    throw error;
-  }
-  const tags: string[][] = [];
-  const title = extractHtmlTitle(html);
-  if (title) tags.push(["title", title]);
-  const description = extractHtmlDescription(html);
-  if (description) tags.push(["description", description]);
-  return tags;
-}
-
-function extractHtmlTitle(html: string): string | null {
-  const match = /<title\b[^>]*>([\s\S]*?)<\/title>/i.exec(html);
-  if (!match) return null;
-  const value = decodeHtmlEntities(match[1]).trim();
-  return value.length > 0 ? value : null;
-}
-
-function extractHtmlDescription(html: string): string | null {
-  const metaRe = /<meta\b[^>]*>/gi;
-  let match: RegExpExecArray | null;
-  while ((match = metaRe.exec(html)) !== null) {
-    const tag = match[0];
-    const name = getHtmlTagAttr(tag, "name");
-    if (name === null || name.toLowerCase() !== "description") continue;
-    const content = getHtmlTagAttr(tag, "content");
-    if (content === null) continue;
-    const value = decodeHtmlEntities(content).trim();
-    if (value.length > 0) return value;
-  }
-  return null;
-}
-
-function getHtmlTagAttr(tag: string, name: string): string | null {
-  const re = new RegExp(`\\b${name}\\s*=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s>]+))`, "i");
-  const match = re.exec(tag);
-  return match ? (match[1] ?? match[2] ?? match[3] ?? "") : null;
-}
-
-function decodeHtmlEntities(value: string): string {
-  return value
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&amp;/g, "&");
+function overlayTags(html: string[][], sidecar: string[][]): string[][] {
+  const replaced = new Set(sidecar.map((tag) => tag[0]));
+  return dedupeTags([...html.filter((tag) => !replaced.has(tag[0])), ...sidecar]);
 }
 
 function dedupeTags(tags: readonly string[][]): string[][] {
@@ -174,7 +136,7 @@ function dedupeTags(tags: readonly string[][]): string[][] {
     result.push([...tag]);
   }
   return result.filter((tag, index) =>
-    !["title", "description", "source", "config"].includes(tag[0]) ||
+    !["title", "description", "source", "config", "d", "icon", "a", "A"].includes(tag[0]) ||
     result.findLastIndex((other) => other[0] === tag[0]) === index
   );
 }

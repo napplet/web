@@ -1,3 +1,4 @@
+import { readHtmlPublishingFile } from "./html-metadata.ts";
 import { buildLegacyManifestFields, computeAggregateHash } from "./manifest-legacy.ts";
 import type { ManifestFormat } from "./manifest-format.ts";
 export { computeAggregateHash } from "./manifest-legacy.ts";
@@ -64,7 +65,10 @@ export async function createSiteManifestTemplate(
   const tags: string[][] = [];
   if (item.target === "named") tags.push(["d", normalizeDTag(item.dTag)]);
   tags.push(...fields.tags);
-  for (const server of options.servers ?? []) tags.push(["server", server]);
+  for (
+    const server of options.servers ??
+      metadataTags.filter((t) => t[0] === "server").map((t) => t[1])
+  ) tags.push(["server", server]);
   return {
     kind: item.target === "root" ? NAPPLET_KIND_ROOT : NAPPLET_KIND_NAMED,
     created_at: options.createdAt ?? nowSeconds(),
@@ -130,6 +134,18 @@ export async function createDeployManifestTemplates(
     const uploadFiles = format === "legacy"
       ? files
       : selectCurrentUploadFiles(item.candidate.dir, files, metadataTags);
+    if (format === "current") {
+      const { icon } = await readHtmlPublishingFile(item.candidate.indexHtml);
+      if (
+        icon && metadataTags.some((t) =>
+          t[0] === "icon" && t[1] === icon.sha256 && t[2] === icon.mimeType
+        ) && !uploadFiles.some((f) =>
+          f.sha256 === icon.sha256
+        )
+      ) {
+        uploadFiles.push({ path: `/icon-${icon.sha256}.${icon.mimeType.split("/")[1]}`, ...icon });
+      }
+    }
     if (item.target === "snapshot") {
       const snapshot = createDeploySnapshotTemplate(item, sourceTemplates, options);
       result.push({
@@ -144,7 +160,7 @@ export async function createDeployManifestTemplates(
     }
     const template = await createSiteManifestTemplate(item, files, {
       createdAt: options.createdAt,
-      servers: config.blossomServers,
+      servers: config.blossomServers.length ? config.blossomServers : undefined,
       metadataTags,
       format,
     });

@@ -13,8 +13,10 @@ import type { ManifestPluginState, ManifestTemplate, Nip5aManifestOptions } from
 import { NAPPLET_KIND_NAMED } from './types.js';
 import { sha256File } from './hashing.js';
 import { discoverConfigSchema, validateConfigSchema } from './config-schema.js';
-import { inlineSingleFileBuildAssets, listLocalArtifactAssets, readHtmlMetadata } from './html.js';
-import { resolvedRequirements } from './requirements.js';
+import { inlineSingleFileBuildAssets, listLocalArtifactAssets } from './html.js';
+import { readPublishingMetadata, renderPublishingMetadata, replaceHeadMetadata } from './publishing-metadata.js';
+import { resolvePublishingIcon } from './publishing-icon.js';
+import { resolvedRequirements, reportRequirementDiagnostics } from './requirements.js';
 
 /**
  * Resolve all per-build plugin state in the `configResolved` hook: out dir,
@@ -60,17 +62,20 @@ function validateResolvedSchema(schema: NappletConfigSchema | null, source: stri
  * @param options - the plugin options.
  * @param state - resolved plugin state (out dir, schema).
  */
-export async function writeBundleManifest(options: Nip5aManifestOptions, state: ManifestPluginState): Promise<void> {
+export async function writeBundleManifest(options: Nip5aManifestOptions, state: ManifestPluginState, warn: (message: string) => void = console.warn): Promise<void> {
   const distPath = path.resolve(state.outDir);
   if (!fs.existsSync(distPath)) {
     console.error(`[nip5a-manifest] dist directory not found: ${distPath}`);
     return;
   }
 
-  prepareDistIndexHtml(distPath, state);
 
   const privkeyHex = process.env.VITE_DEV_PRIVKEY_HEX;
-  const manifest = buildManifestTemplate(options, distPath, state);
+  const metadata = embedManifestMetadata(options, distPath, state, warn);
+  prepareDistIndexHtml(distPath, state);
+  const artifactHash = sha256File(path.join(distPath, 'index.html'));
+  metadata.tags.splice(1, 0, ['x', artifactHash]);
+  const manifest: ManifestTemplate = { ...metadata, artifactHash };
   await writeManifestFile(distPath, manifest, privkeyHex);
 }
 
@@ -101,39 +106,53 @@ function prepareDistIndexHtml(distPath: string, state: ManifestPluginState): voi
   }
 }
 
-function buildManifestTemplate(
+function embedManifestMetadata(
   options: Nip5aManifestOptions,
   distPath: string,
   state: ManifestPluginState,
-): ManifestTemplate {
+  warn: (message: string) => void,
+): Omit<ManifestTemplate, 'artifactHash'> {
   const indexPath = path.join(distPath, 'index.html');
-  const artifactHash = sha256File(indexPath);
-  const metadata = readHtmlMetadata(fs.readFileSync(indexPath, 'utf-8'));
-  const description = options.description ?? metadata.description;
+  if (!fs.existsSync(indexPath)) throw new Error('[nip5a-manifest] dist/index.html not found; NIP-5D requires /index.html');
+  const html = fs.readFileSync(indexPath, 'utf-8');
+  const metadata = readPublishingMetadata(html);
+  const values = (name: string): string[][] => metadata.tags.filter((tag) => tag[0] === name);
+  const description = options.description ?? values('description')[0]?.[1];
   // NIP-5D §Manifest requires non-empty plain-text content.
   if (!description?.trim()) throw new Error('[nip5a-manifest] Set description or an HTML description meta for NIP-5D manifest content');
-  const optional = resolvedRequirements(options.optional ?? [], state);
-  const required = resolvedRequirements(options.requires, state).filter((name) => !optional.includes(name));
-  const title = options.title ?? metadata.title;
-  return {
+  const optional = resolvedRequirements(options.optional ?? values('O').map((t) => t[1]), state);
+  const requires = options.requires ?? values('R').map((t) => t[1]);
+  reportRequirementDiagnostics(requires, state, warn, optional);
+  const required = resolvedRequirements(requires, state).filter((name) => !optional.includes(name));
+  const title = options.title ?? values('title')[0]?.[1];
+  const icon = resolvePublishingIcon(options.icon, metadata.icons);
+  const source = options.source ?? values('source')[0]?.[1];
+  const manifest: Omit<ManifestTemplate, 'artifactHash'> = {
     kind: NAPPLET_KIND_NAMED,
     created_at: Math.floor(Date.now() / 1000),
     tags: [
       ['d', options.nappletType],
-      ['x', artifactHash],
       ...(title ? [['title', title]] : []),
-      ...(options.source ? [['source', options.source]] : []),
-      ...(options.servers ?? []).map((server) => ['server', server]),
-      ...(options.icon ? [['icon', options.icon.sha256, options.icon.mimeType]] : []),
+      ...(source ? [['source', source]] : []),
+      ...(options.servers ?? values('server').map((t) => t[1])).map((server) => ['server', server]),
+      ...(icon ? [['icon', icon.sha256, icon.mimeType]] : []),
       ...(state.resolvedSchema !== null ? [['config', JSON.stringify(state.resolvedSchema)]] : []),
       ...required.map((name) => ['R', name]),
       ...optional.map((name) => ['O', name]),
-      ...buildArchetypeTags(options.archetypes),
-      ...buildIntentTags(options.intents),
+      ...(options.archetypes === undefined ? values('z') : buildArchetypeTags(options.archetypes)),
+      ...(options.intents !== undefined ? buildIntentTags(options.intents) : options.archetypes === undefined ? values('i') : []),
     ],
     content: description,
-    artifactHash,
   };
+  manifest.tags = manifest.tags.filter((tag, i, tags) => tags.findIndex((t) => JSON.stringify(t) === JSON.stringify(tag)) === i);
+  for (const tag of manifest.tags.filter((t) => t[0] === 'i')) {
+    if (!tag[1] || tag[1].includes('?') || tag.slice(1).some((part) => !part || /[\t\n\f\r ]/.test(part))) {
+      throw new Error('[nip5a-manifest] intent identity and parameter names must be non-empty ASCII-whitespace-free tokens; identity must be queryless');
+    }
+  }
+  fs.writeFileSync(indexPath, replaceHeadMetadata(html, renderPublishingMetadata(manifest.tags, description,
+    icon?.url ? { url: icon.url, mimeType: icon.mimeType } : undefined)));
+  return manifest;
 }
 
 /**

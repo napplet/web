@@ -289,7 +289,7 @@ describe('nip5aManifest artifact modes', () => {
     expect(pluginWarnings).toHaveLength(1);
     expect(pluginWarnings[0]).toContain('hashes only dist/index.html');
     expect(pluginWarnings[0]).toContain('assets/index.js');
-    expect(readManifest(fixture.dist).tags).toContainEqual(['x', sha256(html)]);
+    expect(readManifest(fixture.dist).tags).toContainEqual(['x', sha256(fs.readFileSync(path.join(fixture.dist, 'index.html')))]);
     expect(fs.existsSync(path.join(fixture.dist, 'assets', 'index.js'))).toBe(true);
   });
 
@@ -307,11 +307,8 @@ describe('nip5aManifest artifact modes', () => {
     expect(messages.some((message) => message.includes('[nip5a-manifest]'))).toBe(false);
   });
 
-  it('excludes config from the NIP-5A aggregate but still emits its tag', async () => {
-    // NIP-5D §Identity: the runtime recomputes artifactHash from the artifact
-    // tags ALONE and asserts it equals the `x` tag. The `config` capability
-    // declaration is emitted as its own tag but MUST NOT feed the aggregate —
-    // otherwise a conformant runtime would reject the napplet.
+  it('keeps the non-embedded config schema outside artifact bytes', async () => {
+    // NIP-5D §HTML Metadata for Publishing does not define a config-schema meta.
     const baseFixture = makeFixture();
     const configFixture = makeFixture();
     const html = '<!doctype html><script type="module" src="./assets/index.js"></script>';
@@ -322,12 +319,12 @@ describe('nip5aManifest artifact modes', () => {
     }
 
     await runCloseBundle(
-      { nappletType: 'synthetic-base', artifactMode: 'single-file' },
+      { nappletType: 'synthetic', artifactMode: 'single-file' },
       baseFixture,
     );
     await runCloseBundle(
       {
-        nappletType: 'synthetic-config',
+        nappletType: 'synthetic',
         artifactMode: 'single-file',
         configSchema: {
           type: 'object',
@@ -340,14 +337,13 @@ describe('nip5aManifest artifact modes', () => {
     const base = readManifest(baseFixture.dist);
     const withConfig = readManifest(configFixture.dist);
 
-    // Identical dist bytes → identical aggregate, regardless of capabilities.
+    // With the same embedded metadata, a sidecar-only schema leaves bytes unchanged.
     expect(withConfig.artifactHash).toBe(base.artifactHash);
 
     // Capability tags are still present on the manifest.
     expect(withConfig.tags.some((tag) => tag[0] === 'config')).toBe(true);
 
-    // The ONLY `x` tag on each manifest is the path-tags aggregate — no
-    // capability bytes leak into the content address under any disguise.
+    // Each x tag is the hash of the final HTML artifact.
     for (const manifest of [base, withConfig]) {
       expect(manifest.tags.filter((tag) => tag[0] === 'x')).toEqual([
         ['x', manifest.artifactHash],
@@ -457,7 +453,7 @@ describe('nip5aManifest artifact modes', () => {
     expect(fs.existsSync(path.join(fixture.dist, '.nip5a-manifest.json'))).toBe(false);
   });
 
-  it('keeps archetype metadata outside artifact identity', async () => {
+  it('hashes embedded archetype metadata as part of artifact identity', async () => {
     const baseFixture = makeFixture();
     const archetypeFixture = makeFixture();
     const html = '<!doctype html><script type="module" src="./assets/index.js"></script>';
@@ -483,13 +479,13 @@ describe('nip5aManifest artifact modes', () => {
     const base = readManifest(baseFixture.dist);
     const withArchetypes = readManifest(archetypeFixture.dist);
 
-    // Identical artifact bytes retain the same hash regardless of archetype metadata.
-    expect(withArchetypes.artifactHash).toBe(base.artifactHash);
+    // Embedded archetype declarations change the final artifact bytes and hash.
+    expect(withArchetypes.artifactHash).not.toBe(base.artifactHash);
 
     // The base build (no archetypes) emits no archetype tag at all.
     expect(base.tags.some((tag) => tag[0] === 'z' || tag[0] === 'i')).toBe(false);
 
-    // The ONLY `x` tag on each manifest stays the path-tags aggregate.
+    // Each manifest retains exactly one final-artifact x tag.
     for (const manifest of [base, withArchetypes]) {
       expect(manifest.tags.filter((tag) => tag[0] === 'x')).toEqual([
         ['x', manifest.artifactHash],
@@ -702,10 +698,7 @@ describe('nip5aManifest artifact modes', () => {
 });
 
 describe('nip5aManifest title/description HTML metadata', () => {
-  // The plugin's title/description options inject PLAIN HTML `<title>` /
-  // `<meta name="description">` (NOT napplet-* protocol meta). The napplet CLI
-  // reads these back out of the built index.html to emit the NIP-5A
-  // `["title", …]` / `["description", …]` manifest tags.
+  // The early transform handles display options; closeBundle embeds resolved publishing metadata.
   function transformIndexHtml(
     options: Nip5aManifestOptions,
     html: string,
@@ -787,8 +780,8 @@ describe('nip5aManifest title/description HTML metadata', () => {
     );
     // Title: element-text escaping (& < >), quote left as-is.
     expect(out).toContain('<title>Hi &lt;b&gt; &amp; "you"</title>');
-    // Description: attribute escaping (& "), angle brackets safe inside quotes.
-    expect(out).toContain('content="A &quot;cool&quot; &amp; <napplet>"');
+    // Description is escaped for a quoted attribute.
+    expect(out).toContain('content="A &quot;cool&quot; &amp; &lt;napplet&gt;"');
     expect(out).not.toContain('stale');
   });
 });

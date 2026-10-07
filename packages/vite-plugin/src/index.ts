@@ -30,7 +30,7 @@
  * - rewrite local JS/CSS assets into `index.html` for single-file artifacts
  * - compute the SHA-256 of the final index.html artifact
  * - write `.nip5a-manifest.json` containing a NIP-5D kind 35129 manifest template
- * - inject optional plain-HTML title and description metadata
+ * - embed resolved NIP-5D publishing metadata into the artifact head
  * - record required domains, config schema, and archetype metadata in the
  *   manifest template or signed event
  *
@@ -53,7 +53,6 @@ import {
 import {
   addInferredRequirements,
   inferRequirementsFromSource,
-  reportRequirementDiagnostics,
 } from './requirements.js';
 
 export { NAPPLET_KIND_NAMED, NAPPLET_KIND_ROOT, NAPPLET_KIND_SNAPSHOT } from './types.js';
@@ -99,7 +98,6 @@ export function nip5aManifest(options: Nip5aManifestOptions): Plugin {
 
     transform(code: string, id: string) {
       addInferredRequirements(state, inferRequirementsFromSource(code, id));
-      reportRequirementDiagnostics(options.requires, state, (message) => this.warn(message), options.optional);
       return null;
     },
 
@@ -117,8 +115,7 @@ export function nip5aManifest(options: Nip5aManifestOptions): Plugin {
     },
 
     async closeBundle() {
-      reportRequirementDiagnostics(options.requires, state, (message) => this.warn(message), options.optional);
-      await writeBundleManifest(options, state);
+      await writeBundleManifest(options, state, (message) => this.warn(message));
     },
   };
 }
