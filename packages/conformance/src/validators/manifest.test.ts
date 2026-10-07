@@ -75,7 +75,7 @@ describe('validateManifestEvent — failures', () => {
     expect(unexpected.errors.some((e) => e.code === 'unexpected-d-tag')).toBe(true);
   });
 
-  it('requires a hashed /index.html path tag', () => {
+  it('requires the /index.html artifact x tag', () => {
     const missing = validateManifestEvent(event({ tags: [['d', 'demo']] }));
     expect(missing.errors.some((e) => e.code === 'invalid-artifact-hash')).toBe(true);
 
@@ -83,7 +83,7 @@ describe('validateManifestEvent — failures', () => {
     expect(invalid.errors.some((e) => e.code === 'invalid-artifact-hash')).toBe(true);
   });
 
-  it('requires bare known NAP domains in requires tags', () => {
+  it('requires bare NAP domains in R tags and flags unknown ones as advisories', () => {
     const v = validateManifestEvent(event({
       tags: [
         ['d', 'demo'],
@@ -93,12 +93,54 @@ describe('validateManifestEvent — failures', () => {
       ],
     }));
     expect(v.errors.some((e) => e.code === 'invalid-required-nap')).toBe(true);
+    expect(v.errors.some((e) => e.code === 'unknown-required-nap')).toBe(false);
     expect(v.warnings.some((e) => e.code === 'unknown-required-nap')).toBe(true);
+  });
+
+  it.each(['relay.subscribe', 'perm:popups', 'relay storage', 'nap:relay', 'NAP-RELAY'])(
+    'rejects malformed R value %j as an error, not an advisory',
+    (req) => {
+      const v = validateManifestEvent(event({
+        tags: [
+          ['d', 'demo'],
+          ['x', HASH],
+          ['R', req],
+        ],
+      }));
+      expect(v.ok).toBe(false);
+      expect(v.errors.map((e) => e.code)).toEqual(['invalid-required-nap']);
+      expect(v.warnings).toEqual([]);
+    },
+  );
+
+  it('accepts a manifest whose only unusual R tag is an unknown domain', () => {
+    const v = validateManifestEvent(event({
+      tags: [
+        ['d', 'demo'],
+        ['x', HASH],
+        ['R', 'mesh'],
+      ],
+    }));
+    expect(v.ok).toBe(true);
+    expect(v.warnings).toEqual([
+      { code: 'unknown-required-nap', message: 'Domain "mesh" is not in this tool\'s registry; check its NAP and runtime availability' },
+    ]);
   });
 });
 
 
 describe('current schema cardinality and fallback', () => {
+  it.each(['R', 'O'])('does not impose a lowercase-only registry rule on %s declarations', (tag) => {
+    const verdict = validateManifestEvent(event({ tags: [['d', 'demo'], ['x', HASH], [tag, 'Relay']] }));
+    expect(verdict.ok).toBe(true);
+    expect(verdict.warnings.map((warning) => warning.code)).toEqual(['unknown-required-nap']);
+  });
+
+  it.each(['relay.subscribe', 'perm:popups', 'relay storage', 'NAP-RELAY'])('rejects malformed optional domain %j', (domain) => {
+    const verdict = validateManifestEvent(event({ tags: [['d', 'demo'], ['x', HASH], ['O', domain]] }));
+    expect(verdict.errors.map((error) => error.code)).toEqual(['invalid-optional-nap']);
+    expect(verdict.warnings).toEqual([]);
+  });
   it('rejects duplicate x, aggregate x and uppercase hashes', () => {
     for (const hashes of [[['x', HASH], ['x', HASH]], [['x', HASH, 'aggregate']], [['x', HASH.toUpperCase()]]]) {
       expect(validateManifestEvent(event({ tags: [['d', 'demo'], ...hashes] })).ok).toBe(false);

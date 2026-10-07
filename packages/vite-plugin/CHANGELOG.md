@@ -10,6 +10,7 @@
 
 ### Patch Changes
 
+- Warn when explicit required domains are outside the built-in NAP list while preserving their `R` declarations. Source inference remains limited to known domains (#223).
 - Builds without `dist/index.html` fail with a clear `[nip5a-manifest]` error instead of a raw ENOENT, and `artifactMode: 'external-assets'` builds warn that the manifest `x` hash covers only `index.html` and list the remaining local assets.
 
 ## 0.14.1

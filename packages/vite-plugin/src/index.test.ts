@@ -42,17 +42,17 @@ async function runCloseBundle(
       root: fixture.root,
       build: { outDir: fixture.dist },
     });
+    const context = {
+      warn(message: string) {
+        warnings.push(message);
+      },
+    };
     if (typeof plugin.transform === 'function') {
-      const context = {
-        warn(message: string) {
-          warnings.push(message);
-        },
-      };
       for (const source of sources) {
         await plugin.transform.call(context as never, source.code, source.id);
       }
     }
-    await (plugin.closeBundle as () => unknown)?.();
+    await (plugin.closeBundle as (this: typeof context) => unknown)?.call(context);
     return { warnings };
   } finally {
     if (previousPrivkey === undefined) {
@@ -571,6 +571,64 @@ describe('nip5aManifest artifact modes', () => {
 
     const manifest = readManifest(fixture.dist);
     expect(manifest.tags.filter((tag) => tag[0] === 'R')).toEqual([['R', 'relay']]);
+  });
+
+  it('emits explicit requirements outside the known NAP list and warns', async () => {
+    const fixture = makeFixture();
+    fs.writeFileSync(path.join(fixture.dist, 'index.html'), '<!doctype html>');
+
+    const result = await runCloseBundle(
+      { nappletType: 'explicit-unknown', requires: ['mesh', 'relay'] },
+      fixture,
+      {},
+    );
+
+    expect(readManifest(fixture.dist).tags.filter((tag) => tag[0] === 'R')).toEqual([
+      ['R', 'mesh'],
+      ['R', 'relay'],
+    ]);
+    expect(result.warnings.filter((warning) => warning.includes('not in the known NAP list'))).toEqual([
+      '[nip5a-manifest] requires domain(s) not in the known NAP list, emitted as declared: mesh',
+    ]);
+  });
+
+  it('does not infer requirements from window.napplet reads outside the known NAP list', async () => {
+    const fixture = makeFixture();
+    fs.writeFileSync(path.join(fixture.dist, 'index.html'), '<!doctype html>');
+
+    await runCloseBundle(
+      { nappletType: 'infer-unknown', requires: { infer: true } },
+      fixture,
+      {},
+      [{ id: path.join(fixture.root, 'src/main.ts'), code: 'window.napplet.mesh?.info();' }],
+    );
+
+    expect(readManifest(fixture.dist).tags.some((tag) => tag[0] === 'R')).toBe(false);
+  });
+
+  it.each(['nap:relay', 'NAP-RELAY', 'relay.subscribe', 'relay storage'])('rejects a non-bare explicit requirement %j', async (domain) => {
+    const fixture = makeFixture();
+    fs.writeFileSync(path.join(fixture.dist, 'index.html'), '<!doctype html>');
+    await expect(runCloseBundle({ nappletType: 'invalid-domain', requires: [domain] }, fixture))
+      .rejects.toThrow('NAP requirement must be a bare domain');
+  });
+
+  it('warns once across transforms and keeps explicitly optional inference out of missing requirements', async () => {
+    const fixture = makeFixture();
+    fs.writeFileSync(path.join(fixture.dist, 'index.html'), '<!doctype html>');
+    const result = await runCloseBundle({
+      nappletType: 'optional-inference',
+      requires: { infer: true, explicit: ['mesh'], mode: 'error' },
+      optional: ['theme'],
+    }, fixture, {}, [
+      { id: 'main.ts', code: 'window.napplet.theme;' },
+      { id: 'other.ts', code: 'window.napplet.theme;' },
+    ]);
+    expect(result.warnings).toHaveLength(1);
+    expect(result.warnings[0]).toContain('emitted as declared: mesh');
+    const tags = readManifest(fixture.dist).tags;
+    expect(tags.filter((tag) => tag[0] === 'R')).toEqual([['R', 'mesh']]);
+    expect(tags.filter((tag) => tag[0] === 'O')).toEqual([['O', 'theme']]);
   });
 
   it('accepts count as an explicit or inferred requirement', async () => {

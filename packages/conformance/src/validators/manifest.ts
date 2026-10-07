@@ -2,8 +2,8 @@
  * NIP-5D napplet manifest event validator.
  *
  * NIP-5D publishes napplets as Nostr events of kind 5129, 15129, or 35129 with
- * the artifact-hash schema in NIP-5D §Manifest. HTML `<meta name="napplet-*">` tags are not
- * protocol surface and are intentionally not validated here.
+ * the artifact-hash schema in NIP-5D §Manifest. Optional HTML publishing metadata
+ * does not override the signed event and is not validated here.
  *
  * @packageDocumentation
  */
@@ -183,7 +183,7 @@ export function validateManifest(_html: string, _options: ValidateManifestOption
 function validateCapabilities(event: NappletManifestEvent, errors: ManifestError[], warnings: ManifestError[]): void {
   for (const tag of event.tags.filter((tag) => tag[0] === 'R' || tag[0] === 'O')) {
     const domain = tag[1];
-    if (tag.length !== 2 || !domain || /[:\s]/.test(domain) || domain.startsWith('NAP-')) {
+    if (tag.length !== 2 || !domain || /[.:\s]/.test(domain) || domain.startsWith('NAP-')) {
       errors.push({ code: tag[0] === 'R' ? 'invalid-required-nap' : 'invalid-optional-nap', message: `${tag[0]} must name one bare NAP domain` });
     } else if (!(NAP_DOMAINS as readonly string[]).includes(domain)) {
       warnings.push({ code: 'unknown-required-nap', message: `Domain "${domain}" is not in this tool's registry; check its NAP and runtime availability` });

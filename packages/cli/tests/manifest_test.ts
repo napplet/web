@@ -245,6 +245,33 @@ Deno.test("legacy: createDeployManifestTemplates preserves plugin-emitted requir
   });
 });
 
+for (const format of ["current", "legacy"] as const) {
+  Deno.test(`${format}: deploy keeps unknown domains from legacy sidecars`, async () => {
+    await withTempDir(async (dir) => {
+      await Deno.writeTextFile(`${dir}/index.html`, "index");
+      await Deno.writeTextFile(
+        `${dir}/.nip5a-manifest.json`,
+        JSON.stringify({ tags: [["requires", "mesh"], ["requires", " relay "], ["requires", ""]] }),
+      );
+      const candidate: NappletCandidate = {
+        name: "dingdong",
+        dir,
+        indexHtml: `${dir}/index.html`,
+        manifestPath: `${dir}/.nip5a-manifest.json`,
+      };
+      const config = defaultConfig({ named: ["dingdong"], metadata: { description: "An example napplet" } });
+      const plan = createDeployPlan(config, [candidate], {});
+      const manifests = await buildDeploy(plan, config, { createdAt: 123, format });
+
+      const requiredTag = format === "current" ? "R" : "requires";
+      assertEquals(manifests[0].template?.tags.filter((tag) => tag[0] === requiredTag), [
+        [requiredTag, "mesh"],
+        [requiredTag, "relay"],
+      ]);
+    });
+  });
+}
+
 Deno.test("legacy: plugin manifest requirements cover every active @napplet/nap domain", async () => {
   await withTempDir(async (dir) => {
     const napPackage = JSON.parse(

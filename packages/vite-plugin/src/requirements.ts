@@ -73,6 +73,15 @@ export function reportRequirementDiagnostics(
   warn: (message: string) => void,
   optional: readonly string[] = [],
 ): void {
+  // Explicit requirements are the author's declaration and are emitted as
+  // written. The shell decides at load whether it provides each domain, so a
+  // domain this plugin does not know (a drafted or runtime-specific NAP) is
+  // passed through with a warning rather than dropped.
+  const unknown = dedupeRequirements(explicitRequirements(option)).filter((domain) => !NAP_DOMAIN_SET.has(domain));
+  if (unknown.length > 0) {
+    warnOnce(state, warn, `[nip5a-manifest] requires domain(s) not in the known NAP list, emitted as declared: ${unknown.join(', ')}`);
+  }
+
   if (!option || Array.isArray(option) || !option.infer || !option.explicit) return;
 
   const explicit = new Set(dedupeRequirements(option.explicit));
@@ -81,8 +90,12 @@ export function reportRequirementDiagnostics(
 
   const message = `[nip5a-manifest] missing explicit requires for inferred NAP domain(s): ${missing.join(', ')}`;
   if (option.mode === 'error') throw new Error(message);
-  if (state.reportedMissingRequires.has(message)) return;
-  state.reportedMissingRequires.add(message);
+  warnOnce(state, warn, message);
+}
+
+function warnOnce(state: ManifestPluginState, warn: (message: string) => void, message: string): void {
+  if (state.reportedRequirementWarnings.has(message)) return;
+  state.reportedRequirementWarnings.add(message);
   warn(message);
 }
 
@@ -111,7 +124,7 @@ function domainFromSpecifier(specifier: string | undefined): string | null {
 }
 
 function assertBareNapDomain(domain: string): void {
-  if (!domain || /[:\s]/.test(domain) || domain.startsWith("NAP-")) throw new Error(`NAP requirement must be a bare domain: ${domain}`);
+  if (!domain || /[.:\s]/.test(domain) || domain.startsWith("NAP-")) throw new Error(`NAP requirement must be a bare domain: ${domain}`);
 }
 
 function isSourceFile(id: string): boolean {

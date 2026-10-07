@@ -8,6 +8,10 @@
 
   CLI deployment defaults to current output and offers temporary explicit legacy serialization. Add offline signed-event migration previews without altering source events or publishing. Vite builds default to a self-contained artifact; compatibility helper and sidecar names remain available. See the event migration guide for package cutoffs, immutable pointers and shell ACL/storage implications.
 
+### Patch Changes
+
+- Report domains outside the toolchain registry through the advisory `manifest/requires-known` check for current `R`/`O` tags; warnings never fail a run (#223). Prefixed, whitespace-separated, and `domain.action` values still fail the bare-domain check. No lowercase-only naming restriction is imposed beyond the live NIP-5D contract.
+
 ## 0.17.0
 
 ### Minor Changes

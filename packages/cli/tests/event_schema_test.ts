@@ -180,6 +180,19 @@ function domainTags(tags: string[][], name: "R" | "O"): string[][] {
   return tags.filter((tag) => tag[0] === name);
 }
 
+Deno.test("current deploy preserves required and optional domains outside the registry", async () => {
+  await withTempDir(async (dir) => {
+    await Deno.writeTextFile(`${dir}/index.html`, html);
+    await Deno.writeTextFile(
+      `${dir}/.nip5a-manifest.json`,
+      JSON.stringify({ tags: [["R", "mesh"], ["O", "mesh-ui"]] }),
+    );
+    const [manifest] = await rootDeploy(dir);
+    assertEquals(domainTags(manifest.template!.tags, "R"), [["R", "mesh"]]);
+    assertEquals(domainTags(manifest.template!.tags, "O"), [["O", "mesh-ui"]]);
+  });
+});
+
 Deno.test("metadata merge lets sidecar optional domains win over config requirements", async () => {
   await withTempDir(async (dir) => {
     await Deno.writeTextFile(`${dir}/index.html`, html);

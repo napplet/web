@@ -43,8 +43,12 @@ async function readPluginManifestMetadataTags(
     for (const tag of value.tags) {
       if (!Array.isArray(tag) || typeof tag[0] !== "string") continue;
       if (!tag.every((part) => typeof part === "string")) continue;
-      if (tag[0] === "requires") tags.push(["R", tag[1]]);
-      else if (isCanonicalArchetypeTag(tag)) {
+      if (tag[0] === "requires") {
+        // Legacy sidecars may include whitespace or empty requirements. Keep all
+        // non-empty declarations without restricting them to this CLI's registry.
+        const domain = tag[1]?.trim();
+        if (domain) tags.push(["R", domain]);
+      } else if (isCanonicalArchetypeTag(tag)) {
         if (format === "legacy") tags.push([...tag]);
         else tags.push(["z", tag[1]], ["i", tag[2]]);
       } else if (["R", "O", "z", "i", "icon", "title", "source", "config"].includes(tag[0])) {

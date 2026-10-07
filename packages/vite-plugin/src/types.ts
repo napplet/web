@@ -83,7 +83,7 @@ export interface ManifestPluginState {
   resolvedSchema: NappletConfigSchema | null;
   resolvedSchemaSource: string | null;
   inferredRequires: Set<string>;
-  reportedMissingRequires: Set<string>;
+  reportedRequirementWarnings: Set<string>;
 }
 
 /** Internal: unsigned manifest template carrying the precomputed artifactHash. */

@@ -32,7 +32,7 @@ describe('runConformance', () => {
     expect(run.summary.errors).toBe(0);
     expect(run.startedAt).toBe(1);
     expect(run.finishedAt).toBeGreaterThan(run.startedAt);
-    expect(run.checks.length).toBe(10);
+    expect(run.checks.length).toBe(11);
   });
 
   it('is not ok when an error-severity check fails', () => {
@@ -41,6 +41,18 @@ describe('runConformance', () => {
     expect(run.ok).toBe(false);
     expect(run.summary.errors).toBeGreaterThan(0);
     expect(run.checks.find((c) => c.id === 'manifest/event-kind')!.status).toBe('fail');
+  });
+
+  it.each(['R', 'O'])('keeps an unknown %s domain advisory without failing the run', (tag) => {
+    const run = runConformance(makeContext({
+      manifestEvent: { ...goodEvent, tags: [...goodEvent.tags, [tag, 'mesh']] },
+    }));
+    expect(run.ok).toBe(true);
+    expect(run.summary.errors).toBe(0);
+    expect(run.summary.warnings).toBe(1);
+    expect(run.checks.find((check) => check.id === 'manifest/requires-known')).toMatchObject({
+      status: 'fail', severity: 'warning',
+    });
   });
 
   it('produces a JSON-serializable run', () => {
