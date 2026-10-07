@@ -1,5 +1,5 @@
 ---
-status: verified
+status: complete
 ---
 
 # HTML publishing metadata
@@ -25,4 +25,4 @@ Minor changesets are pending for `@napplet/vite-plugin` and `@napplet/cli`; pack
 
 ## Shipping
 
-GitHub returned internal server errors on initial push and PR creation attempts. Implementation and tests are committed; shipping is being retried against the canonical repository URL.
+Opened [PR #226](https://github.com/napplet/web/pull/226) with the two package changesets. Git push initially returned internal server errors; the Git data API reproduced and published the exact local commits, verified by matching commit and file-tree hashes. PR creation succeeded after retrying the transient GitHub API failure.

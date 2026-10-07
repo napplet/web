@@ -579,7 +579,7 @@ Items acknowledged and deferred at v0.31.0 milestone close on 2026-05-24:
 
 **Resume file:** None
 
-| 261007-c0v | Embed NIP-5D publishing metadata and recover standalone HTML deploys (verified; shipping pending) | 2026-10-07 | 4b9cbc79 | [261007-c0v](./quick/261007-c0v-embed-nip-5d-publishing-metadata-and-rec/) |
+| 261007-c0v | Embed NIP-5D publishing metadata and recover standalone HTML deploys ([PR #226](https://github.com/napplet/web/pull/226)) | 2026-10-07 | 4b9cbc79 | [261007-c0v](./quick/261007-c0v-embed-nip-5d-publishing-metadata-and-rec/) |
 
 Last session: 2026-07-23T15:44:08.781Z
 Stopped at: Completed 161-16-PLAN.md
