@@ -1,5 +1,11 @@
 # @napplet/vite-plugin
 
+## 0.14.2
+
+### Patch Changes
+
+- 39a1e4a: Emit explicit `requires` domains as declared instead of silently dropping ones outside the built-in NAP list. Unknown explicit domains now produce a build warning. Inference from source still only recognizes known domains.
+
 ## 0.14.1
 
 ### Patch Changes

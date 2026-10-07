@@ -1,5 +1,11 @@
 # @napplet/cli
 
+## 0.6.1
+
+### Patch Changes
+
+- 39a1e4a: `napplet deploy` keeps plugin-emitted `requires` tags for domains outside the built-in NAP list instead of dropping them from the published manifest.
+
 ## 0.6.0
 
 ### Minor Changes
