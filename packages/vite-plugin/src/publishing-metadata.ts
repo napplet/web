@@ -50,7 +50,7 @@ export function readPublishingMetadata(html: string): { tags: string[][]; icons:
 }
 
 function escape(value: string, attribute = true): string {
-  const text = value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const text = value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\r/g, '&#13;');
   return attribute ? text.replace(/"/g, '&quot;') : text;
 }
 

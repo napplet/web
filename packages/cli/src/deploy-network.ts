@@ -64,21 +64,36 @@ export type RelayPublisher = (
   event: SignedNostrEvent,
 ) => Promise<RelayPublishResult[]>;
 
+/**
+ * Resolve upload destinations from explicit config, then manifest publishing hints.
+ * @param manifests Resolved deploy manifests.
+ * @param configured Explicit upload destinations, if any.
+ * @returns The destinations used for uploads and displayed in deployment reports.
+ * @example resolveDeployServers(manifests, ["https://blossom.example"])
+ */
+export function resolveDeployServers(
+  manifests: readonly DeployManifestTemplate[],
+  configured: readonly string[],
+): string[] {
+  if (configured.length) return [...configured];
+  return [
+    ...new Set(
+      manifests.flatMap((manifest) =>
+        (manifest.signedEvent ?? manifest.template)?.tags.filter((tag) => tag[0] === "server").map((
+          tag,
+        ) => tag[1]) ?? []
+      ),
+    ),
+  ];
+}
+
 export async function executeNetworkDeploy(
   manifests: readonly DeployManifestTemplate[],
   config: NetworkDeployConfig,
   signer: NappletSigner,
   options: NetworkDeployOptions = {},
 ): Promise<NetworkDeployResult> {
-  const servers = config.blossomServers.length ? config.blossomServers : [
-    ...new Set(
-      manifests.flatMap((m) =>
-        (m.signedEvent ?? m.template)?.tags.filter((tag) => tag[0] === "server").map((tag) =>
-          tag[1]
-        ) ?? []
-      ),
-    ),
-  ];
+  const servers = resolveDeployServers(manifests, config.blossomServers);
   if (servers.length === 0) {
     throw new Error(
       "Network deploy requires at least one blossom server in .napplet config or manifest hints",

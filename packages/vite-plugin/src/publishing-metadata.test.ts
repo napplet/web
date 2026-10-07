@@ -10,7 +10,7 @@ import { readPublishingMetadata } from './publishing-metadata';
 import { resolvePublishingIcon } from './publishing-icon';
 
 const fixtureHtml = fs.readFileSync(fileURLToPath(new URL('../../../tests/fixtures/publishing-metadata.html', import.meta.url)), 'utf8');
-const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aOZkAAAAASUVORK5CYII=', 'base64');
+const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGMQCVgAAAGAAQUSaopEAAAAAElFTkSuQmCC', 'base64');
 const icons = JSON.parse(fs.readFileSync(fileURLToPath(new URL('../../../tests/fixtures/publishing-icons.json', import.meta.url)), 'utf8')) as Array<{ mimeType: 'image/png' | 'image/jpeg' | 'image/webp'; base64: string; sha256: string }>;
 const hash = (data: string | Uint8Array): string => createHash('sha256').update(data).digest('hex');
 const roots: string[] = [];
@@ -57,13 +57,14 @@ describe('NIP-5D HTML Metadata for Publishing', () => {
   it('resolves explicit options, inference, optional overlap, stale declarations and duplicates once', async () => {
     const html = fixtureHtml.replace('</head>', '<title>Duplicate</title><meta name="napplet-parent" content="old"><meta name="napplet-root" content="old"></head>');
     const { output, manifest } = await publish(html, {
-      title: 'New </title><script>bad()</script> & "text"', description: 'New "description" <value>',
+      title: 'New </title><script>bad()</script> & "text"', description: 'New "description" <value>\r\nSecond line',
       nappletType: 'configured', requires: { infer: true, explicit: ['storage'] }, optional: ['theme'],
       archetypes: [{ slug: 'profile', convention: 'napplet:profile/open', params: ['pubkey'] }],
       intents: [{ intent: 'napplet:profile/edit', params: ['fields'] }], source: 'https://new.example/?a=1&b=2', servers: [],
       icon: { data: png, mimeType: 'image/png' },
     }, "import '@napplet/nap/relay'; import '@napplet/nap/theme';");
     const tags = readPublishingMetadata(output).tags;
+    expect(tags.filter((t) => t[0] === 'description')).toEqual([['description', manifest.content]]);
     expect(tags.filter((t) => t[0] === 'title')).toEqual([['title', 'New </title><script>bad()</script> & "text"']]);
     expect(tags.filter((t) => t[0] === 'R')).toEqual([['R', 'relay'], ['R', 'storage']]);
     expect(tags.filter((t) => t[0] === 'O')).toEqual([['O', 'theme']]);

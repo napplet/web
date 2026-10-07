@@ -7,6 +7,39 @@ import { readManifestMetadataTags } from "../src/manifest-metadata.ts";
 import { readHtmlPublishingMetadata } from "../src/html-metadata.ts";
 import { collectDeployFilePayloads, executeNetworkDeploy } from "../src/deploy-network.ts";
 import { assert, assertEquals, withTempDir } from "./assert.ts";
+import { main } from "../src/cli.ts";
+
+Deno.test("deploy dry-run reports recovered destinations and omits binary icon data", async () => {
+  await withTempDir(async (dir) => {
+    const sourceDir = `${dir}/dist`;
+    await Deno.mkdir(sourceDir);
+    await Deno.writeTextFile(`${sourceDir}/index.html`, html);
+    await Deno.writeTextFile(`${dir}/config.json`, JSON.stringify(defaultConfig({ sourceDir })));
+    const output: string[] = [];
+    const previousLog = console.log;
+    console.log = (message: unknown) => {
+      output.push(String(message));
+    };
+    try {
+      assertEquals(
+        await main(["deploy", "--dry-run", "--json", "--config", `${dir}/config.json`]),
+        0,
+      );
+    } finally {
+      console.log = previousLog;
+    }
+    const report = JSON.parse(output.join("\n"));
+    assertEquals(report.blossomServers, [
+      "https://blossom.example.com",
+      "https://mirror.example.com",
+    ]);
+    assertEquals(report.plan.items[0].dTag, "portable-notes");
+    assertEquals(report.manifests[0].files.length, 2);
+    assert(
+      report.manifests[0].files.every((file: Record<string, unknown>) => file.data === undefined),
+    );
+  });
+});
 
 Deno.test("supported PNG, JPEG and WebP icon fixtures recover exact bytes and hashes", async () => {
   const icons = JSON.parse(
@@ -31,7 +64,7 @@ const html = await Deno.readTextFile(
 );
 const png = Uint8Array.from(
   atob(
-    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aOZkAAAAASUVORK5CYII=",
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGMQCVgAAAGAAQUSaopEAAAAAElFTkSuQmCC",
   ),
   (c) => c.charCodeAt(0),
 );
@@ -48,7 +81,10 @@ Deno.test("standalone HTML recovers named metadata, final-byte hash and identica
     const candidates = await discoverNapplets(config);
     const plan = createDeployPlan(config, candidates);
     assertEquals(plan.items[0].dTag, "portable-notes");
-    assertEquals(createDeployPlan(config, candidates, { root: true }).items.map((item) => item.target), ["root"]);
+    assertEquals(
+      createDeployPlan(config, candidates, { root: true }).items.map((item) => item.target),
+      ["root"],
+    );
     const manifests = await createDeployManifestTemplates(plan, config);
     const template = manifests[0].template!;
     assertEquals(template.kind, 35129);

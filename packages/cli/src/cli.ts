@@ -10,7 +10,7 @@ import { configPath, initConfig, parseArchetypeConventions, readConfig } from ".
 import { createDebugReport, createSigningDebugInfo } from "./debug.ts";
 import { createDeployPlan } from "./deploy-plan.ts";
 import { createDeploySigner } from "./deploy-signer.ts";
-import { executeNetworkDeploy, networkDeploySucceeded } from "./deploy-network.ts";
+import { executeNetworkDeploy, networkDeploySucceeded, resolveDeployServers } from "./deploy-network.ts";
 import { discoverNapplets } from "./discover.ts";
 import { collectFlags, first, type FlagBag } from "./flags.ts";
 import { commandGuide } from "./guide.ts";
@@ -308,6 +308,7 @@ async function commandDeploy(argv: string[]): Promise<number> {
         signer,
       )
       : await createDeployManifestTemplates(plan, config, { format });
+    const blossomServers = resolveDeployServers(manifests, config.blossomServers);
     if (!dryRun) {
       if (!signer) {
         throw new Error("Network deploy requires a signer from --sec, --prompt-sec, config, or CI");
@@ -316,7 +317,7 @@ async function commandDeploy(argv: string[]): Promise<number> {
         manifests,
         {
           relays: config.relays,
-          blossomServers: config.blossomServers,
+          blossomServers,
         },
         signer,
         {
@@ -329,10 +330,10 @@ async function commandDeploy(argv: string[]): Promise<number> {
         manifests,
         deploy,
         relays: config.relays,
-        blossomServers: config.blossomServers,
+        blossomServers,
         dryRun: false,
       };
-      console.log(jsonOutput ? JSON.stringify(report, null, 2) : renderDeployReport(report));
+      console.log(jsonOutput ? JSON.stringify(report, (_key, value) => value instanceof Uint8Array ? undefined : value, 2) : renderDeployReport(report));
       return networkDeploySucceeded(deploy, manifests) ? 0 : 1;
     }
     const report = {
@@ -340,10 +341,10 @@ async function commandDeploy(argv: string[]): Promise<number> {
       plan,
       manifests,
       relays: config.relays,
-      blossomServers: config.blossomServers,
+      blossomServers,
       dryRun: true,
     };
-    console.log(jsonOutput ? JSON.stringify(report, null, 2) : renderDeployReport(report));
+    console.log(jsonOutput ? JSON.stringify(report, (_key, value) => value instanceof Uint8Array ? undefined : value, 2) : renderDeployReport(report));
     return 0;
   } finally {
     await signer?.close?.();
