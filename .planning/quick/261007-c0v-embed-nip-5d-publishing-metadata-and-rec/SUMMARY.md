@@ -26,3 +26,7 @@ Minor changesets are pending for `@napplet/vite-plugin` and `@napplet/cli`; pack
 ## Shipping
 
 Opened [PR #226](https://github.com/napplet/web/pull/226) with the two package changesets. Git push initially returned internal server errors; the Git data API reproduced and published the exact local commits, verified by matching commit and file-tree hashes. PR creation succeeded after retrying the transient GitHub API failure.
+
+## CI follow-up (2026-10-09)
+
+CI exposed an obsolete tutorial smoke-test ban on every `napplet-*` meta element. The initial verification omitted `pnpm test:tutorial`, which CI runs through `pnpm test`. Replaced that ban with tutorial metadata/manifest consistency and final-byte hash assertions. The complete `pnpm test`, build and type-check commands now pass locally. See [debug record](../../debug/resolved/pr226-tutorial-metadata.md).
