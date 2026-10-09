@@ -30,3 +30,7 @@ Opened [PR #226](https://github.com/napplet/web/pull/226) with the two package c
 ## CI follow-up (2026-10-09)
 
 CI exposed an obsolete tutorial smoke-test ban on every `napplet-*` meta element. The initial verification omitted `pnpm test:tutorial`, which CI runs through `pnpm test`. Replaced that ban with tutorial metadata/manifest consistency and final-byte hash assertions. The complete `pnpm test`, build and type-check commands now pass locally. See [debug record](../../debug/resolved/pr226-tutorial-metadata.md).
+
+## Review follow-up (2026-10-09)
+
+Validated both inline findings on PR #226. Selected Blossom destinations now receive origin validation before manifest signing and network use, with regression tests for malformed recovered and configured values. CLI docs and the changeset describe the error behavior. Corrected the plan's stale status to `complete`. Build, type-check, full tests, and the configured AI-slop threshold pass; see [review debug record](../../debug/resolved/pr226-review-comments.md).

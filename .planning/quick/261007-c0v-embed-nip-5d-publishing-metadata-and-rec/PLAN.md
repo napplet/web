@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: complete
 ---
 
 # Embed publishing metadata and recover standalone HTML deployments

@@ -75,8 +75,7 @@ export function resolveDeployServers(
   manifests: readonly DeployManifestTemplate[],
   configured: readonly string[],
 ): string[] {
-  if (configured.length) return [...configured];
-  return [
+  const servers = configured.length ? [...configured] : [
     ...new Set(
       manifests.flatMap((manifest) =>
         (manifest.signedEvent ?? manifest.template)?.tags.filter((tag) => tag[0] === "server").map((
@@ -85,6 +84,30 @@ export function resolveDeployServers(
       ),
     ),
   ];
+  // NIP-5D Manifest: server tags hint Blossom origins, not arbitrary request URLs.
+  // Validate the entire selected list before any upload or authorization signing.
+  return servers.map((server, index) => {
+    if (!isServerOrigin(server)) {
+      const source = configured.length ? "blossomServers config" : "manifest server hints";
+      throw new Error(
+        `Invalid Blossom server at ${source}[${index}]: expected a non-empty HTTP(S) origin ` +
+          "without credentials, a path, a query or a fragment (a trailing slash is allowed)",
+      );
+    }
+    return server;
+  });
+}
+
+function isServerOrigin(value: unknown): value is string {
+  // Check syntax before URL parsing, which silently repairs slashes and strips controls.
+  if (typeof value !== "string" || !/^https?:\/\/[^\s/\\?#@]+\/?$/i.test(value)) return false;
+  try {
+    const url = new URL(value);
+    return Boolean(url.hostname) && !url.username && !url.password && url.pathname === "/" &&
+      !url.search && !url.hash;
+  } catch {
+    return false;
+  }
 }
 
 export async function executeNetworkDeploy(

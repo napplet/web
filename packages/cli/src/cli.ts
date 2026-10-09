@@ -302,13 +302,12 @@ async function commandDeploy(argv: string[]): Promise<number> {
   });
   try {
     const signingInfo = createSigningDebugInfo(deploySigning);
-    const manifests = signer
-      ? await signDeployManifestTemplates(
-        await createDeployManifestTemplates(plan, config, { sourcePubkey: signer.pubkey, format }),
-        signer,
-      )
-      : await createDeployManifestTemplates(plan, config, { format });
-    const blossomServers = resolveDeployServers(manifests, config.blossomServers);
+    const templates = await createDeployManifestTemplates(plan, config, {
+      sourcePubkey: signer?.pubkey,
+      format,
+    });
+    const blossomServers = resolveDeployServers(templates, config.blossomServers);
+    const manifests = signer ? await signDeployManifestTemplates(templates, signer) : templates;
     if (!dryRun) {
       if (!signer) {
         throw new Error("Network deploy requires a signer from --sec, --prompt-sec, config, or CI");
