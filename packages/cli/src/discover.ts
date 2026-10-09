@@ -1,3 +1,4 @@
+import { readManifestMetadataTags } from "./manifest-metadata.ts";
 import type { NappletCandidate, NappletConfig } from "./types.ts";
 import { basename, joinPath, relativePath, resolvePath } from "./path.ts";
 
@@ -82,12 +83,16 @@ async function buildCandidate(
   cwd: string,
 ): Promise<NappletCandidate> {
   const relative = relativePath(cwd, dir);
-  const manifestPath = joinPath(dir, ".nip5a-manifest.json");
+  const sidecarPath = joinPath(dir, ".nip5a-manifest.json");
+  const manifestPath = await exists(sidecarPath) ? sidecarPath : undefined;
   return {
     name: inferName(relative),
+    publishingId: (await readManifestMetadataTags(indexHtml, manifestPath, {})).find((tag) =>
+      tag[0] === "d"
+    )?.[1],
     dir,
     indexHtml,
-    manifestPath: await exists(manifestPath) ? manifestPath : undefined,
+    manifestPath,
   };
 }
 

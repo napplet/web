@@ -117,7 +117,7 @@ Messages from unmapped windows are silently dropped.
 
 ## ACL and storage
 
-Shells enforce capability, consent and storage policy using the verified napplet identity and each NAP's contract. NIP-5D's current identity is `(dTag, artifactHash)`, where `artifactHash` covers the artifact bytes alone. Metadata does not participate in that digest. Domain declarations do not grant authority.
+Shells enforce capability, consent and storage policy using the verified napplet identity and each NAP's contract. NIP-5D's current identity is `(dTag, artifactHash)`, where `artifactHash` covers the artifact bytes alone. Any metadata embedded in the HTML participates in that digest; event-only metadata does not. Domain declarations do not grant authority.
 
 Moving from legacy aggregate hashes changes identity keys even when artifact bytes stay the same. Shell maintainers need an explicit migration policy for existing saved data and grants; the SDK does not silently copy them. See [event migration](/guide/event-migration) and the living [NAP contracts](https://github.com/napplet/naps) for domain-specific behavior.
 

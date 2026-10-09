@@ -64,14 +64,63 @@ export type RelayPublisher = (
   event: SignedNostrEvent,
 ) => Promise<RelayPublishResult[]>;
 
+/**
+ * Resolve upload destinations from explicit config, then manifest publishing hints.
+ * @param manifests Resolved deploy manifests.
+ * @param configured Explicit upload destinations, if any.
+ * @returns The destinations used for uploads and displayed in deployment reports.
+ * @example resolveDeployServers(manifests, ["https://blossom.example"])
+ */
+export function resolveDeployServers(
+  manifests: readonly DeployManifestTemplate[],
+  configured: readonly string[],
+): string[] {
+  const servers = configured.length ? [...configured] : [
+    ...new Set(
+      manifests.flatMap((manifest) =>
+        (manifest.signedEvent ?? manifest.template)?.tags.filter((tag) => tag[0] === "server").map((
+          tag,
+        ) => tag[1]) ?? []
+      ),
+    ),
+  ];
+  // NIP-5D Manifest: server tags hint Blossom origins, not arbitrary request URLs.
+  // Validate the entire selected list before any upload or authorization signing.
+  return servers.map((server, index) => {
+    if (!isServerOrigin(server)) {
+      const source = configured.length ? "blossomServers config" : "manifest server hints";
+      throw new Error(
+        `Invalid Blossom server at ${source}[${index}]: expected a non-empty HTTP(S) origin ` +
+          "without credentials, a path, a query or a fragment (a trailing slash is allowed)",
+      );
+    }
+    return server;
+  });
+}
+
+function isServerOrigin(value: unknown): value is string {
+  // Check syntax before URL parsing, which silently repairs slashes and strips controls.
+  if (typeof value !== "string" || !/^https?:\/\/[^\s/\\?#@]+\/?$/i.test(value)) return false;
+  try {
+    const url = new URL(value);
+    return Boolean(url.hostname) && !url.username && !url.password && url.pathname === "/" &&
+      !url.search && !url.hash;
+  } catch {
+    return false;
+  }
+}
+
 export async function executeNetworkDeploy(
   manifests: readonly DeployManifestTemplate[],
   config: NetworkDeployConfig,
   signer: NappletSigner,
   options: NetworkDeployOptions = {},
 ): Promise<NetworkDeployResult> {
-  if (config.blossomServers.length === 0) {
-    throw new Error("Network deploy requires at least one blossom server in .napplet config");
+  const servers = resolveDeployServers(manifests, config.blossomServers);
+  if (servers.length === 0) {
+    throw new Error(
+      "Network deploy requires at least one blossom server in .napplet config or manifest hints",
+    );
   }
   if (config.relays.length === 0) {
     throw new Error("Network deploy requires at least one relay in .napplet config");
@@ -84,11 +133,11 @@ export async function executeNetworkDeploy(
   options.onProgress?.({
     type: "upload:start",
     files: files.length,
-    servers: config.blossomServers.length,
-    totalUploads: files.length * config.blossomServers.length,
+    servers: servers.length,
+    totalUploads: files.length * servers.length,
   });
-  const uploaded = await uploadFilesToServers(files, config.blossomServers, signer, options);
-  const uploadSummary = summarizeUploads(uploaded, config.blossomServers);
+  const uploaded = await uploadFilesToServers(files, servers, signer, options);
+  const uploadSummary = summarizeUploads(uploaded, servers);
   options.onProgress?.({ type: "upload:complete", summary: uploadSummary });
   if (uploadSummary.serversFullyUploaded === 0) {
     // Publish only when at least one server holds every blob referenced by the

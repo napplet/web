@@ -65,6 +65,8 @@ export interface NappletCandidate {
   dir: string;
   indexHtml: string;
   manifestPath?: string;
+  /** Author head identifier used when deployment names are not configured. */
+  publishingId?: string;
 }
 
 /** DeploySelection shape used by shared CLI type helpers. */
@@ -115,6 +117,9 @@ export interface SignedNostrEvent extends NostrEventTemplate {
 export interface ManifestFileMapping {
   path: string;
   sha256: string;
+  /** In-memory blob recovered from an HTML data URL; no file is written. */
+  data?: Uint8Array;
+  mimeType?: string;
 }
 
 /** DeployManifestTemplate shape used by shared CLI type helpers. */

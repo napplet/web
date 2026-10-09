@@ -57,8 +57,8 @@ export async function collectDeployFilePayloads(
       candidateDir,
       path: file.path,
       sha256: file.sha256,
-      data: await Deno.readFile(joinPath(candidateDir, file.path.slice(1))),
-      contentType: contentTypeForPath(file.path),
+      data: file.data ?? await Deno.readFile(joinPath(candidateDir, file.path.slice(1))),
+      contentType: file.mimeType ?? contentTypeForPath(file.path),
     });
   }
   return payloads;

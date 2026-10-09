@@ -1855,7 +1855,8 @@
           "npm:@types/node@^22.15.0",
           "npm:applesauce-relay@^5.2.0",
           "npm:applesauce-signers@^5.2.0",
-          "npm:nostr-tools@^2.23.3"
+          "npm:nostr-tools@^2.23.3",
+          "npm:parse5@^7.3.0"
         ],
         "packageJson": {
           "dependencies": [
@@ -1863,7 +1864,8 @@
             "npm:@types/node@^22.15.0",
             "npm:applesauce-relay@^5.2.0",
             "npm:applesauce-signers@^5.2.0",
-            "npm:nostr-tools@^2.23.3"
+            "npm:nostr-tools@^2.23.3",
+            "npm:parse5@^7.3.0"
           ]
         }
       },
@@ -1919,6 +1921,7 @@
           "dependencies": [
             "npm:@types/node@^22.15.0",
             "npm:nostr-tools@^2.23.3",
+            "npm:parse5@^7.3.0",
             "npm:tsup@^8.5.0",
             "npm:typescript@^5.9.3",
             "npm:vite@^6.4.3",
