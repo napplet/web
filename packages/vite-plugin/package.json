@@ -1,6 +1,6 @@
 {
   "name": "@napplet/vite-plugin",
-  "version": "0.15.0",
+  "version": "0.16.0",
   "description": "Vite plugin for napplet development — generates signed NIP-5A manifests at build time for local testing",
   "type": "module",
   "main": "./dist/index.js",
