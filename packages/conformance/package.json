@@ -20,8 +20,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@napplet/core": "workspace:^",
-    "@napplet/nap": "workspace:^"
+    "@napplet/core": "workspace:^"
   },
   "devDependencies": {
     "@types/node": "^22.15.0",
