@@ -628,6 +628,7 @@ Surfaced by research (informational — each belongs to a specific phase plan):
 
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
+| 261010-dcr | Dead-code audit: remove unreferenced shim modules, dead exports, unused deps and lint task | 2026-10-10 | 276b6c84 | [261010-dead-code-audit-and-removal](./quick/261010-dead-code-audit-and-removal/) |
 | 261007-aae | Resolve PR #224 conflicts after #223 | 2026-10-07 | cc741b8f | [261007-aae-resolve-pr-224-conflicts-after-merging-p](./quick/261007-aae-resolve-pr-224-conflicts-after-merging-p/) |
 | 260421-u87 | Create cross-repo PRs in napplet/nubs from the 4 v0.29.0 drafts | 2026-04-21 | c28d8e4 | [260421-u87-create-cross-repo-prs-in-napplet-nubs-fr](./quick/260421-u87-create-cross-repo-prs-in-napplet-nubs-fr/) |
 | 260424-o1k | Implement default shell.supports() in shim so napplets can be tested without a shell | 2026-04-24 | 5ad9cdb | [260424-o1k-implement-default-shell-supports-in-shim](./quick/260424-o1k-implement-default-shell-supports-in-shim/) |
