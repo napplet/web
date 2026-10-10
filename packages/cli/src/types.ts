@@ -41,6 +41,7 @@ export interface NappletConfig {
   bunkerPubkey?: string;
   named?: string[];
   metadata?: NappletDeployMetadata;
+  zapstore?: ZapstoreConfig;
   discover?: {
     enabled: boolean;
     roots: string[];
@@ -57,6 +58,21 @@ export interface NappletConfig {
   paja?: {
     command: string;
   };
+}
+
+/** Optional application listing, separate from the NIP-5D manifest. */
+export interface ZapstoreConfig {
+  enabled?: boolean;
+  id: string;
+  name: string;
+  description?: string;
+  summary?: string;
+  icon?: string;
+  images?: string[];
+  website?: string;
+  repository?: string;
+  license?: string;
+  tags?: string[];
 }
 
 /** NappletCandidate shape used by shared CLI type helpers. */

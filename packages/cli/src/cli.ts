@@ -37,6 +37,8 @@ import { resolveSigningMethod, signDeployManifestTemplates } from "./signing.ts"
 import { getBlossomServerSuggestions, getRelaySuggestions } from "./suggestions.ts";
 import type { DeploySelection, NappletConfig } from "./types.ts";
 import cliMetadata from "../deno.json" with { type: "json" };
+import { prepareZapstorePublication } from "./zapstore.ts";
+import { captureDeployScreenshot } from "./deploy-screenshot.ts";
 
 import { runPackageCli, resolveConformanceCommand, resolvePajaArgs } from "./package-runner.ts";
 export { runPackageCli, resolveConformanceCommand, resolvePajaArgs } from "./package-runner.ts";
@@ -49,7 +51,7 @@ Usage:
   napplet guide
   napplet create <directory> [--template <path-or-url>] [--force]
   napplet init [--force] [--root] [--source-dir <dir>] [--name <dtag>] [--title <title>] [--description <text>] [--archetype <napplet:archetype/intent>] [--relay <url>] [--server <url>]
-  napplet deploy [--format current|legacy] [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>] [--prompt-sec] [--dry-run] [--json]
+  napplet deploy [--format current|legacy] [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>] [--prompt-sec] [--zapstore | --no-zapstore] [--screenshot <preview-url>] [--dry-run] [--json]
   napplet migrate <signed-event.json> [--description <text>] [--optional <domain>] [--output <preview.json>]
   napplet debug [--format current|legacy] [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>]
   napplet keys store --name <ref> [--sec <secret> | --prompt-sec]
@@ -61,6 +63,10 @@ Usage:
   napplet discover [--config <file>] [--all]
   napplet conformance [--config <file>] [--all] [-- <args>]
   napplet paja [--config <file>] [-- <args>]
+  napplet screenshot <preview-url> [--output preview.png] [--selector iframe] [--ready-selector <css>] [--width 1200] [--height 750] [--delay 1500]
+
+Deploy capture options: --screenshot-selector, --screenshot-ready-selector,
+  --screenshot-width, --screenshot-height, --screenshot-delay (all take values).
 
 Run "napplet guide" for the complete developer workflow and documentation.
 `;
@@ -76,6 +82,7 @@ export type PackageCliRunner = (args: readonly string[]) => number | Promise<num
 /** Optional maintained-package runners used by standalone builds. */
 export interface CliMainOptions {
   runCreate?: PackageCliRunner;
+  runScreenshot?: PackageCliRunner;
 }
 
 /**
@@ -109,10 +116,12 @@ export async function main(argv = Deno.args, options: CliMainOptions = {}): Prom
         return await (options.runCreate ?? ((args) => runPackageCli("@napplet/boilerplate", args)))(
           parsed.rest,
         );
+      case "screenshot":
+        return await (options.runScreenshot ?? ((args) => runPackageCli("@napplet/conformance-cli", args)))(parsed.rest);
       case "discover":
         return await commandDiscover(parsed.rest);
       case "deploy":
-        return await commandDeploy(parsed.rest);
+        return await commandDeploy(parsed.rest, options.runScreenshot);
       case "debug":
         return await commandDebug(parsed.rest);
       case "keys":
@@ -218,8 +227,11 @@ async function commandDiscover(argv: string[]): Promise<number> {
   return 0;
 }
 
-async function commandDeploy(argv: string[]): Promise<number> {
+async function commandDeploy(argv: string[], runScreenshot?: PackageCliRunner): Promise<number> {
   const flags = collectFlags(argv);
+  if (flags.boolean.has("zapstore") && flags.boolean.has("no-zapstore")) {
+    throw new Error("Choose either --zapstore or --no-zapstore");
+  }
   const jsonOutput = flags.boolean.has("json") || !isTerminalOutput();
   const config = await loadDeployConfig(flags, jsonOutput);
   const format = await selectManifestFormat(first(flags.values.get("format")), isTerminalInput() && !jsonOutput);
@@ -247,6 +259,7 @@ async function commandDeploy(argv: string[]): Promise<number> {
     print: (line) => console.error(line),
     writePromptBytes: (bytes) => Deno.stderr.writeSync(bytes),
   });
+  let screenshot: Awaited<ReturnType<typeof captureDeployScreenshot>>;
   try {
     const signingInfo = createSigningDebugInfo(deploySigning);
     const templates = await createDeployManifestTemplates(plan, config, {
@@ -254,12 +267,21 @@ async function commandDeploy(argv: string[]): Promise<number> {
       format,
     });
     const blossomServers = resolveDeployServers(templates, config.blossomServers);
+    screenshot = await captureDeployScreenshot(flags, config, runScreenshot);
+    const publicationConfig = screenshot && config.zapstore
+      ? { ...config, zapstore: { ...config.zapstore, images: [...(config.zapstore.images ?? []), screenshot.path] } }
+      : config;
+    const application = await prepareZapstorePublication(publicationConfig, blossomServers, {
+      enabled: flags.boolean.has("no-zapstore") ? false : flags.boolean.has("zapstore") ? true : undefined,
+    });
+    if (application && signer) application.signedEvent = await signer.sign(application.template);
     const manifests = signer ? await signDeployManifestTemplates(templates, signer) : templates;
+    let deploy;
     if (!dryRun) {
       if (!signer) {
         throw new Error("Network deploy requires a signer from --sec, --prompt-sec, config, or CI");
       }
-      const deploy = await executeNetworkDeploy(
+      deploy = await executeNetworkDeploy(
         manifests,
         {
           relays: config.relays,
@@ -268,32 +290,24 @@ async function commandDeploy(argv: string[]): Promise<number> {
         signer,
         {
           onProgress: jsonOutput ? undefined : createDeployProgressReporter(),
+          application,
         },
       );
-      const report = {
-        signing: signingInfo,
-        plan,
-        manifests,
-        deploy,
-        relays: config.relays,
-        blossomServers,
-        dryRun: false,
-      };
-      console.log(jsonOutput ? JSON.stringify(report, (_key, value) => value instanceof Uint8Array ? undefined : value, 2) : renderDeployReport(report));
-      return networkDeploySucceeded(deploy, manifests) ? 0 : 1;
     }
     const report = {
       signing: signingInfo,
       plan,
       manifests,
+      application,
+      deploy,
       relays: config.relays,
       blossomServers,
-      dryRun: true,
+      dryRun,
     };
     console.log(jsonOutput ? JSON.stringify(report, (_key, value) => value instanceof Uint8Array ? undefined : value, 2) : renderDeployReport(report));
-    return 0;
+    return deploy && !networkDeploySucceeded(deploy, manifests) ? 1 : 0;
   } finally {
-    await signer?.close?.();
+    try { await screenshot?.cleanup(); } finally { await signer?.close?.(); }
   }
 }
 

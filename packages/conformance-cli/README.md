@@ -62,3 +62,7 @@ Exit codes: `0` conformant, `1` non-conformant, `2` usage/runtime error.
 > Requires Playwright's Chromium. In CI, run `npx playwright install --with-deps chromium`
 > once before invoking the CLI. This package is npm-only (Playwright is not
 > JSR-friendly); the pure engine `@napplet/conformance` is published to both.
+
+## Capture a preview screenshot
+
+The CLI also provides the browser runner for `napplet screenshot`. Capture the iframe in a running preview shell with `npx @napplet/conformance-cli screenshot http://localhost:5173 --output preview.png`. Use `--selector` to select one iframe, `--ready-selector` to wait for an element inside it, and `--width`, `--height`, or `--delay` to adjust the default 1200 × 750 capture after 1500 ms. Existing output files are preserved. Install Chromium with `npx --yes --package @napplet/conformance-cli playwright install chromium` first.

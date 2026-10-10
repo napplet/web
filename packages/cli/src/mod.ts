@@ -72,3 +72,4 @@ export * from "./process.ts";
 export * from "./signing.ts";
 export * from "./suggestions.ts";
 export * from "./types.ts";
+export * from "./zapstore.ts";

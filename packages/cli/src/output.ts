@@ -10,6 +10,7 @@ export type { EventPointers } from "./event-pointers.ts";
 import type { SigningDebugInfo } from "./debug.ts";
 import { networkDeploySucceeded } from "./deploy-network.ts";
 import type { NetworkDeployProgress, NetworkDeployResult } from "./deploy-network.ts";
+import type { ZapstorePublication } from "./zapstore.ts";
 import type {
   DeployManifestTemplate,
   DeployPlan,
@@ -20,6 +21,7 @@ export interface DeployReport {
   signing: SigningDebugInfo;
   plan: DeployPlan;
   manifests: DeployManifestTemplate[];
+  application?: ZapstorePublication;
   deploy?: NetworkDeployResult;
   relays: string[];
   blossomServers: string[];
@@ -100,6 +102,18 @@ export function renderDeployReport(report: DeployReport): string {
   }
   lines.push("");
 
+  if (report.application) {
+    pushSection(lines, "Zapstore Application");
+    pushField(lines, "Kind", "32267");
+    for (const tag of report.application.template.tags) pushField(lines, tag[0], tag.slice(1).join(" "));
+    pushField(lines, "Description", report.application.template.content);
+    pushField(lines, "Local images", String(report.application.files.length));
+    pushField(lines, "Status", report.application.signedEvent ? "signed" : "unsigned template");
+    if (report.application.signedEvent) {
+      pushField(lines, "Copy naddr", createEventPointers(report.application.signedEvent, report.relays).naddr ?? "");
+    }
+    lines.push("");
+  }
   if (report.deploy) {
     pushSection(lines, "Uploads");
     const uploadSummary = report.deploy.uploadSummary;
@@ -184,7 +198,7 @@ export function createDeployProgressReporter(
         break;
       case "publish:start":
         writeLine(
-          `Publishing ${progress.events} manifest event(s) to ${progress.relays} relay(s)...`,
+          `Publishing ${progress.events} event(s) to ${progress.relays} relay(s)...`,
         );
         break;
       case "publish:event": {
@@ -345,6 +359,11 @@ function summarizeDeployOutcome(
         "manifest events were not published",
       ),
     );
+  }
+  if ((deploy.additionalEventIds ?? []).some((eventId) =>
+    !deploy.published.some((publish) => publish.eventId === eventId && publish.success)
+  )) {
+    failures.push("Zapstore application metadata was not published");
   }
   if (!succeeded && failures.length === 0) failures.push("deployment requirements not met");
 

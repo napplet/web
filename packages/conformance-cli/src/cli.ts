@@ -30,6 +30,7 @@ import { startHarnessServer } from './server.js';
 import { startUiServer } from './ui-server.js';
 import { scanForbiddenGlobals } from './scan.js';
 import { resolveNappletDir } from './resolve-napplet.js';
+import { captureScreenshot, parseScreenshotArgs } from './screenshot.js';
 
 interface CliOptions {
   target?: string;
@@ -53,6 +54,7 @@ Usage:
   napplet-conformance [dir] [options]            # headless, one-shot, CI exit code
   napplet-conformance --ui [dir] [options]       # open the live web runtime (like vitest --ui)
   napplet-conformance --url https://my.napplet/ [options]
+  napplet-conformance screenshot <preview-url> [--output preview.png]
 
 Arguments:
   dir                      Built napplet directory (prefers ./dist/index.html, falls back to ./index.html)
@@ -305,7 +307,19 @@ async function main(argv: string[]): Promise<number> {
   return run.ok ? 0 : 1;
 }
 
-main(process.argv.slice(2))
+async function run(args: string[]): Promise<number> {
+  if (args[0] !== 'screenshot') return main(args);
+  if (args.includes('--help') || args.includes('-h')) {
+    console.log('Usage: napplet screenshot <preview-url> [--output preview.png] [--selector iframe] [--ready-selector <css>] [--width 1200] [--height 750] [--delay 1500]');
+    return 0;
+  }
+  const options = parseScreenshotArgs(args.slice(1));
+  await captureScreenshot(options);
+  console.log(`Screenshot saved to ${options.output}`);
+  return 0;
+}
+
+run(process.argv.slice(2))
   .then((code) => {
     process.exitCode = code;
   })

@@ -18,14 +18,17 @@ export interface PackageCliRunOptions {
  * @returns Process exit code from the maintained package CLI.
  */
 export async function runPackageCli(
-  packageName: "@napplet/boilerplate",
+  packageName: "@napplet/boilerplate" | "@napplet/conformance-cli",
   args: readonly string[],
   options: PackageCliRunOptions = {},
 ): Promise<number> {
   const executable = (options.os ?? Deno.build.os) === "windows" ? "npx.cmd" : "npx";
   let result;
   try {
-    result = await (options.runner ?? runCommand)(executable, ["--yes", packageName, ...args]);
+    const commandArgs = packageName === "@napplet/conformance-cli"
+      ? ["--yes", packageName, "screenshot", ...args]
+      : ["--yes", packageName, ...args];
+    result = await (options.runner ?? runCommand)(executable, commandArgs);
   } catch (error) {
     if (error instanceof Deno.errors.NotFound) {
       throw new Error(
