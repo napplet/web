@@ -17,7 +17,7 @@ One convention is one stable, **queryless** string: `napplet:<archetype>/<intent
 
 ## Archetype metadata (manifest)
 
-A napplet that fulfils an archetype role advertises one contract per entry through the vite-plugin `archetypes` option, which the CLI's `napplet init --archetype slug:napplet:<archetype>/<intent>` also records in `.napplet/config.json`:
+A napplet that fulfils an archetype role advertises one contract per entry through the vite-plugin `archetypes` option, which the CLI's `napplet init --archetype napplet:<archetype>/<intent>` also records in `.napplet/config.json`:
 
 ```ts
 archetypes: [{ slug: 'note', convention: 'napplet:note/open' }],

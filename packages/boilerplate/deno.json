@@ -1,6 +1,6 @@
 {
   "extends": "../../deno.json",
   "name": "@napplet/boilerplate",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "exports": "./src/deno.ts"
 }

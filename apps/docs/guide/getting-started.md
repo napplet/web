@@ -33,15 +33,15 @@ cd my-napplet
 napplet init
 ```
 
-The wizard writes `.napplet/config.json` with the named-manifest d-tag, title, optional description, queryless `slug:convention` archetype metadata, relays, and Blossom servers. Automation can provide the same values explicitly:
+The wizard writes `.napplet/config.json` with the named-manifest d-tag, title, optional description, queryless `napplet:<archetype>/<intent>` convention metadata, relays, and Blossom servers. Automation can provide the same values explicitly:
 
 ```bash
 napplet init --name my-napplet --title "My Napplet" \
-  --archetype note:napplet:note/open \
+  --archetype napplet:note/open \
   --relay wss://relay.example --server https://blossom.example
 ```
 
-The CLI validates the documented `slug:convention` shape and deploys the complete queryless convention identity.
+The CLI validates the documented `napplet:<archetype>/<intent>` shape and deploys the complete queryless convention identity.
 
 At runtime, INC `emit` and intent `invoke/open` may accept `napplet:<archetype>/<intent>?name=value` developer input. Their bindings transpose query pairs to text payload fields before sending a queryless normalized identity. Subscriptions, manifest discovery, and handler routing do not parse queries and use exact equality.
 

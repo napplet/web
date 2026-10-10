@@ -176,8 +176,15 @@ export function normalizeConfig(input: unknown): NappletConfig {
   });
 }
 
-/** Normalize and validate one `slug:convention` automation value. */
+/**
+ * Normalize a convention URI, accepting the older role-prefixed CLI input.
+ * @param value Queryless convention URI or legacy role-prefixed CLI value.
+ * @returns The role and convention used for manifest advertisements.
+ * @example parseArchetypeConvention("napplet:note/open")
+ */
 export function parseArchetypeConvention(value: string): NappletArchetypeConvention {
+  value = value.trim();
+  if (value.startsWith("napplet:")) return normalizeArchetypeConvention(value, "archetype");
   const separator = value.indexOf(":");
   const slug = separator === -1 ? "" : value.slice(0, separator).trim();
   const convention = separator === -1 ? "" : value.slice(separator + 1).trim();
@@ -229,15 +236,16 @@ function normalizeArchetypeConvention(
   value: unknown,
   field: string,
 ): NappletArchetypeConvention {
+  if (typeof value === "string") {
+    const convention = value.trim();
+    value = { slug: /^napplet:([^/]+)\//.exec(convention)?.[1], convention };
+  }
   if (!value || typeof value !== "object" || Array.isArray(value)) {
-    throw new Error(`${field} must use slug:convention (for example note:napplet:note/open)`);
+    throw new Error(`${field} must be a convention URI (for example napplet:note/open) or an object with slug and convention`);
   }
   const conventionValue = value as Partial<NappletArchetypeConvention>;
   const slug = optionalString(conventionValue.slug, `${field}.slug`);
   const convention = optionalString(conventionValue.convention, `${field}.convention`);
-  if (!slug || !/^[a-z0-9][a-z0-9-]*$/.test(slug)) {
-    throw new Error(`${field} slug must contain lowercase letters, numbers, and hyphens`);
-  }
   if (convention && /^NAP-[1-9][0-9]*$/.test(convention)) {
     throw new Error(`${field} convention must use napplet:<archetype>/<intent>, not a numbered NAP identifier`);
   }
@@ -247,6 +255,9 @@ function normalizeArchetypeConvention(
   const conventionMatch = /^napplet:([^/?#\s]+)\/([^/?#\s]+)$/.exec(convention);
   if (!conventionMatch) {
     throw new Error(`${field} convention must use queryless napplet:<archetype>/<intent>`);
+  }
+  if (!slug || !/^[a-z0-9][a-z0-9-]*$/.test(slug)) {
+    throw new Error(`${field} slug must contain lowercase letters, numbers, and hyphens`);
   }
   return { slug, convention, ...(conventionValue.params === undefined ? {} : { params: stringArray(conventionValue.params, `${field}.params`) }) };
 }

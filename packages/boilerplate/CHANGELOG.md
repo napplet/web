@@ -1,5 +1,11 @@
 # @napplet/boilerplate
 
+## 0.3.4
+
+### Patch Changes
+
+- 2910c4b: Correct the shipped setup guide to use `napplet:note/open` directly with `napplet init --archetype` and describe its separate role and intent advertisements.
+
 ## 0.3.3
 
 ### Patch Changes
