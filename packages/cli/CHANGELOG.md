@@ -1,5 +1,11 @@
 # @napplet/cli
 
+## 0.8.2
+
+### Patch Changes
+
+- f33d9d6: Add `napplet --version`, `napplet -v`, and `napplet version` to report the installed package version in JSR and standalone installations.
+
 ## 0.8.1
 
 ### Patch Changes
