@@ -105,7 +105,7 @@ napplet create <directory> [--template <path-or-url>] [--force]
 napplet init [--force] [--root] [--source-dir <dir>] [--name <dtag>] [--title <title>] [--description <text>] [--archetype <napplet:archetype/intent>] [--relay <url>] [--server <url>]
 napplet discover [--config <file>] [--all]
 napplet debug [--format current|legacy] [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>]
-napplet deploy [--format current|legacy] [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>] [--prompt-sec] [--zapstore | --no-zapstore] [--screenshot <preview-url>] [--dry-run]
+napplet deploy [--format current|legacy] [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>] [--prompt-sec] [--zapstore | --no-zapstore] [--screenshot [<preview-url>]] [--dry-run]
 napplet keys store --name <ref> [--sec <secret> | --prompt-sec]
 napplet keys connect --name <ref> [--relay <url> ...] [--config <file>]
 napplet keys use --name <ref> [--config <file>]
@@ -182,10 +182,12 @@ Decoded icon bytes are hashed and uploaded unchanged alongside the HTML, even wh
 
 ## Screenshots and optional Zapstore metadata
 
-Capture the napplet iframe from a running preview shell (for example, the URL opened by `napplet paja`). This command uses the maintained browser runner via npm and requires Node.js 20+ and Playwright Chromium. Install the matching browser with `npx --yes --package @napplet/conformance-cli playwright install chromium`.
+Capture a built napplet without starting a host. The command starts a temporary local Kehto Paja preview, captures its iframe, and closes the preview afterwards. It requires Node.js 20+; the matching Chromium browser is installed automatically on first use. The preview uses Paja’s development identity, fresh browser storage, and live relays, so content may differ from your signed-in shell.
 
 ```sh
-napplet screenshot http://localhost:5173 --output preview.png
+napplet screenshot --output preview.png
+# Optional: choose another project or an existing shell.
+napplet screenshot ./my-project --output other.png
 # Optional: select one iframe and wait for content inside it.
 napplet screenshot http://localhost:5173 --output ready.png --selector '#napplet-frame' --ready-selector '.app-ready'
 ```
@@ -217,7 +219,7 @@ Only `id` and `name` are required within this object. The stable `id` identifies
 napplet deploy --zapstore --dry-run --json
 napplet deploy --zapstore
 # Capture and attach a screenshot during deployment:
-napplet deploy --zapstore --screenshot http://localhost:5173
+napplet deploy --zapstore --screenshot
 ```
 
 Publishing defaults to off. `--zapstore` enables it for one deployment; `"enabled": true` in the object enables it by default; `--no-zapstore` disables it for one deployment. Supplying both flags is an error. Dry runs show the application template, resolved media URLs and any signature without uploading or publishing.
@@ -226,4 +228,4 @@ Local PNG, JPEG and WebP images are resolved relative to the working directory, 
 
 The listing uses kind `32267` from the [Software Applications proposal](https://github.com/nostr-protocol/nips/pull/1336), with screenshot URLs in `image` tags. It is separate from the current [NIP-5D manifest](https://github.com/nostr-protocol/nips/pull/2303/files) and does not change the artifact hash or add a manifest `app` pointer. This publishes application metadata only, without software release or asset events; acceptance into a particular store's catalog depends on that store.
 
-`deploy --screenshot <preview-url>` captures a temporary PNG and appends it to the configured application images for that deployment. It requires `--zapstore` or `zapstore.enabled`, and does not modify your config or build files. Capture failure stops deployment before any upload or relay publication. The temporary image is removed after success or failure. `--dry-run` also performs capture and previews the resulting metadata without uploading or publishing. Capture diagnostics go to stderr so `--json` stdout remains valid JSON. The preview shell must already be running. Use `--screenshot-selector`, `--screenshot-ready-selector`, `--screenshot-width`, `--screenshot-height`, and `--screenshot-delay` for the corresponding standalone capture options. Use the standalone `napplet screenshot` command when you want to keep a PNG on disk.
+`deploy --screenshot` starts a local preview for each distinct selected build, captures a temporary PNG, and appends it to the configured application images for that deployment. It requires `--zapstore` or `zapstore.enabled`, and does not modify your config or build files. Capture failure stops deployment before any upload or relay publication. The temporary image is removed after success or failure. `--dry-run` also performs capture and previews the resulting metadata without uploading or publishing. Capture diagnostics go to stderr so `--json` stdout remains valid JSON. No host URL is required. Root and snapshot selections of the same artifact share one capture. To capture an existing shell instead, use `--screenshot <preview-url>`. Use `--screenshot-selector`, `--screenshot-ready-selector`, `--screenshot-width`, `--screenshot-height`, and `--screenshot-delay` for the corresponding standalone capture options. Use the standalone `napplet screenshot` command when you want to keep a PNG on disk.

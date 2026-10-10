@@ -1,10 +1,18 @@
-/** Capture a running napplet preview through its shell's iframe. */
-import { writeFile } from 'node:fs/promises';
+/** Capture a local build or an existing shell preview through its iframe. */
+import { access, writeFile } from 'node:fs/promises';
+import { execFile } from 'node:child_process';
+import { createRequire } from 'node:module';
+import { dirname, join } from 'node:path';
+import { promisify } from 'node:util';
 import { chromium } from 'playwright';
+import { startScreenshotPreview } from './screenshot-preview.js';
+import { resolveNappletDir } from './resolve-napplet.js';
 
 /** Options for capturing a shell-hosted napplet. */
 export interface ScreenshotOptions {
-  url: string;
+  url?: string;
+  directory?: string;
+  artifact?: string;
   output: string;
   selector: string;
   readySelector?: string;
@@ -20,16 +28,20 @@ export interface ScreenshotOptions {
  * @example parseScreenshotArgs(['http://localhost:5173', '--output', 'preview.png'])
  */
 export function parseScreenshotArgs(args: readonly string[]): ScreenshotOptions {
-  const [url, ...rest] = args;
-  if (!url || !/^https?:\/\//.test(url)) throw new Error('Provide the HTTP(S) URL of a running napplet preview');
-  new URL(url);
-  const options: ScreenshotOptions = { url, output: 'preview.png', selector: 'iframe', width: 1200, height: 750, delay: 1500 };
+  const hasTarget = args[0] && !args[0].startsWith('--');
+  const target = hasTarget ? args[0] : '.';
+  const rest = hasTarget ? args.slice(1) : args;
+  const remote = /^https?:\/\//.test(target);
+  if (remote) new URL(target);
+  else if (/^[a-z][a-z0-9+.-]*:/i.test(target) && !/^[a-z]:[\\/]/i.test(target)) throw new Error('Preview URLs must use HTTP(S)');
+  const options: ScreenshotOptions = { ...(remote ? { url: target } : { directory: target }), output: 'preview.png', selector: 'iframe', width: 1200, height: 750, delay: 1500 };
   for (let index = 0; index < rest.length; index += 2) {
     const flag = rest[index];
     const value = rest[index + 1];
     if (!value || value.startsWith('--')) throw new Error(`Missing value for ${flag}`);
     switch (flag) {
       case '--output': options.output = value; break;
+      case '--artifact': options.artifact = value; break;
       case '--selector': options.selector = value; break;
       case '--ready-selector': options.readySelector = value; break;
       case '--width': options.width = integer(value, flag, 1, 4096); break;
@@ -39,21 +51,33 @@ export function parseScreenshotArgs(args: readonly string[]): ScreenshotOptions 
     }
   }
   if (!options.output.toLowerCase().endsWith('.png')) throw new Error('--output must end in .png');
+  if (options.artifact && hasTarget) throw new Error('Use a target or --artifact, not both');
   return options;
 }
 
 /**
- * Save a PNG of a running napplet iframe, preserving existing output files.
- * @param options URL, iframe selector, dimensions and readiness settings.
- * @returns Resolves after the PNG is written and Chromium is closed.
+ * Save a PNG of a napplet iframe, starting a local preview when needed.
+ * @param options Local build or URL, output, dimensions and readiness settings.
+ * @returns Resolves after capture and cleanup of Chromium and any local preview.
  * @example await captureScreenshot(parseScreenshotArgs(['http://localhost:5173']))
  */
 export async function captureScreenshot(options: ScreenshotOptions): Promise<void> {
-  const browser = await chromium.launch();
+  await ensureChromium();
+  const preview = options.url ? undefined : await startScreenshotPreview(
+    options.artifact ?? (await resolveNappletDir(options.directory ?? '.')).indexHtml,
+  );
+  let browser;
   try {
+    browser = await chromium.launch({ channel: 'chromium' });
     const page = await browser.newPage({ viewport: { width: options.width, height: options.height } });
     page.setDefaultTimeout(30000);
-    await page.goto(options.url, { waitUntil: 'domcontentloaded' });
+    await page.goto(options.url ?? preview!.url, { waitUntil: 'domcontentloaded' });
+    if (preview) {
+      await page.waitForFunction(() => {
+        const iframe = document.querySelector<HTMLIFrameElement>('#napplet-frame');
+        return Boolean(iframe?.srcdoc);
+      });
+    }
     const frame = page.locator(options.selector);
     await frame.waitFor({ state: 'visible' });
     await frame.evaluate((element, size) => {
@@ -68,8 +92,16 @@ export async function captureScreenshot(options: ScreenshotOptions): Promise<voi
     const png = await frame.screenshot({ type: 'png', timeout: 30000 });
     await writeFile(options.output, png, { flag: 'wx' });
   } finally {
-    await browser.close();
+    try { await browser?.close(); } finally { await preview?.close(); }
   }
+}
+
+async function ensureChromium(): Promise<void> {
+  try { await access(chromium.executablePath()); return; } catch { /* Install the matching browser on first use. */ }
+  console.error('Installing Chromium for screenshot capture...');
+  const require = createRequire(import.meta.url);
+  const cli = join(dirname(require.resolve('playwright/package.json')), 'cli.js');
+  await promisify(execFile)(process.execPath, [cli, 'install', 'chromium'], { timeout: 180000 });
 }
 
 function integer(value: string, flag: string, min: number, max: number): number {

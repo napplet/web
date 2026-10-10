@@ -1,5 +1,11 @@
 # @napplet/conformance-cli
 
+## 0.3.3
+
+### Patch Changes
+
+- Capture deploy screenshots without a host URL using an automatic local Kehto Paja preview. Install Chromium on first use and retain explicit preview URLs.
+
 ## 0.3.2
 
 ### Patch Changes

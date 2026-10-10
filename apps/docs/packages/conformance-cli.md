@@ -55,4 +55,4 @@ source edits rebuild and re-check automatically.
 - [Getting started](/guide/getting-started) — scaffold, build, and verify a napplet
 - [`@napplet/vite-plugin`](./vite-plugin) — generates the manifest the runner validates
 
-The browser runner also supports `npx @napplet/conformance-cli screenshot <preview-url> --output preview.png`, exposed as `napplet screenshot` by the standalone CLI. See [screenshots and application metadata](./cli.md#screenshots-and-optional-zapstore-metadata) for browser setup, iframe selection, and publication options.
+The browser runner also supports `npx @napplet/conformance-cli screenshot [directory|preview-url] --output preview.png`, exposed as `napplet screenshot` by the standalone CLI. See [screenshots and application metadata](./cli.md#screenshots-and-optional-zapstore-metadata) for browser setup, iframe selection, and publication options.
