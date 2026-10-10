@@ -22,6 +22,8 @@ export interface NappletArchetypeConvention {
 
 /** Normalized deployment metadata; JSON input also accepts convention URI strings in archetypes. */
 export interface NappletDeployMetadata {
+  /** Source URL override; false suppresses embedded and inferred source tags. */
+  source?: string | false;
   name?: string;
   title?: string;
   description?: string;

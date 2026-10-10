@@ -1,3 +1,4 @@
+import { normalizeSourceOverride } from "./repository-source.ts";
 import {
   CONFIG_DIR,
   CONFIG_FILE,
@@ -228,6 +229,7 @@ function normalizeMetadata(value: unknown): NappletDeployMetadata | undefined {
     name,
     title,
     description,
+    source: normalizeSourceOverride(metadata.source),
     archetypes,
     requires: metadata.requires === undefined ? undefined : stringArray(metadata.requires, "metadata.requires"),
     optional: metadata.optional === undefined ? undefined : stringArray(metadata.optional, "metadata.optional"),

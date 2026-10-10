@@ -1,5 +1,11 @@
 # @napplet/cli
 
+## 0.8.6
+
+### Patch Changes
+
+- Infer missing NIP-5D source tags from the selected build's Git origin. Add metadata.source to override the URL or suppress source publication with false.
+
 ## 0.8.5
 
 ### Patch Changes
