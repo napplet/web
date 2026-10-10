@@ -110,7 +110,7 @@ Deno.test("current root output has no identifier and rejects empty descriptions"
   const item = { candidate, target: "root" as const, kind: 15129 };
   const files = [{ path: "/index.html", sha256: hash }];
   const event = await createSiteManifestTemplate(item, files, { content: "Notes" });
-  assertEquals(event.tags, [["x", hash]]);
+  assertEquals(event.tags, [["x", hash], ["client", "napplet.run"]]);
   assertEquals(
     createSnapshotManifestTemplate(event, { kind: 15129, pubkey: "a".repeat(64) }).content,
     "Notes",

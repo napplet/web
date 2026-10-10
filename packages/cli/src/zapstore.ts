@@ -1,4 +1,5 @@
 /** Optional software application events and their local image uploads. */
+import { withClientTag } from "./client-tag.ts";
 import { resolvePath } from "./path.ts";
 import type { DeployFilePayload } from "./blossom-upload.ts";
 import type {
@@ -121,7 +122,7 @@ export async function prepareZapstorePublication(
       kind: 32267,
       created_at: options.createdAt ?? Math.floor(Date.now() / 1000),
       content: metadata.description ?? config.metadata?.description ?? "",
-      tags,
+      tags: withClientTag(tags),
     },
     files,
     mediaServer: files.length ? servers[0] : undefined,

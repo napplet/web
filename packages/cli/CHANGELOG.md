@@ -1,5 +1,11 @@
 # @napplet/cli
 
+## 0.8.9
+
+### Patch Changes
+
+- Add napplet.run client attribution to current and legacy deployment manifests, snapshots, and optional Zapstore application events before signing.
+
 ## 0.8.8
 
 ### Patch Changes
