@@ -23,7 +23,7 @@ curl -fsSL https://napplet.run/install.sh | sh
 irm https://napplet.run/install.ps1 | iex
 ```
 
-Run `napplet guide` for the current workflow and links to the relevant docs, or follow the same path directly:
+Run `napplet --version` (also `-v` or `version`) to identify the installed CLI. Run `napplet guide` for the current workflow and links to the relevant docs, or follow the same path directly:
 
 ```bash
 napplet create my-napplet
