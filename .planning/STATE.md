@@ -36,6 +36,12 @@ Last activity: 2026-10-09 - Completed quick task 261009-ur6: Remove commit-title
 
 See phase 162 VERIFICATION.md for evidence and disclosed compatibility/tooling findings. Earlier phase and quick-task records below are historical.
 
+### Quick task 261010-2y9 — COMPLETE
+
+- Pinned screenshot/default conformance runner to 0.3.3 so older local dependencies cannot intercept commands.
+- Verified real npm resolution and the normal inline screenshot dry-run path; reports in `/tmp/napplet-runner-proof`.
+- Prepared CLI 0.8.7 atop PR #237; build, types, unit suite and slop passed.
+
 ### Quick task 261010-2m3 — COMPLETE
 
 - Added repository-derived source tags and config override/suppression for CLI 0.8.6.
