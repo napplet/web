@@ -6,9 +6,9 @@ name: Publish to JSR
 # is linked under the @napplet scope on jsr.io.
 #
 # Trigger model:
-# - JSR publishing runs only for Version Packages commits. Stable CLI binaries
-#   run on every main push so install.sh never points at a missing release while
-#   waiting for the generated Version Packages PR.
+# - Every main push runs JSR publishing. The publisher skips versions already
+#   present in the registry, so package metadata determines what gets released.
+# - Stable CLI binaries also run on every main push.
 # - Manual workflow_dispatch is also wired for one-off bootstrap publishes.
 
 on:
@@ -22,7 +22,6 @@ concurrency:
 
 jobs:
   publish-jsr:
-    if: github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'Version Packages')
     runs-on: ubuntu-latest
     permissions:
       contents: read

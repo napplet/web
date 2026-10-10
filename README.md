@@ -156,7 +156,7 @@ napplet create my-napplet # Scaffold a new napplet from the template repo
 
 ### Publishing
 
-Publishing runs from GitHub Actions. Prepare release metadata locally, then push the branch/tag and let the npm + JSR workflows publish from `main`.
+Publishing runs from GitHub Actions. Prepare release metadata locally, then merge the release changes into `main`. Every push to `main` runs the JSR publisher, which skips versions already present in the registry and publishes missing versions regardless of the commit title. Manual dispatch remains available to retry a failed release. npm publishing runs through Changesets; the Deno CLI is distributed through JSR and standalone GitHub release binaries.
 
 ```bash
 pnpm version-packages   # Apply changesets, bump versions
