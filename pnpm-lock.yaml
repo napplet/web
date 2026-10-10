@@ -157,9 +157,18 @@ importers:
 
   packages/conformance-cli:
     dependencies:
+      '@kehto/paja':
+        specifier: 0.19.0
+        version: 0.19.0(@napplet/core@0.32.0)(@napplet/nap@0.32.0(json-schema-to-ts@3.1.1))(nostr-tools@2.23.3(typescript@5.9.3))
       '@napplet/conformance':
         specifier: workspace:^
         version: link:../conformance
+      '@napplet/core':
+        specifier: 0.32.0
+        version: 0.32.0
+      '@napplet/nap':
+        specifier: 0.32.0
+        version: 0.32.0(json-schema-to-ts@3.1.1)
       playwright:
         specifier: ^1.59.1
         version: 1.61.0
@@ -667,6 +676,55 @@ packages:
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
 
+  '@kehto/acl@0.19.0':
+    resolution: {integrity: sha512-A2wxhWOLWbN3wiCofFs+WKZ5NcHXgbJvXucwJK51Z03Qh705JQ0T/cW1FYVYrJZTEvMyVN0QEGfybOwMLln/Kw==}
+    peerDependencies:
+      '@napplet/core': '>=0.32.0 <0.33.0'
+      '@napplet/nap': '>=0.32.0 <0.33.0'
+
+  '@kehto/firewall@0.6.0':
+    resolution: {integrity: sha512-KRWlh2NJrT/7L1LbXnL6IY+ASgrqivuoOwBn892xDuVHoOfBZrafH7bWxcwsLahDxu4iQmXRhEa/ToiaMDhyaQ==}
+    peerDependencies:
+      '@napplet/core': '>=0.32.0 <0.33.0'
+
+  '@kehto/nip@0.6.0':
+    resolution: {integrity: sha512-RhiLX0NYbOZ+rxq+wbWrcZiHE7F7nasaDCXzpk8TTxDsJvDdLjUISe6o5udMwry5sTya9S40F91D7m0dYd2Gqg==}
+    peerDependencies:
+      nostr-tools: '>=2.23.3 <=2.x'
+
+  '@kehto/paja@0.19.0':
+    resolution: {integrity: sha512-UCUwER9thz/sP3B1BPhM/QkymesjnFKGfeNLtuIX0lT1xPH+q8Tbl149U7P2OdgAWt+p5n8p/T/WIOXTFE1CBQ==}
+    peerDependencies:
+      '@napplet/core': '>=0.32.0 <0.33.0'
+      '@napplet/nap': '>=0.32.0 <0.33.0'
+      nostr-tools: '>=2.23.3 <=2.x'
+
+  '@kehto/runtime@0.24.0':
+    resolution: {integrity: sha512-uWjopIDhFTbduBZ1iPmm6dKZyV/4nySb52ODBeqeWo9ErVIbYt0v3j/RGgeYvGNRJbCxqqN/Rllpec1FWFgoqA==}
+    peerDependencies:
+      '@napplet/core': '>=0.32.0 <0.33.0'
+      '@napplet/nap': '>=0.32.0 <0.33.0'
+
+  '@kehto/services@0.22.1':
+    resolution: {integrity: sha512-7rn8IGhqJmN922eO++UmcB9J1rMhqkDUMMne7zSX6Rd1krn2a98Z17req/rD/Ed67ByrMMjkbD11OU+avdRuig==}
+    peerDependencies:
+      '@napplet/core': '>=0.32.0 <0.33.0'
+      '@napplet/nap': '>=0.32.0 <0.33.0'
+      nostr-tools: '>=2.23.3 <=2.x'
+    peerDependenciesMeta:
+      nostr-tools:
+        optional: true
+
+  '@kehto/shell@0.22.0':
+    resolution: {integrity: sha512-YFPxZdFiZ73u40TKU5EOjnsH2P2pRfni4NWppyGwcBYUSkzsiNZs5G63ay3D/Ugr5hLznnNcu5HB88K6QbJ0HQ==}
+    peerDependencies:
+      '@napplet/core': '>=0.32.0 <0.33.0'
+      '@napplet/nap': '>=0.32.0 <0.33.0'
+      nostr-tools: '>=2.23.3 <=2.x'
+
+  '@kehto/wm@0.0.2':
+    resolution: {integrity: sha512-8cjneY8paT9jcBRE/XX1oEA0pWtojkO9BESQ7UMTL9gIc+2zClXGLmY0HwdHMHMeZ3+c1sIcxsF08IHVwI3pDQ==}
+
   '@manypkg/find-root@3.1.0':
     resolution: {integrity: sha512-BcSqCyKhBVZ5YkSzOiheMCV41kqAFptW6xGqYSTjkVTl9XQpr+pqHhwgGCOHQtjDCv7Is6EFyA14Sm5GVbVABA==}
     engines: {node: '>=20.0.0'}
@@ -678,6 +736,17 @@ packages:
   '@manypkg/tools@2.1.2':
     resolution: {integrity: sha512-6QEf6yqFbETdwGITKq57aYoPfX/3K8XFNwsAlx0C1M7o8cb79sv1M3w+tWuWvIcSbNqrLF7OD7YpZMVVz335hQ==}
     engines: {node: '>=20.0.0'}
+
+  '@napplet/core@0.32.0':
+    resolution: {integrity: sha512-gP+U7xd32gD7uFYINK+NWDJfW2TMvhLcIPr+Boafta7tZWTRIlyzozvqsooyFg7XUapCOnGKqnjIUa0DFo6Brw==}
+
+  '@napplet/nap@0.32.0':
+    resolution: {integrity: sha512-DvlneleMpcUtOZmLGRGj9QSCor67veL4gWOYGTWaXPDkBEaEuiU4Ijtreb3+kVky/4ghjL3qmScOFMW6WorWQw==}
+    peerDependencies:
+      json-schema-to-ts: ^3.1.1
+    peerDependenciesMeta:
+      json-schema-to-ts:
+        optional: true
 
   '@noble/ciphers@0.5.3':
     resolution: {integrity: sha512-B0+6IIHiqEs3BPMT0hcRmHvEj2QHOLu+uwt+tqDDeVd0oyVzh7BPrDcPjRnV1PV/5LaknXJJQvOuRGR0zQJz+w==}
@@ -2401,6 +2470,60 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
 
+  '@kehto/acl@0.19.0(@napplet/core@0.32.0)(@napplet/nap@0.32.0(json-schema-to-ts@3.1.1))':
+    dependencies:
+      '@napplet/core': 0.32.0
+      '@napplet/nap': 0.32.0(json-schema-to-ts@3.1.1)
+
+  '@kehto/firewall@0.6.0(@napplet/core@0.32.0)':
+    dependencies:
+      '@napplet/core': 0.32.0
+
+  '@kehto/nip@0.6.0(nostr-tools@2.23.3(typescript@5.9.3))':
+    dependencies:
+      '@noble/hashes': 2.0.1
+      nostr-tools: 2.23.3(typescript@5.9.3)
+
+  '@kehto/paja@0.19.0(@napplet/core@0.32.0)(@napplet/nap@0.32.0(json-schema-to-ts@3.1.1))(nostr-tools@2.23.3(typescript@5.9.3))':
+    dependencies:
+      '@kehto/acl': 0.19.0(@napplet/core@0.32.0)(@napplet/nap@0.32.0(json-schema-to-ts@3.1.1))
+      '@kehto/firewall': 0.6.0(@napplet/core@0.32.0)
+      '@kehto/nip': 0.6.0(nostr-tools@2.23.3(typescript@5.9.3))
+      '@kehto/runtime': 0.24.0(@napplet/core@0.32.0)(@napplet/nap@0.32.0(json-schema-to-ts@3.1.1))
+      '@kehto/services': 0.22.1(@napplet/core@0.32.0)(@napplet/nap@0.32.0(json-schema-to-ts@3.1.1))(nostr-tools@2.23.3(typescript@5.9.3))
+      '@kehto/shell': 0.22.0(@napplet/core@0.32.0)(@napplet/nap@0.32.0(json-schema-to-ts@3.1.1))(nostr-tools@2.23.3(typescript@5.9.3))
+      '@kehto/wm': 0.0.2
+      '@napplet/core': 0.32.0
+      '@napplet/nap': 0.32.0(json-schema-to-ts@3.1.1)
+      nostr-tools: 2.23.3(typescript@5.9.3)
+
+  '@kehto/runtime@0.24.0(@napplet/core@0.32.0)(@napplet/nap@0.32.0(json-schema-to-ts@3.1.1))':
+    dependencies:
+      '@kehto/acl': 0.19.0(@napplet/core@0.32.0)(@napplet/nap@0.32.0(json-schema-to-ts@3.1.1))
+      '@kehto/firewall': 0.6.0(@napplet/core@0.32.0)
+      '@napplet/core': 0.32.0
+      '@napplet/nap': 0.32.0(json-schema-to-ts@3.1.1)
+      '@noble/curves': 2.0.1
+      '@noble/hashes': 2.0.1
+
+  '@kehto/services@0.22.1(@napplet/core@0.32.0)(@napplet/nap@0.32.0(json-schema-to-ts@3.1.1))(nostr-tools@2.23.3(typescript@5.9.3))':
+    dependencies:
+      '@kehto/runtime': 0.24.0(@napplet/core@0.32.0)(@napplet/nap@0.32.0(json-schema-to-ts@3.1.1))
+      '@napplet/core': 0.32.0
+      '@napplet/nap': 0.32.0(json-schema-to-ts@3.1.1)
+    optionalDependencies:
+      nostr-tools: 2.23.3(typescript@5.9.3)
+
+  '@kehto/shell@0.22.0(@napplet/core@0.32.0)(@napplet/nap@0.32.0(json-schema-to-ts@3.1.1))(nostr-tools@2.23.3(typescript@5.9.3))':
+    dependencies:
+      '@kehto/acl': 0.19.0(@napplet/core@0.32.0)(@napplet/nap@0.32.0(json-schema-to-ts@3.1.1))
+      '@kehto/runtime': 0.24.0(@napplet/core@0.32.0)(@napplet/nap@0.32.0(json-schema-to-ts@3.1.1))
+      '@napplet/core': 0.32.0
+      '@napplet/nap': 0.32.0(json-schema-to-ts@3.1.1)
+      nostr-tools: 2.23.3(typescript@5.9.3)
+
+  '@kehto/wm@0.0.2': {}
+
   '@manypkg/find-root@3.1.0':
     dependencies:
       '@manypkg/tools': 2.1.2
@@ -2415,6 +2538,14 @@ snapshots:
       jju: 1.4.0
       tinyglobby: 0.2.17
       yaml: 2.9.1
+
+  '@napplet/core@0.32.0': {}
+
+  '@napplet/nap@0.32.0(json-schema-to-ts@3.1.1)':
+    dependencies:
+      '@napplet/core': 0.32.0
+    optionalDependencies:
+      json-schema-to-ts: 3.1.1
 
   '@noble/ciphers@0.5.3': {}
 

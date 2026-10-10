@@ -51,7 +51,7 @@ Usage:
   napplet guide
   napplet create <directory> [--template <path-or-url>] [--force]
   napplet init [--force] [--root] [--source-dir <dir>] [--name <dtag>] [--title <title>] [--description <text>] [--archetype <napplet:archetype/intent>] [--relay <url>] [--server <url>]
-  napplet deploy [--format current|legacy] [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>] [--prompt-sec] [--zapstore | --no-zapstore] [--screenshot <preview-url>] [--dry-run] [--json]
+  napplet deploy [--format current|legacy] [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>] [--prompt-sec] [--zapstore | --no-zapstore] [--screenshot [<preview-url>]] [--dry-run] [--json]
   napplet migrate <signed-event.json> [--description <text>] [--optional <domain>] [--output <preview.json>]
   napplet debug [--format current|legacy] [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>]
   napplet keys store --name <ref> [--sec <secret> | --prompt-sec]
@@ -63,7 +63,7 @@ Usage:
   napplet discover [--config <file>] [--all]
   napplet conformance [--config <file>] [--all] [-- <args>]
   napplet paja [--config <file>] [-- <args>]
-  napplet screenshot <preview-url> [--output preview.png] [--selector iframe] [--ready-selector <css>] [--width 1200] [--height 750] [--delay 1500]
+  napplet screenshot [directory|preview-url] [--output preview.png] [--selector iframe] [--ready-selector <css>] [--width 1200] [--height 750] [--delay 1500]
 
 Deploy capture options: --screenshot-selector, --screenshot-ready-selector,
   --screenshot-width, --screenshot-height, --screenshot-delay (all take values).
@@ -267,9 +267,9 @@ async function commandDeploy(argv: string[], runScreenshot?: PackageCliRunner): 
       format,
     });
     const blossomServers = resolveDeployServers(templates, config.blossomServers);
-    screenshot = await captureDeployScreenshot(flags, config, runScreenshot);
+    screenshot = await captureDeployScreenshot(flags, config, runScreenshot, plan);
     const publicationConfig = screenshot && config.zapstore
-      ? { ...config, zapstore: { ...config.zapstore, images: [...(config.zapstore.images ?? []), screenshot.path] } }
+      ? { ...config, zapstore: { ...config.zapstore, images: [...(config.zapstore.images ?? []), ...screenshot.paths] } }
       : config;
     const application = await prepareZapstorePublication(publicationConfig, blossomServers, {
       enabled: flags.boolean.has("no-zapstore") ? false : flags.boolean.has("zapstore") ? true : undefined,

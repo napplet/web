@@ -37,6 +37,10 @@ export function collectFlags(argv: string[]): FlagBag {
       continue;
     }
     const name = arg.slice(2);
+    if (name === "screenshot" && (argv[i + 1] === undefined || argv[i + 1].startsWith("--"))) {
+      flags.boolean.add(name);
+      continue;
+    }
     if (["force", "all", "root", "snapshot", "prompt-sec", "dry-run", "json", "zapstore", "no-zapstore"].includes(name)) {
       flags.boolean.add(name);
       continue;

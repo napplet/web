@@ -36,6 +36,12 @@ Last activity: 2026-10-07 - Completed quick task 261007-aae: Resolve PR #224 con
 
 See phase 162 VERIFICATION.md for evidence and disclosed compatibility/tooling findings. Earlier phase and quick-task records below are historical.
 
+### Quick task 261010-26v — COMPLETE
+
+- Automatic Kehto Paja screenshot previews for deploy and standalone capture; no user-supplied host required.
+- CLI 0.8.5 and conformance-cli 0.3.3 prepared; real PNG proofs saved in `/tmp/napplet-screenshot-proof`.
+- Full build, type-check, unit suite and changed-code slop gate passed.
+
 ### Quick task 260726-ft1 — COMPLETE
 
 - Removed manual prose wrapping from all 11 READMEs changed by the current branch while preserving structural Markdown and fenced examples.

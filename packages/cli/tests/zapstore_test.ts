@@ -1,4 +1,6 @@
 import { verifyEvent } from "nostr-tools";
+import { captureDeployScreenshot } from "../src/deploy-screenshot.ts";
+import { collectFlags } from "../src/flags.ts";
 import { main } from "../src/cli.ts";
 import { createSigningDebugInfo } from "../src/debug.ts";
 import { renderDeployReport } from "../src/output.ts";
@@ -278,82 +280,102 @@ Deno.test("screenshot runner passes arguments literally to the maintained browse
   assertEquals(received, ["npx.cmd", "--yes", "@napplet/conformance-cli", "screenshot", ...args]);
 });
 
-for (const outcome of ["success", "capture failure", "invalid image", "disabled"] as const) {
-  Deno.test(`inline deploy screenshot: ${outcome}`, async () => {
-    await withTempDir(async (dir) => {
-      await Deno.mkdir(`${dir}/dist`);
-      await Deno.writeTextFile(
-        `${dir}/dist/index.html`,
-        '<meta name="description" content="Notes">',
-      );
-      const config = defaultConfig({
-        sourceDir: `${dir}/dist`,
-        blossomServers: servers,
-        zapstore: { ...listing, images: ["https://images.example/existing.png"] },
-      });
-      await Deno.writeTextFile(`${dir}/config.json`, JSON.stringify(config));
-      const originalConfig = await Deno.readTextFile(`${dir}/config.json`);
-      const logs: string[] = [];
-      const errors: string[] = [];
-      const log = console.log;
-      const error = console.error;
-      console.log = (value: unknown) => logs.push(String(value));
-      console.error = (value: unknown) => errors.push(String(value));
-      let capturePath = "";
-      let code: number;
-      try {
-        code = await main([
-          "deploy",
-          "--config",
-          `${dir}/config.json`,
-          "--dry-run",
-          "--json",
-          "--screenshot",
-          "http://localhost:5173",
-          "--screenshot-ready-selector",
-          ".ready",
-          ...(outcome === "disabled" ? ["--no-zapstore"] : ["--zapstore"]),
-        ], {
-          runScreenshot: async (args) => {
-            assertEquals(args[0], "http://localhost:5173");
-            assertEquals(args.slice(3), ["--ready-selector", ".ready"]);
-            capturePath = args[2];
-            await Deno.writeFile(
-              capturePath,
-              outcome === "invalid image" ? new Uint8Array([1, 2, 3]) : png,
-            );
-            return outcome === "capture failure" ? 2 : 0;
-          },
-        });
-      } finally {
-        console.log = log;
-        console.error = error;
-      }
-      assertEquals(code, outcome === "success" ? 0 : 1);
-      assertEquals(await Deno.readTextFile(`${dir}/config.json`), originalConfig);
-      if (outcome === "success") {
-        assertEquals(logs.length, 1);
-        const report = JSON.parse(logs[0]);
-        const images = report.application.template.tags.filter((tag: string[]) =>
-          tag[0] === "image"
+for (const automatic of [false, true]) {
+  for (const outcome of ["success", "capture failure", "invalid image", "disabled"] as const) {
+    Deno.test(`inline deploy screenshot (${automatic ? "automatic" : "URL"}): ${outcome}`, async () => {
+      await withTempDir(async (dir) => {
+        await Deno.mkdir(`${dir}/dist`);
+        await Deno.writeTextFile(
+          `${dir}/dist/index.html`,
+          '<meta name="description" content="Notes">',
         );
-        assertEquals(images.length, 2);
-        assertEquals(images[0], ["image", "https://images.example/existing.png"]);
-        assert(images[1][1].startsWith(servers[0]));
-        assertEquals(report.manifests[0].files.length, 1);
-      } else {
-        assertEquals(logs.length, 0);
-        assert(errors.length > 0);
-      }
-      if (outcome === "disabled") assertEquals(capturePath, "");
-      else {
+        const config = defaultConfig({
+          sourceDir: `${dir}/dist`,
+          blossomServers: servers,
+          zapstore: { ...listing, images: ["https://images.example/existing.png"] },
+        });
+        await Deno.writeTextFile(`${dir}/config.json`, JSON.stringify(config));
+        const originalConfig = await Deno.readTextFile(`${dir}/config.json`);
+        const logs: string[] = [];
+        const errors: string[] = [];
+        const log = console.log;
+        const error = console.error;
+        console.log = (value: unknown) => logs.push(String(value));
+        console.error = (value: unknown) => errors.push(String(value));
+        let capturePath = "";
+        let code: number;
         try {
-          await Deno.stat(capturePath.slice(0, capturePath.lastIndexOf("/")));
-          throw new Error("Temporary directory was retained");
-        } catch (error) {
-          assert(error instanceof Deno.errors.NotFound);
+          code = await main([
+            "deploy",
+            "--config",
+            `${dir}/config.json`,
+            "--dry-run",
+            "--json",
+            "--screenshot",
+            ...(automatic ? [] : ["http://localhost:5173"]),
+            "--screenshot-ready-selector",
+            ".ready",
+            ...(outcome === "disabled" ? ["--no-zapstore"] : ["--zapstore"]),
+          ], {
+            runScreenshot: async (args) => {
+              assertEquals(args.slice(0, automatic ? 2 : 1), automatic ? ["--artifact", `${dir}/dist/index.html`] : ["http://localhost:5173"]);
+              assertEquals(args.slice(automatic ? 4 : 3), ["--ready-selector", ".ready"]);
+              capturePath = args[automatic ? 3 : 2];
+              await Deno.writeFile(
+                capturePath,
+                outcome === "invalid image" ? new Uint8Array([1, 2, 3]) : png,
+              );
+              return outcome === "capture failure" ? 2 : 0;
+            },
+          });
+        } finally {
+          console.log = log;
+          console.error = error;
         }
-      }
+        assertEquals(code, outcome === "success" ? 0 : 1);
+        assertEquals(await Deno.readTextFile(`${dir}/config.json`), originalConfig);
+        if (outcome === "success") {
+          assertEquals(logs.length, 1);
+          const report = JSON.parse(logs[0]);
+          const images = report.application.template.tags.filter((tag: string[]) =>
+            tag[0] === "image"
+          );
+          assertEquals(images.length, 2);
+          assertEquals(images[0], ["image", "https://images.example/existing.png"]);
+          assert(images[1][1].startsWith(servers[0]));
+          assertEquals(report.manifests[0].files.length, 1);
+        } else {
+          assertEquals(logs.length, 0);
+          assert(errors.length > 0);
+        }
+        if (outcome === "disabled") assertEquals(capturePath, "");
+        else {
+          try {
+            await Deno.stat(capturePath.slice(0, capturePath.lastIndexOf("/")));
+            throw new Error("Temporary directory was retained");
+          } catch (error) {
+            assert(error instanceof Deno.errors.NotFound);
+          }
+        }
+      });
     });
-  });
+  }
+
 }
+
+Deno.test("automatic screenshots deduplicate companion snapshots and retain distinct builds", async () => {
+  const config = defaultConfig({ blossomServers: servers, zapstore: { ...listing, enabled: true } });
+  const candidates = ["one", "two"].map((name) => ({ name, dir: `/build/${name}`, indexHtml: `/build/${name}/index.html` }));
+  const plan = createDeployPlan(config, candidates, { root: true, snapshot: true });
+  const captured: string[] = [];
+  const screenshot = await captureDeployScreenshot(collectFlags(["--screenshot"]), config, async (args) => {
+    captured.push(args[1]);
+    await Deno.writeFile(args[3], png);
+    return 0;
+  }, plan);
+  assert(screenshot);
+  try {
+    assertEquals(captured, candidates.map((candidate) => candidate.indexHtml));
+    assertEquals(screenshot.paths.length, 2);
+  } finally { await screenshot.cleanup(); }
+});
