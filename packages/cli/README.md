@@ -20,6 +20,15 @@ irm https://napplet.run/install.ps1 | iex
 
 The installers download a supported asset from the [stable CLI release](https://github.com/napplet/napplet/releases/tag/napplet-cli) and verify it against `SHA256SUMS` before replacing the executable. Supported assets are Linux x64 / ARM64, macOS x64 / ARM64, and Windows x64.
 
+### Check the installed version
+
+```sh
+napplet --version
+# Also available: napplet -v or napplet version
+```
+
+This prints the version of the CLI you actually invoked. If you have both standalone and Deno installations, use `type -a napplet` on macOS/Linux or `Get-Command napplet -All` in PowerShell to check which executable takes precedence. A version command reported as unknown means that installation predates version reporting.
+
 ### JSR/Deno alternative
 
 ```sh
@@ -28,6 +37,9 @@ deno install --global \
   --name napplet \
   jsr:@napplet/cli/cli
 ```
+
+To refresh an existing JSR installation, rerun the command with `--force --reload` after `--global`. Then check the Deno-installed executable directly (`~/.deno/bin/napplet --version` with Deno's default install location); another `napplet` earlier on `PATH` is unaffected. See [Deno's install reference](https://docs.deno.com/runtime/reference/cli/install/) for custom install locations and upgrade flags.
+
 
 The permission set is intentionally explicit:
 

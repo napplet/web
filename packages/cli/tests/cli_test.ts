@@ -8,6 +8,23 @@ import {
 import { defaultConfig } from "../src/config.ts";
 import { collectFlags } from "../src/flags.ts";
 import { assert, assertEquals } from "./assert.ts";
+import cliMetadata from "../deno.json" with { type: "json" };
+
+for (const alias of ["--version", "-v", "version"]) {
+  Deno.test(`main reports installed package version for ${alias} without permissions`, {
+    permissions: "none",
+  }, async () => {
+    const output: string[] = [];
+    const original = console.log;
+    console.log = (value: unknown) => output.push(String(value));
+    try {
+      assertEquals(await main([alias]), 0);
+    } finally {
+      console.log = original;
+    }
+    assertEquals(output, [`napplet ${cliMetadata.version}`]);
+  });
+}
 
 Deno.test("loadDeployConfig bootstraps missing config in interactive deploy", async () => {
   const flags = collectFlags(["--name", "gbcolor"]);

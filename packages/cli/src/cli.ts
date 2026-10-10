@@ -36,6 +36,7 @@ import { runCommand, splitCommand } from "./process.ts";
 import { resolveSigningMethod, signDeployManifestTemplates } from "./signing.ts";
 import { getBlossomServerSuggestions, getRelaySuggestions } from "./suggestions.ts";
 import type { DeploySelection, NappletConfig } from "./types.ts";
+import cliMetadata from "../deno.json" with { type: "json" };
 
 import { runPackageCli, resolveConformanceCommand, resolvePajaArgs } from "./package-runner.ts";
 export { runPackageCli, resolveConformanceCommand, resolvePajaArgs } from "./package-runner.ts";
@@ -44,6 +45,7 @@ export type { PackageCliRunOptions, ResolvedCommand } from "./package-runner.ts"
 const HELP = `@napplet/cli
 
 Usage:
+  napplet --version | -v | version
   napplet guide
   napplet create <directory> [--template <path-or-url>] [--force]
   napplet init [--force] [--root] [--source-dir <dir>] [--name <dtag>] [--title <title>] [--description <text>] [--archetype <slug:napplet:<archetype>/<intent>>] [--relay <url>] [--server <url>]
@@ -87,6 +89,11 @@ export async function main(argv = Deno.args, options: CliMainOptions = {}): Prom
   const parsed = parseCommand(argv);
   try {
     switch (parsed.command) {
+      case "version":
+      case "--version":
+      case "-v":
+        console.log(`napplet ${cliMetadata.version}`);
+        return 0;
       case "help":
       case "--help":
       case "-h":
