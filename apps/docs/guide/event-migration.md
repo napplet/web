@@ -70,6 +70,6 @@ The command does not sign or publish. Review the template, then use your event s
 - Discovery code that filters `requires` or `archetype` needs `R`/`O` and `z`/`i`. During rollout, legacy catalog ingestion belongs in an explicit boundary; it must not silently treat the old aggregate as `x` artifact identity.
 - The `.nip5a-manifest.json` filename and `nip5aManifest` helper remain compatibility names for local tooling. Current conformance checks derive identity from the event and downloaded artifact, not sidecar convenience fields.
 
-The NAP archetype registry currently includes older manifest examples and `shell.supports()` references. Follow current NIP-5D for manifest tags and namespace availability; keep NAP-INTENT's separately specified runtime operations unchanged. Report drift instead of adding a private handshake or tag.
+NAP-INTENT now derives role and action from convention URIs, catalogs NIP-5D `z`/`i` advertisements, and exposes retained target delivery through `onDelivery`. NAP-SHELL readiness is optional and does not gate other domains. Follow the living NAP documents for those API contracts.
 
 The CLI still applies its existing lowercase/hyphen naming policy when selecting deployment names. That is a tool limitation, not a NIP-5D restriction on `d` values; migration preserves identifiers exactly.

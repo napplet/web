@@ -1,5 +1,63 @@
 # @napplet/cli
 
+## 0.8.9
+
+### Patch Changes
+
+- Add napplet.run client attribution to current and legacy deployment manifests, snapshots, and optional Zapstore application events before signing.
+
+## 0.8.8
+
+### Patch Changes
+
+- Link current deployment manifests to optional Zapstore application metadata using the proposed NIP-5D app reference, allowing clients to discover screenshots. Publish application metadata before referencing manifests.
+
+## 0.8.7
+
+### Patch Changes
+
+- Pin screenshot and default conformance commands to the tested browser runner so older project-local dependencies cannot intercept them. Preserve custom conformance commands.
+
+## 0.8.6
+
+### Patch Changes
+
+- Infer missing NIP-5D source tags from the selected build's Git origin. Add metadata.source to override the URL or suppress source publication with false.
+
+## 0.8.5
+
+### Patch Changes
+
+- Capture deploy screenshots without a host URL using an automatic local Kehto Paja preview. Install Chromium on first use and retain explicit preview URLs.
+
+## 0.8.4
+
+### Patch Changes
+
+- Add optional Zapstore application metadata publishing with local screenshot uploads, dry-run previews, publication failure reporting, the preview screenshot command, and inline capture with deploy --screenshot.
+
+## 0.8.3
+
+### Patch Changes
+
+- 2910c4b: Accept queryless convention URIs such as `napplet:note/open` directly in CLI archetype input and JSON metadata. Derive the role from the URI, preserve existing object configs and legacy CLI input, and correct setup prompts, reports, and documentation.
+- Updated dependencies [2910c4b]
+  - @napplet/boilerplate@0.3.4
+
+## 0.8.2
+
+### Patch Changes
+
+- f33d9d6: Add `napplet --version`, `napplet -v`, and `napplet version` to report the installed package version in JSR and standalone installations.
+
+## 0.8.1
+
+### Patch Changes
+
+- Follow the NAP-INTENT lifecycle and manifest amendments: accept authoritative convention URIs and naddr recommendations, expose acceptance results and buffered onDelivery callbacks, and discover opaque catalog identifiers with parameter contracts. Restore the optional NAP-SHELL environment API independently of other domain calls. Align INC provenance with authenticated endpoint identifiers and deliver theme/identity updates only for exposed domains.
+
+  INTENT callers migrate from archetype/request arguments to invoke(uri, options) and open(uri, options), from handled/windowId to acceptance, and from candidate dTag to id/contracts. Existing IntentOpenOptions and named SDK helpers remain exported with the URI signatures. CLI helper extraction preserves existing exports and behavior.
+
 ## 0.8.0
 
 ### Minor Changes

@@ -14,7 +14,7 @@
  * napplet guide
  * napplet create feed
  * cd feed
- * napplet init --relay wss://relay.example --server https://blossom.example --name feed --title Feed --archetype note:napplet:note/open
+ * napplet init --relay wss://relay.example --server https://blossom.example --name feed --title Feed --archetype napplet:note/open
  * npx skills add napplet/napplet
  * napplet debug
  * napplet deploy --dry-run --sec nsec1...
@@ -72,3 +72,4 @@ export * from "./process.ts";
 export * from "./signing.ts";
 export * from "./suggestions.ts";
 export * from "./types.ts";
+export * from "./zapstore.ts";

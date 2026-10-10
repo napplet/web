@@ -1,78 +1,107 @@
-/** How the shell should pick the handling napplet for an intent (NAP-INTENT). */
+/** Runtime catalog selection preference; identifiers are opaque and runtime-local. */
 export type IntentHandlerPreference = 'default' | 'choose' | (string & {});
 
-/** Window and focus hints for an intent invocation. */
+/** Lifecycle hints; runtime policy remains authoritative. */
 export interface IntentBehavior {
-  /** Focus the target surface. */
+  /** Request focus for the target surface. */
   focus?: boolean;
-  /** Request a new target window instead of reuse. */
-  newWindow?: boolean;
-  /** Permit reuse of an existing matching window. */
+  /** Permit reuse of an existing matching target. */
   reuse?: boolean;
 }
 
-/** Optional fields accepted by the `intent.open` convenience operation. */
-export interface IntentOpenOptions {
-  /** Convention that shapes the opaque payload. */
-  convention?: string;
-  /** Runtime-authorized handler selection preference. */
+/** A recommended named napplet, separate from explicit handler selection. */
+export interface IntentHandlerHint {
+  /** Kind 35129 coordinate; publisher and case-sensitive identifier are preserved. */
+  address: string;
+  /** Untrusted relay discovery hints, outside handler identity. */
+  relays?: string[];
+}
+
+/** Options for the URI-based invoke and open operations. */
+export interface IntentInvokeOptions {
+  /** Structured payload; cannot accompany URI query parameters. */
+  payload?: unknown;
+  /** Runtime-authorized catalog selection preference. */
   handler?: IntentHandlerPreference;
-  /** Window and focus hints. */
+  /** Recommendation; cannot accompany a URI handler fragment. */
+  handlerHint?: IntentHandlerHint;
+  /** Lifecycle and focus hints. */
   behavior?: IntentBehavior;
 }
 
-/** A request to dispatch an action to a napplet archetype. */
-export interface IntentRequest extends IntentOpenOptions {
-  /** Role slug used for handler resolution. */
+/** Options shared by open and invoke. */
+export type IntentOpenOptions = IntentInvokeOptions;
+
+/** The normalized wire request derived from an authoritative convention URI. */
+export interface IntentRequest extends IntentInvokeOptions {
+  /** Role derived from the convention URI. */
   archetype: string;
-  /** Action to dispatch; defaults to `open`. */
-  action?: string;
-  /** Opaque payload shaped by `convention` when present. */
-  payload?: unknown;
+  /** Action derived from the convention URI. */
+  action: string;
+  /** Queryless, fragment-free convention identity. */
+  convention: string;
 }
 
-/** A napplet that can fulfill an archetype (from the manifest catalog). */
+/** A parsed manifest i-tag contract. */
+export interface IntentContract {
+  /** Stable convention identity. */
+  convention: string;
+  /** Advertised parameter names, in tag order. */
+  params: string[];
+}
+
+/** An installed handler advertised by a verified manifest. */
 export interface IntentCandidate {
-  /** Napplet dTag. */
-  dTag: string;
-  /** Optional human-readable handler label. */
+  /** Opaque runtime catalog identifier, distinct from an endpoint or d tag. */
+  id: string;
+  /** Human-readable label. */
   title?: string;
-  /** Actions supported by this candidate. */
+  /** Unique actions derived from contracts for this role. */
   actions: string[];
-  /** Payload conventions supported by this candidate. */
+  /** Unique stable convention identities for this role. */
   conventions: string[];
-  /** Whether this candidate is the current default. */
+  /** Contracts eligible for this role. */
+  contracts: IntentContract[];
+  /** Whether this candidate is the user's default. */
   isDefault?: boolean;
 }
 
-/** Availability of an archetype, sourced from the installed-napplet catalog. */
+/** Availability from the installed catalog, independent of running instances. */
 export interface IntentAvailability {
-  /** Queried archetype. */
+  /** Queried role. */
   archetype: string;
-  /** Whether at least one candidate is available. */
+  /** Whether a candidate is available. */
   available: boolean;
-  /** Candidate napplets. */
+  /** Installed candidates. */
   candidates: IntentCandidate[];
-  /** Whether the runtime has a default handler. */
+  /** Whether the user has an applicable default. */
   hasDefault: boolean;
 }
 
-/** The result of an intent invocation. */
-export interface IntentResult {
-  /** Whether dispatch completed. */
-  ok: boolean;
-  /** Requested archetype. */
+/** Acceptance transfers delivery responsibility to the runtime. */
+export type IntentResult = {
+  ok: true;
   archetype: string;
-  /** Dispatched action. */
   action: string;
-  /** Whether a handler accepted the dispatch. */
-  handled: boolean;
-  /** dTag of the handling napplet. */
-  handler?: string;
-  /** Runtime-assigned target window identifier. */
-  windowId?: string;
-  /** Convention used for payload delivery. */
+  convention: string;
+  /** Resolved opaque catalog identifier. */
+  handler: string;
+} | {
+  ok: false;
+  /** Pre-acceptance failure reason. */
+  error: string;
+  archetype?: string;
+  action?: string;
   convention?: string;
-  /** Failure reason. */
-  error?: string;
+  handler?: string;
+};
+
+/** Runtime-attested delivery, independent of the source's lifecycle. */
+export interface IntentDelivery {
+  /** Source catalog identifier, supplied only by the runtime. */
+  sender: string;
+  archetype: string;
+  action: string;
+  convention: string;
+  payload?: unknown;
 }

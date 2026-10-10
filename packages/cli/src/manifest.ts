@@ -1,3 +1,4 @@
+import { withClientTag } from "./client-tag.ts";
 import { readHtmlPublishingFile } from "./html-metadata.ts";
 import { buildLegacyManifestFields, computeAggregateHash } from "./manifest-legacy.ts";
 import type { ManifestFormat } from "./manifest-format.ts";
@@ -72,7 +73,7 @@ export async function createSiteManifestTemplate(
   return {
     kind: item.target === "root" ? NAPPLET_KIND_ROOT : NAPPLET_KIND_NAMED,
     created_at: options.createdAt ?? nowSeconds(),
-    tags,
+    tags: withClientTag(tags),
     content: fields.content,
   };
 }
@@ -99,7 +100,7 @@ export function createSnapshotManifestTemplate(
   return {
     kind: NAPPLET_KIND_SNAPSHOT,
     created_at: options.createdAt ?? nowSeconds(),
-    tags,
+    tags: withClientTag(tags),
     content: source.content,
   };
 }

@@ -7,7 +7,7 @@ description: Use when converting an existing Nostr web app, client, or widget in
 
 Run before `napplet-design` when the starting point is an existing app. Do not copy the app architecture into the iframe: a napplet is sandboxed UI plus intent, and the shell owns keys, signing, encryption, relay routing, storage, network bytes, policy — and the window chrome. Protocol truth: NIP-5D (<https://github.com/nostr-protocol/nips/pull/2303>) and the NAPs (<https://github.com/napplet/naps>). Undefined surface is a gap to flag, not something to recreate.
 
-Use only domains the current `@napplet/sdk` exports (list and signatures in `napplet-sdk`). If a NAP is not exported, do not treat it as usable API; list the feature as blocked/deferred. Replace app infrastructure with SDK imports, not hand-written `window.napplet.<domain>` clients; keep `window.napplet?.domain` for optional-domain gating only. If the source app had an async service-discovery layer, remove it — there is no `shell.ready()` / `shell.supports()`.
+Use only domains the current `@napplet/sdk` exports (list and signatures in `napplet-sdk`). If a NAP is not exported, do not treat it as usable API; list the feature as blocked/deferred. Replace app infrastructure with SDK imports, not hand-written `window.napplet.<domain>` clients; keep `window.napplet?.domain` for optional-domain gating only. If the source app had an async service-discovery layer, remove it — optional shell readiness does not gate the other exposed domains.
 
 ## Sandbox authority contract
 
@@ -89,7 +89,7 @@ Keep `relay` only where the inventory says "explicit relay-local escape hatch" a
 
 ## Step 4 — Remove forbidden surfaces
 
-Search and delete or replace: `window.nostr`, key material, `signEvent`, `nip04`, `nip44`; `new WebSocket("wss://…")`, pool libraries, NIP-65 resolvers; `fetch`, `XMLHttpRequest`, external `<img src>`, external scripts/styles; `localStorage`, `sessionStorage`, IndexedDB, cookies; `discoverServices`, `hasService`, `shell.ready()`, `shell.supports()`. Optional-domain gating is a property check after injection:
+Search and delete or replace: `window.nostr`, key material, `signEvent`, `nip04`, `nip44`; `new WebSocket("wss://…")`, pool libraries, NIP-65 resolvers; `fetch`, `XMLHttpRequest`, external `<img src>`, external scripts/styles; `localStorage`, `sessionStorage`, IndexedDB, cookies; `discoverServices`, `hasService`, and any startup gate on `shell.ready()` / `shell.supports()`. Optional-domain gating is a property check after injection:
 
 ```ts
 if (window.napplet?.common) enableSocialActions(); else disableSocialActions();

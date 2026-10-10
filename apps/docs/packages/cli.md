@@ -28,8 +28,16 @@ curl -fsSL https://napplet.run/install.sh | sh
 irm https://napplet.run/install.ps1 | iex
 ```
 
-The installers verify the downloaded asset against the release's
-`SHA256SUMS`. Linux and macOS support x64 and ARM64; Windows supports x64.
+The installers download from the [stable CLI release](https://github.com/napplet/napplet/releases/tag/napplet-cli) and verify the asset against its `SHA256SUMS`. Linux and macOS support x64 and ARM64; Windows supports x64.
+
+### Check the installed version
+
+```sh
+napplet --version
+# Also available: napplet -v or napplet version
+```
+
+This prints the version of the CLI you actually invoked. If you have both standalone and Deno installations, use `type -a napplet` on macOS/Linux or `Get-Command napplet -All` in PowerShell to check which executable takes precedence. A version command reported as unknown means that installation predates version reporting.
 
 ### JSR/Deno alternative
 
@@ -39,6 +47,9 @@ deno install --global \
   --name napplet \
   jsr:@napplet/cli/cli
 ```
+
+To refresh an existing JSR installation, rerun the command with `--force --reload` after `--global`. Then check the Deno-installed executable directly (`~/.deno/bin/napplet --version` with Deno's default install location); another `napplet` earlier on `PATH` is unaffected. See [Deno's install reference](https://docs.deno.com/runtime/reference/cli/install/) for custom install locations and upgrade flags.
+
 
 Then open the developer guide or check the command reference:
 
@@ -91,10 +102,10 @@ napplet deploy
 ```bash
 napplet guide
 napplet create <directory> [--template <path-or-url>] [--force]
-napplet init [--force] [--root] [--source-dir <dir>] [--name <dtag>] [--title <title>] [--description <text>] [--archetype <slug:napplet:archetype/intent>] [--relay <url>] [--server <url>]
+napplet init [--force] [--root] [--source-dir <dir>] [--name <dtag>] [--title <title>] [--description <text>] [--archetype <napplet:archetype/intent>] [--relay <url>] [--server <url>]
 napplet discover [--config <file>] [--all]
 napplet debug [--format current|legacy] [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>]
-napplet deploy [--format current|legacy] [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>] [--prompt-sec] [--dry-run]
+napplet deploy [--format current|legacy] [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>] [--prompt-sec] [--zapstore | --no-zapstore] [--screenshot [<preview-url>]] [--dry-run]
 napplet keys store --name <ref> [--sec <secret> | --prompt-sec]
 napplet keys connect --name <ref> [--relay <url> ...] [--config <file>]
 napplet keys use --name <ref> [--config <file>]
@@ -115,41 +126,26 @@ deploys under its own folder name as the named `d` tag.
 
 ## Archetype conventions
 
-Pass each `--archetype` option as `slug:napplet:<archetype>/<intent>`, for
-example `profile:napplet:profile/open`. The resulting configuration preserves
-the queryless convention:
+Pass each `--archetype` option as a queryless convention URI, for example `napplet:profile/open`. The CLI derives the role from the URI. JSON configuration accepts URI strings directly:
 
 ```json
 {
   "metadata": {
-    "archetypes": [
-      {
-        "slug": "profile",
-        "convention": "napplet:profile/open"
-      }
-    ]
+    "archetypes": ["napplet:profile/open"]
   }
 }
 ```
+
+The CLI normalizes each URI to an object such as `{ "slug": "profile", "convention": "napplet:profile/open" }`. Existing object configs remain supported; add `"params": ["pubkey"]` to an object to advertise accepted parameter names. Older role-prefixed CLI inputs remain supported for compatibility.
+
+This example emits the independent advertisements:
 
 ```json
 ["z", "profile"]
 ["i", "napplet:profile/open"]
 ```
 
-Each tag advertises one stable convention identity. The role slug and convention's own archetype segment are independent under [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md). Query parameters are rejected in metadata.
-
-`--archetype` and the interactive wizard remain convention-only. Use object-form `.napplet/config.json` metadata
-when event-kind discovery is needed. URI query transposition occurs only in the
-runtime bindings for INC emission and intent invocation, never in manifest
-discovery or handler matching.
-
-This shape follows [NAP-INC PR #89
-(`4593ce9`)](https://github.com/napplet/naps/pull/89/commits/4593ce9e301ce098fd3dad64206fcd6f144fa7af),
-[the web projection PR #90
-(`896c32c`)](https://github.com/napplet/naps/pull/90/commits/896c32c92deee68dc4d10fc1132b62df20cccb6f),
-and [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md)
-at those exact draft heads.
+This non-normative guide follows the living [NAP-INTENT manifest catalog contract](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md#manifest-catalog-contract). A convention is eligible for dispatch when its archetype segment matches a `z` role on the same manifest. Metadata convention identities are queryless and fragment-free. Trailing `i` values advertise parameter names, not event-kind restrictions or parameter values.
 
 ## See also
 
@@ -174,6 +170,22 @@ napplet migrate signed-event.json --optional theme --output migration-preview.js
 
 `migrate` verifies the source signature and writes an unsigned preview with provenance. It does not publish or modify the artifact, and refuses to overwrite an existing output file. Review description, required/optional choices and pointers before signing. See the [migration guide](https://napplet.run/docs/guide/event-migration) for format differences and shell data/consent implications.
 
+## Repository source metadata
+
+For current-format deploys, the CLI adds one `source` tag from the Git `origin` of the repository containing each selected build when neither config, the Vite sidecar, nor HTML already supplies it. Nested builds and Git worktrees are supported. HTTPS, HTTP, `ssh://`, and scp-style clone URLs are converted to HTTP(S) repository URLs; inferred URLs omit credentials, query strings, fragments, and the `.git` suffix. SSH remotes use HTTPS without the SSH port. Git is queried locally; no remote is contacted. If Git, a repository, or a usable origin is unavailable, the tag is omitted. Other remotes are not selected, and SSH host aliases are not expanded; configure their public source URL explicitly.
+
+Set `metadata.source` in `.napplet/config.json` to override every inferred or embedded source:
+
+```json
+{
+  "metadata": {
+    "source": "https://github.com/example/my-napplet"
+  }
+}
+```
+
+Use `"source": false` in that object to omit the tag, including any sidecar or HTML source. A source override must be one absolute HTTP(S) URL without credentials; arrays are not accepted. The precedence is config → sidecar → HTML → Git origin. Root, named, and companion snapshot events retain the resolved source. This follows the current [NIP-5D manifest table](https://github.com/dskvr/nips/blob/nip/5d/5D.md#manifest), which permits zero or one `source` tag. Automatic Git inference does not apply to `--format legacy`; an explicit config override still does. These are CLI defaults, not additional protocol requirements.
+
 ## Standalone HTML recovery
 
 The CLI reads the head mappings from [NIP-5D, HTML Metadata for Publishing](https://github.com/nostr-protocol/nips/pull/2303), including title, description, named identifier, roles, intents with advertised parameters, required/optional domains, source, server hints, and supported PNG/JPEG/WebP data-URL icons. This is non-normative implementation guidance; the living specification remains authoritative. Embedded metadata is optional, remains untrusted publishing input, and does not replace signed manifest verification at runtime.
@@ -183,3 +195,55 @@ For current-format deployment, explicit config metadata overrides matching sidec
 Root and named events omit lineage tags. Companion snapshots retain the CLI's selected source address as their parent; head provenance does not replace that explicit selection. Root/snapshot events omit the named identifier. Deployment does not rewrite the HTML when config or selection overrides its hints: it hashes and uploads the original bytes and signs the resolved metadata separately.
 
 Decoded icon bytes are hashed and uploaded unchanged alongside the HTML, even when `index.html` is the only file in the deployment directory. No extracted icon file is written. If a sidecar overrides the icon, embedded bytes are used only when both hash and MIME type match that declaration. Remote, unsupported, empty, malformed, and MIME-mismatched icon URLs are ignored. Hash-only sidecars still require the matching blob to be supplied separately. Consumers verify decoding before display according to NIP-5D. Legacy-format deployment retains its previous title/description HTML fallback behavior.
+
+Deployment manifests (current and legacy, including snapshots) and optional Zapstore application events include `["client", "napplet.run"]` before signing. This identifies the publisher using the [NIP-89 client tag](https://github.com/nostr-protocol/nips/blob/master/89.md#client-tag) and does not change artifact hashes. Dry-run templates include the same attribution.
+
+## Screenshots and optional Zapstore metadata
+
+Capture a built napplet without starting a host. The command starts a temporary local Kehto Paja preview, captures its iframe, and closes the preview afterwards. It requires Node.js 20+; the matching Chromium browser is installed automatically on first use. Screenshot and default conformance commands select the tested `@napplet/conformance-cli@0.3.3` runner explicitly, so an older project-local conformance dependency cannot intercept them. Explicit custom conformance commands remain supported. The preview uses Paja’s development identity, fresh browser storage, and live relays, so content may differ from your signed-in shell.
+
+```sh
+napplet screenshot --output preview.png
+# Optional: choose another project or an existing shell.
+napplet screenshot ./my-project --output other.png
+# Optional: select one iframe and wait for content inside it.
+napplet screenshot http://localhost:5173 --output ready.png --selector '#napplet-frame' --ready-selector '.app-ready'
+```
+
+The default capture is 1200 × 750 pixels with a 1500 ms delay. Override these with `--width`, `--height`, and `--delay` (milliseconds). The command captures only the iframe, waits for fonts, closes Chromium on success or failure, and refuses to overwrite an existing file. Keep screenshots outside the build directory.
+
+To publish an optional application listing, add a `zapstore` object to `.napplet/config.json`:
+
+```json
+{
+  "zapstore": {
+    "id": "org.example.notes",
+    "name": "Notes",
+    "description": "Private notes in a napplet shell.",
+    "summary": "A simple notebook",
+    "images": ["./preview.png", "https://example.org/notes-mobile.png"],
+    "icon": "./assets/icon.png",
+    "website": "https://example.org/notes",
+    "repository": "https://github.com/example/notes",
+    "license": "MIT",
+    "tags": ["notes", "productivity"]
+  }
+}
+```
+
+Only `id` and `name` are required within this object. The stable `id` identifies the application listing under the signing pubkey; reusing it updates that listing. Description falls back to the deployment config's description. This configuration describes one application listing per deploy invocation, including deployments that select multiple manifests.
+
+```sh
+napplet deploy --zapstore --dry-run --json
+napplet deploy --zapstore
+# Capture and attach a screenshot during deployment:
+napplet deploy --zapstore --screenshot
+```
+
+Publishing defaults to off. `--zapstore` enables it for one deployment; `"enabled": true` in the object enables it by default; `--no-zapstore` disables it for one deployment. Supplying both flags is an error. Dry runs show the application template, resolved media URLs and any signature without uploading or publishing.
+
+Local PNG, JPEG and WebP images are resolved relative to the working directory, hashed, and uploaded to the configured Blossom servers. Existing HTTP(S) image URLs are used as supplied. Local media URLs point to the first selected Blossom server; if those uploads fail, application publication is skipped and deploy exits nonzero even if another mirror succeeds. The application uses the same signer and relays as the deployment. A requested application event must be accepted by at least one relay for deploy to succeed.
+
+The listing uses kind `32267` from the [Software Applications proposal](https://github.com/nostr-protocol/nips/pull/1336), with screenshot URLs in `image` tags. Current-format deployments link each root, named, and snapshot manifest to this listing with `["app", "32267:<pubkey>:<id>", "<relay>"]`, implementing the [proposed NIP-5D application reference](https://github.com/dskvr/nips/pull/11) (pending acceptance). The link is added before signing and does not change the artifact hash. The application event is published before its referencing manifests. Legacy manifests remain unchanged. Unsigned dry runs omit the link because the author public key is not yet known; a signed dry run includes it. This publishes application metadata only, without software release or asset events; acceptance into a particular store's catalog depends on that store.
+
+`deploy --screenshot` starts a local preview for each distinct selected build, captures a temporary PNG, and appends it to the configured application images for that deployment. It requires `--zapstore` or `zapstore.enabled`, and does not modify your config or build files. Capture failure stops deployment before any upload or relay publication. The temporary image is removed after success or failure. `--dry-run` also performs capture and previews the resulting metadata without uploading or publishing. Capture diagnostics go to stderr so `--json` stdout remains valid JSON. No host URL is required. Root and snapshot selections of the same artifact share one capture. To capture an existing shell instead, use `--screenshot <preview-url>`. Use `--screenshot-selector`, `--screenshot-ready-selector`, `--screenshot-width`, `--screenshot-height`, and `--screenshot-delay` for the corresponding standalone capture options. Use the standalone `napplet screenshot` command when you want to keep a PNG on disk.

@@ -97,7 +97,7 @@ type NapDomain = 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | '
 Runtime constant array of all NAP domain strings. Useful for iteration and validation.
 
 ```ts
-const NAP_DOMAINS: readonly NapDomain[] = ['relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent', 'ble', 'webrtc', 'link', 'count', 'lists', 'serial', 'common', 'dm'];
+const NAP_DOMAINS: readonly NapDomain[] = ['shell', 'relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent', 'ble', 'webrtc', 'link', 'count', 'lists', 'serial', 'common', 'dm'];
 
 for (const domain of NAP_DOMAINS) {
   console.log(`Checking support for: ${domain}`);
@@ -116,22 +116,18 @@ if (window.napplet?.relay) {
 
 #### `IntentApi`
 
-NAP-INTENT targets an archetype rather than a specific running surface. `invoke(request)` accepts the canonical `IntentRequest`; `open(archetype, payload?, opts?)` is action-`"open"` sugar. Archetype and optional convention are orthogonal.
+Intent calls derive archetype and action from the URI. An `ok: true` result means the runtime accepted delivery responsibility and includes the normalized identity and handler catalog identifier; an `ok: false` result includes `error`. Targets receive runtime-attested `IntentDelivery` values through `onDelivery`, including deliveries retained before registration. Behavior hints are `focus` and `reuse`. This non-normative guidance defers to the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md).
 
 ```ts
-const result = await window.napplet.intent?.open(
-  'profile',
-  { pubkey: 'abc123' },
-  { convention: 'napplet:profile/open', behavior: { newWindow: true } },
-);
-if (result?.handled) {
-  console.log(`Handled by ${result.handler} in ${result.windowId}`);
+const result = await window.napplet.intent?.open('napplet:profile/open', { payload: { pubkey: 'abc123' }, behavior: { reuse: false } });
+if (result?.ok) {
+  console.log(`Accepted by ${result.handler}`);
 } else {
-  throw new Error(result?.error ?? 'intent not handled');
+  throw new Error(result?.error ?? 'intent not accepted');
 }
 ```
 
-Results include required `ok`, `archetype`, `action`, and `handled` fields. `IntentBehavior` includes `focus`, `newWindow`, and `reuse`; availability candidates expose supported actions and conventions. See the living [NAP-INTENT document](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md).
+Intent calls derive archetype and action from the URI. An `ok: true` result means the runtime accepted delivery responsibility and includes the normalized identity and handler catalog identifier; an `ok: false` result includes `error`. Targets receive runtime-attested `IntentDelivery` values through `onDelivery`, including deliveries retained before registration. Behavior hints are `focus` and `reuse`. This non-normative guidance defers to the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md).
 
 ---
 
@@ -402,3 +398,21 @@ These are SDK plumbing only — identical plain envelopes reach the wire, so the
 ## License
 
 MIT
+
+
+### Optional shell environment
+
+The runtime may expose `shell` for environment information. `shell.supports(domain)` reads current domain object presence, `shell.services` is empty until environment delivery, and `shell.ready()` / `shell.onReady(handler)` use the retained snapshot. Readiness does not gate other domain calls. See the living [NAP-SHELL](https://github.com/napplet/naps/blob/master/naps/NAP-SHELL.md).
+
+### Intent delivery and recommendations
+
+```ts
+import { intent } from '@napplet/sdk';
+
+intent.onDelivery(({ sender, convention, payload }) => {
+  console.log(sender, convention, payload);
+});
+await intent.invoke('napplet:profile/open?pubkey=abc123');
+```
+
+The runtime binding retains deliveries until a listener registers. Discovery candidates expose opaque catalog `id` values and `contracts` with parameter names. INC peers instead use identifiers for running authenticated endpoints. A NAP-INTENT URI may append a bare `#naddr1…` recommendation; the binding sends its coordinate and relay hints as `handlerHint`, outside convention identity and payload. An applicable user default takes precedence. INC URI operations reject fragments. See the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md) and [web projection](https://github.com/napplet/naps/blob/master/projections/web.md).

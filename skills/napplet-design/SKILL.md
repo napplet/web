@@ -48,7 +48,7 @@ Use only domains the current `@napplet/sdk` exports (`napplet-sdk` lists them). 
 | Notifications, playback, device bridges | `notify`, `media`, `cvm`, `ble`, `serial`, `fs`, `webrtc` | Browser APIs |
 | One explicit relay, diagnostics, protocols outside the outbox model | `relay` | Treating relay as the data layer |
 
-Every NAP is voluntary: assume a domain may be absent and name the fallback. `relay` needs an exact written reason; if none exists it is wrong. There is no `shell.ready()` / `shell.supports()` / capability probe — a conforming runtime installs `window.napplet` before module code runs.
+Every NAP is voluntary: assume a domain may be absent and name the fallback. `relay` needs an exact written reason; if none exists it is wrong. Do not gate a domain on `shell.ready()` / `shell.supports()` or any capability probe — a conforming runtime installs `window.napplet` before module code runs, and the optional `shell` domain only describes the environment.
 
 ## Step 3 — Hard requirements vs optional enhancements
 

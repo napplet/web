@@ -4,30 +4,28 @@
  * @module
  */
 
-import { nip19 } from "nostr-tools";
+import { createEventPointers } from "./event-pointers.ts";
+export { createEventPointers } from "./event-pointers.ts";
+export type { EventPointers } from "./event-pointers.ts";
 import type { SigningDebugInfo } from "./debug.ts";
 import { networkDeploySucceeded } from "./deploy-network.ts";
 import type { NetworkDeployProgress, NetworkDeployResult } from "./deploy-network.ts";
+import type { ZapstorePublication } from "./zapstore.ts";
 import type {
   DeployManifestTemplate,
   DeployPlan,
   NappletConfig,
-  SignedNostrEvent,
 } from "./types.ts";
 
 export interface DeployReport {
   signing: SigningDebugInfo;
   plan: DeployPlan;
   manifests: DeployManifestTemplate[];
+  application?: ZapstorePublication;
   deploy?: NetworkDeployResult;
   relays: string[];
   blossomServers: string[];
   dryRun: boolean;
-}
-
-export interface EventPointers {
-  nevent: string;
-  naddr?: string;
 }
 
 export interface InitReport {
@@ -56,41 +54,6 @@ export function isTerminalOutput(output: { isTerminal?: () => boolean } = Deno.s
   } catch {
     return false;
   }
-}
-
-/**
- * Create NIP-19 pointers for a signed deploy event.
- *
- * @param event Signed event to reference.
- * @param relays Relays where the event was or will be published.
- * @returns Exact-event pointer plus address pointer when the event is addressable.
- * @example
- * ```ts
- * createEventPointers(event, ["wss://relay.example"]).nevent;
- * ```
- */
-export function createEventPointers(
-  event: SignedNostrEvent,
-  relays: readonly string[] = [],
-): EventPointers {
-  const relayHints = relays.length > 0 ? [...relays] : undefined;
-  const pointers: EventPointers = {
-    nevent: nip19.neventEncode({
-      id: event.id,
-      author: event.pubkey,
-      kind: event.kind,
-      relays: relayHints,
-    }),
-  };
-  if (isReplaceableKind(event.kind)) {
-    pointers.naddr = nip19.naddrEncode({
-      identifier: event.tags.find((tag) => tag[0] === "d")?.[1] ?? "",
-      pubkey: event.pubkey,
-      kind: event.kind,
-      relays: relayHints,
-    });
-  }
-  return pointers;
 }
 
 /**
@@ -139,6 +102,18 @@ export function renderDeployReport(report: DeployReport): string {
   }
   lines.push("");
 
+  if (report.application) {
+    pushSection(lines, "Zapstore Application");
+    pushField(lines, "Kind", "32267");
+    for (const tag of report.application.template.tags) pushField(lines, tag[0], tag.slice(1).join(" "));
+    pushField(lines, "Description", report.application.template.content);
+    pushField(lines, "Local images", String(report.application.files.length));
+    pushField(lines, "Status", report.application.signedEvent ? "signed" : "unsigned template");
+    if (report.application.signedEvent) {
+      pushField(lines, "Copy naddr", createEventPointers(report.application.signedEvent, report.relays).naddr ?? "");
+    }
+    lines.push("");
+  }
   if (report.deploy) {
     pushSection(lines, "Uploads");
     const uploadSummary = report.deploy.uploadSummary;
@@ -223,7 +198,7 @@ export function createDeployProgressReporter(
         break;
       case "publish:start":
         writeLine(
-          `Publishing ${progress.events} manifest event(s) to ${progress.relays} relay(s)...`,
+          `Publishing ${progress.events} event(s) to ${progress.relays} relay(s)...`,
         );
         break;
       case "publish:event": {
@@ -280,7 +255,9 @@ export function renderInitReport(report: InitReport): string {
     lines,
     "Archetypes",
     formatCountedList(
-      report.config.metadata?.archetypes?.map(({ slug, convention }) => `${slug}:${convention}`) ?? [],
+      report.config.metadata?.archetypes?.map(({ slug, convention }) =>
+        convention.startsWith(`napplet:${slug}/`) ? convention : `${convention} (role: ${slug})`
+      ) ?? [],
     ),
   );
   pushField(lines, "Relays", formatCountedList(report.config.relays));
@@ -383,6 +360,11 @@ function summarizeDeployOutcome(
       ),
     );
   }
+  if ((deploy.additionalEventIds ?? []).some((eventId) =>
+    !deploy.published.some((publish) => publish.eventId === eventId && publish.success)
+  )) {
+    failures.push("Zapstore application metadata was not published");
+  }
   if (!succeeded && failures.length === 0) failures.push("deployment requirements not met");
 
   const warnings: string[] = [];
@@ -434,8 +416,4 @@ function progressBar(completed: number, total: number): string {
   const safeTotal = Math.max(total, 1);
   const filled = Math.min(width, Math.floor((completed / safeTotal) * width));
   return `[${"#".repeat(filled)}${"-".repeat(width - filled)}]`;
-}
-
-function isReplaceableKind(kind: number): boolean {
-  return kind >= 10_000 && kind < 40_000;
 }

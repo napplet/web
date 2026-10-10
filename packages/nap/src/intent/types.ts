@@ -4,16 +4,7 @@
  * @module
  */
 
-import type {
-  IntentAvailability,
-  IntentBehavior,
-  IntentCandidate,
-  IntentHandlerPreference,
-  IntentOpenOptions,
-  IntentRequest,
-  IntentResult,
-  NappletMessage,
-} from '@napplet/core';
+import type { IntentAvailability, IntentDelivery, IntentRequest, IntentResult, NappletMessage } from '@napplet/core';
 
 /** The NAP domain name for intent messages. */
 export const DOMAIN = 'intent' as const;
@@ -22,11 +13,15 @@ export type {
   IntentAvailability,
   IntentBehavior,
   IntentCandidate,
+  IntentContract,
+  IntentDelivery,
+  IntentHandlerHint,
   IntentHandlerPreference,
+  IntentInvokeOptions,
   IntentOpenOptions,
   IntentRequest,
   IntentResult,
-};
+} from '@napplet/core';
 
 /** Base interface for all INTENT envelopes. */
 export interface IntentMessage extends NappletMessage {
@@ -50,8 +45,6 @@ export interface IntentInvokeResultMessage extends IntentMessage {
   id: string;
   /** Structured dispatch result required by NAP-INTENT. */
   result: IntentResult;
-  /** Top-level processing error. */
-  error?: string;
 }
 
 /** Query whether the runtime can satisfy an archetype. */
@@ -99,6 +92,12 @@ export interface IntentChangedMessage extends IntentMessage {
   availability: IntentAvailability;
 }
 
+/** A runtime push, without request or delivery correlation identifiers. */
+export interface IntentDeliverMessage extends IntentMessage {
+  type: 'intent.deliver';
+  delivery: IntentDelivery;
+}
+
 /** Napplet-to-runtime INTENT envelopes. */
 export type IntentOutboundMessage =
   | IntentInvokeMessage
@@ -110,7 +109,8 @@ export type IntentInboundMessage =
   | IntentInvokeResultMessage
   | IntentAvailableResultMessage
   | IntentHandlersResultMessage
-  | IntentChangedMessage;
+  | IntentChangedMessage
+  | IntentDeliverMessage;
 
 /** Every INTENT envelope. */
 export type IntentNapMessage = IntentOutboundMessage | IntentInboundMessage;

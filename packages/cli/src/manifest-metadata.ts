@@ -1,3 +1,5 @@
+import { dirname } from "./path.ts";
+import { inferRepositorySource, normalizeSourceOverride } from "./repository-source.ts";
 import { readHtmlPublishingFile } from "./html-metadata.ts";
 import type { ManifestFormat } from "./manifest-format.ts";
 import type { NappletConfig } from "./types.ts";
@@ -12,7 +14,7 @@ export async function readManifestMetadataTags(
   const htmlTags = format === "legacy"
     ? html.filter((t) => ["title", "description"].includes(t[0])).map((t) => [t[0], t[1].trim()])
     : html;
-  return preferOptionalDomains(mergeConfigMetadataTags(
+  const tags = preferOptionalDomains(mergeConfigMetadataTags(
     overlayTags(
       htmlTags,
       await readPluginManifestMetadataTags(manifestPath, format),
@@ -20,6 +22,11 @@ export async function readManifestMetadataTags(
     config,
     format,
   ));
+  if (format === "current" && indexHtmlPath && config.metadata?.source !== false && !tags.some((tag) => tag[0] === "source")) {
+    const source = await inferRepositorySource(dirname(indexHtmlPath));
+    if (source) tags.push(["source", source]);
+  }
+  return tags;
 }
 
 /**
@@ -80,7 +87,9 @@ function mergeConfigMetadataTags(
 ): string[][] {
   const metadata = config.metadata;
   if (!metadata) return dedupeTags(tags);
+  const source = normalizeSourceOverride(metadata.source);
   const replaced = new Set<string>();
+  if (source !== undefined) replaced.add("source");
   if (metadata.title) replaced.add("title");
   if (metadata.description) replaced.add("description");
   if (metadata.archetypes !== undefined) {
@@ -91,6 +100,7 @@ function mergeConfigMetadataTags(
   if (metadata.requires !== undefined) replaced.add("R");
   if (metadata.optional !== undefined) replaced.add("O");
   const result = tags.filter((tag) => !replaced.has(tag[0]));
+  if (source) result.push(["source", source]);
   if (metadata.title) result.push(["title", metadata.title]);
   if (metadata.description) result.push(["description", metadata.description]);
   for (const convention of metadata.archetypes ?? []) {

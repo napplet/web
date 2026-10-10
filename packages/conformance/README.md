@@ -15,7 +15,7 @@ v1 is **zero-config protocol conformance**: NIP-5D manifest-event validity, boot
 
 The validator surface is kept in lockstep with `@napplet/nap` by a drift test, so a new NAP message type cannot ship without matching conformance coverage.
 
-For `intent` envelopes, conformance checks the merged `intent.invoke` request/result carrier. Requests require an archetype, optional action and convention remain orthogonal, and results expose canonical handling state. Convention strings and payloads remain opaque local choices.
+For `intent` envelopes, conformance checks the merged `intent.invoke` request/result carrier. Requests require URI-derived archetype, action, and stable convention identity. Acceptance results transfer delivery responsibility to the runtime, while targets receive buffered `intent.deliver` pushes. Payload semantics belong to the convention and target.
 
 This non-normative description follows the living [NAP-INC](https://github.com/napplet/naps/blob/master/naps/NAP-INC.md) and [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md) documents.
 

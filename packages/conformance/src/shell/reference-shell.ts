@@ -22,6 +22,10 @@ export type { RecordedEnvelope } from './reference-handler.js';
 export interface ReferenceShellOptions {
   /** Injectable clock for deterministic tests. Defaults to `Date.now`. */
   now?: () => number;
+  /** Already verified installed metadata for catalog tests. */
+  manifests?: readonly import('./intent-catalog.js').CatalogManifest[];
+  /** User preferences, keyed by role. */
+  defaults?: Readonly<Record<string, string>>;
 }
 
 /** A reference shell instance for transport-agnostic conformance tests. */
@@ -64,7 +68,7 @@ export function createReferenceShell(options: ReferenceShellOptions = {}): Refer
     now: options.now ?? Date.now,
     records,
     queueDelivery: deliveries.queue,
-    intents: createIntentHandlers(),
+    intents: createIntentHandlers(deliveries.queue, options.manifests, options.defaults),
   });
 
   return {

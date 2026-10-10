@@ -20,8 +20,10 @@ export interface NappletArchetypeConvention {
   params?: string[];
 }
 
-/** Deployment metadata owned by `napplet init`. */
+/** Normalized deployment metadata; JSON input also accepts convention URI strings in archetypes. */
 export interface NappletDeployMetadata {
+  /** Source URL override; false suppresses embedded and inferred source tags. */
+  source?: string | false;
   name?: string;
   title?: string;
   description?: string;
@@ -41,6 +43,7 @@ export interface NappletConfig {
   bunkerPubkey?: string;
   named?: string[];
   metadata?: NappletDeployMetadata;
+  zapstore?: ZapstoreConfig;
   discover?: {
     enabled: boolean;
     roots: string[];
@@ -57,6 +60,21 @@ export interface NappletConfig {
   paja?: {
     command: string;
   };
+}
+
+/** Optional application listing, separate from the NIP-5D manifest. */
+export interface ZapstoreConfig {
+  enabled?: boolean;
+  id: string;
+  name: string;
+  description?: string;
+  summary?: string;
+  icon?: string;
+  images?: string[];
+  website?: string;
+  repository?: string;
+  license?: string;
+  tags?: string[];
 }
 
 /** NappletCandidate shape used by shared CLI type helpers. */

@@ -2,8 +2,8 @@ import type { Subscription } from '../nostr.js';
 import type { UploadInfo, UploadRequest, UploadResult, UploadStatus } from '../upload.js';
 import type {
   IntentAvailability,
-  IntentOpenOptions,
-  IntentRequest,
+  IntentInvokeOptions,
+  IntentDelivery,
   IntentResult,
 } from '../intent.js';
 import type { LinkOpenOptions, LinkOpenResult } from '../link.js';
@@ -67,11 +67,7 @@ export interface UploadApi {
  * if (window.napplet.intent) {
  *   const { available } = await window.napplet.intent.available('note');
  *   if (available) {
- *     await window.napplet.intent.open(
- *       'profile',
- *       { pubkey: 'abc123' },
- *       { convention: 'napplet:profile/open' },
- *     );
+ *     await window.napplet.intent.open('napplet:note/open', { payload: { event: 'abc123' } });
  *   }
  * }
  * ```
@@ -79,18 +75,18 @@ export interface UploadApi {
 export interface IntentApi {
   /**
    * Dispatch an intent request by archetype.
-   * @param request  Archetype, optional action, convention, payload, and hints
+   * @param uri Authoritative convention URI
+   * @param options Structured payload and runtime selection hints
    * @returns Promise resolving to the dispatch result
    */
-  invoke(request: IntentRequest): Promise<IntentResult>;
+  invoke(uri: string, options?: IntentInvokeOptions): Promise<IntentResult>;
   /**
-   * Convenience sugar for `invoke({ archetype, action: "open", payload, ...opts })`.
-   * @param archetype  Role slug to open
-   * @param payload  Optional opaque payload
-   * @param opts  Optional convention, handler preference, and behavior hints
+   * Convenience sugar for `invoke(uri, options)` with an open action.
+   * @param uri Convention URI whose action is open
+   * @param options Structured payload and runtime selection hints
    * @returns Promise resolving to the dispatch result
    */
-  open(archetype: string, payload?: unknown, opts?: IntentOpenOptions): Promise<IntentResult>;
+  open(uri: string, options?: IntentInvokeOptions): Promise<IntentResult>;
   /**
    * Whether the runtime can currently satisfy `archetype`, with candidates and
    * the actions and conventions each supports. Sourced from the installed
@@ -110,6 +106,14 @@ export interface IntentApi {
    * @returns A Subscription with `close()` to stop listening
    */
   onChanged(handler: (availability: IntentAvailability) => void): Subscription;
+  /**
+   * Receive retained and future runtime-attested deliveries.
+   * @param handler Callback for each target delivery
+   * @returns Subscription handle
+   * @example
+   * napplet.intent?.onDelivery(({ payload }) => render(payload));
+   */
+  onDelivery(handler: (delivery: IntentDelivery) => void): Subscription;
 }
 
 /**

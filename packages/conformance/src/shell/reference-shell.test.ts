@@ -6,8 +6,9 @@ import {
   type ReferenceEndpoint,
   type MessageWindowLike,
 } from './reference-shell.js';
+import { REFERENCE_HANDLER } from './reference-responses.js';
 
-const authenticatedSource: ReferenceEndpoint = { dTag: 'authenticated-source' };
+const authenticatedSource: ReferenceEndpoint = { id: 'authenticated-source-endpoint', catalogId: 'authenticated-source' };
 
 describe('createReferenceShell — record + respond', () => {
   it('records each inbound envelope with a verdict and timestamp', () => {
@@ -52,7 +53,8 @@ describe('createReferenceShell — record + respond', () => {
           available: true,
           candidates: [
             {
-              dTag: 'reference-handler',
+              id: REFERENCE_HANDLER,
+              contracts: [{ convention: 'napplet:note/open', params: ['event'] }],
               actions: ['open'],
               conventions: ['napplet:note/open'],
               isDefault: true,
@@ -64,9 +66,9 @@ describe('createReferenceShell — record + respond', () => {
     ]);
   });
 
-  it('returns the canonical handled result for an archetype invoke', () => {
+  it('retains target delivery independently after immediate acceptance', () => {
     const shell = createReferenceShell();
-    const sourceAtAcceptance: ReferenceEndpoint = { dTag: 'source-at-acceptance' };
+    const sourceAtAcceptance: ReferenceEndpoint = { id: 'source-endpoint', catalogId: 'source-at-acceptance' };
 
     expect(shell.handleFrom(sourceAtAcceptance, {
       type: 'intent.invoke',
@@ -86,13 +88,14 @@ describe('createReferenceShell — record + respond', () => {
           archetype: 'note',
           action: 'open',
           convention: 'napplet:note/open',
-          handled: true,
-          handler: 'reference-handler',
-          windowId: 'reference-window',
+          handler: REFERENCE_HANDLER,
         },
       },
     ]);
-    expect(shell.takeDeliveries('reference-handler')).toEqual([]);
+    expect(shell.takeDeliveries(REFERENCE_HANDLER)).toEqual([{
+      type: 'intent.deliver',
+      delivery: { sender: 'source-at-acceptance', archetype: 'note', action: 'open', convention: 'napplet:note/open', payload: { event: 'abc123' } },
+    }]);
   });
 
   it('records forged intent sender data as invalid and does not deliver it', () => {
@@ -112,30 +115,34 @@ describe('createReferenceShell — record + respond', () => {
     expect(shell.takeDeliveries('reference-handler')).toEqual([]);
   });
 
-  it('keeps archetype, action, and convention orthogonal at validation', () => {
+  it('rejects inconsistent or non-stable normalized intent identities', () => {
     const shell = createReferenceShell();
+    for (const request of [
+      { archetype: 'note', action: 'edit', convention: 'napplet:note/open' },
+      { archetype: 'viewer', action: 'open', convention: 'napplet:note/open' },
+      { archetype: 'note', action: 'open', convention: 'napplet:note/open?event=abc' },
+      { archetype: 'note', action: 'open', convention: 'napplet:note/open#hint' },
+    ]) {
+      expect(shell.handleFrom(authenticatedSource, { type: 'intent.invoke', id: 'conflict', request })).toEqual([]);
+      expect(shell.records.at(-1)?.verdict.ok).toBe(false);
+    }
+    expect(shell.takeDeliveries(REFERENCE_HANDLER)).toEqual([]);
+  });
 
-    expect(shell.handleFrom(authenticatedSource, {
-      type: 'intent.invoke',
-      id: 'intent-conflict',
-      request: {
-        archetype: 'note',
-        action: 'edit',
-        convention: 'napplet:note/open?event=abc123',
-      },
-    })).toEqual([{
-      type: 'intent.invoke.result',
-      id: 'intent-conflict',
-      result: {
-        ok: false,
-        archetype: 'note',
-        action: 'edit',
-        handled: false,
-        error: 'unsupported convention',
-      },
-    }]);
-    expect(shell.records.at(-1)?.verdict.ok).toBe(true);
-    expect(shell.takeDeliveries('reference-handler')).toEqual([]);
+  it('does not fall back from explicit unknown handlers to the default', () => {
+    const shell = createReferenceShell();
+    expect(shell.handle({ type: 'intent.invoke', id: 'explicit', request: { archetype: 'note', action: 'open', convention: 'napplet:note/open', handler: 'unknown' } })).toEqual([{ type: 'intent.invoke.result', id: 'explicit', result: { ok: false, error: 'no handler' } }]);
+    expect(shell.takeDeliveries(REFERENCE_HANDLER)).toEqual([]);
+  });
+
+  it('delivers optional environment exactly once and leaves other domains usable', () => {
+    const shell = createReferenceShell();
+    const endpoint = { id: 'instance-1', catalogId: 'catalog-source', domains: ['shell', 'identity'] };
+    expect(shell.handleFrom(endpoint, { type: 'identity.getPublicKey', id: 'before-ready' })).toHaveLength(1);
+    expect(shell.handleFrom(endpoint, { type: 'shell.ready' })).toEqual([{ type: 'shell.init', capabilities: { domains: ['shell', 'identity'] }, services: [] }]);
+    expect(shell.handleFrom(endpoint, { type: 'shell.ready' })).toEqual([]);
+    expect(shell.handleFrom({ ...endpoint, id: 'instance-2' }, { type: 'shell.ready' })).toHaveLength(1);
+    expect(shell.handleFrom({ ...endpoint, domains: ['identity'] }, { type: 'shell.ready' })).toEqual([]);
   });
 
   it('routes INC only to the exact stable subscriber and derives sender from its endpoint', () => {
@@ -150,7 +157,7 @@ describe('createReferenceShell — record + respond', () => {
       {
         type: 'inc.event',
         topic: 'napplet:note/open',
-        sender: 'authenticated-source',
+        sender: 'authenticated-source-endpoint',
         payload: { event: 'abc123' },
       },
     ]);

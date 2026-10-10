@@ -4,6 +4,7 @@ import { collectDeployFilePayloads, uploadFilesToServers } from "./blossom-uploa
 import type { ServerUploadResult, UploadResultProgress } from "./blossom-upload.ts";
 import type { NappletSigner } from "./signing.ts";
 import type { DeployManifestTemplate, SignedNostrEvent } from "./types.ts";
+import type { ZapstorePublication } from "./zapstore.ts";
 
 export {
   collectDeployFilePayloads,
@@ -35,6 +36,7 @@ export interface NetworkDeployResult {
   uploaded: ServerUploadResult[];
   published: RelayPublishResult[];
   uploadSummary: UploadSummary;
+  additionalEventIds?: string[];
 }
 
 export type NetworkDeployProgress =
@@ -53,6 +55,7 @@ export type NetworkDeployProgress =
   | { type: "publish:complete"; results: RelayPublishResult[] };
 
 export interface NetworkDeployOptions {
+  application?: ZapstorePublication;
   fetch?: typeof fetch;
   publish?: RelayPublisher;
   now?: () => number;
@@ -130,6 +133,12 @@ export async function executeNetworkDeploy(
     throw new Error("Network deploy requires at least one signed manifest event");
   }
   const files = await collectDeployFilePayloads(manifests);
+  const application = options.application;
+  if (application && !application.signedEvent) throw new Error("Zapstore application event must be signed");
+  const additionalEventIds = application?.signedEvent ? [application.signedEvent.id] : [];
+  for (const file of application?.files ?? []) {
+    if (!files.some((existing) => existing.sha256 === file.sha256)) files.push(file);
+  }
   options.onProgress?.({
     type: "upload:start",
     files: files.length,
@@ -156,9 +165,12 @@ export async function executeNetworkDeploy(
       uploaded,
       published: [],
       uploadSummary,
+      additionalEventIds,
     };
   }
   const publish = options.publish ?? publishEventWithSimplePool;
+  // Make metadata available before clients discover manifests that reference it.
+  if (application?.signedEvent) events.unshift(application.signedEvent);
   const published: RelayPublishResult[] = [];
   options.onProgress?.({
     type: "publish:start",
@@ -168,7 +180,14 @@ export async function executeNetworkDeploy(
   });
   let completedEvents = 0;
   for (const event of events) {
-    const results = await publish(config.relays, event);
+    const mediaUnavailable = event === application?.signedEvent && application.mediaServer &&
+      application.files.some((file) => !uploaded.some((upload) =>
+        upload.server === application.mediaServer && upload.sha256 === file.sha256 && upload.success
+      ));
+    const results = mediaUnavailable
+      ? config.relays.map((relay) => ({ relay, eventId: event.id, success: false,
+        error: "Zapstore publish skipped: images unavailable at their declared Blossom URLs" }))
+      : await publish(config.relays, event);
     completedEvents += 1;
     published.push(...results);
     options.onProgress?.({
@@ -180,7 +199,7 @@ export async function executeNetworkDeploy(
     });
   }
   options.onProgress?.({ type: "publish:complete", results: published });
-  return { uploaded, published, uploadSummary };
+  return { uploaded, published, uploadSummary, additionalEventIds };
 }
 
 function summarizeUploads(
@@ -205,7 +224,7 @@ export function networkDeploySucceeded(
   result: NetworkDeployResult,
   manifests: readonly DeployManifestTemplate[],
 ): boolean {
-  const eventIds = signedEvents(manifests).map((event) => event.id);
+  const eventIds = [...signedEvents(manifests).map((event) => event.id), ...(result.additionalEventIds ?? [])];
   return result.uploadSummary.serversFullyUploaded > 0 && eventIds.length > 0 &&
     eventIds.every((eventId) =>
       result.published.some((publish) => publish.eventId === eventId && publish.success)

@@ -4,6 +4,7 @@
  * @module
  */
 
+import { normalizeIntentUri } from './normalize.js';
 import { postToShell } from '../boundary.js';
 import type { Subscription } from '@napplet/core';
 import type {
@@ -15,7 +16,9 @@ import type {
   IntentHandlersResultMessage,
   IntentInvokeMessage,
   IntentInvokeResultMessage,
-  IntentOpenOptions,
+  IntentInvokeOptions,
+  IntentDelivery,
+  IntentDeliverMessage,
   IntentRequest,
   IntentResult,
 } from './types.js';
@@ -40,6 +43,9 @@ const pendingHandlers = new Map<string, {
   timeout: ReturnType<typeof setTimeout>;
 }>();
 
+const deliveryHandlers = new Set<(delivery: IntentDelivery) => void>();
+const deliveries: IntentDelivery[] = [];
+
 const changedHandlers = new Set<(availability: IntentAvailability) => void>();
 let installed = false;
 
@@ -53,10 +59,12 @@ function isMessageType<T extends { type: string }>(
 function isIntentResult(value: unknown): value is IntentResult {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) return false;
   const result = value as Record<string, unknown>;
-  return typeof result.ok === 'boolean'
+  if (result.ok === false) return typeof result.error === 'string';
+  return result.ok === true
     && typeof result.archetype === 'string'
     && typeof result.action === 'string'
-    && typeof result.handled === 'boolean';
+    && typeof result.convention === 'string'
+    && typeof result.handler === 'string';
 }
 
 function handleInvokeResult(msg: IntentInvokeResultMessage): void {
@@ -68,7 +76,7 @@ function handleInvokeResult(msg: IntentInvokeResultMessage): void {
     pending.resolve(msg.result);
     return;
   }
-  pending.reject(new Error(msg.error ?? 'invalid intent.invoke.result'));
+  pending.reject(new Error('invalid intent.invoke.result'));
 }
 
 function handleAvailableResult(msg: IntentAvailableResultMessage): void {
@@ -113,6 +121,9 @@ export function handleIntentMessage(msg: { type: string; [key: string]: unknown 
     handleAvailableResult(msg);
   } else if (isMessageType<IntentHandlersResultMessage>(msg, 'intent.handlers.result')) {
     handleHandlersResult(msg);
+  } else if (isMessageType<IntentDeliverMessage>(msg, 'intent.deliver')) {
+    if (deliveryHandlers.size === 0) deliveries.push(msg.delivery);
+    else for (const callback of deliveryHandlers) callback(msg.delivery);
   } else if (isMessageType<IntentChangedMessage>(msg, 'intent.changed')) {
     handleChanged(msg);
   }
@@ -121,20 +132,17 @@ export function handleIntentMessage(msg: { type: string; [key: string]: unknown 
 /**
  * Dispatch an intent request by archetype.
  *
- * @param request Archetype dispatch request
+ * @param uri Authoritative convention URI
+ * @param options Structured payload and runtime selection hints
  * @returns Promise resolving to the structured dispatch result
  *
  * @example
  * ```ts
- * const result = await invoke({
- *   archetype: 'note',
- *   action: 'open',
- *   convention: 'napplet:note/open',
- *   payload: { id: 'abc' },
- * });
+ * const result = await invoke('napplet:note/open', { payload: { id: 'abc' } });
  * ```
  */
-export function invoke(request: IntentRequest): Promise<IntentResult> {
+export function invoke(uri: string, options?: IntentInvokeOptions): Promise<IntentResult> {
+  const request: IntentRequest = normalizeIntentUri(uri, options);
   const id = crypto.randomUUID();
   return new Promise<IntentResult>((resolve, reject) => {
     const timeout = setTimeout(() => {
@@ -153,22 +161,23 @@ export function invoke(request: IntentRequest): Promise<IntentResult> {
 /**
  * Open a napplet by archetype.
  *
- * @param archetype Role slug to open
- * @param payload Optional opaque payload
- * @param opts Optional convention, handler selection, and behavior hints
+ * @param uri Convention URI whose action is open
+ * @param options Structured payload and runtime selection hints
  * @returns Promise resolving to the structured dispatch result
  *
  * @example
  * ```ts
- * await open('note', { id: 'abc' }, { convention: 'napplet:note/open' });
+ * await open('napplet:note/open', { payload: { id: 'abc' } });
  * ```
  */
 export function open(
-  archetype: string,
-  payload?: unknown,
-  opts?: IntentOpenOptions,
+  uri: string,
+  options?: IntentInvokeOptions,
 ): Promise<IntentResult> {
-  return invoke({ archetype, action: 'open', payload, ...opts });
+  if (normalizeIntentUri(uri, options).action !== 'open') {
+    throw new Error('intent.open requires the open URI action');
+  }
+  return invoke(uri, options);
 }
 
 /**
@@ -229,6 +238,20 @@ export function onChanged(handler: (availability: IntentAvailability) => void): 
 }
 
 /**
+ * Receive retained and future runtime-attested deliveries.
+ * @param handler Callback for each accepted delivery
+ * @returns Subscription whose close removes this callback
+ * @example
+ * onDelivery(({ payload }) => render(payload));
+ */
+export function onDelivery(handler: (delivery: IntentDelivery) => void): Subscription {
+  deliveryHandlers.add(handler);
+  const retained = deliveries.splice(0);
+  for (const delivery of retained) handler(delivery);
+  return { close(): void { deliveryHandlers.delete(handler); } };
+}
+
+/**
  * Install the INTENT shim state.
  *
  * @returns Cleanup function
@@ -244,6 +267,8 @@ export function installIntentShim(): () => void {
     pendingAvailable.clear();
     pendingHandlers.clear();
     changedHandlers.clear();
+    deliveryHandlers.clear();
+    deliveries.length = 0;
     installed = false;
   };
 }

@@ -32,9 +32,27 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 Phase: 162 (nip-5d-event-schema-migration) — COMPLETE
 Plan: 3 of 3
 Status: Verified; [draft PR #224](https://github.com/napplet/web/pull/224) open, hzrd149 requested
-Last activity: 2026-10-07 - Completed quick task 261007-aae: Resolve PR #224 conflicts after #223
+Last activity: 2026-10-09 - Completed quick task 261009-ur6: Remove commit-title gating from JSR publication
 
 See phase 162 VERIFICATION.md for evidence and disclosed compatibility/tooling findings. Earlier phase and quick-task records below are historical.
+
+### Quick task 261010-2y9 — COMPLETE
+
+- Pinned screenshot/default conformance runner to 0.3.3 so older local dependencies cannot intercept commands.
+- Verified real npm resolution and the normal inline screenshot dry-run path; reports in `/tmp/napplet-runner-proof`.
+- Prepared CLI 0.8.7 atop PR #237; build, types, unit suite and slop passed.
+
+### Quick task 261010-2m3 — COMPLETE
+
+- Added repository-derived source tags and config override/suppression for CLI 0.8.6.
+- Source remains singular per current NIP-5D; clarification PR: https://github.com/dskvr/nips/pull/10 (base nip/5d).
+- Build, type-check, full unit suite and AI-slop passed; real GB Color dry-run reports in `/tmp/napplet-source-proof`.
+
+### Quick task 261010-26v — COMPLETE
+
+- Automatic Kehto Paja screenshot previews for deploy and standalone capture; no user-supplied host required.
+- CLI 0.8.5 and conformance-cli 0.3.3 prepared; real PNG proofs saved in `/tmp/napplet-screenshot-proof`.
+- Full build, type-check, unit suite and changed-code slop gate passed.
 
 ### Quick task 260726-ft1 — COMPLETE
 
@@ -510,6 +528,7 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 
 | Quick ID | Task | Date | Commit | Artifacts |
 |----------|------|------|--------|-----------|
+| 261009-ur6 | Remove commit-title gating from JSR publication | 2026-10-09 | d798a91f | [261009-ur6-remove-commit-title-gating-from-jsr-publ](./quick/261009-ur6-remove-commit-title-gating-from-jsr-publ/) |
 | 261006-ij3 | Fix verified PR #224 review findings (conformance x-hash panel, deploy/plugin dropped-asset guards, CLI R/O overlap, debug crash) | 2026-10-06 | a4f1c8b4 | [261006-ij3-fix-verified-pr-224-review-findings-conf](./quick/261006-ij3-fix-verified-pr-224-review-findings-conf/) |
 | 260912-wr8 | Restructure napplet skills for the skills.sh installer (napplet-* names, napplet-ui contract, custom installer removed) | 2026-09-12 | 2d3556c9 | [260912-wr8-restructure-napplet-skills-for-the-skill](./quick/260912-wr8-restructure-napplet-skills-for-the-skill/) |
 | 260904-g1f | Add the MIT license and open a pull request | 2026-09-04 | 7b82fe08 | [260904-g1f-add-the-mit-license-and-open-a-pull-requ](./quick/260904-g1f-add-the-mit-license-and-open-a-pull-requ/) |
@@ -580,6 +599,7 @@ Items acknowledged and deferred at v0.31.0 milestone close on 2026-05-24:
 **Resume file:** None
 
 | 261007-c0v | Embed NIP-5D publishing metadata and recover standalone HTML deploys ([PR #226](https://github.com/napplet/web/pull/226)) | 2026-10-07 | 4b9cbc79 | [261007-c0v](./quick/261007-c0v-embed-nip-5d-publishing-metadata-and-rec/) |
+| 261010-01a | Optional Zapstore metadata, standalone/inline screenshots, and current protocol context | 2026-10-10 | 46c19178 | [261010-01a](./quick/261010-01a-optional-zapstore-metadata-and-current-p/) |
 
 Last session: 2026-07-23T15:44:08.781Z
 Stopped at: Completed 161-16-PLAN.md
@@ -628,6 +648,10 @@ Surfaced by research (informational — each belongs to a specific phase plan):
 
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
+| 261010-3v2 | Add napplet.run client attribution to CLI publications | 2026-10-10 | 678fb834 | [261010-3v2](./quick/261010-3v2-add-napplet-run-client-attribution-to-cl/) |
+| 261010-3fr | Propose NIP-5D application references and link CLI screenshot metadata | 2026-10-10 | eb6b87e2 | [261010-3fr](./quick/261010-3fr-propose-application-descriptor-links-and/) |
+| 261010-gap | Close PR #228 completeness gaps: handlerHint validation, stale intent/shell docs and skills | 2026-10-10 | 82c54ed3 | [261010-gap-close-pr-228-intent-cascade-gaps](./quick/261010-gap-close-pr-228-intent-cascade-gaps/) |
+| 261009-nvo | Chase NAP-INTENT and cascading domain amendments; tests green, slop 100 | 2026-10-09 | c9f2c8e1 | [261009-nvo-align-sdk-and-conformance-with-nap-inten](./quick/261009-nvo-align-sdk-and-conformance-with-nap-inten/) |
 | 261010-dcr | Dead-code audit: remove unreferenced shim modules, dead exports, unused deps and lint task | 2026-10-10 | 276b6c84 | [261010-dead-code-audit-and-removal](./quick/261010-dead-code-audit-and-removal/) |
 | 261007-aae | Resolve PR #224 conflicts after #223 | 2026-10-07 | cc741b8f | [261007-aae-resolve-pr-224-conflicts-after-merging-p](./quick/261007-aae-resolve-pr-224-conflicts-after-merging-p/) |
 | 260421-u87 | Create cross-repo PRs in napplet/nubs from the 4 v0.29.0 drafts | 2026-04-21 | c28d8e4 | [260421-u87-create-cross-repo-prs-in-napplet-nubs-fr](./quick/260421-u87-create-cross-repo-prs-in-napplet-nubs-fr/) |

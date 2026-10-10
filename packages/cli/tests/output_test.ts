@@ -323,6 +323,7 @@ Deno.test("renderInitReport shows resolved config", () => {
       sourceDir: "dist",
       defaultTarget: "named",
       named: ["feed"],
+      metadata: { archetypes: [{ slug: "note", convention: "napplet:note/open" }] },
       relays: ["wss://relay.example"],
       blossomServers: ["https://cdn.example"],
     },
@@ -333,6 +334,7 @@ Deno.test("renderInitReport shows resolved config", () => {
   assert(output.includes("Config: /repo/.napplet/config.json"));
   assert(output.includes("Default target: named"));
   assert(output.includes("Named d tags: 1 (feed)"));
+  assert(output.includes("Archetypes: 1 (napplet:note/open)"));
   assert(output.includes("Relays: 1 (wss://relay.example)"));
   assert(output.includes("Blossom servers: 1 (https://cdn.example)"));
   assert(output.includes("napplet deploy --dry-run"));

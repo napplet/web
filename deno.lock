@@ -8,7 +8,6 @@
     "jsr:@std/media-types@1": "1.1.0",
     "jsr:@std/path@1": "1.1.6",
     "jsr:@std/streams@1": "1.1.2",
-    "npm:@changesets/cli@^2.30.0": "2.31.1",
     "npm:@scure/base@^1.2.6": "1.2.6",
     "npm:applesauce-relay@^5.2.0": "5.2.0_typescript@5.9.3",
     "npm:applesauce-signers@^5.2.0": "5.2.0_typescript@5.9.3",
@@ -1823,7 +1822,7 @@
   "workspace": {
     "packageJson": {
       "dependencies": [
-        "npm:@changesets/cli@^2.30.0",
+        "npm:@changesets/cli@^3.0.3",
         "npm:@types/node@^22.15.0",
         "npm:happy-dom@^20.10.3",
         "npm:playwright@^1.59.1",
@@ -1892,6 +1891,7 @@
         "packageJson": {
           "dependencies": [
             "npm:@types/node@^22.15.0",
+            "npm:nostr-tools@^2.23.3",
             "npm:tsup@^8.5.0",
             "npm:typescript@^5.9.3",
             "npm:vitest@^4.1.11"
