@@ -98,6 +98,7 @@ Deno.test("application uses Software Application tags and hashes local screensho
         ["image", `${servers[0]}/${digest}`],
         ["image", "https://images.example/remote.png"],
         ["t", "notes"],
+        ["client", "napplet.run"],
       ],
     });
     assertEquals(application.files.length, 1);
