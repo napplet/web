@@ -48,12 +48,39 @@ function validateIntentInvokeRequest(request: unknown, errors: EnvelopeError[]):
     errors.push({ code: 'wrong-type', message: 'Intent convention must be stable and match archetype and action', field: 'request.convention' });
   }
 
+  if (intent.handler !== undefined && typeof intent.handler !== 'string') {
+    errors.push({ code: 'wrong-type', message: 'Intent request field "handler" must be a string', field: 'request.handler' });
+  }
+  if (intent.behavior !== undefined && kindOf(intent.behavior) !== 'object') {
+    errors.push({ code: 'wrong-type', message: 'Intent request field "behavior" must be an object', field: 'request.behavior' });
+  }
+  if (intent.handlerHint !== undefined) validateIntentHandlerHint(intent.handlerHint, errors);
+
   if ('sender' in intent) {
     errors.push({
       code: 'forbidden-field',
       message: 'Intent request does not define a caller-supplied sender field',
       field: 'request.sender',
     });
+  }
+}
+
+/** Validate the NAP-INTENT recommendation: a kind 35129 coordinate plus optional relay hints. */
+function validateIntentHandlerHint(hint: unknown, errors: EnvelopeError[]): void {
+  if (kindOf(hint) !== 'object') {
+    errors.push({ code: 'wrong-type', message: 'Intent request field "handlerHint" must be an object', field: 'request.handlerHint' });
+    return;
+  }
+  const { address, relays } = hint as Record<string, unknown>;
+  if (typeof address !== 'string' || !/^35129:[0-9a-f]{64}:.+$/s.test(address)) {
+    errors.push({
+      code: address === undefined ? 'missing-field' : 'wrong-type',
+      message: 'Intent handler hint "address" must be a 35129:<pubkey>:<d> coordinate',
+      field: 'request.handlerHint.address',
+    });
+  }
+  if (relays !== undefined && !(Array.isArray(relays) && relays.every((relay) => typeof relay === 'string'))) {
+    errors.push({ code: 'wrong-type', message: 'Intent handler hint "relays" must be an array of strings', field: 'request.handlerHint.relays' });
   }
 }
 
