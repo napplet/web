@@ -1,5 +1,5 @@
 ---
-status: investigating
+status: resolved
 trigger: 'metadata.archetypes[0] must use slug:convention; expected napplet:note/open'
 created: 2026-10-09
 updated: 2026-10-09
@@ -17,7 +17,7 @@ updated: 2026-10-09
 
 - hypothesis: CLI input and JSON normalization were missed by the NAP-INTENT migration.
 - test: URI input through config, wizard, CLI, and resulting manifest advertisements.
-- next_action: Add failing regression coverage, then normalize URI inputs to the existing internal objects.
+- next_action: Open the verified fix PR.
 
 ## Evidence
 
@@ -28,4 +28,8 @@ updated: 2026-10-09
 
 ## Resolution
 
-- Pending.
+- Root cause: CLI parsing required a redundant role prefix and JSON normalization rejected URI strings with an incorrect format hint.
+- Fix: Accept direct convention URIs in both paths, derive their roles, preserve object configs and legacy CLI input, and update reports, wizard prompts, tutorials, and shipped documentation.
+- Verification: Three regression failures reproduced before the fix. Afterwards, 40 focused tests passed; `pnpm build`, `pnpm type-check`, and `pnpm -r test:unit` passed (159 CLI tests); release tooling, skills contracts, and onboarding contracts passed; the rebuilt CLI 0.8.3 passed flag/config/report smoke checks; changed-code aislop scored 100/100.
+- Release metadata: `pnpm version-packages` prepared CLI 0.8.3 and boilerplate 0.3.4 (shipped README correction). No local publishing.
+- Scope: CLI input normalization and documentation only; existing manifest serialization and runtime intent behavior are unchanged.

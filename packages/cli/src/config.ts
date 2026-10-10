@@ -176,7 +176,12 @@ export function normalizeConfig(input: unknown): NappletConfig {
   });
 }
 
-/** Normalize a convention URI, accepting the older role-prefixed CLI input. */
+/**
+ * Normalize a convention URI, accepting the older role-prefixed CLI input.
+ * @param value Queryless convention URI or legacy role-prefixed CLI value.
+ * @returns The role and convention used for manifest advertisements.
+ * @example parseArchetypeConvention("napplet:note/open")
+ */
 export function parseArchetypeConvention(value: string): NappletArchetypeConvention {
   value = value.trim();
   if (value.startsWith("napplet:")) return normalizeArchetypeConvention(value, "archetype");
