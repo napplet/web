@@ -27,7 +27,7 @@ Deno.test("repository source normalizes clone URLs without publishing credential
 Deno.test("source override accepts one URL or false and rejects arrays and unsafe values", () => {
   assertEquals(normalizeConfig({ metadata: { source: " https://example.org/archive.tar.gz " } }).metadata?.source, "https://example.org/archive.tar.gz");
   assertEquals(normalizeConfig({ metadata: { source: false } }).metadata?.source, false);
-  for (const source of [[], ["https://a.example", "https://b.example"], true, null, "", "git@host:repo", "file:///repo", "https://user:secret@example.org/repo"]) {
+  for (const source of [[], ["https://a.example", "https://b.example"], true, null, "", "git@host:repo", "https:example.org", "//example.org/repo", "file:///repo", "https://user:secret@example.org/repo"]) {
     let error = "";
     try { normalizeConfig({ metadata: { source } }); } catch (caught) { error = String(caught); }
     assert(error.includes("metadata.source"));

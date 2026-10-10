@@ -36,6 +36,12 @@ Last activity: 2026-10-07 - Completed quick task 261007-aae: Resolve PR #224 con
 
 See phase 162 VERIFICATION.md for evidence and disclosed compatibility/tooling findings. Earlier phase and quick-task records below are historical.
 
+### Quick task 261010-2m3 — COMPLETE
+
+- Added repository-derived source tags and config override/suppression for CLI 0.8.6.
+- Source remains singular per current NIP-5D; clarification PR: https://github.com/dskvr/nips/pull/10 (base nip/5d).
+- Build, type-check, full unit suite and AI-slop passed; real GB Color dry-run reports in `/tmp/napplet-source-proof`.
+
 ### Quick task 261010-26v — COMPLETE
 
 - Automatic Kehto Paja screenshot previews for deploy and standalone capture; no user-supplied host required.
