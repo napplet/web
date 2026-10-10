@@ -4,7 +4,7 @@
 
 ### Patch Changes
 
-- Add optional Zapstore application metadata publishing with local screenshot uploads, dry-run previews, publication failure reporting, and the preview screenshot command.
+- Add optional Zapstore application metadata publishing with local screenshot uploads, dry-run previews, publication failure reporting, the preview screenshot command, and inline capture with deploy --screenshot.
 
 ## 0.8.3
 
