@@ -264,7 +264,7 @@ Deno.test("CLI dry run includes application metadata only when requested, with n
   });
 });
 
-Deno.test("screenshot runner passes arguments literally to the maintained browser CLI", async () => {
+Deno.test("screenshot runner pins a compatible version and preserves literal arguments", async () => {
   let received: string[] = [];
   const args = ["http://localhost:5173", "--output", "preview with spaces.png"];
   assertEquals(
@@ -277,7 +277,7 @@ Deno.test("screenshot runner passes arguments literally to the maintained browse
     }),
     0,
   );
-  assertEquals(received, ["npx.cmd", "--yes", "@napplet/conformance-cli", "screenshot", ...args]);
+  assertEquals(received, ["npx.cmd", "--yes", "@napplet/conformance-cli@0.3.3", "screenshot", ...args]);
 });
 
 for (const automatic of [false, true]) {

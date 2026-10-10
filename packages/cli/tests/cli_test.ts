@@ -249,11 +249,11 @@ Deno.test("published CLI entrypoint excludes standalone-only workspace imports",
 Deno.test("resolveConformanceCommand runs the package-backed CLI without a global binary", () => {
   assertEquals(resolveConformanceCommand("napplet-conformance", "darwin"), {
     command: "npx",
-    args: ["--yes", "@napplet/conformance-cli"],
+    args: ["--yes", "@napplet/conformance-cli@0.3.3"],
   });
   assertEquals(resolveConformanceCommand(undefined, "windows"), {
     command: "npx.cmd",
-    args: ["--yes", "@napplet/conformance-cli"],
+    args: ["--yes", "@napplet/conformance-cli@0.3.3"],
   });
 });
 
