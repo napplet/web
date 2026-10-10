@@ -8,6 +8,8 @@
 
   INTENT callers migrate from archetype/request arguments to invoke(uri, options) and open(uri, options), from handled/windowId to acceptance, and from candidate dTag to id/contracts. Existing IntentOpenOptions and named SDK helpers remain exported with the URI signatures. CLI helper extraction preserves existing exports and behavior.
 
+- Validate the optional `handler`, `behavior`, and `handlerHint` fields of `intent.invoke` requests: `handlerHint.address` must be a `35129:<pubkey>:<d>` coordinate and `relays` an array of strings.
+
 ### Patch Changes
 
 - Updated dependencies
