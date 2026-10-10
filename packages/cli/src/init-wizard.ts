@@ -113,7 +113,7 @@ export async function promptInitWizard(options: InitWizardOptions): Promise<Init
 async function promptArchetypes(options: InitWizardOptions): Promise<NappletArchetypeConvention[]> {
   for (;;) {
     const value = await promptLine({
-      message: "Archetype conventions (slug:napplet:<archetype>/<intent>, comma separated, optional)",
+      message: "Archetype conventions (napplet:<archetype>/<intent>, comma separated, optional)",
       input: options.input,
       output: options.output,
     });

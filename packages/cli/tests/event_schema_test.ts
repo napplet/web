@@ -1,6 +1,6 @@
 import { finalizeEvent } from "nostr-tools";
 import { main } from "../src/cli.ts";
-import { defaultConfig } from "../src/config.ts";
+import { defaultConfig, normalizeConfig } from "../src/config.ts";
 import { createDeployPlan } from "../src/deploy-plan.ts";
 import {
   createDeployManifestTemplates,
@@ -17,6 +17,22 @@ const key = new Uint8Array(32).fill(1);
 const hash = [
   ...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(html))),
 ].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+
+Deno.test("URI metadata emits a matching role and intent without a redundant prefix", async () => {
+  await withTempDir(async (dir) => {
+    await Deno.writeTextFile(`${dir}/index.html`, html);
+    const config = normalizeConfig({
+      metadata: { name: "notes", archetypes: ["napplet:note/open"] },
+    });
+    const candidate = { name: "notes", dir, indexHtml: `${dir}/index.html` };
+    const plan = createDeployPlan(config, [candidate], { names: ["notes"] });
+    const manifests = await createDeployManifestTemplates(plan, config, { createdAt: 12 });
+    const tags = manifests[0].template?.tags ?? [];
+    assertEquals(tags.filter((tag) => tag[0] === "z"), [["z", "note"]]);
+    assertEquals(tags.filter((tag) => tag[0] === "i"), [["i", "napplet:note/open"]]);
+    assertEquals(tags.some((tag) => tag[0] === "archetype"), false);
+  });
+});
 
 Deno.test("current is the unattended and interactive deployment default; legacy is explicit", async () => {
   assertEquals(await selectManifestFormat(undefined, false), "current");

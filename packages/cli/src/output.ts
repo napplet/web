@@ -241,7 +241,9 @@ export function renderInitReport(report: InitReport): string {
     lines,
     "Archetypes",
     formatCountedList(
-      report.config.metadata?.archetypes?.map(({ slug, convention }) => `${slug}:${convention}`) ?? [],
+      report.config.metadata?.archetypes?.map(({ slug, convention }) =>
+        convention.startsWith(`napplet:${slug}/`) ? convention : `${convention} (role: ${slug})`
+      ) ?? [],
     ),
   );
   pushField(lines, "Relays", formatCountedList(report.config.relays));

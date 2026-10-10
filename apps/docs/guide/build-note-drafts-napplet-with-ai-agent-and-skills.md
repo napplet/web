@@ -27,7 +27,7 @@ napplet create note-drafts
 cd note-drafts
 napplet init --name notedrafts --title "Note Drafts" \
   --description "Draft and publish short Nostr notes from a sandboxed napplet." \
-  --archetype note:napplet:note/open
+  --archetype napplet:note/open
 ```
 
 ## 2. Install the napplet skills for your agent
@@ -98,7 +98,7 @@ The diff should look like this:
   `@napplet/sdk`, `@napplet/vite-plugin`, and `@napplet/conformance-cli`
   versions.
 - `.napplet/config.json` still owns `notedrafts`, title, description, and the
-  queryless `note:napplet:note/open` archetype convention.
+  queryless `napplet:note/open` archetype convention.
 - `vite.config.ts` declares `requires: ['identity', 'storage', 'outbox']` and
   does not become a second source of deployment metadata.
 - `src/main.ts` imports `identity`, `storage`, and `outbox` from

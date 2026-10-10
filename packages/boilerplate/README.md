@@ -8,7 +8,7 @@ napplet create my-napplet
 
 Deployment name, title, description, and archetype roles plus conventions belong to `napplet init`; this generator does not prompt for or mutate them. It currently ships one variant, `basic`.
 
-An archetype declaration pairs one role slug with one queryless convention, such as `note:napplet:note/open`. When deployment metadata is later written, one object represents one manifest tag:
+Pass a queryless convention URI such as `napplet:note/open` to `napplet init --archetype`. The CLI derives the role and stores an object that emits separate role and intent tags:
 
 ```jsonc
 { "slug": "note", "convention": "napplet:note/open" }

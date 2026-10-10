@@ -20,7 +20,7 @@ export interface NappletArchetypeConvention {
   params?: string[];
 }
 
-/** Deployment metadata owned by `napplet init`. */
+/** Normalized deployment metadata; JSON input also accepts convention URI strings in archetypes. */
 export interface NappletDeployMetadata {
   name?: string;
   title?: string;

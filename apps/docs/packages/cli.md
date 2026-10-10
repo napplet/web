@@ -102,7 +102,7 @@ napplet deploy
 ```bash
 napplet guide
 napplet create <directory> [--template <path-or-url>] [--force]
-napplet init [--force] [--root] [--source-dir <dir>] [--name <dtag>] [--title <title>] [--description <text>] [--archetype <slug:napplet:archetype/intent>] [--relay <url>] [--server <url>]
+napplet init [--force] [--root] [--source-dir <dir>] [--name <dtag>] [--title <title>] [--description <text>] [--archetype <napplet:archetype/intent>] [--relay <url>] [--server <url>]
 napplet discover [--config <file>] [--all]
 napplet debug [--format current|legacy] [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>]
 napplet deploy [--format current|legacy] [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>] [--prompt-sec] [--dry-run]
@@ -126,41 +126,26 @@ deploys under its own folder name as the named `d` tag.
 
 ## Archetype conventions
 
-Pass each `--archetype` option as `slug:napplet:<archetype>/<intent>`, for
-example `profile:napplet:profile/open`. The resulting configuration preserves
-the queryless convention:
+Pass each `--archetype` option as a queryless convention URI, for example `napplet:profile/open`. The CLI derives the role from the URI. JSON configuration accepts URI strings directly:
 
 ```json
 {
   "metadata": {
-    "archetypes": [
-      {
-        "slug": "profile",
-        "convention": "napplet:profile/open"
-      }
-    ]
+    "archetypes": ["napplet:profile/open"]
   }
 }
 ```
+
+The CLI normalizes each URI to an object such as `{ "slug": "profile", "convention": "napplet:profile/open" }`. Existing object configs remain supported; add `"params": ["pubkey"]` to an object to advertise accepted parameter names. Older role-prefixed CLI inputs remain supported for compatibility.
+
+This example emits the independent advertisements:
 
 ```json
 ["z", "profile"]
 ["i", "napplet:profile/open"]
 ```
 
-Each tag advertises one stable convention identity. The role slug and convention's own archetype segment are independent under [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md). Query parameters are rejected in metadata.
-
-`--archetype` and the interactive wizard remain convention-only. Use object-form `.napplet/config.json` metadata
-when event-kind discovery is needed. URI query transposition occurs only in the
-runtime bindings for INC emission and intent invocation, never in manifest
-discovery or handler matching.
-
-This shape follows [NAP-INC PR #89
-(`4593ce9`)](https://github.com/napplet/naps/pull/89/commits/4593ce9e301ce098fd3dad64206fcd6f144fa7af),
-[the web projection PR #90
-(`896c32c`)](https://github.com/napplet/naps/pull/90/commits/896c32c92deee68dc4d10fc1132b62df20cccb6f),
-and [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md)
-at those exact draft heads.
+This non-normative guide follows the living [NAP-INTENT manifest catalog contract](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md#manifest-catalog-contract). A convention is eligible for dispatch when its archetype segment matches a `z` role on the same manifest. Metadata convention identities are queryless and fragment-free. Trailing `i` values advertise parameter names, not event-kind restrictions or parameter values.
 
 ## See also
 

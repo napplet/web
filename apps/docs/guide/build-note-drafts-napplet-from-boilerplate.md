@@ -33,7 +33,7 @@ napplet create note-drafts
 cd note-drafts
 napplet init --name notedrafts --title "Note Drafts" \
   --description "Draft and publish short Nostr notes from a sandboxed napplet." \
-  --archetype note:napplet:note/open
+  --archetype napplet:note/open
 pnpm install
 ```
 

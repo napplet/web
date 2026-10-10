@@ -42,7 +42,7 @@ const suggestions = {
 
 Deno.test("promptInitWizard fills missing fields with URL autocomplete", async () => {
   const input = new FakeTerminalInput(
-    "\n\nfeed\n\nA focused feed\nnote:napplet:note/open\nwss://relay-o\t\nwss://relay-t\t\n\nhttps://cdn-o\t\n\n",
+    "\n\nfeed\n\nA focused feed\nnapplet:note/open\nwss://relay-o\t\nwss://relay-t\t\n\nhttps://cdn-o\t\n\n",
   );
   const output = new FakeOutput();
 
@@ -86,7 +86,7 @@ Deno.test("promptInitWizard preserves flagged values and root target", async () 
       named: ["ignored"],
       title: "Root App",
       description: "Root description",
-      archetypes: ["feed:napplet:feed/open"],
+      archetypes: ["napplet:feed/open"],
       root: true,
     },
     suggestions,
