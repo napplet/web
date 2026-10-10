@@ -39,10 +39,8 @@ INC `emit(topic, payload?)` is the developer-facing convention URI boundary. A q
 Intent calls derive archetype and action from the URI. An `ok: true` result means the runtime accepted delivery responsibility and includes the normalized identity and handler catalog identifier; an `ok: false` result includes `error`. Targets receive runtime-attested `IntentDelivery` values through `onDelivery`, including deliveries retained before registration. Behavior hints are `focus` and `reuse`. This non-normative guidance defers to the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md).
 
 ```ts
-const result = await window.napplet.intent.open('profile', { pubkey: 'abc123' }, {
-  convention: 'napplet:profile/open',
-});
-console.log(result.ok, result.ok);
+const result = await window.napplet.intent.open('napplet:profile/open', { payload: { pubkey: 'abc123' } });
+if (!result.ok) console.error(result.error);
 ```
 
 Delivery does not depend on the source staying alive or on NAP-INC. Target startup/reuse, overlap, replacement, retry, and persistence remain runtime policy.
