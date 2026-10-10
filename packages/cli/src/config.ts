@@ -8,6 +8,7 @@ import {
 } from "./types.ts";
 import { dirname, joinPath, resolvePath } from "./path.ts";
 import { normalizeDTag } from "./manifest.ts";
+import { normalizeZapstoreConfig } from "./zapstore.ts";
 
 /** DEFAULT_CONFIG constant used by configuration helpers. */
 export const DEFAULT_CONFIG: NappletConfig = {
@@ -155,6 +156,7 @@ export function normalizeConfig(input: unknown): NappletConfig {
     bunkerPubkey: typeof value.bunkerPubkey === "string" ? value.bunkerPubkey : undefined,
     named,
     metadata,
+    zapstore: normalizeZapstoreConfig(value.zapstore),
     discover: value.discover
       ? {
         enabled: value.discover.enabled ?? true,

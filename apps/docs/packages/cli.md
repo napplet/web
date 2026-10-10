@@ -105,7 +105,7 @@ napplet create <directory> [--template <path-or-url>] [--force]
 napplet init [--force] [--root] [--source-dir <dir>] [--name <dtag>] [--title <title>] [--description <text>] [--archetype <napplet:archetype/intent>] [--relay <url>] [--server <url>]
 napplet discover [--config <file>] [--all]
 napplet debug [--format current|legacy] [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>]
-napplet deploy [--format current|legacy] [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>] [--prompt-sec] [--dry-run]
+napplet deploy [--format current|legacy] [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>] [--prompt-sec] [--zapstore | --no-zapstore] [--dry-run]
 napplet keys store --name <ref> [--sec <secret> | --prompt-sec]
 napplet keys connect --name <ref> [--relay <url> ...] [--config <file>]
 napplet keys use --name <ref> [--config <file>]
@@ -179,3 +179,47 @@ For current-format deployment, explicit config metadata overrides matching sidec
 Root and named events omit lineage tags. Companion snapshots retain the CLI's selected source address as their parent; head provenance does not replace that explicit selection. Root/snapshot events omit the named identifier. Deployment does not rewrite the HTML when config or selection overrides its hints: it hashes and uploads the original bytes and signs the resolved metadata separately.
 
 Decoded icon bytes are hashed and uploaded unchanged alongside the HTML, even when `index.html` is the only file in the deployment directory. No extracted icon file is written. If a sidecar overrides the icon, embedded bytes are used only when both hash and MIME type match that declaration. Remote, unsupported, empty, malformed, and MIME-mismatched icon URLs are ignored. Hash-only sidecars still require the matching blob to be supplied separately. Consumers verify decoding before display according to NIP-5D. Legacy-format deployment retains its previous title/description HTML fallback behavior.
+
+## Screenshots and optional Zapstore metadata
+
+Capture the napplet iframe from a running preview shell (for example, the URL opened by `napplet paja`). This command uses the maintained browser runner via npm and requires Node.js 20+ and Playwright Chromium. Install the matching browser with `npx --yes --package @napplet/conformance-cli playwright install chromium`.
+
+```sh
+napplet screenshot http://localhost:5173 --output preview.png
+# Optional: select one iframe and wait for content inside it.
+napplet screenshot http://localhost:5173 --output ready.png --selector '#napplet-frame' --ready-selector '.app-ready'
+```
+
+The default capture is 1200 × 750 pixels with a 1500 ms delay. Override these with `--width`, `--height`, and `--delay` (milliseconds). The command captures only the iframe, waits for fonts, closes Chromium on success or failure, and refuses to overwrite an existing file. Keep screenshots outside the build directory.
+
+To publish an optional application listing, add a `zapstore` object to `.napplet/config.json`:
+
+```json
+{
+  "zapstore": {
+    "id": "org.example.notes",
+    "name": "Notes",
+    "description": "Private notes in a napplet shell.",
+    "summary": "A simple notebook",
+    "images": ["./preview.png", "https://example.org/notes-mobile.png"],
+    "icon": "./assets/icon.png",
+    "website": "https://example.org/notes",
+    "repository": "https://github.com/example/notes",
+    "license": "MIT",
+    "tags": ["notes", "productivity"]
+  }
+}
+```
+
+Only `id` and `name` are required within this object. The stable `id` identifies the application listing under the signing pubkey; reusing it updates that listing. Description falls back to the deployment config's description. This configuration describes one application listing per deploy invocation, including deployments that select multiple manifests.
+
+```sh
+napplet deploy --zapstore --dry-run --json
+napplet deploy --zapstore
+```
+
+Publishing defaults to off. `--zapstore` enables it for one deployment; `"enabled": true` in the object enables it by default; `--no-zapstore` disables it for one deployment. Supplying both flags is an error. Dry runs show the application template, resolved media URLs and any signature without uploading or publishing.
+
+Local PNG, JPEG and WebP images are resolved relative to the working directory, hashed, and uploaded to the configured Blossom servers. Existing HTTP(S) image URLs are used as supplied. Local media URLs point to the first selected Blossom server; if those uploads fail, application publication is skipped and deploy exits nonzero even if another mirror succeeds. The application uses the same signer and relays as the deployment. A requested application event must be accepted by at least one relay for deploy to succeed.
+
+The listing uses kind `32267` from the [Software Applications proposal](https://github.com/nostr-protocol/nips/pull/1336), with screenshot URLs in `image` tags. It is separate from the current [NIP-5D manifest](https://github.com/nostr-protocol/nips/pull/2303/files) and does not change the artifact hash or add a manifest `app` pointer. This publishes application metadata only, without software release or asset events; acceptance into a particular store's catalog depends on that store.

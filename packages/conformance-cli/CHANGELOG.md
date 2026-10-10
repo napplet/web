@@ -1,5 +1,11 @@
 # @napplet/conformance-cli
 
+## 0.3.2
+
+### Patch Changes
+
+- Add a screenshot command that captures a napplet iframe from a running preview shell, with configurable dimensions and readiness controls and protection against overwriting files.
+
 ## 0.3.1
 
 ### Patch Changes

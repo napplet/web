@@ -39,6 +39,8 @@ napplet deploy
 
 `napplet create` clones the maintained Vite + TypeScript starter. `napplet init` owns deployment name, title, description, archetype roles and conventions, relays, and Blossom servers in `.napplet/config.json`. Node.js 20+ is needed by the generated project, by the package-backed `create` command, and by the skills.sh CLI.
 
+The CLI supports `napplet screenshot <preview-url> --output preview.png` and optional `napplet deploy --zapstore` application metadata publishing. See the [CLI guide](packages/cli/README.md#screenshots-and-optional-zapstore-metadata) for configuration, browser setup, and dry-run examples.
+
 ## Event schema compatibility
 
 Current event defaults begin at **CLI 0.7.0**, **Vite plugin 0.15.0**, **conformance 0.18.0**, and **conformance-cli 0.3.0**. Earlier release series use legacy path/aggregate manifests. The event kinds remain 5129/15129/35129; current events use the artifact SHA-256 in `x`, a description in `content`, and `R`/`O` plus `z`/`i` metadata. CLI deployments offer temporary `--format legacy` support; unattended deployments default to current. See the [migration guide](apps/docs/guide/event-migration.md) for event conversion, legacy pointers and shell storage/ACL implications.

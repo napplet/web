@@ -37,6 +37,7 @@ import { resolveSigningMethod, signDeployManifestTemplates } from "./signing.ts"
 import { getBlossomServerSuggestions, getRelaySuggestions } from "./suggestions.ts";
 import type { DeploySelection, NappletConfig } from "./types.ts";
 import cliMetadata from "../deno.json" with { type: "json" };
+import { prepareZapstorePublication } from "./zapstore.ts";
 
 import { runPackageCli, resolveConformanceCommand, resolvePajaArgs } from "./package-runner.ts";
 export { runPackageCli, resolveConformanceCommand, resolvePajaArgs } from "./package-runner.ts";
@@ -49,7 +50,7 @@ Usage:
   napplet guide
   napplet create <directory> [--template <path-or-url>] [--force]
   napplet init [--force] [--root] [--source-dir <dir>] [--name <dtag>] [--title <title>] [--description <text>] [--archetype <napplet:archetype/intent>] [--relay <url>] [--server <url>]
-  napplet deploy [--format current|legacy] [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>] [--prompt-sec] [--dry-run] [--json]
+  napplet deploy [--format current|legacy] [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>] [--prompt-sec] [--zapstore | --no-zapstore] [--dry-run] [--json]
   napplet migrate <signed-event.json> [--description <text>] [--optional <domain>] [--output <preview.json>]
   napplet debug [--format current|legacy] [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>]
   napplet keys store --name <ref> [--sec <secret> | --prompt-sec]
@@ -61,6 +62,7 @@ Usage:
   napplet discover [--config <file>] [--all]
   napplet conformance [--config <file>] [--all] [-- <args>]
   napplet paja [--config <file>] [-- <args>]
+  napplet screenshot <preview-url> [--output preview.png] [--selector iframe] [--ready-selector <css>] [--width 1200] [--height 750] [--delay 1500]
 
 Run "napplet guide" for the complete developer workflow and documentation.
 `;
@@ -109,6 +111,8 @@ export async function main(argv = Deno.args, options: CliMainOptions = {}): Prom
         return await (options.runCreate ?? ((args) => runPackageCli("@napplet/boilerplate", args)))(
           parsed.rest,
         );
+      case "screenshot":
+        return await runPackageCli("@napplet/conformance-cli", parsed.rest);
       case "discover":
         return await commandDiscover(parsed.rest);
       case "deploy":
@@ -220,6 +224,9 @@ async function commandDiscover(argv: string[]): Promise<number> {
 
 async function commandDeploy(argv: string[]): Promise<number> {
   const flags = collectFlags(argv);
+  if (flags.boolean.has("zapstore") && flags.boolean.has("no-zapstore")) {
+    throw new Error("Choose either --zapstore or --no-zapstore");
+  }
   const jsonOutput = flags.boolean.has("json") || !isTerminalOutput();
   const config = await loadDeployConfig(flags, jsonOutput);
   const format = await selectManifestFormat(first(flags.values.get("format")), isTerminalInput() && !jsonOutput);
@@ -254,6 +261,10 @@ async function commandDeploy(argv: string[]): Promise<number> {
       format,
     });
     const blossomServers = resolveDeployServers(templates, config.blossomServers);
+    const application = await prepareZapstorePublication(config, blossomServers, {
+      enabled: flags.boolean.has("no-zapstore") ? false : flags.boolean.has("zapstore") ? true : undefined,
+    });
+    if (application && signer) application.signedEvent = await signer.sign(application.template);
     const manifests = signer ? await signDeployManifestTemplates(templates, signer) : templates;
     if (!dryRun) {
       if (!signer) {
@@ -268,12 +279,14 @@ async function commandDeploy(argv: string[]): Promise<number> {
         signer,
         {
           onProgress: jsonOutput ? undefined : createDeployProgressReporter(),
+          application,
         },
       );
       const report = {
         signing: signingInfo,
         plan,
         manifests,
+        application,
         deploy,
         relays: config.relays,
         blossomServers,
@@ -286,6 +299,7 @@ async function commandDeploy(argv: string[]): Promise<number> {
       signing: signingInfo,
       plan,
       manifests,
+      application,
       relays: config.relays,
       blossomServers,
       dryRun: true,
