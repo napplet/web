@@ -648,6 +648,7 @@ Surfaced by research (informational — each belongs to a specific phase plan):
 
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
+| 261010-3fr | Propose NIP-5D application references and link CLI screenshot metadata | 2026-10-10 | eb6b87e2 | [261010-3fr](./quick/261010-3fr-propose-application-descriptor-links-and/) |
 | 261010-gap | Close PR #228 completeness gaps: handlerHint validation, stale intent/shell docs and skills | 2026-10-10 | 82c54ed3 | [261010-gap-close-pr-228-intent-cascade-gaps](./quick/261010-gap-close-pr-228-intent-cascade-gaps/) |
 | 261009-nvo | Chase NAP-INTENT and cascading domain amendments; tests green, slop 100 | 2026-10-09 | c9f2c8e1 | [261009-nvo-align-sdk-and-conformance-with-nap-inten](./quick/261009-nvo-align-sdk-and-conformance-with-nap-inten/) |
 | 261007-aae | Resolve PR #224 conflicts after #223 | 2026-10-07 | cc741b8f | [261007-aae-resolve-pr-224-conflicts-after-merging-p](./quick/261007-aae-resolve-pr-224-conflicts-after-merging-p/) |
