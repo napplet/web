@@ -1,7 +1,6 @@
 import { validateEnvelope, type EnvelopeVerdict } from '../validators/envelope.js';
 import {
   REFERENCE_CONVENTION,
-  REFERENCE_ENDPOINT,
   REFERENCE_SUBSCRIBER,
   RESPONDERS,
   ok,
@@ -71,5 +70,3 @@ function handleIncEmit(
   queueDelivery(REFERENCE_SUBSCRIBER, event);
   return [];
 }
-
-export { REFERENCE_ENDPOINT };
