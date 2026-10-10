@@ -2,6 +2,7 @@
 import { resolvePath } from "./path.ts";
 import type { DeployFilePayload } from "./blossom-upload.ts";
 import type {
+  DeployManifestTemplate,
   NappletConfig,
   NostrEventTemplate,
   SignedNostrEvent,
@@ -135,4 +136,45 @@ function imageType(bytes: Uint8Array): string | undefined {
   const text = new TextDecoder().decode(bytes.subarray(0, 12));
   if (text.startsWith("RIFF") && text.endsWith("WEBP")) return "image/webp";
   return undefined;
+}
+
+/**
+ * Attach the proposed NIP-5D application reference before manifest signing.
+ * @param manifests Unsigned deployment templates; legacy manifests are unchanged.
+ * @param application Signed application event that the deployment will publish.
+ * @param relays Configured publication relays, used for an optional lookup hint.
+ * @returns Templates linked to the application without changing artifact hashes.
+ * @example linkZapstoreApplication(manifests, application, ["wss://relay.example"])
+ */
+export function linkZapstoreApplication(
+  manifests: readonly DeployManifestTemplate[],
+  application: SignedNostrEvent,
+  relays: readonly string[],
+): DeployManifestTemplate[] {
+  // Proposed wire surface: https://github.com/dskvr/nips/pull/11
+  const identifiers = application.tags.filter((tag) => tag[0] === "d");
+  if (application.kind !== 32267 || identifiers.length !== 1 || !identifiers[0][1]) {
+    throw new Error("Application reference requires kind 32267 with one non-empty d tag");
+  }
+  const reference = ["app", `32267:${application.pubkey}:${identifiers[0][1]}`];
+  const relay = relays.find((value) => {
+    try {
+      const url = new URL(value);
+      return url.protocol === "wss:" || url.protocol === "ws:";
+    } catch {
+      return false;
+    }
+  });
+  if (relay) reference.push(relay);
+  return manifests.map((manifest) => {
+    if (manifest.format !== "current" || !manifest.template) return manifest;
+    if (manifest.signedEvent) throw new Error("Application references must be attached before manifest signing");
+    return {
+      ...manifest,
+      template: {
+        ...manifest.template,
+        tags: [...manifest.template.tags.filter((tag) => tag[0] !== "app"), [...reference]],
+      },
+    };
+  });
 }

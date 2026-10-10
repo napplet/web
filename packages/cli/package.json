@@ -1,6 +1,6 @@
 {
   "name": "@napplet/cli",
-  "version": "0.8.6",
+  "version": "0.8.8",
   "description": "Standalone CLI for creating, configuring, testing, and deploying napplets",
   "type": "module",
   "files": [

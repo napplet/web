@@ -1,6 +1,9 @@
 /** Maintained package CLI adapters and argument normalization. */
 import { type CommandRunner, runCommand, splitCommand } from "./process.ts";
 
+// Pin the CLI contract: unversioned npx may select an incompatible local dependency.
+const CONFORMANCE_PACKAGE = "@napplet/conformance-cli@0.3.3";
+
 /** Process and output adapters used to invoke a maintained package CLI. */
 export interface PackageCliRunOptions {
   runner?: CommandRunner;
@@ -26,7 +29,7 @@ export async function runPackageCli(
   let result;
   try {
     const commandArgs = packageName === "@napplet/conformance-cli"
-      ? ["--yes", packageName, "screenshot", ...args]
+      ? ["--yes", CONFORMANCE_PACKAGE, "screenshot", ...args]
       : ["--yes", packageName, ...args];
     result = await (options.runner ?? runCommand)(executable, commandArgs);
   } catch (error) {
@@ -56,7 +59,7 @@ export function resolveConformanceCommand(
   if (command === "napplet-conformance") {
     return {
       command: os === "windows" ? "npx.cmd" : "npx",
-      args: ["--yes", "@napplet/conformance-cli"],
+      args: ["--yes", CONFORMANCE_PACKAGE],
     };
   }
   return splitCommand(command);
