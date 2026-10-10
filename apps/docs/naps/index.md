@@ -267,7 +267,7 @@ if (window.napplet?.fs) {
 
 ## Core domain union
 
-[`@napplet/core`](/packages/core) exports a `NapDomain` string union for the foundational domains — `relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `ble`, `webrtc`, `link`, `lists`, `serial`, `fs`, `common` — used as the discriminant for envelope routing and domain presence.
+[`@napplet/core`](/packages/core) exports a `NapDomain` string union for the foundational domains — `shell`, `relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `ble`, `webrtc`, `link`, `count`, `lists`, `serial`, `fs`, `common`, `dm` — used as the discriminant for envelope routing and domain presence.
 
 ## Where to go next
 

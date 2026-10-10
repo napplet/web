@@ -12,7 +12,7 @@ An archetype declaration pairs one role slug with one queryless convention, such
 
 ```jsonc
 { "slug": "note", "convention": "napplet:note/open" }
-// → ["archetype", "note", "napplet:note/open"]
+// → ["z", "note"] and ["i", "napplet:note/open"]
 ```
 
 The convention names a local payload choice; this generator does not define its payload shape. For the living contract, see [the archetype registry](https://github.com/napplet/naps/blob/master/ARCHETYPES.md) and [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md).

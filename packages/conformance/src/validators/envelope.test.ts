@@ -115,6 +115,32 @@ describe('validateEnvelope — outbound field checks', () => {
     }
   });
 
+  it('type-checks optional handler selection, behavior hints, and the 35129 recommendation', () => {
+    const pubkey = 'a'.repeat(64);
+    const base = { type: 'intent.invoke', id: 'intent-4', request: { archetype: 'note', action: 'open', convention: 'napplet:note/open' } };
+    const request = (extra: Record<string, unknown>) => validateEnvelope({ ...base, request: { ...base.request, ...extra } });
+
+    expect(request({ handler: 'choose', behavior: { focus: true, reuse: false } }).ok).toBe(true);
+    expect(request({ handlerHint: { address: `35129:${pubkey}:Profile:Viewer` } }).ok).toBe(true);
+    expect(request({ handlerHint: { address: `35129:${pubkey}:viewer`, relays: ['wss://relay.example'] } }).ok).toBe(true);
+
+    const invalid: Array<[Record<string, unknown>, string]> = [
+      [{ handler: 1 }, 'request.handler'],
+      [{ behavior: 'focus' }, 'request.behavior'],
+      [{ handlerHint: 'naddr1...' }, 'request.handlerHint'],
+      [{ handlerHint: {} }, 'request.handlerHint.address'],
+      [{ handlerHint: { address: `30023:${pubkey}:article` } }, 'request.handlerHint.address'],
+      [{ handlerHint: { address: `35129:${pubkey.toUpperCase()}:viewer` } }, 'request.handlerHint.address'],
+      [{ handlerHint: { address: `35129:${pubkey}:` } }, 'request.handlerHint.address'],
+      [{ handlerHint: { address: `35129:${pubkey}:viewer`, relays: 'wss://relay.example' } }, 'request.handlerHint.relays'],
+    ];
+    for (const [extra, field] of invalid) {
+      const verdict = request(extra);
+      expect(verdict.ok).toBe(false);
+      expect(verdict.errors).toContainEqual(expect.objectContaining({ field }));
+    }
+  });
+
   it('requires runtime-attested sender on inbound INC events', () => {
     const missingSender = validateEnvelope({ type: 'inc.event', topic: 'room' });
     expect(missingSender.errors).toContainEqual(expect.objectContaining({

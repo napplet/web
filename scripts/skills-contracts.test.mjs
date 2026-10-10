@@ -158,6 +158,14 @@ test('docs and website point at the skills.sh install command and the new skill 
 });
 
 
+test('the SDK reference describes the optional shell domain instead of denying it', () => {
+  const sdk = skills.get('napplet-sdk').source;
+  assert.match(sdk, /## Optional shell environment/);
+  for (const skill of skills.values()) {
+    assert.doesNotMatch(skill.source, /There is no `(window\.napplet\.shell|shell\.ready\(\))/, skill.file);
+  }
+});
+
 test('interop teaches URI acceptance and buffered delivery from living NAPs', () => {
   const interop = skills.get('napplet-interop').source;
   assert.match(interop, /invoke\(uri, options\?\)/);

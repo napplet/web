@@ -35,7 +35,7 @@ Conformance runs against `./dist` (prefers `dist/index.html`). Never test source
 | Relay routing | No NIP-65 resolver, relay pool, WebSocket client, fanout policy in the napplet |
 | Network and media bytes | No `fetch`, XHR, WebSocket, external `<img src>`; `resource` instead |
 | Persistence | No `localStorage`, IndexedDB, cookies; `storage` instead |
-| Optional-domain gating | `window.napplet?.domain` after injection; no `shell.ready()` / `shell.supports()` / service probes |
+| Optional-domain gating | `window.napplet?.domain` after injection; never wait on optional `shell.ready()` / `shell.supports()` or service probes |
 | `requires` | Bare domain names, hard requirements only; matches the design spec |
 
 ```bash
