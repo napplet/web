@@ -185,21 +185,17 @@ Deprecated IFC compatibility exports are available as migration aliases: `ifc`, 
 
 ### `intent`
 
-Archetype intent dispatch. Mirrors `window.napplet.intent`. Use `invoke(request)` or `open(archetype, payload?, opts?)`.
+Archetype intent dispatch. Mirrors `window.napplet.intent`. Use `invoke(uri, options?)` or `open(uri, options?)`.
 
 ```ts
 import { intent } from '@napplet/sdk';
 
-const result = await intent.open(
-  'profile',
-  { pubkey: 'abc123' },
-  { convention: 'napplet:profile/open', behavior: { newWindow: true } },
-);
-if (!result.handled) throw new Error(result.error);
-console.log(`Handled by ${result.handler} in ${result.windowId}`);
+const result = await intent.open('napplet:profile/open', { payload: { pubkey: 'abc123' }, behavior: { reuse: false } });
+if (!result.ok) throw new Error(result.error);
+console.log(`Accepted by ${result.handler}`);
 ```
 
-Results include required `ok`, `archetype`, `action`, and `handled` fields. `IntentBehavior` supports `focus`, `newWindow`, and `reuse`. This non-normative reference follows the living [NAP-INTENT document](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md).
+Intent calls derive archetype and action from the URI. An `ok: true` result means the runtime accepted delivery responsibility and includes the normalized identity and handler catalog identifier; an `ok: false` result includes `error`. Targets receive runtime-attested `IntentDelivery` values through `onDelivery`, including deliveries retained before registration. Behavior hints are `focus` and `reuse`. This non-normative guidance defers to the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md).
 
 ### `storage`
 
@@ -492,3 +488,21 @@ If you are writing a vanilla napplet with no build step, use the injected `windo
 ## License
 
 MIT
+
+
+### Optional shell environment
+
+The runtime may expose `shell` for environment information. `shell.supports(domain)` reads current domain object presence, `shell.services` is empty until environment delivery, and `shell.ready()` / `shell.onReady(handler)` use the retained snapshot. Readiness does not gate other domain calls. See the living [NAP-SHELL](https://github.com/napplet/naps/blob/master/naps/NAP-SHELL.md).
+
+### Intent delivery and recommendations
+
+```ts
+import { intent } from '@napplet/sdk';
+
+intent.onDelivery(({ sender, convention, payload }) => {
+  console.log(sender, convention, payload);
+});
+await intent.invoke('napplet:profile/open?pubkey=abc123');
+```
+
+The runtime binding retains deliveries until a listener registers. Discovery candidates expose opaque catalog `id` values and `contracts` with parameter names. INC peers instead use identifiers for running authenticated endpoints. A NAP-INTENT URI may append a bare `#naddr1…` recommendation; the binding sends its coordinate and relay hints as `handlerHint`, outside convention identity and payload. An applicable user default takes precedence. INC URI operations reject fragments. See the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md) and [web projection](https://github.com/napplet/naps/blob/master/projections/web.md).

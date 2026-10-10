@@ -208,3 +208,9 @@ Use the exact method names exported by the installed `@napplet/sdk` version (`no
 - Direct `window.napplet.<domain>.method()` calls when the SDK exports that domain — wrong default.
 - `fetch`, `XMLHttpRequest`, `WebSocket`, `<img src="https://…">`, `localStorage`, `window.nostr` — none exist for a napplet; route through `resource`, `storage`, `outbox`.
 - There is no `nappletState` / `nappStorage` import — storage is `storage.*`.
+
+## Optional shell environment
+
+`shell` exposes optional environment information through `supports`, `services`, `ready`, and `onReady`. Check injected domain presence for availability; other domains remain usable without waiting for the environment. See [NAP-SHELL](https://github.com/napplet/naps/blob/master/naps/NAP-SHELL.md).
+
+Theme updates reach napplets with the exposed `theme` domain, independently of manifest requirement declarations. User identity changes report the connected signer, including an empty string at sign-out; they do not alter napplet identity. Profile picture/banner bytes use optional `resource` when exposed; otherwise show local placeholder artwork. Theme media URLs do not grant network access, so colors and local fonts provide the fallback. See [NAP-THEME](https://github.com/napplet/naps/blob/master/naps/NAP-THEME.md) and [NAP-IDENTITY](https://github.com/napplet/naps/blob/master/naps/NAP-IDENTITY.md).

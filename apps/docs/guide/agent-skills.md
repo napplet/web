@@ -52,7 +52,7 @@ Agents that read skills by name can then invoke `/napplet-make`, `/napplet-ui`, 
 
 - The sandbox is an authoring contract: no direct `fetch`, XHR, WebSocket, browser storage, cookies, `window.nostr`, external scripts/styles/images, or app-owned relay/signing infrastructure in napplet code. Bytes go through `resource`, state through `storage`, social Nostr behavior through `outbox`, `common`, `lists`, `count`, and `dm`.
 - Napplets are applets, not web pages: no title header or tagline (the runtime shows the name), compact tool density, layouts that use the whole frame at every size, an explicit minimum-size notice only when a floor truly exists.
-- SDK-first calls through `@napplet/sdk`; `window.napplet?.domain` only as an optional-domain check after runtime injection. There is no `shell.ready()` / `shell.supports(...)`.
+- SDK-first calls through `@napplet/sdk`; `window.napplet?.domain` only as an optional-domain check after runtime injection. The optional `shell` domain reports environment information; other domains remain usable without waiting for `shell.ready()`.
 - New projects come from `napplet create` and `napplet init`; agents edit the generated project rather than rebuilding its substrate, and run `pnpm verify` + `pnpm test:conformance` before claiming done.
 - Protocol truth stays in the living [NIP-5D](https://github.com/nostr-protocol/nips/pull/2303) and [NAPs](https://github.com/napplet/naps) documents. The skills are non-normative authoring guidance and tell the agent to stop and flag gaps instead of inventing surface.
 

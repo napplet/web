@@ -65,34 +65,8 @@ export function syncJsrVersions(repoRoot = REPO_ROOT) {
 
     jsr.version = pkg.version;
 
-    // Regenerate concrete JSR source-module exports from npm's built targets.
-    // Wildcards are npm asset patterns, so they have no corresponding JSR module.
-    if (jsr.exports && typeof jsr.exports === 'object' && pkg.exports && typeof pkg.exports === 'object') {
-      const regenerated = {};
-      const skipSubpaths = JSR_EXPORT_SKIP_SUBPATHS.get(pkg.name) ?? new Set();
-      for (const [subpath, target] of Object.entries(pkg.exports)) {
-        if (skipSubpaths.has(subpath)) continue;
-        const jsEntry = typeof target === 'string' ? target : (target.import || target.default);
-        if (!jsEntry || subpath.includes('*') || jsEntry.includes('*')) continue;
-        const sourceEntry = jsEntry.replace('/dist/', '/src/').replace(/\.js$/, '.ts');
-        const sourcePath = join(dirname(jsrPath), sourceEntry.replace(/^\.\//, ''));
-        if (!existsSync(sourcePath)) {
-          throw new Error(`${pkg.name} ${subpath} maps to missing JSR source file: ${sourceEntry}`);
-        }
-        regenerated[subpath] = sourceEntry;
-      }
-      jsr.exports = regenerated;
-    }
-
-    // Rewrite internal @napplet/* import constraints to the dependency's
-    // current version. Leave npm:/external specifiers alone.
-    if (jsr.imports && typeof jsr.imports === 'object') {
-      for (const [name, spec] of Object.entries(jsr.imports)) {
-        if (!versions.has(name)) continue;
-        const want = `jsr:${name}@^${versions.get(name)}`;
-        if (spec !== want) jsr.imports[name] = want;
-      }
-    }
+    syncJsrExports(pkg, jsr, jsrPath);
+    syncJsrImports(jsr, versions);
 
     if (JSON.stringify(jsr) === before) continue;
     writeFileSync(jsrPath, JSON.stringify(jsr, null, 2) + '\n');
@@ -131,6 +105,39 @@ export function syncJsrVersions(repoRoot = REPO_ROOT) {
   }
 
   console.log(`sync-jsr-versions: ${denoChanged} deno.json package configs updated`);
+}
+
+/** Regenerate concrete source exports while preserving npm-only asset exclusions. */
+function syncJsrExports(pkg, jsr, jsrPath) {
+  if (jsr.exports && typeof jsr.exports === 'object' && pkg.exports && typeof pkg.exports === 'object') {
+    const regenerated = {};
+    const skipSubpaths = JSR_EXPORT_SKIP_SUBPATHS.get(pkg.name) ?? new Set();
+    for (const [subpath, target] of Object.entries(pkg.exports)) {
+      if (skipSubpaths.has(subpath)) continue;
+      const jsEntry = typeof target === 'string' ? target : (target.import || target.default);
+      if (!jsEntry || subpath.includes('*') || jsEntry.includes('*')) continue;
+      const sourceEntry = jsEntry.replace('/dist/', '/src/').replace(/\.js$/, '.ts');
+      const sourcePath = join(dirname(jsrPath), sourceEntry.replace(/^\.\//, ''));
+      if (!existsSync(sourcePath)) {
+        throw new Error(`${pkg.name} ${subpath} maps to missing JSR source file: ${sourceEntry}`);
+      }
+      regenerated[subpath] = sourceEntry;
+    }
+    jsr.exports = regenerated;
+  }
+
+}
+
+/** Update internal version constraints without rewriting external imports. */
+function syncJsrImports(jsr, versions) {
+  if (jsr.imports && typeof jsr.imports === 'object') {
+    for (const [name, spec] of Object.entries(jsr.imports)) {
+      if (!versions.has(name)) continue;
+      const want = `jsr:${name}@^${versions.get(name)}`;
+      if (spec !== want) jsr.imports[name] = want;
+    }
+  }
+
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

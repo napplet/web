@@ -1,42 +1,20 @@
 # NAP domain reference
 
-A **NAP** (*Nostr Applet Protocol*) is one capability contract between a napplet
-and its runtime — what the runtime provides (relay access, storage, intents, …)
-and exactly how a napplet asks for it. On the web, [NIP-5D](/guide/nip-5d) binds
-each NAP to a **message domain**: a NAP named `foo` owns all `foo.*` JSON envelope
-messages, their payload shapes, and the expected shell behavior. NAP contracts are
-proposed and maintained in the [NAPs track](https://github.com/napplet/naps).
+A **NAP** (*Nostr Applet Protocol*) is one capability contract between a napplet and its runtime — what the runtime provides (relay access, storage, intents, …) and exactly how a napplet asks for it. On the web, [NIP-5D](/guide/nip-5d) binds each NAP to a **message domain**: a NAP named `foo` owns all `foo.*` JSON envelope messages, their payload shapes, and the expected shell behavior. NAP contracts are proposed and maintained in the [NAPs track](https://github.com/napplet/naps).
 
-The convention and intent examples on this page adopt the exact draft heads of
-[NAP-INC PR #89
-(`4593ce9`)](https://github.com/napplet/naps/pull/89/commits/4593ce9e301ce098fd3dad64206fcd6f144fa7af),
-[the governance/web projection PR #90
-(`896c32c`)](https://github.com/napplet/naps/pull/90/commits/896c32c92deee68dc4d10fc1132b62df20cccb6f),
-and [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md).
-They remain draft upstream contracts.
+This non-normative guide defers to the living [NAP-INC](https://github.com/napplet/naps/blob/master/naps/NAP-INC.md), [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md), and [web projection](https://github.com/napplet/naps/blob/master/projections/web.md).
 
-The protocol is modular by design. A NAP must be **independently implementable**,
-and shells may support **any subset** of NAPs. That's why napplets feature-gate
-with injected domain property presence before using a domain and degrade
-gracefully when it's absent — see [Core concepts](/guide/concepts#domain-presence).
+The protocol is modular by design. A NAP must be **independently implementable**, and shells may support **any subset** of NAPs. That's why napplets feature-gate with injected domain property presence before using a domain and degrade gracefully when it's absent — see [Core concepts](/guide/concepts#domain-presence).
 
-These domains ship as subpaths of [`@napplet/nap`](/packages/nap) (barrel /
-`types` / `shim` / `sdk` per domain).
+These domains ship as subpaths of [`@napplet/nap`](/packages/nap) (barrel / `types` / `shim` / `sdk` per domain).
 
 ## The domains
 
-Each domain below shows its purpose and a minimal example. Examples assume the
-runtime injected `window.napplet` before napplet code ran; the same calls are also importable as named helpers from
-[`@napplet/sdk`](/packages/sdk). Feature-gate optional domains with
-`if (window.napplet?.domain)` first.
+Each domain below shows its purpose and a minimal example. Examples assume the runtime injected `window.napplet` before napplet code ran; the same calls are also importable as named helpers from [`@napplet/sdk`](/packages/sdk). Feature-gate optional domains with `if (window.napplet?.domain)` first.
 
 ### relay
 
-Low-level Nostr relay proxy — subscribe, publish, and one-shot query through the
-shell's relay pool. Use this only for explicit relay-local behavior such as a
-group relay, diagnostics, or protocol tooling. For normal social reads and
-publishes, use [`outbox`](#outbox) or a higher-level domain such as
-[`common`](#common), [`lists`](#lists), [`count`](#count), or `dm`.
+Low-level Nostr relay proxy — subscribe, publish, and one-shot query through the shell's relay pool. Use this only for explicit relay-local behavior such as a group relay, diagnostics, or protocol tooling. For normal social reads and publishes, use [`outbox`](#outbox) or a higher-level domain such as [`common`](#common), [`lists`](#lists), [`count`](#count), or `dm`.
 
 ```ts
 // Explicit relay-local subscription (returns a handle with .close())
@@ -74,13 +52,7 @@ const sub = window.napplet.inc.on('napplet:profile/open', (event) => {
 });
 ```
 
-`emit(topic, payload?)` transposes unique percent-decoded query pairs into a
-shallow text payload before posting the normalized message. Literal `+` stays
-`+`. Consumers subscribe to the stable queryless topic, and routing then uses
-exact equality with no query-aware, wildcard, or prefix matching. Fragments,
-malformed percent encoding, duplicate decoded names, and query plus explicit
-payload reject. Use a queryless topic with an explicit payload for structured
-or non-text data.
+`emit(topic, payload?)` transposes unique percent-decoded query pairs into a shallow text payload before posting the normalized message. Literal `+` stays `+`. Consumers subscribe to the stable queryless topic, and routing then uses exact equality with no query-aware, wildcard, or prefix matching. Fragments, malformed percent encoding, duplicate decoded names, and query plus explicit payload reject. Use a queryless topic with an explicit payload for structured or non-text data.
 
 ### keys
 
@@ -93,8 +65,7 @@ const sub = window.napplet.keys.onAction('editor.save', () => save());
 
 ### theme
 
-Read-only shell theme access — colors, fonts, background, and title. The shell owns
-theming; the napplet reads it and reacts to changes.
+Read-only shell theme access — colors, fonts, background, and title. The shell owns theming; the napplet reads it and reacts to changes.
 
 ```ts
 const theme = await window.napplet.theme.get();
@@ -137,8 +108,7 @@ const sub = window.napplet.identity.onChanged((pk) => reload(pk));
 
 ### config
 
-Declarative per-napplet configuration (JSON Schema-driven). The shell renders the
-settings UI, validates, persists, and pushes live values; the shell is the sole writer.
+Declarative per-napplet configuration (JSON Schema-driven). The shell renders the settings UI, validates, persists, and pushes live values; the shell is the sole writer.
 
 ```ts
 const sub = window.napplet.config.subscribe((values) => applyTheme(values.theme as string));
@@ -147,9 +117,7 @@ window.napplet.config.openSettings({ section: 'appearance' });
 
 ### resource
 
-Sandboxed byte fetching (`info() -> ResourceInfo`, `bytes(url, options?) -> Blob`, `bytesMany(requests) -> ResourceBytesItem[]`)
-over https / blossom / nostr / data schemes — the only network-fetch primitive
-available inside the iframe sandbox.
+Sandboxed byte fetching (`info() -> ResourceInfo`, `bytes(url, options?) -> Blob`, `bytesMany(requests) -> ResourceBytesItem[]`) over https / blossom / nostr / data schemes — the only network-fetch primitive available inside the iframe sandbox.
 
 ```ts
 const info = await window.napplet.resource.info();
@@ -169,9 +137,7 @@ imgEl.onload = () => revoke();
 
 ### cvm
 
-Native ContextVM bridge — MCP-over-Nostr (`discover` / `listTools` / `callTool` /
-`listResources` / `readResource` / `registry.*`); the shell owns transport,
-registry selection, and tool policy.
+Native ContextVM bridge — MCP-over-Nostr (`discover` / `listTools` / `callTool` / `listResources` / `readResource` / `registry.*`); the shell owns transport, registry selection, and tool policy.
 
 ```ts
 if (window.napplet?.cvm) {
@@ -183,10 +149,7 @@ if (window.napplet?.cvm) {
 
 ### outbox
 
-Outbox-aware relay routing — `getEvent` / `query` / `subscribe` / `publish` /
-`resolveRelays`; the shell owns NIP-65 relay discovery, fallback, dedup,
-signature validation, signing, and fanout. This is the default event-read and
-publish boundary when relay selection is part of result correctness.
+Outbox-aware relay routing — `getEvent` / `query` / `subscribe` / `publish` / `resolveRelays`; the shell owns NIP-65 relay discovery, fallback, dedup, signature validation, signing, and fanout. This is the default event-read and publish boundary when relay selection is part of result correctness.
 
 ```ts
 if (window.napplet?.outbox) {
@@ -212,8 +175,7 @@ if (window.napplet?.outbox) {
 
 ### upload
 
-Shell-mediated file/blob upload over NIP-96 + Blossom rails; the shell signs auth and
-returns NIP-94 metadata.
+Shell-mediated file/blob upload over NIP-96 + Blossom rails; the shell signs auth and returns NIP-94 metadata.
 
 ```ts
 if (window.napplet?.upload) {
@@ -225,31 +187,21 @@ if (window.napplet?.upload) {
 
 ### intent
 
-Archetype intent dispatch. The runtime resolves an installed handler from the
-requested role; convention-based payload interpretation remains orthogonal.
+Intent calls derive archetype and action from the URI. An `ok: true` result means the runtime accepted delivery responsibility and includes the normalized identity and handler catalog identifier; an `ok: false` result includes `error`. Targets receive runtime-attested `IntentDelivery` values through `onDelivery`, including deliveries retained before registration. Behavior hints are `focus` and `reuse`. This non-normative guidance defers to the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md).
 
 ```ts
 if (window.napplet?.intent) {
   const { available } = await window.napplet.intent.available('profile');
   if (available) {
-    const result = await window.napplet.intent.open(
-      'profile',
-      { pubkey: 'abc123' },
-      { convention: 'napplet:profile/open', behavior: { newWindow: true } },
-    );
-    if (!result.handled) console.error(result.error);
+    const result = await window.napplet.intent.open('napplet:profile/open', { payload: { pubkey: 'abc123' }, behavior: { reuse: false } });
+    if (!result.ok) console.error(result.error);
   }
 }
 ```
 
-Results contain required `ok`, `archetype`, `action`, and `handled` fields plus
-optional handler, window, convention, and error details.
-
 ### ble
 
-Runtime-mediated Bluetooth LE/GATT sessions. Napplets receive opaque session ids
-and byte arrays while the shell owns chooser UI, permissions, device handles,
-GATT lifecycle, notifications, disconnects, and policy.
+Runtime-mediated Bluetooth LE/GATT sessions. Napplets receive opaque session ids and byte arrays while the shell owns chooser UI, permissions, device handles, GATT lifecycle, notifications, disconnects, and policy.
 
 ```ts
 if (window.napplet?.ble) {
@@ -260,8 +212,7 @@ if (window.napplet?.ble) {
 
 ### link
 
-Shell-mediated external link opening. This is user-visible navigation, not byte
-fetching; the shell owns prompting, policy, opener isolation, and browser context.
+Shell-mediated external link opening. This is user-visible navigation, not byte fetching; the shell owns prompting, policy, opener isolation, and browser context.
 
 ```ts
 if (window.napplet?.link) {
@@ -274,9 +225,7 @@ if (window.napplet?.link) {
 
 ### lists
 
-Runtime-mediated NIP-51 list mutations. Napplets send add/remove intent while the
-runtime owns current-event lookup, kind/type mapping, tag formatting, private
-item encryption, event preservation, signing, and publishing.
+Runtime-mediated NIP-51 list mutations. Napplets send add/remove intent while the runtime owns current-event lookup, kind/type mapping, tag formatting, private item encryption, event preservation, signing, and publishing.
 
 ```ts
 if (window.napplet?.lists) {
@@ -288,9 +237,7 @@ if (window.napplet?.lists) {
 
 ### common
 
-Common social actions — public NIP-19 helpers, profile lookup, follows,
-follow/unfollow, reactions, and reports. The shell owns identity, consent,
-event construction, signing, publishing, relay access, and NIP-19 handling.
+Common social actions — public NIP-19 helpers, profile lookup, follows, follow/unfollow, reactions, and reports. The shell owns identity, consent, event construction, signing, publishing, relay access, and NIP-19 handling.
 
 ```ts
 if (window.napplet?.common) {
@@ -320,14 +267,29 @@ if (window.napplet?.fs) {
 
 ## Core domain union
 
-[`@napplet/core`](/packages/core) exports a `NapDomain` string union for the
-foundational domains — `relay`, `identity`, `storage`, `inc`, `theme`,
-`keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`,
-`upload`, `intent`, `ble`, `webrtc`, `link`, `lists`, `serial`, `fs`, `common` — used as the discriminant for envelope routing and
-domain presence.
+[`@napplet/core`](/packages/core) exports a `NapDomain` string union for the foundational domains — `relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `ble`, `webrtc`, `link`, `lists`, `serial`, `fs`, `common` — used as the discriminant for envelope routing and domain presence.
 
 ## Where to go next
 
 - [`@napplet/nap`](/packages/nap) — the package and its subpath patterns
 - [`@napplet/sdk`](/packages/sdk) — typed helpers and per-domain message unions
 - [NIP-5D explained](/guide/nip-5d#nap-extension-framework) — the NAP framework
+
+
+### Optional shell environment
+
+The runtime may expose `shell` for environment information. `shell.supports(domain)` reads current domain object presence, `shell.services` is empty until environment delivery, and `shell.ready()` / `shell.onReady(handler)` use the retained snapshot. Readiness does not gate other domain calls. See the living [NAP-SHELL](https://github.com/napplet/naps/blob/master/naps/NAP-SHELL.md).
+
+### Intent delivery and recommendations
+
+```ts
+import { intent } from '@napplet/sdk';
+
+intent.onDelivery(({ sender, convention, payload }) => {
+  console.log(sender, convention, payload);
+});
+await intent.invoke('napplet:profile/open?pubkey=abc123');
+```
+
+The runtime binding retains deliveries until a listener registers. Discovery candidates expose opaque catalog `id` values and `contracts` with parameter names. INC peers instead use identifiers for running authenticated endpoints. A NAP-INTENT URI may append a bare `#naddr1…` recommendation; the binding sends its coordinate and relay hints as `handlerHint`, outside convention identity and payload. An applicable user default takes precedence. INC URI operations reject fragments. See the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md) and [web projection](https://github.com/napplet/naps/blob/master/projections/web.md).
+Theme updates reach napplets with the exposed `theme` domain, independently of manifest requirement declarations. User identity changes report the connected signer, including an empty string at sign-out; they do not alter napplet identity. Profile picture/banner bytes use optional `resource` when exposed; otherwise show local placeholder artwork. Theme media URLs do not grant network access, so colors and local fonts provide the fallback. See [NAP-THEME](https://github.com/napplet/naps/blob/master/naps/NAP-THEME.md) and [NAP-IDENTITY](https://github.com/napplet/naps/blob/master/naps/NAP-IDENTITY.md).

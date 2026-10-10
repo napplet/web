@@ -2,6 +2,11 @@ import { defineConfig } from 'tsup';
 
 export default defineConfig({
   entry: {
+    'shell/index': 'src/shell/index.ts',
+    'shell/types': 'src/shell/types.ts',
+    'shell/shim': 'src/shell/shim.ts',
+    'shell/sdk': 'src/shell/sdk.ts',
+
     'relay/index': 'src/relay/index.ts',
     'relay/types': 'src/relay/types.ts',
     'relay/shim': 'src/relay/shim.ts',

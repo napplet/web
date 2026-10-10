@@ -179,15 +179,15 @@ describe('validateEnvelope — outbound field checks', () => {
       webrtc: {
         type: 'webrtc.open',
         id: 'a',
-        request: { scope: { type: 'direct', pubkey: 'abc123' } },
+        request: { scope: { type: 'direct', pubkey: 'abc125' } },
       },
-      link: { type: 'link.open', id: 'a', url: 'https://example.com/post/123' },
+      link: { type: 'link.open', id: 'a', url: 'https://example.com/post/125' },
       count: { type: 'count.query', id: 'a', filters: [{ kinds: [7], '#e': ['event-id'] }] },
       lists: {
         type: 'lists.add',
         id: 'a',
         list: { type: 'mute-list' },
-        items: [{ itemType: 'pubkey', value: 'abc123' }],
+        items: [{ itemType: 'pubkey', value: 'abc125' }],
       },
       common: { type: 'common.react', id: 'a', targetEventId: 'e'.repeat(64), reaction: '+' },
       serial: { type: 'serial.write', id: 'a', sessionId: 's', data: [1, 2, 3] },
@@ -201,23 +201,23 @@ describe('validateEnvelope — outbound field checks', () => {
   });
 });
 
-describe('validateEnvelope — no generic shell domain', () => {
-  it('rejects removed generic shell messages as an unknown domain', () => {
+describe('validateEnvelope — optional shell domain', () => {
+  it('accepts readiness and rejects init emitted by a napplet', () => {
     const removedReady = ['shell', 'ready'].join('.');
     const removedInit = ['shell', 'init'].join('.');
-    expect(validateEnvelope({ type: removedReady }).errors[0].code).toBe('unknown-domain');
-    expect(validateEnvelope({ type: removedInit }).errors[0].code).toBe('unknown-domain');
+    expect(validateEnvelope({ type: removedReady }).ok).toBe(true);
+    expect(validateEnvelope({ type: removedInit }).errors[0].code).toBe('inbound-type-emitted');
   });
 });
 
 describe('ENVELOPE_SPECS invariants', () => {
-  it('has 237 discriminants split 114 outbound / 123 inbound', () => {
+  it('has 240 discriminants split 115 outbound / 125 inbound', () => {
     const all = knownEnvelopeTypes();
-    expect(all).toHaveLength(237);
+    expect(all).toHaveLength(240);
     const out = all.filter((t) => ENVELOPE_SPECS[t].dir === 'out');
     const inbound = all.filter((t) => ENVELOPE_SPECS[t].dir === 'in');
-    expect(out).toHaveLength(114);
-    expect(inbound).toHaveLength(123);
+    expect(out).toHaveLength(115);
+    expect(inbound).toHaveLength(125);
   });
 
   it('declares canonical inbound INC carrier fields', () => {

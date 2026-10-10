@@ -2,11 +2,7 @@
 
 > Project-only generator behind `napplet create`.
 
-`@napplet/boilerplate` is the package-backed generator used by the primary CLI. It clones the
-[`github.com/napplet/boilerplate`](https://github.com/napplet/boilerplate)
-template — a Vite + TypeScript napplet starter — and derives the package name
-from the destination. Deployment name, title, description, and archetypes are
-owned later by `napplet init`.
+`@napplet/boilerplate` is the package-backed generator used by the primary CLI. It clones the [`github.com/napplet/boilerplate`](https://github.com/napplet/boilerplate) template — a Vite + TypeScript napplet starter — and derives the package name from the destination. Deployment name, title, description, and archetypes are owned later by `napplet init`.
 
 - **npm:** [`@napplet/boilerplate`](https://www.npmjs.com/package/@napplet/boilerplate)
 - **Source:** [packages/boilerplate](https://github.com/napplet/napplet/tree/main/packages/boilerplate)
@@ -17,13 +13,11 @@ owned later by `napplet init`.
 napplet create my-napplet
 ```
 
-It currently ships one variant, `basic`, but keeps a `--variant` option so future
-templates can be added without changing the command shape.
+It currently ships one variant, `basic`, but keeps a `--variant` option so future templates can be added without changing the command shape.
 
 ## Direct package route
 
-The package can still be invoked directly for generator development or custom
-template testing:
+The package can still be invoked directly for generator development or custom template testing:
 
 ```bash
 npx @napplet/boilerplate ./my-napplet --yes
@@ -52,22 +46,16 @@ By default the CLI clones `https://github.com/napplet/boilerplate.git`.
 
 ## Deployment metadata boundary
 
-The generated project leaves archetype metadata to `napplet init`. Each
-manifest archetype tag advertises one complete queryless
-`napplet:<archetype>/<intent>` identity:
+The generated project leaves archetype metadata to `napplet init`. Each manifest archetype tag advertises one complete queryless `napplet:<archetype>/<intent>` identity:
 
 ```json
 ["z", "profile"]
 ["i", "napplet:profile/open"]
 ```
 
-URI queries are per-invocation payload sugar at INC `emit`. They never appear in manifest discovery or subscriptions. Intent dispatch uses `invoke(request)` or `open(archetype, payload?, opts?)` and returns the canonical result with `handled`, handler, and window information.
+Intent calls derive archetype and action from the URI. An `ok: true` result means the runtime accepted delivery responsibility and includes the normalized identity and handler catalog identifier; an `ok: false` result includes `error`. Targets receive runtime-attested `IntentDelivery` values through `onDelivery`, including deliveries retained before registration. Behavior hints are `focus` and `reuse`. This non-normative guidance defers to the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md).
 
-This guidance follows the exact draft heads of [NAP-INC PR #89
-(`4593ce9`)](https://github.com/napplet/naps/pull/89/commits/4593ce9e301ce098fd3dad64206fcd6f144fa7af),
-[the governance/web projection PR #90
-(`896c32c`)](https://github.com/napplet/naps/pull/90/commits/896c32c92deee68dc4d10fc1132b62df20cccb6f),
-and [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md).
+This non-normative guide defers to the living [NAP-INC](https://github.com/napplet/naps/blob/master/naps/NAP-INC.md), [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md), and [web projection](https://github.com/napplet/naps/blob/master/projections/web.md).
 
 ## See also
 

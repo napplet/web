@@ -34,13 +34,18 @@ function validateIntentInvokeRequest(request: unknown, errors: EnvelopeError[]):
     });
   }
   for (const field of ['action', 'convention'] as const) {
-    if (intent[field] !== undefined && typeof intent[field] !== 'string') {
+    if (typeof intent[field] !== 'string') {
       errors.push({
-        code: 'wrong-type',
+        code: intent[field] === undefined ? 'missing-field' : 'wrong-type',
         message: `Intent request field "${field}" must be a string`,
         field: `request.${field}`,
       });
     }
+  }
+
+  const match = typeof intent.convention === 'string' ? /^napplet:([^/?#]+)\/([^/?#]+)$/.exec(intent.convention) : null;
+  if (!match || match[1] !== intent.archetype || match[2] !== intent.action) {
+    errors.push({ code: 'wrong-type', message: 'Intent convention must be stable and match archetype and action', field: 'request.convention' });
   }
 
   if ('sender' in intent) {

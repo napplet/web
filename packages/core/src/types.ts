@@ -34,3 +34,5 @@ export type {
   ResourceBytesRequest,
   ResourceSidecarEntry,
 } from './types/global/runtime-api.js';
+
+export type * from './types/shell.js';

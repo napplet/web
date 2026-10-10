@@ -4,7 +4,9 @@
  * @module
  */
 
-import { nip19 } from "nostr-tools";
+import { createEventPointers } from "./event-pointers.ts";
+export { createEventPointers } from "./event-pointers.ts";
+export type { EventPointers } from "./event-pointers.ts";
 import type { SigningDebugInfo } from "./debug.ts";
 import { networkDeploySucceeded } from "./deploy-network.ts";
 import type { NetworkDeployProgress, NetworkDeployResult } from "./deploy-network.ts";
@@ -12,7 +14,6 @@ import type {
   DeployManifestTemplate,
   DeployPlan,
   NappletConfig,
-  SignedNostrEvent,
 } from "./types.ts";
 
 export interface DeployReport {
@@ -23,11 +24,6 @@ export interface DeployReport {
   relays: string[];
   blossomServers: string[];
   dryRun: boolean;
-}
-
-export interface EventPointers {
-  nevent: string;
-  naddr?: string;
 }
 
 export interface InitReport {
@@ -56,41 +52,6 @@ export function isTerminalOutput(output: { isTerminal?: () => boolean } = Deno.s
   } catch {
     return false;
   }
-}
-
-/**
- * Create NIP-19 pointers for a signed deploy event.
- *
- * @param event Signed event to reference.
- * @param relays Relays where the event was or will be published.
- * @returns Exact-event pointer plus address pointer when the event is addressable.
- * @example
- * ```ts
- * createEventPointers(event, ["wss://relay.example"]).nevent;
- * ```
- */
-export function createEventPointers(
-  event: SignedNostrEvent,
-  relays: readonly string[] = [],
-): EventPointers {
-  const relayHints = relays.length > 0 ? [...relays] : undefined;
-  const pointers: EventPointers = {
-    nevent: nip19.neventEncode({
-      id: event.id,
-      author: event.pubkey,
-      kind: event.kind,
-      relays: relayHints,
-    }),
-  };
-  if (isReplaceableKind(event.kind)) {
-    pointers.naddr = nip19.naddrEncode({
-      identifier: event.tags.find((tag) => tag[0] === "d")?.[1] ?? "",
-      pubkey: event.pubkey,
-      kind: event.kind,
-      relays: relayHints,
-    });
-  }
-  return pointers;
 }
 
 /**
@@ -434,8 +395,4 @@ function progressBar(completed: number, total: number): string {
   const safeTotal = Math.max(total, 1);
   const filled = Math.min(width, Math.floor((completed / safeTotal) * width));
   return `[${"#".repeat(filled)}${"-".repeat(width - filled)}]`;
-}
-
-function isReplaceableKind(kind: number): boolean {
-  return kind >= 10_000 && kind < 40_000;
 }

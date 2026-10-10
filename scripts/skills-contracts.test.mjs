@@ -122,7 +122,7 @@ test('build and design keep the boilerplate-first and OUTBOX-first guidance', ()
 test('the SDK reference lists every shipped domain and no skill imports the runtime shim', () => {
   const sdk = skills.get('napplet-sdk').source;
   for (const domain of [
-    'relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource',
+    'shell', 'relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource',
     'cvm', 'outbox', 'upload', 'intent', 'ble', 'webrtc', 'link', 'count', 'lists', 'serial', 'fs',
     'common', 'dm',
   ]) {
@@ -155,4 +155,12 @@ test('docs and website point at the skills.sh install command and the new skill 
   }
   const reference = await readFile(path.join(root, 'apps/docs/guide/agent-skills.md'), 'utf8');
   for (const name of EXPECTED_SKILLS) assert.match(reference, new RegExp(`\`${name}\``), name);
+});
+
+
+test('interop teaches URI acceptance and buffered delivery from living NAPs', () => {
+  const interop = skills.get('napplet-interop').source;
+  assert.match(interop, /invoke\(uri, options\?\)/);
+  assert.match(interop, /onDelivery/);
+  assert.doesNotMatch(interop, /result\.handled|newWindow|orthogonal/);
 });
