@@ -169,7 +169,8 @@ export async function executeNetworkDeploy(
     };
   }
   const publish = options.publish ?? publishEventWithSimplePool;
-  if (application?.signedEvent) events.push(application.signedEvent);
+  // Make metadata available before clients discover manifests that reference it.
+  if (application?.signedEvent) events.unshift(application.signedEvent);
   const published: RelayPublishResult[] = [];
   options.onProgress?.({
     type: "publish:start",

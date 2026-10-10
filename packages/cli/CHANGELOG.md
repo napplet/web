@@ -1,5 +1,11 @@
 # @napplet/cli
 
+## 0.8.8
+
+### Patch Changes
+
+- Link current deployment manifests to optional Zapstore application metadata using the proposed NIP-5D app reference, allowing clients to discover screenshots. Publish application metadata before referencing manifests.
+
 ## 0.8.7
 
 ### Patch Changes

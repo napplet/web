@@ -1,0 +1,5 @@
+# Link deployment manifests to application metadata
+
+Propose an optional singleton app tag against dskvr/nips nip/5d: a kind-32267 address and optional relay hint. Define signature/address verification, replaceable selection and presentation-only semantics without changing artifact identity or requiring metadata to load. Open that proposal before implementing the explicitly requested CLI support.
+
+When Zapstore publication is enabled, attach the matching signed application's address to current root, named and snapshot templates before manifest signing. Do not invent a pubkey for unsigned dry runs; explain the unresolved link. Preserve disabled/legacy behavior and artifact hashes. Test the CLI path with signed dry runs and screenshot fixtures, exact descriptor matching and signatures, plus repository gates. Carry the previously approved runner fix from PR #238, which was merged only into the source feature branch. Prepare a CLI release and open a PR against main, explicitly linking the pending specification proposal.

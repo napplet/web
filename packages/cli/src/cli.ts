@@ -37,7 +37,7 @@ import { resolveSigningMethod, signDeployManifestTemplates } from "./signing.ts"
 import { getBlossomServerSuggestions, getRelaySuggestions } from "./suggestions.ts";
 import type { DeploySelection, NappletConfig } from "./types.ts";
 import cliMetadata from "../deno.json" with { type: "json" };
-import { prepareZapstorePublication } from "./zapstore.ts";
+import { linkZapstoreApplication, prepareZapstorePublication } from "./zapstore.ts";
 import { captureDeployScreenshot } from "./deploy-screenshot.ts";
 
 import { runPackageCli, resolveConformanceCommand, resolvePajaArgs } from "./package-runner.ts";
@@ -262,7 +262,7 @@ async function commandDeploy(argv: string[], runScreenshot?: PackageCliRunner): 
   let screenshot: Awaited<ReturnType<typeof captureDeployScreenshot>>;
   try {
     const signingInfo = createSigningDebugInfo(deploySigning);
-    const templates = await createDeployManifestTemplates(plan, config, {
+    let templates = await createDeployManifestTemplates(plan, config, {
       sourcePubkey: signer?.pubkey,
       format,
     });
@@ -274,7 +274,12 @@ async function commandDeploy(argv: string[], runScreenshot?: PackageCliRunner): 
     const application = await prepareZapstorePublication(publicationConfig, blossomServers, {
       enabled: flags.boolean.has("no-zapstore") ? false : flags.boolean.has("zapstore") ? true : undefined,
     });
-    if (application && signer) application.signedEvent = await signer.sign(application.template);
+    if (application && signer) {
+      application.signedEvent = await signer.sign(application.template);
+      templates = linkZapstoreApplication(templates, application.signedEvent, config.relays);
+    } else if (application && format === "current") {
+      console.error("Application link omitted from unsigned dry run: a signer public key is required.");
+    }
     const manifests = signer ? await signDeployManifestTemplates(templates, signer) : templates;
     let deploy;
     if (!dryRun) {
