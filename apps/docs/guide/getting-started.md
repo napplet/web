@@ -1,11 +1,6 @@
 # Getting started
 
-This page walks you from zero to a deployable napplet. The standalone `napplet`
-CLI does not require Deno. You will need Node.js 20+ and a package manager for
-the generated Vite project, the package-backed `create` command, and the
-skills.sh CLI. To
-actually *run* a napplet you also need a host shell — see
-[running in a shell](#running-in-a-shell) at the end.
+This page walks you from zero to a deployable napplet. The standalone `napplet` CLI does not require Deno. You will need Node.js 20+ and a package manager for the generated Vite project, the package-backed `create` command, and the skills.sh CLI. To actually *run* a napplet you also need a host shell — see [running in a shell](#running-in-a-shell) at the end.
 
 ## 1. Install the CLI
 
@@ -19,12 +14,9 @@ curl -fsSL https://napplet.run/install.sh | sh
 irm https://napplet.run/install.ps1 | iex
 ```
 
-Each installer downloads the platform binary and verifies it against the
-release's `SHA256SUMS` before replacing `napplet`. The
-[`@napplet/cli`](/packages/cli) page documents the JSR/Deno alternative.
+Each installer downloads the platform binary and verifies it against the release's `SHA256SUMS` before replacing `napplet`. The [`@napplet/cli`](/packages/cli) page documents the JSR/Deno alternative.
 
-Run `napplet guide` at any point for the complete command sequence and links to
-the documentation for each stage.
+Run `napplet guide` at any point for the complete command sequence and links to the documentation for each stage.
 
 ## 2. Create the project
 
@@ -33,10 +25,7 @@ napplet create my-napplet
 cd my-napplet
 ```
 
-`napplet create` delegates to the maintained
-[`github.com/napplet/boilerplate`](https://github.com/napplet/boilerplate)
-template. The generator creates the project and derives only its package name;
-it does not own deployment name, title, or archetype metadata.
+`napplet create` delegates to the maintained [`github.com/napplet/boilerplate`](https://github.com/napplet/boilerplate) template. The generator creates the project and derives only its package name; it does not own deployment name, title, or archetype metadata.
 
 ## 3. Initialize deployment metadata
 
@@ -44,9 +33,7 @@ it does not own deployment name, title, or archetype metadata.
 napplet init
 ```
 
-The wizard writes `.napplet/config.json` with the named-manifest d-tag, title,
-optional description, queryless `slug:convention` archetype metadata, relays, and
-Blossom servers. Automation can provide the same values explicitly:
+The wizard writes `.napplet/config.json` with the named-manifest d-tag, title, optional description, queryless `slug:convention` archetype metadata, relays, and Blossom servers. Automation can provide the same values explicitly:
 
 ```bash
 napplet init --name my-napplet --title "My Napplet" \
@@ -56,11 +43,7 @@ napplet init --name my-napplet --title "My Napplet" \
 
 The CLI validates the documented `slug:convention` shape and deploys the complete queryless convention identity.
 
-At runtime, INC `emit` and intent `invoke/open` may accept
-`napplet:<archetype>/<intent>?name=value` developer input. Their bindings
-transpose query pairs to text payload fields before sending a queryless
-normalized identity. Subscriptions, manifest discovery, and handler routing do
-not parse queries and use exact equality.
+At runtime, INC `emit` and intent `invoke/open` may accept `napplet:<archetype>/<intent>?name=value` developer input. Their bindings transpose query pairs to text payload fields before sending a queryless normalized identity. Subscriptions, manifest discovery, and handler routing do not parse queries and use exact equality.
 
 ## 4. Install agent skills
 
@@ -86,9 +69,7 @@ napplet deploy --dry-run
 napplet deploy
 ```
 
-The dry run resolves the same config, files, metadata, and manifest events
-without uploading or publishing. Configure a local or remote signer before the
-live deploy; see [`@napplet/cli`](/packages/cli#deploy).
+The dry run resolves the same config, files, metadata, and manifest events without uploading or publishing. Configure a local or remote signer before the live deploy; see [`@napplet/cli`](/packages/cli#deploy).
 
 Choose the Note Drafts path that matches how you want to learn:
 
@@ -101,16 +82,11 @@ Choose the Note Drafts path that matches how you want to learn:
   shows the prompt, review loop, and verification commands for agent-assisted
   authoring.
 
-All three create a small Nostr note composer that autosaves through `storage`,
-reads the shell-user pubkey through `identity`, publishes through `outbox`, and
-runs in Kehto/Paja.
+All three create a small Nostr note composer that autosaves through `storage`, reads the shell-user pubkey through `identity`, publishes through `outbox`, and runs in Kehto/Paja.
 
 ## Retrofit an existing app manually
 
-For a new napplet, prefer the generator above. It owns the package manager pin,
-Vite config, single-file build plumbing, scripts, conformance wiring, and starter
-layout. Use manual wiring only when you are adding napplet support to an existing
-app.
+For a new napplet, prefer the generator above. It owns the package manager pin, Vite config, single-file build plumbing, scripts, conformance wiring, and starter layout. Use manual wiring only when you are adding napplet support to an existing app.
 
 Install the napplet-side SDK:
 
@@ -118,8 +94,7 @@ Install the napplet-side SDK:
 npm install @napplet/sdk
 ```
 
-And the build-time Vite plugin as a dev dependency, which generates the signed
-NIP-5A manifest event:
+And the build-time Vite plugin as a dev dependency, which generates the signed NIP-5A manifest event:
 
 ```bash
 npm install -D @napplet/vite-plugin
@@ -150,8 +125,7 @@ Mirror the boilerplate scripts so verification stays consistent:
 
 ## Build your first napplet
 
-NIP-5D runtimes inject `window.napplet` before your code runs. Napplet code can
-use the injected namespace directly:
+NIP-5D runtimes inject `window.napplet` before your code runs. Napplet code can use the injected namespace directly:
 
 ```ts
 // main.ts
@@ -162,11 +136,7 @@ const { events } = await window.napplet.outbox.query(
 );
 for (const result of events) console.log('Note:', result.event.content);
 
-// Subscribe to live updates through the same outbox boundary
-const sub = window.napplet.outbox.subscribe([{ kinds: [1], limit: 20 }], {
-  timeoutMs: 3000,
-});
-sub.on('event', (result) => console.log('New note:', result.event.content));
+// Subscribe to live updates through the same outbox boundary const sub = window.napplet.outbox.subscribe([{ kinds: [1], limit: 20 }], {   timeoutMs: 3000, }); sub.on('event', (result) => console.log('New note:', result.event.content));
 
 // Publish a note — the shell signs and fans it out; your napplet never sees the key
 const published = await window.napplet.outbox.publish({
@@ -178,9 +148,7 @@ const published = await window.napplet.outbox.publish({
 if (!published.ok) throw new Error(published.error ?? 'publish failed');
 ```
 
-Notice you never imported a signing library and never touched a relay socket. The
-runtime sends `outbox.query`, `outbox.subscribe`, and `outbox.publish` JSON
-envelopes; the shell does relay discovery, signing, fanout, and policy.
+Notice you never imported a signing library and never touched a relay socket. The runtime sends `outbox.query`, `outbox.subscribe`, and `outbox.publish` JSON envelopes; the shell does relay discovery, signing, fanout, and policy.
 
 ## Runtime injection vs. SDK
 
@@ -193,9 +161,7 @@ Runtimes and napplets use different packages.
 | **What it does** | Injects selected `window.napplet.<domain>` objects | Named, typed exports that wrap injected domains |
 | **Required?** | Required for runtimes that use these packages | Optional convenience for bundler users |
 
-The **sdk** is an ergonomic, typed wrapper. Its methods delegate to
-`window.napplet.*` at call time and throw a clear error if the runtime did not
-inject the namespace or requested domain.
+The **sdk** is an ergonomic, typed wrapper. Its methods delegate to `window.napplet.*` at call time and throw a clear error if the runtime did not inject the namespace or requested domain.
 
 Typical napplet code imports only the SDK:
 
@@ -203,23 +169,13 @@ Typical napplet code imports only the SDK:
 import { outbox, inc, intent, storage } from '@napplet/sdk';
 ```
 
-If you're writing a vanilla napplet with no build step, you can skip the sdk and
-use the injected `window.napplet.*` namespace directly.
+If you're writing a vanilla napplet with no build step, you can skip the sdk and use the injected `window.napplet.*` namespace directly.
 
-For cross-napplet intent, call `intent.invoke(request)` or `intent.open(archetype, payload?, opts?)`. The returned canonical result reports both dispatch success and whether a handler accepted the request. Delivery is a
-separate no-ID push with runtime-attested sender, independent of the source
-lifetime and with no public NAP-INC dependency. See the exact adopted draft
-heads for [NAP-INC PR #89
-(`4593ce9`)](https://github.com/napplet/naps/pull/89/commits/4593ce9e301ce098fd3dad64206fcd6f144fa7af),
-[the governance/web projection PR #90
-(`896c32c`)](https://github.com/napplet/naps/pull/90/commits/896c32c92deee68dc4d10fc1132b62df20cccb6f),
-and [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md).
+For cross-napplet intent, call `intent.invoke(uri, options?)` or `intent.open(uri, options?)` with a convention URI such as `napplet:profile/open?pubkey=abc123`. An `ok: true` result means the runtime accepted delivery responsibility; it does not mean the target has already handled anything. An `ok: false` result carries `error`. The target receives the delivery through `intent.onDelivery(handler)` as a separate push with a runtime-attested `sender`, independent of the source lifetime and without any NAP-INC dependency. This is non-normative orientation; the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md), [NAP-INC](https://github.com/napplet/naps/blob/master/naps/NAP-INC.md), and [web projection](https://github.com/napplet/naps/blob/master/projections/web.md) documents are authoritative.
 
 ## Running in a shell
 
-A napplet only does something when hosted by a compatible **shell** — the trusted
-runtime that owns keys, relays, and storage and proxies your requests. The
-reference runtime is **Kehto**.
+A napplet only does something when hosted by a compatible **shell** — the trusted runtime that owns keys, relays, and storage and proxies your requests. The reference runtime is **Kehto**.
 
 ::: tip
 The reference shell/runtime is **Kehto**:
@@ -230,5 +186,4 @@ For questions and coordination, join the
 [community group chat](https://armada.buzz/invite/naddr1qvzqqqyzz5pzpjk98hj7z978r9xc9d2ymagw6tga0lx0s06y8lhpy9twc2kp8uwdqqqqpwqpw5#BAACAwTDEKKhS9_iA_qOc1n4ljVt).
 :::
 
-Next, read [Core concepts](./concepts) to understand the envelope, NAPs, the
-sandbox model, identity, and storage scoping.
+Next, read [Core concepts](./concepts) to understand the envelope, NAPs, the sandbox model, identity, and storage scoping.

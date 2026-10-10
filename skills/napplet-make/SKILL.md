@@ -64,7 +64,7 @@ If Kehto/Paja is unavailable, continue build and conformance work and report the
 
 - **Sandbox authority.** No `fetch`, XHR, WebSocket, browser storage, cookies, `window.nostr`, external scripts/styles/images, relay pools, or signing in napplet code. Bytes → bundled or `resource`; state → `storage`; Nostr → `outbox` / `common` / `lists` / `count` / `dm`; links → `link`; `relay` only for a named relay-local escape hatch recorded in the brief.
 - **Applet, not website.** No title header / tagline; compact density; fills the frame; good at tiny and huge sizes; declared minimum only when the UI truly breaks (`napplet-ui`).
-- **SDK-first.** `@napplet/sdk` wrappers for calls; `window.napplet?.domain` only for optional-domain gating. No `shell.ready()` / `shell.supports()` / service probes — they do not exist.
+- **SDK-first.** `@napplet/sdk` wrappers for calls; `window.napplet?.domain` only for optional-domain gating. Domain object presence is the availability signal; optional shell environment APIs do not gate other domains.
 - **Requires = hard only.** Bare domain names; `keys`, `theme`, `config`, `notify`, `resource`, `inc`, `intent` almost never belong there.
 - **Theme covers the whole surface**, including `html` / `body` / root backgrounds, in dark and light.
 

@@ -95,7 +95,7 @@ Report the URL Paja prints. A raw Vite URL is an asset server without a runtime 
 - Leaving the starter masthead, eyebrow, or `<h1>` in place, or shipping the starter's centered 1040px column — see `napplet-ui`.
 - Only checking one desktop width — the napplet is resized live; check four frames.
 - Recreating the boilerplate by hand, or importing `@napplet/shim` in napplet code — the runtime injects `window.napplet`.
-- Treating open NAP proposals as shipped APIs, or adding `shell.ready()` / capability probes — not in the packages.
+- Treating open NAP proposals as shipped APIs, or gating unrelated domains on optional `shell.ready()`.
 - `relay` as the default data layer; hand-built social events instead of `common` / `lists`.
 - `localStorage`, `fetch`, `<img src=https://…>`, `WebSocket`, `window.nostr` — none exist in the sandbox.
 - External `<script src>` in the artifact — JS must be inline; `artifactMode: 'single-file'` handles it.

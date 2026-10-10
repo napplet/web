@@ -1,13 +1,8 @@
 # Tutorial: build a Note Drafts napplet with an AI agent and the napplet skills
 
-This tutorial builds the Note Drafts napplet with a coding agent instead of
-typing every file yourself. It uses the [`napplet-*` agent skills](./agent-skills),
-the authoring guidance that teaches agents the current napplet package surface,
-the boilerplate-first project shape, the sandbox boundary, the applet UI
-contract, and the verification checklist.
+This tutorial builds the Note Drafts napplet with a coding agent instead of typing every file yourself. It uses the [`napplet-*` agent skills](./agent-skills), the authoring guidance that teaches agents the current napplet package surface, the boilerplate-first project shape, the sandbox boundary, the applet UI contract, and the verification checklist.
 
-Use this path when you want the agent to do the implementation work, while you
-keep control of scope, review, and release evidence.
+Use this path when you want the agent to do the implementation work, while you keep control of scope, review, and release evidence.
 
 Protocol references the agent must defer to:
 
@@ -25,8 +20,7 @@ Protocol references the agent must defer to:
 
 ## 1. Create and initialize the project
 
-Start from the maintained scaffold and record deployment metadata before the
-agent edits application code:
+Start from the maintained scaffold and record deployment metadata before the agent edits application code:
 
 ```bash
 napplet create note-drafts
@@ -54,23 +48,13 @@ npx skills add napplet/napplet --skill napplet-make    # a single skill
 
 Install the full set for this tutorial; `napplet-make` routes the work through the others.
 
-What this teaches: the skill file is not a protocol spec. It is a build guide
-that tells the agent to check NIP-5D and NAPs, preserve the `napplet create`
-scaffold and `napplet init` metadata, use shipped `@napplet/*` package exports,
-and stop instead of inventing missing protocol surface.
+What this teaches: the skill file is not a protocol spec. It is a build guide that tells the agent to check NIP-5D and NAPs, preserve the `napplet create` scaffold and `napplet init` metadata, use shipped `@napplet/*` package exports, and stop instead of inventing missing protocol surface.
 
-Before implementation, the agent should inspect the project state and available
-tools. An empty directory, a maintained boilerplate, an initialized napplet, a
-boilerplate-based brownfield app, and an unrelated brownfield app require
-different paths. It should also check whether `napplet` and Kehto/Paja are
-installed rather than assuming either binary exists.
+Before implementation, the agent should inspect the project state and available tools. An empty directory, a maintained boilerplate, an initialized napplet, a boilerplate-based brownfield app, and an unrelated brownfield app require different paths. It should also check whether `napplet` and Kehto/Paja are installed rather than assuming either binary exists.
 
 The configured queryless convention emits `['z', 'note']` and `['i', 'napplet:note/open']`. The agent must not infer a kind or payload schema from payload content.
 
-If a feature needs INC `emit` or intent `invoke/open`, those two bindings may
-transpose a queried convention URI into the stable queryless identity and a
-shallow text payload. Subscriptions, manifest discovery, and handler resolution
-stay queryless and exact. The agent must use the structured intent result to distinguish dispatch success from `handled`.
+Intent calls derive archetype and action from the URI. An `ok: true` result means the runtime accepted delivery responsibility and includes the normalized identity and handler catalog identifier; an `ok: false` result includes `error`. Targets receive runtime-attested `IntentDelivery` values through `onDelivery`, including deliveries retained before registration. Behavior hints are `focus` and `reuse`. This non-normative guidance defers to the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md).
 
 ## 3. Give the agent a small product prompt
 
@@ -80,20 +64,14 @@ Paste a prompt like this into your coding agent:
 Build a Note Drafts napplet in this directory using the installed
 napplet-make skill.
 
-The app should let a user write one short Nostr note, autosave the draft, and
-publish it through the host shell.
+The app should let a user write one short Nostr note, autosave the draft, and publish it through the host shell.
 
 The project is already scaffolded and its deployment metadata is in
 .napplet/config.json. Follow the skills end to end and report the changed files
 plus verification evidence.
 ```
 
-This prompt is intentionally short. The installed `napplet-make` skill is
-responsible for routing the work through `napplet-design`, `napplet-ui`,
-`napplet-build`, and `napplet-test`, preserving the `napplet create` scaffold,
-choosing the shell-mediated domains, keeping the UI compact and usable at any
-frame size, preserving the generated scripts, and refusing direct browser or
-signing authority.
+This prompt is intentionally short. The installed `napplet-make` skill is responsible for routing the work through `napplet-design`, `napplet-ui`, `napplet-build`, and `napplet-test`, preserving the `napplet create` scaffold, choosing the shell-mediated domains, keeping the UI compact and usable at any frame size, preserving the generated scripts, and refusing direct browser or signing authority.
 
 For this app, the skills should infer:
 
@@ -131,20 +109,17 @@ The diff should look like this:
 - The code checks for absent hard domains only to show user-facing errors; it
   does not invent a shell discovery API.
 
-Run a quick forbidden-surface scan. You should not need to paste this list into
-the first prompt; it is here so you can audit the result:
+Run a quick forbidden-surface scan. You should not need to paste this list into the first prompt; it is here so you can audit the result:
 
 ```bash
 rg "window\\.nostr|localStorage|sessionStorage|indexedDB|fetch\\(|WebSocket|EventSource|shell\\.ready|shell\\.supports|discoverServices" src
 ```
 
-No matches is the expected result. If there are matches, ask the agent to repair
-them before continuing.
+No matches is the expected result. If there are matches, ask the agent to repair them before continuing.
 
 ## 5. Use a repair prompt when needed
 
-If the first pass keeps starter-demo code, broad requirements, or shell bypasses,
-use a focused repair prompt:
+If the first pass keeps starter-demo code, broad requirements, or shell bypasses, use a focused repair prompt:
 
 ```text
 The first pass drifted from the installed napplet skills.
@@ -154,10 +129,7 @@ repair any boundary, layout, or verification failures, and keep the Note Drafts
 product scope unchanged.
 ```
 
-Keep repair prompts narrow. Do not ask the agent to redesign the whole app after
-you already have a working structure. If the same boundary detail must be added
-to every user prompt, treat that as a skill bug and update the relevant
-`skills/napplet-*/SKILL.md` instead of growing the prompt.
+Keep repair prompts narrow. Do not ask the agent to redesign the whole app after you already have a working structure. If the same boundary detail must be added to every user prompt, treat that as a skill bug and update the relevant `skills/napplet-*/SKILL.md` instead of growing the prompt.
 
 ## 6. Verify the artifact, not just the source
 
@@ -185,42 +157,25 @@ Expected manifest tags include:
 ["requires", "storage"]
 ```
 
-The manifest check matters because the shell reads the signed capability
-declaration. A source file can look correct while generated manifest tags remain
-stale.
+The manifest check matters because the shell reads the signed capability declaration. A source file can look correct while generated manifest tags remain stale.
 
 ## 7. Run a shell smoke test
 
-Use the shell/runtime you target for local testing. Start the project through
-Paja, not as a raw Vite page:
+Use the shell/runtime you target for local testing. Start the project through Paja, not as a raw Vite page:
 
 ```bash
 napplet paja -- pnpm vite --host 127.0.0.1
 ```
 
-Report the URL printed by Paja. The underlying Vite URL is only an asset server
-and is not a valid napplet preview. If Paja is unavailable, report that manual
-runtime verification is pending instead of linking to Vite.
+Report the URL printed by Paja. The underlying Vite URL is only an asset server and is not a valid napplet preview. If Paja is unavailable, report that manual runtime verification is pending instead of linking to Vite.
 
 In Paja or another compatible runtime:
 
-1. Load the built or dev Note Drafts napplet through the shell, not as a raw Vite
-   page.
-2. Confirm identity renders as a short pubkey or signed-out state.
-3. Type a draft and reload the iframe; the draft should restore through
-   `storage`.
-4. Publish a note; the shell should own signing and relay fanout.
-5. Disable `storage` or `outbox` and reload; the UI should show a clear status
-   message.
+1. Load the built or dev Note Drafts napplet through the shell, not as a raw Vite    page. 2. Confirm identity renders as a short pubkey or signed-out state. 3. Type a draft and reload the iframe; the draft should restore through    `storage`. 4. Publish a note; the shell should own signing and relay fanout. 5. Disable `storage` or `outbox` and reload; the UI should show a clear status    message.
 
-Do not treat a raw browser preview as proof. The app only proves the napplet
-boundary when a shell injects the required NAP domains.
+Do not treat a raw browser preview as proof. The app only proves the napplet boundary when a shell injects the required NAP domains.
 
-The visual implementation should also use NAP-THEME when available. Apply
-`theme.colors.background` to `html`, `body`, and the app root, apply
-`theme.colors.text` and `theme.colors.primary` to the design tokens, and update
-the full surface from `themeOnChanged`. A dark component palette on a white page
-is not themed; test both dark and light backgrounds.
+The visual implementation should also use NAP-THEME when available. Apply `theme.colors.background` to `html`, `body`, and the app root, apply `theme.colors.text` and `theme.colors.primary` to the design tokens, and update the full surface from `themeOnChanged`. A dark component palette on a white page is not themed; test both dark and light backgrounds.
 
 ## 8. Ask the agent for a completion report
 
@@ -238,13 +193,11 @@ Include:
 - any untested gaps
 ```
 
-The useful output is not "done"; it is evidence. Keep the report with the
-project or PR so future edits can tell which claims were verified.
+The useful output is not "done"; it is evidence. Keep the report with the project or PR so future edits can tell which claims were verified.
 
 ## What the skills are buying you
 
-The skills do not make the agent authoritative. They make the default path
-better:
+The skills do not make the agent authoritative. They make the default path better:
 
 - Preserve the `napplet create` scaffold and `napplet init` deployment metadata
   instead of recreating build plumbing.
@@ -254,5 +207,4 @@ better:
   assets out of napplet code.
 - Run conformance before claiming completion.
 
-You still review the diff, run the checks, and compare any protocol-facing claim
-against the living NIP-5D and NAP documents.
+You still review the diff, run the checks, and compare any protocol-facing claim against the living NIP-5D and NAP documents.

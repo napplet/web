@@ -3,11 +3,7 @@
 > Runtime-side helper for injecting selected `window.napplet.<domain>` objects
 > before napplet scripts run.
 
-`@napplet/shim` is consumed by NIP-5D runtimes, not by napplet application code.
-The runtime calls its installer before any napplet script runs, injecting only
-the NAP domain objects exposed to that napplet. It has no cryptographic
-dependencies — the shim sends messages, and the shell handles identity, signing,
-and encryption. **No `window.nostr` is installed.**
+`@napplet/shim` is consumed by NIP-5D runtimes, not by napplet application code. The runtime calls its installer before any napplet script runs, injecting only the NAP domain objects exposed to that napplet. It has no cryptographic dependencies — the shim sends messages, and the shell handles identity, signing, and encryption. **No `window.nostr` is installed.**
 
 - **npm:** [`@napplet/shim`](https://www.npmjs.com/package/@napplet/shim)
 - **JSR:** [`@napplet/shim`](https://jsr.io/@napplet/shim)
@@ -21,29 +17,18 @@ npm install @napplet/shim
 
 ## Runtime export
 
-`installNappletGlobal` installs selected domain objects onto a target window.
-Napplet-side code should use [`@napplet/sdk`](./sdk) or direct typed
-`window.napplet` access.
+`installNappletGlobal` installs selected domain objects onto a target window. Napplet-side code should use [`@napplet/sdk`](./sdk) or direct typed `window.napplet` access.
 
-For `iframe.srcdoc` runtimes, `@napplet/shim/prelude` exposes a host-injectable
-surface that does not require every napplet bundle to import the shim. Inline the
-npm browser artifact from `@napplet/shim/prelude.global`, then activate it with
-an explicit domain allowlist:
+For `iframe.srcdoc` runtimes, `@napplet/shim/prelude` exposes a host-injectable surface that does not require every napplet bundle to import the shim. Inline the npm browser artifact from `@napplet/shim/prelude.global`, then activate it with an explicit domain allowlist:
 
 ```ts
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { renderNappletRuntimePreludeCall } from '@napplet/shim/prelude';
 
-const require = createRequire(import.meta.url);
-const preludeSource = readFileSync(
-  require.resolve('@napplet/shim/prelude.global'),
-  'utf8',
-);
+const require = createRequire(import.meta.url); const preludeSource = readFileSync(   require.resolve('@napplet/shim/prelude.global'),   'utf8', );
 
-const activatePrelude = renderNappletRuntimePreludeCall({
-  domains: ['identity', 'storage', 'outbox'],
-});
+const activatePrelude = renderNappletRuntimePreludeCall({   domains: ['identity', 'storage', 'outbox'], });
 
 const srcdoc = html.replace(
   '<head>',
@@ -51,10 +36,7 @@ const srcdoc = html.replace(
 );
 ```
 
-The IIFE artifact exposes `globalThis.NappletShimPrelude.install({ domains })`
-and installs only the requested known NAP domains. JSR exposes the source ESM
-helpers under `@napplet/shim/prelude`; the generated `prelude.global` artifact
-is npm-only.
+The IIFE artifact exposes `globalThis.NappletShimPrelude.install({ domains })` and installs only the requested known NAP domains. JSR exposes the source ESM helpers under `@napplet/shim/prelude`; the generated `prelude.global` artifact is npm-only.
 
 ## The `window.napplet` shape
 
@@ -99,48 +81,19 @@ const { events } = await window.napplet.outbox.query(
 );
 for (const result of events) console.log('Note:', result.event.content);
 
-// Subscribe to live updates through the same outbox boundary
-const sub = window.napplet.outbox.subscribe([{ kinds: [1], limit: 20 }], {
-  timeoutMs: 3000,
-});
-sub.on('event', (result) => console.log('New note:', result.event.content));
+// Subscribe to live updates through the same outbox boundary const sub = window.napplet.outbox.subscribe([{ kinds: [1], limit: 20 }], {   timeoutMs: 3000, }); sub.on('event', (result) => console.log('New note:', result.event.content));
 
-// Publish a note (the shell signs and fans it out)
-const published = await window.napplet.outbox.publish({
-  kind: 1,
-  content: 'Hello from my napplet!',
-  tags: [],
-  created_at: Math.floor(Date.now() / 1000),
-});
-if (!published.ok) throw new Error(published.error ?? 'publish failed');
+// Publish a note (the shell signs and fans it out) const published = await window.napplet.outbox.publish({   kind: 1,   content: 'Hello from my napplet!',   tags: [],   created_at: Math.floor(Date.now() / 1000), }); if (!published.ok) throw new Error(published.error ?? 'publish failed');
 
-// NAP-INC convention URI emission: the runtime sends the stable topic with
-// a shallow text payload. `pubkey` is a local convention choice.
-window.napplet.inc.emit('napplet:profile/open?pubkey=abc123');
-const profileOpen = window.napplet.inc.on('napplet:profile/open', (event) => {
-  validateProfileOpenPayload(event.payload);
-});
+// NAP-INC convention URI emission: the runtime sends the stable topic with // a shallow text payload. `pubkey` is a local convention choice. window.napplet.inc.emit('napplet:profile/open?pubkey=abc123'); const profileOpen = window.napplet.inc.on('napplet:profile/open', (event) => {   validateProfileOpenPayload(event.payload); });
 
-const intentResult = await window.napplet.intent.open(
-  'profile',
-  { pubkey: 'abc123' },
-  { convention: 'napplet:profile/open', behavior: { newWindow: true } },
-);
+const intentResult = await window.napplet.intent.open('napplet:profile/open', { payload: { pubkey: 'abc123' }, behavior: { reuse: false } });
 
-// Scoped storage, proxied through the shell
-await window.napplet.storage.setItem('theme', 'dark');
-const theme = await window.napplet.storage.getItem('theme'); // 'dark'
+// Scoped storage, proxied through the shell await window.napplet.storage.setItem('theme', 'dark'); const theme = await window.napplet.storage.getItem('theme'); // 'dark'
 
-// Read-only identity
-const pubkey = await window.napplet.identity.getPublicKey(); // "" when signed out
+// Read-only identity const pubkey = await window.napplet.identity.getPublicKey(); // "" when signed out
 
-// Feature-gate before using a domain
-if (window.napplet?.media) {
-  const { sessionId } = await window.napplet.media.createSession({
-    owner: 'napplet',
-    metadata: { title: 'My Song', artist: 'The Artist' },
-  });
-}
+// Feature-gate before using a domain if (window.napplet?.media) {   const { sessionId } = await window.napplet.media.createSession({     owner: 'napplet',     metadata: { title: 'My Song', artist: 'The Artist' },   }); }
 
 sub.close();
 profileOpen.close();
@@ -148,31 +101,19 @@ profileOpen.close();
 
 ### INC convention URIs
 
-The NAP-INC shim accepts a queried `napplet:<archetype>/<intent>` URI only at
-`emit(topic, payload?)`. It transposes the query before posting `inc.emit`, so
-the shell and consumers see the exact queryless stable topic and a shallow
-decoded text payload. Subscriptions and routing never parse, normalize,
-prefix-match, or wildcard-match topics after that boundary.
+The NAP-INC shim accepts a queried `napplet:<archetype>/<intent>` URI only at `emit(topic, payload?)`. It transposes the query before posting `inc.emit`, so the shell and consumers see the exact queryless stable topic and a shallow decoded text payload. Subscriptions and routing never parse, normalize, prefix-match, or wildcard-match topics after that boundary.
 
-Fragments, malformed percent escapes, repeated decoded names, and a queried URI
-with an explicit payload reject before emission. Use a queryless topic and its
-explicit payload for structured data.
+Fragments, malformed percent escapes, repeated decoded names, and a queried URI with an explicit payload reject before emission. Use a queryless topic and its explicit payload for structured data.
 
 ### Intent dispatch injection
 
-The intent shim exposes `invoke(request)` and
-`open(archetype, payload?, opts?)`. Results contain required `ok`, `archetype`,
-`action`, and `handled` fields plus optional handler, window, convention, and
-error details.
+Intent calls derive archetype and action from the URI. An `ok: true` result means the runtime accepted delivery responsibility and includes the normalized identity and handler catalog identifier; an `ok: false` result includes `error`. Targets receive runtime-attested `IntentDelivery` values through `onDelivery`, including deliveries retained before registration. Behavior hints are `focus` and `reuse`. This non-normative guidance defers to the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md).
 
 This behavior defers to the living [NAP-INC](https://github.com/napplet/naps/blob/master/naps/NAP-INC.md) and [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md) documents.
 
 ## TypeScript support
 
-The shim does not modify global `Window` types in its published source (so it is
-accepted by JSR). For typed `window.napplet` access, cast using `NappletGlobal`
-from [`@napplet/core`](./core), or — preferably — use the named helpers in
-[`@napplet/sdk`](./sdk):
+The shim does not modify global `Window` types in its published source (so it is accepted by JSR). For typed `window.napplet` access, cast using `NappletGlobal` from [`@napplet/core`](./core), or — preferably — use the named helpers in [`@napplet/sdk`](./sdk):
 
 ```ts
 import type { NappletGlobal } from '@napplet/core';
@@ -182,13 +123,27 @@ const napplet = (window as Window & { napplet: NappletGlobal }).napplet;
 
 ## Wire format
 
-The shim communicates with the shell using JSON envelope messages
-(`{ type: 'domain.action', ...payload }`). Outbound messages go via
-`window.parent.postMessage(msg, '*')`; inbound arrive via a `message` listener.
-Request/response pairs are correlated by an `id` field. The shim package README
-documents the full per-domain outbound and inbound message catalog.
+The shim communicates with the shell using JSON envelope messages (`{ type: 'domain.action', ...payload }`). Outbound messages go via `window.parent.postMessage(msg, '*')`; inbound arrive via a `message` listener. Request/response pairs are correlated by an `id` field. The shim package README documents the full per-domain outbound and inbound message catalog.
 
 ## See also
 
 - [Shim vs. SDK](/guide/getting-started#when-to-use-shim-vs-sdk)
 - [`@napplet/sdk`](./sdk) — named, typed wrapper over the same global
+
+
+### Optional shell environment
+
+The runtime may expose `shell` for environment information. `shell.supports(domain)` reads current domain object presence, `shell.services` is empty until environment delivery, and `shell.ready()` / `shell.onReady(handler)` use the retained snapshot. Readiness does not gate other domain calls. See the living [NAP-SHELL](https://github.com/napplet/naps/blob/master/naps/NAP-SHELL.md).
+
+### Intent delivery and recommendations
+
+```ts
+import { intent } from '@napplet/sdk';
+
+intent.onDelivery(({ sender, convention, payload }) => {
+  console.log(sender, convention, payload);
+});
+await intent.invoke('napplet:profile/open?pubkey=abc123');
+```
+
+The runtime binding retains deliveries until a listener registers. Discovery candidates expose opaque catalog `id` values and `contracts` with parameter names. INC peers instead use identifiers for running authenticated endpoints. A NAP-INTENT URI may append a bare `#naddr1…` recommendation; the binding sends its coordinate and relay hints as `handlerHint`, outside convention identity and payload. An applicable user default takes precedence. INC URI operations reject fragments. See the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md) and [web projection](https://github.com/napplet/naps/blob/master/projections/web.md).

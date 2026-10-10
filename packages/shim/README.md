@@ -279,7 +279,7 @@ Messages received via `window.addEventListener('message', ...)`:
 { type: 'inc.event', topic: string, payload?: unknown, sender: string }
 { type: 'inc.channel.opened', channelId: string, peer: string }
 
-{ type: 'intent.invoke.result', id: string, result: { ok: boolean, archetype: string, action: string, handled: boolean, convention?: string, handler?: string, windowId?: string, error?: string } }
+{ type: 'intent.invoke.result', id: string, result: { ok: true, archetype: string, action: string, convention: string, handler: string } | { ok: false, error: string } }
 
 { type: 'storage.get.result', id: string, value?: string | null, error?: string }
 { type: 'storage.set.result', id: string, error?: string }
@@ -345,8 +345,8 @@ window.napplet = {
     };
   },
   intent: {
-    invoke(request): Promise<IntentResult>;
-    open(archetype, payload?, options?): Promise<IntentResult>;
+    invoke(uri, options?): Promise<IntentResult>;
+    open(uri: string, options?: IntentInvokeOptions): Promise<IntentResult>;
     available(archetype): Promise<IntentAvailability>;
     handlers(): Promise<IntentAvailability[]>;
     onChanged(callback): { close(): void };
@@ -469,18 +469,14 @@ Query values are shallow percent-decoded text (`+` remains a literal plus) befor
 
 ### `window.napplet.intent`
 
-NAP-INTENT dispatches by archetype. Use `invoke(request)` or the `open(archetype, payload?, opts?)` convenience operation.
+NAP-INTENT dispatches by archetype. Use `invoke(uri, options?)` or the `open(uri, options?)` convenience operation.
 
 ```ts
-const result = await window.napplet.intent.open(
-  'profile',
-  { pubkey: 'abc123' },
-  { convention: 'napplet:profile/open', behavior: { newWindow: true } },
-);
-if (!result.handled) throw new Error(result.error);
+const result = await window.napplet.intent.open('napplet:profile/open', { payload: { pubkey: 'abc123' }, behavior: { reuse: false } });
+if (!result.ok) throw new Error(result.error);
 ```
 
-Results include required `ok`, `archetype`, `action`, and `handled` fields and optional handler, window, convention, and error details. See the living [NAP-INTENT document](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md).
+Intent calls derive archetype and action from the URI. An `ok: true` result means the runtime accepted delivery responsibility and includes the normalized identity and handler catalog identifier; an `ok: false` result includes `error`. Targets receive runtime-attested `IntentDelivery` values through `onDelivery`, including deliveries retained before registration. Behavior hints are `focus` and `reuse`. This non-normative guidance defers to the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md).
 
 ### `window.napplet.storage`
 
@@ -650,3 +646,21 @@ import { relay, inc, storage, keys, identity } from '@napplet/sdk';
 ## License
 
 MIT
+
+
+### Optional shell environment
+
+The runtime may expose `shell` for environment information. `shell.supports(domain)` reads current domain object presence, `shell.services` is empty until environment delivery, and `shell.ready()` / `shell.onReady(handler)` use the retained snapshot. Readiness does not gate other domain calls. See the living [NAP-SHELL](https://github.com/napplet/naps/blob/master/naps/NAP-SHELL.md).
+
+### Intent delivery and recommendations
+
+```ts
+import { intent } from '@napplet/sdk';
+
+intent.onDelivery(({ sender, convention, payload }) => {
+  console.log(sender, convention, payload);
+});
+await intent.invoke('napplet:profile/open?pubkey=abc123');
+```
+
+The runtime binding retains deliveries until a listener registers. Discovery candidates expose opaque catalog `id` values and `contracts` with parameter names. INC peers instead use identifiers for running authenticated endpoints. A NAP-INTENT URI may append a bare `#naddr1…` recommendation; the binding sends its coordinate and relay hints as `handlerHint`, outside convention identity and payload. An applicable user default takes precedence. INC URI operations reject fragments. See the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md) and [web projection](https://github.com/napplet/naps/blob/master/projections/web.md).

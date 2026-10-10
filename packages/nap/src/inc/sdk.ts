@@ -71,7 +71,7 @@ export function incOn(
 /**
  * Open a point-to-point INC channel.
  *
- * @param target Target napplet dTag
+ * @param target Target authenticated endpoint identifier
  * @returns Symmetric channel handle
  */
 export function incOpenChannel(target: string): Promise<ChannelHandle> {

@@ -97,20 +97,16 @@ The old `@napplet/nap/ifc`, `@napplet/nap/ifc/types`, `@napplet/nap/ifc/shim`, a
 
 ### Intent and INC
 
-NAP-INTENT routes to an archetype role. `invoke(request)` accepts a canonical request object; `open(archetype, payload?, opts?)` supplies the common action-`"open"` form. The runtime selects an installed handler.
+NAP-INTENT routes to an archetype role. `invoke(uri, options?)` accepts an authoritative convention URI; `open(uri, options?)` supplies the common action-`"open"` form. The runtime selects an installed handler.
 
 ```ts
 import { intentOpen } from '@napplet/nap/intent';
 
-const result = await intentOpen(
-  'profile',
-  { pubkey: 'abc123' },
-  { convention: 'napplet:profile/open', behavior: { newWindow: true } },
-);
-if (!result.handled) throw new Error(result.error);
+const result = await intentOpen('napplet:profile/open', { payload: { pubkey: 'abc123' }, behavior: { reuse: false } });
+if (!result.ok) throw new Error(result.error);
 ```
 
-Results include required `ok`, `archetype`, `action`, and `handled` fields and optional handler, window, convention, and error details. Archetype resolution and convention-based payload interpretation remain orthogonal.
+Intent calls derive archetype and action from the URI. An `ok: true` result means the runtime accepted delivery responsibility and includes the normalized identity and handler catalog identifier; an `ok: false` result includes `error`. Targets receive runtime-attested `IntentDelivery` values through `onDelivery`, including deliveries retained before registration. Behavior hints are `focus` and `reuse`. This non-normative guidance defers to the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md).
 
 NAP-INC topics use the same opaque-string boundary. Use the current advisory open names such as `napplet:note/open`, `napplet:profile/open`, and `napplet:dm/open` when they fit the receiving napplet's documented local choice.
 
@@ -259,10 +255,28 @@ configSubscribe<FromSchema<typeof schema>>((values) => {
 
 ## Protocol Reference
 
-- [NIP-5D](https://github.com/nostr-protocol/nips/pull/2303) — Napplet-shell protocol specification (JSON envelope + NAP negotiation)
+- [NIP-5D](https://github.com/nostr-protocol/nips/pull/2303) — Napplet-shell protocol specification (JSON envelope and injected domain availability)
 
 ## License
 
 MIT
 
 Repository: [github.com/sandwichfarm/napplet](https://github.com/sandwichfarm/napplet)
+
+
+### Optional shell environment
+
+The runtime may expose `shell` for environment information. `shell.supports(domain)` reads current domain object presence, `shell.services` is empty until environment delivery, and `shell.ready()` / `shell.onReady(handler)` use the retained snapshot. Readiness does not gate other domain calls. See the living [NAP-SHELL](https://github.com/napplet/naps/blob/master/naps/NAP-SHELL.md).
+
+### Intent delivery and recommendations
+
+```ts
+import { intent } from '@napplet/sdk';
+
+intent.onDelivery(({ sender, convention, payload }) => {
+  console.log(sender, convention, payload);
+});
+await intent.invoke('napplet:profile/open?pubkey=abc123');
+```
+
+The runtime binding retains deliveries until a listener registers. Discovery candidates expose opaque catalog `id` values and `contracts` with parameter names. INC peers instead use identifiers for running authenticated endpoints. A NAP-INTENT URI may append a bare `#naddr1…` recommendation; the binding sends its coordinate and relay hints as `handlerHint`, outside convention identity and payload. An applicable user default takes precedence. INC URI operations reject fragments. See the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md) and [web projection](https://github.com/napplet/naps/blob/master/projections/web.md).

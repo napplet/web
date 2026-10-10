@@ -135,6 +135,7 @@ export {
   intentAvailable,
   intentHandlers,
   intentOnChanged,
+  intentOnDelivery,
 } from '@napplet/nap/intent';
 export {
   bleOpen,
@@ -202,3 +203,5 @@ export {
   dmUnsubscribe,
   dmOnMessage,
 } from '@napplet/nap/dm';
+
+export { shellReady, shellSupports, shellOnReady, installShellShim, DOMAIN as SHELL_DOMAIN } from '@napplet/nap/shell';

@@ -3,16 +3,21 @@ export const REFERENCE_PUBKEY: string = 'f'.repeat(64);
 
 /** A source identity supplied by the reference runtime's authenticated endpoint fixture. */
 export interface ReferenceEndpoint {
-  /** The authenticated source napplet dTag. */
-  dTag: string;
+  /** Authenticated running endpoint identifier. */
+  id: string;
+  /** Verified source catalog identifier. */
+  catalogId: string;
+  /** Exposed domains; omitted by the default all-domain fixture. */
+  domains?: readonly string[];
 }
 
 /** Default authenticated reference endpoint. */
-export const REFERENCE_ENDPOINT: ReferenceEndpoint = { dTag: 'reference-source' };
+export const REFERENCE_ENDPOINT: ReferenceEndpoint = { id: 'reference-source-endpoint', catalogId: 'reference-source' };
 
 /** A placeholder blob URL for canned upload responses. `.invalid` is reserved (RFC 2606) and never resolves. */
 const REFERENCE_BLOB_URL = 'https://reference.invalid/blob';
-export const REFERENCE_HANDLER = 'reference-handler';
+export const REFERENCE_HANDLER = `named:${REFERENCE_PUBKEY}:reference-handler`;
+export const REFERENCE_MANIFEST = { kind: 35129 as const, pubkey: REFERENCE_PUBKEY, id: '0'.repeat(64), tags: [['d', 'reference-handler'], ['z', 'note'], ['i', 'napplet:note/open', 'event']] };
 export const REFERENCE_SUBSCRIBER = 'reference-subscriber';
 export const REFERENCE_CONVENTION = 'napplet:note/open';
 
@@ -104,7 +109,7 @@ export const RESPONDERS: Record<string, Responder> = {
   'inc.channel.close': none,
 
   // theme
-  'theme.get': (e) => ok({ type: 'theme.get.result', id: e.id, theme: { colors: {}, mode: 'dark' } }),
+  'theme.get': (e) => ok({ type: 'theme.get.result', id: e.id, theme: { colors: { background: '#000000', text: '#ffffff', primary: '#663399' } } }),
 
   // keys
   'keys.forward': none,

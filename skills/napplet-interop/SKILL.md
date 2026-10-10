@@ -23,7 +23,7 @@ A napplet that fulfils an archetype role advertises one contract per entry throu
 archetypes: [{ slug: 'note', convention: 'napplet:note/open' }],
 ```
 
-This emits the manifest tag `["z", "note"]` and `["i", "napplet:note/open"]`. The role `slug` and the convention's archetype segment are independent under NAP-INTENT. Do not add payload, version, or negotiation fields.
+This emits the manifest tag `["z", "note"]` and `["i", "napplet:note/open"]`. The convention's archetype segment matches a `z` role on the same manifest for dispatch eligibility; trailing `i` values advertise parameter names. Do not add payload, version, or negotiation fields.
 
 ## NAP-INC — broadcast between napplets
 
@@ -59,17 +59,13 @@ The deprecated `ifc` SDK subpath is only an INC compatibility alias; new code im
 ```ts
 import { intent } from '@napplet/sdk';
 
-const result = await intent.open(
-  'profile',
-  { pubkey: 'abc123' },
-  { convention: 'napplet:profile/open', behavior: { newWindow: true } },
-);
-if (!result.handled) showIntentError(result.error);
+const result = await intent.open('napplet:profile/open', { payload: { pubkey: 'abc123' }, behavior: { reuse: false } });
+if (!result.ok) showIntentError(result.error);
 ```
 
-- Dispatch with `intent.invoke(request)` or the `intent.open(archetype, payload?, opts?)` convenience.
-- Results always carry `ok`, `archetype`, `action`, and `handled`; use `handled` to distinguish "dispatched" from "someone acted on it". Behavior hints: `focus`, `newWindow`, `reuse`.
-- Archetype routing and optional convention-based payload interpretation are orthogonal; do not couple intent delivery to INC.
+- Dispatch with `intent.invoke(uri, options?)` or the `intent.open(uri, options?)` convenience.
+- An `ok: true` result accepts delivery responsibility; failures contain `error`. Targets register `onDelivery` and validate the runtime-attested payload. Behavior hints: `focus`, `reuse`.
+- The URI derives archetype and action; target delivery is independent of INC and source lifetime.
 
 ## Spec lines to fill in
 
@@ -78,7 +74,7 @@ Add these to the `napplet-design` spec when interop is in scope:
 ```
 archetype metadata: <none | slug + napplet:<archetype>/<intent>>
 INC topics: <none | exact topic(s) emitted / subscribed + payload validation source>
-intent dispatch: <none | invoke/open request + how `handled` drives the UI>
+intent dispatch: <none | invoke/open request + how acceptance and onDelivery drive the UI>
 ```
 
 ## Pitfalls
@@ -86,4 +82,4 @@ intent dispatch: <none | invoke/open request + how `handled` drives the UI>
 - Subscribing to a queried topic (`inc.on('napplet:profile/open?pubkey=…')`) — never matches; subscribe to the queryless identity.
 - Treating a topic as a schema (`if (topic.endsWith('/open')) payload.pubkey…`) — validate the payload itself.
 - Adding `inc` or `intent` to manifest `requires` for an optional handoff — gate on `window.napplet?.inc` / `?.intent` and hide the affordance when absent.
-- Inventing delivery identifiers, acknowledgement lifecycles, or version negotiation around intents — not in the living spec; use the returned result object only.
+- Inventing delivery identifiers, acknowledgement lifecycles, or version negotiation around intents — not in the living spec; use the acceptance result and onDelivery contract.

@@ -3,11 +3,7 @@
 > Every active napplet NAP domain as layered subpath exports. The package name remains
 > `@napplet/nap` for compatibility.
 
-`@napplet/nap` ships every active NAP domain (relay, storage, inc, keys, theme,
-media, notify, identity, config, resource, cvm, outbox, upload, intent, ble,
-webrtc, link, count, lists, common, serial, fs, dm)
-as independent, tree-shakable subpaths. It sits between the shim/sdk and
-[`@napplet/core`](./core) in the dependency graph.
+`@napplet/nap` ships every active NAP domain (relay, storage, inc, keys, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent, ble, webrtc, link, count, lists, common, serial, fs, dm) as independent, tree-shakable subpaths. It sits between the shim/sdk and [`@napplet/core`](./core) in the dependency graph.
 
 - **npm:** [`@napplet/nap`](https://www.npmjs.com/package/@napplet/nap)
 - **JSR:** [`@napplet/nap`](https://jsr.io/@napplet/nap)
@@ -26,8 +22,7 @@ pnpm add @napplet/nap
 
 ## Subpath patterns
 
-Each domain exposes up to four entry-point shapes. Pick the one that matches what
-your code actually needs:
+Each domain exposes up to four entry-point shapes. Pick the one that matches what your code actually needs:
 
 | Pattern | Subpath | Contents |
 | --- | --- | --- |
@@ -40,11 +35,9 @@ your code actually needs:
 // Barrel — everything for a domain
 import { installRelayShim, relaySubscribe, RelaySubscribeMessage } from '@napplet/nap/relay';
 
-// Types only — zero runtime cost
-import type { IncEventMessage } from '@napplet/nap/inc/types';
+// Types only — zero runtime cost import type { IncEventMessage } from '@napplet/nap/inc/types';
 
-// Shim only — for shells mounting a NAP into the napplet window
-import { installStorageShim } from '@napplet/nap/storage/shim';
+// Shim only — for shells mounting a NAP into the napplet window import { installStorageShim } from '@napplet/nap/storage/shim';
 
 // SDK only — typed wrapper for napplet consumer code
 import { notifySend } from '@napplet/nap/notify/sdk';
@@ -92,15 +85,11 @@ import { notifySend } from '@napplet/nap/notify/sdk';
   `open`/`write`/`close`/`onEvent`; the shell owns permissions, raw port
   handles, streams, OS paths, and lifecycle policy.
 - **fs** — shell-mediated virtual filesystem access: napplets get `info`/`pickFile`/`pickFiles`/`pickDirectory`/`pickSaveFile`/`stat`/`list`/`read`/`write`/`mkdir`/`remove`/`move`/`watch`/`unwatch`/`onChanged`; the runtime owns host paths, mounts, backing store, normalization, policy, and authorization. Byte payloads use RFC 4648 standard padded base64 text on the JSON wire, and byte limits/counts refer to decoded bytes.
-- **intent** — archetype-based invocation through `invoke(request)` and `open(archetype, payload?, opts?)`, with canonical structured dispatch results.
+- **intent** — archetype-based invocation through `invoke(uri, options?)` and `open(uri, options?)`, with canonical structured dispatch results.
 
 ### INC convention URIs
 
-NAP-INC exposes `emit(topic, payload?)` and `on(topic, callback)`. For
-`emit('napplet:profile/open?pubkey=abc123')`, the binding
-transposes the query at the outgoing boundary into the shallow decoded text
-payload `{ pubkey: 'abc123' }` and posts the stable topic
-`napplet:profile/open`.
+NAP-INC exposes `emit(topic, payload?)` and `on(topic, callback)`. For `emit('napplet:profile/open?pubkey=abc123')`, the binding transposes the query at the outgoing boundary into the shallow decoded text payload `{ pubkey: 'abc123' }` and posts the stable topic `napplet:profile/open`.
 
 Subscribe with the stable, queryless topic and keep routing exact afterward:
 
@@ -114,13 +103,11 @@ const sub = on('napplet:profile/open', (payload) => {
 });
 ```
 
-Fragments, malformed percent escapes, repeated decoded names, and a query with
-an explicit payload reject before emission. Structured or non-text data belongs
-in the explicit payload of a queryless topic.
+Fragments, malformed percent escapes, repeated decoded names, and a query with an explicit payload reject before emission. Structured or non-text data belongs in the explicit payload of a queryless topic.
 
 ### Intent invocation
 
-NAP-INTENT accepts `invoke(request)` and `open(archetype, payload?, opts?)`:
+NAP-INTENT accepts `invoke(uri, options?)` and `open(uri, options?)`:
 
 ```ts
 import {
@@ -129,17 +116,12 @@ import {
 } from '@napplet/nap/intent/sdk';
 
 if ((await intentAvailable('profile')).available) {
-  const result = await intentOpen(
-    'profile',
-    { pubkey: 'abc123' },
-    { convention: 'napplet:profile/open', behavior: { newWindow: true } },
-  );
-  if (!result.handled) console.error(result.error);
+  const result = await intentOpen('napplet:profile/open', { payload: { pubkey: 'abc123' }, behavior: { reuse: false } });
+  if (!result.ok) console.error(result.error);
 }
 ```
 
-Results contain required `ok`, `archetype`, `action`, and `handled` fields plus
-optional handler, window, convention, and error details.
+Intent calls derive archetype and action from the URI. An `ok: true` result means the runtime accepted delivery responsibility and includes the normalized identity and handler catalog identifier; an `ok: false` result includes `error`. Targets receive runtime-attested `IntentDelivery` values through `onDelivery`, including deliveries retained before registration. Behavior hints are `focus` and `reuse`. This non-normative guidance defers to the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md).
 
 These APIs defer to the living [NAP-INC](https://github.com/napplet/naps/blob/master/naps/NAP-INC.md) and [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md) documents.
 
@@ -147,12 +129,27 @@ See the [NAP domain reference](/naps/) for the full list with one-line purposes.
 
 ## Optional peer dependency
 
-`@napplet/nap` declares `json-schema-to-ts` as an **optional** peer dependency
-(scoped to the `config` domain's `FromSchema` typing). Install it only if you want
-schema-inferred typing for your `config.subscribe` callback; skipping it costs
-nothing.
+`@napplet/nap` declares `json-schema-to-ts` as an **optional** peer dependency (scoped to the `config` domain's `FromSchema` typing). Install it only if you want schema-inferred typing for your `config.subscribe` callback; skipping it costs nothing.
 
 ## See also
 
 - [NAP domain reference](/naps/) — every domain and its purpose
 - [`@napplet/sdk`](./sdk) — re-exports the per-domain helpers and message types
+
+
+### Optional shell environment
+
+The runtime may expose `shell` for environment information. `shell.supports(domain)` reads current domain object presence, `shell.services` is empty until environment delivery, and `shell.ready()` / `shell.onReady(handler)` use the retained snapshot. Readiness does not gate other domain calls. See the living [NAP-SHELL](https://github.com/napplet/naps/blob/master/naps/NAP-SHELL.md).
+
+### Intent delivery and recommendations
+
+```ts
+import { intent } from '@napplet/sdk';
+
+intent.onDelivery(({ sender, convention, payload }) => {
+  console.log(sender, convention, payload);
+});
+await intent.invoke('napplet:profile/open?pubkey=abc123');
+```
+
+The runtime binding retains deliveries until a listener registers. Discovery candidates expose opaque catalog `id` values and `contracts` with parameter names. INC peers instead use identifiers for running authenticated endpoints. A NAP-INTENT URI may append a bare `#naddr1…` recommendation; the binding sends its coordinate and relay hints as `handlerHint`, outside convention identity and payload. An applicable user default takes precedence. INC URI operations reject fragments. See the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md) and [web projection](https://github.com/napplet/naps/blob/master/projections/web.md).

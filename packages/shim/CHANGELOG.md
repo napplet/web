@@ -1,5 +1,19 @@
 # @napplet/shim
 
+## 0.31.0
+
+### Minor Changes
+
+- Follow the NAP-INTENT lifecycle and manifest amendments: accept authoritative convention URIs and naddr recommendations, expose acceptance results and buffered onDelivery callbacks, and discover opaque catalog identifiers with parameter contracts. Restore the optional NAP-SHELL environment API independently of other domain calls. Align INC provenance with authenticated endpoint identifiers and deliver theme/identity updates only for exposed domains.
+
+  INTENT callers migrate from archetype/request arguments to invoke(uri, options) and open(uri, options), from handled/windowId to acceptance, and from candidate dTag to id/contracts. Existing IntentOpenOptions and named SDK helpers remain exported with the URI signatures. CLI helper extraction preserves existing exports and behavior.
+
+### Patch Changes
+
+- Updated dependencies
+  - @napplet/core@0.33.0
+  - @napplet/nap@0.33.0
+
 ## 0.30.0
 
 ### Minor Changes

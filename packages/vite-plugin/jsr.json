@@ -5,7 +5,7 @@
   "exports": "./src/index.ts",
   "imports": {
     "parse5": "npm:parse5@^7.3.0",
-    "@napplet/nap": "jsr:@napplet/nap@^0.32.0",
+    "@napplet/nap": "jsr:@napplet/nap@^0.33.0",
     "nostr-tools": "npm:nostr-tools@^2.23.3",
     "vite": "npm:vite@^6.3.0"
   },
