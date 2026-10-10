@@ -32,7 +32,7 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 Phase: 162 (nip-5d-event-schema-migration) — COMPLETE
 Plan: 3 of 3
 Status: Verified; [draft PR #224](https://github.com/napplet/web/pull/224) open, hzrd149 requested
-Last activity: 2026-10-07 - Completed quick task 261007-aae: Resolve PR #224 conflicts after #223
+Last activity: 2026-10-09 - Completed quick task 261009-ur6: Remove commit-title gating from JSR publication
 
 See phase 162 VERIFICATION.md for evidence and disclosed compatibility/tooling findings. Earlier phase and quick-task records below are historical.
 
@@ -510,6 +510,7 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 
 | Quick ID | Task | Date | Commit | Artifacts |
 |----------|------|------|--------|-----------|
+| 261009-ur6 | Remove commit-title gating from JSR publication | 2026-10-09 | d798a91f | [261009-ur6-remove-commit-title-gating-from-jsr-publ](./quick/261009-ur6-remove-commit-title-gating-from-jsr-publ/) |
 | 261006-ij3 | Fix verified PR #224 review findings (conformance x-hash panel, deploy/plugin dropped-asset guards, CLI R/O overlap, debug crash) | 2026-10-06 | a4f1c8b4 | [261006-ij3-fix-verified-pr-224-review-findings-conf](./quick/261006-ij3-fix-verified-pr-224-review-findings-conf/) |
 | 260912-wr8 | Restructure napplet skills for the skills.sh installer (napplet-* names, napplet-ui contract, custom installer removed) | 2026-09-12 | 2d3556c9 | [260912-wr8-restructure-napplet-skills-for-the-skill](./quick/260912-wr8-restructure-napplet-skills-for-the-skill/) |
 | 260904-g1f | Add the MIT license and open a pull request | 2026-09-04 | 7b82fe08 | [260904-g1f-add-the-mit-license-and-open-a-pull-requ](./quick/260904-g1f-add-the-mit-license-and-open-a-pull-requ/) |
