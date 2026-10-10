@@ -385,7 +385,7 @@ Decoded icon bytes are hashed and uploaded unchanged alongside the HTML, even wh
 
 ## Screenshots and optional Zapstore metadata
 
-Capture a built napplet without starting a host. The command starts a temporary local Kehto Paja preview, captures its iframe, and closes the preview afterwards. It requires Node.js 20+; the matching Chromium browser is installed automatically on first use. The preview uses Paja’s development identity, fresh browser storage, and live relays, so content may differ from your signed-in shell.
+Capture a built napplet without starting a host. The command starts a temporary local Kehto Paja preview, captures its iframe, and closes the preview afterwards. It requires Node.js 20+; the matching Chromium browser is installed automatically on first use. Screenshot and default conformance commands select the tested `@napplet/conformance-cli@0.3.3` runner explicitly, so an older project-local conformance dependency cannot intercept them. Explicit custom conformance commands remain supported. The preview uses Paja’s development identity, fresh browser storage, and live relays, so content may differ from your signed-in shell.
 
 ```sh
 napplet screenshot --output preview.png
@@ -432,3 +432,11 @@ Local PNG, JPEG and WebP images are resolved relative to the working directory, 
 The listing uses kind `32267` from the [Software Applications proposal](https://github.com/nostr-protocol/nips/pull/1336), with screenshot URLs in `image` tags. It is separate from the current [NIP-5D manifest](https://github.com/nostr-protocol/nips/pull/2303/files) and does not change the artifact hash or add a manifest `app` pointer. This publishes application metadata only, without software release or asset events; acceptance into a particular store's catalog depends on that store.
 
 `deploy --screenshot` starts a local preview for each distinct selected build, captures a temporary PNG, and appends it to the configured application images for that deployment. It requires `--zapstore` or `zapstore.enabled`, and does not modify your config or build files. Capture failure stops deployment before any upload or relay publication. The temporary image is removed after success or failure. `--dry-run` also performs capture and previews the resulting metadata without uploading or publishing. Capture diagnostics go to stderr so `--json` stdout remains valid JSON. No host URL is required. Root and snapshot selections of the same artifact share one capture. To capture an existing shell instead, use `--screenshot <preview-url>`. Use `--screenshot-selector`, `--screenshot-ready-selector`, `--screenshot-width`, `--screenshot-height`, and `--screenshot-delay` for the corresponding standalone capture options. Use the standalone `napplet screenshot` command when you want to keep a PNG on disk.
+
+### npm runner regression test
+
+The opt-in integration test creates an older local runner, reproduces its selection by unversioned `npx`, and verifies that screenshot and default conformance commands select the compatible public package. It requires Node/npm and network access or a populated npm cache; it runs on macOS/Linux.
+
+```sh
+NAPPLET_TEST_NPM_RUNNER=1 deno test -A packages/cli/tests/package_runner_integration_test.ts
+```

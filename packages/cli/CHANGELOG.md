@@ -1,5 +1,11 @@
 # @napplet/cli
 
+## 0.8.7
+
+### Patch Changes
+
+- Pin screenshot and default conformance commands to the tested browser runner so older project-local dependencies cannot intercept them. Preserve custom conformance commands.
+
 ## 0.8.6
 
 ### Patch Changes

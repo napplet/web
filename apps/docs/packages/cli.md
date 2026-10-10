@@ -198,7 +198,7 @@ Decoded icon bytes are hashed and uploaded unchanged alongside the HTML, even wh
 
 ## Screenshots and optional Zapstore metadata
 
-Capture a built napplet without starting a host. The command starts a temporary local Kehto Paja preview, captures its iframe, and closes the preview afterwards. It requires Node.js 20+; the matching Chromium browser is installed automatically on first use. The preview uses Paja’s development identity, fresh browser storage, and live relays, so content may differ from your signed-in shell.
+Capture a built napplet without starting a host. The command starts a temporary local Kehto Paja preview, captures its iframe, and closes the preview afterwards. It requires Node.js 20+; the matching Chromium browser is installed automatically on first use. Screenshot and default conformance commands select the tested `@napplet/conformance-cli@0.3.3` runner explicitly, so an older project-local conformance dependency cannot intercept them. Explicit custom conformance commands remain supported. The preview uses Paja’s development identity, fresh browser storage, and live relays, so content may differ from your signed-in shell.
 
 ```sh
 napplet screenshot --output preview.png
