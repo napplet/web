@@ -15,8 +15,10 @@ doc, or summary — including this repo's own:
   <https://github.com/nostr-protocol/nips/pull/2303>
 - **NAPs track** — every NAP capability domain (`relay`, `storage`, `identity`, …)
   is proposed and defined here: <https://github.com/napplet/naps>
-- **NIP-5A** — the manifest aggregate-hash tag schema NIP-5D adopts (linked from
-  the NIP-5D text above).
+
+NIP-5D defines its own manifest event schema. Read the actual `5D.md` file at the current head of the linked PR (Files changed or its head SHA); the PR description, old comments, and archived planning notes can describe superseded revisions. Do not use NIP-5A's manifest schema or aggregate-hash model for current NIP-5D events. Follow another NIP only for the specific semantics that the current NIP-5D text explicitly references. This paragraph is non-normative navigation guidance; the living specification governs tags and media fields.
+
+Optional Zapstore application metadata is a separate kind 32267 event defined by the [Software Applications proposal](https://github.com/nostr-protocol/nips/pull/1336), not an inherited NIP-5A manifest extension. Keep its URL-based image metadata separate from NIP-5D manifest fields and identity.
 
 Rules, in priority order. These **cannot be violated** — not to make a check
 green, not to call a task "done", not because a sibling file already does it:
@@ -219,7 +221,7 @@ This is the **napplet** monorepo — npm packages for the napplet protocol. Napp
 - `packages/core` — **@napplet/core** — JSON envelope types, NAP dispatch, protocol constants
 - `packages/shim` — **@napplet/shim** — Runtime-side injected `window.napplet` domain installer
 - `packages/sdk` — **@napplet/sdk** — Named exports wrapping window.napplet for bundler consumers
-- `packages/vite-plugin` — **@napplet/vite-plugin** — NIP-5A manifest generation at build time
+- `packages/vite-plugin` — **@napplet/vite-plugin** — NIP-5D manifest generation at build time
 - `packages/nap` — **@napplet/nap** — NAP domain subpaths (`@napplet/nap/relay`, `@napplet/nap/identity`, etc.)
 - `packages/boilerplate` — **@napplet/boilerplate** — Interactive `npx` generator for the `github.com/napplet/boilerplate` template
 - `skills/` — the `napplet-*` agent skills (`SKILL.md` per skill), installed with the skills.sh CLI (`npx skills add napplet/napplet`); not an npm package
@@ -238,8 +240,8 @@ This is the **napplet** monorepo — npm packages for the napplet protocol. Napp
 - **JSON Envelope**: All messages use `{ type: "domain.action", ...payload }` format via postMessage. NIP-5D defines the envelope; NAP specs define message types per domain.
 - **NAPs**: Napplet Unified Blueprints — modular interface specs (relay, identity, storage, inc, theme, keys, media, notify). Each NAP owns a message domain. Shells implement the NAPs they support.
 - **Identity**: Shell identifies napplets via unforgeable `MessageEvent.source` at iframe creation. No handshake needed.
-- **ACL**: Capabilities keyed on `(dTag, aggregateHash)`. Controls signing, storage, relay access.
-- **Storage scoping**: Keys scoped by `dTag:aggregateHash` so different napplet types and versions have isolated storage.
+- **ACL**: Consult current NIP-5D and NAPs for capability identity and authorization. Current manifests use the artifact hash; historical aggregate hashes belong to legacy formats.
+- **Storage scoping**: Follow the current NAP-STORAGE specification for storage identity and isolation.
 - **Sandbox**: `allow-scripts` only — no `allow-same-origin`. Everything is proxied via the shell.
 - **Domain availability**: Runtimes inject only available `window.napplet.<domain>` objects; absence means unavailable.
 
@@ -385,8 +387,7 @@ A portable SDK for the napplet protocol — sandboxed Nostr mini-apps that run i
 - Identity via unforgeable `MessageEvent.source` at iframe creation — no handshake
 - Modular NAP architecture: each NAP owns a message domain (relay, identity, storage, inc, theme, keys, media, notify)
 - Core dispatch: `registerNap(domain, handler)` routes messages by domain prefix
-- ACL keyed on `(dTag, aggregateHash)` for per-napplet capability enforcement
-- Storage scoped by `dTag:aggregateHash` — cross-napplet isolation enforced by shell
+- Capability identity and storage isolation follow current NIP-5D and NAP-STORAGE; historical aggregate-hash descriptions are not current protocol guidance.
 - iframe sandbox: `allow-scripts` only, no `allow-same-origin`
 <!-- GSD:architecture-end -->
 
