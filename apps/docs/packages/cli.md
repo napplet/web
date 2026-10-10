@@ -28,8 +28,7 @@ curl -fsSL https://napplet.run/install.sh | sh
 irm https://napplet.run/install.ps1 | iex
 ```
 
-The installers verify the downloaded asset against the release's
-`SHA256SUMS`. Linux and macOS support x64 and ARM64; Windows supports x64.
+The installers download from the [stable CLI release](https://github.com/napplet/napplet/releases/tag/napplet-cli) and verify the asset against its `SHA256SUMS`. Linux and macOS support x64 and ARM64; Windows supports x64.
 
 ### JSR/Deno alternative
 
