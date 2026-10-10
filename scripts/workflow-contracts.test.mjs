@@ -4,6 +4,20 @@ import test from 'node:test';
 
 const workflow = await readFile(new URL('../.github/workflows/publish-jsr.yml', import.meta.url), 'utf8');
 
+test('JSR publication runs on every main push and supports manual recovery', () => {
+  const triggers = workflow.split('\non:\n')[1]?.split('\nconcurrency:')[0];
+  assert.ok(triggers, 'workflow must declare its triggers');
+  assert.match(triggers, /push:\s*\n\s*branches: \[main\]/);
+  assert.match(triggers, /workflow_dispatch:/);
+  assert.doesNotMatch(triggers, /paths(?:-ignore)?:/);
+  const publishJob = workflow.split('\n  publish-jsr:\n')[1]?.split('\n  build-cli-binaries:')[0];
+  assert.ok(publishJob, 'JSR publication job must exist');
+  assert.doesNotMatch(publishJob, /^\s*if:/m, 'package versions, not workflow conditions, determine publication');
+  assert.doesNotMatch(workflow, /head_commit|Version Packages/);
+  assert.match(workflow, /cancel-in-progress: false/);
+  assert.match(publishJob, /--workspace-concurrency=1/);
+});
+
 test('CLI release compiles every supported standalone target', () => {
   for (const target of [
     'linux-x86_64',
