@@ -91,8 +91,8 @@ test('completion output routes through init, skills, verify, and dry-run deploy'
 });
 
 test('hosted template creation downloads archives without Git and rejects traversal', async () => {
-  assert.equal(templateArchiveUrl('https://github.com/napplet/boilerplate.git'), 'https://api.github.com/repos/napplet/boilerplate/zipball');
-  assert.equal(templateArchiveUrl('https://github.com/napplet/boilerplate/tree/test/ref'), 'https://api.github.com/repos/napplet/boilerplate/zipball/test/ref');
+  assert.equal(templateArchiveUrl('https://github.com/napplet/boilerplate.git'), 'https://codeload.github.com/napplet/boilerplate/zip/HEAD');
+  assert.equal(templateArchiveUrl('https://github.com/napplet/boilerplate/tree/test/ref'), 'https://codeload.github.com/napplet/boilerplate/zip/test/ref');
   const root = await mkdtemp(path.join(os.tmpdir(), 'napplet-archive-test-'));
   const originalFetch = globalThis.fetch;
   try {

@@ -251,8 +251,8 @@ export function templateArchiveUrl(template: string): string {
   if (!['https:', 'http:'].includes(url.protocol) || url.username || url.password) throw new Error('Use a local directory, GitHub HTTPS URL, or HTTP(S) ZIP template');
   if (url.hostname === 'github.com') {
     const parts = url.pathname.replace(/\.git$/, '').split('/').filter(Boolean);
-    if (parts.length === 2) return `https://api.github.com/repos/${parts.join('/')}/zipball`;
-    if (parts.length >= 4 && parts[2] === 'tree') return `https://api.github.com/repos/${parts.slice(0, 2).join('/')}/zipball/${parts.slice(3).join('/')}`;
+    if (parts.length === 2) return `https://codeload.github.com/${parts.join('/')}/zip/HEAD`;
+    if (parts.length >= 4 && parts[2] === 'tree') return `https://codeload.github.com/${parts.slice(0, 2).join('/')}/zip/${parts.slice(3).join('/')}`;
   }
   if (url.pathname.endsWith('.zip')) return url.href;
   throw new Error('Use a local directory, GitHub HTTPS URL, or HTTP(S) ZIP template');

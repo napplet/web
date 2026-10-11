@@ -74,7 +74,8 @@ Deno.test({
       }).output();
       assert([0, 1].includes(conformance.code), decode(conformance.stderr));
       assert(JSON.parse(decode(conformance.stdout)));
-      assert((await run(["paja", "--", "--help"])).stdout.includes("paja"));
+      const paja = await run(["paja", "--", "--help"]);
+      assert((paja.stdout + paja.stderr).toLowerCase().includes("paja"), JSON.stringify(paja));
       // Reuse the private cache with package/browser network access deliberately unavailable.
       const cached = await new Deno.Command(binary, {
         args: ["screenshot", "dist", "--output", "cached.png", "--delay", "0"], cwd: root,

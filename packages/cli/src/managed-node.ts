@@ -80,7 +80,7 @@ export async function ensureManagedNode(): Promise<ManagedNode> {
     env: {
       PATH: `${dirname(executable)}${delimiter}${Deno.env.get("PATH") ?? ""}`,
       npm_config_cache: join(cache, "npm"),
-      PLAYWRIGHT_BROWSERS_PATH: join(cache, "browsers"),
+      PLAYWRIGHT_BROWSERS_PATH: join(cache, "browsers", `${Deno.build.os}-${Deno.build.arch}`),
     },
   };
 }
@@ -97,7 +97,7 @@ export async function managedPackageCommand(spec: string, entry: string): Promis
   const name = spec.slice(0, spec.lastIndexOf("@"));
   const cache = toolCacheDir();
   const browserTool = name === "@napplet/conformance-cli";
-  const destination = join(cache, "packages", `${spec.replace(/[^a-z0-9.-]/gi, "_")}-v4`);
+  const destination = join(cache, "packages", `${spec.replace(/[^a-z0-9.-]/gi, "_")}-${Deno.build.os}-${Deno.build.arch}-v1`);
   const script = join(destination, "node_modules", name, entry);
   if (!await cacheFileExists(join(destination, ".ready"))) {
     console.error(`Installing private CLI tool ${spec}...`);
