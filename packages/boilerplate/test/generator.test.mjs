@@ -91,14 +91,21 @@ test('completion output routes through init, skills, verify, and dry-run deploy'
 });
 
 test('hosted template creation downloads archives without Git and rejects traversal', async () => {
-  assert.equal(templateArchiveUrl('https://github.com/napplet/boilerplate.git'), 'https://codeload.github.com/napplet/boilerplate/zip/HEAD');
-  assert.equal(templateArchiveUrl('https://github.com/napplet/boilerplate/tree/test/ref'), 'https://codeload.github.com/napplet/boilerplate/zip/test/ref');
+  assert.equal(templateArchiveUrl('https://github.com/napplet/boilerplate.git'), 'https://api.github.com/repos/napplet/boilerplate/zipball');
+  assert.equal(templateArchiveUrl('https://github.com/napplet/boilerplate/tree/test/ref'), 'https://api.github.com/repos/napplet/boilerplate/zipball/test/ref');
   const root = await mkdtemp(path.join(os.tmpdir(), 'napplet-archive-test-'));
   const originalFetch = globalThis.fetch;
   try {
     globalThis.fetch = async () => new Response(zipSync({ 'template/package.json': new TextEncoder().encode('{"name":"template"}') }));
     await generate({ targetDir: path.join(root, 'created'), template: 'https://example.org/template.zip', packageName: 'created', variant: 'basic', force: false });
     assert.equal(JSON.parse(await readFile(path.join(root, 'created', 'package.json'), 'utf8')).name, 'created');
+    const urls = [];
+    globalThis.fetch = async (url) => {
+      urls.push(url);
+      return urls.length === 1 ? new Response(null, { status: 403 }) : new Response(zipSync({ 'template/package.json': new TextEncoder().encode('{"name":"template"}') }));
+    };
+    await generate({ targetDir: path.join(root, 'fallback'), template: 'https://github.com/napplet/boilerplate/tree/test/ref', packageName: 'fallback', variant: 'basic', force: false });
+    assert.deepEqual(urls, ['https://api.github.com/repos/napplet/boilerplate/zipball/test/ref', 'https://codeload.github.com/napplet/boilerplate/zip/test/ref']);
     globalThis.fetch = async () => new Response(zipSync({ '../escaped.txt': new TextEncoder().encode('escape') }));
     await assert.rejects(generate({ targetDir: path.join(root, 'invalid'), template: 'https://example.org/template.zip', packageName: 'invalid', variant: 'basic', force: false }), /Unsafe template archive/);
   } finally {

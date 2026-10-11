@@ -224,7 +224,14 @@ async function materializeTemplate(template: string, tmpRoot: string): Promise<s
   }
 
   const archive = templateArchiveUrl(template);
-  const response = await fetch(archive, { signal: AbortSignal.timeout(60000) });
+  let response = await fetch(archive, { signal: AbortSignal.timeout(60000) });
+  if ([403, 429].includes(response.status) && archive.startsWith('https://api.github.com/repos/')) {
+    await response.body?.cancel();
+    const parts = new URL(archive).pathname.split('/').filter(Boolean);
+    const repository = parts.slice(1, 3).join('/');
+    const ref = parts.slice(4).join('/') || 'HEAD';
+    response = await fetch(`https://codeload.github.com/${repository}/zip/${ref}`, { signal: AbortSignal.timeout(60000) });
+  }
   if (!response.ok) throw new Error(`Template download failed: HTTP ${response.status}`);
   const files = unzipSync(new Uint8Array(await response.arrayBuffer()));
   const templateDir = path.join(tmpRoot, 'template');
@@ -251,8 +258,8 @@ export function templateArchiveUrl(template: string): string {
   if (!['https:', 'http:'].includes(url.protocol) || url.username || url.password) throw new Error('Use a local directory, GitHub HTTPS URL, or HTTP(S) ZIP template');
   if (url.hostname === 'github.com') {
     const parts = url.pathname.replace(/\.git$/, '').split('/').filter(Boolean);
-    if (parts.length === 2) return `https://codeload.github.com/${parts.join('/')}/zip/HEAD`;
-    if (parts.length >= 4 && parts[2] === 'tree') return `https://codeload.github.com/${parts.slice(0, 2).join('/')}/zip/${parts.slice(3).join('/')}`;
+    if (parts.length === 2) return `https://api.github.com/repos/${parts.join('/')}/zipball`;
+    if (parts.length >= 4 && parts[2] === 'tree') return `https://api.github.com/repos/${parts.slice(0, 2).join('/')}/zipball/${parts.slice(3).join('/')}`;
   }
   if (url.pathname.endsWith('.zip')) return url.href;
   throw new Error('Use a local directory, GitHub HTTPS URL, or HTTP(S) ZIP template');
