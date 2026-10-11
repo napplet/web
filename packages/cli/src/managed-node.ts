@@ -97,6 +97,8 @@ export async function managedPackageCommand(spec: string, entry: string): Promis
   const name = spec.slice(0, spec.lastIndexOf("@"));
   const cache = toolCacheDir();
   const browserTool = name === "@napplet/conformance-cli";
+  const launcherName = browserTool ? "browser-cli.mjs" : name === "@kehto/cli" ? "paja-cli.mjs" : undefined;
+  const launcherSource = browserTool ? BROWSER_LAUNCHER : PAJA_LAUNCHER;
   const destination = join(cache, "packages", `${spec.replace(/[^a-z0-9.-]/gi, "_")}-${Deno.build.os}-${Deno.build.arch}-v1`);
   const script = join(destination, "node_modules", name, entry);
   if (!await cacheFileExists(join(destination, ".ready"))) {
@@ -123,24 +125,32 @@ export async function managedPackageCommand(spec: string, entry: string): Promis
         await verifyToolDownload(bytes, arch === "arm64" ? "b6874fc0d7af15e16a15ef1b73177731f698c296c73d26aa4a90840c0777a338" : "91b9f56d35a2cbb14279a1cbdaf1c86c0faa5fd82315bdd7334ff93bf35f224d");
         await extractToolArchive(bytes, "tar", join(staging, "chromium-pack"));
       }
-      if (browserTool) await Deno.writeTextFile(join(staging, "browser-cli.mjs"), BROWSER_LAUNCHER);
+      if (launcherName) await Deno.writeTextFile(join(staging, launcherName), launcherSource);
       await Deno.writeTextFile(join(staging, ".ready"), spec);
       try { await Deno.rename(staging, destination); }
       catch (error) { if (!await cacheFileExists(join(destination, ".ready"))) throw error; }
     } finally { await Deno.remove(staging, { recursive: true }).catch((error) => { if (!(error instanceof Deno.errors.NotFound)) throw error; }); }
   }
-  if (browserTool) {
-    const launcher = join(destination, "browser-cli.mjs");
-    if (await Deno.readTextFile(launcher) !== BROWSER_LAUNCHER) {
+  if (launcherName) {
+    const launcher = join(destination, launcherName);
+    if (!await cacheFileExists(launcher) || await Deno.readTextFile(launcher) !== launcherSource) {
       const staging = await Deno.makeTempFile({ dir: destination, prefix: "launcher-" });
       try {
-        await Deno.writeTextFile(staging, BROWSER_LAUNCHER);
+        await Deno.writeTextFile(staging, launcherSource);
         await Deno.rename(staging, launcher);
       } finally { await Deno.remove(staging).catch((error) => { if (!(error instanceof Deno.errors.NotFound)) throw error; }); }
     }
   }
-  return { command: node.executable, args: browserTool ? [join(destination, "browser-cli.mjs"), script] : [script], env: node.env };
+  return { command: node.executable, args: launcherName ? [join(destination, launcherName), script] : [script], env: node.env };
 }
+
+// Kehto's direct-entry guard uses POSIX path suffixes; call its exported CLI on every OS.
+const PAJA_LAUNCHER = `
+const { pathToFileURL } = await import('node:url');
+const script = process.argv.splice(2, 1)[0];
+const { runKehtoCli } = await import(pathToFileURL(script).href);
+process.exitCode = await runKehtoCli(process.argv.slice(2));
+`;
 
 // Adapt only the private tool copy; maintained capture/check logic remains authoritative.
 const BROWSER_LAUNCHER = `
