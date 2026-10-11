@@ -276,10 +276,15 @@ Deno.test("screenshot runner pins a compatible version and preserves literal arg
         return Promise.resolve({ code: 0, stdout: "", stderr: "" });
       },
       os: "windows",
+      resolvePackage: async (spec, entry) => {
+        assertEquals(spec, "@napplet/conformance-cli@0.3.3");
+        assertEquals(entry, "dist/cli.js");
+        return { command: "C:/private/node.exe", args: ["C:/private/screenshot.js"] };
+      },
     }),
     0,
   );
-  assertEquals(received, ["npx.cmd", "--yes", "@napplet/conformance-cli@0.3.3", "screenshot", ...args]);
+  assertEquals(received, ["C:/private/node.exe", "C:/private/screenshot.js", "screenshot", ...args]);
 });
 
 for (const automatic of [false, true]) {

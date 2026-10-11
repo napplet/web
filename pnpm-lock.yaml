@@ -94,6 +94,10 @@ importers:
         version: 6.4.3(@types/node@22.19.15)(jiti@2.6.1)(yaml@2.9.1)
 
   packages/boilerplate:
+    dependencies:
+      fflate:
+        specifier: 0.8.2
+        version: 0.8.2
     devDependencies:
       '@types/node':
         specifier: ^22.15.0
@@ -119,6 +123,9 @@ importers:
       applesauce-signers:
         specifier: ^5.2.0
         version: 5.2.0(@capacitor/core@7.6.7)(typescript@5.9.3)
+      fflate:
+        specifier: 0.8.2
+        version: 0.8.2
       nostr-tools:
         specifier: ^2.23.3
         version: 2.23.3(typescript@5.9.3)
@@ -1498,6 +1505,9 @@ packages:
     peerDependenciesMeta:
       picomatch:
         optional: true
+
+  fflate@0.8.2:
+    resolution: {integrity: sha512-cPJU47OaAoCbg0pBvzsgpTPhmhqI5eJjh/JIu8tPj5q+T7iLvW/JAYUqmE7KOB4R1ZyEhzBaIQpQpardBF5z8A==}
 
   fix-dts-default-cjs-exports@1.0.1:
     resolution: {integrity: sha512-pVIECanWFC61Hzl2+oOCtoJ3F17kglZC/6N94eRWycFgBH35hHx0Li604ZIzhseh97mf2p0cv7vVrOZGoqhlEg==}
@@ -3229,6 +3239,8 @@ snapshots:
   fdir@6.5.0(picomatch@4.0.7):
     optionalDependencies:
       picomatch: 4.0.7
+
+  fflate@0.8.2: {}
 
   fix-dts-default-cjs-exports@1.0.1:
     dependencies:

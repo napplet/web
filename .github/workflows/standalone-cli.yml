@@ -1,0 +1,36 @@
+name: Standalone CLI
+
+on:
+  pull_request:
+    paths:
+      - 'packages/cli/**'
+      - 'packages/boilerplate/**'
+      - 'deno.*'
+      - '.github/workflows/standalone-cli.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'packages/cli/**'
+      - 'packages/boilerplate/**'
+      - 'deno.*'
+      - '.github/workflows/standalone-cli.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    name: No host tools (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm, macos-latest, macos-15-intel, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+      - name: Compile and exercise commands with empty PATH and a fresh cache
+        run: deno test -A packages/cli/tests/standalone_integration_test.ts
+        env:
+          NAPPLET_TEST_STANDALONE: '1'

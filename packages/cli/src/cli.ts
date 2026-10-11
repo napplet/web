@@ -39,6 +39,8 @@ import type { DeploySelection, NappletConfig } from "./types.ts";
 import cliMetadata from "../deno.json" with { type: "json" };
 import { linkZapstoreApplication, prepareZapstorePublication } from "./zapstore.ts";
 import { captureDeployScreenshot } from "./deploy-screenshot.ts";
+import { managedPackageCommand } from "./managed-node.ts";
+import type { ResolvedCommand } from "./package-runner.ts";
 
 import { runPackageCli, resolveConformanceCommand, resolvePajaArgs } from "./package-runner.ts";
 export { runPackageCli, resolveConformanceCommand, resolvePajaArgs } from "./package-runner.ts";
@@ -385,10 +387,10 @@ async function commandConformance(argv: string[]): Promise<number> {
   const flags = collectFlags(argv);
   const config = await loadConfig(flags);
   const candidates = await discoverNapplets(config, { traverse: flags.boolean.has("all") });
-  const base = resolveConformanceCommand(config.conformance?.command);
+  const base = await resolveConformanceCommand(config.conformance?.command);
   const passthrough = flags.afterDoubleDash;
   for (const candidate of candidates) {
-    const result = await runCommand(base.command, [...base.args, candidate.dir, ...passthrough]);
+    const result = await runCommand(base.command, [...base.args, candidate.dir, ...passthrough], { env: base.env });
     Deno.stdout.writeSync(new TextEncoder().encode(result.stdout));
     Deno.stderr.writeSync(new TextEncoder().encode(result.stderr));
     if (result.code !== 0) return result.code;
@@ -399,15 +401,15 @@ async function commandConformance(argv: string[]): Promise<number> {
 async function commandPaja(argv: string[]): Promise<number> {
   const flags = collectFlags(argv);
   const config = await loadConfig(flags);
-  const base = splitCommand(config.paja?.command ?? "kehto");
-  const result = await runCommand(base.command, [
-    ...base.args,
-    "paja",
-    ...resolvePajaArgs(flags.afterDoubleDash),
-  ]);
-  Deno.stdout.writeSync(new TextEncoder().encode(result.stdout));
-  Deno.stderr.writeSync(new TextEncoder().encode(result.stderr));
-  return result.code;
+  const configured = config.paja?.command?.trim();
+  const base: ResolvedCommand = !configured || configured === "kehto"
+    ? await managedPackageCommand("@kehto/cli@0.5.4", "dist/index.js")
+    : splitCommand(configured);
+  const child = new Deno.Command(base.command, {
+    args: [...base.args, "paja", ...resolvePajaArgs(flags.afterDoubleDash)],
+    env: base.env, stdin: "inherit", stdout: "inherit", stderr: "inherit",
+  }).spawn();
+  return (await child.status).code;
 }
 
 async function loadConfig(flags: FlagBag): Promise<NappletConfig> {

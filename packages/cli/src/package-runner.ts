@@ -1,7 +1,7 @@
 /** Maintained package CLI adapters and argument normalization. */
 import { type CommandRunner, runCommand, splitCommand } from "./process.ts";
+import { managedPackageCommand } from "./managed-node.ts";
 
-// Pin the CLI contract: unversioned npx may select an incompatible local dependency.
 const CONFORMANCE_PACKAGE = "@napplet/conformance-cli@0.3.3";
 
 /** Process and output adapters used to invoke a maintained package CLI. */
@@ -10,6 +10,7 @@ export interface PackageCliRunOptions {
   writeStdout?: (value: string) => void;
   writeStderr?: (value: string) => void;
   os?: typeof Deno.build.os;
+  resolvePackage?: typeof managedPackageCommand;
 }
 
 /**
@@ -25,21 +26,12 @@ export async function runPackageCli(
   args: readonly string[],
   options: PackageCliRunOptions = {},
 ): Promise<number> {
-  const executable = (options.os ?? Deno.build.os) === "windows" ? "npx.cmd" : "npx";
-  let result;
-  try {
-    const commandArgs = packageName === "@napplet/conformance-cli"
-      ? ["--yes", CONFORMANCE_PACKAGE, "screenshot", ...args]
-      : ["--yes", packageName, ...args];
-    result = await (options.runner ?? runCommand)(executable, commandArgs);
-  } catch (error) {
-    if (error instanceof Deno.errors.NotFound) {
-      throw new Error(
-        `Cannot run ${packageName}: install Node.js 20+ so the bundled npm package runner is available.`,
-      );
-    }
-    throw error;
-  }
+  const conformance = packageName === "@napplet/conformance-cli";
+  const base = await (options.resolvePackage ?? managedPackageCommand)(
+    conformance ? CONFORMANCE_PACKAGE : "@napplet/boilerplate@0.4.0", conformance ? "dist/cli.js" : "dist/index.js",
+  );
+  const result = await (options.runner ?? runCommand)(base.command,
+    [...base.args, ...(conformance ? ["screenshot"] : []), ...args], { env: base.env });
   if (result.stdout) (options.writeStdout ?? console.log)(result.stdout.replace(/\n$/, ""));
   if (result.stderr) (options.writeStderr ?? console.error)(result.stderr.replace(/\n$/, ""));
   return result.code;
@@ -48,19 +40,18 @@ export async function runPackageCli(
 export interface ResolvedCommand {
   command: string;
   args: string[];
+  env?: Record<string, string>;
 }
 
-/** Resolve the default conformance runner through npm instead of requiring a global binary. */
-export function resolveConformanceCommand(
+/** Resolve default conformance through private tooling; preserve explicit custom runners. */
+export async function resolveConformanceCommand(
   configuredCommand: string | undefined,
   os: typeof Deno.build.os = Deno.build.os,
-): ResolvedCommand {
+  resolvePackage = managedPackageCommand,
+): Promise<ResolvedCommand> {
   const command = configuredCommand?.trim() || "napplet-conformance";
   if (command === "napplet-conformance") {
-    return {
-      command: os === "windows" ? "npx.cmd" : "npx",
-      args: ["--yes", CONFORMANCE_PACKAGE],
-    };
+    return await resolvePackage(CONFORMANCE_PACKAGE, "dist/cli.js");
   }
   return splitCommand(command);
 }

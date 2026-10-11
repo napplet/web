@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { spawn } from 'node:child_process';
+import { unzipSync } from 'fflate';
 import { createInterface } from 'node:readline/promises';
 import { stdin as input, stdout as output } from 'node:process';
 import * as fs from 'node:fs/promises';
@@ -223,9 +223,39 @@ async function materializeTemplate(template: string, tmpRoot: string): Promise<s
     return localPath;
   }
 
-  const cloneDir = path.join(tmpRoot, 'template');
-  await run('git', ['clone', '--depth', '1', template, cloneDir]);
-  return cloneDir;
+  const archive = templateArchiveUrl(template);
+  const response = await fetch(archive, { signal: AbortSignal.timeout(60000) });
+  if (!response.ok) throw new Error(`Template download failed: HTTP ${response.status}`);
+  const files = unzipSync(new Uint8Array(await response.arrayBuffer()));
+  const templateDir = path.join(tmpRoot, 'template');
+  await fs.mkdir(templateDir);
+  for (const [name, bytes] of Object.entries(files)) {
+    if (name.includes('\\') || name.includes(':') || name.startsWith('/') || name.split('/').includes('..')) throw new Error('Unsafe template archive path');
+    const relative = name.split('/').slice(1).filter(Boolean);
+    if (!relative.length || name.endsWith('/')) continue;
+    const target = path.join(templateDir, ...relative);
+    await fs.mkdir(path.dirname(target), { recursive: true });
+    await fs.writeFile(target, bytes, { flag: 'wx' });
+  }
+  return templateDir;
+}
+
+/**
+ * Resolve hosted templates to ZIP downloads without a Git executable.
+ * @param template GitHub clone URL or HTTP(S) ZIP archive URL.
+ * @returns Archive download URL.
+ * @example templateArchiveUrl('https://github.com/napplet/boilerplate.git')
+ */
+export function templateArchiveUrl(template: string): string {
+  const url = new URL(template);
+  if (!['https:', 'http:'].includes(url.protocol) || url.username || url.password) throw new Error('Use a local directory, GitHub HTTPS URL, or HTTP(S) ZIP template');
+  if (url.hostname === 'github.com') {
+    const parts = url.pathname.replace(/\.git$/, '').split('/').filter(Boolean);
+    if (parts.length === 2) return `https://api.github.com/repos/${parts.join('/')}/zipball`;
+    if (parts.length >= 4 && parts[2] === 'tree') return `https://api.github.com/repos/${parts.slice(0, 2).join('/')}/zipball/${parts.slice(3).join('/')}`;
+  }
+  if (url.pathname.endsWith('.zip')) return url.href;
+  throw new Error('Use a local directory, GitHub HTTPS URL, or HTTP(S) ZIP template');
 }
 
 async function copyTemplate(sourceDir: string, targetDir: string): Promise<void> {
@@ -260,26 +290,6 @@ async function applyTemplateData(config: GeneratorConfig): Promise<void> {
 
 }
 
-async function run(command: string, args: string[]): Promise<void> {
-  await new Promise<void>((resolve, reject) => {
-    const child = spawn(command, args, {
-      stdio: ['ignore', 'pipe', 'pipe'],
-    });
-    let stderr = '';
-    child.stderr.on('data', (chunk: Uint8Array) => {
-      stderr += chunk.toString();
-    });
-    child.on('error', reject);
-    child.on('close', (code) => {
-      if (code === 0) {
-        resolve();
-        return;
-      }
-      reject(new Error(`${command} ${args.join(' ')} failed: ${stderr.trim()}`));
-    });
-  });
-}
-
 async function pathExists(filePath: string): Promise<boolean> {
   try {
     await fs.access(filePath);
@@ -296,7 +306,7 @@ function normalizeTemplateSource(source: string): string {
   if (source === 'github.com/napplet/boilerplate') {
     return DEFAULT_TEMPLATE_URL;
   }
-  if (source.startsWith('https://github.com/') && !source.endsWith('.git')) {
+  if (/^https:\/\/github\.com\/[^/]+\/[^/]+\/?$/.test(source) && !source.endsWith('.git')) {
     return `${source}.git`;
   }
   return source;
