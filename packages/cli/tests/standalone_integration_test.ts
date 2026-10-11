@@ -1,5 +1,5 @@
 /** Opt-in black-box proof using the compiled binary and an empty host-tool PATH. */
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { assert, assertEquals, withTempDir } from "./assert.ts";
 
 const decode = (bytes: Uint8Array) => new TextDecoder().decode(bytes);
@@ -9,7 +9,8 @@ Deno.test({
   ignore: Deno.env.get("NAPPLET_TEST_STANDALONE") !== "1",
   fn: async () => {
     await withTempDir(async (root) => {
-      const binary = Deno.env.get("NAPPLET_TEST_BINARY") ?? join(root, Deno.build.os === "windows" ? "napplet.exe" : "napplet");
+      const providedBinary = Deno.env.get("NAPPLET_TEST_BINARY");
+      const binary = providedBinary ? resolve(providedBinary) : join(root, Deno.build.os === "windows" ? "napplet.exe" : "napplet");
       if (!Deno.env.get("NAPPLET_TEST_BINARY")) {
         const compile = await new Deno.Command(Deno.execPath(), {
           args: ["compile", "--no-check", "--node-modules-dir=none", "--allow-read", "--allow-write", "--allow-run", "--allow-env", "--allow-net", "--output", binary, "src/standalone.ts"],

@@ -444,5 +444,5 @@ The listing uses kind `32267` from the [Software Applications proposal](https://
 The opt-in integration test compiles the release entrypoint and runs with an empty host-tool PATH and a fresh private cache. It exercises hosted template creation, configuration, discovery, debug, key storage, screenshots, inline deploy capture, default conformance, Paja, and cached browser reuse. It needs network access on first use; no host runtime is available to the tested binary.
 
 ```sh
-NAPPLET_TEST_STANDALONE=1 deno test -A packages/cli/tests/standalone_integration_test.ts
+NAPPLET_TEST_STANDALONE=1 deno test --node-modules-dir=none -A packages/cli/tests/standalone_integration_test.ts
 ```
