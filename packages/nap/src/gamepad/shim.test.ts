@@ -24,10 +24,11 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals());
 
 describe('NAP-GAMEPAD cached binding', () => {
-  it('starts neutral and subscribes once with no correlation id', async () => {
+  it('starts neutral and subscribes once, on first use, with no correlation id', async () => {
     const shim = await import('./shim.js');
     const cleanup = shim.installGamepadShim();
     const duplicate = shim.installGamepadShim();
+    expect(post).not.toHaveBeenCalled();
     expect(shim.gamepad.available).toBe(true);
     expect(shim.gamepad.focused).toBe(false);
     expect(shim.getGamepads()).toEqual([]);
@@ -83,6 +84,13 @@ describe('NAP-GAMEPAD cached binding', () => {
     shim.handleGamepadMessage({ type: 'gamepad.state', ...neutral });
     expect(handler).toHaveBeenCalledTimes(2);
     third.close();
+  });
+
+  it('sends nothing when installed and cleaned up without use', async () => {
+    const shim = await import('./shim.js');
+    const cleanup = shim.installGamepadShim();
+    cleanup();
+    expect(post).not.toHaveBeenCalled();
   });
 
   it('keeps delivering to later listeners when one throws', async () => {

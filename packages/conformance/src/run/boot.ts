@@ -112,6 +112,14 @@ export function runtimePrelude(domains: readonly string[]): string {
   const gamepadTools = ${GAMEPAD_STATE_TOOLS_SOURCE};
   let gamepadState = { available: true, focused: false, pads: [] };
   const gamepadHandlers = new Set();
+  // Subscribe on first use, like the nap binding, so napplets that never touch
+  // gamepad emit no gamepad traffic for checks to attribute to them.
+  let gamepadSubscribed = false;
+  const gamepadSubscribe = () => {
+    if (gamepadSubscribed) return;
+    gamepadSubscribed = true;
+    window.parent.postMessage({ type: 'gamepad.subscribe' }, '*');
+  };
   const pending = new Map();
   let seq = 0;
   const nextId = () => {
@@ -133,7 +141,7 @@ export function runtimePrelude(domains: readonly string[]): string {
   window.addEventListener('message', (event) => {
     if (event.source !== window.parent) return;
     const msg = event.data;
-    if (napplet.gamepad && msg && msg.type === 'gamepad.state' && !('id' in msg) && gamepadTools.isGamepadState(msg)) {
+    if (gamepadSubscribed && msg && msg.type === 'gamepad.state' && !('id' in msg) && gamepadTools.isGamepadState(msg)) {
       gamepadState = gamepadTools.copyGamepadState(msg);
       const recipients = Array.from(gamepadHandlers);
       for (const entry of recipients) {
@@ -157,12 +165,13 @@ export function runtimePrelude(domains: readonly string[]): string {
   });
   if (napplet.gamepad) {
     napplet.gamepad = {
-      get available() { return gamepadState.available; },
-      get focused() { return gamepadState.focused; },
-      getGamepads() { return gamepadTools.copyGamepadState(gamepadState).pads; },
+      get available() { gamepadSubscribe(); return gamepadState.available; },
+      get focused() { gamepadSubscribe(); return gamepadState.focused; },
+      getGamepads() { gamepadSubscribe(); return gamepadTools.copyGamepadState(gamepadState).pads; },
       onChange(handler) {
         const entry = { handler };
         gamepadHandlers.add(entry);
+        gamepadSubscribe();
         return { close() { gamepadHandlers.delete(entry); } };
       },
     };
@@ -200,7 +209,6 @@ export function runtimePrelude(domains: readonly string[]): string {
     };
   }
   window.napplet = napplet;
-  if (napplet.gamepad) window.parent.postMessage({ type: 'gamepad.subscribe' }, '*');
   const report = (reason) => {
     try {
       window.parent.postMessage({ type: '${INTERNAL_BOOT_ERROR}', reason: String(reason && reason.message || reason) }, '*');

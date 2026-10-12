@@ -12,6 +12,7 @@ describe('serialized GAMEPAD conformance binding', () => {
     try {
       Function(runtimePrelude(['gamepad']))();
       const api = (window as unknown as { napplet: { gamepad: GamepadApi } }).napplet.gamepad;
+      expect(post).not.toHaveBeenCalled();
       expect(api.available).toBe(true);
       expect(api.focused).toBe(false);
       expect(api.getGamepads()).toEqual([]);
