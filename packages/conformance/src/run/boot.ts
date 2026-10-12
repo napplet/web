@@ -14,7 +14,6 @@
  * @packageDocumentation
  */
 
-import { createGamepadStateTools } from '@napplet/nap/gamepad';
 import { NAP_DOMAINS } from '@napplet/core';
 import { createReferenceShell, type RecordedEnvelope } from '../shell/reference-shell.js';
 import type { BootObservation } from './context.js';
@@ -69,13 +68,48 @@ function escapeHtmlAttr(value: string): string {
     .replace(/>/g, '&gt;');
 }
 
+/**
+ * NAP-GAMEPAD snapshot validation and copying, written as literal browser source.
+ * The prelude must not embed `Function.prototype.toString()` output: bundler and
+ * coverage transforms can add helper references that do not exist in the iframe.
+ * `gamepad.test.ts` keeps this source equivalent to `@napplet/nap/gamepad`.
+ */
+export const GAMEPAD_STATE_TOOLS_SOURCE = `(() => {
+  const record = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
+  const numberIn = (value, min, max) => typeof value === 'number' && Number.isFinite(value) && value >= min && value <= max;
+  const isGamepadState = (value) => {
+    if (!record(value) || typeof value.available !== 'boolean' || typeof value.focused !== 'boolean' || !Array.isArray(value.pads)) return false;
+    if (value.available) {
+      if (value.reason !== undefined) return false;
+    } else if (value.focused || (value.reason !== 'blocked' && value.reason !== 'unavailable')) return false;
+    return Array.from(value.pads).every((pad) => {
+      if (pad === null) return true;
+      if (!record(pad) || !Number.isInteger(pad.index) || pad.index < 0 || typeof pad.id !== 'string' || typeof pad.mapping !== 'string' || pad.connected !== true) return false;
+      if (typeof pad.timestamp !== 'number' || !Number.isFinite(pad.timestamp) || !Array.isArray(pad.axes) || !Array.isArray(pad.buttons)) return false;
+      if (!value.focused && pad.timestamp !== 0) return false;
+      if (!Array.from(pad.axes).every((axis) => numberIn(axis, -1, 1) && (value.focused || axis === 0))) return false;
+      return Array.from(pad.buttons).every((button) => record(button) && numberIn(button.value, 0, 1) && typeof button.pressed === 'boolean' && typeof button.touched === 'boolean' && (value.focused || (button.value === 0 && !button.pressed && !button.touched)));
+    });
+  };
+  const copyGamepadState = (state) => {
+    const copy = { available: state.available, focused: state.focused };
+    if (state.reason !== undefined) copy.reason = state.reason;
+    copy.pads = state.pads.map((pad) => pad === null ? null : {
+      index: pad.index, id: pad.id, mapping: pad.mapping, connected: pad.connected,
+      timestamp: pad.timestamp, axes: pad.axes.slice(), buttons: pad.buttons.map((button) => ({ value: button.value, pressed: button.pressed, touched: button.touched })),
+    });
+    return copy;
+  };
+  return { isGamepadState, copyGamepadState };
+})()`;
+
 export function runtimePrelude(domains: readonly string[]): string {
   return `
 (() => {
   const domains = ${JSON.stringify(domains)};
   const napplet = {};
   for (const domain of domains) napplet[domain] = {};
-  const gamepadTools = (${createGamepadStateTools.toString()})();
+  const gamepadTools = ${GAMEPAD_STATE_TOOLS_SOURCE};
   let gamepadState = { available: true, focused: false, pads: [] };
   const gamepadHandlers = new Set();
   const pending = new Map();
@@ -102,7 +136,11 @@ export function runtimePrelude(domains: readonly string[]): string {
     if (napplet.gamepad && msg && msg.type === 'gamepad.state' && !('id' in msg) && gamepadTools.isGamepadState(msg)) {
       gamepadState = gamepadTools.copyGamepadState(msg);
       const recipients = Array.from(gamepadHandlers);
-      for (const entry of recipients) if (gamepadHandlers.has(entry)) entry.handler(gamepadTools.copyGamepadState(gamepadState));
+      for (const entry of recipients) {
+        if (!gamepadHandlers.has(entry)) continue;
+        try { entry.handler(gamepadTools.copyGamepadState(gamepadState)); }
+        catch (error) { queueMicrotask(() => { throw error; }); }
+      }
       return;
     }
     if (!msg || typeof msg !== 'object' || typeof msg.id !== 'string') return;
