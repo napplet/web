@@ -1,21 +1,19 @@
 ---
 gsd_state_version: "1.0"
 milestone: v0.34.0
-milestone_name: NIP-5D Runtime Injection (Phases 156-161) — IN PROGRESS
+milestone_name: NIP-5D Runtime Injection
 current_phase: 162
 current_phase_name: nip-5d-event-schema-migration
-status: complete
-stopped_at: "Phase 162 verified; draft PR #224 open with hzrd149 requested"
+status: blocked
+stopped_at: "Quick 261012-jnp integration CI verified; NAP-RESOURCE migration scope decision required"
 last_updated: "2026-10-12T19:31:30.852Z"
-last_activity: 2026-10-09
-last_activity_desc: "Completed NIP-5D event schema migration; draft PR #224"
+last_activity: 2026-10-12
+last_activity_desc: "Quick 261012-jnp: main merged and CI green; incomplete due to existing NAP-RESOURCE wire drift"
 state_head: 34bd9b909418a675486254f298dda06aa99f2dcf
 progress:
-  total_phases: 8
-  completed_phases: 1
-  total_plans: 16
-  completed_plans: 6
-  percent: 13
+  total_plans: 3
+  completed_plans: 3
+  percent: 100
 ---
 
 # Project State
@@ -574,7 +572,7 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 
 - CARRIED: npm publish blocked on human npm auth (PUB-04)
 - INFO: Local `specs/NIP-5D.md` may be stale vs napplet/nubs master post-PR-15 (`window.nostr` removal merged 2026-04-21). Phase 138 NIP5D-01 syncs before layering v0.29.0 amendment
-- INFO: `world: 'MAIN'` extension-API bypass acknowledged as residual — no page-side blocking mechanism exists. NUB-CLASS-1 `connect-src ''` is the structural mitigation. Phase 136 artifact MUST document this honestly; Phase 137 amendment + Phase 138 NIP-5D amendment MUST NOT claim a fix
+- INFO: `world: 'MAIN'` extension-API bypass acknowledged as residual — no page-side blocking mechanism exists. NUB-CLASS-1 `connect-src 'none'` is the structural mitigation. Phase 136 artifact MUST document this honestly; Phase 137 amendment + Phase 138 NIP-5D amendment MUST NOT claim a fix
 - Quick 261012-jnp: current NAP-RESOURCE requires urls/base64 wire bytes; existing SDK uses requests/Blob on both lineages. Breaking SDK/NAP/conformance migration requires explicit scope decision; merge CI is green but protocol completeness not claimed.
 
 ### Quick Tasks Completed

@@ -89,6 +89,7 @@ Fresh targeted failures were recorded before editing these additional paths:
 - Fresh subsequent failures in `publishing-metadata.test.ts` and Zapstore tests exposed empty asset directories and URL-canonicalization mismatch. In the already-conflicted production files, remove empty directories after a verified commit without allowing best-effort cleanup to trigger data-loss rollback; compare the advertised media destination as a canonical URL.
 - `.changeset/current-schema-optimizer-integration.md`: patch release metadata for the changed Vite plugin and CLI shipped behavior. No local publishing was run.
 - Deno formatting was restored for the seven edited CLI source/test files; no formatter or scan rule was disabled.
+- Task-artifact commit `23be5409` records the summary, additive state and defect ledger. Post-commit review found the SDK `state.add-blocker` also recalculated unrelated phase counters/milestone text and stripped the word `none` from a historical CSP record. A dedicated docs-only correction restores that provenance/counter context, retaining only the new blocker and honest current quick-task activity. No source behavior changes in that correction.
 
 The independently executed current fixture reports initial HTML **76,897,014 bytes**, final HTML **25,698 bytes**, seven private mappings, exact recovery of every resource, and direct artifact hash `1d957180c709b4a0ff299fb4629eb2d5c32fe7784a842c23f1cb3447b8271d41`.
 
