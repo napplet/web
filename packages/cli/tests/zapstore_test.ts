@@ -277,7 +277,7 @@ Deno.test("screenshot runner pins a compatible version and preserves literal arg
       },
       os: "windows",
       resolvePackage: async (spec, entry) => {
-        assertEquals(spec, "@napplet/conformance-cli@0.3.3");
+        assertEquals(spec, "@napplet/conformance-cli@0.3.4");
         assertEquals(entry, "dist/cli.js");
         return { command: "C:/private/node.exe", args: ["C:/private/screenshot.js"] };
       },
