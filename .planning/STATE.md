@@ -1,18 +1,21 @@
 ---
-gsd_state_version: 1.0
+gsd_state_version: "1.0"
 milestone: v0.34.0
-milestone_name: NIP-5D Runtime Injection
+milestone_name: NIP-5D Runtime Injection (Phases 156-161) — IN PROGRESS
 current_phase: 162
 current_phase_name: nip-5d-event-schema-migration
 status: complete
 stopped_at: "Phase 162 verified; draft PR #224 open with hzrd149 requested"
-last_updated: "2026-10-04T19:00:16.967369+00:00"
-last_activity: 2026-10-04
+last_updated: "2026-10-12T19:31:30.852Z"
+last_activity: 2026-10-09
 last_activity_desc: "Completed NIP-5D event schema migration; draft PR #224"
+state_head: 34bd9b909418a675486254f298dda06aa99f2dcf
 progress:
-  total_plans: 3
-  completed_plans: 3
-  percent: 100
+  total_phases: 8
+  completed_phases: 1
+  total_plans: 16
+  completed_plans: 6
+  percent: 13
 ---
 
 # Project State
@@ -30,6 +33,13 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 > **Provenance note:** The "Accumulated Context" section below preserves bullet records from BOTH branches' STATE.md histories. Records tagged "v0.29.0" from main's lineage refer to the milestone NOW renumbered as v0.30.0 (Class-Gated Decrypt — Phases 135-138). Records tagged "v0.29.0" from feat/strict-model refer to NUB-CONNECT (Phases 135-142). Phase number alone is not a unique identifier across the two; cross-reference the topic (decrypt/identity/NIP-07 → v0.30.0; connect/class/CSP-authority → v0.29.0).
 
 ## Current Position
+
+### Quick task 261012-jnp — INCOMPLETE (protocol scope decision)
+
+- Merged `origin/main` `10fd4e61` into existing `feat/vite-plugin-blossom-optimization` at `34bd9b90`, preserving both parent histories and both independently numbered phase-162 artifact lineages. PR remains https://github.com/napplet/web/pull/205; it must not be merged automatically.
+- Resolved the 20 freshly observed conflict paths, current artifact-hash/R-tag optimizer integration, retained-byte CLI icon/screenshot uploads, destination canonicalization, and the old CI native-digest wait race. Local build/type/recursive units/full tests/conformance e2e/contracts/links and Linux standalone/npm runner tests pass; unchanged actual AI-slop workflow passes 96/100 with three disclosed existing findings.
+- Blocking finding: living NAP-RESOURCE PR #80 head `2529209a1a031e1411f84823c6d5fe8c594f78d7` requires `urls` and base64 wire bytes, while both original feature and fetched main still expose `requests` and Blob wire fields in `packages/nap/src/resource/types.ts:120,166`. Passing mocks are not protocol interoperability proof. No out-of-scope breaking wire migration was attempted; explicit follow-on scope decision required.
+- All nine remote checks pass for merge head `34bd9b909418a675486254f298dda06aa99f2dcf` (CI, conformance, Scan, links and five standalone platforms); PR #205 is OPEN/CLEAN/MERGEABLE. Final task-artifact revision is separately watched and recorded in the closing PR evidence comment. Evidence: `.planning/quick/261012-jnp-catch-feat-vite-plugin-blossom-optimizat/261012-jnp-SUMMARY.md`. Historical milestone position and accumulated records below are preserved, not advanced as though this quick task completed a phase.
 
 Phase: 162 (nip-5d-event-schema-migration) — COMPLETE
 Plan: 3 of 3
@@ -564,7 +574,8 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 
 - CARRIED: npm publish blocked on human npm auth (PUB-04)
 - INFO: Local `specs/NIP-5D.md` may be stale vs napplet/nubs master post-PR-15 (`window.nostr` removal merged 2026-04-21). Phase 138 NIP5D-01 syncs before layering v0.29.0 amendment
-- INFO: `world: 'MAIN'` extension-API bypass acknowledged as residual — no page-side blocking mechanism exists. NUB-CLASS-1 `connect-src 'none'` is the structural mitigation. Phase 136 artifact MUST document this honestly; Phase 137 amendment + Phase 138 NIP-5D amendment MUST NOT claim a fix
+- INFO: `world: 'MAIN'` extension-API bypass acknowledged as residual — no page-side blocking mechanism exists. NUB-CLASS-1 `connect-src ''` is the structural mitigation. Phase 136 artifact MUST document this honestly; Phase 137 amendment + Phase 138 NIP-5D amendment MUST NOT claim a fix
+- Quick 261012-jnp: current NAP-RESOURCE requires urls/base64 wire bytes; existing SDK uses requests/Blob on both lineages. Breaking SDK/NAP/conformance migration requires explicit scope decision; merge CI is green but protocol completeness not claimed.
 
 ### Quick Tasks Completed
 
