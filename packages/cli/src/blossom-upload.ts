@@ -11,8 +11,8 @@
 import { contentType } from "@std/media-types";
 import { extname } from "@std/path";
 import {
-  createNetworkPolicy,
   type BuildSigner,
+  createNetworkPolicy,
   type NetworkPolicy,
   type PublicAddressResolver,
   uploadExactBlobs,
@@ -66,7 +66,7 @@ export async function collectDeployFilePayloads(
   }
   const payloads: DeployFilePayload[] = [];
   for (const { candidateDir, file } of unique.values()) {
-    const data = await Deno.readFile(joinPath(candidateDir, file.path.slice(1)));
+    const data = file.data ?? await Deno.readFile(joinPath(candidateDir, file.path.slice(1)));
     if (await sha256Hex(data) !== file.sha256) {
       throw new Error(`Deploy input changed after manifest creation: ${file.path}`);
     }
@@ -75,14 +75,17 @@ export async function collectDeployFilePayloads(
       path: file.path,
       sha256: file.sha256,
       data,
-      contentType: contentTypeForPath(file.path),
+      contentType: file.mimeType ?? contentTypeForPath(file.path),
     });
   }
   return payloads;
 }
 
 async function sha256Hex(data: Uint8Array): Promise<string> {
-  const bytes = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength) as ArrayBuffer;
+  const bytes = data.buffer.slice(
+    data.byteOffset,
+    data.byteOffset + data.byteLength,
+  ) as ArrayBuffer;
   const digest = await crypto.subtle.digest("SHA-256", bytes);
   return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
 }
@@ -99,10 +102,13 @@ export async function uploadFilesToServers(
   options: UploadFilesToServersOptions = {},
 ): Promise<ServerUploadResult[]> {
   if (files.length === 0 || servers.length === 0) return [];
-  const policy = options.networkPolicy ?? createNetworkPolicy({ resolve: options.resolve ?? resolvePublicDns });
+  const policy = options.networkPolicy ??
+    createNetworkPolicy({ resolve: options.resolve ?? resolvePublicDns });
   const endpoints = [];
   try {
-    for (const server of servers) endpoints.push(await policy.validate(new URL(server), new AbortController().signal));
+    for (const server of servers) {
+      endpoints.push(await policy.validate(new URL(server), new AbortController().signal));
+    }
   } catch {
     return recordFailure(files, servers[0], "Upload did not produce verified evidence", options);
   }
@@ -167,7 +173,10 @@ function recordFailure(
   return results;
 }
 
-async function resolvePublicDns(hostname: string, _signal: AbortSignal): Promise<readonly string[]> {
+async function resolvePublicDns(
+  hostname: string,
+  _signal: AbortSignal,
+): Promise<readonly string[]> {
   const records = await Promise.allSettled([
     Deno.resolveDns(hostname, "A"),
     Deno.resolveDns(hostname, "AAAA"),
@@ -179,7 +188,9 @@ function contentTypeForPath(path: string): string {
   const extension = extname(path);
   const type = extension ? contentType(extension) : undefined;
   if (type) return type;
-  console.warn(`[deploy] no known content type for "${path}"; uploading as application/octet-stream`);
+  console.warn(
+    `[deploy] no known content type for "${path}"; uploading as application/octet-stream`,
+  );
   return "application/octet-stream";
 }
 

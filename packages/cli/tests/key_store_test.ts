@@ -37,18 +37,18 @@ Deno.test("getKeyStoreProvider returns null when disabled", async () => {
   assertEquals(provider, null);
 });
 
-Deno.test("requireKeyStoreProvider fails closed when no backend is available", async () => {
+Deno.test("requireKeyStoreProvider fails closed when storage is explicitly disabled", async () => {
   let message = "";
   try {
     await requireKeyStoreProvider({
       os: "linux",
-      env: {},
+      env: { NAPPLET_DISABLE_KEYCHAIN: "true" },
       run: mockRunner({}),
     });
   } catch (error) {
     message = error instanceof Error ? error.message : String(error);
   }
-  assert(message.includes("No protected keychain writer is available"));
+  assert(message.includes("Key storage is disabled"));
 });
 
 Deno.test("argv-only macOS and Windows credential writers remain unavailable", async () => {
@@ -59,7 +59,9 @@ Deno.test("argv-only macOS and Windows credential writers remain unavailable", a
 
     assertEquals(await provider.isAvailable(), false);
     await provider.store({ service: KEY_SERVICE_NAME, account: "default", secret }).then(
-      () => { throw new Error(`${provider.name} write must be unavailable`); },
+      () => {
+        throw new Error(`${provider.name} write must be unavailable`);
+      },
       () => {},
     );
     assertEquals(calls.length, 0);
@@ -125,4 +127,9 @@ Deno.test("createKeyStore adapts an existing provider to the shared opaque Secre
     account: "remote",
     secret: "nbunksec1replacement",
   }]);
+});
+
+Deno.test("hosts without native helpers receive encrypted local storage", async () => {
+  const provider = await requireKeyStoreProvider({ os: "linux", env: {}, run: mockRunner({}) });
+  assertEquals(provider.name, "encrypted local key store");
 });

@@ -50,13 +50,16 @@ interface FakeFetchOptions {
 }
 
 function descriptorResponse(hash: string, size = 5): Response {
-  return new Response(JSON.stringify({
-    url: "https://blob.example/blob",
-    sha256: hash,
-    size,
-    type: "text/html",
-    uploaded: 123,
-  }), { status: 201, headers: { "content-type": "application/json" } });
+  return new Response(
+    JSON.stringify({
+      url: "https://blob.example/blob",
+      sha256: hash,
+      size,
+      type: "text/html",
+      uploaded: 123,
+    }),
+    { status: 201, headers: { "content-type": "application/json" } },
+  );
 }
 
 function createFakeFetch(
@@ -65,8 +68,7 @@ function createFakeFetch(
 ): typeof fetch {
   const headStatus = options.headStatus ?? (() => 404);
   const putResponse = options.putResponse ??
-    (() =>
-      descriptorResponse(sha256));
+    (() => descriptorResponse(sha256));
   return (async (input, init) => {
     const url = String(input);
     const headers = new Headers(init?.headers);
@@ -206,8 +208,7 @@ Deno.test("executeNetworkDeploy fails when the server stores a mismatched blob",
       signer,
       {
         fetch: createFakeFetch(calls, {
-          putResponse: () =>
-            descriptorResponse("0".repeat(64)),
+          putResponse: () => descriptorResponse("0".repeat(64)),
         }),
         publish,
         now: () => 123,
@@ -235,7 +236,9 @@ Deno.test("executeNetworkDeploy rejects files changed after manifest creation be
       signer,
       { fetch: createFakeFetch(calls), publish: fakePublish().publish, resolve: resolvePublicDns },
     ).then(
-      () => { throw new Error("changed deploy input must reject"); },
+      () => {
+        throw new Error("changed deploy input must reject");
+      },
       (error) => assert(String(error).includes("Deploy input changed after manifest creation")),
     );
     assertEquals(calls.length, 0);
@@ -285,13 +288,18 @@ Deno.test("executeNetworkDeploy directly uploads the primary and secondary serve
     );
 
     const puts = calls.filter((call) => call.method === "PUT");
-    const hosts = puts.map((call) => decodeAuthEvent(call.authorization ?? "").tags.find((tag) => tag[0] === "server")?.[1]);
+    const hosts = puts.map((call) =>
+      decodeAuthEvent(call.authorization ?? "").tags.find((tag) => tag[0] === "server")?.[1]
+    );
     assertEquals(hosts, ["a.example", "b.example"]);
-    assertEquals(puts.map((call) => call.url), ["https://a.example/upload", "https://b.example/upload"]);
+    assertEquals(puts.map((call) => call.url), [
+      "https://a.example/upload",
+      "https://b.example/upload",
+    ]);
   });
 });
 
-Deno.test("executeNetworkDeploy counts canonical full discovery endpoints before publishing", async () => {
+Deno.test("executeNetworkDeploy counts canonical server origins before publishing", async () => {
   await withTempDir(async (dir) => {
     await Deno.writeTextFile(`${dir}/index.html`, "index");
     await Deno.writeTextFile(`${dir}/app.js`, "app");
@@ -302,7 +310,7 @@ Deno.test("executeNetworkDeploy counts canonical full discovery endpoints before
     const calls: FetchCall[] = [];
     const { publish, events } = fakePublish();
     let upload = 0;
-    const servers = ["https://blob.example/", "https://other.example/base/path/"];
+    const servers = ["https://blob.example/", "https://other.example/"];
 
     const result = await executeNetworkDeploy(
       manifests,
@@ -328,8 +336,17 @@ Deno.test("executeNetworkDeploy counts canonical full discovery endpoints before
       totalUploads: 4,
       failedUploads: 0,
     });
-    assertEquals(new Set(result.uploaded.map((entry) => `${entry.server}\0${entry.file}\0${entry.sha256}`)).size, 4);
-    assertEquals(result.uploaded.map((entry) => entry.server), [servers[0], servers[0], servers[1], servers[1]]);
+    assertEquals(
+      new Set(result.uploaded.map((entry) => `${entry.server}\0${entry.file}\0${entry.sha256}`))
+        .size,
+      4,
+    );
+    assertEquals(result.uploaded.map((entry) => entry.server), [
+      servers[0],
+      servers[0],
+      servers[1],
+      servers[1],
+    ]);
     assertEquals(calls.filter((call) => call.method === "PUT").map((call) => call.url), [
       "https://blob.example/upload",
       "https://blob.example/upload",

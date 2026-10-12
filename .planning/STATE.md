@@ -3,18 +3,16 @@ gsd_state_version: 1.0
 milestone: v0.34.0
 milestone_name: NIP-5D Runtime Injection
 current_phase: 162
-current_phase_name: blossom-backed-large-asset-optimization
-status: verifying
-stopped_at: Completed 162-11-PLAN.md
-last_updated: "2026-09-04T19:52:00Z"
-last_activity: 2026-09-04
-last_activity_desc: "Completed quick task 260904-nm7: Add an accessible recoverable packaged-resource loader in stacked PR #216"
+current_phase_name: nip-5d-event-schema-migration
+status: complete
+stopped_at: "Phase 162 verified; draft PR #224 open with hzrd149 requested"
+last_updated: "2026-10-04T19:00:16.967369+00:00"
+last_activity: 2026-10-04
+last_activity_desc: "Completed NIP-5D event schema migration; draft PR #224"
 progress:
-  total_phases: 8
-  completed_phases: 3
-  total_plans: 16
-  completed_plans: 6
-  percent: 38
+  total_plans: 3
+  completed_plans: 3
+  percent: 100
 ---
 
 # Project State
@@ -25,17 +23,47 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 
 **Core value:** Prove that sandboxed Nostr apps can securely delegate to a host shell over a simple, standardized protocol — and ship the spec + SDK so others can build on it.
 
-**Current focus:** Phase 162 — blossom-backed-large-asset-optimization
+**Current focus:** Phase 162 — NIP-5D event schema migration; draft PR #224 awaiting review
+
+> Integration provenance (quick task 261012-jnp): Both lineages independently used phase number 162. The optimizer lineage is `.planning/phases/162-blossom-backed-large-asset-optimization/` (11 plans, verified before integration); main's schema migration lineage is `.planning/phases/162-nip-5d-event-schema-migration/` (3 plans, shipped via #224). Earlier aggregate-hash descriptions are historical, not current protocol guidance. All records and artifacts from both lineages are retained; quick task 261012-jnp tracks their integration on PR #205.
 
 > **Provenance note:** The "Accumulated Context" section below preserves bullet records from BOTH branches' STATE.md histories. Records tagged "v0.29.0" from main's lineage refer to the milestone NOW renumbered as v0.30.0 (Class-Gated Decrypt — Phases 135-138). Records tagged "v0.29.0" from feat/strict-model refer to NUB-CONNECT (Phases 135-142). Phase number alone is not a unique identifier across the two; cross-reference the topic (decrypt/identity/NIP-07 → v0.30.0; connect/class/CSP-authority → v0.29.0).
 
 ## Current Position
 
-Phase: 162 (blossom-backed-large-asset-optimization) — EXECUTING
-Plan: 11 of 11
-Status: Phase complete — ready for verification
-Last activity: 2026-09-04 — Completed quick task 260904-nm7: Add an accessible recoverable packaged-resource loader in stacked PR #216
-community/group-chat invite linked from the SPA and docs.
+Phase: 162 (nip-5d-event-schema-migration) — COMPLETE
+Plan: 3 of 3
+Status: Verified; [draft PR #224](https://github.com/napplet/web/pull/224) open, hzrd149 requested
+Last activity: 2026-10-09 - Completed quick task 261009-ur6: Remove commit-title gating from JSR publication
+
+See phase 162 VERIFICATION.md for evidence and disclosed compatibility/tooling findings. Earlier phase and quick-task records below are historical.
+
+### Quick task 261011-hdg — COMPLETE
+
+- Standalone CLI 0.9.0 provisions verified private runtime/browser tooling for screenshot, inline deploy capture, conformance and Paja; no host package runner is consulted.
+- Boilerplate 0.4.0 downloads template archives without Git; a static Deno adapter avoids the hosted-create fetch timeout found in compiled macOS binaries.
+- Native keychain absence falls back to password-encrypted local storage using authenticated AES-GCM and PBKDF2-SHA256.
+- Verified compiled macOS commands with empty PATH and fresh cache; real Linux ARM64 PNG capture and hosted create in stock Debian slim with empty PATH.
+- Build (12 tasks), types (17 tasks), recursive unit suite and staged AI-slop (100/100) passed. Five-platform standalone CI added. Commit: c8cbb950.
+- Unrelated root package edit and local generated directories remain untouched.
+
+### Quick task 261010-2y9 — COMPLETE
+
+- Pinned screenshot/default conformance runner to 0.3.3 so older local dependencies cannot intercept commands.
+- Verified real npm resolution and the normal inline screenshot dry-run path; reports in `/tmp/napplet-runner-proof`.
+- Prepared CLI 0.8.7 atop PR #237; build, types, unit suite and slop passed.
+
+### Quick task 261010-2m3 — COMPLETE
+
+- Added repository-derived source tags and config override/suppression for CLI 0.8.6.
+- Source remains singular per current NIP-5D; clarification PR: https://github.com/dskvr/nips/pull/10 (base nip/5d).
+- Build, type-check, full unit suite and AI-slop passed; real GB Color dry-run reports in `/tmp/napplet-source-proof`.
+
+### Quick task 261010-26v — COMPLETE
+
+- Automatic Kehto Paja screenshot previews for deploy and standalone capture; no user-supplied host required.
+- CLI 0.8.5 and conformance-cli 0.3.3 prepared; real PNG proofs saved in `/tmp/napplet-screenshot-proof`.
+- Full build, type-check, unit suite and changed-code slop gate passed.
 
 ### Quick task 260904-nm7 — COMPLETE
 
@@ -544,6 +572,9 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 |----------|------|------|--------|-----------|
 | 260904-nm7 | Add an accessible recoverable packaged-resource loader in stacked PR #216 | 2026-09-04 | a1b6bb0c | [260904-nm7-improve-the-napplet-vite-plugin-packaged](./quick/260904-nm7-improve-the-napplet-vite-plugin-packaged/) |
 | 260904-h0g | Resolve issues #212, #213, and #214 in stacked PR #215 | 2026-09-04 | 1e954edd | [260904-h0g-resolve-github-issues-212-and-213-on-top](./quick/260904-h0g-resolve-github-issues-212-and-213-on-top/) |
+| 261009-ur6 | Remove commit-title gating from JSR publication | 2026-10-09 | d798a91f | [261009-ur6-remove-commit-title-gating-from-jsr-publ](./quick/261009-ur6-remove-commit-title-gating-from-jsr-publ/) |
+| 261006-ij3 | Fix verified PR #224 review findings (conformance x-hash panel, deploy/plugin dropped-asset guards, CLI R/O overlap, debug crash) | 2026-10-06 | a4f1c8b4 | [261006-ij3-fix-verified-pr-224-review-findings-conf](./quick/261006-ij3-fix-verified-pr-224-review-findings-conf/) |
+| 260912-wr8 | Restructure napplet skills for the skills.sh installer (napplet-* names, napplet-ui contract, custom installer removed) | 2026-09-12 | 2d3556c9 | [260912-wr8-restructure-napplet-skills-for-the-skill](./quick/260912-wr8-restructure-napplet-skills-for-the-skill/) |
 | 260904-g1f | Add the MIT license and open a pull request | 2026-09-04 | 7b82fe08 | [260904-g1f-add-the-mit-license-and-open-a-pull-requ](./quick/260904-g1f-add-the-mit-license-and-open-a-pull-requ/) |
 | 260826-q11 | Integrate NAP-RESOURCE request-object compatibility into PR 205 after server-hint release | 2026-08-26 | aab681d7 | [260826-q11-integrate-nap-resource-request-object-co](./quick/260826-q11-integrate-nap-resource-request-object-co/) |
 | 260826-jex | Split NAP-RESOURCE server hints from PR #205 into a dedicated PR | 2026-08-26 | 11fdf896 | [260826-jex-split-nap-resource-server-hints-from-pr-](./quick/260826-jex-split-nap-resource-server-hints-from-pr-/) |
@@ -612,8 +643,11 @@ Items acknowledged and deferred at v0.31.0 milestone close on 2026-05-24:
 
 **Resume file:** None
 
-Last session: 2026-08-21T18:25:15.384Z
-Stopped at: Completed 162-11-PLAN.md
+| 261007-c0v | Embed NIP-5D publishing metadata and recover standalone HTML deploys ([PR #226](https://github.com/napplet/web/pull/226)) | 2026-10-07 | 4b9cbc79 | [261007-c0v](./quick/261007-c0v-embed-nip-5d-publishing-metadata-and-rec/) |
+| 261010-01a | Optional Zapstore metadata, standalone/inline screenshots, and current protocol context | 2026-10-10 | 46c19178 | [261010-01a](./quick/261010-01a-optional-zapstore-metadata-and-current-p/) |
+
+Historical optimizer session: 2026-08-21T18:25:15.384Z — Completed 162-11-PLAN.md.
+Historical main session: 2026-07-23T15:44:08.781Z — Completed 161-16-PLAN.md.
 Resume: Phase 155 COMPLETE. All v0.33.0 SHELL requirements satisfied; both phases (154, 155) done. Next: orchestrator verify_phase_goal for Phase 155, then `/gsd:audit-milestone v0.33.0` → `/gsd:ship`.
 
 - v0.26.0: Consolidated `@napplet/nub-*` packages into single `@napplet/nub` with 34 subpath exports; deprecated packages ship as 1-line re-export shims for one release cycle
@@ -659,6 +693,11 @@ Surfaced by research (informational — each belongs to a specific phase plan):
 
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
+| 261010-3v2 | Add napplet.run client attribution to CLI publications | 2026-10-10 | 678fb834 | [261010-3v2](./quick/261010-3v2-add-napplet-run-client-attribution-to-cl/) |
+| 261010-3fr | Propose NIP-5D application references and link CLI screenshot metadata | 2026-10-10 | eb6b87e2 | [261010-3fr](./quick/261010-3fr-propose-application-descriptor-links-and/) |
+| 261010-gap | Close PR #228 completeness gaps: handlerHint validation, stale intent/shell docs and skills | 2026-10-10 | 82c54ed3 | [261010-gap-close-pr-228-intent-cascade-gaps](./quick/261010-gap-close-pr-228-intent-cascade-gaps/) |
+| 261009-nvo | Chase NAP-INTENT and cascading domain amendments; tests green, slop 100 | 2026-10-09 | c9f2c8e1 | [261009-nvo-align-sdk-and-conformance-with-nap-inten](./quick/261009-nvo-align-sdk-and-conformance-with-nap-inten/) |
+| 261007-aae | Resolve PR #224 conflicts after #223 | 2026-10-07 | cc741b8f | [261007-aae-resolve-pr-224-conflicts-after-merging-p](./quick/261007-aae-resolve-pr-224-conflicts-after-merging-p/) |
 | 260421-u87 | Create cross-repo PRs in napplet/nubs from the 4 v0.29.0 drafts | 2026-04-21 | c28d8e4 | [260421-u87-create-cross-repo-prs-in-napplet-nubs-fr](./quick/260421-u87-create-cross-repo-prs-in-napplet-nubs-fr/) |
 | 260424-o1k | Implement default shell.supports() in shim so napplets can be tested without a shell | 2026-04-24 | 5ad9cdb | [260424-o1k-implement-default-shell-supports-in-shim](./quick/260424-o1k-implement-default-shell-supports-in-shim/) |
 | 260524-kxa | please add badges to the README for github workflows, as well as badges for both npm and jsr | 2026-05-24 | 8f4662b | [260524-kxa-please-add-badges-to-the-readme-for-gith](./quick/260524-kxa-please-add-badges-to-the-readme-for-gith/) |

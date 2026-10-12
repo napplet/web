@@ -1,5 +1,33 @@
 # @napplet/conformance
 
+## 0.19.0
+
+### Minor Changes
+
+- Follow the NAP-INTENT lifecycle and manifest amendments: accept authoritative convention URIs and naddr recommendations, expose acceptance results and buffered onDelivery callbacks, and discover opaque catalog identifiers with parameter contracts. Restore the optional NAP-SHELL environment API independently of other domain calls. Align INC provenance with authenticated endpoint identifiers and deliver theme/identity updates only for exposed domains.
+
+  INTENT callers migrate from archetype/request arguments to invoke(uri, options) and open(uri, options), from handled/windowId to acceptance, and from candidate dTag to id/contracts. Existing IntentOpenOptions and named SDK helpers remain exported with the URI signatures. CLI helper extraction preserves existing exports and behavior.
+
+- Validate the optional `handler`, `behavior`, and `handlerHint` fields of `intent.invoke` requests: `handlerHint.address` must be a `35129:<pubkey>:<d>` coordinate and `relays` an array of strings.
+
+### Patch Changes
+
+- Updated dependencies
+  - @napplet/core@0.33.0
+  - @napplet/nap@0.33.0
+
+## 0.18.0
+
+### Minor Changes
+
+- Adopt the current NIP-5D artifact-hash manifest schema for kinds 5129, 15129 and 35129. Writers emit one direct artifact `x` hash, description content, required/optional `R`/`O` domains and independent `z`/`i` advertisements. Readers verify current events and raw artifact bytes; legacy events require migration or older readers.
+
+  CLI deployment defaults to current output and offers temporary explicit legacy serialization. Add offline signed-event migration previews without altering source events or publishing. Vite builds default to a self-contained artifact; compatibility helper and sidecar names remain available. See the event migration guide for package cutoffs, immutable pointers and shell ACL/storage implications.
+
+### Patch Changes
+
+- Report domains outside the toolchain registry through the advisory `manifest/requires-known` check for current `R`/`O` tags; warnings never fail a run (#223). Prefixed, whitespace-separated, and `domain.action` values still fail the bare-domain check. No lowercase-only naming restriction is imposed beyond the live NIP-5D contract.
+
 ## 0.17.0
 
 ### Minor Changes

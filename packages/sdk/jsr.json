@@ -1,11 +1,11 @@
 {
   "name": "@napplet/sdk",
-  "version": "0.28.0",
+  "version": "0.29.0",
   "license": "MIT",
   "exports": "./src/index.ts",
   "imports": {
-    "@napplet/core": "jsr:@napplet/core@^0.32.0",
-    "@napplet/nap": "jsr:@napplet/nap@^0.32.0"
+    "@napplet/core": "jsr:@napplet/core@^0.33.0",
+    "@napplet/nap": "jsr:@napplet/nap@^0.33.0"
   },
   "publish": {
     "include": [

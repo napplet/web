@@ -9,6 +9,6 @@
   },
   "devDependencies": {
     "@napplet/conformance-cli": "workspace:^",
-    "vitest": "^4.1.2"
+    "vitest": "^4.1.11"
   }
 }

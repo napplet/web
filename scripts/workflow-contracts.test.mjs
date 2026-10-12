@@ -4,6 +4,20 @@ import test from 'node:test';
 
 const workflow = await readFile(new URL('../.github/workflows/publish-jsr.yml', import.meta.url), 'utf8');
 
+test('JSR publication runs on every main push and supports manual recovery', () => {
+  const triggers = workflow.split('\non:\n')[1]?.split('\nconcurrency:')[0];
+  assert.ok(triggers, 'workflow must declare its triggers');
+  assert.match(triggers, /push:\s*\n\s*branches: \[main\]/);
+  assert.match(triggers, /workflow_dispatch:/);
+  assert.doesNotMatch(triggers, /paths(?:-ignore)?:/);
+  const publishJob = workflow.split('\n  publish-jsr:\n')[1]?.split('\n  build-cli-binaries:')[0];
+  assert.ok(publishJob, 'JSR publication job must exist');
+  assert.doesNotMatch(publishJob, /^\s*if:/m, 'package versions, not workflow conditions, determine publication');
+  assert.doesNotMatch(workflow, /head_commit|Version Packages/);
+  assert.match(workflow, /cancel-in-progress: false/);
+  assert.match(publishJob, /--workspace-concurrency=1/);
+});
+
 test('CLI release compiles every supported standalone target', () => {
   for (const target of [
     'linux-x86_64',
@@ -31,10 +45,9 @@ test('versioned and stable CLI releases receive the same verified assets', () =>
   assert.match(workflow, /gh release upload napplet-cli/);
 });
 
-test('skills JSR publish uses its explicit JSR config', () => {
-  assert.match(workflow, /Publish to JSR \(topologically ordered\)[\s\S]*?--filter='!@napplet\/skills'/);
-  assert.match(
-    workflow,
-    /Publish @napplet\/skills to JSR[\s\S]*?working-directory: packages\/skills[\s\S]*?npx jsr publish --config jsr\.json --allow-slow-types --allow-dirty/,
-  );
+test('JSR publish includes workspace packages and excludes npm-only tools and retired skills', () => {
+  assert.match(workflow, /Publish to JSR \(topologically ordered\)[\s\S]*?--filter='\.\/packages\/\*'/);
+  assert.match(workflow, /--filter='!@napplet\/boilerplate'/);
+  assert.match(workflow, /--filter='!@napplet\/conformance-cli'/);
+  assert.doesNotMatch(workflow, /packages\/skills|@napplet\/skills/);
 });

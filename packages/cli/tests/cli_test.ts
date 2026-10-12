@@ -8,6 +8,23 @@ import {
 import { defaultConfig } from "../src/config.ts";
 import { collectFlags } from "../src/flags.ts";
 import { assert, assertEquals } from "./assert.ts";
+import cliMetadata from "../deno.json" with { type: "json" };
+
+for (const alias of ["--version", "-v", "version"]) {
+  Deno.test(`main reports installed package version for ${alias} without permissions`, {
+    permissions: "none",
+  }, async () => {
+    const output: string[] = [];
+    const original = console.log;
+    console.log = (value: unknown) => output.push(String(value));
+    try {
+      assertEquals(await main([alias]), 0);
+    } finally {
+      console.log = original;
+    }
+    assertEquals(output, [`napplet ${cliMetadata.version}`]);
+  });
+}
 
 Deno.test("loadDeployConfig bootstraps missing config in interactive deploy", async () => {
   const flags = collectFlags(["--name", "gbcolor"]);
@@ -140,15 +157,15 @@ Deno.test("runPackageCli preserves create arguments as an explicit argv array", 
       },
       writeStdout: (value) => stdout.push(value),
       os: "darwin",
+      resolvePackage: async () => ({ command: "/private/node", args: ["/private/create.js"] }),
     },
   );
 
   assertEquals(code, 0);
   assertEquals(calls, [{
-    command: "npx",
+    command: "/private/node",
     args: [
-      "--yes",
-      "@napplet/boilerplate",
+      "/private/create.js",
       "project with spaces",
       "--template",
       "./local template",
@@ -158,21 +175,22 @@ Deno.test("runPackageCli preserves create arguments as an explicit argv array", 
   assertEquals(stdout, ["created"]);
 });
 
-Deno.test("runPackageCli preserves skills target passthrough on Windows", async () => {
+Deno.test("runPackageCli uses the private Windows executable and forwards the package exit code", async () => {
   const calls: Array<{ command: string; args: string[] }> = [];
-  const code = await runPackageCli("@napplet/skills", ["install", "--to", "agents"], {
+  const code = await runPackageCli("@napplet/boilerplate", ["project", "--force"], {
     runner(command, args) {
       calls.push({ command, args });
       return Promise.resolve({ code: 3, stdout: "", stderr: "failed\n" });
     },
     writeStderr: () => {},
     os: "windows",
+    resolvePackage: async () => ({ command: "C:/private/node.exe", args: ["C:/private/create.js"] }),
   });
 
   assertEquals(code, 3);
   assertEquals(calls, [{
-    command: "npx.cmd",
-    args: ["--yes", "@napplet/skills", "install", "--to", "agents"],
+    command: "C:/private/node.exe",
+    args: ["C:/private/create.js", "project", "--force"],
   }]);
 });
 
@@ -183,18 +201,35 @@ Deno.test("main accepts standalone package runner injection without changing def
       calls.push({ command: "create", args });
       return Promise.resolve(7);
     },
-    runSkills(args: readonly string[]) {
-      calls.push({ command: "skills", args });
-      return 8;
-    },
   };
 
   assertEquals(await main(["create", "project", "--force"], options), 7);
-  assertEquals(await main(["skills", "install", "--to", "codex"], options), 8);
-  assertEquals(calls, [
-    { command: "create", args: ["project", "--force"] },
-    { command: "skills", args: ["install", "--to", "codex"] },
-  ]);
+  assertEquals(calls, [{ command: "create", args: ["project", "--force"] }]);
+});
+
+Deno.test("skills is no longer a CLI command; agents install skills through skills.sh", async () => {
+  const errors: string[] = [];
+  const original = console.error;
+  console.error = (value: unknown) => errors.push(String(value));
+  try {
+    assertEquals(await main(["skills", "install", "--to", "codex"]), 2);
+  } finally {
+    console.error = original;
+  }
+  assert(errors.some((line) => line.includes("Unknown command: skills")));
+  assert(!errors.join("\n").includes("napplet skills"));
+});
+
+Deno.test("debug validates --format before loading config", async () => {
+  const errors: string[] = [];
+  const original = console.error;
+  console.error = (value: unknown) => errors.push(String(value));
+  try {
+    assert(await main(["debug", "--format", "bogus"]) !== 0);
+  } finally {
+    console.error = original;
+  }
+  assert(errors.some((line) => line.includes("--format must be current or legacy")));
 });
 
 Deno.test("published CLI entrypoint excludes standalone-only workspace imports", async () => {
@@ -207,27 +242,28 @@ Deno.test("published CLI entrypoint excludes standalone-only workspace imports",
   ) as { publish?: { exclude?: string[] } };
 
   assert(!cliSource.includes('from "@napplet/boilerplate"'));
-  assert(!cliSource.includes('from "@napplet/skills/cli"'));
   assert(standaloneSource.includes('from "@napplet/boilerplate"'));
-  assert(standaloneSource.includes('from "@napplet/skills/cli"'));
+  assert(!standaloneSource.includes("@napplet/skills"));
   assert(config.publish?.exclude?.includes("src/standalone.ts"));
 });
 
-Deno.test("resolveConformanceCommand runs the package-backed CLI without a global binary", () => {
-  assertEquals(resolveConformanceCommand("napplet-conformance", "darwin"), {
-    command: "npx",
-    args: ["--yes", "@napplet/conformance-cli"],
-  });
-  assertEquals(resolveConformanceCommand(undefined, "windows"), {
-    command: "npx.cmd",
-    args: ["--yes", "@napplet/conformance-cli"],
-  });
+Deno.test("resolveConformanceCommand uses private tooling for either platform", async () => {
+  const calls: string[] = [];
+  const resolve = async (spec: string, entry: string) => {
+    calls.push(`${spec}:${entry}`);
+    return { command: "/private/node", args: ["/private/conformance.js"] };
+  };
+  for (const os of ["darwin", "windows"] as const) {
+    assertEquals(await resolveConformanceCommand(undefined, os, resolve), {
+      command: "/private/node", args: ["/private/conformance.js"],
+    });
+  }
+  assertEquals(calls, ["@napplet/conformance-cli@0.3.3:dist/cli.js", "@napplet/conformance-cli@0.3.3:dist/cli.js"]);
 });
 
-Deno.test("resolveConformanceCommand preserves an explicit custom runner", () => {
-  assertEquals(resolveConformanceCommand("pnpm exec custom-conformance", "linux"), {
-    command: "pnpm",
-    args: ["exec", "custom-conformance"],
+Deno.test("resolveConformanceCommand preserves an explicit custom runner", async () => {
+  assertEquals(await resolveConformanceCommand("pnpm exec custom-conformance", "linux", async () => { throw new Error("Unexpected provision"); }), {
+    command: "pnpm", args: ["exec", "custom-conformance"],
   });
 });
 

@@ -1,6 +1,6 @@
 {
   "name": "@napplet/vite-plugin",
-  "version": "0.14.1",
+  "version": "0.16.0",
   "description": "Vite plugin for napplet development — generates signed NIP-5A manifests at build time for local testing",
   "type": "module",
   "main": "./dist/index.js",
@@ -25,6 +25,7 @@
   "dependencies": {
     "@napplet/build-tools": "workspace:*",
     "nostr-tools": "^2.23.3",
+    "parse5": "^7.3.0",
     "postcss-value-parser": "4.2.0",
     "qrcode": "1.5.4",
     "ws": "8.21.0"
@@ -37,7 +38,7 @@
     "tsup": "^8.5.0",
     "typescript": "^5.9.3",
     "vite": "^6.4.3",
-    "vitest": "^4.1.2"
+    "vitest": "^4.1.11"
   },
   "scripts": {
     "build": "tsup",

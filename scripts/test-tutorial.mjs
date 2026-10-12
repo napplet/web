@@ -1,10 +1,13 @@
 #!/usr/bin/env node
 import { execFileSync } from 'node:child_process';
+import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { mkdtemp, mkdir, readFile, readdir, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { Window } from 'happy-dom';
 
 import { caretRangeIncludesVersion } from './tutorial-package-versions.mjs';
 
@@ -129,8 +132,27 @@ async function assertOutput() {
   const html = await readFile(htmlPath, 'utf8');
   const files = await readdir(dist);
 
-  if (/<meta\b[^>]*\bname=["']napplet-[^"']+["']/i.test(html)) {
-    throw new Error('Built HTML must not contain invented napplet-* protocol metadata');
+  // Tutorial regression assertions, not runtime requirements. Publishing mappings:
+  // https://github.com/nostr-protocol/nips/pull/2303 (HTML Metadata for Publishing).
+  const manifest = JSON.parse(await readFile(join(dist, '.nip5a-manifest.json'), 'utf8'));
+  const window = new Window();
+  try {
+    const document = new window.DOMParser().parseFromString(html, 'text/html');
+    const head = document.head;
+    const metadata = (name) => [...head.querySelectorAll(`meta[name="${name}"]`)]
+      .map((element) => element.getAttribute('content'));
+    assert.equal(manifest.kind, 35129);
+    assert.deepEqual(metadata('napplet-id'), ['notedrafts']);
+    assert.deepEqual(manifest.tags.filter(([name]) => name === 'd'), [['d', 'notedrafts']]);
+    assert.deepEqual([...head.querySelectorAll('title')].map((element) => element.textContent),
+      manifest.tags.filter(([name]) => name === 'title').map(([, value]) => value));
+    assert.deepEqual(metadata('description'), [manifest.content]);
+    assert.deepEqual(metadata('napplet-requires').flatMap((value) => value.split(/[\t\n\f\r ]+/).filter(Boolean)).sort(),
+      manifest.tags.filter(([name]) => name === 'R').map(([, value]) => value).sort());
+    assert.deepEqual(manifest.tags.filter(([name]) => name === 'x'),
+      [['x', createHash('sha256').update(html).digest('hex')]]);
+  } finally {
+    await window.happyDOM.close();
   }
   if (/<script[^>]+src=/.test(html) || /<link[^>]+rel="stylesheet"/.test(html)) {
     throw new Error('Built HTML still references local external JS/CSS assets');

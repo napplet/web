@@ -1,83 +1,108 @@
 # @napplet/vite-plugin
 
-> Vite build plugin that generates NIP-5A manifest sidecars for verification and deploy metadata handoff.
+Vite build integration for current NIP-5D manifests. This package is a development dependency; shells provide the runtime namespace.
 
-`@napplet/vite-plugin` runs at build time and is **not** a runtime dependency. It walks `dist/`, computes per-file SHA-256 hashes and the NIP-5A aggregate hash, and writes a NIP-5D **kind 35129** named-napplet manifest sidecar containing the `path`, aggregate `x`, `requires`, `config`, and `archetype` tags. A development key may sign that sidecar for local verification, but signing is not required for metadata handoff.
+This is non-normative package guidance. [NIP-5D](https://github.com/nostr-protocol/nips/pull/2303) defines event format and loading; [NAPs](https://github.com/napplet/naps) define capability contracts.
 
-For `artifactMode: 'single-file'`, `largeAssetOptimization: 'auto'` is non-normative Vite-tool behavior: it starts only above 2 MiB, obtains a NIP-46 signer through a reusable protected session or terminal QR/paste pairing, discovers the user's kind-10063 Blossom list through NIP-65 write/unmarked relays, uploads exact bytes over validated-address-pinned HTTPS, and offloads only supported bounded whole Blobs. A committed artifact adds `resource` because its private mapping/loader calls the proposed NAP-RESOURCE `bytes`/`bytesMany` API. The mapping and loader are implementation bytes inside the signed HTML, not new protocol fields; the runtime `resource` dependency is protocol surface. Pass an options object instead of `'auto'` to receive `onReport` or override individual `node` adapters while retaining defaults for omitted boundaries. One 50 MiB Blob, streaming, ranges, progress, BUD-04 mirroring, BUD-10 URI syntax, deletion, listing, transforms, payment, and report operations are not delivered. Consult [NIP-5A](https://github.com/nostr-protocol/nips/blob/master/5A.md), [NIP-5D](https://github.com/nostr-protocol/nips/pull/2303), [NAP-RESOURCE](https://github.com/napplet/naps/pull/80), and [NIP-B7](https://github.com/nostr-protocol/nips/blob/master/B7.md) for canonical sources.
+For `artifactMode: 'single-file'`, `largeAssetOptimization: 'auto'` is non-normative Vite-tool behavior: it starts only above 2 MiB, obtains a NIP-46 signer through a reusable protected session or terminal QR/paste pairing, discovers the user's kind-10063 Blossom list through NIP-65 write/unmarked relays, uploads exact bytes over validated-address-pinned HTTPS, and offloads only supported bounded whole Blobs. A committed artifact adds `['R', 'resource']` because its private mapping/loader calls the proposed NAP-RESOURCE `bytes`/`bytesMany` API. The mapping and loader are implementation bytes inside the signed HTML, not new protocol fields; the runtime `resource` dependency is protocol surface. Metadata is finalized before hashing the final `index.html` bytes. Pass an options object instead of `'auto'` to receive `onReport` or override individual `node` adapters while retaining defaults for omitted boundaries. One 50 MiB Blob, streaming, ranges, progress, BUD-04 mirroring, BUD-10 URI syntax, deletion, listing, transforms, payment, and report operations are not delivered. Consult [NIP-5D](https://github.com/nostr-protocol/nips/pull/2303), [NAP-RESOURCE](https://github.com/napplet/naps/pull/80), and [NIP-B7](https://github.com/nostr-protocol/nips/blob/master/B7.md) for canonical sources.
 
 ::: tip
 Use `napplet deploy` for production signing, Blossom upload, and relay publication. It reads build-owned metadata from `.nip5a-manifest.json` and constructs the event it publishes; the sidecar itself is not published as-is.
 :::
+## Install and configure
 
-- **npm:** [`@napplet/vite-plugin`](https://www.npmjs.com/package/@napplet/vite-plugin)
-- **JSR:** [`@napplet/vite-plugin`](https://jsr.io/@napplet/vite-plugin)
-- **Source:** [packages/vite-plugin](https://github.com/napplet/napplet/tree/main/packages/vite-plugin)
-
-## Install
-
-```bash
-npm install -D @napplet/vite-plugin
+```sh
+pnpm add -D @napplet/vite-plugin
 ```
 
-## Quick start
-
 ```ts
-// vite.config.ts
 import { defineConfig } from 'vite';
 import { nip5aManifest } from '@napplet/vite-plugin';
 
 export default defineConfig({
-  plugins: [nip5aManifest({ nappletType: 'my-napp' })],
+  plugins: [nip5aManifest({
+    nappletType: 'notes',
+    title: 'Notes',
+    description: 'Read and write personal notes',
+    requires: ['outbox', 'storage'],
+    optional: ['theme'],
+    archetypes: [{ slug: 'note', convention: 'napplet:note/open', params: ['id'] }],
+    artifactMode: 'single-file',
+  })],
 });
 ```
 
+`nip5aManifest` and `.nip5a-manifest.json` retain their existing names for package and tool compatibility. Their output is a NIP-5D manifest, not an nsite manifest. From **0.15.0**, the output uses the direct artifact hash; **0.14.x and earlier** generated legacy path/aggregate events.
+
+## Build output
+
+The default `single-file` mode inlines local JS/CSS into `index.html`. After rewriting, the plugin hashes the final artifact bytes and writes a kind `35129` event template. Its single `x` tag is that SHA-256, and `content` is the description. No `path` tags or aggregate hash are emitted. Embedded metadata is part of those artifact bytes and therefore changes the hash when edited. The hash is never injected back into the bytes it covers.
+
+Set `description`, or supply an ordinary HTML `<meta name="description" content="…">`. A missing or empty description fails manifest generation because NIP-5D §Manifest requires non-empty content. `title` and `description` options update their HTML counterparts. The plugin also embeds the applicable publishing metadata described below before computing `x`.
+
+Without `VITE_DEV_PRIVKEY_HEX`, the sidecar is unsigned. With a development key, it contains a signed event. `artifactHash` is local sidecar metadata, not a Nostr tag. Use `napplet deploy` for production signing, Blossom upload and relay publication; it builds fresh events from the artifact and metadata.
+
 ## Options
 
-`nip5aManifest(options)` returns a Vite `Plugin`. The options:
+| Option | Behavior |
+| --- | --- |
+| `nappletType: string` | Named-event `d` identifier. |
+| `description?: string` | Plain-text event content; falls back to HTML description metadata. |
+| `title?: string` | Optional display title and HTML title override. |
+| `requires?: string[]` | Required domains, serialized as `R` tags. |
+| `largeAssetOptimization?: 'auto' \| false \| object` | Automatic bounded Blossom offloads above 2 MiB, or disabled. Object options expose `onReport` and controlled `node` adapter overrides. |
+| `requires?: { infer?, explicit?, mode? }` | Opt-in inference from static SDK/NAP imports and direct namespace access. `mode` is `warn` or `error` for missing explicit declarations. |
+| `optional?: string[]` | Optional integrations, serialized as `O` tags and excluded from inferred required domains. |
+| `archetypes?: Array<{ slug, convention, params? }>` | Existing ergonomic option; emits independent `z` role and `i` intent tags. `params` names advertised intent parameters. |
+| `intents?: Array<{ intent, params? }>` | Advertise intents without coupling them to a role option. |
+| `source?: string` | Source URL metadata. |
+| `servers?: string[]` | Blossom server hints. |
+| `icon?: { data?, sha256?, mimeType }` | Supply PNG, JPEG or WebP bytes as `Uint8Array` to embed an icon and derive its hash. Hash-only input remains supported; upload that blob separately. |
+| `configSchema?: NappletConfigSchema \| string` | Inline NAP-CONFIG schema or project-relative schema file. Discovery falls back to `config.schema.json`, then `napplet.config.ts`/`.js`/`.mjs`. |
+| `artifactMode?: 'single-file' \| 'external-assets'` | `single-file` is the default. The explicit external-assets option preserves Vite output for existing tooling; external runtime assets need rebundling before deployment as a self-contained napplet. External-assets builds warn that the manifest `x` hash covers only `index.html` and list the remaining local assets. Builds without `dist/index.html` fail with a `[nip5a-manifest]` error. |
 
-| Option | Type | Purpose |
-| --- | --- | --- |
-| `nappletType` *(required)* | `string` | The napp type / manifest `d` tag. |
-| `requires` | `string[]` | Bare NAP domain names this napplet needs, such as `outbox` or `storage`. Emits `["requires", …]` manifest tags. |
-| `title` | `string` | Human-readable title. Sets/overrides the built HTML `<title>` (plain HTML, not a `napplet-*` meta; untouched when omitted). The napplet CLI reads it back out of the built `index.html` and emits the NIP-5A `["title", …]` manifest tag. |
-| `description` | `string` | Human-readable description. Sets/overrides the built HTML `<meta name="description">` (plain HTML, not a `napplet-*` meta; untouched when omitted). The napplet CLI reads it back out and emits the NIP-5A `["description", …]` manifest tag. |
-| `configSchema` | `NappletConfigSchema \| string` | A JSON Schema (draft-07+) for the napplet's NAP-CONFIG surface. Inline object or path; falls through to `config.schema.json` then `napplet.config.*` discovery. |
-| `artifactMode` | `'external-assets' \| 'single-file'` | Default `'external-assets'`. `'single-file'` inlines local JS/CSS into `index.html` before hashing — for gateway-portable NIP-5A artifacts. |
+Known-domain inference is best effort. Explicit required domains are retained with a build warning when absent from this package's registry; they still need a published NAP contract and support from the target shell. An `R` or `O` declaration never grants authority. Runtime code checks `window.napplet?.<domain>` and handles missing domains.
 
-## Generated manifest
+Config schema discovery and validation remain package features. A resolved schema is carried in its NAP-defined `config` tag and is not folded into `x`. See the [NAP track](https://github.com/napplet/naps) for schema semantics.
 
-At **build time**, the plugin walks `dist/`, computes hashes, and writes `.nip5a-manifest.json`. With `VITE_DEV_PRIVKEY_HEX` set it also signs the kind 35129 event; without a key it writes the unsigned template so deploy tooling can preserve its metadata:
-
-```json
-{
-  "kind": 35129,
-  "tags": [
-    ["d", "my-music-app"],
-    ["path", "/index.html", "<sha256>"],
-    ["x", "<aggregateHash>", "aggregate"],
-    ["requires", "outbox"],
-    ["requires", "storage"]
-  ]
-}
+```ts
+nip5aManifest({
+  nappletType: 'notes',
+  description: 'Read and write notes',
+  requires: { infer: true, explicit: ['outbox', 'storage'], mode: 'warn' },
+  optional: ['theme'],
+});
 ```
 
-## Build-time guards & diagnostics
+## Migration
 
-- **Config schema validation** — the resolved schema is checked against the
-  NAP-CONFIG Core Subset; `pattern`, `$ref`, a non-object root, or a
-  `x-napplet-secret` with a `default` abort the build.
-- **Inline scripts are supported** — NIP-5D loads a napplet as a single
-  self-contained `/index.html` via `iframe.srcdoc` (opaque origin), so its JS is
-  inline by design. The plugin does not reject inline `<script>` elements. With
-  `artifactMode: 'single-file'` it folds local script/style assets into the HTML
-  and leaves any pre-existing inline scripts intact.
+New builds emit only the current schema. For a legacy-only shell, use CLI 0.7.0+ with `napplet deploy --format legacy` during the compatibility window. That serializer is isolated in the CLI and can be removed without changing current readers. Existing immutable event pointers and shell ACL/storage keys need separate rollout planning; rebuilding does not migrate saved data.
 
-## Environment
+See the [event migration guide](/guide/event-migration).
 
-- **`VITE_DEV_PRIVKEY_HEX`** — hex-encoded 32-byte test private key. If set, the plugin signs the manifest at build time; if unset, the plugin still writes the unsigned manifest template. **Never use a real key** — generate a dedicated test key.
+## Recoverable HTML metadata
 
-## See also
+This is a non-normative description of the plugin's implementation of [NIP-5D, HTML Metadata for Publishing](https://github.com/nostr-protocol/nips/pull/2303). The living specification defines the mappings and remains authoritative. Embedding supplies publishing hints; it is not a runtime requirement and does not grant capabilities or override a signed manifest.
 
-- [NIP-5D explained](/guide/nip-5d) — manifest & NAP negotiation
-- [Core concepts](/guide/concepts#acl-capabilities) — how the aggregate hash keys ACL
+The final head contains the resolved title, description, named identifier, archetypes, accepted intents and advertised parameter names, required/optional domains, source URL, Blossom hints, and an icon data URL when image bytes are available. The plugin emits named events (`35129`), so it removes snapshot-only `napplet-parent` and `napplet-root` declarations. It never inserts the artifact hash or event signing fields into HTML.
+
+Explicit options replace the corresponding author head declarations; an omitted option falls back to the head. `nappletType` remains required and controls the identifier. Explicit `archetypes` replaces author archetype and intent declarations with its roles and conventions; `intents` adds standalone advertisements. Without `archetypes`, explicit `intents` replaces just the author intent declarations. Empty arrays clear a category. `requires: { infer: true, explicit: [...] }` combines the configured list with inferred domains; `optional` wins author overlaps, except that a committed resource offload promotes `resource` to required. Explicit resource requirements remain declared even when optimization is disabled or rolls back. The first author singleton is used, repeated declarations are deduplicated, and all owned head elements are replaced once. Scripts, comments, templates, body content, and unrelated head elements are preserved. Metadata inside scripts, comments, templates, or the body is not read as a declaration.
+
+For a recoverable icon, provide bytes:
+
+```ts
+import { readFileSync } from 'node:fs'
+
+nip5aManifest({
+  nappletType: 'notes',
+  description: 'Read and write notes',
+  icon: {
+    data: readFileSync(new URL('./icon.png', import.meta.url)),
+    mimeType: 'image/png',
+  },
+})
+```
+
+The hash covers decoded image bytes, not the data URL. If `sha256` is supplied alongside `data`, it is checked against those bytes. An existing supported head icon data URL can supply the bytes instead. Hash-only input retains its manifest tag; when no matching head image exists the plugin warns and omits the HTML icon, because a hash cannot recover an image. Unsupported, remote, empty, or malformed author icon URLs supply no embedded icon. Consumers still verify image decoding before display as specified by NIP-5D.
+
+Metadata and JS/CSS inlining finish before the plugin hashes `index.html`. Changing an embedded declaration or icon changes the artifact hash. The NAP-CONFIG schema remains in the sidecar: NIP-5D defines no HTML mapping for that extension. `napplet deploy` can recover the specified publishing fields and icon bytes from the built HTML without the sidecar.

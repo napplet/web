@@ -138,7 +138,7 @@ export interface IncChannelOpenedMessage extends IncMessage {
   type: 'inc.channel.opened';
   /** Shell-assigned opaque channel identifier. */
   channelId: string;
-  /** Runtime-attested opener dTag. */
+  /** Runtime-attested opener endpoint identifier. */
   peer: string;
 }
 

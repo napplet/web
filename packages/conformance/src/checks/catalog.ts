@@ -14,17 +14,23 @@ import { validateManifestEvent, type ManifestError } from '../validators/manifes
 import type { Check } from './types.js';
 import { result } from './types.js';
 
-/** Codes that fail a given manifest check. */
+/** Findings (errors and advisories) that fail a given manifest check. */
 function manifestErrors(ctx: Parameters<Check['run']>[0], codes: ManifestError['code'][]): ManifestError[] {
-  return validateManifestEvent(ctx.manifestEvent).errors.filter((e) => codes.includes(e.code));
+  const verdict = validateManifestEvent(ctx.manifestEvent);
+  return [...verdict.errors, ...verdict.warnings].filter((e) => codes.includes(e.code));
 }
 
 /** Build a NIP-5D manifest-event check. */
-function manifestCheck(id: string, title: string, codes: ManifestError['code'][]): Check {
+function manifestCheck(
+  id: string,
+  title: string,
+  codes: ManifestError['code'][],
+  severity: Check['severity'] = 'error',
+): Check {
   return {
     id,
     area: 'manifest',
-    severity: 'error',
+    severity,
     title,
     run: (ctx) => {
       if (!ctx.manifestEvent) return result.skip('No NIP-5D manifest event was resolved');
@@ -43,13 +49,18 @@ export const CHECKS: Check[] = [
     'unexpected-d-tag',
   ]),
   manifestCheck('manifest/index-html', 'Manifest declares a hashed /index.html', [
-    'missing-index-html',
-    'invalid-index-html-hash',
+    'invalid-artifact-hash',
+    'missing-description',
+    'invalid-metadata',
   ]),
-  manifestCheck('manifest/requires', 'requires tags are bare known NAP domains', [
+  manifestCheck('manifest/requires', 'R/O tags name bare NAP domains', [
     'invalid-required-nap',
-    'unknown-required-nap',
+    'invalid-optional-nap',
   ]),
+  // Registry coverage is a tooling advisory, not a protocol requirement.
+  manifestCheck('manifest/requires-known', 'R/O domains are in this toolchain registry (advisory)', [
+    'unknown-required-nap',
+  ], 'warning'),
 
   // ── boot ─────────────────────────────────────────────────────────────────────
   {

@@ -149,9 +149,10 @@ function createHarness(
 }
 
 async function flushUntil(predicate: () => boolean): Promise<void> {
-  for (let index = 0; index < 30; index += 1) {
+  const deadline = performance.now() + 5_000;
+  while (performance.now() < deadline) {
     if (predicate()) return;
-    await new Promise<void>((resolve) => setImmediate(resolve));
+    await new Promise<void>((resolve) => setTimeout(resolve, 10));
   }
   expect(predicate()).toBe(true);
 }

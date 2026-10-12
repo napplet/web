@@ -1,5 +1,109 @@
 # @napplet/cli
 
+## 0.9.0
+
+### Minor Changes
+
+- Run standalone CLI commands without installed host runtimes, package managers, Git, Kehto, browser tooling, or keychain utilities. Browser and Paja commands provision private cached tooling automatically; screenshots and conformance share it. Linux browser packs include libraries and fonts for x64 and ARM64. Hosts without native keychains use password-encrypted local storage.
+
+  Remote scaffolding downloads GitHub or HTTP(S) ZIP templates without Git. Other Git transports now require a local directory or archive URL. The exported CLI `resolveConformanceCommand` helper is asynchronous because it may provision private tooling.
+
+### Patch Changes
+
+- Updated dependencies - @napplet/boilerplate@0.4.0
+
+## 0.8.9
+
+### Patch Changes
+
+- Add napplet.run client attribution to current and legacy deployment manifests, snapshots, and optional Zapstore application events before signing.
+
+## 0.8.8
+
+### Patch Changes
+
+- Link current deployment manifests to optional Zapstore application metadata using the proposed NIP-5D app reference, allowing clients to discover screenshots. Publish application metadata before referencing manifests.
+
+## 0.8.7
+
+### Patch Changes
+
+- Pin screenshot and default conformance commands to the tested browser runner so older project-local dependencies cannot intercept them. Preserve custom conformance commands.
+
+## 0.8.6
+
+### Patch Changes
+
+- Infer missing NIP-5D source tags from the selected build's Git origin. Add metadata.source to override the URL or suppress source publication with false.
+
+## 0.8.5
+
+### Patch Changes
+
+- Capture deploy screenshots without a host URL using an automatic local Kehto Paja preview. Install Chromium on first use and retain explicit preview URLs.
+
+## 0.8.4
+
+### Patch Changes
+
+- Add optional Zapstore application metadata publishing with local screenshot uploads, dry-run previews, publication failure reporting, the preview screenshot command, and inline capture with deploy --screenshot.
+
+## 0.8.3
+
+### Patch Changes
+
+- 2910c4b: Accept queryless convention URIs such as `napplet:note/open` directly in CLI archetype input and JSON metadata. Derive the role from the URI, preserve existing object configs and legacy CLI input, and correct setup prompts, reports, and documentation.
+- Updated dependencies [2910c4b]
+  - @napplet/boilerplate@0.3.4
+
+## 0.8.2
+
+### Patch Changes
+
+- f33d9d6: Add `napplet --version`, `napplet -v`, and `napplet version` to report the installed package version in JSR and standalone installations.
+
+## 0.8.1
+
+### Patch Changes
+
+- Follow the NAP-INTENT lifecycle and manifest amendments: accept authoritative convention URIs and naddr recommendations, expose acceptance results and buffered onDelivery callbacks, and discover opaque catalog identifiers with parameter contracts. Restore the optional NAP-SHELL environment API independently of other domain calls. Align INC provenance with authenticated endpoint identifiers and deliver theme/identity updates only for exposed domains.
+
+  INTENT callers migrate from archetype/request arguments to invoke(uri, options) and open(uri, options), from handled/windowId to acceptance, and from candidate dTag to id/contracts. Existing IntentOpenOptions and named SDK helpers remain exported with the URI signatures. CLI helper extraction preserves existing exports and behavior.
+
+## 0.8.0
+
+### Minor Changes
+
+- b3c8ace: Preserve NIP-5D publishing metadata in the built HTML head before computing its artifact hash. Resolve plugin options, author declarations and inferred capabilities consistently; add icon byte input while retaining hash-only callers.
+
+  Recover current-format deploy metadata and supported data-URL icon bytes from standalone HTML without a sidecar. Upload the same decoded icon bytes, respect explicit deployment overrides and event-kind restrictions, and preserve legacy-format behavior. Embedded metadata changes now change the built artifact hash.
+
+  Validate configured and recovered Blossom upload destinations before signing manifests or uploading, with clear errors for missing values and non-origin URLs.
+
+## 0.7.0
+
+### Minor Changes
+
+- Adopt the current NIP-5D artifact-hash manifest schema for kinds 5129, 15129 and 35129. Writers emit one direct artifact `x` hash, description content, required/optional `R`/`O` domains and independent `z`/`i` advertisements. Readers verify current events and raw artifact bytes; legacy events require migration or older readers.
+
+  CLI deployment defaults to current output and offers temporary explicit legacy serialization. Add offline signed-event migration previews without altering source events or publishing. Vite builds default to a self-contained artifact; compatibility helper and sidecar names remain available. See the event migration guide for package cutoffs, immutable pointers and shell ACL/storage implications.
+
+### Patch Changes
+
+- Preserve unknown required domains from plugin sidecars in both current and legacy deployments, including trimmed non-empty requirements from legacy sidecars (#223).
+- Current deploys fail with the list of built files they would drop instead of silently uploading only `/index.html`; `napplet debug` reports manifest template errors in `manifests.error` instead of crashing and accepts `--format current|legacy`; a domain listed as both required and optional is emitted only as `O`.
+
+## 0.6.0
+
+### Minor Changes
+
+- 976ad05: Remove the `napplet skills` subcommand and the bundled `@napplet/skills` installer. Agent skills now live in the repository's `skills/` directory as `napplet-*` skills and install with the open skills.sh CLI: `npx skills add napplet/napplet`. `napplet guide`, `napplet init` output, and the `napplet create` next-steps point at that command.
+
+### Patch Changes
+
+- Updated dependencies [976ad05]
+  - @napplet/boilerplate@0.3.3
+
 ## 0.5.2
 
 ### Patch Changes

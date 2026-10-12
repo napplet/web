@@ -2,7 +2,6 @@
   "workspace": [
     "./packages/boilerplate",
     "./packages/build-tools",
-    "./packages/skills",
     "./packages/cli",
     "./packages/conformance",
     "./packages/core",

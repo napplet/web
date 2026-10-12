@@ -19,7 +19,7 @@ describe('@napplet/shim — runtime injection', () => {
     expect((installed as { shell?: unknown }).shell).toBeUndefined();
   });
 
-  it('installs the merged INTENT request surface without draft delivery hooks', () => {
+  it('installs INTENT delivery without requiring INC or SHELL', () => {
     const installed = installNappletGlobal({ domains: ['intent'] });
 
     expect(installed.inc).toBeUndefined();
@@ -30,7 +30,7 @@ describe('@napplet/shim — runtime injection', () => {
       handlers: expect.any(Function),
       onChanged: expect.any(Function),
     });
-    expect((installed.intent as { onDelivery?: unknown }).onDelivery).toBeUndefined();
+    expect(installed.intent?.onDelivery).toEqual(expect.any(Function));
   });
 
   it('installs the complete INC topic and channel surface', () => {

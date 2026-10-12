@@ -38,6 +38,7 @@ import {
   available as intentAvailable,
   handlers as intentHandlers,
   onChanged as intentOnChanged,
+  onDelivery as intentOnDelivery,
 } from '@napplet/nap/intent/shim';
 import {
   open as webrtcOpen,
@@ -171,6 +172,7 @@ function installNetworkDomains(domains: ReadonlySet<NapDomain>, napplet: Partial
       available: intentAvailable,
       handlers: intentHandlers,
       onChanged: intentOnChanged,
+      onDelivery: intentOnDelivery,
     };
   }
 

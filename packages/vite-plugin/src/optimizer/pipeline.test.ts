@@ -540,11 +540,11 @@ describe('large single-file artifact optimizer', () => {
       resolvedSchema: null,
       resolvedSchemaSource: null,
       inferredRequires: new Set(),
-      reportedMissingRequires: new Set(),
+      reportedRequirementWarnings: new Set(),
     };
 
     await writeBundleManifest(
-      { nappletType: 'optimizer-tracer', artifactMode: 'single-file' },
+      { nappletType: 'optimizer-tracer', description: 'Direct HTML optimizer fixture', artifactMode: 'single-file' },
       state,
       {
         authorize: async () => ({ token: 'short-lived-test-authorization', expiresAt: Date.now() + 60_000 }),
@@ -555,7 +555,7 @@ describe('large single-file artifact optimizer', () => {
 
     const manifest = JSON.parse(fs.readFileSync(path.join(dist, '.nip5a-manifest.json'), 'utf-8')) as { tags: string[][] };
     const html = fs.readFileSync(path.join(dist, 'index.html'), 'utf-8');
-    expect(manifest.tags.filter((tag) => tag[0] === 'requires')).toEqual([]);
+    expect(manifest.tags.filter((tag) => tag[0] === 'R')).toEqual([]);
     expect(manifest.tags.flat().join(' ')).not.toContain('data-napplet-private-resource-table');
     expect(html).toContain('data:application/octet-stream;base64');
     expect(fs.existsSync(path.join(dist, 'asset.bin'))).toBe(false);
@@ -576,15 +576,15 @@ describe('large single-file artifact optimizer', () => {
       resolvedSchema: null,
       resolvedSchemaSource: null,
       inferredRequires: new Set(),
-      reportedMissingRequires: new Set(),
+      reportedRequirementWarnings: new Set(),
     };
 
-    await writeBundleManifest({ nappletType: 'optimizer-baseline', artifactMode: 'single-file' }, state);
+    await writeBundleManifest({ nappletType: 'optimizer-baseline', description: 'Inline optimizer baseline', artifactMode: 'single-file' }, state);
 
     const html = fs.readFileSync(path.join(dist, 'index.html'), 'utf-8');
     const manifest = JSON.parse(fs.readFileSync(path.join(dist, '.nip5a-manifest.json'), 'utf-8')) as { tags: string[][] };
     expect(html).toContain('data:application/octet-stream;base64,UlJSUlJSUlJSUlJS');
     expect(fs.existsSync(path.join(dist, 'asset.bin'))).toBe(false);
-    expect(manifest.tags.filter((tag) => tag[0] === 'requires')).toEqual([]);
+    expect(manifest.tags.filter((tag) => tag[0] === 'R')).toEqual([]);
   });
 });

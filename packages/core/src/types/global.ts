@@ -1,3 +1,4 @@
+import type { ShellApi } from './shell.js';
 import type { RelayApi, IncApi, StorageApi, KeysApi } from './global/nostr-api.js';
 
 export type {
@@ -48,6 +49,8 @@ import type {
  * domain to the napplet; absence means the domain is unavailable.
  */
 export interface NappletGlobal {
+  /** Optional shell environment; other domains work without it. */
+  shell?: ShellApi;
   /**
    * NIP-01 relay operations: subscribe to events, publish events, one-shot queries.
    * Routes through the shell's relay pool via postMessage.

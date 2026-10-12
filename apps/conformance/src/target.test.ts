@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { nip19 } from 'nostr-tools';
 import { NAPPLET_KIND_NAMED, NAPPLET_KIND_SNAPSHOT, type NappletManifestEvent } from '@napplet/conformance';
-import { computeAggregateHash, decodeNappletPointer, isHttpTarget } from './target.js';
+import { fetchIndexHtml, resolveTarget, decodeNappletPointer, isHttpTarget } from './target.js';
 
 const PUBKEY = 'a'.repeat(64);
 const ID = 'b'.repeat(64);
@@ -48,22 +48,38 @@ describe('target parsing', () => {
   });
 });
 
-describe('manifest aggregate hashing', () => {
-  it('hashes sorted path-tag pairs only', async () => {
-    const event: NappletManifestEvent = {
-      kind: NAPPLET_KIND_NAMED,
-      tags: [
-        ['d', 'demo'],
-        ['path', '/b.js', 'b'.repeat(64)],
-        ['title', 'ignored'],
-        ['path', '/index.html', 'a'.repeat(64)],
-      ],
+describe('artifact verification', () => {
+  const html = '<!doctype html><title>Verified napplet</title>';
+  async function manifest(): Promise<NappletManifestEvent> {
+    const hash = [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(html)))].map((byte) => byte.toString(16).padStart(2, '0')).join('');
+    return { kind: NAPPLET_KIND_NAMED, content: 'A verified napplet', tags: [['d', 'demo'], ['x', hash], ['server', 'https://blossom.example']] };
+  }
+
+  it('fetches by direct x hash and verifies the exact artifact bytes', async () => {
+    const event = await manifest();
+    const fetcher: typeof fetch = async (url) => {
+      expect(String(url)).toBe(`https://blossom.example/${event.tags[1][1]}`);
+      return new Response(html);
     };
-    const expected = await crypto.subtle.digest(
-      'SHA-256',
-      new TextEncoder().encode(`${'a'.repeat(64)} /index.html\n${'b'.repeat(64)} /b.js\n`),
-    );
-    const expectedHex = [...new Uint8Array(expected)].map((byte) => byte.toString(16).padStart(2, '0')).join('');
-    await expect(computeAggregateHash(event)).resolves.toBe(expectedHex);
+    await expect(fetchIndexHtml(event, fetcher)).resolves.toBe(html);
+    await expect(fetchIndexHtml(event, async () => new Response('tampered'))).rejects.toThrow(/did not match/);
+  });
+
+  it('rejects missing, duplicate, uppercase and legacy x before fetching', async () => {
+    const original = await manifest();
+    for (const hashes of [[], [['x', 'A'.repeat(64)]], [original.tags[1], original.tags[1]], [['x', original.tags[1][1], 'aggregate']]]) {
+      const event = { ...original, tags: [['d', 'demo'], ...hashes] };
+      await expect(fetchIndexHtml(event, async () => { throw new Error('unexpected fetch'); })).rejects.toThrow(/exactly one x/);
+    }
+  });
+
+  it('resolves a signed event through the complete reader path', async () => {
+    const { finalizeEvent } = await import('nostr-tools/pure');
+    const template = await manifest();
+    const event = finalizeEvent({ kind: template.kind, tags: template.tags, content: template.content!, created_at: 1 }, new Uint8Array(32).fill(1));
+    const pointer = nip19.neventEncode({ id: event.id, relays: [RELAY] });
+    const result = await resolveTarget(pointer, { pool: { get: async () => event, destroy: () => {} }, fetcher: async () => new Response(html), createObjectUrl: () => 'blob:test' });
+    expect(result.html).toBe(html);
+    expect(result.manifestEvent?.content).toBe(template.content);
   });
 });

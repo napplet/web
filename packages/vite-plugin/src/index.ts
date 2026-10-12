@@ -17,6 +17,7 @@
  *   plugins: [
  *     nip5aManifest({
  *       nappletType: "feed",
+ *       description: "Read a Nostr feed",
  *       requires: ["outbox", "storage"],
  *       artifactMode: "single-file",
  *     }),
@@ -27,9 +28,9 @@
  * During build it can:
  *
  * - rewrite local JS/CSS assets into `index.html` for single-file artifacts
- * - compute per-file SHA-256 hashes and the NIP-5A aggregate hash
+ * - compute the SHA-256 of the final index.html artifact
  * - write `.nip5a-manifest.json` containing a NIP-5D kind 35129 manifest template
- * - inject optional plain-HTML title and description metadata
+ * - embed resolved NIP-5D publishing metadata into the artifact head
  * - record required domains, config schema, and archetype metadata in the
  *   manifest template or signed event
  *
@@ -49,7 +50,6 @@ import { resolvePluginConfig, writeBundleManifest } from './manifest.js';
 import {
   addInferredRequirements,
   inferRequirementsFromSource,
-  reportRequirementDiagnostics,
 } from './requirements.js';
 
 export { NAPPLET_KIND_NAMED, NAPPLET_KIND_ROOT, NAPPLET_KIND_SNAPSHOT } from './types.js';
@@ -63,17 +63,17 @@ export type {
 export type { NodeOptimizationOptions, NodePairingAdapter } from './optimizer/node-services.js';
 
 /**
- * Create the NIP-5A manifest Vite plugin.
+ * Create the NIP-5D manifest Vite plugin (historical helper name retained).
  *
  * @param options - manifest options (napplet type, requires, artifact mode,
  *                   config schema).
  * @returns A Vite {@link Plugin} that optionally updates plain HTML metadata
- *          and generates the NIP-5A manifest template at build time.
+ *          and generates the NIP-5D manifest template at build time.
  * @example
  * import { nip5aManifest } from '@napplet/vite-plugin';
  *
  * export default {
- *   plugins: [nip5aManifest({ nappletType: 'feed' })],
+ *   plugins: [nip5aManifest({ nappletType: 'feed', description: 'Read a feed' })],
  * };
  */
 export function nip5aManifest(options: Nip5aManifestOptions): Plugin {
@@ -81,14 +81,14 @@ export function nip5aManifest(options: Nip5aManifestOptions): Plugin {
     outDir: 'dist',
     projectRoot: process.cwd(),
     base: '/',
-    artifactMode: options.artifactMode ?? 'external-assets',
+    artifactMode: options.artifactMode ?? 'single-file',
     largeAssetOptimization: options.largeAssetOptimization ?? 'auto',
     optimizationCallbackConflict: false,
     optimizationReport: null,
     resolvedSchema: null,
     resolvedSchemaSource: null,
     inferredRequires: new Set(),
-    reportedMissingRequires: new Set(),
+    reportedRequirementWarnings: new Set(),
   };
 
   return {
@@ -115,7 +115,6 @@ export function nip5aManifest(options: Nip5aManifestOptions): Plugin {
 
     transform(code: string, id: string) {
       addInferredRequirements(state, inferRequirementsFromSource(code, id));
-      reportRequirementDiagnostics(options.requires, state, (message) => this.warn(message));
       return null;
     },
 
@@ -133,11 +132,10 @@ export function nip5aManifest(options: Nip5aManifestOptions): Plugin {
     },
 
     async closeBundle() {
-      reportRequirementDiagnostics(options.requires, state, (message) => this.warn(message));
       const optimization = typeof options.largeAssetOptimization === 'object'
         ? options.largeAssetOptimization
         : undefined;
-      await writeBundleManifest(options, state);
+      await writeBundleManifest(options, state, undefined, (message) => this.warn(message));
       if (state.optimizationReport) optimization?.onReport?.(state.optimizationReport);
     },
   };

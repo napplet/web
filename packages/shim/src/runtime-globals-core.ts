@@ -1,3 +1,4 @@
+import { shell } from '@napplet/nap/shell/shim';
 import type { NapDomain, NappletGlobal } from '@napplet/core';
 import {
   registerAction,
@@ -42,6 +43,7 @@ import {
 
 
 export function installCoreDomains(domains: ReadonlySet<NapDomain>, napplet: Partial<NappletGlobal>): void {
+  if (domains.has('shell')) napplet.shell = shell;
   installFoundationDomains(domains, napplet);
   installPresentationDomains(domains, napplet);
 }

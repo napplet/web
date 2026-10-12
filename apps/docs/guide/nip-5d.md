@@ -1,8 +1,6 @@
 # NIP-5D explained
 
-[NIP-5D — *Nostr Web Applets*](#source-of-truth) is the specification that
-defines how a napplet and its host shell talk to each other. This page summarizes
-the model the `@napplet/*` packages implement.
+[NIP-5D — *Nostr Web Applets*](#source-of-truth) is the specification that defines how a napplet and its host shell talk to each other. This page summarizes the model the `@napplet/*` packages implement.
 
 ::: warning NON-NORMATIVE — read the spec
 This page is an orientation, not the specification. The living, authoritative
@@ -27,8 +25,8 @@ this page, the packages, or any test.
 | --- | --- |
 | **Shell** | The trusted hosting web application that contains napplet iframes. |
 | **Napplet** | A sandboxed iframe application that communicates via `postMessage`. |
-| **dTag** | The napplet type identifier from its NIP-5A manifest. |
-| **Aggregate hash** | A SHA-256 over the napplet's build files; identifies an exact build. |
+| **dTag** | The napplet type identifier from its NIP-5D manifest. |
+| **Artifact hash** | SHA-256 of the final `/index.html` bytes. |
 | **NAP** | *Nostr Applet Protocol* — one capability contract between a napplet and its runtime, defining the protocol messages for a capability domain. |
 
 > In this SDK, each NAP is a **domain** that owns one message domain (`relay`,
@@ -65,17 +63,14 @@ Request/response pairs are correlated by an `id` field:
 { type: "outbox.query.result", id: "abc", events: [{ event: { /* NostrEvent */ } }] }
 ```
 
-The `type` prefix before the first `.` is the **domain**, and routes the message
-to the correct NAP handler. **Unrecognized message types are silently ignored**
-for forward compatibility — a napplet can speak to an older shell and degrade
-gracefully.
+The `type` prefix before the first `.` is the **domain**, and routes the message to the correct NAP handler. **Unrecognized message types are silently ignored** for forward compatibility — a napplet can speak to an older shell and degrade gracefully.
 
 ## Identity
 
 - The shell assigns a napplet's identity **at iframe creation time**, with no
   negotiation or handshake.
-- It maps the iframe's `Window` reference to the napplet's `(dTag, aggregateHash)`
-  tuple, read from the NIP-5A manifest.
+- It maps the iframe's `Window` reference to the napplet's `(dTag, artifactHash)`
+  tuple, verified against the signed NIP-5D manifest and artifact bytes.
 - The shell MUST verify `MessageEvent.source` on **every** inbound message.
   `MessageEvent.source` is an **unforgeable** sender identity — origin validation
   uses `source`, not `event.origin`.
@@ -83,18 +78,9 @@ gracefully.
 
 ## Manifest and NAP negotiation
 
-- A napplet's manifest is a NIP-5D **kind 35129** named-napplet event (adopting
-  the NIP-5A `path` + aggregate `x` tag schema). It declares the capabilities it
-  needs with `requires` tags: `["requires", "<nap-name>"]`.
-- The shell checks those `requires` tags against its own capabilities at load
-  time and can warn on a mismatch.
-- At runtime, a napplet detects support from domain object presence:
-  `if (window.napplet?.relay) { ... }`.
-- Napplets MUST **gracefully degrade** when a capability is absent.
+The current manifest kinds are 5129, 15129, and 35129. The manifest carries one direct artifact hash in `x`, description text in `content`, required domains in `R`, and optional integrations in `O`. Archetype advertisements use `z`; accepted intents and parameter names use `i`. See [NIP-5D §Manifest](https://github.com/dskvr/nips/blob/nip/5d/5D.md#manifest) for the complete living contract.
 
-The [`@napplet/vite-plugin`](/packages/vite-plugin) generates this manifest at
-build time — computing per-file SHA-256 hashes, the aggregate hash, and the
-`requires` / `connect` / `config` tags.
+The plugin generates current events and the CLI offers temporary legacy output. See [event migration](/guide/event-migration) for release cutoffs and rollout implications. Runtime availability still comes from injected domain presence, such as `window.napplet?.relay`.
 
 ## NAP extension framework
 
@@ -104,35 +90,19 @@ build time — computing per-file SHA-256 hashes, the aggregate hash, and the
 - Each NAP must be **independently implementable**, and shells may support any
   subset of NAPs.
 
-This is what makes the protocol modular: NAP contracts live in the
-[NAPs track](https://github.com/napplet/naps); see the
-[NAP domain reference](/naps/) for the domains this SDK ships.
+This is what makes the protocol modular: NAP contracts live in the [NAPs track](https://github.com/napplet/naps); see the [NAP domain reference](/naps/) for the domains this SDK ships.
 
 ## Convention URI projection
 
-The stable convention identity is the complete queryless
-`napplet:<archetype>/<intent>` string. Archetype manifest tags, subscriptions,
-handler discovery, normalized messages, and routing contain that identity and use exact equality.
+The stable convention identity is the complete queryless `napplet:<archetype>/<intent>` string. Archetype manifest tags, subscriptions, handler discovery, normalized messages, and routing contain that identity and use exact equality.
 
-The web binding normalizes developer-facing URI input before `postMessage` for INC `emit(topic, payload?)`. Unique percent-decoded query pairs become text payload fields, literal `+` remains `+`, and the outgoing topic is queryless. Fragments, malformed percent encoding, repeated decoded names, and a
-query combined with explicit payload reject. Structured/non-text data uses a
-queryless URI with an explicit payload.
+The web binding normalizes developer-facing URI input before `postMessage` for INC `emit(topic, payload?)`. Unique percent-decoded query pairs become text payload fields, literal `+` remains `+`, and the outgoing topic is queryless. Fragments, malformed percent encoding, repeated decoded names, and a query combined with explicit payload reject. Structured/non-text data uses a queryless URI with an explicit payload.
 
-NAP-INTENT returns an immediate result whose ordinary wire `id` correlates only
-the invocation request and result. The canonical result reports `ok`, `archetype`, `action`, and `handled`, plus optional handler, window, convention, and error fields.
+Intent calls derive archetype and action from the URI. An `ok: true` result means the runtime accepted delivery responsibility and includes the normalized identity and handler catalog identifier; an `ok: false` result includes `error`. Targets receive runtime-attested `IntentDelivery` values through `onDelivery`, including deliveries retained before registration. Behavior hints are `focus` and `reuse`. This non-normative guidance defers to the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md).
 
-At this web projection's trust boundary, the host authenticates the source
-iframe with `MessageEvent.source` and derives the NAP-level `sender` from that
-endpoint. A napplet does not provide sender. On other carriers the endpoint
-mechanism differs, while the runtime-attested sender contract stays the same.
-Receivers treat sender as provenance and payload as untrusted.
+At this web projection's trust boundary, the host authenticates the source iframe with `MessageEvent.source` and derives the NAP-level `sender` from that endpoint. A napplet does not provide sender. On other carriers the endpoint mechanism differs, while the runtime-attested sender contract stays the same. Receivers treat sender as provenance and payload as untrusted.
 
-This is non-normative guidance following the exact draft heads of [NAP-INC PR
-#89
-(`4593ce9`)](https://github.com/napplet/naps/pull/89/commits/4593ce9e301ce098fd3dad64206fcd6f144fa7af),
-[the governance/web projection PR #90
-(`896c32c`)](https://github.com/napplet/naps/pull/90/commits/896c32c92deee68dc4d10fc1132b62df20cccb6f),
-and [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md).
+This non-normative guide defers to the living [NAP-INC](https://github.com/napplet/naps/blob/master/naps/NAP-INC.md), [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md), and [web projection](https://github.com/napplet/naps/blob/master/projections/web.md).
 
 ## Security model
 
@@ -158,5 +128,4 @@ This page is a **non-normative** summary. The living, authoritative documents ar
 - **NAPs track** (the capability domains):
   [github.com/napplet/naps](https://github.com/napplet/naps)
 
-For every normative requirement, read those — not this page. See
-[NIP-5D spec status](/spec) for how drift is tracked.
+For every normative requirement, read those — not this page. See [NIP-5D spec status](/spec) for how drift is tracked.

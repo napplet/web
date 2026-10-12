@@ -2,10 +2,10 @@
   "candidateBytes": 57671680,
   "assetCount": 7,
   "maximumWholeBlobBytes": 10485760,
-  "initialHtmlBytes": 76896853,
-  "finalHtmlBytes": 25528,
-  "aggregateHash": "745dc3a7720fcb313170f514f28471be2bf55f44c03d81fcfd9fb0e9c8c1ec5c",
-  "finalIndexSha256": "e0dc07045b28d94ff19cd67c1dfd4e8e3b9485bc215e9fd3166931d63de5ec0c",
+  "initialHtmlBytes": 76897014,
+  "finalHtmlBytes": 25698,
+  "artifactHash": "1d957180c709b4a0ff299fb4629eb2d5c32fe7784a842c23f1cb3447b8271d41",
+  "finalIndexSha256": "1d957180c709b4a0ff299fb4629eb2d5c32fe7784a842c23f1cb3447b8271d41",
   "selected": [
     {
       "source": "assets/fixture-01.bin",
@@ -56,7 +56,7 @@
   "assertions": [
     "all seven exact-byte uploads carry verified kind 24242 authorization",
     "only uploaded candidate files are removed after the transaction commits",
-    "the private mapping stays in index.html, not NIP-5A tags",
+    "the private mapping stays in index.html, not NIP-5D tags",
     "resource.bytesMany recovers all selected bounded Blobs byte-for-byte",
     "a failing direct secondary upload is noncommittable and corrupt bytes recover only after verified retry",
     "the over-limit whole-Blob fallback remains inline without streaming or ranges"

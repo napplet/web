@@ -88,6 +88,10 @@ export type {
   IntentHandlerPreference,
   IntentBehavior,
   IntentOpenOptions,
+  IntentInvokeOptions,
+  IntentHandlerHint,
+  IntentContract,
+  IntentDelivery,
   IntentRequest,
   IntentCandidate,
   IntentAvailability,
@@ -231,3 +235,5 @@ export {
   getCloneMode,
   clearCloneWarnings,
 } from './boundary.js';
+
+export type { ShellApi, ShellCapabilities, ShellEnvironment } from './types/shell.js';

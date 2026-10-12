@@ -1,5 +1,37 @@
 # @napplet/conformance-cli
 
+## 0.3.3
+
+### Patch Changes
+
+- Capture deploy screenshots without a host URL using an automatic local Kehto Paja preview. Install Chromium on first use and retain explicit preview URLs.
+
+## 0.3.2
+
+### Patch Changes
+
+- Add a screenshot command that captures a napplet iframe from a running preview shell, with configurable dimensions and readiness controls and protection against overwriting files.
+
+## 0.3.1
+
+### Patch Changes
+
+- Updated dependencies
+  - @napplet/conformance@0.19.0
+
+## 0.3.0
+
+### Minor Changes
+
+- Adopt the current NIP-5D artifact-hash manifest schema for kinds 5129, 15129 and 35129. Writers emit one direct artifact `x` hash, description content, required/optional `R`/`O` domains and independent `z`/`i` advertisements. Readers verify current events and raw artifact bytes; legacy events require migration or older readers.
+
+  CLI deployment defaults to current output and offers temporary explicit legacy serialization. Add offline signed-event migration previews without altering source events or publishing. Vite builds default to a self-contained artifact; compatibility helper and sidecar names remain available. See the event migration guide for package cutoffs, immutable pointers and shell ACL/storage implications.
+
+### Patch Changes
+
+- Updated dependencies
+  - @napplet/conformance@0.18.0
+
 ## 0.2.19
 
 ### Patch Changes

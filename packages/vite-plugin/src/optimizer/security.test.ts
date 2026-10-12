@@ -7,7 +7,6 @@ import { writeBundleManifest } from '../manifest.js';
 import type { ManifestPluginState } from '../types.js';
 import type { OptimizationServices } from './pipeline.js';
 import { OPTIMIZATION_TARGET_BYTES } from './pipeline.js';
-import { computeAggregateHash } from '../hashing.js';
 
 const roots: string[] = [];
 
@@ -20,7 +19,7 @@ function state(outDir: string, root: string): ManifestPluginState {
     resolvedSchema: null,
     resolvedSchemaSource: null,
     inferredRequires: new Set(['relay']),
-    reportedMissingRequires: new Set(),
+    reportedRequirementWarnings: new Set(),
   };
 }
 
@@ -56,37 +55,38 @@ describe('large asset optimizer manifest security boundary', () => {
   it('emits one resource requirement only after a committed transaction and hashes the final index.html', async () => {
     const built = fixture();
     await writeBundleManifest(
-      { nappletType: 'security', artifactMode: 'single-file', requires: ['relay', 'resource'] },
+      { nappletType: 'security', description: 'Packaged security fixture', artifactMode: 'single-file', requires: ['relay'], optional: ['resource', 'theme'] },
       state(built.dist, built.root),
       services(built.payload),
     );
 
     const html = fs.readFileSync(path.join(built.dist, 'index.html'), 'utf8');
-    const manifest = JSON.parse(fs.readFileSync(path.join(built.dist, '.nip5a-manifest.json'), 'utf8')) as { aggregateHash: string; tags: string[][] };
-    expect(manifest.tags.filter((tag) => tag[0] === 'requires')).toEqual([
-      ['requires', 'relay'],
-      ['requires', 'resource'],
+    const manifest = JSON.parse(fs.readFileSync(path.join(built.dist, '.nip5a-manifest.json'), 'utf8')) as { artifactHash: string; tags: string[][] };
+    expect(manifest.tags.filter((tag) => tag[0] === 'R')).toEqual([
+      ['R', 'relay'],
+      ['R', 'resource'],
     ]);
+    expect(manifest.tags.filter((tag) => tag[0] === 'O')).toEqual([['O', 'theme']]);
+    expect(html).toContain('name="napplet-requires" content="relay resource"');
+    expect(manifest.tags.some((tag) => tag[0] === 'path' || tag[0] === 'requires')).toBe(false);
     expect(manifest.tags.flat().join(' ')).not.toContain('data-napplet-private-resource-table');
     expect(manifest.tags.flat().join(' ')).not.toContain('blossom:sha256:');
     expect(html).toContain('data-napplet-private-resource-table');
-    expect(manifest.aggregateHash).toBe(computeAggregateHash([[
-      crypto.createHash('sha256').update(html).digest('hex'),
-      '/index.html',
-    ]]));
+    expect(manifest.artifactHash).toBe(crypto.createHash('sha256').update(html).digest('hex'));
+    expect(manifest.tags.filter((tag) => tag[0] === 'x')).toEqual([['x', manifest.artifactHash]]);
     expect(fs.existsSync(path.join(built.dist, 'assets', 'payload.bin'))).toBe(false);
   });
 
   it('rolls back the artifact and omits resource when upload evidence is incomplete', async () => {
     const built = fixture();
     await writeBundleManifest(
-      { nappletType: 'security-failure', artifactMode: 'single-file', requires: ['relay'] },
+      { nappletType: 'security-failure', description: 'Packaged fallback fixture', artifactMode: 'single-file', requires: ['relay'] },
       state(built.dist, built.root),
       services(built.payload, true),
     );
 
     const manifest = JSON.parse(fs.readFileSync(path.join(built.dist, '.nip5a-manifest.json'), 'utf8')) as { tags: string[][] };
-    expect(manifest.tags.filter((tag) => tag[0] === 'requires')).toEqual([['requires', 'relay']]);
+    expect(manifest.tags.filter((tag) => tag[0] === 'R')).toEqual([['R', 'relay']]);
     expect(fs.existsSync(path.join(built.dist, 'assets', 'payload.bin'))).toBe(false);
     expect(fs.readFileSync(path.join(built.dist, 'index.html'), 'utf8')).toContain('data:application/octet-stream;base64');
   });

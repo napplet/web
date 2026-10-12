@@ -14,8 +14,8 @@
  * napplet guide
  * napplet create feed
  * cd feed
- * napplet init --relay wss://relay.example --server https://blossom.example --name feed --title Feed --archetype note:napplet:note/open
- * napplet skills install --to codex
+ * napplet init --relay wss://relay.example --server https://blossom.example --name feed --title Feed --archetype napplet:note/open
+ * npx skills add napplet/napplet
  * napplet debug
  * napplet deploy --dry-run --sec nsec1...
  * ```
@@ -64,9 +64,12 @@ export * from "./init-wizard.ts";
 export * from "./keys-command.ts";
 export * from "./key-store.ts";
 export * from "./manifest.ts";
+export * from "./manifest-format.ts";
+export * from "./migrate.ts";
 export * from "./output.ts";
 export * from "./prompt.ts";
 export * from "./process.ts";
 export * from "./signing.ts";
 export * from "./suggestions.ts";
 export * from "./types.ts";
+export * from "./zapstore.ts";

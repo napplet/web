@@ -2,10 +2,7 @@
 
 > JSON envelope types and NAP dispatch infrastructure for the napplet ecosystem.
 
-`@napplet/core` is the single source of truth for all protocol-level definitions.
-Every other `@napplet/*` package imports its envelope types, dispatch
-infrastructure, and protocol constants from here. It has **zero dependencies** and
-no DOM or browser APIs — it works in any JavaScript runtime.
+`@napplet/core` is the single source of truth for all protocol-level definitions. Every other `@napplet/*` package imports its envelope types, dispatch infrastructure, and protocol constants from here. It has **zero dependencies** and no DOM or browser APIs — it works in any JavaScript runtime.
 
 - **npm:** [`@napplet/core`](https://www.npmjs.com/package/@napplet/core)
 - **JSR:** [`@napplet/core`](https://jsr.io/@napplet/core)
@@ -43,8 +40,7 @@ import {
 
 ### Dispatch infrastructure
 
-NAP modules self-register at import time; inbound messages route by the domain
-prefix of `message.type` (the part before the first `.`).
+NAP modules self-register at import time; inbound messages route by the domain prefix of `message.type` (the part before the first `.`).
 
 - **`createDispatch()`** — factory returning an isolated
   `{ registerNap, dispatch, getRegisteredDomains }` backed by its own registry.
@@ -56,11 +52,7 @@ prefix of `message.type` (the part before the first `.`).
 
 ### Boundary helpers (clone-safety)
 
-Every NAP shim crosses the napplet ⇄ shell boundary by structured-cloning a JSON
-envelope through `postMessage`. Framework reactive values — Svelte 5 `$state`,
-Vue `reactive`, Solid stores — are `Proxy` objects that are **not** structured-
-cloneable, so a naive `postMessage` throws `DataCloneError`, which is silently
-swallowed in async paths (the envelope never crosses). These helpers fix that.
+Every NAP shim crosses the napplet ⇄ shell boundary by structured-cloning a JSON envelope through `postMessage`. Framework reactive values — Svelte 5 `$state`, Vue `reactive`, Solid stores — are `Proxy` objects that are **not** structured- cloneable, so a naive `postMessage` throws `DataCloneError`, which is silently swallowed in async paths (the envelope never crosses). These helpers fix that.
 
 - **`sendEnvelope(target, message, targetOrigin?)`** — the single boundary
   chokepoint the shims post through. Per the active clone mode it posts the
@@ -79,16 +71,14 @@ swallowed in async paths (the envelope never crosses). These helpers fix that.
 ```ts
 import { setCloneMode, toCloneableSnapshot } from '@napplet/core';
 
-// Default 'auto' just works — reactive state is snapshotted on the failure path.
-napplet.outbox.subscribe(filters, { relays, timeoutMs: 3000 });
+// Default 'auto' just works — reactive state is snapshotted on the failure path. napplet.outbox.subscribe(filters, { relays, timeoutMs: 3000 });
 
 // Or normalize explicitly / eagerly:
 napplet.outbox.subscribe(toCloneableSnapshot(filters), { relays });
 setCloneMode('snapshot');
 ```
 
-These helpers are SDK plumbing only — the bytes placed on the wire are identical
-plain envelopes, so they add no protocol surface.
+These helpers are SDK plumbing only — the bytes placed on the wire are identical plain envelopes, so they add no protocol surface.
 
 ### Protocol types & constants
 
@@ -110,16 +100,11 @@ INC `emit(topic, payload?)` accepts a convention URI. Unique percent-decoded que
 napplet.inc.emit('napplet:profile/open?pubkey=abc123');
 napplet.inc.on('napplet:profile/open', (event) => validateLocally(event.payload));
 
-const result = await napplet.intent.open(
-  'profile',
-  { pubkey: 'abc123' },
-  { convention: 'napplet:profile/open', behavior: { newWindow: true } },
-);
-if (!result.handled) throw new Error(result.error);
+const result = await napplet.intent.open('napplet:profile/open', { payload: { pubkey: 'abc123' }, behavior: { reuse: false } });
+if (!result.ok) throw new Error(result.error);
 ```
 
-INTENT results expose required `ok`, `archetype`, `action`, and `handled`
-fields. INC convention URI transposition remains an `emit`-only rule.
+Intent calls derive archetype and action from the URI. An `ok: true` result means the runtime accepted delivery responsibility and includes the normalized identity and handler catalog identifier; an `ok: false` result includes `error`. Targets receive runtime-attested `IntentDelivery` values through `onDelivery`, including deliveries retained before registration. Behavior hints are `focus` and `reuse`. This non-normative guidance defers to the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md).
 
 This package defers to the living [NAP-INC](https://github.com/napplet/naps/blob/master/naps/NAP-INC.md) and [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md) documents.
 
@@ -132,10 +117,7 @@ import { createDispatch } from '@napplet/core';
 
 const { registerNap, dispatch } = createDispatch();
 
-registerNap('outbox', (msg) => {
-  // handles all outbox.* messages
-  console.log('outbox message:', msg.type);
-});
+registerNap('outbox', (msg) => {   // handles all outbox.* messages   console.log('outbox message:', msg.type); });
 
 dispatch({ type: 'outbox.query', id: 'abc', filters: [{ kinds: [1] }] }); // true
 dispatch({ type: 'unknown.action' });                                     // false
@@ -146,3 +128,21 @@ dispatch({ type: 'malformed' });                                           // fa
 
 - [Core concepts](/guide/concepts) — the JSON envelope and NAP dispatch model
 - [NIP-5D explained](/guide/nip-5d) — the wire format this package implements
+
+
+### Optional shell environment
+
+The runtime may expose `shell` for environment information. `shell.supports(domain)` reads current domain object presence, `shell.services` is empty until environment delivery, and `shell.ready()` / `shell.onReady(handler)` use the retained snapshot. Readiness does not gate other domain calls. See the living [NAP-SHELL](https://github.com/napplet/naps/blob/master/naps/NAP-SHELL.md).
+
+### Intent delivery and recommendations
+
+```ts
+import { intent } from '@napplet/sdk';
+
+intent.onDelivery(({ sender, convention, payload }) => {
+  console.log(sender, convention, payload);
+});
+await intent.invoke('napplet:profile/open?pubkey=abc123');
+```
+
+The runtime binding retains deliveries until a listener registers. Discovery candidates expose opaque catalog `id` values and `contracts` with parameter names. INC peers instead use identifiers for running authenticated endpoints. A NAP-INTENT URI may append a bare `#naddr1…` recommendation; the binding sends its coordinate and relay hints as `handlerHint`, outside convention identity and payload. An applicable user default takes precedence. INC URI operations reject fragments. See the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md) and [web projection](https://github.com/napplet/naps/blob/master/projections/web.md).

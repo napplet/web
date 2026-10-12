@@ -1,76 +1,46 @@
-import {
-  REFERENCE_CONVENTION,
-  REFERENCE_HANDLER,
-  ok,
-} from './reference-responses.js';
+/** Reference INTENT acceptance and lifecycle-independent delivery. */
+import type { IntentAvailability } from '@napplet/core';
+import { catalogAvailability, type CatalogManifest } from './intent-catalog.js';
+import { REFERENCE_HANDLER, REFERENCE_MANIFEST, ok, type ReferenceEndpoint } from './reference-responses.js';
 
 export interface IntentHandlers {
-  handleInvoke(endpoint: { dTag: string }, env: Record<string, unknown>): unknown[];
-  availability(archetype: unknown): Record<string, unknown>;
+  handleInvoke(endpoint: ReferenceEndpoint, env: Record<string, unknown>): unknown[];
+  availability(archetype: unknown): IntentAvailability;
+  handlers(): IntentAvailability[];
 }
 
-function unavailableIntent(
-  id: unknown,
-  archetype: string,
-  action: string,
-  error: string,
-): unknown[] {
-  return ok({
-    type: 'intent.invoke.result',
-    id,
-    result: { ok: false, archetype, action, handled: false, error },
-  });
-}
-
-export function createIntentHandlers(): IntentHandlers {
-  return { handleInvoke, availability };
-}
-
-function handleInvoke(_endpoint: { dTag: string }, env: Record<string, unknown>): unknown[] {
-  const request = env.request;
-  if (typeof request !== 'object' || request === null || Array.isArray(request)) {
-    return unavailableIntent(env.id, '', 'open', 'invalid intent request');
-  }
-
-  const intent = request as Record<string, unknown>;
-  const archetype = typeof intent.archetype === 'string' ? intent.archetype : '';
-  const action = typeof intent.action === 'string' ? intent.action : 'open';
-  if (!archetype) {
-    return unavailableIntent(env.id, archetype, action, 'intent request requires an archetype');
-  }
-  if (archetype !== 'note') return unavailableIntent(env.id, archetype, action, 'no handler');
-  if (intent.convention !== undefined && intent.convention !== REFERENCE_CONVENTION) {
-    return unavailableIntent(env.id, archetype, action, 'unsupported convention');
-  }
-
-  return ok({
-    type: 'intent.invoke.result',
-    id: env.id,
-    result: {
-      ok: true,
-      archetype,
-      action,
-      handled: true,
-      handler: REFERENCE_HANDLER,
-      windowId: 'reference-window',
-      convention: typeof intent.convention === 'string' ? intent.convention : REFERENCE_CONVENTION,
-    },
-  });
-}
-
-function availability(archetype: unknown): Record<string, unknown> {
-  if (archetype !== 'note') {
-    return { archetype, available: false, candidates: [], hasDefault: false };
-  }
+/** Create fixture handlers from installed verified metadata. */
+export function createIntentHandlers(
+  queueDelivery: (target: string, delivery: unknown) => void,
+  manifests: readonly CatalogManifest[] = [REFERENCE_MANIFEST],
+  defaults: Readonly<Record<string, string>> = { note: REFERENCE_HANDLER },
+): IntentHandlers {
+  const availability = (archetype: unknown): IntentAvailability =>
+    catalogAvailability(manifests, String(archetype), defaults[String(archetype)]);
   return {
-    archetype,
-    available: true,
-    candidates: [{
-      dTag: REFERENCE_HANDLER,
-      actions: ['open'],
-      conventions: [REFERENCE_CONVENTION],
-      isDefault: true,
-    }],
-    hasDefault: true,
+    availability,
+    handlers: () => [...new Set(manifests.flatMap((manifest) => manifest.tags.filter((tag) => tag[0] === 'z').map((tag) => tag[1])))].map(availability),
+    handleInvoke(endpoint, env) {
+      const request = env.request as { archetype: string; action: string; convention: string; payload?: unknown; handler?: string };
+      const candidates = availability(request.archetype).candidates.filter((candidate) => candidate.conventions.includes(request.convention));
+      const explicit = request.handler && !['default', 'choose'].includes(request.handler);
+      // This fixture declines interactive selection and ignores optional recommendations under its policy.
+      const candidate = request.handler === 'choose' ? undefined : explicit
+        ? candidates.find((item) => item.id === request.handler)
+        : candidates.find((item) => item.isDefault) ?? candidates[0];
+      if (!candidate) return ok({ type: 'intent.invoke.result', id: env.id, result: { ok: false, error: 'no handler' } });
+      const { archetype, action, convention } = request;
+      queueDelivery(candidate.id, structuredClone({
+        type: 'intent.deliver',
+        delivery: {
+          sender: endpoint.catalogId,
+          archetype,
+          action,
+          convention,
+          ...('payload' in request ? { payload: request.payload } : {}),
+        },
+      }));
+      return ok({ type: 'intent.invoke.result', id: env.id, result: { ok: true, archetype, action, convention, handler: candidate.id } });
+    },
   };
 }

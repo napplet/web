@@ -1,5 +1,6 @@
 import { RedactedSecret, type SecretStore } from "@napplet/build-tools";
 import { type CommandRunner, runCommand } from "./process.ts";
+import { PortableKeyStore } from "./portable-key-store.ts";
 
 /** KEY_SERVICE_NAME constant used by native key storage helpers. */
 export const KEY_SERVICE_NAME = "napplet";
@@ -66,14 +67,21 @@ export async function getKeyStoreProvider(
   const os = options.os ?? Deno.build.os;
   const env = options.env ?? Deno.env.toObject();
   const run = options.run ?? runCommand;
+  if (env.NAPPLET_KEYSTORE === "portable") return new PortableKeyStore(env.NAPPLET_KEYSTORE_DIR);
 
   if (env.NAPPLET_DISABLE_KEYCHAIN === "true" || env.NAPPLET_TEST_MODE === "true") {
     return null;
   }
 
   const provider = createProvider(os, env, run);
-  if (!provider) return null;
-  return await provider.isAvailable() ? provider : null;
+  if (provider) {
+    try {
+      if (await provider.isAvailable()) return provider;
+    } catch (error) {
+      if (!(error instanceof Deno.errors.NotFound)) throw error;
+    }
+  }
+  return new PortableKeyStore(env.NAPPLET_KEYSTORE_DIR);
 }
 
 /** require key store provider helper for native key storage. */
@@ -83,7 +91,7 @@ export async function requireKeyStoreProvider(
   const provider = await getKeyStoreProvider(options);
   if (!provider) {
     throw new Error(
-      "No protected keychain writer is available. Install Linux libsecret secret-tool with a D-Bus session or configure an in-memory credential provider.",
+      "Key storage is disabled by NAPPLET_DISABLE_KEYCHAIN or NAPPLET_TEST_MODE.",
     );
   }
   return provider;

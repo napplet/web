@@ -7,3 +7,5 @@
 export type * from './nap-types-foundation.js';
 export type * from './nap-types-services.js';
 export type * from './nap-types-devices.js';
+
+export type { ShellApi, ShellCapabilities, ShellEnvironment } from '@napplet/core';

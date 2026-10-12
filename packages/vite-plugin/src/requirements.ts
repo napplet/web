@@ -72,16 +72,15 @@ export function resolvedRequirements(
  *
  * `resource` is protocol surface defined by the published NAP-RESOURCE proposal
  * at https://github.com/napplet/naps/pull/80. It is included only when the final
- * artifact actually committed one or more private resource mappings; candidate
- * and failed uploads cannot change the manifest.
+ * artifact actually committed one or more private resource mappings. Author
+ * declarations are preserved even when no optimizer transaction commits.
  */
 export function effectiveRequirements(
   configured: readonly string[],
   committedResourceCount: number,
 ): string[] {
-  const withoutResource = configured.filter((domain) => domain.trim() !== 'resource');
   return dedupeRequirements(
-    committedResourceCount > 0 ? [...withoutResource, 'resource'] : withoutResource,
+    committedResourceCount > 0 ? [...configured, 'resource'] : [...configured],
   );
 }
 
@@ -89,17 +88,31 @@ export function reportRequirementDiagnostics(
   option: Nip5aRequiresOption | undefined,
   state: ManifestPluginState,
   warn: (message: string) => void,
+  optional: readonly string[] = [],
 ): void {
+  // Explicit requirements are the author's declaration and are emitted as
+  // written. The shell decides at load whether it provides each domain, so a
+  // domain this plugin does not know (a drafted or runtime-specific NAP) is
+  // passed through with a warning rather than dropped.
+  const unknown = dedupeRequirements(explicitRequirements(option)).filter((domain) => !NAP_DOMAIN_SET.has(domain));
+  if (unknown.length > 0) {
+    warnOnce(state, warn, `[nip5a-manifest] requires domain(s) not in the known NAP list, emitted as declared: ${unknown.join(', ')}`);
+  }
+
   if (!option || Array.isArray(option) || !option.infer || !option.explicit) return;
 
   const explicit = new Set(dedupeRequirements(option.explicit));
-  const missing = [...state.inferredRequires].filter((domain) => !explicit.has(domain)).sort();
+  const missing = [...state.inferredRequires].filter((domain) => !explicit.has(domain) && !optional.includes(domain)).sort();
   if (missing.length === 0) return;
 
   const message = `[nip5a-manifest] missing explicit requires for inferred NAP domain(s): ${missing.join(', ')}`;
   if (option.mode === 'error') throw new Error(message);
-  if (state.reportedMissingRequires.has(message)) return;
-  state.reportedMissingRequires.add(message);
+  warnOnce(state, warn, message);
+}
+
+function warnOnce(state: ManifestPluginState, warn: (message: string) => void, message: string): void {
+  if (state.reportedRequirementWarnings.has(message)) return;
+  state.reportedRequirementWarnings.add(message);
   warn(message);
 }
 
@@ -113,7 +126,9 @@ function shouldInfer(option: Nip5aRequiresOption | undefined): boolean {
 }
 
 function dedupeRequirements(domains: readonly string[]): string[] {
-  return [...new Set(domains.map((domain) => domain.trim()).filter(isNapDomain))].sort();
+  const trimmed = domains.map((domain) => domain.trim());
+  for (const domain of trimmed) assertBareNapDomain(domain);
+  return [...new Set(trimmed)].sort();
 }
 
 function domainFromSpecifier(specifier: string | undefined): string | null {
@@ -125,8 +140,8 @@ function domainFromSpecifier(specifier: string | undefined): string | null {
   return null;
 }
 
-function isNapDomain(domain: string): boolean {
-  return NAP_DOMAIN_SET.has(domain);
+function assertBareNapDomain(domain: string): void {
+  if (!domain || /[.:\s]/.test(domain) || domain.startsWith("NAP-")) throw new Error(`NAP requirement must be a bare domain: ${domain}`);
 }
 
 function isSourceFile(id: string): boolean {

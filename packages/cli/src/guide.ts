@@ -23,9 +23,8 @@ export function renderGuide(): string {
    CLI docs: ${DOCS_BASE}/packages/cli.html
 
 4. Equip your agent
-   napplet skills list
-   napplet skills install --to codex
-   Skills docs: ${DOCS_BASE}/packages/skills.html
+   npx skills add napplet/napplet
+   Skills docs: ${DOCS_BASE}/guide/agent-skills.html
 
 5. Build and verify
    pnpm install
@@ -34,6 +33,9 @@ export function renderGuide(): string {
 
 6. Preview, then deploy
    napplet paja -- pnpm vite --host 127.0.0.1
+   # Optional: capture an iframe from your running preview shell
+   napplet screenshot http://localhost:5173 --output preview.png
+   # Optional application metadata: configure zapstore, then use deploy --zapstore
    napplet deploy --dry-run
    napplet deploy
    Deploy docs: ${DOCS_BASE}/packages/cli.html

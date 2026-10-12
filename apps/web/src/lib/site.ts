@@ -57,7 +57,7 @@ const PACKAGE_SOURCES: ReadonlyArray<{ name: string; blurb: string; jsr: boolean
   {
     name: '@napplet/cli',
     blurb:
-      'Standalone CLI for creating projects, owning deploy metadata, installing agent skills, and publishing NIP-5A manifests to Blossom and Nostr relays.',
+      'Standalone CLI for creating projects, owning deploy metadata, previewing in Paja, and publishing NIP-5A manifests to Blossom and Nostr relays.',
     jsr: true,
   },
   {
@@ -83,12 +83,6 @@ const PACKAGE_SOURCES: ReadonlyArray<{ name: string; blurb: string; jsr: boolean
     blurb:
       'Project scaffold behind napplet create. Clones the maintained Vite + TypeScript starter without owning deployment metadata.',
     jsr: false,
-  },
-  {
-    name: '@napplet/skills',
-    blurb:
-      'Agent skills for designing, building, and testing a napplet end to end. Install them through napplet skills for Codex, Claude, Cursor, AGENTS.md, Gemini, or Copilot.',
-    jsr: true,
   },
 ];
 

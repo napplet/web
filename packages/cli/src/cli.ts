@@ -10,7 +10,7 @@ import { configPath, initConfig, parseArchetypeConventions, readConfig } from ".
 import { createDebugReport, createSigningDebugInfo } from "./debug.ts";
 import { createDeployPlan } from "./deploy-plan.ts";
 import { createDeploySigner } from "./deploy-signer.ts";
-import { executeNetworkDeploy, networkDeploySucceeded } from "./deploy-network.ts";
+import { executeNetworkDeploy, networkDeploySucceeded, resolveDeployServers } from "./deploy-network.ts";
 import { discoverNapplets } from "./discover.ts";
 import { collectFlags, first, type FlagBag } from "./flags.ts";
 import { commandGuide } from "./guide.ts";
@@ -21,6 +21,8 @@ import {
   titleFromName,
 } from "./init-wizard.ts";
 import { commandKeys } from "./keys-command.ts";
+import { commandMigrate } from "./migrate-command.ts";
+import { selectManifestFormat } from "./manifest-format.ts";
 import { createDeployManifestTemplates } from "./manifest.ts";
 import {
   createDeployProgressReporter,
@@ -30,20 +32,30 @@ import {
   renderInitReport,
 } from "./output.ts";
 import { isTerminalInput } from "./prompt.ts";
-import { type CommandRunner, runCommand, splitCommand } from "./process.ts";
+import { runCommand, splitCommand } from "./process.ts";
 import { resolveSigningMethod, signDeployManifestTemplates } from "./signing.ts";
 import { getBlossomServerSuggestions, getRelaySuggestions } from "./suggestions.ts";
 import type { DeploySelection, NappletConfig } from "./types.ts";
+import cliMetadata from "../deno.json" with { type: "json" };
+import { linkZapstoreApplication, prepareZapstorePublication } from "./zapstore.ts";
+import { captureDeployScreenshot } from "./deploy-screenshot.ts";
+import { managedPackageCommand } from "./managed-node.ts";
+import type { ResolvedCommand } from "./package-runner.ts";
+
+import { runPackageCli, resolveConformanceCommand, resolvePajaArgs } from "./package-runner.ts";
+export { runPackageCli, resolveConformanceCommand, resolvePajaArgs } from "./package-runner.ts";
+export type { PackageCliRunOptions, ResolvedCommand } from "./package-runner.ts";
 
 const HELP = `@napplet/cli
 
 Usage:
+  napplet --version | -v | version
   napplet guide
   napplet create <directory> [--template <path-or-url>] [--force]
-  napplet init [--force] [--root] [--source-dir <dir>] [--name <dtag>] [--title <title>] [--description <text>] [--archetype <slug:napplet:<archetype>/<intent>>] [--relay <url>] [--server <url>]
-  napplet skills <list|print|install> [args]
-  napplet deploy [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>] [--prompt-sec] [--dry-run] [--json]
-  napplet debug [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>]
+  napplet init [--force] [--root] [--source-dir <dir>] [--name <dtag>] [--title <title>] [--description <text>] [--archetype <napplet:archetype/intent>] [--relay <url>] [--server <url>]
+  napplet deploy [--format current|legacy] [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>] [--prompt-sec] [--zapstore | --no-zapstore] [--screenshot [<preview-url>]] [--dry-run] [--json]
+  napplet migrate <signed-event.json> [--description <text>] [--optional <domain>] [--output <preview.json>]
+  napplet debug [--format current|legacy] [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>]
   napplet keys store --name <ref> [--sec <secret> | --prompt-sec]
   napplet keys connect --name <ref> [--relay <url> ...] [--config <file>]
   napplet keys use --name <ref> [--config <file>]
@@ -53,6 +65,10 @@ Usage:
   napplet discover [--config <file>] [--all]
   napplet conformance [--config <file>] [--all] [-- <args>]
   napplet paja [--config <file>] [-- <args>]
+  napplet screenshot [directory|preview-url] [--output preview.png] [--selector iframe] [--ready-selector <css>] [--width 1200] [--height 750] [--delay 1500]
+
+Deploy capture options: --screenshot-selector, --screenshot-ready-selector,
+  --screenshot-width, --screenshot-height, --screenshot-delay (all take values).
 
 Run "napplet guide" for the complete developer workflow and documentation.
 `;
@@ -68,7 +84,7 @@ export type PackageCliRunner = (args: readonly string[]) => number | Promise<num
 /** Optional maintained-package runners used by standalone builds. */
 export interface CliMainOptions {
   runCreate?: PackageCliRunner;
-  runSkills?: PackageCliRunner;
+  runScreenshot?: PackageCliRunner;
 }
 
 /**
@@ -82,11 +98,18 @@ export async function main(argv = Deno.args, options: CliMainOptions = {}): Prom
   const parsed = parseCommand(argv);
   try {
     switch (parsed.command) {
+      case "version":
+      case "--version":
+      case "-v":
+        console.log(`napplet ${cliMetadata.version}`);
+        return 0;
       case "help":
       case "--help":
       case "-h":
         console.log(HELP);
         return 0;
+      case "migrate":
+        return await commandMigrate(parsed.rest);
       case "init":
         return await commandInit(parsed.rest);
       case "guide":
@@ -95,14 +118,12 @@ export async function main(argv = Deno.args, options: CliMainOptions = {}): Prom
         return await (options.runCreate ?? ((args) => runPackageCli("@napplet/boilerplate", args)))(
           parsed.rest,
         );
-      case "skills":
-        return await (options.runSkills ?? ((args) => runPackageCli("@napplet/skills", args)))(
-          parsed.rest,
-        );
+      case "screenshot":
+        return await (options.runScreenshot ?? ((args) => runPackageCli("@napplet/conformance-cli", args)))(parsed.rest);
       case "discover":
         return await commandDiscover(parsed.rest);
       case "deploy":
-        return await commandDeploy(parsed.rest);
+        return await commandDeploy(parsed.rest, options.runScreenshot);
       case "debug":
         return await commandDebug(parsed.rest);
       case "keys":
@@ -120,70 +141,6 @@ export async function main(argv = Deno.args, options: CliMainOptions = {}): Prom
     console.error(error instanceof Error ? error.message : String(error));
     return 1;
   }
-}
-
-/** Process and output adapters used to invoke a maintained package CLI. */
-export interface PackageCliRunOptions {
-  runner?: CommandRunner;
-  writeStdout?: (value: string) => void;
-  writeStderr?: (value: string) => void;
-  os?: typeof Deno.build.os;
-}
-
-/**
- * Run one maintained package CLI without interpreting user arguments as shell source.
- *
- * @param packageName Maintained npm package that owns the requested command.
- * @param args Arguments passed to the package CLI without shell interpolation.
- * @param options Process and output adapters, primarily for tests.
- * @returns Process exit code from the maintained package CLI.
- */
-export async function runPackageCli(
-  packageName: "@napplet/boilerplate" | "@napplet/skills",
-  args: readonly string[],
-  options: PackageCliRunOptions = {},
-): Promise<number> {
-  const executable = (options.os ?? Deno.build.os) === "windows" ? "npx.cmd" : "npx";
-  let result;
-  try {
-    result = await (options.runner ?? runCommand)(executable, ["--yes", packageName, ...args]);
-  } catch (error) {
-    if (error instanceof Deno.errors.NotFound) {
-      throw new Error(
-        `Cannot run ${packageName}: install Node.js 20+ so the bundled npm package runner is available.`,
-      );
-    }
-    throw error;
-  }
-  if (result.stdout) (options.writeStdout ?? console.log)(result.stdout.replace(/\n$/, ""));
-  if (result.stderr) (options.writeStderr ?? console.error)(result.stderr.replace(/\n$/, ""));
-  return result.code;
-}
-
-export interface ResolvedCommand {
-  command: string;
-  args: string[];
-}
-
-/** Resolve the default conformance runner through npm instead of requiring a global binary. */
-export function resolveConformanceCommand(
-  configuredCommand: string | undefined,
-  os: typeof Deno.build.os = Deno.build.os,
-): ResolvedCommand {
-  const command = configuredCommand?.trim() || "napplet-conformance";
-  if (command === "napplet-conformance") {
-    return {
-      command: os === "windows" ? "npx.cmd" : "npx",
-      args: ["--yes", "@napplet/conformance-cli"],
-    };
-  }
-  return splitCommand(command);
-}
-
-/** Preserve Kehto options while restoring the separator before a bare managed command. */
-export function resolvePajaArgs(args: readonly string[]): string[] {
-  if (args.length === 0 || args[0].startsWith("-") || args.includes("--")) return [...args];
-  return ["--", ...args];
 }
 
 function parseCommand(argv: string[]): ParsedArgs {
@@ -272,10 +229,14 @@ async function commandDiscover(argv: string[]): Promise<number> {
   return 0;
 }
 
-async function commandDeploy(argv: string[]): Promise<number> {
+async function commandDeploy(argv: string[], runScreenshot?: PackageCliRunner): Promise<number> {
   const flags = collectFlags(argv);
+  if (flags.boolean.has("zapstore") && flags.boolean.has("no-zapstore")) {
+    throw new Error("Choose either --zapstore or --no-zapstore");
+  }
   const jsonOutput = flags.boolean.has("json") || !isTerminalOutput();
   const config = await loadDeployConfig(flags, jsonOutput);
+  const format = await selectManifestFormat(first(flags.values.get("format")), isTerminalInput() && !jsonOutput);
   const candidates = await discoverNapplets(config, { traverse: flags.boolean.has("all") });
   const selection: Partial<DeploySelection> = {
     root: flags.boolean.has("root") ? true : undefined,
@@ -300,53 +261,60 @@ async function commandDeploy(argv: string[]): Promise<number> {
     print: (line) => console.error(line),
     writePromptBytes: (bytes) => Deno.stderr.writeSync(bytes),
   });
+  let screenshot: Awaited<ReturnType<typeof captureDeployScreenshot>>;
   try {
     const signingInfo = createSigningDebugInfo(deploySigning);
-    const manifests = signer
-      ? await signDeployManifestTemplates(
-        await createDeployManifestTemplates(plan, config, { sourcePubkey: signer.pubkey }),
-        signer,
-      )
-      : await createDeployManifestTemplates(plan, config);
+    let templates = await createDeployManifestTemplates(plan, config, {
+      sourcePubkey: signer?.pubkey,
+      format,
+    });
+    const blossomServers = resolveDeployServers(templates, config.blossomServers);
+    screenshot = await captureDeployScreenshot(flags, config, runScreenshot, plan);
+    const publicationConfig = screenshot && config.zapstore
+      ? { ...config, zapstore: { ...config.zapstore, images: [...(config.zapstore.images ?? []), ...screenshot.paths] } }
+      : config;
+    const application = await prepareZapstorePublication(publicationConfig, blossomServers, {
+      enabled: flags.boolean.has("no-zapstore") ? false : flags.boolean.has("zapstore") ? true : undefined,
+    });
+    if (application && signer) {
+      application.signedEvent = await signer.sign(application.template);
+      templates = linkZapstoreApplication(templates, application.signedEvent, config.relays);
+    } else if (application && format === "current") {
+      console.error("Application link omitted from unsigned dry run: a signer public key is required.");
+    }
+    const manifests = signer ? await signDeployManifestTemplates(templates, signer) : templates;
+    let deploy;
     if (!dryRun) {
       if (!signer) {
         throw new Error("Network deploy requires a signer from --sec, --prompt-sec, config, or CI");
       }
-      const deploy = await executeNetworkDeploy(
+      deploy = await executeNetworkDeploy(
         manifests,
         {
           relays: config.relays,
-          blossomServers: config.blossomServers,
+          blossomServers,
         },
         signer,
         {
           onProgress: jsonOutput ? undefined : createDeployProgressReporter(),
+          application,
         },
       );
-      const report = {
-        signing: signingInfo,
-        plan,
-        manifests,
-        deploy,
-        relays: config.relays,
-        blossomServers: config.blossomServers,
-        dryRun: false,
-      };
-      console.log(jsonOutput ? JSON.stringify(report, null, 2) : renderDeployReport(report));
-      return networkDeploySucceeded(deploy, manifests) ? 0 : 1;
     }
     const report = {
       signing: signingInfo,
       plan,
       manifests,
+      application,
+      deploy,
       relays: config.relays,
-      blossomServers: config.blossomServers,
-      dryRun: true,
+      blossomServers,
+      dryRun,
     };
-    console.log(jsonOutput ? JSON.stringify(report, null, 2) : renderDeployReport(report));
-    return 0;
+    console.log(jsonOutput ? JSON.stringify(report, (_key, value) => value instanceof Uint8Array ? undefined : value, 2) : renderDeployReport(report));
+    return deploy && !networkDeploySucceeded(deploy, manifests) ? 1 : 0;
   } finally {
-    await signer?.close?.();
+    try { await screenshot?.cleanup(); } finally { await signer?.close?.(); }
   }
 }
 
@@ -389,6 +357,8 @@ export async function loadDeployConfig(
 
 async function commandDebug(argv: string[]): Promise<number> {
   const flags = collectFlags(argv);
+  // Debug emits JSON non-interactively: never prompt; reject bad values before config load.
+  const format = await selectManifestFormat(first(flags.values.get("format")), false);
   const config = await loadConfig(flags);
   const selection: Partial<DeploySelection> = {
     root: flags.boolean.has("root") ? true : undefined,
@@ -404,8 +374,12 @@ async function commandDebug(argv: string[]): Promise<number> {
     traverse: flags.boolean.has("all"),
     selection,
     signing,
+    format,
   });
   console.log(JSON.stringify(report, null, 2));
+  if (report.manifests.error) {
+    console.error(`Manifest templates could not be built: ${report.manifests.error}`);
+  }
   return 0;
 }
 
@@ -413,10 +387,10 @@ async function commandConformance(argv: string[]): Promise<number> {
   const flags = collectFlags(argv);
   const config = await loadConfig(flags);
   const candidates = await discoverNapplets(config, { traverse: flags.boolean.has("all") });
-  const base = resolveConformanceCommand(config.conformance?.command);
+  const base = await resolveConformanceCommand(config.conformance?.command);
   const passthrough = flags.afterDoubleDash;
   for (const candidate of candidates) {
-    const result = await runCommand(base.command, [...base.args, candidate.dir, ...passthrough]);
+    const result = await runCommand(base.command, [...base.args, candidate.dir, ...passthrough], { env: base.env });
     Deno.stdout.writeSync(new TextEncoder().encode(result.stdout));
     Deno.stderr.writeSync(new TextEncoder().encode(result.stderr));
     if (result.code !== 0) return result.code;
@@ -427,15 +401,15 @@ async function commandConformance(argv: string[]): Promise<number> {
 async function commandPaja(argv: string[]): Promise<number> {
   const flags = collectFlags(argv);
   const config = await loadConfig(flags);
-  const base = splitCommand(config.paja?.command ?? "kehto");
-  const result = await runCommand(base.command, [
-    ...base.args,
-    "paja",
-    ...resolvePajaArgs(flags.afterDoubleDash),
-  ]);
-  Deno.stdout.writeSync(new TextEncoder().encode(result.stdout));
-  Deno.stderr.writeSync(new TextEncoder().encode(result.stderr));
-  return result.code;
+  const configured = config.paja?.command?.trim();
+  const base: ResolvedCommand = !configured || configured === "kehto"
+    ? await managedPackageCommand("@kehto/cli@0.5.4", "dist/index.js")
+    : splitCommand(configured);
+  const child = new Deno.Command(base.command, {
+    args: [...base.args, "paja", ...resolvePajaArgs(flags.afterDoubleDash)],
+    env: base.env, stdin: "inherit", stdout: "inherit", stderr: "inherit",
+  }).spawn();
+  return (await child.status).code;
 }
 
 async function loadConfig(flags: FlagBag): Promise<NappletConfig> {

@@ -13,7 +13,6 @@ import * as os from 'os';
 import * as path from 'path';
 import { build as viteBuild } from 'vite';
 import { nip5aManifest } from '../index.js';
-import { computeAggregateHash } from '../hashing.js';
 import { ResourceRuntime, type ResourceTableEntry } from './loader.js';
 import { executeFinalArtifact } from './large-fixture-runtime.js';
 import {
@@ -52,7 +51,7 @@ export interface LargeFixtureEvidence {
   selected: Array<{ source: string; bytes: number }>;
   uploads: FixtureUploadEvidence[];
   recovery: Array<{ source: string; sha256: string; exact: boolean }>;
-  aggregateHash: string;
+  artifactHash: string;
   finalIndexHash: string;
   manifestTags: string[][];
   privateMappingCount: number;
@@ -81,7 +80,7 @@ interface BuiltFixture {
 
 interface FixtureOutput {
   finalHtml: string;
-  manifest: { aggregateHash: string; tags: string[][] };
+  manifest: { artifactHash: string; tags: string[][] };
   entries: ResourceTableEntry[];
   selected: Array<{ source: string; bytes: number; sha256: string }>;
 }
@@ -125,6 +124,7 @@ async function buildFixtureArtifact(root: string, fixture: LargeAssetFixture): P
   let report: OptimizationReport | undefined;
   const options = {
     nappletType: 'large-fixture',
+    description: 'Large packaged resource fixture',
     artifactMode: 'single-file' as const,
     requires: ['relay'],
     largeAssetOptimization: {
@@ -197,14 +197,14 @@ async function collectFixtureEvidence(
   const recovery = await recoverFixtureResources(output.entries, output.selected, built.uploaded);
   const executedResourceCalls = await executeFinalArtifact(output.finalHtml, output.entries, built.uploaded, sha256);
   const finalIndexHash = sha256(fs.readFileSync(path.join(built.dist, 'index.html')));
-  if (output.manifest.aggregateHash !== computeAggregateHash([[finalIndexHash, '/index.html']])) throw new Error('fixture aggregate hash does not match final output');
+  if (output.manifest.artifactHash !== finalIndexHash) throw new Error('fixture artifact hash does not match final output');
   return {
     initialHtmlBytes: built.initialHtmlBytes,
     finalHtmlBytes: Buffer.byteLength(output.finalHtml),
     selected: output.selected,
     uploads: built.uploadEvidence,
     recovery,
-    aggregateHash: output.manifest.aggregateHash,
+    artifactHash: output.manifest.artifactHash,
     finalIndexHash,
     manifestTags: output.manifest.tags,
     privateMappingCount: output.entries.length,
@@ -279,6 +279,7 @@ export async function runWholeBlobPortabilityFallback(): Promise<FallbackEvidenc
     let report: OptimizationReport | undefined;
     const options = {
       nappletType: 'whole-blob-boundary',
+      description: 'Whole Blob portability fixture',
       artifactMode: 'single-file' as const,
       requires: ['relay'],
       largeAssetOptimization: {
@@ -292,7 +293,7 @@ export async function runWholeBlobPortabilityFallback(): Promise<FallbackEvidenc
     return {
       wholeBlobPreserved: html.includes('data:application/octet-stream;base64,'),
       reason: 'whole-Blob portability limit; streaming and ranges are not provided',
-      resourceRequirementPresent: manifest.tags.some((tag) => tag[0] === 'requires' && tag[1] === 'resource'),
+      resourceRequirementPresent: manifest.tags.some((tag) => tag[0] === 'R' && tag[1] === 'resource'),
     };
   } finally {
     fs.rmSync(root, { recursive: true, force: true });

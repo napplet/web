@@ -1,6 +1,6 @@
 {
   "name": "@napplet/cli",
-  "version": "0.5.2",
+  "version": "0.9.0",
   "description": "Standalone CLI for creating, configuring, testing, and deploying napplets",
   "type": "module",
   "files": [
@@ -19,11 +19,12 @@
   },
   "dependencies": {
     "@napplet/boilerplate": "workspace:^",
-    "@napplet/skills": "workspace:^",
     "@scure/base": "^1.2.6",
     "applesauce-relay": "^5.2.0",
     "applesauce-signers": "^5.2.0",
-    "nostr-tools": "^2.23.3"
+    "fflate": "0.8.2",
+    "nostr-tools": "^2.23.3",
+    "parse5": "^7.3.0"
   },
   "devDependencies": {
     "@types/node": "^22.15.0"

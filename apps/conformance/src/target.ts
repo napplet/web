@@ -112,6 +112,7 @@ function asManifestEvent(event: NostrEvent): NappletManifestEvent {
     pubkey: event.pubkey,
     kind: event.kind,
     tags: event.tags,
+    content: event.content,
   };
 }
 
@@ -121,31 +122,6 @@ async function sha256Hex(input: string | Uint8Array): Promise<string> {
   copy.set(data);
   const digest = await crypto.subtle.digest('SHA-256', copy.buffer);
   return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, '0')).join('');
-}
-
-function pathTags(event: NappletManifestEvent): string[][] {
-  return event.tags.filter((tag) => tag[0] === 'path' && typeof tag[1] === 'string' && typeof tag[2] === 'string');
-}
-
-export async function computeAggregateHash(event: NappletManifestEvent): Promise<string> {
-  const lines = pathTags(event)
-    .map((tag) => `${tag[2]} ${tag[1]}\n`)
-    .sort()
-    .join('');
-  return sha256Hex(lines);
-}
-
-async function verifyAggregateHash(event: NappletManifestEvent): Promise<void> {
-  const aggregate = await computeAggregateHash(event);
-  for (const tag of event.tags.filter((candidate) => candidate[0] === 'x')) {
-    if (tag[2] !== aggregate) {
-      throw new Error(`Manifest x tag does not match recomputed aggregate hash ${aggregate}`);
-    }
-  }
-}
-
-function indexPathTag(event: NappletManifestEvent): string[] | undefined {
-  return event.tags.find((tag) => tag[0] === 'path' && tag[1] === '/index.html');
 }
 
 function blossomServers(event: NappletManifestEvent): string[] {
@@ -171,9 +147,9 @@ export async function fetchIndexHtml(
   event: NappletManifestEvent,
   fetcher: typeof fetch = fetch,
 ): Promise<string> {
-  const index = indexPathTag(event);
-  const sha256 = index?.[2];
-  if (!sha256) throw new Error('Manifest does not include a /index.html path hash');
+  const verdict = validateManifestEvent(event);
+  if (!verdict.ok) throw new Error(verdict.errors.map((error) => error.message).join('; '));
+  const sha256 = event.tags.find((tag) => tag[0] === 'x')![1];
 
   const servers = blossomServers(event);
   if (servers.length === 0) {
@@ -230,7 +206,6 @@ async function resolveNostrTarget(input: string, options: ResolveTargetOptions):
     if (!verdict.ok) {
       throw new Error(`Resolved event is not a valid NIP-5D napplet manifest: ${verdict.errors[0]?.message}`);
     }
-    await verifyAggregateHash(manifestEvent);
 
     const html = await fetchIndexHtml(manifestEvent, options.fetcher ?? fetch);
     const bootUrl = (options.createObjectUrl ?? URL.createObjectURL)(new Blob([html], {

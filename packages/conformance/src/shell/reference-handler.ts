@@ -1,3 +1,4 @@
+import { NAP_DOMAINS } from '@napplet/core';
 import { validateEnvelope, type EnvelopeVerdict } from '../validators/envelope.js';
 import {
   REFERENCE_CONVENTION,
@@ -28,19 +29,27 @@ export interface ReferenceHandlerOptions {
 
 /** Create the pure request handler for the reference shell. */
 export function createReferenceHandler(options: ReferenceHandlerOptions) {
+  const initialized = new Set<string>();
   return (endpoint: ReferenceEndpoint, envelope: unknown): unknown[] => {
     const type = getEnvelopeType(envelope);
     const verdict = validateEnvelope(envelope);
     options.records.push({ envelope, verdict, timestamp: options.now() });
 
     if (!type || !verdict.ok) return [];
+    const domains = endpoint.domains ?? NAP_DOMAINS;
+    if (!domains.includes(type.slice(0, type.indexOf('.')))) return [];
+    if (type === 'shell.ready') {
+      if (initialized.has(endpoint.id)) return [];
+      initialized.add(endpoint.id);
+      return ok({ type: 'shell.init', capabilities: { domains: [...domains] }, services: [] });
+    }
     const env = envelope as Record<string, unknown>;
     if (type === 'intent.invoke') return options.intents.handleInvoke(endpoint, env);
     if (type === 'intent.available') {
       return ok({ type: 'intent.available.result', id: env.id, availability: options.intents.availability(env.archetype) });
     }
     if (type === 'intent.handlers') {
-      return ok({ type: 'intent.handlers.result', id: env.id, handlers: [options.intents.availability('note')] });
+      return ok({ type: 'intent.handlers.result', id: env.id, handlers: options.intents.handlers() });
     }
     if (type === 'inc.emit') return handleIncEmit(endpoint, env, options.queueDelivery);
 
@@ -65,7 +74,7 @@ function handleIncEmit(
   const event: Record<string, unknown> = {
     type: 'inc.event',
     topic: env.topic,
-    sender: endpoint.dTag,
+    sender: endpoint.id,
   };
   if ('payload' in env) event.payload = env.payload;
   queueDelivery(REFERENCE_SUBSCRIBER, event);

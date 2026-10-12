@@ -37,6 +37,9 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      - name: Test CLI installers
+        run: pnpm test:installers
+
       # Build workspace package deps the apps may import, then each app.
       - name: Build packages
         run: pnpm build

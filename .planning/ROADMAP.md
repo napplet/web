@@ -919,7 +919,9 @@ Plans:
 - [x] 161-25-PLAN.md — Correct shipped skill guidance and mirror assertions
 - [x] 161-26-PLAN.md — Reverse stale guard rules and enforce adopted intent boundaries
 
-### Phase 162: Blossom-backed large-asset optimization
+### Phase 162 (optimizer lineage): Blossom-backed large-asset optimization
+
+Historical lineage record; plans live in `162-blossom-backed-large-asset-optimization`. Aggregate-hash wording below describes the pre-migration implementation, not current NIP-5D requirements. Quick task 261012-jnp integrates it with main's independently numbered schema migration phase.
 
 **Goal:** Vite builds that would inline more than 2 MiB can safely move eligible large assets to user-discovered Blossom servers and recover them through existing NAP-RESOURCE methods, while preserving a valid inline artifact whenever optimization cannot complete.
 **Requirements:** None assigned (no requirement IDs; decisions, canonical boundaries, and validation predicates are carried in the phase plans)
@@ -970,3 +972,13 @@ Plans:
 **Wave 8** *(blocked on Wave 7 completion)*
 
 - [x] 162-11-PLAN.md — Scan secrets, record evidence, run release gates, push, and open the PR
+### Phase 162 (main lineage): NIP-5D event schema migration
+
+**Goal:** Adopt the live NIP-5D event schema, retain an isolated temporary CLI legacy writer, document migration and release cutoffs, and open a verified draft PR with hzrd149 requested.
+**Requirements:** Current writers/readers, explicit CLI format selection, migration preview and skill, compatibility guide, package releases, verification and draft PR.
+**Depends on:** Phase 161
+**Plans:** 3/3 complete; local checks passed and [draft PR #224](https://github.com/napplet/web/pull/224) opened with hzrd149 requested.
+
+- [x] 162-01-PLAN.md — Current-schema writer and readers
+- [x] 162-02-PLAN.md — CLI format boundary and event migration
+- [x] 162-03-PLAN.md — Docs, release metadata and draft PR shipment
