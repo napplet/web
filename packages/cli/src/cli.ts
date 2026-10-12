@@ -403,7 +403,7 @@ async function commandPaja(argv: string[]): Promise<number> {
   const config = await loadConfig(flags);
   const configured = config.paja?.command?.trim();
   const base: ResolvedCommand = !configured || configured === "kehto"
-    ? await managedPackageCommand("@kehto/cli@0.5.5", "dist/index.js")
+    ? await managedPackageCommand("@kehto/cli@0.5.4", "dist/index.js")
     : splitCommand(configured);
   const child = new Deno.Command(base.command, {
     args: [...base.args, "paja", ...resolvePajaArgs(flags.afterDoubleDash)],

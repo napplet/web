@@ -90,7 +90,7 @@ export async function ensureManagedNode(): Promise<ManagedNode> {
  * @param spec Exact package version.
  * @param entry Package-relative CLI script.
  * @returns Absolute executable/script and environment, independent of project dependencies.
- * @example await managedPackageCommand('@napplet/conformance-cli@0.3.4', 'dist/cli.js')
+ * @example await managedPackageCommand('@napplet/conformance-cli@0.3.3', 'dist/cli.js')
  */
 export async function managedPackageCommand(spec: string, entry: string): Promise<ResolvedCommand> {
   const node = await ensureManagedNode();
