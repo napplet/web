@@ -73,6 +73,7 @@ describe('validateEnvelope — outbound field checks', () => {
     expect(forged.errors).toContainEqual(expect.objectContaining({
       code: 'forbidden-field',
       field: 'sender',
+      message: expect.stringContaining('runtime-derived'),
     }));
   });
 
