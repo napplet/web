@@ -51,5 +51,5 @@ describe('generated large-asset optimizer fixture', () => {
     expect(evidence.reason).toContain('whole-Blob portability limit');
     expect(evidence.reason).not.toContain('streaming success');
     expect(evidence.resourceRequirementPresent).toBe(false);
-  });
+  }, 30_000);
 });

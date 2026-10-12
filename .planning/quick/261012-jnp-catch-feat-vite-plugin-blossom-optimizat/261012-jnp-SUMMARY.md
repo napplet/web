@@ -90,6 +90,7 @@ Fresh targeted failures were recorded before editing these additional paths:
 - `.changeset/current-schema-optimizer-integration.md`: patch release metadata for the changed Vite plugin and CLI shipped behavior. No local publishing was run.
 - Deno formatting was restored for the seven edited CLI source/test files; no formatter or scan rule was disabled.
 - Task-artifact commit `23be5409` records the summary, additive state and defect ledger. Post-commit review found the SDK `state.add-blocker` also recalculated unrelated phase counters/milestone text and stripped the word `none` from a historical CSP record. A dedicated docs-only correction restores that provenance/counter context, retaining only the new blocker and honest current quick-task activity. No source behavior changes in that correction.
+- Final delivery rerun at `87bb6917` exposed a second fixture timing defect: `large-fixture.test.ts`'s whole-Blob fallback exceeded Vitest's default 5,000 ms budget (5,644 ms under recursive unit contention). Its real Vite build parses and retains an over-limit asset; it now uses the same bounded 30,000 ms budget as the companion large-asset test. All assertions remain unchanged; no retry, skip, production change or release bump was introduced. Fresh failure and exact repair path were recorded before editing, and targeted plugin units pass 137/137. Full repaired gates and the subsequent pushed-head checks are reported in the final PR evidence comment after execution.
 
 The independently executed current fixture reports initial HTML **76,897,014 bytes**, final HTML **25,698 bytes**, seven private mappings, exact recovery of every resource, and direct artifact hash `1d957180c709b4a0ff299fb4629eb2d5c32fe7784a842c23f1cb3447b8271d41`.
 
@@ -136,6 +137,10 @@ The first normal push updated PR #205 to merge commit `34bd9b90`; progress evide
 | Standalone CLI — Ubuntu x86_64/ARM64, macOS ARM64/x86_64, Windows x86_64 | https://github.com/napplet/web/actions/runs/38297671075 | All 5 SUCCESS |
 
 The active ruleset requires PR delivery and prohibits non-fast-forward updates but specifies no named required status checks or review-count requirement. `gh pr checks 205 --required` reports no required checks. This task nevertheless waits for **all applicable reported checks**, including the five-platform standalone matrix, rather than using that absence to skip CI.
+
+The evidence revision `87bb691797518497bad1691aba6f693a48580e9b` subsequently passed all nine checks as well: CI `38298708017`, conformance `38298707694`, Scan `38298707741`, links `38298707768`, and all five standalone jobs in `38298707798`. The watcher exited 0 and observed OPEN/CLEAN/MERGEABLE with both original-feature and freshly fetched main ancestry intact. Its local recursive-unit rerun independently found the companion fixture timeout described above; that fresh failure was repaired rather than disregarded because remote CI passed. The repaired revision's final checks are recorded in the closing PR comment.
+
+After the companion timeout repair, `pnpm build`, `pnpm type-check`, `pnpm -r test:unit`, `pnpm test`, conformance e2e (5/5), unchanged actual AI-slop gate (95/100), and `git diff --check` all completed successfully. Logs are `/tmp/opencode/jnp/repaired-{build,types,units,test,e2e,slop}.log`. Tutorial's six existing harness-not-measured skips remain disclosed. Both canonical proposal heads were refreshed via GitHub API and their actual current source files reread; the SHAs cited above are still current. This test-only timing repair changes no shipped package output.
 
 ### Blocking protocol finding — scope decision required
 
