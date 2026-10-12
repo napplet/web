@@ -85,6 +85,20 @@ describe('NAP-GAMEPAD cached binding', () => {
     third.close();
   });
 
+  it('keeps delivering to later listeners when one throws', async () => {
+    const shim = await import('./shim.js');
+    const failure = new Error('listener failed');
+    const reported = vi.fn();
+    vi.stubGlobal('queueMicrotask', reported);
+    shim.onChange(() => { throw failure; });
+    const later = vi.fn();
+    shim.onChange(later);
+    expect(() => shim.handleGamepadMessage({ type: 'gamepad.state', ...focused })).not.toThrow();
+    expect(later).toHaveBeenCalledExactlyOnceWith(focused);
+    expect(reported).toHaveBeenCalledOnce();
+    expect(() => reported.mock.calls[0][0]()).toThrow(failure);
+  });
+
   it('defers listeners added during delivery until the next snapshot', async () => {
     const shim = await import('./shim.js');
     const later = vi.fn();

@@ -59,7 +59,10 @@ export function handleGamepadMessage(message: { type: string; [key: string]: unk
   const snapshot = copyGamepadState(state);
   const recipients = [...handlers];
   for (const entry of recipients) {
-    if (handlers.has(entry)) entry.handler(copyGamepadState(snapshot));
+    if (!handlers.has(entry)) continue;
+    // A throwing listener must not starve later listeners of state (including neutral snapshots).
+    try { entry.handler(copyGamepadState(snapshot)); }
+    catch (error) { queueMicrotask(() => { throw error; }); }
   }
 }
 
