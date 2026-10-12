@@ -210,7 +210,7 @@ export function validateEnvelope(message: unknown): EnvelopeVerdict {
     if (field in record) {
       errors.push({
         code: 'forbidden-field',
-        message: `Field "${field}" must be runtime-derived and cannot be emitted by a napplet`,
+        message: domain === 'gamepad' ? `NAP-GAMEPAD fire-and-forget envelopes do not carry "${field}"` : `Field "${field}" must be runtime-derived and cannot be emitted by a napplet`,
         field,
       });
     }

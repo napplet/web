@@ -5,6 +5,6 @@ export { DOMAIN } from './types.js';
 export type * from './types.js';
 export { gamepad, getGamepads, onChange, installGamepadShim, handleGamepadMessage } from './shim.js';
 export { gamepadGetGamepads, gamepadAvailable, gamepadFocused, gamepadOnChange } from './sdk.js';
-export { isGamepadState, copyGamepadState } from './state.js';
+export { createGamepadStateTools, isGamepadState, copyGamepadState } from './state.js';
 
 registerNap(DOMAIN, () => { /* The runtime supplies the domain handler. */ });

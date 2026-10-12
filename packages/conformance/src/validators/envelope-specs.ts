@@ -7,6 +7,11 @@ const ID = { id: 'string' } as const;
  * NAP domains, with its direction and (for outbound) required fields.
  */
 export const ENVELOPE_SPECS: Record<string, EnvelopeSpec> = {
+  // NAP-GAMEPAD Wire Protocol: all three messages are fire-and-forget, without ids.
+  // https://github.com/napplet/naps/pull/108
+  'gamepad.subscribe': { dir: 'out', forbiddenFields: ['id'] },
+  'gamepad.unsubscribe': { dir: 'out', forbiddenFields: ['id'] },
+  'gamepad.state': { dir: 'in', fields: { available: 'boolean', focused: 'boolean', pads: 'array' } },
   // Optional NAP-SHELL environment, independent of other domains.
   'shell.ready': { dir: 'out' },
   'shell.init': { dir: 'in', fields: { capabilities: 'object', services: 'array' } },

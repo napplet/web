@@ -14,6 +14,7 @@
  * @packageDocumentation
  */
 
+import { createGamepadStateTools } from '@napplet/nap/gamepad';
 import { NAP_DOMAINS } from '@napplet/core';
 import { createReferenceShell, type RecordedEnvelope } from '../shell/reference-shell.js';
 import type { BootObservation } from './context.js';
@@ -74,6 +75,9 @@ export function runtimePrelude(domains: readonly string[]): string {
   const domains = ${JSON.stringify(domains)};
   const napplet = {};
   for (const domain of domains) napplet[domain] = {};
+  const gamepadTools = (${createGamepadStateTools.toString()})();
+  let gamepadState = { available: true, focused: false, pads: [] };
+  const gamepadHandlers = new Set();
   const pending = new Map();
   let seq = 0;
   const nextId = () => {
@@ -93,7 +97,14 @@ export function runtimePrelude(domains: readonly string[]): string {
     window.parent.postMessage({ ...message, id }, '*');
   });
   window.addEventListener('message', (event) => {
+    if (event.source !== window.parent) return;
     const msg = event.data;
+    if (napplet.gamepad && msg && msg.type === 'gamepad.state' && !('id' in msg) && gamepadTools.isGamepadState(msg)) {
+      gamepadState = gamepadTools.copyGamepadState(msg);
+      const recipients = Array.from(gamepadHandlers);
+      for (const entry of recipients) if (gamepadHandlers.has(entry)) entry.handler(gamepadTools.copyGamepadState(gamepadState));
+      return;
+    }
     if (!msg || typeof msg !== 'object' || typeof msg.id !== 'string') return;
     const slot = pending.get(msg.id);
     if (!slot) return;
@@ -106,6 +117,18 @@ export function runtimePrelude(domains: readonly string[]): string {
     }
     slot.resolve(msg);
   });
+  if (napplet.gamepad) {
+    napplet.gamepad = {
+      get available() { return gamepadState.available; },
+      get focused() { return gamepadState.focused; },
+      getGamepads() { return gamepadTools.copyGamepadState(gamepadState).pads; },
+      onChange(handler) {
+        const entry = { handler };
+        gamepadHandlers.add(entry);
+        return { close() { gamepadHandlers.delete(entry); } };
+      },
+    };
+  }
   if (napplet.resource) {
     napplet.resource.info = () =>
       request({ type: 'resource.info' }, 'resource.info.result', 'resource.info.error')
@@ -139,6 +162,7 @@ export function runtimePrelude(domains: readonly string[]): string {
     };
   }
   window.napplet = napplet;
+  if (napplet.gamepad) window.parent.postMessage({ type: 'gamepad.subscribe' }, '*');
   const report = (reason) => {
     try {
       window.parent.postMessage({ type: '${INTERNAL_BOOT_ERROR}', reason: String(reason && reason.message || reason) }, '*');
@@ -190,6 +214,7 @@ async function bootOnce(
   const shell = createReferenceShell();
   const iframe = doc.createElement('iframe');
   iframe.setAttribute('sandbox', opts.allowSameOrigin ? 'allow-scripts allow-same-origin' : 'allow-scripts');
+  iframe.setAttribute('allow', "gamepad 'none'");
   iframe.setAttribute('aria-hidden', 'true');
   iframe.style.position = 'absolute';
   iframe.style.width = '1px';
