@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 11
+open_count: 12
 waived_count: 0
 fixed_count: 2
-total_count: 13
-last_updated: 2026-10-12T19:31:31.145Z
+total_count: 14
+last_updated: 2026-10-12T19:35:48.549Z
 ---
 
 # Broken Windows Ledger
@@ -28,6 +28,7 @@ last_updated: 2026-10-12T19:31:31.145Z
 | 11 | quick-261012-jnp | lint-warning | packages/cli/src/output.ts | 69 | AI-slop reports existing 89-line renderDeployReport warning; integration does not alter that function. | open |  | 2026-10-12T19:24:34.151Z |  |
 | 12 | quick-261012-jnp | deviation | packages/boilerplate/package.json |  | Existing main fflate 0.8.2 has moderate GHSA-px8p-9vwx-vf98; audit exits 1, unchanged AI-slop minimum70 gate passes96. | open |  | 2026-10-12T19:24:34.361Z |  |
 | 13 | quick-261012-jnp | unmet-truth | packages/nap/src/resource/types.ts | 120 | Living NAP-RESOURCE urls/base64 wire contract differs from existing requests/Blob SDK; both lineages predate integration. Explicit breaking-migration scope decision needed. | open |  | 2026-10-12T19:31:31.145Z |  |
+| 14 | quick-261012-jnp | lint-warning | packages/vite-plugin/src/manifest.ts |  | Final post-commit full AI-slop scan reports combined manifest.ts at 445 lines; unchanged minimum70 gate passes95, target100 not claimed. | open |  | 2026-10-12T19:35:48.549Z |  |
 
 ````json
 [
@@ -188,6 +189,19 @@ last_updated: 2026-10-12T19:31:31.145Z
     "status": "open",
     "reason": "",
     "recorded_at": "2026-10-12T19:31:31.145Z",
+    "resolved_at": null,
+    "milestone": "v0.34.0"
+  },
+  {
+    "id": 14,
+    "kind": "lint-warning",
+    "phase": "quick-261012-jnp",
+    "file": "packages/vite-plugin/src/manifest.ts",
+    "line": null,
+    "description": "Final post-commit full AI-slop scan reports combined manifest.ts at 445 lines; unchanged minimum70 gate passes95, target100 not claimed.",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-10-12T19:35:48.549Z",
     "resolved_at": null,
     "milestone": "v0.34.0"
   }

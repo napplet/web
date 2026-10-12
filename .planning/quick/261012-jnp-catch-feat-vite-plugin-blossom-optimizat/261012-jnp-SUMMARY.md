@@ -151,7 +151,7 @@ AGENTS.md requires flagging downstream/spec mismatches rather than rubber-stampi
 
 ## Deferred issues and deviations
 
-See `deferred-items.md` and additive `.planning/WINDOWS.md` records. The 100/100 slop target remains unmet due to existing 89-line `renderDeployReport`, 472-line `references.ts`, and `fflate` 0.8.2 GHSA-px8p-9vwx-vf98. These are not suppressed or silently repaired outside the evidenced integration scope. No new stubs or skipped tests were introduced; both opt-in CLI integrations were run separately. Nested agent delegation was unavailable (depth limit), so the executor resolved the integration directly.
+See `deferred-items.md` and additive `.planning/WINDOWS.md` records. Earlier pre-commit scans reported 96/100 and three findings. The final post-commit full scan reports **95/100, zero errors and four warnings**, still passing the exact unchanged minimum-70 gate: existing 89-line `renderDeployReport`, 472-line `references.ts`, `fflate` 0.8.2 GHSA-px8p-9vwx-vf98, plus the integrated `manifest.ts` at 445 lines. The additional integration-size warning is explicitly deferred rather than hidden; no rule was suppressed, and 100/100 is not claimed. No new stubs or skipped tests were introduced; both opt-in CLI integrations were run separately. Nested agent delegation was unavailable (depth limit), so the executor resolved the integration directly.
 
 ## Self-Check: PASSED
 
