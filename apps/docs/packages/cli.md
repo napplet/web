@@ -8,7 +8,11 @@ artifacts, inspects deploy plans, signs manifest events, uploads files to
 Blossom servers, publishes to relays, and runs local napplet tooling such as
 conformance and Paja.
 
-The standalone binary runs `napplet create` through bundled package code, so scaffolding does not need Node.js or an npm package resolver at runtime. Agent skills are installed separately with the open skills CLI — see [Agent skills](/guide/agent-skills).
+The standalone binary runs every built-in command without separately installed Node.js, npm, npx, Deno, Git, Kehto, or browser tooling. Screenshot, conformance, and Paja commands download a private, checksum-verified Node runtime and maintained packages on first use; browser commands also provision Chromium. Linux captures include the browser libraries and fonts. Downloads live in the CLI cache and never install into your project or global PATH.
+
+First use of these tools requires network access and a writable cache. Later invocations reuse the downloads. The default cache is `~/Library/Caches/napplet` on macOS, `$XDG_CACHE_HOME/napplet` (or `~/.cache/napplet`) on Linux, and `%LOCALAPPDATA%\napplet` on Windows. Set `NAPPLET_CACHE_DIR` to choose another location; copying a populated cache between machines with the same OS and architecture supports offline tooling. User-configured `conformance.command`, `paja.command`, and app-server commands passed to Paja use the software you explicitly select.
+
+The generated Vite project and optional skills.sh CLI still need their own development dependencies. Agent skills are installed separately — see [Agent skills](/guide/agent-skills).
 
 - **npm:** [`@napplet/cli`](https://www.npmjs.com/package/@napplet/cli)
 - **JSR:** [`@napplet/cli`](https://jsr.io/@napplet/cli)
@@ -152,8 +156,7 @@ This non-normative guide follows the living [NAP-INTENT manifest catalog contrac
 - [`@napplet/vite-plugin`](./vite-plugin) — emits build-side manifest metadata
   the CLI preserves during deploy.
 - [`@napplet/conformance-cli`](./conformance-cli) — the default command behind
-  `napplet conformance`; the standalone CLI resolves it through `npx`, without requiring a global
-  `napplet-conformance` executable.
+  `napplet conformance`; the standalone CLI provisions it in its private cache without a host package manager or global conformance executable.
 - [Getting started](/guide/getting-started) — scaffold, build, and verify a
   napplet before deploying.
 
@@ -200,7 +203,7 @@ Deployment manifests (current and legacy, including snapshots) and optional Zaps
 
 ## Screenshots and optional Zapstore metadata
 
-Capture a built napplet without starting a host. The command starts a temporary local Kehto Paja preview, captures its iframe, and closes the preview afterwards. It requires Node.js 20+; the matching Chromium browser is installed automatically on first use. Screenshot and default conformance commands select the tested `@napplet/conformance-cli@0.3.3` runner explicitly, so an older project-local conformance dependency cannot intercept them. Explicit custom conformance commands remain supported. The preview uses Paja’s development identity, fresh browser storage, and live relays, so content may differ from your signed-in shell.
+Capture a built napplet without starting a host. The command starts a temporary local Kehto Paja preview, captures its iframe, and closes the preview afterwards. The CLI provisions its private runtime and Chromium automatically on first use, without host Node.js or npx. Screenshot and default conformance commands select the tested `@napplet/conformance-cli@0.3.3` runner explicitly, so an older project-local conformance dependency cannot intercept them. Explicit custom conformance commands remain supported. The preview uses Paja’s development identity, fresh browser storage, and live relays, so content may differ from your signed-in shell.
 
 ```sh
 napplet screenshot --output preview.png
@@ -247,3 +250,7 @@ Local PNG, JPEG and WebP images are resolved relative to the working directory, 
 The listing uses kind `32267` from the [Software Applications proposal](https://github.com/nostr-protocol/nips/pull/1336), with screenshot URLs in `image` tags. Current-format deployments link each root, named, and snapshot manifest to this listing with `["app", "32267:<pubkey>:<id>", "<relay>"]`, implementing the [proposed NIP-5D application reference](https://github.com/dskvr/nips/pull/11) (pending acceptance). The link is added before signing and does not change the artifact hash. The application event is published before its referencing manifests. Legacy manifests remain unchanged. Unsigned dry runs omit the link because the author public key is not yet known; a signed dry run includes it. This publishes application metadata only, without software release or asset events; acceptance into a particular store's catalog depends on that store.
 
 `deploy --screenshot` starts a local preview for each distinct selected build, captures a temporary PNG, and appends it to the configured application images for that deployment. It requires `--zapstore` or `zapstore.enabled`, and does not modify your config or build files. Capture failure stops deployment before any upload or relay publication. The temporary image is removed after success or failure. `--dry-run` also performs capture and previews the resulting metadata without uploading or publishing. Capture diagnostics go to stderr so `--json` stdout remains valid JSON. No host URL is required. Root and snapshot selections of the same artifact share one capture. To capture an existing shell instead, use `--screenshot <preview-url>`. Use `--screenshot-selector`, `--screenshot-ready-selector`, `--screenshot-width`, `--screenshot-height`, and `--screenshot-delay` for the corresponding standalone capture options. Use the standalone `napplet screenshot` command when you want to keep a PNG on disk.
+
+## Key storage without system helpers
+
+Native keychains are used when available. Otherwise, key commands use password-encrypted local files in `~/.napplet/keys` (AES-256-GCM, PBKDF2-SHA256 with 600,000 iterations). Enter a password of at least 12 characters at the hidden prompt, or set `NAPPLET_KEYSTORE_PASSWORD` for non-interactive use. The password is not stored; reuse it to unlock your keys. Set `NAPPLET_KEYSTORE=portable` to select this store explicitly and `NAPPLET_KEYSTORE_DIR` to change its location. `napplet keys doctor` reports the selected provider.

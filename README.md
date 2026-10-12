@@ -37,7 +37,7 @@ napplet deploy --dry-run
 napplet deploy
 ```
 
-`napplet create` clones the maintained Vite + TypeScript starter. `napplet init` owns deployment name, title, description, archetype roles and conventions, relays, and Blossom servers in `.napplet/config.json`. Node.js 20+ is needed by the generated project, by the package-backed `create` command, and by the skills.sh CLI.
+`napplet create` downloads the maintained Vite + TypeScript starter. `napplet init` owns deployment name, title, description, archetype roles and conventions, relays, and Blossom servers in `.napplet/config.json`. The standalone CLI provisions its own cached tooling for screenshots, conformance, and Paja, so no host Node.js, npm, npx, Deno, Git, or Kehto installation is required. Node.js 20+ is needed by the generated Vite project and the optional skills.sh CLI.
 
 The CLI supports `napplet screenshot --output preview.png` and optional `napplet deploy --zapstore` application metadata publishing. Use `napplet deploy --zapstore --screenshot` to capture and publish in one invocation. See the [CLI guide](packages/cli/README.md#screenshots-and-optional-zapstore-metadata) for configuration, browser setup, and dry-run examples.
 

@@ -1835,9 +1835,13 @@
     },
     "members": {
       "packages/boilerplate": {
+        "dependencies": [
+          "npm:fflate@0.8.2"
+        ],
         "packageJson": {
           "dependencies": [
             "npm:@types/node@^22.15.0",
+            "npm:fflate@0.8.2",
             "npm:tsup@^8.5.0",
             "npm:typescript@^5.9.3"
           ]
@@ -1854,6 +1858,7 @@
           "npm:@types/node@^22.15.0",
           "npm:applesauce-relay@^5.2.0",
           "npm:applesauce-signers@^5.2.0",
+          "npm:fflate@0.8.2",
           "npm:nostr-tools@^2.23.3",
           "npm:parse5@^7.3.0"
         ],
@@ -1863,6 +1868,7 @@
             "npm:@types/node@^22.15.0",
             "npm:applesauce-relay@^5.2.0",
             "npm:applesauce-signers@^5.2.0",
+            "npm:fflate@0.8.2",
             "npm:nostr-tools@^2.23.3",
             "npm:parse5@^7.3.0"
           ]

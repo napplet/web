@@ -33,18 +33,18 @@ Deno.test("getKeyStoreProvider returns null when disabled", async () => {
   assertEquals(provider, null);
 });
 
-Deno.test("requireKeyStoreProvider fails closed when no backend is available", async () => {
+Deno.test("requireKeyStoreProvider fails closed when storage is explicitly disabled", async () => {
   let message = "";
   try {
     await requireKeyStoreProvider({
       os: "linux",
-      env: {},
+      env: { NAPPLET_DISABLE_KEYCHAIN: "true" },
       run: mockRunner({}),
     });
   } catch (error) {
     message = error instanceof Error ? error.message : String(error);
   }
-  assert(message.includes("No native keychain provider is available"));
+  assert(message.includes("Key storage is disabled"));
 });
 
 Deno.test("MacOSKeychain stores and retrieves generic passwords", async () => {
@@ -114,4 +114,9 @@ Deno.test("WindowsCredentialManager stores, lists, and deletes targets", async (
   await provider.store({ service: KEY_SERVICE_NAME, account: "default", secret: "nsec1secret" });
   assertEquals(await provider.list(KEY_SERVICE_NAME), ["default"]);
   assertEquals(await provider.delete(KEY_SERVICE_NAME, "default"), true);
+});
+
+Deno.test("hosts without native helpers receive encrypted local storage", async () => {
+  const provider = await requireKeyStoreProvider({ os: "linux", env: {}, run: mockRunner({}) });
+  assertEquals(provider.name, "encrypted local key store");
 });

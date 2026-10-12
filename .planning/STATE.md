@@ -36,6 +36,15 @@ Last activity: 2026-10-09 - Completed quick task 261009-ur6: Remove commit-title
 
 See phase 162 VERIFICATION.md for evidence and disclosed compatibility/tooling findings. Earlier phase and quick-task records below are historical.
 
+### Quick task 261011-hdg — COMPLETE
+
+- Standalone CLI 0.9.0 provisions verified private runtime/browser tooling for screenshot, inline deploy capture, conformance and Paja; no host package runner is consulted.
+- Boilerplate 0.4.0 downloads template archives without Git; a static Deno adapter avoids the hosted-create fetch timeout found in compiled macOS binaries.
+- Native keychain absence falls back to password-encrypted local storage using authenticated AES-GCM and PBKDF2-SHA256.
+- Verified compiled macOS commands with empty PATH and fresh cache; real Linux ARM64 PNG capture and hosted create in stock Debian slim with empty PATH.
+- Build (12 tasks), types (17 tasks), recursive unit suite and staged AI-slop (100/100) passed. Five-platform standalone CI added. Commit: c8cbb950.
+- Unrelated root package edit and local generated directories remain untouched.
+
 ### Quick task 261010-2y9 — COMPLETE
 
 - Pinned screenshot/default conformance runner to 0.3.3 so older local dependencies cannot intercept commands.

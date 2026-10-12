@@ -1,6 +1,6 @@
 # @napplet/boilerplate
 
-Project scaffold generator behind `napplet create`. It clones the maintained `github.com/napplet/boilerplate` Vite + TypeScript template and derives the `package.json` name from the destination directory.
+Project scaffold generator behind `napplet create`. It downloads the maintained `github.com/napplet/boilerplate` Vite + TypeScript template and derives the `package.json` name from the destination directory.
 
 ```bash
 napplet create my-napplet
@@ -30,9 +30,11 @@ napplet create my-napplet
 | `--yes`, `-y` | Use `./my-napplet` when the destination is omitted. |
 | `--force` | Allow generation into a non-empty directory. |
 
-By default, the CLI clones:
+By default, the CLI downloads the repository’s default-branch ZIP archive without Git:
 
 `https://github.com/napplet/boilerplate.git`
+
+Remote templates accept GitHub HTTPS repository URLs (including `/tree/<ref>`) or HTTP(S) ZIP URLs containing one top-level template directory. Local directories are supported too. SSH clone URLs and other Git transports are replaced by archive downloads or local directories.
 
 ## Programmatic CLI API
 
