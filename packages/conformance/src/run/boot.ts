@@ -252,7 +252,9 @@ async function bootOnce(
   const shell = createReferenceShell();
   const iframe = doc.createElement('iframe');
   iframe.setAttribute('sandbox', opts.allowSameOrigin ? 'allow-scripts allow-same-origin' : 'allow-scripts');
-  iframe.setAttribute('allow', "gamepad 'none'; hid 'none'; usb 'none'");
+  // NAP-GAMEPAD Web Projection Guidance: deny the native API with Permissions-Policy.
+  // https://github.com/napplet/naps/pull/108
+  iframe.setAttribute('allow', "gamepad 'none'");
   iframe.setAttribute('aria-hidden', 'true');
   iframe.style.position = 'absolute';
   iframe.style.width = '1px';
