@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { installNappletRuntimePrelude } from './prelude.js';
-import { gamepad as sdkGamepad } from '../../sdk/src/gamepad.js';
+import { gamepad as sdkGamepad } from '@napplet/sdk/gamepad';
 
 function deliver(data: unknown, source: MessageEventSource | null = window.parent): void {
   window.dispatchEvent(new MessageEvent('message', { data, source }));

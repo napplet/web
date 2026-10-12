@@ -1,16 +1,35 @@
 # @napplet/conformance-cli
 
+## 0.3.4
+
+### Patch Changes
+
+- Add the proposed NAP-GAMEPAD cached API, types and subpaths, runtime binding,
+  envelope validation, conformance injection, and optional manifest-domain
+  inference. Update the standalone CLI's private conformance/Paja runners to
+  GAMEPAD-capable releases. Publish Kehto CLI 0.5.5 before this release;
+  conformance CLI 0.3.4 is included in the same package set. Native Gamepad API
+  replacement remains deferred pending clarification of the proposal and NIP-5D
+  namespace-only injection restriction.
+- Updated dependencies
+  - @napplet/core@0.34.0
+  - @napplet/nap@0.34.0
+  - @napplet/conformance@0.20.0
+
 ## 0.3.3
 
 ### Patch Changes
 
-- Capture deploy screenshots without a host URL using an automatic local Kehto Paja preview. Install Chromium on first use and retain explicit preview URLs.
+- Capture deploy screenshots without a host URL using an automatic local Kehto
+  Paja preview. Install Chromium on first use and retain explicit preview URLs.
 
 ## 0.3.2
 
 ### Patch Changes
 
-- Add a screenshot command that captures a napplet iframe from a running preview shell, with configurable dimensions and readiness controls and protection against overwriting files.
+- Add a screenshot command that captures a napplet iframe from a running preview
+  shell, with configurable dimensions and readiness controls and protection
+  against overwriting files.
 
 ## 0.3.1
 
@@ -23,9 +42,18 @@
 
 ### Minor Changes
 
-- Adopt the current NIP-5D artifact-hash manifest schema for kinds 5129, 15129 and 35129. Writers emit one direct artifact `x` hash, description content, required/optional `R`/`O` domains and independent `z`/`i` advertisements. Readers verify current events and raw artifact bytes; legacy events require migration or older readers.
+- Adopt the current NIP-5D artifact-hash manifest schema for kinds 5129, 15129
+  and 35129. Writers emit one direct artifact `x` hash, description content,
+  required/optional `R`/`O` domains and independent `z`/`i` advertisements.
+  Readers verify current events and raw artifact bytes; legacy events require
+  migration or older readers.
 
-  CLI deployment defaults to current output and offers temporary explicit legacy serialization. Add offline signed-event migration previews without altering source events or publishing. Vite builds default to a self-contained artifact; compatibility helper and sidecar names remain available. See the event migration guide for package cutoffs, immutable pointers and shell ACL/storage implications.
+  CLI deployment defaults to current output and offers temporary explicit legacy
+  serialization. Add offline signed-event migration previews without altering
+  source events or publishing. Vite builds default to a self-contained artifact;
+  compatibility helper and sidecar names remain available. See the event
+  migration guide for package cutoffs, immutable pointers and shell ACL/storage
+  implications.
 
 ### Patch Changes
 
@@ -58,10 +86,10 @@
 
 ### Patch Changes
 
-- dd7b3a7: Update shipped generator, conformance CLI, and agent-skill guidance for
-  queryless convention identities, optional same-tag event kinds, authoritative
-  intent URIs, acceptance-before-delivery, runtime-attested sender, and
-  carrier-neutral delivery without a public NAP-INC dependency.
+- dd7b3a7: Update shipped generator, conformance CLI, and agent-skill guidance
+  for queryless convention identities, optional same-tag event kinds,
+  authoritative intent URIs, acceptance-before-delivery, runtime-attested
+  sender, and carrier-neutral delivery without a public NAP-INC dependency.
 - Updated dependencies [dd7b3a7]
   - @napplet/conformance@0.14.0
 
@@ -79,9 +107,13 @@
 - dd2b0bc: Harden napplet sandbox authoring and verification.
 
   - `@napplet/nap` decodes `data:` resource URLs without using browser `fetch`.
-  - `@napplet/conformance-cli` flags direct browser network, storage, cookie, and external network-loaded asset surfaces in served napplet code.
-  - `@napplet/conformance` reports the broader forbidden-surface check accurately.
-  - `@napplet/skills` moves the sandbox authority contract into the top-level authoring flow so generated napplets route bytes, state, relays, signing, and links through shell-owned NAPs.
+  - `@napplet/conformance-cli` flags direct browser network, storage, cookie,
+    and external network-loaded asset surfaces in served napplet code.
+  - `@napplet/conformance` reports the broader forbidden-surface check
+    accurately.
+  - `@napplet/skills` moves the sandbox authority contract into the top-level
+    authoring flow so generated napplets route bytes, state, relays, signing,
+    and links through shell-owned NAPs.
 
 - Updated dependencies [dd2b0bc]
 - Updated dependencies [f63f8af]
@@ -121,9 +153,9 @@
   surface is removed from active package APIs: no `window.napplet.shell`, no
   `shell.ready` / `shell.init` handshake, and no `@napplet/nap/shell` subpath.
 
-  Conformance now injects the runtime namespace before fixture code and validates
-  only NAP domain envelopes. Skills and package guidance now teach domain-property
-  presence instead of the retired shell supports API.
+  Conformance now injects the runtime namespace before fixture code and
+  validates only NAP domain envelopes. Skills and package guidance now teach
+  domain-property presence instead of the retired shell supports API.
 
 - Updated dependencies [688fb59]
   - @napplet/conformance@0.9.1
@@ -182,22 +214,47 @@
 
 ### Patch Changes
 
-- Resolve a napplet target to its built `dist/index.html` before a sibling source `index.html`.
+- Resolve a napplet target to its built `dist/index.html` before a sibling
+  source `index.html`.
 
-  `napplet-conformance --ui .` (and `napplet-conformance .`) on a Vite **project root** previously served the source `index.html` — a Vite entry referencing `/src/*.ts` that cannot execute in the opaque-origin `srcdoc` sandbox — instead of the built single-file `dist/index.html`. The live UI runner then reported a spurious NON-CONFORMANT (no `napplet-type` meta, `window.napplet` never installed, no `shell.ready`) because it was testing the wrong, never-booting artifact.
+  `napplet-conformance --ui .` (and `napplet-conformance .`) on a Vite **project
+  root** previously served the source `index.html` — a Vite entry referencing
+  `/src/*.ts` that cannot execute in the opaque-origin `srcdoc` sandbox —
+  instead of the built single-file `dist/index.html`. The live UI runner then
+  reported a spurious NON-CONFORMANT (no `napplet-type` meta, `window.napplet`
+  never installed, no `shell.ready`) because it was testing the wrong,
+  never-booting artifact.
 
-  `resolveNappletDir` now prefers `<target>/dist/index.html` over `<target>/index.html`, so pointing the CLI at a project root tests its build output. A plain built directory (only `index.html`, no `dist/`) still resolves as before, and `--ui . --exec "vite build --watch"` now serves the built single-file while running the build in the project root.
+  `resolveNappletDir` now prefers `<target>/dist/index.html` over
+  `<target>/index.html`, so pointing the CLI at a project root tests its build
+  output. A plain built directory (only `index.html`, no `dist/`) still resolves
+  as before, and `--ui . --exec "vite build --watch"` now serves the built
+  single-file while running the build in the project root.
 
 ## 0.2.1
 
 ### Patch Changes
 
-- Stop rejecting inline `<script>` — it broke spec-faithful `srcdoc` napplets ([napplet/web#53](https://github.com/napplet/web/issues/53)).
+- Stop rejecting inline `<script>` — it broke spec-faithful `srcdoc` napplets
+  ([napplet/web#53](https://github.com/napplet/web/issues/53)).
 
-  Per NIP-5D a napplet is a single self-contained `/index.html` loaded via `iframe.srcdoc` with `sandbox="allow-scripts"` and no `allow-same-origin` (an opaque origin). There is no served origin from which to fetch an external `<script src>`, so a napplet's executable JS **must** be inline. The toolchain was enforcing the opposite under an invented "shell-as-CSP-authority / `script-src 'self'`" model that NIP-5D never defines and that was justified by NAP-CONNECT/strict-CSP — since deferred from the NAPs track.
+  Per NIP-5D a napplet is a single self-contained `/index.html` loaded via
+  `iframe.srcdoc` with `sandbox="allow-scripts"` and no `allow-same-origin` (an
+  opaque origin). There is no served origin from which to fetch an external
+  `<script src>`, so a napplet's executable JS **must** be inline. The toolchain
+  was enforcing the opposite under an invented "shell-as-CSP-authority /
+  `script-src 'self'`" model that NIP-5D never defines and that was justified by
+  NAP-CONNECT/strict-CSP — since deferred from the NAPs track.
 
-  - **`@napplet/vite-plugin`**: removed `assertNoInlineScripts` and its unconditional `closeBundle` call. The build no longer aborts on inline scripts; `artifactMode: 'single-file'` still folds local script/style assets into `index.html` and now preserves any pre-existing inline scripts verbatim.
-  - **`@napplet/conformance`** (and bundled **`@napplet/conformance-cli`**): removed the `manifest/no-inline-scripts` check, the `inline-script` error code, and the `findInlineScripts` export. A conformant napplet that carries inline JS no longer fails conformance.
+  - **`@napplet/vite-plugin`**: removed `assertNoInlineScripts` and its
+    unconditional `closeBundle` call. The build no longer aborts on inline
+    scripts; `artifactMode: 'single-file'` still folds local script/style assets
+    into `index.html` and now preserves any pre-existing inline scripts
+    verbatim.
+  - **`@napplet/conformance`** (and bundled **`@napplet/conformance-cli`**):
+    removed the `manifest/no-inline-scripts` check, the `inline-script` error
+    code, and the `findInlineScripts` export. A conformant napplet that carries
+    inline JS no longer fails conformance.
 
 - Updated dependencies
   - @napplet/conformance@0.2.1
@@ -206,12 +263,31 @@
 
 ### Minor Changes
 
-- b75880f: Align the SDK to the updated NAPs track ([github.com/napplet/naps](https://github.com/napplet/naps)).
+- b75880f: Align the SDK to the updated NAPs track
+  ([github.com/napplet/naps](https://github.com/napplet/naps)).
 
-  - **Defer NAP-CLASS and NAP-CONNECT.** Both are now inactive on the track, so the `class` and `connect` domains are removed from the active surface: `NAP_DOMAINS`/`NapDomain`, `window.napplet.class` / `window.napplet.connect`, the `@napplet/nap/class` + `@napplet/nap/connect` subpaths, the shim installers + sdk re-exports, the conformance validators/checks (incl. `manifest/connect-origins`), and the `@napplet/vite-plugin` `connect` option, manifest `connect` tags, and `napplet-connect-requires` meta. `NAP_DOMAINS` now has 14 entries.
-  - **Implement NAP-SHELL** (mandatory, foundational). The `shell.ready` → `shell.init` bootstrap handshake is now a published NAP. `shell.init` carries `{ capabilities: { domains, protocols }, services, class }`. `window.napplet.shell` gains `services`, `class` (opaque integer), `ready(): Promise<ShellEnvironment>`, and `onReady(handler)` alongside `supports(domain, protocol?)`. A new `@napplet/nap/shell` subpath ships the NAP-SHELL types. The conformance engine recognizes `shell.ready`/`shell.init` as the foundational `shell` domain (dropping the previous special-case) and cites NAP-SHELL in its boot/degradation checks.
+  - **Defer NAP-CLASS and NAP-CONNECT.** Both are now inactive on the track, so
+    the `class` and `connect` domains are removed from the active surface:
+    `NAP_DOMAINS`/`NapDomain`, `window.napplet.class` /
+    `window.napplet.connect`, the `@napplet/nap/class` + `@napplet/nap/connect`
+    subpaths, the shim installers + sdk re-exports, the conformance
+    validators/checks (incl. `manifest/connect-origins`), and the
+    `@napplet/vite-plugin` `connect` option, manifest `connect` tags, and
+    `napplet-connect-requires` meta. `NAP_DOMAINS` now has 14 entries.
+  - **Implement NAP-SHELL** (mandatory, foundational). The `shell.ready` →
+    `shell.init` bootstrap handshake is now a published NAP. `shell.init`
+    carries `{ capabilities: { domains, protocols }, services, class }`.
+    `window.napplet.shell` gains `services`, `class` (opaque integer),
+    `ready(): Promise<ShellEnvironment>`, and `onReady(handler)` alongside
+    `supports(domain, protocol?)`. A new `@napplet/nap/shell` subpath ships the
+    NAP-SHELL types. The conformance engine recognizes
+    `shell.ready`/`shell.init` as the foundational `shell` domain (dropping the
+    previous special-case) and cites NAP-SHELL in its boot/degradation checks.
 
-  BREAKING CHANGE: removes `window.napplet.class` / `window.napplet.connect`, the `@napplet/nap/class` and `@napplet/nap/connect` subpaths, and the `@napplet/vite-plugin` `connect` option; migrates the `shell.init` capabilities shape from `{ naps, sandbox }` to `{ domains, protocols }`.
+  BREAKING CHANGE: removes `window.napplet.class` / `window.napplet.connect`,
+  the `@napplet/nap/class` and `@napplet/nap/connect` subpaths, and the
+  `@napplet/vite-plugin` `connect` option; migrates the `shell.init`
+  capabilities shape from `{ naps, sandbox }` to `{ domains, protocols }`.
 
 ### Patch Changes
 
@@ -222,22 +298,23 @@
 
 ### Patch Changes
 
-- b705d67: Rebuild against `@napplet/conformance@0.1.1`. The CLI bundles the engine into
-  `cli.js` (and the host UI bundle), so it must be republished to pick up the
-  manifest-parsing fixes (HTML-entity-decoded config schema; aggregate-hash check
-  removed). No CLI behavior change of its own.
+- b705d67: Rebuild against `@napplet/conformance@0.1.1`. The CLI bundles the
+  engine into `cli.js` (and the host UI bundle), so it must be republished to
+  pick up the manifest-parsing fixes (HTML-entity-decoded config schema;
+  aggregate-hash check removed). No CLI behavior change of its own.
 
 ## 0.1.0
 
 ### Minor Changes
 
-- c8d0198: Initial release. Headless `napplet-conformance` runner that drives the
-  `@napplet/conformance` engine against a napplet in real Chromium via Playwright:
-  serves the built napplet (and the engine bundle) on loopback with permissive CORS,
-  boots it into a `sandbox="allow-scripts"` iframe, records every emitted envelope,
-  runs a graceful-degradation pass, then prints a `pretty`/`json`/`junit` report and
-  exits non-zero on any error-severity failure. Wire it up as `test:conformance`.
-  npm-only (Playwright dependency); the pure engine ships to both npm and JSR.
+- c8d0198: Initial release. Headless `napplet-conformance` runner that drives
+  the `@napplet/conformance` engine against a napplet in real Chromium via
+  Playwright: serves the built napplet (and the engine bundle) on loopback with
+  permissive CORS, boots it into a `sandbox="allow-scripts"` iframe, records
+  every emitted envelope, runs a graceful-degradation pass, then prints a
+  `pretty`/`json`/`junit` report and exits non-zero on any error-severity
+  failure. Wire it up as `test:conformance`. npm-only (Playwright dependency);
+  the pure engine ships to both npm and JSR.
 
 ### Patch Changes
 

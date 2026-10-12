@@ -56,3 +56,7 @@ npx skills add napplet/napplet
 ```
 
 Treat the [living NIP-5D proposal](https://github.com/nostr-protocol/nips/pull/2303), [NAP-OUTBOX](https://github.com/napplet/naps/pull/32), and [NAP-RELAY](https://github.com/napplet/naps/pull/2) as protocol authority for the claims below. The shipped skills provide non-normative authoring guidance: the runtime injects `window.napplet`, app calls use `@napplet/sdk`, direct domain-property checks are only for optional fallbacks, normal Nostr reads and publishes are OUTBOX-first, RELAY is an explicit relay-local escape hatch, and manifest `requires` lists hard requirements only.
+
+### GAMEPAD integration
+
+Generated projects keep controller input optional unless it is essential to the app’s core task. The template’s controller guide covers fallbacks, focus edges, and runtime-owned native access. See the proposed [NAP-GAMEPAD](https://github.com/napplet/naps/pull/108).

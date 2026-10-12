@@ -446,3 +446,7 @@ The opt-in integration test compiles the release entrypoint and runs with an emp
 ```sh
 NAPPLET_TEST_STANDALONE=1 deno test --node-modules-dir=none -A packages/cli/tests/standalone_integration_test.ts
 ```
+
+### GAMEPAD integration
+
+GAMEPAD is a bare manifest domain accepted by `init`, `build`, and deployment metadata. Controller fallback apps use `O gamepad`; controller-required apps use `R gamepad`. Live `dev` controller input depends on a GAMEPAD-capable Kehto/Paja release. See the proposed [NAP-GAMEPAD](https://github.com/napplet/naps/pull/108).

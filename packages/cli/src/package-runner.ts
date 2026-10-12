@@ -2,7 +2,7 @@
 import { type CommandRunner, runCommand, splitCommand } from "./process.ts";
 import { managedPackageCommand } from "./managed-node.ts";
 
-const CONFORMANCE_PACKAGE = "@napplet/conformance-cli@0.3.3";
+const CONFORMANCE_PACKAGE = "@napplet/conformance-cli@0.3.4";
 
 /** Process and output adapters used to invoke a maintained package CLI. */
 export interface PackageCliRunOptions {

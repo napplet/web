@@ -100,3 +100,7 @@ for (const check of run.checks) {
 ## CLI Pairing
 
 The package intentionally stays framework-agnostic. For a project-level command that launches real Chromium against a built napplet, use the companion `napplet-conformance` CLI shipped from `@napplet/conformance-cli`.
+
+### GAMEPAD integration
+
+GAMEPAD validation recognizes only `gamepad.subscribe`, `gamepad.unsubscribe`, and `gamepad.state`; correlation ids are rejected. The injected browser API shares snapshot validation with the portable binding and accepts only parent messages. The reference mock reports unavailable controllers rather than physical input. Focus and native-access isolation require host integration tests. See the proposed [NAP-GAMEPAD](https://github.com/napplet/naps/pull/108).
