@@ -4,15 +4,17 @@ milestone: v0.34.0
 milestone_name: NIP-5D Runtime Injection
 current_phase: 163
 current_phase_name: nap-gamepad-across-repositories
-status: in_progress
-stopped_at: "Phase 162 verified; draft PR #224 open with hzrd149 requested"
-last_updated: "2026-10-04T19:00:16.967369+00:00"
-last_activity: 2026-10-04
-last_activity_desc: "Completed NIP-5D event schema migration; draft PR #224"
+status: completed
+stopped_at: Phase 163 verified; coordinated PRs open with CLI follow-up release gated
+last_updated: "2026-10-12T19:26:09.613Z"
+last_activity: 2026-10-12
+last_activity_desc: GAMEPAD verified across all repositories; PRs 242/243 and Kehto 297
 progress:
-  total_plans: 3
-  completed_plans: 3
-  percent: 100
+  total_phases: 8
+  completed_phases: 3
+  total_plans: 16
+  completed_plans: 6
+  percent: 38
 ---
 
 # Project State
@@ -23,18 +25,18 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 
 **Core value:** Prove that sandboxed Nostr apps can securely delegate to a host shell over a simple, standardized protocol — and ship the spec + SDK so others can build on it.
 
-**Current focus:** Phase 163 — NAP-GAMEPAD across repositories; portable API checkpoint committed, runtime/conformance and repository coverage in progress.
+**Current focus:** Phase 163 — NAP-GAMEPAD verified and shipped as coordinated PRs; release ordering recorded in COVERAGE.md.
 
 > **Provenance note:** The "Accumulated Context" section below preserves bullet records from BOTH branches' STATE.md histories. Records tagged "v0.29.0" from main's lineage refer to the milestone NOW renumbered as v0.30.0 (Class-Gated Decrypt — Phases 135-138). Records tagged "v0.29.0" from feat/strict-model refer to NUB-CONNECT (Phases 135-142). Phase number alone is not a unique identifier across the two; cross-reference the topic (decrypt/identity/NIP-07 → v0.30.0; connect/class/CSP-authority → v0.29.0).
 
 ## Current Position
 
-Phase: 162 (nip-5d-event-schema-migration) — COMPLETE
-Plan: 3 of 3
-Status: Verified; [draft PR #224](https://github.com/napplet/web/pull/224) open, hzrd149 requested
-Last activity: 2026-10-09 - Completed quick task 261009-ur6: Remove commit-title gating from JSR publication
+Phase: 155 — Implement NAP-SHELL
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-10-12 — Phase 163 complete, transitioned to Phase 155
 
-See phase 162 VERIFICATION.md for evidence and disclosed compatibility/tooling findings. Earlier phase and quick-task records below are historical.
+See phase 163 VERIFICATION.md and COVERAGE.md for evidence and disclosed release/specification/baseline limits. Earlier phase and quick-task records below are historical.
 
 ### Quick task 261011-hdg — COMPLETE
 
