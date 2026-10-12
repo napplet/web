@@ -56,3 +56,5 @@ source edits rebuild and re-check automatically.
 - [`@napplet/vite-plugin`](./vite-plugin) — generates the manifest the runner validates
 
 The browser runner also supports `npx @napplet/conformance-cli@0.3.3 screenshot [directory|preview-url] --output preview.png`, exposed as `napplet screenshot` by the standalone CLI. See [screenshots and application metadata](./cli.md#screenshots-and-optional-zapstore-metadata) for browser setup, iframe selection, and publication options.
+
+GAMEPAD screenshots need Paja 0.21.0 from the coordinated runtime release. The dependency range accepts the published base release and the GAMEPAD release; publish the latter before this package so fresh private runner installs use the controller-capable preview.
