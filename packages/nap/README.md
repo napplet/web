@@ -1,6 +1,6 @@
 # @napplet/nap
 
-> Every active napplet NAP domain (relay, storage, inc, keys, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent, ble, webrtc, link, count, lists, serial, fs, common, dm) as layered subpath exports. The package name remains `@napplet/nap` for compatibility.
+> Every active napplet NAP domain (relay, storage, inc, keys, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent, ble, webrtc, link, count, lists, serial, fs, common, dm, shell, gamepad) as layered subpath exports. The package name remains `@napplet/nap` for compatibility.
 
 ## Install
 
@@ -227,7 +227,7 @@ import { mediaCreateSession } from '@napplet/nap/media/sdk';
 import type { MediaNapMessage } from '@napplet/nap/media/types';
 ```
 
-Domain barrels are also available at `@napplet/nap/relay`, `@napplet/nap/storage`, `@napplet/nap/inc`, `@napplet/nap/keys`, `@napplet/nap/theme`, `@napplet/nap/media`, `@napplet/nap/notify`, `@napplet/nap/identity`, `@napplet/nap/config`, `@napplet/nap/resource`, `@napplet/nap/cvm`, `@napplet/nap/outbox`, `@napplet/nap/upload`, `@napplet/nap/intent`, `@napplet/nap/ble`, `@napplet/nap/webrtc`, `@napplet/nap/link`, `@napplet/nap/count`, `@napplet/nap/lists`, `@napplet/nap/common`, `@napplet/nap/serial`, `@napplet/nap/fs`, and `@napplet/nap/dm`.
+Domain barrels are also available at `@napplet/nap/relay`, `@napplet/nap/storage`, `@napplet/nap/inc`, `@napplet/nap/keys`, `@napplet/nap/theme`, `@napplet/nap/media`, `@napplet/nap/notify`, `@napplet/nap/identity`, `@napplet/nap/config`, `@napplet/nap/resource`, `@napplet/nap/cvm`, `@napplet/nap/outbox`, `@napplet/nap/upload`, `@napplet/nap/intent`, `@napplet/nap/ble`, `@napplet/nap/webrtc`, `@napplet/nap/link`, `@napplet/nap/count`, `@napplet/nap/lists`, `@napplet/nap/common`, `@napplet/nap/serial`, `@napplet/nap/fs`, `@napplet/nap/dm`, `@napplet/nap/shell`, and `@napplet/nap/gamepad`.
 
 ## Optional Peer Dependency
 
