@@ -203,8 +203,7 @@ if (window.napplet?.gamepad) {
       if (pad) console.log(pad.index, pad.axes);
     }
   });
-  // Close this listener when its owning view is disposed.
-  subscription.close();
+  // Call subscription.close() when the owning view is disposed, not right away.
 }
 ```
 
