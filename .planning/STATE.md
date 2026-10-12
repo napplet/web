@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v0.34.0
 milestone_name: NIP-5D Runtime Injection
-current_phase: 162
-current_phase_name: nip-5d-event-schema-migration
-status: complete
+current_phase: 163
+current_phase_name: nap-gamepad-across-repositories
+status: in_progress
 stopped_at: "Phase 162 verified; draft PR #224 open with hzrd149 requested"
 last_updated: "2026-10-04T19:00:16.967369+00:00"
 last_activity: 2026-10-04
@@ -23,7 +23,7 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 
 **Core value:** Prove that sandboxed Nostr apps can securely delegate to a host shell over a simple, standardized protocol — and ship the spec + SDK so others can build on it.
 
-**Current focus:** Phase 162 — NIP-5D event schema migration; draft PR #224 awaiting review
+**Current focus:** Phase 163 — NAP-GAMEPAD across repositories; portable API checkpoint committed, runtime/conformance and repository coverage in progress.
 
 > **Provenance note:** The "Accumulated Context" section below preserves bullet records from BOTH branches' STATE.md histories. Records tagged "v0.29.0" from main's lineage refer to the milestone NOW renumbered as v0.30.0 (Class-Gated Decrypt — Phases 135-138). Records tagged "v0.29.0" from feat/strict-model refer to NUB-CONNECT (Phases 135-142). Phase number alone is not a unique identifier across the two; cross-reference the topic (decrypt/identity/NIP-07 → v0.30.0; connect/class/CSP-authority → v0.29.0).
 
