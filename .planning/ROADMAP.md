@@ -929,3 +929,14 @@ Plans:
 - [x] 162-01-PLAN.md — Current-schema writer and readers
 - [x] 162-02-PLAN.md — CLI format boundary and event migration
 - [x] 162-03-PLAN.md — Docs, release metadata and draft PR shipment
+
+### Phase 163: NAP-GAMEPAD across repositories
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 162
+**Plans:** 0 plans
+
+Plans:
+
+- [ ] TBD (run /gsd-plan-phase 163 to break down)

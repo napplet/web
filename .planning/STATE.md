@@ -715,3 +715,7 @@ Resume: Phase 142 TERMINAL-COMPLETE — all 13 VER-IDs (VER-01..13) verified PAS
 | Phase 161 P12 | 4min | 1 tasks | 5 files |
 | Phase 161-ad-hoc-convention-package-contracts P15 | 2min | 1 tasks | 4 files |
 | Phase 161 P16 | 4 min | 2 tasks | 5 files |
+
+### Phase 163 roadmap evolution
+
+- Added NAP-GAMEPAD across repositories, including boilerplate and relevant Kehto runtime consumers. Planning and implementation evidence live in phases/163-nap-gamepad-across-repositories.
