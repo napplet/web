@@ -100,3 +100,9 @@ Report the URL Paja prints. A raw Vite URL is an asset server without a runtime 
 - `localStorage`, `fetch`, `<img src=https://…>`, `WebSocket`, `window.nostr` — none exist in the sandbox.
 - External `<script src>` in the artifact — JS must be inline; `artifactMode: 'single-file'` handles it.
 - Trusting upstream `Content-Type` for resource bytes — the shell delivers a byte-sniffed `mime`.
+
+## Optional gameplay preview
+
+Use `napplet record --actions capture.json --output gameplay.webm` for a repeatable clip after building. Recipes are arrays of timed `click`, `keyDown`, and `keyUp` actions. Configure `zapstore.id` and `zapstore.name` first. Use `--duration`, `--width`, `--height`, and `--ready-selector` when needed. Ask before opening `--interactive` during unattended agent work because it opens a visible Chromium window.
+
+Review actual motion, framing, readability, and errors before publishing with the existing `napplet deploy --zapstore` flow. The default is a six-second silent WebM. Keep captures outside `dist`; preserve earlier files using new names. Rebuilds invalidate the selected clip: record again or use `napplet record --clear`. Preserve static covers. These are authoring tools, not runtime capabilities or conformance requirements. The optional `app` manifest link remains a pending proposal; defer to the living specifications.

@@ -36,6 +36,9 @@ export function renderGuide(): string {
    # Optional: capture an iframe from your running preview shell
    napplet screenshot http://localhost:5173 --output preview.png
    # Optional application metadata: configure zapstore, then use deploy --zapstore
+   napplet record --interactive --output gameplay.webm
+   # Or record a timed click/key recipe: napplet record --actions capture.json
+   # Review the clip before publishing. Clear a stale selection: napplet record --clear
    napplet deploy --dry-run
    napplet deploy
    Deploy docs: ${DOCS_BASE}/packages/cli.html

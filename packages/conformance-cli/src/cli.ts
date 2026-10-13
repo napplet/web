@@ -31,6 +31,8 @@ import { startUiServer } from './ui-server.js';
 import { scanForbiddenGlobals } from './scan.js';
 import { resolveNappletDir } from './resolve-napplet.js';
 import { captureScreenshot, parseScreenshotArgs } from './screenshot.js';
+import { captureRecording } from './record.js';
+import { parseRecordArgs } from './record-options.js';
 
 interface CliOptions {
   target?: string;
@@ -55,6 +57,7 @@ Usage:
   napplet-conformance --ui [dir] [options]       # open the live web runtime (like vitest --ui)
   napplet-conformance --url https://my.napplet/ [options]
   napplet-conformance screenshot [directory|preview-url] [--output preview.png]
+  napplet-conformance record [directory] [--interactive] [--output preview.webm]
 
 Arguments:
   dir                      Built napplet directory (prefers ./dist/index.html, falls back to ./index.html)
@@ -308,6 +311,15 @@ async function main(argv: string[]): Promise<number> {
 }
 
 async function run(args: string[]): Promise<number> {
+  if (args[0] === 'record') {
+    if (args.includes('--help') || args.includes('-h')) {
+      console.log('Usage: napplet record [directory] [--interactive] [--output preview.webm] [--duration 6000] [--width 960] [--height 600] [--delay 1500] [--ready-selector <css>] [--actions recipe.json]');
+      return 0;
+    }
+    const metadata = await captureRecording(parseRecordArgs(args.slice(1)));
+    console.log(JSON.stringify(metadata));
+    return 0;
+  }
   if (args[0] !== 'screenshot') return main(args);
   if (args.includes('--help') || args.includes('-h')) {
     console.log('Usage: napplet screenshot [directory|preview-url] [--output preview.png] [--selector iframe] [--ready-selector <css>] [--width 1200] [--height 750] [--delay 1500]');

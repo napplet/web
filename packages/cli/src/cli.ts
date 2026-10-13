@@ -41,6 +41,7 @@ import { linkZapstoreApplication, prepareZapstorePublication } from "./zapstore.
 import { captureDeployScreenshot } from "./deploy-screenshot.ts";
 import { managedPackageCommand } from "./managed-node.ts";
 import type { ResolvedCommand } from "./package-runner.ts";
+import { commandRecord } from "./record-command.ts";
 
 import { runPackageCli, resolveConformanceCommand, resolvePajaArgs } from "./package-runner.ts";
 export { runPackageCli, resolveConformanceCommand, resolvePajaArgs } from "./package-runner.ts";
@@ -66,6 +67,8 @@ Usage:
   napplet conformance [--config <file>] [--all] [-- <args>]
   napplet paja [--config <file>] [-- <args>]
   napplet screenshot [directory|preview-url] [--output preview.png] [--selector iframe] [--ready-selector <css>] [--width 1200] [--height 750] [--delay 1500]
+  napplet record [directory] [--interactive] [--output preview.webm] [--duration 6000] [--actions recipe.json]
+  napplet record --clear
 
 Deploy capture options: --screenshot-selector, --screenshot-ready-selector,
   --screenshot-width, --screenshot-height, --screenshot-delay (all take values).
@@ -85,6 +88,7 @@ export type PackageCliRunner = (args: readonly string[]) => number | Promise<num
 export interface CliMainOptions {
   runCreate?: PackageCliRunner;
   runScreenshot?: PackageCliRunner;
+  runRecord?: PackageCliRunner;
 }
 
 /**
@@ -120,6 +124,8 @@ export async function main(argv = Deno.args, options: CliMainOptions = {}): Prom
         );
       case "screenshot":
         return await (options.runScreenshot ?? ((args) => runPackageCli("@napplet/conformance-cli", args)))(parsed.rest);
+      case "record":
+        return await commandRecord(parsed.rest, options.runRecord);
       case "discover":
         return await commandDiscover(parsed.rest);
       case "deploy":
@@ -275,6 +281,7 @@ async function commandDeploy(argv: string[], runScreenshot?: PackageCliRunner): 
       : config;
     const application = await prepareZapstorePublication(publicationConfig, blossomServers, {
       enabled: flags.boolean.has("no-zapstore") ? false : flags.boolean.has("zapstore") ? true : undefined,
+      artifactHashes: templates.map((template) => template.artifactHash ?? ''),
     });
     if (application && signer) {
       application.signedEvent = await signer.sign(application.template);

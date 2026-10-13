@@ -5,6 +5,8 @@ on:
     paths:
       - 'packages/cli/**'
       - 'packages/boilerplate/**'
+      - 'packages/conformance-cli/**'
+      - 'pnpm-lock.yaml'
       - 'deno.*'
       - '.github/workflows/standalone-cli.yml'
   push:
@@ -12,6 +14,8 @@ on:
     paths:
       - 'packages/cli/**'
       - 'packages/boilerplate/**'
+      - 'packages/conformance-cli/**'
+      - 'pnpm-lock.yaml'
       - 'deno.*'
       - '.github/workflows/standalone-cli.yml'
 
@@ -49,12 +53,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: denoland/setup-deno@v2
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @napplet/conformance-cli... build
+      - name: Pack the unpublished recording runner
+        run: pnpm --dir packages/conformance-cli pack --pack-destination ../..
       - name: Compile release binary
         run: deno task --cwd packages/cli compile:${{ matrix.target }}
       - name: Exercise commands with empty PATH and a fresh cache
-        run: deno test --node-modules-dir=none -A packages/cli/tests/standalone_integration_test.ts
+        run: deno test --node-modules-dir=none -A packages/cli/tests/standalone_integration_test.ts packages/cli/tests/recording_standalone_test.ts
         env:
           NAPPLET_TEST_STANDALONE: '1'
+          NAPPLET_TEST_RECORDING_PACKAGE: napplet-conformance-cli-0.4.0.tgz
           NAPPLET_TEST_BINARY: packages/cli/dist/${{ matrix.asset }}
       - uses: actions/upload-artifact@v4
         with:

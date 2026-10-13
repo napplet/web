@@ -71,6 +71,7 @@ export default defineConfig({
             link: '/guide/build-note-drafts-napplet-with-ai-agent-and-skills',
           },
           { text: 'Agent skills', link: '/guide/agent-skills' },
+          { text: 'Gameplay previews', link: '/guide/gameplay-previews' },
         ],
       },
       {
