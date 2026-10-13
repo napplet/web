@@ -31,6 +31,8 @@ Assessment date: 2026-10-13. Scope: every repository in the napplet organization
 | `@napplet/conformance-web` (`apps/conformance`) | Test report UI, not an application gallery. Unchanged. |
 | `@napplet/docs` | Guide, CLI reference, sidebar and version-synchronized tutorial updated. |
 | `@napplet/web` (`apps/web`) | Marketing sections, with no application-event catalog or preview cards. Unchanged. |
+| `tests/e2e/harness` | Browser test host; no application preview gallery. Unchanged. |
+| `tests/fixtures/napplets/broken`, `conformant`, `resource-data` | Three fixture packages exercise protocol/runtime behavior. Recording has a separate playable HTML fixture and does not change their conformance expectations. Unchanged. |
 | `skills/` (not an npm package) | Updated `napplet-build`, `napplet-make`, `napplet-test`. Other skills cover design, runtime APIs, interop, migration, porting and UI rather than optional publication authoring; unchanged. |
 
 ## Kehto/Paja consumers

@@ -935,5 +935,5 @@ Plans:
 
 **Goal:** Optional capture, application metadata publication, and applicable catalog playback across the ecosystem.
 **Requirements:** VIDEO-CAPTURE, VIDEO-PUBLISH, VIDEO-PLAYBACK, VIDEO-COVERAGE, VIDEO-SHIP.
-**Plans:** 164-01-PLAN.md.
-**Status:** In progress.
+**Plans:** 1/1 complete: 164-01-PLAN.md.
+**Status:** Verified; [web PR #244](https://github.com/napplet/web/pull/244) and [boilerplate PR #8](https://github.com/napplet/boilerplate/pull/8) open.

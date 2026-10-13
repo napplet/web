@@ -56,3 +56,7 @@ source edits rebuild and re-check automatically.
 - [`@napplet/vite-plugin`](./vite-plugin) — generates the manifest the runner validates
 
 The browser runner also supports `npx @napplet/conformance-cli@0.3.3 screenshot [directory|preview-url] --output preview.png`, exposed as `napplet screenshot` by the standalone CLI. See [screenshots and application metadata](./cli.md#screenshots-and-optional-zapstore-metadata) for browser setup, iframe selection, and publication options.
+
+## Gameplay recording
+
+Version 0.4.0 adds `napplet-conformance record [directory] --output gameplay.webm`, with `--interactive` for an author-controlled window or `--actions recipe.json` for timed input. It records the built artifact through Paja, writes a silent WebM with a thumbnail and metadata sidecar, and preserves existing output files. This low-level runner writes files; `napplet record` also selects the clip in deployment configuration. Use the standalone command for automatic private runtime provisioning and publication through `--zapstore`. See the [gameplay preview guide](../guide/gameplay-previews.md).
