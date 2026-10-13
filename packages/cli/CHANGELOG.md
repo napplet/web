@@ -1,5 +1,11 @@
 # @napplet/cli
 
+## 0.10.0
+
+### Minor Changes
+
+- Add optional gameplay recordings through managed Paja and Playwright tools. Support interactive capture and timed input recipes, preserve local media and build provenance, and publish verified WebM previews with NIP-92 metadata through the existing Zapstore application event.
+
 ## 0.9.0
 
 ### Minor Changes

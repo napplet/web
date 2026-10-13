@@ -71,10 +71,22 @@ export interface ZapstoreConfig {
   summary?: string;
   icon?: string;
   images?: string[];
+  video?: PreviewVideo;
   website?: string;
   repository?: string;
   license?: string;
   tags?: string[];
+}
+
+/** Recorded local media selected for an optional application listing. */
+export interface PreviewVideo {
+  file: string;
+  thumbnail: string;
+  artifactHash: string;
+  sha256: string;
+  width: number;
+  height: number;
+  durationMs: number;
 }
 
 /** NappletCandidate shape used by shared CLI type helpers. */

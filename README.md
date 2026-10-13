@@ -39,6 +39,8 @@ napplet deploy
 
 `napplet create` downloads the maintained Vite + TypeScript starter. `napplet init` owns deployment name, title, description, archetype roles and conventions, relays, and Blossom servers in `.napplet/config.json`. The standalone CLI provisions its own cached tooling for screenshots, conformance, and Paja, so no host Node.js, npm, npx, Deno, Git, or Kehto installation is required. Node.js 20+ is needed by the generated Vite project and the optional skills.sh CLI.
 
+Use `napplet record --interactive` or a timed input recipe to capture optional gameplay clips, then publish through the existing `--zapstore` listing. See the [gameplay preview guide](apps/docs/guide/gameplay-previews.md).
+
 The CLI supports `napplet screenshot --output preview.png` and optional `napplet deploy --zapstore` application metadata publishing. Use `napplet deploy --zapstore --screenshot` to capture and publish in one invocation. See the [CLI guide](packages/cli/README.md#screenshots-and-optional-zapstore-metadata) for configuration, browser setup, and dry-run examples.
 
 ## Event schema compatibility

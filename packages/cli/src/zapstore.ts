@@ -2,6 +2,7 @@
 import { withClientTag } from "./client-tag.ts";
 import { resolvePath } from "./path.ts";
 import type { DeployFilePayload } from "./blossom-upload.ts";
+import { normalizePreviewVideo, readPreviewVideo } from "./preview-video.ts";
 import type {
   DeployManifestTemplate,
   NappletConfig,
@@ -61,6 +62,7 @@ export function normalizeZapstoreConfig(input: unknown): ZapstoreConfig | undefi
     }
     result[key] = [...new Set(field.map((item: string) => item.trim()))];
   }
+  if (value.video !== undefined) result.video = normalizePreviewVideo(value.video);
   return result as unknown as ZapstoreConfig;
 }
 
@@ -75,7 +77,7 @@ export function normalizeZapstoreConfig(input: unknown): ZapstoreConfig | undefi
 export async function prepareZapstorePublication(
   config: NappletConfig,
   servers: readonly string[],
-  options: { enabled?: boolean; cwd?: string; createdAt?: number } = {},
+  options: { enabled?: boolean; cwd?: string; createdAt?: number; artifactHashes?: readonly string[] } = {},
 ): Promise<ZapstorePublication | undefined> {
   if (!(options.enabled ?? config.zapstore?.enabled ?? false)) return undefined;
   const metadata = normalizeZapstoreConfig(config.zapstore);
@@ -116,12 +118,25 @@ export async function prepareZapstorePublication(
   }
   if (metadata.icon) tags.push(["icon", await media(metadata.icon)]);
   for (const value of metadata.images ?? []) tags.push(["image", await media(value)]);
+  let content = metadata.description ?? config.metadata?.description ?? "";
+  if (metadata.video) {
+    if (!servers.length) throw new Error("Local Zapstore videos require a Blossom server");
+    const video = metadata.video;
+    const data = await readPreviewVideo(video, options.artifactHashes ?? [], cwd);
+    const url = `${servers[0].replace(/\/$/, "")}/${video.sha256}`;
+    const thumb = await media(video.thumbnail);
+    if (!tags.some((tag) => tag[0] === "image")) tags.push(["image", thumb]);
+    files.push({ candidateDir: cwd, path: video.file, sha256: video.sha256, data, contentType: "video/webm" });
+    content = `${content}${content ? "\n\n" : ""}${url}`;
+    // NIP-92: URL in content, one matching imeta; fields from NIP-94.
+    tags.push(["imeta", `url ${url}`, "m video/webm", `x ${video.sha256}`, `size ${data.length}`, `dim ${video.width}x${video.height}`, `thumb ${thumb}`, `alt ${metadata.name} gameplay preview`]);
+  }
   for (const topic of metadata.tags ?? []) tags.push(["t", topic]);
   return {
     template: {
       kind: 32267,
       created_at: options.createdAt ?? Math.floor(Date.now() / 1000),
-      content: metadata.description ?? config.metadata?.description ?? "",
+      content,
       tags: withClientTag(tags),
     },
     files,

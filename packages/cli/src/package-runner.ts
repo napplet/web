@@ -3,6 +3,22 @@ import { type CommandRunner, runCommand, splitCommand } from "./process.ts";
 import { managedPackageCommand } from "./managed-node.ts";
 
 const CONFORMANCE_PACKAGE = "@napplet/conformance-cli@0.3.3";
+const RECORDING_PACKAGE = "@napplet/conformance-cli@0.4.0";
+
+/**
+ * Run the recording-capable maintained CLI through the private runtime.
+ * @param args Valid recording command arguments.
+ * @returns Browser runner exit code.
+ * @example await runRecordingCli(['dist', '--output', 'preview.webm'])
+ */
+export async function runRecordingCli(args: readonly string[]): Promise<number> {
+  const base = await managedPackageCommand(RECORDING_PACKAGE, "dist/cli.js");
+  // Interactive capture needs live browser progress and cancellation, not buffered output.
+  return (await new Deno.Command(base.command, {
+    args: [...base.args, "record", ...args], env: base.env,
+    stdin: "inherit", stdout: "inherit", stderr: "inherit",
+  }).spawn().status).code;
+}
 
 /** Process and output adapters used to invoke a maintained package CLI. */
 export interface PackageCliRunOptions {

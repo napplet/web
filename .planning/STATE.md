@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v0.34.0
 milestone_name: NIP-5D Runtime Injection
-current_phase: 162
-current_phase_name: nip-5d-event-schema-migration
+current_phase: 164
+current_phase_name: gameplay-previews
 status: complete
-stopped_at: "Phase 162 verified; draft PR #224 open with hzrd149 requested"
-last_updated: "2026-10-04T19:00:16.967369+00:00"
-last_activity: 2026-10-04
-last_activity_desc: "Completed NIP-5D event schema migration; draft PR #224"
+stopped_at: "Phase 164 verified; web PR #244 and boilerplate PR #8 open"
+last_updated: "2026-10-13T23:29:00Z"
+last_activity: 2026-10-13
+last_activity_desc: "Gameplay capture and local publication verified on all five standalone platforms"
 progress:
-  total_plans: 3
-  completed_plans: 3
+  total_plans: 1
+  completed_plans: 1
   percent: 100
 ---
 
@@ -23,18 +23,18 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 
 **Core value:** Prove that sandboxed Nostr apps can securely delegate to a host shell over a simple, standardized protocol — and ship the spec + SDK so others can build on it.
 
-**Current focus:** Phase 162 — NIP-5D event schema migration; draft PR #224 awaiting review
+**Current focus:** Phase 164 — Gameplay previews; web PR #244 and boilerplate PR #8 awaiting review
 
 > **Provenance note:** The "Accumulated Context" section below preserves bullet records from BOTH branches' STATE.md histories. Records tagged "v0.29.0" from main's lineage refer to the milestone NOW renumbered as v0.30.0 (Class-Gated Decrypt — Phases 135-138). Records tagged "v0.29.0" from feat/strict-model refer to NUB-CONNECT (Phases 135-142). Phase number alone is not a unique identifier across the two; cross-reference the topic (decrypt/identity/NIP-07 → v0.30.0; connect/class/CSP-authority → v0.29.0).
 
 ## Current Position
 
-Phase: 162 (nip-5d-event-schema-migration) — COMPLETE
-Plan: 3 of 3
-Status: Verified; [draft PR #224](https://github.com/napplet/web/pull/224) open, hzrd149 requested
-Last activity: 2026-10-09 - Completed quick task 261009-ur6: Remove commit-title gating from JSR publication
+Phase: 164 (gameplay-previews) — COMPLETE
+Plan: 1 of 1
+Status: Verified; [web PR #244](https://github.com/napplet/web/pull/244) and [boilerplate PR #8](https://github.com/napplet/boilerplate/pull/8) open.
+Last activity: 2026-10-13 — Verified real capture, loopback publication and all five standalone targets; documented complete ecosystem coverage.
 
-See phase 162 VERIFICATION.md for evidence and disclosed compatibility/tooling findings. Earlier phase and quick-task records below are historical.
+See phase 164 VERIFICATION.md and COVERAGE.md. No application-preview gallery exists on inspected default branches. Existing application-reference and Software Applications proposals remain interoperability limits. CLI 0.10.0 requires recording runner 0.4.0 to be published before runtime installation. Original dirty workspaces are preserved. Earlier phase and quick-task records below are historical.
 
 ### Quick task 261011-hdg — COMPLETE
 

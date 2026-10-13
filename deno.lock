@@ -11,6 +11,7 @@
     "npm:@scure/base@^1.2.6": "1.2.6",
     "npm:applesauce-relay@^5.2.0": "5.2.0_typescript@5.9.3",
     "npm:applesauce-signers@^5.2.0": "5.2.0_typescript@5.9.3",
+    "npm:fflate@0.8.2": "0.8.2",
     "npm:happy-dom@^20.10.3": "20.11.1",
     "npm:nostr-tools@^2.23.3": "2.24.1_typescript@5.9.3",
     "npm:playwright@^1.59.1": "1.62.1",
@@ -1187,6 +1188,9 @@
         "jsonfile",
         "universalify"
       ]
+    },
+    "fflate@0.8.2": {
+      "integrity": "sha512-cPJU47OaAoCbg0pBvzsgpTPhmhqI5eJjh/JIu8tPj5q+T7iLvW/JAYUqmE7KOB4R1ZyEhzBaIQpQpardBF5z8A=="
     },
     "fsevents@2.3.2": {
       "integrity": "sha512-xiqMQR4xAeHTuB9uWm+fFRcIOgKBMiOBP+eXiyT7jsgVCq1bkVygt00oASowB7EdtpOHaaPgKt812P9ab+DDKA==",

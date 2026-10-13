@@ -86,3 +86,9 @@ Report the Paja URL. If `napplet`, Kehto, or Paja is not installed, report the e
 ```
 
 Cache Playwright's Chromium. Green conformance + a clean boundary audit + a self-contained single-file build + the four-frame UI check = ready to publish.
+
+## Optional gameplay preview
+
+Use `napplet record --actions capture.json --output gameplay.webm` for a repeatable clip after building. Recipes are arrays of timed `click`, `keyDown`, and `keyUp` actions. Configure `zapstore.id` and `zapstore.name` first. Use `--duration`, `--width`, `--height`, and `--ready-selector` when needed. Ask before opening `--interactive` during unattended agent work because it opens a visible Chromium window.
+
+Review actual motion, framing, readability, and errors before publishing with the existing `napplet deploy --zapstore` flow. The default is a six-second silent WebM. Keep captures outside `dist`; preserve earlier files using new names. Rebuilds invalidate the selected clip: record again or use `napplet record --clear`. Preserve static covers. These are authoring tools, not runtime capabilities or conformance requirements. The optional `app` manifest link remains a pending proposal; defer to the living specifications.

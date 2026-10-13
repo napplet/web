@@ -9,13 +9,14 @@ import { sendFile, setCors } from './static.js';
 /**
  * Host a built artifact in Paja on ephemeral loopback ports.
  * @param artifact Exact index.html selected by deployment.
+ * @param frozenHtml Optional bytes frozen by a recording operation.
  * @returns Shell URL and an async cleanup handle for both servers.
  * @example const preview = await startScreenshotPreview('/project/dist/index.html');
  */
-export async function startScreenshotPreview(artifact: string): Promise<{ url: string; close(): Promise<void> }> {
+export async function startScreenshotPreview(artifact: string, frozenHtml?: Uint8Array): Promise<{ url: string; close(): Promise<void> }> {
   const index = await realpath(artifact);
   const root = dirname(index);
-  const html = await readFile(index);
+  const html = frozenHtml ?? await readFile(index);
   const server = createServer((request, response) => {
     setCors(response);
     void (async () => {

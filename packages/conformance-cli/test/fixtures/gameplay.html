@@ -1,0 +1,19 @@
+<!doctype html>
+<html><head><title>Capture game</title><meta name="description" content="Move the red square with the right arrow."><style>html,body{margin:0;height:100%;overflow:hidden;background:#102030}canvas{display:block;width:100%;height:100%}</style></head>
+<body><canvas></canvas><script>
+const canvas = document.querySelector('canvas');
+const context = canvas.getContext('2d');
+let x = 20, moving = false, running = false;
+addEventListener('pointerdown', () => { running = true; });
+addEventListener('keydown', event => { if (event.key === 'ArrowRight') moving = true; });
+addEventListener('keyup', event => { if (event.key === 'ArrowRight') moving = false; });
+function draw() {
+  canvas.width = innerWidth; canvas.height = innerHeight;
+  if (running && moving) x = Math.min(innerWidth - 50, x + 2);
+  context.fillStyle = '#102030'; context.fillRect(0, 0, innerWidth, innerHeight);
+  context.fillStyle = '#ff3030'; context.fillRect(x, 100, 40, 40);
+  context.fillStyle = '#ffffff'; context.font = '18px sans-serif'; context.fillText('Click, then hold right arrow', 16, 40);
+  requestAnimationFrame(draw);
+}
+draw();
+</script></body></html>

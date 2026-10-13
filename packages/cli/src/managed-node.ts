@@ -166,7 +166,7 @@ const { chromium } = require('playwright');
 const script = process.argv.splice(2, 1)[0];
 process.argv[1] = script;
 if (!process.argv.includes('--help') && !process.argv.includes('-h') && !process.argv.includes('--ui')) {
-  if (process.platform === 'linux') {
+  if (process.platform === 'linux' && !process.argv.includes('--interactive')) {
     const scratch = mkdtempSync(join(tmpdir(), 'napplet-chromium-'));
     process.env.TMPDIR = scratch;
     process.on('exit', () => rmSync(scratch, { recursive: true, force: true }));
