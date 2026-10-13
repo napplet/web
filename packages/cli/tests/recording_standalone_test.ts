@@ -13,7 +13,7 @@ Deno.test({
       const binary = resolve(Deno.env.get("NAPPLET_TEST_BINARY")!);
       const emptyPath = join(root, "empty-path");
       await Deno.mkdir(emptyPath);
-      const env = { PATH: emptyPath, NAPPLET_CACHE_DIR: join(root, "cache") };
+      const env = { PATH: emptyPath, NAPPLET_CACHE_DIR: Deno.env.get("NAPPLET_TEST_CACHE_DIR") ?? join(root, "cache") };
       const run = async (args: string[], code = 0) => {
         console.log(`Standalone recording: ${args[0]}`);
         const result = await new Deno.Command(binary, {
@@ -45,6 +45,7 @@ Deno.test({
       assertEquals(selection.file, "game with spaces.webm");
       assertEquals(selection.width, 960);
       assertEquals(selection.height, 600);
+      assert(selection.durationMs >= 5500 && selection.durationMs <= 8500, JSON.stringify(selection));
       const recorded = await Deno.readFile(join(root, selection.file));
       assertEquals([...recorded.subarray(0, 4)], [0x1a, 0x45, 0xdf, 0xa3]);
       const videoReport = JSON.parse((await run(["deploy", "--zapstore", "--dry-run", "--json"])).stdout);

@@ -59,7 +59,9 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @napplet/conformance-cli... build
+      - run: pnpm --workspace-concurrency=1 --filter @napplet/conformance-cli... build
+        env:
+          NODE_OPTIONS: --max-old-space-size=4096
       - name: Pack the unpublished recording runner
         run: pnpm --dir packages/conformance-cli pack --pack-destination ../..
       - name: Compile release binary

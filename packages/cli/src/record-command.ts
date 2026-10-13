@@ -13,7 +13,7 @@ import { normalizePreviewVideo } from "./preview-video.ts";
  */
 export async function commandRecord(argv: readonly string[], run: (args: readonly string[]) => Promise<number> | number = runRecordingCli): Promise<number> {
   if (argv.includes('--help') || argv.includes('-h')) {
-    console.log('Usage: napplet record [directory] [--interactive] [--output preview.webm] [--duration 6000] [--width 960] [--height 600] [--delay 1500] [--ready-selector <css>] [--actions recipe.json] [--config <file>]\n       napplet record --clear [--config <file>]\nDurations and delay use milliseconds. Recording selects zapstore.video; publishing still requires --zapstore.');
+    console.log('Usage: napplet record [directory | --artifact <file>] [--interactive] [--output preview.webm] [--duration 6000] [--width 960] [--height 600] [--delay 1500] [--ready-selector <css>] [--actions recipe.json] [--config <file>]\n       napplet record --clear [--config <file>]\nDurations and delay use milliseconds. Recording selects zapstore.video; publishing still requires --zapstore.');
     return 0;
   }
   const args = [...argv];
