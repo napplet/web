@@ -929,3 +929,11 @@ Plans:
 - [x] 162-01-PLAN.md — Current-schema writer and readers
 - [x] 162-02-PLAN.md — CLI format boundary and event migration
 - [x] 162-03-PLAN.md — Docs, release metadata and draft PR shipment
+
+
+### Phase 164: Gameplay previews
+
+**Goal:** Optional capture, application metadata publication, and applicable catalog playback across the ecosystem.
+**Requirements:** VIDEO-CAPTURE, VIDEO-PUBLISH, VIDEO-PLAYBACK, VIDEO-COVERAGE, VIDEO-SHIP.
+**Plans:** 164-01-PLAN.md.
+**Status:** In progress.
