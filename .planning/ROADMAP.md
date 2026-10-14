@@ -929,3 +929,16 @@ Plans:
 - [x] 162-01-PLAN.md — Current-schema writer and readers
 - [x] 162-02-PLAN.md — CLI format boundary and event migration
 - [x] 162-03-PLAN.md — Docs, release metadata and draft PR shipment
+
+### Phase 163: NAP-GAMEPAD across repositories
+
+**Goal:** Implement the proposed GAMEPAD API/runtime/tooling across all organization repositories and applicable packages, including boilerplate. Non-normative acceptance defers to [NAP-GAMEPAD](https://github.com/napplet/naps/pull/108) and [NIP-5D](https://github.com/nostr-protocol/nips/pull/2303).
+**Requirements:** GP-API, GP-WIRE, GP-ISOLATION, GP-TRUST, GP-REPOS, GP-DOCS, GP-SHIP (defined in 163-CONTEXT.md)
+**Depends on:** Phase 162
+**Plans:** 3 plans — COMPLETE
+
+- [x] 163-01-PLAN.md — Portable API, core types, runtime binding and SDK exports
+- [x] 163-02-PLAN.md — Host isolation, injection and conformance
+- [x] 163-03-PLAN.md — All repositories, docs, releases and coordinated PR shipment
+
+Verified and shipped in [web #242](https://github.com/napplet/web/pull/242), [Kehto #297](https://github.com/kehto/web/pull/297), and five consumer/community PRs linked in COVERAGE.md. Publish the Kehto package set before the primary release. The optional native API replacement conflict and existing CVM baseline failures remain disclosed.
