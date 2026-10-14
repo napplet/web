@@ -32,7 +32,7 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 Phase: 162 (nip-5d-event-schema-migration) — COMPLETE
 Plan: 3 of 3
 Status: Verified; [draft PR #224](https://github.com/napplet/web/pull/224) open, hzrd149 requested
-Last activity: 2026-10-13 - Completed quick task 261013-vo3: Add icon design and generation skill
+Last activity: 2026-10-14 - Completed quick task 261014-fuc: Replace blossom:sha256 URIs with BUD-10 form
 
 See phase 162 VERIFICATION.md for evidence and disclosed compatibility/tooling findings. Earlier phase and quick-task records below are historical.
 
@@ -537,6 +537,7 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 
 | Quick ID | Task | Date | Commit | Artifacts |
 |----------|------|------|--------|-----------|
+| 261014-fuc | Replace blossom:sha256 URIs with BUD-10 blossom:<sha256>.<ext> | 2026-10-14 | 48782cd0 | [261014-fuc-replace-blossom-sha256-uris-with-bud-10-](./quick/261014-fuc-replace-blossom-sha256-uris-with-bud-10-/) |
 | 261013-vo3 | Add a skill for icon design, generation, refinement, and NIP-5D integration | 2026-10-13 | b5757eec | [261013-vo3-add-a-napplet-skill-for-icon-design-imag](./quick/261013-vo3-add-a-napplet-skill-for-icon-design-imag/) |
 | 261009-ur6 | Remove commit-title gating from JSR publication | 2026-10-09 | d798a91f | [261009-ur6-remove-commit-title-gating-from-jsr-publ](./quick/261009-ur6-remove-commit-title-gating-from-jsr-publ/) |
 | 261006-ij3 | Fix verified PR #224 review findings (conformance x-hash panel, deploy/plugin dropped-asset guards, CLI R/O overlap, debug crash) | 2026-10-06 | a4f1c8b4 | [261006-ij3-fix-verified-pr-224-review-findings-conf](./quick/261006-ij3-fix-verified-pr-224-review-findings-conf/) |
