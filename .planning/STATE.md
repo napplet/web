@@ -5,10 +5,10 @@ milestone_name: NIP-5D Runtime Injection
 current_phase: 163
 current_phase_name: nap-gamepad-across-repositories
 status: completed
-stopped_at: Phase 163 verified; coordinated PRs open with CLI follow-up release gated
-last_updated: "2026-10-12T19:26:09.613Z"
-last_activity: 2026-10-12
-last_activity_desc: GAMEPAD verified across all repositories; PRs 242/243 and Kehto 297
+stopped_at: Phase 163 verified; completing prerequisite publication for CLI follow-up 243
+last_updated: "2026-10-14T16:24:49.491178+00:00"
+last_activity: 2026-10-14
+last_activity_desc: Integrated the merged icon skill with the verified GAMEPAD release
 progress:
   total_phases: 8
   completed_phases: 3
@@ -31,10 +31,10 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 
 ## Current Position
 
-Phase: 155 — Implement NAP-SHELL
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-10-12 — Phase 163 complete, transitioned to Phase 155
+Phase: 163 (nap-gamepad-across-repositories) — implementation verified
+Plan: 3 of 3
+Status: Completing prerequisite publication for CLI follow-up #243
+Last activity: 2026-10-14 - Integrated the merged icon skill with the GAMEPAD release branch
 
 See phase 163 VERIFICATION.md and COVERAGE.md for evidence and disclosed release/specification/baseline limits. Earlier phase and quick-task records below are historical.
 
@@ -539,6 +539,7 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 
 | Quick ID | Task | Date | Commit | Artifacts |
 |----------|------|------|--------|-----------|
+| 261013-vo3 | Add a skill for icon design, generation, refinement, and NIP-5D integration | 2026-10-13 | b5757eec | [261013-vo3-add-a-napplet-skill-for-icon-design-imag](./quick/261013-vo3-add-a-napplet-skill-for-icon-design-imag/) |
 | 261009-ur6 | Remove commit-title gating from JSR publication | 2026-10-09 | d798a91f | [261009-ur6-remove-commit-title-gating-from-jsr-publ](./quick/261009-ur6-remove-commit-title-gating-from-jsr-publ/) |
 | 261006-ij3 | Fix verified PR #224 review findings (conformance x-hash panel, deploy/plugin dropped-asset guards, CLI R/O overlap, debug crash) | 2026-10-06 | a4f1c8b4 | [261006-ij3-fix-verified-pr-224-review-findings-conf](./quick/261006-ij3-fix-verified-pr-224-review-findings-conf/) |
 | 260912-wr8 | Restructure napplet skills for the skills.sh installer (napplet-* names, napplet-ui contract, custom installer removed) | 2026-09-12 | 2d3556c9 | [260912-wr8-restructure-napplet-skills-for-the-skill](./quick/260912-wr8-restructure-napplet-skills-for-the-skill/) |

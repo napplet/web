@@ -16,11 +16,14 @@ Protocol truth: NIP-5D (<https://github.com/nostr-protocol/nips/pull/2303>) and 
 | New napplet from an idea | `napplet-design` → `napplet-ui` → `napplet-build` → `napplet-test` |
 | Port an existing Nostr app / client / widget | `napplet-port` → `napplet-design` → `napplet-ui` → `napplet-build` → `napplet-test` |
 | Add a feature to an existing napplet | Re-run `napplet-design` for that feature's boundary → `napplet-build` → `napplet-test` |
+| Design, generate, or refine an app icon | `napplet-icon`; run `napplet-test` if integrating it into the app |
 | Change only layout / visuals | `napplet-ui` → `napplet-test` (four-frame + theme checks) |
 | Debug or verify a built napplet | `napplet-test`; edit only after reproducing the failure |
 | Needs a NAP / domain the packages do not ship | Stop and flag the gap; do not fake it |
 
 Load `napplet-sdk` while writing calls and `napplet-interop` only if the spec has cross-napplet features.
+
+Use `napplet-icon` when the request includes an app icon or identity artwork. It owns the visual concept, image generation, refinement, and asset delivery; icon work is optional in the full build workflow.
 
 ## Step 1 — Brief
 

@@ -88,7 +88,7 @@ theme: optional | required; fallback palette <bg/fg/primary>
 states: loading=<…> empty=<…> error=<…> signed-out=<…>
 ```
 
-Hand this to `napplet-build`; verify with `napplet-test`.
+Hand this to `napplet-build`; verify with `napplet-test`. When the request includes icon artwork, use `napplet-icon` to design and generate it from the app's purpose and visual direction. Carry the selected asset and integration notes into the build handoff.
 
 ## Optional controller input
 
