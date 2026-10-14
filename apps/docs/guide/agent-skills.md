@@ -1,6 +1,6 @@
 # Agent skills
 
-> `napplet-*` skills that let a coding agent make, design, build, port, and test a napplet end to end. Installed with the open [skills CLI](https://skills.sh); not an npm package.
+> `napplet-*` skills that let a coding agent make, design, build, port, and test a napplet, including its icon artwork. Installed with the open [skills CLI](https://skills.sh); not an npm package.
 
 A **napplet** is a sandboxed Nostr iframe applet (NIP-5D). The skills carry the exact, verified package surface and protocol constraints an agent needs so that one well-scoped prompt produces a working, conformant, compact napplet that looks right at any frame size.
 
@@ -20,6 +20,7 @@ npx skills add napplet/napplet --list                    # see what ships
 npx skills add napplet/napplet -a claude-code            # one agent (also: codex, cursor, gemini-cli, github-copilot, …)
 npx skills add napplet/napplet -g                        # global, all projects
 npx skills add napplet/napplet --skill napplet-make      # a single skill
+npx skills add napplet/napplet --skill napplet-icon      # icon design and generation
 npx skills add napplet/napplet --skill napplet-ui --skill napplet-sdk
 npx skills update                                        # pull the latest skill text
 ```
@@ -32,6 +33,7 @@ Agents that read skills by name can then invoke `/napplet-make`, `/napplet-ui`, 
 | --- | --- | --- |
 | `napplet-make` | "Build me a napplet" in one prompt | Entry point. Project/toolchain triage, routing through the other skills, the non-negotiables, and the evidence report. |
 | `napplet-design` | First, before code | Sandbox authority contract, NAP boundary per feature (OUTBOX-first, relay as escape hatch), hard `requires` vs optional fallbacks, the form-factor plan, the build spec. |
+| `napplet-icon` | Designing, generating, or refining an app icon | Visual concept, image generation or editing, small-size and transparency checks, refinement, asset delivery, and optional NIP-5D integration. |
 | `napplet-ui` | Any markup, CSS, or layout work | The applet visual contract: no title header, compact density by default, tiers from tiny widget to full screen, minimum-size notice only when the UI truly breaks, whole-surface NAP-THEME, the four-frame check. |
 | `napplet-build` | Implementing a spec | `napplet create` + `napplet init`, boilerplate edit points (including stripping the starter masthead and page layout), manifest config, SDK-first implementation, `pnpm verify` + conformance, Paja preview. |
 | `napplet-sdk` | While writing calls | Per-domain `@napplet/sdk` reference: shipped domains, outbox, social NAPs, relay escape hatch, storage, identity, resource, config, theme, keys, availability pattern. |
@@ -43,6 +45,7 @@ Agents that read skills by name can then invoke `/napplet-make`, `/napplet-ui`, 
 ## Usage patterns
 
 - **New napplet:** install everything, then prompt with the product idea and "use the napplet-make skill". `napplet-make` runs design → ui → build → test.
+- **Design and generate an icon:** invoke `napplet-icon` with the app's purpose, any visual references, and style preferences. For example: "Use napplet-icon to design and generate an icon for my note-drafts napplet. Use a warm paper palette, one recognizable shape, and a transparent background." The skill develops a direction, generates artwork with the agent's image tool, inspects small-size legibility, and delivers the file. It can also integrate the selected icon into an existing project when requested. Image generation requires an available image tool; without one, the skill provides the brief and prompt and reports that limitation.
 - **Fix the look of an existing napplet:** invoke `napplet-ui` directly ("apply the napplet-ui contract to this napplet") — it is deliberately self-contained so the agent does not reload the SDK reference.
 - **Add one feature:** `napplet-design` for the new boundary, `napplet-build` for the change, `napplet-test` to close.
 - **Port:** start with `napplet-port`; it produces the inventory the rest of the chain consumes.
