@@ -378,7 +378,6 @@ describe('nip5aManifest artifact modes', () => {
       archetypeFixture,
     );
 
-    const base = readManifest(baseFixture.dist);
     const withArchetypes = readManifest(archetypeFixture.dist);
 
     const archetypeTags = withArchetypes.tags.filter((tag) => tag[0] === 'z' || tag[0] === 'i');
