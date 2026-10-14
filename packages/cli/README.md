@@ -1,6 +1,10 @@
 # @napplet/cli
 
-Standalone CLI for creating, configuring, inspecting, testing, and deploying napplets. The binary does not require Deno, Node.js, or an npm package resolver for `napplet create`: it calls the bundled generator directly. Agent skills are installed with the open skills CLI (`npx skills add napplet/napplet`), not by this binary.
+Standalone CLI for creating, configuring, inspecting, testing, and deploying napplets. The standalone binary runs every built-in command without separately installed Node.js, npm, npx, Deno, Git, Kehto, or browser tooling. Screenshot, conformance, and Paja commands download a private, checksum-verified Node runtime and maintained packages on first use; browser commands also provision Chromium. Linux captures include the browser libraries and fonts. Downloads live in the CLI cache and never install into your project or global PATH.
+
+First use of these tools requires network access and a writable cache. Later invocations reuse the downloads. The default cache is `~/Library/Caches/napplet` on macOS, `$XDG_CACHE_HOME/napplet` (or `~/.cache/napplet`) on Linux, and `%LOCALAPPDATA%\napplet` on Windows. Set `NAPPLET_CACHE_DIR` to choose another location; copying a populated cache between machines with the same OS and architecture supports offline tooling. User-configured `conformance.command`, `paja.command`, and app-server commands passed to Paja use the software you explicitly select.
+
+The generated Vite project and the optional skills.sh CLI have their own development dependencies; they are separate from running `napplet` commands.
 
 Use it to create a `.napplet/config.json`, find built `index.html` artifacts, inspect the deploy plan, sign manifest events, upload files to Blossom servers, publish to relays, and run local napplet tooling such as conformance and Paja.
 
@@ -208,7 +212,7 @@ Deploy also recovers current NIP-5D publishing metadata from the built HTML head
 
 ## Signing And Keys
 
-Local key storage uses native platform secure storage: macOS Keychain, Windows Credential Manager, or Linux Secret Service through `secret-tool` with a D-Bus session. If no native provider is available, key commands fail closed rather than writing secrets to plaintext.
+Local key storage prefers native platform secure storage: macOS Keychain, Windows Credential Manager, or Linux Secret Service when available. Hosts without those utilities use password-encrypted files in `~/.napplet/keys`. The portable store uses AES-256-GCM with a fresh salt and IV per record and PBKDF2-SHA256 (600,000 iterations). Secrets are never written as plaintext. Unlock it with a password of at least 12 characters at the hidden terminal prompt, or set `NAPPLET_KEYSTORE_PASSWORD` for non-interactive use. Set `NAPPLET_KEYSTORE=portable` to select it explicitly and `NAPPLET_KEYSTORE_DIR` to change its location. Keep the same password for later retrieval; it is not saved by the CLI.
 
 ```sh
 napplet keys doctor
@@ -235,7 +239,7 @@ The command then prints a `nostrconnect://` QR code and waits for either:
 - a signer to approve the QR flow, or
 - a `bunker://` URL pasted into stdin
 
-On success it stores an `nbunksec` in the platform keychain, updates `.napplet` `signing.keyReference`, and uses that stored reference for later deploy signing.
+On success it stores an `nbunksec` in the selected key store, updates `.napplet` `signing.keyReference`, and uses that stored reference for later deploy signing.
 
 Plain interactive `napplet deploy` uses the same NIP-46 flow when no signer flag or stored signer is available. It prompts for bunker relays before showing the QR code; deploy relays from `.napplet` are not used as the NIP-46 relay default. It stores the paired session under the remote signer pubkey when native key storage is available, writes that pubkey and the selected bunker relays to `.napplet` config, and continues the current deploy. If native key storage is unavailable, the current deploy can still proceed after pairing, but the session is not persisted for later runs.
 
@@ -309,7 +313,7 @@ napplet conformance
 napplet conformance --all -- --verbose
 ```
 
-The default `napplet-conformance` setting runs `@napplet/conformance-cli` through `npx`, so the standalone `napplet` binary does not require a global conformance executable. Override it in `.napplet/config.json` with `conformance.command` when using another runner.
+The default `napplet-conformance` setting runs the maintained runner using the CLI’s private runtime and package cache. No host package manager or global conformance executable is required. Override it in `.napplet/config.json` with `conformance.command` when using another runner.
 
 `napplet paja` forwards to the configured Paja command:
 
@@ -318,12 +322,12 @@ napplet paja -- --port 5173
 napplet paja -- pnpm vite --host 127.0.0.1
 ```
 
-The default command is `kehto paja`; override it with `paja.command`. A bare command after the separator is passed to Kehto as its managed app server command.
+The default provisions `@kehto/cli@0.5.4` privately and runs its `kehto paja` command; override it with `paja.command`. A bare command after the separator is passed to Kehto as its managed app server command.
 
 ## Troubleshooting
 
 - Run `napplet debug` before `deploy`; it shows the candidates and manifest templates without publishing.
-- Run `napplet keys doctor` if key commands fail; Linux needs `secret-tool` and an active D-Bus session.
+- Run `napplet keys doctor` to see the selected store. When using encrypted local storage, provide its password at the terminal or through `NAPPLET_KEYSTORE_PASSWORD`.
 - Use `--prompt-sec` when you need an ad-hoc key without echoing it in shell history; press Enter to submit the hidden prompt. If `.napplet` is configured for another pubkey, interactive deploys warn before continuing and non-interactive prompt input fails closed.
 - Use `--json` when another program needs to parse `deploy` output.
 - Use `--dry-run` before network deploys; it signs the same manifest events without uploading files or publishing to relays.
@@ -387,7 +391,7 @@ Deployment manifests (current and legacy, including snapshots) and optional Zaps
 
 ## Screenshots and optional Zapstore metadata
 
-Capture a built napplet without starting a host. The command starts a temporary local Kehto Paja preview, captures its iframe, and closes the preview afterwards. It requires Node.js 20+; the matching Chromium browser is installed automatically on first use. Screenshot and default conformance commands select the tested `@napplet/conformance-cli@0.3.3` runner explicitly, so an older project-local conformance dependency cannot intercept them. Explicit custom conformance commands remain supported. The preview uses Paja’s development identity, fresh browser storage, and live relays, so content may differ from your signed-in shell.
+Capture a built napplet without starting a host. The command starts a temporary local Kehto Paja preview, captures its iframe, and closes the preview afterwards. The CLI provisions its private runtime and Chromium automatically on first use, without host Node.js or npx. Screenshot and default conformance commands select the tested `@napplet/conformance-cli@0.3.3` runner explicitly, so an older project-local conformance dependency cannot intercept them. Explicit custom conformance commands remain supported. The preview uses Paja’s development identity, fresh browser storage, and live relays, so content may differ from your signed-in shell.
 
 ```sh
 napplet screenshot --output preview.png
@@ -435,10 +439,14 @@ The listing uses kind `32267` from the [Software Applications proposal](https://
 
 `deploy --screenshot` starts a local preview for each distinct selected build, captures a temporary PNG, and appends it to the configured application images for that deployment. It requires `--zapstore` or `zapstore.enabled`, and does not modify your config or build files. Capture failure stops deployment before any upload or relay publication. The temporary image is removed after success or failure. `--dry-run` also performs capture and previews the resulting metadata without uploading or publishing. Capture diagnostics go to stderr so `--json` stdout remains valid JSON. No host URL is required. Root and snapshot selections of the same artifact share one capture. To capture an existing shell instead, use `--screenshot <preview-url>`. Use `--screenshot-selector`, `--screenshot-ready-selector`, `--screenshot-width`, `--screenshot-height`, and `--screenshot-delay` for the corresponding standalone capture options. Use the standalone `napplet screenshot` command when you want to keep a PNG on disk.
 
-### npm runner regression test
+### Standalone regression test
 
-The opt-in integration test creates an older local runner, reproduces its selection by unversioned `npx`, and verifies that screenshot and default conformance commands select the compatible public package. It requires Node/npm and network access or a populated npm cache; it runs on macOS/Linux.
+The opt-in integration test compiles the release entrypoint and runs with an empty host-tool PATH and a fresh private cache. It exercises hosted template creation, configuration, discovery, debug, key storage, screenshots, inline deploy capture, default conformance, Paja, and cached browser reuse. It needs network access on first use; no host runtime is available to the tested binary.
 
 ```sh
-NAPPLET_TEST_NPM_RUNNER=1 deno test -A packages/cli/tests/package_runner_integration_test.ts
+NAPPLET_TEST_STANDALONE=1 deno test --node-modules-dir=none -A packages/cli/tests/standalone_integration_test.ts
 ```
+
+### GAMEPAD integration
+
+GAMEPAD is a bare manifest domain accepted by `init`, `build`, and deployment metadata. Controller fallback apps use `O gamepad`; controller-required apps use `R gamepad`. Live `dev` controller input depends on a GAMEPAD-capable Kehto/Paja release. See the proposed [NAP-GAMEPAD](https://github.com/napplet/naps/pull/108).

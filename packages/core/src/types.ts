@@ -36,3 +36,5 @@ export type {
 } from './types/global/runtime-api.js';
 
 export type * from './types/shell.js';
+
+export type * from './types/gamepad.js';

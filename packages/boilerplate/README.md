@@ -1,6 +1,6 @@
 # @napplet/boilerplate
 
-Project scaffold generator behind `napplet create`. It clones the maintained `github.com/napplet/boilerplate` Vite + TypeScript template and derives the `package.json` name from the destination directory.
+Project scaffold generator behind `napplet create`. It downloads the maintained `github.com/napplet/boilerplate` Vite + TypeScript template and derives the `package.json` name from the destination directory.
 
 ```bash
 napplet create my-napplet
@@ -30,9 +30,11 @@ napplet create my-napplet
 | `--yes`, `-y` | Use `./my-napplet` when the destination is omitted. |
 | `--force` | Allow generation into a non-empty directory. |
 
-By default, the CLI clones:
+By default, the CLI downloads the repository’s default-branch ZIP archive without Git:
 
 `https://github.com/napplet/boilerplate.git`
+
+Remote templates accept GitHub HTTPS repository URLs (including `/tree/<ref>`) or HTTP(S) ZIP URLs containing one top-level template directory. Local directories are supported too. SSH clone URLs and other Git transports are replaced by archive downloads or local directories.
 
 ## Programmatic CLI API
 
@@ -54,3 +56,7 @@ npx skills add napplet/napplet
 ```
 
 Treat the [living NIP-5D proposal](https://github.com/nostr-protocol/nips/pull/2303), [NAP-OUTBOX](https://github.com/napplet/naps/pull/32), and [NAP-RELAY](https://github.com/napplet/naps/pull/2) as protocol authority for the claims below. The shipped skills provide non-normative authoring guidance: the runtime injects `window.napplet`, app calls use `@napplet/sdk`, direct domain-property checks are only for optional fallbacks, normal Nostr reads and publishes are OUTBOX-first, RELAY is an explicit relay-local escape hatch, and manifest `requires` lists hard requirements only.
+
+### GAMEPAD integration
+
+Generated projects keep controller input optional unless it is essential to the app’s core task. The template’s controller guide covers fallbacks, focus edges, and runtime-owned native access. See the proposed [NAP-GAMEPAD](https://github.com/napplet/naps/pull/108).

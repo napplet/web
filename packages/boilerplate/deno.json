@@ -1,6 +1,9 @@
 {
   "extends": "../../deno.json",
   "name": "@napplet/boilerplate",
-  "version": "0.3.4",
-  "exports": "./src/deno.ts"
+  "version": "0.4.0",
+  "exports": "./src/deno.ts",
+  "imports": {
+    "fflate": "npm:fflate@0.8.2"
+  }
 }

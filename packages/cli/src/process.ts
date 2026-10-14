@@ -9,6 +9,7 @@ export interface CommandResult {
 export interface CommandOptions {
   cwd?: string;
   input?: string;
+  env?: Record<string, string>;
 }
 
 /** CommandRunner union used by subprocess execution helpers. */
@@ -28,6 +29,7 @@ export async function runCommand(
   const child = new Deno.Command(command, {
     args,
     cwd: options.cwd ?? Deno.cwd(),
+    env: options.env,
     stdin: options.input === undefined ? "null" : "piped",
     stdout: "piped",
     stderr: "piped",

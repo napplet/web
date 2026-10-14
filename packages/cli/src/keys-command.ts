@@ -44,7 +44,7 @@ export async function commandKeys(
 
   if (subcommand === "doctor") {
     const provider = await loadProvider();
-    console.log(`Native key storage available: ${provider.name}`);
+    console.log(`Key storage available: ${provider.name}`);
     return 0;
   }
 

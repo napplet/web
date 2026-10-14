@@ -1,6 +1,6 @@
 # Getting started
 
-This page walks you from zero to a deployable napplet. The standalone `napplet` CLI does not require Deno. You will need Node.js 20+ and a package manager for the generated Vite project, the package-backed `create` command, and the skills.sh CLI. To actually *run* a napplet you also need a host shell — see [running in a shell](#running-in-a-shell) at the end.
+This page walks you from zero to a deployable napplet. The standalone `napplet` CLI provisions its own cached tooling and does not require host Node.js, npm, npx, or Deno, including for screenshots and conformance. You will need Node.js 20+ and a package manager to develop the generated Vite project or use the optional skills.sh CLI. To actually *run* a napplet you also need a host shell — see [running in a shell](#running-in-a-shell) at the end.
 
 ## 1. Install the CLI
 

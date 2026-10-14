@@ -27,8 +27,8 @@ Deno.test({
       assertEquals(code, 0, output.join("\n"));
       assert(output.join("\n").includes("Usage: napplet screenshot"));
       assert(!output.join("\n").includes("OLD_LOCAL_RUNNER"));
-      const conformance = resolveConformanceCommand(undefined);
-      const help = await runCommand(conformance.command, [...conformance.args, "--help"], { cwd: dir });
+      const conformance = await resolveConformanceCommand(undefined);
+      const help = await runCommand(conformance.command, [...conformance.args, "--help"], { cwd: dir, env: conformance.env });
       assertEquals(help.code, 0, help.stderr);
       assert(help.stdout.includes("napplet-conformance screenshot"));
     });
