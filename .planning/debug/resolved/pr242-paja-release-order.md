@@ -1,5 +1,5 @@
 ---
-status: verifying
+status: resolved
 trigger: "Resolve PR #242 review comment 6131874990"
 created: 2026-10-14
 updated: 2026-10-14
@@ -38,4 +38,4 @@ Raised the Paja minimum to `>=0.21.0 <0.22.0`; the lockfile selects 0.21.0 and t
 - Build: 12 tasks passed. Types: 18 tasks passed. Recursive unit tests passed. Conformance browser suite: 5 tests passed. Release-tooling and workflow contract tests passed. Frozen workspace install with strict peers and whitespace checks passed.
 - AI-slop: 98/100, zero errors, only the existing `fflate` dependency advisory.
 
-Local verification logs and packed-install evidence are under `/tmp/napplet-pr242-*`; the scratch registry root is `/tmp/napplet-pr242-peers.a32qMw`. These tests establish release compatibility without claiming the napplet package set is already on npm. Remote CI and the PR response remain to be verified before closing this debug session.
+The fix is committed as `3c3f1a66` and pushed to PR #242. Local verification logs and packed-install evidence are under `/tmp/napplet-pr242-*`; the scratch registry root is `/tmp/napplet-pr242-peers.a32qMw`. These tests establish release compatibility without claiming the napplet package set is already on npm. The PR check runs and review response carry the remote verification record. No merge or publication was performed.
