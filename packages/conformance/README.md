@@ -15,7 +15,7 @@ v1 is **zero-config protocol conformance**: NIP-5D manifest-event validity, boot
 
 The validator surface is kept in lockstep with `@napplet/nap` by a drift test, so a new NAP message type cannot ship without matching conformance coverage.
 
-`@napplet/nap` remains a devDependency because that test reads NAP source files directly. This workspace dependency lets Turbo invalidate cached conformance tests after NAP-only source changes; it is not a runtime dependency of the published engine. Run `pnpm test:workflow-contracts` from the repository root to verify cache invalidation against the current Turbo configuration.
+`@napplet/nap` remains a devDependency because the drift test reads NAP source files directly and the GAMEPAD parity test imports its state helpers. This workspace dependency lets Turbo invalidate cached conformance tests after NAP-only source changes; it is not a runtime dependency of the published engine. Run `pnpm test:workflow-contracts` from the repository root to verify cache invalidation against the current Turbo configuration.
 
 For `intent` envelopes, conformance checks the merged `intent.invoke` request/result carrier. Requests require URI-derived archetype, action, and stable convention identity. Acceptance results transfer delivery responsibility to the runtime, while targets receive buffered `intent.deliver` pushes. Payload semantics belong to the convention and target.
 
