@@ -15,6 +15,7 @@ describe('runtime-injected GAMEPAD', () => {
     try {
       const installed = installNappletRuntimePrelude({ domains: ['gamepad'] });
       expect(Object.keys(installed)).toEqual(['gamepad']);
+      expect(post).not.toHaveBeenCalled();
       expect(installed.gamepad!.getGamepads()).toEqual([]);
       expect(installed.gamepad!.focused).toBe(true);
       expect(sdkGamepad.focused).toBe(true);
