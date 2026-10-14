@@ -2,4 +2,4 @@
 "@napplet/conformance": patch
 ---
 
-Remove the unused `@napplet/nap` dependency. The envelope drift guard reads the NAP sources from the workspace checkout; nothing in the published package imports `@napplet/nap`.
+Move `@napplet/nap` from runtime dependencies to devDependencies. The envelope drift guard reads NAP sources from the workspace checkout, so the development dependency preserves Turbo cache invalidation for NAP-only changes. Nothing in the published package imports `@napplet/nap`.

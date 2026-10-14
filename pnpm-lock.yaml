@@ -140,6 +140,9 @@ importers:
         specifier: workspace:^
         version: link:../core
     devDependencies:
+      '@napplet/nap':
+        specifier: workspace:^
+        version: link:../nap
       '@types/node':
         specifier: ^22.15.0
         version: 22.19.15

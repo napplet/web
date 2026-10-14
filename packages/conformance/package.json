@@ -23,6 +23,7 @@
     "@napplet/core": "workspace:^"
   },
   "devDependencies": {
+    "@napplet/nap": "workspace:^",
     "@types/node": "^22.15.0",
     "happy-dom": "^20.10.3",
     "tsup": "^8.5.0",

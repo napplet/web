@@ -11,7 +11,7 @@ Scope: every workspace package, app, script, and fixture on `main` (6079477d). S
 5. `packages/nap/src/resource/resource-transport.ts`: six `export` keywords on symbols only used inside the module (`REQUEST_TIMEOUT_MS`, `pendingBytes`, `pendingInfo`, `pendingMany`, `sendCancel`, `cancelMany`); the module is not a package entry.
 6. `packages/sdk/src/require-napplet.ts`: `requireNapplet` is only used by `requireDomain` in the same file and is not re-exported.
 7. `packages/vite-plugin/src/index.test.ts`: an unused `base` local.
-8. Root `nostr-tools` devDependency (no importer; `@napplet/vite-plugin` declares its own), the root `lint` script and turbo task (no package defines `lint`), and the `@napplet/nap` dependency of `@napplet/conformance` (the drift guard reads NAP sources from the workspace path, never imports the package).
+8. Root `nostr-tools` devDependency (no importer; `@napplet/vite-plugin` declares its own), the root `lint` script and turbo task (no package defines `lint`), and the runtime `@napplet/nap` dependency of `@napplet/conformance`. Keep NAP as a devDependency: the drift guard reads its workspace sources, and Turbo must invalidate conformance tests when those sources change.
 
 ## Verified alive, kept
 
