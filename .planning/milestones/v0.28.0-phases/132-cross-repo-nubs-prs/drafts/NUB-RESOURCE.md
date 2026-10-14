@@ -77,7 +77,7 @@ napplet: napplet.resource.bytes('data:image/png;base64,iVBORw0KGgo...')
 
 **Successful `blossom:` fetch:**
 ```
--> { "type": "resource.bytes", "id": "r2", "url": "blossom:sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" }
+-> { "type": "resource.bytes", "id": "r2", "url": "blossom:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.bin" }
 <- { "type": "resource.bytes.result", "id": "r2", "blob": <Blob 9001 bytes>, "mime": "image/webp" }
 ```
 
@@ -110,7 +110,7 @@ The shell performs the network fetch. This scheme is subject to the **full Defau
 
 ### `blossom:`
 
-Blossom hash → bytes resolution. Canonical URL form: `blossom:sha256:<hex>` where `<hex>` is the lowercase 64-character SHA-256 hex digest of the resource bytes. Shells MAY consult any number of Blossom servers per their server-selection policy (typically a user-configured list of preferred Blossom hosts). The shell MUST verify the returned bytes hash against the URL's declared digest **before** delivering them to the napplet; mismatch MUST result in `error: "decode-failed"`. The `mime` field is byte-sniffed by the shell after hash verification, not before.
+Blossom hash → bytes resolution. Canonical URL form: `blossom:<sha256>.<ext>` as defined by [BUD-10](https://github.com/hzrd149/blossom/blob/master/buds/10.md), where `<sha256>` is the lowercase 64-character SHA-256 hex digest of the resource bytes and `<ext>` is a file extension (`.bin` when unknown), optionally followed by BUD-10 discovery hints (`xs`, `as`, `sz`). Shells MAY consult any number of Blossom servers per their server-selection policy (typically a user-configured list of preferred Blossom hosts). The shell MUST verify the returned bytes hash against the URL's declared digest **before** delivering them to the napplet; mismatch MUST result in `error: "decode-failed"`. The `mime` field is byte-sniffed by the shell after hash verification, not before.
 
 When fetching from upstream Blossom hosts, shells MUST apply the same `https:` policy (private-IP block list at DNS-resolution time, etc.) to each candidate host. Blossom-host selection MUST NOT bypass DNS-pinning.
 
@@ -221,7 +221,7 @@ The key words MUST, MUST NOT, SHOULD, SHOULD NOT, and MAY in this document are t
 | Byte-sniff MIME | Never honor upstream `Content-Type` for the value delivered to the napplet. Sniffed MIME drives scheme-appropriate allowlist enforcement. |
 | Rasterize SVG in a sandboxed Worker with no network | Per the SVG Handling section. `image/svg+xml` MUST NOT be delivered to napplets. |
 | Single-Blob delivery | Result envelope contains exactly one `Blob`; no streaming, no chunked, no range, no progress. |
-| Verify Blossom hash before delivery | For `blossom:sha256:<hex>` URLs, the returned bytes MUST hash to the declared digest. Mismatch MUST result in `error: "decode-failed"`. |
+| Verify Blossom hash before delivery | For [BUD-10](https://github.com/hzrd149/blossom/blob/master/buds/10.md) `blossom:<sha256>.<ext>` URLs, the returned bytes MUST hash to the declared digest. Mismatch MUST result in `error: "decode-failed"`. |
 | Single-hop `nostr:` resolution | Do NOT recursively follow URLs found within resolved Nostr resources. |
 | Scope cache per `(dTag, aggregateHash)` | Per NIP-5D identity binding. Napplets MUST NOT see another napplet's cached resources. |
 | Drop late envelopes after cancel | After receiving `resource.cancel` for an `id`, shells SHOULD NOT emit a terminal envelope for that `id`; if one is emitted (race), conformant napplet shims MUST silently drop it. |
