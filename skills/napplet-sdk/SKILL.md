@@ -144,12 +144,12 @@ import { resource } from '@napplet/sdk';
 const blob = await resource.bytes('https://example.com/avatar.png');
 img.src = URL.createObjectURL(blob);                 // revokeObjectURL when done
 
-const handle = resource.bytesAsObjectURL('blossom:sha256:<hex>');
+const handle = resource.bytesAsObjectURL('blossom:<sha256>.<ext>');
 img.src = handle.url;                                // resolves once fetched
 handle.revoke();
 ```
 
-Schemes: `data:` (decoded in-shim), `https:` (shell network under policy), `blossom:sha256:<hex>` (hash-verified), `htree:` (Hashtree-verified), `nostr:<bech32>` (single-hop NIP-19). Cancel with `bytes(url, { signal })`. Rejections carry a `code` — branch on it, not the message: `not-found`, `blocked-by-policy`, `timeout`, `too-large`, `unsupported-scheme`, `decode-failed`, `network-error`, `quota-exceeded`. The shell byte-sniffs the MIME; never trust upstream `Content-Type`. SVG is rasterized before delivery. `resource.bytesMany` batches.
+Schemes: `data:` (decoded in-shim), `https:` (shell network under policy), `blossom:<sha256>.<ext>` ([BUD-10](https://github.com/hzrd149/blossom/blob/master/buds/10.md), hash-verified), `htree:` (Hashtree-verified), `nostr:<bech32>` (single-hop NIP-19). Cancel with `bytes(url, { signal })`. Rejections carry a `code` — branch on it, not the message: `not-found`, `blocked-by-policy`, `timeout`, `too-large`, `unsupported-scheme`, `decode-failed`, `network-error`, `quota-exceeded`. The shell byte-sniffs the MIME; never trust upstream `Content-Type`. SVG is rasterized before delivery. `resource.bytesMany` batches.
 
 ## Config and theme
 

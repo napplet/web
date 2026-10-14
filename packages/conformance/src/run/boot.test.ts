@@ -70,14 +70,14 @@ describe('bootAndCollect — DOM wiring', () => {
       expect(await (await promise).text()).toBe('hi');
 
       const many = napplet.resource.bytesMany([{
-        url: 'blossom:sha256:abc',
+        url: 'blossom:abc.bin',
         servers: ['https://cdn.example'],
       }]);
       expect(posted[1]).toEqual({
         type: 'resource.bytesMany',
         id: expect.any(String),
         requests: [{
-          url: 'blossom:sha256:abc',
+          url: 'blossom:abc.bin',
           servers: ['https://cdn.example'],
         }],
       });

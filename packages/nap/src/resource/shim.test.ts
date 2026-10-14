@@ -117,14 +117,14 @@ describe('@napplet/nap/resource shim', () => {
   it('posts resource.bytes with advisory Blossom server hints', async () => {
     const { bytes, handleResourceMessage } = await import('./shim.js');
 
-    const promise = bytes('blossom:sha256:abc123', {
+    const promise = bytes('blossom:abc123.bin', {
       servers: ['https://cdn.example', 'https://mirror.example'],
     });
     const sent = lastPosted('resource.bytes');
     expect(sent).toEqual({
       type: 'resource.bytes',
       id: 'resource-test-1',
-      url: 'blossom:sha256:abc123',
+      url: 'blossom:abc123.bin',
       servers: ['https://cdn.example', 'https://mirror.example'],
     });
 
@@ -142,7 +142,7 @@ describe('@napplet/nap/resource shim', () => {
     const { bytesMany, handleResourceMessage } = await import('./shim.js');
 
     const requests = [
-      { url: 'blossom:sha256:abc123', servers: ['https://cdn.example'] },
+      { url: 'blossom:abc123.bin', servers: ['https://cdn.example'] },
       { url: 'https://example.com/missing.png' },
     ];
     const promise = bytesMany(requests);
@@ -155,7 +155,7 @@ describe('@napplet/nap/resource shim', () => {
 
     const okBlob = new Blob(['a'], { type: 'image/png' });
     const items: ResourceBytesItem[] = [
-      { url: 'blossom:sha256:abc123', ok: true, blob: okBlob, mime: 'image/png' },
+      { url: 'blossom:abc123.bin', ok: true, blob: okBlob, mime: 'image/png' },
       {
         url: 'https://example.com/missing.png',
         ok: false,

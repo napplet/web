@@ -68,13 +68,13 @@ const intentResult = await intent.open('napplet:profile/open', { payload: { pubk
 
 // Live per-napplet config const configSub = config.subscribe((values) => applyTheme(values.theme));
 
-// Fetch external bytes through the shell
-const avatarBlob = await resource.bytes('blossom:sha256:abc123...', {
+// Fetch external bytes through the shell (`blossom:<sha256>.<ext>` URIs follow BUD-10: https://github.com/hzrd149/blossom/blob/master/buds/10.md)
+const avatarBlob = await resource.bytes('blossom:<sha256>.png', {
   servers: ['https://cdn.hzrd149.com'],
 });
 const avatarItems = await resource.bytesMany([
   { url: 'https://example.com/avatar.png' },
-  { url: 'blossom:sha256:abc123...', servers: ['https://cdn.hzrd149.com'] },
+  { url: 'blossom:<sha256>.png', servers: ['https://cdn.hzrd149.com'] },
 ]);
 ```
 
