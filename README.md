@@ -41,6 +41,8 @@ napplet deploy
 
 The CLI supports `napplet screenshot --output preview.png` and optional `napplet deploy --zapstore` application metadata publishing. Use `napplet deploy --zapstore --screenshot` to capture and publish in one invocation. See the [CLI guide](packages/cli/README.md#screenshots-and-optional-zapstore-metadata) for configuration, browser setup, and dry-run examples.
 
+Use the [`napplet-icon` skill](skills/napplet-icon/SKILL.md) to design, generate, and refine an app icon, check it at small sizes, and prepare it for NIP-5D integration. Install it with `npx skills add napplet/napplet --skill napplet-icon`; see the [agent skills guide](apps/docs/guide/agent-skills.md) for the complete workflow.
+
 ## Event schema compatibility
 
 Current event defaults begin at **CLI 0.7.0**, **Vite plugin 0.15.0**, **conformance 0.18.0**, and **conformance-cli 0.3.0**. Earlier release series use legacy path/aggregate manifests. The event kinds remain 5129/15129/35129; current events use the artifact SHA-256 in `x`, a description in `content`, and `R`/`O` plus `z`/`i` metadata. CLI deployments offer temporary `--format legacy` support; unattended deployments default to current. See the [migration guide](apps/docs/guide/event-migration.md) for event conversion, legacy pointers and shell storage/ACL implications.
