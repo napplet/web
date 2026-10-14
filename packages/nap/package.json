@@ -1,7 +1,7 @@
 {
   "name": "@napplet/nap",
-  "version": "0.33.0",
-  "description": "The active napplet NAP domains (relay, storage, inc, keys, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent, ble, webrtc, link, count, lists, serial, fs, common, dm, shell) as layered subpath exports",
+  "version": "0.34.0",
+  "description": "The active napplet NAP domains (relay, storage, inc, keys, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent, ble, webrtc, link, count, lists, serial, fs, common, dm, shell, gamepad) as layered subpath exports",
   "type": "module",
   "exports": {
     "./relay": {
@@ -403,6 +403,22 @@
     "./shell/sdk": {
       "types": "./dist/shell/sdk.d.ts",
       "import": "./dist/shell/sdk.js"
+    },
+    "./gamepad": {
+      "types": "./dist/gamepad/index.d.ts",
+      "import": "./dist/gamepad/index.js"
+    },
+    "./gamepad/types": {
+      "types": "./dist/gamepad/types.d.ts",
+      "import": "./dist/gamepad/types.js"
+    },
+    "./gamepad/shim": {
+      "types": "./dist/gamepad/shim.d.ts",
+      "import": "./dist/gamepad/shim.js"
+    },
+    "./gamepad/sdk": {
+      "types": "./dist/gamepad/sdk.d.ts",
+      "import": "./dist/gamepad/sdk.js"
     }
   },
   "files": [

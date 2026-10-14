@@ -59,6 +59,7 @@ describe('bootAndCollect — DOM wiring', () => {
       }]);
 
       window.dispatchEvent(new MessageEvent('message', {
+        source: window.parent,
         data: {
           type: 'resource.bytes.result',
           id: posted[0].id,
@@ -82,6 +83,7 @@ describe('bootAndCollect — DOM wiring', () => {
         }],
       });
       window.dispatchEvent(new MessageEvent('message', {
+        source: window.parent,
         data: {
           type: 'resource.bytesMany.result',
           id: posted[1].id,

@@ -1,5 +1,17 @@
 # @napplet/conformance
 
+## 0.20.0
+
+### Minor Changes
+
+- Add the proposed NAP-GAMEPAD cached API, types and subpaths, runtime binding, envelope validation, conformance injection, and optional manifest-domain inference. The coordinated CLI runner follow-up selects these packages after publication. Publish Kehto Paja 0.21.0 before the screenshot package release; conformance CLI 0.3.4 is included in this package set. Native Gamepad API replacement remains deferred pending clarification of the proposal and NIP-5D namespace-only injection restriction.
+
+### Patch Changes
+
+- Updated dependencies
+  - @napplet/core@0.34.0
+  - @napplet/nap@0.34.0
+
 ## 0.19.0
 
 ### Minor Changes
