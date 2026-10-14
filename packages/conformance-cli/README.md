@@ -71,4 +71,4 @@ The CLI also provides the browser runner for `napplet screenshot`. Run `npx @nap
 
 Controller artifacts use the engine’s GAMEPAD envelope validation and injected cached API. The reference mock reports unavailable controllers; validate live focus isolation in a compatible runtime. See the proposed [NAP-GAMEPAD](https://github.com/napplet/naps/pull/108).
 
-GAMEPAD screenshots need Paja 0.21.0 from the coordinated runtime release. The dependency range accepts the published base release and the GAMEPAD release; publish the latter before this package so fresh private runner installs use the controller-capable preview.
+Conformance CLI 0.3.4 requires the published Paja 0.21.x line for GAMEPAD screenshots and compatibility with core/NAP 0.34.0. Paja 0.20.x is excluded because its peer range does not accept those core/NAP versions. Publish this package after its core/NAP dependencies; the standalone CLI runner update follows conformance CLI publication.
