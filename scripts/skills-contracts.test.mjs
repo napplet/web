@@ -10,6 +10,7 @@ const skillsDir = path.join(root, 'skills');
 const EXPECTED_SKILLS = [
   'napplet-make',
   'napplet-design',
+  'napplet-icon',
   'napplet-ui',
   'napplet-build',
   'napplet-sdk',
