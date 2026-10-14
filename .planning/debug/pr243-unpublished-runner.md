@@ -1,8 +1,8 @@
 ---
-status: awaiting-release-approval
+status: fixing
 trigger: "PR #243 tests are red across the board"
 created: 2026-10-13
-updated: 2026-10-13
+updated: 2026-10-14
 ---
 
 # PR #243 runner publication dependency
@@ -16,9 +16,9 @@ updated: 2026-10-13
 
 ## Current Focus
 
-- Hypothesis: this is the documented release dependency, not five independent platform defects.
-- Evidence: every platform has the same npm ETARGET error. PR #242 remains unmerged and contains conformance CLI 0.3.4. Its nine checks pass and GitHub reports it mergeable. Kehto CLI 0.5.5 and Paja 0.21.0 are now published.
-- Next action: merge #242 and wait for publication only if the user authorizes that separate feature release. Retarget and rerun #243 after the real package exists.
+- Cause: the documented release dependency. All five jobs in the current run 38520521467 still fail with npm ETARGET for conformance CLI 0.3.4.
+- Current state: PR #242's peer compatibility review is resolved and its original nine checks passed. Main's subsequently merged icon skill introduced two text conflicts, now resolved on the prerequisite branch while retaining both icon and GAMEPAD guidance. Combined-branch verification is running before publication.
+- Next action: complete the prerequisite release, verify the actual npm artifacts, integrate main into this follow-up, retarget #243 to main, and verify fresh-cache execution on all five platforms.
 
 ## Evidence
 
@@ -31,4 +31,4 @@ updated: 2026-10-13
 
 Root cause confirmed. Updated the stacked branch with #242's latest reviewed fixes and restored the CLI changelog's existing unwrapped history, leaving one focused 0.9.1 entry. Local verification passed: build (12 tasks), type-check (18 tasks), recursive unit tests, and diff whitespace checks. AI-slop passed at 98/100 with zero errors; the existing `fflate` dependency advisory is the sole warning.
 
-Publication and final fresh-cache CI verification remain pending. The user was asked to authorize merging #242 because that ships a separate feature release. No dependency downgrade, local-package substitution, or test bypass was added.
+The user resumed the goal to fix #243. The required release sequence is in progress; fresh-cache success remains unproven until the actual package is published and the platform tests pass. No dependency downgrade, local-package substitution, or test bypass was added.
