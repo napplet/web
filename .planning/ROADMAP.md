@@ -942,3 +942,14 @@ Plans:
 - [x] 163-03-PLAN.md — All repositories, docs, releases and coordinated PR shipment
 
 Verified and shipped in [web #242](https://github.com/napplet/web/pull/242), [Kehto #297](https://github.com/kehto/web/pull/297), and five consumer/community PRs linked in COVERAGE.md. Publish the Kehto package set before the primary release. The optional native API replacement conflict and existing CVM baseline failures remain disclosed.
+
+### Phase 164: CLI terminal usability
+
+**Goal:** Improve CLI prompts, terminal display, CI safety, and ship a PR with visual proof.
+**Requirements**: TBD
+**Depends on:** Phase 163
+**Plans:** 0 plans
+
+Plans:
+
+- [ ] TBD (run /gsd-plan-phase 164 to break down)
