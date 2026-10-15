@@ -35,7 +35,7 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 
 ### Quick task 261012-jnp — historical synchronization evidence
 
-Follow-up authorized on 2026-10-14: `.planning/debug/pr205-resource-wire.md` tracks migration of the protocol blocker below. Earlier observations remain historical evidence.
+Follow-up authorized on 2026-10-14: `.planning/debug/pr205-resource-wire.md` records the implemented and locally verified migration of the historical blocker below. Earlier observations remain historical evidence.
 
 - Merged `origin/main` `10fd4e61` into existing `feat/vite-plugin-blossom-optimization` at `34bd9b90`, preserving both parent histories and both independently numbered phase-162 artifact lineages. PR remains https://github.com/napplet/web/pull/205; it must not be merged automatically.
 - Resolved the 20 freshly observed conflict paths, current artifact-hash/R-tag optimizer integration, retained-byte CLI icon/screenshot uploads, destination canonicalization, and the old CI native-digest wait race. Local build/type/recursive units/full tests/conformance e2e/contracts/links and Linux standalone/npm runner tests pass; unchanged actual AI-slop workflow passes 95/100 in the post-commit full scan (earlier pre-commit scans 96/100). Three existing findings and the combined manifest.ts size warning are disclosed, not suppressed.
@@ -45,7 +45,7 @@ Follow-up authorized on 2026-10-14: `.planning/debug/pr205-resource-wire.md` tra
 
 Phase: 163 (nap-gamepad-across-repositories) — implementation verified
 Plan: 3 of 3
-Status: GAMEPAD published and CLI follow-up #243 merged; PR #205 resource wire migration in progress
+Status: GAMEPAD published and CLI follow-up #243 merged; PR #205 resource wire migration verified locally; final remote checks pending
 Last activity: 2026-10-14 - Completed quick task 261014-fuc: Replace blossom:sha256 URIs with BUD-10 form
 
 See phase 163 VERIFICATION.md and COVERAGE.md for evidence and disclosed release/specification/baseline limits. Earlier phase and quick-task records below are historical.
@@ -577,7 +577,7 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 - CARRIED: npm publish blocked on human npm auth (PUB-04)
 - INFO: Local `specs/NIP-5D.md` may be stale vs napplet/nubs master post-PR-15 (`window.nostr` removal merged 2026-04-21). Phase 138 NIP5D-01 syncs before layering v0.29.0 amendment
 - INFO: `world: 'MAIN'` extension-API bypass acknowledged as residual — no page-side blocking mechanism exists. NUB-CLASS-1 `connect-src 'none'` is the structural mitigation. Phase 136 artifact MUST document this honestly; Phase 137 amendment + Phase 138 NIP-5D amendment MUST NOT claim a fix
-- Quick 261012-jnp: current NAP-RESOURCE requires urls/base64 wire bytes; existing SDK uses requests/Blob on both lineages. Breaking SDK/NAP/conformance migration requires explicit scope decision; merge CI is green but protocol completeness not claimed.
+- Quick 261012-jnp wire blocker resolved by 16cc8a49 and abe60708. URL lists, canonical base64 decoding, imported sidecars and real-shim optimizer integration pass local verification; final remote checks are tracked on PR #205. Host fetch-policy and network-isolation enforcement are separate from this byte-contract evidence.
 
 ### Quick Tasks Completed
 

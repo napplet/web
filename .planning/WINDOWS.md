@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 12
+open_count: 11
 waived_count: 0
-fixed_count: 2
+fixed_count: 3
 total_count: 14
-last_updated: 2026-10-12T19:35:48.549Z
+last_updated: 2026-10-15T04:51:16.875Z
 ---
 
 # Broken Windows Ledger
@@ -27,7 +27,7 @@ last_updated: 2026-10-12T19:35:48.549Z
 | 10 | quick-261012-jnp | lint-warning | packages/vite-plugin/src/optimizer/references.ts |  | AI-slop 96/100 includes existing 472-line references.ts warning; unchanged by integration repair. | open |  | 2026-10-12T19:24:33.872Z |  |
 | 11 | quick-261012-jnp | lint-warning | packages/cli/src/output.ts | 69 | AI-slop reports existing 89-line renderDeployReport warning; integration does not alter that function. | open |  | 2026-10-12T19:24:34.151Z |  |
 | 12 | quick-261012-jnp | deviation | packages/boilerplate/package.json |  | Existing main fflate 0.8.2 has moderate GHSA-px8p-9vwx-vf98; audit exits 1, unchanged AI-slop minimum70 gate passes96. | open |  | 2026-10-12T19:24:34.361Z |  |
-| 13 | quick-261012-jnp | unmet-truth | packages/nap/src/resource/types.ts | 120 | Living NAP-RESOURCE urls/base64 wire contract differs from existing requests/Blob SDK; both lineages predate integration. Explicit breaking-migration scope decision needed. | open |  | 2026-10-12T19:31:31.145Z |  |
+| 13 | quick-261012-jnp | unmet-truth | packages/nap/src/resource/types.ts | 120 | Living NAP-RESOURCE urls/base64 wire contract differs from existing requests/Blob SDK; both lineages predate integration. Explicit breaking-migration scope decision needed. | fixed | Resolved by 16cc8a49 and abe60708; see .planning/debug/pr205-resource-wire.md. | 2026-10-12T19:31:31.145Z | 2026-10-15T04:51:16.875Z |
 | 14 | quick-261012-jnp | lint-warning | packages/vite-plugin/src/manifest.ts |  | Final post-commit full AI-slop scan reports combined manifest.ts at 445 lines; unchanged minimum70 gate passes95, target100 not claimed. | open |  | 2026-10-12T19:35:48.549Z |  |
 
 ````json
@@ -186,10 +186,10 @@ last_updated: 2026-10-12T19:35:48.549Z
     "file": "packages/nap/src/resource/types.ts",
     "line": 120,
     "description": "Living NAP-RESOURCE urls/base64 wire contract differs from existing requests/Blob SDK; both lineages predate integration. Explicit breaking-migration scope decision needed.",
-    "status": "open",
-    "reason": "",
+    "status": "fixed",
+    "reason": "Resolved by 16cc8a49 and abe60708; see .planning/debug/pr205-resource-wire.md.",
     "recorded_at": "2026-10-12T19:31:31.145Z",
-    "resolved_at": null,
+    "resolved_at": "2026-10-15T04:51:16.875Z",
     "milestone": "v0.34.0"
   },
   {

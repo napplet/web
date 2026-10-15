@@ -1,5 +1,5 @@
 ---
-status: investigating
+status: verifying
 trigger: "Resolve https://github.com/napplet/web/pull/205#issuecomment-6131418214"
 created: 2026-10-14
 updated: 2026-10-14
@@ -9,9 +9,9 @@ updated: 2026-10-14
 
 ## Current Focus
 
-Hypothesis: Resource types, transport, injected adapters, and optimizer fixtures retain a superseded NAP-RESOURCE contract. Their passing tests cannot establish interoperability with the current proposal.
+Root cause: Resource types, transport, injected adapters, and optimizer fixtures retained a superseded NAP-RESOURCE contract. Existing tests asserted that obsolete contract.
 
-Next action: Integrate current main without rewriting PR history, then migrate and verify the resource wire boundary.
+Next action: Push the verified migration to the existing PR branch, then verify every applicable GitHub check at the final SHA.
 
 ## Symptoms and evidence
 
@@ -36,4 +36,26 @@ This record is non-normative. Protocol decisions defer to [NAP-RESOURCE](https:/
 
 ## Resolution
 
-Pending implementation and verification.
+Implemented in `16cc8a49`; large-reference-fixture handling corrected in `abe60708`. Merge `633e84d3` preserves original feature `f52cc924`, previous PR head `d3461adf`, and fetched main `efc64764` as ancestors. Both phase-162 planning directories remain intact.
+
+- Public `bytesMany` accepts URL strings; request envelopes contain `urls`, and separate resource `servers`/`maxServers` fields are retired. BUD-10 URL hints remain available.
+- `ResourceBytes` describes canonical padded base64. Wire results use it while application results retain Blobs. Validation rejects host byte objects, URL-safe alphabet, whitespace, missing/excess padding, and nonzero padding bits. Empty bytes and the specification's `AAEC/w==` vector decode correctly.
+- Bulk conversion preserves order and length, retains per-item failures, and rejects malformed results. Cancellation suppresses late replies. Imported sidecars validate before cache hydration; malformed sidecars reject query promises and never reach subscription callbacks.
+- Current NAP-RELAY head `9f30b350` and NAP-OUTBOX head `8865f73d` explicitly declare optional resource wire dependencies, so their imported sidecars remain supported. The resource proposal itself does not invent their carriers.
+- Data URLs pass through runtime policy. The optimizer emits BUD-10 URIs and URL-list bulk calls. Its integration regression uses the actual built resource shim and JSON-serialized base64 responses, then verifies recovered octets and MIME. The large fixture recovers all seven assets; final single-file HTML is 25,617 bytes with SHA-256 `bd15b362ea463c0883bd5cbb0ec3d5de946b99de45ba4e791520b71333320da8`.
+- Documentation, migration examples, wire types, conformance fixtures, and breaking changesets move together. Boilerplate and fixture searches found no additional old resource call sites outside the migrated packages.
+
+## Verification evidence
+
+- Root build: 13 tasks pass; root type-check: 20 tasks pass; recursive unit suite passes. Full `pnpm test` passes, including release/JSR/skills/tutorial checks. The final post-review build/type/unit logs use `/tmp/napplet-pr205-{build,types,units}-final.log`.
+- Resource/types/relay/outbox regressions: 43 pass. Focused conformance tests: 58 pass; additional large-reference regression passes. Optimizer integration/loader/large-fixture tests: 18 pass.
+- Conformance e2e: 5/5 pass. Workflow, onboarding and convention contracts pass. Assembled SPA/docs link crawl: 25 URLs, no broken internal links.
+- Native macOS ARM standalone test with empty host-tool PATH and npm-runner compatibility test: 2/2 pass. Five-platform verification remains the GitHub matrix's responsibility.
+- AI-slop 0.12.0: 93/100, zero errors, five existing warnings, unchanged configuration. The merged baseline independently reproduces the boot-prelude nesting warning; remaining warnings are existing output complexity, manifest/reference file size, and the moderate fflate advisory. No 100/100 or clean security audit claim is made.
+- The first build overlapped an independently started type-check build and observed temporarily missing NAP declarations. The subsequent sequential build passes; this was a local orchestration error, not a source workaround.
+
+## Evidence limits
+
+The conformance reference shell is a mock; these results establish wire compatibility and application byte recovery, not production DNS/SSRF/MIME policy or the web binding's network-isolation enforcement. The existing browser harness does not establish the latter prerequisite. Hosts must satisfy the living binding before exposing resource; no private handshake, CSP artifact rule, or new protocol field was added. The tutorial still reports six harness-unmeasured checks, and ordinary CLI units retain two opt-in tests that were run separately above.
+
+PR #205 stays open. Final remote checks and pushed-head equality are recorded in its description after delivery, so this file does not pretend to know its own future commit SHA.

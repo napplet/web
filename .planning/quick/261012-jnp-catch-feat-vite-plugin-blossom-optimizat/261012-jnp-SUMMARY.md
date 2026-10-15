@@ -3,7 +3,7 @@ phase: quick-261012-jnp
 plan: "01"
 subsystem: integration
 tags: [git-merge, vite, blossom, nip-5d, cli, ci]
-status: incomplete
+status: complete
 requirements-completed: []
 requires:
   - phase: 162-blossom-backed-large-asset-optimization
@@ -31,6 +31,11 @@ completed: 2026-10-12
 
 # Quick Task 261012-jnp: Existing Blossom Branch Integration
 
+## Follow-up resolution — October 14, 2026
+
+The user authorized the breaking migration in comment #6131418214. Commits `16cc8a49` and `abe60708` resolve the recorded wire blocker: URL-list bulk requests, canonical base64 results and imported sidecars, validated browser Blob conversion, and BUD-10 optimizer URIs. The loader now has an integration test through the actual shim and JSON envelopes. Current evidence and delivery status are recorded in `.planning/debug/pr205-resource-wire.md` and PR #205. The original synchronization history below is preserved as dated evidence; its scope-decision blocker is resolved. This verifies the byte contract, not every downstream host policy requirement.
+
+
 **Merged main's current publishing and standalone CLI behavior with the bounded Blossom optimizer, preserving both histories and repairing the evidenced CI digest-wait race. All nine merge-revision GitHub checks pass and PR #205 is CLEAN/MERGEABLE; existing NAP-RESOURCE wire drift blocks a protocol-complete claim.**
 
 ## Execution and ancestry
@@ -48,7 +53,7 @@ completed: 2026-10-12
 - Both original feature and fetched main pass `git merge-base --is-ancestor <SHA> HEAD`; no rebase, reset, force push or PR merge occurred.
 - The persisted commit ledger measures **19 reachable commits** from the original head to the merge head: 17 imported main commits, the plan commit, and the merge commit. This measurement precedes the final task-artifact commit; it is not a claim of 19 newly authored commits.
 
-Task 1 completed in the plan/evidence commit; Task 2's integration work is committed in the merge commit. Task 3 remains incomplete: closing delivery/check evidence is recorded, but the newly observed living-spec mismatch requires an explicit follow-on scope decision before protocol-complete verification can be claimed.
+Task 1 completed in the plan/evidence commit; Task 2's integration work is committed in the merge commit. At the October 12 close, Task 3 remained incomplete: closing delivery/check evidence is recorded, but the newly observed living-spec mismatch requires an explicit follow-on scope decision before protocol-complete verification can be claimed.
 
 ## Live CI diagnosis
 
@@ -126,7 +131,7 @@ Local environment: Node 26.9.0, pnpm 10.8.0, Deno 2.9.7; Playwright Chromium ins
 
 ## Delivery and blockers
 
-The first normal push updated PR #205 to merge commit `34bd9b90`; progress evidence is at https://github.com/napplet/web/pull/205#issuecomment-6131132943. `gh pr checks 205 --watch --interval 15` exited 0 with all **nine** reported checks successful for exactly `34bd9b909418a675486254f298dda06aa99f2dcf`; `gh pr view` confirmed **OPEN / CLEAN / MERGEABLE**, existing branch, base `main`. Final task-artifact delivery follows; its exact SHA and observed check results are recorded in the final PR evidence comment/agent return (a commit cannot embed its own hash). Status remains deliberately **incomplete** because of the protocol scope blocker, not because local or merge-revision CI failed. No PR merge is authorized or attempted.
+The first normal push updated PR #205 to merge commit `34bd9b90`; progress evidence is at https://github.com/napplet/web/pull/205#issuecomment-6131132943. `gh pr checks 205 --watch --interval 15` exited 0 with all **nine** reported checks successful for exactly `34bd9b909418a675486254f298dda06aa99f2dcf`; `gh pr view` confirmed **OPEN / CLEAN / MERGEABLE**, existing branch, base `main`. Final task-artifact delivery follows; its exact SHA and observed check results are recorded in the final PR evidence comment/agent return (a commit cannot embed its own hash). At that close, status remained deliberately **incomplete** because of the protocol scope blocker, not because local or merge-revision CI failed. No PR merge is authorized or attempted.
 
 | Merge-revision remote workflow | Run | Result |
 |---|---|---|
@@ -142,17 +147,17 @@ The evidence revision `87bb691797518497bad1691aba6f693a48580e9b` subsequently pa
 
 After the companion timeout repair, `pnpm build`, `pnpm type-check`, `pnpm -r test:unit`, `pnpm test`, conformance e2e (5/5), unchanged actual AI-slop gate (95/100), and `git diff --check` all completed successfully. Logs are `/tmp/opencode/jnp/repaired-{build,types,units,test,e2e,slop}.log`. Tutorial's six existing harness-not-measured skips remain disclosed. Both canonical proposal heads were refreshed via GitHub API and their actual current source files reread; the SHAs cited above are still current. This test-only timing repair changes no shipped package output.
 
-### Blocking protocol finding — scope decision required
+### Historical protocol finding — resolved by the October 14 follow-up
 
 The living NAP-RESOURCE **Wire Protocol** names `urls` for bulk requests, and **Byte encoding** requires canonical base64 text for every wire `blob`. Its **Resource binding / Bytes and local helpers** section requires validating/decoding those wire strings into application-facing Blobs. In contrast, unchanged `packages/nap/src/resource/types.ts:120` defines wire `requests: ResourceBytesRequest[]`, line 166 defines `blob: Blob`, and the shim forwards the old shapes without the required base64 boundary. `git show` confirms this same surface exists at both the original feature head and fetched main; it was not introduced by these merge repairs. The optimizer's existing object-request bulk seam and fake-Blob fixture proof therefore cannot demonstrate interoperability against the current proposal.
 
-AGENTS.md requires flagging downstream/spec mismatches rather than rubber-stamping existing private conventions. No automatic wire/API migration was attempted: that would be a breaking SDK/NAP/conformance change outside the 20 live conflicts and needs an explicit follow-on scope decision. The merge and passing checks remain usable Git integration evidence, **not** a declaration of current NAP-RESOURCE protocol compliance. This blocker keeps `status: incomplete` even if all GitHub checks pass.
+AGENTS.md requires flagging downstream/spec mismatches rather than rubber-stamping existing private conventions. No automatic wire/API migration was attempted: that would be a breaking SDK/NAP/conformance change outside the 20 live conflicts and needs an explicit follow-on scope decision. The merge and passing checks remain usable Git integration evidence, **not** a declaration of current NAP-RESOURCE protocol compliance. This blocker kept the original close incomplete; the follow-up resolution above supersedes it.
 
 ## Threat Flags
 
 | Flag | File | Description |
 |---|---|---|
-| threat_flag: protocol-boundary-drift | `packages/nap/src/resource/types.ts:120,166` | Existing bulk request/Blob wire shapes differ from the living NAP-RESOURCE proposal; passing repository mocks cannot validate interoperability. |
+| resolved: protocol-boundary-drift | `packages/nap/src/resource/types.ts:120,166` | Existing bulk request/Blob wire shapes differ from the living NAP-RESOURCE proposal; passing repository mocks cannot validate interoperability. |
 
 ## Deferred issues and deviations
 

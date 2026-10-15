@@ -4,6 +4,7 @@
 "@napplet/sdk": minor
 "@napplet/shim": minor
 "@napplet/conformance": minor
+"@napplet/conformance-cli": patch
 "@napplet/vite-plugin": patch
 ---
 

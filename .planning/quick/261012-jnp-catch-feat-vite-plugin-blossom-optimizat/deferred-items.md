@@ -2,9 +2,10 @@
 
 These findings predate this integration's repairs and are not reasons to weaken the unchanged CI configuration.
 
-## Blocking scope decision
+## Resolved resource wire migration
 
-Current NAP-RESOURCE PR #80 head `2529209a1a031e1411f84823c6d5fe8c594f78d7` specifies `urls` bulk requests and canonical base64 wire `blob` fields, converted to Blobs in the web binding. Both original feature and fetched main still define `requests: ResourceBytesRequest[]` and `blob: Blob` in `packages/nap/src/resource/types.ts:120,166`, and the existing shim forwards those shapes. The optimizer's preserved bulk seam and fake-Blob fixtures do not prove interoperability with the living proposal. This is flagged under AGENTS.md, not silently propagated as normative truth. A breaking SDK/NAP/conformance migration needs an explicit scope decision outside this quick merge; task status remains incomplete.
+The October 12 URLs/base64 blocker is resolved by the explicitly authorized follow-up in `16cc8a49` and `abe60708`. Shared types, SDK, shim, conformance adapters and optimizer now use the current wire contract, with strict base64 validation and decoded application Blobs. `.planning/debug/pr205-resource-wire.md` records regression and integration evidence against current proposal head `ae5b9c64`. Historical synchronization evidence remains in SUMMARY; the obsolete request-object/host-Blob mocks are no longer the interoperability oracle.
+
 
 ## Non-blocking gate findings
 
