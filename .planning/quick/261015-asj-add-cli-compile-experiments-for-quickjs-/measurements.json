@@ -1,0 +1,151 @@
+{
+  "deno": "2.9.5",
+  "platform": "aarch64-apple-darwin",
+  "sourceBase": "efc647642c9bd80aed58af139bf90910e68e962c",
+  "results": [
+    {
+      "task": "compile",
+      "compileExit": 0,
+      "seconds": 6.09,
+      "bytes": 221025074,
+      "--version": {
+        "exit": 0,
+        "stdout": "napplet 0.9.1\n",
+        "stderr": ""
+      },
+      "--help": {
+        "exit": 0,
+        "stdout": "@napplet/cli\n\nUsage:\n  napplet --version | -v | version\n  napplet guide\n  napplet create <directory> [--template <path-or-url>] [--force]\n  napplet init [--force] [--root] [--source-dir <dir>] [--name",
+        "stderr": ""
+      }
+    },
+    {
+      "task": "compile:pruned",
+      "compileExit": 0,
+      "seconds": 1.28,
+      "bytes": 120037682,
+      "--version": {
+        "exit": 0,
+        "stdout": "napplet 0.9.1\n",
+        "stderr": ""
+      },
+      "--help": {
+        "exit": 0,
+        "stdout": "@napplet/cli\n\nUsage:\n  napplet --version | -v | version\n  napplet guide\n  napplet create <directory> [--template <path-or-url>] [--force]\n  napplet init [--force] [--root] [--source-dir <dir>] [--name",
+        "stderr": ""
+      }
+    },
+    {
+      "task": "compile:bundle",
+      "compileExit": 0,
+      "seconds": 1.96,
+      "bytes": 164157746,
+      "--version": {
+        "exit": 0,
+        "stdout": "napplet 0.9.1\n",
+        "stderr": ""
+      },
+      "--help": {
+        "exit": 0,
+        "stdout": "@napplet/cli\n\nUsage:\n  napplet --version | -v | version\n  napplet guide\n  napplet create <directory> [--template <path-or-url>] [--force]\n  napplet init [--force] [--root] [--source-dir <dir>] [--name",
+        "stderr": ""
+      }
+    },
+    {
+      "task": "compile:minify",
+      "compileExit": 0,
+      "seconds": 1.82,
+      "bytes": 163167026,
+      "--version": {
+        "exit": 0,
+        "stdout": "napplet 0.9.1\n",
+        "stderr": ""
+      },
+      "--help": {
+        "exit": 0,
+        "stdout": "@napplet/cli\n\nUsage:\n  napplet --version | -v | version\n  napplet guide\n  napplet create <directory> [--template <path-or-url>] [--force]\n  napplet init [--force] [--root] [--source-dir <dir>] [--name",
+        "stderr": ""
+      }
+    },
+    {
+      "task": "compile:no-code-cache",
+      "compileExit": 0,
+      "seconds": 2.24,
+      "bytes": 221025074,
+      "--version": {
+        "exit": 0,
+        "stdout": "napplet 0.9.1\n",
+        "stderr": ""
+      },
+      "--help": {
+        "exit": 0,
+        "stdout": "@napplet/cli\n\nUsage:\n  napplet --version | -v | version\n  napplet guide\n  napplet create <directory> [--template <path-or-url>] [--force]\n  napplet init [--force] [--root] [--source-dir <dir>] [--name",
+        "stderr": ""
+      }
+    },
+    {
+      "task": "compile:quickjs",
+      "compileExit": 0,
+      "seconds": 3.63,
+      "bytes": 189908674,
+      "--version": {
+        "exit": 0,
+        "stdout": "napplet 0.9.1\n",
+        "stderr": ""
+      },
+      "--help": {
+        "exit": 0,
+        "stdout": "@napplet/cli\n\nUsage:\n  napplet --version | -v | version\n  napplet guide\n  napplet create <directory> [--template <path-or-url>] [--force]\n  napplet init [--force] [--root] [--source-dir <dir>] [--name",
+        "stderr": ""
+      }
+    },
+    {
+      "task": "compile:quickjs-minify",
+      "compileExit": 0,
+      "seconds": 1.5,
+      "bytes": 132050626,
+      "--version": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "error: Module not found: jsr:@libs/qrcode\n"
+      },
+      "--help": {
+        "exit": 1,
+        "stdout": "",
+        "stderr": "error: Module not found: jsr:@libs/qrcode\n"
+      }
+    },
+    {
+      "task": "compile:small",
+      "compileExit": 0,
+      "seconds": 3.49,
+      "bytes": 163167026,
+      "--version": {
+        "exit": 0,
+        "stdout": "napplet 0.9.1\n",
+        "stderr": ""
+      },
+      "--help": {
+        "exit": 0,
+        "stdout": "@napplet/cli\n\nUsage:\n  napplet --version | -v | version\n  napplet guide\n  napplet create <directory> [--template <path-or-url>] [--force]\n  napplet init [--force] [--root] [--source-dir <dir>] [--name",
+        "stderr": ""
+      }
+    },
+    {
+      "task": "compile:quickjs-pruned",
+      "compileExit": 0,
+      "seconds": 1.01,
+      "bytes": 88921282,
+      "--version": {
+        "exit": 0,
+        "stdout": "napplet 0.9.1\n",
+        "stderr": ""
+      },
+      "--help": {
+        "exit": 0,
+        "stdout": "@napplet/cli\n\nUsage:\n  napplet --version | -v | version\n  napplet guide\n  napplet create <directory> [--template <path-or-url>] [--force]\n  napplet init [--force] [--root] [--source-dir <dir>] [--name",
+        "stderr": ""
+      }
+    }
+  ]
+}
