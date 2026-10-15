@@ -108,7 +108,7 @@ What each step does:
 
 ## Terminal workflow
 
-The CLI opens human terminal sessions with an ASCII napplet banner, grouped command help, colored results, and upload/publish progress. Use `napplet <command> --help` for command-specific options. `NO_COLOR=1` or `--no-color` removes colors; redirected deploy output remains JSON, and `--version` remains one line.
+The CLI opens human terminal sessions with an ASCII napplet banner, grouped command help, colored results, and filled upload/publish progress bars (`█` completed, `░` remaining). Use `napplet <command> --help` for command-specific options. `NO_COLOR=1` or `--no-color` removes colors; redirected deploy output remains JSON, and `--version` remains one line.
 
 Interactive deployment completes missing build paths, descriptions, publishing names, relays, Blossom destinations, and application metadata before signing. Existing settings and embedded metadata are retained. Prompted deployment settings can be saved for the next run. A missing signer opens a choice of remote connection, an existing stored reference, or hidden secret entry. Ctrl-C or EOF cancels cleanly.
 

@@ -16,10 +16,10 @@ Deno.test("banner supports color, plain text and narrow terminals", () => {
 });
 
 Deno.test("progress bar clamps counts and status lines fit the available width", () => {
-  assertEquals(renderProgressBar(1, 4, 4), "[=---] 25%");
-  assertEquals(renderProgressBar(9, 4, 4), "[====] 100%");
-  assertEquals(renderProgressBar(-1, 4, 4), "[----] 0%");
-  assertEquals(renderProgressBar(0, 0, 4), "[----] 0%");
+  assertEquals(renderProgressBar(1, 4, 4), "[█░░░] 25%");
+  assertEquals(renderProgressBar(9, 4, 4), "[████] 100%");
+  assertEquals(renderProgressBar(-1, 4, 4), "[░░░░] 0%");
+  assertEquals(renderProgressBar(0, 0, 4), "[░░░░] 0%");
   assertEquals(fitStatus("abcdefghijkl", 8), "abcde...");
   assert(!fitStatus("bad\x1b[2J\ntext", 80).includes("\x1b"));
 });

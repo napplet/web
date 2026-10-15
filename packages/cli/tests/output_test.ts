@@ -306,6 +306,7 @@ Deno.test("createDeployProgressReporter renders terminal progress lines", () => 
 
   assert(lines[0].includes("Uploading 2 file(s)"));
   assert(lines[1].includes("upload 1/2 uploaded: https://blob.example/index.html"));
+  assert(lines[1].startsWith("[█████████░░░░░░░░░]"));
   assert(lines[2].includes("publish 1/1 1/1 relays accepted"));
 });
 

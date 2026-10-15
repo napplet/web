@@ -167,5 +167,5 @@ function progressBar(completed: number, total: number): string {
   const width = 18;
   const safeTotal = Math.max(total, 1);
   const filled = Math.min(width, Math.floor((completed / safeTotal) * width));
-  return `[${"#".repeat(filled)}${"-".repeat(width - filled)}]`;
+  return `[${"█".repeat(filled)}${"░".repeat(width - filled)}]`;
 }

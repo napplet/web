@@ -81,10 +81,10 @@ export function fitStatus(text: string, width: number): string {
  * @param total Expected operations.
  * @param width Bar width.
  * @returns A bounded progress bar and percentage.
- * @example renderProgressBar(1, 4) // [=====---------------] 25%
+ * @example renderProgressBar(1, 4) // [█████░░░░░░░░░░░░░░░] 25%
  */
 export function renderProgressBar(done: number, total: number, width = 20): string {
   const ratio = total > 0 ? Math.max(0, Math.min(1, done / total)) : 0;
   const filled = Math.floor(ratio * width);
-  return `[${"=".repeat(filled)}${"-".repeat(width - filled)}] ${Math.floor(ratio * 100)}%`;
+  return `[${"█".repeat(filled)}${"░".repeat(width - filled)}] ${Math.floor(ratio * 100)}%`;
 }

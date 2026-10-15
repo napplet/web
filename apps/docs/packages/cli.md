@@ -257,7 +257,7 @@ Native keychains are used when available. Otherwise, key commands use password-e
 
 ## Interactive terminals and CI
 
-Human terminal sessions show the napplet banner, grouped help, colored deployment summaries, and live upload/publish progress. `napplet deploy` prompts for missing configuration values before signing, preserves existing values, and offers to save completed settings. Use `napplet deploy --dry-run` to preview without uploading or publishing.
+Human terminal sessions show the napplet banner, grouped help, colored deployment summaries, and live upload/publish progress with filled `█` blocks and a `░` remaining track. `napplet deploy` prompts for missing configuration values before signing, preserves existing values, and offers to save completed settings. Use `napplet deploy --dry-run` to preview without uploading or publishing.
 
 Use `-i` or `--non-interactive` on any command to disable prompts. CI and redirected streams do this automatically. Missing required values produce actionable errors; supply them through configuration or `--source-dir`, `--description`, `--relay`, and `--server`. `--json` keeps deploy stdout machine-readable, and `NO_COLOR=1` or `--no-color` disables colors.
 
