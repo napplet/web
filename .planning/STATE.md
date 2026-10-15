@@ -7,8 +7,8 @@ current_phase_name: nap-gamepad-across-repositories
 status: completed
 stopped_at: Phase 163 verified; completing prerequisite publication for CLI follow-up 243
 last_updated: "2026-10-14T16:24:49.491178+00:00"
-last_activity: 2026-10-14
-last_activity_desc: Integrated the merged icon skill with the verified GAMEPAD release
+last_activity: 2026-10-15
+last_activity_desc: Opened PR 250 for YAML CLI configuration and required JSON migration
 progress:
   total_phases: 8
   completed_phases: 3
@@ -613,6 +613,8 @@ Items acknowledged and deferred at v0.31.0 milestone close on 2026-05-24:
 
 | 261007-c0v | Embed NIP-5D publishing metadata and recover standalone HTML deploys ([PR #226](https://github.com/napplet/web/pull/226)) | 2026-10-07 | 4b9cbc79 | [261007-c0v](./quick/261007-c0v-embed-nip-5d-publishing-metadata-and-rec/) |
 | 261010-01a | Optional Zapstore metadata, standalone/inline screenshots, and current protocol context | 2026-10-10 | 46c19178 | [261010-01a](./quick/261010-01a-optional-zapstore-metadata-and-current-p/) |
+
+| 261015-by5 | Migrate CLI project configuration to YAML with required consent | 2026-10-15 | 5132679b | [261015-by5-migrate-cli-project-configuration-from-j](./quick/261015-by5-migrate-cli-project-configuration-from-j/) |
 
 Last session: 2026-07-23T15:44:08.781Z
 Stopped at: Completed 161-16-PLAN.md

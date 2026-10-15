@@ -1,5 +1,5 @@
 ---
-status: planned
+status: complete
 ---
 
 # YAML project configuration and mandatory migration
