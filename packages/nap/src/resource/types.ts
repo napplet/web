@@ -86,12 +86,14 @@ export interface ResourceInfoErrorMessage extends ResourceMessage {
  * NOTE: AbortSignal is napplet-side only and never crosses the wire.
  * In-flight cancellation flows via the separate `ResourceCancelMessage`.
  *
+ * @see https://github.com/hzrd149/blossom/blob/master/buds/10.md BUD-10 Blossom URI schema for `blossom:` URLs
+ *
  * @example
  * ```ts
  * const msg: ResourceBytesMessage = {
  *   type: 'resource.bytes',
  *   id: crypto.randomUUID(),
- *   url: 'blossom:sha256:abc123...',
+ *   url: 'blossom:<sha256>.png',
  *   servers: ['https://cdn.hzrd149.com'],
  * };
  * ```

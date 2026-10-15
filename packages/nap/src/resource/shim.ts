@@ -53,7 +53,7 @@ export function info(): Promise<ResourceInfo> {
  *
  * // With cancellation:
  * const ac = new AbortController();
- * const promise = bytes('blossom:abc...', { signal: ac.signal });
+ * const promise = bytes('blossom:<sha256>.bin', { signal: ac.signal });
  * ac.abort(); // -> rejects with AbortError, sends resource.cancel envelope
  * ```
  */
@@ -150,7 +150,7 @@ export function bytesMany(
  *
  * @example
  * ```ts
- * const handle = bytesAsObjectURL('blossom:abc123...');
+ * const handle = bytesAsObjectURL('blossom:<sha256>.png');
  * await (handle as { ready: Promise<unknown> }).ready;
  * imgEl.src = handle.url;
  * imgEl.onload = () => handle.revoke();
@@ -203,7 +203,7 @@ export function bytesAsObjectURL(url: string): { url: string; revoke: () => void
  * ```ts
  * hydrateResourceCache([
  *   { url: 'https://example.com/a.png', blob: aBlob, mime: 'image/png' },
- *   { url: 'blossom:def456', blob: bBlob, mime: 'image/jpeg' },
+ *   { url: 'blossom:def456.jpg', blob: bBlob, mime: 'image/jpeg' },
  * ]);
  * // Subsequent bytes('https://example.com/a.png') resolves from cache.
  * ```

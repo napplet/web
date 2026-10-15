@@ -167,13 +167,13 @@ describe('validateEnvelope — outbound field checks', () => {
     expect(validateEnvelope({
       type: 'resource.bytes',
       id: 'single',
-      url: 'blossom:sha256:abc',
+      url: 'blossom:abc.bin',
       servers: ['https://cdn.example'],
     }).ok).toBe(true);
     expect(validateEnvelope({
       type: 'resource.bytesMany',
       id: 'a',
-      requests: [{ url: 'https://x/y' }, { url: 'blossom:sha256:abc', servers: ['https://cdn.example'] }],
+      requests: [{ url: 'https://x/y' }, { url: 'blossom:abc.bin', servers: ['https://cdn.example'] }],
     }).ok).toBe(true);
     expect(validateEnvelope({ type: 'resource.bytesMany', id: 'a' }).errors[0].code).toBe('missing-field');
     expect(validateEnvelope({ type: 'resource.bytesMany', id: 'a', requests: 'https://x/y' }).errors[0].code).toBe('wrong-type');

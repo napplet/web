@@ -169,18 +169,18 @@ import { info, bytes, bytesMany, bytesAsObjectURL } from '@napplet/nap/resource/
 const resourceInfo = await info();
 
 // Fetch any URL the shell accepts under its policy. URL space is scheme-pluggable.
-const blob: Blob = await bytes('blossom:sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', {
+const blob: Blob = await bytes('blossom:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.bin', {
   servers: ['https://cdn.hzrd149.com'],
 });
 
 // Fetch many URLs in one envelope. Items preserve input order and length.
 const items = await bytesMany([
   { url: 'https://example.com/avatar.png' },
-  { url: 'blossom:sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', servers: ['https://cdn.hzrd149.com'] },
+  { url: 'blossom:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.bin', servers: ['https://cdn.hzrd149.com'] },
 ]);
 
 // Synchronous handle for <img src> use; revoke when done.
-const handle = bytesAsObjectURL('blossom:sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855');
+const handle = bytesAsObjectURL('blossom:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.bin');
 imgEl.src = handle.url;
 // later
 handle.revoke();
@@ -190,7 +190,7 @@ Canonical schemes are defined in the spec:
 
 - `data:` — RFC 2397, decoded inside the napplet shim with zero shell round-trip
 - `https:` — shell-side network fetch under the default resource policy (private-IP block list at DNS time, MIME byte-sniffing, size cap, timeout, rate limit, redirect cap)
-- `blossom:sha256:<hex>` — Blossom hash → bytes; shell verifies hash before delivery
+- `blossom:<sha256>.<ext>` — [BUD-10](https://github.com/hzrd149/blossom/blob/master/buds/10.md) Blossom URI → bytes; shell verifies hash before delivery
 - `htree:` — Hashtree reference; shell verifies every Hashtree hash before delivery
 - `nostr:<bech32>` — single-hop NIP-19 resolution against the shell's relay pool
 

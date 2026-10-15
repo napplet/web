@@ -56,7 +56,7 @@ import { notifySend } from '@napplet/nap/notify/sdk';
 
 - **resource** — a single scheme-pluggable byte-fetching primitive,
   `bytes(url) → Blob`, over four canonical schemes (`data:`, `https:`,
-  `blossom:sha256:<hex>`, `nostr:<bech32>`).
+  `blossom:<sha256>.<ext>` per [BUD-10](https://github.com/hzrd149/blossom/blob/master/buds/10.md), `nostr:<bech32>`).
 - **identity** — strictly **read-only**: it exposes the shell-user pubkey and
   public identity data but never signs, encrypts, or decrypts. Take one snapshot
   with `getPublicKey()`, then subscribe to shell-pushed `identity.changed`.

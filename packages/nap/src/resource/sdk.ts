@@ -41,11 +41,13 @@ export const info = resourceInfo;
  *             `data:`, `https:`, `blossom:`, `htree:`, `nostr:`, ...)
  * @returns Promise resolving to the fetched bytes as a Blob
  *
+ * @see https://github.com/hzrd149/blossom/blob/master/buds/10.md BUD-10 Blossom URI schema for `blossom:` URLs
+ *
  * @example
  * ```ts
  * import { resourceBytes } from '@napplet/nap/resource';
  *
- * const blob = await resourceBytes('blossom:sha256:abc123...', {
+ * const blob = await resourceBytes('blossom:<sha256>.png', {
  *   servers: ['https://cdn.hzrd149.com'],
  * });
  * const url = URL.createObjectURL(blob);
@@ -74,7 +76,7 @@ export const bytes = resourceBytes;
  *
  * const items = await resourceBytesMany([
  *   { url: 'https://example.com/avatar.png' },
- *   { url: 'blossom:sha256:...', servers: ['https://cdn.hzrd149.com'] },
+ *   { url: 'blossom:<sha256>.png', servers: ['https://cdn.hzrd149.com'] },
  *   { url: 'htree://example-root/path' },
  * ]);
  * ```
@@ -102,7 +104,7 @@ export const bytesMany = resourceBytesMany;
  * ```ts
  * import { resourceBytesAsObjectURL } from '@napplet/nap/resource';
  *
- * const handle = resourceBytesAsObjectURL('blossom:abc123...');
+ * const handle = resourceBytesAsObjectURL('blossom:<sha256>.png');
  * imgEl.src = handle.url;
  * imgEl.onload = () => handle.revoke();
  * ```
