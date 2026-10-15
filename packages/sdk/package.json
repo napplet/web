@@ -1,6 +1,6 @@
 {
   "name": "@napplet/sdk",
-  "version": "0.29.0",
+  "version": "0.30.0",
   "description": "Typed named exports wrapping window.napplet for bundler-consuming napplet developers",
   "type": "module",
   "main": "./dist/index.js",
@@ -10,6 +10,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./gamepad": {
+      "types": "./dist/gamepad.d.ts",
+      "import": "./dist/gamepad.js"
     }
   },
   "files": [
@@ -29,7 +33,8 @@
   },
   "scripts": {
     "build": "tsup",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "test:unit": "node --test test/*.test.mjs"
   },
   "license": "MIT",
   "repository": {

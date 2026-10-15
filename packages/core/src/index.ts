@@ -237,3 +237,5 @@ export {
 } from './boundary.js';
 
 export type { ShellApi, ShellCapabilities, ShellEnvironment } from './types/shell.js';
+
+export type * from './types/gamepad.js';

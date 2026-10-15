@@ -95,14 +95,14 @@ const configSub = config.subscribe((v) => {
 config.openSettings({ section: 'appearance' });
 
 // Fetch external bytes through the runtime's NAP-RESOURCE surface
-const avatarBlob = await resource.bytes('blossom:sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', {
+const avatarBlob = await resource.bytes('blossom:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.bin', {
   servers: ['https://cdn.hzrd149.com'],
 });
 const resourceItems = await resource.bytesMany([
   { url: 'https://example.com/avatar.png' },
-  { url: 'blossom:sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', servers: ['https://cdn.hzrd149.com'] },
+  { url: 'blossom:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.bin', servers: ['https://cdn.hzrd149.com'] },
 ]);
-const handle = resource.bytesAsObjectURL('blossom:sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855');
+const handle = resource.bytesAsObjectURL('blossom:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.bin');
 imgEl.src = handle.url;
 // handle.revoke() when done
 
@@ -295,7 +295,7 @@ Sandboxed byte fetching (NAP-RESOURCE). Mirrors `window.napplet.resource`; loadi
 | `bytesMany(requests, opts?)` | `Promise<ResourceBytesItem[]>` | Fetch many per-resource requests through one envelope. Each request may carry advisory Blossom `servers`; items preserve input order and length. |
 | `bytesAsObjectURL(url)` | `{ url: string; revoke: () => void }` | Synchronous handle whose `url` resolves to a blob URL once the fetch completes. |
 
-Canonical schemes: `data:` (in-shim), `https:` (shell-side under policy), `blossom:sha256:<hex>` (hash-verified), `htree:` (Hashtree-verified), `nostr:<bech32>` (single-hop NIP-19).
+Canonical schemes: `data:` (in-shim), `https:` (shell-side under policy), `blossom:<sha256>.<ext>` ([BUD-10](https://github.com/hzrd149/blossom/blob/master/buds/10.md), hash-verified), `htree:` (Hashtree-verified), `nostr:<bech32>` (single-hop NIP-19).
 
 Bare helper aliases are also re-exported for consumers that prefer functional imports:
 
@@ -305,7 +305,7 @@ import { resourceInfo, resourceBytes, resourceBytesMany, resourceBytesAsObjectUR
 const info = await resourceInfo();
 const blob = await resourceBytes('https://example.com/avatar.png');
 const items = await resourceBytesMany(['https://example.com/a.png']);
-const handle = resourceBytesAsObjectURL('blossom:sha256:...');
+const handle = resourceBytesAsObjectURL('blossom:<sha256>.png');
 ```
 
 ### `keys`
@@ -418,6 +418,7 @@ These are discriminated union types covering all messages in each NAP domain. Us
 | `CountNapMessage` | `@napplet/nap/count` | Discriminated union of all count domain messages |
 | `ListsNapMessage` | `@napplet/nap/lists` | Discriminated union of all lists domain messages |
 | `CommonNapMessage` | `@napplet/nap/common` | Discriminated union of all common domain messages |
+| `GamepadNapMessage` | `@napplet/nap/gamepad` | Subscribe, unsubscribe, and state envelopes without correlation ids |
 | `SerialNapMessage` | `@napplet/nap/serial` | Discriminated union of all serial domain messages |
 
 Individual message types (e.g., `RelaySubscribeMessage`, `IdentityGetPublicKeyMessage`) are also re-exported from `@napplet/sdk` for fine-grained typing.
@@ -428,7 +429,7 @@ Each NAP domain has a string constant re-exported from its package:
 
 ```ts
 import { RELAY_DOMAIN, IDENTITY_DOMAIN, STORAGE_DOMAIN, INC_DOMAIN, THEME_DOMAIN, KEYS_DOMAIN, MEDIA_DOMAIN, NOTIFY_DOMAIN, CONFIG_DOMAIN, RESOURCE_DOMAIN, CVM_DOMAIN, OUTBOX_DOMAIN, UPLOAD_DOMAIN, INTENT_DOMAIN, BLE_DOMAIN, WEBRTC_DOMAIN, LINK_DOMAIN, COUNT_DOMAIN, LISTS_DOMAIN, COMMON_DOMAIN, SERIAL_DOMAIN, DM_DOMAIN } from '@napplet/sdk';
-// Values: 'relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent', 'ble', 'webrtc', 'link', 'count', 'lists', 'common', 'serial', 'dm'
+// Values: 'relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent', 'ble', 'webrtc', 'link', 'count', 'lists', 'common', 'serial', 'fs', 'dm', 'shell', 'gamepad'
 ```
 
 These constants are re-exported from the individual domain packages. Use property presence for type-safe conditional logic:
@@ -506,3 +507,23 @@ await intent.invoke('napplet:profile/open?pubkey=abc123');
 ```
 
 The runtime binding retains deliveries until a listener registers. Discovery candidates expose opaque catalog `id` values and `contracts` with parameter names. INC peers instead use identifiers for running authenticated endpoints. A NAP-INTENT URI may append a bare `#naddr1…` recommendation; the binding sends its coordinate and relay hints as `handlerHint`, outside convention identity and payload. An applicable user default takes precedence. INC URI operations reject fragments. See the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md) and [web projection](https://github.com/napplet/naps/blob/master/projections/web.md).
+
+### Controller snapshots
+
+This non-normative guidance defers to [NAP-GAMEPAD](https://github.com/napplet/naps/pull/108). When the runtime exposes `window.napplet.gamepad`, the SDK provides cached `getGamepads()`, read-only `available` and `focused`, and `onChange(handler)` with an independently closable listener. Keep keyboard or pointer controls available when the domain or native controllers are unavailable. Ignore gameplay edges while unfocused, and reset the button baseline on regained focus. Preserve null slots and route controllers by their `index`.
+
+```ts
+import { gamepad } from '@napplet/sdk/gamepad';
+
+if (window.napplet?.gamepad) {
+  const subscription = gamepad.onChange(state => {
+    if (!state.available || !state.focused) return;
+    for (const pad of state.pads) {
+      if (pad) console.log(pad.index, pad.axes);
+    }
+  });
+  // Call subscription.close() when the owning view is disposed, not right away.
+}
+```
+
+Declare `gamepad` as optional (`O`) when other controls fulfill the core task. Use a hard requirement (`R`) only when the core task needs controller input. The runtime owns controller access and focus isolation; app code does not call native `navigator.getGamepads()` or open raw HID devices. Haptics and remapping are outside this proposal.

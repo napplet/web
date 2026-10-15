@@ -166,7 +166,7 @@ Only the canonical schemes plus shell-administrator opt-ins are dispatched. Smug
 
 - [ ] `data:` (RFC 2397) — decoded in-shim with zero shell round-trip; size cap still applies on the decoded `Blob`
 - [ ] `https:` — full Default Resource Policy applies
-- [ ] `blossom:sha256:<hex>` — shell verifies hash against the URL's declared digest **before** delivery; mismatch → `code: "decode-failed"`
+- [ ] `blossom:<sha256>.<ext>` ([BUD-10](https://github.com/hzrd149/blossom/blob/master/buds/10.md)) — shell verifies hash against the URL's declared digest **before** delivery; mismatch → `code: "decode-failed"`
 - [ ] `htree:` — shell resolves Hashtree references to verified bytes without forwarding fragment keys to relays, storage servers, or peers
 - [ ] `nostr:<bech32>` — single-hop NIP-19 resolution; recursive resolution is **not** the shell's job
 

@@ -73,6 +73,7 @@ describe('validateEnvelope — outbound field checks', () => {
     expect(forged.errors).toContainEqual(expect.objectContaining({
       code: 'forbidden-field',
       field: 'sender',
+      message: expect.stringContaining('runtime-derived'),
     }));
   });
 
@@ -166,13 +167,13 @@ describe('validateEnvelope — outbound field checks', () => {
     expect(validateEnvelope({
       type: 'resource.bytes',
       id: 'single',
-      url: 'blossom:sha256:abc',
+      url: 'blossom:abc.bin',
       servers: ['https://cdn.example'],
     }).ok).toBe(true);
     expect(validateEnvelope({
       type: 'resource.bytesMany',
       id: 'a',
-      requests: [{ url: 'https://x/y' }, { url: 'blossom:sha256:abc', servers: ['https://cdn.example'] }],
+      requests: [{ url: 'https://x/y' }, { url: 'blossom:abc.bin', servers: ['https://cdn.example'] }],
     }).ok).toBe(true);
     expect(validateEnvelope({ type: 'resource.bytesMany', id: 'a' }).errors[0].code).toBe('missing-field');
     expect(validateEnvelope({ type: 'resource.bytesMany', id: 'a', requests: 'https://x/y' }).errors[0].code).toBe('wrong-type');
@@ -237,13 +238,13 @@ describe('validateEnvelope — optional shell domain', () => {
 });
 
 describe('ENVELOPE_SPECS invariants', () => {
-  it('has 240 discriminants split 115 outbound / 125 inbound', () => {
+  it('has 243 discriminants split 117 outbound / 126 inbound', () => {
     const all = knownEnvelopeTypes();
-    expect(all).toHaveLength(240);
+    expect(all).toHaveLength(243);
     const out = all.filter((t) => ENVELOPE_SPECS[t].dir === 'out');
     const inbound = all.filter((t) => ENVELOPE_SPECS[t].dir === 'in');
-    expect(out).toHaveLength(115);
-    expect(inbound).toHaveLength(125);
+    expect(out).toHaveLength(117);
+    expect(inbound).toHaveLength(126);
   });
 
   it('declares canonical inbound INC carrier fields', () => {

@@ -1,5 +1,11 @@
 # @napplet/cli
 
+## 0.9.1
+
+### Patch Changes
+
+- Select the GAMEPAD-capable conformance CLI 0.3.4 and Kehto CLI 0.5.5 in the private runner cache. These package versions must be published before this CLI release.
+
 ## 0.9.0
 
 ### Minor Changes

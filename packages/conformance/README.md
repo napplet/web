@@ -15,6 +15,8 @@ v1 is **zero-config protocol conformance**: NIP-5D manifest-event validity, boot
 
 The validator surface is kept in lockstep with `@napplet/nap` by a drift test, so a new NAP message type cannot ship without matching conformance coverage.
 
+`@napplet/nap` remains a devDependency because the drift test reads NAP source files directly and the GAMEPAD parity test imports its state helpers. This workspace dependency lets Turbo invalidate cached conformance tests after NAP-only source changes; it is not a runtime dependency of the published engine. Run `pnpm test:workflow-contracts` from the repository root to verify cache invalidation against the current Turbo configuration.
+
 For `intent` envelopes, conformance checks the merged `intent.invoke` request/result carrier. Requests require URI-derived archetype, action, and stable convention identity. Acceptance results transfer delivery responsibility to the runtime, while targets receive buffered `intent.deliver` pushes. Payload semantics belong to the convention and target.
 
 This non-normative description follows the living [NAP-INC](https://github.com/napplet/naps/blob/master/naps/NAP-INC.md) and [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md) documents.
@@ -100,3 +102,7 @@ for (const check of run.checks) {
 ## CLI Pairing
 
 The package intentionally stays framework-agnostic. For a project-level command that launches real Chromium against a built napplet, use the companion `napplet-conformance` CLI shipped from `@napplet/conformance-cli`.
+
+### GAMEPAD integration
+
+GAMEPAD validation recognizes only `gamepad.subscribe`, `gamepad.unsubscribe`, and `gamepad.state`; correlation ids are rejected. The injected browser API shares snapshot validation with the portable binding and accepts only parent messages. The reference mock reports unavailable controllers rather than physical input. Focus and native-access isolation require host integration tests. See the proposed [NAP-GAMEPAD](https://github.com/napplet/naps/pull/108).

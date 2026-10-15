@@ -59,6 +59,7 @@ describe('bootAndCollect — DOM wiring', () => {
       }]);
 
       window.dispatchEvent(new MessageEvent('message', {
+        source: window.parent,
         data: {
           type: 'resource.bytes.result',
           id: posted[0].id,
@@ -70,18 +71,19 @@ describe('bootAndCollect — DOM wiring', () => {
       expect(await (await promise).text()).toBe('hi');
 
       const many = napplet.resource.bytesMany([{
-        url: 'blossom:sha256:abc',
+        url: 'blossom:abc.bin',
         servers: ['https://cdn.example'],
       }]);
       expect(posted[1]).toEqual({
         type: 'resource.bytesMany',
         id: expect.any(String),
         requests: [{
-          url: 'blossom:sha256:abc',
+          url: 'blossom:abc.bin',
           servers: ['https://cdn.example'],
         }],
       });
       window.dispatchEvent(new MessageEvent('message', {
+        source: window.parent,
         data: {
           type: 'resource.bytesMany.result',
           id: posted[1].id,

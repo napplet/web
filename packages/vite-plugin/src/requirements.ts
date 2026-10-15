@@ -32,6 +32,7 @@ const NAP_DOMAINS = [
   'fs',
   'common',
   'dm',
+  'gamepad',
 ] as const;
 
 const NAP_DOMAIN_SET = new Set<string>(NAP_DOMAINS);

@@ -88,7 +88,7 @@ completed: 2026-04-20
 - Scheme Protocol Surfaces (4 subsections — covers SCH-02, SCH-03, SCH-04 plus references SCH-01 done in Phase 126):
   - `data:` per RFC 2397, in-shim or shell-handled, no network, no SSRF policy
   - `https:` with full Default Resource Policy applied; explicit ban on `http:` cleartext as default
-  - `blossom:` with canonical `blossom:sha256:<hex>` form, hash verification before delivery, same `https:` policy on upstream Blossom-host fetches
+  - `blossom:` with canonical [BUD-10](https://github.com/hzrd149/blossom/blob/master/buds/10.md) `blossom:<sha256>.<ext>` form, hash verification before delivery, same `https:` policy on upstream Blossom-host fetches
   - `nostr:` with NIP-19 bech32 input and **single-hop resolution semantics** (anti-fan-out)
 - Default Resource Policy section with grep-anchor MUST language for Pitfall 6 mitigation:
   - Private-IP block list as MUST at DNS-resolution time covering all 6 categories (10/8, 172.16/12, 192.168/16, 127/8, ::1, 169.254/16, fe80::/10, fc00::/7, 169.254.169.254)
@@ -277,7 +277,7 @@ Exit 0 across all 14 workspace packages. DEF-125-01 stays closed.
 | SPEC-05 | NUB-MEDIA-AMENDMENT.md (entire file) | Documentation Clarification with artwork.url -> resource.bytes() prose |
 | SPEC-06 | All 4 drafts | grep -c '@napplet/' returns 0 across all 4 files |
 | SCH-02 | NUB-RESOURCE.md § Scheme Protocol Surfaces / `https:` | Shell-side network fetch with full Default Resource Policy; `http:` not default |
-| SCH-03 | NUB-RESOURCE.md § Scheme Protocol Surfaces / `blossom:` | Canonical `blossom:sha256:<hex>` form; hash verification before delivery |
+| SCH-03 | NUB-RESOURCE.md § Scheme Protocol Surfaces / `blossom:` | Canonical [BUD-10](https://github.com/hzrd149/blossom/blob/master/buds/10.md) `blossom:<sha256>.<ext>` form; hash verification before delivery |
 | SCH-04 | NUB-RESOURCE.md § Scheme Protocol Surfaces / `nostr:` | NIP-19 bech32 input; single-hop resolution semantics |
 | POL-01 | NUB-RESOURCE.md § Default Resource Policy / Private-IP block list (MUST, at DNS-resolution time) | Full 6-category IP block list; DNS-pinning per redirect hop |
 | POL-02 | NUB-RESOURCE.md § Default Resource Policy / Response size cap (SHOULD, ~10 MiB) | Excess -> `code: "too-large"` |

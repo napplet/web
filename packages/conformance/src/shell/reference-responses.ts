@@ -74,6 +74,9 @@ function dataUrlToBlob(url: unknown): { blob: Blob; mime: string } | null {
  * envelopes, not the shell's responses.
  */
 export const RESPONDERS: Record<string, Responder> = {
+  // This transport-neutral mock has no controller API. Production shells use a host reader.
+  'gamepad.subscribe': () => ok({ type: 'gamepad.state', available: false, reason: 'unavailable', focused: false, pads: [] }),
+  'gamepad.unsubscribe': none,
   // relay
   'relay.subscribe': (e) => ok({ type: 'relay.eose', subId: e.subId }),
   'relay.close': none,

@@ -398,7 +398,6 @@ describe('nip5aManifest artifact modes', () => {
       archetypeFixture,
     );
 
-    const base = readManifest(baseFixture.dist);
     const withArchetypes = readManifest(archetypeFixture.dist);
 
     const archetypeTags = withArchetypes.tags.filter((tag) => tag[0] === 'z' || tag[0] === 'i');
@@ -550,6 +549,21 @@ describe('nip5aManifest artifact modes', () => {
       ['R', 'identity'],
       ['R', 'storage'],
     ]);
+  });
+
+  it('recognizes GAMEPAD imports and retains an explicitly optional controller domain', async () => {
+    const fixture = makeFixture();
+    fs.writeFileSync(path.join(fixture.dist, 'index.html'), '<!doctype html>');
+    const result = await runCloseBundle(
+      { nappletType: 'controller-fallback', optional: ['gamepad'], requires: { infer: true, explicit: [], mode: 'error' } },
+      fixture,
+      {},
+      [{ id: path.join(fixture.root, 'src/main.ts'), code: "import { gamepad } from '@napplet/sdk/gamepad';\ngamepad.getGamepads();" }],
+    );
+    const tags = readManifest(fixture.dist).tags;
+    expect(tags).toContainEqual(['O', 'gamepad']);
+    expect(tags).not.toContainEqual(['R', 'gamepad']);
+    expect(result.warnings).toEqual([]);
   });
 
   it('does not infer requirements from type-only imports or dynamic window access', async () => {

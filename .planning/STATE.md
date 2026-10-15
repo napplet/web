@@ -2,18 +2,19 @@
 gsd_state_version: "1.0"
 milestone: v0.34.0
 milestone_name: NIP-5D Runtime Injection
-current_phase: 162
-current_phase_name: nip-5d-event-schema-migration
-status: blocked
-stopped_at: "Quick 261012-jnp integration CI verified; NAP-RESOURCE migration scope decision required"
-last_updated: "2026-10-12T19:31:30.852Z"
-last_activity: 2026-10-12
-last_activity_desc: "Quick 261012-jnp: main merged and CI green; incomplete due to existing NAP-RESOURCE wire drift"
-state_head: 34bd9b909418a675486254f298dda06aa99f2dcf
+current_phase: 163
+current_phase_name: nap-gamepad-across-repositories
+status: completed
+stopped_at: Phase 163 verified; completing prerequisite publication for CLI follow-up 243
+last_updated: "2026-10-14T16:24:49.491178+00:00"
+last_activity: 2026-10-14
+last_activity_desc: Integrated the merged icon skill with the verified GAMEPAD release
 progress:
-  total_plans: 3
-  completed_plans: 3
-  percent: 100
+  total_phases: 8
+  completed_phases: 3
+  total_plans: 16
+  completed_plans: 6
+  percent: 38
 ---
 
 # Project State
@@ -24,7 +25,7 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 
 **Core value:** Prove that sandboxed Nostr apps can securely delegate to a host shell over a simple, standardized protocol — and ship the spec + SDK so others can build on it.
 
-**Current focus:** Phase 162 — NIP-5D event schema migration; draft PR #224 awaiting review
+**Current focus:** Phase 163 — NAP-GAMEPAD verified and shipped as coordinated PRs; release ordering recorded in COVERAGE.md.
 
 > Integration provenance (quick task 261012-jnp): Both lineages independently used phase number 162. The optimizer lineage is `.planning/phases/162-blossom-backed-large-asset-optimization/` (11 plans, verified before integration); main's schema migration lineage is `.planning/phases/162-nip-5d-event-schema-migration/` (3 plans, shipped via #224). Earlier aggregate-hash descriptions are historical, not current protocol guidance. All records and artifacts from both lineages are retained; quick task 261012-jnp tracks their integration on PR #205.
 
@@ -32,7 +33,9 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 
 ## Current Position
 
-### Quick task 261012-jnp — INCOMPLETE (protocol scope decision)
+### Quick task 261012-jnp — historical synchronization evidence
+
+Follow-up authorized on 2026-10-14: `.planning/debug/pr205-resource-wire.md` tracks migration of the protocol blocker below. Earlier observations remain historical evidence.
 
 - Merged `origin/main` `10fd4e61` into existing `feat/vite-plugin-blossom-optimization` at `34bd9b90`, preserving both parent histories and both independently numbered phase-162 artifact lineages. PR remains https://github.com/napplet/web/pull/205; it must not be merged automatically.
 - Resolved the 20 freshly observed conflict paths, current artifact-hash/R-tag optimizer integration, retained-byte CLI icon/screenshot uploads, destination canonicalization, and the old CI native-digest wait race. Local build/type/recursive units/full tests/conformance e2e/contracts/links and Linux standalone/npm runner tests pass; unchanged actual AI-slop workflow passes 95/100 in the post-commit full scan (earlier pre-commit scans 96/100). Three existing findings and the combined manifest.ts size warning are disclosed, not suppressed.
@@ -40,12 +43,12 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 - All nine remote checks pass for merge head `34bd9b909418a675486254f298dda06aa99f2dcf` (CI, conformance, Scan, links and five standalone platforms); PR #205 is OPEN/CLEAN/MERGEABLE. Final task-artifact revision is separately watched and recorded in the closing PR evidence comment. Evidence: `.planning/quick/261012-jnp-catch-feat-vite-plugin-blossom-optimizat/261012-jnp-SUMMARY.md`. Historical milestone position and accumulated records below are preserved, not advanced as though this quick task completed a phase.
 - Final delivery rerun exposed the companion whole-Blob fixture's default five-second timeout under contention. Its timeout now matches the other large-fixture test's bounded thirty-second budget, retaining every assertion. Targeted plugin units pass 137/137; repaired full local gates and final pushed-SHA results are recorded in the closing PR evidence comment. The protocol blocker above remains unchanged.
 
-Phase: 162 (nip-5d-event-schema-migration) — COMPLETE
+Phase: 163 (nap-gamepad-across-repositories) — implementation verified
 Plan: 3 of 3
-Status: Verified; [draft PR #224](https://github.com/napplet/web/pull/224) open, hzrd149 requested
-Last activity: 2026-10-09 - Completed quick task 261009-ur6: Remove commit-title gating from JSR publication
+Status: GAMEPAD published and CLI follow-up #243 merged; PR #205 resource wire migration in progress
+Last activity: 2026-10-14 - Completed quick task 261014-fuc: Replace blossom:sha256 URIs with BUD-10 form
 
-See phase 162 VERIFICATION.md for evidence and disclosed compatibility/tooling findings. Earlier phase and quick-task records below are historical.
+See phase 163 VERIFICATION.md and COVERAGE.md for evidence and disclosed release/specification/baseline limits. Earlier phase and quick-task records below are historical.
 
 ### Quick task 261011-hdg — COMPLETE
 
@@ -580,6 +583,8 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 
 | Quick ID | Task | Date | Commit | Artifacts |
 |----------|------|------|--------|-----------|
+| 261014-fuc | Replace blossom:sha256 URIs with BUD-10 blossom:<sha256>.<ext> | 2026-10-14 | 48782cd0 | [261014-fuc-replace-blossom-sha256-uris-with-bud-10-](./quick/261014-fuc-replace-blossom-sha256-uris-with-bud-10-/) |
+| 261013-vo3 | Add a skill for icon design, generation, refinement, and NIP-5D integration | 2026-10-13 | b5757eec | [261013-vo3-add-a-napplet-skill-for-icon-design-imag](./quick/261013-vo3-add-a-napplet-skill-for-icon-design-imag/) |
 | 260904-nm7 | Add an accessible recoverable packaged-resource loader in stacked PR #216 | 2026-09-04 | a1b6bb0c | [260904-nm7-improve-the-napplet-vite-plugin-packaged](./quick/260904-nm7-improve-the-napplet-vite-plugin-packaged/) |
 | 260904-h0g | Resolve issues #212, #213, and #214 in stacked PR #215 | 2026-09-04 | 1e954edd | [260904-h0g-resolve-github-issues-212-and-213-on-top](./quick/260904-h0g-resolve-github-issues-212-and-213-on-top/) |
 | 261009-ur6 | Remove commit-title gating from JSR publication | 2026-10-09 | d798a91f | [261009-ur6-remove-commit-title-gating-from-jsr-publ](./quick/261009-ur6-remove-commit-title-gating-from-jsr-publ/) |
@@ -707,6 +712,7 @@ Surfaced by research (informational — each belongs to a specific phase plan):
 | 261010-3fr | Propose NIP-5D application references and link CLI screenshot metadata | 2026-10-10 | eb6b87e2 | [261010-3fr](./quick/261010-3fr-propose-application-descriptor-links-and/) |
 | 261010-gap | Close PR #228 completeness gaps: handlerHint validation, stale intent/shell docs and skills | 2026-10-10 | 82c54ed3 | [261010-gap-close-pr-228-intent-cascade-gaps](./quick/261010-gap-close-pr-228-intent-cascade-gaps/) |
 | 261009-nvo | Chase NAP-INTENT and cascading domain amendments; tests green, slop 100 | 2026-10-09 | c9f2c8e1 | [261009-nvo-align-sdk-and-conformance-with-nap-inten](./quick/261009-nvo-align-sdk-and-conformance-with-nap-inten/) |
+| 261010-dcr | Dead-code audit: remove unreferenced shim modules, dead exports, unused deps and lint task | 2026-10-10 | 276b6c84 | [261010-dead-code-audit-and-removal](./quick/261010-dead-code-audit-and-removal/) |
 | 261007-aae | Resolve PR #224 conflicts after #223 | 2026-10-07 | cc741b8f | [261007-aae-resolve-pr-224-conflicts-after-merging-p](./quick/261007-aae-resolve-pr-224-conflicts-after-merging-p/) |
 | 260421-u87 | Create cross-repo PRs in napplet/nubs from the 4 v0.29.0 drafts | 2026-04-21 | c28d8e4 | [260421-u87-create-cross-repo-prs-in-napplet-nubs-fr](./quick/260421-u87-create-cross-repo-prs-in-napplet-nubs-fr/) |
 | 260424-o1k | Implement default shell.supports() in shim so napplets can be tested without a shell | 2026-04-24 | 5ad9cdb | [260424-o1k-implement-default-shell-supports-in-shim](./quick/260424-o1k-implement-default-shell-supports-in-shim/) |
@@ -772,3 +778,7 @@ Resume: Phase 142 TERMINAL-COMPLETE — all 13 VER-IDs (VER-01..13) verified PAS
 | Phase 162 P09 | 24 minutes | 2 tasks | 8 files |
 | Phase 162 P10 | ~105 minutes | 3 tasks | 11 files |
 | Phase 162 P11 | 15m | 2 tasks | 18 files |
+
+### Phase 163 roadmap evolution
+
+- Added NAP-GAMEPAD across repositories, including boilerplate and relevant Kehto runtime consumers. Planning and implementation evidence live in phases/163-nap-gamepad-across-repositories.

@@ -25,7 +25,7 @@ import type {
 } from './types.js';
 
 /** Default timeout for resource fetch requests (30 seconds; aligns with other NAPs). */
-export const REQUEST_TIMEOUT_MS = 30_000;
+const REQUEST_TIMEOUT_MS = 30_000;
 
 /**
  * Single-flight cache: canonical URL string -> in-flight Promise<Blob>.
@@ -42,13 +42,13 @@ type Pending<T> = {
 };
 
 /** Pending `resource.bytes` wire requests. */
-export const pendingBytes = new Map<string, Pending<Blob>>();
+const pendingBytes = new Map<string, Pending<Blob>>();
 
 /** Pending `resource.info` wire requests. */
-export const pendingInfo = new Map<string, Pending<ResourceInfo>>();
+const pendingInfo = new Map<string, Pending<ResourceInfo>>();
 
 /** Pending `resource.bytesMany` wire requests. */
-export const pendingMany = new Map<string, Pending<ResourceBytesItem[]>>();
+const pendingMany = new Map<string, Pending<ResourceBytesItem[]>>();
 
 /** Guard against double-install. */
 let installed = false;
@@ -176,7 +176,7 @@ export function sendBytesManyRequest(requests: ResourceBytesRequest[], id: strin
 /**
  * Send a resource.cancel envelope (fire-and-forget) for an in-flight request.
  */
-export function sendCancel(id: string): void {
+function sendCancel(id: string): void {
   const msg: ResourceCancelMessage = {
     type: 'resource.cancel',
     id,
@@ -301,7 +301,7 @@ export function cancelBytes(id: string, reason: Error): void {
   p.reject(reason);
 }
 
-export function cancelMany(id: string, reason: Error): void {
+function cancelMany(id: string, reason: Error): void {
   const p = pendingMany.get(id);
   if (!p) return;
   pendingMany.delete(id);

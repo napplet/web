@@ -117,20 +117,20 @@ window.napplet.config.openSettings({ section: 'appearance' });
 
 ### resource
 
-Sandboxed byte fetching (`info() -> ResourceInfo`, `bytes(url, options?) -> Blob`, `bytesMany(requests) -> ResourceBytesItem[]`) over https / blossom / nostr / data schemes — the only network-fetch primitive available inside the iframe sandbox.
+Sandboxed byte fetching (`info() -> ResourceInfo`, `bytes(url, options?) -> Blob`, `bytesMany(requests) -> ResourceBytesItem[]`) over https / blossom ([BUD-10](https://github.com/hzrd149/blossom/blob/master/buds/10.md) `blossom:<sha256>.<ext>` URIs) / nostr / data schemes — the only network-fetch primitive available inside the iframe sandbox.
 
 ```ts
 const info = await window.napplet.resource.info();
-const blob = await window.napplet.resource.bytes('blossom:sha256:abc123…', {
+const blob = await window.napplet.resource.bytes('blossom:<sha256>.png', {
   servers: ['https://cdn.hzrd149.com'],
 });
 const items = await window.napplet.resource.bytesMany([
   { url: 'https://example.com/avatar.png' },
-  { url: 'blossom:sha256:abc123…', servers: ['https://cdn.hzrd149.com'] },
+  { url: 'blossom:<sha256>.png', servers: ['https://cdn.hzrd149.com'] },
 ]);
 
 // Managed object URL — revoke when done to free memory
-const { url, revoke } = window.napplet.resource.bytesAsObjectURL('blossom:sha256:abc123…');
+const { url, revoke } = window.napplet.resource.bytesAsObjectURL('blossom:<sha256>.png');
 imgEl.src = url;
 imgEl.onload = () => revoke();
 ```
@@ -267,7 +267,7 @@ if (window.napplet?.fs) {
 
 ## Core domain union
 
-[`@napplet/core`](/packages/core) exports a `NapDomain` string union for the foundational domains — `shell`, `relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `ble`, `webrtc`, `link`, `count`, `lists`, `serial`, `fs`, `common`, `dm` — used as the discriminant for envelope routing and domain presence.
+[`@napplet/core`](/packages/core) exports a `NapDomain` string union for the foundational domains — `shell`, `relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `ble`, `webrtc`, `link`, `count`, `lists`, `serial`, `fs`, `common`, `dm`, `gamepad` — used as the discriminant for envelope routing and domain presence.
 
 ## Where to go next
 
@@ -293,3 +293,7 @@ await intent.invoke('napplet:profile/open?pubkey=abc123');
 
 The runtime binding retains deliveries until a listener registers. Discovery candidates expose opaque catalog `id` values and `contracts` with parameter names. INC peers instead use identifiers for running authenticated endpoints. A NAP-INTENT URI may append a bare `#naddr1…` recommendation; the binding sends its coordinate and relay hints as `handlerHint`, outside convention identity and payload. An applicable user default takes precedence. INC URI operations reject fragments. See the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md) and [web projection](https://github.com/napplet/naps/blob/master/projections/web.md).
 Theme updates reach napplets with the exposed `theme` domain, independently of manifest requirement declarations. User identity changes report the connected signer, including an empty string at sign-out; they do not alter napplet identity. Profile picture/banner bytes use optional `resource` when exposed; otherwise show local placeholder artwork. Theme media URLs do not grant network access, so colors and local fonts provide the fallback. See [NAP-THEME](https://github.com/napplet/naps/blob/master/naps/NAP-THEME.md) and [NAP-IDENTITY](https://github.com/napplet/naps/blob/master/naps/NAP-IDENTITY.md).
+
+### gamepad
+
+Optional focus-scoped controller snapshots. See the non-normative [GAMEPAD guide](./gamepad) and living [NAP-GAMEPAD proposal](https://github.com/napplet/naps/pull/108).

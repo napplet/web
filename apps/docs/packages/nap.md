@@ -56,7 +56,7 @@ import { notifySend } from '@napplet/nap/notify/sdk';
 
 - **resource** — a single scheme-pluggable byte-fetching primitive,
   `bytes(url) → Blob`, over four canonical schemes (`data:`, `https:`,
-  `blossom:sha256:<hex>`, `nostr:<bech32>`).
+  `blossom:<sha256>.<ext>` per [BUD-10](https://github.com/hzrd149/blossom/blob/master/buds/10.md), `nostr:<bech32>`).
 - **identity** — strictly **read-only**: it exposes the shell-user pubkey and
   public identity data but never signs, encrypts, or decrypts. Take one snapshot
   with `getPublicKey()`, then subscribe to shell-pushed `identity.changed`.
@@ -153,3 +153,22 @@ await intent.invoke('napplet:profile/open?pubkey=abc123');
 ```
 
 The runtime binding retains deliveries until a listener registers. Discovery candidates expose opaque catalog `id` values and `contracts` with parameter names. INC peers instead use identifiers for running authenticated endpoints. A NAP-INTENT URI may append a bare `#naddr1…` recommendation; the binding sends its coordinate and relay hints as `handlerHint`, outside convention identity and payload. An applicable user default takes precedence. INC URI operations reject fragments. See the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md) and [web projection](https://github.com/napplet/naps/blob/master/projections/web.md).
+### Controller snapshots
+
+This non-normative guidance defers to [NAP-GAMEPAD](https://github.com/napplet/naps/pull/108). When the runtime exposes `window.napplet.gamepad`, the SDK provides cached `getGamepads()`, read-only `available` and `focused`, and `onChange(handler)` with an independently closable listener. Keep keyboard or pointer controls available when the domain or native controllers are unavailable. Ignore gameplay edges while unfocused, and reset the button baseline on regained focus. Preserve null slots and route controllers by their `index`.
+
+```ts
+import { gamepad } from '@napplet/sdk/gamepad';
+
+if (window.napplet?.gamepad) {
+  const subscription = gamepad.onChange(state => {
+    if (!state.available || !state.focused) return;
+    for (const pad of state.pads) {
+      if (pad) console.log(pad.index, pad.axes);
+    }
+  });
+  // Call subscription.close() when the owning view is disposed, not right away.
+}
+```
+
+Declare `gamepad` as optional (`O`) when other controls fulfill the core task. Use a hard requirement (`R`) only when the core task needs controller input. The runtime owns controller access and focus isolation; app code does not call native `navigator.getGamepads()` or open raw HID devices. Haptics and remapping are outside this proposal.

@@ -102,18 +102,20 @@ export const config: SdkDomain<'config'> = {
  * shell fetches and returns a Blob. URL space is scheme-pluggable
  * (`data:`, `https:`, `blossom:`, `htree:`, `nostr:`).
  *
+ * @see https://github.com/hzrd149/blossom/blob/master/buds/10.md BUD-10 Blossom URI schema for `blossom:` URLs
+ *
  * @example
  * ```ts
  * import { resource } from '@napplet/sdk';
  *
- * const blob = await resource.bytes('blossom:sha256:abc123...', {
+ * const blob = await resource.bytes('blossom:<sha256>.png', {
  *   servers: ['https://cdn.hzrd149.com'],
  * });
  * const items = await resource.bytesMany([
  *   { url: 'https://example.com/a.png' },
  *   { url: 'htree://example-root/path' },
  * ]);
- * const handle = resource.bytesAsObjectURL('blossom:abc123...');
+ * const handle = resource.bytesAsObjectURL('blossom:<sha256>.png');
  * imgEl.src = handle.url;
  * imgEl.onload = () => handle.revoke();
  * ```
