@@ -1,5 +1,5 @@
 ---
-status: verifying
+status: resolved
 trigger: "Resolve https://github.com/napplet/web/pull/205#issuecomment-6131418214"
 created: 2026-10-14
 updated: 2026-10-14
@@ -11,7 +11,7 @@ updated: 2026-10-14
 
 Root cause: Resource types, transport, injected adapters, and optimizer fixtures retained a superseded NAP-RESOURCE contract. Existing tests asserted that obsolete contract.
 
-Next action: Push the verified migration to the existing PR branch, then verify every applicable GitHub check at the final SHA.
+Next action: Source repair and local verification are complete. PR #205 carries the current delivery checks and review state.
 
 ## Symptoms and evidence
 

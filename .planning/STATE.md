@@ -45,7 +45,7 @@ Follow-up authorized on 2026-10-14: `.planning/debug/pr205-resource-wire.md` rec
 
 Phase: 163 (nap-gamepad-across-repositories) — implementation verified
 Plan: 3 of 3
-Status: GAMEPAD published and CLI follow-up #243 merged; PR #205 resource wire migration verified locally; final remote checks pending
+Status: GAMEPAD published and CLI follow-up #243 merged; PR #205 resource wire migration implemented and locally verified; see the PR for current delivery checks
 Last activity: 2026-10-14 - Completed quick task 261014-fuc: Replace blossom:sha256 URIs with BUD-10 form
 
 See phase 163 VERIFICATION.md and COVERAGE.md for evidence and disclosed release/specification/baseline limits. Earlier phase and quick-task records below are historical.
