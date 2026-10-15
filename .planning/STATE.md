@@ -2,19 +2,19 @@
 gsd_state_version: 1.0
 milestone: v0.34.0
 milestone_name: NIP-5D Runtime Injection
-current_phase: 163
-current_phase_name: nap-gamepad-across-repositories
+current_phase: 164
+current_phase_name: cli-terminal-usability
 status: completed
-stopped_at: Phase 163 verified; completing prerequisite publication for CLI follow-up 243
-last_updated: "2026-10-14T16:24:49.491178+00:00"
-last_activity: 2026-10-14
-last_activity_desc: Integrated the merged icon skill with the verified GAMEPAD release
+stopped_at: Phase 164 verified locally and shipped in PR 248 with terminal recordings
+last_updated: "2026-10-15T14:16:00+00:00"
+last_activity: 2026-10-15
+last_activity_desc: Shipped CLI guided setup, terminal display, non-interactive flags, and visual proof
 progress:
-  total_phases: 8
-  completed_phases: 3
-  total_plans: 16
-  completed_plans: 6
-  percent: 38
+  total_phases: 9
+  completed_phases: 4
+  total_plans: 19
+  completed_plans: 9
+  percent: 47
 ---
 
 # Project State
@@ -25,20 +25,20 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 
 **Core value:** Prove that sandboxed Nostr apps can securely delegate to a host shell over a simple, standardized protocol — and ship the spec + SDK so others can build on it.
 
-**Current focus:** Phase 163 — NAP-GAMEPAD verified and shipped as coordinated PRs; release ordering recorded in COVERAGE.md.
+**Current focus:** Phase 164 — CLI terminal usability verified and shipped in [PR #248](https://github.com/napplet/web/pull/248) with visual proof.
 
 > **Provenance note:** The "Accumulated Context" section below preserves bullet records from BOTH branches' STATE.md histories. Records tagged "v0.29.0" from main's lineage refer to the milestone NOW renumbered as v0.30.0 (Class-Gated Decrypt — Phases 135-138). Records tagged "v0.29.0" from feat/strict-model refer to NUB-CONNECT (Phases 135-142). Phase number alone is not a unique identifier across the two; cross-reference the topic (decrypt/identity/NIP-07 → v0.30.0; connect/class/CSP-authority → v0.29.0).
 
-### Phase 164 — CLI terminal usability (in progress)
+### Phase 164 — CLI terminal usability (complete)
 
-Branch `feat/cli-terminal-usability` implements guided missing-value recovery, `-i` prompt suppression, terminal presentation, and real visual proof. Plan and acceptance evidence: `.planning/phases/164-cli-terminal-usability/`. Existing completed phases below retain their historical status.
+Branch `feat/cli-terminal-usability` ships guided missing-value recovery, `-i` prompt suppression, terminal presentation, and real visual proof in PR #248. Plan and acceptance evidence: `.planning/phases/164-cli-terminal-usability/`. Build, types, repository tests, native smoke, PTY checks, and site links passed. Existing completed phases below retain their historical status.
 
 ## Current Position
 
-Phase: 163 (nap-gamepad-across-repositories) — implementation verified
+Phase: 164 (cli-terminal-usability) — verified and shipped
 Plan: 3 of 3
-Status: Verified; [draft PR #224](https://github.com/napplet/web/pull/224) open, hzrd149 requested
-Last activity: 2026-10-14 - Completed quick task 261014-fuc: Replace blossom:sha256 URIs with BUD-10 form
+Status: [PR #248](https://github.com/napplet/web/pull/248) open with six actual terminal screenshots
+Last activity: 2026-10-15 - Completed phase 164 and shipped visual evidence
 
 See phase 163 VERIFICATION.md and COVERAGE.md for evidence and disclosed release/specification/baseline limits. Earlier phase and quick-task records below are historical.
 

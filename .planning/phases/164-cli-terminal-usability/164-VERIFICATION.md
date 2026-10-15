@@ -1,6 +1,6 @@
 # Phase 164 verification
 
-CLI source: `0b4cbc260d8df2f370a3b4b3cfe3dce8586f5080`. Final terminal captures use that source tree; [capture metadata](proofs/capture-metadata.json) records the native binary SHA-256. Local acceptance is complete. PR shipment and GitHub checks are recorded in the plan 03 summary after opening the PR.
+CLI source: `0b4cbc260d8df2f370a3b4b3cfe3dce8586f5080`. Final terminal captures use that source tree; [capture metadata](proofs/capture-metadata.json) records the native binary SHA-256. Local acceptance is complete, and [PR #248](https://github.com/napplet/web/pull/248) contains the visual proof. GitHub checks are attached to the PR head.
 
 | Requirement | Result | Evidence |
 |---|---|---|
@@ -9,7 +9,7 @@ CLI source: `0b4cbc260d8df2f370a3b4b3cfe3dce8586f5080`. Final terminal captures 
 | CLI-UX-03: use nsyte workflow patterns | PASS | Pinned source research, preflight, signer choices, progress, actionable failures, and complete/partial/failed summaries |
 | CLI-UX-04: `-i` disables prompts | PASS | Flags before/after command, nested credential policy, delegated create, CI and redirected streams; real TTY `-i` and CI invocations exit promptly |
 | CLI-UX-05: ASCII napplet banner | PASS | Actual startup screenshot; one-line version and JSON output remain undecorated |
-| CLI-UX-06: PR with visual proof | READY | Committed recordings, PNGs, network evidence, and reproducible capture scripts; publication tracked in plan 03 summary |
+| CLI-UX-06: PR with visual proof | PASS | Open PR #248 with six embedded PNGs, recordings, network evidence, binary checksum, and reproducible capture scripts |
 
 ## Repository checks
 
