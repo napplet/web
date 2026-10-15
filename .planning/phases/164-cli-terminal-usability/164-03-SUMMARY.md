@@ -1,6 +1,6 @@
 # Phase 164 plan 03 — shipped
 
-Opened [PR #248](https://github.com/napplet/web/pull/248) with six embedded screenshots of actual compiled CLI output, replayable PTY recordings, fixture network evidence, binary checksum, and reproduction instructions. The published PNG links are pinned to the proof commit. CLI source revision `0b4cbc26` is unchanged by the proof and planning commits.
+Opened [PR #248](https://github.com/napplet/web/pull/248) with six embedded screenshots of actual compiled CLI output, replayable PTY recordings, fixture network evidence, binary checksum, and reproduction instructions. The published PNG links are pinned to the proof commit. The initial CLI source revision was `0b4cbc26`. Quick task 261015-aen subsequently adopted nsyte-style filled progress bars and refreshed the recorded proof; current source and binary checksums are in `proofs/capture-metadata.json`.
 
 All local gates passed: five-target build, type-check, 658 recursive unit tests, full repository tests, workflow and onboarding contracts, 25 assembled-site links, the opt-in native standalone test, and PTY interaction assertions. AI-slop passed at 97/100 with zero errors and two existing warnings. Exact acceptance evidence and limits are in [164-VERIFICATION.md](164-VERIFICATION.md); terminal artifacts are in [proofs/README.md](proofs/README.md). GitHub checks for the PR head are visible on the PR and are verified before reporting completion.
 

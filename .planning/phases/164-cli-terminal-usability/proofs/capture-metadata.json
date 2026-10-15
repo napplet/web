@@ -1,9 +1,9 @@
 {
-  "cliSourceCommit": "0b4cbc260d8df2f370a3b4b3cfe3dce8586f5080",
-  "cliSourceTree": "0f3e34cdcc4e949b8f34f1d33ce396f10c9dbb94",
+  "cliSourceCommit": "5e165056cac196cb9d618f12299a0a2b2082410b",
+  "cliSourceTree": "4f7219ce7cb9ee586dde2253f13175f46f6b8962",
   "binary": "napplet-darwin-aarch64",
-  "binarySha256": "c5980bb6f919d1a2ab42fc000a8be7fa54a0e703facf1c97eb87963bd4dc26aa",
-  "recordedAtUtc": "2026-10-15T14:13:00.805250+00:00",
+  "binarySha256": "ac0350e94b73992c41d4368b7873b4413c816f91b349fb833b0170619c9b52be",
+  "recordedAtUtc": "2026-10-15T14:33:35.132970+00:00",
   "platform": "macOS ARM64",
   "deno": "deno 2.9.5 (stable, release, aarch64-apple-darwin)",
   "renderer": "@xterm/xterm 6.0.0 and Playwright Chromium",

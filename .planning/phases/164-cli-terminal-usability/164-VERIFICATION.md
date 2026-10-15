@@ -1,6 +1,6 @@
 # Phase 164 verification
 
-CLI source: `0b4cbc260d8df2f370a3b4b3cfe3dce8586f5080`. Final terminal captures use that source tree; [capture metadata](proofs/capture-metadata.json) records the native binary SHA-256. Local acceptance is complete, and [PR #248](https://github.com/napplet/web/pull/248) contains the visual proof. GitHub checks are attached to the PR head.
+CLI source: `5e165056cac196cb9d618f12299a0a2b2082410b`. Final terminal captures use that source tree; [capture metadata](proofs/capture-metadata.json) records the native binary SHA-256. Local acceptance is complete, and [PR #248](https://github.com/napplet/web/pull/248) contains the visual proof. GitHub checks are attached to the PR head.
 
 | Requirement | Result | Evidence |
 |---|---|---|
