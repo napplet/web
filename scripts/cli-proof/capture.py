@@ -126,6 +126,7 @@ def main():
             assert saved['metadata']['title'] == 'Notes'
             assert saved['metadata']['description'] == 'A private notebook for quick ideas.'
             assert 'secret' not in path.read_text()
+            assert ephemeral not in path.read_text(), 'Signing input leaked into saved configuration'
             with urllib.request.urlopen(addresses['servers'][0] + '/stats') as response:
                 stats = json.load(response)
             assert len(stats['uploads']) == 2 and len(stats['events']) == 1, stats
