@@ -106,6 +106,22 @@ What each step does:
 - `napplet deploy --dry-run` builds the same deploy plan and signed manifest events without network writes. Interactive terminals get a readable report with copyable NIP-19 pointers.
 - `napplet deploy` uploads files to configured Blossom servers and publishes signed root, named, and optional snapshot manifest events to configured relays. Use `--json` for CI / machine output.
 
+## Terminal workflow
+
+The CLI opens human terminal sessions with an ASCII napplet banner, grouped command help, colored results, and upload/publish progress. Use `napplet <command> --help` for command-specific options. `NO_COLOR=1` or `--no-color` removes colors; redirected deploy output remains JSON, and `--version` remains one line.
+
+Interactive deployment completes missing build paths, descriptions, publishing names, relays, Blossom destinations, and application metadata before signing. Existing settings and embedded metadata are retained. Prompted deployment settings can be saved for the next run. A missing signer opens a choice of remote connection, an existing stored reference, or hidden secret entry. Ctrl-C or EOF cancels cleanly.
+
+Every command accepts `-i` / `--non-interactive` to disable prompts, including nested key-store password prompts. CI and redirected streams also disable prompts. Missing required inputs then produce actionable configuration guidance instead of waiting on stdin. `--prompt-sec` still supports explicitly piped secret input; it does not open a terminal prompt with `-i`. `keys connect` requires interactive remote approval, so automation should use an existing session. For encrypted local storage, provide `NAPPLET_KEYSTORE_PASSWORD` through your CI secret store.
+
+```sh
+napplet deploy -i --format current --json
+napplet deploy -i --dry-run --description "My napplet" --json
+napplet init -i --name notes --description "Private notes" --relay wss://relay.example --server https://blossom.example
+```
+
+Deploy accepts `--source-dir`, `--description`, repeated `--relay`, and repeated `--server` as per-invocation overrides. It shows the selected targets before network work. Final results distinguish complete deployments, partial redundancy warnings, and failures, and retain copyable event references. Re-running `napplet init` interactively fills gaps in the existing configuration; `--force` explicitly replaces it.
+
 ## Commands
 
 ```sh
@@ -201,7 +217,7 @@ Signing can come from:
 - `--prompt-sec`, which reads hidden terminal input until Enter and still accepts piped stdin in non-interactive runs. If the project config names a bunker pubkey/npub, the prompted signer must match that identity unless an interactive user explicitly confirms the mismatch.
 - a stored key reference configured by `napplet keys use`
 - a configured bunker pubkey/npub whose `nbunksec` session exists in native key storage
-- an interactive NIP-46 connection flow when no signer is configured and `deploy` is running in a terminal
+- an interactive signer choice when no signer is configured and `deploy` is running in a terminal
 - `NAPPLET_CI_SIGNING_KEY` or `NAPPLET_CI_KEY_REFERENCE` when `.napplet` uses CI signing mode
 
 The human deploy report includes each signed manifest event's short event id plus a copyable `nevent` pointer. Addressable root and named manifests also include copyable `naddr` pointers using the configured relay hints.
@@ -241,7 +257,7 @@ The command then prints a `nostrconnect://` QR code and waits for either:
 
 On success it stores an `nbunksec` in the selected key store, updates `.napplet` `signing.keyReference`, and uses that stored reference for later deploy signing.
 
-Plain interactive `napplet deploy` uses the same NIP-46 flow when no signer flag or stored signer is available. It prompts for bunker relays before showing the QR code; deploy relays from `.napplet` are not used as the NIP-46 relay default. It stores the paired session under the remote signer pubkey when native key storage is available, writes that pubkey and the selected bunker relays to `.napplet` config, and continues the current deploy. If native key storage is unavailable, the current deploy can still proceed after pairing, but the session is not persisted for later runs.
+Plain interactive `napplet deploy` offers the same NIP-46 flow alongside stored-key and hidden-secret choices when no signer is configured. It prompts for bunker relays before showing the QR code; deploy relays from `.napplet` are not used as the NIP-46 relay default. It stores the paired session under the remote signer pubkey when native key storage is available, writes that pubkey and the selected bunker relays to `.napplet` config, and continues the current deploy. If native key storage is unavailable, the current deploy can still proceed after pairing, but the session is not persisted for later runs.
 
 ## Project Layouts
 

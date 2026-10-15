@@ -10,6 +10,7 @@ import { promptLine } from "./prompt.ts";
 import { isAllowedUrl, parseUrlListInput } from "./url-prompt.ts";
 import { resolveDeployServers } from "./deploy-network.ts";
 import type { NappletCandidate, NappletConfig } from "./types.ts";
+import { confirm } from "./command-prompts.ts";
 
 export interface DeployInputOptions {
   interactive?: boolean;
@@ -64,6 +65,7 @@ export async function completeDeployInputs(
     }
     print(`No built index.html found in ${config.sourceDir}. Choose the build directory.`);
     config.sourceDir = await required("Build directory", "--source-dir <directory>");
+    if (discovery.traverse) config.discover = { ...config.discover, enabled: true, roots: [config.sourceDir] };
     // An explicit recovery path selects one build; do not keep searching stale monorepo roots.
     candidates = await discover(config, { traverse: false });
   }
@@ -75,7 +77,7 @@ export async function completeDeployInputs(
     for (let i = 0; i < candidates.length; i++) {
       if (tags[i].some((tag) => tag[0] === "description" && tag[1]?.trim())) continue;
       const value = await required(
-        `Description for ${candidates[i].name}`,
+        `Description for ${candidates.length === 1 ? config.metadata?.title ?? candidates[i].name : candidates[i].name}`,
         `Add metadata.description, an HTML description, or --description <text> (${candidates[i].name}).`,
       );
       if (value && candidates.length === 1) config.metadata = { ...config.metadata, description: value };
@@ -85,7 +87,7 @@ export async function completeDeployInputs(
   if (!flags.boolean.has("dry-run")) {
     if (!config.relays.length) {
       const value = await required("Relay URLs (comma separated)", "Add relays or pass --relay <ws(s)://url>.",
-        (value) => parseUrlListInput(value).every((url) => isAllowedUrl(url, ["ws:", "wss:"])));
+        (value) => parseUrlListInput(value).length > 0 && parseUrlListInput(value).every((url) => isAllowedUrl(url, ["ws:", "wss:"])));
       if (value) config.relays = [...new Set(parseUrlListInput(value))];
     }
     const embeddedServers = tags.flatMap((list) => list.filter((tag) => tag[0] === "server").map((tag) => tag[1]));
@@ -106,9 +108,15 @@ export async function completeDeployInputs(
   if (missing.length) {
     throw new Error(`Deployment needs configuration:\n${missing.map((line) => `  - ${line}`).join("\n")}\nRun without -i in a terminal for guided setup.`);
   }
+  const appEnabled = !flags.boolean.has("no-zapstore") && (flags.boolean.has("zapstore") || config.zapstore?.enabled);
+  if (appEnabled && !config.zapstore) {
+    const id = await required("Zapstore application ID", "Add zapstore.id in config.");
+    const name = await required("Zapstore display name", "Add zapstore.name in config.");
+    if (!id || !name) throw new Error(`Application metadata needs configuration:\n${missing.map((line) => `  - ${line}`).join("\n")}`);
+    config.zapstore = { id, name, enabled: true };
+  }
   if (prompted && JSON.stringify(config) !== JSON.stringify(original)) {
-    const answer = await ask({ message: "Save these settings for next time? (yes/no)", defaultValue: "yes" });
-    if (["y", "yes"].includes(answer.toLowerCase())) {
+    if (await confirm("Save these settings for next time?", true, ask)) {
       await (options.save ?? writeConfig)(config, first(flags.values.get("config")));
       print("Saved project settings.");
     }

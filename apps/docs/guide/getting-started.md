@@ -187,3 +187,7 @@ For questions and coordination, join the
 :::
 
 Next, read [Core concepts](./concepts) to understand the envelope, NAPs, the sandbox model, identity, and storage scoping.
+
+### Terminal and automation options
+
+`napplet init` and `napplet deploy` guide you through missing settings in a terminal. Deployment previews and results use readable sections, and network deployments show upload and relay progress. For automation, add `-i` / `--non-interactive` and supply values through flags or configuration. CI and redirected streams never trigger prompts. Use `napplet deploy -i --json` for machine-readable results and `--no-color` for plain display. See the [CLI reference](../packages/cli.md) for all options.

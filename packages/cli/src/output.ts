@@ -5,14 +5,15 @@
  */
 
 import { createEventPointers } from "./event-pointers.ts";
-import { canPrompt } from "./interaction.ts";
-import { createLiveDeployReporter } from "./deploy-progress.ts";
+export { createDeployProgressReporter } from "./deploy-progress.ts";
+export type { DeployProgressReporterOptions } from "./deploy-progress.ts";
+import { relativePath } from "./path.ts";
 import { decorateReport } from "./terminal.ts";
 export { createEventPointers } from "./event-pointers.ts";
 export type { EventPointers } from "./event-pointers.ts";
 import type { SigningDebugInfo } from "./debug.ts";
 import { networkDeploySucceeded } from "./deploy-network.ts";
-import type { NetworkDeployProgress, NetworkDeployResult } from "./deploy-network.ts";
+import type { NetworkDeployResult } from "./deploy-network.ts";
 import type { ZapstorePublication } from "./zapstore.ts";
 import type {
   DeployManifestTemplate,
@@ -37,9 +38,6 @@ export interface InitReport {
   created: boolean;
 }
 
-export interface DeployProgressReporterOptions {
-  writeLine?: (line: string) => void;
-}
 
 /**
  * Return whether an output sink is an interactive terminal.
@@ -77,7 +75,7 @@ export function renderDeployReport(report: DeployReport): string {
   pushSection(lines, "Summary");
   pushField(lines, "Status", describeDeployStatus(report));
   pushField(lines, "Mode", report.dryRun ? "dry run" : "network deploy");
-  pushField(lines, "Config", report.plan.configPath);
+  pushField(lines, "Config", displayPath(report.plan.configPath));
   pushField(lines, "Signer", describeSigning(report.signing));
   pushField(lines, "Targets", String(report.plan.items.length));
   pushField(lines, "Relays", formatCountedList(report.relays));
@@ -105,18 +103,7 @@ export function renderDeployReport(report: DeployReport): string {
   }
   lines.push("");
 
-  if (report.application) {
-    pushSection(lines, "Zapstore Application");
-    pushField(lines, "Kind", "32267");
-    for (const tag of report.application.template.tags) pushField(lines, tag[0], tag.slice(1).join(" "));
-    pushField(lines, "Description", report.application.template.content);
-    pushField(lines, "Local images", String(report.application.files.length));
-    pushField(lines, "Status", report.application.signedEvent ? "signed" : "unsigned template");
-    if (report.application.signedEvent) {
-      pushField(lines, "Copy naddr", createEventPointers(report.application.signedEvent, report.relays).naddr ?? "");
-    }
-    lines.push("");
-  }
+  pushApplication(lines, report);
   if (report.deploy) {
     pushSection(lines, "Uploads");
     const uploadSummary = report.deploy.uploadSummary;
@@ -157,79 +144,6 @@ export function renderDeployReport(report: DeployReport): string {
   const result = describeDeployResult(report);
   if (result) lines.push(result);
   return decorateReport(lines.join("\n"));
-}
-
-/**
- * Create a terminal progress reporter for network deploys.
- *
- * @param options Output hooks for tests or custom terminals.
- * @returns Progress event callback suitable for `executeNetworkDeploy`.
- * @example
- * ```ts
- * const onProgress = createDeployProgressReporter();
- * ```
- */
-export function createDeployProgressReporter(
-  options: DeployProgressReporterOptions = {},
-): (progress: NetworkDeployProgress) => void {
-  if (!options.writeLine && canPrompt() && isTerminalOutput(Deno.stderr) && Deno.env.get("TERM") !== "dumb") {
-    return createLiveDeployReporter();
-  }
-  const writeLine = options.writeLine ?? ((line: string) => console.error(line));
-  return (progress) => {
-    switch (progress.type) {
-      case "upload:start":
-        writeLine(
-          `Uploading ${progress.files} file(s) to ${progress.servers} Blossom server(s)...`,
-        );
-        break;
-      case "upload:result": {
-        const status = progress.result.success
-          ? progress.result.skipped ? "already present" : "uploaded"
-          : "failed";
-        writeLine(
-          `${progressBar(progress.completedUploads, progress.totalUploads)} upload ` +
-            `${progress.completedUploads}/${progress.totalUploads} ` +
-            `${status}: ${progress.result.server}${progress.result.file}`,
-        );
-        break;
-      }
-      case "upload:complete":
-        writeLine(
-          `Uploads complete: ${
-            progress.summary.totalUploads - progress.summary.failedUploads
-          }/${progress.summary.totalUploads} file mirrors ready, ` +
-            `${progress.summary.serversFullyUploaded}/${progress.summary.servers} servers complete.`,
-        );
-        break;
-      case "publish:start":
-        writeLine(
-          `Publishing ${progress.events} event(s) to ${progress.relays} relay(s)...`,
-        );
-        break;
-      case "publish:event": {
-        const success = progress.results.filter((result) => result.success).length;
-        writeLine(
-          `${progressBar(progress.completedEvents, progress.events)} publish ` +
-            `${progress.completedEvents}/${progress.events} ` +
-            `${success}/${progress.results.length} relays accepted ${short(progress.eventId, 12)}`,
-        );
-        break;
-      }
-      case "publish:skipped":
-        writeLine(
-          `Relay publish skipped: ${progress.summary.failedUploads} upload failure(s) need repair.`,
-        );
-        break;
-      case "publish:complete": {
-        const summary = summarizePublishes(progress.results);
-        writeLine(
-          `Relay publish complete: ${summary.success}/${progress.results.length} accepted.`,
-        );
-        break;
-      }
-    }
-  };
 }
 
 /**
@@ -417,9 +331,23 @@ function displayCandidateName(manifest: DeployManifestTemplate): string {
   return leaf ?? manifest.item.candidate.dir;
 }
 
-function progressBar(completed: number, total: number): string {
-  const width = 18;
-  const safeTotal = Math.max(total, 1);
-  const filled = Math.min(width, Math.floor((completed / safeTotal) * width));
-  return `[${"#".repeat(filled)}${"-".repeat(width - filled)}]`;
+
+function pushApplication(lines: string[], report: DeployReport): void {
+  if (report.application) {
+    pushSection(lines, "Zapstore Application");
+    pushField(lines, "Kind", "32267");
+    for (const tag of report.application.template.tags) pushField(lines, tag[0], tag.slice(1).join(" "));
+    pushField(lines, "Description", report.application.template.content);
+    pushField(lines, "Local images", String(report.application.files.length));
+    pushField(lines, "Status", report.application.signedEvent ? "signed" : "unsigned template");
+    if (report.application.signedEvent) {
+      pushField(lines, "Copy naddr", createEventPointers(report.application.signedEvent, report.relays).naddr ?? "");
+    }
+    lines.push("");
+  }
+}
+
+function displayPath(path: string): string {
+  const relative = relativePath(Deno.cwd(), path);
+  return relative.startsWith("..") ? path : relative;
 }

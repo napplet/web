@@ -39,7 +39,8 @@ export function renderBanner(version: string, width = terminalWidth()): string {
 | | | | (_| | |_) | |_) || |  __/ |_
 |_| |_|\__,_| .__/| .__/ |_|\___|\__|
             |_|   |_|`;
-  return `\n${paint(wordmark, "accent")}\n${paint(`  napplet ${version}  /  build · preview · publish`, "muted")}\n`;
+  const caption = width < 48 ? `napplet ${version}` : `  napplet ${version}  /  build · preview · publish`;
+  return `\n${paint(wordmark, "accent")}\n${paint(caption, "muted")}\n`;
 }
 
 /**

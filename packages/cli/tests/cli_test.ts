@@ -113,6 +113,7 @@ Deno.test("loadDeployConfig preserves explicit config missing config failure", a
     await loadDeployConfig(flags, false, {
       readConfig: () => Promise.resolve(null),
       isTerminalInput: () => true,
+      confirmCreate: () => Promise.resolve(false),
       runInit() {
         initCalled = true;
         return Promise.reject(new Error("should not initialize"));

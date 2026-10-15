@@ -254,3 +254,16 @@ The listing uses kind `32267` from the [Software Applications proposal](https://
 ## Key storage without system helpers
 
 Native keychains are used when available. Otherwise, key commands use password-encrypted local files in `~/.napplet/keys` (AES-256-GCM, PBKDF2-SHA256 with 600,000 iterations). Enter a password of at least 12 characters at the hidden prompt, or set `NAPPLET_KEYSTORE_PASSWORD` for non-interactive use. The password is not stored; reuse it to unlock your keys. Set `NAPPLET_KEYSTORE=portable` to select this store explicitly and `NAPPLET_KEYSTORE_DIR` to change its location. `napplet keys doctor` reports the selected provider.
+
+## Interactive terminals and CI
+
+Human terminal sessions show the napplet banner, grouped help, colored deployment summaries, and live upload/publish progress. `napplet deploy` prompts for missing configuration values before signing, preserves existing values, and offers to save completed settings. Use `napplet deploy --dry-run` to preview without uploading or publishing.
+
+Use `-i` or `--non-interactive` on any command to disable prompts. CI and redirected streams do this automatically. Missing required values produce actionable errors; supply them through configuration or `--source-dir`, `--description`, `--relay`, and `--server`. `--json` keeps deploy stdout machine-readable, and `NO_COLOR=1` or `--no-color` disables colors.
+
+```sh
+napplet deploy -i --format current --json
+napplet init -i --name notes --description "Private notes"
+```
+
+Signing secrets remain hidden and are never saved in project configuration. `--prompt-sec` can consume explicitly piped input in automation. Set `NAPPLET_KEYSTORE_PASSWORD` for encrypted local keys; `keys connect` requires interactive remote approval, so CI should use an existing key or session.

@@ -106,6 +106,7 @@ export async function writeConfig(
 export async function initConfig(
   options: {
     cwd?: string;
+    path?: string;
     force?: boolean;
     sourceDir?: string;
     relays?: string[];
@@ -116,7 +117,7 @@ export async function initConfig(
   } = {},
 ): Promise<{ path: string; config: NappletConfig; created: boolean }> {
   const cwd = options.cwd ?? Deno.cwd();
-  const path = configPath(cwd);
+  const path = options.path ?? configPath(cwd);
   const existing = await readConfig(path);
   if (existing && !options.force) {
     return { path, config: existing, created: false };
