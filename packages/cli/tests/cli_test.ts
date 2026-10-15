@@ -258,7 +258,7 @@ Deno.test("resolveConformanceCommand uses private tooling for either platform", 
       command: "/private/node", args: ["/private/conformance.js"],
     });
   }
-  assertEquals(calls, ["@napplet/conformance-cli@0.3.3:dist/cli.js", "@napplet/conformance-cli@0.3.3:dist/cli.js"]);
+  assertEquals(calls, ["@napplet/conformance-cli@0.3.4:dist/cli.js", "@napplet/conformance-cli@0.3.4:dist/cli.js"]);
 });
 
 Deno.test("resolveConformanceCommand preserves an explicit custom runner", async () => {
