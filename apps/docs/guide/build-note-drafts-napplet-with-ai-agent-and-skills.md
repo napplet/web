@@ -67,7 +67,7 @@ napplet-make skill.
 The app should let a user write one short Nostr note, autosave the draft, and publish it through the host shell.
 
 The project is already scaffolded and its deployment metadata is in
-.napplet/config.json. Follow the skills end to end and report the changed files
+.napplet/config.yaml. Follow the skills end to end and report the changed files
 plus verification evidence.
 ```
 
@@ -97,7 +97,7 @@ The diff should look like this:
 - `package.json` preserves the generated scripts and uses current
   `@napplet/sdk`, `@napplet/vite-plugin`, and `@napplet/conformance-cli`
   versions.
-- `.napplet/config.json` still owns `notedrafts`, title, description, and the
+- `.napplet/config.yaml` still owns `notedrafts`, title, description, and the
   queryless `napplet:note/open` archetype convention.
 - `vite.config.ts` declares `requires: ['identity', 'storage', 'outbox']` and
   does not become a second source of deployment metadata.

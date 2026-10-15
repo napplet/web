@@ -16,7 +16,7 @@ Rewrite the plan before coding if it needs any of these in napplet code: `fetch`
 ```bash
 napplet create my-napplet
 cd my-napplet
-napplet init            # d-tag, title, description, archetype metadata → .napplet/config.json
+napplet init            # d-tag, title, description, archetype metadata → .napplet/config.yaml
 pnpm install
 ```
 
@@ -32,7 +32,7 @@ Keep these scripts as generated:
 
 | File | Edit |
 | --- | --- |
-| `.napplet/config.json` | Read-only for you; CLI-owned deployment metadata |
+| `.napplet/config.yaml` | Read-only for you; CLI-owned deployment metadata |
 | `vite.config.ts` | Hard `requires: [...]`, `archetypes`, optional config schema; keep `artifactMode: 'single-file'` and the `nappletType` fallback |
 | `index.html` | Keep `<title>`, `<meta viewport>`, `#app` root. **Delete the starter `masthead` / `eyebrow` / `<h1>`** and the demo panels; add only the product's markup (`napplet-ui` Rule 1) |
 | `src/styles.css` | Replace the starter's page layout (`.app-shell { padding: 2rem }`, `.workspace { width: min(1040px, 100%) }`, `body { min-width: 320px }`) with the compact, full-frame, container-query layout from `napplet-ui` |

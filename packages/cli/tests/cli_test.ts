@@ -45,7 +45,7 @@ Deno.test("loadDeployConfig bootstraps missing config in interactive deploy", as
       assertEquals(seenFlags, flags);
       initCalled = true;
       return Promise.resolve({
-        path: "/repo/.napplet/config.json",
+        path: "/repo/.napplet/config.yaml",
         config,
         created: true,
       });
@@ -105,7 +105,7 @@ Deno.test("loadDeployConfig preserves json missing config failure", async () => 
 });
 
 Deno.test("loadDeployConfig preserves explicit config missing config failure", async () => {
-  const flags = collectFlags(["--config", "/tmp/missing-config.json"]);
+  const flags = collectFlags(["--config", "/tmp/missing-config.yaml"]);
   let initCalled = false;
   let message = "";
 
@@ -123,7 +123,7 @@ Deno.test("loadDeployConfig preserves explicit config missing config failure", a
   }
 
   assert(!initCalled);
-  assert(message.includes("at /tmp/missing-config.json"));
+  assert(message.includes("at /tmp/missing-config.yaml"));
   assert(message.includes("Run: napplet init"));
 });
 

@@ -47,7 +47,7 @@ pwd
 command -v napplet || true
 command -v kehto || command -v paja || true
 test -f package.json && cat package.json
-test -f .napplet/config.json && cat .napplet/config.json
+test -f .napplet/config.yaml && cat .napplet/config.yaml
 test -f vite.config.ts && sed -n '1,120p' vite.config.ts
 find . -maxdepth 2 -type f -not -path './node_modules/*' | sort | sed -n '1,120p'
 ```
@@ -57,7 +57,7 @@ find . -maxdepth 2 -type f -not -path './node_modules/*' | sort | sed -n '1,120p
 | `napplet` CLI unavailable | Tell the user to install the standalone CLI (or use the repo's documented local path). Never pretend `create` / `init` / `paja` ran. |
 | Empty directory | `napplet create <dir>`, `cd`, `napplet init`. |
 | Fresh boilerplate, no product work | Keep the substrate; run `napplet init` if metadata is absent; implement the product. |
-| Initialized napplet (`.napplet/config.json` + generated scripts) | Inspect metadata and scripts; edit product surfaces only. |
+| Initialized napplet (`.napplet/config.yaml` + generated scripts) | Inspect metadata and scripts; edit product surfaces only. |
 | Brownfield app built on the boilerplate | Preserve compatible scripts/config; port only app code; do not re-scaffold. |
 | Brownfield app without the boilerplate | `napplet-port` first, then add only the equivalent build / single-file / metadata / conformance wiring; document the retrofit. |
 
@@ -78,7 +78,7 @@ If Kehto/Paja is unavailable, continue build and conformance work and report the
 - `pnpm verify` and `pnpm test:conformance` pass in the project (or the retrofit equivalents).
 - Boundary audit from `napplet-test` is clean; every `relay` use has a written reason.
 - `napplet-ui` four-frame check (`200×160`, `320×560`, `900×600`, largest available) in dark and light: no title header, no overflow, frame filled, minimum notice correct if declared.
-- Manifest `requires` matches the spec's hard list; `.napplet/config.json` still owns deployment metadata.
+- Manifest `requires` matches the spec's hard list; `.napplet/config.yaml` still owns deployment metadata.
 - Paja preview URL reported, or Paja explicitly reported unavailable.
 - Any protocol/package gap listed as a gap, not papered over.
 

@@ -22,7 +22,7 @@ const requiredFiles = [
   'index.html',
   'src/main.ts',
   'src/styles.css',
-  '.napplet/config.json',
+  '.napplet/config.yaml',
   'kehto.dev.json',
 ];
 

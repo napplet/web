@@ -25,7 +25,8 @@
     "@std/encoding": "jsr:@std/encoding@^1",
     "@std/media-types": "jsr:@std/media-types@^1",
     "@std/path": "jsr:@std/path@^1",
-    "@std/streams": "jsr:@std/streams@^1"
+    "@std/streams": "jsr:@std/streams@^1",
+    "yaml": "npm:yaml@2.9.1"
   },
   "tasks": {
     "dev": "deno run --allow-read --allow-write --allow-run --allow-env --allow-net src/cli.ts",

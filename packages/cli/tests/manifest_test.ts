@@ -53,7 +53,7 @@ Deno.test("legacy: collectManifestFiles skips local control paths but keeps well
     await Deno.writeTextFile(`${dir}/index.html`, "index");
     await Deno.writeTextFile(`${dir}/.env`, "NAPPLET_CI_SIGNING_KEY=secret");
     await Deno.writeTextFile(`${dir}/.git/config`, "private");
-    await Deno.writeTextFile(`${dir}/.napplet/config.json`, '{"servers":["https://cdn.example"]}');
+    await Deno.writeTextFile(`${dir}/.napplet/config.yaml`, 'servers: [https://cdn.example]\n');
     await Deno.writeTextFile(`${dir}/.well-known/nostr.json`, "{}");
     await Deno.writeTextFile(`${dir}/node_modules/pkg/index.js`, "ignored");
 

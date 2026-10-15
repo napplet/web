@@ -33,7 +33,7 @@ Deno.test("commandKeys connect records remote signer pubkey and relays for recov
       "--relay",
       "wss://relay.connect",
       "--config",
-      "/repo/.napplet/config.json",
+      "/repo/.napplet/config.yaml",
     ],
     "help",
     {
@@ -47,7 +47,7 @@ Deno.test("commandKeys connect records remote signer pubkey and relays for recov
         });
       },
       readConfig(path) {
-        assertEquals(path, "/repo/.napplet/config.json");
+        assertEquals(path, "/repo/.napplet/config.yaml");
         return Promise.resolve(defaultConfig());
       },
       writeConfig(config, path) {
@@ -63,7 +63,7 @@ Deno.test("commandKeys connect records remote signer pubkey and relays for recov
     account: "default",
     secret: "nbunksec1connected",
   }]);
-  assertEquals(written[0].path, "/repo/.napplet/config.json");
+  assertEquals(written[0].path, "/repo/.napplet/config.yaml");
   assertEquals(written[0].config.bunkerPubkey, pubkey);
   assertEquals(written[0].config.signing, {
     mode: "interactive",

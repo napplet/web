@@ -17,7 +17,8 @@
     "npm:tsup@^8.5.0": "8.5.1_typescript@5.9.3_esbuild@0.27.7",
     "npm:turbo@^2.9.14": "2.10.8",
     "npm:typescript@^5.9.3": "5.9.3",
-    "npm:vite@^6.4.3": "6.4.3_picomatch@4.0.5"
+    "npm:vite@^6.4.3": "6.4.3_picomatch@4.0.5",
+    "npm:yaml@2.9.1": "2.9.1"
   },
   "jsr": {
     "@libs/qrcode@3.1.0": {
@@ -1817,6 +1818,10 @@
     },
     "ws@8.21.1": {
       "integrity": "sha512-+0NTnW77fFN/DjQi6k/Sq/Yvk4Sgajw7urW8V+asjXnRgDs9gyGkdb7EzgfhA4goXsRIZKE28fzIXBHEzhuiWw=="
+    },
+    "yaml@2.9.1": {
+      "integrity": "sha512-3NxN8+78OdzbT7C/WjGsyfPAtJaN3FNDsWxv7Y7mcDsT/oOmgW8BpyQQFFBnvZE3j9Y2Sdz1ULFLezL7Eb2yFw==",
+      "bin": true
     }
   },
   "workspace": {
@@ -1859,7 +1864,8 @@
           "npm:applesauce-signers@^5.2.0",
           "npm:fflate@0.8.2",
           "npm:nostr-tools@^2.23.3",
-          "npm:parse5@^7.3.0"
+          "npm:parse5@^7.3.0",
+          "npm:yaml@2.9.1"
         ],
         "packageJson": {
           "dependencies": [
@@ -1869,7 +1875,8 @@
             "npm:applesauce-signers@^5.2.0",
             "npm:fflate@0.8.2",
             "npm:nostr-tools@^2.23.3",
-            "npm:parse5@^7.3.0"
+            "npm:parse5@^7.3.0",
+            "npm:yaml@2.9.1"
           ]
         }
       },
