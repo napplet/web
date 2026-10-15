@@ -199,7 +199,7 @@ Use this as a deployment sign-off:
 - [ ] Sidecar bytes obey the same MIME/SVG/size policy as direct calls
 - [ ] Single-flight cache scoped by the authenticated manifest key and verified artifact hash
 - [ ] Scheme dispatch is a whitelist; smuggling-prone schemes blocked
-- [ ] Capability discovery uses `shell.supports('resource')`; optional scheme and limit introspection uses `resource.info()`
+- [ ] Domain availability uses presence of `window.napplet.resource`; optional scheme and limit introspection uses `resource.info()`
 - [ ] Resource bytes treated as observable (cleartext over postMessage); deployers document this in user-facing notice if relevant
 
 

@@ -206,6 +206,13 @@ describe('createReferenceShell — record + respond', () => {
     expect(response.items[0].blob).toBe('aGk=');
   });
 
+  it('encodes large resource fixtures without spreading bytes into function arguments', () => {
+    const shell = createReferenceShell();
+    const encoded = btoa('f'.repeat(200_000));
+    const [response] = shell.handle({ type: 'resource.bytes', id: 'large', url: `data:application/octet-stream;base64,${encoded}` }) as Array<{ blob: string }>;
+    expect(response.blob).toBe(encoded);
+  });
+
   it('returns no response for fire-and-forget and unknown messages', () => {
     const shell = createReferenceShell();
     expect(shell.handle({ type: 'inc.emit', topic: 't' })).toEqual([]);

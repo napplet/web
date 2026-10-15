@@ -58,8 +58,7 @@ function dataUrlToBytes(url: unknown): { blob: string; mime: string } | null {
   try {
     if (base64) {
       const binary = globalThis.atob(body);
-      const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
-      return { blob: btoa(String.fromCharCode(...bytes)), mime };
+      return { blob: btoa(binary), mime };
     }
     const bytes = new TextEncoder().encode(decodeURIComponent(body));
     return { blob: btoa(Array.from(bytes, (byte) => String.fromCharCode(byte)).join('')), mime };
