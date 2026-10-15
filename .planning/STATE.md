@@ -29,6 +29,10 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 
 > **Provenance note:** The "Accumulated Context" section below preserves bullet records from BOTH branches' STATE.md histories. Records tagged "v0.29.0" from main's lineage refer to the milestone NOW renumbered as v0.30.0 (Class-Gated Decrypt — Phases 135-138). Records tagged "v0.29.0" from feat/strict-model refer to NUB-CONNECT (Phases 135-142). Phase number alone is not a unique identifier across the two; cross-reference the topic (decrypt/identity/NIP-07 → v0.30.0; connect/class/CSP-authority → v0.29.0).
 
+### Phase 164 — CLI terminal usability (in progress)
+
+Branch `feat/cli-terminal-usability` implements guided missing-value recovery, `-i` prompt suppression, terminal presentation, and real visual proof. Plan and acceptance evidence: `.planning/phases/164-cli-terminal-usability/`. Existing completed phases below retain their historical status.
+
 ## Current Position
 
 Phase: 163 (nap-gamepad-across-repositories) — implementation verified

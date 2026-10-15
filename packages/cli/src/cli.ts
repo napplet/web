@@ -9,6 +9,7 @@
 import { configPath, initConfig, parseArchetypeConventions, readConfig } from "./config.ts";
 import { createDebugReport, createSigningDebugInfo } from "./debug.ts";
 import { createDeployPlan } from "./deploy-plan.ts";
+import { completeDeployInputs } from "./deploy-config.ts";
 import { createDeploySigner } from "./deploy-signer.ts";
 import { executeNetworkDeploy, networkDeploySucceeded, resolveDeployServers } from "./deploy-network.ts";
 import { discoverNapplets } from "./discover.ts";
@@ -31,7 +32,9 @@ import {
   renderDeployReport,
   renderInitReport,
 } from "./output.ts";
-import { isTerminalInput } from "./prompt.ts";
+import { PromptCancelledError } from "./prompt.ts";
+import { canPrompt, resolveInteraction, withInteraction } from "./interaction.ts";
+import { paint, renderBanner } from "./terminal.ts";
 import { runCommand, splitCommand } from "./process.ts";
 import { resolveSigningMethod, signDeployManifestTemplates } from "./signing.ts";
 import { getBlossomServerSuggestions, getRelaySuggestions } from "./suggestions.ts";
@@ -71,6 +74,12 @@ Deploy capture options: --screenshot-selector, --screenshot-ready-selector,
   --screenshot-width, --screenshot-height, --screenshot-delay (all take values).
 
 Run "napplet guide" for the complete developer workflow and documentation.
+
+Terminal options (all commands):
+  -i, --non-interactive  Disable prompts; supply values with flags or config.
+  --no-color            Disable colors (also honors NO_COLOR).
+  CI and redirected input/output automatically disable prompts.
+  --json                Keep deploy stdout machine-readable; no banner or prompts.
 `;
 
 interface ParsedArgs {
@@ -95,8 +104,32 @@ export interface CliMainOptions {
  * @returns Process exit code.
  */
 export async function main(argv = Deno.args, options: CliMainOptions = {}): Promise<number> {
-  const parsed = parseCommand(argv);
+  const separator = argv.indexOf("--");
+  const own = separator < 0 ? argv : argv.slice(0, separator);
+  const passthrough = separator < 0 ? [] : argv.slice(separator);
+  const switches = new Set(["-i", "--non-interactive", "--no-color"]);
+  const parsed = parseCommand([...own.filter((arg) => !switches.has(arg)), ...passthrough]);
+  if (["version", "--version", "-v"].includes(parsed.command)) return await dispatch(parsed, options);
+  const policy = resolveInteraction({
+    nonInteractive: own.includes("-i") || own.includes("--non-interactive"),
+    noColor: own.includes("--no-color"),
+    json: own.includes("--json") || ["debug", "discover"].includes(parsed.command),
+  });
+  return await withInteraction(policy, () => {
+    if (isTerminalOutput() && !own.includes("--json") && !["debug", "discover"].includes(parsed.command)) {
+      console.log(renderBanner(cliMetadata.version));
+    }
+    return dispatch(parsed, options);
+  });
+}
+
+async function dispatch(parsed: ParsedArgs, options: CliMainOptions): Promise<number> {
   try {
+    const own = parsed.rest.slice(0, parsed.rest.indexOf("--") < 0 ? undefined : parsed.rest.indexOf("--"));
+    if (own.includes("--help") || own.includes("-h")) {
+      console.log(HELP);
+      return 0;
+    }
     switch (parsed.command) {
       case "version":
       case "--version":
@@ -116,7 +149,7 @@ export async function main(argv = Deno.args, options: CliMainOptions = {}): Prom
         return commandGuide();
       case "create":
         return await (options.runCreate ?? ((args) => runPackageCli("@napplet/boilerplate", args)))(
-          parsed.rest,
+          canPrompt() ? parsed.rest : [...parsed.rest, "--yes"],
         );
       case "screenshot":
         return await (options.runScreenshot ?? ((args) => runPackageCli("@napplet/conformance-cli", args)))(parsed.rest);
@@ -138,8 +171,8 @@ export async function main(argv = Deno.args, options: CliMainOptions = {}): Prom
         return 2;
     }
   } catch (error) {
-    console.error(error instanceof Error ? error.message : String(error));
-    return 1;
+    console.error(paint(error instanceof Error ? error.message : String(error), "error"));
+    return error instanceof PromptCancelledError ? 130 : 1;
   }
 }
 
@@ -174,7 +207,7 @@ async function runInitFromFlags(flags: FlagBag): Promise<InitReport> {
     root: flags.boolean.has("root"),
   };
   let options: InitWizardResult;
-  const interactive = isTerminalInput();
+  const interactive = canPrompt() && !flags.boolean.has("non-interactive");
   if (interactive) {
     console.error("Discovering relay and Blossom server suggestions...");
     const relaySuggestions = await getRelaySuggestions();
@@ -235,9 +268,9 @@ async function commandDeploy(argv: string[], runScreenshot?: PackageCliRunner): 
     throw new Error("Choose either --zapstore or --no-zapstore");
   }
   const jsonOutput = flags.boolean.has("json") || !isTerminalOutput();
-  const config = await loadDeployConfig(flags, jsonOutput);
-  const format = await selectManifestFormat(first(flags.values.get("format")), isTerminalInput() && !jsonOutput);
-  const candidates = await discoverNapplets(config, { traverse: flags.boolean.has("all") });
+  const loaded = await loadDeployConfig(flags, jsonOutput);
+  const format = await selectManifestFormat(first(flags.values.get("format")), canPrompt() && !jsonOutput);
+  const { config, candidates, descriptions } = await completeDeployInputs(loaded, flags, format);
   const selection: Partial<DeploySelection> = {
     root: flags.boolean.has("root") ? true : undefined,
     names: flags.values.get("name"),
@@ -256,7 +289,8 @@ async function commandDeploy(argv: string[], runScreenshot?: PackageCliRunner): 
   const { signer, signing: deploySigning } = await createDeploySigner(signing, config, {
     sec: first(flags.values.get("sec")),
     required: !dryRun,
-    interactiveConnect: !dryRun && isTerminalInput() && !jsonOutput,
+    interactiveConnect: !dryRun && canPrompt() && !jsonOutput,
+    isTerminalInput: canPrompt,
     configPath: first(flags.values.get("config")),
     print: (line) => console.error(line),
     writePromptBytes: (bytes) => Deno.stderr.writeSync(bytes),
@@ -267,6 +301,7 @@ async function commandDeploy(argv: string[], runScreenshot?: PackageCliRunner): 
     let templates = await createDeployManifestTemplates(plan, config, {
       sourcePubkey: signer?.pubkey,
       format,
+      descriptions,
     });
     const blossomServers = resolveDeployServers(templates, config.blossomServers);
     screenshot = await captureDeployScreenshot(flags, config, runScreenshot, plan);
@@ -342,8 +377,8 @@ export async function loadDeployConfig(
   const path = first(flags.values.get("config"));
   const config = await (options.readConfig ?? readConfig)(path);
   if (config) return config;
-  const terminalInput = options.isTerminalInput ?? isTerminalInput;
-  if (path || jsonOutput || !terminalInput()) {
+  const terminalInput = options.isTerminalInput ?? canPrompt;
+  if (path || jsonOutput || flags.boolean.has("non-interactive") || !terminalInput()) {
     throw new Error(`No .napplet config found${path ? ` at ${path}` : ""}. Run: napplet init`);
   }
 

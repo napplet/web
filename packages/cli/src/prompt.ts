@@ -3,6 +3,12 @@
  *
  * @module
  */
+import { currentInteraction } from "./interaction.ts";
+
+/** Cancellation restores terminal state and maps to exit code 130 in the dispatcher. */
+export class PromptCancelledError extends Error {
+  constructor() { super("Prompt cancelled"); }
+}
 
 export interface PromptInput {
   readonly readable?: ReadableStream<Uint8Array>;
@@ -56,6 +62,9 @@ export async function promptSecret(options: SecretPromptOptions = {}): Promise<s
   const output = options.output ?? Deno.stderr;
   const message = options.message ?? "Enter signing secret (input hidden), then press Enter: ";
   const isTerminal = input.isTerminal?.() ?? false;
+  if (isTerminal && currentInteraction()?.interactive === false) {
+    throw new Error("Prompts are disabled. Provide --sec or NAPPLET_CI_SIGNING_KEY; pipe a secret only with --prompt-sec.");
+  }
   if (isTerminal && input.read && input.setRaw) {
     return finalizeSecret(await readBytesFromTerminal(input, output, message, false, []));
   }
@@ -73,6 +82,9 @@ export async function promptSecret(options: SecretPromptOptions = {}): Promise<s
  * ```
  */
 export async function promptLine(options: LinePromptOptions): Promise<string> {
+  if (currentInteraction()?.interactive === false) {
+    throw new Error("Prompts are disabled. Supply the missing value with a flag or in .napplet/config.json.");
+  }
   const input = options.input ?? Deno.stdin;
   const output = options.output ?? Deno.stderr;
   const message = formatPromptMessage(options.message, options.defaultValue);
@@ -122,11 +134,8 @@ async function readBytesFromTerminal(
       if (read === null || read === undefined) break;
       for (let i = 0; i < read; i += 1) {
         const byte = buffer[i];
-        if (byte === 3) throw new Error("Prompt cancelled");
-        if (byte === 4 && bytes.length === 0 && !echo) {
-          throw new Error("No secret provided on stdin");
-        }
-        if (byte === 4 || byte === 10 || byte === 13) {
+        if (byte === 3 || byte === 4) throw new PromptCancelledError();
+        if (byte === 10 || byte === 13) {
           output.writeSync(encoder.encode("\n"));
           return bytes;
         }

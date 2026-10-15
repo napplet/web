@@ -194,7 +194,7 @@ Deno.test("runPackageCli uses the private Windows executable and forwards the pa
   }]);
 });
 
-Deno.test("main accepts standalone package runner injection without changing default dispatch", async () => {
+Deno.test("main suppresses delegated create prompts in non-interactive sessions", async () => {
   const calls: Array<{ command: string; args: readonly string[] }> = [];
   const options = {
     runCreate(args: readonly string[]) {
@@ -204,7 +204,7 @@ Deno.test("main accepts standalone package runner injection without changing def
   };
 
   assertEquals(await main(["create", "project", "--force"], options), 7);
-  assertEquals(calls, [{ command: "create", args: ["project", "--force"] }]);
+  assertEquals(calls, [{ command: "create", args: ["project", "--force", "--yes"] }]);
 });
 
 Deno.test("skills is no longer a CLI command; agents install skills through skills.sh", async () => {

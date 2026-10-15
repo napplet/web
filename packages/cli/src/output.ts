@@ -5,6 +5,9 @@
  */
 
 import { createEventPointers } from "./event-pointers.ts";
+import { canPrompt } from "./interaction.ts";
+import { createLiveDeployReporter } from "./deploy-progress.ts";
+import { decorateReport } from "./terminal.ts";
 export { createEventPointers } from "./event-pointers.ts";
 export type { EventPointers } from "./event-pointers.ts";
 import type { SigningDebugInfo } from "./debug.ts";
@@ -153,7 +156,7 @@ export function renderDeployReport(report: DeployReport): string {
   pushSection(lines, "Result");
   const result = describeDeployResult(report);
   if (result) lines.push(result);
-  return lines.join("\n");
+  return decorateReport(lines.join("\n"));
 }
 
 /**
@@ -169,6 +172,9 @@ export function renderDeployReport(report: DeployReport): string {
 export function createDeployProgressReporter(
   options: DeployProgressReporterOptions = {},
 ): (progress: NetworkDeployProgress) => void {
+  if (!options.writeLine && canPrompt() && isTerminalOutput(Deno.stderr) && Deno.env.get("TERM") !== "dumb") {
+    return createLiveDeployReporter();
+  }
   const writeLine = options.writeLine ?? ((line: string) => console.error(line));
   return (progress) => {
     switch (progress.type) {
@@ -272,7 +278,7 @@ export function renderInitReport(report: InitReport): string {
   } else {
     lines.push("Add at least one relay and Blossom server before network deploy.");
   }
-  return lines.join("\n");
+  return decorateReport(lines.join("\n"));
 }
 
 function pushSection(lines: string[], title: string): void {
