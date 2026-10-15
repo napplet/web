@@ -347,7 +347,7 @@ Dependencies are declared in `deno.json` `imports`. The npm dependencies (`apple
 
 ### Compile experiments
 
-Run these tasks from a repository checkout with Deno 2.9.5 or newer. Each task compiles `src/standalone.ts` for the current machine into `packages/cli/dist/experiments/`; Windows adds `.exe`. Outputs have distinct names so experiments can be compared without replacing release artifacts. The normal `build` task still checks types and builds the five existing release targets. Individual compile tasks skip type checking; run `deno task check` first.
+Run these tasks from a repository checkout with Deno 2.9.5 or newer. Each task compiles `src/standalone.ts` for the current machine into `packages/cli/dist/experiments/`; Windows adds `.exe`. Outputs have distinct names so experiments can be compared without replacing release artifacts. The normal `build` task checks types and builds all five release targets with QuickJS and dependency pruning (`--engine quickjs --exclude-unused-npm`). Release and standalone smoke workflows pin Deno 2.9.5. Individual compile tasks skip type checking; run `deno task check` first.
 
 | Task | Output name | Experiment |
 | --- | --- | --- |
@@ -373,9 +373,9 @@ deno task compile:small
 ./dist/experiments/napplet-small --help
 ```
 
-All five existing cross-compilation tasks also have pnpm aliases: `compile:linux-x86_64`, `compile:linux-aarch64`, `compile:darwin-x86_64`, `compile:darwin-aarch64`, and `compile:windows-x86_64`. These keep their existing V8 release flags and `dist/napplet-<platform>` output paths. The experiment tasks use the host target; to experiment with another target, copy the corresponding command from `deno.json` and insert `--target <triple>` before `src/standalone.ts`.
+All five existing cross-compilation tasks also have pnpm aliases: `compile:linux-x86_64`, `compile:linux-aarch64`, `compile:darwin-x86_64`, `compile:darwin-aarch64`, and `compile:windows-x86_64`. These use QuickJS with dependency pruning and retain their `dist/napplet-<platform>` output paths. The experiment tasks use the host target; to experiment with another target, copy the corresponding command from `deno.json` and insert `--target <triple>` before `src/standalone.ts`.
 
-These are opt-in experiments, not release presets. [Deno's compile documentation](https://docs.deno.com/runtime/reference/cli/compile/) describes the engine and bundling options. QuickJS is experimental, lacks a JIT, and does not receive the same security updates as V8. Bundling and pruning can omit dependencies loaded through computed imports; minification makes stack traces less readable. A successful compile or `--help` does not establish that deployment, signing, screenshots, or managed tools work.
+The host-native tasks are comparison presets; `compile:quickjs-pruned` uses the same engine and pruning settings as the platform release tasks. [Deno's compile documentation](https://docs.deno.com/runtime/reference/cli/compile/) describes the engine and bundling options. QuickJS is experimental, lacks a JIT, and does not receive the same security updates as V8. Bundling and pruning can omit dependencies loaded through computed imports; minification makes stack traces less readable. A successful compile or `--help` does not establish that deployment, signing, screenshots, or managed tools work.
 
 Run the existing standalone integration suite against a candidate binary before considering it for release. From the repository root on macOS or Linux, for example:
 
