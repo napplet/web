@@ -1,11 +1,15 @@
 import {
+  createKeyStore,
   getKeyStoreProvider,
   KEY_SERVICE_NAME,
+  type KeyStoreProvider,
   LinuxSecretService,
   MacOSKeychain,
   requireKeyStoreProvider,
+  type StoredSecret,
   WindowsCredentialManager,
 } from "../src/key-store.ts";
+import { RedactedSecret } from "@napplet/build-tools";
 import type { CommandResult, CommandRunner } from "../src/process.ts";
 import { assert, assertEquals } from "./assert.ts";
 
@@ -47,29 +51,22 @@ Deno.test("requireKeyStoreProvider fails closed when storage is explicitly disab
   assert(message.includes("Key storage is disabled"));
 });
 
-Deno.test("MacOSKeychain stores and retrieves generic passwords", async () => {
-  const calls: Array<{ command: string; args: string[]; input?: string }> = [];
-  const provider = new MacOSKeychain(mockRunner({
-    "which security": result(0),
-    "security delete-generic-password -a default -s napplet": result(0),
-    "security add-generic-password -a default -s napplet -w nsec1secret -U": result(0),
-    "security find-generic-password -a default -s napplet -w": result(0, "nsec1secret\n"),
-  }, calls));
+Deno.test("argv-only macOS and Windows credential writers remain unavailable", async () => {
+  const secret = "nbunksec1must-not-enter-argv";
+  for (const Provider of [MacOSKeychain, WindowsCredentialManager]) {
+    const calls: Array<{ command: string; args: string[]; input?: string }> = [];
+    const provider = new Provider(mockRunner({}, calls));
 
-  assertEquals(await provider.isAvailable(), true);
-  await provider.store({ service: KEY_SERVICE_NAME, account: "default", secret: "nsec1secret" });
-  assertEquals(await provider.retrieve(KEY_SERVICE_NAME, "default"), "nsec1secret");
-  assertEquals(calls[1].args, ["delete-generic-password", "-a", "default", "-s", "napplet"]);
-  assertEquals(calls[2].args, [
-    "add-generic-password",
-    "-a",
-    "default",
-    "-s",
-    "napplet",
-    "-w",
-    "nsec1secret",
-    "-U",
-  ]);
+    assertEquals(await provider.isAvailable(), false);
+    await provider.store({ service: KEY_SERVICE_NAME, account: "default", secret }).then(
+      () => {
+        throw new Error(`${provider.name} write must be unavailable`);
+      },
+      () => {},
+    );
+    assertEquals(calls.length, 0);
+    assert(!calls.some((call) => call.args.some((arg) => arg.includes(secret))));
+  }
 });
 
 Deno.test("LinuxSecretService requires DBus and writes secret through stdin", async () => {
@@ -94,6 +91,7 @@ Deno.test("LinuxSecretService requires DBus and writes secret through stdin", as
     secret: "nbunksec1secret",
   });
   assertEquals(calls[2].input, "nbunksec1secret");
+  assert(!calls[2].args.some((arg) => arg.includes("nbunksec1secret")));
   assertEquals(await provider.list(KEY_SERVICE_NAME), ["default"]);
 });
 
@@ -102,18 +100,33 @@ Deno.test("LinuxSecretService is unavailable without DBus", async () => {
   assertEquals(await provider.isAvailable(), false);
 });
 
-Deno.test("WindowsCredentialManager stores, lists, and deletes targets", async () => {
-  const provider = new WindowsCredentialManager(mockRunner({
-    "where cmdkey": result(0),
-    "cmdkey /delete:napplet:default": result(0),
-    "cmdkey /add:napplet:default /user:default /pass:nsec1secret": result(0),
-    "cmdkey /list": result(0, "Target: napplet:default\nTarget: other:ignored\n"),
-  }));
+Deno.test("createKeyStore adapts an existing provider to the shared opaque SecretStore", async () => {
+  const stored: StoredSecret[] = [];
+  const provider: KeyStoreProvider = {
+    name: "test key store",
+    isAvailable: () => Promise.resolve(true),
+    store: (secret) => {
+      stored.push(secret);
+      return Promise.resolve();
+    },
+    retrieve: (_service, account) =>
+      Promise.resolve(account === "remote" ? "nbunksec1secret" : null),
+    delete: () => Promise.resolve(true),
+    list: () => Promise.resolve([]),
+  };
+  const store = createKeyStore(provider);
 
-  assertEquals(await provider.isAvailable(), true);
-  await provider.store({ service: KEY_SERVICE_NAME, account: "default", secret: "nsec1secret" });
-  assertEquals(await provider.list(KEY_SERVICE_NAME), ["default"]);
-  assertEquals(await provider.delete(KEY_SERVICE_NAME, "default"), true);
+  const retrieved = await store.get("remote");
+  assertEquals(retrieved?.withValue((value) => value), "nbunksec1secret");
+  assertEquals(String(retrieved), "[REDACTED]");
+  await store.set("remote", new RedactedSecret("nbunksec1replacement"));
+  await store.delete("remote");
+
+  assertEquals(stored, [{
+    service: KEY_SERVICE_NAME,
+    account: "remote",
+    secret: "nbunksec1replacement",
+  }]);
 });
 
 Deno.test("hosts without native helpers receive encrypted local storage", async () => {

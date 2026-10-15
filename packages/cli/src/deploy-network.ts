@@ -1,16 +1,16 @@
 import { SimplePool } from "nostr-tools/pool";
 import type { Event as NostrToolsEvent } from "nostr-tools/core";
 import { collectDeployFilePayloads, uploadFilesToServers } from "./blossom-upload.ts";
-import type { ServerUploadResult, UploadResultProgress } from "./blossom-upload.ts";
+import type {
+  ServerUploadResult,
+  UploadFilesToServersOptions,
+  UploadResultProgress,
+} from "./blossom-upload.ts";
 import type { NappletSigner } from "./signing.ts";
 import type { DeployManifestTemplate, SignedNostrEvent } from "./types.ts";
 import type { ZapstorePublication } from "./zapstore.ts";
 
-export {
-  collectDeployFilePayloads,
-  createUploadAuthorization,
-  uploadFilesToServers,
-} from "./blossom-upload.ts";
+export { collectDeployFilePayloads, uploadFilesToServers } from "./blossom-upload.ts";
 export type { DeployFilePayload, ServerUploadResult } from "./blossom-upload.ts";
 
 export interface NetworkDeployConfig {
@@ -54,7 +54,8 @@ export type NetworkDeployProgress =
   | { type: "publish:skipped"; summary: UploadSummary }
   | { type: "publish:complete"; results: RelayPublishResult[] };
 
-export interface NetworkDeployOptions {
+export interface NetworkDeployOptions
+  extends Pick<UploadFilesToServersOptions, "networkPolicy" | "resolve"> {
   application?: ZapstorePublication;
   fetch?: typeof fetch;
   publish?: RelayPublisher;
@@ -134,7 +135,9 @@ export async function executeNetworkDeploy(
   }
   const files = await collectDeployFilePayloads(manifests);
   const application = options.application;
-  if (application && !application.signedEvent) throw new Error("Zapstore application event must be signed");
+  if (application && !application.signedEvent) {
+    throw new Error("Zapstore application event must be signed");
+  }
   const additionalEventIds = application?.signedEvent ? [application.signedEvent.id] : [];
   for (const file of application?.files ?? []) {
     if (!files.some((existing) => existing.sha256 === file.sha256)) files.push(file);
@@ -146,12 +149,11 @@ export async function executeNetworkDeploy(
     totalUploads: files.length * servers.length,
   });
   const uploaded = await uploadFilesToServers(files, servers, signer, options);
-  const uploadSummary = summarizeUploads(uploaded, servers);
+  const uploadSummary = summarizeUploads(uploaded, servers, files);
   options.onProgress?.({ type: "upload:complete", summary: uploadSummary });
-  if (uploadSummary.serversFullyUploaded === 0) {
-    // Publish only when at least one server holds every blob referenced by the
-    // manifests. Individual mirror failures reduce redundancy but do not make the
-    // deployed files unavailable.
+  if (uploadSummary.serversFullyUploaded !== servers.length) {
+    // A shared partial batch never establishes complete verified evidence; relay
+    // publication must not make an incompletely uploaded manifest look successful.
     console.error(
       `[deploy] skipping relay publish: ${uploadSummary.serversFullyUploaded}/` +
         `${uploadSummary.servers} servers fully uploaded ` +
@@ -181,12 +183,19 @@ export async function executeNetworkDeploy(
   let completedEvents = 0;
   for (const event of events) {
     const mediaUnavailable = event === application?.signedEvent && application.mediaServer &&
-      application.files.some((file) => !uploaded.some((upload) =>
-        upload.server === application.mediaServer && upload.sha256 === file.sha256 && upload.success
-      ));
+      application.files.some((file) =>
+        !uploaded.some((upload) =>
+          upload.server === new URL(application.mediaServer!).toString() &&
+          upload.sha256 === file.sha256 && upload.success
+        )
+      );
     const results = mediaUnavailable
-      ? config.relays.map((relay) => ({ relay, eventId: event.id, success: false,
-        error: "Zapstore publish skipped: images unavailable at their declared Blossom URLs" }))
+      ? config.relays.map((relay) => ({
+        relay,
+        eventId: event.id,
+        success: false,
+        error: "Zapstore publish skipped: images unavailable at their declared Blossom URLs",
+      }))
       : await publish(config.relays, event);
     completedEvents += 1;
     published.push(...results);
@@ -205,13 +214,28 @@ export async function executeNetworkDeploy(
 function summarizeUploads(
   uploaded: readonly ServerUploadResult[],
   servers: readonly string[],
+  files: readonly { path: string; sha256: string }[],
 ): UploadSummary {
   const failedUploads = uploaded.filter((result) => !result.success).length;
-  const serversFullyUploaded =
-    servers.filter((server) =>
-      uploaded.some((result) => result.server === server) &&
-      uploaded.every((result) => result.server !== server || result.success)
-    ).length;
+  // uploadExactBlobs stops at the first failed evidence. No individual server
+  // may be reported complete when its containing direct-upload batch failed.
+  if (failedUploads > 0) {
+    return {
+      servers: servers.length,
+      serversFullyUploaded: 0,
+      totalUploads: uploaded.length,
+      failedUploads,
+    };
+  }
+  const requiredEvidence = new Set(files.map((file) => `${file.path}\0${file.sha256}`));
+  const serversFullyUploaded = servers.filter((server) => {
+    const endpoint = new URL(server).toString();
+    const evidence = uploaded.filter((result) => result.server === endpoint && result.success);
+    return evidence.length === requiredEvidence.size &&
+      new Set(evidence.map((result) => `${result.file}\0${result.sha256}`)).size ===
+        requiredEvidence.size &&
+      evidence.every((result) => requiredEvidence.has(`${result.file}\0${result.sha256}`));
+  }).length;
   return {
     servers: servers.length,
     serversFullyUploaded,
@@ -224,8 +248,12 @@ export function networkDeploySucceeded(
   result: NetworkDeployResult,
   manifests: readonly DeployManifestTemplate[],
 ): boolean {
-  const eventIds = [...signedEvents(manifests).map((event) => event.id), ...(result.additionalEventIds ?? [])];
-  return result.uploadSummary.serversFullyUploaded > 0 && eventIds.length > 0 &&
+  const eventIds = [
+    ...signedEvents(manifests).map((event) => event.id),
+    ...(result.additionalEventIds ?? []),
+  ];
+  return result.uploadSummary.serversFullyUploaded === result.uploadSummary.servers &&
+    eventIds.length > 0 &&
     eventIds.every((eventId) =>
       result.published.some((publish) => publish.eventId === eventId && publish.success)
     );

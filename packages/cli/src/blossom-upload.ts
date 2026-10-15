@@ -1,13 +1,25 @@
-import { base64urlnopad } from "@scure/base";
+/**
+ * Deno adapter for shared exact-byte Blossom uploads.
+ *
+ * The protocol request, authorization, redirect, descriptor, retry, and batch
+ * semantics live in @napplet/build-tools. This module only reads deploy files,
+ * supplies Deno DNS/fetch, and preserves the CLI's progress/result shape.
+ *
+ * @module
+ */
+
 import { contentType } from "@std/media-types";
 import { extname } from "@std/path";
+import {
+  type BuildSigner,
+  createNetworkPolicy,
+  type NetworkPolicy,
+  type PublicAddressResolver,
+  uploadExactBlobs,
+} from "@napplet/build-tools";
 import { joinPath } from "./path.ts";
 import type { NappletSigner } from "./signing.ts";
-import type { DeployManifestTemplate, ManifestFileMapping, SignedNostrEvent } from "./types.ts";
-
-const UPLOAD_AUTH_KIND = 24242;
-const UPLOAD_AUTH_TTL_SECONDS = 3600;
-type UploadAuthorizationEncoding = "base64url" | "base64";
+import type { DeployManifestTemplate, ManifestFileMapping } from "./types.ts";
 
 export interface DeployFilePayload {
   candidateDir: string;
@@ -36,9 +48,12 @@ export type UploadResultProgress = {
 export interface UploadFilesToServersOptions {
   fetch?: typeof fetch;
   now?: () => number;
+  networkPolicy?: NetworkPolicy;
+  resolve?: PublicAddressResolver["resolve"];
   onProgress?: (progress: UploadResultProgress) => void;
 }
 
+/** Read each unique manifest file without transforming the bytes before upload. */
 export async function collectDeployFilePayloads(
   manifests: readonly DeployManifestTemplate[],
 ): Promise<DeployFilePayload[]> {
@@ -46,267 +61,127 @@ export async function collectDeployFilePayloads(
   for (const manifest of manifests) {
     for (const file of manifest.files) {
       const key = `${manifest.item.candidate.dir}\0${file.path}`;
-      if (!unique.has(key)) {
-        unique.set(key, { candidateDir: manifest.item.candidate.dir, file });
-      }
+      if (!unique.has(key)) unique.set(key, { candidateDir: manifest.item.candidate.dir, file });
     }
   }
   const payloads: DeployFilePayload[] = [];
   for (const { candidateDir, file } of unique.values()) {
+    const data = file.data ?? await Deno.readFile(joinPath(candidateDir, file.path.slice(1)));
+    if (await sha256Hex(data) !== file.sha256) {
+      throw new Error(`Deploy input changed after manifest creation: ${file.path}`);
+    }
     payloads.push({
       candidateDir,
       path: file.path,
       sha256: file.sha256,
-      data: file.data ?? await Deno.readFile(joinPath(candidateDir, file.path.slice(1))),
+      data,
       contentType: file.mimeType ?? contentTypeForPath(file.path),
     });
   }
   return payloads;
 }
 
+async function sha256Hex(data: Uint8Array): Promise<string> {
+  const bytes = data.buffer.slice(
+    data.byteOffset,
+    data.byteOffset + data.byteLength,
+  ) as ArrayBuffer;
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+/**
+ * Upload exact payload bytes through the shared BUD implementation.
+ *
+ * @returns Per-upload evidence compatible with existing deployment reporting.
+ */
 export async function uploadFilesToServers(
   files: readonly DeployFilePayload[],
   servers: readonly string[],
   signer: NappletSigner,
   options: UploadFilesToServersOptions = {},
 ): Promise<ServerUploadResult[]> {
-  const fetcher = options.fetch ?? fetch;
-  const blobSha256s = [...new Set(files.map((file) => file.sha256))];
-  const results: ServerUploadResult[] = [];
-  const totalUploads = files.length * servers.length;
-  for (const server of servers) {
-    // BUD-11: scope each token to the target server so a leaked header cannot be
-    // replayed against other Blossom servers before it expires. Some deployed
-    // Blossom servers reject either scoped tokens or base64url auth, so retries
-    // below intentionally fall back only after an auth-shaped failure.
-    const authAttempts: UploadAuthorizationAttempt[] = [
-      {
-        create: once(() =>
-          createUploadAuthorization(signer, blobSha256s, options.now, serverHost(server))
-        ),
-      },
-      {
-        create: once(() => createUploadAuthorization(signer, blobSha256s, options.now)),
-      },
-      {
-        create: once(() =>
-          createUploadAuthorization(signer, blobSha256s, options.now, undefined, "base64")
-        ),
-      },
-    ];
-    let preferredAuthAttempt = 0;
-    for (const file of files) {
-      const upload = await uploadFileToServer(
-        file,
-        server,
-        authAttempts,
-        fetcher,
-        preferredAuthAttempt,
-      );
-      const result = upload.result;
-      if (upload.authAttemptIndex !== undefined) preferredAuthAttempt = upload.authAttemptIndex;
-      results.push(result);
-      options.onProgress?.({
-        type: "upload:result",
-        completedUploads: results.length,
-        totalUploads,
-        result,
-      });
-    }
-  }
-  return results;
-}
-
-export async function createUploadAuthorization(
-  signer: NappletSigner,
-  blobSha256s: readonly string[],
-  now: () => number = () => Math.floor(Date.now() / 1000),
-  server?: string,
-  encoding: UploadAuthorizationEncoding = "base64url",
-): Promise<string> {
-  const createdAt = now();
-  const tags: string[][] = [
-    ["t", "upload"],
-    ...blobSha256s.map((hash) => ["x", hash]),
-    ["expiration", String(createdAt + UPLOAD_AUTH_TTL_SECONDS)],
-    ["client", "napplet"],
-  ];
-  if (server) tags.push(["server", server]);
-  const signed = await signer.sign({
-    kind: UPLOAD_AUTH_KIND,
-    created_at: createdAt,
-    tags,
-    content: "Upload blobs via napplet",
-  });
-  return `Nostr ${encodeAuthEvent(signed, encoding)}`;
-}
-
-interface UploadAuthorizationAttempt {
-  create: () => Promise<string>;
-}
-
-interface UploadFileAttemptResult {
-  result: ServerUploadResult;
-  authAttemptIndex?: number;
-}
-
-async function uploadFileToServer(
-  file: DeployFilePayload,
-  server: string,
-  authAttempts: readonly UploadAuthorizationAttempt[],
-  fetcher: typeof fetch,
-  preferredAuthAttempt: number,
-): Promise<UploadFileAttemptResult> {
-  const base = server.endsWith("/") ? server : `${server}/`;
-  const blobUrl = `${base}${file.sha256}`;
-  const uploadUrl = `${base}upload`;
+  if (files.length === 0 || servers.length === 0) return [];
+  const policy = options.networkPolicy ??
+    createNetworkPolicy({ resolve: options.resolve ?? resolvePublicDns });
+  const endpoints = [];
   try {
-    // BUD-01 makes HEAD /<sha256> a SHOULD, so only a positive hit lets us skip the
-    // upload; any other status (or a thrown error) falls through to PUT.
-    const preflight = await fetcher(blobUrl, { method: "HEAD" });
-    if (preflight.ok) {
-      return {
-        result: {
-          server,
-          file: file.path,
-          sha256: file.sha256,
-          success: true,
-          skipped: true,
-        },
-      };
+    for (const server of servers) {
+      endpoints.push(await policy.validate(new URL(server), new AbortController().signal));
     }
   } catch {
-    // Fall through to PUT; some Blossom servers do not support unauthenticated HEAD checks.
+    return recordFailure(files, servers[0], "Upload did not produce verified evidence", options);
   }
-
-  let lastFailure: ServerUploadResult | undefined;
-  for (const { authAttempt, index } of orderedAuthAttempts(authAttempts, preferredAuthAttempt)) {
-    const result = await putFileToServer(
-      file,
-      server,
-      uploadUrl,
-      await authAttempt.create(),
-      fetcher,
-    );
-    if (result.success) return { result, authAttemptIndex: index };
-    lastFailure = result;
-    if (!isRetryableAuthFailure(result)) return { result };
+  const result = await uploadExactBlobs({
+    primary: endpoints[0],
+    secondary: endpoints.slice(1),
+    blobs: files.map((file) => ({ bytes: file.data, contentType: file.contentType })),
+    signer: asBuildSigner(signer),
+  }, { fetch: options.fetch ?? globalThis.fetch, networkPolicy: policy, now: options.now });
+  const pathForHash = new Map(files.map((file) => [file.sha256, file.path]));
+  const uploads = result.evidence.map((evidence) => ({
+    server: safeServer(evidence.server),
+    file: pathForHash.get(evidence.sha256) ?? "[unknown-file]",
+    sha256: evidence.sha256,
+    success: evidence.accepted,
+    skipped: evidence.descriptor?.existed ?? false,
+    error: evidence.error?.message,
+  }));
+  let completedUploads = 0;
+  for (const upload of uploads) {
+    completedUploads += 1;
+    options.onProgress?.({
+      type: "upload:result",
+      completedUploads,
+      totalUploads: files.length * servers.length,
+      result: upload,
+    });
   }
-  return { result: lastFailure ?? failure(server, file, `PUT ${uploadUrl} did not run`) };
+  return uploads;
 }
 
-async function putFileToServer(
-  file: DeployFilePayload,
-  server: string,
-  uploadUrl: string,
-  authHeader: string,
-  fetcher: typeof fetch,
-): Promise<ServerUploadResult> {
-  const response = await fetcher(uploadUrl, {
-    method: "PUT",
-    headers: {
-      Authorization: authHeader,
-      "Content-Type": file.contentType,
-      // BUD-02: lets the server reject a mismatched body early (409) before storing it.
-      "X-SHA-256": file.sha256,
-    },
-    body: new Blob([copyBytes(file.data).buffer], { type: file.contentType }),
-  });
-  if (!response.ok) {
-    const reason = response.headers.get("x-reason");
-    const body = await response.text().catch(() => "");
-    const details = [reason, body].filter(Boolean).join(": ");
-    return failure(
-      server,
-      file,
-      `PUT ${uploadUrl} returned HTTP ${response.status}${details ? `: ${details}` : ""}`,
-    );
-  }
-
-  // BUD-02: a 200/201 upload returns a blob descriptor; confirm the server stored the
-  // exact blob we asked for before treating the upload as successful.
-  const descriptorError = await verifyBlobDescriptor(response, file.sha256);
-  if (descriptorError) return failure(server, file, `PUT ${uploadUrl} ${descriptorError}`);
+function asBuildSigner(signer: NappletSigner): BuildSigner {
   return {
-    server,
-    file: file.path,
-    sha256: file.sha256,
-    success: true,
-    skipped: false,
+    signEvent: (template) => signer.sign(template),
+    getPublicKey: () => Promise.resolve(signer.pubkey),
+    close: () => signer.close?.() ?? Promise.resolve(),
   };
 }
 
-function isRetryableAuthFailure(result: ServerUploadResult): boolean {
-  if (result.success) return false;
-  const error = result.error ?? "";
-  if (!/\bHTTP (400|401)\b/.test(error)) return false;
-  return /auth|authorization|token|server url mismatch|server .*scope|invalid auth string|signature|base64/i
-    .test(error);
-}
-
-function orderedAuthAttempts(
-  attempts: readonly UploadAuthorizationAttempt[],
-  preferredIndex: number,
-): { authAttempt: UploadAuthorizationAttempt; index: number }[] {
-  return attempts.map((authAttempt, index) => ({ authAttempt, index })).sort((left, right) => {
-    if (left.index === preferredIndex) return -1;
-    if (right.index === preferredIndex) return 1;
-    return left.index - right.index;
-  });
-}
-
-async function verifyBlobDescriptor(
-  response: Response,
-  expectedSha256: string,
-): Promise<string | undefined> {
-  let descriptor: unknown;
-  try {
-    descriptor = await response.json();
-  } catch {
-    return "returned an unparseable blob descriptor";
-  }
-  if (typeof descriptor !== "object" || descriptor === null) {
-    return "returned an invalid blob descriptor";
-  }
-  const sha256 = (descriptor as { sha256?: unknown }).sha256;
-  if (typeof sha256 !== "string") return "blob descriptor is missing a sha256";
-  if (sha256.toLowerCase() !== expectedSha256) {
-    return `stored sha256 ${sha256} does not match expected ${expectedSha256}`;
-  }
-  return undefined;
-}
-
-function failure(server: string, file: DeployFilePayload, error: string): ServerUploadResult {
-  return {
-    server,
+function recordFailure(
+  files: readonly DeployFilePayload[],
+  server: string,
+  error: string,
+  options: UploadFilesToServersOptions,
+): ServerUploadResult[] {
+  const results = files.map((file) => ({
+    server: safeServer(server),
     file: file.path,
     sha256: file.sha256,
     success: false,
     skipped: false,
     error,
-  };
+  }));
+  for (const [index, result] of results.entries()) {
+    options.onProgress?.({
+      type: "upload:result",
+      completedUploads: index + 1,
+      totalUploads: files.length,
+      result,
+    });
+  }
+  return results;
 }
 
-function copyBytes(bytes: Uint8Array): Uint8Array<ArrayBuffer> {
-  return new Uint8Array(bytes);
-}
-
-function encodeAuthEvent(event: SignedNostrEvent, encoding: UploadAuthorizationEncoding): string {
-  const bytes = new TextEncoder().encode(JSON.stringify(event));
-  // BUD-11 uses base64url without padding; standard base64 is only for legacy
-  // servers that still reject the specified encoding.
-  if (encoding === "base64url") return base64urlnopad.encode(bytes);
-  let binary = "";
-  for (const byte of bytes) binary += String.fromCharCode(byte);
-  return btoa(binary);
-}
-
-function once<T>(create: () => Promise<T>): () => Promise<T> {
-  let promise: Promise<T> | undefined;
-  return () => {
-    promise ??= create();
-    return promise;
-  };
+async function resolvePublicDns(
+  hostname: string,
+  _signal: AbortSignal,
+): Promise<readonly string[]> {
+  const records = await Promise.allSettled([
+    Deno.resolveDns(hostname, "A"),
+    Deno.resolveDns(hostname, "AAAA"),
+  ]);
+  return records.flatMap((record) => record.status === "fulfilled" ? record.value : []);
 }
 
 function contentTypeForPath(path: string): string {
@@ -319,11 +194,10 @@ function contentTypeForPath(path: string): string {
   return "application/octet-stream";
 }
 
-function serverHost(server: string): string {
+function safeServer(value: string): string {
   try {
-    return new URL(server).hostname.toLowerCase();
+    return new URL(value).toString();
   } catch {
-    // Fall back to the raw value; config validation is responsible for URL shape.
-    return server.split(":")[0].toLowerCase();
+    return "[invalid-server]";
   }
 }

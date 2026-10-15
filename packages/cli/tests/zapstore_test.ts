@@ -10,7 +10,11 @@ import { createDeployPlan } from "../src/deploy-plan.ts";
 import { createDeployManifestTemplates } from "../src/manifest.ts";
 import { runPackageCli } from "../src/package-runner.ts";
 import { createPrivateKeySigner, signDeployManifestTemplates } from "../src/signing.ts";
-import { linkZapstoreApplication, normalizeZapstoreConfig, prepareZapstorePublication } from "../src/zapstore.ts";
+import {
+  linkZapstoreApplication,
+  normalizeZapstoreConfig,
+  prepareZapstorePublication,
+} from "../src/zapstore.ts";
 import { assert, assertEquals, withTempDir } from "./assert.ts";
 
 const png = Uint8Array.from(
@@ -158,6 +162,7 @@ for (
         const uploads: string[] = [];
         const result = await executeNetworkDeploy(manifests, config, signer, {
           application,
+          resolve: () => Promise.resolve(["93.184.216.34"]),
           fetch: ((input: RequestInfo | URL, init?: RequestInit) => {
             if (init?.method === "HEAD") {
               return Promise.resolve(new Response(null, { status: 404 }));
@@ -168,7 +173,16 @@ for (
               (scenario === "primary media failure" && String(input).startsWith(servers[0]) &&
                 hash === application.files[0].sha256);
             return Promise.resolve(
-              new Response(JSON.stringify({ sha256: hash }), { status: failure ? 500 : 201 }),
+              new Response(
+                JSON.stringify({
+                  sha256: hash,
+                  size: Number(new Headers(init?.headers).get("content-length")),
+                  url: `${servers[0]}/${hash}`,
+                  type: new Headers(init?.headers).get("content-type"),
+                  uploaded: 123,
+                }),
+                { status: failure ? 500 : 201 },
+              ),
             );
           }) as typeof fetch,
           publish: (relays, event) => {
@@ -199,12 +213,14 @@ for (
         if (scenario !== "success") {
           assert(report.includes("Zapstore application metadata was not published"));
         }
-        assert(uploads.includes(application.files[0].sha256));
+        if (scenario !== "all uploads fail") assert(uploads.includes(application.files[0].sha256));
         assertEquals(
           published.includes(32267),
           scenario === "success" || scenario === "relay rejection",
         );
-        if (scenario === "success" || scenario === "relay rejection") assertEquals(published[0], 32267);
+        if (scenario === "success" || scenario === "relay rejection") {
+          assertEquals(published[0], 32267);
+        }
         if (scenario === "all uploads fail") assertEquals(published, []);
       } finally {
         await Deno.remove(preview);
@@ -284,7 +300,12 @@ Deno.test("screenshot runner pins a compatible version and preserves literal arg
     }),
     0,
   );
-  assertEquals(received, ["C:/private/node.exe", "C:/private/screenshot.js", "screenshot", ...args]);
+  assertEquals(received, [
+    "C:/private/node.exe",
+    "C:/private/screenshot.js",
+    "screenshot",
+    ...args,
+  ]);
 });
 
 for (const automatic of [false, true]) {
@@ -325,7 +346,10 @@ for (const automatic of [false, true]) {
             ...(outcome === "disabled" ? ["--no-zapstore"] : ["--zapstore"]),
           ], {
             runScreenshot: async (args) => {
-              assertEquals(args.slice(0, automatic ? 2 : 1), automatic ? ["--artifact", `${dir}/dist/index.html`] : ["http://localhost:5173"]);
+              assertEquals(
+                args.slice(0, automatic ? 2 : 1),
+                automatic ? ["--artifact", `${dir}/dist/index.html`] : ["http://localhost:5173"],
+              );
               assertEquals(args.slice(automatic ? 4 : 3), ["--ready-selector", ".ready"]);
               capturePath = args[automatic ? 3 : 2];
               await Deno.writeFile(
@@ -367,49 +391,79 @@ for (const automatic of [false, true]) {
       });
     });
   }
-
 }
 
 Deno.test("automatic screenshots deduplicate companion snapshots and retain distinct builds", async () => {
-  const config = defaultConfig({ blossomServers: servers, zapstore: { ...listing, enabled: true } });
-  const candidates = ["one", "two"].map((name) => ({ name, dir: `/build/${name}`, indexHtml: `/build/${name}/index.html` }));
+  const config = defaultConfig({
+    blossomServers: servers,
+    zapstore: { ...listing, enabled: true },
+  });
+  const candidates = ["one", "two"].map((name) => ({
+    name,
+    dir: `/build/${name}`,
+    indexHtml: `/build/${name}/index.html`,
+  }));
   const plan = createDeployPlan(config, candidates, { root: true, snapshot: true });
   const captured: string[] = [];
-  const screenshot = await captureDeployScreenshot(collectFlags(["--screenshot"]), config, async (args) => {
-    captured.push(args[1]);
-    await Deno.writeFile(args[3], png);
-    return 0;
-  }, plan);
+  const screenshot = await captureDeployScreenshot(
+    collectFlags(["--screenshot"]),
+    config,
+    async (args) => {
+      captured.push(args[1]);
+      await Deno.writeFile(args[3], png);
+      return 0;
+    },
+    plan,
+  );
   assert(screenshot);
   try {
     assertEquals(captured, candidates.map((candidate) => candidate.indexHtml));
     assertEquals(screenshot.paths.length, 2);
-  } finally { await screenshot.cleanup(); }
+  } finally {
+    await screenshot.cleanup();
+  }
 });
 
 Deno.test("signed CLI deployment links every manifest to its screenshot application", async () => {
   await withTempDir(async (dir) => {
     await Deno.mkdir(`${dir}/dist`);
     await Deno.writeTextFile(`${dir}/dist/index.html`, '<meta name="description" content="Notes">');
-    await Deno.writeTextFile(`${dir}/config.json`, JSON.stringify(defaultConfig({
-      sourceDir: `${dir}/dist`,
-      relays: ["wss://relay.example"],
-      blossomServers: servers,
-      zapstore: listing,
-    })));
+    await Deno.writeTextFile(
+      `${dir}/config.json`,
+      JSON.stringify(defaultConfig({
+        sourceDir: `${dir}/dist`,
+        relays: ["wss://relay.example"],
+        blossomServers: servers,
+        zapstore: listing,
+      })),
+    );
     const output: string[] = [];
     const log = console.log;
     console.log = (value: unknown) => output.push(String(value));
-    const args = ["deploy", "--config", `${dir}/config.json`, "--root", "--name", "notes",
-      "--snapshot", "--dry-run", "--json", "--sec", "01".padStart(64, "0")];
+    const args = [
+      "deploy",
+      "--config",
+      `${dir}/config.json`,
+      "--root",
+      "--name",
+      "notes",
+      "--snapshot",
+      "--dry-run",
+      "--json",
+      "--sec",
+      "01".padStart(64, "0"),
+    ];
     try {
-      assertEquals(await main([...args, "--zapstore", "--screenshot"], {
-        runScreenshot: async (captureArgs) => {
-          const path = captureArgs[captureArgs.indexOf("--output") + 1];
-          await Deno.writeFile(path, png);
-          return 0;
-        },
-      }), 0);
+      assertEquals(
+        await main([...args, "--zapstore", "--screenshot"], {
+          runScreenshot: async (captureArgs) => {
+            const path = captureArgs[captureArgs.indexOf("--output") + 1];
+            await Deno.writeFile(path, png);
+            return 0;
+          },
+        }),
+        0,
+      );
       assertEquals(await main([...args, "--no-zapstore"]), 0);
     } finally {
       console.log = log;
@@ -418,22 +472,36 @@ Deno.test("signed CLI deployment links every manifest to its screenshot applicat
     const disabled = JSON.parse(output[1]);
     const application = linked.application.signedEvent;
     assert(verifyEvent(application));
-    assertEquals(linked.manifests.map((manifest: { template: { kind: number } }) => manifest.template.kind),
-      [15129, 5129, 35129, 5129]);
+    assertEquals(
+      linked.manifests.map((manifest: { template: { kind: number } }) => manifest.template.kind),
+      [15129, 5129, 35129, 5129],
+    );
     for (let index = 0; index < linked.manifests.length; index++) {
       const manifest = linked.manifests[index];
       assert(verifyEvent(manifest.signedEvent));
       const references = manifest.signedEvent.tags.filter((tag: string[]) => tag[0] === "app");
-      assertEquals(references, [["app", `32267:${application.pubkey}:${listing.id}`, "wss://relay.example"]]);
+      assertEquals(references, [[
+        "app",
+        `32267:${application.pubkey}:${listing.id}`,
+        "wss://relay.example",
+      ]]);
       // Resolve the descriptor using only the signed manifest's address.
       const [kind, pubkey, ...identifier] = references[0][1].split(":");
       assertEquals(application.kind, Number(kind));
       assertEquals(application.pubkey, pubkey);
-      assertEquals(application.tags.find((tag: string[]) => tag[0] === "d")?.[1], identifier.join(":"));
-      assertEquals(application.tags.filter((tag: string[]) => tag[0] === "image"),
-        [["image", `${servers[0]}/${linked.application.files[0].sha256}`]]);
+      assertEquals(
+        application.tags.find((tag: string[]) => tag[0] === "d")?.[1],
+        identifier.join(":"),
+      );
+      assertEquals(application.tags.filter((tag: string[]) => tag[0] === "image"), [[
+        "image",
+        `${servers[0]}/${linked.application.files[0].sha256}`,
+      ]]);
       assertEquals(manifest.artifactHash, disabled.manifests[index].artifactHash);
-      assertEquals(disabled.manifests[index].signedEvent.tags.some((tag: string[]) => tag[0] === "app"), false);
+      assertEquals(
+        disabled.manifests[index].signedEvent.tags.some((tag: string[]) => tag[0] === "app"),
+        false,
+      );
     }
   });
 });
@@ -442,7 +510,11 @@ Deno.test("application links replace stale references, omit absent relay hints, 
   await withTempDir(async (dir) => {
     await Deno.writeTextFile(`${dir}/index.html`, '<meta name="description" content="Notes">');
     const config = defaultConfig({ sourceDir: dir, zapstore: { ...listing, enabled: true } });
-    const plan = createDeployPlan(config, [{ name: "notes", dir, indexHtml: `${dir}/index.html` }], { root: true });
+    const plan = createDeployPlan(
+      config,
+      [{ name: "notes", dir, indexHtml: `${dir}/index.html` }],
+      { root: true },
+    );
     const application = await prepareZapstorePublication(config, servers);
     assert(application);
     const signed = await signer.sign(application.template);
@@ -450,12 +522,16 @@ Deno.test("application links replace stale references, omit absent relay hints, 
     current[0].template!.tags.push(["app", "stale"], ["app", "duplicate"]);
     const before = JSON.stringify(current);
     const linked = linkZapstoreApplication(current, signed, []);
-    assertEquals(linked[0].template!.tags.filter((tag) => tag[0] === "app"),
-      [["app", `32267:${signed.pubkey}:${listing.id}`]]);
+    assertEquals(linked[0].template!.tags.filter((tag) => tag[0] === "app"), [[
+      "app",
+      `32267:${signed.pubkey}:${listing.id}`,
+    ]]);
     assertEquals(JSON.stringify(current), before);
     const legacy = await createDeployManifestTemplates(plan, config, { format: "legacy" });
     assertEquals(linkZapstoreApplication(legacy, signed, []), legacy);
-    await rejects(() => linkZapstoreApplication([{ ...current[0], signedEvent: signed }], signed, []),
-      "before manifest signing");
+    await rejects(
+      () => linkZapstoreApplication([{ ...current[0], signedEvent: signed }], signed, []),
+      "before manifest signing",
+    );
   });
 });

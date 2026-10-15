@@ -69,14 +69,15 @@ const intentResult = await intent.open('napplet:profile/open', { payload: { pubk
 // Live per-napplet config const configSub = config.subscribe((values) => applyTheme(values.theme));
 
 // Fetch external bytes through the shell (`blossom:<sha256>.<ext>` URIs follow BUD-10: https://github.com/hzrd149/blossom/blob/master/buds/10.md)
-const avatarBlob = await resource.bytes('blossom:<sha256>.png', {
-  servers: ['https://cdn.hzrd149.com'],
-});
+const avatarBlob = await resource.bytes('blossom:<sha256>.png?xs=cdn.hzrd149.com');
 const avatarItems = await resource.bytesMany([
-  { url: 'https://example.com/avatar.png' },
-  { url: 'blossom:<sha256>.png', servers: ['https://cdn.hzrd149.com'] },
+  'https://example.com/avatar.png',
+  'blossom:<sha256>.png?xs=cdn.hzrd149.com',
 ]);
 ```
+
+Resource transport follows the living [NAP-RESOURCE proposal](https://github.com/napplet/naps/pull/80) and its [web binding](https://github.com/napplet/naps/blob/nub-resource/projections/web.md#resource-binding). Bulk calls take URL strings. Wire `blob` fields are canonical padded base64; the binding validates and decodes them into application-facing Blobs. Data URLs go through runtime policy. Replace former request objects and `opts.servers` with URL strings and BUD-10 URI hints. Hosts enforce the binding's network isolation before exposing this domain.
+
 
 ### INC convention URIs
 

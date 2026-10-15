@@ -4,6 +4,7 @@ import { KEY_SERVICE_NAME, type KeyStoreProvider, type StoredSecret } from "../s
 import { DEFAULT_CONNECT_RELAYS } from "../src/nostr-connect.ts";
 import { encodeNbunksec, type NappletSigner } from "../src/signing.ts";
 import type { NappletConfig, NostrEventTemplate, SignedNostrEvent } from "../src/types.ts";
+import { type BuildSignerSession, RedactedSecret } from "@napplet/build-tools";
 import { assert, assertEquals } from "./assert.ts";
 
 const pubkey = "02".repeat(32);
@@ -464,4 +465,71 @@ Deno.test("createDeploySigner fails explicitly for non-interactive deploy withou
   }
 
   assert(message.includes("Network deploy requires a signer"));
+});
+
+Deno.test("remote deploy authorization is delegated to the shared BuildSigner contract", async () => {
+  const source = await Deno.readTextFile(new URL("../src/deploy-signer-remote.ts", import.meta.url));
+
+  assert(source.includes("reconnectBuildSigner"));
+  assert(source.includes("createKeyStore"));
+});
+
+Deno.test("stored remote sessions use BuildSigner only for kind-24242 authorization", async () => {
+  const storedSecret = encodeNbunksec({
+    pubkey,
+    localKey: "03".repeat(32),
+    relays: ["wss://relay.test"],
+  });
+  let genericSigns = 0;
+  let sharedSigns = 0;
+  let sharedClosed = 0;
+  const sharedSession: BuildSignerSession = {
+    clientSecret: new RedactedSecret(storedSecret),
+    remotePubkey: pubkey,
+    relays: ["wss://relay.test"],
+    signer: {
+      getPublicKey: () => Promise.resolve(pubkey),
+      signEvent(template) {
+        sharedSigns += 1;
+        return Promise.resolve({
+          ...template,
+          id: "1".repeat(64),
+          pubkey,
+          sig: "2".repeat(128),
+        });
+      },
+      close() {
+        sharedClosed += 1;
+        return Promise.resolve();
+      },
+    },
+  };
+  const result = await createDeploySigner(
+    { type: "stored", source: "config", keyReference: pubkey },
+    defaultConfig(),
+    {
+      required: true,
+      interactiveConnect: false,
+      getKeyStoreProvider: () =>
+        Promise.resolve(provider({ retrieve: { [pubkey]: storedSecret } })),
+      createSigner: () =>
+        Promise.resolve({
+          ...fakeSigner(),
+          sign(template) {
+            genericSigns += 1;
+            return fakeSigner().sign(template);
+          },
+        }),
+      reconnectRemoteBuildSigner: () => Promise.resolve(sharedSession),
+    },
+  );
+
+  assert(result.signer);
+  await result.signer.sign({ kind: 24242, created_at: 1, tags: [], content: "upload" });
+  await result.signer.sign({ kind: 5129, created_at: 1, tags: [], content: "manifest" });
+  await result.signer.close?.();
+
+  assertEquals(sharedSigns, 1);
+  assertEquals(genericSigns, 1);
+  assertEquals(sharedClosed, 1);
 });

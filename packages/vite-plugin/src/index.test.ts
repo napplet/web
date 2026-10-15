@@ -5,6 +5,7 @@ import * as os from 'os';
 import * as path from 'path';
 import type { IndexHtmlTransformResult } from 'vite';
 import { nip5aManifest, NAPPLET_KIND_NAMED, type Nip5aManifestOptions } from './index';
+import { effectiveRequirements } from './requirements';
 
 const TEST_PRIVKEY = '01'.repeat(32);
 const tempRoots: string[] = [];
@@ -77,7 +78,26 @@ afterEach(() => {
   }
 });
 
+describe('effective manifest requirements', () => {
+  it('preserves author requirements and adds resource exactly once after a transaction commits', () => {
+    expect(effectiveRequirements(['relay', 'resource', 'relay'], 0)).toEqual(['relay', 'resource']);
+    expect(effectiveRequirements(['relay', 'resource', 'relay'], 2)).toEqual(['relay', 'resource']);
+  });
+});
+
 describe('nip5aManifest artifact modes', () => {
+  it('accepts disabled automatic large-asset optimization without adding a resource requirement', async () => {
+    const fixture = makeFixture();
+    fs.writeFileSync(path.join(fixture.dist, 'index.html'), '<!doctype html>');
+
+    await runCloseBundle(
+      { nappletType: 'optimization-disabled', largeAssetOptimization: false },
+      fixture,
+    );
+
+    expect(readManifest(fixture.dist).tags.filter((tag) => tag[0] === 'requires')).toEqual([]);
+  });
+
   it('writes unsigned requires and archetype metadata when no development key is set', async () => {
     const fixture = makeFixture();
     fs.writeFileSync(path.join(fixture.dist, 'index.html'), '<!doctype html>');

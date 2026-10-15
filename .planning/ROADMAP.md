@@ -919,7 +919,60 @@ Plans:
 - [x] 161-25-PLAN.md — Correct shipped skill guidance and mirror assertions
 - [x] 161-26-PLAN.md — Reverse stale guard rules and enforce adopted intent boundaries
 
-### Phase 162: NIP-5D event schema migration
+### Phase 162 (optimizer lineage): Blossom-backed large-asset optimization
+
+Historical lineage record; plans live in `162-blossom-backed-large-asset-optimization`. Aggregate-hash wording below describes the pre-migration implementation, not current NIP-5D requirements. Quick task 261012-jnp integrates it with main's independently numbered schema migration phase.
+
+**Goal:** Vite builds that would inline more than 2 MiB can safely move eligible large assets to user-discovered Blossom servers and recover them through existing NAP-RESOURCE methods, while preserving a valid inline artifact whenever optimization cannot complete.
+**Requirements:** None assigned (no requirement IDs; decisions, canonical boundaries, and validation predicates are carried in the phase plans)
+**Depends on:** Phase 161
+**Plans:** 11/11 plans executed
+
+**Success Criteria:**
+
+1. Retained Vite asset boundaries, exact threshold measurement, deterministic selection, and nonfatal exhaustion are test-proven.
+2. Shared Node/Deno build services provide least-authority NIP-46 pairing/session reuse, verified two-stage kind-10002/kind-10063 discovery, and exact authenticated Blossom uploads without leaking secrets.
+3. Private artifact metadata and loader code use only `blossom:sha256:<lowercase-hash>` plus existing `resource.bytes`/`bytesMany`, with bounded, enumerated browser reference support and runtime integrity checks.
+4. Every partial upload, unsafe URL/redirect, descriptor mismatch, resource substitution, unsupported reference, and destructive commit failure preserves/restores a conformant artifact and emits safe evidence.
+5. A deterministic generated fixture totaling more than 50 MiB across individually modest assets proves upload, final size, aggregate hash, and byte-identical fake NAP-RESOURCE recovery.
+6. Node/Deno regressions, full repository gates, docs, changesets, secret scan, AI-slop, durable demo evidence, push, and PR all complete.
+
+Plans:
+**Wave 1**
+
+- [x] 162-01-PLAN.md — Trace retained asset selection through fake upload, private rewrite, reversible commit, and fake resource recovery
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [x] 162-02-PLAN.md — Establish the platform-neutral build-tools package and isolated least-authority signer core
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
+- [x] 162-03-PLAN.md — Add QR/paste pairing, protected stores, and dirty-safe workspace integration
+
+**Wave 4** *(blocked on Wave 3 completion)*
+
+- [x] 162-04-PLAN.md — Migrate CLI pairing, key stores, and deploy signing to shared build services
+- [x] 162-05-PLAN.md — Implement verified write-relay server discovery and hardened exact-byte Blossom upload
+- [x] 162-07-PLAN.md — Bound browser reference rewriting and whole-Blob NAP-RESOURCE loading with parser-backed tests
+
+**Wave 5** *(blocked on Wave 4 completion)*
+
+- [x] 162-06-PLAN.md — Migrate CLI suggestions and deployment networking to shared discovery/upload services
+- [x] 162-08-PLAN.md — Add audited dependencies and lazy fakeable Node platform adapters
+
+**Wave 6** *(blocked on Wave 5 completion)*
+
+- [ ] 162-09-PLAN.md — Wire live optimization with exact conditional resource requirement and final aggregate hashing
+
+**Wave 7** *(blocked on Wave 6 completion)*
+
+- [ ] 162-10-PLAN.md — Prove the generated 50 MiB+ demonstration and synchronize canonical-boundary docs
+
+**Wave 8** *(blocked on Wave 7 completion)*
+
+- [x] 162-11-PLAN.md — Scan secrets, record evidence, run release gates, push, and open the PR
+### Phase 162 (main lineage): NIP-5D event schema migration
 
 **Goal:** Adopt the live NIP-5D event schema, retain an isolated temporary CLI legacy writer, document migration and release cutoffs, and open a verified draft PR with hzrd149 requested.
 **Requirements:** Current writers/readers, explicit CLI format selection, migration preview and skill, compatibility guide, package releases, verification and draft PR.

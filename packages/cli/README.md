@@ -6,6 +6,8 @@ First use of these tools requires network access and a writable cache. Later inv
 
 The generated Vite project and the optional skills.sh CLI have their own development dependencies; they are separate from running `napplet` commands.
 
+Its protected NIP-46 signer/session and Blossom deployment helpers are reused by the optional Vite large-asset optimizer; that build-tool behavior follows verified kind-10002 write/unmarked relay discovery to kind-10063 servers and remains non-normative implementation plumbing, not a CLI command or protocol addition.
+
 Use it to create a `.napplet/config.json`, find built `index.html` artifacts, inspect the deploy plan, sign manifest events, upload files to Blossom servers, publish to relays, and run local napplet tooling such as conformance and Paja.
 
 ## Install
@@ -212,7 +214,7 @@ Deploy also recovers current NIP-5D publishing metadata from the built HTML head
 
 ## Signing And Keys
 
-Local key storage prefers native platform secure storage: macOS Keychain, Windows Credential Manager, or Linux Secret Service when available. Hosts without those utilities use password-encrypted files in `~/.napplet/keys`. The portable store uses AES-256-GCM with a fresh salt and IV per record and PBKDF2-SHA256 (600,000 iterations). Secrets are never written as plaintext. Unlock it with a password of at least 12 characters at the hidden terminal prompt, or set `NAPPLET_KEYSTORE_PASSWORD` for non-interactive use. Set `NAPPLET_KEYSTORE=portable` to select it explicitly and `NAPPLET_KEYSTORE_DIR` to change its location. Keep the same password for later retrieval; it is not saved by the CLI.
+Local key storage prefers Linux Secret Service through `secret-tool` with a D-Bus session. macOS Keychain and Windows Credential Manager writes remain disabled because their command-line tools expose secrets through process arguments. Hosts without a protected native writer use password-encrypted files in `~/.napplet/keys`. The portable store uses AES-256-GCM with a fresh salt and IV per record and PBKDF2-SHA256 (600,000 iterations). Secrets are never written as plaintext. Unlock it with a password of at least 12 characters at the hidden terminal prompt, or set `NAPPLET_KEYSTORE_PASSWORD` for non-interactive use. Set `NAPPLET_KEYSTORE=portable` to select it explicitly and `NAPPLET_KEYSTORE_DIR` to change its location. Keep the same password for later retrieval; it is not saved by the CLI.
 
 ```sh
 napplet keys doctor

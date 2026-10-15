@@ -183,30 +183,34 @@ describe('createReferenceShell — record + respond', () => {
       type: 'resource.bytes',
       id: 'R',
       url: 'data:text/plain;base64,aGk=',
-    }) as Array<{ type: string; id: string; blob: Blob; mime: string }>;
+    }) as Array<{ type: string; id: string; blob: string; mime: string }>;
 
     expect(response.type).toBe('resource.bytes.result');
     expect(response.id).toBe('R');
     expect(response.mime).toBe('text/plain');
-    expect(await response.blob.text()).toBe('hi');
+    expect(response.blob).toBe('aGk=');
   });
 
-  it('accepts per-resource server hints for resource.bytesMany', async () => {
+  it('returns canonical base64 for ordered resource URLs', async () => {
     const shell = createReferenceShell();
     const [response] = shell.handle({
       type: 'resource.bytesMany',
       id: 'R',
-      requests: [{
-        url: 'data:text/plain;base64,aGk=',
-        servers: ['https://cdn.example'],
-      }],
-    }) as Array<{ type: string; id: string; items: Array<{ url: string; blob: Blob; mime: string }> }>;
+      urls: ['data:text/plain;base64,aGk='],
+    }) as Array<{ type: string; id: string; items: Array<{ url: string; blob: string; mime: string }> }>;
 
     expect(response.type).toBe('resource.bytesMany.result');
     expect(response.id).toBe('R');
     expect(response.items[0].url).toBe('data:text/plain;base64,aGk=');
     expect(response.items[0].mime).toBe('text/plain');
-    expect(await response.items[0].blob.text()).toBe('hi');
+    expect(response.items[0].blob).toBe('aGk=');
+  });
+
+  it('encodes large resource fixtures without spreading bytes into function arguments', () => {
+    const shell = createReferenceShell();
+    const encoded = btoa('f'.repeat(200_000));
+    const [response] = shell.handle({ type: 'resource.bytes', id: 'large', url: `data:application/octet-stream;base64,${encoded}` }) as Array<{ blob: string }>;
+    expect(response.blob).toBe(encoded);
   });
 
   it('returns no response for fire-and-forget and unknown messages', () => {

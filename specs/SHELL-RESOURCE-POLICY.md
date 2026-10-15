@@ -142,21 +142,20 @@ Coalesce concurrent same-URL fetches.
 
 - [ ] Cache keyed on the URL string as supplied by the napplet (byte-equal — this NAP does not mandate canonicalization)
 - [ ] N concurrent calls for the same URL share **one** in-flight fetch and resolve with the same `Blob` reference
-- [ ] Cache scope partitioned per `(dTag, aggregateHash)` per NIP-5D — napplets MUST NOT see another napplet's cached resources
+- [ ] Cache scope partitioned by the authenticated manifest key and verified artifact hash as defined by current NAP-RESOURCE
 - [ ] Aborted entries are removed from the in-flight map for retryability
 
 
 ## Blossom Server Hints
 
-The current NAP-RESOURCE proposal defines an ordered advisory `servers` list on `resource.bytes` and per-resource entries in `resource.bytesMany`. Treat the proposal itself as authoritative; this checklist only calls out the shell integration points that are easy to miss.
+The living [NAP-RESOURCE proposal](https://github.com/napplet/naps/pull/80) uses BUD-10 discovery hints in Blossom URIs. This checklist is non-normative.
 
-- [ ] Accept hints only for `blossom:` resources and ignore them for other schemes
-- [ ] Keep `servers` outside the resource URL and cache key
-- [ ] Treat hints as untrusted input that cannot bypass a cache hit, runtime/user policy, or the full network policy
-- [ ] Accept only public HTTPS origins, discard invalid or disallowed entries, deduplicate equivalent origins in first-seen order, and enforce a finite per-resource cap
-- [ ] Try accepted request hints before configured defaults and runtime-selected public fallbacks
-- [ ] Continue after HTTP 404/410, preserve the NAP-defined `not-found` versus `network-error` distinction, and verify the requested SHA-256 before caching or delivery
-
+- [ ] Read `xs`, `as`, and `sz` hints from the BUD-10 URI; do not add `servers` to resource envelopes
+- [ ] Send bulk URL strings in `urls`; preserve their input order and length in results
+- [ ] Treat hints as advisory and apply runtime fetch policy and hash verification
+- [ ] Encode every wire `blob`, including imported sidecars, as canonical padded base64
+- [ ] Validate and decode wire bytes into browser Blobs before success callbacks or cache hydration
+- [ ] Enforce the [web binding's network isolation prerequisite](https://github.com/napplet/naps/blob/nub-resource/projections/web.md#resource-binding) before exposing resource
 
 ## Scheme Whitelist (MUST)
 
@@ -164,7 +163,7 @@ Only the canonical schemes plus shell-administrator opt-ins are dispatched. Smug
 
 ### Canonical schemes
 
-- [ ] `data:` (RFC 2397) — decoded in-shim with zero shell round-trip; size cap still applies on the decoded `Blob`
+- [ ] `data:` (RFC 2397) — processed through the runtime by this shim; the same MIME, SVG, size, quota, and policy checks apply
 - [ ] `https:` — full Default Resource Policy applies
 - [ ] `blossom:<sha256>.<ext>` ([BUD-10](https://github.com/hzrd149/blossom/blob/master/buds/10.md)) — shell verifies hash against the URL's declared digest **before** delivery; mismatch → `code: "decode-failed"`
 - [ ] `htree:` — shell resolves Hashtree references to verified bytes without forwarding fragment keys to relays, storage servers, or peers
@@ -198,9 +197,9 @@ Use this as a deployment sign-off:
 - [ ] SVG caps (5 MiB input / 4096×4096 output / 2s wall-clock) all enforced together
 - [ ] Sidecar pre-resolution defaults OFF; opt-in per shell deployment policy + per-event-kind allowlist
 - [ ] Sidecar bytes obey the same MIME/SVG/size policy as direct calls
-- [ ] Single-flight cache scoped per `(dTag, aggregateHash)`
+- [ ] Single-flight cache scoped by the authenticated manifest key and verified artifact hash
 - [ ] Scheme dispatch is a whitelist; smuggling-prone schemes blocked
-- [ ] Capability discovery uses `shell.supports('resource')`; optional scheme and limit introspection uses `resource.info()`
+- [ ] Domain availability uses presence of `window.napplet.resource`; optional scheme and limit introspection uses `resource.info()`
 - [ ] Resource bytes treated as observable (cleartext over postMessage); deployers document this in user-facing notice if relevant
 
 

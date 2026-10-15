@@ -11,6 +11,8 @@
  */
 
 import type { NappletConfigSchema } from '@napplet/nap/config/types';
+import type { OptimizationReport } from './optimizer/pipeline.js';
+import type { NodeOptimizationOptions } from './optimizer/node-services.js';
 
 /**
  * NIP-5D napplet manifest kinds. Deliberately distinct from NIP-5A's nsite
@@ -46,6 +48,17 @@ export interface Nip5aRequiresOptions {
 /** Supported forms for the `requires` plugin option. */
 export type Nip5aRequiresOption = string[] | Nip5aRequiresOptions;
 
+/** Optional production integration boundaries for automatic large-asset optimization. */
+export interface Nip5aLargeAssetOptimizationOptions {
+  /** Node platform adapters. Omitted fields use the lazy built-in terminal, Nostr, DNS, and pinned HTTPS adapters. */
+  node?: NodeOptimizationOptions;
+  /** Receive the non-secret final optimization report after the build transaction settles. */
+  onReport?: (report: OptimizationReport) => void;
+}
+
+/** Public automatic large-asset optimization setting. */
+export type Nip5aLargeAssetOptimization = 'auto' | false | Nip5aLargeAssetOptimizationOptions;
+
 /** Public configuration for {@link import('./index.js').nip5aManifest}. */
 export interface Nip5aManifestOptions {
   /** Napplet type/dtag identifier (e.g., 'feed', 'chat'). Used as the NIP-5D `d` tag. */
@@ -72,6 +85,15 @@ export interface Nip5aManifestOptions {
   configSchema?: NappletConfigSchema | string;
   /** Authoring alias for independent z roles and i intents with advertised parameter names. */
   archetypes?: Array<{ slug: string; convention: string; params?: string[] }>;
+  /**
+   * Automatically externalize eligible retained build assets only when the
+   * measured would-be single-file HTML exceeds 2 MiB. This is build-tool
+   * behavior. A committed offload declares the `resource` capability defined
+   * by the published NAP-RESOURCE proposal.
+   *
+   * Defaults to `'auto'`. Set `false` to keep the normal all-inline artifact.
+   */
+  largeAssetOptimization?: Nip5aLargeAssetOptimization;
 }
 
 /** Internal: resolved per-plugin-instance build state shared across hooks. */
@@ -80,6 +102,9 @@ export interface ManifestPluginState {
   projectRoot: string;
   base: string;
   artifactMode: Nip5aArtifactMode;
+  largeAssetOptimization?: Nip5aLargeAssetOptimization;
+  optimizationCallbackConflict?: boolean;
+  optimizationReport?: OptimizationReport | null;
   resolvedSchema: NappletConfigSchema | null;
   resolvedSchemaSource: string | null;
   inferredRequires: Set<string>;

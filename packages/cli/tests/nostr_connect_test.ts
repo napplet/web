@@ -137,6 +137,17 @@ Deno.test("ensureNostrConnectPool wires applesauce signer static pool fallback",
   assertEquals(NostrConnectSigner.pool, undefined);
 });
 
+Deno.test("CLI pairing delegates first-success coordination to the shared build tools", async () => {
+  const source = await Deno.readTextFile(
+    new URL("../src/nostr-connect.ts", import.meta.url),
+  );
+
+  assert(
+    source.includes("pairBuildSigner"),
+    "CLI pairing must use the shared QR/pasted-bunker coordinator",
+  );
+});
+
 Deno.test("connectRemoteSigner completes via a pasted bunker:// URL", async () => {
   const remoteSk = generateSecretKey();
   const remotePubkey = getPublicKey(remoteSk);
@@ -176,10 +187,8 @@ Deno.test("connectRemoteSigner completes via a pasted bunker:// URL", async () =
 Deno.test("connectRemoteSigner completes QR flow when bunker replies with ack", async () => {
   const remoteSk = generateSecretKey();
   const remotePubkey = getPublicKey(remoteSk);
-  const userSk = generateSecretKey();
-  const userPubkey = getPublicKey(userSk);
   const relays = ["wss://relay.test"];
-  const pool = new FakeRemotePool(remoteSk, remotePubkey, userPubkey, {
+  const pool = new FakeRemotePool(remoteSk, remotePubkey, remotePubkey, {
     autoAck: true,
     connectResult: "ack",
   });
@@ -193,7 +202,7 @@ Deno.test("connectRemoteSigner completes QR flow when bunker replies with ack", 
     timeoutMs: 5000,
   });
 
-  assertEquals(result.pubkey, userPubkey);
+  assertEquals(result.pubkey, remotePubkey);
   assertEquals(result.relays, relays);
 
   const decoded = decodeNbunksec(result.nbunksec);
@@ -202,4 +211,20 @@ Deno.test("connectRemoteSigner completes QR flow when bunker replies with ack", 
   assertEquals(typeof decoded.secret, "string");
   assertEquals(/^[0-9a-f]{64}$/.test(decoded.localKey), true);
   assert(decoded.localKey !== bytesToHex(remoteSk));
+});
+
+Deno.test("connectRemoteSigner settles when stdin is closed and QR pairing fails", async () => {
+  const remoteSk = generateSecretKey();
+  const stdin = new ReadableStream<Uint8Array>({ start(controller) { controller.close(); } });
+  const pending = connectRemoteSigner({
+    relays: ["wss://relay.test"],
+    stdin,
+    pool: new FakeRemotePool(remoteSk, getPublicKey(remoteSk)) as unknown as AbstractSimplePool,
+    print: () => {},
+    timeoutMs: 25,
+  });
+  await Promise.race([
+    pending.then(() => { throw new Error("closed stdin must not pair"); }, () => {}),
+    new Promise((_, reject) => setTimeout(() => reject(new Error("connectRemoteSigner did not settle")), 500)),
+  ]);
 });

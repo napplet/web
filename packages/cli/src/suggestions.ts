@@ -1,24 +1,33 @@
 /**
  * Best-effort setup suggestions for interactive init.
  *
- * NIP-66 relay discovery and BUD-03/NIP-B7 Blossom server lists are advisory
- * inputs only. Absence of live suggestion data must never block init.
+ * Relay suggestions remain advisory. Blossom suggestions deliberately use the
+ * shared verified NIP-65 -> BUD-03 discovery service: without an author's
+ * public key and a valid server list the CLI presents no server suggestion.
  *
  * @module
  */
 
+import {
+  discoverBlossomServers,
+  type DiscoveryFilter,
+  type DiscoveryServices,
+} from "@napplet/build-tools";
 import { SimplePool } from "nostr-tools/pool";
 
+/** NIP-66 relay discovery event kind. */
 export const NIP66_RELAY_DISCOVERY_KIND = 30166;
-export const BLOSSOM_SERVER_LIST_KIND = 10063;
+/** Maximum number of relay suggestions retained for terminal completion. */
 export const DEFAULT_SUGGESTION_LIMIT = 1200;
 
+/** Bounded NIP-66 relay discovery sources. */
 export const DEFAULT_RELAY_DISCOVERY_RELAYS = [
   "wss://relaypag.es",
   "wss://relay.nostr.watch",
   "wss://monitorlizard.nostr1.com",
 ] as const;
 
+/** Static relay suggestions retained when live NIP-66 discovery is unavailable. */
 export const DEFAULT_RELAY_SUGGESTIONS = [
   "wss://relay.primal.net",
   "wss://nos.lol",
@@ -26,13 +35,6 @@ export const DEFAULT_RELAY_SUGGESTIONS = [
   "wss://nostr.wine",
   "wss://relay.nostr.band",
   "wss://nostr-pub.wellorder.net",
-] as const;
-
-export const DEFAULT_BLOSSOM_SERVER_SUGGESTIONS = [
-  "https://cdn.hzrd149.com",
-  "https://cdn.sovbit.host",
-  "https://cdn.nostrcheck.me",
-  "https://nostr.download",
 ] as const;
 
 interface QueryPool {
@@ -45,11 +47,14 @@ interface QueryPool {
   destroy?: () => void;
 }
 
-interface SuggestionOptions {
+export interface SuggestionOptions {
   pool?: QueryPool;
   relays?: string[];
   limit?: number;
   maxWait?: number;
+  pubkey?: string;
+  verifyEvent?: DiscoveryServices["verifyEvent"];
+  now?: () => number;
 }
 
 interface NostrEventLike {
@@ -64,16 +69,7 @@ interface RelayCandidate {
   createdAt: number;
 }
 
-/**
- * Resolve relay suggestions from NIP-66 discovery events with defaults appended.
- *
- * @param options Optional pool, relays, and timeout for tests or callers.
- * @returns Unique relay URLs ordered by live discovery score, then defaults.
- * @example
- * ```ts
- * const relays = await getRelaySuggestions();
- * ```
- */
+/** Resolve relay suggestions from NIP-66 discovery events with defaults appended. */
 export async function getRelaySuggestions(options: SuggestionOptions = {}): Promise<string[]> {
   const limit = options.limit ?? DEFAULT_SUGGESTION_LIMIT;
   const defaults = [...DEFAULT_RELAY_SUGGESTIONS];
@@ -87,30 +83,36 @@ export async function getRelaySuggestions(options: SuggestionOptions = {}): Prom
 }
 
 /**
- * Resolve Blossom server suggestions from kind 10063 server-list events.
+ * Resolve an author's ordered Blossom server list through verified NIP-65 data.
  *
- * @param options Optional pool, relays, and timeout for tests or callers.
- * @returns Unique Blossom server URLs ordered by observed frequency, then defaults.
- * @example
- * ```ts
- * const servers = await getBlossomServerSuggestions({ relays });
- * ```
+ * @param options User public key plus Deno relay adapter test seams.
+ * @returns Ordered BUD-03 server URLs, or an empty list when the user must choose manually.
  */
 export async function getBlossomServerSuggestions(
   options: SuggestionOptions = {},
 ): Promise<string[]> {
-  const limit = options.limit ?? DEFAULT_SUGGESTION_LIMIT;
-  const defaults = [...DEFAULT_BLOSSOM_SERVER_SUGGESTIONS];
-  const relays = options.relays?.length ? options.relays : DEFAULT_RELAY_SUGGESTIONS.slice(0, 4);
-  const discovered = await querySuggestions(
-    { ...options, relays },
-    relays,
-    { kinds: [BLOSSOM_SERVER_LIST_KIND], limit },
-    eventsToBlossomServerSuggestions,
-  );
-  return unique([...discovered, ...defaults]).slice(0, limit);
+  if (!options.pubkey) return [];
+  const pool = options.pool ?? new SimplePool() as QueryPool;
+  const directoryRelays = options.relays?.length ? options.relays : undefined;
+  try {
+    const result = await discoverBlossomServers({
+      pubkey: options.pubkey,
+      directoryRelays,
+      now: options.now,
+      maxRelays: options.limit,
+    }, {
+      query: (relays, filter, signal) => queryWithPool(pool, relays, filter, signal, options),
+      verifyEvent: options.verifyEvent,
+    });
+    return result.status === "found" ? result.servers.map((server) => server.toString()) : [];
+  } catch {
+    return [];
+  } finally {
+    if (!options.pool) closePool(pool, directoryRelays ?? []);
+  }
 }
 
+/** Convert untrusted NIP-66 events into scored relay completion candidates. */
 export function eventsToRelaySuggestions(events: readonly unknown[]): string[] {
   const latest = new Map<string, RelayCandidate>();
   for (const event of events) {
@@ -118,16 +120,10 @@ export function eventsToRelaySuggestions(events: readonly unknown[]): string[] {
     if (!parsed) continue;
     const url = normalizeUrl(firstTagValue(parsed.tags, "d"));
     if (!url || !isRelayUrl(url)) continue;
-    const candidate: RelayCandidate = {
-      url,
-      score: scoreRelay(parsed),
-      createdAt: parsed.created_at ?? 0,
-    };
+    const candidate: RelayCandidate = { url, score: scoreRelay(parsed), createdAt: parsed.created_at ?? 0 };
     const existing = latest.get(url);
-    if (
-      !existing || candidate.score < existing.score ||
-      (candidate.score === existing.score && candidate.createdAt > existing.createdAt)
-    ) {
+    if (!existing || candidate.score < existing.score ||
+      (candidate.score === existing.score && candidate.createdAt > existing.createdAt)) {
       latest.set(url, candidate);
     }
   }
@@ -136,21 +132,18 @@ export function eventsToRelaySuggestions(events: readonly unknown[]): string[] {
     .map((candidate) => candidate.url);
 }
 
-export function eventsToBlossomServerSuggestions(events: readonly unknown[]): string[] {
-  const counts = new Map<string, number>();
-  for (const event of events) {
-    const parsed = asEvent(event, BLOSSOM_SERVER_LIST_KIND);
-    if (!parsed) continue;
-    for (const tag of parsed.tags) {
-      if (tag[0] !== "server") continue;
-      const url = normalizeUrl(tag[1]);
-      if (!url || !isHttpUrl(url)) continue;
-      counts.set(url, (counts.get(url) ?? 0) + 1);
-    }
-  }
-  return [...counts.entries()]
-    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
-    .map(([url]) => url);
+async function queryWithPool(
+  pool: QueryPool,
+  relays: readonly string[],
+  filter: DiscoveryFilter,
+  signal: AbortSignal,
+  options: SuggestionOptions,
+): Promise<readonly unknown[]> {
+  if (signal.aborted) throw new Error("cancelled");
+  return await pool.querySync([...relays], { ...filter }, {
+    maxWait: options.maxWait ?? 1500,
+    label: "napplet-init-suggestions",
+  });
 }
 
 async function querySuggestions(
@@ -170,15 +163,13 @@ async function querySuggestions(
   } catch {
     return [];
   } finally {
-    if (!options.pool) {
-      try {
-        pool.close?.(relays);
-      } catch { /* best-effort */ }
-      try {
-        pool.destroy?.();
-      } catch { /* best-effort */ }
-    }
+    if (!options.pool) closePool(pool, relays);
   }
+}
+
+function closePool(pool: QueryPool, relays: readonly string[]): void {
+  try { pool.close?.([...relays]); } catch { /* best-effort */ }
+  try { pool.destroy?.(); } catch { /* best-effort */ }
 }
 
 function asEvent(value: unknown, kind: number): NostrEventLike | null {
@@ -190,17 +181,11 @@ function asEvent(value: unknown, kind: number): NostrEventLike | null {
     if (!Array.isArray(tag) || tag.some((part) => typeof part !== "string")) continue;
     tags.push([...tag]);
   }
-  return {
-    kind,
-    created_at: typeof event.created_at === "number" ? event.created_at : undefined,
-    tags,
-  };
+  return { kind, created_at: typeof event.created_at === "number" ? event.created_at : undefined, tags };
 }
 
 function scoreRelay(event: NostrEventLike): number {
-  let score = firstNumberTag(event.tags, "rtt-open") ??
-    firstNumberTag(event.tags, "rtt-read") ??
-    10_000;
+  let score = firstNumberTag(event.tags, "rtt-open") ?? firstNumberTag(event.tags, "rtt-read") ?? 10_000;
   if (firstTagValue(event.tags, "d")?.startsWith("wss://")) score -= 100;
   const requirements = event.tags.filter((tag) => tag[0] === "R").map((tag) => tag[1]);
   if (requirements.includes("payment")) score += 1000;
@@ -216,8 +201,7 @@ function firstTagValue(tags: readonly string[][], name: string): string | undefi
 
 function firstNumberTag(tags: readonly string[][], name: string): number | undefined {
   const raw = firstTagValue(tags, name);
-  if (raw === undefined) return undefined;
-  const value = Number(raw);
+  const value = raw === undefined ? Number.NaN : Number(raw);
   return Number.isFinite(value) ? value : undefined;
 }
 
@@ -229,26 +213,14 @@ function normalizeUrl(value: string | undefined): string | null {
     url.search = "";
     const normalized = url.toString();
     return normalized.endsWith("/") ? normalized.slice(0, -1) : normalized;
-  } catch {
-    return null;
-  }
+  } catch { return null; }
 }
 
 function isRelayUrl(value: string): boolean {
   return value.startsWith("wss://") || value.startsWith("ws://");
 }
 
-function isHttpUrl(value: string): boolean {
-  return value.startsWith("https://") || value.startsWith("http://");
-}
-
 function unique(values: readonly string[]): string[] {
   const seen = new Set<string>();
-  const result: string[] = [];
-  for (const value of values) {
-    if (seen.has(value)) continue;
-    seen.add(value);
-    result.push(value);
-  }
-  return result;
+  return values.filter((value) => !seen.has(value) && (seen.add(value), true));
 }

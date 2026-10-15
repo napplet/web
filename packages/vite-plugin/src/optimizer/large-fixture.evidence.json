@@ -1,0 +1,64 @@
+{
+  "candidateBytes": 57671680,
+  "assetCount": 7,
+  "maximumWholeBlobBytes": 10485760,
+  "initialHtmlBytes": 76897014,
+  "finalHtmlBytes": 25617,
+  "artifactHash": "bd15b362ea463c0883bd5cbb0ec3d5de946b99de45ba4e791520b71333320da8",
+  "finalIndexSha256": "bd15b362ea463c0883bd5cbb0ec3d5de946b99de45ba4e791520b71333320da8",
+  "selected": [
+    {
+      "source": "assets/fixture-01.bin",
+      "bytes": 9437184,
+      "sha256": "2a5f3e710787fef2cab50c7f38ea6f8ed9d16b500e75e6855a7bf79f2dd5dcff"
+    },
+    {
+      "source": "assets/fixture-02.bin",
+      "bytes": 9437184,
+      "sha256": "133519935dff60330e25fb2b96c3526f0a00d116a7abe80d28611c5b42f5b35a"
+    },
+    {
+      "source": "assets/fixture-03.bin",
+      "bytes": 8388608,
+      "sha256": "4c81a80c532327a49f423a7d27bcfeacea9e3d36e3b803d0fdff1cb2267492cc"
+    },
+    {
+      "source": "assets/fixture-04.bin",
+      "bytes": 8388608,
+      "sha256": "3df06c1fd8db4c6b62c79a22c2a1fa03b14df29c07095e6f623389626263ded5"
+    },
+    {
+      "source": "assets/fixture-05.bin",
+      "bytes": 8388608,
+      "sha256": "05e2c5e3dc114de65c2df4031549658b8126f79923850d381bdbe9ed54c2909f"
+    },
+    {
+      "source": "assets/fixture-06.bin",
+      "bytes": 7340032,
+      "sha256": "16582a67d3df7d2be1514161c219c9d151fb8f0518ab041bcd6f5f6eeadb3b03"
+    },
+    {
+      "source": "assets/fixture-07.bin",
+      "bytes": 6291456,
+      "sha256": "a4daecdb071f24cce8bae4a760a156939d30badb21f785b716377199e88acdd2"
+    }
+  ],
+  "discovery": {
+    "writeRelays": [
+      "wss://write.fixture.test",
+      "wss://unmarked.fixture.test"
+    ],
+    "servers": [
+      "https://primary.blossom.fixture.test",
+      "https://secondary.blossom.fixture.test"
+    ]
+  },
+  "assertions": [
+    "all seven exact-byte uploads carry verified kind 24242 authorization",
+    "only uploaded candidate files are removed after the transaction commits",
+    "the private mapping stays in index.html, not NIP-5D tags",
+    "resource.bytesMany recovers all selected bounded Blobs byte-for-byte",
+    "a failing direct secondary upload is noncommittable and corrupt bytes recover only after verified retry",
+    "the over-limit whole-Blob fallback remains inline without streaming or ranges"
+  ]
+}

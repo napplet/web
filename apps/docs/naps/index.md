@@ -117,16 +117,14 @@ window.napplet.config.openSettings({ section: 'appearance' });
 
 ### resource
 
-Sandboxed byte fetching (`info() -> ResourceInfo`, `bytes(url, options?) -> Blob`, `bytesMany(requests) -> ResourceBytesItem[]`) over https / blossom ([BUD-10](https://github.com/hzrd149/blossom/blob/master/buds/10.md) `blossom:<sha256>.<ext>` URIs) / nostr / data schemes — the only network-fetch primitive available inside the iframe sandbox.
+Sandboxed byte fetching (`info() -> ResourceInfo`, `bytes(url, options?) -> Blob`, `bytesMany(urls) -> ResourceBytesItem[]`) over https / blossom ([BUD-10](https://github.com/hzrd149/blossom/blob/master/buds/10.md) `blossom:<sha256>.<ext>` URIs) / nostr / data schemes through the runtime. Hosts exposing this domain enforce the network-isolation prerequisite in the [resource web binding](https://github.com/napplet/naps/blob/nub-resource/projections/web.md#resource-binding).
 
 ```ts
 const info = await window.napplet.resource.info();
-const blob = await window.napplet.resource.bytes('blossom:<sha256>.png', {
-  servers: ['https://cdn.hzrd149.com'],
-});
+const blob = await window.napplet.resource.bytes('blossom:<sha256>.png?xs=cdn.hzrd149.com');
 const items = await window.napplet.resource.bytesMany([
-  { url: 'https://example.com/avatar.png' },
-  { url: 'blossom:<sha256>.png', servers: ['https://cdn.hzrd149.com'] },
+  'https://example.com/avatar.png',
+  'blossom:<sha256>.png?xs=cdn.hzrd149.com',
 ]);
 
 // Managed object URL — revoke when done to free memory

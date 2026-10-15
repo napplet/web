@@ -42,20 +42,17 @@ describe('bootAndCollect — DOM wiring', () => {
       const napplet = (window as unknown as {
         napplet: {
           resource: {
-            bytes(url: string, options?: { servers?: string[] }): Promise<Blob>;
-            bytesMany(requests: Array<{ url: string; servers?: string[] }>): Promise<unknown[]>;
+            bytes(url: string, options?: { signal?: AbortSignal }): Promise<Blob>;
+            bytesMany(urls: string[]): Promise<unknown[]>;
           };
         };
       }).napplet;
-      const promise = napplet.resource.bytes('data:text/plain;base64,aGk=', {
-        servers: ['https://cdn.example'],
-      });
+      const promise = napplet.resource.bytes('data:text/plain;base64,aGk=');
 
       expect(posted).toEqual([{
         type: 'resource.bytes',
         id: expect.any(String),
         url: 'data:text/plain;base64,aGk=',
-        servers: ['https://cdn.example'],
       }]);
 
       window.dispatchEvent(new MessageEvent('message', {
@@ -63,34 +60,29 @@ describe('bootAndCollect — DOM wiring', () => {
         data: {
           type: 'resource.bytes.result',
           id: posted[0].id,
-          blob: new Blob(['hi'], { type: 'text/plain' }),
+          blob: 'aGk=',
           mime: 'text/plain',
         },
       }));
 
       expect(await (await promise).text()).toBe('hi');
 
-      const many = napplet.resource.bytesMany([{
-        url: 'blossom:abc.bin',
-        servers: ['https://cdn.example'],
-      }]);
+      const many = napplet.resource.bytesMany(['blossom:abc.bin']);
       expect(posted[1]).toEqual({
         type: 'resource.bytesMany',
         id: expect.any(String),
-        requests: [{
-          url: 'blossom:abc.bin',
-          servers: ['https://cdn.example'],
-        }],
+        urls: ['blossom:abc.bin'],
       });
       window.dispatchEvent(new MessageEvent('message', {
         source: window.parent,
         data: {
           type: 'resource.bytesMany.result',
           id: posted[1].id,
-          items: [],
+          items: [{ url: 'blossom:abc.bin', ok: true, blob: 'aGk=', mime: 'text/plain' }],
         },
       }));
-      await expect(many).resolves.toEqual([]);
+      const result = await many as Array<{ blob: Blob }>;
+      expect(await result[0].blob.text()).toBe('hi');
     } finally {
       Object.defineProperty(window, 'parent', { configurable: true, value: previousParent });
       delete (window as unknown as { napplet?: unknown }).napplet;

@@ -346,8 +346,8 @@ function summarizeDeployOutcome(
       !deploy.published.some((publish) => publish.eventId === eventId && publish.success)
     ).length;
   const failures: string[] = [];
-  if (deploy.uploadSummary.serversFullyUploaded === 0) {
-    failures.push("no complete Blossom mirror");
+  if (deploy.uploadSummary.serversFullyUploaded !== deploy.uploadSummary.servers) {
+    failures.push("incomplete Blossom upload batch");
   }
   if (eventIds.length === 0) {
     failures.push("no signed manifest events");
@@ -369,13 +369,6 @@ function summarizeDeployOutcome(
 
   const warnings: string[] = [];
   if (succeeded) {
-    const incompleteMirrors = Math.max(
-      0,
-      deploy.uploadSummary.servers - deploy.uploadSummary.serversFullyUploaded,
-    );
-    if (incompleteMirrors > 0) {
-      warnings.push(formatCount(incompleteMirrors, "incomplete Blossom mirror"));
-    }
     const failedRelayPublishes = deploy.published.filter((publish) => !publish.success).length;
     if (failedRelayPublishes > 0) {
       warnings.push(

@@ -68,7 +68,8 @@ export function subscribe(
 
     if (msg.type === 'relay.event') {
       const eventMsg = msg as RelayEventMessage;
-      hydrateResourceCache(eventMsg.result.sidecar?.resources);
+      try { hydrateResourceCache(eventMsg.result.sidecar?.resources); }
+      catch { return; /* Invalid wire bytes cannot reach the event callback. */ }
       onEvent(eventMsg.result);
     } else if (msg.type === 'relay.eose') {
       onEose();
@@ -255,8 +256,10 @@ export function query(filters: NostrFilter | NostrFilter[]): Promise<RelayEventR
         reject(new Error(result.error));
       } else {
         const events = Array.isArray(result.events) ? result.events : [];
-        for (const item of events) hydrateResourceCache(item.sidecar?.resources);
-        resolve(events);
+        try {
+          hydrateResourceCache(events.flatMap((item) => item.sidecar?.resources ?? []));
+          resolve(events);
+        } catch (error) { reject(error); }
       }
     }
 

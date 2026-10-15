@@ -1,6 +1,7 @@
 {
   "workspace": [
     "./packages/boilerplate",
+    "./packages/build-tools",
     "./packages/cli",
     "./packages/conformance",
     "./packages/core",

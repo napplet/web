@@ -86,4 +86,28 @@ describe('@napplet/nap/relay shim', () => {
 
     await expect(promise).resolves.toEqual([]);
   });
+  it('rejects malformed query sidecars and leaves their bytes uncached', async () => {
+    const { query } = await import('./shim.js');
+    const { bytes, handleResourceMessage } = await import('../resource/shim.js');
+    const promise = query({ kinds: [1] });
+    const rejected = expect(promise).rejects.toThrow('decode-failed');
+    const url = 'https://example.com/a';
+    emitFromParent({ type: 'relay.query.result', id: lastPosted('relay.query').id, events: [{ sidecar: { resources: [{ url, blob: 'Zh==', mime: 'text/plain' }] } }] });
+    await rejected;
+    const resource = bytes(url);
+    const sent = lastPosted('resource.bytes');
+    handleResourceMessage({ type: 'resource.bytes.result', id: sent.id, blob: 'Zg==', mime: 'text/plain' });
+    expect(await (await resource).text()).toBe('f');
+  });
+
+  it('drops malformed subscription sidecars before callbacks', async () => {
+    const { subscribe } = await import('./shim.js');
+    const received = vi.fn();
+    const sub = subscribe({ kinds: [1] }, received, () => {});
+    const subId = lastPosted('relay.subscribe').subId;
+    emitFromParent({ type: 'relay.event', subId, result: { sidecar: { resources: [{ url: 'https://example.com/a', blob: new Blob(['f']), mime: 'text/plain' }] } } });
+    expect(received).not.toHaveBeenCalled();
+    sub.close();
+  });
+
 });
