@@ -7,8 +7,8 @@ current_phase_name: nap-gamepad-across-repositories
 status: completed
 stopped_at: Phase 163 verified; completing prerequisite publication for CLI follow-up 243
 last_updated: "2026-10-14T16:24:49.491178+00:00"
-last_activity: 2026-10-14
-last_activity_desc: Integrated the merged icon skill with the verified GAMEPAD release
+last_activity: 2026-10-15
+last_activity_desc: Added keyboard action registration guidance across napplet skills
 progress:
   total_phases: 8
   completed_phases: 3
@@ -576,6 +576,7 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 | 260706-psu | Resolve napplet/web#126 with @napplet/shim host prelude | 2026-07-06 | 4e726171 | [260706-psu-task-resolve-napplet-web-126-by-adding-a](./quick/260706-psu-task-resolve-napplet-web-126-by-adding-a/) |
 | 260706-dmu | Align NAP-DM result envelope unions | 2026-07-07 | ac9c32e0 | [260706-dmu-align-dm-result-envelope-unions](./quick/260706-dmu-align-dm-result-envelope-unions/) |
 | 260706-via | Harden napplet skills against direct browser network and storage APIs in sandboxed napplets | 2026-07-06 | e781e436 | [260706-via-harden-napplet-skills-against-direct-bro](./quick/260706-via-harden-napplet-skills-against-direct-bro/) |
+| 261015-k1f | Recommend NAP-KEYS registration for shortcuts and game controls | 2026-10-15 | e55a2aa8 | [261015-k1f-document-nap-keys-registration-for-keybo](./quick/261015-k1f-document-nap-keys-registration-for-keybo/) |
 
 ## Deferred Items
 
