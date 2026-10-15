@@ -24,7 +24,7 @@ interface PrivateLoader {
 
 interface ResourceDomain {
   bytes(uri: string, options?: { signal?: AbortSignal }): Promise<Blob>;
-  bytesMany(requests: ResourceRequest[], options?: { signal?: AbortSignal }): Promise<ResourceItem[]>;
+  bytesMany(urls: string[], options?: { signal?: AbortSignal }): Promise<ResourceItem[]>;
 }
 
 interface ScenarioWindow extends Window {
@@ -89,7 +89,7 @@ function buildArtifact(sources: string[]): ArtifactFixture {
   };
   const entries = assets.map((asset) => ({
     source: asset.source,
-    uri: `blossom:sha256:${digest(asset.bytes)}`,
+    uri: `blossom:${digest(asset.bytes)}.bin`,
     sha256: digest(asset.bytes),
     bytes: asset.bytes.byteLength,
     mime: asset.mime,
@@ -262,24 +262,24 @@ describe('generated packaged-loader browser runtime', () => {
 
   it('retains successful mixed bulk rows and retries only the failed source in original order', async () => {
     const fixture = buildArtifact(['assets/a.bin', 'assets/b.bin', 'assets/c.bin']);
-    const calls: ResourceRequest[][] = [];
+    const calls: string[][] = [];
     const digestCounts = new Map<number, number>();
     let attempt = 0;
     const harness = createHarness(
       fixture,
       {
         bytes: async () => { throw new Error('bulk scenario must not decompose into bytes calls'); },
-        bytesMany: async (requests) => {
-          calls.push(requests);
+        bytesMany: async (urls) => {
+          calls.push(urls);
           attempt += 1;
           if (attempt === 1) {
             return [
-              { url: requests[0]!.url, ok: true, blob: new Blob([fixture.values[0]!]) },
-              { url: requests[1]!.url, ok: false },
-              { url: requests[2]!.url, ok: true, blob: new Blob([fixture.values[2]!]) },
+              { url: urls[0]!, ok: true, blob: new Blob([fixture.values[0]!]) },
+              { url: urls[1]!, ok: false },
+              { url: urls[2]!, ok: true, blob: new Blob([fixture.values[2]!]) },
             ];
           }
-          return [{ url: requests[0]!.url, ok: true, blob: new Blob([fixture.values[1]!]) }];
+          return [{ url: urls[0]!, ok: true, blob: new Blob([fixture.values[1]!]) }];
         },
       },
       async (algorithm, value) => {
@@ -306,8 +306,8 @@ describe('generated packaged-loader browser runtime', () => {
         expect.objectContaining({ size: 4 }),
       ]);
       expect(calls).toEqual([
-        fixture.entries.map(({ uri }) => ({ url: uri })),
-        [{ url: fixture.entries[1]!.uri }],
+        fixture.entries.map(({ uri }) => uri),
+        [fixture.entries[1]!.uri],
       ]);
       expect(digestCounts).toEqual(new Map([[49, 1], [51, 1], [50, 1]]));
       expect(harness.window.document.getElementById('napplet-loader')!.getAttribute('data-state')).toBe('success');

@@ -7,11 +7,6 @@ import {
   type ResourceTableEntry,
 } from './loader.js';
 
-interface ResourceBytesRequest {
-  url: string;
-  servers?: string[];
-}
-
 interface ResourceBytesItem {
   url: string;
   ok: boolean;
@@ -84,7 +79,7 @@ function bytes(length: number, value = 65): Uint8Array {
 
 function entry(source: string, value: Uint8Array): ResourceTableEntry {
   const sha256 = crypto.createHash('sha256').update(value).digest('hex');
-  return { source, uri: `blossom:sha256:${sha256}`, sha256, bytes: value.byteLength, mime: 'application/octet-stream' };
+  return { source, uri: `blossom:${sha256}.bin`, sha256, bytes: value.byteLength, mime: 'application/octet-stream' };
 }
 
 function deferred<T>(): { promise: Promise<T>; resolve(value: T): void; reject(reason: unknown): void } {
@@ -99,7 +94,7 @@ function deferred<T>(): { promise: Promise<T>; resolve(value: T): void; reject(r
 
 function fakeWindow(overrides: Partial<{
   bytes: (uri: string, options?: { signal?: AbortSignal }) => Promise<Blob>;
-  bytesMany: (requests: ResourceBytesRequest[], options?: { signal?: AbortSignal }) => Promise<ResourceBytesItem[]>;
+  bytesMany: (urls: string[], options?: { signal?: AbortSignal }) => Promise<ResourceBytesItem[]>;
 }> = {}) {
   return {
     napplet: {
@@ -339,16 +334,16 @@ describe('private NAP-RESOURCE runtime', () => {
     const errorState = deferred<LoaderState>();
     let errorSeen = false;
     const signals: AbortSignal[] = [];
-    const manyCall = vi.fn(async (requests: ResourceBytesRequest[], options?: { signal?: AbortSignal }) => {
+    const manyCall = vi.fn(async (urls: string[], options?: { signal?: AbortSignal }) => {
       signals.push(options!.signal!);
       if (manyCall.mock.calls.length === 1) {
         return [
-          { url: requests[0]!.url, ok: true, blob: blobs[0] },
-          { url: requests[1]!.url, ok: false },
-          { url: requests[2]!.url, ok: true, blob: blobs[2] },
+          { url: urls[0]!, ok: true, blob: blobs[0] },
+          { url: urls[1]!, ok: false },
+          { url: urls[2]!, ok: true, blob: blobs[2] },
         ];
       }
-      return [{ url: requests[0]!.url, ok: true, blob: blobs[1] }];
+      return [{ url: urls[0]!, ok: true, blob: blobs[1] }];
     });
     const instance = runtime({
       entries,
@@ -372,8 +367,8 @@ describe('private NAP-RESOURCE runtime', () => {
     await instance.retry();
     await expect(aggregate).resolves.toEqual(blobs);
     expect(manyCall.mock.calls.map(([requests]) => requests)).toEqual([
-      entries.map(({ uri }) => ({ url: uri })),
-      [{ url: entries[1]!.uri }],
+      entries.map(({ uri }) => uri),
+      [entries[1]!.uri],
     ]);
     expect(signals[0]).not.toBe(signals[1]);
     expect(states.at(-1)).toMatchObject({ phase: 'success', completed: 3, total: 3 });
@@ -414,7 +409,7 @@ describe('private NAP-RESOURCE runtime', () => {
 
   it('preserves canonical requests, bounded batches/digests/cache, MIME, and URL ownership', async () => {
     const entries = [entry('assets/one.bin', bytes(4, 49)), entry('assets/two.bin', bytes(4, 50)), entry('assets/three.bin', bytes(4, 51))];
-    const manyCall = vi.fn(async (requests: ResourceBytesRequest[], _options?: { signal?: AbortSignal }) => requests.map(({ url }) => {
+    const manyCall = vi.fn(async (urls: string[], _options?: { signal?: AbortSignal }) => urls.map((url) => {
       const index = entries.findIndex((candidate) => candidate.uri === url);
       return { url, ok: true, blob: new Blob([bytes(4, 49 + index)]) };
     }));
@@ -439,8 +434,8 @@ describe('private NAP-RESOURCE runtime', () => {
 
     await expect(instance.resolveMany(entries.map(({ source }) => source))).resolves.toHaveLength(3);
     expect(manyCall.mock.calls.map(([requests]) => requests)).toEqual([
-      [{ url: entries[0]!.uri }, { url: entries[1]!.uri }],
-      [{ url: entries[2]!.uri }],
+      [entries[0]!.uri, entries[1]!.uri],
+      [entries[2]!.uri],
     ]);
     expect(peak).toBe(1);
 
@@ -461,7 +456,7 @@ describe('private NAP-RESOURCE runtime', () => {
   it('fails closed on unknown, malformed, oversized, or reordered table associations', async () => {
     const value = bytes(4, 49);
     const valid = entry('assets/value.bin', value);
-    const malformed = { ...valid, source: 'assets/malformed.bin', uri: `blossom:sha256:${'0'.repeat(64)}` };
+    const malformed = { ...valid, source: 'assets/malformed.bin', uri: `blossom:${'0'.repeat(64)}.bin` };
     const oversized = { ...valid, source: 'assets/oversized.bin', bytes: 10 * 1024 * 1024 + 1 };
     const instance = runtime({ entries: [valid, malformed, oversized], window: fakeWindow() });
 

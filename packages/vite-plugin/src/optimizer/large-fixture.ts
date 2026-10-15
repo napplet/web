@@ -160,15 +160,15 @@ async function recoverFixtureResources(
   selected: FixtureOutput['selected'],
   uploaded: Map<string, Uint8Array>,
 ): Promise<Array<{ source: string; sha256: string; exact: boolean }>> {
-  const byteCalls: Array<Array<{ url: string }>> = [];
+  const byteCalls: string[][] = [];
   const runtime = new ResourceRuntime({
     entries,
     maxLiveBytes: 50 * MEBIBYTE,
     window: { napplet: { resource: {
       bytes: async () => { throw new Error('single bytes path is not the batch fixture proof'); },
-      bytesMany: async (requests: Array<{ url: string }>) => {
-        byteCalls.push([...requests]);
-        return requests.map(({ url }) => ({ url, ok: true, blob: new Blob([uploaded.get(url)!]) }));
+      bytesMany: async (urls: string[]) => {
+        byteCalls.push([...urls]);
+        return urls.map((url) => ({ url, ok: true, blob: new Blob([uploaded.get(url)!]) }));
       },
     } } } as never,
     digest: async (blob) => sha256(new Uint8Array(await blob.arrayBuffer())),
@@ -183,7 +183,7 @@ async function recoverFixtureResources(
     }
   }
   runtime.teardown();
-  if (byteCalls.length === 0 || byteCalls.some((requests) => requests.length === 0 || requests.some((request) => Object.keys(request).length !== 1 || typeof request.url !== 'string'))) {
+  if (byteCalls.length === 0 || byteCalls.some((requests) => requests.length === 0 || requests.some((url) => typeof url !== 'string'))) {
     throw new Error('fixture did not use exact URL-only NAP-RESOURCE bytesMany requests');
   }
   return recovery;

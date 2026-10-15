@@ -133,7 +133,7 @@ function createFixtureFetch(
       return new Response('invalid descriptor', { status: 400 });
     }
 
-    uploaded.set(`blossom:sha256:${digest}`, bytes);
+    uploaded.set(`blossom:${digest}.bin`, bytes);
     uploadEvidence.push({
       source: '',
       sha256: digest,

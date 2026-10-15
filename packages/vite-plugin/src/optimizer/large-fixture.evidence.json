@@ -3,9 +3,9 @@
   "assetCount": 7,
   "maximumWholeBlobBytes": 10485760,
   "initialHtmlBytes": 76897014,
-  "finalHtmlBytes": 25698,
-  "artifactHash": "1d957180c709b4a0ff299fb4629eb2d5c32fe7784a842c23f1cb3447b8271d41",
-  "finalIndexSha256": "1d957180c709b4a0ff299fb4629eb2d5c32fe7784a842c23f1cb3447b8271d41",
+  "finalHtmlBytes": 25617,
+  "artifactHash": "bd15b362ea463c0883bd5cbb0ec3d5de946b99de45ba4e791520b71333320da8",
+  "finalIndexSha256": "bd15b362ea463c0883bd5cbb0ec3d5de946b99de45ba4e791520b71333320da8",
   "selected": [
     {
       "source": "assets/fixture-01.bin",

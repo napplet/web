@@ -46,7 +46,7 @@ export function sha256(bytes: Uint8Array): string {
 }
 
 export function canonicalUri(sha256Hex: string): string {
-  return `blossom:sha256:${sha256Hex}`;
+  return `blossom:${sha256Hex}.bin`;
 }
 
 export function tableEntries(selected: readonly RetainedAsset[]): ResourceTableEntry[] {

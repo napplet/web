@@ -90,7 +90,7 @@ export class ResourceRuntime {
   private entryFor(source: string): ResourceTableEntry {
     const entry = this.entries.get(source);
     if (!entry) throw new Error(`unknown optimized resource: ${source}`);
-    if (!/^blossom:sha256:[a-f0-9]{64}$/.test(entry.uri) || !/^[a-f0-9]{64}$/.test(entry.sha256) || entry.uri !== canonicalUri(entry.sha256)) {
+    if (!/^blossom:[a-f0-9]{64}\.bin$/.test(entry.uri) || !/^[a-f0-9]{64}$/.test(entry.sha256) || entry.uri !== canonicalUri(entry.sha256)) {
       throw new Error(`invalid optimized resource mapping: ${source}`);
     }
     if (!Number.isSafeInteger(entry.bytes) || entry.bytes < 0 || entry.bytes > this.maxAssetBytes) {
@@ -243,11 +243,11 @@ export class ResourceRuntime {
     const attempt = this.prepareAttempt(operation);
     if (!attempt) return;
     const entries = attempt.sources.map((source) => this.entryFor(source));
-    const requests = entries.map((entry) => ({ url: entry.uri }));
+    const urls = entries.map((entry) => entry.uri);
     try {
-      const items = await requireResource(this.runtimeWindow).bytesMany(requests, { signal: attempt.controller.signal });
+      const items = await requireResource(this.runtimeWindow).bytesMany(urls, { signal: attempt.controller.signal });
       if (!attempt.active) return;
-      if (items.length !== requests.length || items.some((item, index) => item.url !== requests[index]!.url)) {
+      if (items.length !== urls.length || items.some((item, index) => item.url !== urls[index])) {
         this.recordFailures(attempt.sources, false, 'batch');
         return;
       }

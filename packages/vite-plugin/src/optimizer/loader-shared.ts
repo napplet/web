@@ -16,14 +16,9 @@ export interface ResourceBytesItem {
   blob?: Blob;
 }
 
-export interface ResourceBytesRequest {
-  url: string;
-  servers?: string[];
-}
-
 export interface ResourceDomain {
-  bytes(uri: string, options?: { servers?: string[]; signal?: AbortSignal }): Promise<Blob>;
-  bytesMany(requests: ResourceBytesRequest[], options?: { signal?: AbortSignal }): Promise<ResourceBytesItem[]>;
+  bytes(uri: string, options?: { signal?: AbortSignal }): Promise<Blob>;
+  bytesMany(urls: string[], options?: { signal?: AbortSignal }): Promise<ResourceBytesItem[]>;
 }
 
 export interface ResourceWindow {
@@ -83,7 +78,7 @@ export const DEFAULT_MAX_BATCH_SIZE = 8;
 export const DEFAULT_MAX_CONCURRENT_DIGESTS = 2;
 
 export function canonicalUri(sha256: string): string {
-  return `blossom:sha256:${sha256}`;
+  return `blossom:${sha256}.bin`;
 }
 
 export function requireResource(runtimeWindow: ResourceWindow): ResourceDomain {

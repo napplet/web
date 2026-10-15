@@ -220,7 +220,7 @@ export type {
   ResourceBytesOkItem,
   ResourceBytesErrorItem,
   ResourceBytesItem,
-  ResourceBytesRequest,
+  ResourceBytes,
   ResourceSidecarEntry,
 } from './types.js';
 
@@ -239,3 +239,5 @@ export {
 export type { ShellApi, ShellCapabilities, ShellEnvironment } from './types/shell.js';
 
 export type * from './types/gamepad.js';
+
+export { decodeResourceBlob } from './resource-bytes.js';

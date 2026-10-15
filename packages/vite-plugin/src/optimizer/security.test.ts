@@ -70,7 +70,7 @@ describe('large asset optimizer manifest security boundary', () => {
     expect(html).toContain('name="napplet-requires" content="relay resource"');
     expect(manifest.tags.some((tag) => tag[0] === 'path' || tag[0] === 'requires')).toBe(false);
     expect(manifest.tags.flat().join(' ')).not.toContain('data-napplet-private-resource-table');
-    expect(manifest.tags.flat().join(' ')).not.toContain('blossom:sha256:');
+    expect(manifest.tags.flat().join(' ')).not.toContain('blossom:');
     expect(html).toContain('data-napplet-private-resource-table');
     expect(manifest.artifactHash).toBe(crypto.createHash('sha256').update(html).digest('hex'));
     expect(manifest.tags.filter((tag) => tag[0] === 'x')).toEqual([['x', manifest.artifactHash]]);

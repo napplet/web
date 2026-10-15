@@ -26,7 +26,7 @@ describe('generated large-asset optimizer fixture', () => {
     expect(evidence.uploads.every((entry) => entry.authorizationKind === 24_242 && entry.authorizationVerified && entry.descriptorVerified)).toBe(true);
     expect(evidence.manifestTags.filter((tag) => tag[0] === 'R' && tag[1] === 'resource')).toEqual([['R', 'resource']]);
     expect(evidence.manifestTags.flat()).not.toContain('data-napplet-private-resource-table');
-    expect(evidence.manifestTags.flat().join(' ')).not.toContain('blossom:sha256:');
+    expect(evidence.manifestTags.flat().join(' ')).not.toContain('blossom:');
     expect(evidence.privateMappingCount).toBe(evidence.selected.length);
     expect(evidence.removedCandidateSources).toEqual(evidence.selected.map((entry) => entry.source));
     expect(evidence.preservedCandidateSources).toEqual([]);

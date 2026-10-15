@@ -93,7 +93,8 @@ function handleGetEventResult(msg: OutboxGetEventResultMessage): void {
   clearTimeout(p.timeout);
   const result: OutboxEventResult = {};
   if (msg.result !== undefined) {
-    hydrateResourceCache(msg.result.sidecar?.resources);
+    try { hydrateResourceCache(msg.result.sidecar?.resources); }
+    catch (error) { p.reject(error as Error); return; }
     result.result = msg.result;
   }
   if (msg.incomplete !== undefined) result.incomplete = msg.incomplete;
@@ -107,7 +108,8 @@ function handleQueryResult(msg: OutboxQueryResultMessage): void {
   pendingQuery.delete(msg.id);
   clearTimeout(p.timeout);
   const events = Array.isArray(msg.events) ? msg.events : [];
-  for (const item of events) hydrateResourceCache(item.sidecar?.resources);
+  try { hydrateResourceCache(events.flatMap((item) => item.sidecar?.resources ?? [])); }
+  catch (error) { p.reject(error as Error); return; }
   const result: OutboxResult = {
     events,
   };
@@ -148,7 +150,8 @@ function handleResolveResult(msg: OutboxResolveRelaysResultMessage): void {
 function handleSubEvent(msg: OutboxEventMessage): void {
   const sub = subscriptions.get(msg.subId);
   if (!sub) return;
-  hydrateResourceCache(msg.result.sidecar?.resources);
+  try { hydrateResourceCache(msg.result.sidecar?.resources); }
+  catch { return; /* Invalid wire bytes cannot reach subscription callbacks. */ }
   for (const cb of sub.event) cb(msg.result);
 }
 

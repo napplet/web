@@ -39,10 +39,10 @@ function resource() {
   return window.napplet.resource;
 }
 function resourceBytes(uri, signal) { resource(); return window.napplet.resource.bytes(uri, { signal: signal }); }
-function resourceBytesMany(requests, signal) { resource(); return window.napplet.resource.bytesMany(requests, { signal: signal }); }
+function resourceBytesMany(urls, signal) { resource(); return window.napplet.resource.bytesMany(urls, { signal: signal }); }
 function entryFor(source) {
   const entry = table.get(source);
-  if (!entry || !/^blossom:sha256:[a-f0-9]{64}$/.test(entry.uri) || !/^[a-f0-9]{64}$/.test(entry.sha256) || entry.uri !== 'blossom:sha256:' + entry.sha256 || !Number.isSafeInteger(entry.bytes) || entry.bytes < 0 || entry.bytes > MAX_ASSET_BYTES) throw new Error('invalid optimized resource mapping: ' + source);
+  if (!entry || !/^blossom:[a-f0-9]{64}\\.bin$/.test(entry.uri) || !/^[a-f0-9]{64}$/.test(entry.sha256) || entry.uri !== 'blossom:' + entry.sha256 + '.bin' || !Number.isSafeInteger(entry.bytes) || entry.bytes < 0 || entry.bytes > MAX_ASSET_BYTES) throw new Error('invalid optimized resource mapping: ' + source);
   return entry;
 }
 function loaderState() {
@@ -153,11 +153,11 @@ async function startBatch(operation) {
   const attempt = prepareAttempt(operation);
   if (!attempt) return;
   const entries = attempt.sources.map(entryFor);
-  const requests = entries.map((entry) => ({ url: entry.uri }));
+  const urls = entries.map((entry) => entry.uri);
   try {
-    const items = await resourceBytesMany(requests, attempt.controller.signal);
+    const items = await resourceBytesMany(urls, attempt.controller.signal);
     if (!attempt.active) return;
-    if (items.length !== requests.length || items.some((item, index) => item.url !== requests[index].url)) {
+    if (items.length !== urls.length || items.some((item, index) => item.url !== urls[index])) {
       recordFailures(attempt.sources, false, 'batch');
       return;
     }

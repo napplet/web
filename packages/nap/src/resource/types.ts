@@ -12,13 +12,13 @@
  * - Shell -> Napplet: bytes.result/error, bytesMany.result/error
  *
  * All types form a discriminated union on the `type` field.
- * Single-Blob delivery contract: no streaming, no partial payloads, no segmentation.
+ * Complete-byte delivery contract: no streaming, no partial payloads, no segmentation.
  */
 
 import type {
   NappletMessage,
   ResourceBytesItem,
-  ResourceBytesRequest,
+  ResourceBytes,
   ResourceErrorCode,
   ResourceInfo,
 } from '@napplet/core';
@@ -27,7 +27,7 @@ export type {
   ResourceBytesOkItem,
   ResourceBytesErrorItem,
   ResourceBytesItem,
-  ResourceBytesRequest,
+  ResourceBytes,
   ResourceErrorCode,
   ResourceSchemeInfo,
   ResourceInfo,
@@ -40,7 +40,7 @@ export const DOMAIN = 'resource' as const;
 /**
  * Canonical URL schemes currently listed by NAP-RESOURCE.
  */
-export type ResourceScheme = 'data' | 'https' | 'blossom' | 'htree' | 'nostr';
+export type ResourceScheme = 'data' | 'https' | 'blossom' | 'htree' | 'hashtree' | 'nostr';
 
 /**
  * Base interface for all resource NAP messages.
@@ -94,7 +94,6 @@ export interface ResourceInfoErrorMessage extends ResourceMessage {
  *   type: 'resource.bytes',
  *   id: crypto.randomUUID(),
  *   url: 'blossom:<sha256>.png',
- *   servers: ['https://cdn.hzrd149.com'],
  * };
  * ```
  */
@@ -104,8 +103,6 @@ export interface ResourceBytesMessage extends ResourceMessage {
   id: string;
   /** URL identifying the resource (any registered scheme). */
   url: string;
-  /** Advisory Blossom server locations. Ignored by the runtime for other schemes. */
-  servers?: string[];
 }
 
 /**
@@ -118,8 +115,8 @@ export interface ResourceBytesManyMessage extends ResourceMessage {
   type: 'resource.bytesMany';
   /** Correlation ID. */
   id: string;
-  /** Non-empty resource request list. Result items preserve this order and length. */
-  requests: ResourceBytesRequest[];
+  /** Non-empty URL list. Result items preserve this order and length. */
+  urls: string[];
 }
 
 /**
@@ -143,10 +140,10 @@ export interface ResourceCancelMessage extends ResourceMessage {
 
 /**
  * Successful result for a `resource.bytes` request. Carries the
- * fetched bytes as a single Blob plus the shell-classified MIME
+ * fetched bytes as canonical padded base64 plus the shell-classified MIME
  * (byte-sniffed; NEVER upstream Content-Type per RES-04).
  *
- * Single-Blob contract (RES-07): no segmentation, streaming, or range
+ * Complete-byte contract (RES-07): no segmentation, streaming, or range
  * fields exist anywhere in the result union. Streaming delivery is
  * reserved for a future audio/video milestone.
  *
@@ -155,7 +152,7 @@ export interface ResourceCancelMessage extends ResourceMessage {
  * const msg: ResourceBytesResultMessage = {
  *   type: 'resource.bytes.result',
  *   id: 'q1',
- *   blob: new Blob([...]),
+ *   blob: 'AAEC/w==',
  *   mime: 'image/png',
  * };
  * ```
@@ -164,8 +161,8 @@ export interface ResourceBytesResultMessage extends ResourceMessage {
   type: 'resource.bytes.result';
   /** Correlation ID matching the original request. */
   id: string;
-  /** Fetched bytes as a single Blob. */
-  blob: Blob;
+  /** Fetched bytes as canonical padded base64. */
+  blob: ResourceBytes;
   /** Shell-classified MIME type (byte-sniffed). */
   mime: string;
 }
@@ -179,7 +176,7 @@ export interface ResourceBytesManyResultMessage extends ResourceMessage {
   /** Correlation ID matching the original request. */
   id: string;
   /** Ordered one-item-per-input-URL result list. */
-  items: ResourceBytesItem[];
+  items: ResourceBytesItem<ResourceBytes>[];
 }
 
 /**

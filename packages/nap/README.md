@@ -169,14 +169,12 @@ import { info, bytes, bytesMany, bytesAsObjectURL } from '@napplet/nap/resource/
 const resourceInfo = await info();
 
 // Fetch any URL the shell accepts under its policy. URL space is scheme-pluggable.
-const blob: Blob = await bytes('blossom:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.bin', {
-  servers: ['https://cdn.hzrd149.com'],
-});
+const blob: Blob = await bytes('blossom:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.bin?xs=cdn.hzrd149.com');
 
 // Fetch many URLs in one envelope. Items preserve input order and length.
 const items = await bytesMany([
-  { url: 'https://example.com/avatar.png' },
-  { url: 'blossom:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.bin', servers: ['https://cdn.hzrd149.com'] },
+  'https://example.com/avatar.png',
+  'blossom:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.bin?xs=cdn.hzrd149.com',
 ]);
 
 // Synchronous handle for <img src> use; revoke when done.
@@ -185,6 +183,9 @@ imgEl.src = handle.url;
 // later
 handle.revoke();
 ```
+
+Resource transport follows the living [NAP-RESOURCE proposal](https://github.com/napplet/naps/pull/80) and its [web binding](https://github.com/napplet/naps/blob/nub-resource/projections/web.md#resource-binding). Bulk calls take URL strings. Wire `blob` fields are canonical padded base64; the binding validates and decodes them into application-facing Blobs. Data URLs go through runtime policy. Replace former request objects and `opts.servers` with URL strings and BUD-10 URI hints. Hosts enforce the binding's network isolation before exposing this domain.
+
 
 Canonical schemes are defined in the spec:
 

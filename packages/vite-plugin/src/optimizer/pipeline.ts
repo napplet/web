@@ -247,7 +247,7 @@ export async function loadVerifiedResourceBytes(
   entry: ResourceTableEntry,
   resourceBytes: (uri: string) => Promise<Blob>,
 ): Promise<Blob> {
-  if (!/^blossom:sha256:[a-f0-9]{64}$/.test(entry.uri)) {
+  if (!/^blossom:[a-f0-9]{64}\.bin$/.test(entry.uri)) {
     throw new Error('invalid optimized resource URI');
   }
   if (entry.uri !== canonicalUri(entry.sha256)) {

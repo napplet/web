@@ -195,10 +195,10 @@ export type ResourceErrorCode =
   | 'quota-exceeded';
 
 /** Successful per-URL item returned by `resource.bytesMany`. */
-export interface ResourceBytesOkItem {
+export interface ResourceBytesOkItem<T = Blob> {
   url: string;
   ok: true;
-  blob: Blob;
+  blob: T;
   mime: string;
   message?: string;
 }
@@ -212,21 +212,16 @@ export interface ResourceBytesErrorItem {
   blob?: never;
 }
 
-/** Ordered per-URL item returned by `resource.bytesMany`. */
-export type ResourceBytesItem = ResourceBytesOkItem | ResourceBytesErrorItem;
+/** Canonical padded base64 resource bytes. */
+export type ResourceBytes = string;
 
-/** One resource request within a `resource.bytesMany` envelope. */
-export interface ResourceBytesRequest {
-  /** URL identifying the resource (any registered scheme). */
-  url: string;
-  /** Advisory Blossom server locations for this resource only. */
-  servers?: string[];
-}
+/** Ordered per-URL result with decoded Blobs for browser callers. */
+export type ResourceBytesItem<T = Blob> = ResourceBytesOkItem<T> | ResourceBytesErrorItem;
 
-/** Pre-resolved resource bytes carried by another NAP's event sidecar. */
+/** Pre-resolved wire bytes imported by a carrier NAP with a resource dependency. */
 export interface ResourceSidecarEntry {
   url: string;
-  blob: Blob;
+  blob: ResourceBytes;
   mime: string;
 }
 
@@ -241,17 +236,16 @@ export interface ResourceInfo {
   schemes: ResourceSchemeInfo[];
   maxBytes?: number;
   maxUrls?: number;
-  maxServers?: number;
 }
 
 /**
  * Browser-enforced resource fetching: napplets request bytes by URL,
- * shell fetches and returns a Blob. The strict-CSP iframe sandbox
- * blocks all napplet-side network access, so this is the canonical
- * (and only) byte-fetching primitive available inside a napplet.
+ * shell returns canonical base64 wire bytes decoded into a Blob by the web binding.
+ * Hosts exposing resource must enforce the network isolation specified by
+ * NAP-RESOURCE's web binding; the opaque iframe origin alone is insufficient.
  *
  * URL space is scheme-pluggable: shells register handlers per scheme.
- * Canonical schemes include `data:` (decoded in-shim, no round-trip),
+ * Canonical schemes include `data:` (shell policy),
  * `https:` (shell-side network with policy), `blossom:<sha256>.<ext>`
  * (BUD-10 Blossom URI to bytes), `htree:` (Hashtree-verified bytes), and `nostr:` (NIP-19 single-hop
  * resolution).
@@ -261,15 +255,13 @@ export interface ResourceInfo {
  * @example
  * ```ts
  * // Fetch raw bytes:
- * const blob = await window.napplet.resource.bytes('blossom:<sha256>.png', {
- *   servers: ['https://cdn.hzrd149.com'],
- * });
+ * const blob = await window.napplet.resource.bytes('blossom:<sha256>.png?xs=cdn.hzrd149.com');
  *
  * // Fetch many resources in one envelope:
  * const items = await window.napplet.resource.bytesMany([
- *   { url: 'https://example.com/avatar.png' },
- *   { url: 'blossom:<sha256>.png', servers: ['https://cdn.hzrd149.com'] },
- *   { url: 'htree://example-root/path' },
+ *   'https://example.com/avatar.png',
+ *   'blossom:<sha256>.png?xs=cdn.hzrd149.com',
+ *   'htree://example-root/path',
  * ]);
  *
  * // Get a managed object URL (revoke when done to free memory):
@@ -292,19 +284,19 @@ export interface ResourceApi {
    * (private-IP blocks, size caps, timeouts, MIME classification), and
    * returns the bytes as a single Blob. No streaming, no chunking.
    * @param url  URL identifying the resource (any registered scheme)
-   * @param opts  Optional advisory Blossom `servers` and AbortController signal
+   * @param opts  Optional AbortController signal
    * @returns Promise resolving to the fetched bytes as a Blob
    */
-  bytes(url: string, opts?: { servers?: string[]; signal?: AbortSignal }): Promise<Blob>;
+  bytes(url: string, opts?: { signal?: AbortSignal }): Promise<Blob>;
   /**
-   * Fetch the bytes referenced by many per-resource requests through one shell envelope.
+   * Fetch the bytes referenced by many URLs through one shell envelope.
    * The returned items preserve input order and length. Failed URLs are
    * represented as `ok: false` items; successful siblings remain available.
-   * @param requests  Non-empty resource request list with optional per-resource Blossom servers
+   * @param urls  Non-empty URL list
    * @param opts  Optional AbortController signal
    * @returns Promise resolving to ordered per-URL result items
    */
-  bytesMany(requests: ResourceBytesRequest[], opts?: { signal?: AbortSignal }): Promise<ResourceBytesItem[]>;
+  bytesMany(urls: string[], opts?: { signal?: AbortSignal }): Promise<ResourceBytesItem[]>;
   /**
    * Convenience wrapper around `bytes(url)` that returns a managed
    * object URL plus a `revoke` function. Calling `revoke()` invokes

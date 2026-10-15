@@ -15,6 +15,7 @@
  */
 
 import { NAP_DOMAINS } from '@napplet/core';
+import { RESOURCE_METHODS_SOURCE } from './resource-prelude.js';
 import { createReferenceShell, type RecordedEnvelope } from '../shell/reference-shell.js';
 import type { BootObservation } from './context.js';
 
@@ -177,36 +178,7 @@ export function runtimePrelude(domains: readonly string[]): string {
     };
   }
   if (napplet.resource) {
-    napplet.resource.info = () =>
-      request({ type: 'resource.info' }, 'resource.info.result', 'resource.info.error')
-        .then((msg) => msg.info);
-    napplet.resource.bytes = (url, options) => {
-      const message = { type: 'resource.bytes', url: String(url) };
-      if (options && options.servers !== undefined) message.servers = options.servers;
-      return request(message, 'resource.bytes.result', 'resource.bytes.error')
-        .then((msg) => msg.blob);
-    };
-    napplet.resource.bytesMany = (requests) =>
-      request({ type: 'resource.bytesMany', requests: Array.from(requests || []) }, 'resource.bytesMany.result', 'resource.bytesMany.error')
-        .then((msg) => msg.items);
-    napplet.resource.bytesAsObjectURL = (url) => {
-      const handle = { url: '', revoke: () => {} };
-      let objectUrl = '';
-      let revoked = false;
-      const ready = napplet.resource.bytes(url).then((blob) => {
-        if (revoked) return;
-        objectUrl = URL.createObjectURL(blob);
-        handle.url = objectUrl;
-        return objectUrl;
-      });
-      handle.revoke = () => {
-        if (revoked) return;
-        revoked = true;
-        if (objectUrl) URL.revokeObjectURL(objectUrl);
-      };
-      Object.defineProperty(handle, 'ready', { value: ready, enumerable: false });
-      return handle;
-    };
+    ${RESOURCE_METHODS_SOURCE}
   }
   window.napplet = napplet;
   const report = (reason) => {

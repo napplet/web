@@ -76,7 +76,7 @@ function fakeServices(overrides: Partial<OptimizationServices> = {}): Optimizati
   return {
     authorize: async () => ({ token: 'short-lived-test-authorization', expiresAt: Date.now() + 60_000 }),
     upload: async ({ bytes: value, sha256 }) => {
-      uploaded.set(`blossom:sha256:${sha256}`, value);
+      uploaded.set(`blossom:${sha256}.bin`, value);
       return { sha256, bytes: value.byteLength };
     },
     resourceBytes: async (uri) => new Blob([uploaded.get(uri) ?? new Uint8Array()]),
@@ -97,7 +97,7 @@ describe('large single-file artifact optimizer', () => {
     retained.html = retained.html.replace('<body>', '<body class="packaged" data-shell="fixture">');
     const entries = [first, second].map((candidate) => ({
       source: candidate.source,
-      uri: `blossom:sha256:${digest(candidate.bytes)}`,
+      uri: `blossom:${digest(candidate.bytes)}.bin`,
       sha256: digest(candidate.bytes),
       bytes: candidate.bytes.byteLength,
       mime: candidate.mime,
@@ -369,7 +369,7 @@ describe('large single-file artifact optimizer', () => {
     expect(discoveredPubkey).toBe(userPubkey);
     expect(discoveredPubkey).not.toBe(remotePubkey);
     expect(report.committedResourceCount).toBe(1);
-    expect(report.entries[0]?.uri).toBe(`blossom:sha256:${digest(selected.bytes)}`);
+    expect(report.entries[0]?.uri).toBe(`blossom:${digest(selected.bytes)}.bin`);
     await expect(services.resourceBytes(report.entries[0]!.uri)).resolves.toBeInstanceOf(Blob);
   });
 
@@ -479,8 +479,8 @@ describe('large single-file artifact optimizer', () => {
 
     expect(uploaded).toEqual(selected.bytes);
     expect(authorization).toBe('short-lived-test-authorization');
-    expect(report.entries).toEqual([expect.objectContaining({ uri: `blossom:sha256:${digest(selected.bytes)}` })]);
-    expect(report.entries[0]!.uri).toMatch(/^blossom:sha256:[a-f0-9]{64}$/);
+    expect(report.entries).toEqual([expect.objectContaining({ uri: `blossom:${digest(selected.bytes)}.bin` })]);
+    expect(report.entries[0]!.uri).toMatch(/^blossom:[a-f0-9]{64}\.bin$/);
   });
 
   it('serializes a stable private table and only deletes selected files after verified commit', async () => {
@@ -515,7 +515,7 @@ describe('large single-file artifact optimizer', () => {
 
   it('uses only the resource.bytes seam to recover a matching Blob and rejects mismatched bytes', async () => {
     const value = bytes(12, 73);
-    const entry = { source: '/asset.bin', uri: `blossom:sha256:${digest(value)}`, sha256: digest(value), bytes: value.byteLength, mime: 'application/octet-stream' };
+    const entry = { source: '/asset.bin', uri: `blossom:${digest(value)}.bin`, sha256: digest(value), bytes: value.byteLength, mime: 'application/octet-stream' };
     const recovered = await loadVerifiedResourceBytes(entry, async () => new Blob([value]));
 
     await expect(loadVerifiedResourceBytes(entry, async () => new Blob([bytes(11, 73)]))).rejects.toThrow(/length/i);

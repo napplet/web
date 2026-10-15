@@ -175,14 +175,14 @@ describe('optimizer reference inventory', () => {
       artifact: css,
       inventory,
       replacements: new Map([
-        ['assets/font.woff2', 'blossom:sha256:font'],
-        ['assets/image.png', 'blossom:sha256:image'],
+        ['assets/font.woff2', 'blossom:font.woff2'],
+        ['assets/image.png', 'blossom:image.png'],
       ]),
     });
 
     expect(classifyAssetReferences(image, inventory).eligible).toBe(true);
     expect(classifyAssetReferences(font, inventory).eligible).toBe(true);
-    expect(rewritten.content).toBe('@font-face { src: local("Inter"), url(  "blossom:sha256:font#latin"  ) format("woff2"), url(data:font/woff2;base64,AAAA); } .hero { background: /* keep */ url(blossom:sha256:image#cover) no-repeat, url(blossom:sha256:image); }');
+    expect(rewritten.content).toBe('@font-face { src: local("Inter"), url(  "blossom:font.woff2#latin"  ) format("woff2"), url(data:font/woff2;base64,AAAA); } .hero { background: /* keep */ url(blossom:image.png#cover) no-repeat, url(blossom:image.png); }');
     expect(rewritten.content).toContain('/* keep */');
     expect(rewritten.content).toContain('data:font/woff2;base64,AAAA');
   });
@@ -204,7 +204,7 @@ describe('optimizer reference inventory', () => {
     const rewritten = rewriteSupportedReferences({
       artifact,
       inventory,
-      replacements: new Map([['assets/image.png', 'blossom:sha256:replacement']]),
+      replacements: new Map([['assets/image.png', 'blossom:replacement.png']]),
     });
 
     expect(classification.eligible).toBe(false);
