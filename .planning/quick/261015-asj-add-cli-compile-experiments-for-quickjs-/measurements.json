@@ -147,5 +147,27 @@
         "stderr": ""
       }
     }
+  ],
+  "standaloneIntegration": [
+    {
+      "profile": "pruned",
+      "exit": 0,
+      "seconds": 204.02
+    },
+    {
+      "profile": "small",
+      "exit": 0,
+      "seconds": 157.35
+    },
+    {
+      "profile": "quickjs-pruned",
+      "exit": 0,
+      "seconds": 224.63
+    },
+    {
+      "profile": "quickjs",
+      "exit": 0,
+      "seconds": 53.5
+    }
   ]
 }

@@ -1,6 +1,6 @@
 ---
 type: quick
-status: planned
+status: complete
 ---
 
 # CLI compile experiments

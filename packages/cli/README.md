@@ -385,6 +385,8 @@ NAPPLET_TEST_BINARY="$PWD/packages/cli/dist/experiments/napplet-small" \
 deno test --node-modules-dir=none -A packages/cli/tests/standalone_integration_test.ts
 ```
 
+The `compile:pruned`, `compile:small`, `compile:quickjs`, and `compile:quickjs-pruned` binaries passed this full suite on the macOS ARM64 machine used for the measurements below. Other platforms and live publication were not exercised by these local experiments.
+
 The suite needs network access for hosted templates and managed tools. For Windows, set the same environment variables using PowerShell and include the `.exe` suffix. Compare file sizes on the same platform and Deno version; the embedded runtime contributes substantially to the result.
 
 
