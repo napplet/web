@@ -70,3 +70,12 @@ describe('runConformance', () => {
     expect(run.ok).toBe(true);
   });
 });
+
+it('keeps extension-bearing manifests conformant while checking required and optional fields', () => {
+  const tags = [...goodEvent.tags, ['custom', 'extra', '', '保留'], ['t', 'notes'], ['custom', 'extra', '', '保留']];
+  expect(runConformance(makeContext({ manifestEvent: { ...goodEvent, tags } })).ok).toBe(true);
+  expect(runConformance(makeContext({ manifestEvent: { ...goodEvent, content: '', tags } })).ok).toBe(false);
+  expect(runConformance(makeContext({ manifestEvent: { ...goodEvent, tags: [...tags, ['x', HASH]] } })).ok).toBe(false);
+  expect(runConformance(makeContext({ manifestEvent: { ...goodEvent, tags: [...tags, ['source', 'file:///tmp/repo']] } })).ok).toBe(false);
+  expect(runConformance(makeContext({ manifestEvent: { ...goodEvent, tags: [...tags, ['O', 'relay.subscribe']] } })).ok).toBe(false);
+});

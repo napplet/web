@@ -40,6 +40,8 @@ npm install -D @napplet/conformance
 The validator surface is kept in lockstep with `@napplet/nap` by a drift test, so
 a new NAP message type cannot ship without matching conformance coverage.
 
+Manifest validation accepts extra Nostr tags and leaves their payloads and multiplicity unchanged. It checks required fields and recognized optional metadata rather than enforcing a tag-name allowlist. A `source` tag is checked for its single-location shape and supported HTTP(S), SSH, Git, or scp-like format; invalid icons remain advisory with generic artwork fallback. Extra tags cannot make missing content, invalid hashes, or malformed capability declarations pass. This is non-normative implementation guidance; consult the living [NIP-5D proposal](https://github.com/nostr-protocol/nips/pull/2303) for the requirements.
+
 ```ts
 import { validateEnvelope, validateManifestEvent } from '@napplet/conformance';
 

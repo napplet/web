@@ -47,7 +47,8 @@ export function migrateManifestEvent(
   }
   const paths = event.tags.filter((tag) => tag[0] === "path");
   const hashes = event.tags.filter((tag) => tag[0] === "x");
-  const legacy = paths.length > 0 || hashes.some((tag) => tag[2] === "aggregate");
+  const legacy = !hashes.some((tag) => tag.length === 2) &&
+    (paths.length > 0 || hashes.some((tag) => tag[2] === "aggregate"));
   let artifactHash: string;
   if (legacy) {
     if (paths.length !== 1 || paths[0][1] !== "/index.html") {
@@ -66,7 +67,7 @@ export function migrateManifestEvent(
     throw new Error("Artifact hash must be lowercase sha256 hex");
   }
   const descriptions = event.tags.filter((tag) => tag[0] === "description");
-  if (descriptions.length > 1 && options.description === undefined) {
+  if (legacy && descriptions.length > 1 && options.description === undefined) {
     throw new Error("Source has multiple descriptions; supply --description");
   }
   const content = options.description ??
@@ -74,7 +75,7 @@ export function migrateManifestEvent(
   if (!content?.trim()) {
     throw new Error("Supply --description with a non-empty plain-text description");
   }
-  const tags = convertTags(event, options, artifactHash);
+  const tags = convertTags(event, options, artifactHash, legacy);
   const notes = legacy
     ? [
       "Artifact bytes are unchanged. Shell ACL/storage identities change from aggregate to artifact hash.",
@@ -113,9 +114,10 @@ function convertTags(
   event: SignedNostrEvent,
   options: MigrationOptions,
   artifactHash: string,
+  legacy: boolean,
 ): string[][] {
   const optional = new Set(options.optional ?? []);
-  const declared = event.tags.filter((tag) => ["requires", "R", "O"].includes(tag[0])).map((tag) =>
+  const declared = event.tags.filter((tag) => ["R", "O", ...(legacy ? ["requires"] : [])].includes(tag[0])).map((tag) =>
     tag[1]
   );
   for (const domain of optional) {
@@ -125,13 +127,13 @@ function convertTags(
   }
   const tags: string[][] = [["x", artifactHash]];
   for (const tag of event.tags) {
-    if (["x", "path", "description"].includes(tag[0])) continue;
-    if (tag[0] === "requires" || tag[0] === "R" || tag[0] === "O") {
+    if (tag[0] === "x" || (legacy && ["path", "description"].includes(tag[0]))) continue;
+    if ((legacy && tag[0] === "requires") || tag[0] === "R" || tag[0] === "O") {
       if (tag.length !== 2 || !tag[1] || /[:\s]/.test(tag[1]) || tag[1].startsWith("NAP-")) {
         throw new Error("Capability tags must name one bare NAP domain");
       }
       tags.push([optional.has(tag[1]) || tag[0] === "O" ? "O" : "R", tag[1]]);
-    } else if (tag[0] === "archetype") {
+    } else if (legacy && tag[0] === "archetype") {
       if (tag.length !== 3 || !tag[1] || !/^napplet:[^/?#\s]+\/[^/?#\s]+$/.test(tag[2])) {
         throw new Error("Ambiguous legacy archetype tag; review its intent before migration");
       }
@@ -143,7 +145,5 @@ function convertTags(
       tags.push([...tag]);
     }
   }
-  return tags.filter((tag, index) =>
-    tags.findIndex((other) => JSON.stringify(tag) === JSON.stringify(other)) === index
-  );
+  return tags;
 }

@@ -221,7 +221,7 @@ Signing can come from:
 
 The human deploy report includes each signed manifest event's short event id plus a copyable `nevent` pointer. Addressable root and named manifests also include copyable `naddr` pointers using the configured relay hints.
 
-When a built napplet includes a plugin-generated `.nip5a-manifest.json`, signed or unsigned, deploy preserves capability and intent metadata from that sidecar, translating legacy `requires`/`archetype` to current `R` and `z`/`i` tags on root, named, and companion snapshot manifests.
+When a built napplet includes a `.nip5a-manifest.json` sidecar, signed or unsigned, deploy preserves additional Nostr tags on root, named, and companion snapshot manifests, including their complete string payloads and repeated values. There is no tag-name allowlist. Explicit config overrides and CLI-managed artifact hashes, identifiers, lineage, server selection, and client attribution still apply. Legacy sidecars translate `requires`/`archetype` to current `R` and `z`/`i`; those names, along with `path` and `description`, remain opaque extra tags when supplied by a current-format event. Current event content is resolved separately from extra `description` tags. Migration likewise preserves additional tags and their multiplicity while converting actual legacy fields.
 
 Deploy also recovers current NIP-5D publishing metadata from the built HTML head, including supported data-URL icon bytes, without a sidecar. Current output requires a non-empty description. See Standalone HTML recovery below for precedence and target handling.
 

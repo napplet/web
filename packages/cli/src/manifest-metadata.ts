@@ -4,29 +4,58 @@ import { readHtmlPublishingFile } from "./html-metadata.ts";
 import type { ManifestFormat } from "./manifest-format.ts";
 import type { NappletConfig } from "./types.ts";
 
+export interface ManifestMetadata {
+  tags: string[][];
+  content: string;
+}
+
+/** Resolve publishing content separately from the event's extensible tag array.
+ * @param indexHtmlPath Built artifact providing optional publishing hints.
+ * @param manifestPath Optional signed or unsigned sidecar.
+ * @param config Explicit publishing metadata overrides.
+ * @param format Requested output format.
+ * @returns Event tags and plain-text content with normal precedence applied.
+ * @example await readManifestMetadata("dist/index.html", undefined, {})
+ */
+export async function readManifestMetadata(
+  indexHtmlPath: string | undefined,
+  manifestPath: string | undefined,
+  config: Pick<NappletConfig, "metadata">,
+  format: ManifestFormat = "current",
+): Promise<ManifestMetadata> {
+  const html = (await readHtmlPublishingFile(indexHtmlPath)).tags;
+  const description = html.find((tag) => tag[0] === "description")?.[1];
+  const htmlContent = format === "legacy" ? description?.trim() : description;
+  const htmlTags = html.filter((tag) => tag[0] !== "description" &&
+    (format === "current" || tag[0] === "title"))
+    .map((tag) => format === "legacy" ? [tag[0], tag[1].trim()] : tag);
+  const sidecar = await readPluginManifestMetadata(manifestPath, format);
+  const tags = preferOptionalDomains(mergeConfigMetadataTags(
+    overlayTags(htmlTags, sidecar.tags), config, format,
+  ));
+  if (format === "current" && indexHtmlPath && config.metadata?.source !== false && !tags.some((tag) => tag[0] === "source")) {
+    const source = await inferRepositorySource(dirname(indexHtmlPath));
+    if (source) tags.push(["source", source]);
+  }
+  return { tags, content: config.metadata?.description ?? sidecar.content ?? htmlContent ?? "" };
+}
+
+/** Compatibility view that exposes the content as a description publishing hint.
+ * @param indexHtmlPath Built artifact.
+ * @param manifestPath Optional sidecar.
+ * @param config Explicit publishing metadata.
+ * @param format Requested output format.
+ * @returns Resolved tags, preceded by the description hint when present.
+ * @example await readManifestMetadataTags("dist/index.html", undefined, {})
+ */
 export async function readManifestMetadataTags(
   indexHtmlPath: string | undefined,
   manifestPath: string | undefined,
   config: Pick<NappletConfig, "metadata">,
   format: ManifestFormat = "current",
 ): Promise<string[][]> {
-  const html = (await readHtmlPublishingFile(indexHtmlPath)).tags;
-  const htmlTags = format === "legacy"
-    ? html.filter((t) => ["title", "description"].includes(t[0])).map((t) => [t[0], t[1].trim()])
-    : html;
-  const tags = preferOptionalDomains(mergeConfigMetadataTags(
-    overlayTags(
-      htmlTags,
-      await readPluginManifestMetadataTags(manifestPath, format),
-    ),
-    config,
-    format,
-  ));
-  if (format === "current" && indexHtmlPath && config.metadata?.source !== false && !tags.some((tag) => tag[0] === "source")) {
-    const source = await inferRepositorySource(dirname(indexHtmlPath));
-    if (source) tags.push(["source", source]);
-  }
-  return tags;
+  const metadata = await readManifestMetadata(indexHtmlPath, manifestPath, config, format);
+  return [...(metadata.content ? [["description", metadata.content]] : []), ...metadata.tags];
 }
 
 /**
@@ -39,43 +68,35 @@ function preferOptionalDomains(tags: readonly string[][]): string[][] {
   return tags.filter((tag) => !(tag[0] === "R" && optional.has(tag[1]))).map((tag) => [...tag]);
 }
 
-async function readPluginManifestMetadataTags(
+async function readPluginManifestMetadata(
   manifestPath: string | undefined,
   format: ManifestFormat,
-): Promise<string[][]> {
-  if (!manifestPath) return [];
+): Promise<{ tags: string[][]; content?: string }> {
+  if (!manifestPath) return { tags: [] };
   try {
-    const raw = await Deno.readTextFile(manifestPath);
-    const value = JSON.parse(raw) as { tags?: unknown; content?: unknown };
-    if (!Array.isArray(value.tags)) return [];
+    const value = JSON.parse(await Deno.readTextFile(manifestPath)) as { tags?: unknown; content?: unknown };
+    if (!Array.isArray(value.tags)) return { tags: [] };
+    const input = value.tags.filter((tag): tag is string[] =>
+      Array.isArray(tag) && typeof tag[0] === "string" &&
+      tag.every((part: unknown) => typeof part === "string"));
+    let content = typeof value.content === "string" && value.content.trim() ? value.content : undefined;
+    const current = content !== undefined || input.some((tag) => tag[0] === "x" && tag.length === 2);
     const tags: string[][] = [];
-    if (typeof value.content === "string" && value.content.trim()) {
-      tags.push(["description", value.content]);
-    }
-    for (const tag of value.tags) {
-      if (!Array.isArray(tag) || typeof tag[0] !== "string") continue;
-      if (!tag.every((part) => typeof part === "string")) continue;
-      if (tag[0] === "requires") {
-        // Legacy sidecars may include whitespace or empty requirements. Keep all
-        // non-empty declarations without restricting them to this CLI's registry.
+    for (const tag of input) {
+      if (format === "legacy" && ["d", "server", "a", "A"].includes(tag[0])) continue;
+      if (!current && tag[0] === "description") content = tag[1];
+      else if (!current && ["path", "x"].includes(tag[0])) continue;
+      else if (!current && tag[0] === "requires") {
         const domain = tag[1]?.trim();
         if (domain) tags.push(["R", domain]);
-      } else if (isCanonicalArchetypeTag(tag)) {
+      } else if (!current && isCanonicalArchetypeTag(tag)) {
         if (format === "legacy") tags.push([...tag]);
         else tags.push(["z", tag[1]], ["i", tag[2]]);
-      } else if (
-        ["R", "O", "z", "i", "icon", "title", "source", "config", "d", "server", "a", "A"].includes(
-          tag[0],
-        )
-      ) {
-        if (format === "current" || !["d", "server", "a", "A"].includes(tag[0])) {
-          tags.push([...tag]);
-        }
-      } else if (tag[0] === "description" && !value.content) tags.push([...tag]);
+      } else tags.push([...tag]);
     }
-    return dedupeTags(tags);
+    return { tags: dedupeTags(tags), content };
   } catch (error) {
-    if (error instanceof Deno.errors.NotFound || error instanceof SyntaxError) return [];
+    if (error instanceof Deno.errors.NotFound || error instanceof SyntaxError) return { tags: [] };
     throw error;
   }
 }
@@ -91,18 +112,16 @@ function mergeConfigMetadataTags(
   const replaced = new Set<string>();
   if (source !== undefined) replaced.add("source");
   if (metadata.title) replaced.add("title");
-  if (metadata.description) replaced.add("description");
   if (metadata.archetypes !== undefined) {
     replaced.add("z");
     replaced.add("i");
-    replaced.add("archetype");
+    if (format === "legacy") replaced.add("archetype");
   }
   if (metadata.requires !== undefined) replaced.add("R");
   if (metadata.optional !== undefined) replaced.add("O");
   const result = tags.filter((tag) => !replaced.has(tag[0]));
   if (source) result.push(["source", source]);
   if (metadata.title) result.push(["title", metadata.title]);
-  if (metadata.description) result.push(["description", metadata.description]);
   for (const convention of metadata.archetypes ?? []) {
     if (format === "legacy") result.push(["archetype", convention.slug, convention.convention]);
     else {result.push(["z", convention.slug], [
@@ -141,12 +160,16 @@ function dedupeTags(tags: readonly string[][]): string[][] {
   const result: string[][] = [];
   for (const tag of tags) {
     const key = JSON.stringify(tag);
-    if (seen.has(key)) continue;
-    seen.add(key);
+    // Only normalize metadata owned by this publisher. Extension multiplicity
+    // and payload elements belong to their authors (NIP-01 event tags).
+    if (["R", "O", "z", "i", "icon", "title", "source", "d", "server", "a", "A"].includes(tag[0])) {
+      if (seen.has(key)) continue;
+      seen.add(key);
+    }
     result.push([...tag]);
   }
   return result.filter((tag, index) =>
-    !["title", "description", "source", "config", "d", "icon", "a", "A"].includes(tag[0]) ||
+    !["title", "source", "d", "icon", "a", "A"].includes(tag[0]) ||
     result.findLastIndex((other) => other[0] === tag[0]) === index
   );
 }

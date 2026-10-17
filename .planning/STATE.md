@@ -6,9 +6,9 @@ current_phase: 164
 current_phase_name: cli-terminal-usability
 status: completed
 stopped_at: Phase 164 verified locally and shipped in PR 248 with terminal recordings
-last_updated: "2026-10-15T14:34:28.295401+00:00"
-last_activity: 2026-10-16
-last_activity_desc: Resolved PR 248 conflicts with current main and verified CLI integration
+last_updated: "2026-10-17T21:23:11+00:00"
+last_activity: 2026-10-17
+last_activity_desc: Merged current main and resolved PR 248 CLI conflicts
 progress:
   total_phases: 9
   completed_phases: 4
@@ -32,6 +32,12 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 ### Phase 164 — CLI terminal usability (complete)
 
 Branch `feat/cli-terminal-usability` ships guided missing-value recovery, `-i` prompt suppression, terminal presentation, and real visual proof in PR #248. Plan and acceptance evidence: `.planning/phases/164-cli-terminal-usability/`. Build, types, repository tests, native smoke, PTY checks, and site links passed. Existing completed phases below retain their historical status.
+
+### Quick task 261017-fw7 — COMPLETE
+
+- Corrected optional-domain declaration guidance across design, build and test skills.
+- Build, type-check, recursive units and 11 skills contracts passed; changed-file AI-slop 98/100 (external dependency advisory only).
+- Runtime and living protocol unchanged; publication templates must preserve both declared lists.
 
 ## Current Position
 
@@ -544,6 +550,7 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 | Quick ID | Task | Date | Commit | Artifacts |
 |----------|------|------|--------|-----------|
 | 261015-aen | Use nsyte-style filled CLI progress bars and refresh terminal proof | 2026-10-15 | 5e165056 | [261015-aen](./quick/261015-aen-use-nsyte-filled-progress-bars-in-cli-an/) |
+| 261017-jqc | Preserve extension tags and validate defined manifest fields | 2026-10-17 | 9ff56c20 / PR #256 | [261017-jqc](./quick/261017-jqc-preserve-nostr-extension-tags-in-cli-pub/) |
 | 261015-bbu | Use QuickJS and dependency pruning for released CLI binaries | 2026-10-15 | PR #249 | [261015-bbu-use-quickjs-and-dependency-pruning-for-r](./quick/261015-bbu-use-quickjs-and-dependency-pruning-for-r/) |
 | 261015-asj | Add CLI compile experiments for QuickJS, pruning, bundling, and minification | 2026-10-15 | be8e27a9 | [261015-asj-add-cli-compile-experiments-for-quickjs-](./quick/261015-asj-add-cli-compile-experiments-for-quickjs-/) |
 | 261014-fuc | Replace blossom:sha256 URIs with BUD-10 blossom:<sha256>.<ext> | 2026-10-14 | 48782cd0 | [261014-fuc-replace-blossom-sha256-uris-with-bud-10-](./quick/261014-fuc-replace-blossom-sha256-uris-with-bud-10-/) |
