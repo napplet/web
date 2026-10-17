@@ -29,6 +29,12 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 
 > **Provenance note:** The "Accumulated Context" section below preserves bullet records from BOTH branches' STATE.md histories. Records tagged "v0.29.0" from main's lineage refer to the milestone NOW renumbered as v0.30.0 (Class-Gated Decrypt — Phases 135-138). Records tagged "v0.29.0" from feat/strict-model refer to NUB-CONNECT (Phases 135-142). Phase number alone is not a unique identifier across the two; cross-reference the topic (decrypt/identity/NIP-07 → v0.30.0; connect/class/CSP-authority → v0.29.0).
 
+### Quick task 261017-fw7 — COMPLETE
+
+- Corrected optional-domain declaration guidance across design, build and test skills.
+- Build, type-check, recursive units and 11 skills contracts passed; changed-file AI-slop 98/100 (external dependency advisory only).
+- Runtime and living protocol unchanged; publication templates must preserve both declared lists.
+
 ## Current Position
 
 Phase: 163 (nap-gamepad-across-repositories) — implementation verified
