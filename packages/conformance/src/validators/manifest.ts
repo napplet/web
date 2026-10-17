@@ -198,6 +198,13 @@ function validateMetadata(event: NappletManifestEvent, errors: ManifestError[], 
       errors.push({ code: 'invalid-metadata', message: `Invalid ${name} tag cardinality for kind ${event.kind}` });
     }
   }
+  // NIP-5D §Source defines this optional tag's shape and supported locations.
+  // Other tag names remain extensible under NIP-01; this is not an allowlist.
+  for (const tag of event.tags.filter((tag) => tag[0] === 'source')) {
+    if (tag.length !== 2 || !isSourceLocation(tag[1])) {
+      errors.push({ code: 'invalid-metadata', message: 'source must contain one HTTP(S), SSH, Git, or SCP repository location' });
+    }
+  }
   // NIP-5D §Archetypes and Intents: advertisements use queryless identities.
   for (const tag of event.tags.filter((tag) => tag[0] === 'i')) {
     if (!tag[1]?.trim() || tag[1].includes('?')) {
@@ -208,4 +215,17 @@ function validateMetadata(event: NappletManifestEvent, errors: ManifestError[], 
   if (icons.length > 1 || icons.some((tag) => tag.length !== 3 || !isSha256Hex(tag[1]) || !['image/png', 'image/jpeg', 'image/webp'].includes(tag[2]))) {
     warnings.push({ code: 'invalid-icon', message: 'Ignore invalid icon metadata and use generic artwork (NIP-5D §Icon)' });
   }
+}
+
+// https://github.com/nostr-protocol/nips/pull/2303 — Source
+function isSourceLocation(value: string | undefined): boolean {
+  if (!value || /^[a-z]:[\\/]/i.test(value)) return false;
+  try {
+    const { protocol } = new URL(value);
+    if (['http:', 'https:', 'ssh:', 'git:'].includes(protocol)) return true;
+    if (protocol === 'file:') return false;
+  } catch {
+    // SCP clone locations are not necessarily parseable as URLs.
+  }
+  return !value.includes('://') && /^(?:[^@\s/:]+@)?[^:\s/]+:[^\s]+$/.test(value);
 }

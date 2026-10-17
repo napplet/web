@@ -6,9 +6,9 @@ current_phase: 163
 current_phase_name: nap-gamepad-across-repositories
 status: completed
 stopped_at: Phase 163 verified; completing prerequisite publication for CLI follow-up 243
-last_updated: "2026-10-14T16:24:49.491178+00:00"
-last_activity: 2026-10-15
-last_activity_desc: Added keyboard action registration guidance across napplet skills
+last_updated: "2026-10-17T21:23:11+00:00"
+last_activity: 2026-10-17
+last_activity_desc: Preserved additional Nostr event tags in CLI publishing and migration; opened PR 256
 progress:
   total_phases: 8
   completed_phases: 3
@@ -539,6 +539,7 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 
 | Quick ID | Task | Date | Commit | Artifacts |
 |----------|------|------|--------|-----------|
+| 261017-jqc | Preserve extension tags and validate defined manifest fields | 2026-10-17 | 9ff56c20 / PR #256 | [261017-jqc](./quick/261017-jqc-preserve-nostr-extension-tags-in-cli-pub/) |
 | 261015-bbu | Use QuickJS and dependency pruning for released CLI binaries | 2026-10-15 | PR #249 | [261015-bbu-use-quickjs-and-dependency-pruning-for-r](./quick/261015-bbu-use-quickjs-and-dependency-pruning-for-r/) |
 | 261015-asj | Add CLI compile experiments for QuickJS, pruning, bundling, and minification | 2026-10-15 | be8e27a9 | [261015-asj-add-cli-compile-experiments-for-quickjs-](./quick/261015-asj-add-cli-compile-experiments-for-quickjs-/) |
 | 261014-fuc | Replace blossom:sha256 URIs with BUD-10 blossom:<sha256>.<ext> | 2026-10-14 | 48782cd0 | [261014-fuc-replace-blossom-sha256-uris-with-bud-10-](./quick/261014-fuc-replace-blossom-sha256-uris-with-bud-10-/) |

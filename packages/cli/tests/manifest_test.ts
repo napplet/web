@@ -458,11 +458,11 @@ Deno.test("legacy: config metadata overrides template archetype metadata", async
       "note",
       "napplet:note/open",
     ]]);
-    assertEquals(tags.some((tag) => tag[0] === "type"), false);
+    assertEquals(tags.filter((tag) => tag[0] === "type"), [["type", "invented"]]);
   });
 });
 
-Deno.test("legacy: template metadata preserves only canonical archetype tags", async () => {
+Deno.test("legacy: template metadata preserves opaque archetype payloads", async () => {
   await withTempDir(async (dir) => {
     await Deno.writeTextFile(`${dir}/index.html`, "<html></html>");
     await Deno.writeTextFile(
@@ -496,6 +496,11 @@ Deno.test("legacy: template metadata preserves only canonical archetype tags", a
         ["archetype", "note", "napplet:note/open"],
         ["archetype", "profile", "napplet:profile/open"],
         ["archetype", "profile", "napplet:note/open"],
+        ["archetype", "note", "napplet:note/open?kind=1", "kind:1"],
+        ["archetype", "note", "napplet:note/open", "kind:-1"],
+        ["archetype", "note", "napplet:note/open", "kind:1.5"],
+        ["archetype", "note", "napplet:note/open", "event:1"],
+        ["archetype", "profile", "napplet:note/open", "kind:0"],
       ],
     );
   });
