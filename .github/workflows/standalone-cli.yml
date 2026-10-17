@@ -7,6 +7,7 @@ on:
       - 'packages/boilerplate/**'
       - 'deno.*'
       - '.github/workflows/standalone-cli.yml'
+      - '.github/workflows/publish-jsr.yml'
   push:
     branches: [main]
     paths:
@@ -14,6 +15,7 @@ on:
       - 'packages/boilerplate/**'
       - 'deno.*'
       - '.github/workflows/standalone-cli.yml'
+      - '.github/workflows/publish-jsr.yml'
 
 permissions:
   contents: read
@@ -49,6 +51,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.9.5
       - name: Compile release binary
         run: deno task --cwd packages/cli compile:${{ matrix.target }}
       - name: Exercise commands with empty PATH and a fresh cache

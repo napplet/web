@@ -44,9 +44,11 @@ Use only domains the current `@napplet/sdk` exports (`napplet-sdk` lists them). 
 | Avatars, images, JSON, media bytes | `resource` | `fetch`, `<img src=https://…>` |
 | Uploads, external links | `upload`, `link` | Direct network / `window.open` |
 | Settings, host look | `config`, `theme` | App-owned settings pages |
-| Shortcuts | `keys` | Global key capture |
+| Keyboard-bound actions, shortcuts, game controls | `keys` action registration | App-owned key capture as the only integration path |
 | Notifications, playback, device bridges | `notify`, `media`, `cvm`, `ble`, `serial`, `fs`, `webrtc` | Browser APIs |
 | One explicit relay, diagnostics, protocols outside the outbox model | `relay` | Treating relay as the data layer |
+
+For maximum compatibility, plan to register every keyboard-bound action through [NAP-KEYS](https://github.com/napplet/naps/pull/9), including app-local shortcuts and game controls. Give each action a stable ID and label; default keys are suggestions for the shell. This is non-normative authoring guidance; the living proposal defines the contract. Ordinary text input does not need action registration.
 
 Every NAP is voluntary: assume a domain may be absent and name the fallback. `relay` needs an exact written reason; if none exists it is wrong. Do not gate a domain on `shell.ready()` / `shell.supports()` or any capability probe — a conforming runtime installs `window.napplet` before module code runs, and the optional `shell` domain only describes the environment.
 

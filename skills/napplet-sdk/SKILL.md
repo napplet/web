@@ -171,7 +171,9 @@ if (window.napplet?.theme) {
 
 `Theme.colors` = `{ background, text, primary }` plus optional `fonts` / `background` / `title`. Whole-surface application rules live in `napplet-ui`. NAP-CONFIG defines runtime `registerSchema` only; there is no manifest or HTML-meta encoding for build-time schemas — recheck the living [NAP-CONFIG proposal](https://github.com/napplet/naps/pull/14) before adding settings.
 
-## Keys — shortcuts through the shell
+## Keys — keyboard actions through the shell
+
+For maximum compatibility, register every keyboard-bound action through NAP-KEYS, including app-local shortcuts and game controls such as jump or pause. Use `keys.register` with a stable action ID, a human-readable label, and an optional `defaultKey` hint; connect the action callback and close the binding on teardown. The shell chooses the actual keymap, so a suggested default is not a guaranteed assignment. Ordinary text input does not need action registration. This is non-normative authoring guidance; the living [NAP-KEYS proposal](https://github.com/napplet/naps/pull/9) defines registration and binding behavior.
 
 ```ts
 import { keys } from '@napplet/sdk';

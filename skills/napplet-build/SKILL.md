@@ -70,8 +70,9 @@ The artifact hash lands in `.nip5a-manifest.json` and the signed event, not in a
 1. **Shell first, then features.** Lay out `index.html` + `styles.css` per `napplet-ui`: full-frame root, compact tokens, tier rules, theme application, inline states, no title header. Check it at `200×160` and `2400×1200` before wiring data.
 2. **Calls are SDK-first.** `import { outbox, storage, identity, … } from '@napplet/sdk'`; `window.napplet?.domain` only decides whether an optional feature renders. Exact signatures: `napplet-sdk` and the installed `@napplet/sdk` types.
 3. **Boundaries from the spec.** Social reads/publishes through `outbox`; social actions through `common` / `lists` / `count` / `dm`; `relay` only where the spec names the escape hatch, with a code comment stating it.
-4. **Teardown.** Close every subscription and key binding; revoke object URLs.
-5. **States.** Signed-out (`identity.getPublicKey()` returns `""`), optional domain absent, publish failure (`result.ok === false`), resource rejection `code` — each renders a compact inline state, never a blank frame.
+4. **Keyboard actions.** For maximum compatibility, register every keyboard-bound action through [NAP-KEYS](https://github.com/napplet/naps/pull/9), including app-local shortcuts and game controls. Follow `napplet-sdk` for `keys.register`, optional-domain gating, and binding cleanup. Keep ordinary text input and usable controls when `keys` is absent; this is non-normative authoring guidance, not an unconditional manifest requirement.
+5. **Teardown.** Close every subscription and key binding; revoke object URLs.
+6. **States.** Signed-out (`identity.getPublicKey()` returns `""`), optional domain absent, publish failure (`result.ok === false`), resource rejection `code` — each renders a compact inline state, never a blank frame.
 
 ## Step 5 — Validate the generated project
 

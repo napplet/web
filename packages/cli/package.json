@@ -15,7 +15,21 @@
   "scripts": {
     "build": "deno task build",
     "type-check": "deno task check",
-    "test:unit": "deno task test:unit"
+    "test:unit": "deno task test:unit",
+    "compile:linux-x86_64": "deno task compile:linux-x86_64",
+    "compile:linux-aarch64": "deno task compile:linux-aarch64",
+    "compile:darwin-x86_64": "deno task compile:darwin-x86_64",
+    "compile:darwin-aarch64": "deno task compile:darwin-aarch64",
+    "compile:windows-x86_64": "deno task compile:windows-x86_64",
+    "compile": "deno task compile",
+    "compile:pruned": "deno task compile:pruned",
+    "compile:bundle": "deno task compile:bundle",
+    "compile:minify": "deno task compile:minify",
+    "compile:no-code-cache": "deno task compile:no-code-cache",
+    "compile:small": "deno task compile:small",
+    "compile:quickjs": "deno task compile:quickjs",
+    "compile:quickjs-minify": "deno task compile:quickjs-minify",
+    "compile:quickjs-pruned": "deno task compile:quickjs-pruned"
   },
   "dependencies": {
     "@napplet/boilerplate": "workspace:^",
