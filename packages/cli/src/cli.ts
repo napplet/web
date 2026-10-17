@@ -7,6 +7,8 @@
  */
 
 import { configPath, initConfig, parseArchetypeConventions, readConfig } from "./config.ts";
+import type { ConfigMigrationOptions } from "./config-migration.ts";
+import { prepareCommand } from "./cli-args.ts";
 import { createDebugReport, createSigningDebugInfo } from "./debug.ts";
 import { createDeployPlan } from "./deploy-plan.ts";
 import { createDeploySigner } from "./deploy-signer.ts";
@@ -70,13 +72,12 @@ Usage:
 Deploy capture options: --screenshot-selector, --screenshot-ready-selector,
   --screenshot-width, --screenshot-height, --screenshot-delay (all take values).
 
+Configuration: .napplet/config.yaml. Legacy JSON requires migration before use.
+  --migrate-config approves migration and retains the original as .json.bak.
+  -i / --non-interactive disables the migration prompt.
+
 Run "napplet guide" for the complete developer workflow and documentation.
 `;
-
-interface ParsedArgs {
-  command: string;
-  rest: string[];
-}
 
 /** Callable adapter for a maintained package CLI. */
 export type PackageCliRunner = (args: readonly string[]) => number | Promise<number>;
@@ -85,6 +86,7 @@ export type PackageCliRunner = (args: readonly string[]) => number | Promise<num
 export interface CliMainOptions {
   runCreate?: PackageCliRunner;
   runScreenshot?: PackageCliRunner;
+  configMigration?: ConfigMigrationOptions;
 }
 
 /**
@@ -95,8 +97,8 @@ export interface CliMainOptions {
  * @returns Process exit code.
  */
 export async function main(argv = Deno.args, options: CliMainOptions = {}): Promise<number> {
-  const parsed = parseCommand(argv);
   try {
+    const parsed = await prepareCommand(argv, options.configMigration);
     switch (parsed.command) {
       case "version":
       case "--version":
@@ -143,17 +145,12 @@ export async function main(argv = Deno.args, options: CliMainOptions = {}): Prom
   }
 }
 
-function parseCommand(argv: string[]): ParsedArgs {
-  if (argv.length === 0) return { command: "help", rest: [] };
-  const [command, ...rest] = argv;
-  return { command, rest };
-}
-
 async function commandInit(argv: string[]): Promise<number> {
   const flags = collectFlags(argv);
-  const existing = await readConfig();
+  const path = first(flags.values.get("config"));
+  const existing = await readConfig(path);
   if (existing && !flags.boolean.has("force")) {
-    console.log(renderInitReport({ path: configPath(), config: existing, created: false }));
+    console.log(renderInitReport({ path: path ?? configPath(), config: existing, created: false }));
     return 0;
   }
   const result = await runInitFromFlags(flags);
@@ -174,7 +171,7 @@ async function runInitFromFlags(flags: FlagBag): Promise<InitReport> {
     root: flags.boolean.has("root"),
   };
   let options: InitWizardResult;
-  const interactive = isTerminalInput();
+  const interactive = isTerminalInput() && !flags.boolean.has("non-interactive");
   if (interactive) {
     console.error("Discovering relay and Blossom server suggestions...");
     const relaySuggestions = await getRelaySuggestions();
@@ -205,6 +202,7 @@ async function runInitFromFlags(flags: FlagBag): Promise<InitReport> {
     };
   }
   const result = await initConfig({
+    path: first(flags.values.get("config")),
     force: seed.force,
     sourceDir: options.sourceDir,
     relays: options.relays,

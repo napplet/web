@@ -32,7 +32,7 @@ Descriptions are literal text. Display them with text APIs rather than HTML or M
 
 ## Deploy an existing project
 
-Upgrade the Vite plugin and CLI. Supply a meaningful `description` option or HTML description meta for builds and `metadata.description` in `.napplet/config.json` for deployment overrides. The existing `requires` and `archetypes` config names remain valid authoring options; current output translates them to the new tags. `metadata.optional` and the plugin's `optional` option mark integrations that can be absent.
+Upgrade the Vite plugin and CLI. Supply a meaningful `description` option or HTML description meta for builds and `metadata.description` in `.napplet/config.yaml` for deployment overrides. The existing `requires` and `archetypes` config names remain valid authoring options; current output translates them to the new tags. `metadata.optional` and the plugin's `optional` option mark integrations that can be absent.
 
 ```sh
 napplet deploy --dry-run --format current

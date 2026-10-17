@@ -322,7 +322,7 @@ function buildCurrentManifestFields(
   }
   if (!content.trim()) {
     throw new Error(
-      "Set metadata.description in .napplet/config.json or an HTML description meta before deploying current NIP-5D events",
+      "Set metadata.description in .napplet/config.yaml or an HTML description meta before deploying current NIP-5D events",
     );
   }
   for (const tag of metadata.filter((tag) => tag[0] === "R" || tag[0] === "O")) {

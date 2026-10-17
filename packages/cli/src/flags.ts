@@ -32,6 +32,10 @@ export function collectFlags(argv: string[]): FlagBag {
       passthrough = true;
       continue;
     }
+    if (arg === "-i") {
+      flags.boolean.add("non-interactive");
+      continue;
+    }
     if (!arg.startsWith("--")) {
       flags.positional.push(arg);
       continue;
@@ -41,7 +45,7 @@ export function collectFlags(argv: string[]): FlagBag {
       flags.boolean.add(name);
       continue;
     }
-    if (["force", "all", "root", "snapshot", "prompt-sec", "dry-run", "json", "zapstore", "no-zapstore"].includes(name)) {
+    if (["force", "all", "root", "snapshot", "prompt-sec", "dry-run", "json", "zapstore", "no-zapstore", "migrate-config", "non-interactive"].includes(name)) {
       flags.boolean.add(name);
       continue;
     }

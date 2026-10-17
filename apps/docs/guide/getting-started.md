@@ -33,7 +33,7 @@ cd my-napplet
 napplet init
 ```
 
-The wizard writes `.napplet/config.json` with the named-manifest d-tag, title, optional description, queryless `napplet:<archetype>/<intent>` convention metadata, relays, and Blossom servers. Automation can provide the same values explicitly:
+The wizard writes `.napplet/config.yaml` with the named-manifest d-tag, title, optional description, queryless `napplet:<archetype>/<intent>` convention metadata, relays, and Blossom servers. Automation can provide the same values explicitly:
 
 ```bash
 napplet init --name my-napplet --title "My Napplet" \

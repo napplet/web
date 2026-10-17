@@ -20,7 +20,7 @@ export interface ZapstorePublication {
 
 /**
  * Validate the optional CLI application listing configuration.
- * @param input JSON configuration value.
+ * @param input Configuration value.
  * @returns Validated configuration, or undefined when absent.
  * @example normalizeZapstoreConfig({ id: "org.example.notes", name: "Notes" })
  */
