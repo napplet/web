@@ -33,7 +33,7 @@ Keep these scripts as generated:
 | File | Edit |
 | --- | --- |
 | `.napplet/config.yaml` | Read-only for you; CLI-owned deployment metadata |
-| `vite.config.ts` | Hard `requires: [...]`, `archetypes`, optional config schema; keep `artifactMode: 'single-file'` and the `nappletType` fallback |
+| `vite.config.ts` | Hard `requires: [...]`, optional integrations in `optional: [...]`, `archetypes`, optional config schema; keep `artifactMode: 'single-file'` and the `nappletType` fallback |
 | `index.html` | Keep `<title>`, `<meta viewport>`, `#app` root. **Delete the starter `masthead` / `eyebrow` / `<h1>`** and the demo panels; add only the product's markup (`napplet-ui` Rule 1) |
 | `src/styles.css` | Replace the starter's page layout (`.app-shell { padding: 2rem }`, `.workspace { width: min(1040px, 100%) }`, `body { min-width: 320px }`) with the compact, full-frame, container-query layout from `napplet-ui` |
 | `src/main.ts` | Product behavior; SDK-first calls; keep `domain-availability.ts`'s `runtimeHasDomain` pattern for optional-domain gating |
@@ -57,11 +57,14 @@ export default defineConfig({
       nappletType: 'my-napplet',        // build-local fallback; deploy metadata comes from napplet init
       artifactMode: 'single-file',      // fold assets, keep inline scripts, one index.html
       requires: ['outbox', 'storage'],  // hard requirements only, bare domain names
+      optional: ['theme', 'keys'],      // integrations with a usable fallback
       // archetypes: [{ slug: 'note', convention: 'napplet:note/open' }],  // see napplet-interop
     }),
   ],
 });
 ```
+
+Keep both capability lists aligned with the design and the SDK domains actually used. A guarded call still needs its optional declaration; importing an SDK wrapper or checking presence does not by itself populate deployment metadata. Current tooling emits `R`/`O` tags. If a constrained generation service only accepts application source, use its documented data-only metadata surface; flag a missing surface rather than silently omitting declarations or editing protected build configuration.
 
 The artifact hash lands in `.nip5a-manifest.json` and the signed event, not in a meta tag. `VITE_DEV_PRIVKEY_HEX` produces a signed manifest in CI; dev builds work without it.
 

@@ -54,8 +54,12 @@ Every NAP is voluntary: assume a domain may be absent and name the fallback. `re
 
 ## Step 3 — Hard requirements vs optional enhancements
 
+This non-normative authoring guidance follows [NIP-5D, Required and Optional Capabilities](https://github.com/nostr-protocol/nips/pull/2303). Record both lists explicitly, even when empty; runtime presence checks do not write manifest declarations.
+
 - **Hard** (napplet cannot do its one job without it) → bare domain names in the vite-plugin `requires: [...]` so a shell can refuse the load up front.
-- **Optional** → no manifest entry; gate after injection with `if (window.napplet?.domain)` and give a fallback.
+- **Optional** → declare in `optional: [...]`; gate after injection with `if (window.napplet?.domain)` and give a fallback.
+
+Put each used optional integration in the vite-plugin `optional: [...]` list as well as guarding its runtime calls. Current tooling emits `R` for `requires` and `O` for `optional`. Keep these declarations aligned when features are added or removed; list only domains actually used.
 
 Prefer optional + graceful degradation. `keys`, `theme`, `config`, `notify`, `resource`, `inc`, `intent` are almost never hard.
 
@@ -75,9 +79,10 @@ Decide these now; `napplet-ui` has the rules and defaults:
 ```
 nappletType: <kebab d-tag, e.g. "note-feed">
 purpose: <one line, one job>
-NAPs used: outbox (req), storage (req), identity (opt), common (opt), resource (opt)
+NAPs used: outbox (req), storage (req), identity (opt), common (opt), resource (opt), keys (opt)
 requires: [outbox, storage]        # hard only
-optional domains and fallbacks: resource -> initials avatar; common -> hide react/follow; keys -> buttons only
+optional: [identity, common, resource, keys]
+optional domains and fallbacks: identity -> anonymous view; resource -> initials avatar; common -> hide react/follow; keys -> buttons only
 SDK helpers: outbox.query, outbox.subscribe, outbox.publish, storage.getItem/setItem, identity.getPublicKey/onChanged
 data flow: <queries / subscriptions / publishes / stored keys>
 relay escape hatches: none | <exact reason outbox/common/lists/count/dm cannot cover>

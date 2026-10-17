@@ -36,7 +36,7 @@ Conformance runs against `./dist` (prefers `dist/index.html`). Never test source
 | Network and media bytes | No `fetch`, XHR, WebSocket, external `<img src>`; `resource` instead |
 | Persistence | No `localStorage`, IndexedDB, cookies; `storage` instead |
 | Optional-domain gating | `window.napplet?.domain` after injection; never wait on optional `shell.ready()` / `shell.supports()` or service probes |
-| `requires` | Bare domain names, hard requirements only; matches the design spec |
+| `requires` / `optional` | Bare domain names for every used integration; required and optional lists match the design and deployment event |
 
 ```bash
 grep -RInE "fetch\\s*\\(|XMLHttpRequest|WebSocket|localStorage|sessionStorage|indexedDB|document\\.cookie|window\\.nostr|<img[^>]+src=['\\\"]?https?:|<script[^>]+src=['\\\"]?https?:|<link[^>]+href=['\\\"]?https?:" src dist index.html
@@ -47,6 +47,12 @@ Any hit in authored or bundled napplet code is removed or explained as a tooling
 ## Step 4 — Artifact
 
 `dist/index.html` is one self-contained file: inline JS, folded assets, no external `<script src>` (opaque-origin `srcdoc` has nothing to fetch). `artifactMode: 'single-file'` produces it; verify by inspecting the file, not by trusting the config.
+
+### Check the event that will be published
+
+Run `napplet deploy --dry-run --json --format current` and inspect the final manifest template, not only the Vite config or runtime preview. Compare its `R` and `O` domains with the design and SDK usage, including optional theme, keyboard, persistence and social integrations. After signing, confirm the same declarations remain in the signed event. This is an authoring verification step following [NIP-5D, Manifest and Required and Optional Capabilities](https://github.com/nostr-protocol/nips/pull/2303); declarations do not grant runtime permissions.
+
+If the build declares capabilities but the deployment drops or reclassifies them, report a publishing-tool defect. Legacy serialization cannot preserve the required/optional distinction; use current-format tooling when that distinction is needed. Do not claim the integration is complete from a successful preview alone.
 
 ## Step 5 — Applet UI checks (`napplet-ui`)
 
