@@ -7,8 +7,8 @@ current_phase_name: cli-terminal-usability
 status: completed
 stopped_at: Phase 164 verified locally and shipped in PR 248 with terminal recordings
 last_updated: "2026-10-15T14:34:28.295401+00:00"
-last_activity: 2026-10-15
-last_activity_desc: Updated CLI progress bars to nsyte filled blocks and refreshed visual proof
+last_activity: 2026-10-16
+last_activity_desc: Resolved PR 248 conflicts with current main and verified CLI integration
 progress:
   total_phases: 9
   completed_phases: 4
@@ -584,6 +584,7 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 | 260706-dmu | Align NAP-DM result envelope unions | 2026-07-07 | ac9c32e0 | [260706-dmu-align-dm-result-envelope-unions](./quick/260706-dmu-align-dm-result-envelope-unions/) |
 | 260706-via | Harden napplet skills against direct browser network and storage APIs in sandboxed napplets | 2026-07-06 | e781e436 | [260706-via-harden-napplet-skills-against-direct-bro](./quick/260706-via-harden-napplet-skills-against-direct-bro/) |
 | 261015-k1f | Recommend NAP-KEYS registration for shortcuts and game controls | 2026-10-15 | e55a2aa8 | [261015-k1f-document-nap-keys-registration-for-keybo](./quick/261015-k1f-document-nap-keys-registration-for-keybo/) |
+| 261016-tlx | Resolve PR 248 conflicts with YAML migration and CLI terminal behavior preserved | 2026-10-16 | 791cfd50 | [261016-tlx-resolve-pr-248-conflicts-with-current-ma](./quick/261016-tlx-resolve-pr-248-conflicts-with-current-ma/) |
 
 ## Deferred Items
 
