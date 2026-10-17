@@ -1,5 +1,5 @@
 ---
-status: planned
+status: complete
 ---
 
 # Preserve extension tags and validate defined manifest fields
