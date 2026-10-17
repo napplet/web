@@ -544,6 +544,8 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 | Quick ID | Task | Date | Commit | Artifacts |
 |----------|------|------|--------|-----------|
 | 261015-aen | Use nsyte-style filled CLI progress bars and refresh terminal proof | 2026-10-15 | 5e165056 | [261015-aen](./quick/261015-aen-use-nsyte-filled-progress-bars-in-cli-an/) |
+| 261015-bbu | Use QuickJS and dependency pruning for released CLI binaries | 2026-10-15 | PR #249 | [261015-bbu-use-quickjs-and-dependency-pruning-for-r](./quick/261015-bbu-use-quickjs-and-dependency-pruning-for-r/) |
+| 261015-asj | Add CLI compile experiments for QuickJS, pruning, bundling, and minification | 2026-10-15 | be8e27a9 | [261015-asj-add-cli-compile-experiments-for-quickjs-](./quick/261015-asj-add-cli-compile-experiments-for-quickjs-/) |
 | 261014-fuc | Replace blossom:sha256 URIs with BUD-10 blossom:<sha256>.<ext> | 2026-10-14 | 48782cd0 | [261014-fuc-replace-blossom-sha256-uris-with-bud-10-](./quick/261014-fuc-replace-blossom-sha256-uris-with-bud-10-/) |
 | 261013-vo3 | Add a skill for icon design, generation, refinement, and NIP-5D integration | 2026-10-13 | b5757eec | [261013-vo3-add-a-napplet-skill-for-icon-design-imag](./quick/261013-vo3-add-a-napplet-skill-for-icon-design-imag/) |
 | 261009-ur6 | Remove commit-title gating from JSR publication | 2026-10-09 | d798a91f | [261009-ur6-remove-commit-title-gating-from-jsr-publ](./quick/261009-ur6-remove-commit-title-gating-from-jsr-publ/) |
@@ -581,6 +583,7 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 | 260706-psu | Resolve napplet/web#126 with @napplet/shim host prelude | 2026-07-06 | 4e726171 | [260706-psu-task-resolve-napplet-web-126-by-adding-a](./quick/260706-psu-task-resolve-napplet-web-126-by-adding-a/) |
 | 260706-dmu | Align NAP-DM result envelope unions | 2026-07-07 | ac9c32e0 | [260706-dmu-align-dm-result-envelope-unions](./quick/260706-dmu-align-dm-result-envelope-unions/) |
 | 260706-via | Harden napplet skills against direct browser network and storage APIs in sandboxed napplets | 2026-07-06 | e781e436 | [260706-via-harden-napplet-skills-against-direct-bro](./quick/260706-via-harden-napplet-skills-against-direct-bro/) |
+| 261015-k1f | Recommend NAP-KEYS registration for shortcuts and game controls | 2026-10-15 | e55a2aa8 | [261015-k1f-document-nap-keys-registration-for-keybo](./quick/261015-k1f-document-nap-keys-registration-for-keybo/) |
 
 ## Deferred Items
 

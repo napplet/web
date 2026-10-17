@@ -66,6 +66,7 @@ At every frame, in both a dark and a light runtime theme: no napplet name / tagl
 - **Signed-out:** `identity.getPublicKey()` returns `""`; publish / list / DM actions degrade with an inline state.
 - **OUTBOX options:** only current fields — `getEvent`: `author`, `relays`, `timeoutMs`; `query` / `subscribe`: `authors`, `relays`, `limit`, `timeoutMs`; `publish`: `relays`, `toOutbox`, `toInboxes`. No `strategy`, subscribe `live`, publish `timeoutMs`, or `outbox.eose`.
 - **Optional domain absent:** remove it from the mock runtime; the affordance hides or falls back, nothing else breaks.
+- **Keyboard actions:** for maximum compatibility, check that every keyboard-bound action is registered through [NAP-KEYS](https://github.com/napplet/naps/pull/9), including app-local shortcuts and game controls. Test the shell-assigned binding and a changed binding, confirm the registered action runs without duplicate local hotkey handling, and exercise the fallback with `keys` absent. Ordinary text input still works. This is a non-normative authoring check; the living proposal defines protocol conformance.
 - **Theme change:** emit a theme change; the whole surface repaints. A dark card on a white page is a failed integration.
 - **Escape hatch:** if `relay` is used, exercise the relay-local behavior and teardown.
 - **Teardown:** subscriptions, key bindings, and object URLs are released when the view goes away.

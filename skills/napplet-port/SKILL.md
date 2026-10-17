@@ -34,11 +34,13 @@ For asset-heavy ports, inventory every image, font, media file, WASM side file, 
 | `localStorage`, IndexedDB, cookies | `storage` |
 | `fetch`, XHR, WebSocket, direct external images/media | `resource`, `upload`, `link`, `media` |
 | App-level cross-window / plugin bus | `inc`, `intent` (`napplet-interop`) |
-| Global shortcuts, editor hotkeys | `keys` (optional; buttons/menus keep it usable) |
+| Keyboard-bound actions, app-local shortcuts, editor hotkeys, game controls | `keys` action registration (optional when other controls keep it usable) |
 | Notifications, badges | `notify` |
 | Device / native bridges | `ble`, `serial`, `webrtc`, `cvm`, `fs` only when the shipped domain fits |
 | App header, logo, nav bar, footer, marketing sections, page router | **Delete.** The runtime frames the applet and shows its name; each focused napplet is one screen (`napplet-ui`) |
 | Fixed desktop layout / min-widths / centered max-width column | Compact, full-frame, tiered layout (`napplet-ui`) |
+
+For maximum compatibility, inventory and register every keyboard-bound action through [NAP-KEYS](https://github.com/napplet/naps/pull/9), including shortcuts and game controls inside the napplet. Follow the non-normative implementation guidance in `napplet-sdk`, preserve usable fallbacks when `keys` is absent, and leave ordinary text input as text input.
 
 If a relay client, signer, direct storage layer, direct network layer, or site chrome survives this pass, assume the boundary is wrong until proven otherwise.
 

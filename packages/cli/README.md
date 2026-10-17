@@ -361,6 +361,69 @@ deno task build
 Dependencies are declared in `deno.json` `imports`. The npm dependencies (`applesauce-signers`, `nostr-tools`) are mirrored in `package.json`; JSR-only dependencies such as `@libs/qrcode` and `@std/streams` live in `deno.json` only.
 
 
+### Compile experiments
+
+Run these tasks from a repository checkout with Deno 2.9.5 or newer. Each task compiles `src/standalone.ts` for the current machine into `packages/cli/dist/experiments/`; Windows adds `.exe`. Outputs have distinct names so experiments can be compared without replacing release artifacts. The normal `build` task checks types and builds all five release targets with QuickJS and dependency pruning (`--engine quickjs --exclude-unused-npm`). Release and standalone smoke workflows pin Deno 2.9.5. Individual compile tasks skip type checking; run `deno task check` first.
+
+| Task | Output name | Experiment |
+| --- | --- | --- |
+| `compile` | `napplet-v8` | Default V8 baseline |
+| `compile:pruned` | `napplet-pruned` | Embed only reachable npm packages (`--exclude-unused-npm`) |
+| `compile:bundle` | `napplet-bundle` | Bundle and tree-shake dependencies (`--bundle`) |
+| `compile:minify` | `napplet-minify` | Bundle and minify (`--bundle --minify`) |
+| `compile:no-code-cache` | `napplet-no-code-cache` | Omit the V8 code cache (`--no-code-cache`) |
+| `compile:small` | `napplet-small` | Combine pruning, bundling, minification, and no code cache |
+| `compile:quickjs` | `napplet-quickjs` | Use the experimental QuickJS runtime (`--engine quickjs`) |
+| `compile:quickjs-pruned` | `napplet-quickjs-pruned` | Combine QuickJS and reachable npm packages |
+| `compile:quickjs-minify` | `napplet-quickjs-minify` | Combine QuickJS, bundling, and minification |
+
+```sh
+# From the repository root:
+pnpm --filter @napplet/cli compile
+pnpm --filter @napplet/cli compile:minify
+pnpm --filter @napplet/cli compile:quickjs
+
+# Or from packages/cli:
+deno task compile:small
+./dist/experiments/napplet-small --version
+./dist/experiments/napplet-small --help
+```
+
+All five existing cross-compilation tasks also have pnpm aliases: `compile:linux-x86_64`, `compile:linux-aarch64`, `compile:darwin-x86_64`, `compile:darwin-aarch64`, and `compile:windows-x86_64`. These use QuickJS with dependency pruning and retain their `dist/napplet-<platform>` output paths. The experiment tasks use the host target; to experiment with another target, copy the corresponding command from `deno.json` and insert `--target <triple>` before `src/standalone.ts`.
+
+The host-native tasks are comparison presets; `compile:quickjs-pruned` uses the same engine and pruning settings as the platform release tasks. [Deno's compile documentation](https://docs.deno.com/runtime/reference/cli/compile/) describes the engine and bundling options. QuickJS is experimental, lacks a JIT, and does not receive the same security updates as V8. Bundling and pruning can omit dependencies loaded through computed imports; minification makes stack traces less readable. A successful compile or `--help` does not establish that deployment, signing, screenshots, or managed tools work.
+
+Run the existing standalone integration suite against a candidate binary before considering it for release. From the repository root on macOS or Linux, for example:
+
+```sh
+NAPPLET_TEST_STANDALONE=1 \
+NAPPLET_TEST_BINARY="$PWD/packages/cli/dist/experiments/napplet-small" \
+deno test --node-modules-dir=none -A packages/cli/tests/standalone_integration_test.ts
+```
+
+The `compile:pruned`, `compile:small`, `compile:quickjs`, and `compile:quickjs-pruned` binaries passed this full suite on the macOS ARM64 machine used for the measurements below. Other platforms and live publication were not exercised by these local experiments.
+
+The suite needs network access for hosted templates and managed tools. For Windows, set the same environment variables using PowerShell and include the `.exe` suffix. Compare file sizes on the same platform and Deno version; the embedded runtime contributes substantially to the result.
+
+
+### Measured on macOS ARM64
+
+Deno 2.9.5, CLI 0.9.1 source, 2026-10-15. These are local measurements, not size guarantees; workspace dependency resolution and target affect the embedded payload. All nine tasks compiled successfully.
+
+| Task | Binary size (MiB) | `--help` and `--version` |
+| --- | ---: | --- |
+| `compile` | 210.8 | Pass |
+| `compile:pruned` | 114.5 | Pass |
+| `compile:bundle` | 156.6 | Pass |
+| `compile:minify` | 155.6 | Pass |
+| `compile:no-code-cache` | 210.8 | Pass |
+| `compile:quickjs` | 181.1 | Pass |
+| `compile:quickjs-minify` | 125.9 | Fail: missing `jsr:@libs/qrcode` |
+| `compile:small` | 155.6 | Pass |
+| `compile:quickjs-pruned` | 84.8 | Pass |
+
+`compile:small` combines size-oriented flags; it is not necessarily the smallest result. In this run, pruning alone beat bundling, and disabling the code cache did not change the final size. `compile:quickjs-minify` currently produces a binary that fails at startup with `error: Module not found: jsr:@libs/qrcode`; retain it as a reproduction task while evaluating newer Deno releases.
+
 ## Current and legacy event formats
 
 From CLI **0.7.0**, deployments default to the current NIP-5D artifact-hash schema. Interactive deploys ask for `current` or `legacy`; scripts can choose with `--format current|legacy`. A non-empty description is required for current event content. Legacy output remains isolated in a temporary serializer; 0.6.x and earlier defaulted to legacy events. Current deploys upload only `/index.html` plus the blob referenced by an `icon` tag; any other built file in the deploy directory makes deploy fail with the list of those files (build a single-file artifact or use `--format legacy`).
