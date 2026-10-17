@@ -6,6 +6,8 @@
  * @module
  */
 
+import type { ConfigMigrationOptions } from "./config-migration.ts";
+import { migrateCommandConfig, parseCommand, type ParsedArgs } from "./cli-args.ts";
 import { createDebugReport } from "./debug.ts";
 import { discoverNapplets } from "./discover.ts";
 import { collectFlags, first } from "./flags.ts";
@@ -31,11 +33,6 @@ export type { DeployConfigLoaderOptions } from "./config-command.ts";
 export { runPackageCli, resolveConformanceCommand, resolvePajaArgs } from "./package-runner.ts";
 export type { PackageCliRunOptions, ResolvedCommand } from "./package-runner.ts";
 
-interface ParsedArgs {
-  command: string;
-  rest: string[];
-}
-
 /** Callable adapter for a maintained package CLI. */
 export type PackageCliRunner = (args: readonly string[]) => number | Promise<number>;
 
@@ -43,6 +40,7 @@ export type PackageCliRunner = (args: readonly string[]) => number | Promise<num
 export interface CliMainOptions {
   runCreate?: PackageCliRunner;
   runScreenshot?: PackageCliRunner;
+  configMigration?: ConfigMigrationOptions;
 }
 
 /**
@@ -68,7 +66,15 @@ export async function main(argv = Deno.args, options: CliMainOptions = {}): Prom
     if (isTerminalOutput() && !own.includes("--json") && !["debug", "discover", "migrate"].includes(parsed.command)) {
       console.log(renderBanner(cliMetadata.version));
     }
-    return dispatch(parsed, options);
+    return dispatch(parsed, {
+      ...options,
+      configMigration: {
+        ...options.configMigration,
+        interactive: own.includes("-i") || own.includes("--non-interactive") || own.includes("--json")
+          ? false
+          : options.configMigration?.interactive ?? policy.interactive,
+      },
+    });
   });
 }
 
@@ -79,6 +85,7 @@ async function dispatch(parsed: ParsedArgs, options: CliMainOptions): Promise<nu
       console.log(decorateReport(commandHelp(parsed.command)));
       return 0;
     }
+    await migrateCommandConfig(parsed, options.configMigration);
     switch (parsed.command) {
       case "version":
       case "--version":
@@ -123,12 +130,6 @@ async function dispatch(parsed: ParsedArgs, options: CliMainOptions): Promise<nu
     console.error(paint(error instanceof Error ? error.message : String(error), "error"));
     return error instanceof PromptCancelledError ? 130 : 1;
   }
-}
-
-function parseCommand(argv: string[]): ParsedArgs {
-  if (argv.length === 0) return { command: "help", rest: [] };
-  const [command, ...rest] = argv;
-  return { command, rest };
 }
 
 async function commandDiscover(argv: string[]): Promise<number> {

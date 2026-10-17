@@ -84,7 +84,7 @@ export async function promptSecret(options: SecretPromptOptions = {}): Promise<s
  */
 export async function promptLine(options: LinePromptOptions): Promise<string> {
   if (currentInteraction()?.interactive === false) {
-    throw new Error("Prompts are disabled. Supply the missing value with a flag or in .napplet/config.json.");
+    throw new Error("Prompts are disabled. Supply the missing value with a flag or in .napplet/config.yaml.");
   }
   const input = options.input ?? Deno.stdin;
   const output = options.output ?? Deno.stderr;

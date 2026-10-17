@@ -97,7 +97,7 @@ still declares only the packages and NAP domains it actually uses.
 
 Open `vite.config.ts`. Keep the generated single-file plugin and manifest plugin
 shape, but change only the hard runtime requirements. Keep the template's
-build-local `nappletType` fallback; `.napplet/config.json` owns the d-tag,
+build-local `nappletType` fallback; `.napplet/config.yaml` owns the d-tag,
 title, description, and archetype metadata used by `napplet deploy`.
 
 ```ts
@@ -109,7 +109,7 @@ export default defineConfig({
   plugins: [
     viteSingleFile(),
     nip5aManifest({
-      nappletType: 'my-napplet', // build-local fallback; deploy uses .napplet/config.json
+      nappletType: 'my-napplet', // build-local fallback; deploy uses .napplet/config.yaml
       requires: ['identity', 'storage', 'outbox'],
     }),
   ],
@@ -557,7 +557,7 @@ Expected manifest tags include:
 ```
 
 The deploy preview must show the CLI-owned `notedrafts` d-tag and the title,
-description, and archetype from `.napplet/config.json`.
+description, and archetype from `.napplet/config.yaml`.
 
 Open the app in your target shell or Paja runtime and verify:
 

@@ -23,7 +23,7 @@
  * Use the root `@napplet/cli` entrypoint when another tool needs the same
  * building blocks as the command implementation:
  *
- * - read and write `.napplet/config.json`
+ * - read and write `.napplet/config.yaml`
  * - discover deployable `index.html` artifacts
  * - create root, named, and snapshot deploy plans
  * - extract title, description, hash, and file metadata from built artifacts
@@ -56,6 +56,7 @@
  */
 
 export * from "./config.ts";
+export { migrateConfig, type ConfigMigrationOptions } from "./config-migration.ts";
 export * from "./deploy-plan.ts";
 export * from "./deploy-signer.ts";
 export * from "./discover.ts";

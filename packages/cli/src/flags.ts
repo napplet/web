@@ -46,7 +46,7 @@ export function collectFlags(argv: string[]): FlagBag {
       flags.boolean.add(name);
       continue;
     }
-    if (["force", "all", "root", "snapshot", "prompt-sec", "dry-run", "json", "zapstore", "no-zapstore", "non-interactive", "no-color"].includes(name)) {
+    if (["force", "all", "root", "snapshot", "prompt-sec", "dry-run", "json", "zapstore", "no-zapstore", "migrate-config", "non-interactive", "no-color"].includes(name)) {
       flags.boolean.add(name);
       continue;
     }

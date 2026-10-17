@@ -31,10 +31,13 @@ Signing keys
 Terminal options
 ----------------
   -i, --non-interactive  Disable prompts; use flags or config
+  --migrate-config      Approve JSON-to-YAML migration with an exact backup
   --no-color            Plain output (also honors NO_COLOR)
   --help, -h            Show command help
   --version, -v         Show installed version
 
+  Project settings: .napplet/config.yaml
+  Legacy JSON requires consent; refusal stops the command.
   CI and redirected streams disable prompts automatically.
   Deploy --json keeps stdout machine-readable, without a banner.
 
@@ -149,5 +152,5 @@ Offline preview only; does not sign or publish.`,
  */
 export function commandHelp(command: string): string {
   const detail = details[command];
-  return detail ? `${detail}\n\nAll commands: -i/--non-interactive, --no-color, --help\n` : HELP;
+  return detail ? `${detail}\n\nAll commands: -i/--non-interactive, --no-color, --migrate-config, --help\n` : HELP;
 }

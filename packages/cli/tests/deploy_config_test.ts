@@ -1,3 +1,4 @@
+import { parse, stringify } from "yaml";
 import { defaultConfig } from "../src/config.ts";
 import { completeDeployInputs } from "../src/deploy-config.ts";
 import { collectFlags } from "../src/flags.ts";
@@ -89,16 +90,17 @@ Deno.test("canceling deployment setup leaves configuration untouched", async () 
 
 Deno.test("saving a connected signer preserves unsaved settings and incomplete app metadata", async () => {
   await withTempDir(async (dir) => {
-    const path = `${dir}/config.json`;
+    const path = `${dir}/config.yaml`;
     const persisted = { version: 1, sourceDir: "dist", relays: [], zapstore: { id: "org.example.notes" }, custom: "keep" };
-    await Deno.writeTextFile(path, JSON.stringify(persisted));
+    await Deno.writeTextFile(path, "# keep this comment\n" + stringify(persisted));
     const updated = defaultConfig({
       sourceDir: "transient", relays: ["wss://override.example"], metadata: { description: "Unsaved" },
       zapstore: { id: "org.example.notes", name: "Unsaved name" },
       signing: { mode: "interactive", keyReference: "connected-signer", pubkey: "02".repeat(32) },
     });
     await saveDeploySigner(updated, path);
-    assertEquals(JSON.parse(await Deno.readTextFile(path)), { ...persisted, signing: updated.signing });
+    assertEquals(parse(await Deno.readTextFile(path)), { ...persisted, signing: updated.signing });
+    assert((await Deno.readTextFile(path)).includes("# keep this comment"));
   });
 });
 

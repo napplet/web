@@ -1,5 +1,9 @@
 /** Recover incomplete application metadata at the command boundary, retaining strict library validation. */
 import { configPath, normalizeConfig, readConfig, writeConfig } from "./config.ts";
+import {
+  configDocumentData, parseConfigDocument, renderConfigYaml, requireYamlConfig,
+  writeConfigText, yamlConfigPath,
+} from "./config-storage.ts";
 import { confirm, promptRequired } from "./command-prompts.ts";
 import { canPrompt } from "./interaction.ts";
 import type { NappletConfig } from "./types.ts";
@@ -11,10 +15,12 @@ import type { NappletConfig } from "./types.ts";
  * @example await readEditableConfig()
  */
 export async function readEditableConfig(path = configPath()): Promise<NappletConfig | null> {
+  await requireYamlConfig(path);
+  path = yamlConfigPath(path);
   try { return await readConfig(path); }
   catch (error) {
     if (!canPrompt() || !(error instanceof Error) || !/^zapstore\.(id|name) must be/.test(error.message)) throw error;
-    const raw: unknown = JSON.parse(await Deno.readTextFile(path));
+    const raw = configDocumentData(parseConfigDocument(await Deno.readTextFile(path), path), path);
     if (!raw || typeof raw !== "object" || !("zapstore" in raw)) throw error;
     const app = raw.zapstore;
     if (!app || typeof app !== "object" || Array.isArray(app)) throw error;
@@ -37,16 +43,17 @@ export async function readEditableConfig(path = configPath()): Promise<NappletCo
  * @param updated Configuration containing the connected signer's public references.
  * @param path Project configuration path.
  * @returns Resolves after updating only signing fields on disk.
- * @example await saveDeploySigner(config, ".napplet/config.json")
+ * @example await saveDeploySigner(config, ".napplet/config.yaml")
  */
 export async function saveDeploySigner(updated: NappletConfig, path = configPath()): Promise<void> {
   // Re-read the persisted document: the user may have declined to save prompted
   // metadata or supplied destination overrides for this deployment only.
-  const persisted: unknown = JSON.parse(await Deno.readTextFile(path));
-  if (!persisted || typeof persisted !== "object" || Array.isArray(persisted)) {
-    throw new Error(`Invalid project configuration at ${path}`);
-  }
-  await Deno.writeTextFile(path, `${JSON.stringify({
+  await requireYamlConfig(path);
+  path = yamlConfigPath(path);
+  const previous = await Deno.readTextFile(path);
+  const persisted = configDocumentData(parseConfigDocument(previous, path), path);
+  const mode = (await Deno.stat(path)).mode ?? undefined;
+  await writeConfigText(path, renderConfigYaml({
     ...persisted, signing: updated.signing, bunkerPubkey: updated.bunkerPubkey,
-  }, null, 2)}\n`);
+  }, previous, path), { mode });
 }

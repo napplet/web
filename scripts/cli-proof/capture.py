@@ -98,9 +98,8 @@ def main():
             work = Path(root)
             (work / '.napplet').mkdir()
             (work / 'index.html').write_text('<!doctype html><html><head><title>Notes</title></head><body><h1>Notes</h1></body></html>')
-            partial = {'version': 1, 'sourceDir': '.', 'named': ['notes'], 'metadata': {'title': 'Notes', 'source': False}}
-            path = work / '.napplet/config.json'
-            path.write_text(json.dumps(partial))
+            path = work / '.napplet/config.yaml'
+            path.write_text('version: 1\nsourceDir: .\nnamed: [notes]\nmetadata:\n  title: Notes\n  source: false\n')
             help_session = Session(binary, ['--help'], work, env, rows=64)
             assert help_session.finish() == 0
             help_session.snapshot(out, '01-help')
@@ -122,9 +121,9 @@ def main():
             assert deploy.finish() == 0, deploy.text
             assert ephemeral not in deploy.text, 'Hidden signing input leaked into transcript'
             deploy.snapshot(out, '04-deployment-result')
-            saved = json.loads(path.read_text())
-            assert saved['metadata']['title'] == 'Notes'
-            assert saved['metadata']['description'] == 'A private notebook for quick ideas.'
+            saved = path.read_text()
+            assert 'title: Notes' in saved
+            assert 'description: A private notebook for quick ideas.' in saved
             assert 'secret' not in path.read_text()
             assert ephemeral not in path.read_text(), 'Signing input leaked into saved configuration'
             with urllib.request.urlopen(addresses['servers'][0] + '/stats') as response:
@@ -137,7 +136,7 @@ def main():
             json.loads(result.stdout)
             assert '\x1b' not in result.stdout and not result.stdout.startswith('napplet')
             (out / 'machine-output.json').write_text(result.stdout)
-            path.write_text(json.dumps(partial))
+            path.write_text('version: 1\nsourceDir: .\nnamed: [notes]\nmetadata:\n  title: Notes\n  source: false\n')
             noninteractive = Session(binary, ['deploy', '-i', '--format', 'current'], work, env, rows=30)
             assert noninteractive.finish(timeout=10) == 1
             assert 'Deployment needs configuration' in noninteractive.text

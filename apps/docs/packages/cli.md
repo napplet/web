@@ -3,7 +3,7 @@
 > Standalone CLI for creating, configuring, inspecting, and deploying napplets.
 
 `@napplet/cli` is the command-line deploy and diagnostics tool for built
-napplets. It creates `.napplet/config.json`, discovers built `index.html`
+napplets. It creates `.napplet/config.yaml`, discovers built `index.html`
 artifacts, inspects deploy plans, signs manifest events, uploads files to
 Blossom servers, publishes to relays, and runs local napplet tooling such as
 conformance and Paja.
@@ -85,7 +85,7 @@ napplet deploy
 
 - `napplet create` delegates to the maintained starter generator without setting deploy metadata.
 - `napplet init` owns name, title, optional description, canonical archetype conventions, and network
-  targets in `.napplet/config.json`. In an interactive terminal it guides setup and shows live suggestions from
+  targets in `.napplet/config.yaml`. In an interactive terminal it guides setup and shows live suggestions from
   relays such as `wss://relaypag.es`, and suggests Blossom servers from kind
   `10063` server-list events.
 - `npx skills add napplet/napplet` installs the `napplet-*` agent skills for whichever coding agents you use; it is the skills.sh CLI, not a `napplet` subcommand.
@@ -128,16 +128,29 @@ For a single napplet repository, discovery checks `sourceDir` and prefers
 For workspaces, set `discover.roots` and use `--all`. Each discovered napplet
 deploys under its own folder name as the named `d` tag.
 
+## YAML configuration and JSON migration
+
+Project settings live in `.napplet/config.yaml`. YAML supports comments and uses the same configuration fields as before. Use `--config path/settings.yaml` or `--config path/settings.yml` for a custom file. Configuration updates preserve comments on unchanged values.
+
+When a command needs configuration and finds the old JSON file, it asks before migrating. Answer `y` to continue with YAML; `n` or Enter exits with `Cannot continue without migrating`. Migration retains the exact original bytes in `config.json.bak`, preserves file permissions, and removes the active JSON file only after writing YAML. Conflicting YAML or backup files stop migration without overwriting them. To roll back for an older CLI, move the YAML file aside and restore the JSON backup.
+
+CI, redirected input, `--json`, and `-i` / `--non-interactive` do not prompt for migration. Approve conversion explicitly with `--migrate-config`:
+
+```sh
+napplet init --migrate-config -i
+napplet deploy --config settings.json --migrate-config --dry-run
+```
+
+An explicit legacy `--config settings.json` path resolves to `settings.yaml` after migration, including on later invocations. The original command continues using YAML. Help and version remain available before migration. The `napplet migrate` command handles signed manifest events separately; event files and machine-readable output remain JSON.
+
 ## Archetype conventions
 
-Pass each `--archetype` option as a queryless convention URI, for example `napplet:profile/open`. The CLI derives the role from the URI. JSON configuration accepts URI strings directly:
+Pass each `--archetype` option as a queryless convention URI, for example `napplet:profile/open`. The CLI derives the role from the URI. YAML configuration accepts URI strings directly:
 
-```json
-{
-  "metadata": {
-    "archetypes": ["napplet:profile/open"]
-  }
-}
+```yaml
+metadata:
+  archetypes:
+    - napplet:profile/open
 ```
 
 The CLI normalizes each URI to an object such as `{ "slug": "profile", "convention": "napplet:profile/open" }`. Existing object configs remain supported; add `"params": ["pubkey"]` to an object to advertise accepted parameter names. Older role-prefixed CLI inputs remain supported for compatibility.
@@ -177,17 +190,14 @@ napplet migrate signed-event.json --optional theme --output migration-preview.js
 
 For current-format deploys, the CLI adds one `source` tag from the Git `origin` of the repository containing each selected build when neither config, the Vite sidecar, nor HTML already supplies it. Nested builds and Git worktrees are supported. HTTPS, HTTP, `ssh://`, and scp-style clone URLs are converted to HTTP(S) repository URLs; inferred URLs omit credentials, query strings, fragments, and the `.git` suffix. SSH remotes use HTTPS without the SSH port. Git is queried locally; no remote is contacted. If Git, a repository, or a usable origin is unavailable, the tag is omitted. Other remotes are not selected, and SSH host aliases are not expanded; configure their public source URL explicitly.
 
-Set `metadata.source` in `.napplet/config.json` to override every inferred or embedded source:
+Set `metadata.source` in `.napplet/config.yaml` to override every inferred or embedded source:
 
-```json
-{
-  "metadata": {
-    "source": "https://github.com/example/my-napplet"
-  }
-}
+```yaml
+metadata:
+  source: https://github.com/example/my-napplet
 ```
 
-Use `"source": false` in that object to omit the tag, including any sidecar or HTML source. A source override must be one absolute HTTP(S) URL without credentials; arrays are not accepted. The precedence is config → sidecar → HTML → Git origin. Root, named, and companion snapshot events retain the resolved source. This follows the current [NIP-5D manifest table](https://github.com/dskvr/nips/blob/nip/5d/5D.md#manifest), which permits zero or one `source` tag. Automatic Git inference does not apply to `--format legacy`; an explicit config override still does. These are CLI defaults, not additional protocol requirements.
+Use `source: false` in that object to omit the tag, including any sidecar or HTML source. A source override must be one absolute HTTP(S) URL without credentials; arrays are not accepted. The precedence is config → sidecar → HTML → Git origin. Root, named, and companion snapshot events retain the resolved source. This follows the current [NIP-5D manifest table](https://github.com/dskvr/nips/blob/nip/5d/5D.md#manifest), which permits zero or one `source` tag. Automatic Git inference does not apply to `--format legacy`; an explicit config override still does. These are CLI defaults, not additional protocol requirements.
 
 ## Standalone HTML recovery
 
@@ -215,23 +225,24 @@ napplet screenshot http://localhost:5173 --output ready.png --selector '#napplet
 
 The default capture is 1200 × 750 pixels with a 1500 ms delay. Override these with `--width`, `--height`, and `--delay` (milliseconds). The command captures only the iframe, waits for fonts, closes Chromium on success or failure, and refuses to overwrite an existing file. Keep screenshots outside the build directory.
 
-To publish an optional application listing, add a `zapstore` object to `.napplet/config.json`:
+To publish an optional application listing, add a `zapstore` object to `.napplet/config.yaml`:
 
-```json
-{
-  "zapstore": {
-    "id": "org.example.notes",
-    "name": "Notes",
-    "description": "Private notes in a napplet shell.",
-    "summary": "A simple notebook",
-    "images": ["./preview.png", "https://example.org/notes-mobile.png"],
-    "icon": "./assets/icon.png",
-    "website": "https://example.org/notes",
-    "repository": "https://github.com/example/notes",
-    "license": "MIT",
-    "tags": ["notes", "productivity"]
-  }
-}
+```yaml
+zapstore:
+  id: org.example.notes
+  name: Notes
+  description: Private notes in a napplet shell.
+  summary: A simple notebook
+  images:
+    - ./preview.png
+    - https://example.org/notes-mobile.png
+  icon: ./assets/icon.png
+  website: https://example.org/notes
+  repository: https://github.com/example/notes
+  license: MIT
+  tags:
+    - notes
+    - productivity
 ```
 
 Only `id` and `name` are required within this object. The stable `id` identifies the application listing under the signing pubkey; reusing it updates that listing. Description falls back to the deployment config's description. This configuration describes one application listing per deploy invocation, including deployments that select multiple manifests.
@@ -243,7 +254,7 @@ napplet deploy --zapstore
 napplet deploy --zapstore --screenshot
 ```
 
-Publishing defaults to off. `--zapstore` enables it for one deployment; `"enabled": true` in the object enables it by default; `--no-zapstore` disables it for one deployment. Supplying both flags is an error. Dry runs show the application template, resolved media URLs and any signature without uploading or publishing.
+Publishing defaults to off. `--zapstore` enables it for one deployment; `enabled: true` in the object enables it by default; `--no-zapstore` disables it for one deployment. Supplying both flags is an error. Dry runs show the application template, resolved media URLs and any signature without uploading or publishing.
 
 Local PNG, JPEG and WebP images are resolved relative to the working directory, hashed, and uploaded to the configured Blossom servers. Existing HTTP(S) image URLs are used as supplied. Local media URLs point to the first selected Blossom server; if those uploads fail, application publication is skipped and deploy exits nonzero even if another mirror succeeds. The application uses the same signer and relays as the deployment. A requested application event must be accepted by at least one relay for deploy to succeed.
 
