@@ -1,5 +1,12 @@
 # @napplet/cli
 
+## 0.11.0
+
+### Minor Changes
+
+- 847c7be: Include captured screenshot URLs in current-format manifest events before signing,
+  alongside Zapstore image tags.
+
 ## 0.10.1
 
 ### Patch Changes
