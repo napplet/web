@@ -4,7 +4,7 @@ import { buildLegacyManifestFields, computeAggregateHash } from "./manifest-lega
 import type { ManifestFormat } from "./manifest-format.ts";
 export { computeAggregateHash } from "./manifest-legacy.ts";
 import { joinPath } from "./path.ts";
-import { readManifestMetadataTags } from "./manifest-metadata.ts";
+import { readManifestMetadata, type ManifestMetadata } from "./manifest-metadata.ts";
 import {
   type DeployManifestTemplate,
   type DeployPlan,
@@ -62,7 +62,11 @@ export async function createSiteManifestTemplate(
     "";
   const fields = format === "legacy"
     ? await buildLegacyManifestFields(files, metadataTags, content)
-    : buildCurrentManifestFields(files, metadataTags, content);
+    : buildCurrentManifestFields(
+      files,
+      options.content === undefined ? metadataTags.filter((tag) => tag[0] !== "description") : metadataTags,
+      content,
+    );
   const tags: string[][] = [];
   if (item.target === "named") tags.push(["d", normalizeDTag(item.dTag)]);
   tags.push(...fields.tags);
@@ -113,20 +117,21 @@ export async function createDeployManifestTemplates(
 ): Promise<DeployManifestTemplate[]> {
   const result: DeployManifestTemplate[] = [];
   const filesByDir = new Map<string, ManifestFileMapping[]>();
-  const metadataByDir = new Map<string, string[][]>();
+  const metadataByDir = new Map<string, ManifestMetadata>();
   const sourceTemplates = new Map<string, NostrEventTemplate>();
   for (const item of plan.items) {
     const files = filesByDir.get(item.candidate.dir) ??
       await collectManifestFiles(item.candidate.dir);
     filesByDir.set(item.candidate.dir, files);
-    const metadataTags = metadataByDir.get(item.candidate.dir) ??
-      await readManifestMetadataTags(
+    const metadata = metadataByDir.get(item.candidate.dir) ??
+      await readManifestMetadata(
         item.candidate.indexHtml,
         item.candidate.manifestPath,
         config,
         options.format,
       );
-    metadataByDir.set(item.candidate.dir, metadataTags);
+    metadataByDir.set(item.candidate.dir, metadata);
+    const metadataTags = metadata.tags;
     const format = options.format ?? "current";
     const index = files.find((file) => file.path === "/index.html");
     if (!index) throw new Error("NIP-5D requires /index.html");
@@ -163,6 +168,7 @@ export async function createDeployManifestTemplates(
       createdAt: options.createdAt,
       servers: config.blossomServers.length ? config.blossomServers : undefined,
       metadataTags,
+      content: metadata.content,
       format,
     });
     sourceTemplates.set(
@@ -340,7 +346,7 @@ function buildCurrentManifestFields(
     tags: [
       ["x", index[0].sha256],
       ...metadata.filter((tag) =>
-        !["description", "x", "path", "d", "a", "A", "server"].includes(tag[0])
+        !["x", "d", "a", "A", "server"].includes(tag[0])
       ).map((tag) => [...tag]),
     ],
     content,
