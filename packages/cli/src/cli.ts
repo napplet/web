@@ -39,7 +39,7 @@ import { resolveSigningMethod, signDeployManifestTemplates } from "./signing.ts"
 import { getBlossomServerSuggestions, getRelaySuggestions } from "./suggestions.ts";
 import type { DeploySelection, NappletConfig } from "./types.ts";
 import cliMetadata from "../deno.json" with { type: "json" };
-import { linkZapstoreApplication, prepareZapstorePublication } from "./zapstore.ts";
+import { linkCapturedScreenshots, linkZapstoreApplication, prepareZapstorePublication } from "./zapstore.ts";
 import { captureDeployScreenshot } from "./deploy-screenshot.ts";
 import { managedPackageCommand } from "./managed-node.ts";
 import type { ResolvedCommand } from "./package-runner.ts";
@@ -274,6 +274,9 @@ async function commandDeploy(argv: string[], runScreenshot?: PackageCliRunner): 
     const application = await prepareZapstorePublication(publicationConfig, blossomServers, {
       enabled: flags.boolean.has("no-zapstore") ? false : flags.boolean.has("zapstore") ? true : undefined,
     });
+    if (screenshot && application) {
+      templates = linkCapturedScreenshots(templates, application, screenshot.paths.length);
+    }
     if (application && signer) {
       application.signedEvent = await signer.sign(application.template);
       templates = linkZapstoreApplication(templates, application.signedEvent, config.relays);
