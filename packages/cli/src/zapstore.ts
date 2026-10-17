@@ -179,3 +179,38 @@ export function linkZapstoreApplication(
     };
   });
 }
+
+/** Provisional extension: NIP-5D does not yet define a screenshot tag. */
+export function linkCapturedScreenshots(
+  manifests: readonly DeployManifestTemplate[],
+  application: ZapstorePublication,
+  captureCount: number,
+): DeployManifestTemplate[] {
+  if (captureCount === 0) return [...manifests];
+  const images = application.template.tags.filter((tag) => tag[0] === "image");
+  if (images.length < captureCount) {
+    throw new Error("Captured screenshots are missing from the Zapstore application");
+  }
+  const urls = images.slice(-captureCount).map((tag) => tag[1]);
+  const artifacts = [...new Set(manifests.map((manifest) => manifest.item.candidate.indexHtml))];
+  if (captureCount !== 1 && captureCount !== artifacts.length) {
+    throw new Error("Captured screenshots do not match the selected artifacts");
+  }
+  return manifests.map((manifest) => {
+    if (manifest.format !== "current" || !manifest.template) return manifest;
+    if (manifest.signedEvent) {
+      throw new Error("Screenshot tags must be attached before manifest signing");
+    }
+    const url = urls[captureCount === 1 ? 0 : artifacts.indexOf(manifest.item.candidate.indexHtml)];
+    return {
+      ...manifest,
+      template: {
+        ...manifest.template,
+        tags: [...manifest.template.tags.filter((tag) => tag[0] !== "screenshot"), [
+          "screenshot",
+          url,
+        ]],
+      },
+    };
+  });
+}
