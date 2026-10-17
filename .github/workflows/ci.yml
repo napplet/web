@@ -17,6 +17,8 @@ jobs:
           node-version: 22
           cache: pnpm
       - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.9.5
       - run: pnpm install --frozen-lockfile
       - run: pnpm test:workflow-contracts
       - run: pnpm type-check
