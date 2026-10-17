@@ -1,0 +1,7 @@
+# Phase 164 plan 02
+
+Completed command-wide interaction behavior: interactive init retains existing settings, custom config paths are respected, missing application identity can be completed, keys request missing references, and deployment offers remote, stored, or hidden one-time signing. Connecting a remote signer updates only persisted signing fields, preserving declined saves and invocation-only overrides. `-i`, CI, JSON output, and redirected streams suppress nested prompts. Delegated create uses its existing `--yes` mode; Paja receives closed stdin in automation.
+
+Terminal presentation now includes the ASCII wordmark, grouped help and command-specific options, semantic colors, deployment preflight, per-mirror operation bars, relay acknowledgement progress, and complete/partial/failed outcomes. Narrow terminals use stable line output. JSON, version, and no-color modes retain their contracts. Real PTY execution exposed and verified a fix for enabling raw input before displaying a prompt; immediate Ctrl-C now exits 130 without duplicate echo.
+
+Validation checkpoints: the full CLI suite passed 210 tests before the last four preflight regressions; those regressions plus prompt tests passed 17/17. Root build passed 12 tasks and type-check passed 18 tasks. Six actual terminal screenshots were captured and inspected. Final full-suite verification, final-source proof capture, and PR shipment remain in plan 03.

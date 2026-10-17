@@ -2,6 +2,7 @@ import {
   isTerminalInput,
   promptLine,
   promptSecret,
+  PromptCancelledError,
   type SecretPromptInput,
 } from "../src/prompt.ts";
 import { assert, assertEquals } from "./assert.ts";
@@ -41,6 +42,22 @@ class FakeOutput {
     return bytes.length;
   }
 }
+
+for (const ending of ["\x03", "\x04", ""]) {
+  Deno.test(`prompt cancellation restores raw mode (${JSON.stringify(ending)})`, async () => {
+    const input = new FakeTerminalInput(ending);
+    let cancelled = false;
+    try { await promptLine({ message: "Name", input, output: new FakeOutput() }); }
+    catch (error) { cancelled = error instanceof PromptCancelledError; }
+    assert(cancelled);
+    assertEquals(input.rawModes, [true, false]);
+  });
+}
+
+Deno.test("prompt backspace removes a complete UTF-8 character", async () => {
+  const value = await promptLine({ message: "Name", input: new FakeTerminalInput("café\x7fe\n"), output: new FakeOutput() });
+  assertEquals(value, "cafe");
+});
 
 Deno.test("promptSecret reads hidden TTY input until Enter", async () => {
   const input = new FakeTerminalInput("nsec1secret\n");

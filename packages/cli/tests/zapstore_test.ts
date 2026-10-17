@@ -11,7 +11,7 @@ import { createDeployPlan } from "../src/deploy-plan.ts";
 import { createDeployManifestTemplates } from "../src/manifest.ts";
 import { runPackageCli } from "../src/package-runner.ts";
 import { createPrivateKeySigner, signDeployManifestTemplates } from "../src/signing.ts";
-import { linkCapturedScreenshots, linkZapstoreApplication, normalizeZapstoreConfig, prepareZapstorePublication } from "../src/zapstore.ts";
+import { linkZapstoreApplication, normalizeZapstoreConfig, prepareZapstorePublication } from "../src/zapstore.ts";
 import { assert, assertEquals, withTempDir } from "./assert.ts";
 
 const png = Uint8Array.from(
@@ -351,8 +351,6 @@ for (const automatic of [false, true]) {
           assertEquals(images.length, 2);
           assertEquals(images[0], ["image", "https://images.example/existing.png"]);
           assert(images[1][1].startsWith(servers[0]));
-          assertEquals(report.manifests[0].template.tags.filter((tag: string[]) => tag[0] === "screenshot"),
-            [["screenshot", images[1][1]]]);
           assertEquals(report.manifests[0].files.length, 1);
         } else {
           assertEquals(logs.length, 0);
@@ -435,45 +433,9 @@ Deno.test("signed CLI deployment links every manifest to its screenshot applicat
       assertEquals(application.tags.find((tag: string[]) => tag[0] === "d")?.[1], identifier.join(":"));
       assertEquals(application.tags.filter((tag: string[]) => tag[0] === "image"),
         [["image", `${servers[0]}/${linked.application.files[0].sha256}`]]);
-      assertEquals(manifest.signedEvent.tags.filter((tag: string[]) => tag[0] === "screenshot"),
-        [["screenshot", `${servers[0]}/${linked.application.files[0].sha256}`]]);
       assertEquals(manifest.artifactHash, disabled.manifests[index].artifactHash);
       assertEquals(disabled.manifests[index].signedEvent.tags.some((tag: string[]) => tag[0] === "app"), false);
-      assertEquals(disabled.manifests[index].signedEvent.tags.some((tag: string[]) => tag[0] === "screenshot"), false);
     }
-  });
-});
-
-Deno.test("captured screenshots follow distinct artifacts and leave legacy manifests unchanged", async () => {
-  await withTempDir(async (dir) => {
-    for (const name of ["one", "two"]) {
-      await Deno.mkdir(`${dir}/${name}`);
-      await Deno.writeTextFile(`${dir}/${name}/index.html`, '<meta name="description" content="Notes">');
-    }
-    const config = defaultConfig({ sourceDir: dir, blossomServers: servers, zapstore: listing });
-    const candidates = ["one", "two"].map((name) => ({
-      name, dir: `${dir}/${name}`, indexHtml: `${dir}/${name}/index.html`,
-    }));
-    const plan = createDeployPlan(config, candidates, { root: true, snapshot: true });
-    const current = await createDeployManifestTemplates(plan, config, { sourcePubkey: signer.pubkey });
-    const application = {
-      template: { kind: 32267, created_at: 123, content: "Notes", tags: [
-        ["image", "https://images.example/existing.png"],
-        ["image", `${servers[0]}/one`],
-        ["image", `${servers[0]}/two`],
-      ] },
-      files: [],
-    };
-    const before = JSON.stringify(current);
-    const linked = linkCapturedScreenshots(current, application, 2);
-    assertEquals(linked.map((manifest) => manifest.template?.tags.find((tag) => tag[0] === "screenshot")?.[1]),
-      [`${servers[0]}/one`, `${servers[0]}/one`, `${servers[0]}/two`, `${servers[0]}/two`]);
-    assertEquals(JSON.stringify(current), before);
-    const legacy = await createDeployManifestTemplates(plan, config, { format: "legacy" });
-    assertEquals(linkCapturedScreenshots(legacy, application, 2), legacy);
-    const signed = await signer.sign(current[0].template!);
-    await rejects(() => linkCapturedScreenshots([{ ...current[0], signedEvent: signed }], application, 1),
-      "before manifest signing");
   });
 });
 

@@ -4,6 +4,7 @@ import {
   configDocumentData, legacyConfigPath, parseConfigDocument, readConfigText,
   renderConfigYaml, writeConfigText, yamlConfigPath,
 } from "./config-storage.ts";
+import { currentInteraction } from "./interaction.ts";
 import { isTerminalInput, promptLine } from "./prompt.ts";
 
 /** Explicit migration approval and injectable terminal I/O. */
@@ -19,6 +20,8 @@ export interface ConfigMigrationOptions {
  * @example canPromptForConfigMigration()
  */
 export function canPromptForConfigMigration(): boolean {
+  const policy = currentInteraction();
+  if (policy) return policy.interactive;
   const ci = Deno.env.get("CI")?.toLowerCase();
   return isTerminalInput() && (!ci || ci === "0" || ci === "false");
 }

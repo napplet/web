@@ -2,7 +2,7 @@
 import { canPromptForConfigMigration, migrateConfig, type ConfigMigrationOptions } from "./config-migration.ts";
 import { collectFlags, first } from "./flags.ts";
 
-interface ParsedArgs {
+export interface ParsedArgs {
   command: string;
   rest: string[];
 }
@@ -19,7 +19,12 @@ export async function prepareCommand(argv: string[], options?: ConfigMigrationOp
   return parsed;
 }
 
-function parseCommand(argv: string[]): ParsedArgs {
+/** Parse a command while preserving leading global flags and child argument boundaries.
+ * @param argv Command-line arguments.
+ * @returns Command name and its arguments.
+ * @example parseCommand(["--migrate-config", "init"])
+ */
+export function parseCommand(argv: string[]): ParsedArgs {
   if (argv.length === 0) return { command: "help", rest: [] };
   let index = 0;
   while (["-i", "--non-interactive", "--migrate-config"].includes(argv[index])) index++;
@@ -34,7 +39,13 @@ function parseCommand(argv: string[]): ParsedArgs {
   };
 }
 
-async function migrateCommandConfig(parsed: ParsedArgs, options: ConfigMigrationOptions = {}): Promise<void> {
+/** Require migration consent before a command can consume legacy configuration.
+ * @param parsed Command arguments, updated to the YAML path after migration.
+ * @param options Explicit consent and terminal I/O overrides.
+ * @returns Resolves once the command may continue.
+ * @example await migrateCommandConfig(parseCommand(["init"]))
+ */
+export async function migrateCommandConfig(parsed: ParsedArgs, options: ConfigMigrationOptions = {}): Promise<void> {
   if (!["init", "deploy", "debug", "discover", "keys", "conformance", "paja"].includes(parsed.command)) return;
   if (parsed.command === "keys" && ["help", "--help", "-h"].includes(parsed.rest[0] ?? "help")) return;
   const flags = collectFlags(parsed.rest);
