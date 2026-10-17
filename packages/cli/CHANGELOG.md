@@ -1,5 +1,14 @@
 # @napplet/cli
 
+## 0.10.0
+
+### Minor Changes
+
+- dfb3a78: Use comment-preserving YAML for project configuration. Detect legacy JSON before
+  config-consuming commands and require migration consent, retaining the original as a backup. Add
+  --migrate-config for explicit noninteractive approval and -i / --non-interactive to suppress the
+  migration prompt.
+
 ## 0.9.2
 
 ### Patch Changes
