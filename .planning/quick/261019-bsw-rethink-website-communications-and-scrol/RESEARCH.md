@@ -71,3 +71,7 @@ HTTP checks confirmed 200 responses for napplet.soy, the Kehto site, Paja and th
 The unchanged AI-slop threshold is 70; the scan scores 73/100 with zero source findings. Advisories are http-cache-semantics, braces, source-map-js, @vue/server-renderer and sprintf-js, all outside this source change. The first two and last report no fix; two report patch upgrades. No gate was lowered. Dependency assessment remains separate from claiming a 100/100 score.
 
 PR #221 is currently conflicting with main, despite its old checks being green. Next: preserve this verified checkpoint, merge current main, resolve conflicts, rerun affected verification, push the existing PR and inspect new CI. Earlier checks on df379da5 do not validate the redesign.
+
+## Fresh upstream directory
+
+The protocol refresh ultimately succeeded using Git blobs from a bare clone of napplet/naps and fetched PR heads, while keeping the generator's authenticated GitHub API metadata, SHA selection, and rechecks. `git cat-file blob <sha>` returned the exact source objects named by the API; no protocol content was rewritten. Snapshot: 2026-10-19T16:35:08.506Z, upstream commit 19de5ce1cea40cd4c76089cdd8126e9f87648049, 44 entries. Directory, detail routes, filters, contribution guide, mobile and no-JavaScript checks pass; all 73 internal links resolve in the freshly assembled site. This supersedes the earlier network-limitation note.

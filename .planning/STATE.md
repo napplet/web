@@ -21,7 +21,7 @@ progress:
 
 ## Website communications redesign — IN PROGRESS
 
-Active user goal continues on PR #221 in `/Users/sandwich/Develop/napplet-showcase`, branch `feat/astro-ecosystem-showcase`. Research and execution contract: `.planning/quick/261019-bsw-rethink-website-communications-and-scrol/PLAN.md`. First copy/layout pass is implemented and browser-checked. Remaining work includes richer persistent motion, current-format preview/provenance resolution, complete research/link verification, social artwork, CSS cleanup, dependency advisory assessment, final gates and PR update. Do not treat earlier showcase completion entries as completion of this new goal.
+Active user goal continues on PR #221 in `/Users/sandwich/Develop/napplet-showcase`, branch `feat/astro-ecosystem-showcase`. Research and execution contract: `.planning/quick/261019-bsw-rethink-website-communications-and-scrol/PLAN.md`. Implementation, motion, archived-preview disclosure, current protocol directory, social artwork and local verification are complete and pushed to PR #221. Hosted checks on the final revision and the closing clean-tree/PR audit remain. See VERIFICATION.md in the task directory for requirement-by-requirement evidence. Do not treat earlier showcase completion entries as completion of this new goal.
 
 
 ## Quick task 261003-tih — COMPLETE
