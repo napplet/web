@@ -1,6 +1,6 @@
 # Verification — website and communications
 
-Status: local verification passed; hosted checks pending.
+Status: passed. Local verification and all four hosted checks passed for implementation revision c0f588eb.
 
 ## Goal evidence
 
@@ -39,4 +39,11 @@ Status: local verification passed; hosted checks pending.
 
 Protocol refresh completed on 2026-10-19 using the generator with authenticated API metadata and exact Git object blobs from upstream commit `19de5ce1cea40cd4c76089cdd8126e9f87648049`. This avoids the local GitHub blob-API connection resets without changing sources or weakening revision checks. All 44 entries were built and checked: directory/filter/detail/contribution behavior at 1440/390/320 and no-JS passed. A final link crawl against the rebuilt artifact passed 73 internal URLs. An earlier crawl overlapped artifact replacement and saw an obsolete route; it is not used as final evidence.
 
-Hosted CI must run on the redesign commits; prior checks on df379da5 are insufficient. The PR title/body now reflect the final scope. Inspect new checks and complete the final clean-tree/PR audit before closing the thread goal. Production deployment requires merging the PR and is not claimed here.
+Hosted checks passed on implementation revision `c0f588eb2b315cfa6e322a3c5395430666449234`:
+
+- [CI: build, type checks and tests](https://github.com/napplet/web/actions/runs/39286991384) — success.
+- [Conformance](https://github.com/napplet/web/actions/runs/39286991429) — success.
+- [Assembled-site links and browser verification](https://github.com/napplet/web/actions/runs/39286991629) — success.
+- [AI-slop scan](https://github.com/napplet/web/actions/runs/39286991402) — success, 97/100 on the hosted runner. Local and hosted dependency resolution/reporting produced different scores; both clear the unchanged 70-point threshold.
+
+PR #221 is mergeable. The final bookkeeping commit changes only `.planning/` artifacts, so the tested application, dependencies, scripts, workflows and generated protocol snapshot are unchanged. No production deployment or PR merge is claimed; the authorized deliverable is the ready-to-review PR.

@@ -1,12 +1,12 @@
 ---
-status: in-progress
+status: complete
 ---
 
 # Website and communications redesign
 
 ## Scope and workflow
 
-Continue PR #221 on `feat/astro-ecosystem-showcase`, based on its verified remote head `df379da5`. The original checkout's CLI WIP is unrelated and remains untouched. GSD quick research/plan/execute/verify stages run inline. This is a substantial redesign within the existing website concern, not a replacement project. No implementation has been completed for this new brief yet.
+Continue PR #221 on `feat/astro-ecosystem-showcase`, based on its verified remote head `df379da5`. The original checkout's CLI WIP is unrelated and remains untouched. GSD quick research/plan/execute/verify stages run inline. This is a substantial redesign within the existing website concern, not a replacement project. Implementation and verification are complete; see SUMMARY.md and VERIFICATION.md.
 
 ## Acceptance contract
 
@@ -38,4 +38,4 @@ Proposed sequence: opening promise → real apps → plain-language definition a
 
 The local showcase worktree was clean and has been fast-forwarded to the PR's newer commit. Remote head was confirmed through the GitHub API. SSH fetch stalled; its exact process was terminated after inspecting the live process. Use HTTPS transport for subsequent fetch/push if necessary. The commit already existed in the shared object database, so fast-forward required no network workaround.
 
-Next: inspect current shell/app releases and migrate the preview away from its confirmed legacy NIP-5A aggregate model; complete research and copy before changing layout. See RESEARCH.md for the verified discrepancy.
+Completed: research, copy/layout, persistent motion, archive disclosure, current protocol references, responsive/accessibility/browser checks, full local gates, main integration, push and PR update. All four hosted checks passed on c0f588eb. The earlier migration idea was revised based on live evidence: preserved signed historical previews are explicitly archived and isolated from current-protocol validation. See RESEARCH.md for rationale and VERIFICATION.md for evidence.
