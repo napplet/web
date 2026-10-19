@@ -1,7 +1,9 @@
 /**
- * Verified srcdoc loading adapted from napplet.soy's MIT-licensed runtime.
- * See /showcase/NOTICE.txt. Protocol authority: NIP-5D Identity / Transport,
- * and NIP-5A Content Addressing, not this site's curated-player policy.
+ * Integrity checks for three pinned historical showcase releases.
+ * Their signed envelopes predate the current NIP-5D manifest revision.
+ * This is an archive adapter, not a current-protocol manifest validator.
+ * Loading code adapted from napplet.soy (MIT); see /showcase/NOTICE.txt.
+ * Current protocol: https://github.com/nostr-protocol/nips/pull/2303
  */
 import { validateEvent, verifyEvent, type Event } from 'nostr-tools/pure';
 
@@ -16,8 +18,8 @@ export async function sha256(bytes: Uint8Array): Promise<string> {
   return Array.from(new Uint8Array(hash), (byte) => byte.toString(16).padStart(2, '0')).join('');
 }
 
-/** Verify the selected signed release, its path and its NIP-5A aggregate. */
-export async function verifyManifest(input: unknown, eventId: string) {
+/** Verify the archived publisher signature and its original hash chain. */
+export async function verifyArchivedRelease(input: unknown, eventId: string) {
   if (!validateEvent(input) || !verifyEvent(input as Event)) {
     throw new Error('The napplet manifest signature could not be verified.');
   }
@@ -35,14 +37,14 @@ export async function verifyManifest(input: unknown, eventId: string) {
   const artifactHash = paths[0][2];
   const aggregateHash = await sha256(new TextEncoder().encode(`${artifactHash} /index.html\n`));
   const aggregates = event.tags.filter((tag) => tag[0] === 'x');
-  if (aggregates.some((tag) => tag[1] !== aggregateHash || tag[2] !== 'aggregate')) {
+  if (aggregates.length !== 1 || aggregates.some((tag) => tag[1] !== aggregateHash || tag[2] !== 'aggregate')) {
     throw new Error('The manifest aggregate hash does not match.');
   }
   // This curated preview grants no host services. Full shells are linked alongside it.
-  if (event.tags.some((tag) => tag[0] === 'requires')) {
+  if (event.tags.some((tag) => tag[0] === 'requires' || tag[0] === 'R')) {
     throw new Error('This release needs a service unavailable in this preview. Open it in its full shell.');
   }
-  return { dTag: identifiers[0][1], aggregateHash, artifactHash };
+  return { artifactHash };
 }
 
 /** Adapted from soy's verifiedDocument: verify first, then prepend shell policy. */

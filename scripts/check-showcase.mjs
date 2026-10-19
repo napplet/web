@@ -86,10 +86,16 @@ try {
     await section.scrollIntoViewIfNeeded();
     await motion.waitForTimeout(1100);
     assert.ok(await section.locator('h1, h2').isVisible());
+    assert.equal(await motion.locator('.journey-traveler').getAttribute('data-chapter'), await section.getAttribute('id'));
+    const traveler = await motion.locator('.journey-traveler').boundingBox();
+    assert.ok(traveler.x >= 0 && traveler.x + traveler.width <= 1440 && traveler.y >= 0 && traveler.y + traveler.height <= 900, 'persistent app remains inside viewport');
   }
   await motion.goto(`${base}/#top`);
   await motion.waitForTimeout(1200);
   await motion.screenshot({ path: `${screenshots}/desktop-hero.png` });
+  await motion.emulateMedia({ reducedMotion: 'reduce' });
+  await motion.locator('.journey-traveler').waitFor({ state: 'hidden' });
+  assert.equal(await motion.locator('.object-app').evaluate(el => getComputedStyle(el).opacity), '1', 'changing motion preference restores static artwork');
   assert.deepEqual(errors, [], 'no page errors in homepage or playable apps');
   console.log(`Static SEO, no-JS, explainer, and motion checks passed. Screenshots: ${screenshots}`);
 } finally {

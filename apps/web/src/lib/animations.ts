@@ -12,14 +12,38 @@ export function initShowcaseAnimations(): () => void {
   gsap.registerPlugin(ScrollTrigger);
   const media = gsap.matchMedia();
   media.add('(prefers-reduced-motion: no-preference)', () => {
-    gsap.from('.object-app', { rotation: 9, y: 18, duration: 1.4, ease: 'power3.out' });
+    const source = document.querySelector<HTMLElement>('.object-app');
+    const dock = document.querySelector<HTMLElement>('.journey-frame');
+    const traveler = document.querySelector<HTMLElement>('.journey-traveler');
+    if (source && dock && traveler) {
+      // One app leaves the opening illustration and stays beside the reading path.
+      // Measurements come from static anchors so refresh and deep links agree.
+      const origin = () => {
+        const box = source.getBoundingClientRect();
+        return { x: box.left, y: box.top + window.scrollY, scale: box.width / 130 };
+      };
+      gsap.set([source, dock], { opacity: 0 });
+      gsap.set(traveler, { display: 'block' });
+      gsap.fromTo(traveler, {
+        x: () => origin().x, y: () => origin().y, scale: () => origin().scale,
+      }, {
+        x: () => dock.getBoundingClientRect().left,
+        y: () => dock.getBoundingClientRect().top,
+        scale: () => dock.offsetWidth / 130,
+        ease: 'power2.inOut',
+        scrollTrigger: { trigger: '#top', start: 'top top', end: 'bottom 35%', scrub: .4, invalidateOnRefresh: true },
+      });
+    }
     gsap.to('.journey-progress', { scaleY: 1, ease: 'none', scrollTrigger: { trigger: 'main', start: 'top top', end: 'bottom bottom', scrub: true } });
-    gsap.to('.journey-frame', { y: 150, ease: 'none', scrollTrigger: { trigger: 'main', start: 'top top', end: 'bottom bottom', scrub: .35 } });
+
     const labels = ['APP / 00', 'PLAY / 01', 'HOST / 02', 'CONNECT / 03', 'MAKE / 04'];
     const label = document.querySelector('.journey-label');
     document.querySelectorAll<HTMLElement>('main > .scene').forEach((section, index) => {
       ScrollTrigger.create({ trigger: section, start: 'top center', end: 'bottom center', onToggle: self => {
-        if (self.isActive && label) label.textContent = labels[index];
+        if (self.isActive) {
+          if (label) label.textContent = labels[index];
+          if (traveler) traveler.dataset.chapter = section.id;
+        }
       } });
       if (section.id === 'napplets') {
         section.querySelectorAll('.napplet-preview').forEach(preview => {
@@ -40,7 +64,7 @@ export function initShowcaseAnimations(): () => void {
         });
       }
     });
-    return () => { if (label) label.textContent = 'APP / 00'; };
+    return () => { if (label) label.textContent = 'APP / 00'; if (traveler) delete traveler.dataset.chapter; };
   });
   let active = true;
   void document.fonts.ready.then(() => { if (active) ScrollTrigger.refresh(); });

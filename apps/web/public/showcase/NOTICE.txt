@@ -1,5 +1,17 @@
 Showcase credits
 
+Historical releases
+
+These three releases preserve their authors' original signed events and artifact
+bytes. Their manifests use the earlier path/aggregate format. They are archived
+examples of apps, not conformance fixtures for the current NIP-5D manifest schema.
+The preview's archive adapter verifies the original signature and hash chain;
+it does not redefine or extend the current protocol. For new implementations:
+https://github.com/nostr-protocol/nips/pull/2303
+
+A relay refresh on 2026-10-19 found no current-format replacements for these
+three author/identifier addresses. No publisher signatures were changed.
+
 Loader adapted from https://github.com/zeSchlausKwab/napplet-soy (packages/runtime/src/index.ts).
 
 MIT License

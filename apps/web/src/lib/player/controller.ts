@@ -13,7 +13,6 @@ export function setupPlayer(): void {
   let selected: PlayableNapplet | undefined;
   let opener: HTMLElement | undefined;
   let previousOverflow = '';
-  const identities = new WeakMap<Window, { dTag: string; aggregateHash: string }>();
 
   async function launch(item: PlayableNapplet) {
     active?.abort();
@@ -33,10 +32,10 @@ export function setupPlayer(): void {
     }
     const timeout = window.setTimeout(() => request.abort(new Error('The download timed out. Please try again.')), 15000);
     try {
-      const { fetchBytes, verifyManifest, verifiedDocument, PLAYER_SANDBOX } = await import('./verify');
+      const { fetchBytes, verifyArchivedRelease, verifiedDocument, PLAYER_SANDBOX } = await import('./verify');
       const signal = request.signal;
       const manifestBytes = await fetchBytes(item.manifest, signal);
-      const identity = await verifyManifest(JSON.parse(new TextDecoder().decode(manifestBytes)), item.eventId);
+      const identity = await verifyArchivedRelease(JSON.parse(new TextDecoder().decode(manifestBytes)), item.eventId);
       const document = await verifiedDocument(await fetchBytes(item.artifact, signal), identity.artifactHash);
       signal.throwIfAborted();
       const frame = window.document.createElement('iframe');
@@ -44,9 +43,8 @@ export function setupPlayer(): void {
       frame.sandbox.value = PLAYER_SANDBOX;
       frame.referrerPolicy = 'no-referrer';
       // This player exposes no NAP domains and consumes no inbound messages.
-      // Bind the Window before assigning any executable bytes (NIP-5D Identity).
+      // Archived demos are not presented as current-protocol conformance examples.
       stage.replaceChildren(frame);
-      identities.set(frame.contentWindow!, identity);
       await new Promise<void>((resolve, reject) => {
         const aborted = () => reject(signal.reason);
         signal.addEventListener('abort', aborted, { once: true });
