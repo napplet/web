@@ -1,0 +1,65 @@
+---
+import ProtocolLayout from '../../layouts/ProtocolLayout.astro';
+import data from '../../data/protocol.json';
+import { entryState } from '../../lib/protocol';
+const statusOrder: Record<string, number> = { merged: 0, open: 1, draft: 2 };
+const entries = [...data.entries].sort((a, b) => statusOrder[a.state] - statusOrder[b.state] || a.id.localeCompare(b.id) || (a.pr ?? 0) - (b.pr ?? 0));
+const merged = data.entries.filter(entry => entry.state === 'merged').length;
+const proposed = data.entries.length - merged;
+---
+<ProtocolLayout title="The protocol" description="Explore merged NAP specifications and open proposals. Find capability contracts, follow their discussion, and learn how to propose a NAP.">
+  <div class="protocol-hero">
+    <p class="eyebrow">An open foundation / Protocol</p>
+    <h1>Small apps.<br /><span>Shared contracts.</span></h1>
+    <p class="protocol-lead">NAPs describe the capabilities a runtime offers a napplet. Explore the specifications, see what’s being proposed, and help shape what comes next.</p>
+    <div class="protocol-actions"><a class="button button-primary" href="#directory">Explore the NAPs ↓</a><a class="button button-secondary" href="/protocol/contribute/">Propose a NAP →</a></div>
+  </div>
+  <div class="protocol-foundations" aria-label="Protocol foundations">
+    <a href="https://github.com/nostr-protocol/nips/blob/master/5A.md"><span class="eyebrow">01 / Identity</span><h2>NIP-5A ↗</h2><p>The manifest that describes a napplet.</p></a>
+    <a href="https://github.com/nostr-protocol/nips/pull/2303"><span class="eyebrow">02 / Web projection</span><h2>NIP-5D ↗</h2><p>The proposed web binding between applet and shell.</p></a>
+    <a href={data.repository}><span class="eyebrow">03 / Capabilities</span><h2>NAPs ↗</h2><p>The contracts, their registry, and open discussion.</p></a>
+  </div>
+  <section id="directory" class="protocol-directory" aria-labelledby="directory-title">
+    <div class="directory-heading"><div><p class="eyebrow">The capability directory</p><h2 id="directory-title">Merged &amp; in motion.</h2></div><p class="directory-count"><strong>{merged}</strong> merged · <strong>{proposed}</strong> proposed changes</p></div>
+    <p class="protocol-note-text">“Merged” means a spec file exists on the repository’s default branch. Open and draft PRs are proposals, including amendments. Upstream status is shown separately; deferred proposals are dormant.</p>
+    <div id="nap-filters" class="nap-filters" hidden>
+      <label>Find a capability<input id="nap-search" type="search" placeholder="Search name, domain, or description" /></label>
+      <label>Show<select id="nap-state"><option value="all">All specifications</option><option value="merged">Merged</option><option value="proposals">Open proposals</option><option value="deferred">Deferred</option></select></label>
+      <p id="nap-count" role="status" aria-live="polite">{data.entries.length} entries</p>
+    </div>
+    <div class="nap-table-scroll" role="region" aria-label="NAP specifications table; scroll horizontally on small screens" tabindex="0">
+      <table class="nap-table">
+        <caption class="visually-hidden">Merged NAP specifications and open NAP pull requests</caption>
+        <thead><tr><th scope="col">NAP / domain</th><th scope="col">Capability</th><th scope="col">Repository state</th><th scope="col">Upstream status</th></tr></thead>
+        <tbody>{entries.map(entry => <tr data-nap-row data-state={entry.state} data-deferred={entry.registryStatus?.toLowerCase() === 'deferred' ? 'true' : 'false'} data-search={`${entry.id} ${entry.domain ?? ''} ${entry.title} ${entry.description}`.toLowerCase()}>
+          <th scope="row"><a href={`/protocol/${entry.slug}/`}>{entry.id} <span aria-hidden="true">→</span></a><small>{entry.domain ?? 'Domain not declared'}</small></th>
+          <td><a href={`/protocol/${entry.slug}/`}>{entry.title}</a>{entry.change === 'amendment' && <small>Proposed amendment</small>}{entry.change === 'removal' && <small>Proposed removal</small>}</td>
+          <td><span class:list={['nap-badge', `state-${entry.state}`]}>{entryState(entry)}</span>{entry.pr && <small>PR #{entry.pr}</small>}</td>
+          <td>{entry.registryStatus ?? 'Not listed'}{entry.declaredStatus && <small>Document: {entry.declaredStatus}</small>}</td>
+        </tr>)}</tbody>
+      </table>
+    </div>
+    <p id="nap-empty" class="protocol-note-text" hidden>No matching NAPs. Try a different name or filter.</p>
+  </section>
+  <aside class="protocol-callout"><div><p class="eyebrow">Have a missing capability in mind?</p><h2>Start with the boundary.</h2><p>A runtime API, a shared message shape, and a napplet role belong in different places.</p></div><a class="button button-secondary" href="/protocol/contribute/">Find the right proposal →</a></aside>
+</ProtocolLayout>
+<script>
+  const controls = document.querySelector<HTMLElement>('#nap-filters')!;
+  const search = document.querySelector<HTMLInputElement>('#nap-search')!;
+  const state = document.querySelector<HTMLSelectElement>('#nap-state')!;
+  const rows = [...document.querySelectorAll<HTMLTableRowElement>('[data-nap-row]')];
+  controls.hidden = false;
+  function filter() {
+    const query = search.value.trim().toLowerCase();
+    let count = 0;
+    for (const row of rows) {
+      const matchesState = state.value === 'all' || (state.value === 'deferred' ? row.dataset.deferred === 'true' : state.value === 'proposals' ? row.dataset.state !== 'merged' : row.dataset.state === 'merged');
+      row.hidden = !matchesState || !row.dataset.search?.includes(query);
+      if (!row.hidden) count++;
+    }
+    document.querySelector('#nap-count')!.textContent = `${count} ${count === 1 ? 'entry' : 'entries'}`;
+    document.querySelector<HTMLElement>('#nap-empty')!.hidden = count > 0;
+  }
+  search.addEventListener('input', filter);
+  state.addEventListener('change', filter);
+</script>

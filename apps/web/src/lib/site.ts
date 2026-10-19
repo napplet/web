@@ -9,9 +9,8 @@ export const LINKS = {
   boilerplate: 'https://github.com/napplet/boilerplate',
   // Kehto — the reference web runtime / shell implementation.
   kehto: 'https://github.com/kehto/web',
-  // The NAPs track — public repo where NAP capability domains are proposed,
-  // drafted, and extended.
-  naps: 'https://github.com/napplet/naps',
+  // Non-normative directory with links to each living NAP specification or PR.
+  naps: '/protocol/',
 } as const;
 
 export interface PackageInfo {
@@ -27,13 +26,13 @@ const PACKAGE_SOURCES: ReadonlyArray<{ name: string; blurb: string; jsr: boolean
   {
     name: '@napplet/core',
     blurb:
-      'JSON envelope types and NAP dispatch infrastructure. The single source of truth every other package imports. Zero dependencies, no DOM.',
+      'JSON envelope types and NAP dispatch infrastructure shared by the SDK packages. Protocol requirements live in NIP-5D and the NAP specs.',
     jsr: true,
   },
   {
     name: '@napplet/shim',
     blurb:
-      'Side-effect window installer. Importing it installs window.napplet and registers with the shell over postMessage. Zero named exports.',
+      'Runtime-side domain installers for the window.napplet namespace. Shells inject the available domains before napplet scripts run.',
     jsr: true,
   },
   {

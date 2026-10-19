@@ -1,31 +1,45 @@
 name: Link check
 
-# Builds + assembles the site exactly like deploy-site.yml (marketing SPA at /,
-# VitePress docs at /docs), serves it with python's http.server (literal files +
-# directory index.html, NO extensionless ".html" rewrite — matching Bunny CDN
-# storage + nsite), then crawls it with a headless browser and fails on any
-# broken internal link. Rendering matters: apps/web is a client-rendered SPA, so
-# its /docs/* links only exist after JS runs.
+# Builds one static artifact with the Astro showcase, preserved explainer, docs,
+# conformance runtime and installers. Both workflows use scripts/assemble-site.mjs.
 
 on:
   push:
     branches: [main]
-    # Docs surface only. The job still assembles + crawls the full site (SPA at /,
-    # docs at /docs), but a docs change is what warrants re-running the check; the
-    # checker's own machinery re-triggers it too.
     paths:
+      - 'apps/web/**'
       - 'apps/docs/**'
+      - 'apps/conformance/**'
+      - 'pnpm-lock.yaml'
+      - 'package.json'
       - 'scripts/check-links.mjs'
+      - 'scripts/check-showcase.mjs'
+      - 'scripts/check-protocol.mjs'
+      - 'scripts/check-protocol-browser.mjs'
+      - 'scripts/generate-protocol*'
+      - 'scripts/lib/protocol-data.mjs'
+      - 'scripts/assemble-site.mjs'
+      - 'scripts/assemble-site.test.mjs'
       - '.github/workflows/link-check.yml'
+      - '.github/workflows/deploy-site.yml'
   pull_request:
     branches: [main]
-    # Docs surface only. The job still assembles + crawls the full site (SPA at /,
-    # docs at /docs), but a docs change is what warrants re-running the check; the
-    # checker's own machinery re-triggers it too.
     paths:
+      - 'apps/web/**'
       - 'apps/docs/**'
+      - 'apps/conformance/**'
+      - 'pnpm-lock.yaml'
+      - 'package.json'
       - 'scripts/check-links.mjs'
+      - 'scripts/check-showcase.mjs'
+      - 'scripts/check-protocol.mjs'
+      - 'scripts/check-protocol-browser.mjs'
+      - 'scripts/generate-protocol*'
+      - 'scripts/lib/protocol-data.mjs'
+      - 'scripts/assemble-site.mjs'
+      - 'scripts/assemble-site.test.mjs'
       - '.github/workflows/link-check.yml'
+      - '.github/workflows/deploy-site.yml'
   workflow_dispatch:
 
 concurrency:
@@ -53,26 +67,23 @@ jobs:
       - name: Build packages
         run: pnpm build
 
-      - name: Build marketing SPA
+      - name: Build Astro showcase and explainer
         run: pnpm --filter @napplet/web build
 
       - name: Build docs (base /docs/)
         run: pnpm --filter @napplet/docs build
 
-      # Assemble one artifact: SPA at root, docs at /docs (mirrors deploy-site.yml).
+      - name: Build conformance runtime (base /conformance/)
+        run: pnpm --filter @napplet/conformance-web build --base=/conformance/
+
+      - name: Test site assembly
+        run: node --test scripts/assemble-site.test.mjs
+
       - name: Assemble site
-        run: |
-          set -euo pipefail
-          rm -rf site
-          mkdir -p site
-          cp -r apps/web/dist/. site/
-          mkdir -p site/docs
-          cp -r apps/docs/.vitepress/dist/. site/docs/
-          test -s site/install.sh
-          test -s site/install.ps1
-          cmp apps/web/public/install.sh site/install.sh
-          cmp apps/web/public/install.ps1 site/install.ps1
-          echo "Assembled $(find site -type f | wc -l) files into ./site"
+        run: node scripts/assemble-site.mjs
+
+      - name: Verify every protocol route
+        run: node scripts/check-protocol.mjs
 
       - name: Install Chromium for Playwright
         run: pnpm exec playwright install --with-deps chromium
@@ -98,3 +109,5 @@ jobs:
           done
 
           node scripts/check-links.mjs http://localhost:8099
+          node scripts/check-showcase.mjs http://localhost:8099
+          node scripts/check-protocol-browser.mjs http://localhost:8099

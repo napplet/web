@@ -19,6 +19,23 @@ progress:
 
 # Project State
 
+## Website communications redesign — COMPLETE
+
+Website redesign delivered on PR #221 in `/Users/sandwich/Develop/napplet-showcase`, branch `feat/astro-ecosystem-showcase`. Research and execution contract: `.planning/quick/261019-bsw-rethink-website-communications-and-scrol/PLAN.md`. Implementation, motion, archived-preview disclosure, current protocol directory, social artwork and local verification are complete and pushed to PR #221. All four hosted checks passed on c0f588eb; the branch is mergeable and pushed. See VERIFICATION.md in the task directory for requirement-by-requirement evidence. Do not treat earlier showcase completion entries as completion of this new goal.
+
+
+## Quick task 261003-tih — COMPLETE
+
+NAP detail pages now render complete upstream specifications, replacing excerpts and outlines at the user’s request. All 38 documents, source links, code examples, responsive layouts and workspace checks pass. Preview is rebuilt on port 8101; PR #222 contains the correction. Evidence: `.planning/quick/261003-tih-render-complete-upstream-nap-specificati/SUMMARY.md`.
+
+## Quick task 261003-sof — COMPLETE
+
+Generated protocol directory, per-NAP pages, contribution guide and daily refresh/deploy workflow implemented on `feat/protocol-directory`. Local gates, all 38 routes, responsive/no-JS browser checks, hosted generation and link checks pass. PR #222 is stacked on #221. Evidence: `.planning/quick/261003-sof-generated-protocol-directory-with-nap-de/SUMMARY.md`.
+
+## Quick task 261003-isf — COMPLETE
+
+Astro ecosystem showcase implemented on `feat/astro-ecosystem-showcase`. Local build, type, unit, tutorial, browser, links, SEO/accessibility, and Bunny artifact checks pass. PR #221 is open and mergeable; hosted CI, conformance, link/browser, and AI-slop checks pass. Evidence: `.planning/quick/261003-isf-astro-ecosystem-showcase-with-extracted-/SUMMARY.md`.
+
 ## Project Reference
 
 See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
@@ -545,6 +562,11 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 
 | Quick ID | Task | Date | Commit | Artifacts |
 |----------|------|------|--------|-----------|
+| 261003-uwf | Simplify Develop to skills and Kehto in one viewport | 2026-10-03 | PR #222 | [261003-uwf-simplify-develop-section-to-napplet-skil](./quick/261003-uwf-simplify-develop-section-to-napplet-skil/) |
+| 261003-ukp | Split final Build section into napplet and shell paths | 2026-10-03 | PR #222 | [261003-ukp-split-final-build-section-into-napplet-a](./quick/261003-ukp-split-final-build-section-into-napplet-a/) |
+| 261003-uii | Sort NAP directory by Merged, Open PR, Draft PR | 2026-10-03 | PR #222 | [261003-uii-sort-nap-directory-by-merged-open-and-dr](./quick/261003-uii-sort-nap-directory-by-merged-open-and-dr/) |
+| 261003-tih | Render full upstream specifications on NAP detail pages | 2026-10-03 | PR #222 | [261003-tih-render-complete-upstream-nap-specificati](./quick/261003-tih-render-complete-upstream-nap-specificati/) |
+| 261003-sof | Generated protocol directory, NAP detail pages, contribution guide and daily refresh/deploy | 2026-10-03 | 9d4a1420 | [261003-sof-generated-protocol-directory-with-nap-de](./quick/261003-sof-generated-protocol-directory-with-nap-de/) |
 | 261017-jqc | Preserve extension tags and validate defined manifest fields | 2026-10-17 | 9ff56c20 / PR #256 | [261017-jqc](./quick/261017-jqc-preserve-nostr-extension-tags-in-cli-pub/) |
 | 261015-bbu | Use QuickJS and dependency pruning for released CLI binaries | 2026-10-15 | PR #249 | [261015-bbu-use-quickjs-and-dependency-pruning-for-r](./quick/261015-bbu-use-quickjs-and-dependency-pruning-for-r/) |
 | 261015-asj | Add CLI compile experiments for QuickJS, pruning, bundling, and minification | 2026-10-15 | be8e27a9 | [261015-asj-add-cli-compile-experiments-for-quickjs-](./quick/261015-asj-add-cli-compile-experiments-for-quickjs-/) |

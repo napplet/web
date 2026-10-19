@@ -1,0 +1,8 @@
+---
+import SiteLayout from '../layouts/SiteLayout.astro';
+import App from '../App.svelte';
+import '../styles/global.css';
+---
+<SiteLayout title="How napplets work — napplet explainer" description="Explore the ideas behind napplets: small Nostr apps, host shells, sandbox isolation, and composable clients. The original napplet explainer.">
+  <App client:load />
+</SiteLayout>

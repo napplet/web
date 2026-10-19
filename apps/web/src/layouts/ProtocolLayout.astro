@@ -1,0 +1,22 @@
+---
+import SiteLayout from './SiteLayout.astro';
+import data from '../data/protocol.json';
+import '../styles/showcase.css';
+import '../styles/protocol.css';
+
+interface Props { title: string; description: string; }
+const { title, description } = Astro.props;
+const checked = new Date(data.checkedAt).toLocaleDateString('en-US', { dateStyle: 'long', timeZone: 'UTC' });
+---
+<SiteLayout title={`${title} · napplet`} description={description}>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="protocol-header">
+    <a class="wordmark" href="/" aria-label="napplet home"><img src="/favicon.svg" width="28" height="28" alt="" />napplet<span class="wordmark-dot">.</span></a>
+    <nav aria-label="Protocol navigation"><a href="/protocol/" aria-current={Astro.url.pathname === '/protocol/' ? 'page' : undefined}>NAP directory</a><a href="/protocol/contribute/" aria-current={Astro.url.pathname === '/protocol/contribute/' ? 'page' : undefined}>Propose a NAP</a><a href="/docs/">Docs</a></nav>
+  </header>
+  <main id="main" class="protocol-main"><slot /></main>
+  <footer class="protocol-footer">
+    <p>Full source documents and a non-normative directory of the living <a href={data.repository}>NAP specifications</a>. GitHub is the source of truth; merged does not mean final or universally implemented.</p>
+    <p>Checked <time datetime={data.checkedAt}>{checked} (UTC)</time> · <a href={`${data.repository}/commit/${data.commit}`}>Registry revision {data.commit.slice(0, 7)}</a> · <a href="/">Back to the ecosystem</a></p>
+  </footer>
+</SiteLayout>

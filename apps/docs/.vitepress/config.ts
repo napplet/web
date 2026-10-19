@@ -8,11 +8,12 @@ const COMMUNITY_URL =
 export default defineConfig({
   base: '/docs/',
   lang: 'en-US',
-  // Build to a modern target so esbuild (pinned to a patched release) doesn't
-  // need to lower modern syntax to a legacy target. Fine for a docs site.
+  // Keep builds, source transforms, and dev dependency optimization on the
+  // same modern target: patched esbuild cannot lower some legacy syntax.
   vite: {
     build: { target: 'esnext' },
     esbuild: { target: 'esnext' },
+    optimizeDeps: { esbuildOptions: { target: 'esnext' } },
   },
   title: 'napplet',
   description:
