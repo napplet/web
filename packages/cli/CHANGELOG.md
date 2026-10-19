@@ -1,8 +1,20 @@
 # @napplet/cli
 
+## 0.12.0
+
+### Minor Changes
+
+- 3192b13: Guide terminal users through missing deployment and application settings, preserve
+  existing project configuration, and offer a choice of signing methods. Add `-i` /
+  `--non-interactive` across commands and suppress nested prompts in CI, JSON output, and redirected
+  sessions. Improve help, display an ASCII banner, add semantic colors and live deployment progress
+  with filled block bars, and handle prompt cancellation without leaving the terminal in raw mode.
+  Existing JSON and version output remain machine-readable.
+
 ## 0.11.0
 
 ### Minor Changes
+
 - 847c7be: Attach captured screenshots to optional kind 32267 application image metadata.
 
 ## 0.10.1
