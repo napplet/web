@@ -6,9 +6,9 @@ current_phase: 164
 current_phase_name: cli-terminal-usability
 status: completed
 stopped_at: Phase 164 verified locally and shipped in PR 248 with terminal recordings
-last_updated: "2026-10-17T21:23:11+00:00"
-last_activity: 2026-10-17
-last_activity_desc: Merged current main and resolved PR 248 CLI conflicts
+last_updated: "2026-10-19T23:36:15+00:00"
+last_activity: 2026-10-19
+last_activity_desc: Resolved PR 205 conflicts with current main
 progress:
   total_phases: 9
   completed_phases: 4
@@ -56,7 +56,7 @@ Follow-up authorized on 2026-10-14: `.planning/debug/pr205-resource-wire.md` rec
 Phase: 164 (cli-terminal-usability) — verified and shipped
 Plan: 3 of 3
 Status: [PR #248](https://github.com/napplet/web/pull/248) open with six actual terminal screenshots
-Last activity: 2026-10-15 - Completed quick task 261015-aen: nsyte-style filled CLI progress bars
+Last activity: 2026-10-19 - Completed quick task 261019-n0s: Resolve PR #205 conflicts with current main
 
 See phase 163 VERIFICATION.md and COVERAGE.md for evidence and disclosed release/specification/baseline limits. Earlier phase and quick-task records below are historical.
 
@@ -593,6 +593,7 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 
 | Quick ID | Task | Date | Commit | Artifacts |
 |----------|------|------|--------|-----------|
+| 261019-n0s | Resolve PR #205 merge conflicts with current main | 2026-10-19 | 85b09faf | [261019-n0s](./quick/261019-n0s-resolve-pr-205-merge-conflicts-with-curr/) |
 | 261015-aen | Use nsyte-style filled CLI progress bars and refresh terminal proof | 2026-10-15 | 5e165056 | [261015-aen](./quick/261015-aen-use-nsyte-filled-progress-bars-in-cli-an/) |
 | 261017-jqc | Preserve extension tags and validate defined manifest fields | 2026-10-17 | 9ff56c20 / PR #256 | [261017-jqc](./quick/261017-jqc-preserve-nostr-extension-tags-in-cli-pub/) |
 | 261015-bbu | Use QuickJS and dependency pruning for released CLI binaries | 2026-10-15 | PR #249 | [261015-bbu-use-quickjs-and-dependency-pruning-for-r](./quick/261015-bbu-use-quickjs-and-dependency-pruning-for-r/) |
