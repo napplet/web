@@ -8,7 +8,6 @@
     "jsr:@std/media-types@1": "1.1.0",
     "jsr:@std/path@1": "1.1.6",
     "jsr:@std/streams@1": "1.1.2",
-    "npm:@changesets/cli@^2.30.0": "2.31.1",
     "npm:@scure/base@^1.2.6": "1.2.6",
     "npm:applesauce-relay@^5.2.0": "5.2.0_typescript@5.9.3",
     "npm:applesauce-signers@^5.2.0": "5.2.0_typescript@5.9.3",
@@ -18,7 +17,8 @@
     "npm:tsup@^8.5.0": "8.5.1_typescript@5.9.3_esbuild@0.27.7",
     "npm:turbo@^2.9.14": "2.10.8",
     "npm:typescript@^5.9.3": "5.9.3",
-    "npm:vite@^6.4.3": "6.4.3_picomatch@4.0.5"
+    "npm:vite@^6.4.3": "6.4.3_picomatch@4.0.5",
+    "npm:yaml@2.9.1": "2.9.1"
   },
   "jsr": {
     "@libs/qrcode@3.1.0": {
@@ -1818,15 +1818,18 @@
     },
     "ws@8.21.1": {
       "integrity": "sha512-+0NTnW77fFN/DjQi6k/Sq/Yvk4Sgajw7urW8V+asjXnRgDs9gyGkdb7EzgfhA4goXsRIZKE28fzIXBHEzhuiWw=="
+    },
+    "yaml@2.9.1": {
+      "integrity": "sha512-3NxN8+78OdzbT7C/WjGsyfPAtJaN3FNDsWxv7Y7mcDsT/oOmgW8BpyQQFFBnvZE3j9Y2Sdz1ULFLezL7Eb2yFw==",
+      "bin": true
     }
   },
   "workspace": {
     "packageJson": {
       "dependencies": [
-        "npm:@changesets/cli@^2.30.0",
+        "npm:@changesets/cli@^3.0.3",
         "npm:@types/node@^22.15.0",
         "npm:happy-dom@^20.10.3",
-        "npm:nostr-tools@^2.23.3",
         "npm:playwright@^1.59.1",
         "npm:turbo@^2.9.14",
         "npm:typescript@^5.9.3",
@@ -1836,9 +1839,13 @@
     },
     "members": {
       "packages/boilerplate": {
+        "dependencies": [
+          "npm:fflate@0.8.2"
+        ],
         "packageJson": {
           "dependencies": [
             "npm:@types/node@^22.15.0",
+            "npm:fflate@0.8.2",
             "npm:tsup@^8.5.0",
             "npm:typescript@^5.9.3"
           ]
@@ -1855,7 +1862,10 @@
           "npm:@types/node@^22.15.0",
           "npm:applesauce-relay@^5.2.0",
           "npm:applesauce-signers@^5.2.0",
-          "npm:nostr-tools@^2.23.3"
+          "npm:fflate@0.8.2",
+          "npm:nostr-tools@^2.23.3",
+          "npm:parse5@^7.3.0",
+          "npm:yaml@2.9.1"
         ],
         "packageJson": {
           "dependencies": [
@@ -1863,7 +1873,10 @@
             "npm:@types/node@^22.15.0",
             "npm:applesauce-relay@^5.2.0",
             "npm:applesauce-signers@^5.2.0",
-            "npm:nostr-tools@^2.23.3"
+            "npm:fflate@0.8.2",
+            "npm:nostr-tools@^2.23.3",
+            "npm:parse5@^7.3.0",
+            "npm:yaml@2.9.1"
           ]
         }
       },
@@ -1891,6 +1904,7 @@
         "packageJson": {
           "dependencies": [
             "npm:@types/node@^22.15.0",
+            "npm:nostr-tools@^2.23.3",
             "npm:tsup@^8.5.0",
             "npm:typescript@^5.9.3",
             "npm:vitest@^4.1.11"
@@ -1919,6 +1933,7 @@
           "dependencies": [
             "npm:@types/node@^22.15.0",
             "npm:nostr-tools@^2.23.3",
+            "npm:parse5@^7.3.0",
             "npm:tsup@^8.5.0",
             "npm:typescript@^5.9.3",
             "npm:vite@^6.4.3",

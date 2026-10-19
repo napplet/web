@@ -1,5 +1,31 @@
 # @napplet/shim
 
+## 0.32.0
+
+### Minor Changes
+
+- Add the proposed NAP-GAMEPAD cached API, types and subpaths, runtime binding, envelope validation, conformance injection, and optional manifest-domain inference. The coordinated CLI runner follow-up selects these packages after publication. Publish Kehto Paja 0.21.0 before the screenshot package release; conformance CLI 0.3.4 is included in this package set. Native Gamepad API replacement remains deferred pending clarification of the proposal and NIP-5D namespace-only injection restriction.
+
+### Patch Changes
+
+- Updated dependencies
+  - @napplet/core@0.34.0
+  - @napplet/nap@0.34.0
+
+## 0.31.0
+
+### Minor Changes
+
+- Follow the NAP-INTENT lifecycle and manifest amendments: accept authoritative convention URIs and naddr recommendations, expose acceptance results and buffered onDelivery callbacks, and discover opaque catalog identifiers with parameter contracts. Restore the optional NAP-SHELL environment API independently of other domain calls. Align INC provenance with authenticated endpoint identifiers and deliver theme/identity updates only for exposed domains.
+
+  INTENT callers migrate from archetype/request arguments to invoke(uri, options) and open(uri, options), from handled/windowId to acceptance, and from candidate dTag to id/contracts. Existing IntentOpenOptions and named SDK helpers remain exported with the URI signatures. CLI helper extraction preserves existing exports and behavior.
+
+### Patch Changes
+
+- Updated dependencies
+  - @napplet/core@0.33.0
+  - @napplet/nap@0.33.0
+
 ## 0.30.0
 
 ### Minor Changes

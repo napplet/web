@@ -69,7 +69,7 @@ export interface IncApi {
 export interface IncEvent {
   /** Exact subscribed topic. */
   topic: string;
-  /** Runtime-attested emitting napplet dTag. */
+  /** Runtime-attested emitting authenticated endpoint identifier. */
   sender: string;
   /** Optional opaque payload. */
   payload?: unknown;
@@ -79,7 +79,7 @@ export interface IncEvent {
 export interface ChannelEvent {
   /** Shell-assigned opaque channel identifier. */
   channelId: string;
-  /** Runtime-attested sender dTag. */
+  /** Runtime-attested sender endpoint identifier. */
   sender: string;
   /** Optional opaque payload. */
   payload?: unknown;
@@ -97,7 +97,7 @@ export interface ChannelClosed {
 export interface ChannelInfo {
   /** Shell-assigned opaque channel identifier. */
   id: string;
-  /** Peer napplet dTag. */
+  /** Peer authenticated endpoint identifier. */
   peer: string;
 }
 
@@ -115,7 +115,7 @@ export interface ChannelHandle extends ChannelInfo {
 
 /** Point-to-point INC channel operations. */
 export interface IncChannelApi {
-  /** Open a channel to a target napplet dTag. */
+  /** Open a channel to a target authenticated endpoint identifier. */
   open(target: string): Promise<ChannelHandle>;
   /** Receive inbound channel handles. */
   onOpened(callback: (handle: ChannelHandle) => void): Subscription;

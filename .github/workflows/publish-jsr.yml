@@ -6,9 +6,9 @@ name: Publish to JSR
 # is linked under the @napplet scope on jsr.io.
 #
 # Trigger model:
-# - JSR publishing runs only for Version Packages commits. Stable CLI binaries
-#   run on every main push so install.sh never points at a missing release while
-#   waiting for the generated Version Packages PR.
+# - Every main push runs JSR publishing. The publisher skips versions already
+#   present in the registry, so package metadata determines what gets released.
+# - Stable CLI binaries also run on every main push.
 # - Manual workflow_dispatch is also wired for one-off bootstrap publishes.
 
 on:
@@ -22,7 +22,6 @@ concurrency:
 
 jobs:
   publish-jsr:
-    if: github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'Version Packages')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -34,6 +33,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
       - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.9.5
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -107,6 +108,8 @@ jobs:
       - name: Build standalone CLI package dependencies
         run: pnpm --filter @napplet/boilerplate build
       - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.9.5
       - name: Compile ${{ matrix.asset }}
         run: deno task --config packages/cli/deno.json ${{ matrix.task }}
       - uses: actions/upload-artifact@v4
@@ -116,7 +119,7 @@ jobs:
           if-no-files-found: error
 
   release-cli-binaries:
-    if: always() && (github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main')
+    if: always() && needs.build-cli-binaries.result == 'success' && (github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main')
     needs: [publish-jsr, build-cli-binaries]
     runs-on: ubuntu-latest
     permissions:

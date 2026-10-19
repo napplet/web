@@ -16,12 +16,13 @@ function event(overrides: Partial<NappletManifestEvent> = {}): NappletManifestEv
   return {
     id: 'event-id',
     pubkey: 'pubkey',
+    content: 'A test napplet',
     kind: NAPPLET_KIND_NAMED,
     tags: [
       ['d', 'demo'],
-      ['path', '/index.html', HASH],
-      ['requires', 'relay'],
-      ['requires', 'storage'],
+      ['x', HASH],
+      ['R', 'relay'],
+      ['R', 'storage'],
     ],
     ...overrides,
   };
@@ -37,12 +38,12 @@ describe('validateManifestEvent — happy path', () => {
   });
 
   it('accepts root and snapshot napplet manifests without d tags', () => {
-    expect(validateManifestEvent(event({ kind: NAPPLET_KIND_ROOT, tags: [['path', '/index.html', HASH]] })).ok).toBe(true);
-    expect(validateManifestEvent(event({ kind: NAPPLET_KIND_SNAPSHOT, tags: [['path', '/index.html', HASH]] })).ok).toBe(true);
+    expect(validateManifestEvent(event({ kind: NAPPLET_KIND_ROOT, tags: [['x', HASH]] })).ok).toBe(true);
+    expect(validateManifestEvent(event({ kind: NAPPLET_KIND_SNAPSHOT, tags: [['x', HASH]] })).ok).toBe(true);
   });
 
   it('returns display metadata from the event', () => {
-    const e = event({ tags: [['path', '/index.html', HASH], ['title', 'Demo Napplet']] });
+    const e = event({ tags: [['x', HASH], ['title', 'Demo Napplet']] });
     expect(manifestDisplayName(e)).toBe('Demo Napplet');
     expect(manifestRequires(event())).toEqual(['relay', 'storage']);
   });
@@ -67,31 +68,142 @@ describe('validateManifestEvent — failures', () => {
   });
 
   it('enforces d tag rules by event kind', () => {
-    const missing = validateManifestEvent(event({ tags: [['path', '/index.html', HASH]] }));
+    const missing = validateManifestEvent(event({ tags: [['x', HASH]] }));
     expect(missing.errors.some((e) => e.code === 'missing-d-tag')).toBe(true);
 
     const unexpected = validateManifestEvent(event({ kind: NAPPLET_KIND_ROOT }));
     expect(unexpected.errors.some((e) => e.code === 'unexpected-d-tag')).toBe(true);
   });
 
-  it('requires a hashed /index.html path tag', () => {
+  it('requires the /index.html artifact x tag', () => {
     const missing = validateManifestEvent(event({ tags: [['d', 'demo']] }));
-    expect(missing.errors.some((e) => e.code === 'missing-index-html')).toBe(true);
+    expect(missing.errors.some((e) => e.code === 'invalid-artifact-hash')).toBe(true);
 
-    const invalid = validateManifestEvent(event({ tags: [['d', 'demo'], ['path', '/index.html', 'nope']] }));
-    expect(invalid.errors.some((e) => e.code === 'invalid-index-html-hash')).toBe(true);
+    const invalid = validateManifestEvent(event({ tags: [['d', 'demo'], ['x', 'nope']] }));
+    expect(invalid.errors.some((e) => e.code === 'invalid-artifact-hash')).toBe(true);
   });
 
-  it('requires bare known NAP domains in requires tags', () => {
+  it('requires bare NAP domains in R tags and flags unknown ones as advisories', () => {
     const v = validateManifestEvent(event({
       tags: [
         ['d', 'demo'],
-        ['path', '/index.html', HASH],
-        ['requires', 'nap:relay'],
-        ['requires', 'telepathy'],
+        ['x', HASH],
+        ['R', 'nap:relay'],
+        ['R', 'telepathy'],
       ],
     }));
     expect(v.errors.some((e) => e.code === 'invalid-required-nap')).toBe(true);
-    expect(v.errors.some((e) => e.code === 'unknown-required-nap')).toBe(true);
+    expect(v.errors.some((e) => e.code === 'unknown-required-nap')).toBe(false);
+    expect(v.warnings.some((e) => e.code === 'unknown-required-nap')).toBe(true);
   });
+
+  it.each(['relay.subscribe', 'perm:popups', 'relay storage', 'nap:relay', 'NAP-RELAY'])(
+    'rejects malformed R value %j as an error, not an advisory',
+    (req) => {
+      const v = validateManifestEvent(event({
+        tags: [
+          ['d', 'demo'],
+          ['x', HASH],
+          ['R', req],
+        ],
+      }));
+      expect(v.ok).toBe(false);
+      expect(v.errors.map((e) => e.code)).toEqual(['invalid-required-nap']);
+      expect(v.warnings).toEqual([]);
+    },
+  );
+
+  it('accepts a manifest whose only unusual R tag is an unknown domain', () => {
+    const v = validateManifestEvent(event({
+      tags: [
+        ['d', 'demo'],
+        ['x', HASH],
+        ['R', 'mesh'],
+      ],
+    }));
+    expect(v.ok).toBe(true);
+    expect(v.warnings).toEqual([
+      { code: 'unknown-required-nap', message: 'Domain "mesh" is not in this tool\'s registry; check its NAP and runtime availability' },
+    ]);
+  });
+});
+
+
+describe('current schema cardinality and fallback', () => {
+  it.each(['R', 'O'])('does not impose a lowercase-only registry rule on %s declarations', (tag) => {
+    const verdict = validateManifestEvent(event({ tags: [['d', 'demo'], ['x', HASH], [tag, 'Relay']] }));
+    expect(verdict.ok).toBe(true);
+    expect(verdict.warnings.map((warning) => warning.code)).toEqual(['unknown-required-nap']);
+  });
+
+  it.each(['relay.subscribe', 'perm:popups', 'relay storage', 'NAP-RELAY'])('rejects malformed optional domain %j', (domain) => {
+    const verdict = validateManifestEvent(event({ tags: [['d', 'demo'], ['x', HASH], ['O', domain]] }));
+    expect(verdict.errors.map((error) => error.code)).toEqual(['invalid-optional-nap']);
+    expect(verdict.warnings).toEqual([]);
+  });
+  it('rejects duplicate x, aggregate x and uppercase hashes', () => {
+    for (const hashes of [[['x', HASH], ['x', HASH]], [['x', HASH, 'aggregate']], [['x', HASH.toUpperCase()]]]) {
+      expect(validateManifestEvent(event({ tags: [['d', 'demo'], ...hashes] })).ok).toBe(false);
+    }
+  });
+  it('checks empty d tags on root and duplicate identifiers on named events', () => {
+    expect(validateManifestEvent(event({ kind: NAPPLET_KIND_ROOT, tags: [['d', ''], ['x', HASH]] })).ok).toBe(false);
+    expect(validateManifestEvent(event({ tags: [['d', 'a'], ['d', 'b'], ['x', HASH]] })).ok).toBe(false);
+  });
+  it('requires description content but treats markup-like punctuation as plain text', () => {
+    expect(validateManifestEvent(event({ content: '  ' })).ok).toBe(false);
+    expect(validateManifestEvent(event({ content: '<b>literal</b> **text**' })).ok).toBe(true);
+  });
+  it('allows optional domains absent from this tool and uses fallback for invalid icons', () => {
+    const v = validateManifestEvent(event({ tags: [['d', 'demo'], ['x', HASH], ['O', 'external-domain'], ['icon', 'bad', 'image/svg+xml']] }));
+    expect(v.ok).toBe(true);
+    expect(v.requires).toEqual([]);
+    expect(v.optional).toEqual(['external-domain']);
+    expect(v.warnings.some((warning) => warning.code === 'invalid-icon')).toBe(true);
+  });
+  it('limits lineage to snapshots without requiring a parent lookup', () => {
+    const tags = [['x', HASH], ['a', `35129:${HASH}:parent`], ['A', `35129:${HASH}:root`]];
+    expect(validateManifestEvent(event({ kind: NAPPLET_KIND_SNAPSHOT, tags })).ok).toBe(true);
+    expect(validateManifestEvent(event({ tags: [['d', 'demo'], ...tags] })).ok).toBe(false);
+  });
+});
+
+it('preserves exact identifier bytes and checks queryless intent advertisements', () => {
+  const valid = event({ tags: [['d', ' My Identifier '], ['x', HASH], ['i', 'napplet:note/open', 'id']] });
+  expect(validateManifestEvent(valid).dTag).toBe(' My Identifier ');
+  expect(validateManifestEvent(valid).ok).toBe(true);
+  expect(validateManifestEvent(event({ tags: [['d', 'demo'], ['x', HASH], ['i', 'napplet:note/open?id=1']] })).ok).toBe(false);
+});
+
+it('accepts arbitrary extension tags without normalizing payloads or removing duplicates', () => {
+  const extra = [['t', 'notes'], ['custom', '保留', '', '{"nested":[1,2]}'], ['custom', 'same'], ['custom', 'same'], ['flag'], ['path', 'extension'], ['description', 'extra'], ['requires', 'opaque'], ['archetype', 'opaque']];
+  const input = event({ tags: [...event().tags, ...extra] });
+  const original = JSON.stringify(input);
+  const verdict = validateManifestEvent(input);
+  expect(verdict.ok).toBe(true);
+  expect(verdict.errors).toEqual([]);
+  expect(verdict.warnings).toEqual([]);
+  expect(JSON.stringify(input)).toBe(original);
+});
+
+it.each([
+  'https://git.example.com/owner/repo.git',
+  'http://git.example.com/owner/repo.git',
+  'ssh://git@git.example.com/owner/repo.git',
+  'git://git.example.com/owner/repo.git',
+  'git@git.example.com:owner/repo.git',
+  'git.example.com:owner/repo.git',
+])('accepts a defined source location %s', (location) => {
+  expect(validateManifestEvent(event({ tags: [...event().tags, ['source', location]] })).ok).toBe(true);
+});
+
+it.each([
+  ['source'], ['source', ''], ['source', './repo'], ['source', '/home/me/repo'],
+  ['source', 'file:///tmp/repo'], ['source', 'ftp://git.example.com/repo'],
+  ['source', 'file:/tmp/repo'], ['source', 'file:relative'],
+  ['source', 'https://git.example.com/repo', 'https://mirror.example.com/repo'],
+  ['source', 'C:\\repo'],
+])('validates defined optional source metadata despite unrelated extension tags: %j', (...source) => {
+  const verdict = validateManifestEvent(event({ tags: [...event().tags, source, ['custom', 'anything']] }));
+  expect(verdict.errors.some((error) => error.code === 'invalid-metadata')).toBe(true);
 });

@@ -8,6 +8,23 @@ import {
 import { defaultConfig } from "../src/config.ts";
 import { collectFlags } from "../src/flags.ts";
 import { assert, assertEquals } from "./assert.ts";
+import cliMetadata from "../deno.json" with { type: "json" };
+
+for (const alias of ["--version", "-v", "version"]) {
+  Deno.test(`main reports installed package version for ${alias} without permissions`, {
+    permissions: "none",
+  }, async () => {
+    const output: string[] = [];
+    const original = console.log;
+    console.log = (value: unknown) => output.push(String(value));
+    try {
+      assertEquals(await main([alias]), 0);
+    } finally {
+      console.log = original;
+    }
+    assertEquals(output, [`napplet ${cliMetadata.version}`]);
+  });
+}
 
 Deno.test("loadDeployConfig bootstraps missing config in interactive deploy", async () => {
   const flags = collectFlags(["--name", "gbcolor"]);
@@ -28,7 +45,7 @@ Deno.test("loadDeployConfig bootstraps missing config in interactive deploy", as
       assertEquals(seenFlags, flags);
       initCalled = true;
       return Promise.resolve({
-        path: "/repo/.napplet/config.json",
+        path: "/repo/.napplet/config.yaml",
         config,
         created: true,
       });
@@ -88,7 +105,7 @@ Deno.test("loadDeployConfig preserves json missing config failure", async () => 
 });
 
 Deno.test("loadDeployConfig preserves explicit config missing config failure", async () => {
-  const flags = collectFlags(["--config", "/tmp/missing-config.json"]);
+  const flags = collectFlags(["--config", "/tmp/missing-config.yaml"]);
   let initCalled = false;
   let message = "";
 
@@ -106,7 +123,7 @@ Deno.test("loadDeployConfig preserves explicit config missing config failure", a
   }
 
   assert(!initCalled);
-  assert(message.includes("at /tmp/missing-config.json"));
+  assert(message.includes("at /tmp/missing-config.yaml"));
   assert(message.includes("Run: napplet init"));
 });
 
@@ -140,15 +157,15 @@ Deno.test("runPackageCli preserves create arguments as an explicit argv array", 
       },
       writeStdout: (value) => stdout.push(value),
       os: "darwin",
+      resolvePackage: async () => ({ command: "/private/node", args: ["/private/create.js"] }),
     },
   );
 
   assertEquals(code, 0);
   assertEquals(calls, [{
-    command: "npx",
+    command: "/private/node",
     args: [
-      "--yes",
-      "@napplet/boilerplate",
+      "/private/create.js",
       "project with spaces",
       "--template",
       "./local template",
@@ -158,7 +175,7 @@ Deno.test("runPackageCli preserves create arguments as an explicit argv array", 
   assertEquals(stdout, ["created"]);
 });
 
-Deno.test("runPackageCli uses npx.cmd on Windows and forwards the package exit code", async () => {
+Deno.test("runPackageCli uses the private Windows executable and forwards the package exit code", async () => {
   const calls: Array<{ command: string; args: string[] }> = [];
   const code = await runPackageCli("@napplet/boilerplate", ["project", "--force"], {
     runner(command, args) {
@@ -167,12 +184,13 @@ Deno.test("runPackageCli uses npx.cmd on Windows and forwards the package exit c
     },
     writeStderr: () => {},
     os: "windows",
+    resolvePackage: async () => ({ command: "C:/private/node.exe", args: ["C:/private/create.js"] }),
   });
 
   assertEquals(code, 3);
   assertEquals(calls, [{
-    command: "npx.cmd",
-    args: ["--yes", "@napplet/boilerplate", "project", "--force"],
+    command: "C:/private/node.exe",
+    args: ["C:/private/create.js", "project", "--force"],
   }]);
 });
 
@@ -202,6 +220,18 @@ Deno.test("skills is no longer a CLI command; agents install skills through skil
   assert(!errors.join("\n").includes("napplet skills"));
 });
 
+Deno.test("debug validates --format before loading config", async () => {
+  const errors: string[] = [];
+  const original = console.error;
+  console.error = (value: unknown) => errors.push(String(value));
+  try {
+    assert(await main(["debug", "--format", "bogus"]) !== 0);
+  } finally {
+    console.error = original;
+  }
+  assert(errors.some((line) => line.includes("--format must be current or legacy")));
+});
+
 Deno.test("published CLI entrypoint excludes standalone-only workspace imports", async () => {
   const cliSource = await Deno.readTextFile(new URL("../src/cli.ts", import.meta.url));
   const standaloneSource = await Deno.readTextFile(
@@ -217,21 +247,23 @@ Deno.test("published CLI entrypoint excludes standalone-only workspace imports",
   assert(config.publish?.exclude?.includes("src/standalone.ts"));
 });
 
-Deno.test("resolveConformanceCommand runs the package-backed CLI without a global binary", () => {
-  assertEquals(resolveConformanceCommand("napplet-conformance", "darwin"), {
-    command: "npx",
-    args: ["--yes", "@napplet/conformance-cli"],
-  });
-  assertEquals(resolveConformanceCommand(undefined, "windows"), {
-    command: "npx.cmd",
-    args: ["--yes", "@napplet/conformance-cli"],
-  });
+Deno.test("resolveConformanceCommand uses private tooling for either platform", async () => {
+  const calls: string[] = [];
+  const resolve = async (spec: string, entry: string) => {
+    calls.push(`${spec}:${entry}`);
+    return { command: "/private/node", args: ["/private/conformance.js"] };
+  };
+  for (const os of ["darwin", "windows"] as const) {
+    assertEquals(await resolveConformanceCommand(undefined, os, resolve), {
+      command: "/private/node", args: ["/private/conformance.js"],
+    });
+  }
+  assertEquals(calls, ["@napplet/conformance-cli@0.3.4:dist/cli.js", "@napplet/conformance-cli@0.3.4:dist/cli.js"]);
 });
 
-Deno.test("resolveConformanceCommand preserves an explicit custom runner", () => {
-  assertEquals(resolveConformanceCommand("pnpm exec custom-conformance", "linux"), {
-    command: "pnpm",
-    args: ["exec", "custom-conformance"],
+Deno.test("resolveConformanceCommand preserves an explicit custom runner", async () => {
+  assertEquals(await resolveConformanceCommand("pnpm exec custom-conformance", "linux", async () => { throw new Error("Unexpected provision"); }), {
+    command: "pnpm", args: ["exec", "custom-conformance"],
   });
 });
 

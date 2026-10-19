@@ -19,6 +19,8 @@ export function normalizeConventionUri(
   uri: string,
   explicitPayload?: unknown,
 ): NormalizedConventionUri {
+  if (typeof uri !== 'string') throw new Error('Convention URI must be a string');
+  decodeURIComponent(uri);
   const queryIndex = uri.indexOf('?');
   const fragmentIndex = uri.indexOf('#');
   const pathEnd = [queryIndex, fragmentIndex]

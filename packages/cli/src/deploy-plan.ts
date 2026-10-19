@@ -43,7 +43,13 @@ function planSingleDeploys(
     if (resolvedSelection.root) {
       pushDeployItem(items, candidate, item(candidate, "root"), resolvedSelection.snapshot);
     }
-    for (const name of resolvedSelection.names) {
+    const names = selection.names === undefined && selection.root === undefined &&
+        selection.snapshot === undefined && !config.named?.length &&
+        config.defaultTarget === "named" &&
+        candidate.publishingId
+      ? [candidate.publishingId]
+      : resolvedSelection.names;
+    for (const name of names) {
       pushDeployItem(items, candidate, item(candidate, "named", name), resolvedSelection.snapshot);
     }
   }

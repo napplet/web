@@ -63,6 +63,8 @@ jobs:
         run: pnpm generate:protocol
         env:
           GH_TOKEN: ${{ github.token }}
+      - name: Test CLI installers
+        run: pnpm test:installers
 
       # Build workspace package deps the apps may import, then each app.
       - name: Build packages

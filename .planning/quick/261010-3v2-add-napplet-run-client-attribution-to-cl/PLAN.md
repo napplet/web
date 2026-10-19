@@ -1,0 +1,3 @@
+# CLI client attribution
+
+Add the requested ["client", "napplet.run"] attribution before signing all CLI-created relay publications: current and legacy root/named/snapshot manifests and optional kind-32267 application metadata. NIP-89 Client tag defines publisher attribution (https://github.com/nostr-protocol/nips/blob/master/89.md#client-tag). Keep it separate from artifact identity and from signer transport/HTTP authorization events. Normalize existing client tags to one attribution. Verify signed output, snapshots and unsigned previews; update CLI docs, consume a patch changeset, run repository gates and open a PR.

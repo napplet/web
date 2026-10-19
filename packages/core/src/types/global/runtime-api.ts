@@ -252,26 +252,28 @@ export interface ResourceInfo {
  *
  * URL space is scheme-pluggable: shells register handlers per scheme.
  * Canonical schemes include `data:` (decoded in-shim, no round-trip),
- * `https:` (shell-side network with policy), `blossom:` (Blossom hash to
- * bytes), `htree:` (Hashtree-verified bytes), and `nostr:` (NIP-19 single-hop
+ * `https:` (shell-side network with policy), `blossom:<sha256>.<ext>`
+ * (BUD-10 Blossom URI to bytes), `htree:` (Hashtree-verified bytes), and `nostr:` (NIP-19 single-hop
  * resolution).
+ *
+ * @see https://github.com/hzrd149/blossom/blob/master/buds/10.md BUD-10 Blossom URI schema
  *
  * @example
  * ```ts
  * // Fetch raw bytes:
- * const blob = await window.napplet.resource.bytes('blossom:sha256:abc123...', {
+ * const blob = await window.napplet.resource.bytes('blossom:<sha256>.png', {
  *   servers: ['https://cdn.hzrd149.com'],
  * });
  *
  * // Fetch many resources in one envelope:
  * const items = await window.napplet.resource.bytesMany([
  *   { url: 'https://example.com/avatar.png' },
- *   { url: 'blossom:sha256:abc123...', servers: ['https://cdn.hzrd149.com'] },
+ *   { url: 'blossom:<sha256>.png', servers: ['https://cdn.hzrd149.com'] },
  *   { url: 'htree://example-root/path' },
  * ]);
  *
  * // Get a managed object URL (revoke when done to free memory):
- * const { url, revoke } = window.napplet.resource.bytesAsObjectURL('blossom:abc123...');
+ * const { url, revoke } = window.napplet.resource.bytesAsObjectURL('blossom:<sha256>.png');
  * imgEl.src = url;
  * imgEl.onload = () => revoke();
  * ```

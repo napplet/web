@@ -1,69 +1,21 @@
 import { describe, expect, it } from 'vitest';
-import type {
-  IntentBehavior,
-  IntentCandidate,
-  IntentOpenOptions,
-  IntentRequest,
-  IntentResult,
-} from './index.js';
+import type { IntentCandidate, IntentDelivery, IntentInvokeOptions, IntentRequest, IntentResult } from './index.js';
 
 describe('NAP-INTENT public contract', () => {
-  it('models the merged archetype request and open options', () => {
-    const behavior: IntentBehavior = {
-      focus: true,
-      newWindow: true,
-      reuse: false,
-    };
-    const options: IntentOpenOptions = {
-      convention: 'napplet:profile/open',
-      handler: 'default',
-      behavior,
-    };
-    const request: IntentRequest = {
-      archetype: 'profile',
-      payload: { pubkey: 'abc123' },
-      ...options,
-    };
-    const candidate: IntentCandidate = {
-      dTag: 'profile-viewer',
-      actions: ['open'],
-      conventions: ['napplet:profile/open'],
-    };
-
-    expect(request.action).toBeUndefined();
-    expect(request.behavior?.newWindow).toBe(true);
-    expect(candidate.conventions).toEqual(['napplet:profile/open']);
+  it('models normalized requests and manifest parameter contracts', () => {
+    const options: IntentInvokeOptions = { payload: { pubkey: 'abc123' }, behavior: { focus: true, reuse: false } };
+    const request: IntentRequest = { archetype: 'profile', action: 'open', convention: 'napplet:profile/open', ...options };
+    const candidate: IntentCandidate = { id: 'catalog-profile-viewer', actions: ['open'], conventions: ['napplet:profile/open'], contracts: [{ convention: 'napplet:profile/open', params: ['pubkey'] }] };
+    expect(request.action).toBe('open');
+    expect(candidate.contracts[0].params).toEqual(['pubkey']);
   });
 
-  it('requires canonical result identity and handling state', () => {
-    const accepted: IntentResult = {
-      ok: true,
-      archetype: 'profile',
-      action: 'open',
-      handled: true,
-      handler: 'profile-viewer',
-      windowId: 'window-1',
-      convention: 'napplet:profile/open',
-    };
-    const rejected: IntentResult = {
-      ok: false,
-      archetype: 'profile',
-      action: 'open',
-      handled: false,
-      error: 'no handler',
-    };
-
-    expect(accepted.handled).toBe(true);
-    expect(rejected.handled).toBe(false);
-  });
-
-  it('keeps archetype and convention orthogonal', () => {
-    const request: IntentRequest = {
-      archetype: 'viewer',
-      convention: 'napplet:profile/open',
-    };
-
-    expect(request.archetype).toBe('viewer');
-    expect(request.convention).toBe('napplet:profile/open');
+  it('separates acceptance from target delivery', () => {
+    const accepted: IntentResult = { ok: true, archetype: 'profile', action: 'open', convention: 'napplet:profile/open', handler: 'catalog-profile-viewer' };
+    const rejected: IntentResult = { ok: false, error: 'no handler' };
+    const delivery: IntentDelivery = { sender: 'catalog-source', archetype: 'profile', action: 'open', convention: 'napplet:profile/open', payload: { pubkey: 'abc123' } };
+    expect(accepted.ok).toBe(true);
+    expect(rejected.error).toBe('no handler');
+    expect(delivery.sender).toBe('catalog-source');
   });
 });

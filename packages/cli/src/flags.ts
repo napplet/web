@@ -32,12 +32,20 @@ export function collectFlags(argv: string[]): FlagBag {
       passthrough = true;
       continue;
     }
+    if (arg === "-i") {
+      flags.boolean.add("non-interactive");
+      continue;
+    }
     if (!arg.startsWith("--")) {
       flags.positional.push(arg);
       continue;
     }
     const name = arg.slice(2);
-    if (["force", "all", "root", "snapshot", "prompt-sec", "dry-run", "json"].includes(name)) {
+    if (name === "screenshot" && (argv[i + 1] === undefined || argv[i + 1].startsWith("--"))) {
+      flags.boolean.add(name);
+      continue;
+    }
+    if (["force", "all", "root", "snapshot", "prompt-sec", "dry-run", "json", "zapstore", "no-zapstore", "migrate-config", "non-interactive"].includes(name)) {
       flags.boolean.add(name);
       continue;
     }

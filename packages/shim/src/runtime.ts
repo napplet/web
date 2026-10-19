@@ -1,3 +1,5 @@
+import { installGamepadShim, handleGamepadMessage } from '@napplet/nap/gamepad/shim';
+import { handleShellMessage, installShellShim } from '@napplet/nap/shell/shim';
 import {
   NAP_DOMAINS,
 } from '@napplet/core';
@@ -97,6 +99,8 @@ const installedDomainShims = new Set<NapDomain>();
 let messageListenerInstalled = false;
 
 const DOMAIN_ROUTERS: ReadonlyArray<readonly [string, DomainHandler]> = [
+  ['gamepad.', handleGamepadMessage],
+  ['shell.', handleShellMessage],
   ['keys.', handleKeysMessage],
   ['media.', mediaShim.handleMediaMessage],
   ['notify.', handleNotifyMessage],
@@ -128,7 +132,8 @@ function handleEnvelopeMessage(event: MessageEvent): void {
   const typed = msg as { type: string; [key: string]: unknown };
   const type = typed.type;
   for (const [prefix, route] of DOMAIN_ROUTERS) {
-    if (type.startsWith(prefix)) {
+    const domain = prefix.slice(0, -1) as NapDomain;
+    if (type.startsWith(prefix) && (window as Window & { napplet?: NappletGlobal }).napplet?.[domain]) {
       route(typed);
       return;
     }
@@ -145,6 +150,12 @@ function installDomainShim(domain: NapDomain): void {
   installedDomainShims.add(domain);
 
   switch (domain) {
+    case 'gamepad':
+      installGamepadShim();
+      return;
+    case 'shell':
+      installShellShim();
+      return;
     case 'relay':
       return;
     case 'inc':

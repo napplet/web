@@ -918,3 +918,27 @@ Plans:
 - [x] 161-24-PLAN.md — Correct active docs, tutorials, and examples
 - [x] 161-25-PLAN.md — Correct shipped skill guidance and mirror assertions
 - [x] 161-26-PLAN.md — Reverse stale guard rules and enforce adopted intent boundaries
+
+### Phase 162: NIP-5D event schema migration
+
+**Goal:** Adopt the live NIP-5D event schema, retain an isolated temporary CLI legacy writer, document migration and release cutoffs, and open a verified draft PR with hzrd149 requested.
+**Requirements:** Current writers/readers, explicit CLI format selection, migration preview and skill, compatibility guide, package releases, verification and draft PR.
+**Depends on:** Phase 161
+**Plans:** 3/3 complete; local checks passed and [draft PR #224](https://github.com/napplet/web/pull/224) opened with hzrd149 requested.
+
+- [x] 162-01-PLAN.md — Current-schema writer and readers
+- [x] 162-02-PLAN.md — CLI format boundary and event migration
+- [x] 162-03-PLAN.md — Docs, release metadata and draft PR shipment
+
+### Phase 163: NAP-GAMEPAD across repositories
+
+**Goal:** Implement the proposed GAMEPAD API/runtime/tooling across all organization repositories and applicable packages, including boilerplate. Non-normative acceptance defers to [NAP-GAMEPAD](https://github.com/napplet/naps/pull/108) and [NIP-5D](https://github.com/nostr-protocol/nips/pull/2303).
+**Requirements:** GP-API, GP-WIRE, GP-ISOLATION, GP-TRUST, GP-REPOS, GP-DOCS, GP-SHIP (defined in 163-CONTEXT.md)
+**Depends on:** Phase 162
+**Plans:** 3 plans — COMPLETE
+
+- [x] 163-01-PLAN.md — Portable API, core types, runtime binding and SDK exports
+- [x] 163-02-PLAN.md — Host isolation, injection and conformance
+- [x] 163-03-PLAN.md — All repositories, docs, releases and coordinated PR shipment
+
+Verified and shipped in [web #242](https://github.com/napplet/web/pull/242), [Kehto #297](https://github.com/kehto/web/pull/297), and five consumer/community PRs linked in COVERAGE.md. Publish the Kehto package set before the primary release. The optional native API replacement conflict and existing CVM baseline failures remain disclosed.

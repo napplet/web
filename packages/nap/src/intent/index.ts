@@ -28,6 +28,10 @@ export type {
   IntentHandlerPreference,
   IntentBehavior,
   IntentOpenOptions,
+  IntentInvokeOptions,
+  IntentHandlerHint,
+  IntentContract,
+  IntentDelivery,
   IntentRequest,
   IntentCandidate,
   IntentAvailability,
@@ -40,6 +44,7 @@ export type {
   IntentHandlersMessage,
   IntentHandlersResultMessage,
   IntentChangedMessage,
+  IntentDeliverMessage,
   IntentOutboundMessage,
   IntentInboundMessage,
   IntentNapMessage,
@@ -53,6 +58,7 @@ export {
   available,
   handlers,
   onChanged,
+  onDelivery,
 } from './shim.js';
 
 export {
@@ -61,6 +67,7 @@ export {
   intentAvailable,
   intentHandlers,
   intentOnChanged,
+  intentOnDelivery,
 } from './sdk.js';
 
 import { registerNap } from '@napplet/core';

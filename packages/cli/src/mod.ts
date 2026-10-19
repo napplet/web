@@ -14,7 +14,7 @@
  * napplet guide
  * napplet create feed
  * cd feed
- * napplet init --relay wss://relay.example --server https://blossom.example --name feed --title Feed --archetype note:napplet:note/open
+ * napplet init --relay wss://relay.example --server https://blossom.example --name feed --title Feed --archetype napplet:note/open
  * npx skills add napplet/napplet
  * napplet debug
  * napplet deploy --dry-run --sec nsec1...
@@ -23,7 +23,7 @@
  * Use the root `@napplet/cli` entrypoint when another tool needs the same
  * building blocks as the command implementation:
  *
- * - read and write `.napplet/config.json`
+ * - read and write `.napplet/config.yaml`
  * - discover deployable `index.html` artifacts
  * - create root, named, and snapshot deploy plans
  * - extract title, description, hash, and file metadata from built artifacts
@@ -56,6 +56,7 @@
  */
 
 export * from "./config.ts";
+export { migrateConfig, type ConfigMigrationOptions } from "./config-migration.ts";
 export * from "./deploy-plan.ts";
 export * from "./deploy-signer.ts";
 export * from "./discover.ts";
@@ -64,9 +65,12 @@ export * from "./init-wizard.ts";
 export * from "./keys-command.ts";
 export * from "./key-store.ts";
 export * from "./manifest.ts";
+export * from "./manifest-format.ts";
+export * from "./migrate.ts";
 export * from "./output.ts";
 export * from "./prompt.ts";
 export * from "./process.ts";
 export * from "./signing.ts";
 export * from "./suggestions.ts";
 export * from "./types.ts";
+export * from "./zapstore.ts";

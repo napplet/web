@@ -1,6 +1,6 @@
 {
   "name": "@napplet/conformance",
-  "version": "0.17.0",
+  "version": "0.20.2",
   "description": "Framework-agnostic napplet protocol conformance engine — reference mock shell, per-NAP envelope validators, manifest validator, check registry, and reporters",
   "type": "module",
   "main": "./dist/index.js",
@@ -20,10 +20,10 @@
     "access": "public"
   },
   "dependencies": {
-    "@napplet/core": "workspace:^",
-    "@napplet/nap": "workspace:^"
+    "@napplet/core": "workspace:^"
   },
   "devDependencies": {
+    "@napplet/nap": "workspace:^",
     "@types/node": "^22.15.0",
     "happy-dom": "^20.10.3",
     "tsup": "^8.5.0",

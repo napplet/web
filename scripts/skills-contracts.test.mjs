@@ -10,12 +10,14 @@ const skillsDir = path.join(root, 'skills');
 const EXPECTED_SKILLS = [
   'napplet-make',
   'napplet-design',
+  'napplet-icon',
   'napplet-ui',
   'napplet-build',
   'napplet-sdk',
   'napplet-interop',
   'napplet-port',
   'napplet-test',
+  'napplet-migrate',
 ];
 
 function parseFrontmatter(markdown) {
@@ -118,10 +120,28 @@ test('build and design keep the boilerplate-first and OUTBOX-first guidance', ()
   assert.match(design, /density:/);
 });
 
+test('keyboard action registration guidance includes shortcuts and games throughout the workflow', () => {
+  for (const name of ['napplet-make', 'napplet-design', 'napplet-build', 'napplet-sdk', 'napplet-port', 'napplet-test']) {
+    const source = skills.get(name).source;
+    assert.match(source, /maximum compatibility/i, name);
+    assert.match(source, /register[^\n]*keyboard-bound action|keyboard-bound action[^\n]*register/i, name);
+    assert.match(source, /shortcuts[^\n]*game controls/i, name);
+    assert.match(source, /https:\/\/github\.com\/napplet\/naps\/pull\/9/, name);
+    assert.match(source, /ordinary text input/i, name);
+  }
+  const sdk = skills.get('napplet-sdk').source;
+  assert.match(sdk, /keys\.register/);
+  assert.match(sdk, /shell chooses the actual keymap/i);
+  const verification = skills.get('napplet-test').source;
+  assert.match(verification, /changed binding/);
+  assert.match(verification, /without duplicate local hotkey handling/);
+  assert.match(verification, /fallback with `keys` absent/);
+});
+
 test('the SDK reference lists every shipped domain and no skill imports the runtime shim', () => {
   const sdk = skills.get('napplet-sdk').source;
   for (const domain of [
-    'relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource',
+    'shell', 'relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource',
     'cvm', 'outbox', 'upload', 'intent', 'ble', 'webrtc', 'link', 'count', 'lists', 'serial', 'fs',
     'common', 'dm',
   ]) {
@@ -154,4 +174,20 @@ test('docs and website point at the skills.sh install command and the new skill 
   }
   const reference = await readFile(path.join(root, 'apps/docs/guide/agent-skills.md'), 'utf8');
   for (const name of EXPECTED_SKILLS) assert.match(reference, new RegExp(`\`${name}\``), name);
+});
+
+
+test('the SDK reference describes the optional shell domain instead of denying it', () => {
+  const sdk = skills.get('napplet-sdk').source;
+  assert.match(sdk, /## Optional shell environment/);
+  for (const skill of skills.values()) {
+    assert.doesNotMatch(skill.source, /There is no `(window\.napplet\.shell|shell\.ready\(\))/, skill.file);
+  }
+});
+
+test('interop teaches URI acceptance and buffered delivery from living NAPs', () => {
+  const interop = skills.get('napplet-interop').source;
+  assert.match(interop, /invoke\(uri, options\?\)/);
+  assert.match(interop, /onDelivery/);
+  assert.doesNotMatch(interop, /result\.handled|newWindow|orthogonal/);
 });

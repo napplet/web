@@ -8,11 +8,12 @@ import { toJson } from '../report/reporters.js';
 const HASH = 'c'.repeat(64);
 const goodHtml = '<!doctype html><html><head><script type="module" src="/app.js"></script></head><body></body></html>';
 const goodEvent: NappletManifestEvent = {
+  content: 'A test napplet',
   kind: NAPPLET_KIND_NAMED,
   id: 'event-id',
   tags: [
     ['d', 'demo'],
-    ['path', '/index.html', HASH],
+    ['x', HASH],
   ],
 };
 
@@ -31,7 +32,7 @@ describe('runConformance', () => {
     expect(run.summary.errors).toBe(0);
     expect(run.startedAt).toBe(1);
     expect(run.finishedAt).toBeGreaterThan(run.startedAt);
-    expect(run.checks.length).toBe(10);
+    expect(run.checks.length).toBe(11);
   });
 
   it('is not ok when an error-severity check fails', () => {
@@ -40,6 +41,18 @@ describe('runConformance', () => {
     expect(run.ok).toBe(false);
     expect(run.summary.errors).toBeGreaterThan(0);
     expect(run.checks.find((c) => c.id === 'manifest/event-kind')!.status).toBe('fail');
+  });
+
+  it.each(['R', 'O'])('keeps an unknown %s domain advisory without failing the run', (tag) => {
+    const run = runConformance(makeContext({
+      manifestEvent: { ...goodEvent, tags: [...goodEvent.tags, [tag, 'mesh']] },
+    }));
+    expect(run.ok).toBe(true);
+    expect(run.summary.errors).toBe(0);
+    expect(run.summary.warnings).toBe(1);
+    expect(run.checks.find((check) => check.id === 'manifest/requires-known')).toMatchObject({
+      status: 'fail', severity: 'warning',
+    });
   });
 
   it('produces a JSON-serializable run', () => {
@@ -56,4 +69,13 @@ describe('runConformance', () => {
     expect(run.checks).toHaveLength(1);
     expect(run.ok).toBe(true);
   });
+});
+
+it('keeps extension-bearing manifests conformant while checking required and optional fields', () => {
+  const tags = [...goodEvent.tags, ['custom', 'extra', '', '保留'], ['t', 'notes'], ['custom', 'extra', '', '保留']];
+  expect(runConformance(makeContext({ manifestEvent: { ...goodEvent, tags } })).ok).toBe(true);
+  expect(runConformance(makeContext({ manifestEvent: { ...goodEvent, content: '', tags } })).ok).toBe(false);
+  expect(runConformance(makeContext({ manifestEvent: { ...goodEvent, tags: [...tags, ['x', HASH]] } })).ok).toBe(false);
+  expect(runConformance(makeContext({ manifestEvent: { ...goodEvent, tags: [...tags, ['source', 'file:///tmp/repo']] } })).ok).toBe(false);
+  expect(runConformance(makeContext({ manifestEvent: { ...goodEvent, tags: [...tags, ['O', 'relay.subscribe']] } })).ok).toBe(false);
 });

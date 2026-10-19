@@ -54,6 +54,7 @@ export default defineConfig({
         items: [
           { text: 'What are napplets?', link: '/guide/' },
           { text: 'NIP-5D explained', link: '/guide/nip-5d' },
+          { text: 'Event migration', link: '/guide/event-migration' },
         ],
       },
       {
@@ -91,7 +92,7 @@ export default defineConfig({
       },
       {
         text: 'NAP domains',
-        items: [{ text: 'NAP domain reference', link: '/naps/' }],
+        items: [{ text: 'NAP domain reference', link: '/naps/' }, { text: 'GAMEPAD', link: '/naps/gamepad' }],
       },
       {
         text: 'Reference',

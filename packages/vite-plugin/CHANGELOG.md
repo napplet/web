@@ -1,5 +1,34 @@
 # @napplet/vite-plugin
 
+## 0.16.1
+
+### Patch Changes
+
+- Add the proposed NAP-GAMEPAD cached API, types and subpaths, runtime binding, envelope validation, conformance injection, and optional manifest-domain inference. The coordinated CLI runner follow-up selects these packages after publication. Publish Kehto Paja 0.21.0 before the screenshot package release; conformance CLI 0.3.4 is included in this package set. Native Gamepad API replacement remains deferred pending clarification of the proposal and NIP-5D namespace-only injection restriction.
+
+## 0.16.0
+
+### Minor Changes
+
+- b3c8ace: Preserve NIP-5D publishing metadata in the built HTML head before computing its artifact hash. Resolve plugin options, author declarations and inferred capabilities consistently; add icon byte input while retaining hash-only callers.
+
+  Recover current-format deploy metadata and supported data-URL icon bytes from standalone HTML without a sidecar. Upload the same decoded icon bytes, respect explicit deployment overrides and event-kind restrictions, and preserve legacy-format behavior. Embedded metadata changes now change the built artifact hash.
+
+  Validate configured and recovered Blossom upload destinations before signing manifests or uploading, with clear errors for missing values and non-origin URLs.
+
+## 0.15.0
+
+### Minor Changes
+
+- Adopt the current NIP-5D artifact-hash manifest schema for kinds 5129, 15129 and 35129. Writers emit one direct artifact `x` hash, description content, required/optional `R`/`O` domains and independent `z`/`i` advertisements. Readers verify current events and raw artifact bytes; legacy events require migration or older readers.
+
+  CLI deployment defaults to current output and offers temporary explicit legacy serialization. Add offline signed-event migration previews without altering source events or publishing. Vite builds default to a self-contained artifact; compatibility helper and sidecar names remain available. See the event migration guide for package cutoffs, immutable pointers and shell ACL/storage implications.
+
+### Patch Changes
+
+- Warn when explicit required domains are outside the built-in NAP list while preserving their `R` declarations. Source inference remains limited to known domains (#223).
+- Builds without `dist/index.html` fail with a clear `[nip5a-manifest]` error instead of a raw ENOENT, and `artifactMode: 'external-assets'` builds warn that the manifest `x` hash covers only `index.html` and list the remaining local assets.
+
 ## 0.14.1
 
 ### Patch Changes

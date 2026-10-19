@@ -1,6 +1,7 @@
 import { createDeployPlan } from "./deploy-plan.ts";
 import { discoverNapplets } from "./discover.ts";
 import { createDeployManifestTemplates } from "./manifest.ts";
+import type { ManifestFormat } from "./manifest-format.ts";
 import { detectSecretFormat } from "./signing.ts";
 import type { DeploySelection, NappletConfig, SigningMethod } from "./types.ts";
 
@@ -42,6 +43,8 @@ export interface DebugReport {
     }>;
   };
   manifests: {
+    format: ManifestFormat;
+    error?: string;
     count: number;
     buildable: number;
     skipped: number;
@@ -50,7 +53,8 @@ export interface DebugReport {
       kind: number;
       dTag?: string;
       fileCount: number;
-      aggregateHash: string;
+      aggregateHash?: string;
+      artifactHash?: string;
       hasTemplate: boolean;
       skippedReason?: string;
     }>;
@@ -72,10 +76,25 @@ export interface SigningDebugInfo {
   notes: string[];
 }
 
+/**
+ * Build a read-only diagnostic report of config, discovery, deploy plan, manifests and signing.
+ *
+ * Manifest template failures are recorded in `manifests.error` instead of aborting the report.
+ *
+ * @param config Loaded napplet CLI config.
+ * @param options Working directory, deploy selection, event format and signing inputs.
+ * @returns Report suitable for JSON output by `napplet debug`.
+ * @example
+ * ```ts
+ * const report = await createDebugReport(config, { format: "current" });
+ * if (report.manifests.error) console.error(report.manifests.error);
+ * ```
+ */
 export async function createDebugReport(
   config: NappletConfig,
   options: {
     cwd?: string;
+    format?: ManifestFormat;
     configPath?: string;
     traverse?: boolean;
     selection?: Partial<DeploySelection>;
@@ -90,7 +109,16 @@ export async function createDebugReport(
     configPath: options.configPath,
     traverse: options.traverse,
   });
-  const manifests = await createDeployManifestTemplates(plan, config);
+  const format = options.format ?? "current";
+  // NIP-5D §Manifest: current-format content MUST be a non-empty description, and deploy
+  // keeps enforcing that. Debug records the failure instead of crashing (PR224-F4).
+  let manifests: Awaited<ReturnType<typeof createDeployManifestTemplates>> = [];
+  let manifestError: string | undefined;
+  try {
+    manifests = await createDeployManifestTemplates(plan, config, { format });
+  } catch (error) {
+    manifestError = error instanceof Error ? error.message : String(error);
+  }
 
   return {
     cwd,
@@ -132,6 +160,8 @@ export async function createDebugReport(
       })),
     },
     manifests: {
+      format,
+      error: manifestError,
       count: manifests.length,
       buildable: manifests.filter((manifest) => manifest.template).length,
       skipped: manifests.filter((manifest) => manifest.skippedReason).length,
@@ -141,6 +171,7 @@ export async function createDebugReport(
         dTag: manifest.item.dTag,
         fileCount: manifest.files.length,
         aggregateHash: manifest.aggregateHash,
+        artifactHash: manifest.artifactHash,
         hasTemplate: manifest.template !== undefined,
         skippedReason: manifest.skippedReason,
       })),

@@ -1,7 +1,7 @@
 import type {
   IntentAvailability,
-  IntentOpenOptions,
-  IntentRequest,
+  IntentInvokeOptions,
+  IntentDelivery,
   IntentResult,
   Subscription,
 } from '@napplet/core';
@@ -17,33 +17,32 @@ import type { SdkDomain } from './sdk-domain.js';
  * import { intent } from '@napplet/sdk';
  *
  * if ((await intent.available('note')).available) {
- *   await intent.open('note', { event: id }, { convention: 'napplet:note/open' });
+ *   await intent.open('napplet:note/open', { payload: { event: id } });
  * }
  * ```
  */
 export const intent: SdkDomain<'intent'> = {
   /**
    * Invoke an archetype request.
-   * @param request Archetype, action, convention, payload, and behavior hints
+   * @param uri Authoritative convention URI
+   * @param options Structured payload and runtime selection hints
    * @returns Promise resolving to the dispatch result
    */
-  invoke(request: IntentRequest): Promise<IntentResult> {
-    return requireDomain('intent').invoke(request);
+  invoke(uri: string, options?: IntentInvokeOptions): Promise<IntentResult> {
+    return requireDomain('intent').invoke(uri, options);
   },
 
   /**
    * Open a napplet by archetype.
-   * @param archetype Role slug to open
-   * @param payload Optional opaque payload
-   * @param opts Optional convention, handler preference, and behavior hints
+   * @param uri Convention URI whose action is open
+   * @param options Structured payload and runtime selection hints
    * @returns Promise resolving to the dispatch result
    */
   open(
-    archetype: string,
-    payload?: unknown,
-    opts?: IntentOpenOptions,
+    uri: string,
+    options?: IntentInvokeOptions,
   ): Promise<IntentResult> {
-    return requireDomain('intent').open(archetype, payload, opts);
+    return requireDomain('intent').open(uri, options);
   },
 
   /**
@@ -73,4 +72,14 @@ export const intent: SdkDomain<'intent'> = {
     return requireDomain('intent').onChanged(handler);
   },
 
+  /**
+   * Receive runtime-attested deliveries, including those retained before registration.
+   * @param handler Called with each delivery
+   * @returns A Subscription with close() to stop listening
+   * @example
+   * intent.onDelivery(({ payload }) => render(payload));
+   */
+  onDelivery(handler: (delivery: IntentDelivery) => void): Subscription {
+    return requireDomain('intent').onDelivery(handler);
+  },
 };

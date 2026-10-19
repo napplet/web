@@ -1,3 +1,4 @@
+import { normalizeSourceOverride } from "./repository-source.ts";
 import {
   CONFIG_DIR,
   CONFIG_FILE,
@@ -6,8 +7,13 @@ import {
   type NappletConfig,
   type NappletDeployMetadata,
 } from "./types.ts";
-import { dirname, joinPath, resolvePath } from "./path.ts";
+import { joinPath, resolvePath } from "./path.ts";
+import {
+  configDocumentData, parseConfigDocument, readConfigText, renderConfigYaml,
+  requireYamlConfig, writeConfigText, yamlConfigPath,
+} from "./config-storage.ts";
 import { normalizeDTag } from "./manifest.ts";
+import { normalizeZapstoreConfig } from "./zapstore.ts";
 
 /** DEFAULT_CONFIG constant used by configuration helpers. */
 export const DEFAULT_CONFIG: NappletConfig = {
@@ -79,16 +85,10 @@ export function configPath(cwd: string = Deno.cwd()): string {
 
 /** read config helper for configuration. */
 export async function readConfig(path: string = configPath()): Promise<NappletConfig | null> {
-  try {
-    const raw = await Deno.readTextFile(path);
-    return normalizeConfig(JSON.parse(raw));
-  } catch (error) {
-    if (error instanceof Deno.errors.NotFound) return null;
-    if (error instanceof SyntaxError) {
-      throw new Error(`Invalid JSON in ${path}: ${error.message}`);
-    }
-    throw error;
-  }
+  await requireYamlConfig(path);
+  path = yamlConfigPath(path);
+  const raw = await readConfigText(path);
+  return raw === null ? null : normalizeConfig(configDocumentData(parseConfigDocument(raw, path), path));
 }
 
 /** write config helper for configuration. */
@@ -96,14 +96,18 @@ export async function writeConfig(
   config: NappletConfig,
   path: string = configPath(),
 ): Promise<void> {
-  await Deno.mkdir(dirname(path), { recursive: true });
-  await Deno.writeTextFile(path, `${JSON.stringify(normalizeConfig(config), null, 2)}\n`);
+  await requireYamlConfig(path);
+  path = yamlConfigPath(path);
+  const previous = await readConfigText(path);
+  const mode = previous === null ? undefined : (await Deno.stat(path)).mode ?? undefined;
+  await writeConfigText(path, renderConfigYaml(normalizeConfig(config), previous, path), { mode });
 }
 
 /** init config helper for configuration. */
 export async function initConfig(
   options: {
     cwd?: string;
+    path?: string;
     force?: boolean;
     sourceDir?: string;
     relays?: string[];
@@ -114,10 +118,10 @@ export async function initConfig(
   } = {},
 ): Promise<{ path: string; config: NappletConfig; created: boolean }> {
   const cwd = options.cwd ?? Deno.cwd();
-  const path = configPath(cwd);
+  const path = options.path ?? configPath(cwd);
   const existing = await readConfig(path);
   if (existing && !options.force) {
-    return { path, config: existing, created: false };
+    return { path: yamlConfigPath(path), config: existing, created: false };
   }
 
   const config = defaultConfig({
@@ -129,13 +133,13 @@ export async function initConfig(
     metadata: options.metadata,
   });
   await writeConfig(config, path);
-  return { path, config, created: true };
+  return { path: yamlConfigPath(path), config, created: true };
 }
 
 /** normalize config helper for configuration. */
 export function normalizeConfig(input: unknown): NappletConfig {
-  if (!input || typeof input !== "object") {
-    throw new Error("Config must be a JSON object");
+  if (!input || typeof input !== "object" || Array.isArray(input)) {
+    throw new Error("Config must be an object");
   }
   const value = input as Partial<NappletConfig>;
   if (value.version !== undefined && value.version !== 1) {
@@ -155,6 +159,7 @@ export function normalizeConfig(input: unknown): NappletConfig {
     bunkerPubkey: typeof value.bunkerPubkey === "string" ? value.bunkerPubkey : undefined,
     named,
     metadata,
+    zapstore: normalizeZapstoreConfig(value.zapstore),
     discover: value.discover
       ? {
         enabled: value.discover.enabled ?? true,
@@ -176,8 +181,15 @@ export function normalizeConfig(input: unknown): NappletConfig {
   });
 }
 
-/** Normalize and validate one `slug:convention` automation value. */
+/**
+ * Normalize a convention URI, accepting the older role-prefixed CLI input.
+ * @param value Queryless convention URI or legacy role-prefixed CLI value.
+ * @returns The role and convention used for manifest advertisements.
+ * @example parseArchetypeConvention("napplet:note/open")
+ */
 export function parseArchetypeConvention(value: string): NappletArchetypeConvention {
+  value = value.trim();
+  if (value.startsWith("napplet:")) return normalizeArchetypeConvention(value, "archetype");
   const separator = value.indexOf(":");
   const slug = separator === -1 ? "" : value.slice(0, separator).trim();
   const convention = separator === -1 ? "" : value.slice(separator + 1).trim();
@@ -219,7 +231,10 @@ function normalizeMetadata(value: unknown): NappletDeployMetadata | undefined {
     name,
     title,
     description,
+    source: normalizeSourceOverride(metadata.source),
     archetypes,
+    requires: metadata.requires === undefined ? undefined : stringArray(metadata.requires, "metadata.requires"),
+    optional: metadata.optional === undefined ? undefined : stringArray(metadata.optional, "metadata.optional"),
   };
 }
 
@@ -227,15 +242,16 @@ function normalizeArchetypeConvention(
   value: unknown,
   field: string,
 ): NappletArchetypeConvention {
+  if (typeof value === "string") {
+    const convention = value.trim();
+    value = { slug: /^napplet:([^/]+)\//.exec(convention)?.[1], convention };
+  }
   if (!value || typeof value !== "object" || Array.isArray(value)) {
-    throw new Error(`${field} must use slug:convention (for example note:napplet:note/open)`);
+    throw new Error(`${field} must be a convention URI (for example napplet:note/open) or an object with slug and convention`);
   }
   const conventionValue = value as Partial<NappletArchetypeConvention>;
   const slug = optionalString(conventionValue.slug, `${field}.slug`);
   const convention = optionalString(conventionValue.convention, `${field}.convention`);
-  if (!slug || !/^[a-z0-9][a-z0-9-]*$/.test(slug)) {
-    throw new Error(`${field} slug must contain lowercase letters, numbers, and hyphens`);
-  }
   if (convention && /^NAP-[1-9][0-9]*$/.test(convention)) {
     throw new Error(`${field} convention must use napplet:<archetype>/<intent>, not a numbered NAP identifier`);
   }
@@ -246,7 +262,10 @@ function normalizeArchetypeConvention(
   if (!conventionMatch) {
     throw new Error(`${field} convention must use queryless napplet:<archetype>/<intent>`);
   }
-  return { slug, convention };
+  if (!slug || !/^[a-z0-9][a-z0-9-]*$/.test(slug)) {
+    throw new Error(`${field} slug must contain lowercase letters, numbers, and hyphens`);
+  }
+  return { slug, convention, ...(conventionValue.params === undefined ? {} : { params: stringArray(conventionValue.params, `${field}.params`) }) };
 }
 
 function optionalString(value: unknown, field: string, allowEmpty = false): string | undefined {

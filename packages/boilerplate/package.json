@@ -1,6 +1,6 @@
 {
   "name": "@napplet/boilerplate",
-  "version": "0.3.3",
+  "version": "0.4.0",
   "description": "Project scaffold generator for the napplet boilerplate template",
   "type": "module",
   "main": "./dist/index.js",
@@ -45,5 +45,8 @@
     "boilerplate",
     "generator",
     "nip-5d"
-  ]
+  ],
+  "dependencies": {
+    "fflate": "0.8.2"
+  }
 }

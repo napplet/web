@@ -7,6 +7,14 @@ const ID = { id: 'string' } as const;
  * NAP domains, with its direction and (for outbound) required fields.
  */
 export const ENVELOPE_SPECS: Record<string, EnvelopeSpec> = {
+  // NAP-GAMEPAD Wire Protocol: all three messages are fire-and-forget, without ids.
+  // https://github.com/napplet/naps/pull/108
+  'gamepad.subscribe': { dir: 'out', forbiddenFields: ['id'], forbiddenReason: 'NAP-GAMEPAD fire-and-forget envelopes do not carry it' },
+  'gamepad.unsubscribe': { dir: 'out', forbiddenFields: ['id'], forbiddenReason: 'NAP-GAMEPAD fire-and-forget envelopes do not carry it' },
+  'gamepad.state': { dir: 'in', fields: { available: 'boolean', focused: 'boolean', pads: 'array' } },
+  // Optional NAP-SHELL environment, independent of other domains.
+  'shell.ready': { dir: 'out' },
+  'shell.init': { dir: 'in', fields: { capabilities: 'object', services: 'array' } },
   // ── relay ────────────────────────────────────────────────────────────────
   'relay.subscribe': { dir: 'out', fields: { ...ID, subId: 'string', filters: 'array' } },
   'relay.close': { dir: 'out', fields: { ...ID, subId: 'string' } },
@@ -176,6 +184,7 @@ export const ENVELOPE_SPECS: Record<string, EnvelopeSpec> = {
   'intent.invoke.result': { dir: 'in', fields: { ...ID, result: 'object' } },
   'intent.available.result': { dir: 'in' },
   'intent.handlers.result': { dir: 'in' },
+  'intent.deliver': { dir: 'in', fields: { delivery: 'object' } },
   'intent.changed': { dir: 'in' },
 
   // ── ble ──────────────────────────────────────────────────────────────────

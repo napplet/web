@@ -135,6 +135,7 @@ export {
   intentAvailable,
   intentHandlers,
   intentOnChanged,
+  intentOnDelivery,
 } from '@napplet/nap/intent';
 export {
   bleOpen,
@@ -202,3 +203,7 @@ export {
   dmUnsubscribe,
   dmOnMessage,
 } from '@napplet/nap/dm';
+
+export { shellReady, shellSupports, shellOnReady, installShellShim, DOMAIN as SHELL_DOMAIN } from '@napplet/nap/shell';
+
+export { DOMAIN as GAMEPAD_DOMAIN, installGamepadShim, gamepadGetGamepads, gamepadAvailable, gamepadFocused, gamepadOnChange } from '@napplet/nap/gamepad';

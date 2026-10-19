@@ -1,8 +1,12 @@
 # @napplet/cli
 
-Standalone CLI for creating, configuring, inspecting, testing, and deploying napplets. The binary does not require Deno, Node.js, or an npm package resolver for `napplet create`: it calls the bundled generator directly. Agent skills are installed with the open skills CLI (`npx skills add napplet/napplet`), not by this binary.
+Standalone CLI for creating, configuring, inspecting, testing, and deploying napplets. The standalone binary runs every built-in command without separately installed Node.js, npm, npx, Deno, Git, Kehto, or browser tooling. Screenshot, conformance, and Paja commands download a private, checksum-verified Node runtime and maintained packages on first use; browser commands also provision Chromium. Linux captures include the browser libraries and fonts. Downloads live in the CLI cache and never install into your project or global PATH.
 
-Use it to create a `.napplet/config.json`, find built `index.html` artifacts, inspect the deploy plan, sign manifest events, upload files to Blossom servers, publish to relays, and run local napplet tooling such as conformance and Paja.
+First use of these tools requires network access and a writable cache. Later invocations reuse the downloads. The default cache is `~/Library/Caches/napplet` on macOS, `$XDG_CACHE_HOME/napplet` (or `~/.cache/napplet`) on Linux, and `%LOCALAPPDATA%\napplet` on Windows. Set `NAPPLET_CACHE_DIR` to choose another location; copying a populated cache between machines with the same OS and architecture supports offline tooling. User-configured `conformance.command`, `paja.command`, and app-server commands passed to Paja use the software you explicitly select.
+
+The generated Vite project and the optional skills.sh CLI have their own development dependencies; they are separate from running `napplet` commands.
+
+Use it to create a `.napplet/config.yaml`, find built `index.html` artifacts, inspect the deploy plan, sign manifest events, upload files to Blossom servers, publish to relays, and run local napplet tooling such as conformance and Paja.
 
 ## Install
 
@@ -18,7 +22,16 @@ curl -fsSL https://napplet.run/install.sh | sh
 irm https://napplet.run/install.ps1 | iex
 ```
 
-The installers select a supported release asset and verify it against `SHA256SUMS` before replacing the executable. Supported assets are Linux x64 / ARM64, macOS x64 / ARM64, and Windows x64.
+The installers download a supported asset from the [stable CLI release](https://github.com/napplet/napplet/releases/tag/napplet-cli) and verify it against `SHA256SUMS` before replacing the executable. Supported assets are Linux x64 / ARM64, macOS x64 / ARM64, and Windows x64.
+
+### Check the installed version
+
+```sh
+napplet --version
+# Also available: napplet -v or napplet version
+```
+
+This prints the version of the CLI you actually invoked. If you have both standalone and Deno installations, use `type -a napplet` on macOS/Linux or `Get-Command napplet -All` in PowerShell to check which executable takes precedence. A version command reported as unknown means that installation predates version reporting.
 
 ### JSR/Deno alternative
 
@@ -29,10 +42,13 @@ deno install --global \
   jsr:@napplet/cli/cli
 ```
 
+To refresh an existing JSR installation, rerun the command with `--force --reload` after `--global`. Then check the Deno-installed executable directly (`~/.deno/bin/napplet --version` with Deno's default install location); another `napplet` earlier on `PATH` is unaffected. See [Deno's install reference](https://docs.deno.com/runtime/reference/cli/install/) for custom install locations and upgrade flags.
+
+
 The permission set is intentionally explicit:
 
-- `--allow-read` reads `.napplet/config.json`, built napplet files, and keychain command output.
-- `--allow-write` writes `.napplet/config.json` and temporary deploy state.
+- `--allow-read` reads `.napplet/config.yaml`, built napplet files, and keychain command output.
+- `--allow-write` writes `.napplet/config.yaml` and temporary deploy state.
 - `--allow-run` calls system keychain helpers, conformance, and Paja wrapper commands.
 - `--allow-env` reads signing and CI environment variables.
 - `--allow-net` uploads to Blossom servers, publishes to relays, and connects to remote signers.
@@ -84,9 +100,9 @@ napplet deploy
 What each step does:
 
 - `napplet create` delegates to `@napplet/boilerplate` and creates the starter only.
-- `napplet init` owns deployment name, title, description, archetype roles and conventions, relays, and Blossom servers in `.napplet/config.json`; scripts can pass the same fields explicitly.
+- `napplet init` owns deployment name, title, description, archetype roles and conventions, relays, and Blossom servers in `.napplet/config.yaml`; scripts can pass the same fields explicitly.
 - `npx skills add napplet/napplet` installs the `napplet-*` agent skills through the skills.sh CLI (Claude Code, Codex, Cursor, and 70+ other agents); it is not a `napplet` subcommand.
-- `napplet debug` prints resolved config, discovered napplets, deploy targets, manifest templates, and signing readiness without uploading or publishing.
+- `napplet debug` prints resolved config, discovered napplets, deploy targets, manifest templates, and signing readiness without uploading or publishing. Manifest template failures (for example a missing description, or built files a current deploy would drop) are reported in `manifests.error` instead of aborting, and `--format current|legacy` selects the event format inspected.
 - `napplet deploy --dry-run` builds the same deploy plan and signed manifest events without network writes. Interactive terminals get a readable report with copyable NIP-19 pointers.
 - `napplet deploy` uploads files to configured Blossom servers and publishes signed root, named, and optional snapshot manifest events to configured relays. Use `--json` for CI / machine output.
 
@@ -95,10 +111,10 @@ What each step does:
 ```sh
 napplet guide
 napplet create <directory> [--template <path-or-url>] [--force]
-napplet init [--force] [--root] [--source-dir <dir>] [--name <dtag>] [--title <title>] [--description <text>] [--archetype <slug:convention>] [--relay <url>] [--server <url>]
+napplet init [--force] [--root] [--source-dir <dir>] [--name <dtag>] [--title <title>] [--description <text>] [--archetype <napplet:archetype/intent>] [--relay <url>] [--server <url>]
 napplet discover [--config <file>] [--all]
-napplet debug [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>]
-napplet deploy [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>] [--prompt-sec] [--dry-run] [--json]
+napplet debug [--format current|legacy] [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>]
+napplet deploy [--format current|legacy] [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>] [--prompt-sec] [--zapstore | --no-zapstore] [--screenshot [<preview-url>]] [--dry-run] [--json]
 napplet keys store --name <ref> [--sec <secret> | --prompt-sec]
 napplet keys connect --name <ref> [--relay <url> ...] [--config <file>]
 napplet keys use --name <ref> [--config <file>]
@@ -111,43 +127,42 @@ napplet paja [--config <file>] [-- <args>]
 
 ### `init`
 
-Creates `.napplet/config.json` unless it already exists. Use `--force` to overwrite it. For named deployments, the NIP-5A d-tag must match `^[a-z0-9-]+$` and cannot end in `-`. Each archetype value pairs a role slug with one convention, for example `note:napplet:note/open`; there is no generic `type` manifest tag.
+Creates `.napplet/config.yaml` unless it already exists. Use `--force` to overwrite it. For named deployments, the NIP-5D d-tag must match `^[a-z0-9-]+$` and cannot end in `-`. Pass a queryless convention URI such as `napplet:note/open`; the CLI derives the role `note` from the URI.
 
-The `--archetype` flag and interactive wizard intentionally remain `slug:convention` input only; there is no CLI kinds flag or delimiter. Optional event-kind discovery metadata belongs in the object-shaped config entry, not in the convention URI.
+The `--archetype` flag and interactive wizard accept convention URIs directly. YAML `metadata.archetypes` entries also accept URI strings, such as `["napplet:note/open"]`, and normalize them to the object form below. Existing object configs and older role-prefixed CLI inputs remain supported. Use object entries with `params` to advertise parameter names; these are not event-kind restrictions.
 
 In an interactive terminal, `napplet init` guides setup for source directory, root-vs-named target, name, title, optional description, archetype roles and conventions, relays, and Blossom servers. Relay suggestions come from best-effort [NIP-66](https://nips.nostr.com/66) discovery events on relay discovery relays such as `wss://relaypag.es`; curated general-purpose relays are completed first, followed by live discoveries. Blossom suggestions come from best-effort [NIP-B7](https://nips.nostr.com/b7) kind `10063` server-list events, with bundled defaults when live discovery is unavailable. Suggestions are advisory Tab-completion candidates; the written config contains only the values you accept or type.
 
 ```sh
 napplet init
-napplet init --source-dir . --name feed --title Feed --archetype note:napplet:note/open --relay wss://relay.example --server https://blossom.example
+napplet init --source-dir . --name feed --title Feed --archetype napplet:note/open --relay wss://relay.example --server https://blossom.example
 napplet init --root --relay wss://relay.example --server https://blossom.example
 ```
 
 Example config:
 
-```json
-{
-  "version": 1,
-  "sourceDir": ".",
-  "relays": ["wss://relay.example"],
-  "blossomServers": ["https://blossom.example"],
-  "defaultTarget": "named",
-  "named": ["feed"],
-  "metadata": {
-    "name": "feed",
-    "title": "Feed",
-    "description": "A focused feed reader",
-    "archetypes": [{
-      "slug": "note",
-      "convention": "napplet:note/open"
-    }]
-  }
-}
+```yaml
+version: 1
+sourceDir: .
+relays:
+  - wss://relay.example
+blossomServers:
+  - https://blossom.example
+defaultTarget: named
+named:
+  - feed
+metadata:
+  name: feed
+  title: Feed
+  description: A focused feed reader
+  archetypes:
+    - slug: note
+      convention: napplet:note/open
 ```
 
-Valid config metadata takes precedence over title/description/archetype defaults found in built HTML or the Vite plugin sidecar. Legacy configs without `metadata` retain their existing fallback behavior. Each object emits one queryless manifest tag: `["archetype", "note", "napplet:note/open"]`. The role slug and convention's own archetype segment are independent under [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md). A metadata-free template keeps its canonical archetype tags; providing `metadata.archetypes` replaces those tags with the configured objects.
+Valid config metadata takes precedence over title/description/archetype defaults found in built HTML or the Vite plugin sidecar. Legacy configs without `metadata` retain their existing fallback behavior. Each object emits independent current tags: `["z", "note"]` and `["i", "napplet:note/open"]`; optional `params` lists advertised parameter names. Under [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md#manifest-catalog-contract), a convention is eligible for dispatch only when its archetype segment matches a `z` role on the same manifest. A metadata-free template keeps its canonical archetype tags; providing `metadata.archetypes` replaces those tags with the configured objects. A domain listed as both required and optional is emitted only as `O`, matching the Vite plugin.
 
-The convention string remains queryless after validation: it does not select a payload schema, query rule, matching rule, or inferred event kind. This non-normative guide follows the adopted [NAP-INC #89 `4593ce9`](https://github.com/napplet/naps/blob/4593ce9e301ce098fd3dad64206fcd6f144fa7af/naps/NAP-INC.md), [URI terminology #90 `896c32c`](https://github.com/napplet/naps/commit/896c32c92deee68dc4d10fc1132b62df20cccb6f), and [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md).
+This non-normative guide defers to the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md) specification. Manifest convention identities are queryless and fragment-free; parameter values belong to invocation payloads.
 
 ### `discover`
 
@@ -190,13 +205,13 @@ Signing can come from:
 
 The human deploy report includes each signed manifest event's short event id plus a copyable `nevent` pointer. Addressable root and named manifests also include copyable `naddr` pointers using the configured relay hints.
 
-When a built napplet includes a plugin-generated `.nip5a-manifest.json`, signed or unsigned, deploy preserves canonical `requires` and `archetype` tags from that sidecar on root, named, and companion snapshot manifests.
+When a built napplet includes a `.nip5a-manifest.json` sidecar, signed or unsigned, deploy preserves additional Nostr tags on root, named, and companion snapshot manifests, including their complete string payloads and repeated values. There is no tag-name allowlist. Explicit config overrides and CLI-managed artifact hashes, identifiers, lineage, server selection, and client attribution still apply. Legacy sidecars translate `requires`/`archetype` to current `R` and `z`/`i`; those names, along with `path` and `description`, remain opaque extra tags when supplied by a current-format event. Current event content is resolved separately from extra `description` tags. Migration likewise preserves additional tags and their multiplicity while converting actual legacy fields.
 
-Deploy also reads the built `index.html` and emits single `title` and `description` manifest tags from its plain HTML `<title>` and `<meta name="description">` values when present.
+Deploy also recovers current NIP-5D publishing metadata from the built HTML head, including supported data-URL icon bytes, without a sidecar. Current output requires a non-empty description. See Standalone HTML recovery below for precedence and target handling.
 
 ## Signing And Keys
 
-Local key storage uses native platform secure storage: macOS Keychain, Windows Credential Manager, or Linux Secret Service through `secret-tool` with a D-Bus session. If no native provider is available, key commands fail closed rather than writing secrets to plaintext.
+Local key storage prefers native platform secure storage: macOS Keychain, Windows Credential Manager, or Linux Secret Service when available. Hosts without those utilities use password-encrypted files in `~/.napplet/keys`. The portable store uses AES-256-GCM with a fresh salt and IV per record and PBKDF2-SHA256 (600,000 iterations). Secrets are never written as plaintext. Unlock it with a password of at least 12 characters at the hidden terminal prompt, or set `NAPPLET_KEYSTORE_PASSWORD` for non-interactive use. Set `NAPPLET_KEYSTORE=portable` to select it explicitly and `NAPPLET_KEYSTORE_DIR` to change its location. Keep the same password for later retrieval; it is not saved by the CLI.
 
 ```sh
 napplet keys doctor
@@ -223,7 +238,7 @@ The command then prints a `nostrconnect://` QR code and waits for either:
 - a signer to approve the QR flow, or
 - a `bunker://` URL pasted into stdin
 
-On success it stores an `nbunksec` in the platform keychain, updates `.napplet` `signing.keyReference`, and uses that stored reference for later deploy signing.
+On success it stores an `nbunksec` in the selected key store, updates `.napplet` `signing.keyReference`, and uses that stored reference for later deploy signing.
 
 Plain interactive `napplet deploy` uses the same NIP-46 flow when no signer flag or stored signer is available. It prompts for bunker relays before showing the QR code; deploy relays from `.napplet` are not used as the NIP-46 relay default. It stores the paired session under the remote signer pubkey when native key storage is available, writes that pubkey and the selected bunker relays to `.napplet` config, and continues the current deploy. If native key storage is unavailable, the current deploy can still proceed after pairing, but the session is not persisted for later runs.
 
@@ -237,7 +252,7 @@ The repository is one napplet. Discovery checks `sourceDir` and prefers `dist/in
 
 ```text
 my-napplet/
-├── .napplet/config.json
+├── .napplet/config.yaml
 ├── dist/
 │   └── index.html
 └── src/
@@ -257,21 +272,24 @@ Set `discover.roots` to the directories to walk, then use `--all`. Each discover
 
 ```text
 my-workspace/
-├── .napplet/config.json
+├── .napplet/config.yaml
 └── packages/
     ├── feed/dist/index.html
     ├── wiki/dist/index.html
     └── settings/dist/index.html
 ```
 
-```json
-{
-  "version": 1,
-  "relays": ["wss://relay.example"],
-  "blossomServers": ["https://blossom.example"],
-  "defaultTarget": "named",
-  "discover": { "enabled": true, "roots": ["packages"] }
-}
+```yaml
+version: 1
+relays:
+  - wss://relay.example
+blossomServers:
+  - https://blossom.example
+defaultTarget: named
+discover:
+  enabled: true
+  roots:
+    - packages
 ```
 
 ```sh
@@ -297,7 +315,7 @@ napplet conformance
 napplet conformance --all -- --verbose
 ```
 
-The default `napplet-conformance` setting runs `@napplet/conformance-cli` through `npx`, so the standalone `napplet` binary does not require a global conformance executable. Override it in `.napplet/config.json` with `conformance.command` when using another runner.
+The default `napplet-conformance` setting runs the maintained runner using the CLI’s private runtime and package cache. No host package manager or global conformance executable is required. Override it in `.napplet/config.yaml` with `conformance.command` when using another runner.
 
 `napplet paja` forwards to the configured Paja command:
 
@@ -306,12 +324,12 @@ napplet paja -- --port 5173
 napplet paja -- pnpm vite --host 127.0.0.1
 ```
 
-The default command is `kehto paja`; override it with `paja.command`. A bare command after the separator is passed to Kehto as its managed app server command.
+The default provisions `@kehto/cli@0.5.4` privately and runs its `kehto paja` command; override it with `paja.command`. A bare command after the separator is passed to Kehto as its managed app server command.
 
 ## Troubleshooting
 
 - Run `napplet debug` before `deploy`; it shows the candidates and manifest templates without publishing.
-- Run `napplet keys doctor` if key commands fail; Linux needs `secret-tool` and an active D-Bus session.
+- Run `napplet keys doctor` to see the selected store. When using encrypted local storage, provide its password at the terminal or through `NAPPLET_KEYSTORE_PASSWORD`.
 - Use `--prompt-sec` when you need an ad-hoc key without echoing it in shell history; press Enter to submit the hidden prompt. If `.napplet` is configured for another pubkey, interactive deploys warn before continuing and non-interactive prompt input fails closed.
 - Use `--json` when another program needs to parse `deploy` output.
 - Use `--dry-run` before network deploys; it signs the same manifest events without uploading files or publishing to relays.
@@ -327,3 +345,186 @@ deno task build
 ```
 
 Dependencies are declared in `deno.json` `imports`. The npm dependencies (`applesauce-signers`, `nostr-tools`) are mirrored in `package.json`; JSR-only dependencies such as `@libs/qrcode` and `@std/streams` live in `deno.json` only.
+
+
+### Compile experiments
+
+Run these tasks from a repository checkout with Deno 2.9.5 or newer. Each task compiles `src/standalone.ts` for the current machine into `packages/cli/dist/experiments/`; Windows adds `.exe`. Outputs have distinct names so experiments can be compared without replacing release artifacts. The normal `build` task checks types and builds all five release targets with QuickJS and dependency pruning (`--engine quickjs --exclude-unused-npm`). Release and standalone smoke workflows pin Deno 2.9.5. Individual compile tasks skip type checking; run `deno task check` first.
+
+| Task | Output name | Experiment |
+| --- | --- | --- |
+| `compile` | `napplet-v8` | Default V8 baseline |
+| `compile:pruned` | `napplet-pruned` | Embed only reachable npm packages (`--exclude-unused-npm`) |
+| `compile:bundle` | `napplet-bundle` | Bundle and tree-shake dependencies (`--bundle`) |
+| `compile:minify` | `napplet-minify` | Bundle and minify (`--bundle --minify`) |
+| `compile:no-code-cache` | `napplet-no-code-cache` | Omit the V8 code cache (`--no-code-cache`) |
+| `compile:small` | `napplet-small` | Combine pruning, bundling, minification, and no code cache |
+| `compile:quickjs` | `napplet-quickjs` | Use the experimental QuickJS runtime (`--engine quickjs`) |
+| `compile:quickjs-pruned` | `napplet-quickjs-pruned` | Combine QuickJS and reachable npm packages |
+| `compile:quickjs-minify` | `napplet-quickjs-minify` | Combine QuickJS, bundling, and minification |
+
+```sh
+# From the repository root:
+pnpm --filter @napplet/cli compile
+pnpm --filter @napplet/cli compile:minify
+pnpm --filter @napplet/cli compile:quickjs
+
+# Or from packages/cli:
+deno task compile:small
+./dist/experiments/napplet-small --version
+./dist/experiments/napplet-small --help
+```
+
+All five existing cross-compilation tasks also have pnpm aliases: `compile:linux-x86_64`, `compile:linux-aarch64`, `compile:darwin-x86_64`, `compile:darwin-aarch64`, and `compile:windows-x86_64`. These use QuickJS with dependency pruning and retain their `dist/napplet-<platform>` output paths. The experiment tasks use the host target; to experiment with another target, copy the corresponding command from `deno.json` and insert `--target <triple>` before `src/standalone.ts`.
+
+The host-native tasks are comparison presets; `compile:quickjs-pruned` uses the same engine and pruning settings as the platform release tasks. [Deno's compile documentation](https://docs.deno.com/runtime/reference/cli/compile/) describes the engine and bundling options. QuickJS is experimental, lacks a JIT, and does not receive the same security updates as V8. Bundling and pruning can omit dependencies loaded through computed imports; minification makes stack traces less readable. A successful compile or `--help` does not establish that deployment, signing, screenshots, or managed tools work.
+
+Run the existing standalone integration suite against a candidate binary before considering it for release. From the repository root on macOS or Linux, for example:
+
+```sh
+NAPPLET_TEST_STANDALONE=1 \
+NAPPLET_TEST_BINARY="$PWD/packages/cli/dist/experiments/napplet-small" \
+deno test --node-modules-dir=none -A packages/cli/tests/standalone_integration_test.ts
+```
+
+The `compile:pruned`, `compile:small`, `compile:quickjs`, and `compile:quickjs-pruned` binaries passed this full suite on the macOS ARM64 machine used for the measurements below. Other platforms and live publication were not exercised by these local experiments.
+
+The suite needs network access for hosted templates and managed tools. For Windows, set the same environment variables using PowerShell and include the `.exe` suffix. Compare file sizes on the same platform and Deno version; the embedded runtime contributes substantially to the result.
+
+
+### Measured on macOS ARM64
+
+Deno 2.9.5, CLI 0.9.1 source, 2026-10-15. These are local measurements, not size guarantees; workspace dependency resolution and target affect the embedded payload. All nine tasks compiled successfully.
+
+| Task | Binary size (MiB) | `--help` and `--version` |
+| --- | ---: | --- |
+| `compile` | 210.8 | Pass |
+| `compile:pruned` | 114.5 | Pass |
+| `compile:bundle` | 156.6 | Pass |
+| `compile:minify` | 155.6 | Pass |
+| `compile:no-code-cache` | 210.8 | Pass |
+| `compile:quickjs` | 181.1 | Pass |
+| `compile:quickjs-minify` | 125.9 | Fail: missing `jsr:@libs/qrcode` |
+| `compile:small` | 155.6 | Pass |
+| `compile:quickjs-pruned` | 84.8 | Pass |
+
+`compile:small` combines size-oriented flags; it is not necessarily the smallest result. In this run, pruning alone beat bundling, and disabling the code cache did not change the final size. `compile:quickjs-minify` currently produces a binary that fails at startup with `error: Module not found: jsr:@libs/qrcode`; retain it as a reproduction task while evaluating newer Deno releases.
+
+## Current and legacy event formats
+
+From CLI **0.7.0**, deployments default to the current NIP-5D artifact-hash schema. Interactive deploys ask for `current` or `legacy`; scripts can choose with `--format current|legacy`. A non-empty description is required for current event content. Legacy output remains isolated in a temporary serializer; 0.6.x and earlier defaulted to legacy events. Current deploys upload only `/index.html` plus the blob referenced by an `icon` tag; any other built file in the deploy directory makes deploy fail with the list of those files (build a single-file artifact or use `--format legacy`).
+
+```sh
+napplet deploy --dry-run --format current
+napplet deploy --format legacy
+napplet migrate signed-event.json --optional theme --output migration-preview.json
+```
+
+`migrate` verifies the source signature and writes an unsigned preview with provenance. It does not publish or modify the artifact, and refuses to overwrite an existing output file. Review description, required/optional choices and pointers before signing. See the [migration guide](https://napplet.run/docs/guide/event-migration) for format differences and shell data/consent implications.
+
+### Removing temporary legacy output
+
+Legacy serialization lives in `src/manifest-legacy.ts`; `manifest-format.ts` owns the format choice. When retiring legacy deployment, remove that serializer, the selection prompt/flag, and the `format === "legacy"` branches in manifest construction and metadata conversion. Keep signed legacy input conversion in `migrate.ts` if old-event migration remains supported. Current-schema conformance readers have no fallback to remove.
+
+## YAML configuration and JSON migration
+
+Project settings live in `.napplet/config.yaml`. YAML supports comments and uses the same configuration fields as before. Use `--config path/settings.yaml` or `--config path/settings.yml` for a custom file. Configuration updates preserve comments on unchanged values.
+
+When a command needs configuration and finds the old JSON file, it asks before migrating. Answer `y` to continue with YAML; `n` or Enter exits with `Cannot continue without migrating`. Migration retains the exact original bytes in `config.json.bak`, preserves file permissions, and removes the active JSON file only after writing YAML. Conflicting YAML or backup files stop migration without overwriting them. To roll back for an older CLI, move the YAML file aside and restore the JSON backup.
+
+CI, redirected input, `--json`, and `-i` / `--non-interactive` do not prompt for migration. Approve conversion explicitly with `--migrate-config`:
+
+```sh
+napplet init --migrate-config -i
+napplet deploy --config settings.json --migrate-config --dry-run
+```
+
+An explicit legacy `--config settings.json` path resolves to `settings.yaml` after migration, including on later invocations. The original command continues using YAML. Help and version remain available before migration. The `napplet migrate` command handles signed manifest events separately; event files and machine-readable output remain JSON.
+
+## Repository source metadata
+
+For current-format deploys, the CLI adds one `source` tag from the Git `origin` of the repository containing each selected build when neither config, the Vite sidecar, nor HTML already supplies it. Nested builds and Git worktrees are supported. HTTPS, HTTP, `ssh://`, and scp-style clone URLs are converted to HTTP(S) repository URLs; inferred URLs omit credentials, query strings, fragments, and the `.git` suffix. SSH remotes use HTTPS without the SSH port. Git is queried locally; no remote is contacted. If Git, a repository, or a usable origin is unavailable, the tag is omitted. Other remotes are not selected, and SSH host aliases are not expanded; configure their public source URL explicitly.
+
+Set `metadata.source` in `.napplet/config.yaml` to override every inferred or embedded source:
+
+```yaml
+metadata:
+  source: https://github.com/example/my-napplet
+```
+
+Use `source: false` in that object to omit the tag, including any sidecar or HTML source. A source override must be one absolute HTTP(S) URL without credentials; arrays are not accepted. The precedence is config → sidecar → HTML → Git origin. Root, named, and companion snapshot events retain the resolved source. This follows the current [NIP-5D manifest table](https://github.com/dskvr/nips/blob/nip/5d/5D.md#manifest), which permits zero or one `source` tag. Automatic Git inference does not apply to `--format legacy`; an explicit config override still does. These are CLI defaults, not additional protocol requirements.
+
+## Standalone HTML recovery
+
+The CLI reads the head mappings from [NIP-5D, HTML Metadata for Publishing](https://github.com/nostr-protocol/nips/pull/2303), including title, description, named identifier, roles, intents with advertised parameters, required/optional domains, source, server hints, and supported PNG/JPEG/WebP data-URL icons. This is non-normative implementation guidance; the living specification remains authoritative. Embedded metadata is optional, remains untrusted publishing input, and does not replace signed manifest verification at runtime.
+
+For current-format deployment, explicit config metadata overrides matching sidecar categories, which override matching head categories. Missing categories fall back to HTML. Explicit target/name selection and configured names override `napplet-id`; a single-project named deploy without a configured name uses the sidecar identifier, then the head identifier, before the existing `default` fallback. Monorepo traversal retains folder-based naming and filtering. Configured Blossom servers override embedded hints; when none are configured, recovered server hints supply upload destinations. The CLI validates selected destinations before manifest signing or upload: each must be a non-empty HTTP(S) origin without credentials, a path, a query, or a fragment; a trailing slash is accepted. Invalid destinations produce an error identifying their config or manifest-hint position. Relay and signing configuration are still needed for publication.
+
+Root and named events omit lineage tags. Companion snapshots retain the CLI's selected source address as their parent; head provenance does not replace that explicit selection. Root/snapshot events omit the named identifier. Deployment does not rewrite the HTML when config or selection overrides its hints: it hashes and uploads the original bytes and signs the resolved metadata separately.
+
+Decoded icon bytes are hashed and uploaded unchanged alongside the HTML, even when `index.html` is the only file in the deployment directory. No extracted icon file is written. If a sidecar overrides the icon, embedded bytes are used only when both hash and MIME type match that declaration. Remote, unsupported, empty, malformed, and MIME-mismatched icon URLs are ignored. Hash-only sidecars still require the matching blob to be supplied separately. Consumers verify decoding before display according to NIP-5D. Legacy-format deployment retains its previous title/description HTML fallback behavior.
+
+Deployment manifests (current and legacy, including snapshots) and optional Zapstore application events include `["client", "napplet.run"]` before signing. This identifies the publisher using the [NIP-89 client tag](https://github.com/nostr-protocol/nips/blob/master/89.md#client-tag) and does not change artifact hashes. Dry-run templates include the same attribution.
+
+## Screenshots and optional Zapstore metadata
+
+Capture a built napplet without starting a host. The command starts a temporary local Kehto Paja preview, captures its iframe, and closes the preview afterwards. The CLI provisions its private runtime and Chromium automatically on first use, without host Node.js or npx. Screenshot and default conformance commands select the tested `@napplet/conformance-cli@0.3.3` runner explicitly, so an older project-local conformance dependency cannot intercept them. Explicit custom conformance commands remain supported. The preview uses Paja’s development identity, fresh browser storage, and live relays, so content may differ from your signed-in shell.
+
+```sh
+napplet screenshot --output preview.png
+# Optional: choose another project or an existing shell.
+napplet screenshot ./my-project --output other.png
+# Optional: select one iframe and wait for content inside it.
+napplet screenshot http://localhost:5173 --output ready.png --selector '#napplet-frame' --ready-selector '.app-ready'
+```
+
+The default capture is 1200 × 750 pixels with a 1500 ms delay. Override these with `--width`, `--height`, and `--delay` (milliseconds). The command captures only the iframe, waits for fonts, closes Chromium on success or failure, and refuses to overwrite an existing file. Keep screenshots outside the build directory.
+
+To publish an optional application listing, add a `zapstore` object to `.napplet/config.yaml`:
+
+```yaml
+zapstore:
+  id: org.example.notes
+  name: Notes
+  description: Private notes in a napplet shell.
+  summary: A simple notebook
+  images:
+    - ./preview.png
+    - https://example.org/notes-mobile.png
+  icon: ./assets/icon.png
+  website: https://example.org/notes
+  repository: https://github.com/example/notes
+  license: MIT
+  tags:
+    - notes
+    - productivity
+```
+
+Only `id` and `name` are required within this object. The stable `id` identifies the application listing under the signing pubkey; reusing it updates that listing. Description falls back to the deployment config's description. This configuration describes one application listing per deploy invocation, including deployments that select multiple manifests.
+
+```sh
+napplet deploy --zapstore --dry-run --json
+napplet deploy --zapstore
+# Capture and attach a screenshot during deployment:
+napplet deploy --zapstore --screenshot
+```
+
+Publishing defaults to off. `--zapstore` enables it for one deployment; `enabled: true` in the object enables it by default; `--no-zapstore` disables it for one deployment. Supplying both flags is an error. Dry runs show the application template, resolved media URLs and any signature without uploading or publishing.
+
+Local PNG, JPEG and WebP images are resolved relative to the working directory, hashed, and uploaded to the configured Blossom servers. Existing HTTP(S) image URLs are used as supplied. Local media URLs point to the first selected Blossom server; if those uploads fail, application publication is skipped and deploy exits nonzero even if another mirror succeeds. The application uses the same signer and relays as the deployment. A requested application event must be accepted by at least one relay for deploy to succeed.
+
+The listing uses kind `32267` from the [Software Applications proposal](https://github.com/nostr-protocol/nips/pull/1336), with screenshot URLs in `image` tags. Current-format deployments link each root, named, and snapshot manifest to this listing with `["app", "32267:<pubkey>:<id>", "<relay>"]`, implementing the [proposed NIP-5D application reference](https://github.com/dskvr/nips/pull/11) (pending acceptance). The link is added before signing and does not change the artifact hash. The application event is published before its referencing manifests. Legacy manifests remain unchanged. Unsigned dry runs omit the link because the author public key is not yet known; a signed dry run includes it. This publishes application metadata only, without software release or asset events; acceptance into a particular store's catalog depends on that store.
+
+`deploy --screenshot` starts a local preview for each distinct selected build, captures a temporary PNG, and appends it to the configured application images for that deployment. Current-format manifests also receive a provisional `["screenshot", "<Blossom URL>"]` tag before signing, using the same URL as the corresponding Zapstore `image` tag. NIP-5D does not yet define this extension; consumers may ignore it. It requires `--zapstore` or `zapstore.enabled`, and does not modify your config or build files. Capture failure stops deployment before any upload or relay publication. The temporary image is removed after success or failure. `--dry-run` also performs capture and previews the resulting metadata without uploading or publishing. Capture diagnostics go to stderr so `--json` stdout remains valid JSON. No host URL is required. Root and snapshot selections of the same artifact share one capture. To capture an existing shell instead, use `--screenshot <preview-url>`. Use `--screenshot-selector`, `--screenshot-ready-selector`, `--screenshot-width`, `--screenshot-height`, and `--screenshot-delay` for the corresponding standalone capture options. Use the standalone `napplet screenshot` command when you want to keep a PNG on disk.
+
+### Standalone regression test
+
+The opt-in integration test compiles the release entrypoint and runs with an empty host-tool PATH and a fresh private cache. It exercises hosted template creation, configuration, discovery, debug, key storage, screenshots, inline deploy capture, default conformance, Paja, and cached browser reuse. It needs network access on first use; no host runtime is available to the tested binary.
+
+```sh
+NAPPLET_TEST_STANDALONE=1 deno test --node-modules-dir=none -A packages/cli/tests/standalone_integration_test.ts
+```
+
+### GAMEPAD integration
+
+GAMEPAD is a bare manifest domain accepted by `init`, `build`, and deployment metadata. Controller fallback apps use `O gamepad`; controller-required apps use `R gamepad`. Live `dev` controller input depends on a GAMEPAD-capable Kehto/Paja release. See the proposed [NAP-GAMEPAD](https://github.com/napplet/naps/pull/108).

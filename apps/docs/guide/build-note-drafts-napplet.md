@@ -20,7 +20,7 @@ Protocol references used here:
   projection: sandboxed iframe, `postMessage` envelope, and runtime-injected
   domains
 - [NIP-5A](https://github.com/nostr-protocol/nips/blob/master/5A.md), the
-  manifest and aggregate-hash model
+  manifest and artifact-hash model
 - [NAPs](https://github.com/napplet/naps), the capability-domain specs for
   `identity`, `storage`, and `outbox`
 - [NAP-INC PR #89 at `4593ce9`](https://github.com/napplet/naps/pull/89/commits/4593ce9e301ce098fd3dad64206fcd6f144fa7af),
@@ -39,10 +39,10 @@ mkdir note-drafts
 cd note-drafts
 napplet init --name notedrafts --title "Note Drafts" \
   --description "Draft and publish short Nostr notes from a sandboxed napplet." \
-  --archetype note:napplet:note/open
+  --archetype napplet:note/open
 pnpm init
-pnpm add @napplet/sdk@^0.28.0
-pnpm add -D @napplet/vite-plugin@^0.14.0 @napplet/conformance-cli@^0.2.18 @kehto/cli@^0.2.11 typescript@^5.9.3 vite@^6.4.3
+pnpm add @napplet/sdk@^0.30.0
+pnpm add -D @napplet/vite-plugin@^0.16.0 @napplet/conformance-cli@^0.3.0 @kehto/cli@^0.2.11 typescript@^5.9.3 vite@^6.4.3
 ```
 
 Replace the generated `package.json` with this:
@@ -62,12 +62,12 @@ Replace the generated `package.json` with this:
     "verify": "pnpm type-check && pnpm test:conformance"
   },
   "dependencies": {
-    "@napplet/sdk": "^0.28.0"
+    "@napplet/sdk": "^0.30.0"
   },
   "devDependencies": {
     "@kehto/cli": "^0.2.11",
-    "@napplet/conformance-cli": "^0.2.18",
-    "@napplet/vite-plugin": "^0.14.0",
+    "@napplet/conformance-cli": "^0.3.0",
+    "@napplet/vite-plugin": "^0.16.0",
     "typescript": "^5.9.3",
     "vite": "^6.4.3"
   }
@@ -78,7 +78,7 @@ What this teaches: napplet application code uses `@napplet/sdk`; local runtime
 testing uses Kehto/Paja; conformance tests the built artifact, not source files.
 
 This tutorial declares the queryless convention `napplet:note/open`, so its
-manifest tag is `['archetype', 'note', 'napplet:note/open']`. The runtime never infers a kind or payload schema from payload content.
+manifest tag is `['z', 'note']` and `['i', 'napplet:note/open']`. The runtime never infers a kind or payload schema from payload content.
 
 If the app later uses INC `emit` or intent `invoke/open`, those two bindings may
 accept a queried convention URI and transpose its unique decoded pairs into a
@@ -609,22 +609,21 @@ pnpm build
 
 Add a Napplet CLI config for discovery, conformance, and later deploy dry-runs:
 
-<!-- tutorial-file: .napplet/config.json -->
-```json
-{
-  "version": 1,
-  "sourceDir": ".",
-  "relays": ["wss://relay.damus.io"],
-  "blossomServers": ["https://cdn.hzrd149.com"],
-  "defaultTarget": "named",
-  "named": ["notedrafts"],
-  "conformance": {
-    "command": "napplet-conformance"
-  },
-  "paja": {
-    "command": "kehto"
-  }
-}
+<!-- tutorial-file: .napplet/config.yaml -->
+```yaml
+version: 1
+sourceDir: .
+relays:
+  - wss://relay.damus.io
+blossomServers:
+  - https://cdn.hzrd149.com
+defaultTarget: named
+named:
+  - notedrafts
+conformance:
+  command: napplet-conformance
+paja:
+  command: kehto
 ```
 
 Add a Paja simulation config:

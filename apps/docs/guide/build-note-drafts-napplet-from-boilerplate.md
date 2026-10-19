@@ -16,7 +16,7 @@ Protocol references used here:
   projection: sandboxed iframe, `postMessage` envelope, and runtime-injected
   domains
 - [NIP-5A](https://github.com/nostr-protocol/nips/blob/master/5A.md), the
-  manifest and aggregate-hash model
+  manifest and artifact-hash model
 - [NAPs](https://github.com/napplet/naps), the capability-domain specs for
   `identity`, `storage`, and `outbox`
 - [NAP-INC PR #89 at `4593ce9`](https://github.com/napplet/naps/pull/89/commits/4593ce9e301ce098fd3dad64206fcd6f144fa7af),
@@ -33,7 +33,7 @@ napplet create note-drafts
 cd note-drafts
 napplet init --name notedrafts --title "Note Drafts" \
   --description "Draft and publish short Nostr notes from a sandboxed napplet." \
-  --archetype note:napplet:note/open
+  --archetype napplet:note/open
 pnpm install
 ```
 
@@ -42,7 +42,7 @@ this tutorial, treat them as a substrate, not as app requirements. The Note
 Drafts app does not need direct relay queries, notifications, config settings,
 resource loading, or a napplet-side shell probe.
 
-This tutorial's queryless convention emits `['archetype', 'note', 'napplet:note/open']`. The runtime never infers a kind or payload schema from payload content.
+This tutorial's queryless convention emits `['z', 'note']` and `['i', 'napplet:note/open']`. The runtime never infers a kind or payload schema from payload content.
 
 If a future feature adds INC `emit` or intent `invoke/open`, those two bindings
 may transpose a queried URI to its stable queryless identity plus a shallow text
@@ -97,7 +97,7 @@ still declares only the packages and NAP domains it actually uses.
 
 Open `vite.config.ts`. Keep the generated single-file plugin and manifest plugin
 shape, but change only the hard runtime requirements. Keep the template's
-build-local `nappletType` fallback; `.napplet/config.json` owns the d-tag,
+build-local `nappletType` fallback; `.napplet/config.yaml` owns the d-tag,
 title, description, and archetype metadata used by `napplet deploy`.
 
 ```ts
@@ -109,7 +109,7 @@ export default defineConfig({
   plugins: [
     viteSingleFile(),
     nip5aManifest({
-      nappletType: 'my-napplet', // build-local fallback; deploy uses .napplet/config.json
+      nappletType: 'my-napplet', // build-local fallback; deploy uses .napplet/config.yaml
       requires: ['identity', 'storage', 'outbox'],
     }),
   ],
@@ -557,7 +557,7 @@ Expected manifest tags include:
 ```
 
 The deploy preview must show the CLI-owned `notedrafts` d-tag and the title,
-description, and archetype from `.napplet/config.json`.
+description, and archetype from `.napplet/config.yaml`.
 
 Open the app in your target shell or Paja runtime and verify:
 

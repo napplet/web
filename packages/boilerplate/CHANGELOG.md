@@ -1,5 +1,19 @@
 # @napplet/boilerplate
 
+## 0.4.0
+
+### Minor Changes
+
+- Run standalone CLI commands without installed host runtimes, package managers, Git, Kehto, browser tooling, or keychain utilities. Browser and Paja commands provision private cached tooling automatically; screenshots and conformance share it. Linux browser packs include libraries and fonts for x64 and ARM64. Hosts without native keychains use password-encrypted local storage.
+
+  Remote scaffolding downloads GitHub or HTTP(S) ZIP templates without Git. Other Git transports now require a local directory or archive URL. The exported CLI `resolveConformanceCommand` helper is asynchronous because it may provision private tooling.
+
+## 0.3.4
+
+### Patch Changes
+
+- 2910c4b: Correct the shipped setup guide to use `napplet:note/open` directly with `napplet init --archetype` and describe its separate role and intent advertisements.
+
 ## 0.3.3
 
 ### Patch Changes

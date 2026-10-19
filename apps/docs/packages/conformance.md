@@ -31,9 +31,7 @@ npm install -D @napplet/conformance
 - **`validateEnvelope(msg)`** — runtime validation of any `domain.action` envelope
   a napplet emits, across every NAP domain. Catches malformed payloads, unknown
   types, and napplets that put shell→napplet (inbound) traffic on the wire.
-- **`validateManifestEvent(event)`** — checks that a resolved Nostr event is a
-  NIP-5D napplet manifest (`5129`, `15129`, or `35129`) with a hashed
-  `/index.html` path and bare known `requires` domains.
+- **`validateManifestEvent(event)`** — checks that a resolved Nostr event is a NIP-5D napplet manifest (`5129`, `15129`, or `35129`) with a single `/index.html` artifact `x` hash, non-empty description, and bare `R`/`O` domains. Domains outside the toolchain registry produce an advisory `manifest/requires-known` warning without failing the run or implying runtime support.
 - **`validateManifest(html)`** — compatibility wrapper for older HTML-only
   harnesses. HTML alone cannot prove a signed NIP-5D manifest event.
 - **Reference mock shell**, **check registry**, and **reporters** that the CLI and
@@ -41,6 +39,8 @@ npm install -D @napplet/conformance
 
 The validator surface is kept in lockstep with `@napplet/nap` by a drift test, so
 a new NAP message type cannot ship without matching conformance coverage.
+
+Manifest validation accepts extra Nostr tags and leaves their payloads and multiplicity unchanged. It checks required fields and recognized optional metadata rather than enforcing a tag-name allowlist. A `source` tag is checked for its single-location shape and supported HTTP(S), SSH, Git, or scp-like format; invalid icons remain advisory with generic artwork fallback. Extra tags cannot make missing content, invalid hashes, or malformed capability declarations pass. This is non-normative implementation guidance; consult the living [NIP-5D proposal](https://github.com/nostr-protocol/nips/pull/2303) for the requirements.
 
 ```ts
 import { validateEnvelope, validateManifestEvent } from '@napplet/conformance';

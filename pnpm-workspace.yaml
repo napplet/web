@@ -21,3 +21,5 @@ overrides:
   esbuild: ^0.28.1
   # Patch legacy Vite users without forcing Astro's Vite 8 back onto Vite 6.
   "vite@<7": ^6.4.3
+  source-map-js: ^1.2.2
+  vue: ^3.5.43

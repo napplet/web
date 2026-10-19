@@ -1,3 +1,4 @@
+import { stringify } from "yaml";
 import {
   defaultConfig,
   initConfig,
@@ -17,7 +18,7 @@ Deno.test("defaultConfig uses a singular .napplet-style project model", () => {
   assertEquals(config.discover?.roots, ["."]);
 });
 
-Deno.test("initConfig writes .napplet/config.json", async () => {
+Deno.test("initConfig writes .napplet/config.yaml", async () => {
   await withTempDir(async (dir) => {
     const result = await initConfig({
       cwd: dir,
@@ -27,7 +28,7 @@ Deno.test("initConfig writes .napplet/config.json", async () => {
       named: ["feed"],
     });
     assert(result.created);
-    assert(result.path.endsWith(".napplet/config.json"));
+    assert(result.path.endsWith(".napplet/config.yaml"));
     const config = await readConfig(result.path);
     assertEquals(config?.sourceDir, "dist");
     assertEquals(config?.named, ["feed"]);
@@ -65,12 +66,12 @@ Deno.test("initConfig persists CLI-owned deploy metadata", async () => {
   });
 });
 
-Deno.test("readConfig preserves legacy named configs without metadata", async () => {
+Deno.test("readConfig preserves named configs without metadata", async () => {
   await withTempDir(async (dir) => {
-    const path = `${dir}/config.json`;
+    const path = `${dir}/config.yaml`;
     await Deno.writeTextFile(
       path,
-      JSON.stringify({
+      stringify({
         version: 1,
         sourceDir: ".",
         relays: [],
@@ -87,9 +88,9 @@ Deno.test("readConfig preserves legacy named configs without metadata", async ()
 
 Deno.test("parseArchetypeConventions accepts stable identities and rejects discovery payloads", () => {
   assertEquals(parseArchetypeConventions([
+    "napplet:note/open",
     "note:napplet:note/open",
-    "note:napplet:note/open",
-    "feed:napplet:feed/open",
+    " napplet:feed/open ",
   ]), [
     { slug: "note", convention: "napplet:note/open" },
     { slug: "feed", convention: "napplet:feed/open" },
@@ -97,6 +98,9 @@ Deno.test("parseArchetypeConventions accepts stable identities and rejects disco
 
   for (const value of [
     "note:NAP-4",
+    "napplet:feed/open?source=following",
+    "napplet:feed/open#fragment",
+    "napplet:feed",
     "feed:napplet:feed/open?source=following",
     "feed:napplet:feed/open#fragment",
   ]) {
@@ -107,6 +111,39 @@ Deno.test("parseArchetypeConventions accepts stable identities and rejects disco
       message = error instanceof Error ? error.message : String(error);
     }
     assert(message.includes("napplet:<archetype>/<intent>"));
+  }
+});
+
+Deno.test("readConfig accepts URI archetypes alongside objects with advertised params", async () => {
+  await withTempDir(async (dir) => {
+    const path = `${dir}/config.yaml`;
+    await Deno.writeTextFile(path, stringify({
+      metadata: {
+        archetypes: [
+          "napplet:note/open",
+          { slug: "profile", convention: "napplet:profile/open", params: ["pubkey"] },
+        ],
+      },
+    }));
+    const config = await readConfig(path);
+    assertEquals(config?.metadata?.archetypes, [
+      { slug: "note", convention: "napplet:note/open" },
+      { slug: "profile", convention: "napplet:profile/open", params: ["pubkey"] },
+    ]);
+  });
+});
+
+Deno.test("invalid archetype entries identify the config field and accepted input", () => {
+  for (const value of [null, 42, [], "napplet:note/open?kind=1", "napplet:note/open#handler"]) {
+    let message = "";
+    try {
+      normalizeConfig({ metadata: { archetypes: [value] } });
+    } catch (error) {
+      message = error instanceof Error ? error.message : String(error);
+    }
+    assert(message.includes("metadata.archetypes[0]"));
+    assert(message.includes("napplet:"));
+    assert(!message.includes("note:napplet:"));
   }
 });
 

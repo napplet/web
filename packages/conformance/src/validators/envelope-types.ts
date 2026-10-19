@@ -16,6 +16,8 @@ export interface EnvelopeSpec {
   fields?: Record<string, FieldKind>;
   /** Fields a napplet-emitted carrier must never supply. */
   forbiddenFields?: readonly string[];
+  /** Why `forbiddenFields` are rejected; defaults to "runtime-derived". */
+  forbiddenReason?: string;
 }
 
 /** A single problem found while validating an envelope. */

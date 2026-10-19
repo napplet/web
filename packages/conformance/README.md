@@ -10,12 +10,16 @@ v1 is **zero-config protocol conformance**: NIP-5D manifest-event validity, boot
 ## What's in the box
 
 - `validateEnvelope(msg)` — runtime validation of any `domain.action` envelope a napplet emits, across all active NAP domains. Catches malformed payloads, unknown types, and napplets that put shell→napplet (inbound) traffic on the wire.
-- `validateManifestEvent(event)` — checks that a resolved Nostr event is a NIP-5D napplet manifest (`5129`, `15129`, or `35129`) with a hashed `/index.html` path and bare known `requires` domains.
+- `validateManifestEvent(event)` — checks that a resolved Nostr event is a NIP-5D napplet manifest (`5129`, `15129`, or `35129`) with a single artifact `x` hash, a non-empty description, and bare `R`/`O` domains. Domains outside the toolchain registry produce the advisory `manifest/requires-known` warning; they do not fail a run or imply runtime support.
 - `validateManifest(html)` — compatibility wrapper for older HTML-only harnesses. HTML alone cannot prove a signed NIP-5D manifest event.
+
+Manifest validation accepts additional Nostr tags without changing the event or restricting tag names. It checks required fields and the specified shape and cardinality of recognized optional metadata. For example, `source` accepts one HTTP(S), SSH, Git, or scp-like repository location; malformed icon metadata remains an advisory with generic artwork fallback. Extra tags cannot satisfy missing content or hide invalid hashes or capability declarations. This is non-normative guidance; the living [NIP-5D proposal](https://github.com/nostr-protocol/nips/pull/2303) defines these requirements.
 
 The validator surface is kept in lockstep with `@napplet/nap` by a drift test, so a new NAP message type cannot ship without matching conformance coverage.
 
-For `intent` envelopes, conformance checks the merged `intent.invoke` request/result carrier. Requests require an archetype, optional action and convention remain orthogonal, and results expose canonical handling state. Convention strings and payloads remain opaque local choices.
+`@napplet/nap` remains a devDependency because the drift test reads NAP source files directly and the GAMEPAD parity test imports its state helpers. This workspace dependency lets Turbo invalidate cached conformance tests after NAP-only source changes; it is not a runtime dependency of the published engine. Run `pnpm test:workflow-contracts` from the repository root to verify cache invalidation against the current Turbo configuration.
+
+For `intent` envelopes, conformance checks the merged `intent.invoke` request/result carrier. Requests require URI-derived archetype, action, and stable convention identity. Acceptance results transfer delivery responsibility to the runtime, while targets receive buffered `intent.deliver` pushes. Payload semantics belong to the convention and target.
 
 This non-normative description follows the living [NAP-INC](https://github.com/napplet/naps/blob/master/naps/NAP-INC.md) and [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md) documents.
 
@@ -100,3 +104,7 @@ for (const check of run.checks) {
 ## CLI Pairing
 
 The package intentionally stays framework-agnostic. For a project-level command that launches real Chromium against a built napplet, use the companion `napplet-conformance` CLI shipped from `@napplet/conformance-cli`.
+
+### GAMEPAD integration
+
+GAMEPAD validation recognizes only `gamepad.subscribe`, `gamepad.unsubscribe`, and `gamepad.state`; correlation ids are rejected. The injected browser API shares snapshot validation with the portable binding and accepts only parent messages. The reference mock reports unavailable controllers rather than physical input. Focus and native-access isolation require host integration tests. See the proposed [NAP-GAMEPAD](https://github.com/napplet/naps/pull/108).

@@ -7,8 +7,8 @@
 import type { NappletGlobal, Subscription } from '@napplet/core';
 import type {
   IntentAvailability,
-  IntentOpenOptions,
-  IntentRequest,
+  IntentInvokeOptions,
+  IntentDelivery,
   IntentResult,
 } from './types.js';
 
@@ -23,37 +23,36 @@ function requireIntent(): NonNullable<NappletGlobal['intent']> {
 /**
  * Invoke a napplet by archetype.
  *
- * @param request Archetype dispatch request
+ * @param uri Authoritative convention URI
+ * @param options Structured payload and runtime selection hints
  * @returns Promise resolving to the dispatch result
  *
  * @example
  * ```ts
- * await intentInvoke({ archetype: 'note', payload: { id: 'abc' } });
+ * await intentInvoke('napplet:note/open', { payload: { id: 'abc' } });
  * ```
  */
-export function intentInvoke(request: IntentRequest): Promise<IntentResult> {
-  return requireIntent().invoke(request);
+export function intentInvoke(uri: string, options?: IntentInvokeOptions): Promise<IntentResult> {
+  return requireIntent().invoke(uri, options);
 }
 
 /**
  * Open a napplet by archetype.
  *
- * @param archetype Role slug to open
- * @param payload Optional opaque payload
- * @param opts Optional convention, handler selection, and behavior hints
+ * @param uri Convention URI whose action is open
+ * @param options Structured payload and runtime selection hints
  * @returns Promise resolving to the dispatch result
  *
  * @example
  * ```ts
- * await intentOpen('note', { id: 'abc' }, { convention: 'napplet:note/open' });
+ * await intentOpen('napplet:note/open', { payload: { id: 'abc' } });
  * ```
  */
 export function intentOpen(
-  archetype: string,
-  payload?: unknown,
-  opts?: IntentOpenOptions,
+  uri: string,
+  options?: IntentInvokeOptions,
 ): Promise<IntentResult> {
-  return requireIntent().open(archetype, payload, opts);
+  return requireIntent().open(uri, options);
 }
 
 /**
@@ -83,4 +82,15 @@ export function intentHandlers(): Promise<IntentAvailability[]> {
  */
 export function intentOnChanged(handler: (availability: IntentAvailability) => void): Subscription {
   return requireIntent().onChanged(handler);
+}
+
+/**
+ * Subscribe to intent deliveries from the runtime.
+ * @param handler Callback for retained and future deliveries
+ * @returns Subscription handle
+ * @example
+ * intentOnDelivery(({ payload }) => render(payload));
+ */
+export function intentOnDelivery(handler: (delivery: IntentDelivery) => void): Subscription {
+  return requireIntent().onDelivery(handler);
 }

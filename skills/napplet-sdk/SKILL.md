@@ -9,9 +9,9 @@ Napplet implementation code is **SDK-first**: import typed wrappers from `@nappl
 
 ## Domains shipped by the current packages
 
-`relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `ble`, `webrtc`, `link`, `count`, `lists`, `serial`, `fs`, `common`, `dm`.
+`shell`, `relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `ble`, `webrtc`, `link`, `count`, `lists`, `serial`, `fs`, `common`, `dm`.
 
-`ifc` is a deprecated INC alias. If a NAP is not in this list, do not implement against it even when a spec PR exists — flag the package/spec gap. There is no `window.napplet.shell`, `shell.ready()`, `shell.supports(...)`, `discoverServices()`, or `hasService()`; a missing optional domain simply means "unavailable for this load".
+`ifc` is a deprecated INC alias. If a NAP is not in this list, do not implement against it even when a spec PR exists — flag the package/spec gap. `shell` is optional environment information only (see below); there is no `discoverServices()` or `hasService()`, and no domain waits on `shell.ready()`. A missing optional domain simply means "unavailable for this load".
 
 | Need | Domain |
 | --- | --- |
@@ -144,12 +144,12 @@ import { resource } from '@napplet/sdk';
 const blob = await resource.bytes('https://example.com/avatar.png');
 img.src = URL.createObjectURL(blob);                 // revokeObjectURL when done
 
-const handle = resource.bytesAsObjectURL('blossom:sha256:<hex>');
+const handle = resource.bytesAsObjectURL('blossom:<sha256>.<ext>');
 img.src = handle.url;                                // resolves once fetched
 handle.revoke();
 ```
 
-Schemes: `data:` (decoded in-shim), `https:` (shell network under policy), `blossom:sha256:<hex>` (hash-verified), `htree:` (Hashtree-verified), `nostr:<bech32>` (single-hop NIP-19). Cancel with `bytes(url, { signal })`. Rejections carry a `code` — branch on it, not the message: `not-found`, `blocked-by-policy`, `timeout`, `too-large`, `unsupported-scheme`, `decode-failed`, `network-error`, `quota-exceeded`. The shell byte-sniffs the MIME; never trust upstream `Content-Type`. SVG is rasterized before delivery. `resource.bytesMany` batches.
+Schemes: `data:` (decoded in-shim), `https:` (shell network under policy), `blossom:<sha256>.<ext>` ([BUD-10](https://github.com/hzrd149/blossom/blob/master/buds/10.md), hash-verified), `htree:` (Hashtree-verified), `nostr:<bech32>` (single-hop NIP-19). Cancel with `bytes(url, { signal })`. Rejections carry a `code` — branch on it, not the message: `not-found`, `blocked-by-policy`, `timeout`, `too-large`, `unsupported-scheme`, `decode-failed`, `network-error`, `quota-exceeded`. The shell byte-sniffs the MIME; never trust upstream `Content-Type`. SVG is rasterized before delivery. `resource.bytesMany` batches.
 
 ## Config and theme
 
@@ -171,7 +171,9 @@ if (window.napplet?.theme) {
 
 `Theme.colors` = `{ background, text, primary }` plus optional `fonts` / `background` / `title`. Whole-surface application rules live in `napplet-ui`. NAP-CONFIG defines runtime `registerSchema` only; there is no manifest or HTML-meta encoding for build-time schemas — recheck the living [NAP-CONFIG proposal](https://github.com/napplet/naps/pull/14) before adding settings.
 
-## Keys — shortcuts through the shell
+## Keys — keyboard actions through the shell
+
+For maximum compatibility, register every keyboard-bound action through NAP-KEYS, including app-local shortcuts and game controls such as jump or pause. Use `keys.register` with a stable action ID, a human-readable label, and an optional `defaultKey` hint; connect the action callback and close the binding on teardown. The shell chooses the actual keymap, so a suggested default is not a guaranteed assignment. Ordinary text input does not need action registration. This is non-normative authoring guidance; the living [NAP-KEYS proposal](https://github.com/napplet/naps/pull/9) defines registration and binding behavior.
 
 ```ts
 import { keys } from '@napplet/sdk';
@@ -208,3 +210,13 @@ Use the exact method names exported by the installed `@napplet/sdk` version (`no
 - Direct `window.napplet.<domain>.method()` calls when the SDK exports that domain — wrong default.
 - `fetch`, `XMLHttpRequest`, `WebSocket`, `<img src="https://…">`, `localStorage`, `window.nostr` — none exist for a napplet; route through `resource`, `storage`, `outbox`.
 - There is no `nappletState` / `nappStorage` import — storage is `storage.*`.
+
+## Optional shell environment
+
+`shell` exposes optional environment information through `supports`, `services`, `ready`, and `onReady`. Check injected domain presence for availability; other domains remain usable without waiting for the environment. See [NAP-SHELL](https://github.com/napplet/naps/blob/master/naps/NAP-SHELL.md).
+
+Theme updates reach napplets with the exposed `theme` domain, independently of manifest requirement declarations. User identity changes report the connected signer, including an empty string at sign-out; they do not alter napplet identity. Profile picture/banner bytes use optional `resource` when exposed; otherwise show local placeholder artwork. Theme media URLs do not grant network access, so colors and local fonts provide the fallback. See [NAP-THEME](https://github.com/napplet/naps/blob/master/naps/NAP-THEME.md) and [NAP-IDENTITY](https://github.com/napplet/naps/blob/master/naps/NAP-IDENTITY.md).
+
+## Optional controller input
+
+This non-normative guidance defers to the living [NAP-GAMEPAD proposal](https://github.com/napplet/naps/pull/108). Check injected `gamepad` presence and call the SDK namespace from `@napplet/sdk/gamepad`. Its cached API exposes `getGamepads()`, `available`, `focused`, and `onChange(handler)`; close listeners on disposal. Keep keyboard or pointer fallbacks, ignore gameplay edges while unfocused, reset held-button baselines on regained focus, preserve null slots, and route controllers by `index`. Use an optional manifest domain when the core task remains usable without controllers. Native controller access belongs to the runtime. Do not add haptics, raw HID access, a correlation id, or a prerequisite SHELL readiness exchange. Reference-mock conformance reports unavailable controllers; verify live focus isolation in a GAMEPAD-capable runtime.

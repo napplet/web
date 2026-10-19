@@ -137,14 +137,14 @@ const configSub = window.napplet.config.subscribe((values) => {
 window.napplet.config.openSettings({ section: 'appearance' });
 
 // Fetch external bytes through the runtime's NAP-RESOURCE surface
-const avatarBlob = await window.napplet.resource.bytes('blossom:sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', {
+const avatarBlob = await window.napplet.resource.bytes('blossom:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.bin', {
   servers: ['https://cdn.hzrd149.com'],
 });
 const resourceItems = await window.napplet.resource.bytesMany([
   { url: 'https://example.com/avatar.png' },
-  { url: 'blossom:sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', servers: ['https://cdn.hzrd149.com'] },
+  { url: 'blossom:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.bin', servers: ['https://cdn.hzrd149.com'] },
 ]);
-const handle = window.napplet.resource.bytesAsObjectURL('blossom:sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855');
+const handle = window.napplet.resource.bytesAsObjectURL('blossom:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.bin');
 imgEl.src = handle.url;
 // later: handle.revoke();
 
@@ -279,7 +279,7 @@ Messages received via `window.addEventListener('message', ...)`:
 { type: 'inc.event', topic: string, payload?: unknown, sender: string }
 { type: 'inc.channel.opened', channelId: string, peer: string }
 
-{ type: 'intent.invoke.result', id: string, result: { ok: boolean, archetype: string, action: string, handled: boolean, convention?: string, handler?: string, windowId?: string, error?: string } }
+{ type: 'intent.invoke.result', id: string, result: { ok: true, archetype: string, action: string, convention: string, handler: string } | { ok: false, error: string } }
 
 { type: 'storage.get.result', id: string, value?: string | null, error?: string }
 { type: 'storage.set.result', id: string, error?: string }
@@ -345,8 +345,8 @@ window.napplet = {
     };
   },
   intent: {
-    invoke(request): Promise<IntentResult>;
-    open(archetype, payload?, options?): Promise<IntentResult>;
+    invoke(uri, options?): Promise<IntentResult>;
+    open(uri: string, options?: IntentInvokeOptions): Promise<IntentResult>;
     available(archetype): Promise<IntentAvailability>;
     handlers(): Promise<IntentAvailability[]>;
     onChanged(callback): { close(): void };
@@ -469,18 +469,14 @@ Query values are shallow percent-decoded text (`+` remains a literal plus) befor
 
 ### `window.napplet.intent`
 
-NAP-INTENT dispatches by archetype. Use `invoke(request)` or the `open(archetype, payload?, opts?)` convenience operation.
+NAP-INTENT dispatches by archetype. Use `invoke(uri, options?)` or the `open(uri, options?)` convenience operation.
 
 ```ts
-const result = await window.napplet.intent.open(
-  'profile',
-  { pubkey: 'abc123' },
-  { convention: 'napplet:profile/open', behavior: { newWindow: true } },
-);
-if (!result.handled) throw new Error(result.error);
+const result = await window.napplet.intent.open('napplet:profile/open', { payload: { pubkey: 'abc123' }, behavior: { reuse: false } });
+if (!result.ok) throw new Error(result.error);
 ```
 
-Results include required `ok`, `archetype`, `action`, and `handled` fields and optional handler, window, convention, and error details. See the living [NAP-INTENT document](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md).
+Intent calls derive archetype and action from the URI. An `ok: true` result means the runtime accepted delivery responsibility and includes the normalized identity and handler catalog identifier; an `ok: false` result includes `error`. Targets receive runtime-attested `IntentDelivery` values through `onDelivery`, including deliveries retained before registration. Behavior hints are `focus` and `reuse`. This non-normative guidance defers to the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md).
 
 ### `window.napplet.storage`
 
@@ -569,7 +565,7 @@ Sandboxed byte fetching through the runtime-provided NAP-RESOURCE surface. Use `
 | `bytesMany(requests, opts?)` | `Promise<ResourceBytesItem[]>` | Fetch many per-resource requests through one envelope. Each request may carry advisory Blossom `servers`; items preserve input order and length. |
 | `bytesAsObjectURL(url)` | `{ url: string; revoke: () => void }` | Synchronous handle whose `url` resolves to a blob URL once the underlying fetch completes. Caller MUST `revoke()` when done. |
 
-Canonical schemes: `data:` (decoded in-shim), `https:` (shell-side network with policy), `blossom:sha256:<hex>` (hash-verified), `htree:` (Hashtree-verified), `nostr:<bech32>` (single-hop NIP-19 resolution).
+Canonical schemes: `data:` (decoded in-shim), `https:` (shell-side network with policy), `blossom:<sha256>.<ext>` ([BUD-10](https://github.com/hzrd149/blossom/blob/master/buds/10.md), hash-verified), `htree:` (Hashtree-verified), `nostr:<bech32>` (single-hop NIP-19 resolution).
 
 Errors use the NAP-RESOURCE vocabulary: `invalid-request`, `not-found`, `blocked-by-policy`, `timeout`, `too-large`, `unsupported-scheme`, `decode-failed`, `network-error`, or `quota-exceeded`.
 
@@ -650,3 +646,25 @@ import { relay, inc, storage, keys, identity } from '@napplet/sdk';
 ## License
 
 MIT
+
+
+### Optional shell environment
+
+The runtime may expose `shell` for environment information. `shell.supports(domain)` reads current domain object presence, `shell.services` is empty until environment delivery, and `shell.ready()` / `shell.onReady(handler)` use the retained snapshot. Readiness does not gate other domain calls. See the living [NAP-SHELL](https://github.com/napplet/naps/blob/master/naps/NAP-SHELL.md).
+
+### Intent delivery and recommendations
+
+```ts
+import { intent } from '@napplet/sdk';
+
+intent.onDelivery(({ sender, convention, payload }) => {
+  console.log(sender, convention, payload);
+});
+await intent.invoke('napplet:profile/open?pubkey=abc123');
+```
+
+The runtime binding retains deliveries until a listener registers. Discovery candidates expose opaque catalog `id` values and `contracts` with parameter names. INC peers instead use identifiers for running authenticated endpoints. A NAP-INTENT URI may append a bare `#naddr1…` recommendation; the binding sends its coordinate and relay hints as `handlerHint`, outside convention identity and payload. An applicable user default takes precedence. INC URI operations reject fragments. See the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md) and [web projection](https://github.com/napplet/naps/blob/master/projections/web.md).
+
+### GAMEPAD integration
+
+The selected `gamepad` runtime binding installs the cached API, subscribes without SHELL readiness, validates parent state, and unsubscribes during cleanup. See the proposed [NAP-GAMEPAD](https://github.com/napplet/naps/pull/108). The native browser Gamepad API is left untouched pending clarification of the proposal’s optional replacement and NIP-5D’s namespace-only injection rule.

@@ -4,6 +4,7 @@ import { collectDeployFilePayloads, uploadFilesToServers } from "./blossom-uploa
 import type { ServerUploadResult, UploadResultProgress } from "./blossom-upload.ts";
 import type { NappletSigner } from "./signing.ts";
 import type { DeployManifestTemplate, SignedNostrEvent } from "./types.ts";
+import type { ZapstorePublication } from "./zapstore.ts";
 
 export {
   collectDeployFilePayloads,
@@ -35,6 +36,7 @@ export interface NetworkDeployResult {
   uploaded: ServerUploadResult[];
   published: RelayPublishResult[];
   uploadSummary: UploadSummary;
+  additionalEventIds?: string[];
 }
 
 export type NetworkDeployProgress =
@@ -53,6 +55,7 @@ export type NetworkDeployProgress =
   | { type: "publish:complete"; results: RelayPublishResult[] };
 
 export interface NetworkDeployOptions {
+  application?: ZapstorePublication;
   fetch?: typeof fetch;
   publish?: RelayPublisher;
   now?: () => number;
@@ -64,14 +67,63 @@ export type RelayPublisher = (
   event: SignedNostrEvent,
 ) => Promise<RelayPublishResult[]>;
 
+/**
+ * Resolve upload destinations from explicit config, then manifest publishing hints.
+ * @param manifests Resolved deploy manifests.
+ * @param configured Explicit upload destinations, if any.
+ * @returns The destinations used for uploads and displayed in deployment reports.
+ * @example resolveDeployServers(manifests, ["https://blossom.example"])
+ */
+export function resolveDeployServers(
+  manifests: readonly DeployManifestTemplate[],
+  configured: readonly string[],
+): string[] {
+  const servers = configured.length ? [...configured] : [
+    ...new Set(
+      manifests.flatMap((manifest) =>
+        (manifest.signedEvent ?? manifest.template)?.tags.filter((tag) => tag[0] === "server").map((
+          tag,
+        ) => tag[1]) ?? []
+      ),
+    ),
+  ];
+  // NIP-5D Manifest: server tags hint Blossom origins, not arbitrary request URLs.
+  // Validate the entire selected list before any upload or authorization signing.
+  return servers.map((server, index) => {
+    if (!isServerOrigin(server)) {
+      const source = configured.length ? "blossomServers config" : "manifest server hints";
+      throw new Error(
+        `Invalid Blossom server at ${source}[${index}]: expected a non-empty HTTP(S) origin ` +
+          "without credentials, a path, a query or a fragment (a trailing slash is allowed)",
+      );
+    }
+    return server;
+  });
+}
+
+function isServerOrigin(value: unknown): value is string {
+  // Check syntax before URL parsing, which silently repairs slashes and strips controls.
+  if (typeof value !== "string" || !/^https?:\/\/[^\s/\\?#@]+\/?$/i.test(value)) return false;
+  try {
+    const url = new URL(value);
+    return Boolean(url.hostname) && !url.username && !url.password && url.pathname === "/" &&
+      !url.search && !url.hash;
+  } catch {
+    return false;
+  }
+}
+
 export async function executeNetworkDeploy(
   manifests: readonly DeployManifestTemplate[],
   config: NetworkDeployConfig,
   signer: NappletSigner,
   options: NetworkDeployOptions = {},
 ): Promise<NetworkDeployResult> {
-  if (config.blossomServers.length === 0) {
-    throw new Error("Network deploy requires at least one blossom server in .napplet config");
+  const servers = resolveDeployServers(manifests, config.blossomServers);
+  if (servers.length === 0) {
+    throw new Error(
+      "Network deploy requires at least one blossom server in .napplet config or manifest hints",
+    );
   }
   if (config.relays.length === 0) {
     throw new Error("Network deploy requires at least one relay in .napplet config");
@@ -81,14 +133,20 @@ export async function executeNetworkDeploy(
     throw new Error("Network deploy requires at least one signed manifest event");
   }
   const files = await collectDeployFilePayloads(manifests);
+  const application = options.application;
+  if (application && !application.signedEvent) throw new Error("Zapstore application event must be signed");
+  const additionalEventIds = application?.signedEvent ? [application.signedEvent.id] : [];
+  for (const file of application?.files ?? []) {
+    if (!files.some((existing) => existing.sha256 === file.sha256)) files.push(file);
+  }
   options.onProgress?.({
     type: "upload:start",
     files: files.length,
-    servers: config.blossomServers.length,
-    totalUploads: files.length * config.blossomServers.length,
+    servers: servers.length,
+    totalUploads: files.length * servers.length,
   });
-  const uploaded = await uploadFilesToServers(files, config.blossomServers, signer, options);
-  const uploadSummary = summarizeUploads(uploaded, config.blossomServers);
+  const uploaded = await uploadFilesToServers(files, servers, signer, options);
+  const uploadSummary = summarizeUploads(uploaded, servers);
   options.onProgress?.({ type: "upload:complete", summary: uploadSummary });
   if (uploadSummary.serversFullyUploaded === 0) {
     // Publish only when at least one server holds every blob referenced by the
@@ -107,9 +165,12 @@ export async function executeNetworkDeploy(
       uploaded,
       published: [],
       uploadSummary,
+      additionalEventIds,
     };
   }
   const publish = options.publish ?? publishEventWithSimplePool;
+  // Make metadata available before clients discover manifests that reference it.
+  if (application?.signedEvent) events.unshift(application.signedEvent);
   const published: RelayPublishResult[] = [];
   options.onProgress?.({
     type: "publish:start",
@@ -119,7 +180,14 @@ export async function executeNetworkDeploy(
   });
   let completedEvents = 0;
   for (const event of events) {
-    const results = await publish(config.relays, event);
+    const mediaUnavailable = event === application?.signedEvent && application.mediaServer &&
+      application.files.some((file) => !uploaded.some((upload) =>
+        upload.server === application.mediaServer && upload.sha256 === file.sha256 && upload.success
+      ));
+    const results = mediaUnavailable
+      ? config.relays.map((relay) => ({ relay, eventId: event.id, success: false,
+        error: "Zapstore publish skipped: images unavailable at their declared Blossom URLs" }))
+      : await publish(config.relays, event);
     completedEvents += 1;
     published.push(...results);
     options.onProgress?.({
@@ -131,7 +199,7 @@ export async function executeNetworkDeploy(
     });
   }
   options.onProgress?.({ type: "publish:complete", results: published });
-  return { uploaded, published, uploadSummary };
+  return { uploaded, published, uploadSummary, additionalEventIds };
 }
 
 function summarizeUploads(
@@ -156,7 +224,7 @@ export function networkDeploySucceeded(
   result: NetworkDeployResult,
   manifests: readonly DeployManifestTemplate[],
 ): boolean {
-  const eventIds = signedEvents(manifests).map((event) => event.id);
+  const eventIds = [...signedEvents(manifests).map((event) => event.id), ...(result.additionalEventIds ?? [])];
   return result.uploadSummary.serversFullyUploaded > 0 && eventIds.length > 0 &&
     eventIds.every((eventId) =>
       result.published.some((publish) => publish.eventId === eventId && publish.success)
