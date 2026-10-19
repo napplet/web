@@ -31,3 +31,7 @@ No new protocol behavior or package output is authored by the resolution. Existi
 The first unit attempt ran before fresh build artifacts existed and stopped on the missing boilerplate dist entry; the required post-build rerun passes. An initial bare link check hit an unrelated existing listener at default port 8099; the correct assembled site was then served on an owned port and the complete crawl passed. Neither setup issue required a source change.
 
 Local command logs are `/tmp/pr205-{build,types,units,test,contracts,e2e,links}.log`; scan report is `/tmp/pr205-aislop.json`. Final pushed-head CI and GitHub mergeability are recorded in the existing PR's verification section after delivery. Leave PR #205 open.
+
+## Publication-time base update
+
+Main advanced during remote CI to `82b29d17` (Version Packages #260). Its only changes consume the terminal-usability changeset, add the CLI changelog entry, and bump matching CLI package/Deno versions to 0.12.0. Integrated that release without conflicts and repeated build, type-check, recursive units, full tests and the unchanged scan. The original merge resolution remains `85b09faf`.
