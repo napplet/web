@@ -1,0 +1,86 @@
+{
+  "signing": {
+    "type": "none",
+    "canSignWithoutPrompt": false,
+    "requiresSecretLookup": false,
+    "notes": [
+      "no signing input configured"
+    ]
+  },
+  "plan": {
+    "configPath": "/private/var/folders/g8/w4qrj6k57hx_3lg6ltc1k70w0000gn/T/napplet-cli-proof-we0ugyif/.napplet/config.json",
+    "items": [
+      {
+        "candidate": {
+          "name": "root",
+          "dir": "/private/var/folders/g8/w4qrj6k57hx_3lg6ltc1k70w0000gn/T/napplet-cli-proof-we0ugyif",
+          "indexHtml": "/private/var/folders/g8/w4qrj6k57hx_3lg6ltc1k70w0000gn/T/napplet-cli-proof-we0ugyif/index.html"
+        },
+        "target": "named",
+        "kind": 35129,
+        "dTag": "notes"
+      }
+    ]
+  },
+  "manifests": [
+    {
+      "item": {
+        "candidate": {
+          "name": "root",
+          "dir": "/private/var/folders/g8/w4qrj6k57hx_3lg6ltc1k70w0000gn/T/napplet-cli-proof-we0ugyif",
+          "indexHtml": "/private/var/folders/g8/w4qrj6k57hx_3lg6ltc1k70w0000gn/T/napplet-cli-proof-we0ugyif/index.html"
+        },
+        "target": "named",
+        "kind": 35129,
+        "dTag": "notes"
+      },
+      "files": [
+        {
+          "path": "/index.html",
+          "sha256": "5d287a63b9dfe0e7fec3c850dbc0769da308896ec568f6b746ea34adbb829535"
+        }
+      ],
+      "format": "current",
+      "artifactHash": "5d287a63b9dfe0e7fec3c850dbc0769da308896ec568f6b746ea34adbb829535",
+      "template": {
+        "kind": 35129,
+        "created_at": 1792074720,
+        "tags": [
+          [
+            "d",
+            "notes"
+          ],
+          [
+            "x",
+            "5d287a63b9dfe0e7fec3c850dbc0769da308896ec568f6b746ea34adbb829535"
+          ],
+          [
+            "title",
+            "Notes"
+          ],
+          [
+            "server",
+            "http://127.0.0.1:62317"
+          ],
+          [
+            "server",
+            "http://127.0.0.1:62318"
+          ],
+          [
+            "client",
+            "napplet.run"
+          ]
+        ],
+        "content": "A private notebook for quick ideas."
+      }
+    }
+  ],
+  "relays": [
+    "ws://127.0.0.1:62317/relay"
+  ],
+  "blossomServers": [
+    "http://127.0.0.1:62317",
+    "http://127.0.0.1:62318"
+  ],
+  "dryRun": true
+}

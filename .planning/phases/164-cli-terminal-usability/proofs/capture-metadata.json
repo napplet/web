@@ -1,0 +1,12 @@
+{
+  "cliSourceCommit": "5e165056cac196cb9d618f12299a0a2b2082410b",
+  "cliSourceTree": "4f7219ce7cb9ee586dde2253f13175f46f6b8962",
+  "binary": "napplet-darwin-aarch64",
+  "binarySha256": "ac0350e94b73992c41d4368b7873b4413c816f91b349fb833b0170619c9b52be",
+  "recordedAtUtc": "2026-10-15T14:33:35.132970+00:00",
+  "platform": "macOS ARM64",
+  "deno": "deno 2.9.5 (stable, release, aarch64-apple-darwin)",
+  "renderer": "@xterm/xterm 6.0.0 and Playwright Chromium",
+  "network": "loopback HTTP Blossom fixtures and WebSocket relay; no public deployment",
+  "signer": "fresh ephemeral key; hidden input; not retained"
+}

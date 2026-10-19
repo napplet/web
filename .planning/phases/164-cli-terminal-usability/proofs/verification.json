@@ -1,0 +1,13 @@
+{
+  "interactiveDeploy": "passed",
+  "uploadedMirrors": 2,
+  "publishedEvents": 1,
+  "hiddenSecret": "not echoed or saved",
+  "partialConfig": "completed and preserved",
+  "nonInteractiveTTY": "exit 1 without prompting",
+  "ciTTY": "exit 1 without prompting",
+  "machineJSON": "parseable and ANSI-free",
+  "noColorTTY": "ANSI-free",
+  "ctrlC": "exit 130",
+  "publicNetwork": "none; loopback fixtures only"
+}

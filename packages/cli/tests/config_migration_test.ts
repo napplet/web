@@ -1,5 +1,6 @@
 import { parse } from "yaml";
 import { migrateConfig } from "../src/config-migration.ts";
+import { withInteraction } from "../src/interaction.ts";
 import { readConfig, writeConfig, defaultConfig } from "../src/config.ts";
 import { main } from "../src/cli.ts";
 import { prepareCommand } from "../src/cli-args.ts";
@@ -241,5 +242,46 @@ Deno.test("leading migration flags preserve keys subcommands and child arguments
       assert(flags.boolean.has("non-interactive"));
       await missing(path);
     }
+  });
+});
+
+Deno.test("migration obeys the invocation prompt policy for library and command preparation", async () => {
+  for (const interactive of [true, false]) {
+    for (const prepare of [migrateConfig, prepareCommand]) {
+      await withTempDir(async (dir) => {
+        const path = `${dir}/config.json`;
+        await Deno.writeTextFile(path, legacyText);
+        let prompts = 0;
+        const options = { ...quiet, prompt: async () => { prompts++; return "n"; } };
+        await withInteraction({ interactive, color: false }, async () => {
+          await rejects(() => prepare === migrateConfig
+            ? migrateConfig(path, options)
+            : prepareCommand(["init", "--config", path], options), "Cannot continue without migrating");
+        });
+        assertEquals(prompts, interactive ? 1 : 0);
+        assertEquals(await Deno.readTextFile(path), legacyText);
+        await missing(`${dir}/config.yaml`);
+      });
+    }
+  }
+});
+
+Deno.test("command-specific help stays available with an unmigrated configuration", async () => {
+  await withTempDir(async (dir) => {
+    const path = `${dir}/config.json`;
+    await Deno.writeTextFile(path, legacyText);
+    const log = console.log;
+    const output: string[] = [];
+    console.log = (message) => output.push(String(message));
+    try {
+      for (const command of ["init", "deploy", "debug", "discover", "keys", "conformance", "paja"]) {
+        assertEquals(await main([command, "--help", "--config", path], {
+          configMigration: { interactive: true, prompt: () => { throw new Error("Unexpected migration prompt"); } },
+        }), 0);
+      }
+      assertEquals(output.length, 7);
+      assertEquals(await Deno.readTextFile(path), legacyText);
+      await missing(`${dir}/config.yaml`);
+    } finally { console.log = log; }
   });
 });
