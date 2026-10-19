@@ -3,6 +3,13 @@
  *
  * @module
  */
+import { currentInteraction } from "./interaction.ts";
+import { paint } from "./terminal.ts";
+
+/** Cancellation restores terminal state and maps to exit code 130 in the dispatcher. */
+export class PromptCancelledError extends Error {
+  constructor() { super("Prompt cancelled"); }
+}
 
 export interface PromptInput {
   readonly readable?: ReadableStream<Uint8Array>;
@@ -56,6 +63,9 @@ export async function promptSecret(options: SecretPromptOptions = {}): Promise<s
   const output = options.output ?? Deno.stderr;
   const message = options.message ?? "Enter signing secret (input hidden), then press Enter: ";
   const isTerminal = input.isTerminal?.() ?? false;
+  if (isTerminal && currentInteraction()?.interactive === false) {
+    throw new Error("Prompts are disabled. Provide --sec or NAPPLET_CI_SIGNING_KEY; pipe a secret only with --prompt-sec.");
+  }
   if (isTerminal && input.read && input.setRaw) {
     return finalizeSecret(await readBytesFromTerminal(input, output, message, false, []));
   }
@@ -73,6 +83,9 @@ export async function promptSecret(options: SecretPromptOptions = {}): Promise<s
  * ```
  */
 export async function promptLine(options: LinePromptOptions): Promise<string> {
+  if (currentInteraction()?.interactive === false) {
+    throw new Error("Prompts are disabled. Supply the missing value with a flag or in .napplet/config.yaml.");
+  }
   const input = options.input ?? Deno.stdin;
   const output = options.output ?? Deno.stderr;
   const message = formatPromptMessage(options.message, options.defaultValue);
@@ -112,27 +125,25 @@ async function readBytesFromTerminal(
   echo: boolean,
   suggestions: readonly string[],
 ): Promise<number[]> {
-  output.writeSync(encoder.encode(message));
   const bytes: number[] = [];
   const buffer = new Uint8Array(1);
-  input.setRaw?.(true, { cbreak: true });
+  input.setRaw?.(true, { cbreak: false });
   try {
+    output.writeSync(encoder.encode(message));
     for (;;) {
       const read = await input.read?.(buffer);
-      if (read === null || read === undefined) break;
+      if (read === null || read === undefined) throw new PromptCancelledError();
       for (let i = 0; i < read; i += 1) {
         const byte = buffer[i];
-        if (byte === 3) throw new Error("Prompt cancelled");
-        if (byte === 4 && bytes.length === 0 && !echo) {
-          throw new Error("No secret provided on stdin");
-        }
-        if (byte === 4 || byte === 10 || byte === 13) {
+        if (byte === 3 || byte === 4) throw new PromptCancelledError();
+        if (byte === 10 || byte === 13) {
           output.writeSync(encoder.encode("\n"));
           return bytes;
         }
         if (byte === 8 || byte === 127) {
           if (bytes.length > 0) {
-            bytes.pop();
+            let removed = bytes.pop()!;
+            while ((removed & 0xc0) === 0x80 && bytes.length) removed = bytes.pop()!;
             if (echo) output.writeSync(encoder.encode("\b \b"));
           }
           continue;
@@ -154,8 +165,6 @@ async function readBytesFromTerminal(
   } finally {
     input.setRaw?.(false);
   }
-  output.writeSync(encoder.encode("\n"));
-  return bytes;
 }
 
 async function readSecretFromReadable(source: ReadableStream<Uint8Array>): Promise<string> {
@@ -191,7 +200,8 @@ function finalizeSecret(bytes: readonly number[]): string {
 }
 
 function formatPromptMessage(message: string, defaultValue: string | undefined): string {
-  return defaultValue === undefined ? `${message}: ` : `${message} [${defaultValue}]: `;
+  const label = paint(`? ${message}`, "accent");
+  return defaultValue === undefined ? `${label}: ` : `${label} ${paint(`[${defaultValue}]`, "muted")}: `;
 }
 
 function completeSuggestion(

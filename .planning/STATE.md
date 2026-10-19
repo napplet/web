@@ -2,19 +2,19 @@
 gsd_state_version: "1.0"
 milestone: v0.34.0
 milestone_name: NIP-5D Runtime Injection
-current_phase: 163
-current_phase_name: nap-gamepad-across-repositories
+current_phase: 164
+current_phase_name: cli-terminal-usability
 status: completed
-stopped_at: Phase 163 verified; completing prerequisite publication for CLI follow-up 243
-last_updated: "2026-10-14T16:24:49.491178+00:00"
-last_activity: 2026-10-14
-last_activity_desc: Integrated the merged icon skill with the verified GAMEPAD release
+stopped_at: Phase 164 verified locally and shipped in PR 248 with terminal recordings
+last_updated: "2026-10-17T21:23:11+00:00"
+last_activity: 2026-10-17
+last_activity_desc: Merged current main and resolved PR 248 CLI conflicts
 progress:
-  total_phases: 8
-  completed_phases: 3
-  total_plans: 16
-  completed_plans: 6
-  percent: 38
+  total_phases: 9
+  completed_phases: 4
+  total_plans: 19
+  completed_plans: 9
+  percent: 47
 ---
 
 # Project State
@@ -25,11 +25,21 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 
 **Core value:** Prove that sandboxed Nostr apps can securely delegate to a host shell over a simple, standardized protocol — and ship the spec + SDK so others can build on it.
 
-**Current focus:** Phase 163 — NAP-GAMEPAD verified and shipped as coordinated PRs; release ordering recorded in COVERAGE.md.
+**Current focus:** Phase 164 — CLI terminal usability verified and shipped in [PR #248](https://github.com/napplet/web/pull/248) with visual proof.
 
 > Integration provenance (quick task 261012-jnp): Both lineages independently used phase number 162. The optimizer lineage is `.planning/phases/162-blossom-backed-large-asset-optimization/` (11 plans, verified before integration); main's schema migration lineage is `.planning/phases/162-nip-5d-event-schema-migration/` (3 plans, shipped via #224). Earlier aggregate-hash descriptions are historical, not current protocol guidance. All records and artifacts from both lineages are retained; quick task 261012-jnp tracks their integration on PR #205.
 
 > **Provenance note:** The "Accumulated Context" section below preserves bullet records from BOTH branches' STATE.md histories. Records tagged "v0.29.0" from main's lineage refer to the milestone NOW renumbered as v0.30.0 (Class-Gated Decrypt — Phases 135-138). Records tagged "v0.29.0" from feat/strict-model refer to NUB-CONNECT (Phases 135-142). Phase number alone is not a unique identifier across the two; cross-reference the topic (decrypt/identity/NIP-07 → v0.30.0; connect/class/CSP-authority → v0.29.0).
+
+### Phase 164 — CLI terminal usability (complete)
+
+Branch `feat/cli-terminal-usability` ships guided missing-value recovery, `-i` prompt suppression, terminal presentation, and real visual proof in PR #248. Plan and acceptance evidence: `.planning/phases/164-cli-terminal-usability/`. Build, types, repository tests, native smoke, PTY checks, and site links passed. Existing completed phases below retain their historical status.
+
+### Quick task 261017-fw7 — COMPLETE
+
+- Corrected optional-domain declaration guidance across design, build and test skills.
+- Build, type-check, recursive units and 11 skills contracts passed; changed-file AI-slop 98/100 (external dependency advisory only).
+- Runtime and living protocol unchanged; publication templates must preserve both declared lists.
 
 ## Current Position
 
@@ -43,10 +53,10 @@ Follow-up authorized on 2026-10-14: `.planning/debug/pr205-resource-wire.md` rec
 - All nine remote checks pass for merge head `34bd9b909418a675486254f298dda06aa99f2dcf` (CI, conformance, Scan, links and five standalone platforms); PR #205 is OPEN/CLEAN/MERGEABLE. Final task-artifact revision is separately watched and recorded in the closing PR evidence comment. Evidence: `.planning/quick/261012-jnp-catch-feat-vite-plugin-blossom-optimizat/261012-jnp-SUMMARY.md`. Historical milestone position and accumulated records below are preserved, not advanced as though this quick task completed a phase.
 - Final delivery rerun exposed the companion whole-Blob fixture's default five-second timeout under contention. Its timeout now matches the other large-fixture test's bounded thirty-second budget, retaining every assertion. Targeted plugin units pass 137/137; repaired full local gates and final pushed-SHA results are recorded in the closing PR evidence comment. The protocol blocker above remains unchanged.
 
-Phase: 163 (nap-gamepad-across-repositories) — implementation verified
+Phase: 164 (cli-terminal-usability) — verified and shipped
 Plan: 3 of 3
-Status: GAMEPAD published and CLI follow-up #243 merged; PR #205 resource wire migration implemented and locally verified; see the PR for current delivery checks
-Last activity: 2026-10-14 - Completed quick task 261014-fuc: Replace blossom:sha256 URIs with BUD-10 form
+Status: [PR #248](https://github.com/napplet/web/pull/248) open with six actual terminal screenshots
+Last activity: 2026-10-15 - Completed quick task 261015-aen: nsyte-style filled CLI progress bars
 
 See phase 163 VERIFICATION.md and COVERAGE.md for evidence and disclosed release/specification/baseline limits. Earlier phase and quick-task records below are historical.
 
@@ -583,6 +593,10 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 
 | Quick ID | Task | Date | Commit | Artifacts |
 |----------|------|------|--------|-----------|
+| 261015-aen | Use nsyte-style filled CLI progress bars and refresh terminal proof | 2026-10-15 | 5e165056 | [261015-aen](./quick/261015-aen-use-nsyte-filled-progress-bars-in-cli-an/) |
+| 261017-jqc | Preserve extension tags and validate defined manifest fields | 2026-10-17 | 9ff56c20 / PR #256 | [261017-jqc](./quick/261017-jqc-preserve-nostr-extension-tags-in-cli-pub/) |
+| 261015-bbu | Use QuickJS and dependency pruning for released CLI binaries | 2026-10-15 | PR #249 | [261015-bbu-use-quickjs-and-dependency-pruning-for-r](./quick/261015-bbu-use-quickjs-and-dependency-pruning-for-r/) |
+| 261015-asj | Add CLI compile experiments for QuickJS, pruning, bundling, and minification | 2026-10-15 | be8e27a9 | [261015-asj-add-cli-compile-experiments-for-quickjs-](./quick/261015-asj-add-cli-compile-experiments-for-quickjs-/) |
 | 261014-fuc | Replace blossom:sha256 URIs with BUD-10 blossom:<sha256>.<ext> | 2026-10-14 | 48782cd0 | [261014-fuc-replace-blossom-sha256-uris-with-bud-10-](./quick/261014-fuc-replace-blossom-sha256-uris-with-bud-10-/) |
 | 261013-vo3 | Add a skill for icon design, generation, refinement, and NIP-5D integration | 2026-10-13 | b5757eec | [261013-vo3-add-a-napplet-skill-for-icon-design-imag](./quick/261013-vo3-add-a-napplet-skill-for-icon-design-imag/) |
 | 260904-nm7 | Add an accessible recoverable packaged-resource loader in stacked PR #216 | 2026-09-04 | a1b6bb0c | [260904-nm7-improve-the-napplet-vite-plugin-packaged](./quick/260904-nm7-improve-the-napplet-vite-plugin-packaged/) |
@@ -623,6 +637,8 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 | 260706-psu | Resolve napplet/web#126 with @napplet/shim host prelude | 2026-07-06 | 4e726171 | [260706-psu-task-resolve-napplet-web-126-by-adding-a](./quick/260706-psu-task-resolve-napplet-web-126-by-adding-a/) |
 | 260706-dmu | Align NAP-DM result envelope unions | 2026-07-07 | ac9c32e0 | [260706-dmu-align-dm-result-envelope-unions](./quick/260706-dmu-align-dm-result-envelope-unions/) |
 | 260706-via | Harden napplet skills against direct browser network and storage APIs in sandboxed napplets | 2026-07-06 | e781e436 | [260706-via-harden-napplet-skills-against-direct-bro](./quick/260706-via-harden-napplet-skills-against-direct-bro/) |
+| 261015-k1f | Recommend NAP-KEYS registration for shortcuts and game controls | 2026-10-15 | e55a2aa8 | [261015-k1f-document-nap-keys-registration-for-keybo](./quick/261015-k1f-document-nap-keys-registration-for-keybo/) |
+| 261016-tlx | Resolve PR 248 conflicts with YAML migration and CLI terminal behavior preserved | 2026-10-16 | 791cfd50 | [261016-tlx-resolve-pr-248-conflicts-with-current-ma](./quick/261016-tlx-resolve-pr-248-conflicts-with-current-ma/) |
 
 ## Deferred Items
 
@@ -660,6 +676,7 @@ Items acknowledged and deferred at v0.31.0 milestone close on 2026-05-24:
 
 | 261007-c0v | Embed NIP-5D publishing metadata and recover standalone HTML deploys ([PR #226](https://github.com/napplet/web/pull/226)) | 2026-10-07 | 4b9cbc79 | [261007-c0v](./quick/261007-c0v-embed-nip-5d-publishing-metadata-and-rec/) |
 | 261010-01a | Optional Zapstore metadata, standalone/inline screenshots, and current protocol context | 2026-10-10 | 46c19178 | [261010-01a](./quick/261010-01a-optional-zapstore-metadata-and-current-p/) |
+| 261015-by5 | Migrate CLI project configuration to YAML with required consent | 2026-10-15 | 5132679b | [261015-by5-migrate-cli-project-configuration-from-j](./quick/261015-by5-migrate-cli-project-configuration-from-j/) |
 
 Historical optimizer session: 2026-08-21T18:25:15.384Z — Completed 162-11-PLAN.md.
 Historical main session: 2026-07-23T15:44:08.781Z — Completed 161-16-PLAN.md.

@@ -1,3 +1,4 @@
+import { stringify } from "yaml";
 import {
   defaultConfig,
   initConfig,
@@ -17,7 +18,7 @@ Deno.test("defaultConfig uses a singular .napplet-style project model", () => {
   assertEquals(config.discover?.roots, ["."]);
 });
 
-Deno.test("initConfig writes .napplet/config.json", async () => {
+Deno.test("initConfig writes .napplet/config.yaml", async () => {
   await withTempDir(async (dir) => {
     const result = await initConfig({
       cwd: dir,
@@ -27,7 +28,7 @@ Deno.test("initConfig writes .napplet/config.json", async () => {
       named: ["feed"],
     });
     assert(result.created);
-    assert(result.path.endsWith(".napplet/config.json"));
+    assert(result.path.endsWith(".napplet/config.yaml"));
     const config = await readConfig(result.path);
     assertEquals(config?.sourceDir, "dist");
     assertEquals(config?.named, ["feed"]);
@@ -65,12 +66,12 @@ Deno.test("initConfig persists CLI-owned deploy metadata", async () => {
   });
 });
 
-Deno.test("readConfig preserves legacy named configs without metadata", async () => {
+Deno.test("readConfig preserves named configs without metadata", async () => {
   await withTempDir(async (dir) => {
-    const path = `${dir}/config.json`;
+    const path = `${dir}/config.yaml`;
     await Deno.writeTextFile(
       path,
-      JSON.stringify({
+      stringify({
         version: 1,
         sourceDir: ".",
         relays: [],
@@ -115,8 +116,8 @@ Deno.test("parseArchetypeConventions accepts stable identities and rejects disco
 
 Deno.test("readConfig accepts URI archetypes alongside objects with advertised params", async () => {
   await withTempDir(async (dir) => {
-    const path = `${dir}/config.json`;
-    await Deno.writeTextFile(path, JSON.stringify({
+    const path = `${dir}/config.yaml`;
+    await Deno.writeTextFile(path, stringify({
       metadata: {
         archetypes: [
           "napplet:note/open",

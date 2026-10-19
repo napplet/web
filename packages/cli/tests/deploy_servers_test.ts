@@ -1,3 +1,4 @@
+import { stringify } from "yaml";
 import { rejects, throws } from "node:assert/strict";
 import { defaultConfig } from "../src/config.ts";
 import { discoverNapplets } from "../src/discover.ts";
@@ -41,7 +42,7 @@ Deno.test("deploy reports malformed sidecar servers before manifest signing", as
       `${sourceDir}/.nip5a-manifest.json`,
       JSON.stringify({ tags: [["server"]] }),
     );
-    await Deno.writeTextFile(`${dir}/config.json`, JSON.stringify(defaultConfig({ sourceDir })));
+    await Deno.writeTextFile(`${dir}/config.yaml`, stringify(defaultConfig({ sourceDir })));
     const errors: string[] = [];
     const previousError = console.error;
     console.error = (message: unknown) => errors.push(String(message));
@@ -52,7 +53,7 @@ Deno.test("deploy reports malformed sidecar servers before manifest signing", as
           "--dry-run",
           "--json",
           "--config",
-          `${dir}/config.json`,
+          `${dir}/config.yaml`,
           "--sec",
           "01".padStart(64, "0"),
         ]),

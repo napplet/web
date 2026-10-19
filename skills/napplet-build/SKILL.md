@@ -16,7 +16,7 @@ Rewrite the plan before coding if it needs any of these in napplet code: `fetch`
 ```bash
 napplet create my-napplet
 cd my-napplet
-napplet init            # d-tag, title, description, archetype metadata → .napplet/config.json
+napplet init            # d-tag, title, description, archetype metadata → .napplet/config.yaml
 pnpm install
 ```
 
@@ -32,8 +32,8 @@ Keep these scripts as generated:
 
 | File | Edit |
 | --- | --- |
-| `.napplet/config.json` | Read-only for you; CLI-owned deployment metadata |
-| `vite.config.ts` | Hard `requires: [...]`, `archetypes`, optional config schema; keep `artifactMode: 'single-file'` and the `nappletType` fallback |
+| `.napplet/config.yaml` | Read-only for you; CLI-owned deployment metadata |
+| `vite.config.ts` | Hard `requires: [...]`, optional integrations in `optional: [...]`, `archetypes`, optional config schema; keep `artifactMode: 'single-file'` and the `nappletType` fallback |
 | `index.html` | Keep `<title>`, `<meta viewport>`, `#app` root. **Delete the starter `masthead` / `eyebrow` / `<h1>`** and the demo panels; add only the product's markup (`napplet-ui` Rule 1) |
 | `src/styles.css` | Replace the starter's page layout (`.app-shell { padding: 2rem }`, `.workspace { width: min(1040px, 100%) }`, `body { min-width: 320px }`) with the compact, full-frame, container-query layout from `napplet-ui` |
 | `src/main.ts` | Product behavior; SDK-first calls; keep `domain-availability.ts`'s `runtimeHasDomain` pattern for optional-domain gating |
@@ -57,11 +57,14 @@ export default defineConfig({
       nappletType: 'my-napplet',        // build-local fallback; deploy metadata comes from napplet init
       artifactMode: 'single-file',      // fold assets, keep inline scripts, one index.html
       requires: ['outbox', 'storage'],  // hard requirements only, bare domain names
+      optional: ['theme', 'keys'],      // integrations with a usable fallback
       // archetypes: [{ slug: 'note', convention: 'napplet:note/open' }],  // see napplet-interop
     }),
   ],
 });
 ```
+
+Keep both capability lists aligned with the design and the SDK domains actually used. A guarded call still needs its optional declaration; importing an SDK wrapper or checking presence does not by itself populate deployment metadata. Current tooling emits `R`/`O` tags. If a constrained generation service only accepts application source, use its documented data-only metadata surface; flag a missing surface rather than silently omitting declarations or editing protected build configuration.
 
 The artifact hash lands in `.nip5a-manifest.json` and the signed event, not in a meta tag. `VITE_DEV_PRIVKEY_HEX` produces a signed manifest in CI; dev builds work without it.
 
@@ -70,8 +73,9 @@ The artifact hash lands in `.nip5a-manifest.json` and the signed event, not in a
 1. **Shell first, then features.** Lay out `index.html` + `styles.css` per `napplet-ui`: full-frame root, compact tokens, tier rules, theme application, inline states, no title header. Check it at `200×160` and `2400×1200` before wiring data.
 2. **Calls are SDK-first.** `import { outbox, storage, identity, … } from '@napplet/sdk'`; `window.napplet?.domain` only decides whether an optional feature renders. Exact signatures: `napplet-sdk` and the installed `@napplet/sdk` types.
 3. **Boundaries from the spec.** Social reads/publishes through `outbox`; social actions through `common` / `lists` / `count` / `dm`; `relay` only where the spec names the escape hatch, with a code comment stating it.
-4. **Teardown.** Close every subscription and key binding; revoke object URLs.
-5. **States.** Signed-out (`identity.getPublicKey()` returns `""`), optional domain absent, publish failure (`result.ok === false`), resource rejection `code` — each renders a compact inline state, never a blank frame.
+4. **Keyboard actions.** For maximum compatibility, register every keyboard-bound action through [NAP-KEYS](https://github.com/napplet/naps/pull/9), including app-local shortcuts and game controls. Follow `napplet-sdk` for `keys.register`, optional-domain gating, and binding cleanup. Keep ordinary text input and usable controls when `keys` is absent; this is non-normative authoring guidance, not an unconditional manifest requirement.
+5. **Teardown.** Close every subscription and key binding; revoke object URLs.
+6. **States.** Signed-out (`identity.getPublicKey()` returns `""`), optional domain absent, publish failure (`result.ok === false`), resource rejection `code` — each renders a compact inline state, never a blank frame.
 
 ## Step 5 — Validate the generated project
 

@@ -1,0 +1,30 @@
+
+[36m                         _      _
+ _ __   __ _ _ __  _ __  | | ___| |_
+| '_ \ / _' | '_ \| '_ \ | |/ _ \ __|
+| | | | (_| | |_) | |_) || |  __/ |_
+|_| |_|\__,_| .__/| .__/ |_|\___|\__|
+            |_|   |_|[0m
+[2m  napplet 0.9.1  /  build · preview · publish[0m
+
+[36m? Description for Notes[0m: A private notebook for quick ideas.
+[36m? Relay URLs (comma separated)[0m: ws://127.0.0.1:62317/relay
+[36m? Blossom server origins (comma separated)[0m: http://127.0.0.1:62317, http://127.0.0.1:62318
+[36m? Save these settings for next time? (yes/no)[0m [2m[yes][0m: yes
+Saved project settings.
+[1;36m
+Deployment plan[0m
+  Notes  /  named:notes
+  Relays: ws://127.0.0.1:62317/relay
+  Blossom: http://127.0.0.1:62317, http://127.0.0.1:62318
+[2m  Preparing signer and artifacts...
+[0m
+Enter signing secret (input hidden), then press Enter: 
+[1;36m  UPLOAD  /  Blossom mirrors[0m
+  [░░░░░░░░░░░░░░░░░░░░] 0%  0/2
+[2A[J[1;36m  UPLOAD  /  Blossom mirrors[0m
+  [36m[██████████░░░░░░░░░░] 50%[0m  1/2  0.6s
+  http://127.0.0.1:62317
+[32m    [████████████] 100%  1 uploaded, 0 present, 0 failed[0m
+  http://127.0.0.1:62318
+[32m    [░░░░░░░░░░░░] 0%  0 uploaded, 0 present, 0 failed[0m

@@ -82,7 +82,7 @@ Deno.test("renderDeployReport shows deploy summary and copyable pointers", async
   const output = renderDeployReport({
     signing,
     plan: {
-      configPath: ".napplet/config.json",
+      configPath: ".napplet/config.yaml",
       items: [item],
     },
     manifests: [manifest],
@@ -120,7 +120,7 @@ Deno.test("renderDeployReport replaces placeholder candidate names with a readab
       notes: [],
     },
     plan: {
-      configPath: ".napplet/config.json",
+      configPath: ".napplet/config.yaml",
       items: [item],
     },
     manifests: [{
@@ -236,7 +236,7 @@ async function createNetworkDeployReport(): Promise<{
         notes: [],
       },
       plan: {
-        configPath: ".napplet/config.json",
+        configPath: ".napplet/config.yaml",
         items: [item],
       },
       manifests: [{
@@ -304,6 +304,7 @@ Deno.test("createDeployProgressReporter renders terminal progress lines", () => 
 
   assert(lines[0].includes("Uploading 2 file(s)"));
   assert(lines[1].includes("upload 1/2 uploaded: https://blob.example/index.html"));
+  assert(lines[1].startsWith("[█████████░░░░░░░░░]"));
   assert(lines[2].includes("publish 1/1 1/1 relays accepted"));
 });
 
@@ -314,7 +315,7 @@ Deno.test("isTerminalOutput falls back to false for non-terminal sinks", () => {
 
 Deno.test("renderInitReport shows resolved config", () => {
   const output = renderInitReport({
-    path: "/repo/.napplet/config.json",
+    path: "/repo/.napplet/config.yaml",
     created: true,
     config: {
       version: 1,
@@ -329,7 +330,7 @@ Deno.test("renderInitReport shows resolved config", () => {
 
   assert(output.includes("Napplet Init Complete"));
   assert(output.includes("Status: created"));
-  assert(output.includes("Config: /repo/.napplet/config.json"));
+  assert(output.includes("Config: /repo/.napplet/config.yaml"));
   assert(output.includes("Default target: named"));
   assert(output.includes("Named d tags: 1 (feed)"));
   assert(output.includes("Archetypes: 1 (napplet:note/open)"));

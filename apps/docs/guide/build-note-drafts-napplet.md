@@ -609,22 +609,21 @@ pnpm build
 
 Add a Napplet CLI config for discovery, conformance, and later deploy dry-runs:
 
-<!-- tutorial-file: .napplet/config.json -->
-```json
-{
-  "version": 1,
-  "sourceDir": ".",
-  "relays": ["wss://relay.damus.io"],
-  "blossomServers": ["https://cdn.hzrd149.com"],
-  "defaultTarget": "named",
-  "named": ["notedrafts"],
-  "conformance": {
-    "command": "napplet-conformance"
-  },
-  "paja": {
-    "command": "kehto"
-  }
-}
+<!-- tutorial-file: .napplet/config.yaml -->
+```yaml
+version: 1
+sourceDir: .
+relays:
+  - wss://relay.damus.io
+blossomServers:
+  - https://cdn.hzrd149.com
+defaultTarget: named
+named:
+  - notedrafts
+conformance:
+  command: napplet-conformance
+paja:
+  command: kehto
 ```
 
 Add a Paja simulation config:

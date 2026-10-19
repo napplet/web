@@ -5,6 +5,7 @@
  */
 
 import { promptSecret } from "./prompt.ts";
+import { canPrompt } from "./interaction.ts";
 
 export interface FlagBag {
   boolean: Set<string>;
@@ -32,6 +33,10 @@ export function collectFlags(argv: string[]): FlagBag {
       passthrough = true;
       continue;
     }
+    if (arg === "-i") {
+      flags.boolean.add("non-interactive");
+      continue;
+    }
     if (!arg.startsWith("--")) {
       flags.positional.push(arg);
       continue;
@@ -41,12 +46,12 @@ export function collectFlags(argv: string[]): FlagBag {
       flags.boolean.add(name);
       continue;
     }
-    if (["force", "all", "root", "snapshot", "prompt-sec", "dry-run", "json", "zapstore", "no-zapstore"].includes(name)) {
+    if (["force", "all", "root", "snapshot", "prompt-sec", "dry-run", "json", "zapstore", "no-zapstore", "migrate-config", "non-interactive", "no-color"].includes(name)) {
       flags.boolean.add(name);
       continue;
     }
     const value = argv[i + 1];
-    if (value === undefined || value.startsWith("--")) throw new Error(`Missing value for ${arg}`);
+    if (value === undefined || value.startsWith("--") || value === "-i") throw new Error(`Missing value for ${arg}`);
     i += 1;
     const values = flags.values.get(name) ?? [];
     values.push(value);
@@ -68,7 +73,7 @@ export function requiredValue(flags: FlagBag, name: string): string {
 export async function resolveSecretInput(flags: FlagBag): Promise<string> {
   const sec = first(flags.values.get("sec"));
   if (sec) return sec;
-  if (!flags.boolean.has("prompt-sec")) {
+  if (!flags.boolean.has("prompt-sec") && (!canPrompt() || flags.boolean.has("non-interactive"))) {
     throw new Error("Provide --sec <secret> or --prompt-sec");
   }
   return await promptSecret();

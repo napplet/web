@@ -995,3 +995,16 @@ Plans:
 - [x] 163-03-PLAN.md — All repositories, docs, releases and coordinated PR shipment
 
 Verified and shipped in [web #242](https://github.com/napplet/web/pull/242), [Kehto #297](https://github.com/kehto/web/pull/297), and five consumer/community PRs linked in COVERAGE.md. Publish the Kehto package set before the primary release. The optional native API replacement conflict and existing CVM baseline failures remain disclosed.
+
+### Phase 164: CLI terminal usability
+
+**Goal:** Improve CLI prompts, terminal display, CI safety, and ship a PR with visual proof.
+**Requirements**: CLI-UX-01 missing configuration recovery; CLI-UX-02 terminal display; CLI-UX-03 nsyte workflow research; CLI-UX-04 non-interactive safety; CLI-UX-05 ASCII banner; CLI-UX-06 PR with visual proof.
+**Depends on:** Phase 163
+**Plans:** 3 plans — COMPLETE; shipped in [PR #248](https://github.com/napplet/web/pull/248) with actual terminal visual proof.
+
+Plans:
+
+- [x] 164-01-PLAN.md — Interaction policy and missing deployment input recovery
+- [x] 164-02-PLAN.md — Command workflows and terminal presentation
+- [x] 164-03-PLAN.md — Visual proof, full verification, and PR shipment

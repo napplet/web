@@ -1,3 +1,4 @@
+import { stringify } from "yaml";
 import { finalizeEvent, getPublicKey } from "nostr-tools";
 import { defaultConfig } from "../src/config.ts";
 import { discoverNapplets } from "../src/discover.ts";
@@ -14,7 +15,7 @@ Deno.test("deploy dry-run reports recovered destinations and omits binary icon d
     const sourceDir = `${dir}/dist`;
     await Deno.mkdir(sourceDir);
     await Deno.writeTextFile(`${sourceDir}/index.html`, html);
-    await Deno.writeTextFile(`${dir}/config.json`, JSON.stringify(defaultConfig({ sourceDir })));
+    await Deno.writeTextFile(`${dir}/config.yaml`, stringify(defaultConfig({ sourceDir })));
     const output: string[] = [];
     const previousLog = console.log;
     console.log = (message: unknown) => {
@@ -22,7 +23,7 @@ Deno.test("deploy dry-run reports recovered destinations and omits binary icon d
     };
     try {
       assertEquals(
-        await main(["deploy", "--dry-run", "--json", "--config", `${dir}/config.json`]),
+        await main(["deploy", "--dry-run", "--json", "--config", `${dir}/config.yaml`]),
         0,
       );
     } finally {

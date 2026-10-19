@@ -3,9 +3,22 @@ import { defaultConfig } from "../src/config.ts";
 import { KEY_SERVICE_NAME, type KeyStoreProvider, type StoredSecret } from "../src/key-store.ts";
 import { DEFAULT_CONNECT_RELAYS } from "../src/nostr-connect.ts";
 import type { NappletConfig } from "../src/types.ts";
-import { assertEquals } from "./assert.ts";
+import { assert, assertEquals } from "./assert.ts";
 
 const pubkey = "02".repeat(32);
+
+Deno.test("keys connect -i fails before accessing key storage or starting pairing", async () => {
+  let message = "";
+  try {
+    await commandKeys(["connect", "-i", "--name", "test"], "help", {
+      interactive: true,
+      requireKeyStoreProvider: () => { throw new Error("unexpected keychain access"); },
+      connectRemoteSigner: () => { throw new Error("unexpected pairing"); },
+    });
+  } catch (error) { message = String(error); }
+  assert(message.includes("requires an interactive signer approval"));
+  assert(!message.includes("unexpected"));
+});
 
 function provider(stores: StoredSecret[]): KeyStoreProvider {
   return {
@@ -33,10 +46,11 @@ Deno.test("commandKeys connect records remote signer pubkey and relays for recov
       "--relay",
       "wss://relay.connect",
       "--config",
-      "/repo/.napplet/config.json",
+      "/repo/.napplet/config.yaml",
     ],
     "help",
     {
+      interactive: true,
       requireKeyStoreProvider: () => Promise.resolve(provider(stores)),
       connectRemoteSigner(options) {
         assertEquals(options.relays, ["wss://relay.connect"]);
@@ -47,7 +61,7 @@ Deno.test("commandKeys connect records remote signer pubkey and relays for recov
         });
       },
       readConfig(path) {
-        assertEquals(path, "/repo/.napplet/config.json");
+        assertEquals(path, "/repo/.napplet/config.yaml");
         return Promise.resolve(defaultConfig());
       },
       writeConfig(config, path) {
@@ -63,7 +77,7 @@ Deno.test("commandKeys connect records remote signer pubkey and relays for recov
     account: "default",
     secret: "nbunksec1connected",
   }]);
-  assertEquals(written[0].path, "/repo/.napplet/config.json");
+  assertEquals(written[0].path, "/repo/.napplet/config.yaml");
   assertEquals(written[0].config.bunkerPubkey, pubkey);
   assertEquals(written[0].config.signing, {
     mode: "interactive",
@@ -81,6 +95,7 @@ Deno.test("commandKeys connect prompts for bunker relays when no relay flags are
     ["connect", "--name", "default"],
     "help",
     {
+      interactive: true,
       requireKeyStoreProvider: () => Promise.resolve(provider(stores)),
       promptConnectRelays(defaults) {
         assertEquals(defaults, [...DEFAULT_CONNECT_RELAYS]);

@@ -1,0 +1,56 @@
+
+[36m                         _      _
+ _ __   __ _ _ __  _ __  | | ___| |_
+| '_ \ / _' | '_ \| '_ \ | |/ _ \ __|
+| | | | (_| | |_) | |_) || |  __/ |_
+|_| |_|\__,_| .__/| .__/ |_|\___|\__|
+            |_|   |_|[0m
+[2m  napplet 0.9.1  /  build · preview · publish[0m
+
+[1;36mBuild a napplet. Preview it. Publish when ready.[0m
+
+Usage: napplet <command> [options]
+
+[1;36mCreate and develop[0m
+[2m──────────────────────────────[0m
+  create [directory]    Start from the napplet boilerplate
+  init                  Complete missing project settings
+  guide                 Read the developer workflow
+  discover              Find built napplets (JSON)
+  paja                  Open the local development shell
+
+[1;36mVerify and publish[0m
+[2m──────────────────────────────[0m
+  conformance           Check your built napplet
+  screenshot [target]   Capture a preview image
+  deploy                Prepare, sign, upload, and publish
+  debug                 Inspect the deployment plan (JSON)
+  migrate <event.json>  Preview a legacy event migration (JSON)
+
+[1;36mSigning keys[0m
+[2m────────────────────────[0m
+  keys store            Save a signing key or bunker session
+  keys connect          Pair with a remote signer
+  keys use              Select a stored key for this project
+  keys list             List stored references
+  keys delete           Remove a stored reference
+  keys doctor           Check local key storage
+
+[1;36mTerminal options[0m
+[2m────────────────────────────[0m
+  -i, --non-interactive  Disable prompts; use flags or config
+  --no-color            Plain output (also honors NO_COLOR)
+  --help, -h            Show command help
+  --version, -v         Show installed version
+
+  CI and redirected streams disable prompts automatically.
+  Deploy --json keeps stdout machine-readable, without a banner.
+
+[1;36mGet started[0m
+[2m───────────────────────[0m
+  napplet create my-napplet
+  napplet init
+  napplet deploy --dry-run
+
+Run napplet <command> --help for options and examples.
+

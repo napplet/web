@@ -120,6 +120,24 @@ test('build and design keep the boilerplate-first and OUTBOX-first guidance', ()
   assert.match(design, /density:/);
 });
 
+test('keyboard action registration guidance includes shortcuts and games throughout the workflow', () => {
+  for (const name of ['napplet-make', 'napplet-design', 'napplet-build', 'napplet-sdk', 'napplet-port', 'napplet-test']) {
+    const source = skills.get(name).source;
+    assert.match(source, /maximum compatibility/i, name);
+    assert.match(source, /register[^\n]*keyboard-bound action|keyboard-bound action[^\n]*register/i, name);
+    assert.match(source, /shortcuts[^\n]*game controls/i, name);
+    assert.match(source, /https:\/\/github\.com\/napplet\/naps\/pull\/9/, name);
+    assert.match(source, /ordinary text input/i, name);
+  }
+  const sdk = skills.get('napplet-sdk').source;
+  assert.match(sdk, /keys\.register/);
+  assert.match(sdk, /shell chooses the actual keymap/i);
+  const verification = skills.get('napplet-test').source;
+  assert.match(verification, /changed binding/);
+  assert.match(verification, /without duplicate local hotkey handling/);
+  assert.match(verification, /fallback with `keys` absent/);
+});
+
 test('the SDK reference lists every shipped domain and no skill imports the runtime shim', () => {
   const sdk = skills.get('napplet-sdk').source;
   for (const domain of [

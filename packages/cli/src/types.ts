@@ -1,7 +1,7 @@
 /** CONFIG_DIR constant used by shared CLI type helpers. */
 export const CONFIG_DIR = ".napplet";
 /** CONFIG_FILE constant used by shared CLI type helpers. */
-export const CONFIG_FILE = "config.json";
+export const CONFIG_FILE = "config.yaml";
 
 /** NAPPLET_KIND_SNAPSHOT constant used by shared CLI type helpers. */
 export const NAPPLET_KIND_SNAPSHOT = 5129;

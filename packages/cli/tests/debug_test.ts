@@ -21,13 +21,13 @@ Deno.test("createDebugReport summarizes config discovery deploy and manifests", 
 
     const report = await createDebugReport(config, {
       cwd: dir,
-      configPath: `${dir}/.napplet/config.json`,
+      configPath: `${dir}/.napplet/config.yaml`,
       selection: { snapshot: true },
       signing,
       env: { NAPPLET_REMOTE_SIGNER: "nbunksec1placeholder" },
     });
 
-    assertEquals(report.configPath, `${dir}/.napplet/config.json`);
+    assertEquals(report.configPath, `${dir}/.napplet/config.yaml`);
     assertEquals(report.config.relays, ["wss://relay.example"]);
     assertEquals(report.config.blossomServers, ["https://cdn.example"]);
     assertEquals(report.discovery.count, 1);

@@ -36,7 +36,7 @@ Conformance runs against `./dist` (prefers `dist/index.html`). Never test source
 | Network and media bytes | No `fetch`, XHR, WebSocket, external `<img src>`; `resource` instead |
 | Persistence | No `localStorage`, IndexedDB, cookies; `storage` instead |
 | Optional-domain gating | `window.napplet?.domain` after injection; never wait on optional `shell.ready()` / `shell.supports()` or service probes |
-| `requires` | Bare domain names, hard requirements only; matches the design spec |
+| `requires` / `optional` | Bare domain names for every used integration; required and optional lists match the design and deployment event |
 
 ```bash
 grep -RInE "fetch\\s*\\(|XMLHttpRequest|WebSocket|localStorage|sessionStorage|indexedDB|document\\.cookie|window\\.nostr|<img[^>]+src=['\\\"]?https?:|<script[^>]+src=['\\\"]?https?:|<link[^>]+href=['\\\"]?https?:" src dist index.html
@@ -47,6 +47,12 @@ Any hit in authored or bundled napplet code is removed or explained as a tooling
 ## Step 4 — Artifact
 
 `dist/index.html` is one self-contained file: inline JS, folded assets, no external `<script src>` (opaque-origin `srcdoc` has nothing to fetch). `artifactMode: 'single-file'` produces it; verify by inspecting the file, not by trusting the config.
+
+### Check the event that will be published
+
+Run `napplet deploy --dry-run --json --format current` and inspect the final manifest template, not only the Vite config or runtime preview. Compare its `R` and `O` domains with the design and SDK usage, including optional theme, keyboard, persistence and social integrations. After signing, confirm the same declarations remain in the signed event. This is an authoring verification step following [NIP-5D, Manifest and Required and Optional Capabilities](https://github.com/nostr-protocol/nips/pull/2303); declarations do not grant runtime permissions.
+
+If the build declares capabilities but the deployment drops or reclassifies them, report a publishing-tool defect. Legacy serialization cannot preserve the required/optional distinction; use current-format tooling when that distinction is needed. Do not claim the integration is complete from a successful preview alone.
 
 ## Step 5 — Applet UI checks (`napplet-ui`)
 
@@ -66,6 +72,7 @@ At every frame, in both a dark and a light runtime theme: no napplet name / tagl
 - **Signed-out:** `identity.getPublicKey()` returns `""`; publish / list / DM actions degrade with an inline state.
 - **OUTBOX options:** only current fields — `getEvent`: `author`, `relays`, `timeoutMs`; `query` / `subscribe`: `authors`, `relays`, `limit`, `timeoutMs`; `publish`: `relays`, `toOutbox`, `toInboxes`. No `strategy`, subscribe `live`, publish `timeoutMs`, or `outbox.eose`.
 - **Optional domain absent:** remove it from the mock runtime; the affordance hides or falls back, nothing else breaks.
+- **Keyboard actions:** for maximum compatibility, check that every keyboard-bound action is registered through [NAP-KEYS](https://github.com/napplet/naps/pull/9), including app-local shortcuts and game controls. Test the shell-assigned binding and a changed binding, confirm the registered action runs without duplicate local hotkey handling, and exercise the fallback with `keys` absent. Ordinary text input still works. This is a non-normative authoring check; the living proposal defines protocol conformance.
 - **Theme change:** emit a theme change; the whole surface repaints. A dark card on a white page is a failed integration.
 - **Escape hatch:** if `relay` is used, exercise the relay-local behavior and teardown.
 - **Teardown:** subscriptions, key bindings, and object URLs are released when the view goes away.

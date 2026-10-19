@@ -2,7 +2,8 @@
 import { join } from "node:path";
 import { userHomeDir } from "./tool-cache.ts";
 import { decodeBase64, encodeBase64 } from "@std/encoding/base64";
-import { isTerminalInput, promptSecret } from "./prompt.ts";
+import { promptSecret } from "./prompt.ts";
+import { canPrompt } from "./interaction.ts";
 import type { KeyStoreProvider, StoredSecret } from "./key-store.ts";
 
 interface KeyRecord {
@@ -24,7 +25,7 @@ export class PortableKeyStore implements KeyStoreProvider {
     private readonly readPassword = async () => {
       const supplied = Deno.env.get("NAPPLET_KEYSTORE_PASSWORD");
       if (supplied) return supplied;
-      if (!isTerminalInput()) throw new Error("Set NAPPLET_KEYSTORE_PASSWORD to unlock the encrypted local key store in non-interactive sessions");
+      if (!canPrompt()) throw new Error("Set NAPPLET_KEYSTORE_PASSWORD to unlock the encrypted local key store in non-interactive sessions");
       return await promptSecret({ message: "Local key store password (input hidden): " });
     },
   ) {}

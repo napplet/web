@@ -45,7 +45,7 @@ Deno.test("loadDeployConfig bootstraps missing config in interactive deploy", as
       assertEquals(seenFlags, flags);
       initCalled = true;
       return Promise.resolve({
-        path: "/repo/.napplet/config.json",
+        path: "/repo/.napplet/config.yaml",
         config,
         created: true,
       });
@@ -105,7 +105,7 @@ Deno.test("loadDeployConfig preserves json missing config failure", async () => 
 });
 
 Deno.test("loadDeployConfig preserves explicit config missing config failure", async () => {
-  const flags = collectFlags(["--config", "/tmp/missing-config.json"]);
+  const flags = collectFlags(["--config", "/tmp/missing-config.yaml"]);
   let initCalled = false;
   let message = "";
 
@@ -113,6 +113,7 @@ Deno.test("loadDeployConfig preserves explicit config missing config failure", a
     await loadDeployConfig(flags, false, {
       readConfig: () => Promise.resolve(null),
       isTerminalInput: () => true,
+      confirmCreate: () => Promise.resolve(false),
       runInit() {
         initCalled = true;
         return Promise.reject(new Error("should not initialize"));
@@ -123,7 +124,7 @@ Deno.test("loadDeployConfig preserves explicit config missing config failure", a
   }
 
   assert(!initCalled);
-  assert(message.includes("at /tmp/missing-config.json"));
+  assert(message.includes("at /tmp/missing-config.yaml"));
   assert(message.includes("Run: napplet init"));
 });
 
@@ -194,7 +195,7 @@ Deno.test("runPackageCli uses the private Windows executable and forwards the pa
   }]);
 });
 
-Deno.test("main accepts standalone package runner injection without changing default dispatch", async () => {
+Deno.test("main suppresses delegated create prompts in non-interactive sessions", async () => {
   const calls: Array<{ command: string; args: readonly string[] }> = [];
   const options = {
     runCreate(args: readonly string[]) {
@@ -204,7 +205,7 @@ Deno.test("main accepts standalone package runner injection without changing def
   };
 
   assertEquals(await main(["create", "project", "--force"], options), 7);
-  assertEquals(calls, [{ command: "create", args: ["project", "--force"] }]);
+  assertEquals(calls, [{ command: "create", args: ["project", "--force", "--yes"] }]);
 });
 
 Deno.test("skills is no longer a CLI command; agents install skills through skills.sh", async () => {

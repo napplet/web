@@ -174,3 +174,36 @@ it('preserves exact identifier bytes and checks queryless intent advertisements'
   expect(validateManifestEvent(valid).ok).toBe(true);
   expect(validateManifestEvent(event({ tags: [['d', 'demo'], ['x', HASH], ['i', 'napplet:note/open?id=1']] })).ok).toBe(false);
 });
+
+it('accepts arbitrary extension tags without normalizing payloads or removing duplicates', () => {
+  const extra = [['t', 'notes'], ['custom', '保留', '', '{"nested":[1,2]}'], ['custom', 'same'], ['custom', 'same'], ['flag'], ['path', 'extension'], ['description', 'extra'], ['requires', 'opaque'], ['archetype', 'opaque']];
+  const input = event({ tags: [...event().tags, ...extra] });
+  const original = JSON.stringify(input);
+  const verdict = validateManifestEvent(input);
+  expect(verdict.ok).toBe(true);
+  expect(verdict.errors).toEqual([]);
+  expect(verdict.warnings).toEqual([]);
+  expect(JSON.stringify(input)).toBe(original);
+});
+
+it.each([
+  'https://git.example.com/owner/repo.git',
+  'http://git.example.com/owner/repo.git',
+  'ssh://git@git.example.com/owner/repo.git',
+  'git://git.example.com/owner/repo.git',
+  'git@git.example.com:owner/repo.git',
+  'git.example.com:owner/repo.git',
+])('accepts a defined source location %s', (location) => {
+  expect(validateManifestEvent(event({ tags: [...event().tags, ['source', location]] })).ok).toBe(true);
+});
+
+it.each([
+  ['source'], ['source', ''], ['source', './repo'], ['source', '/home/me/repo'],
+  ['source', 'file:///tmp/repo'], ['source', 'ftp://git.example.com/repo'],
+  ['source', 'file:/tmp/repo'], ['source', 'file:relative'],
+  ['source', 'https://git.example.com/repo', 'https://mirror.example.com/repo'],
+  ['source', 'C:\\repo'],
+])('validates defined optional source metadata despite unrelated extension tags: %j', (...source) => {
+  const verdict = validateManifestEvent(event({ tags: [...event().tags, source, ['custom', 'anything']] }));
+  expect(verdict.errors.some((error) => error.code === 'invalid-metadata')).toBe(true);
+});

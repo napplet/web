@@ -66,7 +66,7 @@ test('shipped build skills preserve CLI metadata ownership', async () => {
     const source = await readFile(path.join(root, file), 'utf8');
     assert.match(source, /napplet create/);
     assert.match(source, /napplet init/);
-    assert.match(source, /\.napplet\/config\.json|CLI-owned deployment metadata/);
+    assert.match(source, /\.napplet\/config\.yaml|CLI-owned deployment metadata/);
   }
 });
 

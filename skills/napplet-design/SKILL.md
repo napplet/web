@@ -44,16 +44,22 @@ Use only domains the current `@napplet/sdk` exports (`napplet-sdk` lists them). 
 | Avatars, images, JSON, media bytes | `resource` | `fetch`, `<img src=https://…>` |
 | Uploads, external links | `upload`, `link` | Direct network / `window.open` |
 | Settings, host look | `config`, `theme` | App-owned settings pages |
-| Shortcuts | `keys` | Global key capture |
+| Keyboard-bound actions, shortcuts, game controls | `keys` action registration | App-owned key capture as the only integration path |
 | Notifications, playback, device bridges | `notify`, `media`, `cvm`, `ble`, `serial`, `fs`, `webrtc` | Browser APIs |
 | One explicit relay, diagnostics, protocols outside the outbox model | `relay` | Treating relay as the data layer |
+
+For maximum compatibility, plan to register every keyboard-bound action through [NAP-KEYS](https://github.com/napplet/naps/pull/9), including app-local shortcuts and game controls. Give each action a stable ID and label; default keys are suggestions for the shell. This is non-normative authoring guidance; the living proposal defines the contract. Ordinary text input does not need action registration.
 
 Every NAP is voluntary: assume a domain may be absent and name the fallback. `relay` needs an exact written reason; if none exists it is wrong. Do not gate a domain on `shell.ready()` / `shell.supports()` or any capability probe — a conforming runtime installs `window.napplet` before module code runs, and the optional `shell` domain only describes the environment.
 
 ## Step 3 — Hard requirements vs optional enhancements
 
+This non-normative authoring guidance follows [NIP-5D, Required and Optional Capabilities](https://github.com/nostr-protocol/nips/pull/2303). Record both lists explicitly, even when empty; runtime presence checks do not write manifest declarations.
+
 - **Hard** (napplet cannot do its one job without it) → bare domain names in the vite-plugin `requires: [...]` so a shell can refuse the load up front.
-- **Optional** → no manifest entry; gate after injection with `if (window.napplet?.domain)` and give a fallback.
+- **Optional** → declare in `optional: [...]`; gate after injection with `if (window.napplet?.domain)` and give a fallback.
+
+Put each used optional integration in the vite-plugin `optional: [...]` list as well as guarding its runtime calls. Current tooling emits `R` for `requires` and `O` for `optional`. Keep these declarations aligned when features are added or removed; list only domains actually used.
 
 Prefer optional + graceful degradation. `keys`, `theme`, `config`, `notify`, `resource`, `inc`, `intent` are almost never hard.
 
@@ -73,9 +79,10 @@ Decide these now; `napplet-ui` has the rules and defaults:
 ```
 nappletType: <kebab d-tag, e.g. "note-feed">
 purpose: <one line, one job>
-NAPs used: outbox (req), storage (req), identity (opt), common (opt), resource (opt)
+NAPs used: outbox (req), storage (req), identity (opt), common (opt), resource (opt), keys (opt)
 requires: [outbox, storage]        # hard only
-optional domains and fallbacks: resource -> initials avatar; common -> hide react/follow; keys -> buttons only
+optional: [identity, common, resource, keys]
+optional domains and fallbacks: identity -> anonymous view; resource -> initials avatar; common -> hide react/follow; keys -> buttons only
 SDK helpers: outbox.query, outbox.subscribe, outbox.publish, storage.getItem/setItem, identity.getPublicKey/onChanged
 data flow: <queries / subscriptions / publishes / stored keys>
 relay escape hatches: none | <exact reason outbox/common/lists/count/dm cannot cover>

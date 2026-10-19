@@ -52,10 +52,12 @@ export async function buildLegacyManifestFields(
       tags.push([...tag]);
     }
   }
+  // R and O can serialize to the same historical requirement; only collapse
+  // generated fields, leaving opaque extension tags and their multiplicity intact.
+  const generated = new Set(["path", "x", "description", "requires", "archetype"]);
   return {
-    tags: tags.filter((tag, index) =>
-      tags.findIndex((other) => JSON.stringify(tag) === JSON.stringify(other)) === index
-    ),
+    tags: tags.filter((tag, index) => !generated.has(tag[0]) ||
+      tags.findIndex((other) => JSON.stringify(tag) === JSON.stringify(other)) === index),
     content: "",
   };
 }

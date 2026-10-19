@@ -1,3 +1,4 @@
+import { parse, stringify } from "yaml";
 /** Opt-in black-box proof using the compiled binary and an empty host-tool PATH. */
 import { join, resolve } from "node:path";
 import { assert, assertEquals, withTempDir } from "./assert.ts";
@@ -47,11 +48,11 @@ Deno.test({
       await run(["init", "--source-dir", "dist", "--name", "proof", "--description", "Standalone proof"]);
       await run(["discover"]);
       await run(["debug"]);
-      const configPath = join(root, ".napplet", "config.json");
-      const config = JSON.parse(await Deno.readTextFile(configPath));
+      const configPath = join(root, ".napplet", "config.yaml");
+      const config = parse(await Deno.readTextFile(configPath));
       config.blossomServers = ["https://blossom.example"];
       config.zapstore = { id: "org.example.proof", name: "Proof", enabled: true };
-      await Deno.writeTextFile(configPath, JSON.stringify(config));
+      await Deno.writeTextFile(configPath, stringify(config));
       await run(["keys", "doctor"]);
       await run(["keys", "store", "--name", "proof", "--sec", "01".padStart(64, "0")]);
       assert((await run(["keys", "list"])).stdout.includes("proof"));
@@ -85,6 +86,42 @@ Deno.test({
       assertEquals(cached.code, 0, decode(cached.stderr));
       await run(["keys", "delete", "--name", "proof"]);
       assert(!(await run(["keys", "list"])).stdout.includes("proof"));
+    });
+  },
+});
+
+Deno.test({
+  name: "standalone config migration refuses unattended consent and continues after explicit approval",
+  ignore: !Deno.env.get("NAPPLET_TEST_BINARY"),
+  fn: async () => {
+    const binary = resolve(Deno.env.get("NAPPLET_TEST_BINARY")!);
+    await withTempDir(async (root) => {
+      await Deno.mkdir(join(root, ".napplet"));
+      const oldPath = join(root, ".napplet", "config.json");
+      const yamlPath = join(root, ".napplet", "config.yaml");
+      const original = '{\n  "sourceDir": "dist", "named": ["001"]\n}\n';
+      await Deno.writeTextFile(oldPath, original);
+      const run = async (args: string[]) => await new Deno.Command(binary, {
+        args, cwd: root, env: { CI: "true" }, stdin: "null", stdout: "piped", stderr: "piped",
+        signal: AbortSignal.timeout(30000),
+      }).output();
+      for (const args of [["init"], ["-i", "init"], ["init", "--force"]]) {
+        const refused = await run(args);
+        assertEquals(refused.code, 1);
+        assert(decode(refused.stderr).includes("Cannot continue without migrating"));
+        assertEquals(await Deno.readTextFile(oldPath), original);
+      }
+      for (const args of [["--help"], ["--version"], ["keys", "--help"]]) {
+        assertEquals((await run(args)).code, 0);
+      }
+      const approved = await run(["--migrate-config", "-i", "init"]);
+      assertEquals(approved.code, 0, decode(approved.stderr));
+      assert(decode(approved.stdout).includes("config.yaml"));
+      assertEquals(await Deno.readTextFile(oldPath + ".bak"), original);
+      assertEquals(parse(await Deno.readTextFile(yamlPath)), JSON.parse(original));
+      const entries = [...Deno.readDirSync(join(root, ".napplet"))].map((entry) => entry.name).sort();
+      assertEquals(entries, ["config.json.bak", "config.yaml"]);
+      assertEquals((await run(["-i", "init"])).code, 0);
     });
   },
 });

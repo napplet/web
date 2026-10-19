@@ -38,6 +38,10 @@ export function renderGuide(): string {
    # Optional application metadata: configure zapstore, then use deploy --zapstore
    napplet deploy --dry-run
    napplet deploy
+
+   Missing settings are requested in a terminal. For automation:
+   napplet deploy -i --json
+   Use --no-color for plain terminal output.
    Deploy docs: ${DOCS_BASE}/packages/cli.html
 
 Documentation

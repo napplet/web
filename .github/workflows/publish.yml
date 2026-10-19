@@ -27,6 +27,8 @@ jobs:
           cache: pnpm
           registry-url: 'https://registry.npmjs.org'
       - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.9.5
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
       - name: Create Release Pull Request or Publish

@@ -1,3 +1,4 @@
+import { stringify } from "yaml";
 import { verifyEvent } from "nostr-tools";
 import { captureDeployScreenshot } from "../src/deploy-screenshot.ts";
 import { collectFlags } from "../src/flags.ts";
@@ -239,7 +240,7 @@ Deno.test("CLI dry run includes application metadata only when requested, with n
       blossomServers: servers,
       zapstore: { ...listing, images: [`${dir}/preview.png`] },
     });
-    await Deno.writeTextFile(`${dir}/config.json`, JSON.stringify(config));
+    await Deno.writeTextFile(`${dir}/config.yaml`, stringify(config));
     const output: string[] = [];
     const log = console.log;
     console.log = (value: unknown) => output.push(String(value));
@@ -248,7 +249,7 @@ Deno.test("CLI dry run includes application metadata only when requested, with n
         await main([
           "deploy",
           "--config",
-          `${dir}/config.json`,
+          `${dir}/config.yaml`,
           "--zapstore",
           "--dry-run",
           "--json",
@@ -259,7 +260,7 @@ Deno.test("CLI dry run includes application metadata only when requested, with n
         await main([
           "deploy",
           "--config",
-          `${dir}/config.json`,
+          `${dir}/config.yaml`,
           "--no-zapstore",
           "--dry-run",
           "--json",
@@ -322,8 +323,8 @@ for (const automatic of [false, true]) {
           blossomServers: servers,
           zapstore: { ...listing, images: ["https://images.example/existing.png"] },
         });
-        await Deno.writeTextFile(`${dir}/config.json`, JSON.stringify(config));
-        const originalConfig = await Deno.readTextFile(`${dir}/config.json`);
+        await Deno.writeTextFile(`${dir}/config.yaml`, stringify(config));
+        const originalConfig = await Deno.readTextFile(`${dir}/config.yaml`);
         const logs: string[] = [];
         const errors: string[] = [];
         const log = console.log;
@@ -336,7 +337,7 @@ for (const automatic of [false, true]) {
           code = await main([
             "deploy",
             "--config",
-            `${dir}/config.json`,
+            `${dir}/config.yaml`,
             "--dry-run",
             "--json",
             "--screenshot",
@@ -364,7 +365,7 @@ for (const automatic of [false, true]) {
           console.error = error;
         }
         assertEquals(code, outcome === "success" ? 0 : 1);
-        assertEquals(await Deno.readTextFile(`${dir}/config.json`), originalConfig);
+        assertEquals(await Deno.readTextFile(`${dir}/config.yaml`), originalConfig);
         if (outcome === "success") {
           assertEquals(logs.length, 1);
           const report = JSON.parse(logs[0]);
@@ -429,8 +430,8 @@ Deno.test("signed CLI deployment links every manifest to its screenshot applicat
     await Deno.mkdir(`${dir}/dist`);
     await Deno.writeTextFile(`${dir}/dist/index.html`, '<meta name="description" content="Notes">');
     await Deno.writeTextFile(
-      `${dir}/config.json`,
-      JSON.stringify(defaultConfig({
+      `${dir}/config.yaml`,
+      stringify(defaultConfig({
         sourceDir: `${dir}/dist`,
         relays: ["wss://relay.example"],
         blossomServers: servers,
@@ -443,7 +444,7 @@ Deno.test("signed CLI deployment links every manifest to its screenshot applicat
     const args = [
       "deploy",
       "--config",
-      `${dir}/config.json`,
+      `${dir}/config.yaml`,
       "--root",
       "--name",
       "notes",

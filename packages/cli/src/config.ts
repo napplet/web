@@ -7,7 +7,11 @@ import {
   type NappletConfig,
   type NappletDeployMetadata,
 } from "./types.ts";
-import { dirname, joinPath, resolvePath } from "./path.ts";
+import { joinPath, resolvePath } from "./path.ts";
+import {
+  configDocumentData, parseConfigDocument, readConfigText, renderConfigYaml,
+  requireYamlConfig, writeConfigText, yamlConfigPath,
+} from "./config-storage.ts";
 import { normalizeDTag } from "./manifest.ts";
 import { normalizeZapstoreConfig } from "./zapstore.ts";
 
@@ -81,16 +85,10 @@ export function configPath(cwd: string = Deno.cwd()): string {
 
 /** read config helper for configuration. */
 export async function readConfig(path: string = configPath()): Promise<NappletConfig | null> {
-  try {
-    const raw = await Deno.readTextFile(path);
-    return normalizeConfig(JSON.parse(raw));
-  } catch (error) {
-    if (error instanceof Deno.errors.NotFound) return null;
-    if (error instanceof SyntaxError) {
-      throw new Error(`Invalid JSON in ${path}: ${error.message}`);
-    }
-    throw error;
-  }
+  await requireYamlConfig(path);
+  path = yamlConfigPath(path);
+  const raw = await readConfigText(path);
+  return raw === null ? null : normalizeConfig(configDocumentData(parseConfigDocument(raw, path), path));
 }
 
 /** write config helper for configuration. */
@@ -98,14 +96,18 @@ export async function writeConfig(
   config: NappletConfig,
   path: string = configPath(),
 ): Promise<void> {
-  await Deno.mkdir(dirname(path), { recursive: true });
-  await Deno.writeTextFile(path, `${JSON.stringify(normalizeConfig(config), null, 2)}\n`);
+  await requireYamlConfig(path);
+  path = yamlConfigPath(path);
+  const previous = await readConfigText(path);
+  const mode = previous === null ? undefined : (await Deno.stat(path)).mode ?? undefined;
+  await writeConfigText(path, renderConfigYaml(normalizeConfig(config), previous, path), { mode });
 }
 
 /** init config helper for configuration. */
 export async function initConfig(
   options: {
     cwd?: string;
+    path?: string;
     force?: boolean;
     sourceDir?: string;
     relays?: string[];
@@ -116,10 +118,10 @@ export async function initConfig(
   } = {},
 ): Promise<{ path: string; config: NappletConfig; created: boolean }> {
   const cwd = options.cwd ?? Deno.cwd();
-  const path = configPath(cwd);
+  const path = options.path ?? configPath(cwd);
   const existing = await readConfig(path);
   if (existing && !options.force) {
-    return { path, config: existing, created: false };
+    return { path: yamlConfigPath(path), config: existing, created: false };
   }
 
   const config = defaultConfig({
@@ -131,13 +133,13 @@ export async function initConfig(
     metadata: options.metadata,
   });
   await writeConfig(config, path);
-  return { path, config, created: true };
+  return { path: yamlConfigPath(path), config, created: true };
 }
 
 /** normalize config helper for configuration. */
 export function normalizeConfig(input: unknown): NappletConfig {
-  if (!input || typeof input !== "object") {
-    throw new Error("Config must be a JSON object");
+  if (!input || typeof input !== "object" || Array.isArray(input)) {
+    throw new Error("Config must be an object");
   }
   const value = input as Partial<NappletConfig>;
   if (value.version !== undefined && value.version !== 1) {
