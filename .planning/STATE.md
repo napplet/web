@@ -19,6 +19,11 @@ progress:
 
 # Project State
 
+## Website communications redesign — IN PROGRESS
+
+Active user goal continues on PR #221 in `/Users/sandwich/Develop/napplet-showcase`, branch `feat/astro-ecosystem-showcase`. Research and execution contract: `.planning/quick/261019-bsw-rethink-website-communications-and-scrol/PLAN.md`. First copy/layout pass is implemented and browser-checked. Remaining work includes richer persistent motion, current-format preview/provenance resolution, complete research/link verification, social artwork, CSS cleanup, dependency advisory assessment, final gates and PR update. Do not treat earlier showcase completion entries as completion of this new goal.
+
+
 ## Quick task 261003-tih — COMPLETE
 
 NAP detail pages now render complete upstream specifications, replacing excerpts and outlines at the user’s request. All 38 documents, source links, code examples, responsive layouts and workspace checks pass. Preview is rebuilt on port 8101; PR #222 contains the correction. Evidence: `.planning/quick/261003-tih-render-complete-upstream-nap-specificati/SUMMARY.md`.

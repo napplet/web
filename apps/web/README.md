@@ -1,6 +1,6 @@
 # napplet website
 
-The Astro homepage introduces napplets and showcases runnable apps, shells, protocol status, napplet authoring tools, and shell development tools. The final Develop section fits a viewport at standard desktop and mobile sizes, with two concise paths: napplet agent skills and a Kehto tooling overview linking to its repository. Panels sit side by side on desktop and stack on mobile; content can grow naturally when text is enlarged. The original Svelte explainer remains at `/explainer/`. Astro renders the homepage content into static HTML; Svelte hydrates the explainer, while GSAP adds section reveals that respect reduced-motion preferences.
+The Astro homepage introduces portable web apps through playable examples, real shells, protocol links, and four paths for app, shell, service, and tool builders. Manual and agent-assisted app development have separate links. A persistent app frame tracks the reading journey; GSAP reveals are specific to each section and respect reduced-motion preferences. Copy remains readable without JavaScript, and mobile layouts grow with their content. The technical Svelte explainer remains at `/explainer/`, with specifications in `/protocol/` and implementation guidance in `/docs/`.
 
 ## Develop
 

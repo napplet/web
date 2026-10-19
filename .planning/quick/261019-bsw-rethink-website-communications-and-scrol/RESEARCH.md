@@ -43,3 +43,13 @@ The existing Kehto web destination returned a browser research-tool error. That 
 - Rendered baseline and design iteration at multiple widths, not source inspection alone.
 - Verify actual onboarding/service/tool destinations against the code and docs shipped in this branch.
 - Finish copy review, communications metadata/social image consistency and runtime behavior evidence.
+
+## First implementation checkpoint
+
+The updated homepage removes the obsolete NIP-5A layer, uses “Apps that travel” as its opening, places the single network mention in the shell explanation, and supplies four task-based builder paths. Browser screenshots inspected at 1440 and 390 pixels show a quieter visual hierarchy, actual app screenshots, restrained surfaces, and readable stacked mobile sections. The persistent frame currently works as a chapter rail; further refinement is needed to make it carry the app/host relationship more visibly through the journey.
+
+A live WebSocket query to `wss://relay.napplet.soy` for the three selected author/d-tag addresses returned the same legacy manifests: path-based artifact selection, aggregate x tags, and empty descriptions in event content. This is evidence of a downstream compatibility issue, not permission to rewrite signatures or claim current conformance. Player migration remains unresolved.
+
+Validation for this checkpoint: web build and web type-check pass after syncing the lockfile dependencies. Updated `scripts/check-showcase.mjs` passes against the built static site on port 8107 at 1440×900, 390×844 and 320×568, including playable apps, close/focus/retry, one visible network mention, all four builder paths, no-JS, metadata and motion smoke checks. These checks do not establish current-protocol conformance or final visual quality. The first attempt against Astro dev included toolbar headings; the authoritative test runs against static output.
+
+Full `pnpm build` passes (12 tasks), and `pnpm type-check` passes (17 tasks). Website unit tests pass (11). AI-slop 0.12.0 changed-file scan scores 73/100 with four dependency advisories and one warning; no source findings. Its command exits 1; the existing workflow uses a 70-point score threshold. Dependency remediation and the final unchanged-policy gate remain to be evaluated before shipping. Full recursive unit run is tracked by exec session 42224 with output `/tmp/rethink-full-unit.log`. Static preview is served at port 8107 (session 29778); Astro development preview is on port 5176.
