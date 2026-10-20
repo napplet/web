@@ -1,6 +1,6 @@
 ---
 type: quick
-status: in-progress
+status: complete
 description: Repair reference runtime bindings and signed-manifest evidence for unchanged Dryft napplets
 ---
 

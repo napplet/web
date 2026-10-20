@@ -1,5 +1,5 @@
 ---
-status: implementation-verified-gates-pending
+status: complete
 ---
 
 # Reference runtime verification
@@ -30,3 +30,7 @@ The full Dryft UX/project goal remains active. Next downstream work is the genui
 ## Remote review checkpoint
 
 Draft https://github.com/napplet/web/pull/261 at source5bb917c5 passes CI full build, type-check, workflow contracts, conformance, site links and quality. Its main unit run exposes two new integration tests exceeding Vitest default5s while each starts two actual CLI/browser processes. Their observer budget is now30s; the CLI ready5s/settle600ms/default degraded pass and all assertions remain unchanged. Original complete failed job log is retained as ci-first-failed.log; a new run is required after this correction. Both the canonical release-candidate catalog and the development checkout's own signed catalog separately reproduce12subjects10/0/1 plusapp-library9/1/1. Five development HTML artifacts differ from the canonical release candidate and were already built before this task; do not conflate their hashes or overwrite them.
+
+## Final verified source checkpoint
+
+At85d6dba55d32a8069e587f9c529325d13ca99d6c, all four PR261 checks are terminal SUCCESS: mainCI39435175194, Conformance39435175020, Linkcheck39435175233 and Quality39435174970. Main CI passes frozen install, workflow contracts, all19 type tasks, full12-task build and pnpm test (including recursive units and the built tutorial). This remote proof closes the full-software gates that were disk-limited locally; original local ENOSPC and first CI observer failures remain retained. This following documentation update changes no implementation or tests. The draft is reviewable; no merge/npm publication occurred, and Dryft adoption, App Library's genuine degraded failure, lifecycle, public/physical/provider/full-goal acceptance remain separate open work.
