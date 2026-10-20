@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@napplet/conformance": "workspace:^",
+    "@napplet/shim": "workspace:*",
     "nostr-tools": "^2.23.3"
   },
   "devDependencies": {

@@ -21,3 +21,5 @@ HTTP URLs remain supported only as a local development fallback, including legac
 `?url=...` deep links. URL mode cannot prove signed NIP-5D manifest-event checks.
 
 Deployed at `/conformance` alongside the marketing site (see `deploy-site.yml`).
+
+The runtime injects the maintained `@napplet/shim/prelude.global` bindings before subject scripts and boots the same loaded HTML snapshot it resolved. Namespace installation and app boot errors are reported independently. The engine keeps harness telemetry out of NAP envelope records.

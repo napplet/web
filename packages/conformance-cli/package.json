@@ -18,6 +18,8 @@
     "@napplet/conformance": "workspace:^",
     "@napplet/core": "workspace:*",
     "@napplet/nap": "workspace:*",
+    "@napplet/shim": "workspace:*",
+    "nostr-tools": "^2.23.3",
     "playwright": "^1.59.1"
   },
   "devDependencies": {

@@ -49,6 +49,9 @@ importers:
       '@napplet/conformance':
         specifier: workspace:^
         version: link:../../packages/conformance
+      '@napplet/shim':
+        specifier: workspace:*
+        version: link:../../packages/shim
       nostr-tools:
         specifier: ^2.23.3
         version: 2.23.3(typescript@5.9.3)
@@ -146,6 +149,9 @@ importers:
       '@napplet/nap':
         specifier: workspace:^
         version: link:../nap
+      '@napplet/shim':
+        specifier: workspace:*
+        version: link:../shim
       '@types/node':
         specifier: ^22.15.0
         version: 22.19.15
@@ -176,6 +182,12 @@ importers:
       '@napplet/nap':
         specifier: workspace:*
         version: link:../nap
+      '@napplet/shim':
+        specifier: workspace:*
+        version: link:../shim
+      nostr-tools:
+        specifier: ^2.23.3
+        version: 2.23.3(typescript@5.9.3)
       playwright:
         specifier: ^1.59.1
         version: 1.61.0

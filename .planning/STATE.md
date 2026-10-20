@@ -29,6 +29,10 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 
 > **Provenance note:** The "Accumulated Context" section below preserves bullet records from BOTH branches' STATE.md histories. Records tagged "v0.29.0" from main's lineage refer to the milestone NOW renumbered as v0.30.0 (Class-Gated Decrypt — Phases 135-138). Records tagged "v0.29.0" from feat/strict-model refer to NUB-CONNECT (Phases 135-142). Phase number alone is not a unique identifier across the two; cross-reference the topic (decrypt/identity/NIP-07 → v0.30.0; connect/class/CSP-authority → v0.29.0).
 
+### Quick task 261020-8us — COMPLETE, draft PR261
+
+Reference hosts use maintained runtime bindings and signed artifact snapshots. Conformance128/web9/CLI33 cases pass, plus complete19-task types,11-task non-standalone build,468 non-standalone units,JSR exports and25 site links. Twelve unchanged signed Dryft napplets have10/0/1; app-library retains a real missing-INC degraded failure9/1/1. Exact full build and recursive units hit ENOSPC in the unchanged standalone compiler and remain open. Quality97 passes workflow70; baseline warnings retained. Remote85d6dba5 subsequently passes all four checks, full12-task build and pnpm test; the genuine app-library failure and original ENOSPC/observer failures remain recorded. See quick task SUMMARY.md. No npm publication/merge or user runtime changes.
+
 ### Phase 164 — CLI terminal usability (complete)
 
 Branch `feat/cli-terminal-usability` ships guided missing-value recovery, `-i` prompt suppression, terminal presentation, and real visual proof in PR #248. Plan and acceptance evidence: `.planning/phases/164-cli-terminal-usability/`. Build, types, repository tests, native smoke, PTY checks, and site links passed. Existing completed phases below retain their historical status.
