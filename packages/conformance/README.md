@@ -108,3 +108,9 @@ The package intentionally stays framework-agnostic. For a project-level command 
 ### GAMEPAD integration
 
 GAMEPAD validation recognizes only `gamepad.subscribe`, `gamepad.unsubscribe`, and `gamepad.state`; correlation ids are rejected. The injected browser API shares snapshot validation with the portable binding and accepts only parent messages. The reference mock reports unavailable controllers rather than physical input. Focus and native-access isolation require host integration tests. See the proposed [NAP-GAMEPAD](https://github.com/napplet/naps/pull/108).
+
+## Custom browser hosts
+
+`bootAndCollect({ url, html, runtimePreludeSource })` accepts an optional loaded HTML snapshot and the maintained shim IIFE source. The CLI reads `@napplet/shim/prelude.global`; Vite hosts can import it with `?raw`. Supplying `html` avoids refetching an artifact after the host verifies its signature and raw bytes. The engine remains browser-safe and does not import Node APIs or bundled asset loaders.
+
+Without `runtimePreludeSource`, the embedded compatibility fixture exposes only RESOURCE and GAMEPAD bindings. Other domain properties are absent, rather than empty objects advertising unusable methods. Use the maintained source for full reference-shell exercises. `installedGlobal` records observed installation independently from `bootError`; an app failure does not imply injection failed. Signature/hash verification belongs to the loading host, while `validateManifestEvent` checks the event structure. This is non-normative implementation guidance; consult the living [NIP-5D proposal](https://github.com/nostr-protocol/nips/pull/2303) and [NAPs](https://github.com/napplet/naps).

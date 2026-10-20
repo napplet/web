@@ -3,7 +3,7 @@ import { describe, it, expect } from 'vitest';
 import { bootAndCollect, runtimePrelude } from './boot.js';
 
 describe('bootAndCollect — DOM wiring', () => {
-  it('injects the runtime namespace and cleans up the iframe', async () => {
+  it('does not infer installation from an uninstrumented DOM load and cleans up the iframe', async () => {
     const before = document.querySelectorAll('iframe').length;
     const boot = await bootAndCollect({
       url: 'about:blank',
@@ -11,11 +11,27 @@ describe('bootAndCollect — DOM wiring', () => {
       settleMs: 0,
       runDegraded: false,
     });
-    expect(boot.installedGlobal).toBe(true);
+    // happy-dom does not execute srcdoc scripts. A successful load alone is not
+    // evidence that the namespace was installed; real Chromium covers that path.
+    expect(boot.installedGlobal).toBe(false);
     expect(boot.bootError).toBeNull();
     expect(boot.emitted).toEqual([]);
     expect(boot.degraded).toBeNull();
     expect(document.querySelectorAll('iframe').length).toBe(before);
+  });
+
+  it('keeps installation separate from subject errors and ignores peer telemetry', async () => {
+    const pending = bootAndCollect({ url: 'about:blank', readyTimeoutMs: 60, settleMs: 10, runDegraded: false });
+    await Promise.resolve();
+    const frame = document.querySelector('iframe')!;
+    expect(frame).not.toBeNull();
+    window.dispatchEvent(new MessageEvent('message', { source: frame.contentWindow, data: { type: '__nappletConformance.installed', installed: true } }));
+    window.dispatchEvent(new MessageEvent('message', { source: window, data: { type: '__nappletConformance.installed', installed: false } }));
+    window.dispatchEvent(new MessageEvent('message', { source: frame.contentWindow, data: { type: '__nappletConformance.error', reason: 'subject failure' } }));
+    const boot = await pending;
+    expect(boot.installedGlobal).toBe(true);
+    expect(boot.bootError).toBe('napplet boot error: subject failure');
+    expect(boot.emitted).toEqual([]);
   });
 
   it('runs a degraded pass when requested', async () => {
@@ -34,7 +50,9 @@ describe('bootAndCollect — DOM wiring', () => {
     const previousParent = window.parent;
     Object.defineProperty(window, 'parent', {
       configurable: true,
-      value: { postMessage: (message: Record<string, unknown>) => posted.push(message) },
+      value: { postMessage: (message: Record<string, unknown>) => {
+        if (!String(message.type).startsWith('__nappletConformance.')) posted.push(message);
+      } },
     });
 
     try {

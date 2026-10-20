@@ -8,7 +8,9 @@ describe('serialized GAMEPAD conformance binding', () => {
   it('installs before subject code, accepts only parent state and isolates cached data', () => {
     const previous = window.parent;
     const post = vi.fn();
-    Object.defineProperty(window, 'parent', { configurable: true, value: { postMessage: post } });
+    Object.defineProperty(window, 'parent', { configurable: true, value: { postMessage: (message: { type: string }, origin: string) => {
+      if (message.type.startsWith('gamepad.')) post(message, origin);
+    } } });
     try {
       Function(runtimePrelude(['gamepad']))();
       const api = (window as unknown as { napplet: { gamepad: GamepadApi } }).napplet.gamepad;

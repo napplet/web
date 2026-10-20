@@ -19,9 +19,12 @@ import { MIME } from './static.js';
 /** The napplet URL + timing knobs the host page passes to `bootAndCollect`. */
 export interface BootConfig {
   url: string;
+  html?: string;
   readyTimeoutMs: number;
   settleMs: number;
   runDegraded: boolean;
+  runtimePreludeSource?: string;
+  allowSameOrigin?: boolean;
 }
 
 /** Options for {@link startHarnessServer}. */
@@ -50,7 +53,7 @@ const HOST_BUNDLE_ROUTE = '/__conformance__/host-bundle.js';
 function renderHostPage(boot: BootConfig): string {
   // The inline script lives on the harness page (full privilege, our origin), not
   // in the sandboxed napplet — so it is not subject to the napplet CSP.
-  const cfg = JSON.stringify(boot);
+  const cfg = JSON.stringify(boot).replace(/</g, '\\u003c');
   return `<!doctype html>
 <html lang="en">
 <head><meta charset="utf-8"><title>napplet conformance host</title></head>
