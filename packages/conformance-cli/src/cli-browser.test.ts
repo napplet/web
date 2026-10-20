@@ -11,6 +11,8 @@ import { finalizeEvent } from 'nostr-tools/pure';
 import { expect, it } from 'vitest';
 
 const run = promisify(execFile);
+// Each case launches two real CLI/browser processes; their own boot deadlines remain unchanged.
+const CLI_CASE_TIMEOUT_MS = 30_000;
 const cli = fileURLToPath(new URL('../dist/cli.js', import.meta.url));
 
 it('boots the verified remote snapshot once and rejects a mismatched signature before any subject execution', async () => {
@@ -47,7 +49,7 @@ it('boots the verified remote snapshot once and rejects a mismatched signature b
     await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
     await rm(dir, { recursive: true, force: true });
   }
-});
+}, CLI_CASE_TIMEOUT_MS);
 
 
 it('keeps missing-manifest checks skipped and reports the actual debug sandbox', async () => {
@@ -70,4 +72,4 @@ it('keeps missing-manifest checks skipped and reports the actual debug sandbox',
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
-});
+}, CLI_CASE_TIMEOUT_MS);
