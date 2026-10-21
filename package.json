@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "turbo run build",
-    "dev:site": "turbo run dev --filter=@napplet/web --filter=@napplet/docs",
+    "dev:site": "node scripts/dev-site.mjs",
     "refresh:protocol": "node scripts/generate-protocol.mjs",
     "generate:protocol": "pnpm refresh:protocol && pnpm --filter @napplet/web build",
     "test:protocol": "node --test scripts/generate-protocol.test.mjs",
@@ -17,7 +17,7 @@
     "test:onboarding-contracts": "node --test scripts/onboarding-contracts.test.mjs",
     "test:skills-contracts": "node --test scripts/skills-contracts.test.mjs",
     "test:spa-onboarding": "node scripts/check-spa-onboarding.mjs",
-    "test:workflow-contracts": "node --test scripts/workflow-contracts.test.mjs scripts/conformance-cache.test.mjs",
+    "test:workflow-contracts": "node --test scripts/workflow-contracts.test.mjs scripts/conformance-cache.test.mjs scripts/dev-site.test.mjs",
     "test:convention-contracts": "node --test scripts/test-convention-contracts.test.mjs && node scripts/test-convention-contracts.mjs",
     "test:conformance": "node packages/conformance-cli/dist/cli.js tests/fixtures/napplets/conformant",
     "type-check": "turbo run type-check",

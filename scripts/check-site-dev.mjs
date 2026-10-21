@@ -2,7 +2,8 @@ import assert from 'node:assert/strict';
 import { chromium } from 'playwright';
 
 // Run against pnpm dev:site to cover app launch, docs navigation, and hydration.
-const baseUrl = process.argv[2] ?? 'http://127.0.0.1:5173';
+const baseUrl = process.argv[2];
+assert.ok(baseUrl, 'Usage: node scripts/check-site-dev.mjs <website-url printed by pnpm dev:site>');
 const browser = await chromium.launch();
 try {
   const page = await browser.newPage();

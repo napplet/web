@@ -13,9 +13,9 @@ pnpm --filter @napplet/web dev
 pnpm dev:site
 ```
 
-The website runs at `http://127.0.0.1:5173/`. During development, `/docs` redirects to the documentation server at `http://localhost:5174/docs/`; run `pnpm dev:site` to start both. Documentation dependency optimization uses the same modern JavaScript target as its production build. Production serves `/docs/` from static files with directory indexes, so the site needs no application server or SPA fallback.
+`pnpm dev:site` starts both servers in the foreground on available loopback ports and prints their URLs. `/docs` redirects to the documentation server belonging to that launch, preserving paths and queries. Existing Astro previews and other worktrees can keep running; Ctrl+C stops both servers started by the command. Standalone web and docs commands also choose available ports. When running only the website, documentation links open the published docs; set `NAPPLET_DOCS_ORIGIN` to a separately started docs server's origin to use it instead. Documentation dependency optimization uses the same modern JavaScript target as its production build. Production serves `/docs/` from static files with directory indexes, so the site needs no application server or SPA fallback.
 
-With `pnpm dev:site` running, run `node scripts/check-site-dev.mjs` to verify all three playable apps, homepage rendering, documentation navigation, and hydrated documentation search. Astro commands use separate dependency caches so running type-checks while previewing cannot invalidate lazy player imports.
+With `pnpm dev:site` running, run `node scripts/check-site-dev.mjs <website-url>` using the printed website URL to verify all three playable apps, homepage rendering, documentation navigation, and hydrated documentation search. Astro commands use separate dependency caches so running type-checks while previewing cannot invalidate lazy player imports.
 
 ## Curate
 

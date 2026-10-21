@@ -15,9 +15,10 @@ export default defineConfig({
         updateConfig({ vite: { cacheDir: `node_modules/.vite/astro-${command}` } });
       },
       'astro:server:setup': ({ server }) => {
+        const docsOrigin = process.env.NAPPLET_DOCS_ORIGIN ?? 'https://napplet.run';
         server.middlewares.use((req, res, next) => {
           if (!/^\/docs(?:\/|\?|$)/.test(req.url ?? '')) return next();
-          res.writeHead(307, { Location: `http://localhost:5174${req.url}` });
+          res.writeHead(307, { Location: `${docsOrigin}${req.url}` });
           res.end();
         });
       },
