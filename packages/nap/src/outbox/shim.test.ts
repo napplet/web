@@ -153,14 +153,13 @@ describe('@napplet/nap/outbox shim', () => {
   it('hydrates resource sidecars from query results before resolving', async () => {
     const { query, handleOutboxMessage } = await import('./shim.js');
     const { bytes } = await import('../resource/shim.js');
-    const resourceBlob = new Blob(['from outbox'], { type: 'text/plain' });
     const sidecarResult = {
       event: {
         ...EV,
         tags: [['r', RESOURCE_URL]],
       },
       sidecar: {
-        resources: [{ url: RESOURCE_URL, blob: resourceBlob, mime: 'text/plain' }],
+        resources: [{ url: RESOURCE_URL, blob: 'ZnJvbSBvdXRib3g=', mime: 'text/plain' }],
       },
     };
 
@@ -301,4 +300,29 @@ describe('@napplet/nap/outbox shim', () => {
     expect(() => handleOutboxMessage({ type: 'outbox.query.result', id: 'no-such-id' })).not.toThrow();
     expect(() => handleOutboxMessage({ type: 'outbox.event', subId: 'no-such-sub' })).not.toThrow();
   });
+  it.each(['query', 'getEvent'] as const)('rejects malformed %s sidecars instead of leaving the promise pending', async (operation) => {
+    const { query, getEvent, handleOutboxMessage } = await import('./shim.js');
+    const promise = operation === 'query' ? query([{ kinds: [1] }]) : getEvent(EV.id);
+    const rejected = expect(promise).rejects.toThrow('decode-failed');
+    const result = { event: EV, sidecar: { resources: [{ url: RESOURCE_URL, blob: 'Zh==', mime: 'text/plain' }] } };
+    const id = lastPosted(`outbox.${operation}`).id;
+    handleOutboxMessage(operation === 'query'
+      ? { type: 'outbox.query.result', id, events: [result] }
+      : { type: 'outbox.getEvent.result', id, result });
+    await rejected;
+  });
+
+  it('drops malformed resource sidecars before subscription callbacks', async () => {
+    const { subscribe, handleOutboxMessage } = await import('./shim.js');
+    const received = vi.fn();
+    const sub = subscribe([{ kinds: [1] }]);
+    sub.on('event', received);
+    const subId = lastPosted('outbox.subscribe').subId;
+    handleOutboxMessage({ type: 'outbox.event', subId, result: { event: EV, sidecar: { resources: [{ url: RESOURCE_URL, blob: new Blob(['f']), mime: 'text/plain' }] } } });
+    expect(received).not.toHaveBeenCalled();
+    handleOutboxMessage({ type: 'outbox.event', subId, result: RESULT });
+    expect(received).toHaveBeenCalledWith(RESULT);
+    sub.close();
+  });
+
 });

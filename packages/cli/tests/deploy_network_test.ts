@@ -1,6 +1,5 @@
 import { decodeBase64Url } from "@std/encoding/base64url";
 import {
-  createUploadAuthorization,
   executeNetworkDeploy,
   type NetworkDeployProgress,
   networkDeploySucceeded,
@@ -21,6 +20,7 @@ const privateKeyHex = "01".padStart(64, "0");
 const signer = createPrivateKeySigner(privateKeyHex);
 const sha256 = "1bc04b5291c26a46d918139138b992d2de976d6851d0893b0476b85bfbdfc6e6";
 const secondSha256 = "a172cedcae47474b615c54d510a5d84a8dea3032e958587430b413538be3f333";
+const resolvePublicDns = () => Promise.resolve(["93.184.216.34"]);
 
 interface FetchCall {
   url: string;
@@ -28,6 +28,7 @@ interface FetchCall {
   authorization?: string;
   xSha256?: string;
   contentType?: string;
+  body?: Uint8Array;
 }
 
 function decodeAuthEvent(header: string): SignedNostrEvent {
@@ -48,18 +49,27 @@ interface FakeFetchOptions {
   putResponse?: (url: string) => Response;
 }
 
+function descriptorResponse(hash: string, size = 5): Response {
+  return new Response(
+    JSON.stringify({
+      url: "https://blob.example/blob",
+      sha256: hash,
+      size,
+      type: "text/html",
+      uploaded: 123,
+    }),
+    { status: 201, headers: { "content-type": "application/json" } },
+  );
+}
+
 function createFakeFetch(
   calls: FetchCall[],
   options: FakeFetchOptions = {},
 ): typeof fetch {
   const headStatus = options.headStatus ?? (() => 404);
   const putResponse = options.putResponse ??
-    (() =>
-      new Response(JSON.stringify({ url: "https://blob.example", sha256, size: 5 }), {
-        status: 201,
-        headers: { "content-type": "application/json" },
-      }));
-  return ((input, init) => {
+    (() => descriptorResponse(sha256));
+  return (async (input, init) => {
     const url = String(input);
     const headers = new Headers(init?.headers);
     calls.push({
@@ -68,6 +78,7 @@ function createFakeFetch(
       authorization: headers.get("authorization") ?? undefined,
       xSha256: headers.get("x-sha-256") ?? undefined,
       contentType: headers.get("content-type") ?? undefined,
+      body: init?.body instanceof Blob ? new Uint8Array(await init.body.arrayBuffer()) : undefined,
     });
     if (init?.method === "HEAD") {
       return Promise.resolve(new Response(null, { status: headStatus(url) }));
@@ -90,40 +101,6 @@ function fakePublish(): {
   };
 }
 
-Deno.test("createUploadAuthorization signs a base64url upload token scoped to the server", async () => {
-  const header = await createUploadAuthorization(signer, [sha256], () => 123, "blob.example");
-  assert(header.startsWith("Nostr "));
-  const encoded = header.slice("Nostr ".length);
-  // BUD-11 requires base64url without padding.
-  assert(!/[+/=]/.test(encoded), "auth token must be base64url without padding");
-  const event = decodeAuthEvent(header);
-  assertEquals(event.kind, 24242);
-  assertEquals(event.created_at, 123);
-  assertEquals(event.pubkey, signer.pubkey);
-  assertEquals(event.tags, [
-    ["t", "upload"],
-    ["x", sha256],
-    ["expiration", "3723"],
-    ["client", "napplet"],
-    ["server", "blob.example"],
-  ]);
-});
-
-Deno.test("createUploadAuthorization omits the server tag when unscoped", async () => {
-  const event = decodeAuthEvent(await createUploadAuthorization(signer, [sha256], () => 123));
-  assertEquals(event.tags.some((tag) => tag[0] === "server"), false);
-});
-
-Deno.test("createUploadAuthorization can encode legacy standard base64 auth", async () => {
-  const header = await createUploadAuthorization(signer, [sha256], () => 123, undefined, "base64");
-  assert(header.startsWith("Nostr "));
-  const encoded = header.slice("Nostr ".length);
-  assert(/[=+/]/.test(encoded), "legacy auth token should use standard base64");
-  const event = decodeStandardAuthEvent(header);
-  assertEquals(event.kind, 24242);
-  assertEquals(event.tags.some((tag) => tag[0] === "server"), false);
-});
-
 Deno.test("executeNetworkDeploy uploads unique files and publishes signed manifests", async () => {
   await withTempDir(async (dir) => {
     await Deno.writeTextFile(`${dir}/index.html`, "index");
@@ -140,6 +117,7 @@ Deno.test("executeNetworkDeploy uploads unique files and publishes signed manife
         fetch: createFakeFetch(calls),
         publish,
         now: () => 123,
+        resolve: resolvePublicDns,
         onProgress: (event) => progress.push(event),
       },
     );
@@ -159,6 +137,14 @@ Deno.test("executeNetworkDeploy uploads unique files and publishes signed manife
     assertEquals(calls[1].xSha256, sha256);
     assertEquals(calls[1].contentType, "text/html; charset=UTF-8");
     assert(calls[1].authorization?.startsWith("Nostr "));
+    assertEquals(new TextDecoder().decode(calls[1].body), "index");
+    const authorization = decodeAuthEvent(calls[1].authorization ?? "");
+    assertEquals(authorization.tags, [
+      ["t", "upload"],
+      ["expiration", "423"],
+      ["x", sha256],
+      ["server", "blob.example"],
+    ]);
     assertEquals(networkDeploySucceeded(result, manifests), true);
     assertEquals(progress.map((event) => event.type), [
       "upload:start",
@@ -178,6 +164,37 @@ Deno.test("executeNetworkDeploy uploads unique files and publishes signed manife
   });
 });
 
+Deno.test("executeNetworkDeploy defaults uploads to the runtime fetch", async () => {
+  await withTempDir(async (dir) => {
+    await Deno.writeTextFile(`${dir}/index.html`, "index");
+    const manifests = await manifestsFor(dir);
+    const calls: FetchCall[] = [];
+    const { publish, events } = fakePublish();
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = createFakeFetch(calls);
+
+    try {
+      const result = await executeNetworkDeploy(
+        manifests,
+        { relays: ["wss://relay.example"], blossomServers: ["https://blob.example"] },
+        signer,
+        {
+          publish,
+          now: () => 123,
+          resolve: resolvePublicDns,
+        },
+      );
+
+      assertEquals(calls.map((call) => call.method), ["HEAD", "PUT"]);
+      assertEquals(result.uploaded[0].success, true);
+      assertEquals(result.published.length, 2);
+      assertEquals(events.length, 2);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+});
+
 Deno.test("executeNetworkDeploy fails when the server stores a mismatched blob", async () => {
   await withTempDir(async (dir) => {
     await Deno.writeTextFile(`${dir}/index.html`, "index");
@@ -191,21 +208,40 @@ Deno.test("executeNetworkDeploy fails when the server stores a mismatched blob",
       signer,
       {
         fetch: createFakeFetch(calls, {
-          putResponse: () =>
-            new Response(JSON.stringify({ sha256: "0".repeat(64) }), {
-              status: 201,
-              headers: { "content-type": "application/json" },
-            }),
+          putResponse: () => descriptorResponse("0".repeat(64)),
         }),
         publish,
         now: () => 123,
+        resolve: resolvePublicDns,
       },
     );
 
     assertEquals(result.uploaded[0].success, false);
-    assert(result.uploaded[0].error?.includes("does not match expected"));
+    assertEquals(result.uploaded[0].error, "Upload did not produce verified evidence");
     assertEquals(result.published.length, 0);
     assertEquals(events.length, 0);
+  });
+});
+
+Deno.test("executeNetworkDeploy rejects files changed after manifest creation before uploading", async () => {
+  await withTempDir(async (dir) => {
+    await Deno.writeTextFile(`${dir}/index.html`, "index");
+    const manifests = await manifestsFor(dir);
+    await Deno.writeTextFile(`${dir}/index.html`, "changed after manifest");
+    const calls: FetchCall[] = [];
+
+    await executeNetworkDeploy(
+      manifests,
+      { relays: ["wss://relay.example"], blossomServers: ["https://blob.example"] },
+      signer,
+      { fetch: createFakeFetch(calls), publish: fakePublish().publish, resolve: resolvePublicDns },
+    ).then(
+      () => {
+        throw new Error("changed deploy input must reject");
+      },
+      (error) => assert(String(error).includes("Deploy input changed after manifest creation")),
+    );
+    assertEquals(calls.length, 0);
   });
 });
 
@@ -220,7 +256,12 @@ Deno.test("executeNetworkDeploy still uploads when HEAD preflight errors", async
       manifests,
       { relays: ["wss://relay.example"], blossomServers: ["https://blob.example"] },
       signer,
-      { fetch: createFakeFetch(calls, { headStatus: () => 500 }), publish, now: () => 123 },
+      {
+        fetch: createFakeFetch(calls, { headStatus: () => 500 }),
+        publish,
+        now: () => 123,
+        resolve: resolvePublicDns,
+      },
     );
 
     assertEquals(calls.map((call) => call.method), ["HEAD", "PUT"]);
@@ -229,7 +270,7 @@ Deno.test("executeNetworkDeploy still uploads when HEAD preflight errors", async
   });
 });
 
-Deno.test("executeNetworkDeploy scopes each server's token to its own host", async () => {
+Deno.test("executeNetworkDeploy directly uploads the primary and secondary servers in order", async () => {
   await withTempDir(async (dir) => {
     await Deno.writeTextFile(`${dir}/index.html`, "index");
     const manifests = await manifestsFor(dir);
@@ -243,19 +284,81 @@ Deno.test("executeNetworkDeploy scopes each server's token to its own host", asy
         blossomServers: ["https://a.example", "https://b.example"],
       },
       signer,
-      { fetch: createFakeFetch(calls), publish, now: () => 123 },
+      { fetch: createFakeFetch(calls), publish, now: () => 123, resolve: resolvePublicDns },
     );
 
     const puts = calls.filter((call) => call.method === "PUT");
-    const hosts = puts.map((call) => {
-      const event = decodeAuthEvent(call.authorization ?? "");
-      return event.tags.find((tag) => tag[0] === "server")?.[1];
-    });
+    const hosts = puts.map((call) =>
+      decodeAuthEvent(call.authorization ?? "").tags.find((tag) => tag[0] === "server")?.[1]
+    );
     assertEquals(hosts, ["a.example", "b.example"]);
+    assertEquals(puts.map((call) => call.url), [
+      "https://a.example/upload",
+      "https://b.example/upload",
+    ]);
   });
 });
 
-Deno.test("executeNetworkDeploy retries without server scope on server URL mismatch", async () => {
+Deno.test("executeNetworkDeploy counts canonical server origins before publishing", async () => {
+  await withTempDir(async (dir) => {
+    await Deno.writeTextFile(`${dir}/index.html`, "index");
+    await Deno.writeTextFile(`${dir}/app.js`, "app");
+    const manifests = await manifestsFor(dir, [
+      { path: "/index.html", sha256 },
+      { path: "/app.js", sha256: secondSha256 },
+    ]);
+    const calls: FetchCall[] = [];
+    const { publish, events } = fakePublish();
+    let upload = 0;
+    const servers = ["https://blob.example/", "https://other.example/"];
+
+    const result = await executeNetworkDeploy(
+      manifests,
+      { relays: ["wss://relay.example"], blossomServers: servers },
+      signer,
+      {
+        fetch: createFakeFetch(calls, {
+          putResponse: () => {
+            const file = upload % 2;
+            upload += 1;
+            return descriptorResponse(file === 0 ? sha256 : secondSha256, file === 0 ? 5 : 3);
+          },
+        }),
+        publish,
+        now: () => 123,
+        resolve: resolvePublicDns,
+      },
+    );
+
+    assertEquals(result.uploadSummary, {
+      servers: 2,
+      serversFullyUploaded: 2,
+      totalUploads: 4,
+      failedUploads: 0,
+    });
+    assertEquals(
+      new Set(result.uploaded.map((entry) => `${entry.server}\0${entry.file}\0${entry.sha256}`))
+        .size,
+      4,
+    );
+    assertEquals(result.uploaded.map((entry) => entry.server), [
+      servers[0],
+      servers[0],
+      servers[1],
+      servers[1],
+    ]);
+    assertEquals(calls.filter((call) => call.method === "PUT").map((call) => call.url), [
+      "https://blob.example/upload",
+      "https://blob.example/upload",
+      "https://other.example/upload",
+      "https://other.example/upload",
+    ]);
+    assertEquals(events.length, 2);
+    assertEquals(networkDeploySucceeded(result, manifests), true);
+  });
+});
+
+Deno.test("executeNetworkDeploy retries a bounded fresh shared authorization after 401", async () => {
   await withTempDir(async (dir) => {
     await Deno.writeTextFile(`${dir}/index.html`, "index");
     const manifests = await manifestsFor(dir);
@@ -272,90 +375,31 @@ Deno.test("executeNetworkDeploy retries without server scope on server URL misma
           putResponse: () => {
             attempts += 1;
             if (attempts === 1) {
-              return new Response(JSON.stringify({ message: "Server URL mismatch" }), {
+              return new Response(JSON.stringify({ message: "not authorized" }), {
                 status: 401,
                 headers: { "content-type": "application/json" },
               });
             }
-            return new Response(JSON.stringify({ sha256 }), {
-              status: 201,
-              headers: { "content-type": "application/json" },
-            });
+            return descriptorResponse(sha256);
           },
         }),
         publish,
         now: () => 123,
+        resolve: resolvePublicDns,
       },
     );
 
     assertEquals(result.uploaded[0].success, true);
     const puts = calls.filter((call) => call.method === "PUT");
     assertEquals(puts.length, 2);
-    assertEquals(
-      decodeAuthEvent(puts[0].authorization ?? "").tags.find((tag) => tag[0] === "server")?.[1],
-      "blob.example",
-    );
-    assertEquals(
-      decodeAuthEvent(puts[1].authorization ?? "").tags.some((tag) => tag[0] === "server"),
-      false,
-    );
+    assertEquals(puts.map((put) => decodeAuthEvent(put.authorization ?? "").content), [
+      "Upload blob to Blossom",
+      "Retry upload blob to Blossom",
+    ]);
   });
 });
 
-Deno.test("executeNetworkDeploy retries with legacy base64 auth when base64url is rejected", async () => {
-  await withTempDir(async (dir) => {
-    await Deno.writeTextFile(`${dir}/index.html`, "index");
-    const manifests = await manifestsFor(dir);
-    const calls: FetchCall[] = [];
-    const { publish } = fakePublish();
-    let attempts = 0;
-
-    const result = await executeNetworkDeploy(
-      manifests,
-      { relays: ["wss://relay.example"], blossomServers: ["https://blob.example"] },
-      signer,
-      {
-        fetch: createFakeFetch(calls, {
-          putResponse: () => {
-            attempts += 1;
-            if (attempts === 1) {
-              return new Response(null, {
-                status: 401,
-                headers: { "x-reason": "Server not in authorization token scope" },
-              });
-            }
-            if (attempts === 2) {
-              return new Response(null, {
-                status: 400,
-                headers: { "x-reason": "Invalid auth string" },
-              });
-            }
-            return new Response(JSON.stringify({ sha256 }), {
-              status: 201,
-              headers: { "content-type": "application/json" },
-            });
-          },
-        }),
-        publish,
-        now: () => 123,
-      },
-    );
-
-    assertEquals(result.uploaded[0].success, true);
-    const puts = calls.filter((call) => call.method === "PUT");
-    assertEquals(puts.length, 3);
-    assertEquals(
-      decodeAuthEvent(puts[1].authorization ?? "").tags.some((tag) => tag[0] === "server"),
-      false,
-    );
-    assertEquals(
-      decodeStandardAuthEvent(puts[2].authorization ?? "").tags.some((tag) => tag[0] === "server"),
-      false,
-    );
-  });
-});
-
-Deno.test("executeNetworkDeploy publishes when one mirror fails but another is complete", async () => {
+Deno.test("executeNetworkDeploy fails the deployment when any direct upload is partial", async () => {
   await withTempDir(async (dir) => {
     await Deno.writeTextFile(`${dir}/index.html`, "index");
     const manifests = await manifestsFor(dir);
@@ -378,25 +422,23 @@ Deno.test("executeNetworkDeploy publishes when one mirror fails but another is c
           putResponse: (url) =>
             url.startsWith("https://b.example")
               ? new Response("nope", { status: 500 })
-              : new Response(JSON.stringify({ sha256 }), {
-                status: 201,
-                headers: { "content-type": "application/json" },
-              }),
+              : descriptorResponse(sha256),
         }),
         publish,
         now: () => 123,
+        resolve: resolvePublicDns,
       },
     );
 
     assertEquals(result.uploadSummary, {
       servers: 3,
-      serversFullyUploaded: 2,
-      totalUploads: 3,
+      serversFullyUploaded: 0,
+      totalUploads: 2,
       failedUploads: 1,
     });
-    assertEquals(result.published.length, 2);
-    assertEquals(events.length, 2);
-    assertEquals(networkDeploySucceeded(result, manifests), true);
+    assertEquals(result.published.length, 0);
+    assertEquals(events.length, 0);
+    assertEquals(networkDeploySucceeded(result, manifests), false);
   });
 });
 
@@ -426,22 +468,20 @@ Deno.test("executeNetworkDeploy skips publish when uploads are split across inco
             uploads += 1;
             if (upload === 1 || upload === 2) return new Response("nope", { status: 500 });
             const storedSha256 = upload === 0 ? sha256 : secondSha256;
-            return new Response(JSON.stringify({ sha256: storedSha256 }), {
-              status: 201,
-              headers: { "content-type": "application/json" },
-            });
+            return descriptorResponse(storedSha256, upload === 0 ? 5 : 3);
           },
         }),
         publish,
         now: () => 123,
+        resolve: resolvePublicDns,
       },
     );
 
     assertEquals(result.uploadSummary, {
       servers: 2,
       serversFullyUploaded: 0,
-      totalUploads: 4,
-      failedUploads: 2,
+      totalUploads: 2,
+      failedUploads: 1,
     });
     assertEquals(result.published.length, 0);
     assertEquals(events.length, 0);

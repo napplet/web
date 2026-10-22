@@ -1,6 +1,7 @@
+import { type BuildSignerSession, type RedactedSecret } from "@napplet/build-tools";
 import { bunkerRelayDefaults, promptBunkerRelays } from "./bunker-relays.ts";
 import { setSigningRemote, writeConfig as writeNappletConfig } from "./config.ts";
-import { getKeyStoreProvider, KEY_SERVICE_NAME, type KeyStoreProvider } from "./key-store.ts";
+import { KEY_SERVICE_NAME, type KeyStoreProvider } from "./key-store.ts";
 import {
   type ConnectOptions,
   connectRemoteSigner as connectSigner,
@@ -21,6 +22,7 @@ import {
   normalizePublicKey,
 } from "./signing.ts";
 import type { NappletConfig, SigningMethod } from "./types.ts";
+import { createRemoteDeploySigner, formatPubkey, getOptionalKeyStore, getStoredBuildSigner, message } from "./deploy-signer-remote.ts";
 
 export interface DeploySignerResult {
   signer: NappletSigner | null;
@@ -38,6 +40,10 @@ export interface DeploySignerOptions {
   connectRemoteSigner?: (options: ConnectOptions) => Promise<ConnectResult>;
   createSigner?: (secret: string) => Promise<NappletSigner>;
   confirmSignerMismatch?: (actualPubkey: string, expectedPubkey: string) => Promise<boolean>;
+  reconnectRemoteBuildSigner?: (
+    secret: RedactedSecret,
+    signal: AbortSignal,
+  ) => Promise<BuildSignerSession>;
   promptConnectRelays?: (defaults: readonly string[]) => Promise<string[]>;
   promptInput?: PromptInput;
   promptOutput?: PromptOutput;
@@ -79,6 +85,7 @@ export async function createDeploySigner(
       account: signing.keyReference,
       config,
       options,
+      provider,
       preferredRelays: config.signing?.relays,
       secret,
       signing,
@@ -99,6 +106,7 @@ export async function createDeploySigner(
         config,
         expectedPubkey: signing.pubkey,
         options,
+        provider: found.provider,
         preferredRelays: signing.relays,
         secret: found.secret,
         signing: { type: "stored", source: "config", keyReference: found.account },
@@ -131,6 +139,7 @@ async function createStoredDeploySigner(args: {
   config: NappletConfig;
   expectedPubkey?: string;
   options: DeploySignerOptions;
+  provider: KeyStoreProvider;
   preferredRelays?: readonly string[];
   secret: string;
   signing: SigningMethod;
@@ -141,7 +150,14 @@ async function createStoredDeploySigner(args: {
   printStoredSignerMetadata(args.secret, print);
   print("Waiting for stored remote signer response (timeout 30s)...");
   try {
-    return { signer: await createSigner(args.secret), signing: args.signing };
+    const signer = await createSigner(args.secret);
+    return {
+      signer: createRemoteDeploySigner(
+        signer,
+        () => getStoredBuildSigner(args.account, args.provider, args.options),
+      ),
+      signing: args.signing,
+    };
   } catch (error) {
     return await recoverFailedStoredSigner(error, args);
   }
@@ -237,15 +253,16 @@ async function confirmSignerMismatch(
 async function retrieveBunkerSecret(
   pubkey: string,
   options: DeploySignerOptions,
-): Promise<{ account: string; secret: string } | null> {
+): Promise<{ account: string; provider: KeyStoreProvider; secret: string } | null> {
   const provider = await getOptionalKeyStore(options);
   if (!provider) return null;
   for (const account of [pubkey, encodePublicKey(pubkey)]) {
     const secret = await provider.retrieve(KEY_SERVICE_NAME, account);
-    if (secret) return { account, secret };
+    if (secret) return { account, provider, secret };
   }
   return null;
 }
+
 
 async function recoverMissingStoredSigner(
   signing: { type: "stored"; source: "config"; keyReference: string },
@@ -278,7 +295,7 @@ async function recoverMissingStoredSigner(
 
   if (!providerName) {
     throw new Error(
-      "No native keychain provider is available. Install macOS security, Windows Credential Manager/cmdkey, or Linux libsecret secret-tool with a D-Bus session.",
+      "No protected keychain writer is available. Install Linux libsecret secret-tool with a D-Bus session.",
     );
   }
 
@@ -335,7 +352,7 @@ async function connectAndCreateSigner(
   print(
     stored
       ? `Stored remote signer session as key reference "${result.pubkey}".`
-      : "No native keychain provider is available; using this signer for the current deploy only.",
+      : "No protected keychain writer is available; using this signer for the current deploy only.",
   );
   print("Configured .napplet signing for this remote signer.");
 
@@ -367,27 +384,7 @@ async function storeConnectedSigner(
   }
 }
 
-async function getOptionalKeyStore(
-  options: DeploySignerOptions,
-): Promise<KeyStoreProvider | null> {
-  const load = options.getKeyStoreProvider ?? getKeyStoreProvider;
-  return await load();
-}
-
 function requireSec(sec: string | undefined): string {
   if (!sec) throw new Error("Missing --sec");
   return sec;
-}
-
-function formatPubkey(pubkey: string): string {
-  try {
-    const npub = encodePublicKey(pubkey);
-    return `${npub.slice(0, 12)}...${npub.slice(-8)}`;
-  } catch {
-    return `${pubkey.slice(0, 8)}...${pubkey.slice(-8)}`;
-  }
-}
-
-function message(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
 }

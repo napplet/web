@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { ResourceBytesItem, ResourceInfo } from './types.js';
+import type { ResourceBytes, ResourceBytesItem, ResourceInfo } from './types.js';
 
 const posted: Array<Record<string, unknown>> = [];
 let uuidCounter = 0;
@@ -73,7 +73,6 @@ describe('@napplet/nap/resource shim', () => {
       ],
       maxBytes: 10_485_760,
       maxUrls: 100,
-      maxServers: 8,
     };
     handleResourceMessage({ type: 'resource.info.result', id: sent.id, info: runtimeInfo });
 
@@ -95,67 +94,41 @@ describe('@napplet/nap/resource shim', () => {
     await expect(promise).rejects.toThrow('policy-denied: redacted');
   });
 
-  it('decodes data URLs without browser fetch or shell messages', async () => {
-    const fetchSpy = vi.fn(() => {
-      throw new Error('fetch should not be used for data URLs');
-    });
-    Object.defineProperty(globalThis, 'fetch', {
-      configurable: true,
-      value: fetchSpy,
-    });
-
-    const { bytes } = await import('./shim.js');
-
-    const blob = await bytes('data:text/plain;base64,aGk=');
-
-    expect(fetchSpy).not.toHaveBeenCalled();
-    expect(posted).toHaveLength(0);
-    expect(blob.type).toBe('text/plain');
-    await expect(blob.text()).resolves.toBe('hi');
-  });
-
-  it('posts resource.bytes with advisory Blossom server hints', async () => {
+  it('routes data URLs through shell policy and decodes canonical wire bytes', async () => {
     const { bytes, handleResourceMessage } = await import('./shim.js');
-
-    const promise = bytes('blossom:abc123.bin', {
-      servers: ['https://cdn.example', 'https://mirror.example'],
-    });
+    const promise = bytes('data:application/octet-stream;base64,AAEC/w==');
     const sent = lastPosted('resource.bytes');
-    expect(sent).toEqual({
-      type: 'resource.bytes',
-      id: 'resource-test-1',
-      url: 'blossom:abc123.bin',
-      servers: ['https://cdn.example', 'https://mirror.example'],
-    });
-
-    handleResourceMessage({
-      type: 'resource.bytes.result',
-      id: sent.id,
-      blob: new Blob(['ok']),
-      mime: 'application/octet-stream',
-    });
-
-    await expect(promise).resolves.toBeInstanceOf(Blob);
+    expect(sent).toEqual({ type: 'resource.bytes', id: 'resource-test-1', url: 'data:application/octet-stream;base64,AAEC/w==' });
+    handleResourceMessage({ type: 'resource.bytes.result', id: sent.id, blob: 'AAEC/w==', mime: 'application/octet-stream' });
+    const blob = await promise;
+    expect(blob.type).toBe('application/octet-stream');
+    expect(Array.from(new Uint8Array(await blob.arrayBuffer()))).toEqual([0, 1, 2, 255]);
   });
 
-  it('posts resource.bytesMany with per-resource advisory Blossom server hints', async () => {
+  it('preserves BUD-10 URL hints without separate server fields', async () => {
+    const { bytes, handleResourceMessage } = await import('./shim.js');
+    const url = `blossom:${'a'.repeat(64)}.bin?xs=cdn.example&xs=mirror.example`;
+    const promise = bytes(url);
+    const sent = lastPosted('resource.bytes');
+    expect(sent).toEqual({ type: 'resource.bytes', id: 'resource-test-1', url });
+    handleResourceMessage({ type: 'resource.bytes.result', id: sent.id, blob: '', mime: 'application/octet-stream' });
+    expect((await promise).size).toBe(0);
+  });
+
+  it('posts bulk URLs and decodes successes while retaining item errors', async () => {
     const { bytesMany, handleResourceMessage } = await import('./shim.js');
 
-    const requests = [
-      { url: 'blossom:abc123.bin', servers: ['https://cdn.example'] },
-      { url: 'https://example.com/missing.png' },
-    ];
-    const promise = bytesMany(requests);
+    const urls = [`blossom:${'a'.repeat(64)}.bin?xs=cdn.example`, 'https://example.com/missing.png'];
+    const promise = bytesMany(urls);
     const sent = lastPosted('resource.bytesMany');
     expect(sent).toEqual({
       type: 'resource.bytesMany',
       id: 'resource-test-1',
-      requests,
+      urls,
     });
 
-    const okBlob = new Blob(['a'], { type: 'image/png' });
-    const items: ResourceBytesItem[] = [
-      { url: 'blossom:abc123.bin', ok: true, blob: okBlob, mime: 'image/png' },
+    const items: ResourceBytesItem<ResourceBytes>[] = [
+      { url: urls[0], ok: true, blob: 'AAEC/w==', mime: 'application/octet-stream' },
       {
         url: 'https://example.com/missing.png',
         ok: false,
@@ -166,13 +139,16 @@ describe('@napplet/nap/resource shim', () => {
 
     handleResourceMessage({ type: 'resource.bytesMany.result', id: sent.id, items });
 
-    await expect(promise).resolves.toEqual(items);
+    const result = await promise;
+    expect(result[1]).toEqual(items[1]);
+    expect(result[0].ok).toBe(true);
+    if (result[0].ok) expect(Array.from(new Uint8Array(await result[0].blob.arrayBuffer()))).toEqual([0, 1, 2, 255]);
   });
 
   it('rejects top-level resource.bytesMany errors', async () => {
     const { bytesMany, handleResourceMessage } = await import('./shim.js');
 
-    const promise = bytesMany([{ url: 'https://example.com/a.png' }]);
+    const promise = bytesMany(['https://example.com/a.png']);
     const sent = lastPosted('resource.bytesMany');
     handleResourceMessage({
       type: 'resource.bytesMany.error',
@@ -195,7 +171,7 @@ describe('@napplet/nap/resource shim', () => {
     const { bytesMany, handleResourceMessage } = await import('./shim.js');
     const controller = new AbortController();
 
-    const promise = bytesMany([{ url: 'https://example.com/a.png' }], { signal: controller.signal });
+    const promise = bytesMany(['https://example.com/a.png'], { signal: controller.signal });
     const sent = lastPosted('resource.bytesMany');
 
     controller.abort();
@@ -211,7 +187,7 @@ describe('@napplet/nap/resource shim', () => {
         {
           url: 'https://example.com/a.png',
           ok: true,
-          blob: new Blob(['late']),
+          blob: 'bGF0ZQ==',
           mime: 'text/plain',
         },
       ],
@@ -234,4 +210,56 @@ describe('@napplet/nap/resource shim', () => {
       error: 'invalid-request',
     })).not.toThrow();
   });
+  it.each(['Zg', 'Zh==', 'Zm9=', 'Zg===', ' Zg==', 'Zg==\n', 'AAEC_w==', 'data:;base64,Zg==', new Blob(['f']), new ArrayBuffer(1), [102], null])('rejects invalid wire bytes %j without retaining a cache entry', async (value) => {
+    const { bytes, handleResourceMessage } = await import('./shim.js');
+    const url = 'https://example.com/f';
+    const promise = bytes(url);
+    const rejected = expect(promise).rejects.toThrow('decode-failed');
+    handleResourceMessage({ type: 'resource.bytes.result', id: lastPosted('resource.bytes').id, blob: value, mime: 'text/plain' });
+    await rejected;
+    const retry = bytes(url);
+    expect(posted.filter((message) => message.type === 'resource.bytes')).toHaveLength(2);
+    handleResourceMessage({ type: 'resource.bytes.result', id: lastPosted('resource.bytes').id, blob: 'Zg==', mime: 'text/plain' });
+    expect(await (await retry).text()).toBe('f');
+  });
+
+  it('rejects malformed bulk results, including wrong order and host byte objects', async () => {
+    const { bytesMany, handleResourceMessage } = await import('./shim.js');
+    const urls = ['https://example.com/a', 'https://example.com/b'];
+    const good = { url: urls[0], ok: true, blob: 'Zg==', mime: 'text/plain' };
+    const second = { ...good, url: urls[1] };
+    for (const items of [[], [second, good], [good, { ...second, blob: new Blob(['f']) }], [good, { url: urls[1], ok: false, error: 'not-found', blob: '' }]]) {
+      const promise = bytesMany(urls);
+      const rejected = expect(promise).rejects.toThrow('decode-failed');
+      handleResourceMessage({ type: 'resource.bytesMany.result', id: lastPosted('resource.bytesMany').id, items });
+      await rejected;
+    }
+  });
+
+  it('validates sidecar bytes atomically before cache hydration', async () => {
+    const { hydrateResourceCache, bytes, handleResourceMessage } = await import('./shim.js');
+    const first = { url: 'https://example.com/a', blob: 'AAEC/w==', mime: 'application/octet-stream' };
+    expect(() => hydrateResourceCache([first, { ...first, url: 'https://example.com/b', blob: 'Zh==' }])).toThrow('decode-failed');
+    const uncached = bytes(first.url);
+    expect(posted).toHaveLength(1);
+    handleResourceMessage({ type: 'resource.bytes.result', id: lastPosted('resource.bytes').id, blob: '', mime: 'text/plain' });
+    await uncached;
+    hydrateResourceCache([first]);
+    const cached = await bytes(first.url);
+    expect(Array.from(new Uint8Array(await cached.arrayBuffer()))).toEqual([0, 1, 2, 255]);
+    expect(posted).toHaveLength(1);
+  });
+
+  it('cancels single requests and ignores their late malformed replies', async () => {
+    const { bytes, handleResourceMessage } = await import('./shim.js');
+    const controller = new AbortController();
+    const promise = bytes('https://example.com/a', { signal: controller.signal });
+    const rejected = expect(promise).rejects.toMatchObject({ name: 'AbortError' });
+    const sent = lastPosted('resource.bytes');
+    controller.abort();
+    expect(lastPosted('resource.cancel').id).toBe(sent.id);
+    expect(() => handleResourceMessage({ type: 'resource.bytes.result', id: sent.id, blob: new Blob(), mime: '' })).not.toThrow();
+    await rejected;
+  });
+
 });

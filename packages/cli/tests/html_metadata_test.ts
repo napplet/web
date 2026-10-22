@@ -134,11 +134,19 @@ Deno.test("standalone HTML recovers named metadata, final-byte hash and identica
       { relays: ["wss://relay.example"], blossomServers: [] },
       signer,
       {
+        resolve: () => Promise.resolve(["93.184.216.34"]),
         fetch: async (_url, init) => {
           if (init?.method === "HEAD") return new Response(null, { status: 404 });
           const bytes = new Uint8Array(await (init?.body as Blob).arrayBuffer());
           uploaded.push(bytes);
-          return Response.json({ sha256: await hash(bytes) });
+          const sha256 = await hash(bytes);
+          return Response.json({
+            sha256,
+            size: bytes.byteLength,
+            url: `https://blossom.example.com/${sha256}`,
+            type: new Headers(init?.headers).get("content-type"),
+            uploaded: 123,
+          });
         },
         publish: async (relays, event) =>
           relays.map((relay) => ({ relay, eventId: event.id, success: true })),

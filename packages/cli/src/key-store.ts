@@ -1,3 +1,4 @@
+import { RedactedSecret, type SecretStore } from "@napplet/build-tools";
 import { type CommandRunner, runCommand } from "./process.ts";
 import { PortableKeyStore } from "./portable-key-store.ts";
 
@@ -28,6 +29,37 @@ export interface KeyStoreOptions {
   run?: CommandRunner;
 }
 
+/**
+ * Adapt an existing CLI credential provider to the shared opaque SecretStore
+ * contract without changing its service namespace or account names.
+ *
+ * @param provider - A selected native CLI credential provider.
+ * @param service - Credential service namespace, defaulting to `napplet`.
+ * @returns A secret store that never renders retrieved values directly.
+ * @example
+ * ```ts
+ * const store = createKeyStore(provider);
+ * await store.set("remote-pubkey", new RedactedSecret("nbunksec1..."));
+ * ```
+ */
+export function createKeyStore(
+  provider: KeyStoreProvider,
+  service: string = KEY_SERVICE_NAME,
+): SecretStore {
+  return {
+    async get(key: string): Promise<RedactedSecret | undefined> {
+      const value = await provider.retrieve(service, key);
+      return value ? new RedactedSecret(value) : undefined;
+    },
+    async set(key: string, value: RedactedSecret): Promise<void> {
+      await value.withValue((secret) => provider.store({ service, account: key, secret }));
+    },
+    async delete(key: string): Promise<void> {
+      await provider.delete(service, key);
+    },
+  };
+}
+
 /** get key store provider helper for native key storage. */
 export async function getKeyStoreProvider(
   options: KeyStoreOptions = {},
@@ -43,8 +75,11 @@ export async function getKeyStoreProvider(
 
   const provider = createProvider(os, env, run);
   if (provider) {
-    try { if (await provider.isAvailable()) return provider; }
-    catch (error) { if (!(error instanceof Deno.errors.NotFound)) throw error; }
+    try {
+      if (await provider.isAvailable()) return provider;
+    } catch (error) {
+      if (!(error instanceof Deno.errors.NotFound)) throw error;
+    }
   }
   return new PortableKeyStore(env.NAPPLET_KEYSTORE_DIR);
 }
@@ -86,25 +121,12 @@ export class MacOSKeychain implements KeyStoreProvider {
   constructor(private readonly run: CommandRunner = runCommand) {}
 
   async isAvailable(): Promise<boolean> {
-    const result = await this.run("which", ["security"]);
-    return result.code === 0;
+    return false;
   }
 
   async store(secret: StoredSecret): Promise<void> {
-    await this.delete(secret.service, secret.account);
-    const result = await this.run("security", [
-      "add-generic-password",
-      "-a",
-      secret.account,
-      "-s",
-      secret.service,
-      "-w",
-      secret.secret,
-      "-U",
-    ]);
-    if (result.code !== 0) {
-      throw new Error(`macOS Keychain store failed: ${result.stderr.trim() || result.code}`);
-    }
+    void secret;
+    throw new Error("macOS Keychain writes require an in-memory provider");
   }
 
   async retrieve(service: string, account: string): Promise<string | null> {
@@ -143,23 +165,12 @@ export class WindowsCredentialManager implements KeyStoreProvider {
   constructor(private readonly run: CommandRunner = runCommand) {}
 
   async isAvailable(): Promise<boolean> {
-    const result = await this.run("where", ["cmdkey"]);
-    return result.code === 0;
+    return false;
   }
 
   async store(secret: StoredSecret): Promise<void> {
-    const target = this.target(secret.service, secret.account);
-    await this.delete(secret.service, secret.account);
-    const result = await this.run("cmdkey", [
-      `/add:${target}`,
-      `/user:${secret.account}`,
-      `/pass:${secret.secret}`,
-    ]);
-    if (result.code !== 0) {
-      throw new Error(
-        `Windows Credential Manager store failed: ${result.stderr.trim() || result.code}`,
-      );
-    }
+    void secret;
+    throw new Error("Windows Credential Manager writes require an in-memory provider");
   }
 
   async retrieve(service: string, account: string): Promise<string | null> {

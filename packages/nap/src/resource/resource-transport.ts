@@ -5,14 +5,14 @@
  */
 
 // @napplet/nap/resource -- Resource NAP shim (byte-fetching primitives)
-// Single-flight cache, AbortSignal cancellation, data: scheme decoded inline (zero shell round-trip).
+// Single-flight cache, AbortSignal cancellation, all schemes pass through runtime policy.
 
+import { decodeResourceBlob } from '@napplet/core';
 import { postToShell } from '../boundary.js';
 import type {
   ResourceBytesMessage,
   ResourceBytesManyMessage,
   ResourceBytesItem,
-  ResourceBytesRequest,
   ResourceBytesManyResultMessage,
   ResourceBytesManyErrorMessage,
   ResourceBytesResultMessage,
@@ -48,7 +48,7 @@ const pendingBytes = new Map<string, Pending<Blob>>();
 const pendingInfo = new Map<string, Pending<ResourceInfo>>();
 
 /** Pending `resource.bytesMany` wire requests. */
-const pendingMany = new Map<string, Pending<ResourceBytesItem[]>>();
+const pendingMany = new Map<string, Pending<ResourceBytesItem[]> & { urls: string[] }>();
 
 /** Guard against double-install. */
 let installed = false;
@@ -85,7 +85,8 @@ export function handleResourceMessage(msg: { type: string; [key: string]: unknow
     if (!p) return;
     pendingBytes.delete(result.id);
     clearTimeout(p.timeout);
-    p.resolve(result.blob);
+    try { p.resolve(decodeResourceBlob(result.blob, result.mime)); }
+    catch (error) { p.reject(error as Error); }
   } else if (isMessageType<ResourceBytesErrorMessage>(msg, 'resource.bytes.error')) {
     const err = msg;
     const p = pendingBytes.get(err.id);
@@ -99,7 +100,22 @@ export function handleResourceMessage(msg: { type: string; [key: string]: unknow
     if (!p) return;
     pendingMany.delete(result.id);
     clearTimeout(p.timeout);
-    p.resolve(result.items);
+    try {
+      if (!Array.isArray(result.items) || result.items.length !== p.urls.length) {
+        throw new Error('decode-failed: resource result length mismatch');
+      }
+      const items = Array.from(result.items, (item, index) => {
+        if (!item || item.url !== p.urls[index] || typeof item.ok !== 'boolean') {
+          throw new Error('decode-failed: resource result order or shape mismatch');
+        }
+        if (item.ok) return { ...item, blob: decodeResourceBlob(item.blob, item.mime) };
+        if (typeof item.error !== 'string' || 'blob' in item) {
+          throw new Error('decode-failed: invalid resource error item');
+        }
+        return item;
+      });
+      p.resolve(items);
+    } catch (error) { p.reject(error as Error); }
   } else if (isMessageType<ResourceBytesManyErrorMessage>(msg, 'resource.bytesMany.error')) {
     const err = msg;
     const p = pendingMany.get(err.id);
@@ -133,7 +149,7 @@ export function sendInfoRequest(id: string): Promise<ResourceInfo> {
  * Wires into pending Map + installs a timeout. Cancellation is handled by the caller
  * (bytes()) via signal listener -- this helper does not own the AbortSignal.
  */
-export function sendBytesRequest(url: string, id: string, servers?: string[]): Promise<Blob> {
+export function sendBytesRequest(url: string, id: string): Promise<Blob> {
   return new Promise<Blob>((resolve, reject) => {
     const timeout = setTimeout(() => {
       if (pendingBytes.delete(id)) {
@@ -146,7 +162,6 @@ export function sendBytesRequest(url: string, id: string, servers?: string[]): P
       type: 'resource.bytes',
       id,
       url,
-      ...(servers === undefined ? {} : { servers }),
     };
     postToShell(msg);
   });
@@ -155,19 +170,19 @@ export function sendBytesRequest(url: string, id: string, servers?: string[]): P
 /**
  * Send a resource.bytesMany request envelope and return ordered per-resource items.
  */
-export function sendBytesManyRequest(requests: ResourceBytesRequest[], id: string): Promise<ResourceBytesItem[]> {
+export function sendBytesManyRequest(urls: string[], id: string): Promise<ResourceBytesItem[]> {
   return new Promise<ResourceBytesItem[]>((resolve, reject) => {
     const timeout = setTimeout(() => {
       if (pendingMany.delete(id)) {
-        reject(new Error(`resource.bytesMany timed out for ${requests.length} requests`));
+        reject(new Error(`resource.bytesMany timed out for ${urls.length} URLs`));
       }
     }, REQUEST_TIMEOUT_MS);
-    pendingMany.set(id, { resolve, reject, timeout });
+    pendingMany.set(id, { resolve, reject, timeout, urls: [...urls] });
 
     const msg: ResourceBytesManyMessage = {
       type: 'resource.bytesMany',
       id,
-      requests,
+      urls,
     };
     postToShell(msg);
   });
@@ -182,76 +197,6 @@ function sendCancel(id: string): void {
     id,
   };
   postToShell(msg);
-}
-
-function isHexByte(value: string): boolean {
-  return /^[0-9a-fA-F]{2}$/.test(value);
-}
-
-function percentDecodeToBytes(value: string): Uint8Array {
-  const bytes: number[] = [];
-  const encoder = new TextEncoder();
-  for (let i = 0; i < value.length; i += 1) {
-    const char = value[i];
-    if (char === '%' && isHexByte(value.slice(i + 1, i + 3))) {
-      bytes.push(Number.parseInt(value.slice(i + 1, i + 3), 16));
-      i += 2;
-      continue;
-    }
-    bytes.push(...encoder.encode(char));
-  }
-  return new Uint8Array(bytes);
-}
-
-function percentDecodeToString(value: string): string {
-  let output = '';
-  for (let i = 0; i < value.length; i += 1) {
-    const char = value[i];
-    if (char === '%' && isHexByte(value.slice(i + 1, i + 3))) {
-      output += String.fromCharCode(Number.parseInt(value.slice(i + 1, i + 3), 16));
-      i += 2;
-      continue;
-    }
-    output += char;
-  }
-  return output;
-}
-
-function base64ToBytes(value: string): Uint8Array {
-  const decoded = atob(percentDecodeToString(value).replace(/\s/g, ''));
-  const bytes = new Uint8Array(decoded.length);
-  for (let i = 0; i < decoded.length; i += 1) {
-    bytes[i] = decoded.charCodeAt(i);
-  }
-  return bytes;
-}
-
-function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
-  const buffer = new ArrayBuffer(bytes.byteLength);
-  new Uint8Array(buffer).set(bytes);
-  return buffer;
-}
-
-/**
- * Decode a `data:` URI in-shim without browser network primitives.
- * Zero postMessage round-trip. Used by bytes() when the URL scheme is `data:`.
- */
-export function decodeDataUrl(url: string): Promise<Blob> {
-  const comma = url.indexOf(',');
-  if (comma < 0) return Promise.reject(new Error('invalid data URL'));
-
-  const metadata = url.slice('data:'.length, comma);
-  const data = url.slice(comma + 1);
-  const parts = metadata.split(';').filter((part) => part.length > 0);
-  const isBase64 = parts.some((part) => part.toLowerCase() === 'base64');
-  const type = parts.filter((part) => part.toLowerCase() !== 'base64').join(';');
-
-  try {
-    const bytes = isBase64 ? base64ToBytes(data) : percentDecodeToBytes(data);
-    return Promise.resolve(new Blob([toArrayBuffer(bytes)], { type }));
-  } catch (error) {
-    return Promise.reject(error instanceof Error ? error : new Error('invalid data URL'));
-  }
 }
 
 /**

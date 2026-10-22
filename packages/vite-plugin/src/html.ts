@@ -166,7 +166,19 @@ function assertSingleFileArtifact(html: string, distPath: string): void {
   );
 }
 
-export function inlineSingleFileBuildAssets(html: string, distPath: string, base: string): string {
+/**
+ * Render entry CSS and JS into HTML without mutating the retained Vite output.
+ *
+ * The optimizer uses this to measure the exact would-be single-file artifact
+ * before it decides whether any non-entry assets should remain externalized.
+ * `inlineSingleFileBuildAssets` owns the destructive commit used by the normal
+ * single-file path.
+ */
+export function renderSingleFileBuildAssets(
+  html: string,
+  distPath: string,
+  base: string,
+): { html: string; inlinedFiles: string[] } {
   const inlinedFiles = new Set<string>();
 
   const withStyles = html.replace(/<link\b([^>]*?)>/gi, (tag, attrs: string) => {
@@ -213,14 +225,20 @@ export function inlineSingleFileBuildAssets(html: string, distPath: string, base
     },
   );
 
-  for (const filePath of inlinedFiles) {
+  return { html: withScripts, inlinedFiles: [...inlinedFiles] };
+}
+
+export function inlineSingleFileBuildAssets(html: string, distPath: string, base: string): string {
+  const rendered = renderSingleFileBuildAssets(html, distPath, base);
+
+  for (const filePath of rendered.inlinedFiles) {
     fs.rmSync(filePath, { force: true });
     removeEmptyParentDirs(filePath, distPath);
   }
 
-  assertSingleFileArtifact(withScripts, distPath);
+  assertSingleFileArtifact(rendered.html, distPath);
 
-  return withScripts;
+  return rendered.html;
 }
 
 export function singleFileBuildConfig(config: UserConfig): UserConfig {

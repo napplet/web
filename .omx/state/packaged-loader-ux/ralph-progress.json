@@ -1,0 +1,277 @@
+{
+  "scope": "packaged-loader-ux",
+  "threshold": 90,
+  "iteration": 4,
+  "status": "pass",
+  "iteration_history": [
+    {
+      "iteration": 1,
+      "status": "revise",
+      "scores": [72, 74, 62, 74, 78, 64, 82, 76, 62, 58],
+      "reasoning": "The first generated pass was too narrow and flat, lacked the inset status panel and visible activity segment, and had contract-inconsistent reference controls."
+    },
+    {
+      "iteration": 2,
+      "status": "revise",
+      "scores": [94, 68, 84, 79, 98, 78, 92, 94, 91, 61],
+      "reasoning": "Geometry and state structure largely matched; remaining work was progress visibility, safe recovery hierarchy, actual Retry focus capture, and two contaminated reference frames."
+    },
+    {
+      "iteration": 3,
+      "status": "revise",
+      "scores": [98, 86, 95, 93, 99, 94, 88, 91, 84, 95],
+      "reasoning": "Seven states passed; the active-family copy hierarchy and deterministic segment sizing remained."
+    },
+    {
+      "iteration": 4,
+      "status": "pass",
+      "scores": [98, 95, 95, 93, 99, 94, 95, 97, 96, 95],
+      "reasoning": "All ten generated loader states match their frozen references at or above the required threshold."
+    }
+  ],
+  "local_comparisons": [
+    {
+      "reference": "/tmp/reference-01-initial.png",
+      "generated": "/tmp/generated-01-initial.png",
+      "score": 98,
+      "verdict": "pass",
+      "category_match": true,
+      "reasoning": "Initial layout, single-line heading, spacing, and layered shell match closely.",
+      "differences": ["Minor width, subtitle position, and shadow softness differences"],
+      "suggestions": ["Optional pixel-level width and shadow tuning"],
+      "next_actions": []
+    },
+    {
+      "reference": "/tmp/reference-02-active-35s.png",
+      "generated": "/tmp/generated-02-active-35s.png",
+      "score": 95,
+      "verdict": "pass",
+      "category_match": true,
+      "reasoning": "Active copy, inset status panel, visible segment, helper, and Cancel align with the reference.",
+      "differences": ["Minor segment length and lower padding differences"],
+      "suggestions": ["Optional segment and spacing micro-tuning"],
+      "next_actions": []
+    },
+    {
+      "reference": "/tmp/reference-03-partial.png",
+      "generated": "/tmp/generated-03-partial.png",
+      "score": 95,
+      "verdict": "pass",
+      "category_match": true,
+      "reasoning": "Partial N-of-T hierarchy, panel, helper, and control match strongly.",
+      "differences": ["Minor progress position and spacing differences"],
+      "suggestions": ["Optional progress alignment tuning"],
+      "next_actions": []
+    },
+    {
+      "reference": "/tmp/reference-04-error.png",
+      "generated": "/tmp/generated-04-error.png",
+      "score": 93,
+      "verdict": "pass",
+      "category_match": true,
+      "reasoning": "Safe structured error content and Retry action match the reference state.",
+      "differences": ["Generated Retry ring and alert border are slightly stronger"],
+      "suggestions": ["Optional focus and border softening"],
+      "next_actions": []
+    },
+    {
+      "reference": "/tmp/reference-05-ready.png",
+      "generated": "/tmp/generated-05-ready.png",
+      "score": 99,
+      "verdict": "pass",
+      "category_match": true,
+      "reasoning": "The brief ready handoff matches in layout, copy, and shell treatment.",
+      "differences": ["Negligible centering and rasterization variance"],
+      "suggestions": [],
+      "next_actions": []
+    },
+    {
+      "reference": "/tmp/reference-06-cancelled.png",
+      "generated": "/tmp/generated-06-cancelled.png",
+      "score": 94,
+      "verdict": "pass",
+      "category_match": true,
+      "reasoning": "Cancelled hierarchy, safe resource message, and single recovery action align.",
+      "differences": ["Minor subtitle wording and vertical spacing difference"],
+      "suggestions": ["Optional exact-copy parity"],
+      "next_actions": []
+    },
+    {
+      "reference": "/tmp/reference-07-light.png",
+      "generated": "/tmp/generated-07-light.png",
+      "score": 95,
+      "verdict": "pass",
+      "category_match": true,
+      "reasoning": "Light palette, active panel, helper, and control match closely.",
+      "differences": ["Minor segment length and card width difference"],
+      "suggestions": ["Optional pixel-level geometry tuning"],
+      "next_actions": []
+    },
+    {
+      "reference": "/tmp/reference-08-dark.png",
+      "generated": "/tmp/generated-08-dark.png",
+      "score": 97,
+      "verdict": "pass",
+      "category_match": true,
+      "reasoning": "Dark palette, layered shell, active panel, helper, and Cancel align strongly.",
+      "differences": ["Minor headline weight and lower spacing difference"],
+      "suggestions": ["Optional typography micro-tuning"],
+      "next_actions": []
+    },
+    {
+      "reference": "/tmp/reference-09-reduced-motion.png",
+      "generated": "/tmp/generated-09-reduced-motion.png",
+      "score": 96,
+      "verdict": "pass",
+      "category_match": true,
+      "reasoning": "Reduced-motion state retains the same active design with a visible static segment.",
+      "differences": ["Minor static segment length and whitespace difference"],
+      "suggestions": ["Optional static segment tuning"],
+      "next_actions": []
+    },
+    {
+      "reference": "/tmp/reference-10-keyboard-retry.png",
+      "generated": "/tmp/generated-10-keyboard-retry.png",
+      "score": 95,
+      "verdict": "pass",
+      "category_match": true,
+      "reasoning": "The structured recovery state and keyboard-focused Retry affordance match closely.",
+      "differences": ["Minor card width, alert border, and button position differences"],
+      "suggestions": ["Optional pixel-level spacing refinement"],
+      "next_actions": []
+    }
+  ],
+  "production_comparisons": [
+    {
+      "reference": "/tmp/reference-01-initial.png",
+      "generated": ".planning/quick/260904-nm7-improve-the-napplet-vite-plugin-packaged/evidence/01-initial.png",
+      "score": 96,
+      "verdict": "pass",
+      "category_match": true,
+      "reasoning": "The immediate production state matches the corrected active 0-of-10 loader reference.",
+      "differences": ["Minor card height, segment length, and button position variance"],
+      "suggestions": ["Optional pixel-level geometry tuning"],
+      "next_actions": []
+    },
+    {
+      "reference": "/tmp/reference-02-active-35s.png",
+      "generated": ".planning/quick/260904-nm7-improve-the-napplet-vite-plugin-packaged/evidence/02-active-35s.png",
+      "score": 96,
+      "verdict": "pass",
+      "category_match": true,
+      "reasoning": "The production loader remains visibly active beyond 35 seconds with matching copy, panel, helper, and control.",
+      "differences": ["Minor indeterminate segment phase and spacing variance"],
+      "suggestions": ["No structural change needed"],
+      "next_actions": []
+    },
+    {
+      "reference": "/tmp/reference-03-partial.png",
+      "generated": ".planning/quick/260904-nm7-improve-the-napplet-vite-plugin-packaged/evidence/03-partial.png",
+      "score": 97,
+      "verdict": "pass",
+      "category_match": true,
+      "reasoning": "The real three-of-ten verified-resource state matches the reference hierarchy and layout.",
+      "differences": ["Minor indeterminate segment phase variance"],
+      "suggestions": [],
+      "next_actions": []
+    },
+    {
+      "reference": "/tmp/reference-04-error.png",
+      "generated": ".planning/quick/260904-nm7-improve-the-napplet-vite-plugin-packaged/evidence/04-error.png",
+      "score": 97,
+      "verdict": "pass",
+      "category_match": true,
+      "reasoning": "Contextual sibling activity, safe resource failure copy, and Retry align with the reference.",
+      "differences": ["Minor indeterminate segment phase variance"],
+      "suggestions": [],
+      "next_actions": []
+    },
+    {
+      "reference": "/tmp/reference-05-ready.png",
+      "generated": ".planning/quick/260904-nm7-improve-the-napplet-vite-plugin-packaged/evidence/05-ready.png",
+      "score": 93,
+      "verdict": "pass",
+      "category_match": true,
+      "reasoning": "The atomically replaced fixture application matches the expected final ready target and exact copy.",
+      "differences": ["Minor badge, inset frame, and card-weight differences"],
+      "suggestions": ["No loader change; this frame is application-owned after handoff"],
+      "next_actions": []
+    },
+    {
+      "reference": "/tmp/reference-06-cancelled.png",
+      "generated": ".planning/quick/260904-nm7-improve-the-napplet-vite-plugin-packaged/evidence/06-cancelled.png",
+      "score": 91,
+      "verdict": "pass",
+      "category_match": true,
+      "reasoning": "The canonical cancellation state and single Retry action match the reference structure.",
+      "differences": ["Minor subtitle, sample path, and focus-state variance"],
+      "suggestions": ["No structural change needed"],
+      "next_actions": []
+    },
+    {
+      "reference": "/tmp/reference-07-light.png",
+      "generated": ".planning/quick/260904-nm7-improve-the-napplet-vite-plugin-packaged/evidence/07-light.png",
+      "score": 91,
+      "verdict": "pass",
+      "category_match": true,
+      "reasoning": "The production light palette and active loader structure match the reference.",
+      "differences": ["Expected ten-resource count and minor segment/card geometry variance"],
+      "suggestions": [],
+      "next_actions": []
+    },
+    {
+      "reference": "/tmp/reference-08-dark.png",
+      "generated": ".planning/quick/260904-nm7-improve-the-napplet-vite-plugin-packaged/evidence/08-dark.png",
+      "score": 92,
+      "verdict": "pass",
+      "category_match": true,
+      "reasoning": "The dark-theme card, progress panel, helper, and control placement match the reference category.",
+      "differences": ["Expected ten-resource count, segment phase, and button-state styling variance"],
+      "suggestions": ["No structural change needed; unit assertions cover enabled keyboard operation"],
+      "next_actions": []
+    },
+    {
+      "reference": "/tmp/reference-09-reduced-motion.png",
+      "generated": ".planning/quick/260904-nm7-improve-the-napplet-vite-plugin-packaged/evidence/09-reduced-motion.png",
+      "score": 90,
+      "verdict": "pass",
+      "category_match": true,
+      "reasoning": "The reduced-motion production view retains a static visible activity cue and matching structure.",
+      "differences": ["Expected ten-resource count and minor static-segment/whitespace variance"],
+      "suggestions": [],
+      "next_actions": []
+    },
+    {
+      "reference": "/tmp/reference-10-keyboard-retry.png",
+      "generated": ".planning/quick/260904-nm7-improve-the-napplet-vite-plugin-packaged/evidence/10-keyboard-retry.png",
+      "score": 98,
+      "verdict": "pass",
+      "category_match": true,
+      "reasoning": "The production retry state matches the contextual active/error reference and shows Retry as the sole focused control.",
+      "differences": ["Negligible segment phase and rendering variance"],
+      "suggestions": [],
+      "next_actions": []
+    }
+  ],
+  "production_iteration_history": [
+    {
+      "iteration": 1,
+      "status": "revise",
+      "scores": [41, 78, 79, 82, 52, 91, 91, 92, 90, 76],
+      "reasoning": "Real Paja exposed contextual state differences from isolated references: immediate startup is already active at 0 of 10, error and keyboard retry coexist with continuing sibling activity, indeterminate segments appear at arbitrary phases, and the ready capture is the atomically replaced application.",
+      "suggestions": ["Correct reference 01 to the immediate active 0-of-10 production state", "Match references 02 and 03 to real ten-resource counts while treating segment position as indeterminate phase", "Include continuing sibling activity in error and keyboard-retry references", "Make reference 05 the expected final application after atomic handoff"],
+      "next_actions": ["Revise only affected temporary references", "Rerun the six failed production comparisons", "Persist ten authoritative production passes"]
+    },
+    {
+      "iteration": 2,
+      "status": "pass",
+      "scores": [96, 96, 97, 97, 93, 91, 91, 92, 90, 98],
+      "reasoning": "All ten real Paja states match their context-correct references at or above the required threshold without changing production or evidence bytes.",
+      "suggestions": ["Retain the accepted screenshots and runtime bytes for H1"],
+      "next_actions": ["Re-run non-publication evidence validator", "Commit evidence and verdict state as H1"]
+    }
+  ],
+  "reasoning": "Local generated loader states pass all ten frozen reference mappings at scores from 93 to 99.",
+  "suggestions": ["Retain the accepted visual contract during pipeline and production proof"],
+  "next_actions": ["Commit Task 2 GREEN", "Run authoritative production comparisons in Task 3"]
+}

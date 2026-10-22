@@ -198,12 +198,12 @@ export interface NappletGlobal {
   config?: ConfigApi;
   /**
    * Browser-enforced resource fetching: napplets request bytes by URL,
-   * shell fetches and returns a Blob. The strict-CSP iframe sandbox
-   * blocks all napplet-side network access, so this is the canonical
-   * (and only) byte-fetching primitive available inside a napplet.
+   * shell returns canonical base64 bytes decoded into a Blob by the web binding.
+   * Hosts exposing resource enforce NAP-RESOURCE network isolation; the
+   * opaque iframe origin alone is insufficient.
    *
    * URL space is scheme-pluggable: shells register handlers per scheme.
-   * Canonical schemes include `data:` (decoded in-shim, no round-trip),
+   * Canonical schemes include `data:` (processed under shell policy),
    * `https:` (shell-side network with policy), `blossom:<sha256>.<ext>`
    * (BUD-10 Blossom URI to bytes), `htree:` (Hashtree-verified bytes), and `nostr:` (NIP-19
    * single-hop resolution).
@@ -213,15 +213,13 @@ export interface NappletGlobal {
    * @example
    * ```ts
    * // Fetch raw bytes with advisory Blossom server locations:
-   * const blob = await window.napplet.resource.bytes('blossom:<sha256>.png', {
-   *   servers: ['https://cdn.hzrd149.com'],
-   * });
+   * const blob = await window.napplet.resource.bytes('blossom:<sha256>.png?xs=cdn.hzrd149.com');
    *
    * // Fetch many resources in one envelope:
    * const items = await window.napplet.resource.bytesMany([
-   *   { url: 'https://example.com/avatar.png' },
-   *   { url: 'blossom:<sha256>.png', servers: ['https://cdn.hzrd149.com'] },
-   *   { url: 'htree://example-root/path' },
+   *   'https://example.com/avatar.png',
+   *   'blossom:<sha256>.png?xs=cdn.hzrd149.com',
+   *   'htree://example-root/path',
    * ]);
    *
    * // Get a managed object URL (revoke when done to free memory):

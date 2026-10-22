@@ -95,12 +95,10 @@ const configSub = config.subscribe((v) => {
 config.openSettings({ section: 'appearance' });
 
 // Fetch external bytes through the runtime's NAP-RESOURCE surface
-const avatarBlob = await resource.bytes('blossom:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.bin', {
-  servers: ['https://cdn.hzrd149.com'],
-});
+const avatarBlob = await resource.bytes('blossom:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.bin?xs=cdn.hzrd149.com');
 const resourceItems = await resource.bytesMany([
-  { url: 'https://example.com/avatar.png' },
-  { url: 'blossom:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.bin', servers: ['https://cdn.hzrd149.com'] },
+  'https://example.com/avatar.png',
+  'blossom:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.bin?xs=cdn.hzrd149.com',
 ]);
 const handle = resource.bytesAsObjectURL('blossom:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.bin');
 imgEl.src = handle.url;
@@ -286,13 +284,15 @@ npm install --save-dev json-schema-to-ts
 
 ### `resource`
 
+Resource transport follows the living [NAP-RESOURCE proposal](https://github.com/napplet/naps/pull/80) and its [web binding](https://github.com/napplet/naps/blob/nub-resource/projections/web.md#resource-binding). Bulk calls take URL strings. Wire `blob` fields are canonical padded base64; the binding validates and decodes them into application-facing Blobs. Data URLs go through runtime policy. Replace former request objects and `opts.servers` with URL strings and BUD-10 URI hints. Hosts enforce the binding's network isolation before exposing this domain.
+
 Sandboxed byte fetching (NAP-RESOURCE). Mirrors `window.napplet.resource`; loading and transport requirements remain defined by NIP-5D and NAP-RESOURCE rather than by this package.
 
 | Method | Returns | Description |
 |--------|---------|-------------|
 | `info()` | `Promise<ResourceInfo>` | Inspect advisory schemes and coarse policy limits. Not required before fetching. |
-| `bytes(url, opts?)` | `Promise<Blob>` | Fetch bytes through the shell. `opts.servers` carries advisory Blossom locations and `opts.signal` accepts an `AbortSignal`. |
-| `bytesMany(requests, opts?)` | `Promise<ResourceBytesItem[]>` | Fetch many per-resource requests through one envelope. Each request may carry advisory Blossom `servers`; items preserve input order and length. |
+| `bytes(url, opts?)` | `Promise<Blob>` | Fetch bytes through the shell. `opts.signal` accepts an `AbortSignal`. BUD-10 URI query parameters carry advisory discovery hints. |
+| `bytesMany(urls, opts?)` | `Promise<ResourceBytesItem[]>` | Fetch a non-empty URL list through one envelope; items preserve input order and length. |
 | `bytesAsObjectURL(url)` | `{ url: string; revoke: () => void }` | Synchronous handle whose `url` resolves to a blob URL once the fetch completes. |
 
 Canonical schemes: `data:` (in-shim), `https:` (shell-side under policy), `blossom:<sha256>.<ext>` ([BUD-10](https://github.com/hzrd149/blossom/blob/master/buds/10.md), hash-verified), `htree:` (Hashtree-verified), `nostr:<bech32>` (single-hop NIP-19).

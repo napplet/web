@@ -143,7 +143,7 @@ Deno.test("renderDeployReport replaces placeholder candidate names with a readab
   assert(output.includes("from gbcolor-napplet"));
 });
 
-Deno.test("renderDeployReport treats a failed redundant mirror as a warning", async () => {
+Deno.test("renderDeployReport treats an incomplete Blossom batch as a failure", async () => {
   const { report, signedEvent } = await createNetworkDeployReport();
   report.blossomServers = [
     "https://a.example",
@@ -171,10 +171,8 @@ Deno.test("renderDeployReport treats a failed redundant mirror as a warning", as
 
   const output = renderDeployReport(report);
 
-  assert(output.includes("Status: complete with warnings (1 incomplete Blossom mirror)"));
-  assert(output.includes("Deploy complete with warnings: 1 incomplete Blossom mirror."));
-  assert(!output.includes("Status: attention needed"));
-  assert(!output.includes("Deploy failed"));
+  assert(output.includes("Status: failed (incomplete Blossom upload batch)"));
+  assert(output.includes("Deploy failed: incomplete Blossom upload batch."));
 });
 
 Deno.test("renderDeployReport treats a failed redundant relay publish as a warning", async () => {

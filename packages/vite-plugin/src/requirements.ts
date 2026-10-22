@@ -68,6 +68,23 @@ export function resolvedRequirements(
   return dedupeRequirements([...explicit, ...inferred]);
 }
 
+/**
+ * Merge configured requirements with a completed resource transaction.
+ *
+ * `resource` is protocol surface defined by the published NAP-RESOURCE proposal
+ * at https://github.com/napplet/naps/pull/80. It is included only when the final
+ * artifact actually committed one or more private resource mappings. Author
+ * declarations are preserved even when no optimizer transaction commits.
+ */
+export function effectiveRequirements(
+  configured: readonly string[],
+  committedResourceCount: number,
+): string[] {
+  return dedupeRequirements(
+    committedResourceCount > 0 ? [...configured, 'resource'] : [...configured],
+  );
+}
+
 export function reportRequirementDiagnostics(
   option: Nip5aRequiresOption | undefined,
   state: ManifestPluginState,

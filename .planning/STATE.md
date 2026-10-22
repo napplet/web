@@ -1,14 +1,14 @@
 ---
-gsd_state_version: 1.0
+gsd_state_version: "1.0"
 milestone: v0.34.0
 milestone_name: NIP-5D Runtime Injection
 current_phase: 164
 current_phase_name: cli-terminal-usability
 status: completed
 stopped_at: Phase 164 verified locally and shipped in PR 248 with terminal recordings
-last_updated: "2026-10-17T21:23:11+00:00"
-last_activity: 2026-10-17
-last_activity_desc: Merged current main and resolved PR 248 CLI conflicts
+last_updated: "2026-10-19T23:36:15+00:00"
+last_activity: 2026-10-19
+last_activity_desc: Resolved PR 205 conflicts with current main
 progress:
   total_phases: 9
   completed_phases: 4
@@ -26,6 +26,8 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 **Core value:** Prove that sandboxed Nostr apps can securely delegate to a host shell over a simple, standardized protocol — and ship the spec + SDK so others can build on it.
 
 **Current focus:** Phase 164 — CLI terminal usability verified and shipped in [PR #248](https://github.com/napplet/web/pull/248) with visual proof.
+
+> Integration provenance (quick task 261012-jnp): Both lineages independently used phase number 162. The optimizer lineage is `.planning/phases/162-blossom-backed-large-asset-optimization/` (11 plans, verified before integration); main's schema migration lineage is `.planning/phases/162-nip-5d-event-schema-migration/` (3 plans, shipped via #224). Earlier aggregate-hash descriptions are historical, not current protocol guidance. All records and artifacts from both lineages are retained; quick task 261012-jnp tracks their integration on PR #205.
 
 > **Provenance note:** The "Accumulated Context" section below preserves bullet records from BOTH branches' STATE.md histories. Records tagged "v0.29.0" from main's lineage refer to the milestone NOW renumbered as v0.30.0 (Class-Gated Decrypt — Phases 135-138). Records tagged "v0.29.0" from feat/strict-model refer to NUB-CONNECT (Phases 135-142). Phase number alone is not a unique identifier across the two; cross-reference the topic (decrypt/identity/NIP-07 → v0.30.0; connect/class/CSP-authority → v0.29.0).
 
@@ -45,10 +47,20 @@ Branch `feat/cli-terminal-usability` ships guided missing-value recovery, `-i` p
 
 ## Current Position
 
+### Quick task 261012-jnp — historical synchronization evidence
+
+Follow-up authorized on 2026-10-14: `.planning/debug/pr205-resource-wire.md` records the implemented and locally verified migration of the historical blocker below. Earlier observations remain historical evidence.
+
+- Merged `origin/main` `10fd4e61` into existing `feat/vite-plugin-blossom-optimization` at `34bd9b90`, preserving both parent histories and both independently numbered phase-162 artifact lineages. PR remains https://github.com/napplet/web/pull/205; it must not be merged automatically.
+- Resolved the 20 freshly observed conflict paths, current artifact-hash/R-tag optimizer integration, retained-byte CLI icon/screenshot uploads, destination canonicalization, and the old CI native-digest wait race. Local build/type/recursive units/full tests/conformance e2e/contracts/links and Linux standalone/npm runner tests pass; unchanged actual AI-slop workflow passes 95/100 in the post-commit full scan (earlier pre-commit scans 96/100). Three existing findings and the combined manifest.ts size warning are disclosed, not suppressed.
+- Blocking finding: living NAP-RESOURCE PR #80 head `2529209a1a031e1411f84823c6d5fe8c594f78d7` requires `urls` and base64 wire bytes, while both original feature and fetched main still expose `requests` and Blob wire fields in `packages/nap/src/resource/types.ts:120,166`. Passing mocks are not protocol interoperability proof. No out-of-scope breaking wire migration was attempted; explicit follow-on scope decision required.
+- All nine remote checks pass for merge head `34bd9b909418a675486254f298dda06aa99f2dcf` (CI, conformance, Scan, links and five standalone platforms); PR #205 is OPEN/CLEAN/MERGEABLE. Final task-artifact revision is separately watched and recorded in the closing PR evidence comment. Evidence: `.planning/quick/261012-jnp-catch-feat-vite-plugin-blossom-optimizat/261012-jnp-SUMMARY.md`. Historical milestone position and accumulated records below are preserved, not advanced as though this quick task completed a phase.
+- Final delivery rerun exposed the companion whole-Blob fixture's default five-second timeout under contention. Its timeout now matches the other large-fixture test's bounded thirty-second budget, retaining every assertion. Targeted plugin units pass 137/137; repaired full local gates and final pushed-SHA results are recorded in the closing PR evidence comment. The protocol blocker above remains unchanged.
+
 Phase: 164 (cli-terminal-usability) — verified and shipped
 Plan: 3 of 3
 Status: [PR #248](https://github.com/napplet/web/pull/248) open with six actual terminal screenshots
-Last activity: 2026-10-15 - Completed quick task 261015-aen: nsyte-style filled CLI progress bars
+Last activity: 2026-10-19 - Completed quick task 261019-n0s: Resolve PR #205 conflicts with current main
 
 See phase 163 VERIFICATION.md and COVERAGE.md for evidence and disclosed release/specification/baseline limits. Earlier phase and quick-task records below are historical.
 
@@ -78,6 +90,14 @@ See phase 163 VERIFICATION.md and COVERAGE.md for evidence and disclosed release
 - Automatic Kehto Paja screenshot previews for deploy and standalone capture; no user-supplied host required.
 - CLI 0.8.5 and conformance-cli 0.3.3 prepared; real PNG proofs saved in `/tmp/napplet-screenshot-proof`.
 - Full build, type-check, unit suite and changed-code slop gate passed.
+
+### Quick task 260904-nm7 — COMPLETE
+
+- Added an immediate self-contained packaged-resource loader with honest verified-resource counts, light/dark and reduced-motion treatments, safe diagnostics, native Retry/Cancel controls, and atomic application handoff.
+- Kept concurrent and bulk resource work recoverable: verified siblings remain cached, failed/cancelled rows retry independently, and original aggregate promises retain ordered results.
+- Retained and independently validated ten production Paja screenshots plus a trace for a 35,067 ms active load, failure/retry, cancellation, keyboard focus, and final handoff.
+- Verification: targeted optimizer 67/67; evidence validator 58/58; Vite plugin 113/113; build 14/14; type-check 21/21; workspace units; full test 25/25; audit; AI-slop 100/100; independent H1 review and GSD verification.
+- PR: https://github.com/napplet/web/pull/216, stacked on `feat/vite-plugin-blossom-optimization` so the merged #212, #213, and #214 fixes remain in ancestry.
 
 ### Quick task 260726-ft1 — COMPLETE
 
@@ -521,6 +541,29 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 - [Phase ?]: Keep INC query parsing outbound-only and preserve exact opaque receive routing.
 - [Phase ?]: IntentResult now distinguishes immediate runtime acceptance from pre-acceptance rejection; post-acceptance delivery remains runtime policy.
 - [Phase ?]: IntentApi derives identity from convention URIs and exposes no-ID runtime-attested target delivery through onDelivery.
+- [Phase ?]: Retain Vite asset boundaries only while evaluating; commit a verified resource-backed artifact or ordinary all-inline output.
+- [Phase ?]: Emit requires:resource only after a verified transaction and keep the mapping private to index.html.
+- [Phase ?]: Keep encrypted kind-24133 relay transport behind an injected adapter; shared signer owns canonical correlation, verification, and cleanup.
+- [Phase ?]: Restrict BuildSigner to get_public_key and kind-24242 sign_event, with local signed-event verification and redaction-safe errors.
+- [Phase ?]: Protected credential provider failures remain fail-closed; plaintext fallback is explicit only.
+- [Phase ?]: Deno member import maps are validated with --no-lock because workspace lock configuration is root-only.
+- [Phase ?]: Keep the public NappletSigner for generic deployment events; use the verified shared BuildSigner only for Blossom kind 24242 authorization.
+- [Phase ?]: Wrap legacy CLI credential providers in RedactedSecret at the boundary so persisted remote-session secrets stay opaque.
+- [Phase ?]: Discover kind-10063 only through the newest verified kind-10002 event's write or unmarked relays; never treat relay URLs as Blossom servers.
+- [Phase ?]: Use direct primary-first BUD uploads and never call BUD-04 remote mirroring from the build process.
+- [Phase ?]: Keep the resource table and loader private signed-artifact metadata; they do not create NIP-5A or NIP-5D surface.
+- [Phase ?]: Select assets only when every inventoried reference uses a supported loader-owned form; preserve all other bytes inline.
+- [Phase ?]: Use only resource.bytes and resource.bytesMany with whole-Blob integrity checks, bounded lifetime, and no browser network fallback.
+- [Phase ?]: CLI Blossom discovery uses verified kind-10002 write relays and never substitutes a default server.
+- [Phase ?]: CLI upload success requires complete shared exact-byte evidence across configured direct servers.
+- [Phase ?]: Keep Node-only platform capabilities in the Vite adapter while shared build-tools stays environment-neutral.
+- [Phase ?]: Use typed redaction-safe unavailable statuses and lazy injected Node boundaries for live optimization.
+- [Phase ?]: Large asset optimization measures exact would-be single-file HTML against a fixed 2 MiB threshold before lazy Node services.
+- [Phase ?]: The resource requirement is derived only from committedResourceCount, and aggregate hashing follows the final artifact commit.
+- [Phase ?]: The Vite integration test injects local boundaries through an internal WeakMap harness, not a public plugin option.
+- [Phase ?]: Assets over 10 MiB are ineligible whole Blobs and retain the nonfatal inline fallback; streaming and ranges are not claimed.
+- [Phase ?]: Kept Blossom loader/mapping as non-normative private artifact bytes and used only existing NAP-RESOURCE whole-Blob operations.
+- [Phase ?]: Released Vite plugin, build tools, and CLI as 0.x minors; transitive security remediation belongs in pnpm workspace overrides and lockfile.
 
 ### Decisions (napplet/nubs state snapshot, 2026-04-23)
 
@@ -548,21 +591,26 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 - CARRIED: npm publish blocked on human npm auth (PUB-04)
 - INFO: Local `specs/NIP-5D.md` may be stale vs napplet/nubs master post-PR-15 (`window.nostr` removal merged 2026-04-21). Phase 138 NIP5D-01 syncs before layering v0.29.0 amendment
 - INFO: `world: 'MAIN'` extension-API bypass acknowledged as residual — no page-side blocking mechanism exists. NUB-CLASS-1 `connect-src 'none'` is the structural mitigation. Phase 136 artifact MUST document this honestly; Phase 137 amendment + Phase 138 NIP-5D amendment MUST NOT claim a fix
+- Quick 261012-jnp wire blocker resolved by 16cc8a49 and abe60708. URL lists, canonical base64 decoding, imported sidecars and real-shim optimizer integration pass local verification; final remote checks are tracked on PR #205. Host fetch-policy and network-isolation enforcement are separate from this byte-contract evidence.
 
 ### Quick Tasks Completed
 
 | Quick ID | Task | Date | Commit | Artifacts |
 |----------|------|------|--------|-----------|
+| 261019-n0s | Resolve PR #205 merge conflicts with current main | 2026-10-19 | 85b09faf | [261019-n0s](./quick/261019-n0s-resolve-pr-205-merge-conflicts-with-curr/) |
 | 261015-aen | Use nsyte-style filled CLI progress bars and refresh terminal proof | 2026-10-15 | 5e165056 | [261015-aen](./quick/261015-aen-use-nsyte-filled-progress-bars-in-cli-an/) |
 | 261017-jqc | Preserve extension tags and validate defined manifest fields | 2026-10-17 | 9ff56c20 / PR #256 | [261017-jqc](./quick/261017-jqc-preserve-nostr-extension-tags-in-cli-pub/) |
 | 261015-bbu | Use QuickJS and dependency pruning for released CLI binaries | 2026-10-15 | PR #249 | [261015-bbu-use-quickjs-and-dependency-pruning-for-r](./quick/261015-bbu-use-quickjs-and-dependency-pruning-for-r/) |
 | 261015-asj | Add CLI compile experiments for QuickJS, pruning, bundling, and minification | 2026-10-15 | be8e27a9 | [261015-asj-add-cli-compile-experiments-for-quickjs-](./quick/261015-asj-add-cli-compile-experiments-for-quickjs-/) |
 | 261014-fuc | Replace blossom:sha256 URIs with BUD-10 blossom:<sha256>.<ext> | 2026-10-14 | 48782cd0 | [261014-fuc-replace-blossom-sha256-uris-with-bud-10-](./quick/261014-fuc-replace-blossom-sha256-uris-with-bud-10-/) |
 | 261013-vo3 | Add a skill for icon design, generation, refinement, and NIP-5D integration | 2026-10-13 | b5757eec | [261013-vo3-add-a-napplet-skill-for-icon-design-imag](./quick/261013-vo3-add-a-napplet-skill-for-icon-design-imag/) |
+| 260904-nm7 | Add an accessible recoverable packaged-resource loader in stacked PR #216 | 2026-09-04 | a1b6bb0c | [260904-nm7-improve-the-napplet-vite-plugin-packaged](./quick/260904-nm7-improve-the-napplet-vite-plugin-packaged/) |
+| 260904-h0g | Resolve issues #212, #213, and #214 in stacked PR #215 | 2026-09-04 | 1e954edd | [260904-h0g-resolve-github-issues-212-and-213-on-top](./quick/260904-h0g-resolve-github-issues-212-and-213-on-top/) |
 | 261009-ur6 | Remove commit-title gating from JSR publication | 2026-10-09 | d798a91f | [261009-ur6-remove-commit-title-gating-from-jsr-publ](./quick/261009-ur6-remove-commit-title-gating-from-jsr-publ/) |
 | 261006-ij3 | Fix verified PR #224 review findings (conformance x-hash panel, deploy/plugin dropped-asset guards, CLI R/O overlap, debug crash) | 2026-10-06 | a4f1c8b4 | [261006-ij3-fix-verified-pr-224-review-findings-conf](./quick/261006-ij3-fix-verified-pr-224-review-findings-conf/) |
 | 260912-wr8 | Restructure napplet skills for the skills.sh installer (napplet-* names, napplet-ui contract, custom installer removed) | 2026-09-12 | 2d3556c9 | [260912-wr8-restructure-napplet-skills-for-the-skill](./quick/260912-wr8-restructure-napplet-skills-for-the-skill/) |
 | 260904-g1f | Add the MIT license and open a pull request | 2026-09-04 | 7b82fe08 | [260904-g1f-add-the-mit-license-and-open-a-pull-requ](./quick/260904-g1f-add-the-mit-license-and-open-a-pull-requ/) |
+| 260826-q11 | Integrate NAP-RESOURCE request-object compatibility into PR 205 after server-hint release | 2026-08-26 | aab681d7 | [260826-q11-integrate-nap-resource-request-object-co](./quick/260826-q11-integrate-nap-resource-request-object-co/) |
 | 260826-jex | Split NAP-RESOURCE server hints from PR #205 into a dedicated PR | 2026-08-26 | 11fdf896 | [260826-jex-split-nap-resource-server-hints-from-pr-](./quick/260826-jex-split-nap-resource-server-hints-from-pr-/) |
 | 260803-qdc | Preserve CLI JSR and public API compatibility while keeping standalone create and skills resolver-free | 2026-08-03 | 53fc550f | [260803-qdc-preserve-cli-jsr-compatibility-while-kee](./quick/260803-qdc-preserve-cli-jsr-compatibility-while-kee/) |
 | 260803-ogn | Fix release version synchronization to preserve wildcard package exports and unblock the official CLI release | 2026-08-03 | 15783676 | [260803-ogn-fix-release-version-synchronization-to-p](./quick/260803-ogn-fix-release-version-synchronization-to-p/) |
@@ -635,8 +683,8 @@ Items acknowledged and deferred at v0.31.0 milestone close on 2026-05-24:
 | 261010-01a | Optional Zapstore metadata, standalone/inline screenshots, and current protocol context | 2026-10-10 | 46c19178 | [261010-01a](./quick/261010-01a-optional-zapstore-metadata-and-current-p/) |
 | 261015-by5 | Migrate CLI project configuration to YAML with required consent | 2026-10-15 | 5132679b | [261015-by5-migrate-cli-project-configuration-from-j](./quick/261015-by5-migrate-cli-project-configuration-from-j/) |
 
-Last session: 2026-07-23T15:44:08.781Z
-Stopped at: Completed 161-16-PLAN.md
+Historical optimizer session: 2026-08-21T18:25:15.384Z — Completed 162-11-PLAN.md.
+Historical main session: 2026-07-23T15:44:08.781Z — Completed 161-16-PLAN.md.
 Resume: Phase 155 COMPLETE. All v0.33.0 SHELL requirements satisfied; both phases (154, 155) done. Next: orchestrator verify_phase_goal for Phase 155, then `/gsd:audit-milestone v0.33.0` → `/gsd:ship`.
 
 - v0.26.0: Consolidated `@napplet/nub-*` packages into single `@napplet/nub` with 34 subpath exports; deprecated packages ship as 1-line re-export shims for one release cycle
@@ -741,6 +789,17 @@ Resume: Phase 142 TERMINAL-COMPLETE — all 13 VER-IDs (VER-01..13) verified PAS
 | Phase 161 P12 | 4min | 1 tasks | 5 files |
 | Phase 161-ad-hoc-convention-package-contracts P15 | 2min | 1 tasks | 4 files |
 | Phase 161 P16 | 4 min | 2 tasks | 5 files |
+| Phase 162 P01 | 8 minutes | 1 tasks | 6 files |
+| Phase 162 P02 | 3 min | 2 tasks | 8 files |
+| Phase 162-blossom-backed-large-asset-optimization P03 | 9m | 3 tasks | 9 files |
+| Phase 162 P04 | 24m | 2 tasks | 11 files |
+| Phase 162 P05 | 33m | 2 tasks | 7 files |
+| Phase 162 P07 | 8min | 3 tasks | 8 files |
+| Phase 162 P06 | 8min | 2 tasks | 7 files |
+| Phase 162 P08 | 13 min | 2 tasks | 4 files |
+| Phase 162 P09 | 24 minutes | 2 tasks | 8 files |
+| Phase 162 P10 | ~105 minutes | 3 tasks | 11 files |
+| Phase 162 P11 | 15m | 2 tasks | 18 files |
 
 ### Phase 163 roadmap evolution
 

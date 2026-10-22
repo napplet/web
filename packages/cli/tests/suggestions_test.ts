@@ -1,5 +1,4 @@
 import {
-  eventsToBlossomServerSuggestions,
   eventsToRelaySuggestions,
   getBlossomServerSuggestions,
   getRelaySuggestions,
@@ -7,7 +6,11 @@ import {
 import { assert, assertEquals } from "./assert.ts";
 
 class FakePool {
-  constructor(private readonly events: unknown[], private readonly fail = false) {}
+  readonly calls: { relays: string[]; filter: Record<string, unknown> }[] = [];
+  constructor(
+    private readonly events: unknown[] | ((relays: string[], filter: Record<string, unknown>) => unknown[]),
+    private readonly fail = false,
+  ) {}
 
   querySync(
     relays: string[],
@@ -18,8 +21,23 @@ class FakePool {
     assert(Array.isArray(filter.kinds));
     assert(params?.label === "napplet-init-suggestions");
     if (this.fail) throw new Error("offline");
-    return Promise.resolve(this.events);
+    this.calls.push({ relays, filter });
+    return Promise.resolve(typeof this.events === "function" ? this.events(relays, filter) : this.events);
   }
+}
+
+const pubkey = "a".repeat(64);
+
+function signedEvent(kind: number, createdAt: number, tags: string[][]): Record<string, unknown> {
+  return {
+    id: `${kind}${createdAt}`.padEnd(64, "0"),
+    pubkey,
+    sig: "b".repeat(128),
+    kind,
+    created_at: createdAt,
+    content: "",
+    tags,
+  };
 }
 
 Deno.test("eventsToRelaySuggestions extracts and scores NIP-66 relay discovery events", () => {
@@ -42,21 +60,6 @@ Deno.test("eventsToRelaySuggestions extracts and scores NIP-66 relay discovery e
   ]);
 
   assertEquals(relays, ["wss://fast.example", "wss://slow.example"]);
-});
-
-Deno.test("eventsToBlossomServerSuggestions extracts kind 10063 server tags by frequency", () => {
-  const servers = eventsToBlossomServerSuggestions([
-    {
-      kind: 10063,
-      tags: [["server", "https://cdn-two.example/"], ["server", "https://cdn-one.example"]],
-    },
-    {
-      kind: 10063,
-      tags: [["server", "https://cdn-two.example"], ["relay", "wss://ignored.example"]],
-    },
-  ]);
-
-  assertEquals(servers, ["https://cdn-two.example", "https://cdn-one.example"]);
 });
 
 Deno.test("getRelaySuggestions prefers static defaults and appends live discovery", async () => {
@@ -105,38 +108,46 @@ Deno.test("getRelaySuggestions keeps a large autocomplete pool by default", asyn
   assert(live.includes("wss://live-19.example"));
 });
 
-Deno.test("getBlossomServerSuggestions appends defaults and tolerates relay failures", async () => {
-  const live = await getBlossomServerSuggestions({
-    pool: new FakePool([
-      {
-        kind: 10063,
-        tags: [["server", "https://cdn-live.example"]],
-      },
-    ]),
-    relays: ["wss://relay.example"],
-    limit: 2,
+Deno.test("getBlossomServerSuggestions follows verified directory, write-relay, and ordered BUD-03 stages", async () => {
+  const pool = new FakePool((relays, filter) => {
+    const kinds = filter.kinds as number[];
+    if (kinds[0] === 10002) {
+      assertEquals(relays, ["wss://directory.example"]);
+      return [
+        signedEvent(10002, 9, [["r", "wss://stale.example", "read"]]),
+        signedEvent(10002, 10, [
+          ["r", "wss://read.example", "read"],
+          ["r", "wss://write.example", "write"],
+          ["r", "wss://both.example"],
+        ]),
+      ];
+    }
+    assertEquals(relays, ["wss://write.example", "wss://both.example"]);
+    return [signedEvent(10063, 11, [
+      ["server", "https://first.example/"],
+      ["server", "https://second.example"],
+      ["server", "https://first.example/"],
+    ])];
   });
-  assertEquals(live, ["https://cdn-live.example", "https://cdn.hzrd149.com"]);
 
-  const fallback = await getBlossomServerSuggestions({
-    pool: new FakePool([], true),
-    relays: ["wss://relay.example"],
-    limit: 2,
+  const servers = await getBlossomServerSuggestions({
+    pool,
+    pubkey,
+    relays: ["wss://directory.example"],
+    now: () => 12,
+    verifyEvent: () => true,
   });
-  assertEquals(fallback, ["https://cdn.hzrd149.com", "https://cdn.sovbit.host"]);
+
+  assertEquals(servers, ["https://first.example/", "https://second.example/"]);
+  assertEquals(pool.calls.map((call) => call.filter.kinds), [[10002], [10063]]);
 });
 
-Deno.test("getBlossomServerSuggestions keeps a large autocomplete pool by default", async () => {
-  const live = await getBlossomServerSuggestions({
-    pool: new FakePool(
-      Array.from({ length: 20 }, (_, index) => ({
-        kind: 10063,
-        tags: [["server", `https://cdn-${index}.example`]],
-      })),
-    ),
-    relays: ["wss://relay.example"],
-  });
-
-  assert(live.length > 12);
-  assert(live.includes("https://cdn-19.example"));
+Deno.test("getBlossomServerSuggestions has no default server when verified discovery is unavailable", async () => {
+  assertEquals(await getBlossomServerSuggestions(), []);
+  assertEquals(await getBlossomServerSuggestions({
+    pool: new FakePool([], true),
+    pubkey,
+    relays: ["wss://directory.example"],
+    verifyEvent: () => true,
+  }), []);
 });

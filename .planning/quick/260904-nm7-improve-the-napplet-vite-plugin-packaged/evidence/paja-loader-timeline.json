@@ -1,0 +1,427 @@
+{
+  "schemaVersion": 1,
+  "manifest": {
+    "naddr": "naddr1qvzqqqyf8ypzq9ztzj0nr2070k2vrmd52dqhfpcl4ecd8rhlzun5mzz6zlp3vqj0qyxhwumn8ghj7mn0wvhxcmmvqqd8qctrddskwety94kx7ctyv4ez6atc94axjdf4vvukyttvn3r",
+    "eventId": "a08adc548a9f264888a3ffb17d002753cf199f019396b8f7b1c0a180da6735a2",
+    "author": "144b149f31a9fe7d94c1edb4534174871fae70d38eff17274d885a17c316024f",
+    "kind": 35129,
+    "dTag": "packaged-loader-ux-zi55c9b",
+    "relays": [
+      "wss://nos.lol"
+    ],
+    "servers": [
+      "https://cdn.hzrd149.com"
+    ],
+    "paths": [
+      {
+        "path": "/index.html",
+        "sha256": "34e4f466dcb56e77c15c9be03f8c3786afd2d89f06c99db9b7aabc34ac54806e"
+      }
+    ],
+    "aggregateHash": "de8377cf0002828e900901e636557df52fbbdd25126665bd24628758d3d0d157",
+    "index": {
+      "path": "/index.html",
+      "endpoint": "https://cdn.hzrd149.com/34e4f466dcb56e77c15c9be03f8c3786afd2d89f06c99db9b7aabc34ac54806e",
+      "bytes": 28573,
+      "sha256": "34e4f466dcb56e77c15c9be03f8c3786afd2d89f06c99db9b7aabc34ac54806e"
+    }
+  },
+  "resources": [
+    {
+      "source": "assets/resource-01.bin",
+      "uri": "blossom:sha256:2a5f3e710787fef2cab50c7f38ea6f8ed9d16b500e75e6855a7bf79f2dd5dcff",
+      "endpoint": "https://cdn.hzrd149.com/2a5f3e710787fef2cab50c7f38ea6f8ed9d16b500e75e6855a7bf79f2dd5dcff",
+      "bytes": 9437184,
+      "sha256": "2a5f3e710787fef2cab50c7f38ea6f8ed9d16b500e75e6855a7bf79f2dd5dcff"
+    },
+    {
+      "source": "assets/resource-02.bin",
+      "uri": "blossom:sha256:133519935dff60330e25fb2b96c3526f0a00d116a7abe80d28611c5b42f5b35a",
+      "endpoint": "https://cdn.hzrd149.com/133519935dff60330e25fb2b96c3526f0a00d116a7abe80d28611c5b42f5b35a",
+      "bytes": 9437184,
+      "sha256": "133519935dff60330e25fb2b96c3526f0a00d116a7abe80d28611c5b42f5b35a"
+    },
+    {
+      "source": "assets/resource-03.bin",
+      "uri": "blossom:sha256:4c81a80c532327a49f423a7d27bcfeacea9e3d36e3b803d0fdff1cb2267492cc",
+      "endpoint": "https://cdn.hzrd149.com/4c81a80c532327a49f423a7d27bcfeacea9e3d36e3b803d0fdff1cb2267492cc",
+      "bytes": 8388608,
+      "sha256": "4c81a80c532327a49f423a7d27bcfeacea9e3d36e3b803d0fdff1cb2267492cc"
+    },
+    {
+      "source": "assets/resource-04.bin",
+      "uri": "blossom:sha256:3df06c1fd8db4c6b62c79a22c2a1fa03b14df29c07095e6f623389626263ded5",
+      "endpoint": "https://cdn.hzrd149.com/3df06c1fd8db4c6b62c79a22c2a1fa03b14df29c07095e6f623389626263ded5",
+      "bytes": 8388608,
+      "sha256": "3df06c1fd8db4c6b62c79a22c2a1fa03b14df29c07095e6f623389626263ded5"
+    },
+    {
+      "source": "assets/resource-05.bin",
+      "uri": "blossom:sha256:05e2c5e3dc114de65c2df4031549658b8126f79923850d381bdbe9ed54c2909f",
+      "endpoint": "https://cdn.hzrd149.com/05e2c5e3dc114de65c2df4031549658b8126f79923850d381bdbe9ed54c2909f",
+      "bytes": 8388608,
+      "sha256": "05e2c5e3dc114de65c2df4031549658b8126f79923850d381bdbe9ed54c2909f"
+    },
+    {
+      "source": "assets/resource-06.bin",
+      "uri": "blossom:sha256:bb144adff328c62bbf1ffc3d589974cfdd0a2037ff626471ce772b4c644f6198",
+      "endpoint": "https://cdn.hzrd149.com/bb144adff328c62bbf1ffc3d589974cfdd0a2037ff626471ce772b4c644f6198",
+      "bytes": 8388608,
+      "sha256": "bb144adff328c62bbf1ffc3d589974cfdd0a2037ff626471ce772b4c644f6198"
+    },
+    {
+      "source": "assets/resource-07.bin",
+      "uri": "blossom:sha256:3115e26a0b2a1e0cf33556eff76998c6bd0be904eecce5a672fa8ae1f6994645",
+      "endpoint": "https://cdn.hzrd149.com/3115e26a0b2a1e0cf33556eff76998c6bd0be904eecce5a672fa8ae1f6994645",
+      "bytes": 7340032,
+      "sha256": "3115e26a0b2a1e0cf33556eff76998c6bd0be904eecce5a672fa8ae1f6994645"
+    },
+    {
+      "source": "assets/resource-08.bin",
+      "uri": "blossom:sha256:d7307f8d35985354f138b4b4d99fd89a8bde08d9ffbb9c6c37df08a2aed60db7",
+      "endpoint": "https://cdn.hzrd149.com/d7307f8d35985354f138b4b4d99fd89a8bde08d9ffbb9c6c37df08a2aed60db7",
+      "bytes": 7340032,
+      "sha256": "d7307f8d35985354f138b4b4d99fd89a8bde08d9ffbb9c6c37df08a2aed60db7"
+    },
+    {
+      "source": "assets/resource-09.bin",
+      "uri": "blossom:sha256:25e2acf130a6f9bf7419ae12a11ff5680cfd69696353d82559244d09645ee5e1",
+      "endpoint": "https://cdn.hzrd149.com/25e2acf130a6f9bf7419ae12a11ff5680cfd69696353d82559244d09645ee5e1",
+      "bytes": 7340032,
+      "sha256": "25e2acf130a6f9bf7419ae12a11ff5680cfd69696353d82559244d09645ee5e1"
+    },
+    {
+      "source": "assets/resource-10.bin",
+      "uri": "blossom:sha256:ebb47b5037c48d63e2edf16169c771529721662474cfdf774add15cd76d7b7a0",
+      "endpoint": "https://cdn.hzrd149.com/ebb47b5037c48d63e2edf16169c771529721662474cfdf774add15cd76d7b7a0",
+      "bytes": 7340032,
+      "sha256": "ebb47b5037c48d63e2edf16169c771529721662474cfdf774add15cd76d7b7a0"
+    }
+  ],
+  "sessions": [
+    {
+      "name": "packaged-loader-long",
+      "openedAt": 0,
+      "closedAt": 104256,
+      "closed": true,
+      "events": [
+        {
+          "at": 26,
+          "type": "navigation"
+        },
+        {
+          "at": 2562,
+          "type": "state",
+          "state": "initial"
+        },
+        {
+          "at": 2598,
+          "type": "request",
+          "source": "assets/resource-01.bin",
+          "attempt": 1
+        },
+        {
+          "at": 2599,
+          "type": "state",
+          "state": "active"
+        },
+        {
+          "at": 37666,
+          "type": "state",
+          "state": "active-35s"
+        },
+        {
+          "at": 51812,
+          "type": "state",
+          "state": "partial"
+        },
+        {
+          "at": 72672,
+          "type": "terminal",
+          "source": "assets/resource-01.bin",
+          "attempt": 1,
+          "outcome": "success"
+        },
+        {
+          "at": 104216,
+          "type": "state",
+          "state": "ready"
+        },
+        {
+          "at": 104255,
+          "type": "final-app"
+        }
+      ]
+    },
+    {
+      "name": "packaged-loader-retry",
+      "openedAt": 0,
+      "closedAt": 100366,
+      "closed": true,
+      "events": [
+        {
+          "at": 20,
+          "type": "navigation"
+        },
+        {
+          "at": 3699,
+          "type": "state",
+          "state": "initial"
+        },
+        {
+          "at": 3700,
+          "type": "request",
+          "source": "assets/resource-03.bin",
+          "attempt": 1
+        },
+        {
+          "at": 3701,
+          "type": "state",
+          "state": "active"
+        },
+        {
+          "at": 3758,
+          "type": "terminal",
+          "source": "assets/resource-03.bin",
+          "attempt": 1,
+          "outcome": "failure"
+        },
+        {
+          "at": 3759,
+          "type": "state",
+          "state": "error"
+        },
+        {
+          "at": 3837,
+          "type": "state",
+          "state": "keyboard-retry"
+        },
+        {
+          "at": 3896,
+          "type": "retry",
+          "source": "assets/resource-03.bin"
+        },
+        {
+          "at": 3925,
+          "type": "request",
+          "source": "assets/resource-03.bin",
+          "attempt": 2
+        },
+        {
+          "at": 100245,
+          "type": "terminal",
+          "source": "assets/resource-03.bin",
+          "attempt": 2,
+          "outcome": "success"
+        },
+        {
+          "at": 100364,
+          "type": "state",
+          "state": "ready"
+        },
+        {
+          "at": 100365,
+          "type": "final-app"
+        }
+      ]
+    },
+    {
+      "name": "packaged-loader-cancel",
+      "openedAt": 0,
+      "closedAt": 80464,
+      "closed": true,
+      "events": [
+        {
+          "at": 21,
+          "type": "navigation"
+        },
+        {
+          "at": 3082,
+          "type": "state",
+          "state": "initial"
+        },
+        {
+          "at": 3083,
+          "type": "request",
+          "source": "assets/resource-03.bin",
+          "attempt": 1
+        },
+        {
+          "at": 3084,
+          "type": "state",
+          "state": "active"
+        },
+        {
+          "at": 3085,
+          "type": "cancel",
+          "source": "assets/resource-10.bin"
+        },
+        {
+          "at": 3124,
+          "type": "terminal",
+          "source": "assets/resource-10.bin",
+          "attempt": 1,
+          "outcome": "cancelled"
+        },
+        {
+          "at": 3125,
+          "type": "state",
+          "state": "cancelled"
+        },
+        {
+          "at": 9176,
+          "type": "retry",
+          "source": "assets/resource-10.bin"
+        },
+        {
+          "at": 9206,
+          "type": "request",
+          "source": "assets/resource-10.bin",
+          "attempt": 2
+        },
+        {
+          "at": 80461,
+          "type": "terminal",
+          "source": "assets/resource-10.bin",
+          "attempt": 2,
+          "outcome": "success"
+        },
+        {
+          "at": 80462,
+          "type": "state",
+          "state": "ready"
+        },
+        {
+          "at": 80463,
+          "type": "final-app"
+        }
+      ]
+    },
+    {
+      "name": "packaged-loader-a11y",
+      "openedAt": 0,
+      "closedAt": 97193,
+      "closed": true,
+      "events": [
+        {
+          "at": 15,
+          "type": "navigation"
+        },
+        {
+          "at": 2878,
+          "type": "state",
+          "state": "initial"
+        },
+        {
+          "at": 23964,
+          "type": "state",
+          "state": "light"
+        },
+        {
+          "at": 24004,
+          "type": "state",
+          "state": "dark"
+        },
+        {
+          "at": 24067,
+          "type": "state",
+          "state": "reduced-motion"
+        },
+        {
+          "at": 97192,
+          "type": "final-app"
+        }
+      ]
+    }
+  ],
+  "screenshots": [
+    {
+      "state": "initial",
+      "file": "01-initial.png",
+      "session": "packaged-loader-long",
+      "width": 1280,
+      "height": 980,
+      "sha256": "29168562147e3f11353184f046abf81c46654ee5a59f5cac4485734356560052"
+    },
+    {
+      "state": "active-35s",
+      "file": "02-active-35s.png",
+      "session": "packaged-loader-long",
+      "width": 1280,
+      "height": 980,
+      "sha256": "c673a0ae496aa3b8a8bb0484c9ae1d598aef2df2308fe6136cb8f4bc193bd8dc"
+    },
+    {
+      "state": "partial",
+      "file": "03-partial.png",
+      "session": "packaged-loader-long",
+      "width": 1280,
+      "height": 980,
+      "sha256": "af2b2b42081c83842b7ec44a9b1dcb29ccb78f48c98c26ece3b1574bb18feb50"
+    },
+    {
+      "state": "error",
+      "file": "04-error.png",
+      "session": "packaged-loader-retry",
+      "width": 1280,
+      "height": 980,
+      "sha256": "2de2e1028e119251c8b3b93ac44a2f85f12ba7bceb2e41c725f590b0d3a23a11"
+    },
+    {
+      "state": "ready",
+      "file": "05-ready.png",
+      "session": "packaged-loader-long",
+      "width": 1280,
+      "height": 980,
+      "sha256": "d429508af9fc277c254bebe7c42ee1f744b36325872838841b402309450e4810"
+    },
+    {
+      "state": "cancelled",
+      "file": "06-cancelled.png",
+      "session": "packaged-loader-cancel",
+      "width": 1280,
+      "height": 980,
+      "sha256": "d1caa55dcad091865f45e5c576480b307a07aba72aab1ea8496e6f56d3b94057"
+    },
+    {
+      "state": "light",
+      "file": "07-light.png",
+      "session": "packaged-loader-a11y",
+      "width": 1280,
+      "height": 980,
+      "sha256": "c30cf5349e1daea607d7b065032a32c3a61349bc7dab68bd105b6d77863415e8"
+    },
+    {
+      "state": "dark",
+      "file": "08-dark.png",
+      "session": "packaged-loader-a11y",
+      "width": 1280,
+      "height": 980,
+      "sha256": "f2d5073f2b60be16554b710bfcbe3e953e119a0d2362a8ee2e059bfa6c9f9953"
+    },
+    {
+      "state": "reduced-motion",
+      "file": "09-reduced-motion.png",
+      "session": "packaged-loader-a11y",
+      "width": 1280,
+      "height": 980,
+      "sha256": "62692bb84d1082e9677007d21ab2de15dd59dc74d4ae5eaddffd5ea9985f648a"
+    },
+    {
+      "state": "keyboard-retry",
+      "file": "10-keyboard-retry.png",
+      "session": "packaged-loader-retry",
+      "width": 1280,
+      "height": 980,
+      "sha256": "a9c7a02463542c2fee1564c3f3fcd75039a1cc3e63d79afcb441b4877303bc7d"
+    }
+  ],
+  "trace": {
+    "file": "paja-loader-trace.zip",
+    "sha256": "55ba994332853956597d7c5d63b5c034a648f9ee4d0661238ebdceb162df2ba4"
+  },
+  "browser": {
+    "name": "chromium",
+    "version": "149.0.7827.55"
+  }
+}

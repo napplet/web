@@ -29,6 +29,31 @@ export default defineConfig({
 
 `nip5aManifest` and `.nip5a-manifest.json` retain their existing names for package and tool compatibility. Their output is a NIP-5D manifest, not an nsite manifest. From **0.15.0**, the output uses the direct artifact hash; **0.14.x and earlier** generated legacy path/aggregate events.
 
+### Large asset optimization (implementation behavior)
+
+`largeAssetOptimization` defaults to `'auto'` for `artifactMode: 'single-file'`; set it to `false` to keep the normal all-inline result. This non-normative build-tool behavior measures rendered inline HTML and attempts verified offloads only above exactly 2 MiB. The target is nonfatal: unavailable signer/discovery/upload evidence, unsupported references, or insufficient eligible bytes leave a valid inline artifact and safe report rather than declaring a protocol failure.
+
+The built-in Node path reuses a protected NIP-46 session when the platform credential service is available, or pairs for the current build only when protected persistence is unavailable. Fresh pairing races a terminal QR against pasted `bunker://` input. It reads the newest valid kind `10002` only to locate NIP-65 write/unmarked relays, then reads the newest valid kind `10063` Blossom list there. Exact-byte BUD requests use an HTTPS transport pinned to the address validated by the build's DNS policy. A committed offload records private implementation mapping data in `index.html` and adds exactly one `['R', 'resource']` tag because the resulting artifact calls the proposed NAP-RESOURCE `bytes`/`bytesMany` API. The mapping and loader are private artifact bytes rather than new protocol fields; the runtime `resource` dependency is protocol surface defined by NAP-RESOURCE. Metadata is finalized before hashing the final `index.html` bytes.
+
+Pass an object to observe reports or replace controlled Node boundaries. `node` overrides individual adapters while omitted fields retain the lazy production defaults.
+
+```ts
+nip5aManifest({
+  nappletType: 'my-napp',
+  description: 'A packaged application',
+  artifactMode: 'single-file',
+  largeAssetOptimization: {
+    onReport(report) {
+      console.log(report.status, report.finalBytes);
+    },
+  },
+});
+```
+
+Supported build-owned references are documented JavaScript resource sentinels and parser-proven stylesheet URLs; direct HTML attributes, `srcset`, worker/module URLs, streaming WASM, arbitrary computed URLs, and unsupported consumers remain inline. Each resource is a complete Blob bounded to 10 MiB by this implementation; one 50 MiB Blob, streaming, ranges, progress, BUD-04 mirroring, BUD-10 URI syntax, deletion, listing, media transforms, payment, and reports are not delivered.
+
+Canonical behavior belongs to [NIP-5D](https://github.com/nostr-protocol/nips/pull/2303), [NIP-46](https://github.com/nostr-protocol/nips/blob/master/46.md), [NIP-65](https://github.com/nostr-protocol/nips/blob/master/65.md), [NAP-RESOURCE](https://github.com/napplet/naps/pull/80), and [Blossom BUDs](https://github.com/hzrd149/blossom). Thresholds, selection, URL hardening, browser support, and private metadata here are implementation behavior, not protocol law.
+
 ## Build output
 
 The default `single-file` mode inlines local JS/CSS into `index.html`. After rewriting, the plugin hashes the final artifact bytes and writes a kind `35129` event template. Its single `x` tag is that SHA-256, and `content` is the description. No `path` tags or aggregate hash are emitted. Embedded metadata is part of those artifact bytes and therefore changes the hash when edited. The hash is never injected back into the bytes it covers.
@@ -45,6 +70,7 @@ Without `VITE_DEV_PRIVKEY_HEX`, the sidecar is unsigned. With a development key,
 | `description?: string` | Plain-text event content; falls back to HTML description metadata. |
 | `title?: string` | Optional display title and HTML title override. |
 | `requires?: string[]` | Required domains, serialized as `R` tags. |
+| `largeAssetOptimization?: 'auto' \| false \| object` | Automatic bounded Blossom offloads above 2 MiB, or disabled. Object options expose `onReport` and controlled `node` adapter overrides. |
 | `requires?: { infer?, explicit?, mode? }` | Opt-in inference from static SDK/NAP imports and direct namespace access. `mode` is `warn` or `error` for missing explicit declarations. |
 | `optional?: string[]` | Optional integrations, serialized as `O` tags and excluded from inferred required domains. |
 | `archetypes?: Array<{ slug, convention, params? }>` | Existing ergonomic option; emits independent `z` role and `i` intent tags. `params` names advertised intent parameters. |
@@ -80,7 +106,7 @@ This is a non-normative description of the plugin's implementation of [NIP-5D, H
 
 The final head contains the resolved title, description, named identifier, archetypes, accepted intents and advertised parameter names, required/optional domains, source URL, Blossom hints, and an icon data URL when image bytes are available. The plugin emits named events (`35129`), so it removes snapshot-only `napplet-parent` and `napplet-root` declarations. It never inserts the artifact hash or event signing fields into HTML.
 
-Explicit options replace the corresponding author head declarations; an omitted option falls back to the head. `nappletType` remains required and controls the identifier. Explicit `archetypes` replaces author archetype and intent declarations with its roles and conventions; `intents` adds standalone advertisements. Without `archetypes`, explicit `intents` replaces just the author intent declarations. Empty arrays clear a category. `requires: { infer: true, explicit: [...] }` combines the configured list with inferred domains; `optional` wins overlaps. The first author singleton is used, repeated declarations are deduplicated, and all owned head elements are replaced once. Scripts, comments, templates, body content, and unrelated head elements are preserved. Metadata inside scripts, comments, templates, or the body is not read as a declaration.
+Explicit options replace the corresponding author head declarations; an omitted option falls back to the head. `nappletType` remains required and controls the identifier. Explicit `archetypes` replaces author archetype and intent declarations with its roles and conventions; `intents` adds standalone advertisements. Without `archetypes`, explicit `intents` replaces just the author intent declarations. Empty arrays clear a category. `requires: { infer: true, explicit: [...] }` combines the configured list with inferred domains; `optional` wins author overlaps, except that a committed resource offload promotes `resource` to required. Explicit resource requirements remain declared even when optimization is disabled or rolls back. The first author singleton is used, repeated declarations are deduplicated, and all owned head elements are replaced once. Scripts, comments, templates, body content, and unrelated head elements are preserved. Metadata inside scripts, comments, templates, or the body is not read as a declaration.
 
 For a recoverable icon, provide bytes:
 

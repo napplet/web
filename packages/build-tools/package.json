@@ -1,0 +1,47 @@
+{
+  "name": "@napplet/build-tools",
+  "version": "0.1.0",
+  "description": "Platform-neutral build services for napplet publishing workflows",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "nostr-tools": "^2.23.3"
+  },
+  "devDependencies": {
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.3"
+  },
+  "scripts": {
+    "build": "tsup",
+    "type-check": "tsc --noEmit",
+    "test:unit": "deno test --no-lock --allow-env --allow-read --allow-write --allow-run src"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sandwichfarm/napplet.git",
+    "directory": "packages/build-tools"
+  },
+  "keywords": [
+    "nostr",
+    "napplet",
+    "build",
+    "blossom",
+    "nip-46"
+  ]
+}

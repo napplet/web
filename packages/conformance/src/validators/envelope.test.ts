@@ -163,26 +163,13 @@ describe('validateEnvelope — outbound field checks', () => {
     expect(validateEnvelope({ type: 'outbox.query', id: 'a' }).ok).toBe(false);
   });
 
-  it('validates per-resource requests and optional server hints', () => {
-    expect(validateEnvelope({
-      type: 'resource.bytes',
-      id: 'single',
-      url: 'blossom:abc.bin',
-      servers: ['https://cdn.example'],
-    }).ok).toBe(true);
-    expect(validateEnvelope({
-      type: 'resource.bytesMany',
-      id: 'a',
-      requests: [{ url: 'https://x/y' }, { url: 'blossom:abc.bin', servers: ['https://cdn.example'] }],
-    }).ok).toBe(true);
-    expect(validateEnvelope({ type: 'resource.bytesMany', id: 'a' }).errors[0].code).toBe('missing-field');
-    expect(validateEnvelope({ type: 'resource.bytesMany', id: 'a', requests: 'https://x/y' }).errors[0].code).toBe('wrong-type');
-    expect(validateEnvelope({ type: 'resource.bytesMany', id: 'a', requests: [] }).errors[0].code).toBe('invalid-resource-request');
-    expect(validateEnvelope({
-      type: 'resource.bytesMany',
-      id: 'a',
-      requests: [{ url: 'https://x/y', servers: ['https://cdn.example', 1] }],
-    }).errors[0].code).toBe('wrong-type');
+  it('validates canonical resource URLs and rejects the retired bulk request shape', () => {
+    expect(validateEnvelope({ type: 'resource.bytes', id: 'single', url: `blossom:${'a'.repeat(64)}.bin?xs=cdn.example` }).ok).toBe(true);
+    expect(validateEnvelope({ type: 'resource.bytesMany', id: 'a', urls: ['https://x/y', 'data:,hello'] }).ok).toBe(true);
+    expect(validateEnvelope({ type: 'resource.bytesMany', id: 'a', requests: [{ url: 'https://x/y' }] }).errors[0].code).toBe('missing-field');
+    expect(validateEnvelope({ type: 'resource.bytesMany', id: 'a', urls: 'https://x/y' }).errors[0].code).toBe('wrong-type');
+    expect(validateEnvelope({ type: 'resource.bytesMany', id: 'a', urls: [] }).errors[0].code).toBe('invalid-resource-request');
+    expect(validateEnvelope({ type: 'resource.bytesMany', id: 'a', urls: [{ url: 'https://x/y' }] }).errors[0].code).toBe('invalid-resource-request');
   });
 
   it('validates a representative outbound message from every NAP that has one', () => {
@@ -197,7 +184,7 @@ describe('validateEnvelope — outbound field checks', () => {
       media: { type: 'media.session.destroy', sessionId: 's' },
       notify: { type: 'notify.badge', count: 3 },
       config: { type: 'config.get', id: 'a' },
-      resource: { type: 'resource.bytesMany', id: 'a', requests: [{ url: 'https://x/y' }] },
+      resource: { type: 'resource.bytesMany', id: 'a', urls: ['https://x/y'] },
       cvm: { type: 'cvm.registry.call', id: 'a', family: 'relatr', tool: 'search_profiles' },
       outbox: { type: 'outbox.close', id: 'a', subId: 's' },
       upload: { type: 'upload.status', id: 'a', uploadId: 'u' },

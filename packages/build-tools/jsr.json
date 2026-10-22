@@ -1,0 +1,20 @@
+{
+  "name": "@napplet/build-tools",
+  "version": "0.1.0",
+  "license": "MIT",
+  "exports": "./src/index.ts",
+  "imports": {
+    "nostr-tools": "npm:nostr-tools@^2.23.3"
+  },
+  "publish": {
+    "include": [
+      "src/**/*.ts",
+      "README.md",
+      "jsr.json"
+    ],
+    "exclude": [
+      "src/**/*.test.ts",
+      "src/**/*.spec.ts"
+    ]
+  }
+}

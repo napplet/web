@@ -4,15 +4,14 @@
  * @module
  */
 
+import { decodeResourceBlob } from '@napplet/core';
 import type {
   ResourceBytesItem,
-  ResourceBytesRequest,
   ResourceInfo,
   ResourceSidecarEntry,
 } from './types.js';
 import {
   cancelBytes,
-  decodeDataUrl,
   inflight,
   sendBytesManyRequest,
   sendBytesRequest,
@@ -38,13 +37,12 @@ export function info(): Promise<ResourceInfo> {
 /**
  * Fetch bytes for a URL through the shell's resource pipeline.
  *
- * - `data:` URLs are decoded inline (no postMessage round-trip).
- * - All other schemes route through the shell via a `resource.bytes` envelope.
+ * - All schemes route through the shell via a `resource.bytes` envelope.
  * - Concurrent calls for the same URL share a single in-flight Promise (single-flight cache).
  * - Aborted signals are honored synchronously and via cancel envelope.
  *
  * @param url   URL identifying the resource (any registered scheme)
- * @param opts  Optional advisory Blossom `servers` and `{ signal }` for cancellation
+ * @param opts  Optional `{ signal }` for cancellation
  * @returns Promise resolving to the fetched bytes as a Blob
  *
  * @example
@@ -57,7 +55,7 @@ export function info(): Promise<ResourceInfo> {
  * ac.abort(); // -> rejects with AbortError, sends resource.cancel envelope
  * ```
  */
-export function bytes(url: string, opts?: { servers?: string[]; signal?: AbortSignal }): Promise<Blob> {
+export function bytes(url: string, opts?: { signal?: AbortSignal }): Promise<Blob> {
   // Synchronous abort check -- reject before any work or envelope dispatch.
   if (opts?.signal?.aborted) {
     return Promise.reject(new DOMException('Aborted', 'AbortError'));
@@ -69,21 +67,9 @@ export function bytes(url: string, opts?: { servers?: string[]; signal?: AbortSi
     return wireSignal(cached, opts?.signal);
   }
 
-  // Determine work strategy: data: inline, otherwise shell round-trip.
-  let work: Promise<Blob>;
-  let cancelId: string | null = null;
-
-  try {
-    const protocol = new URL(url).protocol; // 'data:', 'https:', 'blossom:', 'htree:', 'nostr:', ...
-    if (protocol === 'data:') {
-      work = decodeDataUrl(url);
-    } else {
-      cancelId = crypto.randomUUID();
-      work = sendBytesRequest(url, cancelId, opts?.servers);
-    }
-  } catch {
-    return Promise.reject(new Error(`invalid URL: ${url}`));
-  }
+  // All schemes use shell policy, including data URLs and bare Hashtree references.
+  const cancelId = crypto.randomUUID();
+  let work = sendBytesRequest(url, cancelId);
 
   // Cleanup inflight entry on settle (success or failure).
   work = work.finally(() => {
@@ -102,28 +88,28 @@ export function bytes(url: string, opts?: { servers?: string[]; signal?: AbortSi
 }
 
 /**
- * Fetch bytes for many per-resource requests through one shell envelope.
+ * Fetch bytes for many URLs through one shell envelope.
  *
  * `items` preserves the input order and length. Failed URLs are represented as
  * `ok: false` items so successful siblings remain available to the caller.
  *
- * @param requests  Non-empty resource request list with optional per-resource Blossom servers.
+ * @param urls  Non-empty URL list.
  * @param opts  Optional `{ signal }` for AbortController cancellation.
  * @returns Promise resolving to ordered per-URL resource result items.
  */
 export function bytesMany(
-  requests: ResourceBytesRequest[],
+  urls: string[],
   opts?: { signal?: AbortSignal },
 ): Promise<ResourceBytesItem[]> {
-  if (requests.length === 0) {
-    return Promise.reject(new Error('invalid-request: requests must be non-empty'));
+  if (!Array.isArray(urls) || urls.length === 0 || Array.from(urls).some((url) => typeof url !== 'string')) {
+    return Promise.reject(new Error('invalid-request: urls must be non-empty'));
   }
   if (opts?.signal?.aborted) {
     return Promise.reject(new DOMException('Aborted', 'AbortError'));
   }
 
   const id = crypto.randomUUID();
-  const work = sendBytesManyRequest(requests, id);
+  const work = sendBytesManyRequest(urls, id);
   return wireManySignal(work, opts?.signal, id);
 }
 
@@ -190,28 +176,26 @@ export function bytesAsObjectURL(url: string): { url: string; revoke: () => void
 }
 
 /**
- * Pre-populate the single-flight cache from sidecar entries (consumed by
- * Phase 127 NAP-RELAY sidecar amendment). After this call, subsequent
+ * Validate and decode sidecars imported by carrier NAPs before cache hydration.
+ * After this call, subsequent
  * bytes(entry.url) for hydrated URLs resolves synchronously from cache.
  *
  * Note: hydrated entries live in the inflight map until the first consumer
  * settles them; v0.28.0 has no long-lived blob cache (deferred).
  *
- * @param entries  Pre-resolved resource entries from a relay event sidecar
+ * @param entries  Pre-resolved canonical base64 entries from an importing carrier
  *
  * @example
  * ```ts
  * hydrateResourceCache([
- *   { url: 'https://example.com/a.png', blob: aBlob, mime: 'image/png' },
- *   { url: 'blossom:def456.jpg', blob: bBlob, mime: 'image/jpeg' },
+ *   { url: 'https://example.com/a.png', blob: 'AAEC/w==', mime: 'image/png' },
+ *   { url: 'blossom:def456.jpg', blob: 'Zg==', mime: 'image/jpeg' },
  * ]);
  * // Subsequent bytes('https://example.com/a.png') resolves from cache.
  * ```
  */
 export function hydrateResourceCache(entries?: ResourceSidecarEntry[]): void {
   if (!entries || entries.length === 0) return;
-  for (const entry of entries) {
-    // Resolve immediately; finally() will delete after first consumer settles.
-    inflight.set(entry.url, Promise.resolve(entry.blob));
-  }
+  const decoded = Array.from(entries, (entry) => ({ url: entry.url, blob: decodeResourceBlob(entry.blob, entry.mime) }));
+  for (const entry of decoded) inflight.set(entry.url, Promise.resolve(entry.blob));
 }
