@@ -11,7 +11,7 @@ const checked = new Date(data.checkedAt).toLocaleDateString('en-US', { dateStyle
 <SiteLayout title={`${title} · napplet`} description={description}>
   <a class="skip-link" href="#main">Skip to content</a>
   <header class="protocol-header">
-    <a class="wordmark" href="/" aria-label="napplet home"><img src="/favicon.svg" width="28" height="28" alt="" />napplet<span class="wordmark-dot">.</span></a>
+    <a class="wordmark" href="/" aria-label="napplet home"><img src="/icon.png" width="28" height="28" alt="" />napplet<span class="wordmark-dot">.</span></a>
     <nav aria-label="Protocol navigation"><a href="/protocol/" aria-current={Astro.url.pathname === '/protocol/' ? 'page' : undefined}>NAP directory</a><a href="/protocol/contribute/" aria-current={Astro.url.pathname === '/protocol/contribute/' ? 'page' : undefined}>Propose a NAP</a><a href="/docs/">Docs</a></nav>
   </header>
   <main id="main" class="protocol-main"><slot /></main>

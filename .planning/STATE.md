@@ -57,7 +57,7 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 Phase: 163 (nap-gamepad-across-repositories) — implementation verified
 Plan: 3 of 3
 Status: Verified; [draft PR #224](https://github.com/napplet/web/pull/224) open, hzrd149 requested
-Last activity: 2026-10-14 - Completed quick task 261014-fuc: Replace blossom:sha256 URIs with BUD-10 form
+Last activity: 2026-10-22 - Completed quick task 261022-8da: Apply supplied duck icon to PR 221 replacement site
 
 See phase 163 VERIFICATION.md and COVERAGE.md for evidence and disclosed release/specification/baseline limits. Earlier phase and quick-task records below are historical.
 
@@ -562,6 +562,7 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 
 | Quick ID | Task | Date | Commit | Artifacts |
 |----------|------|------|--------|-----------|
+| 261022-8da | Apply supplied duck icon to PR 221 replacement site | 2026-10-22 | PR #221 | [261022-8da](./quick/261022-8da-apply-the-supplied-duck-icon-to-the-repl/) |
 | 261003-uwf | Simplify Develop to skills and Kehto in one viewport | 2026-10-03 | PR #222 | [261003-uwf-simplify-develop-section-to-napplet-skil](./quick/261003-uwf-simplify-develop-section-to-napplet-skil/) |
 | 261003-ukp | Split final Build section into napplet and shell paths | 2026-10-03 | PR #222 | [261003-ukp-split-final-build-section-into-napplet-a](./quick/261003-ukp-split-final-build-section-into-napplet-a/) |
 | 261003-uii | Sort NAP directory by Merged, Open PR, Draft PR | 2026-10-03 | PR #222 | [261003-uii-sort-nap-directory-by-merged-open-and-dr](./quick/261003-uii-sort-nap-directory-by-merged-open-and-dr/) |
