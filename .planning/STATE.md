@@ -48,7 +48,7 @@ Branch `feat/cli-terminal-usability` ships guided missing-value recovery, `-i` p
 Phase: 164 (cli-terminal-usability) — verified and shipped
 Plan: 3 of 3
 Status: [PR #248](https://github.com/napplet/web/pull/248) open with six actual terminal screenshots
-Last activity: 2026-10-15 - Completed quick task 261015-aen: nsyte-style filled CLI progress bars
+Last activity: 2026-10-21 - Completed quick task 261021-x6c: Use supplied duck icon across website and docs
 
 See phase 163 VERIFICATION.md and COVERAGE.md for evidence and disclosed release/specification/baseline limits. Earlier phase and quick-task records below are historical.
 
@@ -553,6 +553,7 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 
 | Quick ID | Task | Date | Commit | Artifacts |
 |----------|------|------|--------|-----------|
+| 261021-x6c | Use supplied duck icon across website and docs | 2026-10-21 | ee132426 | [261021-x6c](./quick/261021-x6c-use-the-supplied-purple-duck-icon-for-we/) |
 | 261015-aen | Use nsyte-style filled CLI progress bars and refresh terminal proof | 2026-10-15 | 5e165056 | [261015-aen](./quick/261015-aen-use-nsyte-filled-progress-bars-in-cli-an/) |
 | 261017-jqc | Preserve extension tags and validate defined manifest fields | 2026-10-17 | 9ff56c20 / PR #256 | [261017-jqc](./quick/261017-jqc-preserve-nostr-extension-tags-in-cli-pub/) |
 | 261015-bbu | Use QuickJS and dependency pruning for released CLI binaries | 2026-10-15 | PR #249 | [261015-bbu-use-quickjs-and-dependency-pruning-for-r](./quick/261015-bbu-use-quickjs-and-dependency-pruning-for-r/) |
