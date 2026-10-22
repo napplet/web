@@ -26,7 +26,7 @@ export default defineConfig({
     hostname: SITE_URL,
   },
   head: [
-    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/docs/favicon.svg' }],
+    ['link', { rel: 'icon', type: 'image/png', href: '/docs/icon.png' }],
     ['meta', { name: 'theme-color', content: '#7b2ff7' }],
     ['meta', { property: 'og:type', content: 'website' }],
     ['meta', { property: 'og:title', content: 'napplet docs' }],
@@ -39,6 +39,7 @@ export default defineConfig({
     ],
   ],
   themeConfig: {
+    logo: { src: '/icon.png', alt: '' },
     nav: [
       { text: 'Home', link: SITE_URL },
       { text: 'Guide', link: '/guide/' },
