@@ -1,5 +1,13 @@
 # @napplet/conformance
 
+## 0.20.4
+
+### Patch Changes
+
+- 4cc5813: Update packaged archive dependencies and preserve the conformance
+  fallback runtime output after moving its source outside the generator
+  function.
+
 ## 0.20.3
 
 ### Patch Changes

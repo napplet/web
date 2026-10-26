@@ -1,5 +1,20 @@
 # @napplet/cli
 
+## 0.13.0
+
+### Minor Changes
+
+- 4cc5813: Capture deploy screenshots and publish kind 32267 application metadata by default, with
+  `--no-screenshot` and `--no-zapstore` opt-outs. Infer listing metadata from selected builds when
+  no Zapstore config exists, and stop adding the undocumented `app` tag to NIP-5D manifests.
+
+### Patch Changes
+
+- 4cc5813: Update packaged archive dependencies and preserve the conformance fallback runtime output
+  after moving its source outside the generator function.
+- Updated dependencies [4cc5813]
+  - @napplet/boilerplate@0.4.1
+
 ## 0.12.0
 
 ### Minor Changes
