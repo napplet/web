@@ -51,7 +51,6 @@ Deno.test({
       const configPath = join(root, ".napplet", "config.yaml");
       const config = parse(await Deno.readTextFile(configPath));
       config.blossomServers = ["https://blossom.example"];
-      config.zapstore = { id: "org.example.proof", name: "Proof", enabled: true };
       await Deno.writeTextFile(configPath, stringify(config));
       await run(["keys", "doctor"]);
       await run(["keys", "store", "--name", "proof", "--sec", "01".padStart(64, "0")]);
@@ -63,10 +62,12 @@ Deno.test({
       const header = new DataView(png.buffer);
       assertEquals(header.getUint32(16), 1200);
       assertEquals(header.getUint32(20), 750);
-      const report = await run(["deploy", "--screenshot", "--screenshot-delay", "0", "--dry-run", "--json"]);
+      const report = await run(["deploy", "--screenshot-delay", "0", "--dry-run", "--json"]);
       const deployment = JSON.parse(report.stdout);
       assert(deployment.dryRun);
       assert(deployment.application);
+      assertEquals(deployment.application.template.tags.find((tag: string[]) => tag[0] === "d"), ["d", "proof"]);
+      assertEquals(deployment.application.template.tags.filter((tag: string[]) => tag[0] === "image").length, 1);
       assert(deployment.manifests.every((manifest: { signedEvent?: unknown }) => manifest.signedEvent));
       // A static document is sufficient to exercise the actual browser/check runner.
       const conformance = await new Deno.Command(binary, {

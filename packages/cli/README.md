@@ -130,7 +130,7 @@ napplet create <directory> [--template <path-or-url>] [--force]
 napplet init [--force] [--root] [--source-dir <dir>] [--name <dtag>] [--title <title>] [--description <text>] [--archetype <napplet:archetype/intent>] [--relay <url>] [--server <url>]
 napplet discover [--config <file>] [--all]
 napplet debug [--format current|legacy] [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>]
-napplet deploy [--format current|legacy] [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>] [--prompt-sec] [--zapstore | --no-zapstore] [--screenshot [<preview-url>]] [--dry-run] [--json]
+napplet deploy [--format current|legacy] [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>] [--prompt-sec] [--zapstore | --no-zapstore] [--no-screenshot] [--screenshot [<preview-url>]] [--dry-run] [--json]
 napplet keys store --name <ref> [--sec <secret> | --prompt-sec]
 napplet keys connect --name <ref> [--relay <url> ...] [--config <file>]
 napplet keys use --name <ref> [--config <file>]
@@ -482,7 +482,7 @@ Decoded icon bytes are hashed and uploaded unchanged alongside the HTML, even wh
 
 Deployment manifests (current and legacy, including snapshots) and optional Zapstore application events include `["client", "napplet.run"]` before signing. This identifies the publisher using the [NIP-89 client tag](https://github.com/nostr-protocol/nips/blob/master/89.md#client-tag) and does not change artifact hashes. Dry-run templates include the same attribution.
 
-## Screenshots and optional Zapstore metadata
+## Screenshots and Zapstore metadata
 
 Capture a built napplet without starting a host. The command starts a temporary local Kehto Paja preview, captures its iframe, and closes the preview afterwards. The CLI provisions its private runtime and Chromium automatically on first use, without host Node.js or npx. Screenshot and default conformance commands select the tested `@napplet/conformance-cli@0.3.3` runner explicitly, so an older project-local conformance dependency cannot intercept them. Explicit custom conformance commands remain supported. The preview uses Paja’s development identity, fresh browser storage, and live relays, so content may differ from your signed-in shell.
 
@@ -496,7 +496,7 @@ napplet screenshot http://localhost:5173 --output ready.png --selector '#napplet
 
 The default capture is 1200 × 750 pixels with a 1500 ms delay. Override these with `--width`, `--height`, and `--delay` (milliseconds). The command captures only the iframe, waits for fonts, closes Chromium on success or failure, and refuses to overwrite an existing file. Keep screenshots outside the build directory.
 
-To publish an optional application listing, add a `zapstore` object to `.napplet/config.yaml`:
+To customize the application listing, add a `zapstore` object to `.napplet/config.yaml`:
 
 ```yaml
 zapstore:
@@ -516,22 +516,24 @@ zapstore:
     - productivity
 ```
 
-Only `id` and `name` are required within this object. The stable `id` identifies the application listing under the signing pubkey; reusing it updates that listing. Description falls back to the deployment config's description. This configuration describes one application listing per deploy invocation, including deployments that select multiple manifests.
+The `zapstore` object is optional. When omitted, deploy derives an application ID, name, and description from the selected manifest; a multi-build deploy uses the project directory name for its shared listing. Set `id` and `name` here to control that stable listing identity. Reusing an ID updates the listing under the signing pubkey. Configured fields take precedence over inferred values, and this configuration describes one application listing per deploy invocation.
 
 ```sh
-napplet deploy --zapstore --dry-run --json
-napplet deploy --zapstore
-# Capture and attach a screenshot during deployment:
-napplet deploy --zapstore --screenshot
+napplet deploy --dry-run --json
+napplet deploy
+# Publish metadata without capturing a new screenshot:
+napplet deploy --no-screenshot
+# Skip both application metadata and automatic capture:
+napplet deploy --no-zapstore
 ```
 
-Publishing defaults to off. `--zapstore` enables it for one deployment; `enabled: true` in the object enables it by default; `--no-zapstore` disables it for one deployment. Supplying both flags is an error. Dry runs show the application template, resolved media URLs and any signature without uploading or publishing.
+Application publication and screenshot capture default to on. `--no-screenshot` skips capture but still publishes the application event, including configured images. `--no-zapstore` skips the application event and automatic capture. `enabled: false` in the `zapstore` object also disables both; `--zapstore` overrides that setting for one deployment. Supplying both Zapstore flags or combining `--no-screenshot` with explicit screenshot options is an error. Dry runs capture a preview and show the application template and resolved media URLs without uploading or publishing.
 
 Local PNG, JPEG and WebP images are resolved relative to the working directory, hashed, and uploaded to the configured Blossom servers. Existing HTTP(S) image URLs are used as supplied. Local media URLs point to the first selected Blossom server; if those uploads fail, application publication is skipped and deploy exits nonzero even if another mirror succeeds. The application uses the same signer and relays as the deployment. A requested application event must be accepted by at least one relay for deploy to succeed.
 
-The listing uses kind `32267` from the [Software Applications proposal](https://github.com/nostr-protocol/nips/pull/1336), with screenshot URLs in `image` tags. Current-format deployments link each root, named, and snapshot manifest to this listing with `["app", "32267:<pubkey>:<id>", "<relay>"]`, implementing the [proposed NIP-5D application reference](https://github.com/dskvr/nips/pull/11) (pending acceptance). The link is added before signing and does not change the artifact hash. The application event is published before its referencing manifests. Legacy manifests remain unchanged. Unsigned dry runs omit the link because the author public key is not yet known; a signed dry run includes it. This publishes application metadata only, without software release or asset events; acceptance into a particular store's catalog depends on that store.
+The listing uses kind `32267` from the [Software Applications proposal](https://github.com/nostr-protocol/nips/pull/1336), with screenshot URLs in `image` tags. It is published as a separate event before the napplet manifests. The current [NIP-5D manifest](https://github.com/nostr-protocol/nips/pull/2303) does not define an application reference tag, so deploy leaves manifest tags and artifact hashes unchanged. This publishes application metadata only, without software release or asset events; acceptance into a particular store's catalog depends on that store.
 
-`deploy --screenshot` starts a local preview for each distinct selected build, captures a temporary PNG, and appends it to the configured application images for that deployment. It requires `--zapstore` or `zapstore.enabled`, and does not modify your config or build files. Capture failure stops deployment before any upload or relay publication. The temporary image is removed after success or failure. `--dry-run` also performs capture and previews the resulting metadata without uploading or publishing. Capture diagnostics go to stderr so `--json` stdout remains valid JSON. No host URL is required. Root and snapshot selections of the same artifact share one capture. To capture an existing shell instead, use `--screenshot <preview-url>`. Use `--screenshot-selector`, `--screenshot-ready-selector`, `--screenshot-width`, `--screenshot-height`, and `--screenshot-delay` for the corresponding standalone capture options. Use the standalone `napplet screenshot` command when you want to keep a PNG on disk.
+Deploy starts a local preview for each distinct selected build, captures a temporary PNG, and appends it to the application images for that deployment. Capture failure stops deployment before any upload or relay publication. The temporary image is removed after success or failure. Capture diagnostics go to stderr so `--json` stdout remains valid JSON. No host URL is required. Root and snapshot selections of the same artifact share one capture. To capture an existing shell instead, use `--screenshot <preview-url>`. Use `--screenshot-selector`, `--screenshot-ready-selector`, `--screenshot-width`, `--screenshot-height`, and `--screenshot-delay` for the corresponding capture options. Use the standalone `napplet screenshot` command when you want to keep a PNG on disk.
 
 ### Standalone regression test
 

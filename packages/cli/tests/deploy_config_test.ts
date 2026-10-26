@@ -50,25 +50,16 @@ Deno.test("per-build descriptions preserve valid neighboring artifact metadata",
   });
 });
 
-Deno.test("Zapstore completion honors save refusal and non-interactive mode", async () => {
+Deno.test("Zapstore metadata can be inferred without prompts or config writes", async () => {
   await withTempDir(async (dir) => {
     await Deno.writeTextFile(`${dir}/index.html`, '<!doctype html><meta name="description" content="Notes">');
     const config = defaultConfig({ sourceDir: dir, named: ["notes"] });
-    const answers = ["org.example.notes", "Notes", "no"];
-    const result = await completeDeployInputs(config, collectFlags(["--dry-run", "--zapstore"]), "current", {
-      interactive: true, ask: async () => answers.shift()!, print() {},
+    const result = await completeDeployInputs(config, collectFlags(["--dry-run"]), "current", {
+      interactive: true, ask: () => { throw new Error("unexpected prompt"); }, print() {},
       save: () => { throw new Error("unexpected save"); },
     });
-    assertEquals(result.config.zapstore, { id: "org.example.notes", name: "Notes", enabled: true });
-    assertEquals(answers.length, 0);
-    let error = "";
-    try {
-      await completeDeployInputs(config, collectFlags(["--dry-run", "--zapstore", "-i"]), "current", {
-        interactive: true, ask: () => { throw new Error("unexpected prompt"); },
-      });
-    } catch (e) { error = String(e); }
-    assert(error.includes("zapstore.id") && error.includes("zapstore.name"));
-    assert(!error.includes("unexpected"));
+    assertEquals(result.config.zapstore, undefined);
+    assertEquals(result.candidates.length, 1);
   });
 });
 

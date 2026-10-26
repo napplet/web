@@ -89,9 +89,10 @@ Missing values are requested in an interactive terminal.`,
   --format current|legacy  Event format (default: current)
   --sec <secret>         Use a signing key or bunker session
   --prompt-sec           Read a hidden secret, or explicit piped input
-  --zapstore             Publish application metadata
-  --no-zapstore          Skip application metadata
-  --screenshot [url]     Capture an application preview
+  --zapstore             Publish application metadata even if config disabled it
+  --no-zapstore          Skip application metadata and automatic capture
+  --screenshot [url]     Capture from a URL instead of the selected build
+  --no-screenshot        Skip automatic screenshot capture
 
 Capture controls: --screenshot-selector, --screenshot-ready-selector,
   --screenshot-width, --screenshot-height, --screenshot-delay.
