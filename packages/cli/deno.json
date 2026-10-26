@@ -14,7 +14,7 @@
     ]
   },
   "imports": {
-    "fflate": "npm:fflate@0.8.2",
+    "fflate": "npm:fflate@0.8.3",
     "parse5": "npm:parse5@^7.3.0",
     "applesauce-relay": "npm:applesauce-relay@^5.2.0",
     "applesauce-signers": "npm:applesauce-signers@^5.2.0",

@@ -11,13 +11,11 @@
     "npm:@scure/base@^1.2.6": "1.2.6",
     "npm:applesauce-relay@^5.2.0": "5.2.0_typescript@5.9.3",
     "npm:applesauce-signers@^5.2.0": "5.2.0_typescript@5.9.3",
-    "npm:happy-dom@^20.10.3": "20.11.1",
     "npm:nostr-tools@^2.23.3": "2.24.1_typescript@5.9.3",
     "npm:playwright@^1.59.1": "1.62.1",
     "npm:tsup@^8.5.0": "8.5.1_typescript@5.9.3_esbuild@0.27.7",
     "npm:turbo@^2.9.14": "2.10.8",
     "npm:typescript@^5.9.3": "5.9.3",
-    "npm:vite@^6.4.3": "6.4.3_picomatch@4.0.5",
     "npm:yaml@2.9.1": "2.9.1"
   },
   "jsr": {
@@ -1829,23 +1827,23 @@
       "dependencies": [
         "npm:@changesets/cli@^3.0.3",
         "npm:@types/node@^22.15.0",
-        "npm:happy-dom@^20.10.3",
+        "npm:happy-dom@^21.0.4",
         "npm:playwright@^1.59.1",
         "npm:turbo@^2.9.14",
         "npm:typescript@^5.9.3",
-        "npm:vite@^6.4.3",
-        "npm:vitest@^4.1.11"
+        "npm:vite@^6.4.5",
+        "npm:vitest@^4.1.12"
       ]
     },
     "members": {
       "packages/boilerplate": {
         "dependencies": [
-          "npm:fflate@0.8.2"
+          "npm:fflate@0.8.3"
         ],
         "packageJson": {
           "dependencies": [
             "npm:@types/node@^22.15.0",
-            "npm:fflate@0.8.2",
+            "npm:fflate@0.8.3",
             "npm:tsup@^8.5.0",
             "npm:typescript@^5.9.3"
           ]
@@ -1862,7 +1860,7 @@
           "npm:@types/node@^22.15.0",
           "npm:applesauce-relay@^5.2.0",
           "npm:applesauce-signers@^5.2.0",
-          "npm:fflate@0.8.2",
+          "npm:fflate@0.8.3",
           "npm:nostr-tools@^2.23.3",
           "npm:parse5@^7.3.0",
           "npm:yaml@2.9.1"
@@ -1873,7 +1871,7 @@
             "npm:@types/node@^22.15.0",
             "npm:applesauce-relay@^5.2.0",
             "npm:applesauce-signers@^5.2.0",
-            "npm:fflate@0.8.2",
+            "npm:fflate@0.8.3",
             "npm:nostr-tools@^2.23.3",
             "npm:parse5@^7.3.0",
             "npm:yaml@2.9.1"
@@ -1884,10 +1882,10 @@
         "packageJson": {
           "dependencies": [
             "npm:@types/node@^22.15.0",
-            "npm:happy-dom@^20.10.3",
+            "npm:happy-dom@^21.0.4",
             "npm:tsup@^8.5.0",
             "npm:typescript@^5.9.3",
-            "npm:vitest@^4.1.11"
+            "npm:vitest@^4.1.12"
           ]
         }
       },
@@ -1896,7 +1894,7 @@
           "dependencies": [
             "npm:tsup@^8.5.0",
             "npm:typescript@^5.9.3",
-            "npm:vitest@^4.1.11"
+            "npm:vitest@^4.1.12"
           ]
         }
       },
@@ -1907,7 +1905,7 @@
             "npm:nostr-tools@^2.23.3",
             "npm:tsup@^8.5.0",
             "npm:typescript@^5.9.3",
-            "npm:vitest@^4.1.11"
+            "npm:vitest@^4.1.12"
           ]
         }
       },
@@ -1924,7 +1922,7 @@
           "dependencies": [
             "npm:tsup@^8.5.0",
             "npm:typescript@^5.9.3",
-            "npm:vitest@^4.1.11"
+            "npm:vitest@^4.1.12"
           ]
         }
       },
@@ -1936,8 +1934,8 @@
             "npm:parse5@^7.3.0",
             "npm:tsup@^8.5.0",
             "npm:typescript@^5.9.3",
-            "npm:vite@^6.4.3",
-            "npm:vitest@^4.1.11"
+            "npm:vite@^6.4.5",
+            "npm:vitest@^4.1.12"
           ]
         }
       }

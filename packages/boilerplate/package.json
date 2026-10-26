@@ -47,6 +47,6 @@
     "nip-5d"
   ],
   "dependencies": {
-    "fflate": "0.8.2"
+    "fflate": "0.8.3"
   }
 }

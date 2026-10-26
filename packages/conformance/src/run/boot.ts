@@ -119,19 +119,18 @@ function errorObserver(): string {
   })();`;
 }
 
-export function runtimePrelude(domains: readonly string[], runtimePreludeSource?: string): string {
-  const installed = `window.parent.postMessage({ type: '${INTERNAL_INSTALLED}', installed: !!window.napplet }, '*');`;
-  if (runtimePreludeSource !== undefined) {
-    return `${runtimePreludeSource}\n;globalThis.NappletShimPrelude.install(${JSON.stringify({ domains })});\n${installed}`;
-  }
-  return `
+const FALLBACK_RUNTIME_OPEN = `
 (() => {
-  const domains = ${JSON.stringify(domains)};
+  const domains = `;
+
+const FALLBACK_RUNTIME_BEFORE_GAMEPAD_TOOLS = `;
   const napplet = {};
   for (const domain of domains) {
     if (domain === 'resource' || domain === 'gamepad') napplet[domain] = {};
   }
-  const gamepadTools = ${GAMEPAD_STATE_TOOLS_SOURCE};
+  const gamepadTools = `;
+
+const FALLBACK_RUNTIME_AFTER_GAMEPAD_TOOLS = `;
   let gamepadState = { available: true, focused: false, pads: [] };
   const gamepadHandlers = new Set();
   // Subscribe on first use, like the nap binding, so napplets that never touch
@@ -231,9 +230,19 @@ export function runtimePrelude(domains: readonly string[], runtimePreludeSource?
     };
   }
   window.napplet = napplet;
-  ${installed}
+  `;
+
+const FALLBACK_RUNTIME_CLOSE = `
 })();
 `;
+
+export function runtimePrelude(domains: readonly string[], runtimePreludeSource?: string): string {
+  const installed = `window.parent.postMessage({ type: '${INTERNAL_INSTALLED}', installed: !!window.napplet }, '*');`;
+  if (runtimePreludeSource !== undefined) {
+    return `${runtimePreludeSource}\n;globalThis.NappletShimPrelude.install(${JSON.stringify({ domains })});\n${installed}`;
+  }
+  return FALLBACK_RUNTIME_OPEN + JSON.stringify(domains) + FALLBACK_RUNTIME_BEFORE_GAMEPAD_TOOLS
+    + GAMEPAD_STATE_TOOLS_SOURCE + FALLBACK_RUNTIME_AFTER_GAMEPAD_TOOLS + installed + FALLBACK_RUNTIME_CLOSE;
 }
 
 function injectRuntime(html: string, url: string, domains: readonly string[], runtimePreludeSource?: string): string {

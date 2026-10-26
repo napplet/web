@@ -26,10 +26,10 @@
     "@napplet/nap": "workspace:^",
     "@napplet/shim": "workspace:*",
     "@types/node": "^22.15.0",
-    "happy-dom": "^20.10.3",
+    "happy-dom": "^21.0.4",
     "tsup": "^8.5.0",
     "typescript": "^5.9.3",
-    "vitest": "^4.1.11"
+    "vitest": "^4.1.12"
   },
   "scripts": {
     "build": "tsup",
