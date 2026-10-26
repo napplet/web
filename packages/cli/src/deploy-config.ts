@@ -108,13 +108,6 @@ export async function completeDeployInputs(
   if (missing.length) {
     throw new Error(`Deployment needs configuration:\n${missing.map((line) => `  - ${line}`).join("\n")}\nRun without -i in a terminal for guided setup.`);
   }
-  const appEnabled = !flags.boolean.has("no-zapstore") && (flags.boolean.has("zapstore") || config.zapstore?.enabled);
-  if (appEnabled && !config.zapstore) {
-    const id = await required("Zapstore application ID", "Add zapstore.id in config.");
-    const name = await required("Zapstore display name", "Add zapstore.name in config.");
-    if (!id || !name) throw new Error(`Application metadata needs configuration:\n${missing.map((line) => `  - ${line}`).join("\n")}`);
-    config.zapstore = { id, name, enabled: true };
-  }
   if (prompted && JSON.stringify(config) !== JSON.stringify(original)) {
     if (await confirm("Save these settings for next time?", true, ask)) {
       await (options.save ?? writeConfig)(config, first(flags.values.get("config")));

@@ -35,7 +35,7 @@ export function renderGuide(): string {
    napplet paja -- pnpm vite --host 127.0.0.1
    # Optional: capture an iframe from your running preview shell
    napplet screenshot http://localhost:5173 --output preview.png
-   # Optional application metadata: configure zapstore, then use deploy --zapstore
+   # Deployment captures a screenshot and publishes application metadata by default
    napplet deploy --dry-run
    napplet deploy
 

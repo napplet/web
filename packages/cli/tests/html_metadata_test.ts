@@ -17,19 +17,30 @@ Deno.test("deploy dry-run reports recovered destinations and omits binary icon d
     await Deno.writeTextFile(`${sourceDir}/index.html`, html);
     await Deno.writeTextFile(`${dir}/config.yaml`, stringify(defaultConfig({ sourceDir })));
     const output: string[] = [];
+    let captures = 0;
     const previousLog = console.log;
     console.log = (message: unknown) => {
       output.push(String(message));
     };
     try {
       assertEquals(
-        await main(["deploy", "--dry-run", "--json", "--config", `${dir}/config.yaml`]),
+        await main(["deploy", "--dry-run", "--json", "--config", `${dir}/config.yaml`], {
+          runScreenshot: async (args) => {
+            captures += 1;
+            assertEquals(args.slice(0, 2), ["--artifact", `${sourceDir}/index.html`]);
+            const outputAt = args.indexOf("--output");
+            assert(outputAt >= 0);
+            await Deno.writeFile(args[outputAt + 1], png);
+            return 0;
+          },
+        }),
         0,
       );
     } finally {
       console.log = previousLog;
     }
     const report = JSON.parse(output.join("\n"));
+    assertEquals(captures, 1);
     assertEquals(report.blossomServers, [
       "https://blossom.example.com",
       "https://mirror.example.com",

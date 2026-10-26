@@ -11,7 +11,7 @@ import { createDeployProgressReporter, isTerminalOutput, renderDeployReport } fr
 import { canPrompt } from "./interaction.ts";
 import { resolveSigningMethod, signDeployManifestTemplates } from "./signing.ts";
 import type { DeploySelection } from "./types.ts";
-import { linkZapstoreApplication, prepareZapstorePublication } from "./zapstore.ts";
+import { inferZapstoreConfig, prepareZapstorePublication } from "./zapstore.ts";
 import { captureDeployScreenshot } from "./deploy-screenshot.ts";
 import { loadDeployConfig } from "./config-command.ts";
 import type { PackageCliRunner } from "./cli.ts";
@@ -41,24 +41,26 @@ export async function commandDeploy(argv: string[], runScreenshot?: PackageCliRu
   let screenshot: Awaited<ReturnType<typeof captureDeployScreenshot>>;
   try {
     const signingInfo = createSigningDebugInfo(deploySigning);
-    let templates = await createDeployManifestTemplates(plan, config, {
+    const templates = await createDeployManifestTemplates(plan, config, {
       sourcePubkey: signer?.pubkey,
       format,
       descriptions,
     });
     const blossomServers = resolveDeployServers(templates, config.blossomServers);
-    screenshot = await captureDeployScreenshot(flags, config, runScreenshot, plan);
-    const publicationConfig = screenshot && config.zapstore
-      ? { ...config, zapstore: { ...config.zapstore, images: [...(config.zapstore.images ?? []), ...screenshot.paths] } }
+    const zapstoreEnabled = !flags.boolean.has("no-zapstore") &&
+      (flags.boolean.has("zapstore") || config.zapstore?.enabled !== false);
+    const applicationConfig = zapstoreEnabled
+      ? { ...config, zapstore: config.zapstore ?? inferZapstoreConfig(config, templates) }
       : config;
+    screenshot = await captureDeployScreenshot(flags, applicationConfig, runScreenshot, plan);
+    const publicationConfig = screenshot && applicationConfig.zapstore
+      ? { ...applicationConfig, zapstore: { ...applicationConfig.zapstore, images: [...(applicationConfig.zapstore.images ?? []), ...screenshot.paths] } }
+      : applicationConfig;
     const application = await prepareZapstorePublication(publicationConfig, blossomServers, {
-      enabled: flags.boolean.has("no-zapstore") ? false : flags.boolean.has("zapstore") ? true : undefined,
+      enabled: zapstoreEnabled,
     });
     if (application && signer) {
       application.signedEvent = await signer.sign(application.template);
-      templates = linkZapstoreApplication(templates, application.signedEvent, config.relays);
-    } else if (application && format === "current") {
-      console.error("Application link omitted from unsigned dry run: a signer public key is required.");
     }
     const manifests = signer ? await signDeployManifestTemplates(templates, signer) : templates;
     let deploy;

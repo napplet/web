@@ -39,7 +39,7 @@ napplet deploy
 
 `napplet create` downloads the maintained Vite + TypeScript starter. `napplet init` owns deployment name, title, description, archetype roles and conventions, relays, and Blossom servers in `.napplet/config.yaml`. The standalone CLI provisions its own cached tooling for screenshots, conformance, and Paja, so no host Node.js, npm, npx, Deno, Git, or Kehto installation is required. Node.js 20+ is needed by the generated Vite project and the optional skills.sh CLI.
 
-The CLI supports `napplet screenshot --output preview.png` and optional `napplet deploy --zapstore` application metadata publishing. Use `napplet deploy --zapstore --screenshot` to capture and publish in one invocation. See the [CLI guide](packages/cli/README.md#screenshots-and-optional-zapstore-metadata) for configuration, browser setup, and dry-run examples.
+The CLI supports `napplet screenshot --output preview.png`. `napplet deploy` captures a screenshot and publishes a separate Zapstore application event by default; use `--no-screenshot` and/or `--no-zapstore` to opt out. See the [CLI guide](packages/cli/README.md#screenshots-and-zapstore-metadata) for configuration, browser setup, and dry-run examples.
 
 Use the [`napplet-icon` skill](skills/napplet-icon/SKILL.md) to design, generate, and refine an app icon, check it at small sizes, and prepare it for NIP-5D integration. Install it with `npx skills add napplet/napplet --skill napplet-icon`; see the [agent skills guide](apps/docs/guide/agent-skills.md) for the complete workflow.
 

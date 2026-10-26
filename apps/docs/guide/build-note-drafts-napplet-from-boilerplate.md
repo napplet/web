@@ -76,7 +76,7 @@ surface. The napplet app imports `@napplet/sdk`; the shell/runtime injects
     "@napplet/conformance-cli": "^0.2.18",
     "@napplet/vite-plugin": "^0.14.0",
     "typescript": "^5.9.3",
-    "vite": "^6.4.3",
+    "vite": "^6.4.5",
     "vite-plugin-singlefile": "^2.3.3"
   },
   "packageManager": "pnpm@10.8.0",

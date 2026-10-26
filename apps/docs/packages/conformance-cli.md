@@ -55,7 +55,7 @@ source edits rebuild and re-check automatically.
 - [Getting started](/guide/getting-started) — scaffold, build, and verify a napplet
 - [`@napplet/vite-plugin`](./vite-plugin) — generates the manifest the runner validates
 
-The browser runner also supports `npx @napplet/conformance-cli@0.3.3 screenshot [directory|preview-url] --output preview.png`, exposed as `napplet screenshot` by the standalone CLI. See [screenshots and application metadata](./cli.md#screenshots-and-optional-zapstore-metadata) for browser setup, iframe selection, and publication options.
+The browser runner also supports `npx @napplet/conformance-cli@0.3.3 screenshot [directory|preview-url] --output preview.png`, exposed as `napplet screenshot` by the standalone CLI. See [screenshots and application metadata](./cli.md#screenshots-and-zapstore-metadata) for browser setup, iframe selection, and publication options.
 
 Conformance CLI 0.3.4 requires the published Paja 0.21.x line for GAMEPAD screenshots and compatibility with core/NAP 0.34.0. Paja 0.20.x is excluded because its peer range does not accept those core/NAP versions. Publish this package after its core/NAP dependencies; the standalone CLI runner update follows conformance CLI publication.
 
