@@ -8,6 +8,10 @@ The generated Vite project and the optional skills.sh CLI have their own develop
 
 Use it to create a `.napplet/config.yaml`, find built `index.html` artifacts, inspect the deploy plan, sign manifest events, upload files to Blossom servers, publish to relays, and run local napplet tooling such as conformance and Paja.
 
+*Building a game?*
+
+[`soyli`](https://napplet.soy) cli may be better suited for the task; with features optimized for game napplets such as scoreboards and both local and online multiplayer agent guidance.  
+
 ## Install
 
 ### Standalone binary
