@@ -76,18 +76,5 @@
     ],
     "status": "Developer preview",
     "image": "/showcase/images/shell-paja.webp"
-  },
-  {
-    "id": "dryft",
-    "name": "Dryft",
-    "category": "A home on the big screen",
-    "description": "A TV shell with interchangeable app views, media libraries, and controller navigation.",
-    "href": "https://github.com/sandwichfarm/dryft",
-    "source": "https://github.com/sandwichfarm/dryft",
-    "platforms": [
-      "Linux",
-      "Web"
-    ],
-    "status": "In development"
   }
 ]

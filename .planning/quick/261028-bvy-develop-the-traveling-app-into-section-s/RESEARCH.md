@@ -10,7 +10,6 @@ Read `5D.md` from PR head `5560820fa4f37f45b8ab742a11aeb3001b17dc67`, not its de
 - [Myco README](https://github.com/Origami74/myco#readme) explicitly lists Android and Android TV, nearby app sharing and offline reopening. No desktop platform is claimed.
 - [noStrudel source](https://github.com/hzrd149/nostrudel) contains napplet host/UI and `.changeset/user-napplets-tab.md`, describing user profile discovery and direct opening. Link to the actual web application.
 - [Grimoire source](https://github.com/purrgrammer/grimoire) and `docs/napplets.md` describe a tiling workspace and current napplet integration. The web application responds at grimoire.rocks.
-- [Dryft README](https://github.com/sandwichfarm/dryft#readme) identifies an in-development TV shell, web UI and verified Debian graphical builds. Do not imply a finished cross-platform release.
 - Existing napplet.soy and Paja remain available web destinations with their previous source links.
 
 ## Signed apps and defects surfaced
@@ -30,3 +29,5 @@ The rejected four-circle image is replaced by the recognizable Freeze Frame Resp
 GSAP timelines synchronize the collection fan, host masks, service wire drawing, canvas morph and content reveals. Normal browser scrolling remains in control. The social preview now uses the actual app too.
 
 The homepage and social card now spotlight a direct artifact-hash release, Freeze Frame Response. The three current-format selections lead the curated list; legacy releases remain labeled archives in the app store. The public default experience does not use the archive adapter.
+
+Public shell destinations were rechecked with unauthenticated HTTP requests. Six return 200; an extra candidate had only a private repository, so it was excluded from public listings.
