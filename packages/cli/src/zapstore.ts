@@ -1,6 +1,6 @@
-/** Optional software application events and their local image uploads. */
+/** Software application events and their local image uploads. */
 import { withClientTag } from "./client-tag.ts";
-import { resolvePath } from "./path.ts";
+import { basename, resolvePath } from "./path.ts";
 import type { DeployFilePayload } from "./blossom-upload.ts";
 import type {
   DeployManifestTemplate,
@@ -19,7 +19,7 @@ export interface ZapstorePublication {
 }
 
 /**
- * Validate the optional CLI application listing configuration.
+ * Validate the CLI application listing configuration.
  * @param input Configuration value.
  * @returns Validated configuration, or undefined when absent.
  * @example normalizeZapstoreConfig({ id: "org.example.notes", name: "Notes" })
@@ -65,10 +65,38 @@ export function normalizeZapstoreConfig(input: unknown): ZapstoreConfig | undefi
 }
 
 /**
- * Prepare an opt-in application event without signing or network writes.
+ * Derive a default application listing from selected manifest metadata.
+ * @param config Deployment configuration.
+ * @param manifests Selected manifest templates.
+ * @returns A stable application identifier, name, and description.
+ * @example inferZapstoreConfig(config, manifests)
+ */
+export function inferZapstoreConfig(
+  config: NappletConfig,
+  manifests: readonly DeployManifestTemplate[],
+): ZapstoreConfig {
+  const selected = manifests.find((manifest) => manifest.template);
+  if (!selected?.template) throw new Error("Cannot infer application metadata without a deployment manifest");
+  const candidates = new Set(manifests.map((manifest) => manifest.item.candidate.indexHtml));
+  const project = basename(Deno.cwd());
+  const title = selected.template.tags.find((tag) => tag[0] === "title")?.[1]?.trim();
+  const single = candidates.size === 1;
+  const identifier = single
+    ? manifests.find((manifest) => manifest.item.dTag)?.item.dTag ??
+      selected.item.candidate.publishingId ?? selected.item.candidate.name
+    : project;
+  return {
+    id: config.metadata?.name ?? identifier,
+    name: config.metadata?.title ?? (single ? title ?? selected.item.candidate.name : project),
+    description: selected.template.content,
+  };
+}
+
+/**
+ * Prepare an application event without signing or network writes.
  * @param config Deployment configuration.
  * @param servers Validated Blossom origins, in preference order.
- * @param options CLI opt-in override, local path base, and event timestamp.
+ * @param options CLI enable override, local path base, and event timestamp.
  * @returns Application metadata and upload bytes, or undefined when disabled.
  * @example await prepareZapstorePublication(config, servers, { enabled: true })
  */
@@ -77,9 +105,9 @@ export async function prepareZapstorePublication(
   servers: readonly string[],
   options: { enabled?: boolean; cwd?: string; createdAt?: number } = {},
 ): Promise<ZapstorePublication | undefined> {
-  if (!(options.enabled ?? config.zapstore?.enabled ?? false)) return undefined;
+  if (!(options.enabled ?? config.zapstore?.enabled ?? true)) return undefined;
   const metadata = normalizeZapstoreConfig(config.zapstore);
-  if (!metadata) throw new Error("--zapstore requires zapstore.id and zapstore.name in config");
+  if (!metadata) throw new Error("Application metadata requires zapstore.id and zapstore.name");
   const files: DeployFilePayload[] = [];
   const cwd = options.cwd ?? Deno.cwd();
   const media = async (value: string): Promise<string> => {
@@ -137,80 +165,4 @@ function imageType(bytes: Uint8Array): string | undefined {
   const text = new TextDecoder().decode(bytes.subarray(0, 12));
   if (text.startsWith("RIFF") && text.endsWith("WEBP")) return "image/webp";
   return undefined;
-}
-
-/**
- * Attach the proposed NIP-5D application reference before manifest signing.
- * @param manifests Unsigned deployment templates; legacy manifests are unchanged.
- * @param application Signed application event that the deployment will publish.
- * @param relays Configured publication relays, used for an optional lookup hint.
- * @returns Templates linked to the application without changing artifact hashes.
- * @example linkZapstoreApplication(manifests, application, ["wss://relay.example"])
- */
-export function linkZapstoreApplication(
-  manifests: readonly DeployManifestTemplate[],
-  application: SignedNostrEvent,
-  relays: readonly string[],
-): DeployManifestTemplate[] {
-  // Proposed wire surface: https://github.com/dskvr/nips/pull/11
-  const identifiers = application.tags.filter((tag) => tag[0] === "d");
-  if (application.kind !== 32267 || identifiers.length !== 1 || !identifiers[0][1]) {
-    throw new Error("Application reference requires kind 32267 with one non-empty d tag");
-  }
-  const reference = ["app", `32267:${application.pubkey}:${identifiers[0][1]}`];
-  const relay = relays.find((value) => {
-    try {
-      const url = new URL(value);
-      return url.protocol === "wss:" || url.protocol === "ws:";
-    } catch {
-      return false;
-    }
-  });
-  if (relay) reference.push(relay);
-  return manifests.map((manifest) => {
-    if (manifest.format !== "current" || !manifest.template) return manifest;
-    if (manifest.signedEvent) throw new Error("Application references must be attached before manifest signing");
-    return {
-      ...manifest,
-      template: {
-        ...manifest.template,
-        tags: [...manifest.template.tags.filter((tag) => tag[0] !== "app"), [...reference]],
-      },
-    };
-  });
-}
-
-/** Provisional extension: NIP-5D does not yet define a screenshot tag. */
-export function linkCapturedScreenshots(
-  manifests: readonly DeployManifestTemplate[],
-  application: ZapstorePublication,
-  captureCount: number,
-): DeployManifestTemplate[] {
-  if (captureCount === 0) return [...manifests];
-  const images = application.template.tags.filter((tag) => tag[0] === "image");
-  if (images.length < captureCount) {
-    throw new Error("Captured screenshots are missing from the Zapstore application");
-  }
-  const urls = images.slice(-captureCount).map((tag) => tag[1]);
-  const artifacts = [...new Set(manifests.map((manifest) => manifest.item.candidate.indexHtml))];
-  if (captureCount !== 1 && captureCount !== artifacts.length) {
-    throw new Error("Captured screenshots do not match the selected artifacts");
-  }
-  return manifests.map((manifest) => {
-    if (manifest.format !== "current" || !manifest.template) return manifest;
-    if (manifest.signedEvent) {
-      throw new Error("Screenshot tags must be attached before manifest signing");
-    }
-    const url = urls[captureCount === 1 ? 0 : artifacts.indexOf(manifest.item.candidate.indexHtml)];
-    return {
-      ...manifest,
-      template: {
-        ...manifest.template,
-        tags: [...manifest.template.tags.filter((tag) => tag[0] !== "screenshot"), [
-          "screenshot",
-          url,
-        ]],
-      },
-    };
-  });
 }

@@ -31,19 +31,24 @@ export async function captureDeployScreenshot(
 ): Promise<DeployScreenshot | undefined> {
   const url = first(flags.values.get("screenshot"));
   const controls = ["selector", "ready-selector", "width", "height", "delay"];
-  if (!url && !flags.boolean.has("screenshot")) {
-    if (controls.some((name) => flags.values.has(`screenshot-${name}`))) {
-      throw new Error("Screenshot options require --screenshot");
+  const requested = !!url || flags.boolean.has("screenshot");
+  const configured = controls.some((name) => flags.values.has(`screenshot-${name}`));
+  if (flags.boolean.has("no-screenshot")) {
+    if (requested || configured) {
+      throw new Error("Choose either --screenshot options or --no-screenshot");
     }
     return undefined;
   }
-  if (
-    flags.boolean.has("no-zapstore") || !(flags.boolean.has("zapstore") || config.zapstore?.enabled)
-  ) {
-    throw new Error("--screenshot requires --zapstore or zapstore.enabled in config");
+  if (flags.boolean.has("no-zapstore")) {
+    if (requested || configured) throw new Error("Screenshot options require Zapstore publication; remove --no-zapstore");
+    return undefined;
+  }
+  if (config.zapstore?.enabled === false && !flags.boolean.has("zapstore")) {
+    if (requested || configured) throw new Error("Screenshot options require Zapstore publication; use --zapstore");
+    return undefined;
   }
   if (!config.zapstore) {
-    throw new Error("--screenshot requires zapstore.id and zapstore.name in config");
+    throw new Error("Screenshot capture requires application metadata");
   }
   const artifacts = [...new Set(plan?.items.map((item) => item.candidate.indexHtml) ?? [])];
   if (!url && !artifacts.length) throw new Error("No selected build to screenshot");

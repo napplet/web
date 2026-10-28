@@ -19,6 +19,7 @@ import { createReferenceShell, type RecordedEnvelope } from '../shell/reference-
 import type { BootObservation } from './context.js';
 
 const INTERNAL_BOOT_ERROR = '__nappletConformance.error';
+const INTERNAL_INSTALLED = '__nappletConformance.installed';
 
 /** What a host can observe by booting the napplet. */
 export interface BootCollection {
@@ -36,12 +37,16 @@ export interface BootCollection {
 export interface BootOptions {
   /** The napplet URL to load. */
   url: string;
+  /** Already loaded artifact text. Hosts can supply the exact snapshot they verified instead of fetching again. */
+  html?: string;
   /** Milliseconds to await iframe load before declaring boot failure. Default 5000. */
   readyTimeoutMs?: number;
   /** Milliseconds to keep recording envelopes after boot. Default 600. */
   settleMs?: number;
   /** Also run a no-domain degraded boot. Default true. */
   runDegraded?: boolean;
+  /** Host-supplied maintained shim IIFE. Without it, only the embedded RESOURCE/GAMEPAD fixtures are available. */
+  runtimePreludeSource?: string;
   /** Debug only: also grant `allow-same-origin` (a conformant load must NOT need it). Default false. */
   allowSameOrigin?: boolean;
   /** Document to create the iframe in. Defaults to the global `document`. */
@@ -103,13 +108,29 @@ export const GAMEPAD_STATE_TOOLS_SOURCE = `(() => {
   return { isGamepadState, copyGamepadState };
 })()`;
 
-export function runtimePrelude(domains: readonly string[]): string {
-  return `
+function errorObserver(): string {
+  return `(() => {
+    const report = (reason) => {
+      try { window.parent.postMessage({ type: '${INTERNAL_BOOT_ERROR}', reason: String(reason && reason.message || reason) }, '*'); }
+      catch {}
+    };
+    window.addEventListener('error', (event) => report(event.error || event.message));
+    window.addEventListener('unhandledrejection', (event) => report(event.reason));
+  })();`;
+}
+
+const FALLBACK_RUNTIME_OPEN = `
 (() => {
-  const domains = ${JSON.stringify(domains)};
+  const domains = `;
+
+const FALLBACK_RUNTIME_BEFORE_GAMEPAD_TOOLS = `;
   const napplet = {};
-  for (const domain of domains) napplet[domain] = {};
-  const gamepadTools = ${GAMEPAD_STATE_TOOLS_SOURCE};
+  for (const domain of domains) {
+    if (domain === 'resource' || domain === 'gamepad') napplet[domain] = {};
+  }
+  const gamepadTools = `;
+
+const FALLBACK_RUNTIME_AFTER_GAMEPAD_TOOLS = `;
   let gamepadState = { available: true, focused: false, pads: [] };
   const gamepadHandlers = new Set();
   // Subscribe on first use, like the nap binding, so napplets that never touch
@@ -209,20 +230,25 @@ export function runtimePrelude(domains: readonly string[]): string {
     };
   }
   window.napplet = napplet;
-  const report = (reason) => {
-    try {
-      window.parent.postMessage({ type: '${INTERNAL_BOOT_ERROR}', reason: String(reason && reason.message || reason) }, '*');
-    } catch {}
-  };
-  window.addEventListener('error', (event) => report(event.error || event.message));
-  window.addEventListener('unhandledrejection', (event) => report(event.reason));
+  `;
+
+const FALLBACK_RUNTIME_CLOSE = `
 })();
 `;
+
+export function runtimePrelude(domains: readonly string[], runtimePreludeSource?: string): string {
+  const installed = `window.parent.postMessage({ type: '${INTERNAL_INSTALLED}', installed: !!window.napplet }, '*');`;
+  if (runtimePreludeSource !== undefined) {
+    return `${runtimePreludeSource}\n;globalThis.NappletShimPrelude.install(${JSON.stringify({ domains })});\n${installed}`;
+  }
+  return FALLBACK_RUNTIME_OPEN + JSON.stringify(domains) + FALLBACK_RUNTIME_BEFORE_GAMEPAD_TOOLS
+    + GAMEPAD_STATE_TOOLS_SOURCE + FALLBACK_RUNTIME_AFTER_GAMEPAD_TOOLS + installed + FALLBACK_RUNTIME_CLOSE;
 }
 
-function injectRuntime(html: string, url: string, domains: readonly string[]): string {
+function injectRuntime(html: string, url: string, domains: readonly string[], runtimePreludeSource?: string): string {
   const base = `<base href="${escapeHtmlAttr(url)}">`;
-  const script = `<script>${runtimePrelude(domains)}</script>`;
+  const source = runtimePrelude(domains, runtimePreludeSource).replace(/<\/script/gi, '<\\/script');
+  const script = `<script>${errorObserver()}</script><script>${source}</script>`;
   const headOpen = /<head(?:\s[^>]*)?>/i.exec(html);
   if (headOpen) {
     const at = headOpen.index + headOpen[0].length;
@@ -253,7 +279,7 @@ async function loadHtml(url: string): Promise<string> {
 /** Boot the napplet once with the given injected domain set and collect what's observable. */
 async function bootOnce(
   domains: readonly string[],
-  opts: Required<Pick<BootOptions, 'url' | 'readyTimeoutMs' | 'settleMs' | 'allowSameOrigin'>>,
+  opts: Required<Pick<BootOptions, 'url' | 'readyTimeoutMs' | 'settleMs' | 'allowSameOrigin'>> & Pick<BootOptions, 'runtimePreludeSource' | 'html'>,
   doc: Document,
   win: Window,
 ): Promise<SingleBoot> {
@@ -270,9 +296,14 @@ async function bootOnce(
   iframe.style.left = '-9999px';
 
   let bootError: string | null = null;
+  let installedGlobal = false;
   const listener = (event: MessageEvent): void => {
     if (event.source !== iframe.contentWindow) return;
-    const data = event.data as { type?: unknown; reason?: unknown } | null;
+    const data = event.data as { type?: unknown; reason?: unknown; installed?: unknown } | null;
+    if (data && typeof data === 'object' && data.type === INTERNAL_INSTALLED) {
+      installedGlobal = data.installed === true;
+      return;
+    }
     if (data && typeof data === 'object' && data.type === INTERNAL_BOOT_ERROR) {
       bootError = `napplet boot error: ${String(data.reason ?? 'unknown error')}`;
       return;
@@ -291,11 +322,11 @@ async function bootOnce(
   });
 
   win.addEventListener('message', listener);
-  (doc.body ?? doc.documentElement).appendChild(iframe);
 
   try {
-    const html = await loadHtml(opts.url);
-    iframe.srcdoc = injectRuntime(html, opts.url, domains);
+    const html = opts.html ?? await loadHtml(opts.url);
+    iframe.srcdoc = injectRuntime(html, opts.url, domains, opts.runtimePreludeSource);
+    (doc.body ?? doc.documentElement).appendChild(iframe);
   } catch (error) {
     bootError = error instanceof Error ? error.message : String(error);
   }
@@ -317,7 +348,7 @@ async function bootOnce(
     /* best-effort cleanup */
   }
 
-  return { installedGlobal: bootError === null, bootError, emitted: [...shell.records] };
+  return { installedGlobal, bootError, emitted: [...shell.records] };
 }
 
 /**
@@ -328,9 +359,11 @@ export async function bootAndCollect(options: BootOptions): Promise<BootCollecti
   const win = options.window ?? window;
   const resolved = {
     url: options.url,
+    html: options.html,
     readyTimeoutMs: options.readyTimeoutMs ?? 5000,
     settleMs: options.settleMs ?? 600,
     allowSameOrigin: options.allowSameOrigin ?? false,
+    runtimePreludeSource: options.runtimePreludeSource,
   };
 
   const primary = await bootOnce(NAP_DOMAINS, resolved, doc, win);

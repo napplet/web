@@ -11,7 +11,7 @@ import { createDeployPlan } from "../src/deploy-plan.ts";
 import { createDeployManifestTemplates } from "../src/manifest.ts";
 import { runPackageCli } from "../src/package-runner.ts";
 import { createPrivateKeySigner, signDeployManifestTemplates } from "../src/signing.ts";
-import { linkCapturedScreenshots, linkZapstoreApplication, normalizeZapstoreConfig, prepareZapstorePublication } from "../src/zapstore.ts";
+import { inferZapstoreConfig, normalizeZapstoreConfig, prepareZapstorePublication } from "../src/zapstore.ts";
 import { assert, assertEquals, withTempDir } from "./assert.ts";
 
 const png = Uint8Array.from(
@@ -34,10 +34,9 @@ async function rejects(fn: () => unknown, message: string): Promise<void> {
   throw new Error(`Expected failure containing ${message}`);
 }
 
-Deno.test("Zapstore is opt-in and flags can disable configured publishing without reading media", async () => {
+Deno.test("Zapstore publishes by default and an override skips unreadable media", async () => {
   const config = defaultConfig({ zapstore: { ...listing, images: ["missing.png"] } });
-  assertEquals(await prepareZapstorePublication(config, []), undefined);
-  config.zapstore!.enabled = true;
+  await rejects(() => prepareZapstorePublication(config, []), "require a Blossom server");
   assertEquals(await prepareZapstorePublication(config, [], { enabled: false }), undefined);
   await rejects(
     () => prepareZapstorePublication(defaultConfig(), [], { enabled: true }),
@@ -214,7 +213,7 @@ for (
   });
 }
 
-Deno.test("CLI dry run includes application metadata only when requested, with no network permission", async () => {
+Deno.test("CLI dry run includes application metadata by default, with no network permission", async () => {
   await withTempDir(async (dir) => {
     await Deno.mkdir(`${dir}/dist`);
     await Deno.writeTextFile(`${dir}/dist/index.html`, '<meta name="description" content="Notes">');
@@ -234,9 +233,9 @@ Deno.test("CLI dry run includes application metadata only when requested, with n
           "deploy",
           "--config",
           `${dir}/config.yaml`,
-          "--zapstore",
           "--dry-run",
           "--json",
+          "--no-screenshot",
         ]),
         0,
       );
@@ -351,8 +350,6 @@ for (const automatic of [false, true]) {
           assertEquals(images.length, 2);
           assertEquals(images[0], ["image", "https://images.example/existing.png"]);
           assert(images[1][1].startsWith(servers[0]));
-          assertEquals(report.manifests[0].template.tags.filter((tag: string[]) => tag[0] === "screenshot"),
-            [["screenshot", images[1][1]]]);
           assertEquals(report.manifests[0].files.length, 1);
         } else {
           assertEquals(logs.length, 0);
@@ -378,7 +375,7 @@ Deno.test("automatic screenshots deduplicate companion snapshots and retain dist
   const candidates = ["one", "two"].map((name) => ({ name, dir: `/build/${name}`, indexHtml: `/build/${name}/index.html` }));
   const plan = createDeployPlan(config, candidates, { root: true, snapshot: true });
   const captured: string[] = [];
-  const screenshot = await captureDeployScreenshot(collectFlags(["--screenshot"]), config, async (args) => {
+  const screenshot = await captureDeployScreenshot(collectFlags([]), config, async (args) => {
     captured.push(args[1]);
     await Deno.writeFile(args[3], png);
     return 0;
@@ -390,7 +387,7 @@ Deno.test("automatic screenshots deduplicate companion snapshots and retain dist
   } finally { await screenshot.cleanup(); }
 });
 
-Deno.test("signed CLI deployment links every manifest to its screenshot application", async () => {
+Deno.test("signed CLI deployment keeps application metadata separate from manifests", async () => {
   await withTempDir(async (dir) => {
     await Deno.mkdir(`${dir}/dist`);
     await Deno.writeTextFile(`${dir}/dist/index.html`, '<meta name="description" content="Notes">');
@@ -406,7 +403,7 @@ Deno.test("signed CLI deployment links every manifest to its screenshot applicat
     const args = ["deploy", "--config", `${dir}/config.yaml`, "--root", "--name", "notes",
       "--snapshot", "--dry-run", "--json", "--sec", "01".padStart(64, "0")];
     try {
-      assertEquals(await main([...args, "--zapstore", "--screenshot"], {
+      assertEquals(await main(args, {
         runScreenshot: async (captureArgs) => {
           const path = captureArgs[captureArgs.indexOf("--output") + 1];
           await Deno.writeFile(path, png);
@@ -426,75 +423,81 @@ Deno.test("signed CLI deployment links every manifest to its screenshot applicat
     for (let index = 0; index < linked.manifests.length; index++) {
       const manifest = linked.manifests[index];
       assert(verifyEvent(manifest.signedEvent));
-      const references = manifest.signedEvent.tags.filter((tag: string[]) => tag[0] === "app");
-      assertEquals(references, [["app", `32267:${application.pubkey}:${listing.id}`, "wss://relay.example"]]);
-      // Resolve the descriptor using only the signed manifest's address.
-      const [kind, pubkey, ...identifier] = references[0][1].split(":");
-      assertEquals(application.kind, Number(kind));
-      assertEquals(application.pubkey, pubkey);
-      assertEquals(application.tags.find((tag: string[]) => tag[0] === "d")?.[1], identifier.join(":"));
+      assertEquals(manifest.signedEvent.tags.some((tag: string[]) => tag[0] === "app"), false);
       assertEquals(application.tags.filter((tag: string[]) => tag[0] === "image"),
         [["image", `${servers[0]}/${linked.application.files[0].sha256}`]]);
-      assertEquals(manifest.signedEvent.tags.filter((tag: string[]) => tag[0] === "screenshot"),
-        [["screenshot", `${servers[0]}/${linked.application.files[0].sha256}`]]);
       assertEquals(manifest.artifactHash, disabled.manifests[index].artifactHash);
       assertEquals(disabled.manifests[index].signedEvent.tags.some((tag: string[]) => tag[0] === "app"), false);
-      assertEquals(disabled.manifests[index].signedEvent.tags.some((tag: string[]) => tag[0] === "screenshot"), false);
     }
   });
 });
 
-Deno.test("captured screenshots follow distinct artifacts and leave legacy manifests unchanged", async () => {
+Deno.test("application metadata is inferred from the selected build", async () => {
   await withTempDir(async (dir) => {
-    for (const name of ["one", "two"]) {
-      await Deno.mkdir(`${dir}/${name}`);
-      await Deno.writeTextFile(`${dir}/${name}/index.html`, '<meta name="description" content="Notes">');
-    }
-    const config = defaultConfig({ sourceDir: dir, blossomServers: servers, zapstore: listing });
-    const candidates = ["one", "two"].map((name) => ({
-      name, dir: `${dir}/${name}`, indexHtml: `${dir}/${name}/index.html`,
-    }));
-    const plan = createDeployPlan(config, candidates, { root: true, snapshot: true });
-    const current = await createDeployManifestTemplates(plan, config, { sourcePubkey: signer.pubkey });
-    const application = {
-      template: { kind: 32267, created_at: 123, content: "Notes", tags: [
-        ["image", "https://images.example/existing.png"],
-        ["image", `${servers[0]}/one`],
-        ["image", `${servers[0]}/two`],
-      ] },
-      files: [],
-    };
-    const before = JSON.stringify(current);
-    const linked = linkCapturedScreenshots(current, application, 2);
-    assertEquals(linked.map((manifest) => manifest.template?.tags.find((tag) => tag[0] === "screenshot")?.[1]),
-      [`${servers[0]}/one`, `${servers[0]}/one`, `${servers[0]}/two`, `${servers[0]}/two`]);
-    assertEquals(JSON.stringify(current), before);
-    const legacy = await createDeployManifestTemplates(plan, config, { format: "legacy" });
-    assertEquals(linkCapturedScreenshots(legacy, application, 2), legacy);
-    const signed = await signer.sign(current[0].template!);
-    await rejects(() => linkCapturedScreenshots([{ ...current[0], signedEvent: signed }], application, 1),
-      "before manifest signing");
+    const indexHtml = `${dir}/index.html`;
+    await Deno.writeTextFile(indexHtml, '<!doctype html><title>Notes</title><meta name="description" content="Private notes">');
+    const config = defaultConfig({ sourceDir: dir });
+    const plan = createDeployPlan(config, [{ name: "notes", dir, indexHtml, publishingId: "notes-app" }], { root: true });
+    const templates = await createDeployManifestTemplates(plan, config);
+    assertEquals(inferZapstoreConfig(config, templates), {
+      id: "notes-app", name: "Notes", description: "Private notes",
+    });
   });
 });
 
-Deno.test("application links replace stale references, omit absent relay hints, and preserve legacy", async () => {
+Deno.test("deploy defaults capture and publish metadata with independent opt-outs", async () => {
   await withTempDir(async (dir) => {
-    await Deno.writeTextFile(`${dir}/index.html`, '<meta name="description" content="Notes">');
-    const config = defaultConfig({ sourceDir: dir, zapstore: { ...listing, enabled: true } });
-    const plan = createDeployPlan(config, [{ name: "notes", dir, indexHtml: `${dir}/index.html` }], { root: true });
-    const application = await prepareZapstorePublication(config, servers);
-    assert(application);
-    const signed = await signer.sign(application.template);
-    const current = await createDeployManifestTemplates(plan, config);
-    current[0].template!.tags.push(["app", "stale"], ["app", "duplicate"]);
-    const before = JSON.stringify(current);
-    const linked = linkZapstoreApplication(current, signed, []);
-    assertEquals(linked[0].template!.tags.filter((tag) => tag[0] === "app"),
-      [["app", `32267:${signed.pubkey}:${listing.id}`]]);
-    assertEquals(JSON.stringify(current), before);
-    const legacy = await createDeployManifestTemplates(plan, config, { format: "legacy" });
-    assertEquals(linkZapstoreApplication(legacy, signed, []), legacy);
-    await rejects(() => linkZapstoreApplication([{ ...current[0], signedEvent: signed }], signed, []),
-      "before manifest signing");
+    await Deno.mkdir(`${dir}/dist`);
+    await Deno.writeTextFile(`${dir}/dist/index.html`, '<!doctype html><title>Notes</title><meta name="description" content="Private notes">');
+    await Deno.writeTextFile(`${dir}/config.yaml`, stringify(defaultConfig({
+      sourceDir: `${dir}/dist`, blossomServers: servers,
+    })));
+    for (const [options, captures, published] of [
+      [[], 1, true],
+      [["--no-screenshot"], 0, true],
+      [["--no-zapstore"], 0, false],
+      [["--no-screenshot", "--no-zapstore"], 0, false],
+    ] as const) {
+      const output: string[] = [];
+      const log = console.log;
+      let captured = 0;
+      console.log = (value: unknown) => output.push(String(value));
+      try {
+        assertEquals(await main(["deploy", "--config", `${dir}/config.yaml`, "--dry-run", "--json", ...options], {
+          runScreenshot: async (args) => {
+            captured += 1;
+            assertEquals(args.slice(0, 2), ["--artifact", `${dir}/dist/index.html`]);
+            await Deno.writeFile(args[args.indexOf("--output") + 1], png);
+            return 0;
+          },
+        }), 0);
+      } finally {
+        console.log = log;
+      }
+      assertEquals(captured, captures);
+      const report = JSON.parse(output[0]);
+      assertEquals(!!report.application, published);
+      if (published) {
+        assertEquals(report.application.template.kind, 32267);
+        assertEquals(report.application.template.tags.find((tag: string[]) => tag[0] === "name"), ["name", "Notes"]);
+        assertEquals(report.application.template.tags.filter((tag: string[]) => tag[0] === "image").length, captures);
+      }
+      assertEquals(report.manifests[0].template.tags.some((tag: string[]) => tag[0] === "app"), false);
+    }
   });
+});
+
+Deno.test("screenshot opt-outs reject conflicting capture options", async () => {
+  const config = defaultConfig({ zapstore: listing });
+  await rejects(
+    () => captureDeployScreenshot(collectFlags(["--no-screenshot", "--screenshot"]), config),
+    "Choose either",
+  );
+  await rejects(
+    () => captureDeployScreenshot(collectFlags(["--no-zapstore", "--screenshot-width", "900"]), config),
+    "require Zapstore publication",
+  );
+  assertEquals(await captureDeployScreenshot(collectFlags([]), {
+    ...config, zapstore: { ...listing, enabled: false },
+  }), undefined);
 });

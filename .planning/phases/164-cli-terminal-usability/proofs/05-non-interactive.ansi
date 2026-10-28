@@ -1,0 +1,14 @@
+
+[36m                         _      _
+ _ __   __ _ _ __  _ __  | | ___| |_
+| '_ \ / _' | '_ \| '_ \ | |/ _ \ __|
+| | | | (_| | |_) | |_) || |  __/ |_
+|_| |_|\__,_| .__/| .__/ |_|\___|\__|
+            |_|   |_|[0m
+[2m  napplet 0.9.1  /  build · preview · publish[0m
+
+[31mDeployment needs configuration:
+  - Add metadata.description, an HTML description, or --description <text> (root).
+  - Add relays or pass --relay <ws(s)://url>.
+  - Add blossomServers or pass --server <http(s)://origin>.
+Run without -i in a terminal for guided setup.[0m

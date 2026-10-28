@@ -2,19 +2,19 @@
 gsd_state_version: 1.0
 milestone: v0.34.0
 milestone_name: NIP-5D Runtime Injection
-current_phase: 163
-current_phase_name: nap-gamepad-across-repositories
+current_phase: 164
+current_phase_name: cli-terminal-usability
 status: completed
-stopped_at: Phase 163 verified; completing prerequisite publication for CLI follow-up 243
-last_updated: "2026-10-17T21:23:11+00:00"
-last_activity: 2026-10-17
-last_activity_desc: Preserved additional Nostr event tags in CLI publishing and migration; opened PR 256
+stopped_at: Phase 164 verified locally and shipped in PR 248 with terminal recordings
+last_updated: "2026-10-26T13:07:06+00:00"
+last_activity: 2026-10-26
+last_activity_desc: Completed quick task 261026-jeu with a 100/100 pinned AI-slop scan
 progress:
-  total_phases: 8
-  completed_phases: 3
-  total_plans: 16
-  completed_plans: 6
-  percent: 38
+  total_phases: 9
+  completed_phases: 4
+  total_plans: 19
+  completed_plans: 9
+  percent: 47
 ---
 
 # Project State
@@ -42,9 +42,17 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 
 **Core value:** Prove that sandboxed Nostr apps can securely delegate to a host shell over a simple, standardized protocol — and ship the spec + SDK so others can build on it.
 
-**Current focus:** Phase 163 — NAP-GAMEPAD verified and shipped as coordinated PRs; release ordering recorded in COVERAGE.md.
+**Current focus:** Phase 164 — CLI terminal usability verified and shipped in [PR #248](https://github.com/napplet/web/pull/248) with visual proof.
 
 > **Provenance note:** The "Accumulated Context" section below preserves bullet records from BOTH branches' STATE.md histories. Records tagged "v0.29.0" from main's lineage refer to the milestone NOW renumbered as v0.30.0 (Class-Gated Decrypt — Phases 135-138). Records tagged "v0.29.0" from feat/strict-model refer to NUB-CONNECT (Phases 135-142). Phase number alone is not a unique identifier across the two; cross-reference the topic (decrypt/identity/NIP-07 → v0.30.0; connect/class/CSP-authority → v0.29.0).
+
+### Quick task 261020-8us — COMPLETE, draft PR261
+
+Reference hosts use maintained runtime bindings and signed artifact snapshots. Conformance128/web9/CLI33 cases pass, plus complete19-task types,11-task non-standalone build,468 non-standalone units,JSR exports and25 site links. Twelve unchanged signed Dryft napplets have10/0/1; app-library retains a real missing-INC degraded failure9/1/1. Exact full build and recursive units hit ENOSPC in the unchanged standalone compiler and remain open. Quality97 passes workflow70; baseline warnings retained. Remote85d6dba5 subsequently passes all four checks, full12-task build and pnpm test; the genuine app-library failure and original ENOSPC/observer failures remain recorded. See quick task SUMMARY.md. No npm publication/merge or user runtime changes.
+
+### Phase 164 — CLI terminal usability (complete)
+
+Branch `feat/cli-terminal-usability` ships guided missing-value recovery, `-i` prompt suppression, terminal presentation, and real visual proof in PR #248. Plan and acceptance evidence: `.planning/phases/164-cli-terminal-usability/`. Build, types, repository tests, native smoke, PTY checks, and site links passed. Existing completed phases below retain their historical status.
 
 ### Quick task 261017-fw7 — COMPLETE
 
@@ -54,10 +62,10 @@ See: .planning/PROJECT.md (updated 2026-05-24 after v0.31.0 archive)
 
 ## Current Position
 
-Phase: 163 (nap-gamepad-across-repositories) — implementation verified
+Phase: 164 (cli-terminal-usability) — verified and shipped
 Plan: 3 of 3
-Status: Verified; [draft PR #224](https://github.com/napplet/web/pull/224) open, hzrd149 requested
-Last activity: 2026-10-22 - Completed quick task 261022-8da: Apply supplied duck icon to PR 221 replacement site
+Status: [PR #248](https://github.com/napplet/web/pull/248) open with six actual terminal screenshots
+Last activity: 2026-10-26 - Completed quick task 261026-jeu: pinned AI-slop scan 100/100
 
 See phase 163 VERIFICATION.md and COVERAGE.md for evidence and disclosed release/specification/baseline limits. Earlier phase and quick-task records below are historical.
 
@@ -562,6 +570,9 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 
 | Quick ID | Task | Date | Commit | Artifacts |
 |----------|------|------|--------|-----------|
+| 261026-jeu | Clear the pinned AI-slop scan findings | 2026-10-26 | 8e811a29 | [261026-jeu](./quick/261026-jeu-reach-100-out-of-100-on-the-pinned-ai-sl/) |
+| 261026-iwr | Default deploy screenshots and Zapstore events with opt-out flags | 2026-10-26 | ee144357 | [261026-iwr](./quick/261026-iwr-use-screenshots-and-zapstore-events-by-d/) |
+| 261015-aen | Use nsyte-style filled CLI progress bars and refresh terminal proof | 2026-10-15 | 5e165056 | [261015-aen](./quick/261015-aen-use-nsyte-filled-progress-bars-in-cli-an/) |
 | 261022-8da | Apply supplied duck icon to PR 221 replacement site | 2026-10-22 | PR #221 | [261022-8da](./quick/261022-8da-apply-the-supplied-duck-icon-to-the-repl/) |
 | 261003-uwf | Simplify Develop to skills and Kehto in one viewport | 2026-10-03 | PR #222 | [261003-uwf-simplify-develop-section-to-napplet-skil](./quick/261003-uwf-simplify-develop-section-to-napplet-skil/) |
 | 261003-ukp | Split final Build section into napplet and shell paths | 2026-10-03 | PR #222 | [261003-ukp-split-final-build-section-into-napplet-a](./quick/261003-ukp-split-final-build-section-into-napplet-a/) |
@@ -609,6 +620,7 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 | 260706-dmu | Align NAP-DM result envelope unions | 2026-07-07 | ac9c32e0 | [260706-dmu-align-dm-result-envelope-unions](./quick/260706-dmu-align-dm-result-envelope-unions/) |
 | 260706-via | Harden napplet skills against direct browser network and storage APIs in sandboxed napplets | 2026-07-06 | e781e436 | [260706-via-harden-napplet-skills-against-direct-bro](./quick/260706-via-harden-napplet-skills-against-direct-bro/) |
 | 261015-k1f | Recommend NAP-KEYS registration for shortcuts and game controls | 2026-10-15 | e55a2aa8 | [261015-k1f-document-nap-keys-registration-for-keybo](./quick/261015-k1f-document-nap-keys-registration-for-keybo/) |
+| 261016-tlx | Resolve PR 248 conflicts with YAML migration and CLI terminal behavior preserved | 2026-10-16 | 791cfd50 | [261016-tlx-resolve-pr-248-conflicts-with-current-ma](./quick/261016-tlx-resolve-pr-248-conflicts-with-current-ma/) |
 
 ## Deferred Items
 

@@ -1,6 +1,6 @@
 {
   "name": "@napplet/cli",
-  "version": "0.11.0",
+  "version": "0.13.0",
   "description": "Standalone CLI for creating, configuring, testing, and deploying napplets",
   "type": "module",
   "files": [
@@ -36,7 +36,7 @@
     "@scure/base": "^1.2.6",
     "applesauce-relay": "^5.2.0",
     "applesauce-signers": "^5.2.0",
-    "fflate": "0.8.2",
+    "fflate": "0.8.3",
     "nostr-tools": "^2.23.3",
     "parse5": "^7.3.0",
     "yaml": "2.9.1"

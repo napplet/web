@@ -1,6 +1,6 @@
 {
   "name": "@napplet/conformance-cli",
-  "version": "0.3.4",
+  "version": "0.4.0",
   "description": "Headless CLI that runs @napplet/conformance against a napplet in real Chromium via Playwright \u2014 the `test:conformance` runner",
   "type": "module",
   "bin": {
@@ -18,6 +18,8 @@
     "@napplet/conformance": "workspace:^",
     "@napplet/core": "workspace:*",
     "@napplet/nap": "workspace:*",
+    "@napplet/shim": "workspace:*",
+    "nostr-tools": "^2.23.3",
     "playwright": "^1.59.1"
   },
   "devDependencies": {
@@ -25,7 +27,7 @@
     "@types/node": "^22.15.0",
     "tsup": "^8.5.0",
     "typescript": "^5.9.3",
-    "vitest": "^4.1.11"
+    "vitest": "^4.1.12"
   },
   "scripts": {
     "build": "tsup && node scripts/copy-ui.mjs",

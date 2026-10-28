@@ -1,0 +1,2 @@
+# Preserve literal PTY control bytes and carriage returns in terminal recordings.
+*.ansi binary

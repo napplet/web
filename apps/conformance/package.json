@@ -13,11 +13,12 @@
   },
   "dependencies": {
     "@napplet/conformance": "workspace:^",
+    "@napplet/shim": "workspace:*",
     "nostr-tools": "^2.23.3"
   },
   "devDependencies": {
     "typescript": "^5.9.3",
-    "vite": "^6.4.3",
-    "vitest": "^4.1.11"
+    "vite": "^6.4.5",
+    "vitest": "^4.1.12"
   }
 }

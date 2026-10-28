@@ -31,10 +31,12 @@ import { startUiServer } from './ui-server.js';
 import { scanForbiddenGlobals } from './scan.js';
 import { resolveNappletDir } from './resolve-napplet.js';
 import { captureScreenshot, parseScreenshotArgs } from './screenshot.js';
+import { verifyManifestArtifact } from './manifest.js';
 
 interface CliOptions {
   target?: string;
   url?: string;
+  manifest?: string;
   reporter: ReporterFormat;
   out?: string;
   readyTimeoutMs: number;
@@ -61,6 +63,7 @@ Arguments:
 
 Options:
   --url <url>              Test a remotely-served napplet instead of a local dir (headless)
+  --manifest <file>        Signed NIP-5D event JSON; verify its signature and raw artifact hash before boot (headless)
   --reporter <fmt>         pretty | json | junit            (default: pretty)
   --out <file>             Write the report to a file instead of stdout
   --ready-timeout <ms>     Boot timeout waiting for iframe load (default: 5000)
@@ -105,6 +108,9 @@ function parseArgs(argv: string[]): CliOptions {
       case '--url':
         opts.url = value();
         break;
+      case '--manifest':
+        opts.manifest = value();
+        break;
       case '--reporter': {
         const r = value();
         if (r !== 'pretty' && r !== 'json' && r !== 'junit') throw new Error(`Invalid reporter: ${r}`);
@@ -147,7 +153,7 @@ function parseArgs(argv: string[]): CliOptions {
   return opts;
 }
 
-async function collectBoot(hostUrl: string, allowSameOrigin: boolean, totalTimeoutMs: number): Promise<BootCollection> {
+async function collectBoot(hostUrl: string, totalTimeoutMs: number): Promise<BootCollection> {
   const browser = await chromium.launch({ args: ['--no-sandbox'] });
   try {
     const page = await browser.newPage();
@@ -162,7 +168,6 @@ async function collectBoot(hostUrl: string, allowSameOrigin: boolean, totalTimeo
     if (error) throw new Error(`Host harness failed: ${error}`);
     const boot = await page.evaluate(() => window.__conformanceBoot__);
     if (!boot) throw new Error('Host harness produced no result');
-    void allowSameOrigin;
     return boot;
   } finally {
     await browser.close();
@@ -190,6 +195,10 @@ function openBrowser(url: string): void {
 
 /** `--ui`: serve the live web runtime + the napplet, watch, and re-run on change. */
 async function runUiMode(opts: CliOptions): Promise<number> {
+  if (opts.manifest) {
+    process.stderr.write('--manifest is supported in headless mode; use a NIP-5D pointer in the web runtime for signed manifests.\n');
+    return 2;
+  }
   if (opts.url) {
     process.stderr.write('--ui serves a local napplet directory; --url is not supported in UI mode.\n');
     return 2;
@@ -250,13 +259,15 @@ async function main(argv: string[]): Promise<number> {
 
   // Resolve the subject: local dir or remote URL.
   let nappletDir: string | null = null;
-  let manifestHtml: string;
+  let artifact: Uint8Array;
   let forbiddenGlobals: string[] = [];
   let bootUrl: string;
 
   if (opts.url) {
     bootUrl = opts.url;
-    manifestHtml = await (await fetch(opts.url)).text();
+    const response = await fetch(opts.url);
+    if (!response.ok) throw new Error(`Failed to fetch napplet HTML: ${response.status} ${response.statusText}`);
+    artifact = new Uint8Array(await response.arrayBuffer());
   } else {
     if (!opts.target) {
       process.stderr.write(`Provide a napplet directory or --url.\n\n${HELP}`);
@@ -264,22 +275,31 @@ async function main(argv: string[]): Promise<number> {
     }
     const resolved = await resolveNappletDir(opts.target);
     nappletDir = resolved.dir;
-    manifestHtml = await readFile(resolved.indexHtml, 'utf8');
+    artifact = await readFile(resolved.indexHtml);
     forbiddenGlobals = await scanForbiddenGlobals(resolved.dir);
     bootUrl = '/';
   }
 
+  const manifestEvent = opts.manifest
+    ? verifyManifestArtifact(JSON.parse(await readFile(opts.manifest, 'utf8')) as unknown, artifact)
+    : null;
+  const manifestHtml = new TextDecoder().decode(artifact);
+
   const here = dirname(fileURLToPath(import.meta.url));
   const hostBundle = await readFile(join(here, 'host-bundle.global.js'), 'utf8');
+  const runtimePreludeSource = await readFile(fileURLToPath(import.meta.resolve('@napplet/shim/prelude.global')), 'utf8');
 
   const server = await startHarnessServer({
     nappletDir,
     hostBundle,
     bootConfig: {
       url: bootUrl,
+      html: manifestHtml,
       readyTimeoutMs: opts.readyTimeoutMs,
       settleMs: opts.settleMs,
       runDegraded: opts.runDegraded,
+      runtimePreludeSource,
+      allowSameOrigin: opts.allowSameOrigin,
     },
   });
 
@@ -288,12 +308,12 @@ async function main(argv: string[]): Promise<number> {
     // Generous overall budget: two boots (primary + degraded), each up to
     // readyTimeout + settle, plus browser startup.
     const totalTimeout = (opts.readyTimeoutMs + opts.settleMs) * 2 + 30000;
-    boot = await collectBoot(server.hostUrl, opts.allowSameOrigin, totalTimeout);
+    boot = await collectBoot(server.hostUrl, totalTimeout);
   } finally {
     await server.close();
   }
 
-  const context = buildContext({ manifestHtml, boot, forbiddenGlobals });
+  const context = buildContext({ manifestHtml, manifestEvent, boot, forbiddenGlobals, sandbox: { allowScripts: true, allowSameOrigin: opts.allowSameOrigin } });
   const run = runConformance(context);
   const output = report(run, opts.reporter);
 

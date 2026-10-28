@@ -1,0 +1,85 @@
+
+[36m                         _      _
+ _ __   __ _ _ __  _ __  | | ___| |_
+| '_ \ / _' | '_ \| '_ \ | |/ _ \ __|
+| | | | (_| | |_) | |_) || |  __/ |_
+|_| |_|\__,_| .__/| .__/ |_|\___|\__|
+            |_|   |_|[0m
+[2m  napplet 0.9.1  /  build · preview · publish[0m
+
+[36m? Description for Notes[0m: A private notebook for quick ideas.
+[36m? Relay URLs (comma separated)[0m: ws://127.0.0.1:62317/relay
+[36m? Blossom server origins (comma separated)[0m: http://127.0.0.1:62317, http://127.0.0.1:62318
+[36m? Save these settings for next time? (yes/no)[0m [2m[yes][0m: yes
+Saved project settings.
+[1;36m
+Deployment plan[0m
+  Notes  /  named:notes
+  Relays: ws://127.0.0.1:62317/relay
+  Blossom: http://127.0.0.1:62317, http://127.0.0.1:62318
+[2m  Preparing signer and artifacts...
+[0m
+Enter signing secret (input hidden), then press Enter: 
+[1;36m  UPLOAD  /  Blossom mirrors[0m
+  [░░░░░░░░░░░░░░░░░░░░] 0%  0/2
+[2A[J[1;36m  UPLOAD  /  Blossom mirrors[0m
+  [36m[██████████░░░░░░░░░░] 50%[0m  1/2  0.6s
+  http://127.0.0.1:62317
+[32m    [████████████] 100%  1 uploaded, 0 present, 0 failed[0m
+  http://127.0.0.1:62318
+[32m    [░░░░░░░░░░░░] 0%  0 uploaded, 0 present, 0 failed[0m
+[6A[J[1;36m  UPLOAD  /  Blossom mirrors[0m
+  [36m[████████████████████] 100%[0m  2/2  3.0s
+  http://127.0.0.1:62317
+[32m    [████████████] 100%  1 uploaded, 0 present, 0 failed[0m
+  http://127.0.0.1:62318
+[32m    [████████████] 100%  1 uploaded, 0 present, 0 failed[0m
+[6A[J[32m  Uploads: 2/2 ready · 2/2 complete mirrors · 3.0s[0m
+
+[1;36m  PUBLISH  /  Relay acknowledgements[0m
+  [░░░░░░░░░░░░░░░░░░░░] 0%  0/1
+[2A[J[1;36m  PUBLISH  /  Relay acknowledgements[0m
+  [36m[████████████████████] 100%[0m  1/1
+[32m  1/1 relays accepted this event[0m
+[3A[J[32m  Published: 1/1 relay acknowledgements · 3.8s[0m
+
+[1;36mNapplet Deploy[0m
+[2m──────────────────────────[0m
+
+[1;36mSummary[0m
+[2m───────────────────[0m
+[32mStatus: complete[0m
+Mode: network deploy
+Config: .napplet/config.json
+Signer: prompt
+Targets: 1
+Relays: 1 (ws://127.0.0.1:62317/relay)
+Blossom servers: 2 (http://127.0.0.1:62317, http://127.0.0.1:62318)
+
+[1;36mManifest Events[0m
+[2m───────────────────────────[0m
+- named:notes kind 35129 from root
+  Files: 1
+  Format: current
+  Artifact: 5d287a63b9df...
+  Event: 602bf7c6336c...
+[36m  Copy nevent: nevent1qvzqqqyf8ypzq7e2z687qn08hvqx0dhz5560v2f7583ugqumskry22a386247adhqyd8wue69uhnzv3h9cczuvpwxyarvv3nxymj7un9d3shjqpqvq4l033ndjpv9sye7g6gqynwgz30htn2a8r5muel8kf8nj5fpt0quaq3vt[0m
+[36m  Copy naddr: naddr1qvzqqqyf8ypzq7e2z687qn08hvqx0dhz5560v2f7583ugqumskry22a386247adhqyd8wue69uhnzv3h9cczuvpwxyarvv3nxymj7un9d3shjqq9dehhgetndqwcss[0m
+
+[1;36mUploads[0m
+[2m───────────────────[0m
+Files ready: 2/2
+Mirrors complete: 2/2
+- http://127.0.0.1:62317
+[32m  [ok] /index.html[0m
+- http://127.0.0.1:62318
+[32m  [ok] /index.html[0m
+
+[1;36mRelay Publish[0m
+[2m─────────────────────────[0m
+Accepted: 1/1
+[32m- [ok] ws://127.0.0.1:62317/relay 602bf7c6336c...[0m
+
+[1;36mResult[0m
+[2m──────────────────[0m
+[32mDeploy complete: manifests are uploaded and published.[0m

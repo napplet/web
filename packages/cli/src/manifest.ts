@@ -113,7 +113,10 @@ export function createSnapshotManifestTemplate(
 export async function createDeployManifestTemplates(
   plan: DeployPlan,
   config: NappletConfig,
-  options: Pick<ManifestBuildOptions, "createdAt" | "sourcePubkey" | "format"> = {},
+  options: Pick<ManifestBuildOptions, "createdAt" | "sourcePubkey" | "format"> & {
+    /** Descriptions supplied interactively for individual builds, keyed by candidate directory. */
+    descriptions?: ReadonlyMap<string, string>;
+  } = {},
 ): Promise<DeployManifestTemplate[]> {
   const result: DeployManifestTemplate[] = [];
   const filesByDir = new Map<string, ManifestFileMapping[]>();
@@ -127,7 +130,9 @@ export async function createDeployManifestTemplates(
       await readManifestMetadata(
         item.candidate.indexHtml,
         item.candidate.manifestPath,
-        config,
+        options.descriptions?.has(item.candidate.dir)
+          ? { ...config, metadata: { ...config.metadata, description: options.descriptions.get(item.candidate.dir) } }
+          : config,
         options.format,
       );
     metadataByDir.set(item.candidate.dir, metadata);
