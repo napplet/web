@@ -114,3 +114,27 @@ test('startup preserves the original error when cleanup also fails', async () =>
     else process.env.NAPPLET_DOCS_ORIGIN = previous;
   }
 });
+
+test('standalone docs do not start a website or assume a fixed port', async () => {
+  const previous = process.env.NAPPLET_DOCS_ORIGIN;
+  let requested;
+  const httpServer = createServer((_req, res) => res.end('standalone docs'));
+  try {
+    const site = await startSite({ docs: { createServer: async (_root, options) => {
+      requested = options.port;
+      return { httpServer,
+        async listen() { httpServer.listen(options.port, options.host); await once(httpServer, 'listening'); },
+        close: () => new Promise(resolve => httpServer.close(resolve)),
+      };
+    } }, web: { dev: () => assert.fail('standalone docs started a website') } }, 'docs');
+    assert.ok(Number.isInteger(requested) && requested > 0);
+    assert.equal(site.webUrl, undefined);
+    assert.equal(await (await fetch(site.docsUrl)).text(), 'standalone docs');
+    await site.stop();
+    assert.equal(httpServer.listening, false);
+  } finally {
+    httpServer.close();
+    if (previous === undefined) delete process.env.NAPPLET_DOCS_ORIGIN;
+    else process.env.NAPPLET_DOCS_ORIGIN = previous;
+  }
+});

@@ -34,3 +34,5 @@ At f0a27e65, [CI](https://github.com/napplet/web/actions/runs/40655171435), [con
 Final homepage selections are all current direct-hash releases, with Freeze Frame Response as the traveling app. The current homepage and store browser checks pass after that selection change. The directory contains six public shells, all checked through unauthenticated HTTP. An additional private-only candidate was removed.
 
 Integrated main commit 49fc04dc (PR #270, NAPP porting skill/docs) after it landed during hosted validation. Resolved only the shared planning-state conflict by preserving both quick-task rows. No showcase source or release bytes changed in that merge.
+
+Follow-up: the development runner now chooses OS-assigned ports for paired and standalone website/docs commands, and supports both current main’s Vite frontend and the Astro showcase. Real concurrent browser checks verify correct docs routing, HMR addresses, search, gameplay and independent shutdown; the smoke check runs in link-check CI. The focused main-branch fix is PR #271.
