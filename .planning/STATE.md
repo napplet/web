@@ -6,9 +6,9 @@ current_phase: 164
 current_phase_name: cli-terminal-usability
 status: completed
 stopped_at: Phase 164 verified locally and shipped in PR 248 with terminal recordings
-last_updated: "2026-10-26T13:07:06+00:00"
-last_activity: 2026-10-26
-last_activity_desc: Completed quick task 261026-jeu with a 100/100 pinned AI-slop scan
+last_updated: "2026-10-28T08:20:00+00:00"
+last_activity: 2026-10-28
+last_activity_desc: Expanded showcase motion, public shells and signed app store in PR 221
 progress:
   total_phases: 9
   completed_phases: 4
@@ -570,6 +570,7 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 
 | Quick ID | Task | Date | Commit | Artifacts |
 |----------|------|------|--------|-----------|
+| 261028-bvy | Section-integrated app motion, six public shells and curated/discovered app store | 2026-10-28 | PR #221 | [261028-bvy](./quick/261028-bvy-develop-the-traveling-app-into-section-s/) |
 | 261026-jeu | Clear the pinned AI-slop scan findings | 2026-10-26 | 8e811a29 | [261026-jeu](./quick/261026-jeu-reach-100-out-of-100-on-the-pinned-ai-sl/) |
 | 261026-iwr | Default deploy screenshots and Zapstore events with opt-out flags | 2026-10-26 | ee144357 | [261026-iwr](./quick/261026-iwr-use-screenshots-and-zapstore-events-by-d/) |
 | 261015-aen | Use nsyte-style filled CLI progress bars and refresh terminal proof | 2026-10-15 | 5e165056 | [261015-aen](./quick/261015-aen-use-nsyte-filled-progress-bars-in-cli-an/) |

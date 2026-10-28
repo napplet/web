@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: complete
 ---
 
 # Showcase: an app that participates
@@ -18,3 +18,7 @@ Continue the existing clean `feat/astro-ecosystem-showcase` worktree and PR #221
 ## Work sequence
 
 Research and baseline inspection → content/configuration and app store → section illustrations and GSAP choreography → browser iteration → full gates and PR update. Keep requirement evidence in VERIFICATION.md and unresolved work explicit in SUMMARY.md. No package version changes for private website output.
+
+## Delivery
+
+Implementation, local acceptance checks, main integration, commits and PR #221 update are complete. Hosted source revision f0a27e65 passes CI, conformance and the quality scan; its site-link job is still building when this bookkeeping is committed. See VERIFICATION.md and the PR checks for final hosted results.

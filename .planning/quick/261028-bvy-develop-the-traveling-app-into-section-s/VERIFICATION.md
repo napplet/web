@@ -26,3 +26,9 @@ The stronger mid-page resize/deep-link test exposed asynchronous browser anchor 
 The first hosted run failed before compilation because setup-node selected 22.23.3 while installed Astro declares >=22.23.4. Updated the five jobs building the complete workspace (CI, conformance, link check, site deploy, npm publish) to Node 24 LTS. Package-only JSR and quality jobs retain their existing runtime. Hosted rerun evidence follows.
 
 Local headless scrolling smoke: 163 frame samples, median 8.3 ms, p95 9.2 ms, zero samples above 50 ms. This observation is not a device-independent performance guarantee.
+
+## Hosted source checkpoint
+
+At f0a27e65, [CI](https://github.com/napplet/web/actions/runs/40655171435), [conformance](https://github.com/napplet/web/actions/runs/40655171558), and [quality](https://github.com/napplet/web/actions/runs/40655171482) pass. The [site-link job](https://github.com/napplet/web/actions/runs/40655171414) is still building when this record is committed. The PR check panel supplies its eventual result. The immediately preceding Node-24 integration c8eaf7a0 passed all four hosted checks.
+
+Final homepage selections are all current direct-hash releases, with Freeze Frame Response as the traveling app. The current homepage and store browser checks pass after that selection change. The directory contains six public shells, all checked through unauthenticated HTTP. An additional private-only candidate was removed.
