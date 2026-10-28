@@ -170,6 +170,8 @@ pnpm version-packages   # Apply changesets, bump versions
 
 ## Website
 
+Run `pnpm dev:site` to start the website and documentation together. Each launch chooses open ports through the OS and prints both URLs. The website uses its paired documentation server's actual address; concurrent launches can run side by side. Ctrl+C stops the servers started by that command. Standalone website and documentation commands also select open ports.
+
 The informational site and package documentation live in `apps/`:
 
 - `apps/web` -- Astro ecosystem showcase with runnable napplets, shells, and developer tools; `/protocol/` lists merged NAPs and open proposals with detail pages and contribution guidance. The original Svelte explainer lives at `/explainer/`. Run `pnpm generate:protocol` to refresh the NAP directory and build the website; the deployment workflow also refreshes it daily. See [website development and verification](apps/web/README.md).
@@ -181,6 +183,8 @@ pnpm --filter @napplet/web dev             # showcase and explainer
 pnpm --filter @napplet/docs dev            # documentation
 pnpm --filter @napplet/conformance-web dev # conformance runtime
 ```
+
+Documentation development prebundling uses the same `esnext` target as production builds and source transforms. Keep `optimizeDeps.esbuildOptions.target` aligned with the other docs Vite targets when updating the toolchain.
 
 `scripts/assemble-site.mjs` creates the same static artifact for link checks and `.github/workflows/deploy-site.yml`: showcase at `/`, original explainer at `/explainer/`, docs at `/docs/`, and conformance at `/conformance/`. Bunny is the canonical deployment target; nsite is an optional mirror. Configure deploy secrets with `scripts/setup-site-secrets.sh`.
 

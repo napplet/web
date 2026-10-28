@@ -8,8 +8,8 @@ const COMMUNITY_URL =
 export default defineConfig({
   base: '/docs/',
   lang: 'en-US',
-  // Keep builds, source transforms, and dev dependency optimization on the
-  // same modern target: patched esbuild cannot lower some legacy syntax.
+  // Keep production, source transforms and development prebundling on the same
+  // modern target; the optimizer has its own esbuild options.
   vite: {
     build: { target: 'esnext' },
     esbuild: { target: 'esnext' },

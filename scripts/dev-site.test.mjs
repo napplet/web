@@ -52,8 +52,8 @@ test('paired launches bind distinct available ports and close every listener', a
         close: () => new Promise((resolve, reject) => httpServer.close((error) => error ? reject(error) : resolve())),
       };
     } },
-    web: { dev: async ({ server: options }) => {
-      const origin = process.env.NAPPLET_DOCS_ORIGIN;
+    web: { dev: async ({ server: options, vite }) => {
+      const origin = vite.server.proxy['/docs'].target;
       const server = createServer((_req, res) => res.end(origin));
       servers.push(server);
       server.listen(options.port, options.host);

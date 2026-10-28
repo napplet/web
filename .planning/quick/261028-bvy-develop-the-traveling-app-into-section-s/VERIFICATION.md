@@ -36,3 +36,5 @@ Final homepage selections are all current direct-hash releases, with Freeze Fram
 Integrated main commit 49fc04dc (PR #270, NAPP porting skill/docs) after it landed during hosted validation. Resolved only the shared planning-state conflict by preserving both quick-task rows. No showcase source or release bytes changed in that merge.
 
 Follow-up: the development runner now chooses OS-assigned ports for paired and standalone website/docs commands, and supports both current main’s Vite frontend and the Astro showcase. Real concurrent browser checks verify correct docs routing, HMR addresses, search, gameplay and independent shutdown; the smoke check runs in link-check CI. The focused main-branch fix is PR #271.
+
+Integrated main 3c6e3ae3 after PR #271 merged. Preserved the Astro frontend/configuration, shared dynamic-port runner, generic proxy assertions and Astro-specific redirect coverage. The old Vite-only frontend configuration stays retired. Both listener and browser concurrency checks are retained.
