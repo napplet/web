@@ -102,6 +102,19 @@ try {
   const resized = await motion.locator('.hero-dock').boundingBox();
   const moved = await motion.locator('.journey-traveler').boundingBox();
   assert.ok(Math.abs(resized.x - moved.x) < 2, 'resizing refreshes the static anchors');
+  await motion.goto(`${base}/#protocol`, { waitUntil: 'networkidle' });
+  await motion.setViewportSize({ width: 1200, height: 900 });
+  await motion.waitForFunction(() => {
+    const destination = document.querySelector('.protocol-dock').getBoundingClientRect();
+    const arrived = document.querySelector('.journey-traveler').getBoundingClientRect();
+    const aligned = Math.abs(destination.x - arrived.x) < 2 && Math.abs(destination.y - arrived.y) < 2;
+    const previous = window.appDockCheck;
+    if (!aligned || !previous || previous.scroll !== scrollY) {
+      window.appDockCheck = { since: performance.now(), scroll: scrollY };
+      return false;
+    }
+    return performance.now() - previous.since > 450;
+  }, undefined, { timeout: 5000 });
   await motion.emulateMedia({ reducedMotion: 'reduce' });
   await motion.locator('.journey-traveler').waitFor({ state: 'hidden' });
   assert.equal(await motion.locator('.hero-dock .app-window').evaluate(el => getComputedStyle(el).opacity), '1', 'changing motion preference restores static artwork');

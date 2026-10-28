@@ -44,7 +44,7 @@ const date = snapshot.checkedAt ? new Date(snapshot.checkedAt).toISOString().sli
           <div class="release-meta"><span>Signed release</span><span>{new Date(app.publishedAt * 1000).toISOString().slice(0, 10)}</span></div><h3>{app.name}</h3><p class="publisher-description">{app.description}</p>
           <p class="release-author">Publisher <span title={app.author}>{app.author.slice(0, 8)}…{app.author.slice(-6)}</span></p>
           <p class="release-requirements">{app.requirements.length ? `Needs: ${app.requirements.join(', ')}` : 'No required shell services declared'}</p>
-          <div class="release-links"><a href={`https://napplet.soy/n/${app.pointer}`} target="_blank" rel="noopener noreferrer">Open in napplet.soy ↗</a><button type="button" data-copy-address={app.pointer} hidden>Copy address</button></div>
+          <div class="release-links"><a href={app.event.kind === 35129 ? `https://napplet.soy/n/${app.pointer}` : `https://njump.me/${app.pointer}`} target="_blank" rel="noopener noreferrer">{app.event.kind === 35129 ? 'Open in napplet.soy ↗' : 'View signed release ↗'}</a><button type="button" data-copy-address={app.pointer} hidden>Copy address</button></div>
         </article>)}
       </div>
       <p id="store-empty" class="store-empty" hidden>No apps match. Try a different search or collection.</p>

@@ -67,8 +67,8 @@ function releaseCard(app: CatalogApp, index: number): HTMLElement {
   meta.append(text('span', '', 'Signed release'), text('span', '', new Date(app.publishedAt * 1000).toISOString().slice(0, 10)));
   const links = text('div', 'release-links', '');
   const open = document.createElement('a');
-  open.href = `https://napplet.soy/n/${app.pointer}`;
-  open.target = '_blank'; open.rel = 'noopener noreferrer'; open.textContent = 'Open in napplet.soy ↗';
+  open.href = app.event.kind === 35129 ? `https://napplet.soy/n/${app.pointer}` : `https://njump.me/${app.pointer}`;
+  open.target = '_blank'; open.rel = 'noopener noreferrer'; open.textContent = app.event.kind === 35129 ? 'Open in napplet.soy ↗' : 'View signed release ↗';
   const copy = document.createElement('button');
   copy.type = 'button'; copy.dataset.copyAddress = app.pointer; copy.textContent = 'Copy address';
   links.append(open, copy);

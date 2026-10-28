@@ -32,9 +32,9 @@ export function catalogApp(input: unknown, relays: string[] = []): CatalogApp | 
     if (event.kind === 35129 ? identifiers.length !== 1 : identifiers.length !== 0) return null;
     const identifier = identifiers[0]?.[1] ?? '';
     const title = event.tags.find(tag => tag[0] === 'title')?.[1]?.trim();
-    const pointer = event.kind === 5129
-      ? neventEncode({ id: event.id, author: event.pubkey, kind: event.kind, relays })
-      : naddrEncode({ pubkey: event.pubkey, kind: event.kind, identifier, relays });
+    const pointer = event.kind === 35129
+      ? naddrEncode({ pubkey: event.pubkey, kind: event.kind, identifier, relays })
+      : neventEncode({ id: event.id, author: event.pubkey, kind: event.kind, relays });
     return {
       id: event.kind === 5129 ? event.id : `${event.kind}:${event.pubkey}:${identifier}`,
       name: (title || identifier || 'Untitled napplet').slice(0, 100),

@@ -23,7 +23,7 @@ describe('catalog release selection', () => {
   });
   it('uses each own kind and rejects wrong d/x cardinalities and empty descriptions', () => {
     expect(catalogApp(sign({ kind: 5129, tags: [['x', 'a'.repeat(64)]] }))?.pointer).toMatch(/^nevent1/);
-    expect(catalogApp(sign({ kind: 15129, tags: [['x', 'a'.repeat(64)]] }))?.pointer).toMatch(/^naddr1/);
+    expect(catalogApp(sign({ kind: 15129, tags: [['x', 'a'.repeat(64)]] }))?.pointer).toMatch(/^nevent1/);
     for (const changes of [{kind: 32267}, {content: ''}, {tags: [['x', 'a'.repeat(64)]]}, {kind: 15129}, {tags: [['d', 'x'], ['x', 'a'.repeat(64)], ['x', 'b'.repeat(64)]]}, {tags: [['d', 'x'], ['x', 'a'.repeat(64), 'aggregate']]}, {created_at: 9e14}]) expect(catalogApp(sign(changes))).toBeNull();
   });
   it('keeps newest addressable releases and independent snapshots', () => {

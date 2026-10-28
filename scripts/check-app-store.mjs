@@ -30,6 +30,7 @@ try {
   assert.equal(requests, 0, 'visiting the catalog does not contact relays');
   assert.equal(await page.locator('[data-launch]').count(), apps.length);
   assert.ok(await page.locator('#discovered-grid article').count() > 20, 'real saved discoveries are present');
+  assert.equal(await page.locator('#discovered-grid a[href*="napplet.soy/n/nevent"]').count(), 0, 'snapshot pointers do not use a shell route that rejects them');
   for (const app of apps) {
     await page.locator(`[data-launch="${app.id}"]`).click();
     await page.locator('#player-status').filter({ hasText: 'Ready to play' }).waitFor();

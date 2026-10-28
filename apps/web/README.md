@@ -59,7 +59,7 @@ pnpm --filter @napplet/web build
 
 The refresh preserves original signed events in `src/data/discovered-apps.json`; a failed relay pass leaves the snapshot intact. Ordinary site builds need no network. The catalog selects NIP-5D's own kinds (5129, 15129, 35129), checks signatures and direct `x` hashes, treats descriptions as plain text, and deduplicates replaceable addresses. It does not use NIP-5A schemas or aggregate identities. Snapshots remain independent releases. This is display selection, not full conformance certification or code review.
 
-Search and collection filters run locally. Live relay discovery starts only when the visitor selects “Check for new apps.” Requests are bounded, closed after EOSE or timeout, and cancelled on page exit. Partial/offline results retain the saved collection. Visitors can open a discovered release in napplet.soy or copy its address into another shell; discovered artifacts are never executed by the curated preview. Static discovery links and the saved collection work without JavaScript.
+Search and collection filters run locally. Live relay discovery starts only when the visitor selects “Check for new apps.” Requests are bounded, closed after EOSE or timeout, and cancelled on page exit. Partial/offline results retain the saved collection. Visitors can open named releases in napplet.soy, view other signed releases, or copy an address into another shell; discovered artifacts are never executed by the curated preview. Static discovery links and the saved collection work without JavaScript.
 
 ## Verify the deployed artifact
 

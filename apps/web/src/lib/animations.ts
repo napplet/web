@@ -25,7 +25,7 @@ export function initShowcaseAnimations(): () => void {
         const box = dock.getBoundingClientRect();
         const y = box.top + window.scrollY;
         return { x: box.left, y, scale: box.width / 230, at: Math.max(0, Math.min(maximum, y + box.height / 2 - innerHeight * .55)) };
-      });
+      }).sort((a, b) => a.at - b.at);
       gsap.set(docks.map(dock => dock.firstElementChild), { opacity: 0 });
       gsap.set(traveler, { display: 'block', x: points[0].x, y: points[0].y, scale: points[0].scale });
       travel = gsap.timeline({ defaults: { ease: 'power1.inOut' }, scrollTrigger: {
@@ -87,7 +87,7 @@ function animateSectionScenes(): void {
     gsap.timeline({ scrollTrigger: { trigger: '.host-theatre', start: 'top 90%', end: 'bottom 50%', scrub: .5 } })
       .from('.host-desktop', { clipPath: 'inset(0 100% 0 0)', x: -25, duration: .7 }, 0)
       .from('.desktop-sidebar i', { x: -12, opacity: 0, stagger: .08, duration: .4 }, .25)
-      .from('.host-phone', { y: 85, rotation: 12, opacity: 0, duration: .7 }, .35)
+      .from('.host-phone', { clipPath: 'inset(100% 0 0 0)', opacity: 0, duration: .7 }, .35)
       .from('.host-annotation span', { y: 15, opacity: 0, stagger: .15, duration: .4 }, .6);
 
     gsap.timeline({ scrollTrigger: { trigger: '.capability-stage', start: 'top 85%', end: 'bottom 45%', scrub: .5 } })

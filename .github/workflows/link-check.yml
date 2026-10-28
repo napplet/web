@@ -110,4 +110,5 @@ jobs:
 
           node scripts/check-links.mjs http://localhost:8099
           node scripts/check-showcase.mjs http://localhost:8099
+          node scripts/check-app-store.mjs http://localhost:8099
           node scripts/check-protocol-browser.mjs http://localhost:8099
