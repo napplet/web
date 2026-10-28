@@ -170,6 +170,8 @@ pnpm version-packages   # Apply changesets, bump versions
 
 ## Website
 
+Run `pnpm dev:site` to start the website and documentation together. Each launch chooses open ports through the OS and prints both URLs. The website uses its paired documentation server's actual address; concurrent launches can run side by side. Ctrl+C stops the servers started by that command. Standalone website and documentation commands also select open ports.
+
 The informational site and package documentation live in `apps/`:
 
 - `apps/web` -- Svelte + Vite marketing/education SPA explaining NIP-5D and the paradigm.

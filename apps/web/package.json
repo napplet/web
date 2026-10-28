@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "node ../../scripts/dev-site.mjs --web",
     "build": "vite build",
     "preview": "vite preview",
     "type-check": "svelte-check --tsconfig ./tsconfig.json"
