@@ -5,7 +5,9 @@ description: Use when converting an existing Nostr web app, client, or widget in
 
 # Porting a Nostr App to a Napplet
 
-Run before `napplet-design` when the starting point is an existing app. Do not copy the app architecture into the iframe: a napplet is sandboxed UI plus intent, and the shell owns keys, signing, encryption, relay routing, storage, network bytes, policy — and the window chrome. Protocol truth: NIP-5D (<https://github.com/nostr-protocol/nips/pull/2303>) and the NAPs (<https://github.com/napplet/naps>). Undefined surface is a gap to flag, not something to recreate.
+For an eskema/nostrapps NAPP (`metadata.json`, `window.napp`, `window.nostrdb`), use `napplet-port-napp` for the complete migration through implementation and parity testing.
+
+Run before `napplet-design` when the starting point is another existing app. Do not copy the app architecture into the iframe: a napplet is sandboxed UI plus intent, and the shell owns keys, signing, encryption, relay routing, storage, network bytes, policy — and the window chrome. Protocol truth: NIP-5D (<https://github.com/nostr-protocol/nips/pull/2303>) and the NAPs (<https://github.com/napplet/naps>). Undefined surface is a gap to flag, not something to recreate.
 
 Use only domains the current `@napplet/sdk` exports (list and signatures in `napplet-sdk`). If a NAP is not exported, do not treat it as usable API; list the feature as blocked/deferred. Replace app infrastructure with SDK imports, not hand-written `window.napplet.<domain>` clients; keep `window.napplet?.domain` for optional-domain gating only. If the source app had an async service-discovery layer, remove it — optional shell readiness does not gate the other exposed domains.
 
