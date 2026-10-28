@@ -1,5 +1,44 @@
 [
   {
+    "id": "freeze-frame-response",
+    "name": "Freeze Frame Response",
+    "description": "Freeze the blast. Place trampolines, funnels, and cushions. Resume time and see what happens.",
+    "category": "Physics puzzle",
+    "href": "https://napplet.soy/n/naddr1qvzqqqyf8ypzqw49s9e88sajl985jxzquprj7pyapugqp83rme3sqctxhj5mxm4rqythwumn8ghj7un9d3shjtnwv9c8qmr9wsh8xmmeqqxkuttzvy6nyefnxpjr2e3jqg5uk8",
+    "format": "current",
+    "source": "https://blossom.napplet.soy/e747ab4f9e35a11fd11bd9cf153edd9d49a1ce20debbbe6910c7df27e2e9924e",
+    "image": "/showcase/images/freeze-frame-response.webp",
+    "eventId": "3e45de6048a3ca8b6ebe068ef084cb7a33c05657370d7c50522d64a02ee62480",
+    "manifest": "/showcase/manifests/freeze-frame-response.json",
+    "artifact": "/showcase/blobs/b5633add0b6e43317322ebcc40b452159d3d40b16f9879b4ea28701f9b541e5b.bin"
+  },
+  {
+    "id": "stick-brawl",
+    "name": "Stick Brawl",
+    "description": "One green stickman. Endless waves of trouble. Punch, dodge, and climb your way through the city.",
+    "category": "Survival game",
+    "href": "https://napplet.soy/n/naddr1qvzqqqyf8ypzpxfalt2qlmegdverhysh59dpgjlj5gmjnp7pt80w5ej5vgz3s4kqqythwumn8ghj7un9d3shjtnwv9c8qmr9wsh8xmmeqqxkutf4x56xyvej89jxywfn5x7t9w",
+    "format": "current",
+    "source": "https://blossom.napplet.soy/9794d3420d4d8ef9b3800b7014abb6b742b8e102fea15d8e3787248c4dec524c",
+    "image": "/showcase/images/stick-brawl.webp",
+    "eventId": "fe1d7b3d609ef4f646c9d69f509e36ccaf7c7edfc917952345ea2231da7d52aa",
+    "manifest": "/showcase/manifests/stick-brawl.json",
+    "artifact": "/showcase/blobs/66c2678b110776fc1e3d775c04a7c581b986c4c356110970d9e14a67a2700c27.bin"
+  },
+  {
+    "id": "poly-dogfight",
+    "name": "Poly Dogfight",
+    "description": "Pilot a biplane around a tiny planet. Thread the rock arches, keep your speed up, and take on a dogfight.",
+    "category": "Flight game",
+    "href": "https://napplet.soy/n/naddr1qvzqqqyf8ypzqfngzhsvjggdlgeycm96x4emzjlwf8dyyzdfg4hefp89zpkdgz99qythwumn8ghj7un9d3shjtnwv9c8qmr9wsh8xmmeqqxkutf5x3nrvvm9x56ryvnzrgxw9k",
+    "format": "current",
+    "source": "https://blossom.napplet.soy/fbf8fc78f64d293aa88ebd4e1afb4e9ba668c8621f0e124af4476183c37ecca1",
+    "image": "/showcase/images/poly-dogfight.webp",
+    "eventId": "ad11a55ec88cfc642a3563f5a62fb28b179d5c77f392c527da921c47a49d25ca",
+    "manifest": "/showcase/manifests/poly-dogfight.json",
+    "artifact": "/showcase/blobs/af2880fca37176cb005226c9c5cf1ce33a39230d6977cafacc7d24acecf0ff6b.bin"
+  },
+  {
     "id": "impossible-machine",
     "name": "Impossible Machine",
     "description": "Arrange ramps and bumpers. Drop a marble. Find your own way into the cup.",
@@ -37,44 +76,5 @@
     "manifest": "/showcase/manifests/sketch-loop.json",
     "artifact": "/showcase/blobs/3e4939f95fbe1954d1f637930e3d74f08f2ad71d0575f9896d246a060218b17b.bin",
     "format": "archive"
-  },
-  {
-    "id": "stick-brawl",
-    "name": "Stick Brawl",
-    "description": "Fight off endless waves of colorful stickmen as the green stickman. Punch, kick, drop-kick, slide, quick-draw a revolver and swing a sword through a five-floor apartment building, a fire escape and a brick warehouse. Watch out for big Brutes and tiny Runts!",
-    "category": "Survival game",
-    "href": "https://napplet.soy/n/naddr1qvzqqqyf8ypzpxfalt2qlmegdverhysh59dpgjlj5gmjnp7pt80w5ej5vgz3s4kqqythwumn8ghj7un9d3shjtnwv9c8qmr9wsh8xmmeqqxkutf4x56xyvej89jxywfn5x7t9w",
-    "format": "current",
-    "source": "https://blossom.napplet.soy/9794d3420d4d8ef9b3800b7014abb6b742b8e102fea15d8e3787248c4dec524c",
-    "image": "/showcase/images/stick-brawl.webp",
-    "eventId": "fe1d7b3d609ef4f646c9d69f509e36ccaf7c7edfc917952345ea2231da7d52aa",
-    "manifest": "/showcase/manifests/stick-brawl.json",
-    "artifact": "/showcase/blobs/66c2678b110776fc1e3d775c04a7c581b986c4c356110970d9e14a67a2700c27.bin"
-  },
-  {
-    "id": "freeze-frame-response",
-    "name": "Freeze Frame Response",
-    "description": "A municipal physics puzzle: freeze the blast, place trampolines, funnels and sticky cushions, then resume time and file the damage report.",
-    "category": "Physics puzzle",
-    "href": "https://napplet.soy/n/naddr1qvzqqqyf8ypzqw49s9e88sajl985jxzquprj7pyapugqp83rme3sqctxhj5mxm4rqythwumn8ghj7un9d3shjtnwv9c8qmr9wsh8xmmeqqxkuttzvy6nyefnxpjr2e3jqg5uk8",
-    "format": "current",
-    "source": "https://blossom.napplet.soy/e747ab4f9e35a11fd11bd9cf153edd9d49a1ce20debbbe6910c7df27e2e9924e",
-    "image": "/showcase/images/freeze-frame-response.webp",
-    "eventId": "3e45de6048a3ca8b6ebe068ef084cb7a33c05657370d7c50522d64a02ee62480",
-    "manifest": "/showcase/manifests/freeze-frame-response.json",
-    "artifact": "/showcase/blobs/b5633add0b6e43317322ebcc40b452159d3d40b16f9879b4ea28701f9b541e5b.bin"
-  },
-  {
-    "id": "poly-dogfight",
-    "name": "Poly Dogfight",
-    "description": "Fly a low-poly biplane around a tiny planet you can circle in about a minute. Weave through rock arches, needle spires, floating islands and the Great Rift canyon with momentum-based flight: keep your speed up or the wings stall. Up to four pilots share the screen with game controllers for split-screen dogfights: fixed guns with light aim assist, per-part battle damage, and two heat-seeking rockets on the wings that reload over time. Rockets turn slower than you do, so a hard bank can shake one, and a missed rocket coasts round the planet and may come back for its own pilot. Beginner steering banks and pulls for you; normal mode gives full manual control. Plays with keyboard, gamepad or touch, in any frame from a small widget to full screen.",
-    "category": "Flight game",
-    "href": "https://napplet.soy/n/naddr1qvzqqqyf8ypzqfngzhsvjggdlgeycm96x4emzjlwf8dyyzdfg4hefp89zpkdgz99qythwumn8ghj7un9d3shjtnwv9c8qmr9wsh8xmmeqqxkutf5x3nrvvm9x56ryvnzrgxw9k",
-    "format": "current",
-    "source": "https://blossom.napplet.soy/fbf8fc78f64d293aa88ebd4e1afb4e9ba668c8621f0e124af4476183c37ecca1",
-    "image": "/showcase/images/poly-dogfight.webp",
-    "eventId": "ad11a55ec88cfc642a3563f5a62fb28b179d5c77f392c527da921c47a49d25ca",
-    "manifest": "/showcase/manifests/poly-dogfight.json",
-    "artifact": "/showcase/blobs/af2880fca37176cb005226c9c5cf1ce33a39230d6977cafacc7d24acecf0ff6b.bin"
   }
 ]

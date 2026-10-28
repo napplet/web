@@ -4,6 +4,8 @@ The Astro homepage introduces portable web apps through playable examples, real 
 
 ## Develop
 
+Use Node 24 LTS for the site toolchain. The installed Astro release requires Node >=22.23.4; CI and deployment use Node 24.
+
 From the repository root:
 
 ```bash
@@ -43,13 +45,13 @@ After assembly, `node scripts/check-protocol.mjs` verifies every detail page, so
 
 Edit `src/data/apps.json` for curated previews and `src/data/shells.json` for the shell directory. Each shell has `platforms`, a development `status`, an independent project URL and a source URL. Descriptions are editorial and non-normative; protocol requirements defer to the living [NIP-5D proposal](https://github.com/nostr-protocol/nips/pull/2303) and [NAPs track](https://github.com/napplet/naps). Platform labels were reviewed against project sources on 2026-10-28 and do not claim identical napplet support across every build.
 
-A curated preview entry supplies `id`, `name`, `description`, `category`, `href`, optional `source`, `image`, `eventId`, `manifest`, `artifact`, and an explicit `format` (`current` or `archive`). Mirror the original signed manifest under `public/showcase/manifests/` and its exact artifact under `public/showcase/blobs/`. Add an actual screenshot under `public/showcase/images/`. Check the source license and add its notice to `public/showcase/NOTICE.txt`. The verifier tests every configured preview. The homepage selects the first three entries; `/apps/` shows the whole collection. No component edits are needed to add a preview or shell.
+A curated preview entry supplies `id`, `name`, `description`, `category`, `href`, optional `source`, `image`, `eventId`, `manifest`, `artifact`, and an explicit `format` (`current` or `archive`). Mirror the original signed manifest under `public/showcase/manifests/` and its exact artifact under `public/showcase/blobs/`. Add an actual screenshot under `public/showcase/images/`. Check the source license and add its notice to `public/showcase/NOTICE.txt`. The verifier tests every configured preview. The homepage selects the first three entries, currently all direct artifact-hash releases; `/apps/` shows the whole collection. No component edits are needed to add a preview or shell.
 
 The three original previews remain explicitly archived releases with a private historical verifier. Three additional releases use direct artifact hashes from their own signed manifests. The player verifies each publisher signature and original artifact hash before execution, then grants no NAP domains. Apps needing shell services belong in a full shell. Current-release identity checks follow NIP-5D Identity; the preview is not a full protocol or manifest conformance certification. Some upstream releases still use `nostr://` source locations outside the current proposal's Source formats; signed events stay unchanged and source links use their HTTPS source archives. Loader attribution and app licenses are preserved in the notice.
 
 ## App store and discovery
 
-`/apps/` includes six curated playable selections and signed public relay discoveries. `src/data/discovery.json` configures the relay list, request limit and timeout. Refresh the saved relay snapshot from the repository root with Node 22 or newer:
+`/apps/` includes six curated playable selections and signed public relay discoveries. `src/data/discovery.json` configures the relay list, request limit and timeout. Refresh the saved relay snapshot from the repository root with Node 24 LTS:
 
 ```bash
 node scripts/refresh-showcase-apps.mjs
@@ -97,4 +99,4 @@ The deployment workflow uploads the resulting `site/` directory to Bunny storage
 
 ## Homepage presentation checks
 
-`node scripts/check-showcase.mjs <assembled-site-url>` checks the four builder paths, the single below-fold network explanation, archived previews, mobile layouts, no-JavaScript content, and section-specific GSAP choreography. It also switches reduced motion during a session to check cleanup. Regenerate the matching 1200×630 social card with `node scripts/generate-social-card.mjs` after changing its headline or visual motif.
+`node scripts/check-showcase.mjs <assembled-site-url>` checks the four builder paths, the single below-fold network explanation, current signed previews, mobile layouts, no-JavaScript content, and section-specific GSAP choreography. It also switches reduced motion during a session to check cleanup. Regenerate the matching 1200×630 social card with `node scripts/generate-social-card.mjs` after changing its headline or visual motif.

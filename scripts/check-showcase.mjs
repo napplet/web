@@ -47,9 +47,9 @@ try {
       assert.deepEqual(await frame.evaluate(() => Object.keys(window.napplet)), []);
       assert.equal(await frame.evaluate(() => { try { localStorage.getItem('probe'); return false; } catch { return true; } }), true);
       assert.equal(await frame.evaluate(() => typeof window.nostr), 'undefined');
-      if (i === 0) await frame.getByRole('button', { name: /drop marble/i }).click();
-      if (i === 1) await frame.getByRole('button', { name: /start run/i }).click();
-      if (i === 2) assert.ok(await frame.locator('canvas').count() > 0);
+      if (i === 0) await frame.getByRole('button', { name: /begin inspection/i }).click();
+      if (i === 1) await frame.getByRole('button', { name: 'Fight!', exact: true }).click();
+      if (i === 2) await frame.getByRole('button', { name: 'Fly', exact: true }).click();
       await page.screenshot({ path: `${screenshots}/${viewport.width}-player-${i}.png` });
       // Close button remains reachable even when the iframe has keyboard focus.
       await page.getByRole('button', { name: 'Close preview' }).click();

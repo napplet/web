@@ -25,6 +25,8 @@ A live external check found napplet.soy's named-app `/n/` route rejects `nevent`
 
 ## Visual direction
 
-The rejected four-circle image is replaced by the recognizable Impossible Machine app window. Its purpose changes: open a collection, inhabit desktop then phone, connect to services, become an empty canvas. The same desktop element moves through measured anchors and stops with each illustration. Small screens animate local instances; reduced motion and no-JavaScript use the static illustrations. Source anchors are not transformed by reveal animations. Their document positions are sorted before constructing the journey.
+The rejected four-circle image is replaced by the recognizable Freeze Frame Response app window. Its purpose changes: open a collection, inhabit desktop then phone, connect to services, become an empty canvas. The same desktop element moves through measured anchors and stops with each illustration. Small screens animate local instances; reduced motion and no-JavaScript use the static illustrations. Source anchors are not transformed by reveal animations. Their document positions are sorted before constructing the journey.
 
 GSAP timelines synchronize the collection fan, host masks, service wire drawing, canvas morph and content reveals. Normal browser scrolling remains in control. The social preview now uses the actual app too.
+
+The homepage and social card now spotlight a direct artifact-hash release, Freeze Frame Response. The three current-format selections lead the curated list; legacy releases remain labeled archives in the app store. The public default experience does not use the archive adapter.

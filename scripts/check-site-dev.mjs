@@ -16,9 +16,9 @@ try {
     await launches.nth(i).click();
     await page.locator('#player-status').filter({ hasText: 'Ready to play' }).waitFor();
     const frame = page.frameLocator('#player-stage iframe');
-    if (i === 0) await frame.getByRole('button', { name: /drop marble/i }).click();
-    if (i === 1) await frame.getByRole('button', { name: /start run/i }).click();
-    if (i === 2) await frame.locator('canvas').first().waitFor({ state: 'visible' });
+    if (i === 0) await frame.getByRole('button', { name: /begin inspection/i }).click();
+    if (i === 1) await frame.getByRole('button', { name: 'Fight!', exact: true }).click();
+    if (i === 2) await frame.getByRole('button', { name: 'Fly', exact: true }).click();
     await page.getByRole('button', { name: 'Close preview' }).click();
     await page.locator('#player-stage iframe').waitFor({ state: 'detached' });
   }

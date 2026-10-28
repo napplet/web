@@ -23,7 +23,7 @@ describe('the selected signed releases', () => {
   }
 
   it('rejects a modified manifest and a different valid release', async () => {
-    const entry = NAPPLETS[0];
+    const entry = NAPPLETS.find(app => app.format === 'archive')!;
     const changed = manifest(entry.manifest);
     changed.content = 'tampered';
     await expect(verifyArchivedRelease(changed, entry.eventId)).rejects.toThrow('signature');
@@ -38,14 +38,14 @@ describe('the selected signed releases', () => {
   });
 
   it('rejects an authentically signed but inconsistent aggregate', async () => {
-    const original = manifest(NAPPLETS[0].manifest);
+    const original = manifest(NAPPLETS.find(app => app.format === 'archive')!.manifest);
     const tags = original.tags.map((tag: string[]) => tag[0] === 'x' ? ['x', '0'.repeat(64), 'aggregate'] : tag);
     const event = finalizeEvent({ kind: original.kind, created_at: original.created_at, content: '', tags }, generateSecretKey());
     await expect(verifyArchivedRelease(event, event.id)).rejects.toThrow('aggregate');
   });
 
   it('requires the archived hash chain and does not require embedded metadata', async () => {
-    const original = manifest(NAPPLETS[0].manifest);
+    const original = manifest(NAPPLETS.find(app => app.format === 'archive')!.manifest);
     const event = finalizeEvent({ ...original, tags: original.tags.filter((tag: string[]) => tag[0] !== 'x') }, generateSecretKey());
     await expect(verifyArchivedRelease(event, event.id)).rejects.toThrow('aggregate');
     const plain = new TextEncoder().encode('<h1>Plain app</h1>');
@@ -53,7 +53,7 @@ describe('the selected signed releases', () => {
   });
 
   it('does not pretend to grant required services unavailable in the preview', async () => {
-    const original = manifest(NAPPLETS[0].manifest);
+    const original = manifest(NAPPLETS.find(app => app.format === 'archive')!.manifest);
     const event = finalizeEvent({ ...original, tags: [...original.tags, ['requires', 'storage']] }, generateSecretKey());
     await expect(verifyArchivedRelease(event, event.id)).rejects.toThrow('unavailable');
   });
