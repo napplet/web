@@ -81,3 +81,14 @@ test('a failed binary matrix blocks release uploads independently of JSR publica
   assert.match(releaseJob, /needs: \[publish-jsr, build-cli-binaries\]/);
   assert.doesNotMatch(releaseJob, /needs\.publish-jsr\.result == 'success'/);
 });
+
+
+test('site validation and deployment use the release compiler version', async () => {
+  const pinnedVersion = standaloneWorkflow.match(/deno-version: (\S+)/)?.[1];
+  assert.ok(pinnedVersion);
+  for (const name of ['ci', 'conformance', 'link-check', 'deploy-site']) {
+    const content = await readFile(new URL(`../.github/workflows/${name}.yml`, import.meta.url), 'utf8');
+    const configuredVersion = content.match(/uses: denoland\/setup-deno@v2\s+with:\s+deno-version: (\S+)/)?.[1];
+    assert.equal(configuredVersion, pinnedVersion, `${name} must use the release compiler`);
+  }
+});
