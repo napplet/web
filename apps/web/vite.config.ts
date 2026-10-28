@@ -22,15 +22,11 @@ export default defineConfig({
     },
   },
   server: {
-    // Serve the VitePress docs under /docs from this single dev server, the
-    // same way the deploy workflow stitches them in production. Requires the
-    // docs dev server (`pnpm --filter @napplet/docs dev`) running on 5174 —
-    // `pnpm dev:site` from the repo root starts both together. The web port is
-    // left to Vite's default (auto-increments if busy); only the docs target
-    // port is fixed so this proxy can find it.
+    // The paired runner supplies its actual docs origin. Standalone previews
+    // fall back to published docs, without assuming another local listener.
     proxy: {
       '/docs': {
-        target: 'http://localhost:5174',
+        target: process.env.NAPPLET_DOCS_ORIGIN ?? 'https://napplet.run',
         changeOrigin: true,
         ws: true,
       },

@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vitepress dev --port 5174 --strictPort",
+    "dev": "node ../../scripts/dev-site.mjs --docs",
     "build": "vitepress build",
     "preview": "vitepress preview"
   },

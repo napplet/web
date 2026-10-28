@@ -170,6 +170,8 @@ pnpm version-packages   # Apply changesets, bump versions
 
 ## Website
 
+Run `pnpm dev:site` to start the website and documentation together. Each launch chooses open ports through the OS and prints both URLs. The website uses its paired documentation server's actual address; concurrent launches can run side by side. Ctrl+C stops the servers started by that command. Standalone website and documentation commands also select open ports.
+
 The informational site and package documentation live in `apps/`:
 
 - `apps/web` -- Svelte + Vite marketing/education SPA explaining NIP-5D and the paradigm.
@@ -181,6 +183,8 @@ pnpm --filter @napplet/web dev             # marketing SPA
 pnpm --filter @napplet/docs dev            # documentation
 pnpm --filter @napplet/conformance-web dev # conformance runtime
 ```
+
+Documentation development prebundling uses the same `esnext` target as production builds and source transforms. Keep `optimizeDeps.esbuildOptions.target` aligned with the other docs Vite targets when updating the toolchain.
 
 `.github/workflows/deploy-site.yml` builds all three, stitches docs under `/docs` and the conformance runtime under `/conformance`, and deploys to Bunny + nsite. Configure deploy secrets with `scripts/setup-site-secrets.sh`.
 
