@@ -571,6 +571,7 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 | Quick ID | Task | Date | Commit | Artifacts |
 |----------|------|------|--------|-----------|
 | 261028-bvy | Section-integrated app motion, six public shells and curated/discovered app store | 2026-10-28 | PR #221 | [261028-bvy](./quick/261028-bvy-develop-the-traveling-app-into-section-s/) |
+| 261028-c9t | Complete NAPP-to-napplet porting skill | 2026-10-28 | 5ac63f25 / PR #270 | [261028-c9t](./quick/261028-c9t-write-a-thorough-napp-to-napplet-porting/) |
 | 261026-jeu | Clear the pinned AI-slop scan findings | 2026-10-26 | 8e811a29 | [261026-jeu](./quick/261026-jeu-reach-100-out-of-100-on-the-pinned-ai-sl/) |
 | 261026-iwr | Default deploy screenshots and Zapstore events with opt-out flags | 2026-10-26 | ee144357 | [261026-iwr](./quick/261026-iwr-use-screenshots-and-zapstore-events-by-d/) |
 | 261015-aen | Use nsyte-style filled CLI progress bars and refresh terminal proof | 2026-10-15 | 5e165056 | [261015-aen](./quick/261015-aen-use-nsyte-filled-progress-bars-in-cli-an/) |

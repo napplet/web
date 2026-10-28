@@ -1,6 +1,6 @@
 ---
 name: napplet-make
-description: Use when a user asks to create, build, implement, prototype, or port a complete napplet (sandboxed Nostr iframe applet) in one prompt. Entry point that triages the project state and toolchain, then routes through napplet-port (if migrating), napplet-design, napplet-ui, napplet-build (+ napplet-sdk / napplet-interop as needed), and napplet-test, and ends with an evidence report. Keeps social reads and publishes OUTBOX-first and treats NAP-RELAY as an explicit escape hatch only.
+description: Use when a user asks to create, build, implement, prototype, or port a complete napplet (sandboxed Nostr iframe applet) in one prompt. Entry point that triages the project state and toolchain, then routes through napplet-port-napp (nostrapps NAPPs) or napplet-port (other migrations), napplet-design, napplet-ui, napplet-build (+ napplet-sdk / napplet-interop as needed), and napplet-test, and ends with an evidence report. Keeps social reads and publishes OUTBOX-first and treats NAP-RELAY as an explicit escape hatch only.
 ---
 
 # Making a Napplet End to End
@@ -14,7 +14,8 @@ Protocol truth: NIP-5D (<https://github.com/nostr-protocol/nips/pull/2303>) and 
 | Request | Route |
 | --- | --- |
 | New napplet from an idea | `napplet-design` → `napplet-ui` → `napplet-build` → `napplet-test` |
-| Port an existing Nostr app / client / widget | `napplet-port` → `napplet-design` → `napplet-ui` → `napplet-build` → `napplet-test` |
+| Port an eskema/nostrapps NAPP (`window.napp`, `window.nostrdb`) | `napplet-port-napp` end to end; it coordinates design → ui → build → test |
+| Port another existing Nostr app / client / widget | `napplet-port` → `napplet-design` → `napplet-ui` → `napplet-build` → `napplet-test` |
 | Add a feature to an existing napplet | Re-run `napplet-design` for that feature's boundary → `napplet-build` → `napplet-test` |
 | Design, generate, or refine an app icon | `napplet-icon`; run `napplet-test` if integrating it into the app |
 | Change only layout / visuals | `napplet-ui` → `napplet-test` (four-frame + theme checks) |

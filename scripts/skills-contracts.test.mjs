@@ -16,6 +16,7 @@ const EXPECTED_SKILLS = [
   'napplet-sdk',
   'napplet-interop',
   'napplet-port',
+  'napplet-port-napp',
   'napplet-test',
   'napplet-migrate',
 ];

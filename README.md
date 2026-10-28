@@ -43,6 +43,8 @@ The CLI supports `napplet screenshot --output preview.png`. `napplet deploy` cap
 
 Use the [`napplet-icon` skill](skills/napplet-icon/SKILL.md) to design, generate, and refine an app icon, check it at small sizes, and prepare it for NIP-5D integration. Install it with `npx skills add napplet/napplet --skill napplet-icon`; see the [agent skills guide](apps/docs/guide/agent-skills.md) for the complete workflow.
 
+Use [`napplet-port-napp`](skills/napplet-port-napp/SKILL.md) to port an [eskema/nostrapps NAPP](https://github.com/eskema/nostrapps/blob/main/NAPP.md) through bridge replacement, implementation and behavior verification. Install it with `npx skills add napplet/napplet --skill napplet-port-napp`.
+
 ## Event schema compatibility
 
 Current event defaults begin at **CLI 0.7.0**, **Vite plugin 0.15.0**, **conformance 0.18.0**, and **conformance-cli 0.3.0**. Earlier release series use legacy path/aggregate manifests. The event kinds remain 5129/15129/35129; current events use the artifact SHA-256 in `x`, a description in `content`, and `R`/`O` plus `z`/`i` metadata. CLI deployments offer temporary `--format legacy` support; unattended deployments default to current. See the [migration guide](apps/docs/guide/event-migration.md) for event conversion, legacy pointers and shell storage/ACL implications.
