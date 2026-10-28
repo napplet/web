@@ -182,6 +182,8 @@ pnpm --filter @napplet/docs dev            # documentation
 pnpm --filter @napplet/conformance-web dev # conformance runtime
 ```
 
+Documentation development prebundling uses the same `esnext` target as production builds and source transforms. Keep `optimizeDeps.esbuildOptions.target` aligned with the other docs Vite targets when updating the toolchain.
+
 `.github/workflows/deploy-site.yml` builds all three, stitches docs under `/docs` and the conformance runtime under `/conformance`, and deploys to Bunny + nsite. Configure deploy secrets with `scripts/setup-site-secrets.sh`.
 
 ## Related
