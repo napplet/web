@@ -2,17 +2,17 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { finalizeEvent, generateSecretKey } from 'nostr-tools/pure';
 import { NAPPLETS } from '../showcase';
-import { verifyArchivedRelease, verifiedDocument, sha256 } from './verify';
+import { verifyArchivedRelease, verifyRelease, verifiedDocument, sha256 } from './verify';
 
 const root = new URL('../../../', import.meta.url);
 function fixture(path: string) { return readFileSync(new URL(`public${path}`, root)); }
 function manifest(path: string) { return JSON.parse(fixture(path).toString()); }
 
-describe('the archived signed releases', () => {
+describe('the selected signed releases', () => {
   for (const entry of NAPPLETS) {
     it(`verifies ${entry.name} against the original signed bytes`, async () => {
       const event = manifest(entry.manifest);
-      const identity = await verifyArchivedRelease(event, entry.eventId);
+      const identity = await verifyRelease(event, entry.eventId, entry.format);
       const bytes = fixture(entry.artifact);
       expect(await sha256(bytes)).toBe(identity.artifactHash);
       const doc = await verifiedDocument(bytes, identity.artifactHash);
@@ -56,5 +56,20 @@ describe('the archived signed releases', () => {
     const original = manifest(NAPPLETS[0].manifest);
     const event = finalizeEvent({ ...original, tags: [...original.tags, ['requires', 'storage']] }, generateSecretKey());
     await expect(verifyArchivedRelease(event, event.id)).rejects.toThrow('unavailable');
+  });
+});
+
+
+describe('current release identity', () => {
+  it('rejects legacy aggregates through the current path', async () => {
+    const entry = NAPPLETS.find(app => app.format === 'archive')!;
+    await expect(verifyRelease(manifest(entry.manifest), entry.eventId, 'current')).rejects.toThrow('direct artifact-hash');
+  });
+
+  it('rejects a signed current release requiring unavailable services', async () => {
+    const selected = NAPPLETS.find(app => app.format === 'current')!;
+    const original = manifest(selected.manifest);
+    const event = finalizeEvent({ ...original, tags: [...original.tags, ['R', 'storage']] }, generateSecretKey());
+    await expect(verifyRelease(event, event.id, 'current')).rejects.toThrow('unavailable');
   });
 });

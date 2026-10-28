@@ -2,11 +2,12 @@
 import SiteLayout from '../layouts/SiteLayout.astro';
 import Runner from '../components/Runner.astro';
 import Journey from '../components/showcase/Journey.astro';
+import AppWindow from '../components/showcase/AppWindow.astro';
 import { NAPPLETS, SHELLS, LINKS } from '../lib/showcase';
 import '../styles/showcase.css';
 
 const navigation = [
-  { href: '#napplets', label: 'Napplets' },
+  { href: '/apps/', label: 'App store' },
   { href: '#shells', label: 'Shells' },
   { href: '#protocol', label: 'Protocol' },
   { href: '#build', label: 'Build' },
@@ -46,7 +47,15 @@ const navigation = [
           </div>
           <a class="quiet-link" href="#shells">How it works <span aria-hidden="true">→</span></a>
         </div>
-        <div class="hero-object" aria-hidden="true"><div class="object-shell"><span>one app</span><div class="object-app"><i></i><i></i><i></i><i></i></div><span>many possible homes</span></div></div>
+        <div class="hero-lab" aria-hidden="true">
+          <span class="lab-coordinate">FIG. 01 — ONE LITTLE APP</span>
+          <div class="hero-orbit orbit-a"></div><div class="hero-orbit orbit-b"></div>
+          <span class="host-label host-label-web">A tab in your browser</span>
+          <span class="host-label host-label-phone">A place on your phone</span>
+          <span class="host-label host-label-desktop">A window in your world</span>
+          <div class="app-dock hero-dock" data-app-dock><AppWindow /></div>
+          <span class="lab-caption">Same app. Different surroundings.</span>
+        </div>
       </div>
       <div class="hero-baseline section-wrap"><span>Web technology. Open protocol.</span><a href="#napplets">Follow the app <span aria-hidden="true">↓</span></a></div>
     </section>
@@ -57,8 +66,15 @@ const navigation = [
           <div><p class="eyebrow"><span class="section-number">01 /</span> Start here</p><h2 id="napplets-title">Less explaining.<br /><span>More playing.</span></h2></div>
           <p class="section-intro">These are real napplets. Open one right here, then look under the hood.</p>
         </div>
+        <div class="collection-reveal" aria-hidden="true">
+          <span class="collection-word">PLAY</span>
+          <div class="collection-ticket ticket-a"><span>01 / Experiment</span><strong>Make a little<br />chain reaction.</strong></div>
+          <div class="app-dock collection-dock" data-app-dock><AppWindow /></div>
+          <div class="collection-ticket ticket-b"><span>02 / Discover</span><strong>Follow your<br />curiosity.</strong></div>
+          <span class="collection-rule"></span>
+        </div>
         <div class="napplet-grid">
-          {NAPPLETS.map((item, index) => <article class="napplet-card" data-card>
+          {NAPPLETS.slice(0, 3).map((item, index) => <article class="napplet-card" data-card>
             <div class:list={['napplet-preview', `preview-${index % 3}`]}>
               {item.image ? <img src={item.image} srcset={`${item.image.replace('.webp', '-480.webp')} 480w, ${item.image} 960w`} sizes="(max-width: 600px) calc(100vw - 80px), (max-width: 900px) 50vw, 400px" alt={`${item.name} interface`} width="1440" height="900" loading="lazy" decoding="async" /> : <div class="preview-placeholder" aria-hidden="true"><span>{item.name.slice(0, 1)}</span><div class="preview-lines"><i></i><i></i><i></i></div></div>}
               <span class="preview-index" aria-hidden="true">0{index + 1}</span>
@@ -66,6 +82,7 @@ const navigation = [
             <div class="napplet-details"><p class="card-category">{item.category}</p><h3>{item.name}</h3><p>{item.description}</p><div class="card-links"><a class="run-link" href={item.href} data-launch={item.id}><span class="play-symbol" aria-hidden="true">▶</span> Run {item.name}</a>{item.source && <a href={item.source} class="source-link" aria-label={`${item.name} source code`}>Source <span aria-hidden="true">↗</span></a>}</div></div>
           </article>)}
         </div>
+        <a class="store-invitation" href="/apps/"><span>There’s more out there.</span><strong>Explore the app store <span aria-hidden="true">↗</span></strong><span>Curated picks + community discoveries</span></a>
         <div class="section-note"><span class="note-mark" aria-hidden="true">↳</span><p>Archived releases. Original code. Still worth opening.</p><a href={LINKS.community}>Share what you’re building <span aria-hidden="true">↗</span></a></div>
       </div>
     </section>
@@ -73,21 +90,38 @@ const navigation = [
     <section id="shells" class="scene shells-scene" aria-labelledby="shells-title">
       <div class="section-wrap">
         <div class="section-heading"><div><p class="eyebrow"><span class="section-number">02 /</span> How it works</p><h2 id="shells-title">The app is yours.<br /><span>The setting changes.</span></h2></div><p class="section-intro">A napplet is a web app built on Nostr that runs inside a host called a shell. Your app brings the interface. The shell supplies services such as identity and storage. Different shells offer different capabilities.</p></div>
-        <div class="shell-grid">
-          {SHELLS.map((item, index) => <article class="shell-card" data-shell-card>
-            <a href={item.href} class:list={['shell-preview', `shell-preview-${index % 2}`]} aria-label={`Explore ${item.name}`}>
-              <div class="browser-bar" aria-hidden="true"><span></span><span></span><span></span><small>{item.name}</small><span class="browser-arrow">↗</span></div>
-              {item.image ? <img src={item.image} srcset={`${item.image.replace('.webp', '-480.webp')} 480w, ${item.image} 960w`} sizes="(max-width: 600px) calc(100vw - 80px), (max-width: 900px) 50vw, 400px" alt={`${item.name} shell interface`} width="1440" height="900" loading="lazy" decoding="async" /> : <div class="shell-miniature" aria-hidden="true"><div class="mini-sidebar"><i></i><i></i><i></i></div><div class="mini-app"><span>your apps,<br />your space.</span><div class="mini-tiles"><i></i><i></i><i></i></div></div></div>}
-            </a>
-            <div class="shell-description"><div><p class="card-category">{item.category}</p><h3><a href={item.href}>{item.name} <span aria-hidden="true">↗</span></a></h3><p>{item.description}</p></div>{item.source && <a class="source-link" href={item.source} aria-label={`${item.name} source code`}>Source ↗</a>}</div>
+        <div class="host-theatre" aria-hidden="true">
+          <div class="host-desktop"><div class="host-chrome"><i></i><i></i><i></i><span>A workspace</span></div><div class="desktop-sidebar"><i></i><i></i><i></i></div><span class="desktop-caption">Your tools, together.</span></div>
+          <div class="host-phone"><span class="phone-camera"></span><span class="phone-caption">On the move.</span><div class="app-dock phone-dock" data-app-dock><AppWindow /></div></div>
+          <div class="app-dock host-dock" data-app-dock><AppWindow /></div>
+          <div class="host-annotation"><span>↖ A different host.</span><span>The same little machine. ↗</span></div>
+        </div>
+        <div class="shell-directory">
+          <div class="directory-heading"><span>Find your setting</span><span>Runs on</span></div>
+          {SHELLS.map((item, index) => <article class="shell-row" data-shell-card>
+            <span class="shell-monogram" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+            <div class="shell-name"><h3><a href={item.href}>{item.name} <span aria-hidden="true">↗</span></a></h3><span class="shell-status">{item.status}</span></div>
+            <p>{item.description}</p>
+            <ul class="platforms" aria-label={`${item.name} platforms`}>{item.platforms.map(platform => <li>{platform}</li>)}</ul>
+            <a class="source-link" href={item.source} aria-label={`${item.name} source code`}>Source ↗</a>
           </article>)}
         </div>
+        <p class="directory-note">Platforms describe each project. App support and available services vary by version and shell. <a href="/explainer/">How shells work ↗</a></p>
         <a class="quiet-link shell-build-link" href="#runtimes">Build a home for apps <span aria-hidden="true">→</span></a>
       </div>
     </section>
 
     <section id="protocol" class="scene protocol-scene" aria-labelledby="protocol-title">
-      <div class="section-wrap protocol-grid">
+      <div class="section-wrap">
+        <div class="capability-stage" aria-hidden="true">
+          <div class="capability-ring"></div><svg class="capability-wires" viewBox="0 0 1000 390" preserveAspectRatio="none"><path pathLength="1" d="M500 175 H330 Q300 175 300 140 V110 H180" /><path pathLength="1" d="M500 175 H720 Q750 175 750 140 H850" /><path pathLength="1" d="M500 175 V275 Q500 290 520 290 H780" /></svg>
+          <div class="app-dock protocol-dock" data-app-dock><AppWindow /></div>
+          <span class="capability-port port-identity">Identity <i>Who’s here?</i></span>
+          <span class="capability-port port-storage">Storage <i>Keep my progress.</i></span>
+          <span class="capability-port port-theme">Theme <i>Make it feel at home.</i></span>
+          <span class="capability-caption">The app asks. The shell provides.</span>
+        </div>
+        <div class="protocol-grid">
         <div><p class="eyebrow"><span class="section-number">03 /</span> Open by design</p><h2 id="protocol-title">A common ground.<br /><span>Room to differ.</span></h2><p class="section-intro">Apps and shells meet through a shared protocol. Build either side. Read the contracts. Propose what comes next.</p><a class="quiet-link" href="/explainer/">Take the technical tour <span aria-hidden="true">↗</span></a></div>
         <div class="protocol-stack">
           <a class="protocol-layer" href={LINKS.spec}><span class="layer-index">01</span><div><span class="card-category">Core proposal</span><h3>NIP-5D</h3><p>How a web app and its shell connect.</p></div><span class="layer-arrow" aria-hidden="true">↗</span></a>
@@ -95,11 +129,18 @@ const navigation = [
           <p class="protocol-note">An evolving proposal, with independently built implementations. The living specifications define the protocol.</p>
         </div>
       </div>
+      </div>
     </section>
 
     <section id="build" class="scene build-scene" aria-labelledby="build-title">
       <div class="section-wrap">
         <div class="section-heading"><div><p class="eyebrow"><span class="section-number">04 /</span> Your part in it</p><h2 id="build-title">What will<br /><span>you make?</span></h2></div><p class="section-intro">Start with the part you care about. There is more than one way in.</p></div>
+        <div class="builder-stage" aria-hidden="true">
+          <div class="blueprint-lines"></div><span class="blueprint-label">YOUR NEXT IDEA / START ANYWHERE</span>
+          <div class="app-dock build-dock" data-app-dock><AppWindow /></div>
+          <span class="builder-bracket bracket-left">[</span><span class="builder-bracket bracket-right">]</span>
+          <span class="builder-prompt">Now change the rules.</span>
+        </div>
         <div class="build-paths">
           <section id="build-napplets" class="build-path" aria-labelledby="build-napplets-title"><span class="path-number">01</span><div><h3 id="build-napplets-title">An app</h3><p>Use the web tools you know. Build by hand, or give your coding agent the skills to get started.</p><div class="path-links"><a href="/docs/guide/getting-started.html">Start building ↗</a><a href="/docs/guide/agent-skills.html">Build with an agent ↗</a></div></div></section>
           <section id="runtimes" class="build-path" aria-labelledby="runtimes-title"><span class="path-number">02</span><div><h3 id="runtimes-title">A shell</h3><p>A workspace, a playground, a place in your existing product. Decide how apps fit together.</p><div class="path-links"><a href={LINKS.kehto}>Explore the runtime toolkit ↗</a></div></div></section>
@@ -111,7 +152,7 @@ const navigation = [
     </section>
   </main>
 
-  <footer class="site-footer section-wrap"><a class="wordmark" href="#top"><img src="/icon.png" width="24" height="24" alt="" />napplet<span class="wordmark-dot">.</span></a><p>Apps that travel.</p><nav aria-label="Footer"><a href="/explainer/">The explainer</a><a href={LINKS.docs}>Docs</a><a href={LINKS.github}>GitHub ↗</a><a href={LINKS.community}>Community ↗</a></nav></footer>
+  <footer class="site-footer section-wrap"><a class="wordmark" href="#top"><img src="/icon.png" width="24" height="24" alt="" />napplet<span class="wordmark-dot">.</span></a><p>Apps that travel.</p><nav aria-label="Footer"><a href="/apps/">App store</a><a href="/explainer/">The explainer</a><a href={LINKS.docs}>Docs</a><a href={LINKS.github}>GitHub ↗</a><a href={LINKS.community}>Community ↗</a></nav></footer>
   <Runner />
 </SiteLayout>
 

@@ -1,0 +1,80 @@
+{
+  "kind": 35129,
+  "id": "fe1d7b3d609ef4f646c9d69f509e36ccaf7c7edfc917952345ea2231da7d52aa",
+  "pubkey": "993dfad40fef286b323b9217a15a144bf2a2372987c159deea665462051856c0",
+  "created_at": 1792943644,
+  "tags": [
+    [
+      "x",
+      "66c2678b110776fc1e3d775c04a7c581b986c4c356110970d9e14a67a2700c27"
+    ],
+    [
+      "title",
+      "Stick Brawl"
+    ],
+    [
+      "presentation",
+      "soy.presentation/1"
+    ],
+    [
+      "screenshot",
+      "effdfb8775ea3914693aec6415ca4da1c00fca6aefcaa9ec313b7e5aadc90b00",
+      "image/png"
+    ],
+    [
+      "server",
+      "https://blossom.napplet.soy"
+    ],
+    [
+      "O",
+      "config"
+    ],
+    [
+      "O",
+      "gamepad"
+    ],
+    [
+      "z",
+      "game"
+    ],
+    [
+      "icon",
+      "3d5c68647bd02f433db6e22818fafd7444fc00b7aafeedc57e50f74972c48244",
+      "image/png"
+    ],
+    [
+      "t",
+      "game"
+    ],
+    [
+      "t",
+      "fighting"
+    ],
+    [
+      "t",
+      "stickman"
+    ],
+    [
+      "t",
+      "action"
+    ],
+    [
+      "source",
+      "nostr://npub1ny7l44q0au5xkv3mjgt6zks5f0e2ydefslq4nhh2ve2xypgc2mqqat8qx2/wss%3A%2F%2Fgit.napplet.soy%2F/n-554b329db93"
+    ],
+    [
+      "source-commit",
+      "495c4ea224bf59e046b88b0f29ba8dc830680dbf"
+    ],
+    [
+      "source-archive",
+      "https://blossom.napplet.soy/9794d3420d4d8ef9b3800b7014abb6b742b8e102fea15d8e3787248c4dec524c"
+    ],
+    [
+      "d",
+      "n-554b329db93"
+    ]
+  ],
+  "content": "Fight off endless waves of colorful stickmen as the green stickman. Punch, kick, drop-kick, slide, quick-draw a revolver and swing a sword through a five-floor apartment building, a fire escape and a brick warehouse. Watch out for big Brutes and tiny Runts!",
+  "sig": "2773a4a49392b6fc274fffd19801fbba78efe0e283b57c6f94fe604fe9a624fffd96d7c597e4b0759b0532de576144fc8b69ba61ca5cfe026409100e9650b222"
+}

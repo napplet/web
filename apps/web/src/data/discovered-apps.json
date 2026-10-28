@@ -1,0 +1,6033 @@
+{
+  "checkedAt": "2026-10-28T07:41:06.685Z",
+  "relays": [
+    "wss://relay.napplet.soy",
+    "wss://relay.damus.io"
+  ],
+  "events": [
+    {
+      "kind": 35129,
+      "id": "fe1d7b3d609ef4f646c9d69f509e36ccaf7c7edfc917952345ea2231da7d52aa",
+      "pubkey": "993dfad40fef286b323b9217a15a144bf2a2372987c159deea665462051856c0",
+      "created_at": 1792943644,
+      "tags": [
+        [
+          "x",
+          "66c2678b110776fc1e3d775c04a7c581b986c4c356110970d9e14a67a2700c27"
+        ],
+        [
+          "title",
+          "Stick Brawl"
+        ],
+        [
+          "presentation",
+          "soy.presentation/1"
+        ],
+        [
+          "screenshot",
+          "effdfb8775ea3914693aec6415ca4da1c00fca6aefcaa9ec313b7e5aadc90b00",
+          "image/png"
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "O",
+          "config"
+        ],
+        [
+          "O",
+          "gamepad"
+        ],
+        [
+          "z",
+          "game"
+        ],
+        [
+          "icon",
+          "3d5c68647bd02f433db6e22818fafd7444fc00b7aafeedc57e50f74972c48244",
+          "image/png"
+        ],
+        [
+          "t",
+          "game"
+        ],
+        [
+          "t",
+          "fighting"
+        ],
+        [
+          "t",
+          "stickman"
+        ],
+        [
+          "t",
+          "action"
+        ],
+        [
+          "source",
+          "nostr://npub1ny7l44q0au5xkv3mjgt6zks5f0e2ydefslq4nhh2ve2xypgc2mqqat8qx2/wss%3A%2F%2Fgit.napplet.soy%2F/n-554b329db93"
+        ],
+        [
+          "source-commit",
+          "495c4ea224bf59e046b88b0f29ba8dc830680dbf"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/9794d3420d4d8ef9b3800b7014abb6b742b8e102fea15d8e3787248c4dec524c"
+        ],
+        [
+          "d",
+          "n-554b329db93"
+        ]
+      ],
+      "content": "Fight off endless waves of colorful stickmen as the green stickman. Punch, kick, drop-kick, slide, quick-draw a revolver and swing a sword through a five-floor apartment building, a fire escape and a brick warehouse. Watch out for big Brutes and tiny Runts!",
+      "sig": "2773a4a49392b6fc274fffd19801fbba78efe0e283b57c6f94fe604fe9a624fffd96d7c597e4b0759b0532de576144fc8b69ba61ca5cfe026409100e9650b222"
+    },
+    {
+      "kind": 35129,
+      "id": "32e37bfe002f5579fdf6d79c76b22ed1a86dc9bd5bd2ea20898121f1caad132b",
+      "pubkey": "993dfad40fef286b323b9217a15a144bf2a2372987c159deea665462051856c0",
+      "created_at": 1792895830,
+      "tags": [
+        [
+          "x",
+          "847ab28a2d9a170f44de76d8f934b4d1ed1eb2e9ddd4bacac5b0fbb0bd3afe4a"
+        ],
+        [
+          "title",
+          "Dine and Dash"
+        ],
+        [
+          "presentation",
+          "soy.presentation/1"
+        ],
+        [
+          "screenshot",
+          "288c5083256d2c6c345ae7c2924ac9bce551b6ee454bc2848132de73c32c3f36",
+          "image/png"
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "O",
+          "config"
+        ],
+        [
+          "O",
+          "gamepad"
+        ],
+        [
+          "O",
+          "keys"
+        ],
+        [
+          "z",
+          "game"
+        ],
+        [
+          "icon",
+          "9c2e4e04331109a3c98c69a1cc7440c263e48a053e566ce75da9c547efbd9b33",
+          "image/png"
+        ],
+        [
+          "t",
+          "game"
+        ],
+        [
+          "t",
+          "stealth"
+        ],
+        [
+          "t",
+          "food"
+        ],
+        [
+          "source",
+          "nostr://npub1ny7l44q0au5xkv3mjgt6zks5f0e2ydefslq4nhh2ve2xypgc2mqqat8qx2/wss%3A%2F%2Fgit.napplet.soy%2F/n-2f845a2d471"
+        ],
+        [
+          "source-commit",
+          "dce273752e9576c3e76ce0c4802564522d7ec781"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/34114f86c7bcd52ead7e9399da5e4a0c7e8bb08ee25b80905f0bdfe2bb6c8655"
+        ],
+        [
+          "d",
+          "n-2f845a2d471"
+        ]
+      ],
+      "content": "Sneak around the diner, eat every plate of food, then dash out the door before a waiter catches you! Or play as the waiter and catch both dine and dashers before they escape.",
+      "sig": "0e01b476e1ab8d39d559e7df1775fff966b8855b30d4426e5e619227efba154bcce2881b4006fb0b1f3cf6d15cb2c21df8e3b6059ec47478e6f6e26ee3691ee2"
+    },
+    {
+      "kind": 35129,
+      "id": "039e51f55e34b0b593e53b1f2cafae6394e3350dde254ff2285984885102c04d",
+      "pubkey": "57f7119a0ce9ec9cec24958dc0ade5cbd538a722e0ec4eb4804e64dc532f1aad",
+      "created_at": 1792866819,
+      "tags": [
+        [
+          "x",
+          "f5a0dbc994cfbee77494be3e48eb6f5eb747c585c87b347b80a530f9843a8ccf"
+        ],
+        [
+          "title",
+          "Pickle Rustlers"
+        ],
+        [
+          "presentation",
+          "soy.presentation/1"
+        ],
+        [
+          "screenshot",
+          "e01a7d1f6a54e6278ca5afddd5227544f66468968abdd92b54b3ce40632aebc5",
+          "image/png"
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "O",
+          "storage"
+        ],
+        [
+          "O",
+          "config"
+        ],
+        [
+          "O",
+          "keys"
+        ],
+        [
+          "O",
+          "gamepad"
+        ],
+        [
+          "O",
+          "identity"
+        ],
+        [
+          "O",
+          "upload"
+        ],
+        [
+          "O",
+          "outbox"
+        ],
+        [
+          "t",
+          "game"
+        ],
+        [
+          "t",
+          "3d"
+        ],
+        [
+          "t",
+          "low-poly"
+        ],
+        [
+          "t",
+          "western"
+        ],
+        [
+          "t",
+          "arcade"
+        ],
+        [
+          "t",
+          "boss-fight"
+        ],
+        [
+          "source",
+          "nostr://npub12lm3rxsva8kfempyjkxupt09e02n3fezurkyadyqfejdc5e0r2kscqty6r/wss%3A%2F%2Fgit.napplet.soy%2F/n-bad44e7ab35"
+        ],
+        [
+          "source-commit",
+          "40608586a8a1acd8037cb3817e7c6065ced45853"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/f38e99afa0992052635a09f4b50265c2a11276e6fe15cd195e1e9ef0f6fe3fa4"
+        ],
+        [
+          "d",
+          "n-bad44e7ab35"
+        ]
+      ],
+      "content": "A low-poly 3D western. Rope runaway pickles from horseback and drag them into the Giant Pickle Jar before sundown, while shotgunning the onion outlaws who steal them. Survive five days (a stampede, an onion tank, a dust storm), then peel the giant Onion King to save the West. Borrow an M1A1 Abrams, leap rocks, and drink hot sauce for a fire-breathing horse or a flamethrower tank. Endless mode unlocks after you win.",
+      "sig": "0dd229b783adc8d7712fce817d92b773f7ff9ecd50b0fe2e87c566d648f6fd70bc664a41330873e98e7e1395bd12b1d7a6ec63b7a0952d91c45386fe46bedc3f"
+    },
+    {
+      "kind": 35129,
+      "id": "565f4981bdc37725ad867b09124e17353f604f1d05bdbd46fb78659d3cd5f0cb",
+      "pubkey": "57f7119a0ce9ec9cec24958dc0ade5cbd538a722e0ec4eb4804e64dc532f1aad",
+      "created_at": 1792866688,
+      "tags": [
+        [
+          "x",
+          "bd70828b2b37d2ddecc155783cd401a7cb961d80fa1fc65d71bc44078d8c3c2e"
+        ],
+        [
+          "title",
+          "Pursuit PIT"
+        ],
+        [
+          "presentation",
+          "soy.presentation/1"
+        ],
+        [
+          "screenshot",
+          "742f53ee4a5ea521b4028b5036f89c9888e32cddfb4260021315c5b48a7329c5",
+          "image/png"
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "t",
+          "game"
+        ],
+        [
+          "t",
+          "driving"
+        ],
+        [
+          "t",
+          "racing"
+        ],
+        [
+          "t",
+          "3d"
+        ],
+        [
+          "t",
+          "police"
+        ],
+        [
+          "t",
+          "chase"
+        ],
+        [
+          "source",
+          "nostr://npub12lm3rxsva8kfempyjkxupt09e02n3fezurkyadyqfejdc5e0r2kscqty6r/wss%3A%2F%2Fgit.napplet.soy%2F/n-951414e7fd7"
+        ],
+        [
+          "source-commit",
+          "197afdbed44bed08e8e5d58c32135bc4cc96da96"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/3b0485589942fd5c3e5537f9f6d2ac8daf68c84aa363cb86e2192a5049ab8158"
+        ],
+        [
+          "d",
+          "n-951414e7fd7"
+        ]
+      ],
+      "content": "First-person highway driving from the driver's seat, on an endless, winding interstate through countryside, forests, mountain passes, road works, towns with very silly names and big gridded cities. Pursuit: chase down a fleeing sedan and PIT it (clip its rear quarter to spin it out at up to 160 mph), then watch the replay. Getaway: you're the one running, from eight police cruisers. Free drive: just you, the traffic and the odd flock of birds. Drive by day, dusk or night, customise your cars in the garage, and listen to the police radio or the car stereo. Low-poly 3D with synthesized sound; keyboard, touch or a standard gamepad.",
+      "sig": "1c037593269d929306e08185437f4cc6fac61d8e4501a9925c89ef2ed6eb5db26e3efa3eec63aad9b069a399c534a464f09f73bfd5c1154b0fbc849474e6b933"
+    },
+    {
+      "kind": 35129,
+      "id": "666bc7c74ebd3ee6472611447236763e1676b00acf6418bc9064e672e1d7fc28",
+      "pubkey": "57f7119a0ce9ec9cec24958dc0ade5cbd538a722e0ec4eb4804e64dc532f1aad",
+      "created_at": 1792866682,
+      "tags": [
+        [
+          "x",
+          "84f726c09571a195b09e9acf16ebf76cfbc4e5c95cce3a213f220a1700f07c3e"
+        ],
+        [
+          "title",
+          "Black Site"
+        ],
+        [
+          "presentation",
+          "soy.presentation/1"
+        ],
+        [
+          "screenshot",
+          "b3ff8b528a354875d5db1a26282bb361fd13cf32514177c9e708ddfd6b879cfc",
+          "image/png"
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "O",
+          "keys"
+        ],
+        [
+          "O",
+          "storage"
+        ],
+        [
+          "O",
+          "identity"
+        ],
+        [
+          "O",
+          "common"
+        ],
+        [
+          "O",
+          "resource"
+        ],
+        [
+          "O",
+          "outbox"
+        ],
+        [
+          "icon",
+          "89f9397a27b387275ce52e7f8d058e5c8b17ebc0f0385ef27a429c41782aea7e",
+          "image/png"
+        ],
+        [
+          "t",
+          "game"
+        ],
+        [
+          "t",
+          "shooter"
+        ],
+        [
+          "t",
+          "tactical"
+        ],
+        [
+          "t",
+          "top-down"
+        ],
+        [
+          "t",
+          "extraction"
+        ],
+        [
+          "source",
+          "nostr://npub12lm3rxsva8kfempyjkxupt09e02n3fezurkyadyqfejdc5e0r2kscqty6r/wss%3A%2F%2Fgit.napplet.soy%2F/n-d2225ddc391"
+        ],
+        [
+          "source-commit",
+          "05e95af79676a1fdb0c95ac20d5487596744e119"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/1544e072e245c4a8b5044fd69cc51b7fe05a469f7ad7f080f41fef9c394f9e3d"
+        ],
+        [
+          "d",
+          "n-d2225ddc391"
+        ]
+      ],
+      "content": "Top-down tactical extraction shooter. See only what is in your field of view, loot supply caches, fight through five maps, call in the helicopter and survive until it lands. Includes a campaign, four characters, an armory and three difficulties.",
+      "sig": "f612932bcca055b26906f1affe78e2275bf08f68c0496e6b0128665f1364118e1490d46373ddab480ba57d5182166b8270aa520575c7c1b85caaa75954909b23"
+    },
+    {
+      "kind": 35129,
+      "id": "0b497cfc2f66c55144f6420c1363b63316e02981c828ffe75473d43e66675778",
+      "pubkey": "3aa5817273c3b2f94f491840e0472f049d0f10009e23de63006166bca9b36ea3",
+      "created_at": 1792822248,
+      "tags": [
+        [
+          "x",
+          "66f0973c4361d99d7cef612c4a0f7c0501c02b414d975e4607feaef0a575b8f7"
+        ],
+        [
+          "title",
+          "Funclet"
+        ],
+        [
+          "presentation",
+          "soy.presentation/1"
+        ],
+        [
+          "screenshot",
+          "75d8086e547d96a7c41bba2d98b6fe8a44099ce47e8f115be65105e0b2d33c43",
+          "image/png"
+        ],
+        [
+          "preview",
+          "68152e21b52dd9e89451c853cfe6d4fa039847e5460fd238b0c90adb8545b32d",
+          "video/webm"
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "R",
+          "outbox"
+        ],
+        [
+          "R",
+          "media"
+        ],
+        [
+          "O",
+          "storage"
+        ],
+        [
+          "O",
+          "identity"
+        ],
+        [
+          "O",
+          "cvm"
+        ],
+        [
+          "O",
+          "resource"
+        ],
+        [
+          "O",
+          "config"
+        ],
+        [
+          "O",
+          "link"
+        ],
+        [
+          "t",
+          "radio"
+        ],
+        [
+          "t",
+          "music"
+        ],
+        [
+          "t",
+          "wavefunc"
+        ],
+        [
+          "source",
+          "nostr://npub182jczunncwe0jn6frpqwq3e0qjws7yqqnc3auccqv9nte2dnd63scjm4rf/wss%3A%2F%2Fgit.napplet.soy%2F/n-6b7a37cac1d"
+        ],
+        [
+          "soy-source-repository",
+          "30617:3aa5817273c3b2f94f491840e0472f049d0f10009e23de63006166bca9b36ea3:n-6b7a37cac1d",
+          "linked"
+        ],
+        [
+          "source-commit",
+          "1e531b24f4905e2df9a788a3b0b53129322abf9c"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/71d97a89ed8c40c288ef1ac91efa4185175e1abbc848668496b4ee7165e0d6c7"
+        ],
+        [
+          "d",
+          "n-6b7a37cac1d"
+        ]
+      ],
+      "content": "A little window into a world of radio. Explore Wavefunc stations, listen live, read your favourite lists, and discover what is playing.",
+      "sig": "abaa7d12637d19cdee6f02df1f4a91bdb2bdad11c3d2288c5c72c3685bb0ab94debe9cc08c31e1528b5b1300bbac3b1d09696f8cae399e7c0ce863c9e53792cb"
+    },
+    {
+      "kind": 35129,
+      "id": "ad11a55ec88cfc642a3563f5a62fb28b179d5c77f392c527da921c47a49d25ca",
+      "pubkey": "266815e0c9210dfa324c6cba3573b14bee49da4209a9456f9484e5106cd408a5",
+      "created_at": 1792794377,
+      "tags": [
+        [
+          "x",
+          "af2880fca37176cb005226c9c5cf1ce33a39230d6977cafacc7d24acecf0ff6b"
+        ],
+        [
+          "title",
+          "Poly Dogfight"
+        ],
+        [
+          "presentation",
+          "soy.presentation/1"
+        ],
+        [
+          "screenshot",
+          "a42c38d0148184e91558da57555760ebeab8b82e6ce14a4cd6bf574d7f99253c",
+          "image/png"
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "O",
+          "storage"
+        ],
+        [
+          "O",
+          "config"
+        ],
+        [
+          "O",
+          "gamepad"
+        ],
+        [
+          "O",
+          "keys"
+        ],
+        [
+          "z",
+          "game"
+        ],
+        [
+          "icon",
+          "778d9ec6eac57306e51182c9620ce215f5c830b0f5d1e0a30b5740f240f6c452",
+          "image/png"
+        ],
+        [
+          "t",
+          "game"
+        ],
+        [
+          "t",
+          "flight"
+        ],
+        [
+          "t",
+          "arcade"
+        ],
+        [
+          "t",
+          "dogfight"
+        ],
+        [
+          "t",
+          "multiplayer"
+        ],
+        [
+          "t",
+          "split-screen"
+        ],
+        [
+          "t",
+          "local-multiplayer"
+        ],
+        [
+          "t",
+          "3d"
+        ],
+        [
+          "t",
+          "low-poly"
+        ],
+        [
+          "t",
+          "gamepad"
+        ],
+        [
+          "t",
+          "touch"
+        ],
+        [
+          "source",
+          "nostr://npub1ye5ptcxfyyxl5vjvdjar2ua3f0hynkjzpx552mu5snj3qmx5pzjscpknpr/wss%3A%2F%2Fgit.shakespeare.diy%2F/poly-dogfight"
+        ],
+        [
+          "soy-source-repository",
+          "30617:266815e0c9210dfa324c6cba3573b14bee49da4209a9456f9484e5106cd408a5:poly-dogfight",
+          "linked"
+        ],
+        [
+          "source-commit",
+          "483e0e0c50009786aad009d1c4f18fa32bca655e"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/fbf8fc78f64d293aa88ebd4e1afb4e9ba668c8621f0e124af4476183c37ecca1"
+        ],
+        [
+          "d",
+          "n-44f63e5422b"
+        ]
+      ],
+      "content": "Fly a low-poly biplane around a tiny planet you can circle in about a minute. Weave through rock arches, needle spires, floating islands and the Great Rift canyon with momentum-based flight: keep your speed up or the wings stall. Up to four pilots share the screen with game controllers for split-screen dogfights: fixed guns with light aim assist, per-part battle damage, and two heat-seeking rockets on the wings that reload over time. Rockets turn slower than you do, so a hard bank can shake one, and a missed rocket coasts round the planet and may come back for its own pilot. Beginner steering banks and pulls for you; normal mode gives full manual control. Plays with keyboard, gamepad or touch, in any frame from a small widget to full screen.",
+      "sig": "5f2c19b1e37239a03c2205a4a5bbcd110570bd74a442f95469f8afa8201419c852c4cd06074e6202d1b8b82c6dd34d0d16b4ddc7e4002643e45488a0d063afe5"
+    },
+    {
+      "kind": 35129,
+      "id": "44c589c52043219bcfafc975ec255f4544fd7fc5115c5ba0a69bbb3010ca5301",
+      "pubkey": "6ef777a78b2405fad6b4db2a619116441123b03cf148688084280db15439dac4",
+      "created_at": 1792601954,
+      "tags": [
+        [
+          "x",
+          "593a728ccdbd18ab3a4b74799d6a73e7fc5b54c80ae7c9ba5e0c80d2c97f7377"
+        ],
+        [
+          "title",
+          "Obsidian Breaker"
+        ],
+        [
+          "presentation",
+          "soy.presentation/1"
+        ],
+        [
+          "screenshot",
+          "b6e50a1c597b72f8d21fa6f7b88e5086b62f8b860d234fbfa3f2b60cca57507b",
+          "image/png"
+        ],
+        [
+          "preview",
+          "12ceeb61846f13a10eeb774b0099e8f4e122d985c7121909731de6e4b17070c8",
+          "video/webm"
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "t",
+          "breakout"
+        ],
+        [
+          "t",
+          "arcade"
+        ],
+        [
+          "t",
+          "game"
+        ],
+        [
+          "t",
+          "physics"
+        ],
+        [
+          "t",
+          "bullet-time"
+        ],
+        [
+          "t",
+          "powerups"
+        ],
+        [
+          "t",
+          "trajectory"
+        ],
+        [
+          "source",
+          "nostr://npub1dmmh0futyszl4445mv4xrygkgsgj8vpu79yx3qyy9qxmz4pemtzqlqmc87/wss%3A%2F%2Fgit.napplet.soy%2F/n-de5dc6a02e7"
+        ],
+        [
+          "soy-source-repository",
+          "30617:6ef777a78b2405fad6b4db2a619116441123b03cf148688084280db15439dac4:n-de5dc6a02e7",
+          "linked"
+        ],
+        [
+          "source-commit",
+          "9ee5b61ce1c9c75d8976b661da97452332379eb4"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/240ec416a9cbfd9cb738b938100811fb241360d30ee290cb7b19ac89bcc8d35e"
+        ],
+        [
+          "d",
+          "n-de5dc6a02e7"
+        ]
+      ],
+      "content": "Shatter seven double-wide volatile mineral seams, each with up to twice the stones and a 1.5x faster ball, in a molten breakout run. Chain-explode jade crystals, bank shots off indestructible obsidian ribs, steer a live bounce-prediction seer, slow time with a rechargeable bullet-time meter, and grab blast-radius and ball-splitting powerups.",
+      "sig": "b10af7f841c7aba0f01ff448b8a5df365e9c3de4aba945221c5aa2fb8595ac71b1ac1c9b3ffcb8f395d90898fa4357cfd7d52b36b14672a18c2b82d4f7ba7f68"
+    },
+    {
+      "kind": 35129,
+      "id": "3e45de6048a3ca8b6ebe068ef084cb7a33c05657370d7c50522d64a02ee62480",
+      "pubkey": "3aa5817273c3b2f94f491840e0472f049d0f10009e23de63006166bca9b36ea3",
+      "created_at": 1792501852,
+      "tags": [
+        [
+          "x",
+          "b5633add0b6e43317322ebcc40b452159d3d40b16f9879b4ea28701f9b541e5b"
+        ],
+        [
+          "title",
+          "Freeze Frame Response"
+        ],
+        [
+          "presentation",
+          "soy.presentation/1"
+        ],
+        [
+          "screenshot",
+          "65fae2c69fdf7d720487a84195f719a5f11a0222d6c63a96445adb8b3c950530",
+          "image/png"
+        ],
+        [
+          "preview",
+          "cf7428dba39e945996fd2d145d4026b6ea48ee460a326b11d50443aa8e64d93d",
+          "video/webm"
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "O",
+          "storage"
+        ],
+        [
+          "O",
+          "config"
+        ],
+        [
+          "t",
+          "physics"
+        ],
+        [
+          "t",
+          "puzzle"
+        ],
+        [
+          "t",
+          "city"
+        ],
+        [
+          "t",
+          "game"
+        ],
+        [
+          "t",
+          "municipal"
+        ],
+        [
+          "source",
+          "nostr://npub182jczunncwe0jn6frpqwq3e0qjws7yqqnc3auccqv9nte2dnd63scjm4rf/wss%3A%2F%2Fgit.napplet.soy%2F/n-ba52e30d5f2"
+        ],
+        [
+          "source-commit",
+          "d04885dad630e4b5985bc1d1abf36d01848c6400"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/e747ab4f9e35a11fd11bd9cf153edd9d49a1ce20debbbe6910c7df27e2e9924e"
+        ],
+        [
+          "d",
+          "n-ba52e30d5f2"
+        ]
+      ],
+      "content": "A municipal physics puzzle: freeze the blast, place trampolines, funnels and sticky cushions, then resume time and file the damage report.",
+      "sig": "583cec49f6df37e7b888916d082b90645f3e4bc444440d36b0dc7e3c5c48c53b513cb01106d5b52977685211c45806ade98bf6ea248881774420ab6ca4c0d5c5"
+    },
+    {
+      "kind": 35129,
+      "id": "a6bb863994d901d34193486b043cdf22eb7ee6a6eb1fa5d06c837c4d90ac64fd",
+      "pubkey": "6ef777a78b2405fad6b4db2a619116441123b03cf148688084280db15439dac4",
+      "created_at": 1792404087,
+      "tags": [
+        [
+          "x",
+          "335d39339d26f03946010970ac4ac2ba385eea8890098c157d83117ca6f3acf9"
+        ],
+        [
+          "title",
+          "blockfall"
+        ],
+        [
+          "presentation",
+          "soy.presentation/1"
+        ],
+        [
+          "screenshot",
+          "e6877b9ec015741dbc74096d75d146ad2026635925933c3c4de2f4bbc7f429db",
+          "image/png"
+        ],
+        [
+          "preview",
+          "0cf7e2d6fc615bcaa7ea7b518c07e9785dc0061192bdeb6f2437c590dc777a54",
+          "video/webm"
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "t",
+          "game"
+        ],
+        [
+          "t",
+          "physics"
+        ],
+        [
+          "t",
+          "destruction"
+        ],
+        [
+          "source",
+          "nostr://npub1dmmh0futyszl4445mv4xrygkgsgj8vpu79yx3qyy9qxmz4pemtzqlqmc87/wss%3A%2F%2Fgit.napplet.soy%2F/n-afafae55ef1"
+        ],
+        [
+          "source-commit",
+          "e6ab5899ddac3ec7fa67031b326f60d1b547625e"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/ba8de5cbee33e11e0a693eaf4d0cead995ea8cfe5232dee955a368436d499449"
+        ],
+        [
+          "d",
+          "n-afafae55ef1"
+        ]
+      ],
+      "content": "Steer a thrusting rocket into stacked block towers and bring the skyline down.",
+      "sig": "754c83499122e3f0f6ddcf36be27ef83a4e496ad4cc4ee2b6fe7e7b3ddc7b88d598c46921e1672dfe2828f007c51972988aa504c684bfe0870dce3b9b30331f5"
+    },
+    {
+      "kind": 35129,
+      "id": "bf9d57a12f8286f58c6647b80044bff6f367214e329902d2fa0b47fb98bbd077",
+      "pubkey": "6ef777a78b2405fad6b4db2a619116441123b03cf148688084280db15439dac4",
+      "created_at": 1792352337,
+      "tags": [
+        [
+          "x",
+          "3ab46c3abb9dc746edcf87c65d019af64156cb7843bd6be8e34614d31091252d"
+        ],
+        [
+          "title",
+          "Truffle Rush"
+        ],
+        [
+          "presentation",
+          "soy.presentation/1"
+        ],
+        [
+          "screenshot",
+          "ce2c067736c88307296226064993b0408d98a74662ee06d64500d1123f221e2e",
+          "image/png"
+        ],
+        [
+          "preview",
+          "e07955194c4020dc3acbe51bb48f49705057f62a7931f999c107bd0a13e17cfa",
+          "video/webm"
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "O",
+          "storage"
+        ],
+        [
+          "O",
+          "config"
+        ],
+        [
+          "t",
+          "game"
+        ],
+        [
+          "t",
+          "arcade"
+        ],
+        [
+          "t",
+          "pigs"
+        ],
+        [
+          "t",
+          "truffles"
+        ],
+        [
+          "source",
+          "nostr://npub1dmmh0futyszl4445mv4xrygkgsgj8vpu79yx3qyy9qxmz4pemtzqlqmc87/wss%3A%2F%2Fgit.napplet.soy%2F/n-dad0644224b"
+        ],
+        [
+          "source-commit",
+          "bf11c370d93c861d7a55e74b56ef00b8a59960c2"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/261cbd0dce1d32f53854f44cde194a6f057fb9de0e00c9540d8b5811e280c267"
+        ],
+        [
+          "d",
+          "n-dad0644224b"
+        ]
+      ],
+      "content": "Catch falling truffles, dodge crows and fill the belly meter to unleash a golden frenzy in this moonlit piggy arcade.",
+      "sig": "2f5bd487b3f3fe59e25273dfc4c7a0a06dd3276e6e975c5e3e5ccd32edbb0d1bfcfa9d9082240bfe7f0120764f17fe75fdc1ea58c87ff80db3a738bed9e6d490"
+    },
+    {
+      "kind": 35129,
+      "id": "8e67c38fa0edf4012d1df7289120140307ca33d780128713ad7636de7c11950c",
+      "pubkey": "da19f1cd34beca44be74da4b306d9d1dd86b6343cef94ce22c49c6f59816e5bd",
+      "created_at": 1792144090,
+      "tags": [
+        [
+          "x",
+          "b18375b1400e6c2d6470a3258ff243c6b140126b7f4e2c6e076eb0ffac179a21"
+        ],
+        [
+          "title",
+          "Hang On, Fren"
+        ],
+        [
+          "presentation",
+          "soy.presentation/1"
+        ],
+        [
+          "screenshot",
+          "3e9eea33043b1622031b682690e38b8aa48cd1b58f2ee90c5f1399740b25b8db",
+          "image/png"
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "R",
+          "resource"
+        ],
+        [
+          "t",
+          "game"
+        ],
+        [
+          "t",
+          "arcade"
+        ],
+        [
+          "t",
+          "racing"
+        ],
+        [
+          "source",
+          "nostr://npub1mgvlrnf5hm9yf0n5mf9nqmvarhvxkc6remu5ec3vf8r0txqkuk7su0e7q2/wss%3A%2F%2Fgit.napplet.soy%2F/n-d6c0308a2a8"
+        ],
+        [
+          "source-commit",
+          "11fefa16fa501d1e825797450cce098942909829"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/06d9523d4a9c132350e8c0160eca3be282f1fb3025598c81324df3e3d713cf54"
+        ],
+        [
+          "d",
+          "n-d6c0308a2a8"
+        ]
+      ],
+      "content": "A Riviera Vespa road tribute starring DNI. Grab roses, cross ten regions, and reach the finish line before time runs out.",
+      "sig": "14ad12e854ee5e291ab74b22ac6fedb3763989952a825c7a22386b1d30487a56e7a01b26ee1b9b7a7488161580ca2cc735c16f48bf3dd558fb1cc72d18a151bb"
+    },
+    {
+      "kind": 35129,
+      "id": "32a57733b7e983ff020b37bf1f89be191ee9041de552e8f5e39a0301d0cfb62d",
+      "pubkey": "266815e0c9210dfa324c6cba3573b14bee49da4209a9456f9484e5106cd408a5",
+      "created_at": 1792095537,
+      "tags": [
+        [
+          "x",
+          "3e05d47cc40c7d09ddb10632ff6a3792c39e5ee8bdc342fc9fc0fdfd410af86b"
+        ],
+        [
+          "title",
+          "Black Site Map Editor"
+        ],
+        [
+          "presentation",
+          "soy.presentation/1"
+        ],
+        [
+          "screenshot",
+          "1c2da334dd4f400e16d8a1457c8e12830b40178ec94379d9006c286619542f5a",
+          "image/png"
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "R",
+          "identity"
+        ],
+        [
+          "R",
+          "outbox"
+        ],
+        [
+          "R",
+          "resource"
+        ],
+        [
+          "R",
+          "upload"
+        ],
+        [
+          "O",
+          "storage"
+        ],
+        [
+          "O",
+          "intent"
+        ],
+        [
+          "O",
+          "keys"
+        ],
+        [
+          "z",
+          "black-site"
+        ],
+        [
+          "i",
+          "napplet:black-site/map-edit",
+          "address",
+          "relays"
+        ],
+        [
+          "i",
+          "napplet:black-site/map-remix",
+          "address",
+          "relays"
+        ],
+        [
+          "i",
+          "napplet:black-site/map-open",
+          "address",
+          "relays"
+        ],
+        [
+          "i",
+          "napplet:black-site/map-new",
+          "map"
+        ],
+        [
+          "icon",
+          "f4f7bf4370f9c9e4433c458cb51792351baa4ccccfaf4ff22aec836e84f773a6",
+          "image/png"
+        ],
+        [
+          "t",
+          "black-site"
+        ],
+        [
+          "t",
+          "map-editor"
+        ],
+        [
+          "t",
+          "level-editor"
+        ],
+        [
+          "t",
+          "gaming"
+        ],
+        [
+          "t",
+          "nostr"
+        ],
+        [
+          "source",
+          "nostr://npub1ye5ptcxfyyxl5vjvdjar2ua3f0hynkjzpx552mu5snj3qmx5pzjscpknpr/wss%3A%2F%2Fgit.shakespeare.diy%2F/black-site-map-editor"
+        ],
+        [
+          "soy-source-repository",
+          "30617:266815e0c9210dfa324c6cba3573b14bee49da4209a9456f9484e5106cd408a5:black-site-map-editor",
+          "linked"
+        ],
+        [
+          "source-commit",
+          "3f54890f542f246c3aa7dc8fee734105f1ca9563"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/7a4b1abbac7db5b02ebdec013e655e3df758eba5934a0f481ea2ff2d966af6b8"
+        ],
+        [
+          "d",
+          "n-59475000c74"
+        ]
+      ],
+      "content": "Create, edit and remix maps for Black Site. Draw terrain, buildings, cover, guards and loot; validate routes from insertion to extraction; save drafts and publish maps on Nostr.",
+      "sig": "35ed1247401f10b4765a9ede8c2aa27068e53602903ba9220a57db0d931e4b1013274c1c134d78c94a26afbff7eb0049bf01b80b75422f9948f25046273028a3"
+    },
+    {
+      "kind": 35129,
+      "id": "7eec89142e9d0b56f99b50a8b38f802f2413c7fa71ab103f72820f509501d217",
+      "pubkey": "872b60fdd8ec73ce1323d9798057384fb9836500d9b7201594c71ae3fce2b680",
+      "created_at": 1792088536,
+      "tags": [
+        [
+          "x",
+          "943b6776139c775e41e117eedac62910f5089dfbfcd707e2425e044a207112be"
+        ],
+        [
+          "title",
+          "Naped Snowboarding"
+        ],
+        [
+          "presentation",
+          "soy.presentation/1"
+        ],
+        [
+          "screenshot",
+          "ea5589d733fc674f30ccc22c004dc5a775a0fbb448dfb48db80d344175c41fe9",
+          "image/png"
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "O",
+          "identity"
+        ],
+        [
+          "O",
+          "outbox"
+        ],
+        [
+          "O",
+          "relay"
+        ],
+        [
+          "O",
+          "resource"
+        ],
+        [
+          "O",
+          "storage"
+        ],
+        [
+          "O",
+          "theme"
+        ],
+        [
+          "O",
+          "webrtc"
+        ],
+        [
+          "t",
+          "snowboarding"
+        ],
+        [
+          "t",
+          "game"
+        ],
+        [
+          "t",
+          "sports"
+        ],
+        [
+          "t",
+          "physics"
+        ],
+        [
+          "t",
+          "3d"
+        ],
+        [
+          "source",
+          "nostr://npub1su4kplwca3euuyerm9ucq4ecf7ucxegqmxmjq9v5cudw8l8zk6qqejetyp/wss%3A%2F%2Fgit.napplet.soy%2F/naped-snow"
+        ],
+        [
+          "source-commit",
+          "9c1fe0eb8118283b93815315dd9f2c0fba0596ca"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/60b8bbdefdb7b7b27f6c81ef386028863600048713a98abe4eaa913954aea030"
+        ],
+        [
+          "d",
+          "naped-snow"
+        ]
+      ],
+      "content": "Open-source freestyle snowboarding. Carve, spin, grab and grind for style points on an open mountain, with photographers and a ghost of your best run.",
+      "sig": "b55af9a5e5b1d651f3c7286d101306414d818b5945a31bbe2d79c4186a89c9831cda58024467f2e40a7122c74f026664cff7095c9853471f6aa484a849d8775f"
+    },
+    {
+      "kind": 35129,
+      "id": "2d708dc1528144b490b5530b4e27a238ced1cd1cf95ee89f483ff51e955f7c07",
+      "pubkey": "3aa5817273c3b2f94f491840e0472f049d0f10009e23de63006166bca9b36ea3",
+      "created_at": 1792048649,
+      "tags": [
+        [
+          "x",
+          "898a9ffefcf9c818c12911cff83dd057a5c501839f3ce06c3ab7bccafa7bde2b"
+        ],
+        [
+          "title",
+          "GRAV / RIFT"
+        ],
+        [
+          "presentation",
+          "soy.presentation/1"
+        ],
+        [
+          "screenshot",
+          "17ea9d7a6dad408c975bc76755b0b4de1bcd756120601ffe084ffbab13c4d2f4",
+          "image/png"
+        ],
+        [
+          "preview",
+          "0dd1f14d39e227018525ff0bab4f2eaa6534a28a109d11e7c9dc6e9f765097fe",
+          "video/webm"
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "O",
+          "storage"
+        ],
+        [
+          "t",
+          "game"
+        ],
+        [
+          "t",
+          "physics"
+        ],
+        [
+          "t",
+          "pixel-art"
+        ],
+        [
+          "t",
+          "arcade"
+        ],
+        [
+          "source",
+          "nostr://npub182jczunncwe0jn6frpqwq3e0qjws7yqqnc3auccqv9nte2dnd63scjm4rf/wss%3A%2F%2Fgit.napplet.soy%2F/n-8a7361981e8"
+        ],
+        [
+          "source-commit",
+          "e050bd098fefc66986002e9803a49a70582d09c9"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/8271236c6885eb097609e15fd112da2d23454b58c5690bcaf2d64092ab696e27"
+        ],
+        [
+          "d",
+          "n-8a7361981e8"
+        ]
+      ],
+      "content": "Wield gravity. Stream scrap, rip machines apart, extract their shield cells, and hurl living enemies through a destructible scrapyard.",
+      "sig": "5198e04f1c9dbb6f68e464201c41d6c709603792512aaccccdae8b2aca0a67102711f8824d01051cda07efd28ba682346f1596ff26c4eab0c7988a3b1f137992"
+    },
+    {
+      "kind": 35129,
+      "id": "b1f7cd8ad5848c3806539dd1682304fae3bcc3d4b8464e928338e1e75b7bc36e",
+      "pubkey": "993dfad40fef286b323b9217a15a144bf2a2372987c159deea665462051856c0",
+      "created_at": 1792020602,
+      "tags": [
+        [
+          "x",
+          "e8086989b6b2dc1b9babe525819b1d24fee0c98c647f5e7c0e2ad0e2d70d95c8"
+        ],
+        [
+          "title",
+          "Stick Runner"
+        ],
+        [
+          "presentation",
+          "soy.presentation/1"
+        ],
+        [
+          "screenshot",
+          "9b56df04e532f9ef5349b2b2167f72c643aaa45fe29c6b65248c6d1daf943669",
+          "image/png"
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "O",
+          "config"
+        ],
+        [
+          "O",
+          "gamepad"
+        ],
+        [
+          "z",
+          "game"
+        ],
+        [
+          "icon",
+          "b7187d6f2c0b73ac2032b050eddab9a5afe038c6d394b6d4d90c0afdb3a147d8",
+          "image/png"
+        ],
+        [
+          "t",
+          "game"
+        ],
+        [
+          "t",
+          "platformer"
+        ],
+        [
+          "t",
+          "parkour"
+        ],
+        [
+          "t",
+          "stickman"
+        ],
+        [
+          "t",
+          "3d"
+        ],
+        [
+          "source",
+          "nostr://npub1ny7l44q0au5xkv3mjgt6zks5f0e2ydefslq4nhh2ve2xypgc2mqqat8qx2/wss%3A%2F%2Fgit.napplet.soy%2F/n-938fb0aa7b7"
+        ],
+        [
+          "source-commit",
+          "1a45bd411d6d8cddb41a3e12e7f1c7a551d75a73"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/a80c353ae43bc56615a2f925c36fde20d886f9cf151cd6f35dfbfca586527f4b"
+        ],
+        [
+          "d",
+          "n-938fb0aa7b7"
+        ]
+      ],
+      "content": "Help Rog the stickman parkour across city rooftops through 10 levels, each harder than the last. Jump the pits, slide on ice to fly over extra-wide gaps, and bounce off clotheslines before they snap. Press M to switch between 2D, first person and third person!",
+      "sig": "bc14d8fed457db4390e386ad3727d29e6a53551d2b49b80184d20e0189f1639584da2e118c53b06497de5d38c92fd9a5857f3ee65088213df84ca208c0d56124"
+    },
+    {
+      "kind": 35129,
+      "id": "9dc6c97948c09308a6a92b241d2fb90e3cfac5d882e65283a81e592a75cb9ed5",
+      "pubkey": "8494cb6579081c56693b4668968b92f75722c19a03152841f49a85a1ff55fe12",
+      "created_at": 1791954194,
+      "tags": [
+        [
+          "x",
+          "d196bbbe36563696b32f3b0f0d5ec6148c4b5ebab176fa2b6aedc7ed63de615a"
+        ],
+        [
+          "title",
+          "Pünktlich!"
+        ],
+        [
+          "app",
+          "32267:8494cb6579081c56693b4668968b92f75722c19a03152841f49a85a1ff55fe12:n-bf1ae466031-3e443ec567e74ab8",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "O",
+          "storage"
+        ],
+        [
+          "O",
+          "config"
+        ],
+        [
+          "O",
+          "keys"
+        ],
+        [
+          "z",
+          "game"
+        ],
+        [
+          "icon",
+          "6e49cda24ca00fb395cfbaeeb10a53df523a02ab72572d4028a314f4a32aac1a",
+          "image/png"
+        ],
+        [
+          "t",
+          "game"
+        ],
+        [
+          "t",
+          "runner"
+        ],
+        [
+          "t",
+          "arcade"
+        ],
+        [
+          "t",
+          "germany"
+        ],
+        [
+          "t",
+          "humor"
+        ],
+        [
+          "source",
+          "nostr://npub1sj2vketepqw9v6fmge5fdzuj7atj9sv6qv2jss05n2z6rl64lcfqumdsnt/wss%3A%2F%2Fgit.napplet.soy%2F/n-bf1ae466031"
+        ],
+        [
+          "source-commit",
+          "aebcea49a6666221c7cd95f0661e724e3ddb24f5"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/7705a83d7bdb3f9bac754b012bd4f89057e6470ed4ad3bbe5a49242bdf8cdd58"
+        ],
+        [
+          "d",
+          "n-bf1ae466031"
+        ]
+      ],
+      "content": "Klaus, the most German man alive, must catch the 7:00:00 train — not 7:00:01. A 60-second runner: jump garden gnomes, beer crates and Dackels, sort trash into six bins, wait at every red light, get Formular A38 stamped in triplicate, and never jump in the Ruhezone.",
+      "sig": "83f4f4ad2bd8d45572253d6b816d6ee3ccc241810adbe466bb0bbeb7050c67d15934b126fd3b33278728016a3d3e5e0dded85a06779db64ce9d3860f4046f66d"
+    },
+    {
+      "kind": 35129,
+      "id": "393802aabdd1a6a80de149b6cd92651d6f7e9a190abea7547b4f3a0b2f62b177",
+      "pubkey": "8494cb6579081c56693b4668968b92f75722c19a03152841f49a85a1ff55fe12",
+      "created_at": 1791952949,
+      "tags": [
+        [
+          "x",
+          "2028a94b3f17acd5ebdf07b06db31aa852de26bb24436e7563ce3caa1c88aebb"
+        ],
+        [
+          "title",
+          "City Breaker"
+        ],
+        [
+          "app",
+          "32267:8494cb6579081c56693b4668968b92f75722c19a03152841f49a85a1ff55fe12:n-cf8b858653e-1ce000558b0e8522",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "O",
+          "storage"
+        ],
+        [
+          "O",
+          "config"
+        ],
+        [
+          "z",
+          "game"
+        ],
+        [
+          "icon",
+          "42e255b57b9e2c5ed168333ae9526a5b1e1192b2fa0d371e0d2b37e823ccb2d4",
+          "image/png"
+        ],
+        [
+          "t",
+          "game"
+        ],
+        [
+          "t",
+          "strategy"
+        ],
+        [
+          "t",
+          "simulation"
+        ],
+        [
+          "t",
+          "flight"
+        ],
+        [
+          "t",
+          "war"
+        ],
+        [
+          "t",
+          "cold-war"
+        ],
+        [
+          "t",
+          "bomber"
+        ],
+        [
+          "t",
+          "history"
+        ],
+        [
+          "source",
+          "nostr://npub1sj2vketepqw9v6fmge5fdzuj7atj9sv6qv2jss05n2z6rl64lcfqumdsnt/wss%3A%2F%2Fgit.napplet.soy%2F/n-cf8b858653e"
+        ],
+        [
+          "source-commit",
+          "d57116fff26bf1e24fd077320d965cf40c072862"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/81221cc4d1015fd3e1cf8f6c8fa2f01c5b0955bbacfcd62af07efbf967642c9c"
+        ],
+        [
+          "d",
+          "n-cf8b858653e"
+        ]
+      ],
+      "content": "1968, a Cold War gone hot. You command a Soviet long-range bomber regiment with 60 days to break Hafenstadt, an industrial city of 1.2 million that repairs, disperses, builds decoys and adapts to your tactics. Plan each raid — targets, launch hour, route, package, bomb loads — then fly it yourself: open the bomb doors, beam the SAMs, fight engine fires and walk your bombs onto the target through flak, searchlights and tracer curtains. Strategy sim plus top-down bomber action, inspired by Hamburg, Hanoi and Desert Storm. The horror is in the numbers.",
+      "sig": "220507580d71579e53df37c8a04130697685d307915ea060ab3c6b10061b5c7c656e1395c1a295a88af120762dec586826b82794f5d88782c32a6385fb16c8db"
+    },
+    {
+      "kind": 35129,
+      "id": "91e87bf21ff0158555a9db4699f669be207ba39ee2545ebe9f1876054ef1e818",
+      "pubkey": "8494cb6579081c56693b4668968b92f75722c19a03152841f49a85a1ff55fe12",
+      "created_at": 1791952802,
+      "tags": [
+        [
+          "x",
+          "52bee5fb5eb0a09e60d0f1f17f6a0f5c220e267f806d039ac13d4729f89f94c7"
+        ],
+        [
+          "title",
+          "Big Rig Rush"
+        ],
+        [
+          "app",
+          "32267:8494cb6579081c56693b4668968b92f75722c19a03152841f49a85a1ff55fe12:n-0a99f0cae40-d4938d20bc34ad0b",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "O",
+          "storage"
+        ],
+        [
+          "O",
+          "config"
+        ],
+        [
+          "icon",
+          "2baab1ddf85a64498eddc5e375e960a553427720817797a086b8b8cb8b882443",
+          "image/png"
+        ],
+        [
+          "t",
+          "game"
+        ],
+        [
+          "t",
+          "driving"
+        ],
+        [
+          "t",
+          "arcade"
+        ],
+        [
+          "t",
+          "sandbox"
+        ],
+        [
+          "t",
+          "destruction"
+        ],
+        [
+          "t",
+          "trucks"
+        ],
+        [
+          "source",
+          "nostr://npub1sj2vketepqw9v6fmge5fdzuj7atj9sv6qv2jss05n2z6rl64lcfqumdsnt/wss%3A%2F%2Fgit.napplet.soy%2F/n-0a99f0cae40"
+        ],
+        [
+          "source-commit",
+          "327727e196f9d01c6d2f9577e76d44138d16e7e3"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/229261c1ab4372d8655538adf916f7068b5bec9077b5fe08f963fcdbc5c8d03d"
+        ],
+        [
+          "d",
+          "n-0a99f0cae40"
+        ]
+      ],
+      "content": "Top-down driving chaos in a living city. Pick your ride: a manual 8-speed semi, a sports car with missiles, a bulldozer that pushes through buildings, or an A-10 Warthog with bombs and a 30 mm cannon. Haul cargo across downtown, the hood, the port and the countryside through day and night while police, fire, ambulance, tow and road crews clean up every crash you cause. Everything is destructible. Keyboard or touch controls.",
+      "sig": "20dbddf056d99c4522ddeffa1b56510db6e2254f670fa2c230a8ef827ef5404b7f2692088463dee433daea386ef203945432b6079e6148c4d842e0fbf58a44df"
+    },
+    {
+      "kind": 35129,
+      "id": "bb8b570f3600c046c9c1bb9821d5fc78bbb0c5ac4ddd5233f348a0f39d4ff808",
+      "pubkey": "266815e0c9210dfa324c6cba3573b14bee49da4209a9456f9484e5106cd408a5",
+      "created_at": 1791919891,
+      "tags": [
+        [
+          "x",
+          "42b47753f5603809b8823a8f8a92e13c92f03737d2f609a3db273a8d6a0fbbc3"
+        ],
+        [
+          "title",
+          "Supersonic RC Revive"
+        ],
+        [
+          "app",
+          "32267:266815e0c9210dfa324c6cba3573b14bee49da4209a9456f9484e5106cd408a5:n-143146b0d6f-7eda1291bd9164d3",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "R",
+          "resource"
+        ],
+        [
+          "O",
+          "fs"
+        ],
+        [
+          "O",
+          "keys"
+        ],
+        [
+          "O",
+          "inc"
+        ],
+        [
+          "O",
+          "config"
+        ],
+        [
+          "O",
+          "common"
+        ],
+        [
+          "O",
+          "identity"
+        ],
+        [
+          "O",
+          "webrtc"
+        ],
+        [
+          "O",
+          "cvm"
+        ],
+        [
+          "z",
+          "game"
+        ],
+        [
+          "z",
+          "supersonicrc"
+        ],
+        [
+          "i",
+          "napplet:supersonicrc/play",
+          "url"
+        ],
+        [
+          "icon",
+          "8789422ead9ffe50456644afb52a7b226ea0e1818e9a5dd6ea988ce3fd103b77",
+          "image/png"
+        ],
+        [
+          "t",
+          "game"
+        ],
+        [
+          "t",
+          "racing"
+        ],
+        [
+          "t",
+          "rc-car"
+        ],
+        [
+          "t",
+          "driving"
+        ],
+        [
+          "t",
+          "remake"
+        ],
+        [
+          "t",
+          "shockwave"
+        ],
+        [
+          "source",
+          "nostr://npub1ye5ptcxfyyxl5vjvdjar2ua3f0hynkjzpx552mu5snj3qmx5pzjscpknpr/wss%3A%2F%2Fgit.shakespeare.diy%2F/SuperSonicRCRevive"
+        ],
+        [
+          "soy-source-repository",
+          "30617:266815e0c9210dfa324c6cba3573b14bee49da4209a9456f9484e5106cd408a5:SuperSonicRCRevive",
+          "linked"
+        ],
+        [
+          "source-commit",
+          "073e2d2c0e635f3fef0be1e4d5e800a311994d85"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/857599401cc78951a3df61fdeefd5ea1c6d381c45360e3d7dcbef7faccc4b6db"
+        ],
+        [
+          "d",
+          "n-143146b0d6f"
+        ]
+      ],
+      "content": "A remake of the Shockwave RC-car game SuperSonic RC, rebuilt with three.js and unlimited Free Driving. Drive with keyboard, gamepad or touch. Plug in up to four controllers for local split-screen, or play online in public rooms or with friends by private code. Online players use matching asset packs and independent local physics. Load another .ssrcpack or custom level from the title screen.",
+      "sig": "245bf14332d5326cef72f3f2d3358f8c0a8f36622ae1ee0795bfc4d8c29f2c5303608635702d86570a0bafcf3085ad111c51d48563b88b166b42c23a187b9453"
+    },
+    {
+      "kind": 35129,
+      "id": "b9d42f5768e4e9a2f8c0367a759fb9e81dd309a6af4a54ca7ad5d44e84e74d65",
+      "pubkey": "266815e0c9210dfa324c6cba3573b14bee49da4209a9456f9484e5106cd408a5",
+      "created_at": 1791835583,
+      "tags": [
+        [
+          "x",
+          "5491f3768667445a6fa4d7bf3e6d1597e6ad599c73532b49691ee334ff19b02b"
+        ],
+        [
+          "title",
+          "Browser Side Quest"
+        ],
+        [
+          "app",
+          "32267:266815e0c9210dfa324c6cba3573b14bee49da4209a9456f9484e5106cd408a5:n-8e5abf9b526-74275c32bb5f9d04",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "O",
+          "identity"
+        ],
+        [
+          "O",
+          "storage"
+        ],
+        [
+          "O",
+          "common"
+        ],
+        [
+          "O",
+          "resource"
+        ],
+        [
+          "O",
+          "webrtc"
+        ],
+        [
+          "O",
+          "config"
+        ],
+        [
+          "z",
+          "game"
+        ],
+        [
+          "z",
+          "rpg"
+        ],
+        [
+          "z",
+          "multiplayer"
+        ],
+        [
+          "icon",
+          "ad7421b295bffb9580008e987f96466b6659f17603d4b07e5cb346127b5373a8",
+          "image/png"
+        ],
+        [
+          "t",
+          "game"
+        ],
+        [
+          "t",
+          "rpg"
+        ],
+        [
+          "t",
+          "adventure"
+        ],
+        [
+          "t",
+          "multiplayer"
+        ],
+        [
+          "t",
+          "mmo"
+        ],
+        [
+          "t",
+          "pixel-art"
+        ],
+        [
+          "t",
+          "retro"
+        ],
+        [
+          "t",
+          "browserquest"
+        ],
+        [
+          "t",
+          "webrtc"
+        ],
+        [
+          "t",
+          "nostr"
+        ],
+        [
+          "source",
+          "nostr://npub1ye5ptcxfyyxl5vjvdjar2ua3f0hynkjzpx552mu5snj3qmx5pzjscpknpr/wss%3A%2F%2Fgit.shakespeare.diy%2F/browser-side-quest"
+        ],
+        [
+          "soy-source-repository",
+          "30617:266815e0c9210dfa324c6cba3573b14bee49da4209a9456f9484e5106cd408a5:browser-side-quest",
+          "linked"
+        ],
+        [
+          "source-commit",
+          "c267690145fa5c648032b572747c2bc3e6d386a1"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/6d4b90b8a5f328f7b0cc187885237954eada75b221550b543ecce0316d2b2cf8"
+        ],
+        [
+          "d",
+          "n-8e5abf9b526"
+        ]
+      ],
+      "content": "Browser Side Quest revives Mozilla's 2012 pixel-art adventure BrowserQuest as a napplet. Explore the village, beach, forest, desert and lava caves; fight rats, skeletons and the final boss; loot better swords and armour; and unlock all 20 achievements. Up to eight adventurers share a world peer to peer, under their Nostr names and profiles, or you can play solo. It plays with mouse, touch, keyboard or gamepad.",
+      "sig": "d949dfb7f78fb754507f32766dd17aa1449e5fc735e31fa45b8e2aeb9b656702d01e25f7a7cb7c0c34102a58e8da67a088c26ab9b57aa736502be3765b9ce57f"
+    },
+    {
+      "kind": 35129,
+      "id": "48b4ed933a32f82cc0ea57422c829e29f86c179bda8c16cab8036a2da9a1c8c1",
+      "pubkey": "993dfad40fef286b323b9217a15a144bf2a2372987c159deea665462051856c0",
+      "created_at": 1791758994,
+      "tags": [
+        [
+          "x",
+          "2259ce4cf8b2c8e8ff95956c654b78d51e8bba538715f396030c38f7cbf67f79"
+        ],
+        [
+          "title",
+          "Wizard Duel"
+        ],
+        [
+          "app",
+          "32267:993dfad40fef286b323b9217a15a144bf2a2372987c159deea665462051856c0:n-86005d75eb4-2c6a5276d19aa5bb",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "O",
+          "config"
+        ],
+        [
+          "t",
+          "game"
+        ],
+        [
+          "t",
+          "two-player"
+        ],
+        [
+          "t",
+          "wizards"
+        ],
+        [
+          "t",
+          "pixel-art"
+        ],
+        [
+          "source",
+          "nostr://npub1ny7l44q0au5xkv3mjgt6zks5f0e2ydefslq4nhh2ve2xypgc2mqqat8qx2/wss%3A%2F%2Fgit.napplet.soy%2F/n-86005d75eb4"
+        ],
+        [
+          "source-commit",
+          "3ed8fcbbf62cfa52b0dc94d0a51faef3f7de372b"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/4196bfb69e536a86483e73432bc598840aa97a105439790882580fbd723bb729"
+        ],
+        [
+          "d",
+          "n-86005d75eb4"
+        ]
+      ],
+      "content": "Two wizards share one keyboard and fling silly spells at each other on a moonlit castle rooftop. Tap rune combos to cast 28 spells, most of them secret.",
+      "sig": "787cd8c6fa8c60eeb16091dd18d3f09b4a6242355fefe3b3704de36e47cd0fcef911f85841abe1902ec46620a3fdf55f64086dbbce0cbd97e8df552357dbeead"
+    },
+    {
+      "kind": 35129,
+      "id": "7335c9fdf0a81db53e2d670a97439e50a010fbf741fcc30c1ad03b3102f73efb",
+      "pubkey": "266815e0c9210dfa324c6cba3573b14bee49da4209a9456f9484e5106cd408a5",
+      "created_at": 1791743400,
+      "tags": [
+        [
+          "x",
+          "faefd64192e8881a2960c1aab4042ace9413737051734ae272717a0f6a26873f"
+        ],
+        [
+          "title",
+          "Sickman Survival"
+        ],
+        [
+          "app",
+          "32267:266815e0c9210dfa324c6cba3573b14bee49da4209a9456f9484e5106cd408a5:n-8804151df7f-43c00b94914f79cd",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "O",
+          "storage"
+        ],
+        [
+          "O",
+          "config"
+        ],
+        [
+          "icon",
+          "d9ed2e068656429d4fa87d37761b90944c917c31830d8e594df9d59a57f0647f",
+          "image/png"
+        ],
+        [
+          "t",
+          "game"
+        ],
+        [
+          "t",
+          "platformer"
+        ],
+        [
+          "t",
+          "physics"
+        ],
+        [
+          "t",
+          "survival"
+        ],
+        [
+          "t",
+          "arcade"
+        ],
+        [
+          "t",
+          "destructible-terrain"
+        ],
+        [
+          "t",
+          "local-multiplayer"
+        ],
+        [
+          "t",
+          "split-screen"
+        ],
+        [
+          "t",
+          "gamepad"
+        ],
+        [
+          "source",
+          "nostr://npub1ye5ptcxfyyxl5vjvdjar2ua3f0hynkjzpx552mu5snj3qmx5pzjscpknpr/wss%3A%2F%2Fgit.napplet.soy%2F/n-8804151df7f"
+        ],
+        [
+          "source-commit",
+          "cbd2eeafa70d9072db2ac042fa1a22821ff5fbda"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/591bab4addcbe5fc3f2c21bb90f5e0980fe009be6639eba5029e7f1125191218"
+        ],
+        [
+          "d",
+          "n-8804151df7f"
+        ]
+      ],
+      "content": "Outlast an escalating meteor storm as a stickman on a randomly generated, fully destructible world of cliffs, houses, trees, bouncy mushrooms and caves full of explosive moles. Play solo with keyboard, touch or gamepad, or plug in more controllers for up to four-player split screen.",
+      "sig": "073b2ab61ceb9554df1cdeade2d1ec11f8cd3c60698b488362b9c432058a413f056c16c399790d7d09e0b4392f7439d8bdc77eb88740ba7bdde22f5a85508d29"
+    },
+    {
+      "kind": 35129,
+      "id": "b61593abc2c615f58d573aedc9d58f88e6a0b07a5344f10837c851018cdb7ea3",
+      "pubkey": "d73ae26c0bdb51596858fea135d3a112435cd9483fc3d84c1df51700b428fe01",
+      "created_at": 1791393975,
+      "tags": [
+        [
+          "x",
+          "99027b9af9b703101ed6ee6b75fb03ddbf8fc7fc38e2372edebe65dda7c7a791"
+        ],
+        [
+          "title",
+          "super-platformer"
+        ],
+        [
+          "app",
+          "32267:d73ae26c0bdb51596858fea135d3a112435cd9483fc3d84c1df51700b428fe01:n-01288b1ab38-4f82b871bc937f1d",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "source",
+          "nostr://npub16uawymqtmdg4j6zcl6snt5apzfp4ek2g8lpasnqa75tspdpglcqsgpatvc/wss%3A%2F%2Fgit.napplet.soy%2F/n-01288b1ab38"
+        ],
+        [
+          "source-commit",
+          "bbd35ca510f6d84f3d1a15acbdf59478376a2157"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/d2529eb9ad1961f221c599d62b4609e265ffdbf013b7989bc541ce000621a26a"
+        ],
+        [
+          "d",
+          "n-01288b1ab38"
+        ]
+      ],
+      "content": "super-platformer",
+      "sig": "246485367a3447d95ce9bb57aba162ea8b5e53700c8f98b06b8a35f13f52fb88c8db3e63a463ccf8a9abb867d0680b876c6050eea776df25a7ef47a2d7c976f8"
+    },
+    {
+      "kind": 5129,
+      "id": "b66918206f8b9f170c8fc424531a6566856cb928ce7d2834169e2daaf5cbf9ee",
+      "pubkey": "d73ae26c0bdb51596858fea135d3a112435cd9483fc3d84c1df51700b428fe01",
+      "created_at": 1791393975,
+      "tags": [
+        [
+          "x",
+          "99027b9af9b703101ed6ee6b75fb03ddbf8fc7fc38e2372edebe65dda7c7a791"
+        ],
+        [
+          "title",
+          "super-platformer"
+        ],
+        [
+          "app",
+          "32267:d73ae26c0bdb51596858fea135d3a112435cd9483fc3d84c1df51700b428fe01:n-01288b1ab38-4f82b871bc937f1d",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "source",
+          "nostr://npub16uawymqtmdg4j6zcl6snt5apzfp4ek2g8lpasnqa75tspdpglcqsgpatvc/wss%3A%2F%2Fgit.napplet.soy%2F/n-01288b1ab38"
+        ],
+        [
+          "source-commit",
+          "bbd35ca510f6d84f3d1a15acbdf59478376a2157"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/d2529eb9ad1961f221c599d62b4609e265ffdbf013b7989bc541ce000621a26a"
+        ]
+      ],
+      "content": "super-platformer",
+      "sig": "5ae6c69a2b915c333e60101805a65bca7c10292c283a2853869f06ef7731e296205182ca0878f41a7fae3a767e083e35b9b975ee4e5a68f2a1447315318c79a7"
+    },
+    {
+      "kind": 5129,
+      "id": "a0fde3dc76ac502a83e1c1e72a10c14671368363a3b3120e6804e4b64bec2187",
+      "pubkey": "d73ae26c0bdb51596858fea135d3a112435cd9483fc3d84c1df51700b428fe01",
+      "created_at": 1791393245,
+      "tags": [
+        [
+          "x",
+          "9ac302c86f92ed751508426ba84ca67e630eefb900aecefc6c3fda2825fba3d3"
+        ],
+        [
+          "title",
+          "super-platformer"
+        ],
+        [
+          "app",
+          "32267:d73ae26c0bdb51596858fea135d3a112435cd9483fc3d84c1df51700b428fe01:n-01288b1ab38-f8bf25f660f9a047",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "source",
+          "nostr://npub16uawymqtmdg4j6zcl6snt5apzfp4ek2g8lpasnqa75tspdpglcqsgpatvc/wss%3A%2F%2Fgit.napplet.soy%2F/n-01288b1ab38"
+        ],
+        [
+          "source-commit",
+          "cd623a90e934d7a48b498f83b14ce9e43e8e76b3"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/c7d88685c55312a274af9e2b34e97049e5a6172f3da0575794ce10f52028a0ec"
+        ]
+      ],
+      "content": "super-platformer",
+      "sig": "9deae4b5fab2237f3800c3ddc32d4b0bc7c27812f7ef50f0334796e360db7b690a062920f5bcd1f3a79b2f2277cb58e735d0c079d394835b2d33108f98ea4514"
+    },
+    {
+      "kind": 5129,
+      "id": "3020e079e27b17832b349cb654c7ee8b1627ac4c9755a9abd2c0d4cb5e0d6390",
+      "pubkey": "266815e0c9210dfa324c6cba3573b14bee49da4209a9456f9484e5106cd408a5",
+      "created_at": 1791391196,
+      "tags": [
+        [
+          "x",
+          "e4e1603425dcee382503476413672bb6ffc17c00876b324ddd437e046a2ca299"
+        ],
+        [
+          "title",
+          "Supersonic RC Revive"
+        ],
+        [
+          "app",
+          "32267:266815e0c9210dfa324c6cba3573b14bee49da4209a9456f9484e5106cd408a5:n-143146b0d6f-ad685608d04116af",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "R",
+          "resource"
+        ],
+        [
+          "t",
+          "game"
+        ],
+        [
+          "t",
+          "racing"
+        ],
+        [
+          "t",
+          "rc-car"
+        ],
+        [
+          "t",
+          "driving"
+        ],
+        [
+          "t",
+          "remake"
+        ],
+        [
+          "t",
+          "shockwave"
+        ],
+        [
+          "source",
+          "nostr://npub1ye5ptcxfyyxl5vjvdjar2ua3f0hynkjzpx552mu5snj3qmx5pzjscpknpr/wss%3A%2F%2Fgit.shakespeare.diy%2F/SuperSonicRCRevive"
+        ],
+        [
+          "soy-source-repository",
+          "30617:266815e0c9210dfa324c6cba3573b14bee49da4209a9456f9484e5106cd408a5:SuperSonicRCRevive",
+          "linked"
+        ],
+        [
+          "source-commit",
+          "15b081e56007583f02c7ffb121265f8d7b494aab"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/247234e82b7512b172833f833d029a7ec76d86ec84e40bd396ef23719d49c84d"
+        ]
+      ],
+      "content": "A remake of the Shockwave RC-car game SuperSonic RC, rebuilt with three.js and unlimited Free Driving. Drive with keyboard, gamepad or touch. Plug in up to four controllers for local split-screen, or host an online session and invite friends by code. Online players use matching asset packs and independent local physics. Load another .ssrcpack or custom level from the title screen.",
+      "sig": "6b2b7f66b9cd2dacf27601883f33a9217994bb2ef32816ce5a7c422f7f77faea34359d4fed1f4047b36e1365c29ad4de23023bf2427809d841436d610e648cbb"
+    },
+    {
+      "kind": 5129,
+      "id": "6550c93c6c0c6f67f8535e2ccfbab52a7fe53df293016f4f6643e9f05dec4967",
+      "pubkey": "266815e0c9210dfa324c6cba3573b14bee49da4209a9456f9484e5106cd408a5",
+      "created_at": 1791388603,
+      "tags": [
+        [
+          "x",
+          "85e4fdd79036999817c7027223f26a0cd05c111be240cfeab689b8d87bdf21c6"
+        ],
+        [
+          "title",
+          "Supersonic RC Revive"
+        ],
+        [
+          "app",
+          "32267:266815e0c9210dfa324c6cba3573b14bee49da4209a9456f9484e5106cd408a5:n-143146b0d6f-d1c724e86d44092a",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "R",
+          "resource"
+        ],
+        [
+          "t",
+          "game"
+        ],
+        [
+          "t",
+          "racing"
+        ],
+        [
+          "t",
+          "rc-car"
+        ],
+        [
+          "t",
+          "driving"
+        ],
+        [
+          "t",
+          "remake"
+        ],
+        [
+          "t",
+          "shockwave"
+        ],
+        [
+          "source",
+          "nostr://npub1ye5ptcxfyyxl5vjvdjar2ua3f0hynkjzpx552mu5snj3qmx5pzjscpknpr/wss%3A%2F%2Fgit.shakespeare.diy%2F/SuperSonicRCRevive"
+        ],
+        [
+          "soy-source-repository",
+          "30617:266815e0c9210dfa324c6cba3573b14bee49da4209a9456f9484e5106cd408a5:SuperSonicRCRevive",
+          "linked"
+        ],
+        [
+          "source-commit",
+          "9b8fc605b23c474cfa48567381f1885f456db886"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/cbf5f96edaf95212ca947ca1a3509ee6054c73d892e51aa3b4d9e7f82342873e"
+        ]
+      ],
+      "content": "A remake of the Shockwave RC-car game SuperSonic RC, rebuilt with three.js and unlimited Free Driving. Drive with keyboard, gamepad or touch. Plug in up to four controllers for local split-screen, or host an online session and invite friends by code. Online players use matching asset packs and independent local physics. Load another .ssrcpack or custom level from the title screen.",
+      "sig": "0d46d354694a3633bcee1872269814696efbc62dd6aca201d5e96891b1444dd4f657d600e03c3e9ef613bc1da85729b6b44dcbbf9a2757136f3e49043690d276"
+    },
+    {
+      "kind": 35129,
+      "id": "72c0506a4a1b11c8b11dbc585c42f6c99048cb3a965206cd1f19c00f870d28e3",
+      "pubkey": "75e0f2d4ca0f810b8813f7b8edbec679d5a49ccdeb6810832bf38b21eba4a431",
+      "created_at": 1791371298,
+      "tags": [
+        [
+          "x",
+          "757dd1788d3e80cfbc2f317a0a3c2d9a71ae85447d4dc67a003a7be18986abad"
+        ],
+        [
+          "title",
+          "mini-nostr-saf"
+        ],
+        [
+          "app",
+          "32267:75e0f2d4ca0f810b8813f7b8edbec679d5a49ccdeb6810832bf38b21eba4a431:n-599618f6842-dacf14d2eec46cab",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "t",
+          "nostr"
+        ],
+        [
+          "t",
+          "client"
+        ],
+        [
+          "t",
+          "social"
+        ],
+        [
+          "source",
+          "nostr://npub1whs094x2p7qshzqn77uwm0kx0826f8xdad5ppqet7w9jr6ay5scs99c7wj/wss%3A%2F%2Fgit.napplet.soy%2F/n-599618f6842"
+        ],
+        [
+          "source-commit",
+          "cec3876ccbdc569b256e08eb421b1ed19392eeac"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/e3147c802508002ba874c68ffe9991aa9f9b04462a3754c94e114715572349a8"
+        ],
+        [
+          "d",
+          "n-599618f6842"
+        ]
+      ],
+      "content": "mini-nostr-saf: a minimal Nostr safari client. Browse notes, follows and long-form posts; the host signs with your identity, keys never touch the app.",
+      "sig": "d59bc87775f5db569bcd6126ad70d9afd41ef4cd61abf06320b7d4bd7b9cd4a4206b7244c1ab9f60570694301f0f7371ee65a7ec5a09df35484efde5db517ae4"
+    },
+    {
+      "kind": 5129,
+      "id": "e746d7fcd8e96562581d5a31ca632fea839fbb80f32b8468fbacb7410e502e56",
+      "pubkey": "75e0f2d4ca0f810b8813f7b8edbec679d5a49ccdeb6810832bf38b21eba4a431",
+      "created_at": 1791371298,
+      "tags": [
+        [
+          "x",
+          "757dd1788d3e80cfbc2f317a0a3c2d9a71ae85447d4dc67a003a7be18986abad"
+        ],
+        [
+          "title",
+          "mini-nostr-saf"
+        ],
+        [
+          "app",
+          "32267:75e0f2d4ca0f810b8813f7b8edbec679d5a49ccdeb6810832bf38b21eba4a431:n-599618f6842-dacf14d2eec46cab",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "t",
+          "nostr"
+        ],
+        [
+          "t",
+          "client"
+        ],
+        [
+          "t",
+          "social"
+        ],
+        [
+          "source",
+          "nostr://npub1whs094x2p7qshzqn77uwm0kx0826f8xdad5ppqet7w9jr6ay5scs99c7wj/wss%3A%2F%2Fgit.napplet.soy%2F/n-599618f6842"
+        ],
+        [
+          "source-commit",
+          "cec3876ccbdc569b256e08eb421b1ed19392eeac"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/e3147c802508002ba874c68ffe9991aa9f9b04462a3754c94e114715572349a8"
+        ]
+      ],
+      "content": "mini-nostr-saf: a minimal Nostr safari client. Browse notes, follows and long-form posts; the host signs with your identity, keys never touch the app.",
+      "sig": "82be8aabf5893d98b62ca333ac2a658c8858f580b2d85127cfd6c54aa05329106ff227856425f6129f73e26c8a9b5cc66971e813b41c653fe75b1f94ed8254b8"
+    },
+    {
+      "kind": 5129,
+      "id": "0209e136149403e50335b4ea18906d4b1341ca7fde087b0b037328dae7f8edcd",
+      "pubkey": "266815e0c9210dfa324c6cba3573b14bee49da4209a9456f9484e5106cd408a5",
+      "created_at": 1791333343,
+      "tags": [
+        [
+          "x",
+          "ca6b24f301881f29974ae7bcca9d30de9030f7d76ee3da2c44cb8c3339ac4017"
+        ],
+        [
+          "title",
+          "Supersonic RC Revive"
+        ],
+        [
+          "app",
+          "32267:266815e0c9210dfa324c6cba3573b14bee49da4209a9456f9484e5106cd408a5:n-143146b0d6f-1c0a025ca5deded5",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "R",
+          "resource"
+        ],
+        [
+          "t",
+          "game"
+        ],
+        [
+          "t",
+          "racing"
+        ],
+        [
+          "t",
+          "rc-car"
+        ],
+        [
+          "t",
+          "driving"
+        ],
+        [
+          "t",
+          "remake"
+        ],
+        [
+          "t",
+          "shockwave"
+        ],
+        [
+          "source",
+          "nostr://npub1ye5ptcxfyyxl5vjvdjar2ua3f0hynkjzpx552mu5snj3qmx5pzjscpknpr/wss%3A%2F%2Fgit.napplet.soy%2F/n-143146b0d6f"
+        ],
+        [
+          "source-commit",
+          "5cea1a3d9b87f5ecc10af4a9564a55c79745b39b"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/1739ac6b631f9e36061077e8f5b041fe3e91fbf35472bec766399bdf4fea24db"
+        ]
+      ],
+      "content": "A remake of the Shockwave RC-car game SuperSonic RC, rebuilt with three.js and unlimited Free Driving. Drive with keyboard, gamepad or touch. Plug in up to four controllers for local split-screen, or host an online session and invite friends by code. Online players use matching asset packs and independent local physics. Load another .ssrcpack or custom level from the title screen.",
+      "sig": "06033332955af63853c5bb6126472e51db981591bf24a5a00e52e6ee05b3dac4782c0d2b598d2e3d73c304b819bf13754d24673d386af6420b47146b9bc3ad51"
+    },
+    {
+      "kind": 5129,
+      "id": "fa960af836241b7fd6216d02359516dbf7dda0a6b94178951f5a4b2f811e0587",
+      "pubkey": "266815e0c9210dfa324c6cba3573b14bee49da4209a9456f9484e5106cd408a5",
+      "created_at": 1791331140,
+      "tags": [
+        [
+          "x",
+          "6e0bd4f588e9d11f53efe502e5a86f608341c4fe63140e3d6b4acda535e1f8b7"
+        ],
+        [
+          "title",
+          "Supersonic RC Revive"
+        ],
+        [
+          "app",
+          "32267:266815e0c9210dfa324c6cba3573b14bee49da4209a9456f9484e5106cd408a5:n-143146b0d6f-8c3bf6428af5e35d",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "R",
+          "resource"
+        ],
+        [
+          "t",
+          "game"
+        ],
+        [
+          "t",
+          "racing"
+        ],
+        [
+          "t",
+          "rc-car"
+        ],
+        [
+          "t",
+          "driving"
+        ],
+        [
+          "t",
+          "remake"
+        ],
+        [
+          "t",
+          "shockwave"
+        ],
+        [
+          "source",
+          "nostr://npub1ye5ptcxfyyxl5vjvdjar2ua3f0hynkjzpx552mu5snj3qmx5pzjscpknpr/wss%3A%2F%2Fgit.napplet.soy%2F/n-143146b0d6f"
+        ],
+        [
+          "source-commit",
+          "284438a9c158bc150d039074fadee9f53ada3535"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/336355d33e85f52bdda35dd031f9767a778a8f62470c12b5fb04a9d5ad531b83"
+        ]
+      ],
+      "content": "A remake of the Shockwave RC-car game SuperSonic RC, rebuilt with three.js and unlimited Free Driving. Drive with keyboard, gamepad or touch. Plug in up to four controllers for local split-screen, or host an online session and invite friends by code. Online players use matching asset packs and independent local physics. Load another .ssrcpack or custom level from the title screen.",
+      "sig": "14e6b40f9483fb968967e77749b47c8eeffa41d73e1ba87bd0a080a3e87acf534f11f5f18781f9a26c74f4bebca80f54c7dddb5b9cad91f29a00860efe8707c1"
+    },
+    {
+      "kind": 5129,
+      "id": "365f3dfe25646dd32113234ebca875e2bc90738267cceec05f61bceffea1b479",
+      "pubkey": "75e0f2d4ca0f810b8813f7b8edbec679d5a49ccdeb6810832bf38b21eba4a431",
+      "created_at": 1791299475,
+      "tags": [
+        [
+          "x",
+          "26b322584e0030e18f6e653881b76af66ed9cfc6989ad4c2fd149e94555c74c9"
+        ],
+        [
+          "title",
+          "mini-nostr-saf"
+        ],
+        [
+          "app",
+          "32267:75e0f2d4ca0f810b8813f7b8edbec679d5a49ccdeb6810832bf38b21eba4a431:n-599618f6842-7b72b9b92eb556f1",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "t",
+          "nostr"
+        ],
+        [
+          "t",
+          "client"
+        ],
+        [
+          "t",
+          "social"
+        ],
+        [
+          "source",
+          "nostr://npub1whs094x2p7qshzqn77uwm0kx0826f8xdad5ppqet7w9jr6ay5scs99c7wj/wss%3A%2F%2Fgit.napplet.soy%2F/n-599618f6842"
+        ],
+        [
+          "source-commit",
+          "5e4176c10d923be43e1770c32dd89408a1598832"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/7794b404d006196407dcfbd7eac286560aaa18d66a54ee3f44934346a95ca3e6"
+        ]
+      ],
+      "content": "mini-nostr-saf: a minimal Nostr safari client. Browse notes, follows and long-form posts; the host signs with your identity, keys never touch the app.",
+      "sig": "010d19a55c8b8f1b509211c8fd17907dc714b01b92124b502fca8b55a5f2277de36c213fe6cfb8bace705ad0da8274a7ec8611e2e4ee0e4503b068ba33ee82f4"
+    },
+    {
+      "kind": 5129,
+      "id": "64f19d8259760deb7d15eb5357028cc862fdc04a6bca18f4f0047ef9b5bdba67",
+      "pubkey": "3aa5817273c3b2f94f491840e0472f049d0f10009e23de63006166bca9b36ea3",
+      "created_at": 1791281342,
+      "tags": [
+        [
+          "x",
+          "3bd2cd66d1641d20028a55785c92bba7b05ce44aa2bc1c89f4830eb6927e8028"
+        ],
+        [
+          "title",
+          "Outbreak: Soycoon City"
+        ],
+        [
+          "app",
+          "32267:3aa5817273c3b2f94f491840e0472f049d0f10009e23de63006166bca9b36ea3:n-b87c04571a9-5a005bf089e8ef6b",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "O",
+          "storage"
+        ],
+        [
+          "O",
+          "config"
+        ],
+        [
+          "O",
+          "fs"
+        ],
+        [
+          "O",
+          "identity"
+        ],
+        [
+          "O",
+          "outbox"
+        ],
+        [
+          "O",
+          "upload"
+        ],
+        [
+          "O",
+          "resource"
+        ],
+        [
+          "z",
+          "game"
+        ],
+        [
+          "z",
+          "editor"
+        ],
+        [
+          "t",
+          "game"
+        ],
+        [
+          "t",
+          "survival-horror"
+        ],
+        [
+          "t",
+          "editor"
+        ],
+        [
+          "t",
+          "threejs"
+        ],
+        [
+          "source",
+          "nostr://npub182jczunncwe0jn6frpqwq3e0qjws7yqqnc3auccqv9nte2dnd63scjm4rf/wss%3A%2F%2Fgit.napplet.soy%2F/n-b87c04571a9"
+        ],
+        [
+          "source-commit",
+          "3ee3f5fd27a64be365ce8704030fb7c4cf63ab1b"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/dbebdc772b142a1c89f73aa67adaf9a569a761cfa769c5d3eb0fc5df9472da50"
+        ]
+      ],
+      "content": "A PS1-inspired fixed-camera survival horror demo starring Soybert, with six connected rooms, a graphical level editor, controller support and player levels shared on Nostr.",
+      "sig": "b619f0f132a55ff293666d51c8f775ee1048c7b22fde198ef43760d27245e928ffae7a6b37719fa3704a333bc575e996cfd0d44c8eb82334097896543ff04b53"
+    },
+    {
+      "kind": 35129,
+      "id": "db7750b1d009b54ee7fb54a453bb80c7f49fa6f4a8f1bb66a557a9463df12ea7",
+      "pubkey": "3aa5817273c3b2f94f491840e0472f049d0f10009e23de63006166bca9b36ea3",
+      "created_at": 1791281342,
+      "tags": [
+        [
+          "x",
+          "3bd2cd66d1641d20028a55785c92bba7b05ce44aa2bc1c89f4830eb6927e8028"
+        ],
+        [
+          "title",
+          "Outbreak: Soycoon City"
+        ],
+        [
+          "app",
+          "32267:3aa5817273c3b2f94f491840e0472f049d0f10009e23de63006166bca9b36ea3:n-b87c04571a9-5a005bf089e8ef6b",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "O",
+          "storage"
+        ],
+        [
+          "O",
+          "config"
+        ],
+        [
+          "O",
+          "fs"
+        ],
+        [
+          "O",
+          "identity"
+        ],
+        [
+          "O",
+          "outbox"
+        ],
+        [
+          "O",
+          "upload"
+        ],
+        [
+          "O",
+          "resource"
+        ],
+        [
+          "z",
+          "game"
+        ],
+        [
+          "z",
+          "editor"
+        ],
+        [
+          "t",
+          "game"
+        ],
+        [
+          "t",
+          "survival-horror"
+        ],
+        [
+          "t",
+          "editor"
+        ],
+        [
+          "t",
+          "threejs"
+        ],
+        [
+          "source",
+          "nostr://npub182jczunncwe0jn6frpqwq3e0qjws7yqqnc3auccqv9nte2dnd63scjm4rf/wss%3A%2F%2Fgit.napplet.soy%2F/n-b87c04571a9"
+        ],
+        [
+          "source-commit",
+          "3ee3f5fd27a64be365ce8704030fb7c4cf63ab1b"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/dbebdc772b142a1c89f73aa67adaf9a569a761cfa769c5d3eb0fc5df9472da50"
+        ],
+        [
+          "d",
+          "n-b87c04571a9"
+        ]
+      ],
+      "content": "A PS1-inspired fixed-camera survival horror demo starring Soybert, with six connected rooms, a graphical level editor, controller support and player levels shared on Nostr.",
+      "sig": "a11efbd0b003d98ff92bf7cf716e311d440961d485dfa66f578b8425d3ddc31509214ae6b77250bcddac40f4b607414803af38bcc14c81f8b699b5da494b4c1c"
+    },
+    {
+      "kind": 5129,
+      "id": "59124491c0d3c27025d2fe1c328bc5ed1acaa25d86972c9f1229cdfd425f0e8f",
+      "pubkey": "266815e0c9210dfa324c6cba3573b14bee49da4209a9456f9484e5106cd408a5",
+      "created_at": 1791212910,
+      "tags": [
+        [
+          "x",
+          "5fa14aef34a0d4e30e83f5b469c76ed6983a8971db5de5317a760e8be6f8d645"
+        ],
+        [
+          "title",
+          "Poly Dogfight"
+        ],
+        [
+          "app",
+          "32267:266815e0c9210dfa324c6cba3573b14bee49da4209a9456f9484e5106cd408a5:n-44f63e5422b-7a404896f0083898",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "t",
+          "game"
+        ],
+        [
+          "t",
+          "flight"
+        ],
+        [
+          "t",
+          "arcade"
+        ],
+        [
+          "t",
+          "dogfight"
+        ],
+        [
+          "t",
+          "multiplayer"
+        ],
+        [
+          "t",
+          "split-screen"
+        ],
+        [
+          "t",
+          "local-multiplayer"
+        ],
+        [
+          "t",
+          "3d"
+        ],
+        [
+          "t",
+          "low-poly"
+        ],
+        [
+          "t",
+          "gamepad"
+        ],
+        [
+          "t",
+          "touch"
+        ],
+        [
+          "source",
+          "nostr://npub1ye5ptcxfyyxl5vjvdjar2ua3f0hynkjzpx552mu5snj3qmx5pzjscpknpr/wss%3A%2F%2Fgit.napplet.soy%2F/n-44f63e5422b"
+        ],
+        [
+          "source-commit",
+          "5579434b9d8b653624e766c6574ca0e0357ebee3"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/bcadd2430d8ea2bc792ea042b515cb13ab85c00b72ab71da9460be05698497a4"
+        ]
+      ],
+      "content": "Fly a low-poly biplane around a tiny planet you can circle in about a minute. Weave through rock arches, needle spires, floating islands and the Great Rift canyon with momentum-based flight: keep your speed up or the wings stall. Up to four pilots share the screen with game controllers for split-screen dogfights: fixed guns with light aim assist, per-part battle damage, and two heat-seeking rockets on the wings that reload over time. Rockets turn slower than you do, so a hard bank can shake one, and a missed rocket coasts round the planet and may come back for its own pilot. Beginner steering banks and pulls for you; normal mode gives full manual control. Plays with keyboard, gamepad or touch, in any frame from a small widget to full screen.",
+      "sig": "f134ff09edc731f18ea2e692aa3a3a9d0dfa32210dda77427f0d7052afdbd8501090409461c006f595b99022a1cd058184915906689473d779d18d049047579b"
+    },
+    {
+      "kind": 5129,
+      "id": "26086a550dedda617b63c4f76f2289d19bf25af93a42dd5d7d542bbd0be27da2",
+      "pubkey": "266815e0c9210dfa324c6cba3573b14bee49da4209a9456f9484e5106cd408a5",
+      "created_at": 1791209507,
+      "tags": [
+        [
+          "x",
+          "6912e1569933dd01c12e60ebcb1943e947c44683fc0490df8645e20c47204eb3"
+        ],
+        [
+          "title",
+          "Poly Dogfight"
+        ],
+        [
+          "app",
+          "32267:266815e0c9210dfa324c6cba3573b14bee49da4209a9456f9484e5106cd408a5:n-44f63e5422b-8b1338cb3ceff205",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "t",
+          "game"
+        ],
+        [
+          "t",
+          "flight"
+        ],
+        [
+          "t",
+          "arcade"
+        ],
+        [
+          "t",
+          "dogfight"
+        ],
+        [
+          "t",
+          "multiplayer"
+        ],
+        [
+          "t",
+          "split-screen"
+        ],
+        [
+          "t",
+          "local-multiplayer"
+        ],
+        [
+          "t",
+          "3d"
+        ],
+        [
+          "t",
+          "low-poly"
+        ],
+        [
+          "t",
+          "gamepad"
+        ],
+        [
+          "t",
+          "touch"
+        ],
+        [
+          "source",
+          "nostr://npub1ye5ptcxfyyxl5vjvdjar2ua3f0hynkjzpx552mu5snj3qmx5pzjscpknpr/wss%3A%2F%2Fgit.napplet.soy%2F/n-44f63e5422b"
+        ],
+        [
+          "source-commit",
+          "7969eb6c599dd5b75717322e3134b40f28813397"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/2eb3b14ca45cd2cd1136eda045bdf5ad14bf7d7bfdc046bc6934dbeb039b6f12"
+        ]
+      ],
+      "content": "Fly a low-poly biplane around a tiny planet you can circle in about a minute. Weave through rock arches, needle spires, floating islands and the Great Rift canyon with momentum-based flight: keep your speed up or the wings stall. Up to four pilots share the screen with game controllers for split-screen dogfights: fixed guns with light aim assist, per-part battle damage, and two heat-seeking rockets on the wings that reload over time. Rockets turn slower than you do, so a hard bank can shake one, and a missed rocket coasts round the planet and may come back for its own pilot. Beginner steering banks and pulls for you; normal mode gives full manual control. Plays with keyboard, gamepad or touch, in any frame from a small widget to full screen.",
+      "sig": "faff212031f2cee2bcde94ba05c34374b5083c509efdb2daebe51a5ab18f6b4d9358efd4630ed51476148bfc2c9d7b1e425a9b74677498cf81ce8961e8a16d65"
+    },
+    {
+      "kind": 35129,
+      "id": "a48ffab2ae1e79bfcb87a68cee792d346c954196a9987f32f4da7b164b7ebf61",
+      "pubkey": "3aa5817273c3b2f94f491840e0472f049d0f10009e23de63006166bca9b36ea3",
+      "created_at": 1791185198,
+      "tags": [
+        [
+          "path",
+          "/index.html",
+          "ff21fc99eb4404c70f202250ed1999bca6f52b9b4c8cdfbc78b1187bf52fb7ad"
+        ],
+        [
+          "x",
+          "0d4764fd511f58b7b9073b58929acbcb2df9fb1e1e9591aa81e1885b17157daa",
+          "aggregate"
+        ],
+        [
+          "title",
+          "Napplet Machines V8"
+        ],
+        [
+          "app",
+          "32267:3aa5817273c3b2f94f491840e0472f049d0f10009e23de63006166bca9b36ea3:n-b5572362d4a-b5e910d248bb8052",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "description",
+          "Build a little track. Race a little reckless. Six-car miniature racing with a 3D spline workshop, AI rivals and multiplayer rooms."
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "t",
+          "game"
+        ],
+        [
+          "t",
+          "racing"
+        ],
+        [
+          "t",
+          "multiplayer"
+        ],
+        [
+          "t",
+          "track-editor"
+        ],
+        [
+          "source",
+          "nostr://npub182jczunncwe0jn6frpqwq3e0qjws7yqqnc3auccqv9nte2dnd63scjm4rf/wss%3A%2F%2Fgit.napplet.soy%2F/n-b5572362d4a"
+        ],
+        [
+          "source-commit",
+          "2a817e4d389e85fbf630112fd32177bd895ce60d"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/ecd5161370161eeb478054063c48c9679aef1ba5c4b67d06ea58e0b9d959f106"
+        ],
+        [
+          "d",
+          "n-b5572362d4a"
+        ]
+      ],
+      "content": "",
+      "sig": "e160cde06607ca985730ce7f06411a0dc44ed11330a1af807f0ddd7003a857b0fe5787f1f882ab1a79dc969c543b1e3178484ee0a2b28e7edad4d2746ec09c72"
+    },
+    {
+      "kind": 5129,
+      "id": "be8453b5d78de34945da33cbf0541020e6dee1410ae926afa872825c4b3b8781",
+      "pubkey": "3aa5817273c3b2f94f491840e0472f049d0f10009e23de63006166bca9b36ea3",
+      "created_at": 1791185198,
+      "tags": [
+        [
+          "path",
+          "/index.html",
+          "ff21fc99eb4404c70f202250ed1999bca6f52b9b4c8cdfbc78b1187bf52fb7ad"
+        ],
+        [
+          "x",
+          "0d4764fd511f58b7b9073b58929acbcb2df9fb1e1e9591aa81e1885b17157daa",
+          "aggregate"
+        ],
+        [
+          "title",
+          "Napplet Machines V8"
+        ],
+        [
+          "app",
+          "32267:3aa5817273c3b2f94f491840e0472f049d0f10009e23de63006166bca9b36ea3:n-b5572362d4a-b5e910d248bb8052",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "description",
+          "Build a little track. Race a little reckless. Six-car miniature racing with a 3D spline workshop, AI rivals and multiplayer rooms."
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "t",
+          "game"
+        ],
+        [
+          "t",
+          "racing"
+        ],
+        [
+          "t",
+          "multiplayer"
+        ],
+        [
+          "t",
+          "track-editor"
+        ],
+        [
+          "source",
+          "nostr://npub182jczunncwe0jn6frpqwq3e0qjws7yqqnc3auccqv9nte2dnd63scjm4rf/wss%3A%2F%2Fgit.napplet.soy%2F/n-b5572362d4a"
+        ],
+        [
+          "source-commit",
+          "2a817e4d389e85fbf630112fd32177bd895ce60d"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/ecd5161370161eeb478054063c48c9679aef1ba5c4b67d06ea58e0b9d959f106"
+        ],
+        [
+          "a",
+          "35129:3aa5817273c3b2f94f491840e0472f049d0f10009e23de63006166bca9b36ea3:n-b5572362d4a"
+        ]
+      ],
+      "content": "",
+      "sig": "382d5f7130f250eb8f563f56a4bffb6f17adacfc8f18c038cd9904ffcce8f2f6ace3ef5b0cf642e3c9f09c66b1718c3be6b5c4433451f473a0bf6cf52763e96e"
+    },
+    {
+      "kind": 5129,
+      "id": "df182597117393b54cefb39dd68f0b97cf91b7b15767e59e5eb3fd4760e7025b",
+      "pubkey": "266815e0c9210dfa324c6cba3573b14bee49da4209a9456f9484e5106cd408a5",
+      "created_at": 1791157097,
+      "tags": [
+        [
+          "path",
+          "/index.html",
+          "cf2a61440e6699f244c2c13710544d2a7db5345385294a3973b30588e67c9996"
+        ],
+        [
+          "x",
+          "b52a0e30ebe03534916e942b8bcba134237a5eb59b0a3876b2c06356fed606ad",
+          "aggregate"
+        ],
+        [
+          "title",
+          "Poly Dogfight"
+        ],
+        [
+          "app",
+          "32267:266815e0c9210dfa324c6cba3573b14bee49da4209a9456f9484e5106cd408a5:n-44f63e5422b-93d73da22761a578",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "description",
+          "Fly a low-poly biplane around a tiny planet you can circle in about a minute. Weave through rock arches, needle spires, floating islands and the Great Rift canyon with momentum-based flight: keep your speed up or the wings stall. Up to four pilots share the screen with game controllers for split-screen dogfights: fixed guns with light aim assist, per-part battle damage, and two heat-seeking rockets on the wings that reload over time. Rockets turn slower than you do, so a hard bank can shake one, and a missed rocket coasts round the planet and may come back for its own pilot. Beginner steering banks and pulls for you; normal mode gives full manual control. Plays with keyboard, gamepad or touch, in any frame from a small widget to full screen."
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "t",
+          "game"
+        ],
+        [
+          "t",
+          "flight"
+        ],
+        [
+          "t",
+          "arcade"
+        ],
+        [
+          "t",
+          "dogfight"
+        ],
+        [
+          "t",
+          "multiplayer"
+        ],
+        [
+          "t",
+          "split-screen"
+        ],
+        [
+          "t",
+          "local-multiplayer"
+        ],
+        [
+          "t",
+          "3d"
+        ],
+        [
+          "t",
+          "low-poly"
+        ],
+        [
+          "t",
+          "gamepad"
+        ],
+        [
+          "t",
+          "touch"
+        ],
+        [
+          "source",
+          "nostr://npub1ye5ptcxfyyxl5vjvdjar2ua3f0hynkjzpx552mu5snj3qmx5pzjscpknpr/wss%3A%2F%2Fgit.napplet.soy%2F/n-44f63e5422b"
+        ],
+        [
+          "source-commit",
+          "914cc51b76da0da743be447646d9e36242626fb9"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/7baf8515c420cde86d5e0a7a7ce1fabce62ee16ca53954f9a8703d8397c295ee"
+        ],
+        [
+          "a",
+          "35129:266815e0c9210dfa324c6cba3573b14bee49da4209a9456f9484e5106cd408a5:n-44f63e5422b"
+        ]
+      ],
+      "content": "",
+      "sig": "80f39bc7f3320683bf8c27ff06a23a54971a507a7879cd114dd2655b7b0a8112878be52afb62bd909f357faa8be20816e63fd548bb1dae9b37e24980820f91a0"
+    },
+    {
+      "kind": 5129,
+      "id": "fc5a9eb4a660e3b61ca4727bb99b7d13850e4a0ec16cf7edaa2b88a8a0c09e3d",
+      "pubkey": "266815e0c9210dfa324c6cba3573b14bee49da4209a9456f9484e5106cd408a5",
+      "created_at": 1791143108,
+      "tags": [
+        [
+          "path",
+          "/index.html",
+          "2042c03a3a2fb39c850ac24a70a17e6a19b460ab80159b4f5abb078f378908ed"
+        ],
+        [
+          "x",
+          "56c2b6137d8df1194320153d7991bed00b7cada8dff7b659c2ba04495aa949b1",
+          "aggregate"
+        ],
+        [
+          "title",
+          "Supersonic RC Revive"
+        ],
+        [
+          "app",
+          "32267:266815e0c9210dfa324c6cba3573b14bee49da4209a9456f9484e5106cd408a5:n-143146b0d6f-dc42b7a52d06358e",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "description",
+          "A faithful remake of the Shockwave RC-car game SuperSonic RC, rebuilt with three.js. The car handling is ported line by line from the original Lingo scripts, with all five modes: Free Driving, Checkpoint Chase, Stunt Rally, Scavenger Hunt and the Supersonic Challenge. Drive with the arrow keys or WASD, a gamepad, or the on-screen touch controls. The art and sound are a recreated asset pack, and you can load another .ssrcpack from the title screen."
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "requires",
+          "resource"
+        ],
+        [
+          "t",
+          "game"
+        ],
+        [
+          "t",
+          "racing"
+        ],
+        [
+          "t",
+          "rc-car"
+        ],
+        [
+          "t",
+          "driving"
+        ],
+        [
+          "t",
+          "remake"
+        ],
+        [
+          "t",
+          "shockwave"
+        ],
+        [
+          "source",
+          "nostr://npub1ye5ptcxfyyxl5vjvdjar2ua3f0hynkjzpx552mu5snj3qmx5pzjscpknpr/wss%3A%2F%2Fgit.napplet.soy%2F/n-143146b0d6f"
+        ],
+        [
+          "source-commit",
+          "baecad10b1cdb22608b79159829a84f99614e8b3"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/90d22b206672eba421e668dee581fabc27ab80f75d394987c054c496e8bd85a1"
+        ],
+        [
+          "a",
+          "35129:266815e0c9210dfa324c6cba3573b14bee49da4209a9456f9484e5106cd408a5:n-143146b0d6f"
+        ]
+      ],
+      "content": "",
+      "sig": "698bf6ab1541cde0b7a52ed0211af2695becaad63dbd32dac36e05b16c387da2c60111a35d2e2fbe0761e34e2745d7fe7aab68a45091a8cece7b410b15d09d05"
+    },
+    {
+      "kind": 5129,
+      "id": "49bc2f8d67f564cc0a05369e08c347df5be26f0976b2ac0dd835c1faf7028421",
+      "pubkey": "266815e0c9210dfa324c6cba3573b14bee49da4209a9456f9484e5106cd408a5",
+      "created_at": 1791043684,
+      "tags": [
+        [
+          "path",
+          "/index.html",
+          "4e768893a0a1903c026cfc916f184c0917a947d95250d5b79e04d657578951aa"
+        ],
+        [
+          "x",
+          "ffddddf1e747a8dd3967f61af7906d859d9a9bc38582864616457134659c9f77",
+          "aggregate"
+        ],
+        [
+          "title",
+          "Supersonic RC Revive"
+        ],
+        [
+          "app",
+          "32267:266815e0c9210dfa324c6cba3573b14bee49da4209a9456f9484e5106cd408a5:n-143146b0d6f-ae7b0257f3d21bdd",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "description",
+          "A faithful remake of the Shockwave RC-car game SuperSonic RC, rebuilt with three.js. The car handling is ported line by line from the original Lingo scripts, with all five modes: Free Driving, Checkpoint Chase, Stunt Rally, Scavenger Hunt and the Supersonic Challenge. Drive with the arrow keys or WASD, a gamepad, or the on-screen touch controls. The art and sound are a recreated asset pack, and you can load another .ssrcpack from the title screen."
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "requires",
+          "resource"
+        ],
+        [
+          "t",
+          "game"
+        ],
+        [
+          "t",
+          "racing"
+        ],
+        [
+          "t",
+          "rc-car"
+        ],
+        [
+          "t",
+          "driving"
+        ],
+        [
+          "t",
+          "remake"
+        ],
+        [
+          "t",
+          "shockwave"
+        ],
+        [
+          "source",
+          "nostr://npub1ye5ptcxfyyxl5vjvdjar2ua3f0hynkjzpx552mu5snj3qmx5pzjscpknpr/wss%3A%2F%2Fgit.napplet.soy%2F/n-143146b0d6f"
+        ],
+        [
+          "source-commit",
+          "6fbf09f88a0aff402ffd2e39bf820b67940f8fa8"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/76e4eb30c67a6f45736b1fa7beb4b4258e8d1518bb18e704b63a8651d277fccc"
+        ],
+        [
+          "a",
+          "35129:266815e0c9210dfa324c6cba3573b14bee49da4209a9456f9484e5106cd408a5:n-143146b0d6f"
+        ]
+      ],
+      "content": "",
+      "sig": "841eb4da224c6bd6114f89d1b03643ab0872f6a08cf3effa5fff72721d790165cbee0e57d113f650ffc0e882219de7b2eda6633476cd83bdb2be9b07df99895a"
+    },
+    {
+      "kind": 5129,
+      "id": "66965661188621802558c7c470a6e47e5f11a86108ed14abee4cf6e0f765a1ed",
+      "pubkey": "266815e0c9210dfa324c6cba3573b14bee49da4209a9456f9484e5106cd408a5",
+      "created_at": 1791043036,
+      "tags": [
+        [
+          "path",
+          "/index.html",
+          "4e768893a0a1903c026cfc916f184c0917a947d95250d5b79e04d657578951aa"
+        ],
+        [
+          "x",
+          "ffddddf1e747a8dd3967f61af7906d859d9a9bc38582864616457134659c9f77",
+          "aggregate"
+        ],
+        [
+          "title",
+          "Supersonic RC Revive"
+        ],
+        [
+          "app",
+          "32267:266815e0c9210dfa324c6cba3573b14bee49da4209a9456f9484e5106cd408a5:n-143146b0d6f-9d863a8d421b9bbb",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "description",
+          "A faithful remake of the Shockwave RC-car game SuperSonic RC, rebuilt with three.js. The car handling is ported line by line from the original Lingo scripts, with all five modes: Free Driving, Checkpoint Chase, Stunt Rally, Scavenger Hunt and the Supersonic Challenge. Drive with the arrow keys or WASD, a gamepad, or the on-screen touch controls. The art and sound are a recreated asset pack, and you can load another .ssrcpack from the title screen."
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "requires",
+          "resource"
+        ],
+        [
+          "t",
+          "game"
+        ],
+        [
+          "t",
+          "racing"
+        ],
+        [
+          "t",
+          "rc-car"
+        ],
+        [
+          "t",
+          "driving"
+        ],
+        [
+          "t",
+          "remake"
+        ],
+        [
+          "t",
+          "shockwave"
+        ],
+        [
+          "source",
+          "nostr://npub1ye5ptcxfyyxl5vjvdjar2ua3f0hynkjzpx552mu5snj3qmx5pzjscpknpr/wss%3A%2F%2Fgit.napplet.soy%2F/n-143146b0d6f"
+        ],
+        [
+          "source-commit",
+          "037ef01936e7a84763d5e0c48baeef9cb930a57c"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/f76a30f8588fe1156bdcb4ff7162e50591fe2e49f7369f5e58a3e7ad8041dfb7"
+        ],
+        [
+          "a",
+          "35129:266815e0c9210dfa324c6cba3573b14bee49da4209a9456f9484e5106cd408a5:n-143146b0d6f"
+        ]
+      ],
+      "content": "",
+      "sig": "585a914cff95b84aa68e6c55067aa5d02acb374a81a68d3aeb005d09377ea6d081f4f274a6e6645b8f37508af596c840afa53fe7cfb8630a07cbcb7a524d35f6"
+    },
+    {
+      "kind": 5129,
+      "id": "0642594e994958198514bfe38afbd357b16c429314f8b20f374e943ff3fd011b",
+      "pubkey": "266815e0c9210dfa324c6cba3573b14bee49da4209a9456f9484e5106cd408a5",
+      "created_at": 1791042331,
+      "tags": [
+        [
+          "path",
+          "/index.html",
+          "1fc58f6d23b93bb7092545bf99f990c9734e5590d87bf487033b8e474163b3ef"
+        ],
+        [
+          "x",
+          "18ffaad9bf1b39dcc513b0555c875ceacfc27416d8d173fcd03421e0d3896a8e",
+          "aggregate"
+        ],
+        [
+          "title",
+          "Supersonic RC Revive"
+        ],
+        [
+          "app",
+          "32267:266815e0c9210dfa324c6cba3573b14bee49da4209a9456f9484e5106cd408a5:n-143146b0d6f-6ef90dac5c4eb63a",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "description",
+          "A faithful remake of the Shockwave RC-car game SuperSonic RC, rebuilt with three.js. The car handling is ported line by line from the original Lingo scripts, with all five modes: Free Driving, Checkpoint Chase, Stunt Rally, Scavenger Hunt and the Supersonic Challenge. Drive with the arrow keys or WASD, a gamepad, or the on-screen touch controls. The art and sound are a recreated asset pack, and you can load another .ssrcpack from the title screen."
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "requires",
+          "resource"
+        ],
+        [
+          "t",
+          "game"
+        ],
+        [
+          "t",
+          "racing"
+        ],
+        [
+          "t",
+          "rc-car"
+        ],
+        [
+          "t",
+          "driving"
+        ],
+        [
+          "t",
+          "remake"
+        ],
+        [
+          "t",
+          "shockwave"
+        ],
+        [
+          "source",
+          "nostr://npub1ye5ptcxfyyxl5vjvdjar2ua3f0hynkjzpx552mu5snj3qmx5pzjscpknpr/wss%3A%2F%2Fgit.napplet.soy%2F/n-143146b0d6f"
+        ],
+        [
+          "source-commit",
+          "edaff65b2426cedea9dcd27e3a05a4b67033a621"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/2f363f2d85625424d164a83e08f76f547e060065c54a1856b54541663dbca0f2"
+        ],
+        [
+          "a",
+          "35129:266815e0c9210dfa324c6cba3573b14bee49da4209a9456f9484e5106cd408a5:n-143146b0d6f"
+        ]
+      ],
+      "content": "",
+      "sig": "4573958cc78e0cfee03b997ce12308bfb1a220006fb43c394c45dbb0a4a40774677263ddf416fa187a147d9f7e1e5d1bcbe294b5cacd162e79c6c1fd5f6eae96"
+    },
+    {
+      "kind": 5129,
+      "id": "9b4cb840ffde2fa2f222a14eedb16e560a4bc1eb5e759e027cb2573721601abe",
+      "pubkey": "266815e0c9210dfa324c6cba3573b14bee49da4209a9456f9484e5106cd408a5",
+      "created_at": 1791039613,
+      "tags": [
+        [
+          "path",
+          "/index.html",
+          "ffbffd6b7f3c0dabe5ce7f086f41b144e518bd1fd6649eb46d64b3105c6306e9"
+        ],
+        [
+          "x",
+          "b5636f7a0c9be7ee436bf8eda161206abc52b2355744449d0f894598d5265819",
+          "aggregate"
+        ],
+        [
+          "title",
+          "Supersonic RC Revive"
+        ],
+        [
+          "app",
+          "32267:266815e0c9210dfa324c6cba3573b14bee49da4209a9456f9484e5106cd408a5:n-143146b0d6f-e1474872a2a610b4",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "description",
+          "A faithful remake of the Shockwave RC-car game SuperSonic RC, rebuilt with three.js. The car handling is ported line by line from the original Lingo scripts, with all five modes: Free Driving, Checkpoint Chase, Stunt Rally, Scavenger Hunt and the Supersonic Challenge. Drive with the arrow keys or WASD, a gamepad, or the on-screen touch controls. The art and sound are a recreated asset pack, and you can load another .ssrcpack from the title screen."
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "requires",
+          "resource"
+        ],
+        [
+          "t",
+          "game"
+        ],
+        [
+          "t",
+          "racing"
+        ],
+        [
+          "t",
+          "rc-car"
+        ],
+        [
+          "t",
+          "driving"
+        ],
+        [
+          "t",
+          "remake"
+        ],
+        [
+          "t",
+          "shockwave"
+        ],
+        [
+          "source",
+          "nostr://npub1ye5ptcxfyyxl5vjvdjar2ua3f0hynkjzpx552mu5snj3qmx5pzjscpknpr/wss%3A%2F%2Fgit.napplet.soy%2F/n-143146b0d6f"
+        ],
+        [
+          "source-commit",
+          "edf60ac15420a67688385d72833a08cbe393759b"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/c9cfc6b5ffbaa7c450828c5570125488f466a0c31c52d005299530ca73682ef7"
+        ],
+        [
+          "a",
+          "35129:266815e0c9210dfa324c6cba3573b14bee49da4209a9456f9484e5106cd408a5:n-143146b0d6f"
+        ]
+      ],
+      "content": "",
+      "sig": "18debd45bf3d0915d87fc5f2e05a52e1599c338e7328afd1fc898221b390b0a6d57b41b99912347c33b1d1a31c0b70aeb1cdda0379008ac81ec17376fc7d92e8"
+    },
+    {
+      "kind": 35129,
+      "id": "142767edcab885a701b47569ce0a8b6887777d2e73221cb0ece6bb064a3945fe",
+      "pubkey": "4ffee3d9cf5de52a51cd83f9c46261a5b3254d266c7591f0112b69a738471d6a",
+      "created_at": 1790674840,
+      "tags": [
+        [
+          "path",
+          "/index.html",
+          "ebee2bba2735604b01900b6b350410deb4cd2507996eca8d29f9681a152dea2c"
+        ],
+        [
+          "x",
+          "9c6c9a87fe4336f72cf9653a205abec260481f5f4b40ab7b946c24b842f69a47",
+          "aggregate"
+        ],
+        [
+          "title",
+          "Powder Tool V600Billion"
+        ],
+        [
+          "app",
+          "32267:4ffee3d9cf5de52a51cd83f9c46261a5b3254d266c7591f0112b69a738471d6a:powder-toy-205fa3f8f2b0620e",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "description",
+          "The Powder Toy 100.1.400, the falling-sand physics sandbox, with every element at hand and nine ready-made scenes, from a nuclear reactor to fireworks. Your saves, stamps and settings stay in this browser; saves shared from Nappelin show up in the online browser."
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "requires",
+          "identity"
+        ],
+        [
+          "requires",
+          "link"
+        ],
+        [
+          "requires",
+          "outbox"
+        ],
+        [
+          "requires",
+          "storage"
+        ],
+        [
+          "t",
+          "game"
+        ],
+        [
+          "t",
+          "sandbox"
+        ],
+        [
+          "t",
+          "physics"
+        ],
+        [
+          "t",
+          "simulation"
+        ],
+        [
+          "source",
+          "nostr://npub1fllw8kw0thjj55wds0uugcnp5kej2nfxd36eruq39d56wwz8r44q5q78wj/wss%3A%2F%2Fgit.napplet.soy%2F/powder-toy"
+        ],
+        [
+          "source-commit",
+          "6d92971effd0dacb9390c6bf7d7e42d7a81c941d"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/ed7d6a8ea70831971d5a8e5feab97df475fa2da2a9c2229ad8278b42047badfd"
+        ],
+        [
+          "d",
+          "powder-toy"
+        ]
+      ],
+      "content": "",
+      "sig": "d4d2d833fe3b5ed37787ec2c8399e40a20c0a3797e70ab2867b5ea5d656d36d47f627c9e8334fb9701a3066107915b101db9dd89dee0f2b91ecb040f3ca508fc"
+    },
+    {
+      "kind": 5129,
+      "id": "29f526ec43796d8b6e151a77e1cae44debdf07f626ede45f5c47b78066abb049",
+      "pubkey": "4ffee3d9cf5de52a51cd83f9c46261a5b3254d266c7591f0112b69a738471d6a",
+      "created_at": 1790674840,
+      "tags": [
+        [
+          "path",
+          "/index.html",
+          "ebee2bba2735604b01900b6b350410deb4cd2507996eca8d29f9681a152dea2c"
+        ],
+        [
+          "x",
+          "9c6c9a87fe4336f72cf9653a205abec260481f5f4b40ab7b946c24b842f69a47",
+          "aggregate"
+        ],
+        [
+          "title",
+          "Powder Tool V600Billion"
+        ],
+        [
+          "app",
+          "32267:4ffee3d9cf5de52a51cd83f9c46261a5b3254d266c7591f0112b69a738471d6a:powder-toy-205fa3f8f2b0620e",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "description",
+          "The Powder Toy 100.1.400, the falling-sand physics sandbox, with every element at hand and nine ready-made scenes, from a nuclear reactor to fireworks. Your saves, stamps and settings stay in this browser; saves shared from Nappelin show up in the online browser."
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "requires",
+          "identity"
+        ],
+        [
+          "requires",
+          "link"
+        ],
+        [
+          "requires",
+          "outbox"
+        ],
+        [
+          "requires",
+          "storage"
+        ],
+        [
+          "t",
+          "game"
+        ],
+        [
+          "t",
+          "sandbox"
+        ],
+        [
+          "t",
+          "physics"
+        ],
+        [
+          "t",
+          "simulation"
+        ],
+        [
+          "source",
+          "nostr://npub1fllw8kw0thjj55wds0uugcnp5kej2nfxd36eruq39d56wwz8r44q5q78wj/wss%3A%2F%2Fgit.napplet.soy%2F/powder-toy"
+        ],
+        [
+          "source-commit",
+          "6d92971effd0dacb9390c6bf7d7e42d7a81c941d"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/ed7d6a8ea70831971d5a8e5feab97df475fa2da2a9c2229ad8278b42047badfd"
+        ],
+        [
+          "a",
+          "35129:4ffee3d9cf5de52a51cd83f9c46261a5b3254d266c7591f0112b69a738471d6a:powder-toy"
+        ]
+      ],
+      "content": "",
+      "sig": "8a8c6a7f1df2d9c9025b52a276ac234d768ac0d8fc88d63177b8f585e5b421ffdaec6d911ead0a7ba8a6740416bd7595743368b869011e8467d3bede5ae74380"
+    },
+    {
+      "kind": 5129,
+      "id": "92e3a1ca4904a710de2a70eb706aae4dba11fa03146623d9bf8827d684a1e32c",
+      "pubkey": "4ffee3d9cf5de52a51cd83f9c46261a5b3254d266c7591f0112b69a738471d6a",
+      "created_at": 1790614819,
+      "tags": [
+        [
+          "path",
+          "/index.html",
+          "ca4cb8946181652881bc459c21382fe4903551f8452a3ccdc692aed519fca4a2"
+        ],
+        [
+          "x",
+          "cd24a384809297f374557a23059e7cbcc9b77b2bac98e84ba1c48bdc5ccac0ae",
+          "aggregate"
+        ],
+        [
+          "title",
+          "Powder Tool V600Billion"
+        ],
+        [
+          "app",
+          "32267:4ffee3d9cf5de52a51cd83f9c46261a5b3254d266c7591f0112b69a738471d6a:powder-toy-17bda5cd0d5b7bf5",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "description",
+          "The Powder Toy 100.1.400, the falling-sand physics sandbox, with every element at hand and nine ready-made scenes, from a nuclear reactor to fireworks. Your saves, stamps and settings stay in this browser; saves shared from Nappelin show up in the online browser."
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "requires",
+          "identity"
+        ],
+        [
+          "requires",
+          "link"
+        ],
+        [
+          "requires",
+          "outbox"
+        ],
+        [
+          "requires",
+          "storage"
+        ],
+        [
+          "t",
+          "game"
+        ],
+        [
+          "t",
+          "sandbox"
+        ],
+        [
+          "t",
+          "physics"
+        ],
+        [
+          "t",
+          "simulation"
+        ],
+        [
+          "source",
+          "nostr://npub1fllw8kw0thjj55wds0uugcnp5kej2nfxd36eruq39d56wwz8r44q5q78wj/wss%3A%2F%2Fgit.napplet.soy%2F/powder-toy"
+        ],
+        [
+          "source-commit",
+          "bd3aa94fc991d3b8aceb20786554e2aab823cea4"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/9fc16f220a6cde325aa23b5fb7a5aec6186b949a79840039dc1ff67a21ed9bc9"
+        ],
+        [
+          "a",
+          "35129:4ffee3d9cf5de52a51cd83f9c46261a5b3254d266c7591f0112b69a738471d6a:powder-toy"
+        ]
+      ],
+      "content": "",
+      "sig": "ecc7cc01764abe86e2f871724d7e1140b3328b62ef2d779934bf7547636da4d0ada49c26d888a094df60d58055212cfe8cc07505487d18d7bcb9b064d5ae8162"
+    },
+    {
+      "kind": 5129,
+      "id": "4087cfb95f00721f6c87bc834bf4728bd230946d9dc89a080705a42f29b326f4",
+      "pubkey": "4ffee3d9cf5de52a51cd83f9c46261a5b3254d266c7591f0112b69a738471d6a",
+      "created_at": 1790595658,
+      "tags": [
+        [
+          "path",
+          "/index.html",
+          "22e797478ae608313db53613c72b373e78bd93e52527916708e21a8dc9836e66"
+        ],
+        [
+          "x",
+          "880cdd4f5ca91d7aaf8636815c2f03560d5f40d862c035d630bf2d9697c18bdb",
+          "aggregate"
+        ],
+        [
+          "title",
+          "Powder Tool V600Billion"
+        ],
+        [
+          "app",
+          "32267:4ffee3d9cf5de52a51cd83f9c46261a5b3254d266c7591f0112b69a738471d6a:powder-toy-c193b9e18010b491",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "description",
+          "The Powder Toy 100.1.400, the falling-sand physics sandbox: powders, liquids, gases, electricity, fire. Your saves, stamps and settings stay in this browser; saves shared from Nappelin show up in the online browser."
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "requires",
+          "identity"
+        ],
+        [
+          "requires",
+          "link"
+        ],
+        [
+          "requires",
+          "outbox"
+        ],
+        [
+          "requires",
+          "storage"
+        ],
+        [
+          "t",
+          "game"
+        ],
+        [
+          "t",
+          "sandbox"
+        ],
+        [
+          "t",
+          "physics"
+        ],
+        [
+          "t",
+          "simulation"
+        ],
+        [
+          "source",
+          "nostr://npub1fllw8kw0thjj55wds0uugcnp5kej2nfxd36eruq39d56wwz8r44q5q78wj/wss%3A%2F%2Fgit.napplet.soy%2F/powder-toy"
+        ],
+        [
+          "source-commit",
+          "d8859eb05c207f165b6986e6cb5d7a2d2f17f535"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/869f92d809050b3f4e788b3acb14e4bcad236036ffff22881520cdb8b90eda8c"
+        ],
+        [
+          "a",
+          "35129:4ffee3d9cf5de52a51cd83f9c46261a5b3254d266c7591f0112b69a738471d6a:powder-toy"
+        ]
+      ],
+      "content": "",
+      "sig": "ae6b811857ecc4989696abf0d0bc5897cbbd3f74096d5f6754b32435099dc36f483218718fb68cb5af135a717a95125d69a5a437abbb5394cad0b656f7d5ae24"
+    },
+    {
+      "kind": 5129,
+      "id": "3be960ee2751f5acde448caf91836134f2e50c1396756f3b2edc8f8e90c3f3ec",
+      "pubkey": "3aa5817273c3b2f94f491840e0472f049d0f10009e23de63006166bca9b36ea3",
+      "created_at": 1790407752,
+      "tags": [
+        [
+          "path",
+          "/index.html",
+          "551d322f5d749e43c0107b62f47c3bb64a5f925f77724387cb8553e6110667fb"
+        ],
+        [
+          "x",
+          "479ca78beef811eca6ecc9ff1698c2feec3142ef6ba0d87b20fabe1aedced110",
+          "aggregate"
+        ],
+        [
+          "title",
+          "Napcraft"
+        ],
+        [
+          "app",
+          "32267:3aa5817273c3b2f94f491840e0472f049d0f10009e23de63006166bca9b36ea3:n-52f9e22f5ce-f481f848fa36acc9",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "description",
+          "A little island for big ideas. Browse public worlds or share a code, then build with friends in persistent voxel islands. Six colorful materials, live cube gardeners, and friendly desktop and touch controls."
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "requires",
+          "cvm"
+        ],
+        [
+          "requires",
+          "webrtc"
+        ],
+        [
+          "t",
+          "game"
+        ],
+        [
+          "t",
+          "multiplayer"
+        ],
+        [
+          "t",
+          "creative"
+        ],
+        [
+          "t",
+          "voxel"
+        ],
+        [
+          "source",
+          "nostr://npub182jczunncwe0jn6frpqwq3e0qjws7yqqnc3auccqv9nte2dnd63scjm4rf/wss%3A%2F%2Fgit.napplet.soy%2F/n-52f9e22f5ce"
+        ],
+        [
+          "source-commit",
+          "410dea87e1096e891d6a8b243357f28ce19321df"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/9e6e0cabb18d0d46e1a22ed126f976821c6da009a12e3b4ad6b736034c168761"
+        ],
+        [
+          "a",
+          "35129:3aa5817273c3b2f94f491840e0472f049d0f10009e23de63006166bca9b36ea3:n-52f9e22f5ce"
+        ]
+      ],
+      "content": "",
+      "sig": "3a701dd30bbc252eef7c0153ee6d7e867ad10d15b2c8c0adcda4d18452e269bd42fb75fd1776c187564379305bbfe80763c9bc10e665bf22edc6d0c3fc96fdd3"
+    },
+    {
+      "kind": 35129,
+      "id": "ee47ac6a25df409538e4b70f2afde128c2e3a353dab0399e2ee9d9e34b379656",
+      "pubkey": "3aa5817273c3b2f94f491840e0472f049d0f10009e23de63006166bca9b36ea3",
+      "created_at": 1790407752,
+      "tags": [
+        [
+          "path",
+          "/index.html",
+          "551d322f5d749e43c0107b62f47c3bb64a5f925f77724387cb8553e6110667fb"
+        ],
+        [
+          "x",
+          "479ca78beef811eca6ecc9ff1698c2feec3142ef6ba0d87b20fabe1aedced110",
+          "aggregate"
+        ],
+        [
+          "title",
+          "Napcraft"
+        ],
+        [
+          "app",
+          "32267:3aa5817273c3b2f94f491840e0472f049d0f10009e23de63006166bca9b36ea3:n-52f9e22f5ce-f481f848fa36acc9",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "description",
+          "A little island for big ideas. Browse public worlds or share a code, then build with friends in persistent voxel islands. Six colorful materials, live cube gardeners, and friendly desktop and touch controls."
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "requires",
+          "cvm"
+        ],
+        [
+          "requires",
+          "webrtc"
+        ],
+        [
+          "t",
+          "game"
+        ],
+        [
+          "t",
+          "multiplayer"
+        ],
+        [
+          "t",
+          "creative"
+        ],
+        [
+          "t",
+          "voxel"
+        ],
+        [
+          "source",
+          "nostr://npub182jczunncwe0jn6frpqwq3e0qjws7yqqnc3auccqv9nte2dnd63scjm4rf/wss%3A%2F%2Fgit.napplet.soy%2F/n-52f9e22f5ce"
+        ],
+        [
+          "source-commit",
+          "410dea87e1096e891d6a8b243357f28ce19321df"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/9e6e0cabb18d0d46e1a22ed126f976821c6da009a12e3b4ad6b736034c168761"
+        ],
+        [
+          "d",
+          "n-52f9e22f5ce"
+        ]
+      ],
+      "content": "",
+      "sig": "62f9cb9bcf8c81ae8be2db1c13541134c4976f55d831506d6af81bca1032246ebbd1c52c19a7e4ace1e227daf32c59e4a7a7f7bea8d885630f92cbe7f4080b2a"
+    },
+    {
+      "kind": 5129,
+      "id": "307dcea38bb90d0ac0feac78b463a57a9e55096449b777976dde3fd0331fef25",
+      "pubkey": "3aa5817273c3b2f94f491840e0472f049d0f10009e23de63006166bca9b36ea3",
+      "created_at": 1790404404,
+      "tags": [
+        [
+          "path",
+          "/index.html",
+          "e3df4c86501215286650d66b64ed708da53fe28013a9083b558bee37bbac5720"
+        ],
+        [
+          "x",
+          "de73283acf5c31f7ce9f88dc19b34aeadbe66507df6f61ec8cf88e59bba5e9c6",
+          "aggregate"
+        ],
+        [
+          "title",
+          "Napcraft"
+        ],
+        [
+          "app",
+          "32267:3aa5817273c3b2f94f491840e0472f049d0f10009e23de63006166bca9b36ea3:n-52f9e22f5ce-c55afe4b3bba238b",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "description",
+          "A little island for big ideas. Create a persistent voxel world, share its code, and build with friends. Six colorful materials, live cube gardeners, and friendly desktop and touch controls."
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "requires",
+          "cvm"
+        ],
+        [
+          "requires",
+          "webrtc"
+        ],
+        [
+          "t",
+          "game"
+        ],
+        [
+          "t",
+          "multiplayer"
+        ],
+        [
+          "t",
+          "creative"
+        ],
+        [
+          "t",
+          "voxel"
+        ],
+        [
+          "source",
+          "nostr://npub182jczunncwe0jn6frpqwq3e0qjws7yqqnc3auccqv9nte2dnd63scjm4rf/wss%3A%2F%2Fgit.napplet.soy%2F/n-52f9e22f5ce"
+        ],
+        [
+          "source-commit",
+          "2043aa2d79f2fe00c6c17aa5a5e4f0e9cfaf9760"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/e3afde24fbf5f80eeb7bcb98c87e4aff6e3c0ed9876b9614e5c26306e0ec275b"
+        ],
+        [
+          "a",
+          "35129:3aa5817273c3b2f94f491840e0472f049d0f10009e23de63006166bca9b36ea3:n-52f9e22f5ce"
+        ]
+      ],
+      "content": "",
+      "sig": "ff8ec969d77815aa6f2c069dbb1bd68899b4c3072a5c5018d4154afec3067d9ac5826e9970b291b84723f03d879a9a344ad5f75c13154428e7240a5881dce28d"
+    },
+    {
+      "kind": 5129,
+      "id": "4d1006fa12b413a59ef607f75f4e09d010b6a7e9b8b12369cb66238059bcfef9",
+      "pubkey": "3aa5817273c3b2f94f491840e0472f049d0f10009e23de63006166bca9b36ea3",
+      "created_at": 1790367520,
+      "tags": [
+        [
+          "path",
+          "/index.html",
+          "fc5c1e0ac629450bd5c0f4ed7357c36f6d0e31361f27c6985cec5f23984597d4"
+        ],
+        [
+          "x",
+          "d47f9d6c19c4497f6c2ad36fbc9285080731c5d23ad5832147ee8cfe78c7ca1b",
+          "aggregate"
+        ],
+        [
+          "title",
+          "Napcraft"
+        ],
+        [
+          "app",
+          "32267:3aa5817273c3b2f94f491840e0472f049d0f10009e23de63006166bca9b36ea3:n-52f9e22f5ce-8929fb40856bc7c9",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "description",
+          "A little island for big ideas. Create a persistent voxel world, share its code, and build with friends. Six colorful materials, live cube gardeners, and friendly desktop and touch controls."
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "requires",
+          "cvm"
+        ],
+        [
+          "requires",
+          "webrtc"
+        ],
+        [
+          "t",
+          "game"
+        ],
+        [
+          "t",
+          "multiplayer"
+        ],
+        [
+          "t",
+          "creative"
+        ],
+        [
+          "t",
+          "voxel"
+        ],
+        [
+          "source",
+          "nostr://npub182jczunncwe0jn6frpqwq3e0qjws7yqqnc3auccqv9nte2dnd63scjm4rf/wss%3A%2F%2Fgit.napplet.soy%2F/n-52f9e22f5ce"
+        ],
+        [
+          "source-commit",
+          "c0dd8b13639ebf8852a7609b156cd636f6c56d4e"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/1a7788c8ef24b0daf6b17de3091441b13a2614ce7b5d3377bcddd6b7fa87118a"
+        ],
+        [
+          "a",
+          "35129:3aa5817273c3b2f94f491840e0472f049d0f10009e23de63006166bca9b36ea3:n-52f9e22f5ce"
+        ]
+      ],
+      "content": "",
+      "sig": "5403d1f1b2e33bd8b0bd1010600d836c25f42bfdcd02a4da9d0b432a17819e181fd8011e920966fa448a1692232c06f84205e89dc54f613aa4259de1bf3414cc"
+    },
+    {
+      "kind": 5129,
+      "id": "be7a4f02d2810a5c907b92522eec1f4d0598037019abda7a3917d75d0c6e1fd5",
+      "pubkey": "3aa5817273c3b2f94f491840e0472f049d0f10009e23de63006166bca9b36ea3",
+      "created_at": 1790258141,
+      "tags": [
+        [
+          "path",
+          "/index.html",
+          "dd885254f9ebf79c482edd7fa650d35fb62729df87952f4beab7571d4e8c2607"
+        ],
+        [
+          "x",
+          "daecc31acff3e1f66cc7439a9c1054e025b8fd40be8d6a0ec38cc9256446b966",
+          "aggregate"
+        ],
+        [
+          "title",
+          "Napplet Machines V8"
+        ],
+        [
+          "app",
+          "32267:3aa5817273c3b2f94f491840e0472f049d0f10009e23de63006166bca9b36ea3:n-b5572362d4a-4838519000d08d57",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "description",
+          "Build a little track. Race a little reckless. Six-car miniature racing with a 3D spline workshop, AI rivals and multiplayer rooms."
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "t",
+          "game"
+        ],
+        [
+          "t",
+          "racing"
+        ],
+        [
+          "t",
+          "multiplayer"
+        ],
+        [
+          "t",
+          "track-editor"
+        ],
+        [
+          "source",
+          "nostr://npub182jczunncwe0jn6frpqwq3e0qjws7yqqnc3auccqv9nte2dnd63scjm4rf/wss%3A%2F%2Fgit.napplet.soy%2F/n-b5572362d4a"
+        ],
+        [
+          "source-commit",
+          "534f19acb4ba3c6aa7fce7ab4b6608b7d559f251"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/0f7feb97e2c3d33656cb8311c922abb613cb31edc83860a10d7ab79c9cfdcd34"
+        ],
+        [
+          "a",
+          "35129:3aa5817273c3b2f94f491840e0472f049d0f10009e23de63006166bca9b36ea3:n-b5572362d4a"
+        ]
+      ],
+      "content": "",
+      "sig": "ae40a6a842d5aa7cf0c6379cab91f5e3ab00f2a0e973f549ba16c755c7126b4b86780cc1cb3652ef7c4bbb53a870833107901764b6d950bb48cc73a6e80eb1a3"
+    },
+    {
+      "kind": 5129,
+      "id": "0ea6428c36c2f26f087554db63500634fcdf3c2f10baa896a51c973501bea0f9",
+      "pubkey": "3aa5817273c3b2f94f491840e0472f049d0f10009e23de63006166bca9b36ea3",
+      "created_at": 1790187951,
+      "tags": [
+        [
+          "path",
+          "/index.html",
+          "69077f3fbef8f311b1ce58f9af1b94cb3afbb219d768729924e8d1a43c3d7ed5"
+        ],
+        [
+          "x",
+          "3656a0167115789c7ea575e386f8e11a1ce79da6671908945342f2e70b1cd700",
+          "aggregate"
+        ],
+        [
+          "title",
+          "Limb Race"
+        ],
+        [
+          "app",
+          "32267:3aa5817273c3b2f94f491840e0472f049d0f10009e23de63006166bca9b36ea3:n-c2869f12ad8-fe55597e95b6dacd",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "description",
+          "Draw rotating limbs, race ten physics courses, and compare shared times with drawings. Build, publish and remix custom tracks with ramps, ledges and trenches."
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "t",
+          "game"
+        ],
+        [
+          "t",
+          "racing"
+        ],
+        [
+          "t",
+          "physics"
+        ],
+        [
+          "t",
+          "drawing"
+        ],
+        [
+          "source",
+          "nostr://npub182jczunncwe0jn6frpqwq3e0qjws7yqqnc3auccqv9nte2dnd63scjm4rf/wss%3A%2F%2Fgit.napplet.soy%2F/n-c2869f12ad8"
+        ],
+        [
+          "source-commit",
+          "008c01ee6454c2a2923af3ace80d725b686372c2"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/7be8492d1f89b891ce0ed873fc5aa302d018707d9f1edbb27639f15f18425362"
+        ],
+        [
+          "a",
+          "35129:3aa5817273c3b2f94f491840e0472f049d0f10009e23de63006166bca9b36ea3:n-c2869f12ad8"
+        ]
+      ],
+      "content": "",
+      "sig": "75d319ea796a4f923dc13e08284f12ffc4272440b0ef5fe81fc49435a53b36f7f95b86262cab58f5ef28c47677227fd5c81d640036c1a7a16f773d1fede3cacb"
+    },
+    {
+      "kind": 35129,
+      "id": "6a8ae4fc626eaad88e33b3dc4acfc41b659cb179deecea9eb67dd6c217387b7a",
+      "pubkey": "3aa5817273c3b2f94f491840e0472f049d0f10009e23de63006166bca9b36ea3",
+      "created_at": 1790187951,
+      "tags": [
+        [
+          "path",
+          "/index.html",
+          "69077f3fbef8f311b1ce58f9af1b94cb3afbb219d768729924e8d1a43c3d7ed5"
+        ],
+        [
+          "x",
+          "3656a0167115789c7ea575e386f8e11a1ce79da6671908945342f2e70b1cd700",
+          "aggregate"
+        ],
+        [
+          "title",
+          "Limb Race"
+        ],
+        [
+          "app",
+          "32267:3aa5817273c3b2f94f491840e0472f049d0f10009e23de63006166bca9b36ea3:n-c2869f12ad8-fe55597e95b6dacd",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "description",
+          "Draw rotating limbs, race ten physics courses, and compare shared times with drawings. Build, publish and remix custom tracks with ramps, ledges and trenches."
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "t",
+          "game"
+        ],
+        [
+          "t",
+          "racing"
+        ],
+        [
+          "t",
+          "physics"
+        ],
+        [
+          "t",
+          "drawing"
+        ],
+        [
+          "source",
+          "nostr://npub182jczunncwe0jn6frpqwq3e0qjws7yqqnc3auccqv9nte2dnd63scjm4rf/wss%3A%2F%2Fgit.napplet.soy%2F/n-c2869f12ad8"
+        ],
+        [
+          "source-commit",
+          "008c01ee6454c2a2923af3ace80d725b686372c2"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/7be8492d1f89b891ce0ed873fc5aa302d018707d9f1edbb27639f15f18425362"
+        ],
+        [
+          "d",
+          "n-c2869f12ad8"
+        ]
+      ],
+      "content": "",
+      "sig": "30f2ff0c36ba56b2418b076a4315db09385afca7c490436cf16745d20f2bbd9c4d86cf8f8ca2e768af0db8c3f2679ad714cd11af66fa2f69c5ef2c9066691952"
+    },
+    {
+      "kind": 35129,
+      "id": "242076e6da24834fed54c9f76f61a85069b2e7ec2827b91416e0ec8e6cff8c0c",
+      "pubkey": "3aa5817273c3b2f94f491840e0472f049d0f10009e23de63006166bca9b36ea3",
+      "created_at": 1790152623,
+      "tags": [
+        [
+          "path",
+          "/index.html",
+          "3ff44b96af99e5e64dcd1654be4d22a813ed52fea7187aec06cedd83648c1118"
+        ],
+        [
+          "x",
+          "6a61be25a955476269cb64aa00f6ee0177780106fc8ae6d13c42a375c6252f51",
+          "aggregate"
+        ],
+        [
+          "title",
+          "Powder Tool"
+        ],
+        [
+          "app",
+          "32267:3aa5817273c3b2f94f491840e0472f049d0f10009e23de63006166bca9b36ea3:n-48e516e34e5-3c413bbb3cc19f56",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "description",
+          "A high-resolution physics sandbox with powders, liquids, reactive gases, configurable emitters, crates, and stones."
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "t",
+          "physics"
+        ],
+        [
+          "t",
+          "sandbox"
+        ],
+        [
+          "t",
+          "simulation"
+        ],
+        [
+          "t",
+          "powder"
+        ],
+        [
+          "t",
+          "creative"
+        ],
+        [
+          "source",
+          "nostr://npub182jczunncwe0jn6frpqwq3e0qjws7yqqnc3auccqv9nte2dnd63scjm4rf/wss%3A%2F%2Fgit.napplet.soy%2F/n-48e516e34e5"
+        ],
+        [
+          "source-commit",
+          "c4489f440f270a4e4e508b90be684e2d53f6a004"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/f2fd072590aac7a54b73e005b51018826f2fcfa9a08e16f756c4794ec1a083b3"
+        ],
+        [
+          "d",
+          "n-48e516e34e5"
+        ]
+      ],
+      "content": "",
+      "sig": "a172512b21fe595119a768252d36d9c1e957d0a721a97c77f11b3d87da2abc572ce2d7fa3286dcb4702b94cbb9e67a4000069c01e87e9731fc40c67d4eecdfcb"
+    },
+    {
+      "kind": 5129,
+      "id": "bc8266b3bde44e472245f70f5469b1dea282283c7ded506aa282bce6456baa1e",
+      "pubkey": "3aa5817273c3b2f94f491840e0472f049d0f10009e23de63006166bca9b36ea3",
+      "created_at": 1790152623,
+      "tags": [
+        [
+          "path",
+          "/index.html",
+          "3ff44b96af99e5e64dcd1654be4d22a813ed52fea7187aec06cedd83648c1118"
+        ],
+        [
+          "x",
+          "6a61be25a955476269cb64aa00f6ee0177780106fc8ae6d13c42a375c6252f51",
+          "aggregate"
+        ],
+        [
+          "title",
+          "Powder Tool"
+        ],
+        [
+          "app",
+          "32267:3aa5817273c3b2f94f491840e0472f049d0f10009e23de63006166bca9b36ea3:n-48e516e34e5-3c413bbb3cc19f56",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "description",
+          "A high-resolution physics sandbox with powders, liquids, reactive gases, configurable emitters, crates, and stones."
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "t",
+          "physics"
+        ],
+        [
+          "t",
+          "sandbox"
+        ],
+        [
+          "t",
+          "simulation"
+        ],
+        [
+          "t",
+          "powder"
+        ],
+        [
+          "t",
+          "creative"
+        ],
+        [
+          "source",
+          "nostr://npub182jczunncwe0jn6frpqwq3e0qjws7yqqnc3auccqv9nte2dnd63scjm4rf/wss%3A%2F%2Fgit.napplet.soy%2F/n-48e516e34e5"
+        ],
+        [
+          "source-commit",
+          "c4489f440f270a4e4e508b90be684e2d53f6a004"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/f2fd072590aac7a54b73e005b51018826f2fcfa9a08e16f756c4794ec1a083b3"
+        ],
+        [
+          "a",
+          "35129:3aa5817273c3b2f94f491840e0472f049d0f10009e23de63006166bca9b36ea3:n-48e516e34e5"
+        ]
+      ],
+      "content": "",
+      "sig": "15476217b10e39c14d34a8b6493d0549d58399322baa7199e89d9015e96378f34e0d1afe5982bf7b57762d9c4f79d7c177f89bb6bac69ea90a92c5241a495938"
+    },
+    {
+      "kind": 5129,
+      "id": "be8ca64b03ed0a873076ccedc496e022c34ce1165ffb82477683183cf3331104",
+      "pubkey": "99d1d395c7be96c77766e4124164ce3a2443d486e146644f762d29832f7faf25",
+      "created_at": 1790149932,
+      "tags": [
+        [
+          "path",
+          "/index.html",
+          "f3038a8471c0744355f8748b332639be6c317dc45856739675b878987a3ba565"
+        ],
+        [
+          "x",
+          "9ba1432f069692729bca9ce33f09ae28b26492d2b6016090cb3ad65f0c786e37",
+          "aggregate"
+        ],
+        [
+          "title",
+          "Rail Game"
+        ],
+        [
+          "app",
+          "32267:99d1d395c7be96c77766e4124164ce3a2443d486e146644f762d29832f7faf25:n-91ec90c6fdf-be40ede4ac73f7e7",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "description",
+          "Lead up to 250 soldiers against 13,075 enemies across eight long rail stages. Recruit, multiply, dodge barricades and defeat eight wardens in a geometric arcade runner."
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "t",
+          "game"
+        ],
+        [
+          "t",
+          "arcade"
+        ],
+        [
+          "t",
+          "runner"
+        ],
+        [
+          "source",
+          "nostr://npub1n8ga89w8h6tvwamxusfyzexw8gjy84yxu9rxgnmk955cxtml4ujswzxydd/wss%3A%2F%2Fgit.napplet.soy%2F/n-91ec90c6fdf"
+        ],
+        [
+          "source-commit",
+          "ddf0122b6acc85bff9ea2a6a7e446f06744e5438"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/dad7b678e25f96a35fc8f55d14500aaca8e9fc90ca0284a8c38f975c48d9709a"
+        ],
+        [
+          "a",
+          "35129:99d1d395c7be96c77766e4124164ce3a2443d486e146644f762d29832f7faf25:n-91ec90c6fdf"
+        ]
+      ],
+      "content": "",
+      "sig": "50e5a08e556d9a8c1ae82d687beab568f93e93023c7500ad14e7c01c9ec6b1304f92780e766c5e2884697e1146ab78b4b31f888440ec37836111e666cb277f23"
+    },
+    {
+      "kind": 35129,
+      "id": "ccdd5b913413a364713e5d0e2293857edc8ea630ecd5b11ac0bb92b890fade8e",
+      "pubkey": "99d1d395c7be96c77766e4124164ce3a2443d486e146644f762d29832f7faf25",
+      "created_at": 1790149932,
+      "tags": [
+        [
+          "path",
+          "/index.html",
+          "f3038a8471c0744355f8748b332639be6c317dc45856739675b878987a3ba565"
+        ],
+        [
+          "x",
+          "9ba1432f069692729bca9ce33f09ae28b26492d2b6016090cb3ad65f0c786e37",
+          "aggregate"
+        ],
+        [
+          "title",
+          "Rail Game"
+        ],
+        [
+          "app",
+          "32267:99d1d395c7be96c77766e4124164ce3a2443d486e146644f762d29832f7faf25:n-91ec90c6fdf-be40ede4ac73f7e7",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "description",
+          "Lead up to 250 soldiers against 13,075 enemies across eight long rail stages. Recruit, multiply, dodge barricades and defeat eight wardens in a geometric arcade runner."
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "t",
+          "game"
+        ],
+        [
+          "t",
+          "arcade"
+        ],
+        [
+          "t",
+          "runner"
+        ],
+        [
+          "source",
+          "nostr://npub1n8ga89w8h6tvwamxusfyzexw8gjy84yxu9rxgnmk955cxtml4ujswzxydd/wss%3A%2F%2Fgit.napplet.soy%2F/n-91ec90c6fdf"
+        ],
+        [
+          "source-commit",
+          "ddf0122b6acc85bff9ea2a6a7e446f06744e5438"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/dad7b678e25f96a35fc8f55d14500aaca8e9fc90ca0284a8c38f975c48d9709a"
+        ],
+        [
+          "d",
+          "n-91ec90c6fdf"
+        ]
+      ],
+      "content": "",
+      "sig": "1f609124edcf6725b56210aadcbe7ae7e4a0dc28553712dc945c85cc84b0fe0dff1c59f9d7152e8ce6b73c0a93596c0ca4920be4735958e46cbf54574427b4c7"
+    },
+    {
+      "kind": 5129,
+      "id": "11896857e83ca529b71901102140d50d0c8a79f60b81f5fc7464c42aaa976644",
+      "pubkey": "99d1d395c7be96c77766e4124164ce3a2443d486e146644f762d29832f7faf25",
+      "created_at": 1789982416,
+      "tags": [
+        [
+          "path",
+          "/index.html",
+          "ee1660d966256e736b962658060ade68df02c39740f0f78a060df04c401ace73"
+        ],
+        [
+          "x",
+          "2f5964d241a249b0d51cd969f553475ae6e50b2ce8df755bb6040db98d3adc31",
+          "aggregate"
+        ],
+        [
+          "title",
+          "Soybert 3D"
+        ],
+        [
+          "app",
+          "32267:99d1d395c7be96c77766e4124164ce3a2443d486e146644f762d29832f7faf25:n-9021e1b6a96-0853909db5136bb4",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "description",
+          "A rotating Soybert showcase and a small 3D stage. Run, jump, fire the shotgun and celebrate with keyboard or touch controls."
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "t",
+          "3d"
+        ],
+        [
+          "t",
+          "mascot"
+        ],
+        [
+          "t",
+          "demo"
+        ],
+        [
+          "source",
+          "nostr://npub1n8ga89w8h6tvwamxusfyzexw8gjy84yxu9rxgnmk955cxtml4ujswzxydd/wss%3A%2F%2Fgit.napplet.soy%2F/n-9021e1b6a96"
+        ],
+        [
+          "source-commit",
+          "298fa2d0e8b1c3e7b9788dc25ab64b3408e0f69f"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/7083223a53bbd32026f3f4be929ae9e1a0047000db9c992a35441cc620308f71"
+        ],
+        [
+          "a",
+          "35129:99d1d395c7be96c77766e4124164ce3a2443d486e146644f762d29832f7faf25:n-9021e1b6a96"
+        ]
+      ],
+      "content": "",
+      "sig": "5520d493f57d6aa18b53b79f9182d4d1f00e20853714f94303d72b3b4c89177413c3765e2519868fd3aa281ebd99579287adfc07577a084c2743fa91e6f1df6e"
+    },
+    {
+      "kind": 35129,
+      "id": "4bf80e758af17a4100681b92acabb81d6ed7c564ccec3952749280bdb51f5815",
+      "pubkey": "99d1d395c7be96c77766e4124164ce3a2443d486e146644f762d29832f7faf25",
+      "created_at": 1789982416,
+      "tags": [
+        [
+          "path",
+          "/index.html",
+          "ee1660d966256e736b962658060ade68df02c39740f0f78a060df04c401ace73"
+        ],
+        [
+          "x",
+          "2f5964d241a249b0d51cd969f553475ae6e50b2ce8df755bb6040db98d3adc31",
+          "aggregate"
+        ],
+        [
+          "title",
+          "Soybert 3D"
+        ],
+        [
+          "app",
+          "32267:99d1d395c7be96c77766e4124164ce3a2443d486e146644f762d29832f7faf25:n-9021e1b6a96-0853909db5136bb4",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "description",
+          "A rotating Soybert showcase and a small 3D stage. Run, jump, fire the shotgun and celebrate with keyboard or touch controls."
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "t",
+          "3d"
+        ],
+        [
+          "t",
+          "mascot"
+        ],
+        [
+          "t",
+          "demo"
+        ],
+        [
+          "source",
+          "nostr://npub1n8ga89w8h6tvwamxusfyzexw8gjy84yxu9rxgnmk955cxtml4ujswzxydd/wss%3A%2F%2Fgit.napplet.soy%2F/n-9021e1b6a96"
+        ],
+        [
+          "source-commit",
+          "298fa2d0e8b1c3e7b9788dc25ab64b3408e0f69f"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/7083223a53bbd32026f3f4be929ae9e1a0047000db9c992a35441cc620308f71"
+        ],
+        [
+          "d",
+          "n-9021e1b6a96"
+        ]
+      ],
+      "content": "",
+      "sig": "34b8522c6e10d82b7f295abd1443dc5629dbe9541d9eb411d70e37c800bc62aed53436a0306d83faf6f4c66c3f95eef67c905243fecc08d19c5fe03a51148065"
+    },
+    {
+      "kind": 5129,
+      "id": "39676a720d4ce66d5b81993fb4f0c8fe7f6abc37f2ae3d6419d771e5ed68f89a",
+      "pubkey": "d73ae26c0bdb51596858fea135d3a112435cd9483fc3d84c1df51700b428fe01",
+      "created_at": 1789930567,
+      "tags": [
+        [
+          "path",
+          "/index.html",
+          "1bb5a98bb274ba15fea937d56e556354eeb00910c558a318dddc90235cd1d4a6"
+        ],
+        [
+          "x",
+          "d328a608c98ebe50ee15e3fb80924921a4fa09d6a017416b12b686ca392e9e3b",
+          "aggregate"
+        ],
+        [
+          "title",
+          "super-platformer"
+        ],
+        [
+          "app",
+          "32267:d73ae26c0bdb51596858fea135d3a112435cd9483fc3d84c1df51700b428fe01:n-01288b1ab38-1a9c65a2dd3984e2",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "source",
+          "nostr://npub16uawymqtmdg4j6zcl6snt5apzfp4ek2g8lpasnqa75tspdpglcqsgpatvc/wss%3A%2F%2Fgit.napplet.soy%2F/n-01288b1ab38"
+        ],
+        [
+          "source-commit",
+          "a238519c899c5b45a3ff283a56f2ecb05ddd55e8"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/254ca3f1c7b46da111138a1fb206c5317ca61926edbb72c9c50cc6dd3c0c66d5"
+        ],
+        [
+          "a",
+          "35129:d73ae26c0bdb51596858fea135d3a112435cd9483fc3d84c1df51700b428fe01:n-01288b1ab38"
+        ]
+      ],
+      "content": "",
+      "sig": "f0d3eb74db0c40efe11376ea3390f7e618c664188038ac9d5bb185ae66cad2f7d909c7924f668a72bf9a4276706313ebafc505f4f7edd52580e2e56f811b996b"
+    },
+    {
+      "kind": 5129,
+      "id": "c24d26f25fd02cdaa02a111f09074f3a8049c213ecf86a7d315560b21e853863",
+      "pubkey": "d73ae26c0bdb51596858fea135d3a112435cd9483fc3d84c1df51700b428fe01",
+      "created_at": 1789929731,
+      "tags": [
+        [
+          "path",
+          "/index.html",
+          "bcbe255ffc71e4a16604e01cdd43a3b4f3113a76f2818ca5b3b79284351468e0"
+        ],
+        [
+          "x",
+          "619708544a3adea5ca6dc687beb570414b28957312f939d0aff4754e5e12817c",
+          "aggregate"
+        ],
+        [
+          "title",
+          "super-platformer"
+        ],
+        [
+          "app",
+          "32267:d73ae26c0bdb51596858fea135d3a112435cd9483fc3d84c1df51700b428fe01:n-01288b1ab38-0781e65dd610fcbe",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "source",
+          "nostr://npub16uawymqtmdg4j6zcl6snt5apzfp4ek2g8lpasnqa75tspdpglcqsgpatvc/wss%3A%2F%2Fgit.napplet.soy%2F/n-01288b1ab38"
+        ],
+        [
+          "source-commit",
+          "03cb5add53fbc89a95c452e052f76d68bc9f5ca9"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/975489890d29c0941b7c98b9afb133beae18421be018882186c1b0fe63b9c59b"
+        ],
+        [
+          "a",
+          "35129:d73ae26c0bdb51596858fea135d3a112435cd9483fc3d84c1df51700b428fe01:n-01288b1ab38"
+        ]
+      ],
+      "content": "",
+      "sig": "dfc628d4171feb3334e5191ec42f530b8a6b7e9ff3fbb01f34bd24d312b1f746eff469e5db5df58aadf1991b6b219abf005ef738495804b83db890552d2db56c"
+    },
+    {
+      "kind": 5129,
+      "id": "401645cf54d0c7d7cb31029b159b914fc6d4ef64fbccb5e615346b33112aa083",
+      "pubkey": "d73ae26c0bdb51596858fea135d3a112435cd9483fc3d84c1df51700b428fe01",
+      "created_at": 1789909325,
+      "tags": [
+        [
+          "path",
+          "/index.html",
+          "bbcceaf249efcfb7c914262994b478d4f824ad09dc78bfa345fe61e1d148c800"
+        ],
+        [
+          "x",
+          "a1d57fac546940ee21283ef62073b1be351a69eb5074bc22ebd458b6f0c2ed29",
+          "aggregate"
+        ],
+        [
+          "title",
+          "super-platformer"
+        ],
+        [
+          "app",
+          "32267:d73ae26c0bdb51596858fea135d3a112435cd9483fc3d84c1df51700b428fe01:n-01288b1ab38-8ee4d7f2320f7bfe",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "source",
+          "nostr://npub16uawymqtmdg4j6zcl6snt5apzfp4ek2g8lpasnqa75tspdpglcqsgpatvc/wss%3A%2F%2Fgit.napplet.soy%2F/n-01288b1ab38"
+        ],
+        [
+          "source-commit",
+          "94bcc18c48fd5a1fc11f3d84d1fc6637eaa0abb3"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/ebfe7515f3ec24a476d70f24fe2ba119c61f3cedc3b5b5fe4e10bb13c60701da"
+        ],
+        [
+          "a",
+          "35129:d73ae26c0bdb51596858fea135d3a112435cd9483fc3d84c1df51700b428fe01:n-01288b1ab38"
+        ]
+      ],
+      "content": "",
+      "sig": "24082a704b966e8862189102d931a50e05d4dbf18a7d5ac32fc69baf272c8dddbf545532b4dacc44f1674f146818d3faa77c07a47c5407246892d602c641da59"
+    },
+    {
+      "kind": 5129,
+      "id": "7e2165aeb49c02442b8ef5076e04369d48870adbdb6fe378ce5e6b554b5d52de",
+      "pubkey": "d73ae26c0bdb51596858fea135d3a112435cd9483fc3d84c1df51700b428fe01",
+      "created_at": 1789908478,
+      "tags": [
+        [
+          "path",
+          "/index.html",
+          "4e031d5dc5cdd59df2084a8eddc31b05f8488b005432ce75cc8853b8ffb2fce6"
+        ],
+        [
+          "x",
+          "7e2d13fa47731517793b163ccb094900ad98303b5b86ba3d89b3578c7ee89da8",
+          "aggregate"
+        ],
+        [
+          "title",
+          "super-platformer"
+        ],
+        [
+          "app",
+          "32267:d73ae26c0bdb51596858fea135d3a112435cd9483fc3d84c1df51700b428fe01:n-01288b1ab38-fd5aa7bffabba0f2",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "source",
+          "nostr://npub16uawymqtmdg4j6zcl6snt5apzfp4ek2g8lpasnqa75tspdpglcqsgpatvc/wss%3A%2F%2Fgit.napplet.soy%2F/n-01288b1ab38"
+        ],
+        [
+          "source-commit",
+          "f7bd41f9eac61f63988f3833746aecea7e5c3289"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/77cdcb22f3769d05ef3d08f0e68f40e7ea95ecb5b0a06006e55b938b273729a7"
+        ],
+        [
+          "a",
+          "35129:d73ae26c0bdb51596858fea135d3a112435cd9483fc3d84c1df51700b428fe01:n-01288b1ab38"
+        ]
+      ],
+      "content": "",
+      "sig": "9c8a4d87886731f3c49b69a48bbd604f7b8628ee90c6e6a925ddf28e958b9c605860fa7c7bfbcc4b5045c1419365eec2b932cdf265be7690b4236152b1d959d3"
+    },
+    {
+      "kind": 5129,
+      "id": "238215123c696d4d53714809ec4f185ac19eb5156670d1c26938c99b91d3a93b",
+      "pubkey": "d73ae26c0bdb51596858fea135d3a112435cd9483fc3d84c1df51700b428fe01",
+      "created_at": 1789905147,
+      "tags": [
+        [
+          "path",
+          "/index.html",
+          "8cbf623ad86fdc1e94c965d7ebe55f3a1b1f5963fb34940115aab62ffb7e8180"
+        ],
+        [
+          "x",
+          "6959169a3aab476f2b9fc627e044ec2c069e33a054617f0a7d3db8d8202011e2",
+          "aggregate"
+        ],
+        [
+          "title",
+          "super-platformer"
+        ],
+        [
+          "app",
+          "32267:d73ae26c0bdb51596858fea135d3a112435cd9483fc3d84c1df51700b428fe01:n-01288b1ab38-a027edd39b45fbc0",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "source",
+          "nostr://npub16uawymqtmdg4j6zcl6snt5apzfp4ek2g8lpasnqa75tspdpglcqsgpatvc/wss%3A%2F%2Fgit.napplet.soy%2F/n-01288b1ab38"
+        ],
+        [
+          "source-commit",
+          "1a57ff9731763acb05644f74db6f274b737f0a21"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/531c341b8b8472de5d6019f88b11cafab14b578344bdbdb27b1287e1e8bc2415"
+        ],
+        [
+          "a",
+          "35129:d73ae26c0bdb51596858fea135d3a112435cd9483fc3d84c1df51700b428fe01:n-01288b1ab38"
+        ]
+      ],
+      "content": "",
+      "sig": "ab6e8cc8ff71c5c084712b96f8d2de66081db62ba4b4330d8eac8f5c46ff8fff0137c09683c0081ced0ac02ccf2227301ed5ebb8b57ea0d29de6b59e8fa48ed5"
+    },
+    {
+      "kind": 5129,
+      "id": "a1eef2fd38359717d53dc7c776555d8e5f88a093d5b0c2d67964469af1b86b85",
+      "pubkey": "d73ae26c0bdb51596858fea135d3a112435cd9483fc3d84c1df51700b428fe01",
+      "created_at": 1789902242,
+      "tags": [
+        [
+          "path",
+          "/index.html",
+          "299fef90dcebcd1599a5937133d9245a60fa7b21b7c90ef19cae04a6d20bb6b0"
+        ],
+        [
+          "x",
+          "bb4332989ca328fb0219a7eefcff4d1dfa4c899a7cd9ef90e9afe325df6c225e",
+          "aggregate"
+        ],
+        [
+          "title",
+          "super-platformer"
+        ],
+        [
+          "app",
+          "32267:d73ae26c0bdb51596858fea135d3a112435cd9483fc3d84c1df51700b428fe01:n-01288b1ab38-0746cb107b5f10ac",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "source",
+          "nostr://npub16uawymqtmdg4j6zcl6snt5apzfp4ek2g8lpasnqa75tspdpglcqsgpatvc/wss%3A%2F%2Fgit.napplet.soy%2F/n-01288b1ab38"
+        ],
+        [
+          "source-commit",
+          "f042131b2f637d10b954c99861f442d94629196e"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/fa6788005f7043ce7d4cc4058614d9b67776d867f81897e8b85de8c2eadf6470"
+        ],
+        [
+          "a",
+          "35129:d73ae26c0bdb51596858fea135d3a112435cd9483fc3d84c1df51700b428fe01:n-01288b1ab38"
+        ]
+      ],
+      "content": "",
+      "sig": "3497d4a5a8322db1000dbf90c962ae352044135dfe1db25a1b328b16a39255c0d86e1d12504324734aceac921f03ee251fb0d067ff70ea774f7ea357995a4b1b"
+    },
+    {
+      "kind": 5129,
+      "id": "7662b0324508953c95a2ae7b60f37841142fe789683382a2aa13ca5548a996c7",
+      "pubkey": "99d1d395c7be96c77766e4124164ce3a2443d486e146644f762d29832f7faf25",
+      "created_at": 1789752146,
+      "tags": [
+        [
+          "path",
+          "/index.html",
+          "c7511c0521e6665f10f4eef62ecaee5bb5a8a208d4225743398b44807bca9417"
+        ],
+        [
+          "x",
+          "088c99d2769a813ec0b9d5fc32514e15880e3a60981b4cc386a6fcf4bd9429a6",
+          "aggregate"
+        ],
+        [
+          "title",
+          "Impossible Machine"
+        ],
+        [
+          "app",
+          "32267:99d1d395c7be96c77766e4124164ce3a2443d486e146644f762d29832f7faf25:n-47d97da9d80-d196583eb5a4181d",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "description",
+          "A tiny physics playground. Arrange ramps and springy bumpers, drop a marble, and find your own way into the cup. Three puzzles and endless tinkering."
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "t",
+          "game"
+        ],
+        [
+          "t",
+          "physics"
+        ],
+        [
+          "t",
+          "puzzle"
+        ],
+        [
+          "source",
+          "nostr://npub1n8ga89w8h6tvwamxusfyzexw8gjy84yxu9rxgnmk955cxtml4ujswzxydd/wss%3A%2F%2Fgit.napplet.soy%2F/n-47d97da9d80"
+        ],
+        [
+          "source-commit",
+          "123625b8187097b1c2aa0617db1559ced2d50a9a"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/db7c8101167c4b0799f1ec4acf2dbf0552f83586a70e74d8a67745fe8294d996"
+        ],
+        [
+          "a",
+          "35129:99d1d395c7be96c77766e4124164ce3a2443d486e146644f762d29832f7faf25:n-47d97da9d80"
+        ]
+      ],
+      "content": "",
+      "sig": "cc23d8c24ff94cb34ee59b6b5c96da1726594cbe4397aa1eafc82038da8ddc7c37d1125e8f6de0742e4ef0483e1ba77520882e4886f80143079ce849b506baf0"
+    },
+    {
+      "kind": 35129,
+      "id": "841127ac75f366b1174f745dce61bd415f935557be4af9534b5e202fbb97590c",
+      "pubkey": "99d1d395c7be96c77766e4124164ce3a2443d486e146644f762d29832f7faf25",
+      "created_at": 1789752146,
+      "tags": [
+        [
+          "path",
+          "/index.html",
+          "c7511c0521e6665f10f4eef62ecaee5bb5a8a208d4225743398b44807bca9417"
+        ],
+        [
+          "x",
+          "088c99d2769a813ec0b9d5fc32514e15880e3a60981b4cc386a6fcf4bd9429a6",
+          "aggregate"
+        ],
+        [
+          "title",
+          "Impossible Machine"
+        ],
+        [
+          "app",
+          "32267:99d1d395c7be96c77766e4124164ce3a2443d486e146644f762d29832f7faf25:n-47d97da9d80-d196583eb5a4181d",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "description",
+          "A tiny physics playground. Arrange ramps and springy bumpers, drop a marble, and find your own way into the cup. Three puzzles and endless tinkering."
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "t",
+          "game"
+        ],
+        [
+          "t",
+          "physics"
+        ],
+        [
+          "t",
+          "puzzle"
+        ],
+        [
+          "source",
+          "nostr://npub1n8ga89w8h6tvwamxusfyzexw8gjy84yxu9rxgnmk955cxtml4ujswzxydd/wss%3A%2F%2Fgit.napplet.soy%2F/n-47d97da9d80"
+        ],
+        [
+          "source-commit",
+          "123625b8187097b1c2aa0617db1559ced2d50a9a"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/db7c8101167c4b0799f1ec4acf2dbf0552f83586a70e74d8a67745fe8294d996"
+        ],
+        [
+          "d",
+          "n-47d97da9d80"
+        ]
+      ],
+      "content": "",
+      "sig": "cf45723a627ba0b6c15b8754987efa45b2f6bfee7bc137f1c8a5e716136cb6d9faf2af5701d7f2bfcc3966bd6ed23788960a6c8a08b1f0369866bfc7830b3076"
+    },
+    {
+      "kind": 5129,
+      "id": "406fb07fbee4e164e82cfd9c0d2e8c114f655f51f0c05e2e607ea1c9cde882e9",
+      "pubkey": "99d1d395c7be96c77766e4124164ce3a2443d486e146644f762d29832f7faf25",
+      "created_at": 1789707596,
+      "tags": [
+        [
+          "path",
+          "/index.html",
+          "2f4f0ea7e31ab70419ed71b65479e5606c4d03a35868c9eac8585987fea6bfc6"
+        ],
+        [
+          "x",
+          "23ba06f0a56f4106c3653a6ca17c6e2758ca81151e3780de40ea0717db57f789",
+          "aggregate"
+        ],
+        [
+          "title",
+          "Crossfire"
+        ],
+        [
+          "app",
+          "32267:99d1d395c7be96c77766e4124164ce3a2443d486e146644f762d29832f7faf25:n-347ab685aef-39c20f157d85d784",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "description",
+          "Fast free-for-all arenas for up to 8 players. Move, shoot, respawn, and race to seven eliminations. Peer-to-peer multiplayer with desktop and touch controls."
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "requires",
+          "cvm"
+        ],
+        [
+          "requires",
+          "webrtc"
+        ],
+        [
+          "t",
+          "game"
+        ],
+        [
+          "t",
+          "multiplayer"
+        ],
+        [
+          "t",
+          "shooter"
+        ],
+        [
+          "source",
+          "nostr://npub1n8ga89w8h6tvwamxusfyzexw8gjy84yxu9rxgnmk955cxtml4ujswzxydd/wss%3A%2F%2Fgit.napplet.soy%2F/n-347ab685aef"
+        ],
+        [
+          "source-commit",
+          "6f6c8299e2fb58b16da633e8b96a1e5ee3d643ea"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/34d5295141b419dba67715b8e2ae70565e5bff836531bb4def7b89d5f54e3703"
+        ],
+        [
+          "a",
+          "35129:99d1d395c7be96c77766e4124164ce3a2443d486e146644f762d29832f7faf25:n-347ab685aef"
+        ]
+      ],
+      "content": "",
+      "sig": "2e36445b33e18f9b67741bc0847cfc42635175c9c72cb242a780836c87c40e609035c2c0aa0a2bf170f1f2356b2b4b6cde3369d0e1c33b1eb503136b55f86864"
+    },
+    {
+      "kind": 35129,
+      "id": "9614abe48623a179fc0795d1c5ed15526e8c2adea3ca72ff4c0bc874c7919912",
+      "pubkey": "99d1d395c7be96c77766e4124164ce3a2443d486e146644f762d29832f7faf25",
+      "created_at": 1789707596,
+      "tags": [
+        [
+          "path",
+          "/index.html",
+          "2f4f0ea7e31ab70419ed71b65479e5606c4d03a35868c9eac8585987fea6bfc6"
+        ],
+        [
+          "x",
+          "23ba06f0a56f4106c3653a6ca17c6e2758ca81151e3780de40ea0717db57f789",
+          "aggregate"
+        ],
+        [
+          "title",
+          "Crossfire"
+        ],
+        [
+          "app",
+          "32267:99d1d395c7be96c77766e4124164ce3a2443d486e146644f762d29832f7faf25:n-347ab685aef-39c20f157d85d784",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "description",
+          "Fast free-for-all arenas for up to 8 players. Move, shoot, respawn, and race to seven eliminations. Peer-to-peer multiplayer with desktop and touch controls."
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "requires",
+          "cvm"
+        ],
+        [
+          "requires",
+          "webrtc"
+        ],
+        [
+          "t",
+          "game"
+        ],
+        [
+          "t",
+          "multiplayer"
+        ],
+        [
+          "t",
+          "shooter"
+        ],
+        [
+          "source",
+          "nostr://npub1n8ga89w8h6tvwamxusfyzexw8gjy84yxu9rxgnmk955cxtml4ujswzxydd/wss%3A%2F%2Fgit.napplet.soy%2F/n-347ab685aef"
+        ],
+        [
+          "source-commit",
+          "6f6c8299e2fb58b16da633e8b96a1e5ee3d643ea"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/34d5295141b419dba67715b8e2ae70565e5bff836531bb4def7b89d5f54e3703"
+        ],
+        [
+          "d",
+          "n-347ab685aef"
+        ]
+      ],
+      "content": "",
+      "sig": "9946f1a3f3dada44508507272023a72a32ed469603bfb93a5351bdf52033eae1634394632b2371a2907556504d8d364655c55c387a1ef0680e50a27c87f072a1"
+    },
+    {
+      "kind": 5129,
+      "id": "84969b906cb684c688a1b30047eff065ca388c858a9c9bc0434adf3a16291557",
+      "pubkey": "99d1d395c7be96c77766e4124164ce3a2443d486e146644f762d29832f7faf25",
+      "created_at": 1789707084,
+      "tags": [
+        [
+          "path",
+          "/index.html",
+          "99401a10bc03a3e76a0c0d35d6fcbc0690291efca15e89891ef2615af3abf72b"
+        ],
+        [
+          "x",
+          "305251d55db08f3d7e6a617d5e71d7e74f63f7f618098b05d21fba0aafe25cef",
+          "aggregate"
+        ],
+        [
+          "title",
+          "Crossfire"
+        ],
+        [
+          "app",
+          "32267:99d1d395c7be96c77766e4124164ce3a2443d486e146644f762d29832f7faf25:n-347ab685aef-3341aa6d81a536e0",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "description",
+          "Fast free-for-all arenas for up to 8 players. Move, shoot, respawn, and race to seven eliminations. Peer-to-peer multiplayer with desktop and touch controls."
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "requires",
+          "cvm"
+        ],
+        [
+          "requires",
+          "webrtc"
+        ],
+        [
+          "t",
+          "game"
+        ],
+        [
+          "t",
+          "multiplayer"
+        ],
+        [
+          "t",
+          "shooter"
+        ],
+        [
+          "source",
+          "nostr://npub1n8ga89w8h6tvwamxusfyzexw8gjy84yxu9rxgnmk955cxtml4ujswzxydd/wss%3A%2F%2Fgit.napplet.soy%2F/n-347ab685aef"
+        ],
+        [
+          "source-commit",
+          "7b2e06fa134e2489885e7745542873d6e336c0ed"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/2cdb6cf8227605f80240ff74ac108cca5e73a7071f59ba8ccf20e2fb46acccbc"
+        ],
+        [
+          "a",
+          "35129:99d1d395c7be96c77766e4124164ce3a2443d486e146644f762d29832f7faf25:n-347ab685aef"
+        ]
+      ],
+      "content": "",
+      "sig": "2d12fa328890ee3d27ddac42c65aa812ba212815b2ba3344b47008345e0ad55b962a66cf85e1907a832eee1a7d0b69d3890227163a1b3ded4d337f8b0973b1cc"
+    },
+    {
+      "kind": 5129,
+      "id": "e3712801078e012fabd55f5fdb9007c6194b093f3f5e4002ba69d31e67b6edfc",
+      "pubkey": "99d1d395c7be96c77766e4124164ce3a2443d486e146644f762d29832f7faf25",
+      "created_at": 1789645715,
+      "tags": [
+        [
+          "path",
+          "/index.html",
+          "6f3d7d5ecb8769b9a2d4f816c48f38cbbc154b3278e5b10613ae1e740edff541"
+        ],
+        [
+          "x",
+          "3a19936a7284f867c8b1d06f89351f5873ac8c2e9fbfc942d17f536baeeadf3f",
+          "aggregate"
+        ],
+        [
+          "title",
+          "Crossfire"
+        ],
+        [
+          "app",
+          "32267:99d1d395c7be96c77766e4124164ce3a2443d486e146644f762d29832f7faf25:n-347ab685aef-a4d74093ade87c6e",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "description",
+          "Fast free-for-all arenas for up to 8 players. Move, shoot, respawn, and race to seven eliminations. Peer-to-peer multiplayer with desktop and touch controls."
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "requires",
+          "cvm"
+        ],
+        [
+          "requires",
+          "webrtc"
+        ],
+        [
+          "t",
+          "game"
+        ],
+        [
+          "t",
+          "multiplayer"
+        ],
+        [
+          "t",
+          "shooter"
+        ],
+        [
+          "source",
+          "nostr://npub1n8ga89w8h6tvwamxusfyzexw8gjy84yxu9rxgnmk955cxtml4ujswzxydd/wss%3A%2F%2Fgit.napplet.soy%2F/n-347ab685aef"
+        ],
+        [
+          "source-commit",
+          "862170d3c0a6f866919c4035b79f631e34e88eb0"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/e094178b95ec16f3f715fed91c0a11c41113ef78764fddbe18f44342f1fe9754"
+        ],
+        [
+          "a",
+          "35129:99d1d395c7be96c77766e4124164ce3a2443d486e146644f762d29832f7faf25:n-347ab685aef"
+        ]
+      ],
+      "content": "",
+      "sig": "450d9c1216e2800047ea67c9cc28e4df1b1507d78a300146737591dea0bc711fa8ae18baaa8cb8ab33261e3dc628ed599a3736c9521dddf7c4a7d8ed930a0fab"
+    },
+    {
+      "kind": 5129,
+      "id": "f5c0e46f3f3673db24d1579b402b0cc1fccd45517a8d5e1f2866b430d0dc759b",
+      "pubkey": "99d1d395c7be96c77766e4124164ce3a2443d486e146644f762d29832f7faf25",
+      "created_at": 1789645146,
+      "tags": [
+        [
+          "path",
+          "/index.html",
+          "f9403eb48a0fc2c8d1a3d59cde2309b7b868a7cf70fabb53949a38ac620bfbc7"
+        ],
+        [
+          "x",
+          "c0ae37c43f27273e7cc7f6bee1cba2223519f39d3218caf6d7a42a27f877a569",
+          "aggregate"
+        ],
+        [
+          "title",
+          "Crossfire"
+        ],
+        [
+          "app",
+          "32267:99d1d395c7be96c77766e4124164ce3a2443d486e146644f762d29832f7faf25:n-347ab685aef-9bd5c0ee8ce2e4e5",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "description",
+          "Fast free-for-all arenas for up to 8 players. Move, shoot, respawn, and race to seven eliminations. Peer-to-peer multiplayer with desktop and touch controls."
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "requires",
+          "cvm"
+        ],
+        [
+          "requires",
+          "webrtc"
+        ],
+        [
+          "t",
+          "game"
+        ],
+        [
+          "t",
+          "multiplayer"
+        ],
+        [
+          "t",
+          "shooter"
+        ],
+        [
+          "source",
+          "nostr://npub1n8ga89w8h6tvwamxusfyzexw8gjy84yxu9rxgnmk955cxtml4ujswzxydd/wss%3A%2F%2Fgit.napplet.soy%2F/n-347ab685aef"
+        ],
+        [
+          "source-commit",
+          "7a3674fbc322091c598605f2cf2b577f8c1f2e25"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/b3f05bfc93004227ae3d82b2a1ca17e7863b436bd67bd867c4a470a3bbf15e55"
+        ],
+        [
+          "a",
+          "35129:99d1d395c7be96c77766e4124164ce3a2443d486e146644f762d29832f7faf25:n-347ab685aef"
+        ]
+      ],
+      "content": "",
+      "sig": "a739ffe872fd6a8179a329a4d9b9832ff670cbc6b72245492105b85370232b71a69da272b92ea113c5ad796ad4ba9216b2db3354d157c522c5b1723325e1e32e"
+    },
+    {
+      "kind": 5129,
+      "id": "83a79af255daf598a3f8c93e39c5304d92a5db256cf0c9735697541be1df39be",
+      "pubkey": "99d1d395c7be96c77766e4124164ce3a2443d486e146644f762d29832f7faf25",
+      "created_at": 1789644072,
+      "tags": [
+        [
+          "path",
+          "/index.html",
+          "b76a29c8a3a6f4583bcf6798c8e7118505a7cac1780e60ba093cc7846ab7f40d"
+        ],
+        [
+          "x",
+          "044593471accf766786c2ab4349454bbe5464b2d17897712f32b27c8ac704fe9",
+          "aggregate"
+        ],
+        [
+          "title",
+          "Crossfire"
+        ],
+        [
+          "app",
+          "32267:99d1d395c7be96c77766e4124164ce3a2443d486e146644f762d29832f7faf25:n-347ab685aef-11c566e41105ff07",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "description",
+          "Fast free-for-all arenas for up to 8 players. Move, shoot, respawn, and race to seven eliminations. Peer-to-peer multiplayer with desktop and touch controls."
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "requires",
+          "cvm"
+        ],
+        [
+          "requires",
+          "webrtc"
+        ],
+        [
+          "t",
+          "game"
+        ],
+        [
+          "t",
+          "multiplayer"
+        ],
+        [
+          "t",
+          "shooter"
+        ],
+        [
+          "source",
+          "nostr://npub1n8ga89w8h6tvwamxusfyzexw8gjy84yxu9rxgnmk955cxtml4ujswzxydd/wss%3A%2F%2Fgit.napplet.soy%2F/n-347ab685aef"
+        ],
+        [
+          "source-commit",
+          "0531e1193773bfb81f2e02119578a41087503fb1"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/8f507dc2f8c042231eb65f4bd3015fee2168b934f2576348aa71d340634012b4"
+        ],
+        [
+          "a",
+          "35129:99d1d395c7be96c77766e4124164ce3a2443d486e146644f762d29832f7faf25:n-347ab685aef"
+        ]
+      ],
+      "content": "",
+      "sig": "d9d63d3cec4b3ed61c1750864f054f40acc2440decf4c5b31e400e15390d39e9c18d9ce067ea8317a93b6293ec3500a7648a4a72d868c4859bf8512eef1bd9c2"
+    },
+    {
+      "kind": 5129,
+      "id": "edfbcb0244e3c901b1072096e6eefbec2d91e13f4dedfb5cebc29df1c069a9a2",
+      "pubkey": "99d1d395c7be96c77766e4124164ce3a2443d486e146644f762d29832f7faf25",
+      "created_at": 1789643527,
+      "tags": [
+        [
+          "path",
+          "/index.html",
+          "f3f21c6253f0a47bfc503d21004a8c7fadb8012956a9b79d39b92bab640e3e43"
+        ],
+        [
+          "x",
+          "25e4678a14594e1738f4645f792a83627f703ef5b0e27fe3237952149a21cd64",
+          "aggregate"
+        ],
+        [
+          "title",
+          "Crossfire"
+        ],
+        [
+          "app",
+          "32267:99d1d395c7be96c77766e4124164ce3a2443d486e146644f762d29832f7faf25:n-347ab685aef-f263392100d7285e",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "description",
+          "Fast free-for-all arenas for up to 8 players. Move, shoot, respawn, and race to seven eliminations. Peer-to-peer multiplayer with desktop and touch controls."
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "requires",
+          "cvm"
+        ],
+        [
+          "requires",
+          "webrtc"
+        ],
+        [
+          "t",
+          "game"
+        ],
+        [
+          "t",
+          "multiplayer"
+        ],
+        [
+          "t",
+          "shooter"
+        ],
+        [
+          "source",
+          "nostr://npub1n8ga89w8h6tvwamxusfyzexw8gjy84yxu9rxgnmk955cxtml4ujswzxydd/wss%3A%2F%2Fgit.napplet.soy%2F/n-347ab685aef"
+        ],
+        [
+          "source-commit",
+          "661feb07456fc150f257ff6146928981502779b9"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/0fd9d3ac13575984744e622158fa4b8ffe898f2b39343adb655f7a8247fa5919"
+        ],
+        [
+          "a",
+          "35129:99d1d395c7be96c77766e4124164ce3a2443d486e146644f762d29832f7faf25:n-347ab685aef"
+        ]
+      ],
+      "content": "",
+      "sig": "b0465121eda25be70997349af53e4ef1df63c20e0c646423b8c649b61fd20a4dc61a74419e9fab05ec58d9aecee1275bdc84dda9ac57a21831276b5749c11d78"
+    },
+    {
+      "kind": 5129,
+      "id": "2d32bb606053bd4395f7b3a7eab1d4fe74fb52560432e46a093175be182df640",
+      "pubkey": "99d1d395c7be96c77766e4124164ce3a2443d486e146644f762d29832f7faf25",
+      "created_at": 1789642946,
+      "tags": [
+        [
+          "path",
+          "/index.html",
+          "64dc25caf23e451b626dde159c46db5c2242102c4f19060962b70208c7dbc07d"
+        ],
+        [
+          "x",
+          "fe68e3172cc522465759f9cdeddbb15f5ae6d0e5b5da50758d0220a0cc5168b9",
+          "aggregate"
+        ],
+        [
+          "title",
+          "Crossfire"
+        ],
+        [
+          "app",
+          "32267:99d1d395c7be96c77766e4124164ce3a2443d486e146644f762d29832f7faf25:n-347ab685aef-719721462bc6d001",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "description",
+          "Fast free-for-all arenas for up to 8 players. Move, shoot, respawn, and race to seven eliminations. Peer-to-peer multiplayer with desktop and touch controls."
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "requires",
+          "cvm"
+        ],
+        [
+          "requires",
+          "webrtc"
+        ],
+        [
+          "t",
+          "game"
+        ],
+        [
+          "t",
+          "multiplayer"
+        ],
+        [
+          "t",
+          "shooter"
+        ],
+        [
+          "source",
+          "nostr://npub1n8ga89w8h6tvwamxusfyzexw8gjy84yxu9rxgnmk955cxtml4ujswzxydd/wss%3A%2F%2Fgit.napplet.soy%2F/n-347ab685aef"
+        ],
+        [
+          "source-commit",
+          "f6d1f382f56214b2b3b6540918ec29aafc91c73d"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/ba240c8129ce873b5abbc2faa73a70918e4a8b4c39018ff422fff0a9e8224b9f"
+        ],
+        [
+          "a",
+          "35129:99d1d395c7be96c77766e4124164ce3a2443d486e146644f762d29832f7faf25:n-347ab685aef"
+        ]
+      ],
+      "content": "",
+      "sig": "a37016269a690824673f52ee0357effce165fe656965f9add5568e0e275c4d290d2e37da6873d6f1429abda9359d9e63c56ab57fac8413a1288ea94af3f5bd8a"
+    },
+    {
+      "kind": 5129,
+      "id": "bc60e59f11b58b41bcd680fae9551cf8762b02548a58122f59034db3a5907686",
+      "pubkey": "99d1d395c7be96c77766e4124164ce3a2443d486e146644f762d29832f7faf25",
+      "created_at": 1789642326,
+      "tags": [
+        [
+          "path",
+          "/index.html",
+          "fc45fc935bc0303b02cf2e0be86d727d3eacb421e25bbf32b8dc032398c8463d"
+        ],
+        [
+          "x",
+          "8fe7a4cc9fbbd8779f82fa587cf01ea3d358f4fa3b3b635d97664aa340d6e65c",
+          "aggregate"
+        ],
+        [
+          "title",
+          "Crossfire"
+        ],
+        [
+          "app",
+          "32267:99d1d395c7be96c77766e4124164ce3a2443d486e146644f762d29832f7faf25:n-347ab685aef-7b4292065871d2ff",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "description",
+          "Fast free-for-all arenas for up to 8 players. Move, shoot, respawn, and race to seven eliminations. Peer-to-peer multiplayer with desktop and touch controls."
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "requires",
+          "cvm"
+        ],
+        [
+          "requires",
+          "webrtc"
+        ],
+        [
+          "t",
+          "game"
+        ],
+        [
+          "t",
+          "multiplayer"
+        ],
+        [
+          "t",
+          "shooter"
+        ],
+        [
+          "source",
+          "nostr://npub1n8ga89w8h6tvwamxusfyzexw8gjy84yxu9rxgnmk955cxtml4ujswzxydd/wss%3A%2F%2Fgit.napplet.soy%2F/n-347ab685aef"
+        ],
+        [
+          "source-commit",
+          "f9e96f076081e3d2d30dcc88dca762c603491fb0"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/c4da72b3acc5141f46112cbcc176103a8e1a5fc5543e7f714bb6d87baf46f11d"
+        ],
+        [
+          "a",
+          "35129:99d1d395c7be96c77766e4124164ce3a2443d486e146644f762d29832f7faf25:n-347ab685aef"
+        ]
+      ],
+      "content": "",
+      "sig": "1ca0c02c5c3d5c79ec11d91f1b38e73c742fc4e5b4f3db4a1ad69c8ae1ac061c9d4ccc5738c67903ecdbe0d63eb339c1e28bcc0ebeb778ec8bcdf480e5cb3f2c"
+    },
+    {
+      "kind": 35129,
+      "id": "14966bba4a2af0328fc69cd6b894d38237ef154f9dcb59c641aec7a5bc09b1ba",
+      "pubkey": "99d1d395c7be96c77766e4124164ce3a2443d486e146644f762d29832f7faf25",
+      "created_at": 1789544288,
+      "tags": [
+        [
+          "path",
+          "/index.html",
+          "3e4939f95fbe1954d1f637930e3d74f08f2ad71d0575f9896d246a060218b17b"
+        ],
+        [
+          "x",
+          "f354b81e8f336e49baf93673c283f65625f9c1db10bb65afbd5d8fc0e78d3ce7",
+          "aggregate"
+        ],
+        [
+          "title",
+          "Sketch Loop"
+        ],
+        [
+          "app",
+          "32267:99d1d395c7be96c77766e4124164ce3a2443d486e146644f762d29832f7faf25:n-929bc2a88cb-6c5865b59de25aec",
+          "wss://relay.napplet.soy/"
+        ],
+        [
+          "description",
+          "Paste a 2D p5-style sketch, watch it animate, and export a GIF with your own duration, frame rate and size."
+        ],
+        [
+          "server",
+          "https://blossom.napplet.soy"
+        ],
+        [
+          "t",
+          "creative-coding"
+        ],
+        [
+          "t",
+          "generative-art"
+        ],
+        [
+          "t",
+          "gif"
+        ],
+        [
+          "t",
+          "p5js"
+        ],
+        [
+          "source",
+          "nostr://npub1n8ga89w8h6tvwamxusfyzexw8gjy84yxu9rxgnmk955cxtml4ujswzxydd/wss%3A%2F%2Fgit.napplet.soy%2F/n-929bc2a88cb"
+        ],
+        [
+          "source-commit",
+          "e68361295d81a3f230990ea9fd35f2f425b166f9"
+        ],
+        [
+          "source-archive",
+          "https://blossom.napplet.soy/5e0385e3c08f944f6c2023a3952c87649229fe2f5fd24c07c35d547a7897cc37"
+        ],
+        [
+          "d",
+          "n-929bc2a88cb"
+        ]
+      ],
+      "content": "",
+      "sig": "ab4a57ffe6e0cb1b5d6f9c8a559cc7f060e150f99396feee464941e8d31f53cf90110233589e6317876729c3621bcf6d8fa04cf4abd7f41701549e89e9c194c2"
+    }
+  ]
+}

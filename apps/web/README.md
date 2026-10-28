@@ -39,9 +39,27 @@ The `Deploy site` workflow refreshes and rebuilds the complete site daily at **0
 
 After assembly, `node scripts/check-protocol.mjs` verifies every detail page, source destination, canonical URL, sitemap entry and the contribution guide. With the assembled site served, `node scripts/check-protocol-browser.mjs http://localhost:8099` checks desktop/mobile filtering and navigation, including without JavaScript. Link-check CI runs both checks.
 
-Edit `src/lib/showcase.ts` to change the selected napplets, shells, and developer tools. Keep names, descriptions, source links, and destinations tied to maintained projects. Editorial descriptions are non-normative; protocol status and requirements defer to the living [NIP-5D proposal](https://github.com/nostr-protocol/nips/pull/2303) and [NAPs track](https://github.com/napplet/naps).
+## App and shell configuration
 
-Playable entries are archived releases with locally mirrored signed manifests and original artifact bytes. These releases predate the current NIP-5D manifest schema and are labeled as archived in the page and player. The private `verifyArchivedRelease` adapter checks their historical signature/hash chain; it is not a current-protocol validator or a recommended shell implementation. Current implementations must follow the living specification, including its artifact-hash identity. Preserve the publisher's signature and content hashes when adding or refreshing a selection; editing the downloaded HTML invalidates verification. The player verifies each signed manifest and artifact before execution. Its loader derives from the MIT-licensed [napplet.soy source](https://github.com/zeSchlausKwab/napplet-soy); retain the accompanying attribution when changing that implementation. A curated preview is a limited host for these selections, not a claim that the site implements every NAP.
+Edit `src/data/apps.json` for curated previews and `src/data/shells.json` for the shell directory. Each shell has `platforms`, a development `status`, an independent project URL and a source URL. Descriptions are editorial and non-normative; protocol requirements defer to the living [NIP-5D proposal](https://github.com/nostr-protocol/nips/pull/2303) and [NAPs track](https://github.com/napplet/naps). Platform labels were reviewed against project sources on 2026-10-28 and do not claim identical napplet support across every build.
+
+A curated preview entry supplies `id`, `name`, `description`, `category`, `href`, optional `source`, `image`, `eventId`, `manifest`, `artifact`, and an explicit `format` (`current` or `archive`). Mirror the original signed manifest under `public/showcase/manifests/` and its exact artifact under `public/showcase/blobs/`. Add an actual screenshot under `public/showcase/images/`. Check the source license and add its notice to `public/showcase/NOTICE.txt`. The verifier tests every configured preview. The homepage selects the first three entries; `/apps/` shows the whole collection. No component edits are needed to add a preview or shell.
+
+The three original previews remain explicitly archived releases with a private historical verifier. Three additional releases use direct artifact hashes from their own signed manifests. The player verifies each publisher signature and original artifact hash before execution, then grants no NAP domains. Apps needing shell services belong in a full shell. Current-release identity checks follow NIP-5D Identity; the preview is not a full protocol or manifest conformance certification. Some upstream releases still use `nostr://` source locations outside the current proposal's Source formats; signed events stay unchanged and source links use their HTTPS source archives. Loader attribution and app licenses are preserved in the notice.
+
+## App store and discovery
+
+`/apps/` includes six curated playable selections and signed public relay discoveries. `src/data/discovery.json` configures the relay list, request limit and timeout. Refresh the saved relay snapshot from the repository root with Node 22 or newer:
+
+```bash
+node scripts/refresh-showcase-apps.mjs
+pnpm --filter @napplet/web test:unit
+pnpm --filter @napplet/web build
+```
+
+The refresh preserves original signed events in `src/data/discovered-apps.json`; a failed relay pass leaves the snapshot intact. Ordinary site builds need no network. The catalog selects NIP-5D's own kinds (5129, 15129, 35129), checks signatures and direct `x` hashes, treats descriptions as plain text, and deduplicates replaceable addresses. It does not use NIP-5A schemas or aggregate identities. Snapshots remain independent releases. This is display selection, not full conformance certification or code review.
+
+Search and collection filters run locally. Live relay discovery starts only when the visitor selects “Check for new apps.” Requests are bounded, closed after EOSE or timeout, and cancelled on page exit. Partial/offline results retain the saved collection. Visitors can open a discovered release in napplet.soy or copy its address into another shell; discovered artifacts are never executed by the curated preview. Static discovery links and the saved collection work without JavaScript.
 
 ## Verify the deployed artifact
 
@@ -66,6 +84,7 @@ With that static server running, use another terminal:
 ```bash
 node scripts/check-links.mjs http://localhost:8099
 node scripts/check-showcase.mjs http://localhost:8099
+node scripts/check-app-store.mjs http://localhost:8099
 ```
 
 The onboarding check starts its own Astro development server and exercises the preserved `/explainer/#start` flow. The showcase check exercises the assembled production site. Inspect desktop and mobile output when changing layout or animation.
@@ -78,4 +97,4 @@ The deployment workflow uploads the resulting `site/` directory to Bunny storage
 
 ## Homepage presentation checks
 
-`node scripts/check-showcase.mjs <assembled-site-url>` checks the four builder paths, the single below-fold network explanation, real archived previews, mobile layouts, no-JavaScript content, and the persistent GSAP glyph. It also switches reduced motion during a session to check cleanup. Regenerate the matching 1200×630 social card with `node scripts/generate-social-card.mjs` after changing its headline or visual motif.
+`node scripts/check-showcase.mjs <assembled-site-url>` checks the four builder paths, the single below-fold network explanation, archived previews, mobile layouts, no-JavaScript content, and section-specific GSAP choreography. It also switches reduced motion during a session to check cleanup. Regenerate the matching 1200×630 social card with `node scripts/generate-social-card.mjs` after changing its headline or visual motif.

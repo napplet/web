@@ -1,0 +1,80 @@
+[
+  {
+    "id": "impossible-machine",
+    "name": "Impossible Machine",
+    "description": "Arrange ramps and bumpers. Drop a marble. Find your own way into the cup.",
+    "category": "Physics playground",
+    "href": "https://napplet.soy/n/naddr1qvzqqqyf8ypzpxw36w2u005kcamkdeqjg9jvuw3yg02gdc2xv38hvtffsvhhlte9qythwumn8ghj7un9d3shjtnwv9c8qmr9wsh8xmmeqqxkutf5xajrjdmyvyukgwpse4j4n8",
+    "source": "https://blossom.napplet.soy/db7c8101167c4b0799f1ec4acf2dbf0552f83586a70e74d8a67745fe8294d996",
+    "image": "/showcase/images/impossible-machine.webp",
+    "eventId": "841127ac75f366b1174f745dce61bd415f935557be4af9534b5e202fbb97590c",
+    "manifest": "/showcase/manifests/impossible-machine.json",
+    "artifact": "/showcase/blobs/c7511c0521e6665f10f4eef62ecaee5bb5a8a208d4225743398b44807bca9417.bin",
+    "format": "archive"
+  },
+  {
+    "id": "rail-game",
+    "name": "Rail Game",
+    "description": "Recruit a squad, dodge obstacles, and take on eight wardens.",
+    "category": "Arcade game",
+    "href": "https://napplet.soy/n/naddr1qvzqqqyf8ypzpxw36w2u005kcamkdeqjg9jvuw3yg02gdc2xv38hvtffsvhhlte9qythwumn8ghj7un9d3shjtnwv9c8qmr9wsh8xmmeqqxkutfex9jkxwfsvvmxverxkmltgf",
+    "source": "https://blossom.napplet.soy/dad7b678e25f96a35fc8f55d14500aaca8e9fc90ca0284a8c38f975c48d9709a",
+    "image": "/showcase/images/rail-game.webp",
+    "eventId": "ccdd5b913413a364713e5d0e2293857edc8ea630ecd5b11ac0bb92b890fade8e",
+    "manifest": "/showcase/manifests/rail-game.json",
+    "artifact": "/showcase/blobs/f3038a8471c0744355f8748b332639be6c317dc45856739675b878987a3ba565.bin",
+    "format": "archive"
+  },
+  {
+    "id": "sketch-loop",
+    "name": "Sketch Loop",
+    "description": "Turn a few lines of code into looping art. Tweak a sketch and watch it come alive.",
+    "category": "Creative tool",
+    "href": "https://napplet.soy/n/naddr1qvzqqqyf8ypzpxw36w2u005kcamkdeqjg9jvuw3yg02gdc2xv38hvtffsvhhlte9qythwumn8ghj7un9d3shjtnwv9c8qmr9wsh8xmmeqqxkutfexgukycejvyurscmzzlcp6e",
+    "source": "https://blossom.napplet.soy/5e0385e3c08f944f6c2023a3952c87649229fe2f5fd24c07c35d547a7897cc37",
+    "image": "/showcase/images/sketch-loop.webp",
+    "eventId": "14966bba4a2af0328fc69cd6b894d38237ef154f9dcb59c641aec7a5bc09b1ba",
+    "manifest": "/showcase/manifests/sketch-loop.json",
+    "artifact": "/showcase/blobs/3e4939f95fbe1954d1f637930e3d74f08f2ad71d0575f9896d246a060218b17b.bin",
+    "format": "archive"
+  },
+  {
+    "id": "stick-brawl",
+    "name": "Stick Brawl",
+    "description": "Fight off endless waves of colorful stickmen as the green stickman. Punch, kick, drop-kick, slide, quick-draw a revolver and swing a sword through a five-floor apartment building, a fire escape and a brick warehouse. Watch out for big Brutes and tiny Runts!",
+    "category": "Survival game",
+    "href": "https://napplet.soy/n/naddr1qvzqqqyf8ypzpxfalt2qlmegdverhysh59dpgjlj5gmjnp7pt80w5ej5vgz3s4kqqythwumn8ghj7un9d3shjtnwv9c8qmr9wsh8xmmeqqxkutf4x56xyvej89jxywfn5x7t9w",
+    "format": "current",
+    "source": "https://blossom.napplet.soy/9794d3420d4d8ef9b3800b7014abb6b742b8e102fea15d8e3787248c4dec524c",
+    "image": "/showcase/images/stick-brawl.webp",
+    "eventId": "fe1d7b3d609ef4f646c9d69f509e36ccaf7c7edfc917952345ea2231da7d52aa",
+    "manifest": "/showcase/manifests/stick-brawl.json",
+    "artifact": "/showcase/blobs/66c2678b110776fc1e3d775c04a7c581b986c4c356110970d9e14a67a2700c27.bin"
+  },
+  {
+    "id": "freeze-frame-response",
+    "name": "Freeze Frame Response",
+    "description": "A municipal physics puzzle: freeze the blast, place trampolines, funnels and sticky cushions, then resume time and file the damage report.",
+    "category": "Physics puzzle",
+    "href": "https://napplet.soy/n/naddr1qvzqqqyf8ypzqw49s9e88sajl985jxzquprj7pyapugqp83rme3sqctxhj5mxm4rqythwumn8ghj7un9d3shjtnwv9c8qmr9wsh8xmmeqqxkuttzvy6nyefnxpjr2e3jqg5uk8",
+    "format": "current",
+    "source": "https://blossom.napplet.soy/e747ab4f9e35a11fd11bd9cf153edd9d49a1ce20debbbe6910c7df27e2e9924e",
+    "image": "/showcase/images/freeze-frame-response.webp",
+    "eventId": "3e45de6048a3ca8b6ebe068ef084cb7a33c05657370d7c50522d64a02ee62480",
+    "manifest": "/showcase/manifests/freeze-frame-response.json",
+    "artifact": "/showcase/blobs/b5633add0b6e43317322ebcc40b452159d3d40b16f9879b4ea28701f9b541e5b.bin"
+  },
+  {
+    "id": "poly-dogfight",
+    "name": "Poly Dogfight",
+    "description": "Fly a low-poly biplane around a tiny planet you can circle in about a minute. Weave through rock arches, needle spires, floating islands and the Great Rift canyon with momentum-based flight: keep your speed up or the wings stall. Up to four pilots share the screen with game controllers for split-screen dogfights: fixed guns with light aim assist, per-part battle damage, and two heat-seeking rockets on the wings that reload over time. Rockets turn slower than you do, so a hard bank can shake one, and a missed rocket coasts round the planet and may come back for its own pilot. Beginner steering banks and pulls for you; normal mode gives full manual control. Plays with keyboard, gamepad or touch, in any frame from a small widget to full screen.",
+    "category": "Flight game",
+    "href": "https://napplet.soy/n/naddr1qvzqqqyf8ypzqfngzhsvjggdlgeycm96x4emzjlwf8dyyzdfg4hefp89zpkdgz99qythwumn8ghj7un9d3shjtnwv9c8qmr9wsh8xmmeqqxkutf5x3nrvvm9x56ryvnzrgxw9k",
+    "format": "current",
+    "source": "https://blossom.napplet.soy/fbf8fc78f64d293aa88ebd4e1afb4e9ba668c8621f0e124af4476183c37ecca1",
+    "image": "/showcase/images/poly-dogfight.webp",
+    "eventId": "ad11a55ec88cfc642a3563f5a62fb28b179d5c77f392c527da921c47a49d25ca",
+    "manifest": "/showcase/manifests/poly-dogfight.json",
+    "artifact": "/showcase/blobs/af2880fca37176cb005226c9c5cf1ce33a39230d6977cafacc7d24acecf0ff6b.bin"
+  }
+]

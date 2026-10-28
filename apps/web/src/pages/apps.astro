@@ -1,0 +1,62 @@
+---
+import SiteLayout from '../layouts/SiteLayout.astro';
+import Runner from '../components/Runner.astro';
+import { NAPPLETS, LINKS } from '../lib/showcase';
+import { catalogApp, latestApps } from '../lib/catalog';
+import snapshot from '../data/discovered-apps.json';
+import '../styles/showcase.css';
+import '../styles/store.css';
+const discovered = latestApps(snapshot.events.map(event => catalogApp(event, snapshot.relays)).filter(app => app !== null));
+const date = snapshot.checkedAt ? new Date(snapshot.checkedAt).toISOString().slice(0, 10) : null;
+---
+<SiteLayout title="App store — napplet" description="Find your next small obsession. Play curated napplets and discover signed releases from the community.">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <a class="wordmark" href="/" aria-label="napplet home"><img src="/icon.png" width="28" height="28" alt="" />napplet<span class="wordmark-dot">.</span></a>
+    <nav class="desktop-nav" aria-label="Main navigation"><a href="/apps/" aria-current="page">App store</a><a href="/#shells">Shells</a><a href="/protocol/">Protocol</a><a href="/#build">Build</a></nav>
+    <a class="header-docs" href={LINKS.docs}>Docs ↗</a>
+    <a class="store-home" href="/">Home ↗</a>
+  </header>
+  <main id="main" class="store-main section-wrap">
+    <div class="store-heading"><div><p class="eyebrow">THE SMALL SOFTWARE DEPARTMENT</p><h1>Find your next<br /><span>small obsession.</span></h1></div><p>Games, tools, and experiments. Pick something curious. Give it a home.</p></div>
+    <div class="store-controls" data-store-controls hidden>
+      <fieldset><legend class="visually-hidden">Collection</legend><label><input type="radio" name="collection" value="all" checked /> All apps</label><label><input type="radio" name="collection" value="curated" /> Curated</label><label><input type="radio" name="collection" value="discovered" /> Discovered</label></fieldset>
+      <label class="store-search"><span>Search apps</span><input type="search" id="app-search" placeholder="A game, a tool, a little obsession…" /></label>
+    </div>
+    <p class="store-result" id="store-result" role="status" aria-live="polite"></p>
+    <section class="store-section" data-collection="curated" aria-labelledby="curated-title">
+      <div class="store-section-heading"><div><p class="eyebrow">01 / PICKED FOR YOU</p><h2 id="curated-title">Open. Play. Repeat.</h2></div><p>A few things worth spending a little time with. Play here, or take them to another shell.</p></div>
+      <div class="napplet-grid">
+        {NAPPLETS.map(item => <article class="napplet-card" data-app-card data-search={`${item.name} ${item.category} ${item.description}`}>
+          <div class="napplet-preview"><img src={item.image} alt={`${item.name} interface`} width="960" height="600" loading="lazy" /><span class="preview-index">{item.format === 'archive' ? 'Archived release' : 'Signed release'}</span></div>
+          <div class="napplet-details"><p class="card-category">{item.category}</p><h3>{item.name}</h3><p>{item.description.length > 190 ? `${item.description.slice(0, 187)}…` : item.description}</p><div class="card-links"><a class="run-link" href={item.href} data-launch={item.id}><span class="play-symbol" aria-hidden="true">▶</span> Run {item.name}</a>{item.source && <a class="source-link" href={item.source} aria-label={`${item.name} source code`}>Source ↗</a>}</div></div>
+        </article>)}
+      </div>
+      <p class="store-footnote">The three archived releases retain their original historical manifests. Every preview checks its publisher’s signature and original artifact hash before running. This preview supplies no shell services.</p>
+    </section>
+    <section class="store-section" data-collection="discovered" aria-labelledby="discovered-title">
+      <div class="store-section-heading"><div><p class="eyebrow">02 / OUT IN THE WORLD</p><h2 id="discovered-title">From the community.</h2></div><p>Signed releases found on public relays. These are publisher descriptions, not editorial picks or a conformance certification.</p></div>
+      <div class="discovery-toolbar"><p id="discovery-status" role="status" aria-live="polite">{date ? `Relay snapshot · ${date} · ${discovered.length} releases` : 'No saved releases yet.'}</p><button type="button" id="discover-apps" hidden>Check for new apps <span aria-hidden="true">↻</span></button></div>
+      <p class="discovery-note">Checking connects your browser to the configured public relays. No account is needed. <a href="#discovery-details">Details ↓</a></p>
+      <div class="discovered-grid" id="discovered-grid">
+        {discovered.map((app, index) => <article class="discovered-card" data-app-card data-search={`${app.name} ${app.description} ${app.requirements.join(' ')}`}>
+          <div class="discovered-art" aria-hidden="true"><span>{app.name.slice(0, 1).toUpperCase()}</span><i>{String(index + 1).padStart(2, '0')}</i></div>
+          <div class="release-meta"><span>Signed release</span><span>{new Date(app.publishedAt * 1000).toISOString().slice(0, 10)}</span></div><h3>{app.name}</h3><p class="publisher-description">{app.description}</p>
+          <p class="release-author">Publisher <span title={app.author}>{app.author.slice(0, 8)}…{app.author.slice(-6)}</span></p>
+          <p class="release-requirements">{app.requirements.length ? `Needs: ${app.requirements.join(', ')}` : 'No required shell services declared'}</p>
+          <div class="release-links"><a href={`https://napplet.soy/n/${app.pointer}`} target="_blank" rel="noopener noreferrer">Open in napplet.soy ↗</a><button type="button" data-copy-address={app.pointer} hidden>Copy address</button></div>
+        </article>)}
+      </div>
+      <p id="store-empty" class="store-empty" hidden>No apps match. Try a different search or collection.</p>
+      <details id="discovery-details" class="discovery-details"><summary>About this collection</summary><p>Discovery uses NIP-5D’s own manifest kinds, verifies publisher signatures, and selects releases with a direct artifact-hash tag and a plain-text description. Legacy aggregate-hash releases stay out of this feed. A signature identifies a publisher; it does not review the code or certify every manifest field. Some publishers still use source-location formats outside the current proposal. Your chosen shell verifies artifacts and decides which services it can provide.</p><p>The snapshot reads {snapshot.relays.join(' and ')}. Live discovery queries the same configured relays. <a href="https://github.com/nostr-protocol/nips/pull/2303">Read the living NIP-5D proposal ↗</a> · <a href="/#shells">Find another shell ↗</a></p></details>
+      <noscript><p class="store-footnote">You’re viewing the saved collection. App and shell links work without JavaScript; live discovery and quick play require it.</p></noscript>
+    </section>
+    <a class="store-invitation" href={LINKS.community}><span>Room for one more.</span><strong>Show us what you made ↗</strong></a>
+  </main>
+  <footer class="site-footer section-wrap"><a class="wordmark" href="/">napplet<span class="wordmark-dot">.</span></a><nav aria-label="Footer"><a href="/#shells">Find a shell</a><a href="/#build">Build an app</a><a href={LINKS.github}>GitHub ↗</a></nav></footer>
+  <Runner />
+</SiteLayout>
+<script>
+  import { setupStore } from '../lib/store';
+  setupStore();
+</script>

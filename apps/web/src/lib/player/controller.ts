@@ -6,6 +6,7 @@ export function setupPlayer(): void {
   const dialog = document.querySelector<HTMLDialogElement>('#napplet-player')!;
   const stage = document.querySelector<HTMLDivElement>('#player-stage')!;
   const title = document.querySelector<HTMLHeadingElement>('#player-title')!;
+  const note = document.querySelector<HTMLParagraphElement>('#player-note')!;
   const status = document.querySelector<HTMLParagraphElement>('#player-status')!;
   const original = document.querySelector<HTMLAnchorElement>('#player-original')!;
   const retry = document.querySelector<HTMLButtonElement>('#player-retry')!;
@@ -22,6 +23,7 @@ export function setupPlayer(): void {
     stage.replaceChildren();
     stage.setAttribute('aria-busy', 'true');
     title.textContent = item.name;
+    note.textContent = item.format === 'archive' ? 'An archived release, preserved as published. Progress lasts for this preview.' : 'A signed release, preserved as published. Progress lasts for this preview.';
     status.textContent = 'Loading and verifying this napplet…';
     original.href = item.href;
     retry.hidden = true;
@@ -32,10 +34,10 @@ export function setupPlayer(): void {
     }
     const timeout = window.setTimeout(() => request.abort(new Error('The download timed out. Please try again.')), 15000);
     try {
-      const { fetchBytes, verifyArchivedRelease, verifiedDocument, PLAYER_SANDBOX } = await import('./verify');
+      const { fetchBytes, verifyRelease, verifiedDocument, PLAYER_SANDBOX } = await import('./verify');
       const signal = request.signal;
       const manifestBytes = await fetchBytes(item.manifest, signal);
-      const identity = await verifyArchivedRelease(JSON.parse(new TextDecoder().decode(manifestBytes)), item.eventId);
+      const identity = await verifyRelease(JSON.parse(new TextDecoder().decode(manifestBytes)), item.eventId, item.format);
       const document = await verifiedDocument(await fetchBytes(item.artifact, signal), identity.artifactHash);
       signal.throwIfAborted();
       const frame = window.document.createElement('iframe');

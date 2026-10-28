@@ -1,11 +1,12 @@
 /**
- * Integrity checks for three pinned historical showcase releases.
+ * Integrity checks for explicitly selected current and historical showcase releases.
  * Their signed envelopes predate the current NIP-5D manifest revision.
  * This is an archive adapter, not a current-protocol manifest validator.
  * Loading code adapted from napplet.soy (MIT); see /showcase/NOTICE.txt.
  * Current protocol: https://github.com/nostr-protocol/nips/pull/2303
  */
 import { validateEvent, verifyEvent, type Event } from 'nostr-tools/pure';
+import { catalogApp } from '../catalog';
 
 export const PLAYER_SANDBOX = 'allow-scripts';
 export const PLAYER_CSP = "default-src 'none'; script-src 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; connect-src 'none'; worker-src 'none'; child-src 'none'; frame-src 'none'; media-src 'none'; object-src 'none'; manifest-src 'none'; base-uri 'none'; form-action 'none'";
@@ -45,6 +46,25 @@ export async function verifyArchivedRelease(input: unknown, eventId: string) {
     throw new Error('This release needs a service unavailable in this preview. Open it in its full shell.');
   }
   return { artifactHash };
+}
+
+/**
+ * Verify a pinned selection using its explicitly configured release format.
+ * Identity checks follow NIP-5D Identity; this is not full manifest conformance.
+ * @param input Original signed event.
+ * @param eventId Selected publisher event id.
+ * @param format Explicit current or archived selection; no automatic legacy fallback.
+ * @returns The signed artifact hash used to verify the original bytes.
+ * @example const identity = await verifyRelease(event, selected.eventId, 'current');
+ */
+export async function verifyRelease(input: unknown, eventId: string, format: string) {
+  if (format === 'archive') return verifyArchivedRelease(input, eventId);
+  if (format !== 'current') throw new Error('Unknown curated release format.');
+  const app = catalogApp(input);
+  if (!app) throw new Error('The signed release could not be verified as a direct artifact-hash manifest.');
+  if (app.event.id !== eventId) throw new Error('This is not the selected napplet release.');
+  if (app.requirements.length) throw new Error('This release needs a service unavailable in this preview. Open it in its full shell.');
+  return { artifactHash: app.event.tags.find(tag => tag[0] === 'x')![1] };
 }
 
 /** Adapted from soy's verifiedDocument: verify first, then prepend shell policy. */
