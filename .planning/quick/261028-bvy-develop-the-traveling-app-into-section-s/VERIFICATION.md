@@ -22,3 +22,7 @@ Current local verification for the expanded showcase. Hosted checks are recorded
 A parallel build and type-check rerun raced on tsup's clean output directory and raised ENOENT. Type-check has build dependencies, so final checks ran sequentially; full build passes. No source workaround was added.
 
 The stronger mid-page resize/deep-link test exposed asynchronous browser anchor scrolling and refresh timing, plus a destination ordering issue in the host markup. Anchors are now sorted by document position, and phone reveal uses a mask so it cannot change the anchor geometry. The test waits for sustained alignment rather than taking a transient sample. Final result is recorded with hosted status below.
+
+The first hosted run failed before compilation because setup-node selected 22.23.3 while installed Astro declares >=22.23.4. Updated the five jobs building the complete workspace (CI, conformance, link check, site deploy, npm publish) to Node 24 LTS. Package-only JSR and quality jobs retain their existing runtime. Hosted rerun evidence follows.
+
+Local headless scrolling smoke: 163 frame samples, median 8.3 ms, p95 9.2 ms, zero samples above 50 ms. This observation is not a device-independent performance guarantee.
