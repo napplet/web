@@ -130,3 +130,7 @@ With `data`, the plugin derives `x` and `size`, sniffs the format for `m` (PNG, 
 ### GAMEPAD integration
 
 Requirement inference recognizes `@napplet/nap/gamepad`, `@napplet/sdk/gamepad`, and direct GAMEPAD domain reads. Declare `optional: ["gamepad"]` when keyboard or pointer controls fulfill the core task. See the proposed [NAP-GAMEPAD](https://github.com/napplet/naps/pull/108).
+
+### Torrent declarations
+
+Requirement inference recognizes static `@napplet/nap/torrent` and `@napplet/sdk/torrent` imports and direct `window.napplet.torrent` access. Root SDK namespace imports are not inferred; declare their domain explicitly. Use `requires: ['torrent']` when transfers are the napplet's core task, or `optional: ['torrent']` with a presence check for an enhancement. Manifest declarations do not start jobs or grant consent. See the living [NAP-TORRENT proposal](https://github.com/napplet/naps/blob/nap-torrent/naps/NAP-TORRENT.md).

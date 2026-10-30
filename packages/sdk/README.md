@@ -419,6 +419,7 @@ These are discriminated union types covering all messages in each NAP domain. Us
 | `ListsNapMessage` | `@napplet/nap/lists` | Discriminated union of all lists domain messages |
 | `CommonNapMessage` | `@napplet/nap/common` | Discriminated union of all common domain messages |
 | `GamepadNapMessage` | `@napplet/nap/gamepad` | Subscribe, unsubscribe, and state envelopes without correlation ids |
+| `TorrentNapMessage` | `@napplet/nap/torrent` | Request, result, and job push envelopes |
 | `SerialNapMessage` | `@napplet/nap/serial` | Discriminated union of all serial domain messages |
 
 Individual message types (e.g., `RelaySubscribeMessage`, `IdentityGetPublicKeyMessage`) are also re-exported from `@napplet/sdk` for fine-grained typing.
@@ -428,7 +429,7 @@ Individual message types (e.g., `RelaySubscribeMessage`, `IdentityGetPublicKeyMe
 Each NAP domain has a string constant re-exported from its package:
 
 ```ts
-import { RELAY_DOMAIN, IDENTITY_DOMAIN, STORAGE_DOMAIN, INC_DOMAIN, THEME_DOMAIN, KEYS_DOMAIN, MEDIA_DOMAIN, NOTIFY_DOMAIN, CONFIG_DOMAIN, RESOURCE_DOMAIN, CVM_DOMAIN, OUTBOX_DOMAIN, UPLOAD_DOMAIN, INTENT_DOMAIN, BLE_DOMAIN, WEBRTC_DOMAIN, LINK_DOMAIN, COUNT_DOMAIN, LISTS_DOMAIN, COMMON_DOMAIN, SERIAL_DOMAIN, DM_DOMAIN } from '@napplet/sdk';
+import { RELAY_DOMAIN, IDENTITY_DOMAIN, STORAGE_DOMAIN, INC_DOMAIN, THEME_DOMAIN, KEYS_DOMAIN, MEDIA_DOMAIN, NOTIFY_DOMAIN, CONFIG_DOMAIN, RESOURCE_DOMAIN, CVM_DOMAIN, OUTBOX_DOMAIN, UPLOAD_DOMAIN, INTENT_DOMAIN, BLE_DOMAIN, WEBRTC_DOMAIN, LINK_DOMAIN, COUNT_DOMAIN, LISTS_DOMAIN, COMMON_DOMAIN, SERIAL_DOMAIN, DM_DOMAIN, TORRENT_DOMAIN } from '@napplet/sdk';
 // Values: 'relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent', 'ble', 'webrtc', 'link', 'count', 'lists', 'common', 'serial', 'fs', 'dm', 'shell', 'gamepad'
 ```
 
@@ -527,3 +528,27 @@ if (window.napplet?.gamepad) {
 ```
 
 Declare `gamepad` as optional (`O`) when other controls fulfill the core task. Use a hard requirement (`R`) only when the core task needs controller input. The runtime owns controller access and focus isolation; app code does not call native `navigator.getGamepads()` or open raw HID devices. Haptics and remapping are outside this proposal.
+
+### Torrent indexes and jobs
+
+This non-normative guide follows the living [NAP-TORRENT proposal](https://github.com/napplet/naps/blob/nap-torrent/naps/NAP-TORRENT.md). Import the `torrent` namespace from `@napplet/sdk` or `@napplet/sdk/torrent`; root exports also include prefixed helpers such as `torrentSearch` and `torrentAdd`. The dedicated subpath provides bare aliases such as `search` and `add`.
+
+The API exposes `capabilities`, `fromEvent`, `toMagnet`, `search`, `publish`, `comment`, `pickFiles`, `add`, `status`, `jobs`, `files`, `selectFiles`, `pause`, `resume`, and `remove`. Listen with `onState`, `onProgress`, and `onError`; each returns a `Subscription` with `close()`. Push callbacks retain `jobId` so callers can filter their jobs. Typed `ok: false` refusals resolve as results; top-level errors and request timeouts reject.
+
+```ts
+import { torrent } from '@napplet/sdk/torrent';
+
+if (window.napplet?.torrent) {
+  const matches = await torrent.search({ tags: ['dataset'], limit: 10 });
+  if (matches[0]) {
+    const ack = await torrent.add({
+      source: { sourceType: 'nip35', descriptor: matches[0].descriptor },
+      options: { mode: 'download', startPaused: true },
+    });
+    if (!ack.ok) console.error(ack.error, ack.reason);
+    else if (ack.jobId) console.log(await torrent.status(ack.jobId));
+  }
+}
+```
+
+`add` acknowledges creation, not completion. Register push listeners before starting a job and close them when their owning view is disposed. A runtime file picker returns an opaque `runtimeFileSetId` for seeding; it does not expose local paths or file bytes. Use `publish: false` to request a signed preview without relay publication. The runtime supplies the torrent engine, consent, storage, signing, and tracker/DHT policy. Gate an optional integration on domain presence; declaring `torrent` in a manifest does not grant transfer permission.

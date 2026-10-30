@@ -7,6 +7,41 @@ const ID = { id: 'string' } as const;
  * NAP domains, with its direction and (for outbound) required fields.
  */
 export const ENVELOPE_SPECS: Record<string, EnvelopeSpec> = {
+  // NAP-TORRENT: https://github.com/napplet/naps/pull/72 (Wire Protocol).
+  'torrent.capabilities': { dir: 'out', fields: { ...ID } },
+  'torrent.capabilities.result': { dir: 'in', fields: { ...ID } },
+  'torrent.fromEvent': { dir: 'out', fields: { ...ID, event: 'object' } },
+  'torrent.fromEvent.result': { dir: 'in', fields: { ...ID } },
+  'torrent.toMagnet': { dir: 'out', fields: { ...ID, descriptor: 'object' } },
+  'torrent.toMagnet.result': { dir: 'in', fields: { ...ID } },
+  'torrent.search': { dir: 'out', fields: { ...ID, query: 'object' } },
+  'torrent.search.result': { dir: 'in', fields: { ...ID } },
+  'torrent.publish': { dir: 'out', fields: { ...ID, request: 'object' } },
+  'torrent.publish.result': { dir: 'in', fields: { ...ID } },
+  'torrent.comment': { dir: 'out', fields: { ...ID, request: 'object' } },
+  'torrent.comment.result': { dir: 'in', fields: { ...ID } },
+  'torrent.pickFiles': { dir: 'out', fields: { ...ID } },
+  'torrent.pickFiles.result': { dir: 'in', fields: { ...ID } },
+  'torrent.add': { dir: 'out', fields: { ...ID, request: 'object' } },
+  'torrent.add.result': { dir: 'in', fields: { ...ID } },
+  'torrent.status': { dir: 'out', fields: { ...ID, jobId: 'string' } },
+  'torrent.status.result': { dir: 'in', fields: { ...ID } },
+  'torrent.jobs': { dir: 'out', fields: { ...ID } },
+  'torrent.jobs.result': { dir: 'in', fields: { ...ID } },
+  'torrent.files': { dir: 'out', fields: { ...ID, jobId: 'string' } },
+  'torrent.files.result': { dir: 'in', fields: { ...ID } },
+  'torrent.selectFiles': { dir: 'out', fields: { ...ID, jobId: 'string', selection: 'object' } },
+  'torrent.selectFiles.result': { dir: 'in', fields: { ...ID } },
+  'torrent.pause': { dir: 'out', fields: { ...ID, jobId: 'string' } },
+  'torrent.pause.result': { dir: 'in', fields: { ...ID } },
+  'torrent.resume': { dir: 'out', fields: { ...ID, jobId: 'string' } },
+  'torrent.resume.result': { dir: 'in', fields: { ...ID } },
+  'torrent.remove': { dir: 'out', fields: { ...ID, jobId: 'string' } },
+  'torrent.remove.result': { dir: 'in', fields: { ...ID } },
+  'torrent.state': { dir: 'in', fields: { jobId: 'string', state: 'string' } },
+  'torrent.progress': { dir: 'in', fields: { jobId: 'string', status: 'object' } },
+  'torrent.error': { dir: 'in', fields: { jobId: 'string', error: 'string' } },
+
   // NAP-GAMEPAD Wire Protocol: all three messages are fire-and-forget, without ids.
   // https://github.com/napplet/naps/pull/108
   'gamepad.subscribe': { dir: 'out', forbiddenFields: ['id'], forbiddenReason: 'NAP-GAMEPAD fire-and-forget envelopes do not carry it' },

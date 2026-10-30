@@ -147,3 +147,7 @@ await intent.invoke('napplet:profile/open?pubkey=abc123');
 ```
 
 The runtime binding retains deliveries until a listener registers. Discovery candidates expose opaque catalog `id` values and `contracts` with parameter names. INC peers instead use identifiers for running authenticated endpoints. A NAP-INTENT URI may append a bare `#naddr1…` recommendation; the binding sends its coordinate and relay hints as `handlerHint`, outside convention identity and payload. An applicable user default takes precedence. INC URI operations reject fragments. See the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md) and [web projection](https://github.com/napplet/naps/blob/master/projections/web.md).
+
+### Torrent runtime binding
+
+Select `torrent` in `installNappletGlobal({ domains: ['torrent'] })` or the equivalent runtime prelude options to expose `window.napplet.torrent`. The binding forwards all 15 operations and routes `torrent.state`, `torrent.progress`, and `torrent.error` to local listeners. Requests correlate by `id`; pushes identify jobs by `jobId`. Installing the binding does not install a torrent engine or grant permission: the host supplies policy-bound handlers, scoped jobs, storage, and user consent. See the living [NAP-TORRENT proposal](https://github.com/napplet/naps/blob/nap-torrent/naps/NAP-TORRENT.md).

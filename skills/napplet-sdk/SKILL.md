@@ -9,7 +9,7 @@ Napplet implementation code is **SDK-first**: import typed wrappers from `@nappl
 
 ## Domains shipped by the current packages
 
-`shell`, `relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `ble`, `webrtc`, `link`, `count`, `lists`, `serial`, `fs`, `common`, `dm`.
+`shell`, `relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `ble`, `webrtc`, `link`, `count`, `lists`, `serial`, `fs`, `common`, `dm`, `torrent`.
 
 `ifc` is a deprecated INC alias. If a NAP is not in this list, do not implement against it even when a spec PR exists — flag the package/spec gap. `shell` is optional environment information only (see below); there is no `discoverServices()` or `hasService()`, and no domain waits on `shell.ready()`. A missing optional domain simply means "unavailable for this load".
 
@@ -220,3 +220,27 @@ Theme updates reach napplets with the exposed `theme` domain, independently of m
 ## Optional controller input
 
 This non-normative guidance defers to the living [NAP-GAMEPAD proposal](https://github.com/napplet/naps/pull/108). Check injected `gamepad` presence and call the SDK namespace from `@napplet/sdk/gamepad`. Its cached API exposes `getGamepads()`, `available`, `focused`, and `onChange(handler)`; close listeners on disposal. Keep keyboard or pointer fallbacks, ignore gameplay edges while unfocused, reset held-button baselines on regained focus, preserve null slots, and route controllers by `index`. Use an optional manifest domain when the core task remains usable without controllers. Native controller access belongs to the runtime. Do not add haptics, raw HID access, a correlation id, or a prerequisite SHELL readiness exchange. Reference-mock conformance reports unavailable controllers; verify live focus isolation in a GAMEPAD-capable runtime.
+
+### Torrent indexes and jobs
+
+This non-normative guide follows the living [NAP-TORRENT proposal](https://github.com/napplet/naps/blob/nap-torrent/naps/NAP-TORRENT.md). Import the `torrent` namespace from `@napplet/sdk` or `@napplet/sdk/torrent`; root exports also include prefixed helpers such as `torrentSearch` and `torrentAdd`. The dedicated subpath provides bare aliases such as `search` and `add`.
+
+The API exposes `capabilities`, `fromEvent`, `toMagnet`, `search`, `publish`, `comment`, `pickFiles`, `add`, `status`, `jobs`, `files`, `selectFiles`, `pause`, `resume`, and `remove`. Listen with `onState`, `onProgress`, and `onError`; each returns a `Subscription` with `close()`. Push callbacks retain `jobId` so callers can filter their jobs. Typed `ok: false` refusals resolve as results; top-level errors and request timeouts reject.
+
+```ts
+import { torrent } from '@napplet/sdk/torrent';
+
+if (window.napplet?.torrent) {
+  const matches = await torrent.search({ tags: ['dataset'], limit: 10 });
+  if (matches[0]) {
+    const ack = await torrent.add({
+      source: { sourceType: 'nip35', descriptor: matches[0].descriptor },
+      options: { mode: 'download', startPaused: true },
+    });
+    if (!ack.ok) console.error(ack.error, ack.reason);
+    else if (ack.jobId) console.log(await torrent.status(ack.jobId));
+  }
+}
+```
+
+`add` acknowledges creation, not completion. Register push listeners before starting a job and close them when their owning view is disposed. A runtime file picker returns an opaque `runtimeFileSetId` for seeding; it does not expose local paths or file bytes. Use `publish: false` to request a signed preview without relay publication. The runtime supplies the torrent engine, consent, storage, signing, and tracker/DHT policy. Gate an optional integration on domain presence; declaring `torrent` in a manifest does not grant transfer permission.

@@ -32,6 +32,7 @@ Top-level namespaced objects that mirror `window.napplet`:
 - **`media`** — `createSession`, `reportState`, `onCommand`, …
 - **`notify`** — `send`, `badge`, `onAction`, …
 - **`config`** — `get`, `subscribe`, `openSettings`, `registerSchema`, `schema`
+- **`torrent`** — NIP-35 indexes, runtime transfer jobs, and job event listeners
 - **`resource`** — `info`, `bytes`, `bytesMany`, `bytesAsObjectURL`
 
 `identity` is exported as a top-level object and through bare-name helpers:
@@ -173,3 +174,27 @@ if (window.napplet?.gamepad) {
 ```
 
 Declare `gamepad` as optional (`O`) when other controls fulfill the core task. Use a hard requirement (`R`) only when the core task needs controller input. The runtime owns controller access and focus isolation; app code does not call native `navigator.getGamepads()` or open raw HID devices. Haptics and remapping are outside this proposal.
+
+### Torrent indexes and jobs
+
+This non-normative guide follows the living [NAP-TORRENT proposal](https://github.com/napplet/naps/blob/nap-torrent/naps/NAP-TORRENT.md). Import the `torrent` namespace from `@napplet/sdk` or `@napplet/sdk/torrent`; root exports also include prefixed helpers such as `torrentSearch` and `torrentAdd`. The dedicated subpath provides bare aliases such as `search` and `add`.
+
+The API exposes `capabilities`, `fromEvent`, `toMagnet`, `search`, `publish`, `comment`, `pickFiles`, `add`, `status`, `jobs`, `files`, `selectFiles`, `pause`, `resume`, and `remove`. Listen with `onState`, `onProgress`, and `onError`; each returns a `Subscription` with `close()`. Push callbacks retain `jobId` so callers can filter their jobs. Typed `ok: false` refusals resolve as results; top-level errors and request timeouts reject.
+
+```ts
+import { torrent } from '@napplet/sdk/torrent';
+
+if (window.napplet?.torrent) {
+  const matches = await torrent.search({ tags: ['dataset'], limit: 10 });
+  if (matches[0]) {
+    const ack = await torrent.add({
+      source: { sourceType: 'nip35', descriptor: matches[0].descriptor },
+      options: { mode: 'download', startPaused: true },
+    });
+    if (!ack.ok) console.error(ack.error, ack.reason);
+    else if (ack.jobId) console.log(await torrent.status(ack.jobId));
+  }
+}
+```
+
+`add` acknowledges creation, not completion. Register push listeners before starting a job and close them when their owning view is disposed. A runtime file picker returns an opaque `runtimeFileSetId` for seeding; it does not expose local paths or file bytes. Use `publish: false` to request a signed preview without relay publication. The runtime supplies the torrent engine, consent, storage, signing, and tracker/DHT policy. Gate an optional integration on domain presence; declaring `torrent` in a manifest does not grant transfer permission.

@@ -1,3 +1,4 @@
+import * as torrentShim from '@napplet/nap/torrent/shim';
 import type { NapDomain, NappletGlobal } from '@napplet/core';
 import {
   info as resourceInfo,
@@ -112,6 +113,28 @@ import {
 
 
 export function installServiceDomains(domains: ReadonlySet<NapDomain>, napplet: Partial<NappletGlobal>): void {
+  if (domains.has('torrent')) {
+    napplet.torrent = {
+      capabilities: torrentShim.capabilities,
+      fromEvent: torrentShim.fromEvent,
+      toMagnet: torrentShim.toMagnet,
+      search: torrentShim.search,
+      publish: torrentShim.publish,
+      comment: torrentShim.comment,
+      pickFiles: torrentShim.pickFiles,
+      add: torrentShim.add,
+      status: torrentShim.status,
+      jobs: torrentShim.jobs,
+      files: torrentShim.files,
+      selectFiles: torrentShim.selectFiles,
+      pause: torrentShim.pause,
+      resume: torrentShim.resume,
+      remove: torrentShim.remove,
+      onState: torrentShim.onState,
+      onProgress: torrentShim.onProgress,
+      onError: torrentShim.onError,
+    };
+  }
   installNetworkDomains(domains, napplet);
   installDeviceDomains(domains, napplet);
   installFilesystemDomains(domains, napplet);

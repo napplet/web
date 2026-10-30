@@ -14,6 +14,7 @@
  * @packageDocumentation
  */
 
+import { TORRENT_PRELUDE_SOURCE } from './torrent-prelude.js';
 import { NAP_DOMAINS } from '@napplet/core';
 import { createReferenceShell, type RecordedEnvelope } from '../shell/reference-shell.js';
 import type { BootObservation } from './context.js';
@@ -45,7 +46,7 @@ export interface BootOptions {
   settleMs?: number;
   /** Also run a no-domain degraded boot. Default true. */
   runDegraded?: boolean;
-  /** Host-supplied maintained shim IIFE. Without it, only the embedded RESOURCE/GAMEPAD fixtures are available. */
+  /** Host-supplied maintained shim IIFE. Without it, only the embedded RESOURCE/GAMEPAD/TORRENT fixtures are available. */
   runtimePreludeSource?: string;
   /** Debug only: also grant `allow-same-origin` (a conformant load must NOT need it). Default false. */
   allowSameOrigin?: boolean;
@@ -175,10 +176,10 @@ const FALLBACK_RUNTIME_AFTER_GAMEPAD_TOOLS = `;
     if (!msg || typeof msg !== 'object' || typeof msg.id !== 'string') return;
     const slot = pending.get(msg.id);
     if (!slot) return;
-    if (msg.type !== slot.resultType && msg.type !== slot.errorType) return;
+    if (msg.type !== slot.resultType && (!slot.errorType || msg.type !== slot.errorType)) return;
     pending.delete(msg.id);
     window.clearTimeout(slot.timeout);
-    if (msg.type === slot.errorType) {
+    if (slot.errorType && msg.type === slot.errorType) {
       slot.reject(new Error(msg.message ? msg.error + ': ' + msg.message : String(msg.error || 'request failed')));
       return;
     }
@@ -229,6 +230,7 @@ const FALLBACK_RUNTIME_AFTER_GAMEPAD_TOOLS = `;
       return handle;
     };
   }
+  ${TORRENT_PRELUDE_SOURCE}
   window.napplet = napplet;
   `;
 

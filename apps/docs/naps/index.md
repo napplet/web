@@ -267,7 +267,7 @@ if (window.napplet?.fs) {
 
 ## Core domain union
 
-[`@napplet/core`](/packages/core) exports a `NapDomain` string union for the foundational domains — `shell`, `relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `ble`, `webrtc`, `link`, `count`, `lists`, `serial`, `fs`, `common`, `dm`, `gamepad` — used as the discriminant for envelope routing and domain presence.
+[`@napplet/core`](/packages/core) exports a `NapDomain` string union for the foundational domains — `shell`, `relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `ble`, `webrtc`, `link`, `count`, `lists`, `serial`, `fs`, `common`, `dm`, `gamepad`, `torrent` — used as the discriminant for envelope routing and domain presence.
 
 ## Where to go next
 
@@ -297,3 +297,7 @@ Theme updates reach napplets with the exposed `theme` domain, independently of m
 ### gamepad
 
 Optional focus-scoped controller snapshots. See the non-normative [GAMEPAD guide](./gamepad) and living [NAP-GAMEPAD proposal](https://github.com/napplet/naps/pull/108).
+
+### torrent
+
+NIP-35 indexing and runtime-owned download/seed jobs. The injected `window.napplet.torrent` API supports descriptor conversion, search, publication, comments, picker handles, transfer control, and job events. See the non-normative [TORRENT guide](./torrent) and living [NAP-TORRENT proposal](https://github.com/napplet/naps/blob/nap-torrent/naps/NAP-TORRENT.md).

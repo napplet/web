@@ -52,6 +52,8 @@ describe('@napplet/core exports', () => {
       expect(NAP_DOMAINS).toContain('common');
       expect(NAP_DOMAINS).toContain('dm');
       expect(NAP_DOMAINS).toContain('count');
+      const torrent: NapDomain = 'torrent';
+      expect(NAP_DOMAINS).toContain(torrent);
     });
 
     it('NappletGlobal represents domain availability by property presence', () => {
