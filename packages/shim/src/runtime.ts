@@ -1,3 +1,4 @@
+import { installBlossomShim, handleBlossomMessage } from '@napplet/nap/blossom/shim';
 import { installGamepadShim, handleGamepadMessage } from '@napplet/nap/gamepad/shim';
 import { handleShellMessage, installShellShim } from '@napplet/nap/shell/shim';
 import {
@@ -99,6 +100,7 @@ const installedDomainShims = new Set<NapDomain>();
 let messageListenerInstalled = false;
 
 const DOMAIN_ROUTERS: ReadonlyArray<readonly [string, DomainHandler]> = [
+  ['blossom.', handleBlossomMessage],
   ['gamepad.', handleGamepadMessage],
   ['shell.', handleShellMessage],
   ['keys.', handleKeysMessage],
@@ -150,6 +152,9 @@ function installDomainShim(domain: NapDomain): void {
   installedDomainShims.add(domain);
 
   switch (domain) {
+    case 'blossom':
+      installBlossomShim();
+      return;
     case 'gamepad':
       installGamepadShim();
       return;

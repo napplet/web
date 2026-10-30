@@ -9,7 +9,7 @@ Napplet implementation code is **SDK-first**: import typed wrappers from `@nappl
 
 ## Domains shipped by the current packages
 
-`shell`, `relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `ble`, `webrtc`, `link`, `count`, `lists`, `serial`, `fs`, `common`, `dm`.
+`shell`, `relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `ble`, `webrtc`, `link`, `count`, `lists`, `serial`, `fs`, `common`, `dm`, `gamepad`, `blossom`.
 
 `ifc` is a deprecated INC alias. If a NAP is not in this list, do not implement against it even when a spec PR exists — flag the package/spec gap. `shell` is optional environment information only (see below); there is no `discoverServices()` or `hasService()`, and no domain waits on `shell.ready()`. A missing optional domain simply means "unavailable for this load".
 
@@ -24,6 +24,7 @@ Napplet implementation code is **SDK-first**: import typed wrappers from `@nappl
 | Persist app state | `storage` |
 | External bytes (images, avatars, JSON, WASM side files, media) | `resource` |
 | Shell-mediated upload of user files/blobs | `upload` |
+| Explicit Blossom servers, blob operations, BUD-03 server lists and BUD-10 URI helpers | `blossom` |
 | Open an external URL under shell policy | `link` |
 | Talk to other napplets | `inc`, `intent` (see `napplet-interop`) |
 | User-configurable settings | `config` |
@@ -220,3 +221,7 @@ Theme updates reach napplets with the exposed `theme` domain, independently of m
 ## Optional controller input
 
 This non-normative guidance defers to the living [NAP-GAMEPAD proposal](https://github.com/napplet/naps/pull/108). Check injected `gamepad` presence and call the SDK namespace from `@napplet/sdk/gamepad`. Its cached API exposes `getGamepads()`, `available`, `focused`, and `onChange(handler)`; close listeners on disposal. Keep keyboard or pointer fallbacks, ignore gameplay edges while unfocused, reset held-button baselines on regained focus, preserve null slots, and route controllers by `index`. Use an optional manifest domain when the core task remains usable without controllers. Native controller access belongs to the runtime. Do not add haptics, raw HID access, a correlation id, or a prerequisite SHELL readiness exchange. Reference-mock conformance reports unavailable controllers; verify live focus isolation in a GAMEPAD-capable runtime.
+
+## Blossom
+
+This non-normative guidance defers to the living [NAP-BLOSSOM proposal](https://github.com/napplet/naps/pull/71). Import `blossom` from `@napplet/sdk/blossom`; check `window.napplet?.blossom` for optional features. Use it for explicit server-directed blob operations and ordered BUD-03 server-list helpers. `parseUri` and `formatUri` are local BUD-10 helpers. Keep generic fetching on `resource` and runtime-selected uploads on `upload`. Pass `Blob` or `ArrayBuffer` unchanged; handle typed `ok: false` results separately from rejected promises. The runtime owns auth tokens, signing, integrity verification and network policy. Reference conformance returns typed unavailable results without network access.

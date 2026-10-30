@@ -1,3 +1,4 @@
+import * as blossom from '@napplet/nap/blossom/shim';
 import type { NapDomain, NappletGlobal } from '@napplet/core';
 import {
   info as resourceInfo,
@@ -118,6 +119,26 @@ export function installServiceDomains(domains: ReadonlySet<NapDomain>, napplet: 
 }
 
 function installNetworkDomains(domains: ReadonlySet<NapDomain>, napplet: Partial<NappletGlobal>): void {
+  if (domains.has('blossom')) {
+    napplet.blossom = {
+      check: blossom.check,
+      get: blossom.get,
+      checkUpload: blossom.checkUpload,
+      upload: blossom.upload,
+      mirror: blossom.mirror,
+      checkMedia: blossom.checkMedia,
+      media: blossom.media,
+      list: blossom.list,
+      delete: blossom.deleteBlob,
+      servers: blossom.servers,
+      addServer: blossom.addServer,
+      removeServer: blossom.removeServer,
+      reorderServers: blossom.reorderServers,
+      parseUri: blossom.parseUri,
+      formatUri: blossom.formatUri,
+    };
+  }
+
   if (domains.has('resource')) {
     napplet.resource = {
       info: resourceInfo,

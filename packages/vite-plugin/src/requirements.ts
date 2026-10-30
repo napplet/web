@@ -22,6 +22,7 @@ const NAP_DOMAINS = [
   'cvm',
   'outbox',
   'upload',
+  'blossom',
   'intent',
   'ble',
   'webrtc',

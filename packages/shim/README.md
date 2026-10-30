@@ -668,3 +668,7 @@ The runtime binding retains deliveries until a listener registers. Discovery can
 ### GAMEPAD integration
 
 The selected `gamepad` runtime binding installs the cached API, subscribes without SHELL readiness, validates parent state, and unsubscribes during cleanup. See the proposed [NAP-GAMEPAD](https://github.com/napplet/naps/pull/108). The native browser Gamepad API is left untouched pending clarification of the proposal’s optional replacement and NIP-5D’s namespace-only injection rule.
+
+## Optional BLOSSOM binding
+
+Include `blossom` in the host's explicit domain allowlist to inject `window.napplet.blossom`. The binding correlates the draft's request/result messages, preserves structured-clone bytes and provides local BUD-10 URI helpers. Host code supplies the Blossom endpoint backend, authentication, integrity checks and network policy. See the living [NAP-BLOSSOM proposal](https://github.com/napplet/naps/pull/71) and non-normative [BLOSSOM guide](https://napplet.run/docs/naps/blossom.html).

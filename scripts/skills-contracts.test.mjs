@@ -144,7 +144,7 @@ test('the SDK reference lists every shipped domain and no skill imports the runt
   for (const domain of [
     'shell', 'relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource',
     'cvm', 'outbox', 'upload', 'intent', 'ble', 'webrtc', 'link', 'count', 'lists', 'serial', 'fs',
-    'common', 'dm',
+    'common', 'dm', 'gamepad', 'blossom',
   ]) {
     assert.match(sdk, new RegExp(`\`${domain}\``), `napplet-sdk must list ${domain}`);
   }

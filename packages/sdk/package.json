@@ -14,6 +14,10 @@
     "./gamepad": {
       "types": "./dist/gamepad.d.ts",
       "import": "./dist/gamepad.js"
+    },
+    "./blossom": {
+      "types": "./dist/blossom.d.ts",
+      "import": "./dist/blossom.js"
     }
   },
   "files": [

@@ -585,3 +585,5 @@ NAPPLET_TEST_STANDALONE=1 deno test --node-modules-dir=none -A packages/cli/test
 ### GAMEPAD integration
 
 GAMEPAD is a bare manifest domain accepted by `init`, `build`, and deployment metadata. Controller fallback apps use `O gamepad`; controller-required apps use `R gamepad`. Live `dev` controller input depends on a GAMEPAD-capable Kehto/Paja release. See the proposed [NAP-GAMEPAD](https://github.com/napplet/naps/pull/108).
+
+BLOSSOM capability declarations use the bare `blossom` domain in required (`R`) or optional (`O`) manifest tags. Deployment preserves either declaration; this does not grant runtime access. The CLI's own Blossom deployment uploader is separate from [NAP-BLOSSOM](https://github.com/napplet/naps/pull/71), which a compatible host injects for napplet calls.
