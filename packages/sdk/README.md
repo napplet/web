@@ -195,7 +195,7 @@ if (!result.ok) throw new Error(result.error);
 console.log(`Accepted by ${result.handler}`);
 ```
 
-Intent calls derive archetype and action from the URI. An `ok: true` result means the runtime accepted delivery responsibility and includes the normalized identity and handler catalog identifier; an `ok: false` result includes `error`. Targets receive runtime-attested `IntentDelivery` values through `onDelivery`, including deliveries retained before registration. Behavior hints are `focus` and `reuse`. This non-normative guidance defers to the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md).
+Intent calls derive archetype and action from the URI. An `ok: true` result means the runtime accepted delivery responsibility and includes the normalized identity and handler catalog identifier; an `ok: false` result includes `error`. Targets receive runtime-attested `IntentDelivery` values through `onDelivery`, including deliveries retained before registration. Each delivery has a runtime-assigned `id`; `sender` is the source catalog identifier, or `null` for a shell-originated request. These fields follow the [NAP-INTENT delivery draft](https://github.com/napplet/naps/pull/128). Behavior hints are `focus` and `reuse`. This non-normative guidance defers to the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md).
 
 ### `storage`
 
@@ -500,8 +500,8 @@ The runtime may expose `shell` for environment information. `shell.supports(doma
 ```ts
 import { intent } from '@napplet/sdk';
 
-intent.onDelivery(({ sender, convention, payload }) => {
-  console.log(sender, convention, payload);
+intent.onDelivery(({ id, sender, convention, payload }) => {
+  console.log(id, sender, convention, payload);
 });
 await intent.invoke('napplet:profile/open?pubkey=abc123');
 ```
@@ -527,3 +527,18 @@ if (window.napplet?.gamepad) {
 ```
 
 Declare `gamepad` as optional (`O`) when other controls fulfill the core task. Use a hard requirement (`R`) only when the core task needs controller input. The runtime owns controller access and focus isolation; app code does not call native `navigator.getGamepads()` or open raw HID devices. Haptics and remapping are outside this proposal.
+
+### `navigation`
+
+Import `navigation` from `@napplet/sdk` or `@napplet/sdk/navigation`. Both expose `report(report)` and `get()` returning `Promise<NavigationResult>`. Named `navigationReport` / `navigationGet` helpers are available from the root and navigation subpath; the subpath also exports `report` / `get` aliases and navigation types.
+
+```ts
+import { navigation } from '@napplet/sdk/navigation';
+
+if (window.napplet?.navigation && window.napplet?.intent) {
+  const result = await navigation.report({ revision: 1, location: null });
+  if (!result.ok) console.error(result.error.code);
+}
+```
+
+Report an initial and every subsequent committed view; `null` means no eligible advertised invocation represents it. The runtime owns history and Back/Forward requests, delivered through `intent.onDelivery`. Serialize transitions and reports, carry the responsible `delivery.id` as `deliveryId`, and inspect structured rejections before relying on shell history. Missing domains use the SDK's normal unavailable-domain error. This non-normative API guide follows the [NAP-NAVIGATION draft](https://github.com/napplet/naps/pull/126) and [NAP-INTENT delivery draft](https://github.com/napplet/naps/pull/128); see the [router integration guide](../../apps/docs/naps/navigation.md).

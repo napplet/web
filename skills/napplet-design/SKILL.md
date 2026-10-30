@@ -61,7 +61,7 @@ This non-normative authoring guidance follows [NIP-5D, Required and Optional Cap
 
 Put each used optional integration in the vite-plugin `optional: [...]` list as well as guarding its runtime calls. Current tooling emits `R` for `requires` and `O` for `optional`. Keep these declarations aligned when features are added or removed; list only domains actually used.
 
-Prefer optional + graceful degradation. `keys`, `theme`, `config`, `notify`, `resource`, `inc`, `intent` are almost never hard.
+Prefer optional + graceful degradation. `keys`, `theme`, `config`, `notify`, `resource`, `inc`, `intent` are almost never hard. Navigation depends on INTENT, so a required navigation feature also needs the intent domain.
 
 ## Step 4 — Form factor plan (mandatory)
 
@@ -100,3 +100,7 @@ Hand this to `napplet-build`; verify with `napplet-test`. When the request inclu
 ## Optional controller input
 
 This non-normative guidance defers to the living [NAP-GAMEPAD proposal](https://github.com/napplet/naps/pull/108). Check injected `gamepad` presence and call the SDK namespace from `@napplet/sdk/gamepad`. Its cached API exposes `getGamepads()`, `available`, `focused`, and `onChange(handler)`; close listeners on disposal. Keep keyboard or pointer fallbacks, ignore gameplay edges while unfocused, reset held-button baselines on regained focus, preserve null slots, and route controllers by `index`. Use an optional manifest domain when the core task remains usable without controllers. Native controller access belongs to the runtime. Do not add haptics, raw HID access, a correlation id, or a prerequisite SHELL readiness exchange. Reference-mock conformance reports unavailable controllers; verify live focus isolation in a GAMEPAD-capable runtime.
+
+## Navigation design
+
+For shell-managed Back/Forward, use the [NAP-NAVIGATION draft](https://github.com/napplet/naps/pull/126) with its required [NAP-INTENT delivery draft](https://github.com/napplet/naps/pull/128). Define which committed views have advertised conventions and parameter-name lists, which views report `null`, and how guards serialize with reports. Keep history optional when the core task works without it; declare and guard both `navigation` and `intent`. The runtime owns visits, indices, retention, and traversal delivery. Plan stable monotonic report revisions and recovery after rejections; do not model browser History API interception or a napplet-submitted snapshot.

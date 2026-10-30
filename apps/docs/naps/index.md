@@ -187,7 +187,7 @@ if (window.napplet?.upload) {
 
 ### intent
 
-Intent calls derive archetype and action from the URI. An `ok: true` result means the runtime accepted delivery responsibility and includes the normalized identity and handler catalog identifier; an `ok: false` result includes `error`. Targets receive runtime-attested `IntentDelivery` values through `onDelivery`, including deliveries retained before registration. Behavior hints are `focus` and `reuse`. This non-normative guidance defers to the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md).
+Intent calls derive archetype and action from the URI. An `ok: true` result means the runtime accepted delivery responsibility and includes the normalized identity and handler catalog identifier; an `ok: false` result includes `error`. Targets receive runtime-attested `IntentDelivery` values through `onDelivery`, including deliveries retained before registration. Each delivery has a runtime-assigned `id`; `sender` is the source catalog identifier, or `null` for a shell-originated request. These fields follow the [NAP-INTENT delivery draft](https://github.com/napplet/naps/pull/128). Behavior hints are `focus` and `reuse`. This non-normative guidance defers to the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md).
 
 ```ts
 if (window.napplet?.intent) {
@@ -267,7 +267,7 @@ if (window.napplet?.fs) {
 
 ## Core domain union
 
-[`@napplet/core`](/packages/core) exports a `NapDomain` string union for the foundational domains — `shell`, `relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `ble`, `webrtc`, `link`, `count`, `lists`, `serial`, `fs`, `common`, `dm`, `gamepad` — used as the discriminant for envelope routing and domain presence.
+[`@napplet/core`](/packages/core) exports a `NapDomain` string union for the foundational domains — `shell`, `relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `navigation`, `ble`, `webrtc`, `link`, `count`, `lists`, `serial`, `fs`, `common`, `dm`, `gamepad` — used as the discriminant for envelope routing and domain presence.
 
 ## Where to go next
 
@@ -285,8 +285,8 @@ The runtime may expose `shell` for environment information. `shell.supports(doma
 ```ts
 import { intent } from '@napplet/sdk';
 
-intent.onDelivery(({ sender, convention, payload }) => {
-  console.log(sender, convention, payload);
+intent.onDelivery(({ id, sender, convention, payload }) => {
+  console.log(id, sender, convention, payload);
 });
 await intent.invoke('napplet:profile/open?pubkey=abc123');
 ```
@@ -297,3 +297,7 @@ Theme updates reach napplets with the exposed `theme` domain, independently of m
 ### gamepad
 
 Optional focus-scoped controller snapshots. See the non-normative [GAMEPAD guide](./gamepad) and living [NAP-GAMEPAD proposal](https://github.com/napplet/naps/pull/108).
+
+### navigation
+
+Report committed views as advertised intent locations and read the instance's complete retained history. The runtime owns visit IDs, order, retention, and Back/Forward traversal. Requires INTENT; app code uses only `report` and `get`. See the non-normative [NAVIGATION guide](./navigation), [NAP-NAVIGATION draft](https://github.com/napplet/naps/pull/126), and companion [NAP-INTENT delivery draft](https://github.com/napplet/naps/pull/128).

@@ -1,11 +1,11 @@
 ---
 name: napplet-interop
-description: Use only when a napplet talks to other napplets - NAP-INC topics (inc.emit / inc.on), NAP-INTENT dispatch (intent.invoke / intent.open), archetype manifest metadata, and the stable queryless convention identity rule (napplet:<archetype>/<intent>). Covers the emit-only query shorthand, payload validation, and what must stay exact-match. Skip for napplets that never emit, subscribe, or dispatch.
+description: Use when a napplet talks to other napplets or handles shell navigation history - NAP-INC topics (inc.emit / inc.on), NAP-INTENT dispatch (intent.invoke / intent.open), archetype manifest metadata, and the stable queryless convention identity rule (napplet:<archetype>/<intent>). Covers the emit-only query shorthand, payload validation, and what must stay exact-match. Skip for napplets that never emit, subscribe, dispatch, or report intent-based navigation.
 ---
 
 # Inter-Napplet Conventions (INC, INTENT, archetypes)
 
-Load this only when the design spec names a cross-napplet feature: opening a note/profile/DM in another napplet, exposing an archetype role, broadcasting to sibling napplets. Protocol truth is the living [NAP-INC](https://github.com/napplet/naps/blob/master/naps/NAP-INC.md) (draft history in [PR #89](https://github.com/napplet/naps/pull/89)) and [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md) documents. If a needed behavior is not there, flag the gap; do not invent it.
+Load this only when the design spec names a cross-napplet feature: opening a note/profile/DM in another napplet, exposing an archetype role, broadcasting to sibling napplets, or reporting intent-based navigation history. Protocol truth is the living [NAP-INC](https://github.com/napplet/naps/blob/master/naps/NAP-INC.md) (draft history in [PR #89](https://github.com/napplet/naps/pull/89)) and [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md) documents. If a needed behavior is not there, flag the gap; do not invent it.
 
 ## Convention identity
 
@@ -82,4 +82,10 @@ intent dispatch: <none | invoke/open request + how acceptance and onDelivery dri
 - Subscribing to a queried topic (`inc.on('napplet:profile/open?pubkey=…')`) — never matches; subscribe to the queryless identity.
 - Treating a topic as a schema (`if (topic.endsWith('/open')) payload.pubkey…`) — validate the payload itself.
 - Adding `inc` or `intent` to manifest `requires` for an optional handoff — gate on `window.napplet?.inc` / `?.intent` and hide the affordance when absent.
-- Inventing delivery identifiers, acknowledgement lifecycles, or version negotiation around intents — not in the living spec; use the acceptance result and onDelivery contract.
+- Assigning delivery identifiers in napplet code or inventing acknowledgement lifecycles and version negotiation. The runtime assigns `IntentDelivery.id` under the [delivery draft](https://github.com/napplet/naps/pull/128); the invoking napplet receives acceptance, not a completion receipt.
+
+## NAP-NAVIGATION — report committed views
+
+The [NAP-NAVIGATION draft](https://github.com/napplet/naps/pull/126) depends on the [NAP-INTENT delivery draft](https://github.com/napplet/naps/pull/128). A delivery carries runtime-assigned `id`; `sender` is an authenticated source catalog ID or `null` for shell-originated delivery. The ID is endpoint-scoped correlation, not authority. When that delivery causes a committed transition, report its ID as `deliveryId` through `navigation.report`. Keep it attached to that transition's serialized work, never global "last intent" state or payload fields.
+
+Advertise each retained convention and its parameter names. Report only one committed `location`, not an index or history list; use `null` for a view that cannot be represented. The runtime chooses the exact retained visit for Back/Forward, including duplicate invocations. A guard that declines may reaffirm unchanged state with a newer `replace` report without the declined delivery ID. Handle redirects and late commits by reporting actual state. New reports always advance revision, including after rejection; retries preserve revision and content. Do not replay irreversible actions as history locations.

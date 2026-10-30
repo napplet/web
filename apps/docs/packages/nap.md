@@ -3,7 +3,7 @@
 > Every active napplet NAP domain as layered subpath exports. The package name remains
 > `@napplet/nap` for compatibility.
 
-`@napplet/nap` ships every active NAP domain (relay, storage, inc, keys, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent, ble, webrtc, link, count, lists, common, serial, fs, dm) as independent, tree-shakable subpaths. It sits between the shim/sdk and [`@napplet/core`](./core) in the dependency graph.
+`@napplet/nap` ships every active NAP domain (relay, storage, inc, keys, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent, navigation, ble, webrtc, link, count, lists, common, serial, fs, dm) as independent, tree-shakable subpaths. It sits between the shim/sdk and [`@napplet/core`](./core) in the dependency graph.
 
 - **npm:** [`@napplet/nap`](https://www.npmjs.com/package/@napplet/nap)
 - **JSR:** [`@napplet/nap`](https://jsr.io/@napplet/nap)
@@ -85,6 +85,7 @@ import { notifySend } from '@napplet/nap/notify/sdk';
   `open`/`write`/`close`/`onEvent`; the shell owns permissions, raw port
   handles, streams, OS paths, and lifecycle policy.
 - **fs** — shell-mediated virtual filesystem access: napplets get `info`/`pickFile`/`pickFiles`/`pickDirectory`/`pickSaveFile`/`stat`/`list`/`read`/`write`/`mkdir`/`remove`/`move`/`watch`/`unwatch`/`onChanged`; the runtime owns host paths, mounts, backing store, normalization, policy, and authorization. Byte payloads use RFC 4648 standard padded base64 text on the JSON wire, and byte limits/counts refer to decoded bytes.
+- **navigation** — `report` / `get` for committed locations and runtime-owned history; requires INTENT.
 - **intent** — archetype-based invocation through `invoke(uri, options?)` and `open(uri, options?)`, with canonical structured dispatch results.
 
 ### INC convention URIs
@@ -121,7 +122,7 @@ if ((await intentAvailable('profile')).available) {
 }
 ```
 
-Intent calls derive archetype and action from the URI. An `ok: true` result means the runtime accepted delivery responsibility and includes the normalized identity and handler catalog identifier; an `ok: false` result includes `error`. Targets receive runtime-attested `IntentDelivery` values through `onDelivery`, including deliveries retained before registration. Behavior hints are `focus` and `reuse`. This non-normative guidance defers to the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md).
+Intent calls derive archetype and action from the URI. An `ok: true` result means the runtime accepted delivery responsibility and includes the normalized identity and handler catalog identifier; an `ok: false` result includes `error`. Targets receive runtime-attested `IntentDelivery` values through `onDelivery`, including deliveries retained before registration. Each delivery has a runtime-assigned `id`; `sender` is the source catalog identifier, or `null` for a shell-originated request. These fields follow the [NAP-INTENT delivery draft](https://github.com/napplet/naps/pull/128). Behavior hints are `focus` and `reuse`. This non-normative guidance defers to the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md).
 
 These APIs defer to the living [NAP-INC](https://github.com/napplet/naps/blob/master/naps/NAP-INC.md) and [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md) documents.
 
@@ -146,8 +147,8 @@ The runtime may expose `shell` for environment information. `shell.supports(doma
 ```ts
 import { intent } from '@napplet/sdk';
 
-intent.onDelivery(({ sender, convention, payload }) => {
-  console.log(sender, convention, payload);
+intent.onDelivery(({ id, sender, convention, payload }) => {
+  console.log(id, sender, convention, payload);
 });
 await intent.invoke('napplet:profile/open?pubkey=abc123');
 ```
@@ -172,3 +173,7 @@ if (window.napplet?.gamepad) {
 ```
 
 Declare `gamepad` as optional (`O`) when other controls fulfill the core task. Use a hard requirement (`R`) only when the core task needs controller input. The runtime owns controller access and focus isolation; app code does not call native `navigator.getGamepads()` or open raw HID devices. Haptics and remapping are outside this proposal.
+
+## Navigation history
+
+The `@napplet/nap/navigation`, `/types`, `/shim`, and `/sdk` subpaths provide wire types, the runtime binding, and application helpers. SDK helpers are `navigationReport` / `navigationGet`, also exported as `report` / `get`. This non-normative guidance targets the [NAP-NAVIGATION draft](https://github.com/napplet/naps/pull/126) and [NAP-INTENT delivery draft](https://github.com/napplet/naps/pull/128). See [Navigation](/naps/navigation) for runtime availability, manifest declarations, serialized reporting, and recovery.

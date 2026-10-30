@@ -130,3 +130,7 @@ With `data`, the plugin derives `x` and `size`, sniffs the format for `m` (PNG, 
 ### GAMEPAD integration
 
 Requirement inference recognizes `@napplet/nap/gamepad`, `@napplet/sdk/gamepad`, and direct GAMEPAD domain reads. Declare `optional: ["gamepad"]` when keyboard or pointer controls fulfill the core task. See the proposed [NAP-GAMEPAD](https://github.com/napplet/naps/pull/108).
+
+### Navigation declarations
+
+The requirement scanner recognizes `@napplet/sdk/navigation`, `@napplet/nap/navigation` subpaths, and direct `window.napplet.navigation` access. Declare `intent` explicitly alongside `navigation` when using the [NAP-NAVIGATION draft](https://github.com/napplet/naps/pull/126); inference does not grant or automatically add dependencies. For optional shell history, declare both in `optional` and guard both domain objects. Advertise each retained location's convention and parameter names with `archetypes` / `intents`; parameter names allow history retention without defining payload value schemas. See the [navigation guide](../../apps/docs/naps/navigation.md).
