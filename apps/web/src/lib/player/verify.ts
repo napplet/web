@@ -7,6 +7,7 @@
  */
 import { validateEvent, verifyEvent, type Event } from 'nostr-tools/pure';
 import { catalogApp } from '../catalog';
+import { normalizeBlossomServer } from 'applesauce-common/helpers';
 
 export const PLAYER_SANDBOX = 'allow-scripts';
 export const PLAYER_CSP = "default-src 'none'; script-src 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; connect-src 'none'; worker-src 'none'; child-src 'none'; frame-src 'none'; media-src 'none'; object-src 'none'; manifest-src 'none'; base-uri 'none'; form-action 'none'";
@@ -97,4 +98,24 @@ export async function fetchBytes(url: string, signal: AbortSignal): Promise<Uint
   let offset = 0;
   for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
   return bytes;
+}
+
+/**
+ * Fetch a release artifact by its manifest hash from the publisher's declared Blossom servers, first to answer wins.
+ * The caller verifies the bytes against the hash before anything is rendered.
+ * @param hash The manifest `x` tag, a lowercase-hex sha256 of `/index.html`.
+ * @param servers Blossom origins from the manifest's `server` tags.
+ * @param signal Cancellation for the preview.
+ * @returns The artifact bytes from the first server that returns them.
+ * @example const html = await verifiedDocument(await fetchArtifact(hash, servers, signal), hash);
+ */
+export async function fetchArtifact(hash: string, servers: string[], signal: AbortSignal): Promise<Uint8Array> {
+  if (!/^[a-f0-9]{64}$/.test(hash)) throw new Error('This release has no usable artifact hash.');
+  let failure: unknown;
+  for (const server of servers) {
+    if (!server.startsWith('https://')) continue;
+    try { return await fetchBytes(new URL(hash, normalizeBlossomServer(server)).href, signal); }
+    catch (error) { if (signal.aborted) throw error; failure = error; }
+  }
+  throw failure instanceof Error ? failure : new Error('None of the publisher’s servers returned this release.');
 }

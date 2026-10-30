@@ -1,5 +1,39 @@
-/** Progressive enhancement for the curated Run links. The verifier loads only on click. */
+/** Progressive enhancement for the Run links. The verifier loads only on click. */
 import { NAPPLETS, type PlayableNapplet } from '../showcase';
+
+/** Anything the player can load: a curated preview or a discovered release fetched from its publisher's servers. */
+interface Playable {
+  name: string;
+  note: string;
+  href: string;
+  shell: string;
+  load(signal: AbortSignal): Promise<string>;
+}
+
+/** A discovered release's launch data, carried on its card so re-rendered grids keep working. */
+interface RunData { name: string; hash: string; servers: string[]; href: string; shell: string | null }
+
+async function curated(item: PlayableNapplet): Promise<Playable> {
+  const { fetchBytes, verifyRelease, verifiedDocument } = await import('./verify');
+  return {
+    name: item.name, href: item.href, shell: 'napplet.soy',
+    note: item.format === 'archive' ? 'An archived release, preserved as published. Progress lasts for this preview.' : 'A signed release, preserved as published. Progress lasts for this preview.',
+    async load(signal) {
+      const manifestBytes = await fetchBytes(item.manifest, signal);
+      const identity = await verifyRelease(JSON.parse(new TextDecoder().decode(manifestBytes)), item.eventId, item.format);
+      return verifiedDocument(await fetchBytes(item.artifact, signal), identity.artifactHash);
+    },
+  };
+}
+
+async function discovered(data: RunData): Promise<Playable> {
+  const { fetchArtifact, verifiedDocument } = await import('./verify');
+  return {
+    name: data.name, href: data.href, shell: data.shell ?? 'a full shell',
+    note: 'A signed release fetched from its publisher’s Blossom servers and verified against the manifest hash. This preview supplies no shell services; progress lasts for this preview.',
+    load: async signal => verifiedDocument(await fetchArtifact(data.hash, data.servers, signal), data.hash),
+  };
+}
 
 /** Attach a single dismissible player with cancellation and focus restoration. */
 export function setupPlayer(): void {
@@ -11,11 +45,11 @@ export function setupPlayer(): void {
   const original = document.querySelector<HTMLAnchorElement>('#player-original')!;
   const retry = document.querySelector<HTMLButtonElement>('#player-retry')!;
   let active: AbortController | undefined;
-  let selected: PlayableNapplet | undefined;
+  let selected: Playable | undefined;
   let opener: HTMLElement | undefined;
   let previousOverflow = '';
 
-  async function launch(item: PlayableNapplet) {
+  async function launch(item: Playable) {
     active?.abort();
     const request = new AbortController();
     active = request;
@@ -23,9 +57,10 @@ export function setupPlayer(): void {
     stage.replaceChildren();
     stage.setAttribute('aria-busy', 'true');
     title.textContent = item.name;
-    note.textContent = item.format === 'archive' ? 'An archived release, preserved as published. Progress lasts for this preview.' : 'A signed release, preserved as published. Progress lasts for this preview.';
+    note.textContent = item.note;
     status.textContent = 'Loading and verifying this napplet…';
     original.href = item.href;
+    original.textContent = `Open in ${item.shell} ↗`;
     retry.hidden = true;
     if (!dialog.open) {
       previousOverflow = document.body.style.overflow;
@@ -34,11 +69,9 @@ export function setupPlayer(): void {
     }
     const timeout = window.setTimeout(() => request.abort(new Error('The download timed out. Please try again.')), 15000);
     try {
-      const { fetchBytes, verifyRelease, verifiedDocument, PLAYER_SANDBOX } = await import('./verify');
+      const { PLAYER_SANDBOX } = await import('./verify');
       const signal = request.signal;
-      const manifestBytes = await fetchBytes(item.manifest, signal);
-      const identity = await verifyRelease(JSON.parse(new TextDecoder().decode(manifestBytes)), item.eventId, item.format);
-      const document = await verifiedDocument(await fetchBytes(item.artifact, signal), identity.artifactHash);
+      const document = await item.load(signal);
       signal.throwIfAborted();
       const frame = window.document.createElement('iframe');
       frame.title = `${item.name} napplet`;
@@ -70,15 +103,22 @@ export function setupPlayer(): void {
     }
   }
 
-  document.querySelectorAll<HTMLAnchorElement>('[data-launch]').forEach((link) => {
-    link.addEventListener('click', (event) => {
-      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-      const item = NAPPLETS.find((entry) => entry.id === link.dataset.launch);
-      if (!item) return;
-      event.preventDefault();
-      opener = link;
-      void launch(item);
-    });
+  // Cards are re-rendered by live discovery, so the Run links are handled by delegation.
+  document.addEventListener('click', event => {
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.defaultPrevented) return;
+    const link = (event.target as Element).closest<HTMLAnchorElement>('[data-launch], [data-launch-release]');
+    if (!link) return;
+    let playable: Promise<Playable> | undefined;
+    if (link.dataset.launch) {
+      const item = NAPPLETS.find(entry => entry.id === link.dataset.launch);
+      if (item) playable = curated(item);
+    } else if (link.dataset.run) {
+      try { playable = discovered(JSON.parse(link.dataset.run) as RunData); } catch { return; }
+    }
+    if (!playable) return;
+    event.preventDefault();
+    opener = link;
+    void playable.then(launch);
   });
   retry.addEventListener('click', () => { if (selected) void launch(selected); });
   dialog.addEventListener('close', () => {

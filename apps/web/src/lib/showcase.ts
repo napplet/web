@@ -22,12 +22,16 @@ export interface PlayableNapplet extends ShowcaseItem {
 
 export const NAPPLETS: PlayableNapplet[] = curatedApps;
 
+/** How a web shell opens a release from its NIP-19 address; `{address}` is replaced. */
+export interface ShellLaunch { url: string; pointers: ('naddr' | 'nevent')[] }
+
 export interface ShowcaseShell extends ShowcaseItem {
   platforms: string[];
   status: string;
+  launch?: ShellLaunch;
 }
 
-export const SHELLS: ShowcaseShell[] = shellDirectory;
+export const SHELLS: ShowcaseShell[] = shellDirectory as ShowcaseShell[];
 
 
 export const APP_TOOLS: ShowcaseItem[] = [

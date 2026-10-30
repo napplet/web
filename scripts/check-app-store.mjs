@@ -2,6 +2,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
+import { createHash } from 'node:crypto';
 import { chromium } from 'playwright';
 const require = createRequire(new URL('../apps/web/package.json', import.meta.url));
 const { finalizeEvent, generateSecretKey } = require('nostr-tools/pure');
@@ -9,7 +10,12 @@ const base = process.argv[2] ?? 'http://127.0.0.1:8107';
 const config = JSON.parse(await readFile(new URL('../apps/web/src/data/discovery.json', import.meta.url)));
 const apps = JSON.parse(await readFile(new URL('../apps/web/src/data/apps.json', import.meta.url)));
 const secret = generateSecretKey();
-const injected = finalizeEvent({ kind: 35129, created_at: Math.floor(Date.now() / 1000), content: '<img src=x onerror="window.catalogXss=true"> is publisher text', tags: [['d', 'catalog-browser-vector'], ['title', '<script>not markup</script>'], ['x', 'a'.repeat(64)]] }, secret);
+// The injected release is a real self-contained artifact served by a routed Blossom origin, so it can run here.
+const artifact = Buffer.from('<!doctype html><title>Injected</title><button id="play">Start</button><canvas width="8" height="8"></canvas><script>document.querySelector("#play").addEventListener("click", () => { document.title = "played"; });</script>');
+const artifactHash = createHash('sha256').update(artifact).digest('hex');
+const injected = finalizeEvent({ kind: 35129, created_at: Math.floor(Date.now() / 1000), content: '<img src=x onerror="window.catalogXss=true"> is publisher text', tags: [['d', 'catalog-browser-vector'], ['title', '<script>not markup</script>'], ['x', artifactHash], ['server', 'https://blossom.example']] }, secret);
+// A release that requires a shell service cannot run in this player and only links out.
+const demanding = finalizeEvent({ kind: 35129, created_at: Math.floor(Date.now() / 1000) - 1, content: 'Needs identity to work', tags: [['d', 'catalog-browser-demanding'], ['title', 'Demanding release'], ['x', 'b'.repeat(64)], ['server', 'https://blossom.example'], ['R', 'identity']] }, secret);
 // A Software Applications listing from the same publisher that names the release supplies fallback art by URL.
 const listing = finalizeEvent({ kind: 32267, created_at: Math.floor(Date.now() / 1000), content: '# markdown stays out', tags: [['d', 'catalog-browser-vector-0123456789abcdef'], ['name', 'Listing name'], ['latest', `35129:${injected.pubkey}:catalog-browser-vector`], ['image', 'https://listing.example/art.png'], ['icon', 'javascript:alert(1)']] }, secret);
 const manifestKinds = [5129, 15129, 35129];
@@ -40,6 +46,7 @@ try {
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce' });
   page.on('pageerror', error => errors.push(error.message));
   await page.route('https://listing.example/**', route => route.fulfill({ status: 200, contentType: 'image/png', body: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=', 'base64') }));
+  await page.route('https://blossom.example/**', route => route.fulfill(new URL(route.request().url()).pathname === `/${artifactHash}` ? { status: 200, contentType: 'text/html', headers: { 'access-control-allow-origin': '*' }, body: artifact } : { status: 404, headers: { 'access-control-allow-origin': '*' } }));
   await routeInformation(page);
   const contacted = new Set();
   let sockets = 0;
@@ -67,6 +74,7 @@ try {
         if (filter.until === undefined) {
           socket.send(JSON.stringify(['EVENT', id, { ...injected, content: 'invalid signature' }]));
           socket.send(JSON.stringify(['EVENT', id, injected]));
+          socket.send(JSON.stringify(['EVENT', id, demanding]));
         }
       }
       socket.send(JSON.stringify(['EOSE', id]));
@@ -125,6 +133,26 @@ try {
   assert.equal(await page.locator('text=invalid signature').count(), 0);
   assert.equal(await shown(page), await cards.count(), 'every release was revealed by scrolling');
   assert.ok(await cards.count() > saved, 'the discovered release joined the collection');
+  // Releases run here first when this player can satisfy their requirements; every release links to web shells.
+  const openIn = await card.locator('.release-links a').allTextContents();
+  assert.deepEqual(openIn.slice(0, 3), ['napplet.soy ↗', 'Paja ↗', 'Applesauce loader ↗']);
+  assert.ok((await card.locator('.release-links a').nth(1).getAttribute('href')).startsWith('https://kehto.github.io/web/paja/?pointer=naddr1'));
+  const demandingCard = page.locator('.discovered-card').filter({ hasText: 'Demanding release' });
+  assert.equal(await demandingCard.locator('[data-launch-release]').count(), 0, 'a release that requires a service does not run here');
+  assert.match(await demandingCard.locator('.run-unavailable').textContent(), /Needs identity/);
+  assert.ok(await page.locator('[data-launch-release]').count() > 10, 'releases without requirements can run here');
+  await card.locator('[data-launch-release]').scrollIntoViewIfNeeded();
+  await card.locator('[data-launch-release]').click();
+  await page.locator('#player-status').filter({ hasText: 'Ready to play' }).waitFor();
+  const released = page.locator('#player-stage iframe');
+  assert.equal(await released.getAttribute('sandbox'), 'allow-scripts');
+  const releasedFrame = await (await released.elementHandle()).contentFrame();
+  assert.deepEqual(await releasedFrame.evaluate(() => Object.keys(window.napplet)), []);
+  await releasedFrame.getByRole('button', { name: 'Start' }).click();
+  assert.equal(await releasedFrame.evaluate(() => document.title), 'played');
+  assert.match(await page.locator('#player-original').textContent(), /Open in napplet.soy/);
+  await page.getByRole('button', { name: 'Close preview' }).click();
+  assert.equal(await card.locator('[data-launch-release]').evaluate(el => el === document.activeElement), true, 'focus returns to the Run link');
   await page.getByRole('button', { name: 'Check again' }).click();
   await page.locator('#discovery-status').filter({ hasText: /Checked 2\/2/ }).waitFor();
   await page.screenshot({ path: '/tmp/napplet-store-desktop.png', fullPage: true });
@@ -156,5 +184,5 @@ try {
   assert.equal(await noJs.locator('#discovered-grid article:visible').count(), await noJs.locator('#discovered-grid article').count(), 'the whole saved collection is readable without JavaScript');
   assert.equal(await noJs.locator('#discover-apps').isVisible(), false);
   assert.deepEqual(errors, []);
-  console.log('App store: six previews, gameplay, filters, scroll paging, NIP-77 attempt with request fallback, listing art, XSS, no relay contact before the end, offline retry, mobile and no-JS passed.');
+  console.log('App store: six previews, gameplay, filters, scroll paging, NIP-77 attempt with request fallback, listing art, XSS, running a discovered release here, shell links, no relay contact before the end, offline retry, mobile and no-JS passed.');
 } finally { await browser.close(); }

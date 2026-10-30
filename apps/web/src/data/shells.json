@@ -62,19 +62,51 @@
       "Web"
     ],
     "status": "Available",
-    "image": "/showcase/images/shell-soy.webp"
+    "image": "/showcase/images/shell-soy.webp",
+    "launch": {
+      "url": "https://napplet.soy/n/{address}",
+      "pointers": [
+        "naddr"
+      ]
+    }
   },
   {
     "id": "paja",
     "name": "Paja",
     "category": "Develop & inspect",
-    "description": "Kehto\u2019s developer shell. Load a published app and inspect its behavior.",
+    "description": "Kehto’s developer shell. Load a published app and inspect its behavior.",
     "href": "https://kehto.github.io/web/paja/",
     "source": "https://github.com/kehto/web/tree/main/packages/paja",
     "platforms": [
       "Web"
     ],
     "status": "Developer preview",
-    "image": "/showcase/images/shell-paja.webp"
+    "image": "/showcase/images/shell-paja.webp",
+    "launch": {
+      "url": "https://kehto.github.io/web/paja/?pointer={address}",
+      "pointers": [
+        "naddr",
+        "nevent"
+      ]
+    }
+  },
+  {
+    "id": "applesauce-examples",
+    "name": "Applesauce loader",
+    "category": "Reference host",
+    "description": "The applesauce napplet loader example: a browser host built on the applesauce libraries, with the store and browser examples beside it.",
+    "href": "https://applesauce.build/examples/#/example/napplet/loader",
+    "source": "https://github.com/hzrd149/applesauce/tree/master/apps/examples",
+    "platforms": [
+      "Web"
+    ],
+    "status": "Example",
+    "launch": {
+      "url": "https://applesauce.build/examples/#/example/napplet/loader?pointer={address}",
+      "pointers": [
+        "naddr",
+        "nevent"
+      ]
+    }
   }
 ]
