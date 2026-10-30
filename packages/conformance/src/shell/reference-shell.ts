@@ -6,6 +6,7 @@
 
 import {
   REFERENCE_ENDPOINT,
+  REFERENCE_MANIFEST,
   type ReferenceEndpoint,
 } from './reference-responses.js';
 import {
@@ -13,6 +14,8 @@ import {
   type RecordedEnvelope,
 } from './reference-handler.js';
 import { createIntentHandlers } from './reference-intents.js';
+import { referenceCatalog } from './reference-catalog.js';
+import type { NappletDescriptor } from '@napplet/core';
 
 export { REFERENCE_PUBKEY, REFERENCE_ENDPOINT } from './reference-responses.js';
 export type { ReferenceEndpoint } from './reference-responses.js';
@@ -22,10 +25,14 @@ export type { RecordedEnvelope } from './reference-handler.js';
 export interface ReferenceShellOptions {
   /** Injectable clock for deterministic tests. Defaults to `Date.now`. */
   now?: () => number;
-  /** Already verified installed metadata for catalog tests. */
+  /** Already verified, loadable metadata; the host checks each complete R set before supplying it. */
   manifests?: readonly import('./intent-catalog.js').CatalogManifest[];
   /** User preferences, keyed by role. */
   defaults?: Readonly<Record<string, string>>;
+  /** Disable the runtime intent resolver while retaining catalog metadata. */
+  intentResolver?: boolean;
+  /** Caller policy; false omits the entire entry without replacing its handler. */
+  catalogFilter?: (napplet: NappletDescriptor, endpoint: ReferenceEndpoint) => boolean;
 }
 
 /** A reference shell instance for transport-agnostic conformance tests. */
@@ -64,11 +71,16 @@ export interface ReferenceShell {
 export function createReferenceShell(options: ReferenceShellOptions = {}): ReferenceShell {
   const records: RecordedEnvelope[] = [];
   const deliveries = createDeliveryQueue();
+  const manifests = options.manifests ?? [REFERENCE_MANIFEST];
+  const intents = createIntentHandlers(deliveries.queue, manifests, options.defaults);
+  const intentResolver = options.intentResolver !== false;
   const handleFrom = createReferenceHandler({
     now: options.now ?? Date.now,
     records,
     queueDelivery: deliveries.queue,
-    intents: createIntentHandlers(deliveries.queue, options.manifests, options.defaults),
+    intents,
+    intentResolver,
+    catalog: endpoint => referenceCatalog(manifests, endpoint, intentResolver ? intents : undefined, options.catalogFilter),
   });
 
   return {

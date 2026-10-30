@@ -9,7 +9,7 @@ Napplet implementation code is **SDK-first**: import typed wrappers from `@nappl
 
 ## Domains shipped by the current packages
 
-`shell`, `relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `ble`, `webrtc`, `link`, `count`, `lists`, `serial`, `fs`, `common`, `dm`.
+`shell`, `relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `ble`, `webrtc`, `link`, `count`, `lists`, `serial`, `fs`, `common`, `dm`, `gamepad`, `catalog`.
 
 `ifc` is a deprecated INC alias. If a NAP is not in this list, do not implement against it even when a spec PR exists — flag the package/spec gap. `shell` is optional environment information only (see below); there is no `discoverServices()` or `hasService()`, and no domain waits on `shell.ready()`. A missing optional domain simply means "unavailable for this load".
 
@@ -25,6 +25,7 @@ Napplet implementation code is **SDK-first**: import typed wrappers from `@nappl
 | External bytes (images, avatars, JSON, WASM side files, media) | `resource` |
 | Shell-mediated upload of user files/blobs | `upload` |
 | Open an external URL under shell policy | `link` |
+| Discover available napplets and current handler selectors | `catalog` (read-only) |
 | Talk to other napplets | `inc`, `intent` (see `napplet-interop`) |
 | User-configurable settings | `config` |
 | Match host colors/fonts | `theme` |
@@ -220,3 +221,7 @@ Theme updates reach napplets with the exposed `theme` domain, independently of m
 ## Optional controller input
 
 This non-normative guidance defers to the living [NAP-GAMEPAD proposal](https://github.com/napplet/naps/pull/108). Check injected `gamepad` presence and call the SDK namespace from `@napplet/sdk/gamepad`. Its cached API exposes `getGamepads()`, `available`, `focused`, and `onChange(handler)`; close listeners on disposal. Keep keyboard or pointer fallbacks, ignore gameplay edges while unfocused, reset held-button baselines on regained focus, preserve null slots, and route controllers by `index`. Use an optional manifest domain when the core task remains usable without controllers. Native controller access belongs to the runtime. Do not add haptics, raw HID access, a correlation id, or a prerequisite SHELL readiness exchange. Reference-mock conformance reports unavailable controllers; verify live focus isolation in a GAMEPAD-capable runtime.
+
+## Catalog discovery
+
+Non-normative package guidance for the [NAP-CATALOG draft](https://github.com/napplet/naps/pull/95): feature-gate `window.napplet?.catalog`, then call `catalog.get()` from `@napplet/sdk` or `@napplet/sdk/catalog`. The snapshot contains available napplets and current handler selectors, not running-instance state. Treat titles and descriptions as text. Preserve each opaque `id` unchanged; never derive it from `dTag`. A user-authorized intent invocation can use that selector when `intent` is also exposed. Discovery grants no launch permission, does not change preferences, and works without intent. Parameter metadata contains names only; validate actual payloads against the convention.

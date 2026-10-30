@@ -1,6 +1,6 @@
 {
   "name": "@napplet/sdk",
-  "version": "0.30.0",
+  "version": "0.31.0",
   "description": "Typed named exports wrapping window.napplet for bundler-consuming napplet developers",
   "type": "module",
   "main": "./dist/index.js",
@@ -14,6 +14,10 @@
     "./gamepad": {
       "types": "./dist/gamepad.d.ts",
       "import": "./dist/gamepad.js"
+    },
+    "./catalog": {
+      "types": "./dist/catalog.d.ts",
+      "import": "./dist/catalog.js"
     }
   },
   "files": [

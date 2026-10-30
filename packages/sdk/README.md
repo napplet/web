@@ -429,7 +429,7 @@ Each NAP domain has a string constant re-exported from its package:
 
 ```ts
 import { RELAY_DOMAIN, IDENTITY_DOMAIN, STORAGE_DOMAIN, INC_DOMAIN, THEME_DOMAIN, KEYS_DOMAIN, MEDIA_DOMAIN, NOTIFY_DOMAIN, CONFIG_DOMAIN, RESOURCE_DOMAIN, CVM_DOMAIN, OUTBOX_DOMAIN, UPLOAD_DOMAIN, INTENT_DOMAIN, BLE_DOMAIN, WEBRTC_DOMAIN, LINK_DOMAIN, COUNT_DOMAIN, LISTS_DOMAIN, COMMON_DOMAIN, SERIAL_DOMAIN, DM_DOMAIN } from '@napplet/sdk';
-// Values: 'relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent', 'ble', 'webrtc', 'link', 'count', 'lists', 'common', 'serial', 'fs', 'dm', 'shell', 'gamepad'
+// Values: 'relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent', 'ble', 'webrtc', 'link', 'count', 'lists', 'common', 'serial', 'fs', 'dm', 'shell', 'gamepad', 'catalog'
 ```
 
 These constants are re-exported from the individual domain packages. Use property presence for type-safe conditional logic:
@@ -527,3 +527,7 @@ if (window.napplet?.gamepad) {
 ```
 
 Declare `gamepad` as optional (`O`) when other controls fulfill the core task. Use a hard requirement (`R`) only when the core task needs controller input. The runtime owns controller access and focus isolation; app code does not call native `navigator.getGamepads()` or open raw HID devices. Haptics and remapping are outside this proposal.
+
+## Catalog discovery
+
+Import `catalog` or `catalogGet` from `@napplet/sdk`, or `catalog` / `get` from `@napplet/sdk/catalog`. After checking `window.napplet?.catalog`, call `await catalog.get()` to read a `CatalogSnapshot`. The domain is independent of `intent` and `shell` readiness. Empty snapshots succeed; runtime errors and timeouts reject. Preserve opaque selectors exactly and render metadata as text. This non-normative guidance defers to the [NAP-CATALOG draft](https://github.com/napplet/naps/pull/95); see the [catalog guide](../../apps/docs/naps/catalog.md).

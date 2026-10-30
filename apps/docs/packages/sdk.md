@@ -173,3 +173,7 @@ if (window.napplet?.gamepad) {
 ```
 
 Declare `gamepad` as optional (`O`) when other controls fulfill the core task. Use a hard requirement (`R`) only when the core task needs controller input. The runtime owns controller access and focus isolation; app code does not call native `navigator.getGamepads()` or open raw HID devices. Haptics and remapping are outside this proposal.
+
+## Catalog support
+
+Import `catalog` or `catalogGet` from the SDK root, or `catalog` / `get` from `@napplet/sdk/catalog`. Call `catalog.get()` after checking optional domain presence. This implements the [NAP-CATALOG draft](https://github.com/napplet/naps/pull/95). See the [non-normative catalog guide](/naps/catalog) for types, layered exports, SDK usage, runtime injection, and selector handling.

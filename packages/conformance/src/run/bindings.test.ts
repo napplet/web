@@ -49,6 +49,19 @@ function fixture(domains: string[], preludeSource?: string) {
 }
 
 describe('reference runtime bindings', () => {
+  it('round-trips catalog.get through the maintained IIFE without shell or intent injection', async () => {
+    const host = fixture(['catalog'], source);
+    try {
+      expect(host.napplet.shell).toBeUndefined();
+      expect(host.napplet.intent).toBeUndefined();
+      const snapshot = await host.napplet.catalog!.get();
+      expect(snapshot.napplets[0].identity.kind).toBe(35129);
+      expect(snapshot.handlers[0].currentHandler).toBe(snapshot.napplets[0].id);
+      expect(host.shell.records.map(record => (record.envelope as { type: string }).type)).toEqual(['catalog.get']);
+      expect(host.shell.records[0].verdict.ok).toBe(true);
+    } finally { host.close(); }
+  });
+
   it('installs callable maintained INC, INTENT and THEME bindings', () => {
     const host = fixture(['inc', 'intent', 'theme'], source);
     try {

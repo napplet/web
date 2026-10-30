@@ -83,3 +83,7 @@ intent dispatch: <none | invoke/open request + how acceptance and onDelivery dri
 - Treating a topic as a schema (`if (topic.endsWith('/open')) payload.pubkey…`) — validate the payload itself.
 - Adding `inc` or `intent` to manifest `requires` for an optional handoff — gate on `window.napplet?.inc` / `?.intent` and hide the affordance when absent.
 - Inventing delivery identifiers, acknowledgement lifecycles, or version negotiation around intents — not in the living spec; use the acceptance result and onDelivery contract.
+
+## Catalog discovery
+
+Non-normative package guidance for the [NAP-CATALOG draft](https://github.com/napplet/naps/pull/95): feature-gate `window.napplet?.catalog`, then call `catalog.get()` from `@napplet/sdk` or `@napplet/sdk/catalog`. The snapshot contains available napplets and current handler selectors, not running-instance state. Treat titles and descriptions as text. Preserve each opaque `id` unchanged; never derive it from `dTag`. A user-authorized intent invocation can use that selector when `intent` is also exposed. Discovery grants no launch permission, does not change preferences, and works without intent. Parameter metadata contains names only; validate actual payloads against the convention.
