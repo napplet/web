@@ -629,3 +629,55 @@ Deno.test("migration drops unusable presentation media and keeps valid source pi
     "source-archive must appear once",
   );
 });
+
+function webpHeader(chunk: "VP8L" | "VP8X", width: number, height: number): Uint8Array {
+  const out = new Uint8Array(40);
+  out.set([82, 73, 70, 70, 32, 0, 0, 0, 87, 69, 66, 80, ...[...chunk].map((c) => c.charCodeAt(0))]);
+  const view = new DataView(out.buffer);
+  if (chunk === "VP8L") {
+    out[20] = 0x2f;
+    view.setUint32(21, (width - 1) | ((height - 1) << 14), true);
+  } else {
+    view.setUint32(24, width - 1, true);
+    view.setUint32(27, height - 1, true);
+  }
+  return out;
+}
+
+Deno.test("dimension reading handles every WebP chunk layout and JPEG marker shape", () => {
+  assertEquals(imageDimensions(webpHeader("VP8L", 300, 200), "image/webp"), { width: 300, height: 200 });
+  assertEquals(imageDimensions(webpHeader("VP8X", 4096, 2160), "image/webp"), { width: 4096, height: 2160 });
+  assertEquals(imageDimensions(webpHeader("VP8X", 4096, 2160).subarray(0, 26), "image/webp"), undefined);
+  assertEquals(imageDimensions(Uint8Array.from([82, 73, 70, 70, 0, 0, 0, 0, 87, 69, 66, 80, 65, 76, 80, 72]), "image/webp"), undefined);
+  // Padding 0xFF bytes, a standalone RST marker, then a baseline SOF0 frame header.
+  const sof = [0xff, 0xc0, 0, 11, 8, 1, 224, 2, 128, 1, 1, 0x11, 0];
+  const jpeg = Uint8Array.from([0xff, 0xd8, 0xff, 0xff, 0xd0, 0xff, 0xe0, 0, 4, 0, 0, ...sof]);
+  assertEquals(imageDimensions(jpeg, "image/jpeg"), { width: 640, height: 480 });
+  assertEquals(imageDimensions(Uint8Array.from([0xff, 0xd8, 0xff, 0xda, 0, 2, 0, 0]), "image/jpeg"), undefined);
+  assertEquals(imageDimensions(Uint8Array.from([0xff, 0xd8, 0xff, 0xe0, 0, 4, 0, 0]), "image/jpeg"), undefined);
+  assertEquals(imageDimensions(Uint8Array.from([0xff, 0xd8, 0x00, 0x00, 0, 0]), "image/jpeg"), undefined);
+});
+
+Deno.test("source archive URLs that do not parse are rejected everywhere", () => {
+  rejects(() => validateMediaAndSourceTags([["source-archive", "not a url", "c".repeat(64), "application/gzip"]]), "source-archive must appear once");
+  rejects(() => normalizeSourceArchive({ url: "not a url", sha256: "c".repeat(64), mimeType: "application/gzip" }), "metadata.sourceArchive.url");
+});
+
+Deno.test("configured media that is also a referenced build file is uploaded once, and unreadable paths surface their real error", async () => {
+  await withTempDir(async (dir) => {
+    const png = bytes("image/png");
+    await Deno.writeTextFile(`${dir}/index.html`, html);
+    await Deno.writeFile(`${dir}/one.png`, png);
+    const [manifest] = await rootDeploy(dir, normalizeConfig({ metadata: { screenshots: [`${dir}/one.png`] } }));
+    assertEquals(manifest.files.map((file) => file.path), ["/index.html", "/one.png"]);
+    assertEquals(manifest.template!.tags.filter((t) => t[0] === "screenshot").length, 1);
+    await Deno.mkdir(`${dir}/folder.png`);
+    let error = "";
+    try {
+      await rootDeploy(dir, normalizeConfig({ metadata: { screenshots: [`${dir}/folder.png`] } }));
+    } catch (caught) {
+      error = String(caught);
+    }
+    assert(error && !error.includes("media file not found"), error);
+  });
+});
