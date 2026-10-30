@@ -2,8 +2,8 @@
 import { validateEvent, verifyEvent, type Event } from 'nostr-tools/pure';
 import { naddrEncode, neventEncode } from 'nostr-tools/nip19';
 import {
-  getNappletArchetypes, getNappletIcon, getNappletIdentifier, getNappletOptionalDomains,
-  getNappletRequiredDomains, getNappletServers, getNappletSource, getNappletTitle, isSha256, isValidNapplet,
+  getNappletArchetypes, getNappletIcon, getNappletIdentifier, getNappletOptionalDomains, getNappletParentPointer,
+  getNappletRequiredDomains, getNappletRootPointer, getNappletServers, getNappletSource, getNappletTitle, isSha256, isValidNapplet,
 } from 'applesauce-common/helpers';
 
 /** Kind of the Software Applications proposal (nostr-protocol/nips#1336), separate from napplet manifests. */
@@ -35,6 +35,10 @@ export interface CatalogApp {
   coordinate?: string;
   pointer: string;
   listing?: Listing;
+  /** Snapshots folded into this entry as pinned versions of the same napplet. */
+  versions: number;
+  /** Newest publication among the entry and its folded snapshots. */
+  activityAt: number;
   event: Event;
 }
 
@@ -108,7 +112,7 @@ export function catalogApp(input: unknown, relays: string[] = []): CatalogApp | 
       screenshots: screenshots.slice(0, 8),
       preview,
       coordinate: event.kind === 5129 ? undefined : `${event.kind}:${event.pubkey}:${identifier}`,
-      pointer, event,
+      pointer, versions: 0, activityAt: event.created_at, event,
     };
   } catch { return null; }
 }
@@ -126,6 +130,39 @@ export function latestApps(entries: CatalogApp[]): CatalogApp[] {
     if (!old || entry.publishedAt > old.publishedAt || (entry.publishedAt === old.publishedAt && entry.event.id < old.event.id)) byAddress.set(entry.id, entry);
   }
   return [...byAddress.values()].sort((a, b) => b.publishedAt - a.publishedAt || a.event.id.localeCompare(b.event.id));
+}
+
+const PRECEDENCE: Record<number, number> = { 15129: 0, 35129: 1, 5129: 2 };
+const coordinateOf = (pointer: { kind: number; pubkey: string; identifier: string } | undefined) => pointer ? `${pointer.kind}:${pointer.pubkey}:${pointer.identifier}` : undefined;
+const familyName = (app: CatalogApp) => `${app.author}|${app.name.trim().toLocaleLowerCase()}`;
+
+/**
+ * Fold snapshots into the napplet they pin. Precedence is root, then named, then snapshot: a snapshot joins the
+ * addressable napplet its `a` (or `A`) lineage names, or failing lineage the same publisher's napplet with the same
+ * title; snapshots that match nothing remain independent entries. Groups sort by their newest activity.
+ * @param entries Entries already reduced to the newest revision per address.
+ * @returns One entry per napplet with `versions` counting the folded snapshots.
+ * @example const apps = collapseReleases(latestApps(entries));
+ */
+export function collapseReleases(entries: CatalogApp[]): CatalogApp[] {
+  const addressable = new Map(entries.filter(app => app.coordinate).map(app => [app.coordinate!, app]));
+  const byName = new Map<string, CatalogApp>();
+  for (const app of entries) if (app.coordinate && !byName.has(familyName(app))) byName.set(familyName(app), app);
+  const groups = new Map<string, CatalogApp[]>();
+  for (const app of entries) {
+    let key = app.coordinate ?? app.id;
+    if (!app.coordinate) {
+      const parent = coordinateOf(getNappletParentPointer(app.event));
+      const root = coordinateOf(getNappletRootPointer(app.event));
+      const kin = byName.get(familyName(app));
+      key = (parent && addressable.has(parent) && parent) || (root && addressable.has(root) && root) || parent || root || kin?.coordinate || app.id;
+    }
+    groups.set(key, [...(groups.get(key) ?? []), app]);
+  }
+  return [...groups.values()].map(members => {
+    const [head, ...rest] = [...members].sort((a, b) => PRECEDENCE[a.event.kind] - PRECEDENCE[b.event.kind] || b.publishedAt - a.publishedAt || a.event.id.localeCompare(b.event.id));
+    return { ...head, versions: rest.filter(app => app.event.kind === 5129).length, activityAt: Math.max(...members.map(app => app.publishedAt)) };
+  }).sort((a, b) => b.activityAt - a.activityAt || a.event.id.localeCompare(b.event.id));
 }
 
 const httpsUrl = (value: string | undefined): string | undefined => {

@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { finalizeEvent, generateSecretKey } from 'nostr-tools/pure';
-import { applicationListing, catalogApp, latestApps, matchListing, withListings } from './catalog';
+import { applicationListing, catalogApp, collapseReleases, latestApps, matchListing, withListings } from './catalog';
 import { releaseCardHtml } from './card';
-import snapshot from '../data/discovered-apps.json';
+import snapshot_data from '../data/discovered-apps.json';
+const snapshot = snapshot_data;
 const secret = generateSecretKey();
 const hash = (character: string) => character.repeat(64);
 const sign = (changes: Record<string, unknown> = {}) => finalizeEvent({ kind: 35129, created_at: 100, content: '<img src=x onerror=alert(1)> is plain text', tags: [['d', 'fixture'], ['x', hash('a')], ['title', 'A real test']], ...changes }, secret);
@@ -37,6 +38,49 @@ describe('catalog release selection', () => {
     const regular = catalogApp(sign({ kind: 5129, tags: [['x', hash('b')]] }))!;
     expect(latestApps([older, regular, newer, newer]).map(app => app.event.id)).toEqual([newer.event.id, regular.event.id]);
   });
+});
+
+describe('collapsing pinned versions', () => {
+  const named = catalogApp(sign())!;
+  const root = catalogApp(sign({ kind: 15129, tags: [['x', hash('c')], ['title', 'Root app']] }))!;
+  const snapshot = (tags: string[][], created_at = 50) => catalogApp(sign({ kind: 5129, created_at, tags }))!;
+  it('folds snapshots into the napplet their lineage names, newest activity first', () => {
+    const pinned = snapshot([['x', hash('d')], ['a', named.coordinate!], ['title', 'A real test']], 200);
+    const olderPin = snapshot([['x', hash('e')], ['a', named.coordinate!]], 20);
+    const other = catalogApp(sign({ tags: [['d', 'other'], ['x', hash('f')], ['title', 'Other']], created_at: 150 }))!;
+    const apps = collapseReleases(latestApps([named, pinned, olderPin, other]));
+    expect(apps.map(app => [app.event.id, app.versions])).toEqual([[named.event.id, 2], [other.event.id, 0]]);
+    expect(apps[0].activityAt).toBe(200);
+  });
+  it('falls back to publisher and title when a snapshot has no lineage, and keeps strangers independent', () => {
+    const titled = snapshot([['x', hash('d')], ['title', ' a REAL test ']]);
+    const stranger = snapshot([['x', hash('e')], ['title', 'Unrelated']]);
+    const foreign = catalogApp(finalizeEvent({ kind: 5129, created_at: 60, content: 'text', tags: [['x', hash('9')], ['title', 'A real test']] }, generateSecretKey()))!;
+    const apps = collapseReleases(latestApps([named, titled, stranger, foreign]));
+    expect(apps.find(app => app.event.id === named.event.id)?.versions).toBe(1);
+    expect(apps.map(app => app.event.id).sort()).toEqual([named.event.id, stranger.event.id, foreign.event.id].sort());
+  });
+  it('prefers a root over a named release and keeps snapshots of a missing parent together', () => {
+    const rootPin = snapshot([['x', hash('d')], ['A', root.coordinate!], ['title', 'Root app']], 300);
+    const orphanA = snapshot([['x', hash('1')], ['a', `35129:${named.author}:gone`]], 10);
+    const orphanB = snapshot([['x', hash('2')], ['a', `35129:${named.author}:gone`]], 11);
+    const apps = collapseReleases(latestApps([root, rootPin, orphanA, orphanB]));
+    expect(apps.map(app => [app.event.kind, app.versions])).toEqual([[15129, 1], [5129, 1]]);
+    expect(apps[1].event.id).toBe(orphanB.event.id);
+  });
+  it('collapses the real snapshot without listing any snapshot beside its named napplet', () => {
+    const entries = latestApps(snapshot_events());
+    const apps = collapseReleases(entries);
+    const pins = entries.filter(app => app.event.kind === 5129).length;
+    const standing = apps.filter(app => app.event.kind === 5129).length;
+    for (const app of apps.filter(app => app.event.kind === 5129)) {
+      expect(apps.some(other => other !== app && other.author === app.author && other.name.toLocaleLowerCase() === app.name.toLocaleLowerCase())).toBe(false);
+    }
+    expect(apps.reduce((sum, app) => sum + app.versions, 0)).toBe(pins - standing);
+    expect(standing).toBeLessThan(pins);
+    console.log(`collapse: ${entries.length} entries → ${apps.length} napplets, ${pins} pins, ${standing} standing alone`);
+  });
+  function snapshot_events() { return snapshot_data.events.map(event => catalogApp(event)).filter(app => app !== null); }
 });
 
 describe('manifest media per the current NIP-5D text', () => {

@@ -1,5 +1,5 @@
 /** Opt-in public relay discovery for the website, outside any napplet iframe. */
-import { APPLICATION_KIND, catalogApp, latestApps, withListings, type CatalogApp } from './catalog';
+import { APPLICATION_KIND, catalogApp, collapseReleases, latestApps, withListings, type CatalogApp } from './catalog';
 import { releaseCardHtml } from './card';
 import { verifiedImage } from './media';
 import snapshot from '../data/discovered-apps.json';
@@ -33,7 +33,7 @@ interface StoreState {
 
 /** Collect what the saved snapshot and live discovery know, as display entries with listing fallbacks. */
 function entriesFrom(manifests: unknown[], applications: unknown[], relays: string[]): CatalogApp[] {
-  return withListings(latestApps(manifests.map(event => catalogApp(event, relays)).filter(app => app !== null)), applications);
+  return withListings(collapseReleases(latestApps(manifests.map(event => catalogApp(event, relays)).filter(app => app !== null))), applications);
 }
 
 /** applesauce's pool and store are loaded only after the visitor asks to contact relays. */

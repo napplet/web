@@ -2,12 +2,12 @@
 import SiteLayout from '../layouts/SiteLayout.astro';
 import Runner from '../components/Runner.astro';
 import { NAPPLETS, LINKS } from '../lib/showcase';
-import { catalogApp, latestApps, withListings } from '../lib/catalog';
+import { catalogApp, collapseReleases, latestApps, withListings } from '../lib/catalog';
 import { releaseCardHtml } from '../lib/card';
 import snapshot from '../data/discovered-apps.json';
 import '../styles/showcase.css';
 import '../styles/store.css';
-const discovered = withListings(latestApps(snapshot.events.map(event => catalogApp(event, snapshot.relays)).filter(app => app !== null)), snapshot.applications ?? []);
+const discovered = withListings(collapseReleases(latestApps(snapshot.events.map(event => catalogApp(event, snapshot.relays)).filter(app => app !== null))), snapshot.applications ?? []);
 const date = snapshot.checkedAt ? new Date(snapshot.checkedAt).toISOString().slice(0, 10) : null;
 const withMedia = discovered.filter(app => app.icon || app.screenshots.length).length;
 const withListing = discovered.filter(app => app.listing).length;
