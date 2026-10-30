@@ -147,3 +147,6 @@ await intent.invoke('napplet:profile/open?pubkey=abc123');
 ```
 
 The runtime binding retains deliveries until a listener registers. Discovery candidates expose opaque catalog `id` values and `contracts` with parameter names. INC peers instead use identifiers for running authenticated endpoints. A NAP-INTENT URI may append a bare `#naddr1…` recommendation; the binding sends its coordinate and relay hints as `handlerHint`, outside convention identity and payload. An applicable user default takes precedence. INC URI operations reject fragments. See the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md) and [web projection](https://github.com/napplet/naps/blob/master/projections/web.md).
+## Optional BLOSSOM binding
+
+Include `blossom` in the host's explicit domain allowlist to inject `window.napplet.blossom`. The binding correlates the draft's request/result messages, preserves structured-clone bytes and provides local BUD-10 URI helpers. Host code supplies the Blossom endpoint backend, authentication, integrity checks and network policy. See the living [NAP-BLOSSOM proposal](https://github.com/napplet/naps/pull/71) and non-normative [BLOSSOM guide](https://napplet.run/docs/naps/blossom.html).

@@ -130,3 +130,5 @@ With `data`, the plugin derives `x` and `size`, sniffs the format for `m` (PNG, 
 ### GAMEPAD integration
 
 Requirement inference recognizes `@napplet/nap/gamepad`, `@napplet/sdk/gamepad`, and direct GAMEPAD domain reads. Declare `optional: ["gamepad"]` when keyboard or pointer controls fulfill the core task. See the proposed [NAP-GAMEPAD](https://github.com/napplet/naps/pull/108).
+
+BLOSSOM requirement inference recognizes `@napplet/nap/blossom`, `@napplet/sdk/blossom` and direct `window.napplet.blossom` reads. Use `optional: ['blossom']` when the core task has a fallback; explicit optional declarations remain optional during inference. See the living [NAP-BLOSSOM proposal](https://github.com/napplet/naps/pull/71).

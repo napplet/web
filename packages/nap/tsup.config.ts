@@ -2,6 +2,11 @@ import { defineConfig } from 'tsup';
 
 export default defineConfig({
   entry: {
+    'blossom/index': 'src/blossom/index.ts',
+    'blossom/types': 'src/blossom/types.ts',
+    'blossom/shim': 'src/blossom/shim.ts',
+    'blossom/sdk': 'src/blossom/sdk.ts',
+
     'gamepad/index': 'src/gamepad/index.ts',
     'gamepad/types': 'src/gamepad/types.ts',
     'gamepad/shim': 'src/gamepad/shim.ts',

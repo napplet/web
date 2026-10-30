@@ -7,6 +7,34 @@ const ID = { id: 'string' } as const;
  * NAP domains, with its direction and (for outbound) required fields.
  */
 export const ENVELOPE_SPECS: Record<string, EnvelopeSpec> = {
+  // NAP-BLOSSOM Wire Protocol: https://github.com/napplet/naps/pull/71
+  'blossom.check': { dir: 'out', fields: { ...ID, request: 'object' } },
+  'blossom.check.result': { dir: 'in', fields: { ...ID } },
+  'blossom.get': { dir: 'out', fields: { ...ID, request: 'object' } },
+  'blossom.get.result': { dir: 'in', fields: { ...ID } },
+  'blossom.checkUpload': { dir: 'out', fields: { ...ID, request: 'object' } },
+  'blossom.checkUpload.result': { dir: 'in', fields: { ...ID } },
+  'blossom.upload': { dir: 'out', fields: { ...ID, request: 'object' } },
+  'blossom.upload.result': { dir: 'in', fields: { ...ID } },
+  'blossom.mirror': { dir: 'out', fields: { ...ID, request: 'object' } },
+  'blossom.mirror.result': { dir: 'in', fields: { ...ID } },
+  'blossom.checkMedia': { dir: 'out', fields: { ...ID, request: 'object' } },
+  'blossom.checkMedia.result': { dir: 'in', fields: { ...ID } },
+  'blossom.media': { dir: 'out', fields: { ...ID, request: 'object' } },
+  'blossom.media.result': { dir: 'in', fields: { ...ID } },
+  'blossom.list': { dir: 'out', fields: { ...ID, request: 'object' } },
+  'blossom.list.result': { dir: 'in', fields: { ...ID } },
+  'blossom.delete': { dir: 'out', fields: { ...ID, request: 'object' } },
+  'blossom.delete.result': { dir: 'in', fields: { ...ID } },
+  'blossom.servers': { dir: 'out', fields: { ...ID } },
+  'blossom.servers.result': { dir: 'in', fields: { ...ID } },
+  'blossom.addServer': { dir: 'out', fields: { ...ID, request: 'object' } },
+  'blossom.addServer.result': { dir: 'in', fields: { ...ID } },
+  'blossom.removeServer': { dir: 'out', fields: { ...ID, server: 'string' } },
+  'blossom.removeServer.result': { dir: 'in', fields: { ...ID } },
+  'blossom.reorderServers': { dir: 'out', fields: { ...ID, servers: 'array' } },
+  'blossom.reorderServers.result': { dir: 'in', fields: { ...ID } },
+
   // NAP-GAMEPAD Wire Protocol: all three messages are fire-and-forget, without ids.
   // https://github.com/napplet/naps/pull/108
   'gamepad.subscribe': { dir: 'out', forbiddenFields: ['id'], forbiddenReason: 'NAP-GAMEPAD fire-and-forget envelopes do not carry it' },

@@ -272,6 +272,33 @@ for (const format of ["current", "legacy"] as const) {
   });
 }
 
+Deno.test("current: deploy preserves required and optional Blossom declarations", async () => {
+  for (const declaration of ["R", "O"]) {
+    await withTempDir(async (dir) => {
+      await Deno.writeTextFile(`${dir}/index.html`, "index");
+      await Deno.writeTextFile(
+        `${dir}/.nip5a-manifest.json`,
+        JSON.stringify({ tags: [[declaration, "blossom"]] }),
+      );
+      const candidate: NappletCandidate = {
+        name: "blob-browser",
+        dir,
+        indexHtml: `${dir}/index.html`,
+        manifestPath: `${dir}/.nip5a-manifest.json`,
+      };
+      const config = defaultConfig({ named: ["blob-browser"], metadata: { description: "Browse blobs" } });
+      const manifests = await buildDeploy(createDeployPlan(config, [candidate], {}), config, {
+        createdAt: 123,
+        format: "current",
+      });
+      assertEquals(
+        manifests[0].template?.tags.filter((tag) => tag[0] === "R" || tag[0] === "O"),
+        [[declaration, "blossom"]],
+      );
+    });
+  }
+});
+
 Deno.test("legacy: plugin manifest requirements cover every active @napplet/nap domain", async () => {
   await withTempDir(async (dir) => {
     const napPackage = JSON.parse(

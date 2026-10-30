@@ -52,6 +52,7 @@ describe('@napplet/core exports', () => {
       expect(NAP_DOMAINS).toContain('common');
       expect(NAP_DOMAINS).toContain('dm');
       expect(NAP_DOMAINS).toContain('count');
+      expect(NAP_DOMAINS).toContain('blossom');
     });
 
     it('NappletGlobal represents domain availability by property presence', () => {

@@ -207,3 +207,22 @@ export {
 export { shellReady, shellSupports, shellOnReady, installShellShim, DOMAIN as SHELL_DOMAIN } from '@napplet/nap/shell';
 
 export { DOMAIN as GAMEPAD_DOMAIN, installGamepadShim, gamepadGetGamepads, gamepadAvailable, gamepadFocused, gamepadOnChange } from '@napplet/nap/gamepad';
+
+export { DOMAIN as BLOSSOM_DOMAIN, installBlossomShim } from '@napplet/nap/blossom';
+export {
+  blossomCheck,
+  blossomGet,
+  blossomCheckUpload,
+  blossomUpload,
+  blossomMirror,
+  blossomCheckMedia,
+  blossomMedia,
+  blossomList,
+  blossomDelete,
+  blossomServers,
+  blossomAddServer,
+  blossomRemoveServer,
+  blossomReorderServers,
+  blossomParseUri,
+  blossomFormatUri,
+} from '@napplet/nap/blossom/sdk';

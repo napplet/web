@@ -63,3 +63,5 @@ napplet with the right local headers and exits non-zero on failures.
 - [`@napplet/conformance`](./conformance) — the engine this runtime executes.
 - [`@napplet/conformance-cli`](./conformance-cli) — the headless and UI/watch
   runner that bundles this runtime.
+
+BLOSSOM calls use the maintained runtime prelude and reference shell. Reference results report unavailable endpoints or identity rather than performing network requests or signing. The headless harness tests native `Blob` and `ArrayBuffer` requests across an opaque-origin iframe and the no-domain fallback. See the non-normative [BLOSSOM guide](https://napplet.run/docs/naps/blossom.html).

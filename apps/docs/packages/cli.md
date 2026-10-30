@@ -317,3 +317,5 @@ napplet init -i --name notes --description "Private notes"
 ```
 
 Signing secrets remain hidden and are never saved in project configuration. `--prompt-sec` can consume explicitly piped input in automation. Set `NAPPLET_KEYSTORE_PASSWORD` for encrypted local keys; `keys connect` requires interactive remote approval, so CI should use an existing key or session.
+
+BLOSSOM capability declarations use the bare `blossom` domain in required (`R`) or optional (`O`) manifest tags. Deployment preserves either declaration; this does not grant runtime access. The CLI's own Blossom deployment uploader is separate from [NAP-BLOSSOM](https://github.com/napplet/naps/pull/71), which a compatible host injects for napplet calls.

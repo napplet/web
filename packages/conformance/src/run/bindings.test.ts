@@ -39,7 +39,7 @@ function fixture(domains: string[], preludeSource?: string) {
   // The isolated realm executes the actual maintained IIFE as a classic script.
   // It does not substitute domain methods or evaluate an app-owned shim.
   const script = runtimePrelude(domains, preludeSource);
-  runInNewContext(script, { window: target, crypto: globalThis.crypto, console, Blob, URL, TextDecoder, TextEncoder, queueMicrotask, setTimeout: schedule, clearTimeout });
+  runInNewContext(script, { window: target, crypto: globalThis.crypto, console, Blob, URL, URLSearchParams, TextDecoder, TextEncoder, queueMicrotask, setTimeout: schedule, clearTimeout });
   return {
     napplet: (target as typeof target & { napplet: NappletGlobal }).napplet,
     shell,
@@ -73,9 +73,28 @@ describe('reference runtime bindings', () => {
     } finally { host.close(); }
   });
 
-  it('does not advertise unavailable domains in the fallback runtime', () => {
-    const host = fixture(['inc', 'intent', 'theme', 'resource']);
+  it('round-trips Blossom bytes and typed failures through the maintained prelude', async () => {
+    const host = fixture(['blossom'], source);
     try {
+      expect(Object.keys(host.napplet)).toEqual(['blossom']);
+      const blossom = host.napplet.blossom!;
+      const data = new Blob(['abc']);
+      await expect(blossom.upload({ server: 'https://cdn.example.com', data })).resolves.toEqual({ ok: false, status: 0, error: 'unsupported' });
+      const envelope = host.shell.records[0].envelope as { request: { data: Blob } };
+      expect(envelope.request.data).toBe(data);
+      await expect(blossom.servers()).resolves.toEqual({ ok: false, servers: [], error: 'server-list-unavailable' });
+      const before = host.shell.records.length;
+      const uri = blossom.formatUri({ sha256: 'a'.repeat(64), extension: '.bin', servers: [], authors: [] });
+      expect(blossom.parseUri(uri).sha256).toBe('a'.repeat(64));
+      expect(host.shell.records).toHaveLength(before);
+      expect(host.shell.records.every(record => record.verdict.ok)).toBe(true);
+    } finally { host.close(); }
+  });
+
+  it('does not advertise unavailable domains in the fallback runtime', () => {
+    const host = fixture(['inc', 'intent', 'theme', 'resource', 'blossom']);
+    try {
+      expect(host.napplet.blossom).toBeUndefined();
       expect(host.napplet.inc).toBeUndefined();
       expect(host.napplet.intent).toBeUndefined();
       expect(host.napplet.theme).toBeUndefined();
