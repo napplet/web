@@ -1,5 +1,5 @@
 ---
-status: implemented
+status: complete
 quick_id: 261030-pnj
 ---
 
@@ -27,4 +27,4 @@ Independent review found a recording-reset lifetime regression and sparse-array 
 
 No external production shell was tested. Draft interfaces can change upstream. Unsigned conformance runs use documented reference fixtures; signed runs use host-verified manifest metadata. No merge or package publication performed.
 
-PR creation remains the final shipping step.
+Shipped as open [PR #280](https://github.com/napplet/web/pull/280). Source commit88cf543f and documentation commit0e077c9e passed the recorded gates; the closing tracking commit changes only this summary and STATE.md.
