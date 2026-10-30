@@ -31,8 +31,8 @@
  * - compute the SHA-256 of the final index.html artifact
  * - write `.nip5a-manifest.json` containing a NIP-5D kind 35129 manifest template
  * - embed resolved NIP-5D publishing metadata into the artifact head
- * - record required domains, config schema, and archetype metadata in the
- *   manifest template or signed event
+ * - record required domains, config schema, archetype metadata, source pins and
+ *   presentation media in the manifest template or signed event
  *
  * Set `VITE_DEV_PRIVKEY_HEX` to a hex-encoded 32-byte private key when you want the build-time manifest signed. Without it, the plugin writes an unsigned manifest template so deploy tooling can still consume its metadata.
  *
@@ -56,7 +56,17 @@ import {
 } from './requirements.js';
 
 export { NAPPLET_KIND_NAMED, NAPPLET_KIND_ROOT, NAPPLET_KIND_SNAPSHOT } from './types.js';
-export type { Nip5aArtifactMode, Nip5aManifestOptions, Nip5aRequiresOptions } from './types.js';
+export type {
+  Nip5aArtifactMode,
+  Nip5aImageMimeType,
+  Nip5aManifestOptions,
+  Nip5aPreviewOption,
+  Nip5aRequiresOptions,
+  Nip5aScreenshotOption,
+  Nip5aSourceArchiveOption,
+} from './types.js';
+export { imageDimensions, resolvePresentationMedia, sniffMediaType } from './publishing-media.js';
+export type { PresentationBlob, PresentationMediaResult } from './publishing-media.js';
 
 /**
  * Create the NIP-5D manifest Vite plugin (historical helper name retained).

@@ -12,7 +12,7 @@ import { canPrompt } from "./interaction.ts";
 import { resolveSigningMethod, signDeployManifestTemplates } from "./signing.ts";
 import type { DeploySelection } from "./types.ts";
 import { inferZapstoreConfig, prepareZapstorePublication } from "./zapstore.ts";
-import { captureDeployScreenshot } from "./deploy-screenshot.ts";
+import { attachCapturedScreenshots, captureDeployScreenshot } from "./deploy-screenshot.ts";
 import { loadDeployConfig } from "./config-command.ts";
 import type { PackageCliRunner } from "./cli.ts";
 import { choose, promptRequired } from "./command-prompts.ts";
@@ -53,6 +53,7 @@ export async function commandDeploy(argv: string[], runScreenshot?: PackageCliRu
       ? { ...config, zapstore: config.zapstore ?? inferZapstoreConfig(config, templates) }
       : config;
     screenshot = await captureDeployScreenshot(flags, applicationConfig, runScreenshot, plan);
+    await attachCapturedScreenshots(templates, screenshot, config);
     const publicationConfig = screenshot && applicationConfig.zapstore
       ? { ...applicationConfig, zapstore: { ...applicationConfig.zapstore, images: [...(applicationConfig.zapstore.images ?? []), ...screenshot.paths] } }
       : applicationConfig;

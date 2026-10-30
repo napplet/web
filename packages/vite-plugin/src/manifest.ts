@@ -16,6 +16,7 @@ import { discoverConfigSchema, validateConfigSchema } from './config-schema.js';
 import { inlineSingleFileBuildAssets, listLocalArtifactAssets } from './html.js';
 import { readPublishingMetadata, renderPublishingMetadata, replaceHeadMetadata } from './publishing-metadata.js';
 import { resolvePublishingIcon } from './publishing-icon.js';
+import { blobExtension, resolvePresentationMedia, type PresentationBlob } from './publishing-media.js';
 import { resolvedRequirements, reportRequirementDiagnostics } from './requirements.js';
 
 /**
@@ -71,12 +72,17 @@ export async function writeBundleManifest(options: Nip5aManifestOptions, state: 
 
 
   const privkeyHex = process.env.VITE_DEV_PRIVKEY_HEX;
-  const metadata = embedManifestMetadata(options, distPath, state, warn);
+  const { blobs, ...metadata } = embedManifestMetadata(options, distPath, state, warn);
   prepareDistIndexHtml(distPath, state);
   const artifactHash = sha256File(path.join(distPath, 'index.html'));
   metadata.tags.splice(1, 0, ['x', artifactHash]);
   const manifest: ManifestTemplate = { ...metadata, artifactHash };
   await writeManifestFile(distPath, manifest, privkeyHex);
+  // Presentation blobs are not part of the artifact (NIP-5D §Presentation media
+  // resolves them by their own hash), so they land after index.html is final.
+  for (const blob of blobs) {
+    fs.writeFileSync(path.join(distPath, `${blob.sha256}.${blobExtension(blob.mimeType)}`), blob.data);
+  }
 }
 
 function prepareDistIndexHtml(distPath: string, state: ManifestPluginState): void {
@@ -111,7 +117,7 @@ function embedManifestMetadata(
   distPath: string,
   state: ManifestPluginState,
   warn: (message: string) => void,
-): Omit<ManifestTemplate, 'artifactHash'> {
+): Omit<ManifestTemplate, 'artifactHash'> & { blobs: PresentationBlob[] } {
   const indexPath = path.join(distPath, 'index.html');
   if (!fs.existsSync(indexPath)) throw new Error('[nip5a-manifest] dist/index.html not found; NIP-5D requires /index.html');
   const html = fs.readFileSync(indexPath, 'utf-8');
@@ -127,6 +133,8 @@ function embedManifestMetadata(
   const title = options.title ?? values('title')[0]?.[1];
   const icon = resolvePublishingIcon(options.icon, metadata.icons);
   const source = options.source ?? values('source')[0]?.[1];
+  const sourcePins = buildSourcePinTags(options, source, warn);
+  const media = resolvePresentationMedia(options, warn);
   const manifest: Omit<ManifestTemplate, 'artifactHash'> = {
     kind: NAPPLET_KIND_NAMED,
     created_at: Math.floor(Date.now() / 1000),
@@ -134,8 +142,10 @@ function embedManifestMetadata(
       ['d', options.nappletType],
       ...(title ? [['title', title]] : []),
       ...(source ? [['source', source]] : []),
+      ...sourcePins,
       ...(options.servers ?? values('server').map((t) => t[1])).map((server) => ['server', server]),
       ...(icon ? [['icon', icon.sha256, icon.mimeType]] : []),
+      ...media.tags,
       ...(state.resolvedSchema !== null ? [['config', JSON.stringify(state.resolvedSchema)]] : []),
       ...required.map((name) => ['R', name]),
       ...optional.map((name) => ['O', name]),
@@ -152,7 +162,38 @@ function embedManifestMetadata(
   }
   fs.writeFileSync(indexPath, replaceHeadMetadata(html, renderPublishingMetadata(manifest.tags, description,
     icon?.url ? { url: icon.url, mimeType: icon.mimeType } : undefined)));
-  return manifest;
+  // NIP-5D defines no HTML mapping for presentation media; the caller writes the
+  // bytes beside index.html so deploy tooling can upload them to the declared servers.
+  return { ...manifest, blobs: media.blobs };
+}
+
+// NIP-5D §Source: one optional revision pin and one optional source archive.
+function buildSourcePinTags(
+  options: Pick<Nip5aManifestOptions, 'sourceCommit' | 'sourceArchive'>,
+  source: string | undefined,
+  warn: (message: string) => void,
+): string[][] {
+  const tags: string[][] = [];
+  if (options.sourceCommit !== undefined) {
+    if (!/^(?:[0-9a-f]{40}|[0-9a-f]{64})$/.test(options.sourceCommit)) {
+      throw new Error('[nip5a-manifest] sourceCommit must be a full lowercase-hex Git commit ID (40 or 64 characters)');
+    }
+    if (!source) warn('[nip5a-manifest] sourceCommit without a source repository is ignored by clients (NIP-5D §Source); set source or let deploy tooling infer it.');
+    tags.push(['source-commit', options.sourceCommit]);
+  }
+  if (options.sourceArchive !== undefined) {
+    const { url, sha256, mimeType } = options.sourceArchive;
+    let valid = false;
+    try {
+      const parsed = new URL(url);
+      valid = parsed.protocol === 'https:' && !parsed.username && !parsed.password && !url.includes('#');
+    } catch { /* reported below */ }
+    if (!valid) throw new Error('[nip5a-manifest] sourceArchive.url must be an absolute HTTPS URL without credentials or a fragment');
+    if (!/^[0-9a-f]{64}$/.test(sha256)) throw new Error('[nip5a-manifest] sourceArchive.sha256 must be a lowercase sha256');
+    if (!/^[a-z0-9][a-z0-9!#$&^_.+-]*\/[a-z0-9][a-z0-9!#$&^_.+-]*$/i.test(mimeType)) throw new Error('[nip5a-manifest] sourceArchive.mimeType must be a MIME type');
+    tags.push(['source-archive', url, sha256, mimeType]);
+  }
+  return tags;
 }
 
 /**

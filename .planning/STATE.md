@@ -573,6 +573,7 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 | 261030-jgm | App store: manifest media, listing fallback, applesauce discovery, infinite scroll | 2026-10-30 | 9ac7d606 / PR #221 | [261030-jgm](./quick/261030-jgm-improve-the-apps-directory-with-nip-5d-m/) |
 | 261030-ixc | Tell each homepage section's story with GSAP and a three.js frame field | 2026-10-30 | e2c9fb0b / PR #221 | [261030-ixc](./quick/261030-ixc-tell-each-splash-section-s-story-with-gs/) |
 | 261028-bvy | Section-integrated app motion, six public shells and curated/discovered app store | 2026-10-28 | PR #221 | [261028-bvy](./quick/261028-bvy-develop-the-traveling-app-into-section-s/) |
+| 261030-9r6 | Chase NIP-5D presentation media and source pin tags | 2026-10-30 | 0bae4ebe / PR #272 | [261030-9r6](./quick/261030-9r6-chase-nip-5d-presentation-media-and-sour/) |
 | 261028-c9t | Complete NAPP-to-napplet porting skill | 2026-10-28 | 5ac63f25 / PR #270 | [261028-c9t](./quick/261028-c9t-write-a-thorough-napp-to-napplet-porting/) |
 | 261026-jeu | Clear the pinned AI-slop scan findings | 2026-10-26 | 8e811a29 | [261026-jeu](./quick/261026-jeu-reach-100-out-of-100-on-the-pinned-ai-sl/) |
 | 261026-iwr | Default deploy screenshots and Zapstore events with opt-out flags | 2026-10-26 | ee144357 | [261026-iwr](./quick/261026-iwr-use-screenshots-and-zapstore-events-by-d/) |

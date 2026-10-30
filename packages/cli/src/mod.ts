@@ -66,6 +66,7 @@ export * from "./keys-command.ts";
 export * from "./key-store.ts";
 export * from "./manifest.ts";
 export * from "./manifest-format.ts";
+export * from "./manifest-media.ts";
 export * from "./migrate.ts";
 export * from "./output.ts";
 export * from "./prompt.ts";

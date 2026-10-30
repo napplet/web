@@ -1,4 +1,5 @@
-import { dirname } from "./path.ts";
+import { dirname, resolvePath } from "./path.ts";
+import { buildMediaTag, type MediaBlob } from "./manifest-media.ts";
 import { inferRepositorySource, normalizeSourceOverride } from "./repository-source.ts";
 import { readHtmlPublishingFile } from "./html-metadata.ts";
 import type { ManifestFormat } from "./manifest-format.ts";
@@ -7,6 +8,8 @@ import type { NappletConfig } from "./types.ts";
 export interface ManifestMetadata {
   tags: string[][];
   content: string;
+  /** Bytes of configured screenshots and preview, uploaded alongside the artifact. */
+  blobs: MediaBlob[];
 }
 
 /** Resolve publishing content separately from the event's extensible tag array.
@@ -22,6 +25,7 @@ export async function readManifestMetadata(
   manifestPath: string | undefined,
   config: Pick<NappletConfig, "metadata">,
   format: ManifestFormat = "current",
+  options: { cwd?: string } = {},
 ): Promise<ManifestMetadata> {
   const html = (await readHtmlPublishingFile(indexHtmlPath)).tags;
   const description = html.find((tag) => tag[0] === "description")?.[1];
@@ -37,7 +41,50 @@ export async function readManifestMetadata(
     const source = await inferRepositorySource(dirname(indexHtmlPath));
     if (source) tags.push(["source", source]);
   }
-  return { tags, content: config.metadata?.description ?? sidecar.content ?? htmlContent ?? "" };
+  const blobs = format === "current" ? await mergeConfiguredMedia(tags, config, options.cwd ?? Deno.cwd()) : [];
+  return { tags, content: config.metadata?.description ?? sidecar.content ?? htmlContent ?? "", blobs };
+}
+
+/**
+ * Replace screenshot and preview tags with configured local media (NIP-5D §Presentation media).
+ * Configured lists override sidecar categories; an empty list clears them.
+ */
+async function mergeConfiguredMedia(
+  tags: string[][],
+  config: Pick<NappletConfig, "metadata">,
+  cwd: string,
+): Promise<MediaBlob[]> {
+  const blobs: MediaBlob[] = [];
+  const { screenshots, preview } = config.metadata ?? {};
+  if (screenshots !== undefined) {
+    tags.splice(0, tags.length, ...tags.filter((tag) => tag[0] !== "screenshot"));
+    for (const [index, entry] of screenshots.entries()) {
+      const label = `metadata.screenshots[${index}]`;
+      const data = await readMediaFile(resolvePath(cwd, entry.path), label);
+      const { tag, blob } = await buildMediaTag("screenshot", data, { alt: entry.alt, label });
+      tags.push(tag);
+      blobs.push(blob);
+    }
+  }
+  if (preview !== undefined) {
+    tags.splice(0, tags.length, ...tags.filter((tag) => tag[0] !== "preview"));
+    const data = await readMediaFile(resolvePath(cwd, preview.path), "metadata.preview");
+    const { tag, blob } = await buildMediaTag("preview", data, {
+      alt: preview.alt, duration: preview.duration, label: "metadata.preview",
+    });
+    tags.push(tag);
+    blobs.push(blob);
+  }
+  return blobs;
+}
+
+async function readMediaFile(path: string, label: string): Promise<Uint8Array> {
+  try {
+    return await Deno.readFile(path);
+  } catch (error) {
+    if (error instanceof Deno.errors.NotFound) throw new Error(`${label}: media file not found: ${path}`);
+    throw error;
+  }
 }
 
 /** Compatibility view that exposes the content as a description publishing hint.
@@ -111,6 +158,8 @@ function mergeConfigMetadataTags(
   const source = normalizeSourceOverride(metadata.source);
   const replaced = new Set<string>();
   if (source !== undefined) replaced.add("source");
+  if (metadata.sourceCommit !== undefined) replaced.add("source-commit");
+  if (metadata.sourceArchive !== undefined) replaced.add("source-archive");
   if (metadata.title) replaced.add("title");
   if (metadata.archetypes !== undefined) {
     replaced.add("z");
@@ -121,6 +170,11 @@ function mergeConfigMetadataTags(
   if (metadata.optional !== undefined) replaced.add("O");
   const result = tags.filter((tag) => !replaced.has(tag[0]));
   if (source) result.push(["source", source]);
+  if (metadata.sourceCommit) result.push(["source-commit", metadata.sourceCommit]);
+  if (metadata.sourceArchive) {
+    const { url, sha256, mimeType } = metadata.sourceArchive;
+    result.push(["source-archive", url, sha256, mimeType]);
+  }
   if (metadata.title) result.push(["title", metadata.title]);
   for (const convention of metadata.archetypes ?? []) {
     if (format === "legacy") result.push(["archetype", convention.slug, convention.convention]);
