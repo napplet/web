@@ -78,7 +78,7 @@ The `type` prefix before the first `.` is the **domain**, and routes the message
 
 ## Manifest and NAP negotiation
 
-The current manifest kinds are 5129, 15129, and 35129. The manifest carries one direct artifact hash in `x`, description text in `content`, required domains in `R`, and optional integrations in `O`. Archetype advertisements use `z`; accepted intents and parameter names use `i`. See [NIP-5D §Manifest](https://github.com/dskvr/nips/blob/nip/5d/5D.md#manifest) for the complete living contract.
+The current manifest kinds are 5129, 15129, and 35129. The manifest carries one direct artifact hash in `x`, description text in `content`, required domains in `R`, and optional integrations in `O`. Archetype advertisements use `z`; accepted intents and parameter names use `i`. Optional presentation metadata rides on the same event: one content-addressed `icon`, any number of `screenshot` tags and at most one `preview` video (NIP-92 `key value` fields keyed by the blob's `x` hash), plus `source`, `source-commit` and `source-archive` pins; `server` tags hint where those blobs live. See [NIP-5D §Manifest](https://github.com/dskvr/nips/blob/nip/5d/5D.md#manifest) for the complete living contract.
 
 The plugin generates current events and the CLI offers temporary legacy output. See [event migration](/guide/event-migration) for release cutoffs and rollout implications. Runtime availability still comes from injected domain presence, such as `window.napplet?.relay`.
 

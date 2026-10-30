@@ -34,13 +34,14 @@ npm install -D @napplet/conformance
 - **`validateManifestEvent(event)`** — checks that a resolved Nostr event is a NIP-5D napplet manifest (`5129`, `15129`, or `35129`) with a single `/index.html` artifact `x` hash, non-empty description, and bare `R`/`O` domains. Domains outside the toolchain registry produce an advisory `manifest/requires-known` warning without failing the run or implying runtime support.
 - **`validateManifest(html)`** — compatibility wrapper for older HTML-only
   harnesses. HTML alone cannot prove a signed NIP-5D manifest event.
+- **`parsePresentationMedia(event)`** — applies NIP-5D §Presentation media to `screenshot` and `preview` tags: splits NIP-92 `key value` fields, requires one `x` sha256, drops entries clients must ignore, and returns the usable list in manifest order with advisories for everything ignored.
 - **Reference mock shell**, **check registry**, and **reporters** that the CLI and
   the web runtime share.
 
 The validator surface is kept in lockstep with `@napplet/nap` by a drift test, so
 a new NAP message type cannot ship without matching conformance coverage.
 
-Manifest validation accepts extra Nostr tags and leaves their payloads and multiplicity unchanged. It checks required fields and recognized optional metadata rather than enforcing a tag-name allowlist. A `source` tag is checked for its single-location shape and supported HTTP(S), SSH, Git, or scp-like format; invalid icons remain advisory with generic artwork fallback. Extra tags cannot make missing content, invalid hashes, or malformed capability declarations pass. This is non-normative implementation guidance; consult the living [NIP-5D proposal](https://github.com/nostr-protocol/nips/pull/2303) for the requirements.
+Manifest validation accepts extra Nostr tags and leaves their payloads and multiplicity unchanged. It checks required fields and recognized optional metadata rather than enforcing a tag-name allowlist. A `source` tag is checked for its single-location shape and supported HTTP(S), SSH, Git, scp-like, or NIP-34 `nostr://` format; `source-commit` and `source-archive` are checked for their single-tag shape. Invalid icons, screenshots and previews, and a `source-commit` without a repository `source`, remain advisory (`manifest/media-usable`) with fallback. Extra tags cannot make missing content, invalid hashes, or malformed capability declarations pass. This is non-normative implementation guidance; consult the living [NIP-5D proposal](https://github.com/nostr-protocol/nips/pull/2303) for the requirements.
 
 ```ts
 import { validateEnvelope, validateManifestEvent } from '@napplet/conformance';
