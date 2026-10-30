@@ -7,6 +7,9 @@ const ID = { id: 'string' } as const;
  * NAP domains, with its direction and (for outbound) required fields.
  */
 export const ENVELOPE_SPECS: Record<string, EnvelopeSpec> = {
+  // NAP-CATALOG Wire Protocol: https://github.com/napplet/naps/pull/95
+  'catalog.get': { dir: 'out', fields: ID },
+  'catalog.get.result': { dir: 'in' },
   // NAP-GAMEPAD Wire Protocol: all three messages are fire-and-forget, without ids.
   // https://github.com/napplet/naps/pull/108
   'gamepad.subscribe': { dir: 'out', forbiddenFields: ['id'], forbiddenReason: 'NAP-GAMEPAD fire-and-forget envelopes do not carry it' },

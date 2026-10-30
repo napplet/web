@@ -1,6 +1,6 @@
 # @napplet/nap
 
-> Every active napplet NAP domain (relay, storage, inc, keys, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent, ble, webrtc, link, count, lists, serial, fs, common, dm, shell, gamepad) as layered subpath exports. The package name remains `@napplet/nap` for compatibility.
+> Every active napplet NAP domain (relay, storage, inc, keys, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent, ble, webrtc, link, count, lists, serial, fs, common, dm, shell, gamepad, catalog) as layered subpath exports. The package name remains `@napplet/nap` for compatibility.
 
 ## Install
 
@@ -82,6 +82,7 @@ Each domain is an independent subpath. Barrel imports bundle types + shim instal
 | serial | `@napplet/nap/serial` | `@napplet/nap/serial/types` | `@napplet/nap/serial/shim` | `@napplet/nap/serial/sdk` | Runtime-mediated serial device access — `open`/`write`/`close`/`onEvent`; shell owns permissions, port handles, streams, and lifecycle |
 | fs | `@napplet/nap/fs` | `@napplet/nap/fs/types` | `@napplet/nap/fs/shim` | `@napplet/nap/fs/sdk` | Shell-mediated virtual filesystem access — `info`/`pickFile`/`pickFiles`/`pickDirectory`/`pickSaveFile`/`stat`/`list`/`read`/`write`/`mkdir`/`remove`/`move`/`watch`/`unwatch`/`onChanged`; runtime owns host paths, mounts, backing store, policy, and authorization. Byte payloads use standard padded base64 text on the JSON wire |
 | dm | `@napplet/nap/dm` | `@napplet/nap/dm/types` | `@napplet/nap/dm/shim` | `@napplet/nap/dm/sdk` | Runtime-mediated direct messages — `status`/`conversations`/`messages`/`send`/`subscribe`/`unsubscribe`/`onMessage`; shell owns signing, encryption, relay routing, storage, and policy |
+| catalog | `@napplet/nap/catalog` | `@napplet/nap/catalog/types` | `@napplet/nap/catalog/shim` | `@napplet/nap/catalog/sdk` | Read-only available napplets and current handler selectors |
 
 ### NAP-FS byte transfer
 
@@ -227,7 +228,7 @@ import { mediaCreateSession } from '@napplet/nap/media/sdk';
 import type { MediaNapMessage } from '@napplet/nap/media/types';
 ```
 
-Domain barrels are also available at `@napplet/nap/relay`, `@napplet/nap/storage`, `@napplet/nap/inc`, `@napplet/nap/keys`, `@napplet/nap/theme`, `@napplet/nap/media`, `@napplet/nap/notify`, `@napplet/nap/identity`, `@napplet/nap/config`, `@napplet/nap/resource`, `@napplet/nap/cvm`, `@napplet/nap/outbox`, `@napplet/nap/upload`, `@napplet/nap/intent`, `@napplet/nap/ble`, `@napplet/nap/webrtc`, `@napplet/nap/link`, `@napplet/nap/count`, `@napplet/nap/lists`, `@napplet/nap/common`, `@napplet/nap/serial`, `@napplet/nap/fs`, `@napplet/nap/dm`, `@napplet/nap/shell`, and `@napplet/nap/gamepad`.
+Domain barrels are also available at `@napplet/nap/relay`, `@napplet/nap/storage`, `@napplet/nap/inc`, `@napplet/nap/keys`, `@napplet/nap/theme`, `@napplet/nap/media`, `@napplet/nap/notify`, `@napplet/nap/identity`, `@napplet/nap/config`, `@napplet/nap/resource`, `@napplet/nap/cvm`, `@napplet/nap/outbox`, `@napplet/nap/upload`, `@napplet/nap/intent`, `@napplet/nap/ble`, `@napplet/nap/webrtc`, `@napplet/nap/link`, `@napplet/nap/count`, `@napplet/nap/lists`, `@napplet/nap/common`, `@napplet/nap/serial`, `@napplet/nap/fs`, `@napplet/nap/dm`, `@napplet/nap/shell`, `@napplet/nap/gamepad`, and `@napplet/nap/catalog`.
 
 ## Optional Peer Dependency
 
@@ -300,3 +301,7 @@ if (window.napplet?.gamepad) {
 ```
 
 Declare `gamepad` as optional (`O`) when other controls fulfill the core task. Use a hard requirement (`R`) only when the core task needs controller input. The runtime owns controller access and focus isolation; app code does not call native `navigator.getGamepads()` or open raw HID devices. Haptics and remapping are outside this proposal.
+
+## Catalog discovery
+
+The [NAP-CATALOG draft](https://github.com/napplet/naps/pull/95) is available at `@napplet/nap/catalog`, with `/types`, `/shim`, and `/sdk` layers on npm and JSR. Consumer helpers `catalogGet()` and its `/sdk` alias `get()` read `CatalogSnapshot`; runtime helpers install and route `catalog.get` / `catalog.get.result`. See the [non-normative guide](../../apps/docs/naps/catalog.md).

@@ -11,3 +11,10 @@ export type * from './nap-types-devices.js';
 export type { ShellApi, ShellCapabilities, ShellEnvironment } from '@napplet/core';
 
 export type * from '@napplet/nap/gamepad/types';
+
+export type {
+  CatalogApi, CatalogSnapshot, NappletIdentity, NappletDescriptor,
+  ArchetypeDescriptor, IntentDescriptor, ArchetypeHandler,
+  CatalogGetMessage, CatalogGetResultMessage, CatalogRequestMessage,
+  CatalogResultMessage, CatalogNapMessage,
+} from '@napplet/nap/catalog/types';

@@ -147,3 +147,7 @@ await intent.invoke('napplet:profile/open?pubkey=abc123');
 ```
 
 The runtime binding retains deliveries until a listener registers. Discovery candidates expose opaque catalog `id` values and `contracts` with parameter names. INC peers instead use identifiers for running authenticated endpoints. A NAP-INTENT URI may append a bare `#naddr1…` recommendation; the binding sends its coordinate and relay hints as `handlerHint`, outside convention identity and payload. An applicable user default takes precedence. INC URI operations reject fragments. See the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md) and [web projection](https://github.com/napplet/naps/blob/master/projections/web.md).
+
+## Catalog support
+
+Add `catalog` to the runtime allowlist to inject `window.napplet.catalog.get()`. The host supplies catalog snapshots; the shim handles request correlation and parent message routing. This implements the [NAP-CATALOG draft](https://github.com/napplet/naps/pull/95). See the [non-normative catalog guide](/naps/catalog) for types, layered exports, SDK usage, runtime injection, and selector handling.

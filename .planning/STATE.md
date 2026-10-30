@@ -48,7 +48,7 @@ Branch `feat/cli-terminal-usability` ships guided missing-value recovery, `-i` p
 Phase: 164 (cli-terminal-usability) — verified and shipped
 Plan: 3 of 3
 Status: [PR #248](https://github.com/napplet/web/pull/248) open with six actual terminal screenshots
-Last activity: 2026-10-26 - Completed quick task 261026-jeu: pinned AI-slop scan 100/100
+Last activity: 2026-10-30 - Completed quick task 261030-pog: NAP-CATALOG support, verified and opened PR #275
 
 See phase 163 VERIFICATION.md and COVERAGE.md for evidence and disclosed release/specification/baseline limits. Earlier phase and quick-task records below are historical.
 
@@ -553,6 +553,7 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 
 | Quick ID | Task | Date | Commit | Artifacts |
 |----------|------|------|--------|-----------|
+| 261030-pog | Add NAP-CATALOG across packages and docs | 2026-10-30 | b1933bd0 / PR #275 | [261030-pog](./quick/261030-pog-add-nap-catalog-support-across-relevant-/) |
 | 261030-9r6 | Chase NIP-5D presentation media and source pin tags | 2026-10-30 | 0bae4ebe / PR #272 | [261030-9r6](./quick/261030-9r6-chase-nip-5d-presentation-media-and-sour/) |
 | 261028-c9t | Complete NAPP-to-napplet porting skill | 2026-10-28 | 5ac63f25 / PR #270 | [261028-c9t](./quick/261028-c9t-write-a-thorough-napp-to-napplet-porting/) |
 | 261026-jeu | Clear the pinned AI-slop scan findings | 2026-10-26 | 8e811a29 | [261026-jeu](./quick/261026-jeu-reach-100-out-of-100-on-the-pinned-ai-sl/) |

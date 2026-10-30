@@ -3,7 +3,7 @@
 > Every active napplet NAP domain as layered subpath exports. The package name remains
 > `@napplet/nap` for compatibility.
 
-`@napplet/nap` ships every active NAP domain (relay, storage, inc, keys, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent, ble, webrtc, link, count, lists, common, serial, fs, dm) as independent, tree-shakable subpaths. It sits between the shim/sdk and [`@napplet/core`](./core) in the dependency graph.
+`@napplet/nap` ships every active NAP domain (relay, storage, inc, keys, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent, ble, webrtc, link, count, lists, common, serial, fs, dm, shell, gamepad, catalog) as independent, tree-shakable subpaths. It sits between the shim/sdk and [`@napplet/core`](./core) in the dependency graph.
 
 - **npm:** [`@napplet/nap`](https://www.npmjs.com/package/@napplet/nap)
 - **JSR:** [`@napplet/nap`](https://jsr.io/@napplet/nap)
@@ -46,9 +46,7 @@ import { notifySend } from '@napplet/nap/notify/sdk';
 ## Tree-shaking contract
 
 - Published with `sideEffects: false`.
-- The `exports` map declares **96 entry points**: 23 active domain barrels,
-  23 active-domain types entries, 23 shim entries, 23 sdk entries, plus the
-  `ifc` compatibility wrapper.
+- Each active domain has barrel, types, shim, and SDK exports, alongside the deprecated `ifc` compatibility subpaths.
 - A bundler importing only `@napplet/nap/relay/types` produces zero bytes from
   the other domains.
 
@@ -172,3 +170,7 @@ if (window.napplet?.gamepad) {
 ```
 
 Declare `gamepad` as optional (`O`) when other controls fulfill the core task. Use a hard requirement (`R`) only when the core task needs controller input. The runtime owns controller access and focus isolation; app code does not call native `navigator.getGamepads()` or open raw HID devices. Haptics and remapping are outside this proposal.
+
+## Catalog support
+
+Import `catalogGet` from `@napplet/nap/catalog/sdk`. The catalog domain also has barrel, types, and shim subpaths on npm and JSR. This implements the [NAP-CATALOG draft](https://github.com/napplet/naps/pull/95). See the [non-normative catalog guide](/naps/catalog) for types, layered exports, SDK usage, runtime injection, and selector handling.

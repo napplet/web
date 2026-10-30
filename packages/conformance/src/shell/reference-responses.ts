@@ -17,7 +17,7 @@ export const REFERENCE_ENDPOINT: ReferenceEndpoint = { id: 'reference-source-end
 /** A placeholder blob URL for canned upload responses. `.invalid` is reserved (RFC 2606) and never resolves. */
 const REFERENCE_BLOB_URL = 'https://reference.invalid/blob';
 export const REFERENCE_HANDLER = `named:${REFERENCE_PUBKEY}:reference-handler`;
-export const REFERENCE_MANIFEST = { kind: 35129 as const, pubkey: REFERENCE_PUBKEY, id: '0'.repeat(64), tags: [['d', 'reference-handler'], ['z', 'note'], ['i', 'napplet:note/open', 'event']] };
+export const REFERENCE_MANIFEST = { kind: 35129 as const, pubkey: REFERENCE_PUBKEY, id: '0'.repeat(64), content: 'Displays a Nostr note.', tags: [['d', 'reference-handler'], ['x', 'c'.repeat(64)], ['z', 'note'], ['i', 'napplet:note/open', 'event']] };
 export const REFERENCE_SUBSCRIBER = 'reference-subscriber';
 export const REFERENCE_CONVENTION = 'napplet:note/open';
 

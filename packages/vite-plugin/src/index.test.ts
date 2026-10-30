@@ -546,6 +546,33 @@ describe('nip5aManifest artifact modes', () => {
     expect(result.warnings).toEqual([]);
   });
 
+  it.each([
+    "import { catalog } from '@napplet/sdk/catalog'; catalog.get();",
+    "import { catalogGet } from '@napplet/nap/catalog/sdk'; catalogGet();",
+    'window.napplet.catalog.get();',
+  ])('infers catalog requirements from %s', async (code) => {
+    const fixture = makeFixture();
+    fs.writeFileSync(path.join(fixture.dist, 'index.html'), '<!doctype html>');
+    await runCloseBundle(
+      { nappletType: 'catalog-required', requires: { infer: true } },
+      fixture, {}, [{ id: path.join(fixture.root, 'src/main.ts'), code }],
+    );
+    expect(readManifest(fixture.dist).tags).toContainEqual(['R', 'catalog']);
+  });
+
+  it('retains catalog as optional without requiring intent', async () => {
+    const fixture = makeFixture();
+    fs.writeFileSync(path.join(fixture.dist, 'index.html'), '<!doctype html>');
+    const result = await runCloseBundle(
+      { nappletType: 'catalog-optional', optional: ['catalog'], requires: { infer: true, explicit: [], mode: 'error' } },
+      fixture, {}, [{ id: path.join(fixture.root, 'src/main.ts'), code: "import { catalog } from '@napplet/sdk/catalog'; catalog.get();" }],
+    );
+    const tags = readManifest(fixture.dist).tags;
+    expect(tags).toContainEqual(['O', 'catalog']);
+    expect(tags.filter((tag) => tag[0] === 'R')).toEqual([]);
+    expect(result.warnings).toEqual([]);
+  });
+
   it('does not infer requirements from type-only imports or dynamic window access', async () => {
     const fixture = makeFixture();
     fs.writeFileSync(path.join(fixture.dist, 'index.html'), '<!doctype html>');

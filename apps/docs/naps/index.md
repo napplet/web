@@ -267,7 +267,7 @@ if (window.napplet?.fs) {
 
 ## Core domain union
 
-[`@napplet/core`](/packages/core) exports a `NapDomain` string union for the foundational domains — `shell`, `relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `ble`, `webrtc`, `link`, `count`, `lists`, `serial`, `fs`, `common`, `dm`, `gamepad` — used as the discriminant for envelope routing and domain presence.
+[`@napplet/core`](/packages/core) exports a `NapDomain` string union for the foundational domains — `shell`, `relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `ble`, `webrtc`, `link`, `count`, `lists`, `serial`, `fs`, `common`, `dm`, `gamepad`, `catalog` — used as the discriminant for envelope routing and domain presence.
 
 ## Where to go next
 
@@ -297,3 +297,7 @@ Theme updates reach napplets with the exposed `theme` domain, independently of m
 ### gamepad
 
 Optional focus-scoped controller snapshots. See the non-normative [GAMEPAD guide](./gamepad) and living [NAP-GAMEPAD proposal](https://github.com/napplet/naps/pull/108).
+
+### catalog
+
+Read-only discovery of available napplets, verified identities, convention advertisements, and current handler selectors. Use `catalog.get()` after checking domain presence. See the [catalog guide](./catalog) and living [NAP-CATALOG draft](https://github.com/napplet/naps/pull/95).

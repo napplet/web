@@ -1,4 +1,4 @@
-import { NAP_DOMAINS } from '@napplet/core';
+import { NAP_DOMAINS, type CatalogSnapshot } from '@napplet/core';
 import { validateEnvelope, type EnvelopeVerdict } from '../validators/envelope.js';
 import {
   REFERENCE_CONVENTION,
@@ -24,6 +24,8 @@ export interface ReferenceHandlerOptions {
   records: RecordedEnvelope[];
   queueDelivery(target: string, delivery: unknown): void;
   intents: IntentHandlers;
+  catalog(endpoint: ReferenceEndpoint): CatalogSnapshot;
+  intentResolver: boolean;
 }
 
 /** Create the pure request handler for the reference shell. */
@@ -35,7 +37,7 @@ export function createReferenceHandler(options: ReferenceHandlerOptions) {
     options.records.push({ envelope, verdict, timestamp: options.now() });
 
     if (!type || !verdict.ok) return [];
-    const domains = endpoint.domains ?? NAP_DOMAINS;
+    const domains = (endpoint.domains ?? NAP_DOMAINS).filter(domain => domain !== 'intent' || options.intentResolver);
     if (!domains.includes(type.slice(0, type.indexOf('.')))) return [];
     if (type === 'shell.ready') {
       if (initialized.has(endpoint.id)) return [];
@@ -43,6 +45,14 @@ export function createReferenceHandler(options: ReferenceHandlerOptions) {
       return ok({ type: 'shell.init', capabilities: { domains: [...domains] }, services: [] });
     }
     const env = envelope as Record<string, unknown>;
+    if (type === 'catalog.get') {
+      try {
+        return ok({ type: 'catalog.get.result', id: env.id, snapshot: options.catalog(endpoint) });
+      } catch {
+        return ok({ type: 'catalog.get.result', id: env.id, error: 'catalog unavailable' });
+      }
+    }
+    if (type.startsWith('intent.') && !options.intentResolver) return [];
     if (type === 'intent.invoke') return options.intents.handleInvoke(endpoint, env);
     if (type === 'intent.available') {
       return ok({ type: 'intent.available.result', id: env.id, availability: options.intents.availability(env.archetype) });
