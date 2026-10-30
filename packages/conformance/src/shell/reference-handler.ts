@@ -34,9 +34,14 @@ export function createReferenceHandler(options: ReferenceHandlerOptions) {
     const verdict = validateEnvelope(envelope);
     options.records.push({ envelope, verdict, timestamp: options.now() });
 
-    if (!type || !verdict.ok) return [];
+    if (!type) return [];
     const domains = endpoint.domains ?? NAP_DOMAINS;
     if (!domains.includes(type.slice(0, type.indexOf('.')))) return [];
+    // NAP-MOTION requires a correlated error even for a malformed permission payload.
+    if (type === 'motion.permission' && typeof (envelope as Record<string, unknown>).id === 'string') {
+      return RESPONDERS[type](envelope as Record<string, unknown>);
+    }
+    if (!verdict.ok) return [];
     if (type === 'shell.ready') {
       if (initialized.has(endpoint.id)) return [];
       initialized.add(endpoint.id);

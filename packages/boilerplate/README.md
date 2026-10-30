@@ -60,3 +60,7 @@ Treat the [living NIP-5D proposal](https://github.com/nostr-protocol/nips/pull/2
 ### GAMEPAD integration
 
 Generated projects keep controller input optional unless it is essential to the app’s core task. The template’s controller guide covers fallbacks, focus edges, and runtime-owned native access. See the proposed [NAP-GAMEPAD](https://github.com/napplet/naps/pull/108).
+
+### MOTION integration
+
+Generated apps can import `motion` from `@napplet/sdk/motion`. Keep pointer or keyboard fallback controls and declare `optional: ["motion"]` unless motion is essential. See the non-normative [MOTION guide](../../apps/docs/naps/motion.md) for permission and sample handling.

@@ -1,3 +1,4 @@
+import { installMotionShim, handleMotionMessage } from '@napplet/nap/motion/shim';
 import { installGamepadShim, handleGamepadMessage } from '@napplet/nap/gamepad/shim';
 import { handleShellMessage, installShellShim } from '@napplet/nap/shell/shim';
 import {
@@ -97,8 +98,10 @@ type DomainHandler = (msg: { type: string; [key: string]: unknown }) => void;
 const DEFAULT_DOMAINS = new Set<NapDomain>(NAP_DOMAINS);
 const installedDomainShims = new Set<NapDomain>();
 let messageListenerInstalled = false;
+let cleanupMotion: (() => void) | undefined;
 
 const DOMAIN_ROUTERS: ReadonlyArray<readonly [string, DomainHandler]> = [
+  ['motion.', handleMotionMessage],
   ['gamepad.', handleGamepadMessage],
   ['shell.', handleShellMessage],
   ['keys.', handleKeysMessage],
@@ -150,6 +153,9 @@ function installDomainShim(domain: NapDomain): void {
   installedDomainShims.add(domain);
 
   switch (domain) {
+    case 'motion':
+      cleanupMotion = installMotionShim();
+      return;
     case 'gamepad':
       installGamepadShim();
       return;
@@ -235,6 +241,11 @@ function installDomainShim(domain: NapDomain): void {
  */
 export function installNappletGlobal(options: NappletShimInstallOptions = {}): NappletGlobal {
   const domains = normalizeDomains(options.domains);
+  if (!domains.has('motion') && cleanupMotion) {
+    cleanupMotion();
+    cleanupMotion = undefined;
+    installedDomainShims.delete('motion');
+  }
   const napplet = createNappletGlobal(domains);
 
   (window as Window & typeof globalThis & { napplet: NappletGlobal }).napplet = napplet;

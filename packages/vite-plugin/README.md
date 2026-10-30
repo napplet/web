@@ -130,3 +130,7 @@ With `data`, the plugin derives `x` and `size`, sniffs the format for `m` (PNG, 
 ### GAMEPAD integration
 
 Requirement inference recognizes `@napplet/nap/gamepad`, `@napplet/sdk/gamepad`, and direct GAMEPAD domain reads. Declare `optional: ["gamepad"]` when keyboard or pointer controls fulfill the core task. See the proposed [NAP-GAMEPAD](https://github.com/napplet/naps/pull/108).
+
+### MOTION integration
+
+Requirement inference recognizes `@napplet/nap/motion`, `@napplet/sdk/motion`, and direct `window.napplet.motion` reads. Declare `optional: ["motion"]` when pointer or keyboard controls fulfill the core task; inference preserves this as an `O` tag. See the draft [NAP-MOTION](https://github.com/napplet/naps/pull/124) and non-normative [MOTION guide](../../apps/docs/naps/motion.md).

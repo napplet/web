@@ -585,3 +585,7 @@ NAPPLET_TEST_STANDALONE=1 deno test --node-modules-dir=none -A packages/cli/test
 ### GAMEPAD integration
 
 GAMEPAD is a bare manifest domain accepted by `init`, `build`, and deployment metadata. Controller fallback apps use `O gamepad`; controller-required apps use `R gamepad`. Live `dev` controller input depends on a GAMEPAD-capable Kehto/Paja release. See the proposed [NAP-GAMEPAD](https://github.com/napplet/naps/pull/108).
+
+### MOTION integration
+
+For optional device motion, use `@napplet/sdk/motion` and declare `optional: ["motion"]` in the Vite plugin. `napplet verify` exercises the conformance reference shell, which reports sensors unavailable; validate real sensor grants and focus changes in a capable shell. See the non-normative [MOTION guide](../../apps/docs/naps/motion.md).

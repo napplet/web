@@ -1,3 +1,4 @@
+import type { MotionApi } from './motion.js';
 import type { GamepadApi } from './gamepad.js';
 import type { ShellApi } from './shell.js';
 import type { RelayApi, IncApi, StorageApi, KeysApi } from './global/nostr-api.js';
@@ -52,6 +53,8 @@ import type {
 export interface NappletGlobal {
   /** Optional shell-mediated controller input, scoped to this napplet’s focus. */
   gamepad?: GamepadApi;
+  /** Optional shell-mediated motion, scoped to this napplet’s grant and focus. */
+  motion?: MotionApi;
   /** Optional shell environment; other domains work without it. */
   shell?: ShellApi;
   /**

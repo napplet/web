@@ -225,6 +225,13 @@ export function validateEnvelope(message: unknown): EnvelopeVerdict {
   if (type === 'resource.bytesMany') {
     validateResourceBytesManyRequests(record.requests, errors);
   }
+  if (type === 'motion.permission' && record.absolute !== undefined && typeof record.absolute !== 'boolean') {
+    errors.push({ code: 'wrong-type', message: 'Motion permission "absolute" must be a boolean', field: 'absolute' });
+  }
+  if (type === 'motion.subscribe' && record.frequency !== undefined
+    && (typeof record.frequency !== 'number' || !Number.isFinite(record.frequency) || record.frequency < 0)) {
+    errors.push({ code: 'wrong-type', message: 'Motion subscription "frequency" must be a finite nonnegative number', field: 'frequency' });
+  }
 
   return { ok: errors.length === 0, type, domain, direction: 'out', errors };
 }

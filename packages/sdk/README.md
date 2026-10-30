@@ -527,3 +527,7 @@ if (window.napplet?.gamepad) {
 ```
 
 Declare `gamepad` as optional (`O`) when other controls fulfill the core task. Use a hard requirement (`R`) only when the core task needs controller input. The runtime owns controller access and focus isolation; app code does not call native `navigator.getGamepads()` or open raw HID devices. Haptics and remapping are outside this proposal.
+
+### MOTION integration
+
+Import `motion` from `@napplet/sdk` or `@napplet/sdk/motion` for the draft [NAP-MOTION](https://github.com/napplet/naps/pull/124). The namespace exposes `requestPermission(absolute?)`, `state()`, `latest()`, `onState(handler)`, and `onSample(handler)`. Prefixed helpers such as `motionRequestPermission` are also exported. Check optional domain presence first; request an absolute grant only for compass heading. See the non-normative [MOTION guide](../../apps/docs/naps/motion.md) for permission errors, cached snapshots, listener cleanup, and fallback controls.
