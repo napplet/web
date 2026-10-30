@@ -39,7 +39,7 @@ const navigation = [
       <div class="section-wrap hero-grid">
         <div class="hero-copy">
           <p class="eyebrow"><span class="status-dot" aria-hidden="true"></span> A different shape for software</p>
-          <h1 id="hero-title">Apps that<br /><span>travel.</span></h1>
+          <h1 id="hero-title"><span class="line"><span class="line-inner">Apps that</span></span><br /><span class="line"><span class="line-inner accent">travel.</span></span></h1>
           <p class="hero-lead">Build a game, a tool, a small obsession. Give it more places to run.</p>
           <div class="hero-actions">
             <a class="button button-primary" href="#napplets">Try one <span aria-hidden="true">↗</span></a>
@@ -49,10 +49,9 @@ const navigation = [
         </div>
         <div class="hero-lab" aria-hidden="true">
           <span class="lab-coordinate">FIG. 01 — ONE LITTLE APP</span>
-          <div class="hero-orbit orbit-a"></div><div class="hero-orbit orbit-b"></div>
-          <span class="host-label host-label-web">A tab in your browser</span>
-          <span class="host-label host-label-phone">A place on your phone</span>
-          <span class="host-label host-label-desktop">A window in your world</span>
+          <span class="host-label host-label-web"><b>A tab in your browser</b><i class="leader"></i></span>
+          <span class="host-label host-label-phone"><i class="leader"></i><b>A place on your phone</b></span>
+          <span class="host-label host-label-desktop"><b>A window in your world</b><i class="leader"></i></span>
           <div class="app-dock hero-dock" data-app-dock><AppWindow /></div>
           <span class="lab-caption">Same app. Different surroundings.</span>
         </div>
@@ -67,11 +66,11 @@ const navigation = [
           <p class="section-intro">These are real napplets. Open one right here, then look under the hood.</p>
         </div>
         <div class="collection-reveal" aria-hidden="true">
-          <span class="collection-word">PLAY</span>
-          <div class="collection-ticket ticket-a"><span>01 / Experiment</span><strong>Make a little<br />chain reaction.</strong></div>
+          <div class="deal-slot slot-1"><span>01</span><i class="drop-line"></i></div>
+          <div class="deal-slot slot-2"><span>02</span><i class="drop-line"></i></div>
+          <div class="deal-slot slot-3"><span>03</span><i class="drop-line"></i></div>
           <div class="app-dock collection-dock" data-app-dock><AppWindow /></div>
-          <div class="collection-ticket ticket-b"><span>02 / Discover</span><strong>Follow your<br />curiosity.</strong></div>
-          <span class="collection-rule"></span>
+          <span class="collection-caption">One app, then three. Open any of them.</span>
         </div>
         <div class="napplet-grid">
           {NAPPLETS.slice(0, 3).map((item, index) => <article class="napplet-card" data-card>
@@ -114,7 +113,8 @@ const navigation = [
     <section id="protocol" class="scene protocol-scene" aria-labelledby="protocol-title">
       <div class="section-wrap">
         <div class="capability-stage" aria-hidden="true">
-          <div class="capability-ring"></div><svg class="capability-wires" viewBox="0 0 1000 390" preserveAspectRatio="none"><path pathLength="1" d="M500 175 H330 Q300 175 300 140 V110 H180" /><path pathLength="1" d="M500 175 H720 Q750 175 750 140 H850" /><path pathLength="1" d="M500 175 V275 Q500 290 520 290 H780" /></svg>
+          <svg class="capability-wires" viewBox="0 0 1000 390" preserveAspectRatio="none"><path class="wire wire-identity" pathLength="1" d="M500 175 H330 Q300 175 300 140 V110 H180" /><path class="wire wire-storage" pathLength="1" d="M500 175 H720 Q750 175 750 140 H850" /><path class="wire wire-theme" pathLength="1" d="M500 175 V275 Q500 290 520 290 H780" /></svg>
+          <i class="wire-pulse pulse-identity"></i><i class="wire-pulse pulse-storage"></i><i class="wire-pulse pulse-theme"></i>
           <div class="app-dock protocol-dock" data-app-dock><AppWindow /></div>
           <span class="capability-port port-identity">Identity <i>Who’s here?</i></span>
           <span class="capability-port port-storage">Storage <i>Keep my progress.</i></span>
