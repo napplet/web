@@ -32,7 +32,7 @@ import {
 - **`NappletMessage`** — base interface for every message: `{ type: string }` in
   `domain.action` format. Concrete message types extend it with payload fields.
 - **`NapDomain`** — string literal union of the NAP capability domains
-  (`'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'cvm' | 'outbox' | 'upload' | 'intent' | 'ble' | 'webrtc' | 'link' | 'count' | 'lists' | 'serial' | 'fs' | 'common' | 'dm' | 'shell' | 'gamepad'`).
+  (`'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'cvm' | 'outbox' | 'upload' | 'intent' | 'navigation' | 'ble' | 'webrtc' | 'link' | 'count' | 'lists' | 'serial' | 'fs' | 'common' | 'dm' | 'shell' | 'gamepad'`).
 - **`NappletGlobal`** — the runtime-injected `window.napplet` namespace with
   optional domain properties.
 - **`NAP_DOMAINS`** — runtime constant array of all domain strings, for iteration
@@ -104,7 +104,7 @@ const result = await napplet.intent.open('napplet:profile/open', { payload: { pu
 if (!result.ok) throw new Error(result.error);
 ```
 
-Intent calls derive archetype and action from the URI. An `ok: true` result means the runtime accepted delivery responsibility and includes the normalized identity and handler catalog identifier; an `ok: false` result includes `error`. Targets receive runtime-attested `IntentDelivery` values through `onDelivery`, including deliveries retained before registration. Behavior hints are `focus` and `reuse`. This non-normative guidance defers to the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md).
+Intent calls derive archetype and action from the URI. An `ok: true` result means the runtime accepted delivery responsibility and includes the normalized identity and handler catalog identifier; an `ok: false` result includes `error`. Targets receive runtime-attested `IntentDelivery` values through `onDelivery`, including deliveries retained before registration. Each delivery has a runtime-assigned `id`; `sender` is the source catalog identifier, or `null` for a shell-originated request. These fields follow the [NAP-INTENT delivery draft](https://github.com/napplet/naps/pull/128). Behavior hints are `focus` and `reuse`. This non-normative guidance defers to the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md).
 
 This package defers to the living [NAP-INC](https://github.com/napplet/naps/blob/master/naps/NAP-INC.md) and [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md) documents.
 
@@ -139,10 +139,14 @@ The runtime may expose `shell` for environment information. `shell.supports(doma
 ```ts
 import { intent } from '@napplet/sdk';
 
-intent.onDelivery(({ sender, convention, payload }) => {
-  console.log(sender, convention, payload);
+intent.onDelivery(({ id, sender, convention, payload }) => {
+  console.log(id, sender, convention, payload);
 });
 await intent.invoke('napplet:profile/open?pubkey=abc123');
 ```
 
 The runtime binding retains deliveries until a listener registers. Discovery candidates expose opaque catalog `id` values and `contracts` with parameter names. INC peers instead use identifiers for running authenticated endpoints. A NAP-INTENT URI may append a bare `#naddr1…` recommendation; the binding sends its coordinate and relay hints as `handlerHint`, outside convention identity and payload. An applicable user default takes precedence. INC URI operations reject fragments. See the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md) and [web projection](https://github.com/napplet/naps/blob/master/projections/web.md).
+
+## Navigation history
+
+Core exports the `NavigationApi`, JSON location/report/view/result types, and the `navigation` domain name. `NappletGlobal.navigation` remains optional. `IntentDelivery` includes a target-scoped runtime `id` and a nullable `sender` for shell-originated requests. This non-normative guidance targets the [NAP-NAVIGATION draft](https://github.com/napplet/naps/pull/126) and [NAP-INTENT delivery draft](https://github.com/napplet/naps/pull/128). See [Navigation](/naps/navigation) for runtime availability, manifest declarations, serialized reporting, and recovery.

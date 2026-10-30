@@ -9,15 +9,18 @@ export interface ReferenceEndpoint {
   catalogId: string;
   /** Exposed domains; omitted by the default all-domain fixture. */
   domains?: readonly string[];
+  /** Verified manifest bound by the host, never read from a napplet envelope. */
+  manifest?: import('./intent-catalog.js').CatalogManifest;
 }
 
 /** Default authenticated reference endpoint. */
-export const REFERENCE_ENDPOINT: ReferenceEndpoint = { id: 'reference-source-endpoint', catalogId: 'reference-source' };
+
 
 /** A placeholder blob URL for canned upload responses. `.invalid` is reserved (RFC 2606) and never resolves. */
 const REFERENCE_BLOB_URL = 'https://reference.invalid/blob';
 export const REFERENCE_HANDLER = `named:${REFERENCE_PUBKEY}:reference-handler`;
 export const REFERENCE_MANIFEST = { kind: 35129 as const, pubkey: REFERENCE_PUBKEY, id: '0'.repeat(64), tags: [['d', 'reference-handler'], ['z', 'note'], ['i', 'napplet:note/open', 'event']] };
+export const REFERENCE_ENDPOINT: ReferenceEndpoint = { id: 'reference-source-endpoint', catalogId: 'reference-source', manifest: REFERENCE_MANIFEST };
 export const REFERENCE_SUBSCRIBER = 'reference-subscriber';
 export const REFERENCE_CONVENTION = 'napplet:note/open';
 

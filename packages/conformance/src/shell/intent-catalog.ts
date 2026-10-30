@@ -9,13 +9,13 @@ export interface CatalogManifest {
   tags: string[][];
 }
 
-function catalogId(manifest: CatalogManifest): string {
+export function catalogId(manifest: CatalogManifest): string {
   if (manifest.kind === 5129) return `snapshot:${manifest.id}`;
   if (manifest.kind === 15129) return `root:${manifest.pubkey}`;
   return `named:${manifest.pubkey}:${manifest.tags.find((tag) => tag[0] === 'd')?.[1] ?? ''}`;
 }
 
-function contractsFor(manifest: CatalogManifest, archetype: string): IntentContract[] {
+export function contractsFor(manifest: CatalogManifest, archetype: string): IntentContract[] {
   if (!manifest.tags.some((tag) => tag[0] === 'z' && tag[1] === archetype)) return [];
   const contracts: IntentContract[] = [];
   for (const tag of manifest.tags) {

@@ -14,12 +14,14 @@ import { createServer, type Server, type ServerResponse } from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
 import { join, normalize, extname, resolve } from 'node:path';
 import type { AddressInfo } from 'node:net';
+import type { NappletManifestEvent } from '@napplet/conformance';
 import { MIME } from './static.js';
 
 /** The napplet URL + timing knobs the host page passes to `bootAndCollect`. */
 export interface BootConfig {
   url: string;
   html?: string;
+  verifiedManifest?: NappletManifestEvent;
   readyTimeoutMs: number;
   settleMs: number;
   runDegraded: boolean;

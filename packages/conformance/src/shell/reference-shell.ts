@@ -6,6 +6,7 @@
 
 import {
   REFERENCE_ENDPOINT,
+  REFERENCE_MANIFEST,
   type ReferenceEndpoint,
 } from './reference-responses.js';
 import {
@@ -13,6 +14,9 @@ import {
   type RecordedEnvelope,
 } from './reference-handler.js';
 import { createIntentHandlers } from './reference-intents.js';
+import { createEndpointRegistry } from './reference-endpoints.js';
+import { createReferenceNavigation, type ReferenceNavigationOptions } from './reference-navigation.js';
+import type { IntentDelivery, IntentRequest, NavigationResult, NavigationView } from '@napplet/core';
 
 export { REFERENCE_PUBKEY, REFERENCE_ENDPOINT } from './reference-responses.js';
 export type { ReferenceEndpoint } from './reference-responses.js';
@@ -26,6 +30,8 @@ export interface ReferenceShellOptions {
   manifests?: readonly import('./intent-catalog.js').CatalogManifest[];
   /** User preferences, keyed by role. */
   defaults?: Readonly<Record<string, string>>;
+  /** Reference history limits and shell policy. */
+  navigation?: ReferenceNavigationOptions;
 }
 
 /** A reference shell instance for transport-agnostic conformance tests. */
@@ -47,6 +53,22 @@ export interface ReferenceShell {
   handleFrom(endpoint: ReferenceEndpoint, envelope: unknown): unknown[];
   /** Drain retained target deliveries for one resolved reference target. */
   takeDeliveries(target: string): unknown[];
+  /** Bind already authenticated endpoint metadata; a terminated id cannot be reused. */
+  registerEndpoint(endpoint: ReferenceEndpoint): boolean;
+  /** Deliver a normalized shell intent to this live endpoint only. */
+  deliverIntent(endpointId: string, request: IntentRequest): IntentDelivery | undefined;
+  /** Retry an issued logical delivery without changing its id or content. */
+  retryIntent(endpointId: string, deliveryId: string): boolean;
+  /** Request a retained visit; this is shell control, not a wire operation. */
+  revisit(endpointId: string, entryId: string): NavigationResult;
+  /** Read runtime history for shell UI. */
+  navigationView(endpointId: string): NavigationView;
+  /** Retain selected visits under shell policy, explicitly clearing removed positions. */
+  pruneNavigation(endpointId: string, keepIds: readonly string[]): NavigationView;
+  /** Resolve a failed dispatch; definite means no delivery could have occurred. */
+  failNavigationDelivery(endpointId: string, deliveryId: string, definite?: boolean): void;
+  /** End live authority and discard retained deliveries and history. */
+  terminateEndpoint(endpointId: string): void;
   /** Clear recorded envelopes. */
   reset(): void;
 }
@@ -64,24 +86,39 @@ export interface ReferenceShell {
 export function createReferenceShell(options: ReferenceShellOptions = {}): ReferenceShell {
   const records: RecordedEnvelope[] = [];
   const deliveries = createDeliveryQueue();
-  const handleFrom = createReferenceHandler({
-    now: options.now ?? Date.now,
-    records,
-    queueDelivery: deliveries.queue,
-    intents: createIntentHandlers(deliveries.queue, options.manifests, options.defaults),
-  });
-
+  const endpoints = createEndpointRegistry(options.manifests ?? [REFERENCE_MANIFEST]);
+  const intents = createIntentHandlers(deliveries.queue, endpoints, options.manifests, options.defaults);
+  const navigation = createReferenceNavigation(endpoints, intents, options.now ?? Date.now, options.navigation);
+  const handler = createReferenceHandler({ now: options.now ?? Date.now, records, queueDelivery: deliveries.queue, intents, navigation });
+  const handleFrom = (endpoint: ReferenceEndpoint, envelope: unknown): unknown[] => {
+    const bound = endpoints.register(endpoint);
+    return bound ? handler(bound.endpoint, envelope) : [];
+  };
   return {
-    get records() {
-      return records;
-    },
+    get records() { return records; },
     handle: (envelope) => handleFrom(REFERENCE_ENDPOINT, envelope),
     handleFrom,
     takeDeliveries: deliveries.take,
-    reset() {
-      records.length = 0;
-      deliveries.clear();
+    registerEndpoint: (endpoint) => !!endpoints.register(endpoint),
+    deliverIntent(endpointId, request) {
+      const delivery = intents.deliver(endpointId, request);
+      if (delivery) intents.emit(endpointId, delivery);
+      return delivery;
     },
+    retryIntent: intents.retry,
+    revisit: navigation.revisit,
+    navigationView: navigation.view,
+    pruneNavigation: navigation.prune,
+    failNavigationDelivery(endpointId, deliveryId, definite = false) {
+      deliveries.remove(endpointId, deliveryId);
+      navigation.deliveryFailed(endpointId, deliveryId, definite);
+    },
+    terminateEndpoint(endpointId) {
+      endpoints.terminate(endpointId);
+      navigation.terminate(endpointId);
+      deliveries.take(endpointId);
+    },
+    reset() { records.length = 0; deliveries.clear(); navigation.clearPending(); },
   };
 }
 
@@ -97,6 +134,10 @@ function createDeliveryQueue() {
       const queue = queues.get(target) ?? [];
       queues.delete(target);
       return queue;
+    },
+    remove(target: string, deliveryId: string): void {
+      const queue = queues.get(target);
+      if (queue) queues.set(target, queue.filter((envelope) => (envelope as { delivery?: { id?: string } }).delivery?.id !== deliveryId));
     },
     clear(): void {
       queues.clear();

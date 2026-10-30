@@ -54,7 +54,7 @@ Before implementation, the agent should inspect the project state and available 
 
 The configured queryless convention emits `['z', 'note']` and `['i', 'napplet:note/open']`. The agent must not infer a kind or payload schema from payload content.
 
-Intent calls derive archetype and action from the URI. An `ok: true` result means the runtime accepted delivery responsibility and includes the normalized identity and handler catalog identifier; an `ok: false` result includes `error`. Targets receive runtime-attested `IntentDelivery` values through `onDelivery`, including deliveries retained before registration. Behavior hints are `focus` and `reuse`. This non-normative guidance defers to the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md).
+Intent calls derive archetype and action from the URI. An `ok: true` result means the runtime accepted delivery responsibility and includes the normalized identity and handler catalog identifier; an `ok: false` result includes `error`. Targets receive runtime-attested `IntentDelivery` values through `onDelivery`, including deliveries retained before registration. Each delivery has a runtime-assigned `id`; `sender` is the source catalog identifier, or `null` for a shell-originated request. These fields follow the [NAP-INTENT delivery draft](https://github.com/napplet/naps/pull/128). Behavior hints are `focus` and `reuse`. This non-normative guidance defers to the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md).
 
 ## 3. Give the agent a small product prompt
 

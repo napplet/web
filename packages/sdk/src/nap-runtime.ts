@@ -207,3 +207,4 @@ export {
 export { shellReady, shellSupports, shellOnReady, installShellShim, DOMAIN as SHELL_DOMAIN } from '@napplet/nap/shell';
 
 export { DOMAIN as GAMEPAD_DOMAIN, installGamepadShim, gamepadGetGamepads, gamepadAvailable, gamepadFocused, gamepadOnChange } from '@napplet/nap/gamepad';
+export { DOMAIN as NAVIGATION_DOMAIN, installNavigationShim, navigationReport, navigationGet } from '@napplet/nap/navigation';

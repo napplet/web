@@ -11,3 +11,10 @@ export type * from './nap-types-devices.js';
 export type { ShellApi, ShellCapabilities, ShellEnvironment } from '@napplet/core';
 
 export type * from '@napplet/nap/gamepad/types';
+export type {
+  NavigationApi, NavigationJsonValue, NavigationLocation, NavigationReport,
+  NavigationEntry, NavigationView, NavigationError, NavigationResult,
+  NavigationReportMessage, NavigationGetMessage, NavigationReportResultMessage,
+  NavigationGetResultMessage, NavigationOutboundMessage, NavigationInboundMessage,
+  NavigationNapMessage,
+} from '@napplet/nap/navigation/types';

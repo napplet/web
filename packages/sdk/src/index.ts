@@ -39,3 +39,4 @@ export * from './nap-runtime.js';
 export { shell } from './shell.js';
 
 export { gamepad } from './gamepad.js';
+export { navigation } from './navigation.js';

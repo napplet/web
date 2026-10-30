@@ -54,6 +54,38 @@ describe('real opaque-origin reference runtime', () => {
     expect(result.degraded?.bootError).toContain('subject failed');
   });
 
+  it('round-trips navigation against the host-bound manifest in an opaque iframe', async () => {
+    const result = await boot(`<!doctype html><script>
+      if (window.napplet.navigation) (async () => {
+        const navigation = window.napplet.navigation;
+        const initial = await navigation.get();
+        if (!initial.ok || initial.view.status !== 'unreported') throw new Error('Bad initial view');
+        const accepted = await navigation.report({ revision: 1, location: {
+          convention: 'napplet:profile/open', payload: { pubkey: 'b'.repeat(64) }, title: 'Bob'
+        } });
+        if (!accepted.ok || accepted.view.entries.length !== 1) throw new Error('Own contract rejected');
+        const rejected = await navigation.report({ revision: 2, location: {
+          convention: 'napplet:note/open', payload: { event: 'foreign' }
+        } });
+        if (rejected.ok || rejected.error.code !== 'unsupported' || rejected.view.status !== 'uncertain') throw new Error('Foreign contract accepted');
+        const current = await navigation.get();
+        if (!current.ok || current.view.reportRevision !== 1 || current.view.entries[0].location.title !== 'Bob') throw new Error('History changed on rejection');
+      })();
+    </script>`, {
+      // Already verified fixture metadata; signature/hash verification belongs to the host loader.
+      verifiedManifest: { kind: 35129, id: 'a'.repeat(64), pubkey: 'b'.repeat(64), tags: [
+        ['d', 'profile-fixture'], ['z', 'profile'], ['i', 'napplet:profile/open', 'pubkey'],
+      ] },
+    });
+    expect(result.bootError).toBeNull();
+    expect(result.degraded?.bootError).toBeNull();
+    expect(result.degraded?.emitted).toEqual([]);
+    expect(result.emitted.map(({ envelope }) => (envelope as { type: string }).type).filter((type) => type.startsWith('navigation.'))).toEqual([
+      'navigation.get', 'navigation.report', 'navigation.report', 'navigation.get',
+    ]);
+    expect(result.emitted.every(({ verdict }) => verdict.ok)).toBe(true);
+  });
+
   it('reports installation failure instead of inferring success from iframe load', async () => {
     const result = await boot('<!doctype html><p>Subject</p>', { runtimePreludeSource: 'throw new Error("fixture injection failed");', runDegraded: false });
     expect(result.installedGlobal).toBe(false);

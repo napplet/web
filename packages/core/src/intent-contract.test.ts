@@ -13,7 +13,7 @@ describe('NAP-INTENT public contract', () => {
   it('separates acceptance from target delivery', () => {
     const accepted: IntentResult = { ok: true, archetype: 'profile', action: 'open', convention: 'napplet:profile/open', handler: 'catalog-profile-viewer' };
     const rejected: IntentResult = { ok: false, error: 'no handler' };
-    const delivery: IntentDelivery = { sender: 'catalog-source', archetype: 'profile', action: 'open', convention: 'napplet:profile/open', payload: { pubkey: 'abc123' } };
+    const delivery: IntentDelivery = { id: 'delivery-1', sender: 'catalog-source', archetype: 'profile', action: 'open', convention: 'napplet:profile/open', payload: { pubkey: 'abc123' } };
     expect(accepted.ok).toBe(true);
     expect(rejected.error).toBe('no handler');
     expect(delivery.sender).toBe('catalog-source');
