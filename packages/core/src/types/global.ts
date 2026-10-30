@@ -51,7 +51,7 @@ import type {
  * domain to the napplet; absence means the domain is unavailable.
  */
 export interface NappletGlobal {
-  /** Runtime-mediated NIP-35 discovery and torrent jobs (NAP-TORRENT). */
+  /** Runtime-mediated transfers and authorized content access (NAP-TORRENT). */
   torrent?: TorrentApi;
   /** Optional shell-mediated controller input, scoped to this napplet’s focus. */
   gamepad?: GamepadApi;

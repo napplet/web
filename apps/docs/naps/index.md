@@ -300,4 +300,4 @@ Optional focus-scoped controller snapshots. See the non-normative [GAMEPAD guide
 
 ### torrent
 
-NIP-35 indexing and runtime-owned download/seed jobs. The injected `window.napplet.torrent` API supports descriptor conversion, search, publication, comments, picker handles, transfer control, and job events. See the non-normative [TORRENT guide](./torrent) and living [NAP-TORRENT proposal](https://github.com/napplet/naps/blob/nap-torrent/naps/NAP-TORRENT.md).
+Runtime-owned download/seed jobs and verified content access. The injected `window.napplet.torrent` API supports picker handles, transfer controls, bounded reads, metadata export, file actions, cancellation, revisioned settings, retention, and job events. Discovery and Nostr publication remain outside this domain. See the non-normative [TORRENT guide](./torrent) and living [NAP-TORRENT proposal](https://github.com/napplet/naps/blob/nap-torrent/naps/NAP-TORRENT.md).

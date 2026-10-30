@@ -1,4 +1,4 @@
-/** Runtime-mediated NIP-35 discovery and torrent jobs. @module */
+/** Runtime-mediated torrent transfers and verified content access. @module */
 export * from './types.js';
 export * from './shim.js';
 export * from './sdk.js';

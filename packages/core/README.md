@@ -91,7 +91,7 @@ type NapDomain = 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | '
 | `serial`  | Runtime-mediated serial device access |
 | `common`  | Shell-mediated common social actions |
 | `dm`  | Runtime-mediated direct messages |
-| `torrent` | NIP-35 indexes and runtime-owned torrent jobs |
+| `torrent` | Runtime-owned torrent transfers and verified content access |
 
 #### `NAP_DOMAINS`
 
@@ -424,4 +424,4 @@ The runtime binding retains deliveries until a listener registers. Discovery can
 
 ### Torrent types
 
-`TorrentApi`, torrent record types, and the `torrent` domain describe the optional `NappletGlobal.torrent` binding. `TorrentDescriptor.result` and `TorrentSearchResult.result` retain relay-owned `RelayEventResult` metadata. This non-normative type guide defers to the living [NAP-TORRENT proposal](https://github.com/napplet/naps/blob/nap-torrent/naps/NAP-TORRENT.md).
+`TorrentApi`, torrent record types, and the `torrent` domain describe the optional `NappletGlobal.torrent` transfer binding. Types include v1/v2/hybrid hashes, verified read results, metadata exports, revisioned settings, and job retention; they do not import Nostr event or relay result schemas. This non-normative type guide defers to the living [NAP-TORRENT proposal](https://github.com/napplet/naps/blob/nap-torrent/naps/NAP-TORRENT.md).

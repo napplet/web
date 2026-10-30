@@ -1,32 +1,33 @@
 /** NAP-TORRENT request correlation and runtime job notifications. @module */
 import { postToShell } from '../boundary.js';
-import type { NostrEvent, Subscription } from '@napplet/core';
+import type { Subscription } from '@napplet/core';
 import type {
-  TorrentCapabilities,
-  TorrentDescriptor,
-  TorrentDescriptorResult,
-  TorrentMagnetResult,
-  TorrentSearchQuery,
-  TorrentSearchResult,
-  TorrentPublishRequest,
-  TorrentCommentRequest,
-  TorrentPublishResult,
-  TorrentPickOptions,
-  TorrentFileSetResult,
   TorrentAddRequest,
-  TorrentJobAck,
-  TorrentJobStatus,
-  TorrentJobState,
-  TorrentJobSummary,
-  TorrentJobFilter,
-  TorrentFileStatus,
+  TorrentCancelResult,
+  TorrentCapabilities,
+  TorrentErrorEvent,
+  TorrentFileActionResult,
   TorrentFileSelection,
+  TorrentFileSetResult,
+  TorrentFileStatus,
+  TorrentJobAck,
+  TorrentJobFilter,
+  TorrentJobState,
+  TorrentJobStatus,
+  TorrentJobSummary,
+  TorrentMetadataResult,
+  TorrentMetainfoResult,
+  TorrentOutboundMessage,
+  TorrentPendingRequest,
+  TorrentPickOptions,
+  TorrentProgressEvent,
+  TorrentReadRequest,
+  TorrentReadResult,
   TorrentRemoveOptions,
   TorrentRemoveResult,
+  TorrentSettingsResult,
   TorrentStateEvent,
-  TorrentProgressEvent,
-  TorrentErrorEvent,
-  TorrentOutboundMessage,
+  TorrentUpdateRequest,
 } from './types.js';
 
 const REQUEST_TIMEOUT_MS = 30_000;
@@ -35,20 +36,30 @@ interface PendingRequest {
   resolve: (message: Record<string, unknown>) => void;
   reject: (error: Error) => void;
   timeout: ReturnType<typeof setTimeout>;
+  cancelTarget?: string;
 }
 const pending = new Map<string, PendingRequest>();
 const stateHandlers = new Set<(event: TorrentStateEvent) => void>();
 const progressHandlers = new Set<(event: TorrentProgressEvent) => void>();
 const errorHandlers = new Set<(event: TorrentErrorEvent) => void>();
+const CANCELLABLE_RESULTS = new Set(['torrent.read.result', 'torrent.exportMetainfo.result', 'torrent.saveFile.result']);
 let installed = false;
 
-function sendRequest(type: TorrentOutboundMessage['type'], payload: Record<string, unknown>): Promise<Record<string, unknown>> {
+function withRequestId<T>(promise: Promise<T>, requestId: string): TorrentPendingRequest<T> {
+  return Object.defineProperty(promise, 'requestId', { value: requestId }) as TorrentPendingRequest<T>;
+}
+
+function sendRequest(
+  type: TorrentOutboundMessage['type'], payload: Record<string, unknown>, timeoutMs: number,
+): TorrentPendingRequest<Record<string, unknown>> {
   const id = crypto.randomUUID();
-  return new Promise((resolve, reject) => {
+  const promise = new Promise<Record<string, unknown>>((resolve, reject) => {
     const timeout = setTimeout(() => {
       if (pending.delete(id)) reject(new Error(`${type} timed out`));
-    }, REQUEST_TIMEOUT_MS);
-    pending.set(id, { type: `${type}.result`, resolve, reject, timeout });
+    }, timeoutMs);
+    const entry: PendingRequest = { type: `${type}.result`, resolve, reject, timeout };
+    if (type === 'torrent.cancel' && typeof payload.requestId === 'string') entry.cancelTarget = payload.requestId;
+    pending.set(id, entry);
     try {
       postToShell({ type, id, ...payload });
     } catch (error) {
@@ -57,21 +68,38 @@ function sendRequest(type: TorrentOutboundMessage['type'], payload: Record<strin
       reject(error);
     }
   });
+  return withRequestId(promise, id);
 }
 
-function expectField<T>(message: Record<string, unknown>, field: string, operation: string): T {
-  if (message[field] === undefined) throw new Error(`${operation} returned no ${field}`);
-  return message[field] as T;
+function requestField<T>(
+  type: TorrentOutboundMessage['type'], payload: Record<string, unknown>, field: string, timeoutMs = REQUEST_TIMEOUT_MS,
+): TorrentPendingRequest<T> {
+  const request = sendRequest(type, payload, timeoutMs);
+  return withRequestId(request.then((message) => {
+    if (message[field] === undefined) throw new Error(`${type} returned no ${field}`);
+    return message[field] as T;
+  }), request.requestId);
+}
+
+function finishRequest(id: string, entry: PendingRequest, message: Record<string, unknown>): void {
+  pending.delete(id);
+  clearTimeout(entry.timeout);
+  if (typeof message.error === 'string') entry.reject(new Error(message.error));
+  else entry.resolve(message);
 }
 
 function handleResult(message: Record<string, unknown>): void {
   if (typeof message.id !== 'string') return;
   const entry = pending.get(message.id);
   if (!entry || entry.type !== message.type) return;
-  pending.delete(message.id);
-  clearTimeout(entry.timeout);
-  if (typeof message.error === 'string') entry.reject(new Error(message.error));
-  else entry.resolve(message);
+  const result = message.result as TorrentCancelResult | undefined;
+  if (entry.cancelTarget && result?.ok === true && result.cancelled === true) {
+    const target = pending.get(entry.cancelTarget);
+    if (target && CANCELLABLE_RESULTS.has(target.type)) {
+      finishRequest(entry.cancelTarget, target, { result: { ok: false, error: 'cancelled' } });
+    }
+  }
+  finishRequest(message.id, entry, message);
 }
 
 const JOB_STATES: readonly string[] = ['queued', 'metadata', 'downloading', 'seeding', 'paused', 'complete', 'cancelled', 'error'];
@@ -80,7 +108,7 @@ function isJobState(value: unknown): value is TorrentJobState {
 }
 
 function notifyListeners<T>(handlers: Set<(event: T) => void>, event: T): void {
-  for (const handler of [...handlers]) {
+  for (const handler of Array.from(handlers)) {
     if (!handlers.has(handler)) continue;
     try { handler(event); }
     catch (error) { queueMicrotask(() => { throw error; }); }
@@ -93,7 +121,7 @@ function notifyListeners<T>(handlers: Set<(event: T) => void>, event: T): void {
  */
 export function handleTorrentMessage(message: { type: string; [key: string]: unknown }): void {
   if (message.type.endsWith('.result')) { handleResult(message); return; }
-  if (typeof message.jobId !== 'string') return;
+  if ('id' in message || typeof message.jobId !== 'string') return;
   if (message.type === 'torrent.state' && isJobState(message.state)) {
     const event: TorrentStateEvent = { jobId: message.jobId, state: message.state };
     if (message.status && typeof message.status === 'object') event.status = message.status as TorrentJobStatus;
@@ -112,151 +140,185 @@ export function handleTorrentMessage(message: { type: string; [key: string]: unk
  * @returns Runtime capabilities; typed refusals remain resolved values.
  * @example await capabilities();
  */
-export async function capabilities(): Promise<TorrentCapabilities> {
-  const message = await sendRequest('torrent.capabilities', {});
-  return expectField<TorrentCapabilities>(message, 'capabilities', 'torrent.capabilities');
-}
-
-/** Ask the runtime to perform torrent.fromEvent.
- * @param event Operation event supplied to the runtime.
- * @returns Runtime result; typed refusals remain resolved values.
- * @example await fromEvent(event);
- */
-export async function fromEvent(event: NostrEvent): Promise<TorrentDescriptorResult> {
-  const message = await sendRequest('torrent.fromEvent', { event });
-  return expectField<TorrentDescriptorResult>(message, 'result', 'torrent.fromEvent');
-}
-
-/** Ask the runtime to perform torrent.toMagnet.
- * @param descriptor Operation descriptor supplied to the runtime.
- * @returns Runtime result; typed refusals remain resolved values.
- * @example await toMagnet(descriptor);
- */
-export async function toMagnet(descriptor: TorrentDescriptor): Promise<TorrentMagnetResult> {
-  const message = await sendRequest('torrent.toMagnet', { descriptor });
-  return expectField<TorrentMagnetResult>(message, 'result', 'torrent.toMagnet');
-}
-
-/** Ask the runtime to perform torrent.search.
- * @param query Operation query supplied to the runtime.
- * @returns Runtime results; typed refusals remain resolved values.
- * @example await search(query);
- */
-export async function search(query: TorrentSearchQuery): Promise<TorrentSearchResult[]> {
-  const message = await sendRequest('torrent.search', { query });
-  return expectField<TorrentSearchResult[]>(message, 'results', 'torrent.search');
-}
-
-/** Ask the runtime to perform torrent.publish.
- * @param request Operation request supplied to the runtime.
- * @returns Runtime result; typed refusals remain resolved values.
- * @example await publish(request);
- */
-export async function publish(request: TorrentPublishRequest): Promise<TorrentPublishResult> {
-  const message = await sendRequest('torrent.publish', { request });
-  return expectField<TorrentPublishResult>(message, 'result', 'torrent.publish');
-}
-
-/** Ask the runtime to perform torrent.comment.
- * @param request Operation request supplied to the runtime.
- * @returns Runtime result; typed refusals remain resolved values.
- * @example await comment(request);
- */
-export async function comment(request: TorrentCommentRequest): Promise<TorrentPublishResult> {
-  const message = await sendRequest('torrent.comment', { request });
-  return expectField<TorrentPublishResult>(message, 'result', 'torrent.comment');
+export function capabilities(): Promise<TorrentCapabilities> {
+  return requestField<TorrentCapabilities>('torrent.capabilities', {}, 'capabilities');
 }
 
 /** Ask the runtime to perform torrent.pickFiles.
- * @param options Operation options supplied to the runtime.
+ * @param options Operation argument supplied to the runtime.
  * @returns Runtime result; typed refusals remain resolved values.
  * @example await pickFiles(options);
  */
-export async function pickFiles(options?: TorrentPickOptions): Promise<TorrentFileSetResult> {
-  const message = await sendRequest('torrent.pickFiles', options === undefined ? {} : { options });
-  return expectField<TorrentFileSetResult>(message, 'result', 'torrent.pickFiles');
+export function pickFiles(options?: TorrentPickOptions): Promise<TorrentFileSetResult> {
+  return requestField<TorrentFileSetResult>('torrent.pickFiles', options === undefined ? {} : { options }, 'result');
 }
 
 /** Ask the runtime to perform torrent.add.
- * @param request Operation request supplied to the runtime.
+ * @param request Operation argument supplied to the runtime.
  * @returns Runtime ack; typed refusals remain resolved values.
  * @example await add(request);
  */
-export async function add(request: TorrentAddRequest): Promise<TorrentJobAck> {
-  const message = await sendRequest('torrent.add', { request });
-  return expectField<TorrentJobAck>(message, 'ack', 'torrent.add');
+export function add(request: TorrentAddRequest): Promise<TorrentJobAck> {
+  return requestField<TorrentJobAck>('torrent.add', { request }, 'ack');
 }
 
 /** Ask the runtime to perform torrent.status.
- * @param jobId Operation jobId supplied to the runtime.
+ * @param jobId Operation argument supplied to the runtime.
  * @returns Runtime status; typed refusals remain resolved values.
  * @example await status(jobId);
  */
-export async function status(jobId: string): Promise<TorrentJobStatus> {
-  const message = await sendRequest('torrent.status', { jobId });
-  return expectField<TorrentJobStatus>(message, 'status', 'torrent.status');
+export function status(jobId: string): Promise<TorrentJobStatus> {
+  return requestField<TorrentJobStatus>('torrent.status', { jobId }, 'status');
 }
 
 /** Ask the runtime to perform torrent.jobs.
- * @param filter Operation filter supplied to the runtime.
+ * @param filter Operation argument supplied to the runtime.
  * @returns Runtime jobs; typed refusals remain resolved values.
  * @example await jobs(filter);
  */
-export async function jobs(filter?: TorrentJobFilter): Promise<TorrentJobSummary[]> {
-  const message = await sendRequest('torrent.jobs', filter === undefined ? {} : { filter });
-  return expectField<TorrentJobSummary[]>(message, 'jobs', 'torrent.jobs');
+export function jobs(filter?: TorrentJobFilter): Promise<TorrentJobSummary[]> {
+  return requestField<TorrentJobSummary[]>('torrent.jobs', filter === undefined ? {} : { filter }, 'jobs');
 }
 
 /** Ask the runtime to perform torrent.files.
- * @param jobId Operation jobId supplied to the runtime.
+ * @param jobId Operation argument supplied to the runtime.
  * @returns Runtime files; typed refusals remain resolved values.
  * @example await files(jobId);
  */
-export async function files(jobId: string): Promise<TorrentFileStatus[]> {
-  const message = await sendRequest('torrent.files', { jobId });
-  return expectField<TorrentFileStatus[]>(message, 'files', 'torrent.files');
+export function files(jobId: string): Promise<TorrentFileStatus[]> {
+  return requestField<TorrentFileStatus[]>('torrent.files', { jobId }, 'files');
 }
 
 /** Ask the runtime to perform torrent.selectFiles.
- * @param jobId Operation jobId supplied to the runtime.
- * @param selection Operation selection supplied to the runtime.
+ * @param jobId Operation argument supplied to the runtime.
+ * @param selection Operation argument supplied to the runtime.
  * @returns Runtime status; typed refusals remain resolved values.
  * @example await selectFiles(jobId, selection);
  */
-export async function selectFiles(jobId: string, selection: TorrentFileSelection): Promise<TorrentJobStatus> {
-  const message = await sendRequest('torrent.selectFiles', { jobId, selection });
-  return expectField<TorrentJobStatus>(message, 'status', 'torrent.selectFiles');
+export function selectFiles(jobId: string, selection: TorrentFileSelection): Promise<TorrentJobStatus> {
+  return requestField<TorrentJobStatus>('torrent.selectFiles', { jobId, selection }, 'status');
 }
 
 /** Ask the runtime to perform torrent.pause.
- * @param jobId Operation jobId supplied to the runtime.
+ * @param jobId Operation argument supplied to the runtime.
  * @returns Runtime status; typed refusals remain resolved values.
  * @example await pause(jobId);
  */
-export async function pause(jobId: string): Promise<TorrentJobStatus> {
-  const message = await sendRequest('torrent.pause', { jobId });
-  return expectField<TorrentJobStatus>(message, 'status', 'torrent.pause');
+export function pause(jobId: string): Promise<TorrentJobStatus> {
+  return requestField<TorrentJobStatus>('torrent.pause', { jobId }, 'status');
 }
 
 /** Ask the runtime to perform torrent.resume.
- * @param jobId Operation jobId supplied to the runtime.
+ * @param jobId Operation argument supplied to the runtime.
  * @returns Runtime status; typed refusals remain resolved values.
  * @example await resume(jobId);
  */
-export async function resume(jobId: string): Promise<TorrentJobStatus> {
-  const message = await sendRequest('torrent.resume', { jobId });
-  return expectField<TorrentJobStatus>(message, 'status', 'torrent.resume');
+export function resume(jobId: string): Promise<TorrentJobStatus> {
+  return requestField<TorrentJobStatus>('torrent.resume', { jobId }, 'status');
 }
 
 /** Ask the runtime to perform torrent.remove.
- * @param jobId Operation jobId supplied to the runtime.
- * @param options Operation options supplied to the runtime.
+ * @param jobId Operation argument supplied to the runtime.
+ * @param options Operation argument supplied to the runtime.
  * @returns Runtime result; typed refusals remain resolved values.
  * @example await remove(jobId, options);
  */
-export async function remove(jobId: string, options?: TorrentRemoveOptions): Promise<TorrentRemoveResult> {
-  const message = await sendRequest('torrent.remove', { jobId, ...(options === undefined ? {} : { options }) });
-  return expectField<TorrentRemoveResult>(message, 'result', 'torrent.remove');
+export function remove(jobId: string, options?: TorrentRemoveOptions): Promise<TorrentRemoveResult> {
+  return requestField<TorrentRemoveResult>('torrent.remove', { jobId, ...(options === undefined ? {} : { options }) }, 'result');
+}
+
+/** Ask the runtime to perform torrent.metadata.
+ * @param jobId Operation argument supplied to the runtime.
+ * @returns Runtime result; typed refusals remain resolved values.
+ * @example await metadata(jobId);
+ */
+export function metadata(jobId: string): Promise<TorrentMetadataResult> {
+  return requestField<TorrentMetadataResult>('torrent.metadata', { jobId }, 'result');
+}
+
+/** Ask the runtime to perform torrent.read.
+ * @param request Operation argument supplied to the runtime.
+ * @returns Runtime result; typed refusals remain resolved values.
+ * The returned Promise exposes requestId for cancel().
+ * @example await read(request);
+ */
+export function read(request: TorrentReadRequest): TorrentPendingRequest<TorrentReadResult> {
+  const waitMs = Number.isFinite(request.waitMs) ? Math.max(0, Math.min(request.waitMs ?? 0, 30_000)) : 0;
+  return requestField<TorrentReadResult>('torrent.read', { request }, 'result', REQUEST_TIMEOUT_MS + waitMs);
+}
+
+/** Ask the runtime to perform torrent.exportMetainfo.
+ * @param jobId Operation argument supplied to the runtime.
+ * @returns Runtime result; typed refusals remain resolved values.
+ * The returned Promise exposes requestId for cancel().
+ * @example await exportMetainfo(jobId);
+ */
+export function exportMetainfo(jobId: string): TorrentPendingRequest<TorrentMetainfoResult> {
+  return requestField<TorrentMetainfoResult>('torrent.exportMetainfo', { jobId }, 'result');
+}
+
+/** Ask the runtime to perform torrent.saveFile.
+ * @param jobId Operation argument supplied to the runtime.
+ * @param fileIndex Operation argument supplied to the runtime.
+ * @returns Runtime result; typed refusals remain resolved values.
+ * The returned Promise exposes requestId for cancel().
+ * @example await saveFile(jobId, fileIndex);
+ */
+export function saveFile(jobId: string, fileIndex: number): TorrentPendingRequest<TorrentFileActionResult> {
+  return requestField<TorrentFileActionResult>('torrent.saveFile', { jobId, fileIndex }, 'result');
+}
+
+/** Ask the runtime to perform torrent.openFile.
+ * @param jobId Operation argument supplied to the runtime.
+ * @param fileIndex Operation argument supplied to the runtime.
+ * @returns Runtime result; typed refusals remain resolved values.
+ * @example await openFile(jobId, fileIndex);
+ */
+export function openFile(jobId: string, fileIndex: number): Promise<TorrentFileActionResult> {
+  return requestField<TorrentFileActionResult>('torrent.openFile', { jobId, fileIndex }, 'result');
+}
+
+/** Ask the runtime to perform torrent.cancel.
+ * @param requestId Operation argument supplied to the runtime.
+ * @returns Runtime result; typed refusals remain resolved values.
+ * @example await cancel(requestId);
+ */
+export function cancel(requestId: string): Promise<TorrentCancelResult> {
+  return requestField<TorrentCancelResult>('torrent.cancel', { requestId }, 'result');
+}
+
+function validSettings(value: unknown): boolean {
+  if (!value || typeof value !== 'object') return false;
+  const settings = value as Record<string, unknown>;
+  for (const field of ['revision', 'downloadLimitBytesPerSecond', 'uploadLimitBytesPerSecond']) {
+    if (!Number.isSafeInteger(settings[field]) || Number(settings[field]) < 0) return false;
+  }
+  if (typeof settings.seedAfterComplete !== 'boolean' || typeof settings.endpointsRedacted !== 'boolean') return false;
+  for (const field of ['trackers', 'webSeeds']) {
+    const endpoints = settings[field];
+    if (endpoints !== undefined && (!Array.isArray(endpoints) || !endpoints.every((endpoint) => typeof endpoint === 'string'))) return false;
+  }
+  return true;
+}
+
+function expectSettingsResult(value: unknown): TorrentSettingsResult {
+  if (value && typeof value === 'object') {
+    const result = value as Record<string, unknown>;
+    const valid = result.ok === true ? result.error === undefined && validSettings(result.settings)
+      : result.ok === false && typeof result.error === 'string'
+        && (result.error === 'revision-conflict' ? validSettings(result.settings) : result.settings === undefined);
+    if (valid) return result as TorrentSettingsResult;
+  }
+  throw new Error('torrent.update returned an invalid settings result');
+}
+
+/** Ask the runtime to perform torrent.update.
+ * @param request Operation argument supplied to the runtime.
+ * @returns Runtime result; typed refusals remain resolved values.
+ * @example await update(request);
+ */
+export function update(request: TorrentUpdateRequest): Promise<TorrentSettingsResult> {
+  return requestField<unknown>('torrent.update', { request }, 'result').then(expectSettingsResult);
 }
 
 /** Listen for torrent job state notifications.

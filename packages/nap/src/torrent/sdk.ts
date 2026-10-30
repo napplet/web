@@ -1,30 +1,31 @@
 /** SDK helpers for the runtime-injected NAP-TORRENT domain. @module */
-import type { NappletGlobal, NostrEvent, Subscription, TorrentApi } from '@napplet/core';
-import type {
-  TorrentCapabilities,
-  TorrentDescriptor,
-  TorrentDescriptorResult,
-  TorrentMagnetResult,
-  TorrentSearchQuery,
-  TorrentSearchResult,
-  TorrentPublishRequest,
-  TorrentCommentRequest,
-  TorrentPublishResult,
-  TorrentPickOptions,
-  TorrentFileSetResult,
+import type { NappletGlobal, Subscription,
   TorrentAddRequest,
+  TorrentApi,
+  TorrentCancelResult,
+  TorrentCapabilities,
+  TorrentErrorEvent,
+  TorrentFileActionResult,
+  TorrentFileSelection,
+  TorrentFileSetResult,
+  TorrentFileStatus,
   TorrentJobAck,
+  TorrentJobFilter,
   TorrentJobStatus,
   TorrentJobSummary,
-  TorrentJobFilter,
-  TorrentFileStatus,
-  TorrentFileSelection,
+  TorrentMetadataResult,
+  TorrentMetainfoResult,
+  TorrentPendingRequest,
+  TorrentPickOptions,
+  TorrentProgressEvent,
+  TorrentReadRequest,
+  TorrentReadResult,
   TorrentRemoveOptions,
   TorrentRemoveResult,
+  TorrentSettingsResult,
   TorrentStateEvent,
-  TorrentProgressEvent,
-  TorrentErrorEvent,
-} from './types.js';
+  TorrentUpdateRequest,
+} from '@napplet/core';
 
 function requireTorrent(): TorrentApi {
   const runtime = (window as Window & { napplet?: NappletGlobal }).napplet;
@@ -32,140 +33,160 @@ function requireTorrent(): TorrentApi {
   return runtime.torrent;
 }
 
-/** Ask the runtime to perform torrent.capabilities.
- * @returns Runtime capabilities; typed refusals remain resolved values.
+/** Delegate torrent.capabilities to the current runtime.
+ * @returns Runtime result.
  * @example await torrentCapabilities();
  */
 export function torrentCapabilities(): Promise<TorrentCapabilities> {
   return requireTorrent().capabilities();
 }
 
-/** Ask the runtime to perform torrent.fromEvent.
- * @param event Operation event supplied to the runtime.
- * @returns Runtime result; typed refusals remain resolved values.
- * @example await torrentFromEvent(event);
- */
-export function torrentFromEvent(event: NostrEvent): Promise<TorrentDescriptorResult> {
-  return requireTorrent().fromEvent(event);
-}
-
-/** Ask the runtime to perform torrent.toMagnet.
- * @param descriptor Operation descriptor supplied to the runtime.
- * @returns Runtime result; typed refusals remain resolved values.
- * @example await torrentToMagnet(descriptor);
- */
-export function torrentToMagnet(descriptor: TorrentDescriptor): Promise<TorrentMagnetResult> {
-  return requireTorrent().toMagnet(descriptor);
-}
-
-/** Ask the runtime to perform torrent.search.
- * @param query Operation query supplied to the runtime.
- * @returns Runtime results; typed refusals remain resolved values.
- * @example await torrentSearch(query);
- */
-export function torrentSearch(query: TorrentSearchQuery): Promise<TorrentSearchResult[]> {
-  return requireTorrent().search(query);
-}
-
-/** Ask the runtime to perform torrent.publish.
- * @param request Operation request supplied to the runtime.
- * @returns Runtime result; typed refusals remain resolved values.
- * @example await torrentPublish(request);
- */
-export function torrentPublish(request: TorrentPublishRequest): Promise<TorrentPublishResult> {
-  return requireTorrent().publish(request);
-}
-
-/** Ask the runtime to perform torrent.comment.
- * @param request Operation request supplied to the runtime.
- * @returns Runtime result; typed refusals remain resolved values.
- * @example await torrentComment(request);
- */
-export function torrentComment(request: TorrentCommentRequest): Promise<TorrentPublishResult> {
-  return requireTorrent().comment(request);
-}
-
-/** Ask the runtime to perform torrent.pickFiles.
- * @param options Operation options supplied to the runtime.
- * @returns Runtime result; typed refusals remain resolved values.
+/** Delegate torrent.pickFiles to the current runtime.
+ * @param options Operation argument.
+ * @returns Runtime result.
  * @example await torrentPickFiles(options);
  */
 export function torrentPickFiles(options?: TorrentPickOptions): Promise<TorrentFileSetResult> {
   return requireTorrent().pickFiles(options);
 }
 
-/** Ask the runtime to perform torrent.add.
- * @param request Operation request supplied to the runtime.
- * @returns Runtime ack; typed refusals remain resolved values.
+/** Delegate torrent.add to the current runtime.
+ * @param request Operation argument.
+ * @returns Runtime result.
  * @example await torrentAdd(request);
  */
 export function torrentAdd(request: TorrentAddRequest): Promise<TorrentJobAck> {
   return requireTorrent().add(request);
 }
 
-/** Ask the runtime to perform torrent.status.
- * @param jobId Operation jobId supplied to the runtime.
- * @returns Runtime status; typed refusals remain resolved values.
+/** Delegate torrent.status to the current runtime.
+ * @param jobId Operation argument.
+ * @returns Runtime result.
  * @example await torrentStatus(jobId);
  */
 export function torrentStatus(jobId: string): Promise<TorrentJobStatus> {
   return requireTorrent().status(jobId);
 }
 
-/** Ask the runtime to perform torrent.jobs.
- * @param filter Operation filter supplied to the runtime.
- * @returns Runtime jobs; typed refusals remain resolved values.
+/** Delegate torrent.jobs to the current runtime.
+ * @param filter Operation argument.
+ * @returns Runtime result.
  * @example await torrentJobs(filter);
  */
 export function torrentJobs(filter?: TorrentJobFilter): Promise<TorrentJobSummary[]> {
   return requireTorrent().jobs(filter);
 }
 
-/** Ask the runtime to perform torrent.files.
- * @param jobId Operation jobId supplied to the runtime.
- * @returns Runtime files; typed refusals remain resolved values.
+/** Delegate torrent.files to the current runtime.
+ * @param jobId Operation argument.
+ * @returns Runtime result.
  * @example await torrentFiles(jobId);
  */
 export function torrentFiles(jobId: string): Promise<TorrentFileStatus[]> {
   return requireTorrent().files(jobId);
 }
 
-/** Ask the runtime to perform torrent.selectFiles.
- * @param jobId Operation jobId supplied to the runtime.
- * @param selection Operation selection supplied to the runtime.
- * @returns Runtime status; typed refusals remain resolved values.
+/** Delegate torrent.selectFiles to the current runtime.
+ * @param jobId Operation argument.
+ * @param selection Operation argument.
+ * @returns Runtime result.
  * @example await torrentSelectFiles(jobId, selection);
  */
 export function torrentSelectFiles(jobId: string, selection: TorrentFileSelection): Promise<TorrentJobStatus> {
   return requireTorrent().selectFiles(jobId, selection);
 }
 
-/** Ask the runtime to perform torrent.pause.
- * @param jobId Operation jobId supplied to the runtime.
- * @returns Runtime status; typed refusals remain resolved values.
+/** Delegate torrent.pause to the current runtime.
+ * @param jobId Operation argument.
+ * @returns Runtime result.
  * @example await torrentPause(jobId);
  */
 export function torrentPause(jobId: string): Promise<TorrentJobStatus> {
   return requireTorrent().pause(jobId);
 }
 
-/** Ask the runtime to perform torrent.resume.
- * @param jobId Operation jobId supplied to the runtime.
- * @returns Runtime status; typed refusals remain resolved values.
+/** Delegate torrent.resume to the current runtime.
+ * @param jobId Operation argument.
+ * @returns Runtime result.
  * @example await torrentResume(jobId);
  */
 export function torrentResume(jobId: string): Promise<TorrentJobStatus> {
   return requireTorrent().resume(jobId);
 }
 
-/** Ask the runtime to perform torrent.remove.
- * @param jobId Operation jobId supplied to the runtime.
- * @param options Operation options supplied to the runtime.
- * @returns Runtime result; typed refusals remain resolved values.
+/** Delegate torrent.remove to the current runtime.
+ * @param jobId Operation argument.
+ * @param options Operation argument.
+ * @returns Runtime result.
  * @example await torrentRemove(jobId, options);
  */
 export function torrentRemove(jobId: string, options?: TorrentRemoveOptions): Promise<TorrentRemoveResult> {
   return requireTorrent().remove(jobId, options);
+}
+
+/** Delegate torrent.metadata to the current runtime.
+ * @param jobId Operation argument.
+ * @returns Runtime result.
+ * @example await torrentMetadata(jobId);
+ */
+export function torrentMetadata(jobId: string): Promise<TorrentMetadataResult> {
+  return requireTorrent().metadata(jobId);
+}
+
+/** Delegate torrent.read to the current runtime.
+ * @param request Operation argument.
+ * @returns Runtime result.
+ * @example await torrentRead(request);
+ */
+export function torrentRead(request: TorrentReadRequest): TorrentPendingRequest<TorrentReadResult> {
+  return requireTorrent().read(request);
+}
+
+/** Delegate torrent.exportMetainfo to the current runtime.
+ * @param jobId Operation argument.
+ * @returns Runtime result.
+ * @example await torrentExportMetainfo(jobId);
+ */
+export function torrentExportMetainfo(jobId: string): TorrentPendingRequest<TorrentMetainfoResult> {
+  return requireTorrent().exportMetainfo(jobId);
+}
+
+/** Delegate torrent.saveFile to the current runtime.
+ * @param jobId Operation argument.
+ * @param fileIndex Operation argument.
+ * @returns Runtime result.
+ * @example await torrentSaveFile(jobId, fileIndex);
+ */
+export function torrentSaveFile(jobId: string, fileIndex: number): TorrentPendingRequest<TorrentFileActionResult> {
+  return requireTorrent().saveFile(jobId, fileIndex);
+}
+
+/** Delegate torrent.openFile to the current runtime.
+ * @param jobId Operation argument.
+ * @param fileIndex Operation argument.
+ * @returns Runtime result.
+ * @example await torrentOpenFile(jobId, fileIndex);
+ */
+export function torrentOpenFile(jobId: string, fileIndex: number): Promise<TorrentFileActionResult> {
+  return requireTorrent().openFile(jobId, fileIndex);
+}
+
+/** Delegate torrent.cancel to the current runtime.
+ * @param requestId Operation argument.
+ * @returns Runtime result.
+ * @example await torrentCancel(requestId);
+ */
+export function torrentCancel(requestId: string): Promise<TorrentCancelResult> {
+  return requireTorrent().cancel(requestId);
+}
+
+/** Delegate torrent.update to the current runtime.
+ * @param request Operation argument.
+ * @returns Runtime result.
+ * @example await torrentUpdate(request);
+ */
+export function torrentUpdate(request: TorrentUpdateRequest): Promise<TorrentSettingsResult> {
+  return requireTorrent().update(request);
 }
 
 /** Listen for torrent job state notifications.

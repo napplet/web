@@ -1,4 +1,4 @@
-/** Runtime-mediated torrents. The runtime owns transfers, policy, and storage. @module */
+/** Runtime-mediated transfers. The runtime owns networking, policy, storage, and content disclosure. @module */
 import type { TorrentApi } from '@napplet/core';
 import { requireDomain } from './require-napplet.js';
 
@@ -10,26 +10,6 @@ export const torrent: TorrentApi = {
   /** Delegate `capabilities`. @param args Operation arguments. @returns Runtime result. */
   capabilities(...args: Parameters<TorrentApi['capabilities']>): ReturnType<TorrentApi['capabilities']> {
     return requireDomain('torrent').capabilities(...args);
-  },
-  /** Delegate `fromEvent`. @param args Operation arguments. @returns Runtime result. */
-  fromEvent(...args: Parameters<TorrentApi['fromEvent']>): ReturnType<TorrentApi['fromEvent']> {
-    return requireDomain('torrent').fromEvent(...args);
-  },
-  /** Delegate `toMagnet`. @param args Operation arguments. @returns Runtime result. */
-  toMagnet(...args: Parameters<TorrentApi['toMagnet']>): ReturnType<TorrentApi['toMagnet']> {
-    return requireDomain('torrent').toMagnet(...args);
-  },
-  /** Delegate `search`. @param args Operation arguments. @returns Runtime result. */
-  search(...args: Parameters<TorrentApi['search']>): ReturnType<TorrentApi['search']> {
-    return requireDomain('torrent').search(...args);
-  },
-  /** Delegate `publish`. @param args Operation arguments. @returns Runtime result. */
-  publish(...args: Parameters<TorrentApi['publish']>): ReturnType<TorrentApi['publish']> {
-    return requireDomain('torrent').publish(...args);
-  },
-  /** Delegate `comment`. @param args Operation arguments. @returns Runtime result. */
-  comment(...args: Parameters<TorrentApi['comment']>): ReturnType<TorrentApi['comment']> {
-    return requireDomain('torrent').comment(...args);
   },
   /** Delegate `pickFiles`. @param args Operation arguments. @returns Runtime result. */
   pickFiles(...args: Parameters<TorrentApi['pickFiles']>): ReturnType<TorrentApi['pickFiles']> {
@@ -67,6 +47,34 @@ export const torrent: TorrentApi = {
   remove(...args: Parameters<TorrentApi['remove']>): ReturnType<TorrentApi['remove']> {
     return requireDomain('torrent').remove(...args);
   },
+  /** Delegate `metadata`. @param args Operation arguments. @returns Runtime result. */
+  metadata(...args: Parameters<TorrentApi['metadata']>): ReturnType<TorrentApi['metadata']> {
+    return requireDomain('torrent').metadata(...args);
+  },
+  /** Delegate `read`. @param args Operation arguments. @returns Runtime result. */
+  read(...args: Parameters<TorrentApi['read']>): ReturnType<TorrentApi['read']> {
+    return requireDomain('torrent').read(...args);
+  },
+  /** Delegate `exportMetainfo`. @param args Operation arguments. @returns Runtime result. */
+  exportMetainfo(...args: Parameters<TorrentApi['exportMetainfo']>): ReturnType<TorrentApi['exportMetainfo']> {
+    return requireDomain('torrent').exportMetainfo(...args);
+  },
+  /** Delegate `saveFile`. @param args Operation arguments. @returns Runtime result. */
+  saveFile(...args: Parameters<TorrentApi['saveFile']>): ReturnType<TorrentApi['saveFile']> {
+    return requireDomain('torrent').saveFile(...args);
+  },
+  /** Delegate `openFile`. @param args Operation arguments. @returns Runtime result. */
+  openFile(...args: Parameters<TorrentApi['openFile']>): ReturnType<TorrentApi['openFile']> {
+    return requireDomain('torrent').openFile(...args);
+  },
+  /** Delegate `cancel`. @param args Operation arguments. @returns Runtime result. */
+  cancel(...args: Parameters<TorrentApi['cancel']>): ReturnType<TorrentApi['cancel']> {
+    return requireDomain('torrent').cancel(...args);
+  },
+  /** Delegate `update`. @param args Operation arguments. @returns Runtime result. */
+  update(...args: Parameters<TorrentApi['update']>): ReturnType<TorrentApi['update']> {
+    return requireDomain('torrent').update(...args);
+  },
   /** Delegate `onState`. @param args Operation arguments. @returns Runtime result. */
   onState(...args: Parameters<TorrentApi['onState']>): ReturnType<TorrentApi['onState']> {
     return requireDomain('torrent').onState(...args);
@@ -85,16 +93,6 @@ export type * from '@napplet/nap/torrent/types';
 export {
   torrentCapabilities,
   torrentCapabilities as capabilities,
-  torrentFromEvent,
-  torrentFromEvent as fromEvent,
-  torrentToMagnet,
-  torrentToMagnet as toMagnet,
-  torrentSearch,
-  torrentSearch as search,
-  torrentPublish,
-  torrentPublish as publish,
-  torrentComment,
-  torrentComment as comment,
   torrentPickFiles,
   torrentPickFiles as pickFiles,
   torrentAdd,
@@ -113,6 +111,20 @@ export {
   torrentResume as resume,
   torrentRemove,
   torrentRemove as remove,
+  torrentMetadata,
+  torrentMetadata as metadata,
+  torrentRead,
+  torrentRead as read,
+  torrentExportMetainfo,
+  torrentExportMetainfo as exportMetainfo,
+  torrentSaveFile,
+  torrentSaveFile as saveFile,
+  torrentOpenFile,
+  torrentOpenFile as openFile,
+  torrentCancel,
+  torrentCancel as cancel,
+  torrentUpdate,
+  torrentUpdate as update,
   torrentOnState,
   torrentOnState as onState,
   torrentOnProgress,

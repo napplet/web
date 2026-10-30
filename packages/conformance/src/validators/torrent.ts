@@ -11,6 +11,7 @@ const list = (check: Check): Check => (value) => Array.isArray(value) && value.e
 const choice = (...values: string[]): Check => (value) => typeof value === 'string' && values.includes(value);
 const mode = choice('download', 'seed', 'download-and-seed');
 const state = choice('queued', 'metadata', 'downloading', 'seeding', 'paused', 'complete', 'cancelled', 'error');
+const format = choice('v1', 'v2', 'hybrid');
 const storage = choice('temporary', 'persistent', 'user-selected');
 
 function record(required: Fields, optional: Fields = {}): Check {
@@ -22,38 +23,52 @@ function record(required: Fields, optional: Fields = {}): Check {
   };
 }
 
-const file = record({ path: text }, { size: uint });
-const reference = record({ prefix: text, value: text });
-const descriptor = record({ infoHash: text, files: list(file), trackers: list(text), tags: list(text), references: list(reference) }, {
-  title: text, description: text, magnet: text, eventId: text, author: text, createdAt: uint, result: object,
-});
+const hash = (length: number): Check => (value) => typeof value === 'string' && new RegExp(`^[0-9a-f]{${length}}$`).test(value);
+const hashes: Check = (value) => record({}, { v1: hash(40), v2: hash(64) })(value)
+  && ((value as Record<string, unknown>).v1 !== undefined || (value as Record<string, unknown>).v2 !== undefined);
 const selection = record({}, { indexes: list(uint), paths: list(text), priority: integer });
-const source = record({ sourceType: choice('nip35', 'magnet', 'infohash', 'metainfo', 'runtime-file-set') }, {
-  event: object, descriptor, magnet: text, infoHash: text, runtimeFileSetId: text,
-  // The NAP declares metainfo as bstr but leaves its JSON encoding unspecified; do not invent a restriction.
-});
-const addOptions = record({}, {
-  mode, transport: text, startPaused: bool, seedAfterComplete: bool,
-  downloadLimitBytesPerSecond: uint, uploadLimitBytesPerSecond: uint, storage,
-  trackers: list(text), webSeeds: list(text), fileSelection: selection,
-});
-
+const sourceFields: Record<string, string> = { magnet: 'magnet', infohash: 'hashes', metainfo: 'metainfo', 'runtime-file-set': 'runtimeFileSetId' };
+const source: Check = (value) => {
+  if (!record({ sourceType: choice(...Object.keys(sourceFields)) }, { magnet: text, hashes, runtimeFileSetId: text })(value)) return false;
+  const data = value as Record<string, unknown>;
+  const selected = sourceFields[String(data.sourceType)];
+  // Metainfo input is projection-defined. Check presence without inventing a byte encoding.
+  return data[selected] !== undefined && Object.values(sourceFields).every((field) => field === selected || data[field] === undefined)
+    && ['event', 'descriptor', 'infoHash'].every((field) => data[field] === undefined);
+};
+const settings = {
+  downloadLimitBytesPerSecond: uint, uploadLimitBytesPerSecond: uint, seedAfterComplete: bool,
+  trackers: list(text), webSeeds: list(text),
+};
+const addOptions = record({}, { mode, transport: text, startPaused: bool, storage, ...settings,
+  fileSelection: selection, retention: choice('session', 'persistent'), createFormat: format });
+const addRequest: Check = (value) => {
+  if (!record({ source }, { jobId: text, options: addOptions })(value)) return false;
+  const request = value as { source: Record<string, unknown>; options?: Record<string, unknown> };
+  const options = request.options ?? {};
+  if (options.createFormat !== undefined && request.source.sourceType !== 'runtime-file-set') return false;
+  return options.seedAfterComplete === undefined || options.seedAfterComplete === ((options.mode ?? 'download') !== 'download');
+};
+const readRequest: Check = (value) => {
+  if (!record({ jobId: text, fileIndex: uint, offset: uint, length: uint }, { waitMs: uint })(value)) return false;
+  const request = value as Record<string, number>;
+  return request.length > 0 && request.length <= 1048576 && (request.waitMs ?? 0) <= 30000
+    && Number.isSafeInteger(request.offset + request.length);
+};
+const patch: Check = (value) => record({}, settings)(value) && Object.keys(value as object).length > 0;
 const PAYLOADS: Record<string, { required?: Fields; optional?: Fields }> = {
-  'torrent.fromEvent': { required: { event: object } },
-  'torrent.toMagnet': { required: { descriptor } },
-  'torrent.search': { required: { query: record({}, {
-    text, infoHash: text, tags: list(text), references: list(reference), authors: list(text), since: uint, until: uint, limit: uint,
-  }) } },
-  'torrent.publish': { required: { request: record({ descriptor }, { content: text, relays: list(text), publish: bool }) } },
-  'torrent.comment': { required: { request: record({ torrentEventId: text, torrentAuthor: text, content: text }, { relays: list(text) }) } },
   'torrent.pickFiles': { optional: { options: record({}, { multiple: bool, suggestedName: text }) } },
-  'torrent.add': { required: { request: record({ source }, { jobId: text, options: addOptions }) } },
+  'torrent.add': { required: { request: addRequest } },
   'torrent.jobs': { optional: { filter: record({}, { states: list(state), modes: list(mode) }) } },
   'torrent.selectFiles': { required: { selection } },
   'torrent.remove': { optional: { options: record({}, { deleteData: bool }) } },
+  'torrent.read': { required: { request: readRequest } },
+  'torrent.saveFile': { required: { fileIndex: uint } },
+  'torrent.openFile': { required: { fileIndex: uint } },
+  'torrent.update': { required: { request: record({ jobId: text, expectedRevision: uint, patch }) } },
 };
 
-/** Validate published NAP-TORRENT request records without imposing backend policy. */
+/** Validate NAP-TORRENT requests without replacing runtime authorization or backend policy. */
 export function validateTorrentRequest(type: string, envelope: Record<string, unknown>, errors: EnvelopeError[]): void {
   const schema = PAYLOADS[type];
   if (!schema) return;

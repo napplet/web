@@ -1,30 +1,28 @@
 /** NAP-TORRENT wire envelopes. https://github.com/napplet/naps/pull/72 */
-import type {
-  NostrEvent,
-  NappletMessage,
-  TorrentCapabilities,
-  TorrentDescriptor,
-  TorrentDescriptorResult,
-  TorrentMagnetResult,
-  TorrentSearchQuery,
-  TorrentSearchResult,
-  TorrentPublishRequest,
-  TorrentCommentRequest,
-  TorrentPublishResult,
-  TorrentPickOptions,
-  TorrentFileSetResult,
+import type { NappletMessage,
   TorrentAddRequest,
+  TorrentCancelResult,
+  TorrentCapabilities,
+  TorrentErrorEvent,
+  TorrentFileActionResult,
+  TorrentFileSelection,
+  TorrentFileSetResult,
+  TorrentFileStatus,
   TorrentJobAck,
+  TorrentJobFilter,
   TorrentJobStatus,
   TorrentJobSummary,
-  TorrentJobFilter,
-  TorrentFileStatus,
-  TorrentFileSelection,
+  TorrentMetadataResult,
+  TorrentMetainfoResult,
+  TorrentPickOptions,
+  TorrentProgressEvent,
+  TorrentReadRequest,
+  TorrentReadResult,
   TorrentRemoveOptions,
   TorrentRemoveResult,
+  TorrentSettingsResult,
   TorrentStateEvent,
-  TorrentProgressEvent,
-  TorrentErrorEvent,
+  TorrentUpdateRequest,
 } from '@napplet/core';
 
 export type {
@@ -33,18 +31,15 @@ export type {
   TorrentJobState,
   TorrentSourceType,
   TorrentStorage,
-  TorrentReferencePrefix,
+  TorrentFormat,
+  TorrentRetention,
+  MetainfoBytes,
+  Base64Bytes,
+  HexV1Hash,
+  HexV2Hash,
+  TorrentHashes,
   TorrentCapabilities,
   TorrentFile,
-  TorrentReference,
-  TorrentDescriptor,
-  TorrentDescriptorResult,
-  TorrentMagnetResult,
-  TorrentSearchQuery,
-  TorrentSearchResult,
-  TorrentPublishRequest,
-  TorrentCommentRequest,
-  TorrentPublishResult,
   TorrentPickOptions,
   TorrentRuntimeFileSet,
   TorrentFileSetResult,
@@ -53,6 +48,7 @@ export type {
   TorrentAddRequest,
   TorrentJobAck,
   TorrentPeerStats,
+  TorrentSettings,
   TorrentJobStatus,
   TorrentJobSummary,
   TorrentJobFilter,
@@ -60,6 +56,16 @@ export type {
   TorrentFileSelection,
   TorrentRemoveOptions,
   TorrentRemoveResult,
+  TorrentMetadataResult,
+  TorrentReadRequest,
+  TorrentReadResult,
+  TorrentMetainfoResult,
+  TorrentFileActionResult,
+  TorrentCancelResult,
+  TorrentSettingsPatch,
+  TorrentUpdateRequest,
+  TorrentSettingsResult,
+  TorrentPendingRequest,
   TorrentStateEvent,
   TorrentProgressEvent,
   TorrentErrorEvent,
@@ -69,84 +75,18 @@ export type {
 /** Torrent domain discriminator. */
 export const DOMAIN = 'torrent' as const;
 
+type Reply<Payload extends object> = NappletMessage & { id: string }
+  & (Payload & { error?: never } | { error: string } & { [Key in keyof Payload]?: never });
+
 /** Request for torrent.capabilities. */
 export interface TorrentCapabilitiesMessage extends NappletMessage {
   type: 'torrent.capabilities';
   id: string;
 }
 /** Response to torrent.capabilities. */
-export interface TorrentCapabilitiesResultMessage extends NappletMessage {
+export type TorrentCapabilitiesResultMessage = {
   type: 'torrent.capabilities.result';
-  id: string;
-  capabilities?: TorrentCapabilities;
-  error?: string;
-}
-
-/** Request for torrent.fromEvent. */
-export interface TorrentFromEventMessage extends NappletMessage {
-  type: 'torrent.fromEvent';
-  id: string;
-  event: NostrEvent;
-}
-/** Response to torrent.fromEvent. */
-export interface TorrentFromEventResultMessage extends NappletMessage {
-  type: 'torrent.fromEvent.result';
-  id: string;
-  result: TorrentDescriptorResult;
-}
-
-/** Request for torrent.toMagnet. */
-export interface TorrentToMagnetMessage extends NappletMessage {
-  type: 'torrent.toMagnet';
-  id: string;
-  descriptor: TorrentDescriptor;
-}
-/** Response to torrent.toMagnet. */
-export interface TorrentToMagnetResultMessage extends NappletMessage {
-  type: 'torrent.toMagnet.result';
-  id: string;
-  result: TorrentMagnetResult;
-}
-
-/** Request for torrent.search. */
-export interface TorrentSearchMessage extends NappletMessage {
-  type: 'torrent.search';
-  id: string;
-  query: TorrentSearchQuery;
-}
-/** Response to torrent.search. */
-export interface TorrentSearchResultMessage extends NappletMessage {
-  type: 'torrent.search.result';
-  id: string;
-  results?: TorrentSearchResult[];
-  error?: string;
-}
-
-/** Request for torrent.publish. */
-export interface TorrentPublishMessage extends NappletMessage {
-  type: 'torrent.publish';
-  id: string;
-  request: TorrentPublishRequest;
-}
-/** Response to torrent.publish. */
-export interface TorrentPublishResultMessage extends NappletMessage {
-  type: 'torrent.publish.result';
-  id: string;
-  result: TorrentPublishResult;
-}
-
-/** Request for torrent.comment. */
-export interface TorrentCommentMessage extends NappletMessage {
-  type: 'torrent.comment';
-  id: string;
-  request: TorrentCommentRequest;
-}
-/** Response to torrent.comment. */
-export interface TorrentCommentResultMessage extends NappletMessage {
-  type: 'torrent.comment.result';
-  id: string;
-  result: TorrentPublishResult;
-}
+} & Reply<{ capabilities: TorrentCapabilities }>;
 
 /** Request for torrent.pickFiles. */
 export interface TorrentPickFilesMessage extends NappletMessage {
@@ -181,12 +121,9 @@ export interface TorrentStatusMessage extends NappletMessage {
   jobId: string;
 }
 /** Response to torrent.status. */
-export interface TorrentStatusResultMessage extends NappletMessage {
+export type TorrentStatusResultMessage = {
   type: 'torrent.status.result';
-  id: string;
-  status?: TorrentJobStatus;
-  error?: string;
-}
+} & Reply<{ status: TorrentJobStatus }>;
 
 /** Request for torrent.jobs. */
 export interface TorrentJobsMessage extends NappletMessage {
@@ -195,12 +132,9 @@ export interface TorrentJobsMessage extends NappletMessage {
   filter?: TorrentJobFilter;
 }
 /** Response to torrent.jobs. */
-export interface TorrentJobsResultMessage extends NappletMessage {
+export type TorrentJobsResultMessage = {
   type: 'torrent.jobs.result';
-  id: string;
-  jobs?: TorrentJobSummary[];
-  error?: string;
-}
+} & Reply<{ jobs: TorrentJobSummary[] }>;
 
 /** Request for torrent.files. */
 export interface TorrentFilesMessage extends NappletMessage {
@@ -209,26 +143,21 @@ export interface TorrentFilesMessage extends NappletMessage {
   jobId: string;
 }
 /** Response to torrent.files. */
-export interface TorrentFilesResultMessage extends NappletMessage {
+export type TorrentFilesResultMessage = {
   type: 'torrent.files.result';
-  id: string;
-  files?: TorrentFileStatus[];
-  error?: string;
-}
+} & Reply<{ files: TorrentFileStatus[] }>;
 
 /** Request for torrent.selectFiles. */
 export interface TorrentSelectFilesMessage extends NappletMessage {
   type: 'torrent.selectFiles';
   id: string;
-  jobId: string; selection: TorrentFileSelection;
+  jobId: string;
+  selection: TorrentFileSelection;
 }
 /** Response to torrent.selectFiles. */
-export interface TorrentSelectFilesResultMessage extends NappletMessage {
+export type TorrentSelectFilesResultMessage = {
   type: 'torrent.selectFiles.result';
-  id: string;
-  status?: TorrentJobStatus;
-  error?: string;
-}
+} & Reply<{ status: TorrentJobStatus }>;
 
 /** Request for torrent.pause. */
 export interface TorrentPauseMessage extends NappletMessage {
@@ -237,12 +166,9 @@ export interface TorrentPauseMessage extends NappletMessage {
   jobId: string;
 }
 /** Response to torrent.pause. */
-export interface TorrentPauseResultMessage extends NappletMessage {
+export type TorrentPauseResultMessage = {
   type: 'torrent.pause.result';
-  id: string;
-  status?: TorrentJobStatus;
-  error?: string;
-}
+} & Reply<{ status: TorrentJobStatus }>;
 
 /** Request for torrent.resume. */
 export interface TorrentResumeMessage extends NappletMessage {
@@ -251,18 +177,16 @@ export interface TorrentResumeMessage extends NappletMessage {
   jobId: string;
 }
 /** Response to torrent.resume. */
-export interface TorrentResumeResultMessage extends NappletMessage {
+export type TorrentResumeResultMessage = {
   type: 'torrent.resume.result';
-  id: string;
-  status?: TorrentJobStatus;
-  error?: string;
-}
+} & Reply<{ status: TorrentJobStatus }>;
 
 /** Request for torrent.remove. */
 export interface TorrentRemoveMessage extends NappletMessage {
   type: 'torrent.remove';
   id: string;
-  jobId: string; options?: TorrentRemoveOptions;
+  jobId: string;
+  options?: TorrentRemoveOptions;
 }
 /** Response to torrent.remove. */
 export interface TorrentRemoveResultMessage extends NappletMessage {
@@ -271,17 +195,110 @@ export interface TorrentRemoveResultMessage extends NappletMessage {
   result: TorrentRemoveResult;
 }
 
-/** Runtime job state push; correlation is jobId, never id. */
+/** Request for torrent.metadata. */
+export interface TorrentMetadataMessage extends NappletMessage {
+  type: 'torrent.metadata';
+  id: string;
+  jobId: string;
+}
+/** Response to torrent.metadata. */
+export interface TorrentMetadataResultMessage extends NappletMessage {
+  type: 'torrent.metadata.result';
+  id: string;
+  result: TorrentMetadataResult;
+}
+
+/** Request for torrent.read. */
+export interface TorrentReadMessage extends NappletMessage {
+  type: 'torrent.read';
+  id: string;
+  request: TorrentReadRequest;
+}
+/** Response to torrent.read. */
+export interface TorrentReadResultMessage extends NappletMessage {
+  type: 'torrent.read.result';
+  id: string;
+  result: TorrentReadResult;
+}
+
+/** Request for torrent.exportMetainfo. */
+export interface TorrentExportMetainfoMessage extends NappletMessage {
+  type: 'torrent.exportMetainfo';
+  id: string;
+  jobId: string;
+}
+/** Response to torrent.exportMetainfo. */
+export interface TorrentExportMetainfoResultMessage extends NappletMessage {
+  type: 'torrent.exportMetainfo.result';
+  id: string;
+  result: TorrentMetainfoResult;
+}
+
+/** Request for torrent.saveFile. */
+export interface TorrentSaveFileMessage extends NappletMessage {
+  type: 'torrent.saveFile';
+  id: string;
+  jobId: string;
+  fileIndex: number;
+}
+/** Response to torrent.saveFile. */
+export interface TorrentSaveFileResultMessage extends NappletMessage {
+  type: 'torrent.saveFile.result';
+  id: string;
+  result: TorrentFileActionResult;
+}
+
+/** Request for torrent.openFile. */
+export interface TorrentOpenFileMessage extends NappletMessage {
+  type: 'torrent.openFile';
+  id: string;
+  jobId: string;
+  fileIndex: number;
+}
+/** Response to torrent.openFile. */
+export interface TorrentOpenFileResultMessage extends NappletMessage {
+  type: 'torrent.openFile.result';
+  id: string;
+  result: TorrentFileActionResult;
+}
+
+/** Request for torrent.cancel. */
+export interface TorrentCancelMessage extends NappletMessage {
+  type: 'torrent.cancel';
+  id: string;
+  requestId: string;
+}
+/** Response to torrent.cancel. */
+export interface TorrentCancelResultMessage extends NappletMessage {
+  type: 'torrent.cancel.result';
+  id: string;
+  result: TorrentCancelResult;
+}
+
+/** Request for torrent.update. */
+export interface TorrentUpdateMessage extends NappletMessage {
+  type: 'torrent.update';
+  id: string;
+  request: TorrentUpdateRequest;
+}
+/** Response to torrent.update. */
+export interface TorrentUpdateResultMessage extends NappletMessage {
+  type: 'torrent.update.result';
+  id: string;
+  result: TorrentSettingsResult;
+}
+
+/** Runtime job state push; correlated by jobId, without id. */
 export interface TorrentStateMessage extends NappletMessage, TorrentStateEvent {
   type: 'torrent.state';
 }
 
-/** Runtime job progress push; correlation is jobId, never id. */
+/** Runtime job progress push; correlated by jobId, without id. */
 export interface TorrentProgressMessage extends NappletMessage, TorrentProgressEvent {
   type: 'torrent.progress';
 }
 
-/** Runtime job error push; correlation is jobId, never id. */
+/** Runtime job error push; correlated by jobId, without id. */
 export interface TorrentErrorMessage extends NappletMessage, TorrentErrorEvent {
   type: 'torrent.error';
 }
@@ -289,11 +306,6 @@ export interface TorrentErrorMessage extends NappletMessage, TorrentErrorEvent {
 /** Napplet-to-runtime torrent envelopes. */
 export type TorrentOutboundMessage =
   TorrentCapabilitiesMessage |
-  TorrentFromEventMessage |
-  TorrentToMagnetMessage |
-  TorrentSearchMessage |
-  TorrentPublishMessage |
-  TorrentCommentMessage |
   TorrentPickFilesMessage |
   TorrentAddMessage |
   TorrentStatusMessage |
@@ -302,16 +314,18 @@ export type TorrentOutboundMessage =
   TorrentSelectFilesMessage |
   TorrentPauseMessage |
   TorrentResumeMessage |
-  TorrentRemoveMessage;
+  TorrentRemoveMessage |
+  TorrentMetadataMessage |
+  TorrentReadMessage |
+  TorrentExportMetainfoMessage |
+  TorrentSaveFileMessage |
+  TorrentOpenFileMessage |
+  TorrentCancelMessage |
+  TorrentUpdateMessage;
 
 /** Runtime-to-napplet torrent envelopes. */
 export type TorrentInboundMessage =
   TorrentCapabilitiesResultMessage |
-  TorrentFromEventResultMessage |
-  TorrentToMagnetResultMessage |
-  TorrentSearchResultMessage |
-  TorrentPublishResultMessage |
-  TorrentCommentResultMessage |
   TorrentPickFilesResultMessage |
   TorrentAddResultMessage |
   TorrentStatusResultMessage |
@@ -321,6 +335,13 @@ export type TorrentInboundMessage =
   TorrentPauseResultMessage |
   TorrentResumeResultMessage |
   TorrentRemoveResultMessage |
+  TorrentMetadataResultMessage |
+  TorrentReadResultMessage |
+  TorrentExportMetainfoResultMessage |
+  TorrentSaveFileResultMessage |
+  TorrentOpenFileResultMessage |
+  TorrentCancelResultMessage |
+  TorrentUpdateResultMessage |
   TorrentStateMessage |
   TorrentProgressMessage |
   TorrentErrorMessage;

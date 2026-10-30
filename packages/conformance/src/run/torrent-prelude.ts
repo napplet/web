@@ -3,22 +3,29 @@ export const TORRENT_PRELUDE_SOURCE = `
   if (domains.includes('torrent')) {
     const torrent = {};
     const methods = {
-      capabilities: [[], 'capabilities'], fromEvent: [['event'], 'result'], toMagnet: [['descriptor'], 'result'],
-      search: [['query'], 'results'], publish: [['request'], 'result'], comment: [['request'], 'result'],
-      pickFiles: [['options'], 'result'], add: [['request'], 'ack'], status: [['jobId'], 'status'],
-      jobs: [['filter'], 'jobs'], files: [['jobId'], 'files'], selectFiles: [['jobId', 'selection'], 'status'],
-      pause: [['jobId'], 'status'], resume: [['jobId'], 'status'], remove: [['jobId', 'options'], 'result'],
+      capabilities: [[], 'capabilities'], pickFiles: [['options'], 'result'], add: [['request'], 'ack'],
+      status: [['jobId'], 'status'], jobs: [['filter'], 'jobs'], files: [['jobId'], 'files'],
+      selectFiles: [['jobId', 'selection'], 'status'], pause: [['jobId'], 'status'], resume: [['jobId'], 'status'],
+      remove: [['jobId', 'options'], 'result'], metadata: [['jobId'], 'result'], read: [['request'], 'result'],
+      exportMetainfo: [['jobId'], 'result'], saveFile: [['jobId', 'fileIndex'], 'result'],
+      openFile: [['jobId', 'fileIndex'], 'result'], cancel: [['requestId'], 'result'], update: [['request'], 'result'],
     };
     for (const [method, [fields, result]] of Object.entries(methods)) {
       torrent[method] = (...args) => {
         const type = 'torrent.' + method;
         const payload = { type };
         fields.forEach((field, index) => { if (args[index] !== undefined) payload[field] = args[index]; });
-        return request(payload, type + '.result').then((message) => {
+        const cancellable = ['read', 'exportMetainfo', 'saveFile'].includes(method);
+        const wait = method === 'read' ? Math.min(30000, Math.max(0, Number(args[0]?.waitMs) || 0)) : 0;
+        const raw = request(payload, type + '.result', undefined, 30000 + wait,
+          { cancellable, cancelTargetId: method === 'cancel' ? args[0] : undefined });
+        const response = raw.then((message) => {
           if (typeof message.error === 'string') throw new Error(message.error);
           if (message[result] === undefined) throw new Error(type + ' returned no ' + result);
           return message[result];
         });
+        if (cancellable) Object.defineProperty(response, 'requestId', { value: raw.requestId });
+        return response;
       };
     }
     const handlers = { state: new Set(), progress: new Set(), error: new Set() };

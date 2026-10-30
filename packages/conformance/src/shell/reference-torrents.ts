@@ -1,158 +1,143 @@
 import type { ReferenceEndpoint } from './reference-responses.js';
 
 type RecordValue = Record<string, unknown>;
-const HASH = /^[0-9a-f]{40}$/;
-const HEX64 = /^[0-9a-f]{64}$/;
-const HEX128 = /^[0-9a-f]{128}$/;
+interface Session { jobs: Map<string, RecordValue>; usedIds: Set<string> }
 const object = (value: unknown): RecordValue =>
   typeof value === 'object' && value !== null && !Array.isArray(value) ? value as RecordValue : {};
+const MUTABLE_SETTINGS = ['downloadLimitBytesPerSecond', 'uploadLimitBytesPerSecond', 'seedAfterComplete', 'trackers', 'webSeeds'];
+const CAPABILITIES = {
+  transports: ['reference'], modes: ['download', 'download-and-seed'], formats: [], createFormats: [], retentions: ['session'],
+  mutableSettings: MUTABLE_SETTINGS, maxReadBytes: 1048576, maxReadWaitMs: 30000, maxPendingReads: 1, maxMetainfoBytes: 1048576,
+  canSaveFiles: false, canOpenFiles: false, canSeedRuntimeFiles: false,
+  canUseDht: false, canUseTrackers: false, canUseWebSeeds: false,
+};
 
-function hasEventIdentity(event: RecordValue): boolean {
-  return typeof event.id === 'string' && HEX64.test(event.id)
-    && typeof event.pubkey === 'string' && HEX64.test(event.pubkey)
-    && typeof event.sig === 'string' && HEX128.test(event.sig)
-    && Number.isSafeInteger(event.created_at) && Number(event.created_at) >= 0;
+function decodeV1(value: string): string | undefined {
+  if (/^[0-9a-fA-F]{40}$/.test(value)) return value.toLowerCase();
+  if (!/^[A-Z2-7]{32}$/i.test(value)) return undefined;
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+  let bits = '';
+  for (const char of value.toUpperCase()) bits += alphabet.indexOf(char).toString(2).padStart(5, '0');
+  return bits.match(/.{8}/g)!.map((byte) => parseInt(byte, 2).toString(16).padStart(2, '0')).join('');
 }
 
-/** NIP-35 conversion fixture. No relay lookup or signature verification is performed. */
-function fromEvent(value: unknown): RecordValue {
-  const event = object(value);
-  const tags = event.tags;
-  if (!hasEventIdentity(event) || event.kind !== 2003 || typeof event.content !== 'string' || !Array.isArray(tags)
-    || !tags.every((tag) => Array.isArray(tag) && tag.every((entry) => typeof entry === 'string'))) {
-    return { ok: false, error: 'invalid-event' };
+/** Parse claimed magnet identities only. This fixture cannot verify metainfo or content. */
+function magnetHashes(value: unknown): RecordValue | undefined {
+  if (typeof value !== 'string') return undefined;
+  let uri: URL;
+  try { uri = new URL(value); } catch { return undefined; }
+  if (uri.protocol !== 'magnet:') return undefined;
+  const hashes: RecordValue = {};
+  for (const xt of uri.searchParams.getAll('xt')) {
+    const decoded = xt.startsWith('urn:btih:') ? decodeV1(xt.slice(9)) : undefined;
+    const kind = decoded ? 'v1' : /^urn:btmh:1220[0-9a-fA-F]{64}$/.test(xt) ? 'v2' : undefined;
+    if (!kind) return undefined;
+    const hash = decoded ?? xt.slice(13).toLowerCase();
+    if (hashes[kind] !== undefined && hashes[kind] !== hash) return undefined;
+    hashes[kind] = hash;
   }
-  const rows = tags as string[][];
-  const infoHash = rows.find((tag) => tag[0] === 'x')?.[1];
-  if (!infoHash || !HASH.test(infoHash)) return { ok: false, error: 'invalid-infohash' };
-  const files = rows.filter((tag) => tag[0] === 'file' && tag[1] !== undefined).map((tag) => {
-    const size = Number(tag[2]);
-    return { path: tag[1], ...(tag[2] !== undefined && /^\d+$/.test(tag[2]) && Number.isSafeInteger(size) ? { size } : {}) };
-  });
-  const references = rows.filter((tag) => tag[0] === 'i' && tag[1]?.includes(':')).map((tag) => {
-    const index = tag[1].indexOf(':');
-    return { prefix: tag[1].slice(0, index), value: tag[1].slice(index + 1) };
-  });
-  const descriptor: RecordValue = {
-    infoHash, description: event.content, files, references,
-    trackers: rows.filter((tag) => tag[0] === 'tracker' && tag[1] !== undefined).map((tag) => tag[1]),
-    tags: rows.filter((tag) => tag[0] === 't' && tag[1] !== undefined).map((tag) => tag[1]),
-    result: { event },
+  return Object.keys(hashes).length ? hashes : undefined;
+}
+
+function initialSettings(options: RecordValue): RecordValue {
+  return {
+    revision: 0, downloadLimitBytesPerSecond: options.downloadLimitBytesPerSecond ?? 0,
+    uploadLimitBytesPerSecond: options.uploadLimitBytesPerSecond ?? 0,
+    seedAfterComplete: options.mode === 'download-and-seed', trackers: options.trackers ?? [], webSeeds: options.webSeeds ?? [],
+    endpointsRedacted: false,
   };
-  const title = rows.find((tag) => tag[0] === 'title')?.[1];
-  if (title !== undefined) descriptor.title = title;
-  if (typeof event.id === 'string') descriptor.eventId = event.id;
-  if (typeof event.pubkey === 'string') descriptor.author = event.pubkey;
-  if (Number.isSafeInteger(event.created_at) && Number(event.created_at) >= 0) descriptor.createdAt = event.created_at;
-  return { ok: true, descriptor };
 }
 
-function toMagnet(value: unknown): RecordValue {
-  const descriptor = object(value);
-  if (typeof descriptor.infoHash !== 'string' || !HASH.test(descriptor.infoHash)) return { ok: false, error: 'invalid-infohash' };
-  let magnet = `magnet:?xt=urn:btih:${descriptor.infoHash}`;
-  if (typeof descriptor.title === 'string') magnet += `&dn=${encodeURIComponent(descriptor.title)}`;
-  for (const tracker of Array.isArray(descriptor.trackers) ? descriptor.trackers : []) {
-    if (typeof tracker === 'string') magnet += `&tr=${encodeURIComponent(tracker)}`;
-  }
-  return { ok: true, magnet };
+function addJob(session: Session, request: RecordValue, nextId: () => string): RecordValue {
+  const source = object(request.source);
+  const options = object(request.options);
+  if (!['auto', 'reference'].includes(String(options.transport ?? 'auto'))) return { ok: false, error: 'unsupported-transport' };
+  if (!['download', 'download-and-seed'].includes(String(options.mode ?? 'download'))) return { ok: false, error: 'unsupported-mode' };
+  if (options.retention === 'persistent') return { ok: false, error: 'unsupported' };
+  if (source.sourceType !== 'infohash' && source.sourceType !== 'magnet') return { ok: false, error: 'unsupported-source' };
+  const hashes = source.sourceType === 'infohash' ? object(source.hashes) : magnetHashes(source.magnet);
+  if (!hashes) return { ok: false, error: 'invalid-magnet' };
+  const jobId = typeof request.jobId === 'string' ? request.jobId : nextId();
+  if (session.usedIds.has(jobId)) return { ok: false, error: 'job-conflict' };
+  const status: RecordValue = {
+    ok: true, jobId, state: options.startPaused === true ? 'paused' : 'metadata', mode: options.mode ?? 'download',
+    transport: 'reference', hashes, downloadedBytes: 0, uploadedBytes: 0, downloadRate: 0, uploadRate: 0, ratio: 0,
+    peers: { peers: 0, seeds: 0, leeches: 0 }, settings: initialSettings(options), retention: 'session',
+  };
+  if (options.storage !== undefined) status.storage = options.storage;
+  session.usedIds.add(jobId);
+  session.jobs.set(jobId, structuredClone(status));
+  return { ok: true, jobId, state: status.state };
 }
 
-function sourceHash(source: RecordValue): string | undefined {
-  if (source.sourceType === 'infohash') return typeof source.infoHash === 'string' ? source.infoHash : undefined;
-  if (source.sourceType === 'nip35') {
-    const descriptor = source.event === undefined ? object(source.descriptor) : object(fromEvent(source.event).descriptor);
-    return typeof descriptor.infoHash === 'string' ? descriptor.infoHash : undefined;
+function updateJob(job: RecordValue, request: RecordValue): RecordValue {
+  const settings = object(job.settings);
+  const patch = object(request.patch);
+  if (Object.keys(patch).some((key) => !MUTABLE_SETTINGS.includes(key))) return { ok: false, error: 'unsupported-setting' };
+  if (request.expectedRevision !== settings.revision) {
+    return { ok: false, error: 'revision-conflict', settings: structuredClone(settings) };
   }
-  if (source.sourceType === 'magnet' && typeof source.magnet === 'string') {
-    try {
-      const uri = new URL(source.magnet);
-      if (uri.protocol !== 'magnet:') return undefined;
-      return uri.searchParams.getAll('xt').find((value) => value.startsWith('urn:btih:'))?.slice(9);
-    } catch { return undefined; }
+  const changed = Object.entries(patch).some(([key, value]) => JSON.stringify(settings[key]) !== JSON.stringify(value));
+  if (changed) {
+    job.settings = { ...settings, ...structuredClone(patch), revision: Number(settings.revision) + 1 };
+    if (typeof patch.seedAfterComplete === 'boolean') job.mode = patch.seedAfterComplete ? 'download-and-seed' : 'download';
   }
-  return undefined;
+  return { ok: true, settings: structuredClone(job.settings) };
 }
 
-function handleJob(
-  jobs: Map<string, RecordValue>, type: string, envelope: RecordValue, respond: (fields: RecordValue) => unknown[],
-): unknown[] {
-  const jobId = String(envelope.jobId);
-  const job = jobs.get(jobId);
+function summary(job: RecordValue): RecordValue {
+  const fields = ['jobId', 'state', 'mode', 'transport', 'hashes', 'progress', 'downloadRate', 'uploadRate', 'ratio', 'title', 'retention'];
+  return Object.fromEntries(fields.filter((field) => job[field] !== undefined).map((field) => [field, job[field]]));
+}
+
+function jobReply(session: Session, type: string, envelope: RecordValue): RecordValue {
+  const request = object(envelope.request);
+  const jobId = String(envelope.jobId ?? request.jobId);
+  const job = session.jobs.get(jobId);
+  const payloadResult = ['torrent.metadata', 'torrent.read', 'torrent.exportMetainfo', 'torrent.saveFile', 'torrent.openFile', 'torrent.update'];
   if (type === 'torrent.remove') {
-    if (!job) return respond({ result: { ok: false, jobId, error: 'job-not-found' } });
-    jobs.delete(jobId);
-    return respond({ result: { ok: true, jobId, deletedData: false } });
+    if (!job) return { result: { ok: false, jobId, error: 'job-not-found' } };
+    session.jobs.delete(jobId);
+    return { result: { ok: true, jobId, deletedData: false } };
   }
-  if (!job) return respond({ error: 'job-not-found' });
-  if (type === 'torrent.files') return respond({ files: [] });
+  if (!job) return payloadResult.includes(type) ? { result: { ok: false, error: 'job-not-found' } } : { error: 'job-not-found' };
+  if (type === 'torrent.update') return { result: updateJob(job, request) };
+  if (type === 'torrent.saveFile' || type === 'torrent.openFile') return { result: { ok: false, error: 'unsupported' } };
+  if (payloadResult.includes(type)) return { result: { ok: false, error: 'metadata-unavailable' } };
+  if (type === 'torrent.files') return { files: [] };
   if (type === 'torrent.pause') job.state = 'paused';
   if (type === 'torrent.resume') job.state = 'metadata';
-  return respond({ status: structuredClone(job) });
+  return { status: structuredClone(job) };
 }
 
-/** Deterministic reference jobs. This fixture never transfers bytes or signs events. */
+/** Deterministic session jobs/settings only. This fixture has no network, verified metadata, or file backend. */
 export function createTorrentHandlers() {
-  const jobsByEndpoint = new Map<string, Map<string, RecordValue>>();
+  const sessions = new Map<string, Session>();
   let sequence = 0;
-  const jobsFor = (endpoint: ReferenceEndpoint) => {
-    let jobs = jobsByEndpoint.get(endpoint.id);
-    if (!jobs) { jobs = new Map(); jobsByEndpoint.set(endpoint.id, jobs); }
-    return jobs;
-  };
-
-  function add(jobs: Map<string, RecordValue>, request: RecordValue): RecordValue {
-    const source = object(request.source);
-    const options = object(request.options);
-    if (options.transport !== undefined && options.transport !== 'auto' && options.transport !== 'reference') {
-      return { ok: false, error: 'unsupported-transport' };
-    }
-    if (options.mode !== undefined && options.mode !== 'download') return { ok: false, error: 'unsupported-mode' };
-    if (source.sourceType === 'runtime-file-set' || source.sourceType === 'metainfo') return { ok: false, error: 'unsupported-source' };
-    const infoHash = sourceHash(source);
-    if (!infoHash || !HASH.test(infoHash)) return { ok: false, error: 'invalid-infohash' };
-    const jobId = typeof request.jobId === 'string' ? request.jobId : `reference-torrent-${++sequence}`;
-    if (jobs.has(jobId)) return { ok: false, error: 'policy-denied', reason: 'Job id is already in use' };
-    const status = {
-      ok: true, jobId, state: options.startPaused === true ? 'paused' : 'metadata', mode: 'download', transport: 'reference',
-      infoHash, downloadedBytes: 0, uploadedBytes: 0, totalBytes: 0, progress: 0, downloadRate: 0, uploadRate: 0, ratio: 0,
-      peers: { peers: 0, seeds: 0, leeches: 0 },
-    };
-    jobs.set(jobId, status);
-    return { ok: true, jobId, state: status.state };
+  function sessionFor(endpoint: ReferenceEndpoint): Session {
+    let session = sessions.get(endpoint.id);
+    if (!session) { session = { jobs: new Map(), usedIds: new Set() }; sessions.set(endpoint.id, session); }
+    return session;
   }
-
   function handle(endpoint: ReferenceEndpoint, envelope: RecordValue): unknown[] {
     const type = String(envelope.type);
     const respond = (fields: RecordValue) => [{ type: `${type}.result`, id: envelope.id, ...fields }];
-    const direct: Record<string, () => RecordValue> = {
-      'torrent.capabilities': () => ({ capabilities: {
-        transports: ['reference'], modes: ['download'], canPublishNip35: false, canComment: false, canSeedRuntimeFiles: false,
-        canUseDht: false, canUseTrackers: false, canUseWebSeeds: false,
-      } }),
-      'torrent.fromEvent': () => ({ result: fromEvent(envelope.event) }),
-      'torrent.toMagnet': () => ({ result: toMagnet(envelope.descriptor) }),
-      'torrent.search': () => ({ results: [] }),
-    };
-    if (direct[type]) return respond(direct[type]());
-    if (['torrent.publish', 'torrent.comment', 'torrent.pickFiles'].includes(type)) {
-      return respond({ result: { ok: false, error: 'unsupported', reason: 'Reference shell has no signer or file picker' } });
-    }
-    const jobs = jobsFor(endpoint);
+    if (type === 'torrent.capabilities') return respond({ capabilities: structuredClone(CAPABILITIES) });
+    if (type === 'torrent.pickFiles') return respond({ result: { ok: false, error: 'unsupported' } });
+    // Every reference operation completes synchronously. No request remains cancellable after handle returns.
+    if (type === 'torrent.cancel') return respond({ result: { ok: true, cancelled: false } });
+    const session = sessionFor(endpoint);
     if (type === 'torrent.jobs') {
       const filter = object(envelope.filter);
-      return respond({ jobs: structuredClone([...jobs.values()].filter((job) =>
+      return respond({ jobs: structuredClone([...session.jobs.values()].filter((job) =>
         (!Array.isArray(filter.states) || filter.states.includes(job.state))
-        && (!Array.isArray(filter.modes) || filter.modes.includes(job.mode)))) });
+        && (!Array.isArray(filter.modes) || filter.modes.includes(job.mode))).map(summary)) });
     }
-    if (type === 'torrent.add') {
-      const ack = add(jobs, object(envelope.request));
-      const responses: unknown[] = respond({ ack });
-      if (ack.ok) responses.push({ type: 'torrent.state', jobId: ack.jobId, state: ack.state, status: jobs.get(String(ack.jobId)) });
-      return structuredClone(responses);
-    }
-    return handleJob(jobs, type, envelope, respond);
+    if (type !== 'torrent.add') return respond(jobReply(session, type, envelope));
+    const ack = addJob(session, object(envelope.request), () => `reference-torrent-${++sequence}`);
+    const responses: unknown[] = respond({ ack });
+    if (ack.ok) responses.push({ type: 'torrent.state', jobId: ack.jobId, state: ack.state, status: session.jobs.get(String(ack.jobId)) });
+    return structuredClone(responses);
   }
-
-  return { handle, reset() { jobsByEndpoint.clear(); sequence = 0; } };
+  return { handle, reset() { sessions.clear(); sequence = 0; } };
 }

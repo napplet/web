@@ -4,8 +4,8 @@ import * as sdk from './sdk.js';
 beforeEach(() => { vi.stubGlobal('window', {}); });
 afterEach(() => { vi.unstubAllGlobals(); });
 
-const methods = ['capabilities', 'fromEvent', 'toMagnet', 'search', 'publish', 'comment', 'pickFiles',
-  'add', 'status', 'jobs', 'files', 'selectFiles', 'pause', 'resume', 'remove', 'onState', 'onProgress', 'onError'];
+const methods = ['capabilities', 'pickFiles', 'add', 'status', 'jobs', 'files', 'selectFiles', 'pause', 'resume', 'remove',
+  'metadata', 'read', 'exportMetainfo', 'saveFile', 'openFile', 'cancel', 'update', 'onState', 'onProgress', 'onError'];
 
 describe('torrent SDK', () => {
   it.each(methods)('%s delegates at call time and preserves runtime result', (method) => {
@@ -19,7 +19,7 @@ describe('torrent SDK', () => {
     expect(returned).toBe(result);
     expect(call).toHaveBeenCalledOnce();
     // Helpers pass only their named parameters, preserving explicit false values.
-    const expectedCount = method === 'capabilities' ? 0 : ['selectFiles', 'remove'].includes(method) ? 2 : 1;
+    const expectedCount = method === 'capabilities' ? 0 : ['selectFiles', 'remove', 'saveFile', 'openFile'].includes(method) ? 2 : 1;
     expect(call.mock.calls[0]).toEqual([first, second].slice(0, expectedCount));
   });
 });

@@ -151,15 +151,20 @@ const FALLBACK_RUNTIME_AFTER_GAMEPAD_TOOLS = `;
     seq += 1;
     return 'conformance-' + Date.now().toString(36) + '-' + seq.toString(36);
   };
-  const request = (message, resultType, errorType) => new Promise((resolve, reject) => {
+  const request = (message, resultType, errorType, timeoutMs = 5000, details = {}) => {
     const id = message.id || nextId();
-    const timeout = window.setTimeout(() => {
-      pending.delete(id);
-      reject(new Error(message.type + ' timed out'));
-    }, 5000);
-    pending.set(id, { resolve, reject, resultType, errorType, timeout });
-    window.parent.postMessage({ ...message, id }, '*');
-  });
+    const promise = new Promise((resolve, reject) => {
+      const timeout = window.setTimeout(() => {
+        pending.delete(id);
+        reject(new Error(message.type + ' timed out'));
+      }, timeoutMs);
+      pending.set(id, { resolve, reject, resultType, errorType, timeout, ...details });
+      try { window.parent.postMessage({ ...message, id }, '*'); }
+      catch (error) { pending.delete(id); window.clearTimeout(timeout); reject(error); }
+    });
+    Object.defineProperty(promise, 'requestId', { value: id });
+    return promise;
+  };
   window.addEventListener('message', (event) => {
     if (event.source !== window.parent) return;
     const msg = event.data;
@@ -179,6 +184,14 @@ const FALLBACK_RUNTIME_AFTER_GAMEPAD_TOOLS = `;
     if (msg.type !== slot.resultType && (!slot.errorType || msg.type !== slot.errorType)) return;
     pending.delete(msg.id);
     window.clearTimeout(slot.timeout);
+    if (slot.cancelTargetId && msg.result && msg.result.ok === true && msg.result.cancelled === true) {
+      const target = pending.get(slot.cancelTargetId);
+      if (target && target.cancellable) {
+        pending.delete(slot.cancelTargetId);
+        window.clearTimeout(target.timeout);
+        target.resolve({ type: target.resultType, id: slot.cancelTargetId, result: { ok: false, error: 'cancelled' } });
+      }
+    }
     if (slot.errorType && msg.type === slot.errorType) {
       slot.reject(new Error(msg.message ? msg.error + ': ' + msg.message : String(msg.error || 'request failed')));
       return;

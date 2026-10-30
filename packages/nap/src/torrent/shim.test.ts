@@ -9,24 +9,23 @@ beforeEach(() => {
 });
 afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); });
 
-const descriptor = { infoHash: 'a'.repeat(40), files: [], trackers: [], tags: [], references: [] };
-const event = { id: 'b'.repeat(64), pubkey: 'c'.repeat(64), created_at: 1, kind: 2003, tags: [['x', descriptor.infoHash]], content: '', sig: 'd'.repeat(128) };
-const status = { ok: true, jobId: 'job', state: 'paused', mode: 'download', transport: 'auto', infoHash: descriptor.infoHash,
-  downloadedBytes: 0, uploadedBytes: 0, totalBytes: 42, progress: 0, downloadRate: 0, uploadRate: 0, ratio: 0,
-  peers: { peers: 0, seeds: 0, leeches: 0 } };
+const hashes = { v1: 'a'.repeat(40) };
+const settings = { revision: 0, downloadLimitBytesPerSecond: 0, uploadLimitBytesPerSecond: 0,
+  seedAfterComplete: false, trackers: [], webSeeds: [], endpointsRedacted: false };
+const status = { ok: true, jobId: 'job', state: 'paused', mode: 'download', transport: 'auto', hashes,
+  downloadedBytes: 0, uploadedBytes: 0, downloadRate: 0, uploadRate: 0, ratio: 0,
+  peers: { peers: 0, seeds: 0, leeches: 0 }, settings, retention: 'session' };
+const readRequest = { jobId: 'job', fileIndex: 0, offset: 0, length: 5 };
+const readResult = { ok: true, offset: 0, dataBase64: 'aGVsbG8=', byteLength: 5, totalBytes: 5, eof: true };
 
 describe('torrent request/result contract', () => {
   const vectors = [
-    ['capabilities', [], {}, 'capabilities', { transports: ['bittorrent'], modes: ['download'] }],
-    ['fromEvent', [event], { event }, 'result', { ok: true, descriptor }],
-    ['toMagnet', [descriptor], { descriptor }, 'result', { ok: true, magnet: `magnet:?xt=urn:btih:${descriptor.infoHash}` }],
-    ['search', [{ text: 'archive' }], { query: { text: 'archive' } }, 'results', [{ descriptor, result: { event } }]],
-    ['publish', [{ descriptor, publish: false }], { request: { descriptor, publish: false } }, 'result', { ok: true, event }],
-    ['comment', [{ torrentEventId: event.id, torrentAuthor: event.pubkey, content: 'Thanks' }],
-      { request: { torrentEventId: event.id, torrentAuthor: event.pubkey, content: 'Thanks' } }, 'result', { ok: false, error: 'user-denied' }],
+    ['capabilities', [], {}, 'capabilities', { transports: ['bittorrent'], modes: ['download'], formats: ['v1'],
+      createFormats: [], retentions: ['session'], mutableSettings: [], maxReadBytes: 1048576, maxReadWaitMs: 30000,
+      maxPendingReads: 1, maxMetainfoBytes: 1048576, canSaveFiles: false, canOpenFiles: false }],
     ['pickFiles', [], {}, 'result', { ok: false, error: 'file-pick-cancelled' }],
-    ['add', [{ source: { sourceType: 'infohash', infoHash: descriptor.infoHash } }],
-      { request: { source: { sourceType: 'infohash', infoHash: descriptor.infoHash } } }, 'ack', { ok: true, jobId: 'job', state: 'metadata' }],
+    ['add', [{ source: { sourceType: 'infohash', hashes } }],
+      { request: { source: { sourceType: 'infohash', hashes } } }, 'ack', { ok: true, jobId: 'job', state: 'metadata' }],
     ['status', ['job'], { jobId: 'job' }, 'status', status],
     ['jobs', [], {}, 'jobs', []],
     ['files', ['job'], { jobId: 'job' }, 'files', []],
@@ -34,6 +33,15 @@ describe('torrent request/result contract', () => {
     ['pause', ['job'], { jobId: 'job' }, 'status', status],
     ['resume', ['job'], { jobId: 'job' }, 'status', status],
     ['remove', ['job', { deleteData: false }], { jobId: 'job', options: { deleteData: false } }, 'result', { ok: true, jobId: 'job', deletedData: false }],
+    ['metadata', ['job'], { jobId: 'job' }, 'result', { ok: false, error: 'metadata-unavailable' }],
+    ['read', [readRequest], { request: readRequest }, 'result', readResult],
+    ['exportMetainfo', ['job'], { jobId: 'job' }, 'result', { ok: false, error: 'metadata-unavailable' }],
+    ['saveFile', ['job', 0], { jobId: 'job', fileIndex: 0 }, 'result', { ok: true, jobId: 'job', fileIndex: 0, outcome: 'saved' }],
+    ['openFile', ['job', 0], { jobId: 'job', fileIndex: 0 }, 'result', { ok: true, jobId: 'job', fileIndex: 0, outcome: 'accepted' }],
+    ['cancel', ['read-id'], { requestId: 'read-id' }, 'result', { ok: true, cancelled: false }],
+    ['update', [{ jobId: 'job', expectedRevision: 0, patch: { trackers: [] } }],
+      { request: { jobId: 'job', expectedRevision: 0, patch: { trackers: [] } } }, 'result',
+      { ok: false, error: 'revision-conflict', settings }],
   ] as const;
   it.each(vectors)('%s uses its canonical envelope', async (name, args, payload, field, value) => {
     const shim = await import('./shim.js');
@@ -158,4 +166,75 @@ it.each(['state', 'progress', 'error'] as const)('%s snapshots listeners and ski
   shim.handleTorrentMessage(message);
   expect(added).toHaveBeenCalledOnce();
   expect(closed).not.toHaveBeenCalled();
+});
+
+it('retired discovery and signing methods are absent', async () => {
+  const shim = await import('./shim.js');
+  for (const name of ['fromEvent', 'toMagnet', 'search', 'publish', 'comment']) expect(shim).not.toHaveProperty(name);
+});
+
+it.each(['read', 'exportMetainfo', 'saveFile'] as const)('%s exposes a request id and discards bytes after cancellation', async (method) => {
+  const shim = await import('./shim.js');
+  const target = method === 'read' ? shim.read(readRequest)
+    : method === 'saveFile' ? shim.saveFile('job', 0) : shim.exportMetainfo('job');
+  expect(target.requestId).toBe(posted[0].id);
+  const cancelled = shim.cancel(target.requestId);
+  expect(posted[1]).toEqual({ type: 'torrent.cancel', id: expect.any(String), requestId: target.requestId });
+  shim.handleTorrentMessage({ type: 'torrent.cancel.result', id: posted[1].id, result: { ok: true, cancelled: true } });
+  await expect(cancelled).resolves.toEqual({ ok: true, cancelled: true });
+  shim.handleTorrentMessage({ type: `torrent.${method}.result`, id: target.requestId, result: readResult });
+  await expect(target).resolves.toEqual({ ok: false, error: 'cancelled' });
+  expect(vi.getTimerCount()).toBe(0);
+});
+
+it('preserves a target terminal result when cancellation loses', async () => {
+  const shim = await import('./shim.js');
+  const target = shim.read(readRequest);
+  const cancelled = shim.cancel(target.requestId);
+  shim.handleTorrentMessage({ type: 'torrent.read.result', id: target.requestId, result: readResult });
+  shim.handleTorrentMessage({ type: 'torrent.cancel.result', id: posted[1].id, result: { ok: true, cancelled: false } });
+  await expect(target).resolves.toEqual(readResult);
+  await expect(cancelled).resolves.toEqual({ ok: true, cancelled: false });
+});
+
+it('does not retire a target when cancellation is refused', async () => {
+  const shim = await import('./shim.js');
+  const target = shim.read(readRequest);
+  const cancelled = shim.cancel(target.requestId);
+  shim.handleTorrentMessage({ type: 'torrent.cancel.result', id: posted[1].id, result: { ok: false, error: 'policy-denied' } });
+  shim.handleTorrentMessage({ type: 'torrent.read.result', id: target.requestId, result: readResult });
+  await expect(cancelled).resolves.toEqual({ ok: false, error: 'policy-denied' });
+  await expect(target).resolves.toEqual(readResult);
+});
+
+it('permits the full advertised read wait before its transport timeout', async () => {
+  const shim = await import('./shim.js');
+  const target = shim.read({ ...readRequest, waitMs: 30000 });
+  await vi.advanceTimersByTimeAsync(30000);
+  shim.handleTorrentMessage({ type: 'torrent.read.result', id: target.requestId, result: { ok: false, error: 'timeout' } });
+  await expect(target).resolves.toEqual({ ok: false, error: 'timeout' });
+});
+
+it.each([
+  { ok: false, error: 'revision-conflict' },
+  { ok: false, error: 'revision-conflict', settings: null },
+  { ok: false, error: 'revision-conflict', settings: { ...settings, revision: -1 } },
+  { ok: true },
+  { ok: true, settings: { ...settings, seedAfterComplete: 'false' } },
+  { ok: true, settings: { ...settings, trackers: [42] } },
+  { ok: true, settings, error: 'revision-conflict' },
+  { ok: false, error: 'custom-runtime-error', settings },
+])('rejects malformed settings response %j', async (result) => {
+  const shim = await import('./shim.js');
+  const updated = shim.update({ jobId: 'job', expectedRevision: 0, patch: { trackers: [] } });
+  shim.handleTorrentMessage({ type: 'torrent.update.result', id: posted[0].id, result });
+  await expect(updated).rejects.toThrow('torrent.update returned an invalid settings result');
+});
+
+it('preserves custom machine-readable update errors', async () => {
+  const shim = await import('./shim.js');
+  const updated = shim.update({ jobId: 'job', expectedRevision: 0, patch: { trackers: [] } });
+  const result = { ok: false, error: 'custom-runtime-error', reason: 'Runtime policy detail' };
+  shim.handleTorrentMessage({ type: 'torrent.update.result', id: posted[0].id, result });
+  await expect(updated).resolves.toEqual(result);
 });

@@ -82,7 +82,7 @@ Each domain is an independent subpath. Barrel imports bundle types + shim instal
 | serial | `@napplet/nap/serial` | `@napplet/nap/serial/types` | `@napplet/nap/serial/shim` | `@napplet/nap/serial/sdk` | Runtime-mediated serial device access — `open`/`write`/`close`/`onEvent`; shell owns permissions, port handles, streams, and lifecycle |
 | fs | `@napplet/nap/fs` | `@napplet/nap/fs/types` | `@napplet/nap/fs/shim` | `@napplet/nap/fs/sdk` | Shell-mediated virtual filesystem access — `info`/`pickFile`/`pickFiles`/`pickDirectory`/`pickSaveFile`/`stat`/`list`/`read`/`write`/`mkdir`/`remove`/`move`/`watch`/`unwatch`/`onChanged`; runtime owns host paths, mounts, backing store, policy, and authorization. Byte payloads use standard padded base64 text on the JSON wire |
 | dm | `@napplet/nap/dm` | `@napplet/nap/dm/types` | `@napplet/nap/dm/shim` | `@napplet/nap/dm/sdk` | Runtime-mediated direct messages — `status`/`conversations`/`messages`/`send`/`subscribe`/`unsubscribe`/`onMessage`; shell owns signing, encryption, relay routing, storage, and policy |
-| torrent | `@napplet/nap/torrent` | `@napplet/nap/torrent/types` | `@napplet/nap/torrent/shim` | `@napplet/nap/torrent/sdk` | NIP-35 indexing and runtime-owned download/seed jobs, with state, progress, and error listeners |
+| torrent | `@napplet/nap/torrent` | `@napplet/nap/torrent/types` | `@napplet/nap/torrent/shim` | `@napplet/nap/torrent/sdk` | Runtime-owned download/seed jobs, verified file reads, metadata export, settings, and job listeners |
 
 ### NAP-FS byte transfer
 
@@ -304,4 +304,4 @@ Declare `gamepad` as optional (`O`) when other controls fulfill the core task. U
 
 ### Runtime-owned torrent jobs
 
-`@napplet/nap/torrent` provides the barrel, `types`, `shim`, and `sdk` subpaths for all 15 NAP-TORRENT operations. SDK helpers use the `torrent` prefix, such as `torrentSearch`, `torrentAdd`, and `torrentPickFiles`. `torrentOnState`, `torrentOnProgress`, and `torrentOnError` return independently closable subscriptions. A job acknowledgment does not mean a transfer completed. The runtime owns the engine and selected file bytes; `runtimeFileSetId` is an opaque handle, not a path. This non-normative guidance defers to [NAP-TORRENT](https://github.com/napplet/naps/blob/nap-torrent/naps/NAP-TORRENT.md).
+`@napplet/nap/torrent` provides the barrel, `types`, `shim`, and `sdk` subpaths for all 17 NAP-TORRENT operations. SDK helpers use the `torrent` prefix, such as `torrentAdd`, `torrentRead`, and `torrentUpdate`. `torrentOnState`, `torrentOnProgress`, and `torrentOnError` return independently closable subscriptions. A job acknowledgment does not mean a transfer completed. The runtime owns the engine and selected file bytes; `runtimeFileSetId` is an opaque handle, not a path. This non-normative guidance defers to [NAP-TORRENT](https://github.com/napplet/naps/blob/nap-torrent/naps/NAP-TORRENT.md).

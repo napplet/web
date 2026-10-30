@@ -149,4 +149,4 @@ The runtime binding retains deliveries until a listener registers. Discovery can
 
 ## Torrent types
 
-`TorrentApi` and the torrent records describe `NappletGlobal.torrent`, an optional domain for NIP-35 indexing and runtime-owned transfer jobs. Raw source events use `RelayEventResult`. See the non-normative [TORRENT guide](/naps/torrent) and living [NAP-TORRENT proposal](https://github.com/napplet/naps/blob/nap-torrent/naps/NAP-TORRENT.md).
+`TorrentApi` and the torrent records describe `NappletGlobal.torrent`, an optional transfer domain with v1/v2/hybrid identities, verified reads, metadata export, file actions, revisioned settings, and retention. Discovery and Nostr event schemas belong outside this domain. See the non-normative [TORRENT guide](/naps/torrent) and living [NAP-TORRENT proposal](https://github.com/napplet/naps/blob/nap-torrent/naps/NAP-TORRENT.md).

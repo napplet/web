@@ -47,6 +47,52 @@ describe('real opaque-origin reference runtime', () => {
     expect(result.emitted.some((record) => (record.envelope as { type: string }).type.startsWith('__nappletConformance'))).toBe(false);
   });
 
+  it('round-trips the transfer-only TORRENT binding in a real opaque iframe', async () => {
+    const result = await boot(`<!doctype html><script>
+      (async () => {
+        const torrent = window.napplet.torrent;
+        if (!torrent) return;
+        for (const method of ['search', 'fromEvent', 'toMagnet', 'publish', 'comment']) {
+          if (method in torrent) throw new Error('Retired operation exposed: ' + method);
+        }
+        const capabilities = await torrent.capabilities();
+        if (!Array.isArray(capabilities.formats) || !Array.isArray(capabilities.retentions)) throw new Error('Missing capabilities');
+        await torrent.pickFiles();
+        const ack = await torrent.add({ jobId: 'browser-job', source: {
+          sourceType: 'infohash', hashes: { v1: '0eb2d544ef0c9ae3c0fbba90a71cd742a44aa81d' }
+        } });
+        if (!ack.ok) throw new Error('Reference job rejected');
+        const status = await torrent.status(ack.jobId);
+        await torrent.jobs();
+        await torrent.files(ack.jobId);
+        await torrent.selectFiles(ack.jobId, {});
+        await torrent.pause(ack.jobId);
+        await torrent.resume(ack.jobId);
+        await torrent.metadata(ack.jobId);
+        const pendingRead = torrent.read({ jobId: ack.jobId, fileIndex: 0, offset: 0, length: 4 });
+        if (typeof pendingRead.requestId !== 'string') throw new Error('Missing local cancellation handle');
+        await torrent.cancel(pendingRead.requestId);
+        await pendingRead;
+        await torrent.exportMetainfo(ack.jobId);
+        await torrent.saveFile(ack.jobId, 0);
+        await torrent.openFile(ack.jobId, 0);
+        const updated = await torrent.update({ jobId: ack.jobId, expectedRevision: status.settings.revision,
+          patch: { uploadLimitBytesPerSecond: 1024 } });
+        if (!updated.ok || updated.settings.uploadLimitBytesPerSecond !== 1024) throw new Error('Settings update failed');
+        await torrent.remove(ack.jobId);
+      })().catch(error => { setTimeout(() => { throw error; }); });
+    </script>`, { settleMs: 500 });
+    expect(result.installedGlobal).toBe(true);
+    expect(result.bootError).toBeNull();
+    expect(result.degraded?.bootError).toBeNull();
+    const operations = result.emitted.map((record) => (record.envelope as { type: string }).type);
+    for (const action of ['capabilities', 'pickFiles', 'add', 'status', 'jobs', 'files', 'selectFiles', 'pause', 'resume',
+      'metadata', 'read', 'cancel', 'exportMetainfo', 'saveFile', 'openFile', 'update', 'remove']) {
+      expect(operations).toContain('torrent.' + action);
+    }
+    expect(result.emitted.every((record) => record.verdict.ok)).toBe(true);
+  });
+
   it('distinguishes a subject failure from successful namespace installation', async () => {
     const result = await boot('<!doctype html><script>throw new Error("subject failed");</script>');
     expect(result.installedGlobal).toBe(true);

@@ -13,7 +13,13 @@ describe('runtime-injected TORRENT', () => {
       const installed = installNappletRuntimePrelude({ domains: ['torrent'] });
       expect(Object.keys(installed)).toEqual(['torrent']);
       expect(post).not.toHaveBeenCalled();
-      const added = torrent.add({ source: { sourceType: 'infohash', infoHash: 'a'.repeat(40) } });
+      for (const retired of ['fromEvent', 'toMagnet', 'search', 'publish', 'comment']) {
+        expect(installed.torrent).not.toHaveProperty(retired);
+      }
+      for (const method of ['metadata', 'read', 'exportMetainfo', 'saveFile', 'openFile', 'cancel', 'update']) {
+        expect(installed.torrent).toHaveProperty(method, expect.any(Function));
+      }
+      const added = torrent.add({ source: { sourceType: 'infohash', hashes: { v1: 'a'.repeat(40) } } });
       const request = post.mock.calls[0][0];
       expect(request).toMatchObject({ type: 'torrent.add', request: { source: { sourceType: 'infohash' } } });
       expect(post.mock.calls[0][1]).toBe('*');

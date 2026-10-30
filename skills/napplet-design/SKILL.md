@@ -42,7 +42,7 @@ Use only domains the current `@napplet/sdk` exports (`napplet-sdk` lists them). 
 | Current user pubkey / snapshots | `identity` (read-only) | Polling or `window.nostr` |
 | App state | `storage` | `localStorage` |
 | Avatars, images, JSON, media bytes | `resource` | `fetch`, `<img src=https://…>` |
-| NIP-35 indexes, torrent download/seed jobs | `torrent` | Bundled torrent engines, direct trackers/DHT, local file paths |
+| Torrent download/seed jobs and verified content access | `torrent` | Bundled torrent engines, direct trackers/DHT, local file paths |
 | Uploads, external links | `upload`, `link` | Direct network / `window.open` |
 | Settings, host look | `config`, `theme` | App-owned settings pages |
 | Keyboard-bound actions, shortcuts, game controls | `keys` action registration | App-owned key capture as the only integration path |
