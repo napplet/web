@@ -33,6 +33,7 @@ export {
   manifestDTag,
   manifestDisplayName,
   manifestRequires,
+  parsePresentationMedia,
   validateManifest,
   validateManifestEvent,
 } from './validators/manifest.js';
@@ -40,6 +41,8 @@ export type {
   ManifestError,
   ManifestVerdict,
   NappletManifestEvent,
+  PresentationMedia,
+  PresentationMediaResult,
   ValidateManifestOptions,
 } from './validators/manifest.js';
 
