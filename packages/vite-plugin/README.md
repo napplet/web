@@ -130,3 +130,7 @@ With `data`, the plugin derives `x` and `size`, sniffs the format for `m` (PNG, 
 ### GAMEPAD integration
 
 Requirement inference recognizes `@napplet/nap/gamepad`, `@napplet/sdk/gamepad`, and direct GAMEPAD domain reads. Declare `optional: ["gamepad"]` when keyboard or pointer controls fulfill the core task. See the proposed [NAP-GAMEPAD](https://github.com/napplet/naps/pull/108).
+
+## Catalog requirements
+
+Requirement inference recognizes `@napplet/nap/catalog` subpaths, `@napplet/sdk/catalog`, and direct `window.napplet.catalog` access. Declare `optional: ['catalog']` for optional discovery or `requires: ['catalog']` when essential. This does not add an `intent` requirement or grant access. See the living [NAP-CATALOG draft](https://github.com/napplet/naps/pull/95) for the read-only discovery contract.
