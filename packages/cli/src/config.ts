@@ -1,5 +1,8 @@
 import { normalizeSourceOverride } from "./repository-source.ts";
 import {
+  normalizePreviewConfig, normalizeScreenshotConfigs, normalizeSourceArchive, normalizeSourceCommit,
+} from "./manifest-media.ts";
+import {
   CONFIG_DIR,
   CONFIG_FILE,
   type DeployTargetKind,
@@ -44,6 +47,8 @@ export function defaultConfig(overrides: Partial<NappletConfig> = {}): NappletCo
     ? {
       ...overrides.metadata,
       archetypes: overrides.metadata.archetypes?.map((convention) => ({ ...convention })),
+      screenshots: overrides.metadata.screenshots?.map((entry) => ({ ...entry })),
+      preview: overrides.metadata.preview ? { ...overrides.metadata.preview } : undefined,
     }
     : undefined;
   return {
@@ -232,9 +237,13 @@ function normalizeMetadata(value: unknown): NappletDeployMetadata | undefined {
     title,
     description,
     source: normalizeSourceOverride(metadata.source),
+    sourceCommit: normalizeSourceCommit(metadata.sourceCommit),
+    sourceArchive: normalizeSourceArchive(metadata.sourceArchive),
     archetypes,
     requires: metadata.requires === undefined ? undefined : stringArray(metadata.requires, "metadata.requires"),
     optional: metadata.optional === undefined ? undefined : stringArray(metadata.optional, "metadata.optional"),
+    screenshots: normalizeScreenshotConfigs(metadata.screenshots, "metadata.screenshots"),
+    preview: normalizePreviewConfig(metadata.preview),
   };
 }
 

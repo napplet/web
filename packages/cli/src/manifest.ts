@@ -5,6 +5,7 @@ import type { ManifestFormat } from "./manifest-format.ts";
 export { computeAggregateHash } from "./manifest-legacy.ts";
 import { joinPath } from "./path.ts";
 import { readManifestMetadata, type ManifestMetadata } from "./manifest-metadata.ts";
+import { mediaUploadPath, presentationMediaHashes, validateMediaAndSourceTags } from "./manifest-media.ts";
 import {
   type DeployManifestTemplate,
   type DeployPlan,
@@ -156,6 +157,13 @@ export async function createDeployManifestTemplates(
       ) {
         uploadFiles.push({ path: `/icon-${icon.sha256}.${icon.mimeType.split("/")[1]}`, ...icon });
       }
+      // Configured screenshots and preview are read from outside the build directory.
+      const referenced = presentationMediaHashes(metadataTags);
+      for (const blob of metadata.blobs) {
+        if (!referenced.has(blob.sha256) || uploadFiles.some((f) => f.sha256 === blob.sha256)) continue;
+        const kind = metadataTags.some((t) => t[0] === "preview" && t[1] === `x ${blob.sha256}`) ? "preview" : "screenshot";
+        uploadFiles.push({ path: mediaUploadPath(kind, blob), ...blob });
+      }
     }
     if (item.target === "snapshot") {
       const snapshot = createDeploySnapshotTemplate(item, sourceTemplates, options);
@@ -198,9 +206,10 @@ export async function createDeployManifestTemplates(
 
 /**
  * NIP-5D §Manifest: "A napplet is a single self-contained /index.html", so current deploys
- * publish only /index.html plus the blob an icon tag references. Any other collected file
- * would be silently dropped, so fail loudly instead. `.well-known` files count too because
- * legacy deploys would publish them and current events cannot carry them.
+ * publish only /index.html plus the blobs the icon, screenshot and preview tags reference
+ * (NIP-5D §Icon, §Presentation media). Any other collected file would be silently dropped,
+ * so fail loudly instead. `.well-known` files count too because legacy deploys would
+ * publish them and current events cannot carry them.
  */
 function selectCurrentUploadFiles(
   dir: string,
@@ -209,14 +218,15 @@ function selectCurrentUploadFiles(
 ): ManifestFileMapping[] {
   const kept: ManifestFileMapping[] = [];
   const dropped: string[] = [];
+  const media = presentationMediaHashes(metadataTags);
   for (const file of files) {
     const isIcon = metadataTags.some((tag) => tag[0] === "icon" && tag[1] === file.sha256);
-    if (file.path === "/index.html" || isIcon) kept.push(file);
+    if (file.path === "/index.html" || isIcon || media.has(file.sha256)) kept.push(file);
     else dropped.push(file.path);
   }
   if (dropped.length > 0) {
     throw new Error([
-      `Current NIP-5D deploys publish one self-contained /index.html (plus its icon blob); these built files in ${dir} would not be deployed:`,
+      `Current NIP-5D deploys publish one self-contained /index.html (plus its icon, screenshot and preview blobs); these built files in ${dir} would not be deployed:`,
       ...dropped.map((path) => `  - ${path}`),
       "Build a single-file artifact (the @napplet/vite-plugin default artifactMode: 'single-file') or deploy with --format legacy.",
     ].join("\n"));
@@ -347,6 +357,8 @@ function buildCurrentManifestFields(
       throw new Error("Intent advertisements must be non-empty queryless identities");
     }
   }
+  // NIP-5D §Presentation media and §Source: do not sign entries clients would ignore.
+  validateMediaAndSourceTags(metadata);
   return {
     tags: [
       ["x", index[0].sha256],

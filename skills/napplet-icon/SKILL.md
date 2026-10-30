@@ -63,5 +63,6 @@ Protocol guidance here is non-normative. Before integration, read the actual `5D
 - The optional manifest icon currently supports PNG, JPEG, and WebP. An SVG design source needs a supported raster export for that field. Icons and specific pixel dimensions are not mandatory protocol features.
 - Let publishing tooling hash the final decoded image bytes and upload those same bytes as the icon blob. The icon hash and the artifact's `x` hash describe different bytes. Finalize embedded icon metadata before the artifact is hashed and signed; do not patch a signed artifact afterward.
 - If optional Zapstore metadata is also configured, keep its URL-based image fields separate from the NIP-5D manifest icon. Follow the existing publishing workflow and the user's publishing scope.
+- Screenshots and a preview video are separate **Presentation media** tags, not icons. The vite-plugin `screenshots` / `preview` options and the CLI `metadata.screenshots` / `metadata.preview` config publish them by hash; do not embed them in HTML or reuse the icon field for them.
 
 For delivery, show the selected icon and identify the checks performed. Distinguish a finished asset from verified app integration and publication; report only what actually ran.

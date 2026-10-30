@@ -46,7 +46,10 @@ Deno.test("deploy dry-run reports recovered destinations and omits binary icon d
       "https://mirror.example.com",
     ]);
     assertEquals(report.plan.items[0].dTag, "portable-notes");
+    // The captured screenshot fixture shares the embedded icon's bytes, so its blob is uploaded once.
     assertEquals(report.manifests[0].files.length, 2);
+    const icon = report.manifests[0].template.tags.find((tag: string[]) => tag[0] === "icon");
+    assertEquals(report.manifests[0].template.tags.filter((tag: string[]) => tag[0] === "screenshot").map((tag: string[]) => tag[1]), [`x ${icon[1]}`]);
     assert(
       report.manifests[0].files.every((file: Record<string, unknown>) => file.data === undefined),
     );

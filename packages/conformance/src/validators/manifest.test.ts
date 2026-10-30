@@ -5,6 +5,7 @@ import {
   NAPPLET_KIND_SNAPSHOT,
   manifestDisplayName,
   manifestRequires,
+  parsePresentationMedia,
   validateManifest,
   validateManifestEvent,
   type NappletManifestEvent,
@@ -206,4 +207,159 @@ it.each([
 ])('validates defined optional source metadata despite unrelated extension tags: %j', (...source) => {
   const verdict = validateManifestEvent(event({ tags: [...event().tags, source, ['custom', 'anything']] }));
   expect(verdict.errors.some((error) => error.code === 'invalid-metadata')).toBe(true);
+});
+
+// NIP-5D §Source: nostr clone URLs, revision pins and source archives.
+describe('source pins', () => {
+  const base = event().tags;
+  it('accepts a NIP-34 nostr clone URL as a source location', () => {
+    expect(validateManifestEvent(event({ tags: [...base, ['source', 'nostr://npub1example/relay.example/repo']] })).ok).toBe(true);
+    expect(validateManifestEvent(event({ tags: [...base, ['source', 'nostr://']] })).ok).toBe(false);
+  });
+
+  it.each(['a'.repeat(40), 'b'.repeat(64)])('accepts one source-commit %s alongside a repository source', (commit) => {
+    const v = validateManifestEvent(event({ tags: [...base, ['source', 'https://git.example.com/owner/repo.git'], ['source-commit', commit]] }));
+    expect(v.ok).toBe(true);
+    expect(v.warnings).toEqual([]);
+  });
+
+  it('advises that a source-commit without a repository source is ignored', () => {
+    const v = validateManifestEvent(event({ tags: [...base, ['source-commit', 'a'.repeat(40)]] }));
+    expect(v.ok).toBe(true);
+    expect(v.warnings.map((w) => w.code)).toEqual(['unused-source-commit']);
+    const malformedSource = validateManifestEvent(event({ tags: [...base, ['source', './local'], ['source-commit', 'a'.repeat(40)]] }));
+    expect(malformedSource.warnings.map((w) => w.code)).toEqual(['unused-source-commit']);
+  });
+
+  it.each([
+    [['source-commit', 'A'.repeat(40)]],
+    [['source-commit', 'a'.repeat(39)]],
+    [['source-commit', 'a'.repeat(41)]],
+    [['source-commit']],
+    [['source-commit', 'a'.repeat(40), 'extra']],
+    [['source-commit', 'a'.repeat(40)], ['source-commit', 'b'.repeat(40)]],
+  ])('rejects malformed or repeated source-commit tags %j', (...tags) => {
+    const v = validateManifestEvent(event({ tags: [...base, ['source', 'https://git.example.com/owner/repo.git'], ...tags] }));
+    expect(v.errors.map((e) => e.code)).toEqual(['invalid-metadata']);
+  });
+
+  const archive = ['source-archive', 'https://dl.example.com/napplet-src.tar.gz', 'c'.repeat(64), 'application/gzip'];
+  it('accepts one well-formed source-archive tag', () => {
+    const v = validateManifestEvent(event({ tags: [...base, archive] }));
+    expect(v.ok).toBe(true);
+    expect(v.warnings).toEqual([]);
+  });
+
+  it.each([
+    [archive.slice(0, 3)],
+    [[...archive, 'extra']],
+    [['source-archive', 'http://dl.example.com/src.tar.gz', 'c'.repeat(64), 'application/gzip']],
+    [['source-archive', 'https://user:pw@dl.example.com/src.tar.gz', 'c'.repeat(64), 'application/gzip']],
+    [['source-archive', 'https://dl.example.com/src.tar.gz#frag', 'c'.repeat(64), 'application/gzip']],
+    [['source-archive', 'dl.example.com/src.tar.gz', 'c'.repeat(64), 'application/gzip']],
+    [['source-archive', 'https://dl.example.com/src.tar.gz', 'C'.repeat(64), 'application/gzip']],
+    [['source-archive', 'https://dl.example.com/src.tar.gz', 'c'.repeat(64), 'gzip']],
+    [archive, archive],
+  ])('rejects malformed or repeated source-archive tags %j', (...tags) => {
+    const v = validateManifestEvent(event({ tags: [...base, ...tags] }));
+    expect(v.errors.map((e) => e.code)).toEqual(['invalid-metadata']);
+  });
+});
+
+// NIP-5D §Presentation media: NIP-92 key/value fields; unusable entries are ignored.
+describe('presentation media', () => {
+  const X = 'd'.repeat(64);
+  const Y = 'e'.repeat(64);
+  const base = event().tags;
+  const shot = ['screenshot', `x ${X}`, 'm image/png', 'dim 1200x750', 'size 184320', 'alt The puzzle board'];
+  const clip = ['preview', `x ${Y}`, 'm video/webm', 'dim 960x600', 'duration 8.5', 'alt Building a bridge'];
+
+  it('parses screenshots in manifest order and one preview', () => {
+    const e = event({ tags: [...base, shot, clip, ['screenshot', `x ${Y}`]] });
+    expect(validateManifestEvent(e).ok).toBe(true);
+    expect(validateManifestEvent(e).warnings).toEqual([]);
+    expect(parsePresentationMedia(e)).toEqual({
+      screenshots: [
+        { sha256: X, mimeType: 'image/png', dim: { width: 1200, height: 750 }, size: 184320, alt: 'The puzzle board' },
+        { sha256: Y },
+      ],
+      preview: { sha256: Y, mimeType: 'video/webm', dim: { width: 960, height: 600 }, duration: 8.5, alt: 'Building a bridge' },
+      warnings: [],
+    });
+  });
+
+  it('splits fields at the first ASCII space only and ignores field order and unknown keys', () => {
+    const e = event({ tags: [...base, ['screenshot', 'alt Two  spaces here', 'future value', `x ${X}`]] });
+    const parsed = parsePresentationMedia(e);
+    expect(parsed.screenshots).toEqual([{ sha256: X, alt: 'Two  spaces here' }]);
+    expect(parsed.warnings).toEqual([]);
+  });
+
+  it.each([
+    [['screenshot']],
+    [['screenshot', 'm image/png']],
+    [['screenshot', `x ${X}`, `x ${Y}`]],
+    [['screenshot', `x ${X.toUpperCase()}`]],
+    [['screenshot', 'x']],
+    [['screenshot', `x  ${X}`]],
+    [['screenshot', `x ${X}`, 'm image/gif']],
+    [['screenshot', `x ${X}`, 'm video/webm']],
+    [['preview', `x ${X}`, 'm image/png']],
+  ])('ignores an entry with a missing, malformed, or repeated x or an undecodable format %j', (tag) => {
+    const e = event({ tags: [...base, tag, shot] });
+    const parsed = parsePresentationMedia(e);
+    expect(parsed.screenshots.map((s) => s.sha256)).toEqual([X]);
+    expect(parsed.preview).toBeUndefined();
+    expect(parsed.warnings.map((w) => w.code)).toEqual(['invalid-presentation-media']);
+    const v = validateManifestEvent(e);
+    expect(v.ok).toBe(true);
+    expect(v.warnings.map((w) => w.code)).toEqual(['invalid-presentation-media']);
+  });
+
+  it.each([
+    ['m', 'not a type'],
+    ['dim', '1200'],
+    ['dim', '0x750'],
+    ['dim', '1200x750x2'],
+    ['size', '-1'],
+    ['size', '1.5'],
+    ['alt', ' '],
+  ])('ignores only a malformed %s field, keeping the entry', (key, value) => {
+    const e = event({ tags: [...base, ['screenshot', `x ${X}`, `${key} ${value}`, 'size 10']] });
+    const parsed = parsePresentationMedia(e);
+    expect(parsed.screenshots).toEqual([key === 'size' ? { sha256: X } : { sha256: X, size: 10 }]);
+    expect(parsed.warnings.map((w) => w.code)).toEqual(['invalid-presentation-media']);
+    expect(parsed.warnings[0].message).toContain(`Ignore ${key} field`);
+  });
+
+  it('ignores a repeated optional field and a screenshot duration', () => {
+    const e = event({ tags: [...base, ['screenshot', `x ${X}`, 'dim 1x1', 'dim 2x2', 'duration 3']] });
+    const parsed = parsePresentationMedia(e);
+    expect(parsed.screenshots).toEqual([{ sha256: X }]);
+    expect(parsed.warnings).toHaveLength(1);
+  });
+
+  it.each(['8', '8.5', '0'])('accepts preview duration %s and rejects malformed durations', (duration) => {
+    expect(parsePresentationMedia(event({ tags: [...base, ['preview', `x ${X}`, `duration ${duration}`]] })).preview).toEqual({ sha256: X, duration: Number(duration) });
+    const bad = parsePresentationMedia(event({ tags: [...base, ['preview', `x ${X}`, 'duration 8.5s']] }));
+    expect(bad.preview).toEqual({ sha256: X });
+    expect(bad.warnings).toHaveLength(1);
+  });
+
+  it('ignores the preview entirely when more than one preview tag is present', () => {
+    const e = event({ tags: [...base, clip, clip, shot] });
+    const parsed = parsePresentationMedia(e);
+    expect(parsed.preview).toBeUndefined();
+    expect(parsed.screenshots).toHaveLength(1);
+    expect(parsed.warnings.map((w) => w.message)).toEqual([expect.stringContaining('Multiple preview tags')]);
+    expect(validateManifestEvent(e).ok).toBe(true);
+  });
+
+  it('never fails validation because of presentation media', () => {
+    const e = event({ tags: [...base, ['screenshot'], ['preview'], ['preview', 'junk']] });
+    const v = validateManifestEvent(e);
+    expect(v.ok).toBe(true);
+    expect(v.errors).toEqual([]);
+    expect(v.warnings.every((w) => w.code === 'invalid-presentation-media')).toBe(true);
+  });
 });

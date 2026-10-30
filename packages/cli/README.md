@@ -432,7 +432,7 @@ Deno 2.9.5, CLI 0.9.1 source, 2026-10-15. These are local measurements, not size
 
 ## Current and legacy event formats
 
-From CLI **0.7.0**, deployments default to the current NIP-5D artifact-hash schema. Interactive deploys ask for `current` or `legacy`; scripts can choose with `--format current|legacy`. A non-empty description is required for current event content. Legacy output remains isolated in a temporary serializer; 0.6.x and earlier defaulted to legacy events. Current deploys upload only `/index.html` plus the blob referenced by an `icon` tag; any other built file in the deploy directory makes deploy fail with the list of those files (build a single-file artifact or use `--format legacy`).
+From CLI **0.7.0**, deployments default to the current NIP-5D artifact-hash schema. Interactive deploys ask for `current` or `legacy`; scripts can choose with `--format current|legacy`. A non-empty description is required for current event content. Legacy output remains isolated in a temporary serializer; 0.6.x and earlier defaulted to legacy events. Current deploys upload only `/index.html` plus the blobs referenced by `icon`, `screenshot` and `preview` tags; any other built file in the deploy directory makes deploy fail with the list of those files (build a single-file artifact or use `--format legacy`).
 
 ```sh
 napplet deploy --dry-run --format current
@@ -472,7 +472,21 @@ metadata:
   source: https://github.com/example/my-napplet
 ```
 
-Use `source: false` in that object to omit the tag, including any sidecar or HTML source. A source override must be one absolute HTTP(S) URL without credentials; arrays are not accepted. The precedence is config → sidecar → HTML → Git origin. Root, named, and companion snapshot events retain the resolved source. This follows the current [NIP-5D manifest table](https://github.com/dskvr/nips/blob/nip/5d/5D.md#manifest), which permits zero or one `source` tag. Automatic Git inference does not apply to `--format legacy`; an explicit config override still does. These are CLI defaults, not additional protocol requirements.
+Use `source: false` in that object to omit the tag, including any sidecar or HTML source. A source override must be one absolute HTTP(S) URL without credentials or a NIP-34 `nostr://` clone URL; arrays are not accepted. The precedence is config → sidecar → HTML → Git origin. Root, named, and companion snapshot events retain the resolved source. This follows the current [NIP-5D manifest table](https://github.com/dskvr/nips/blob/nip/5d/5D.md#manifest), which permits zero or one `source` tag. Automatic Git inference does not apply to `--format legacy`; an explicit config override still does. These are CLI defaults, not additional protocol requirements.
+
+[NIP-5D §Source](https://github.com/nostr-protocol/nips/pull/2303) also allows one `source-commit` pin and one `source-archive`. Set them explicitly; the CLI never infers a commit, because a dirty or unpushed tree would pin a revision nobody can fetch:
+
+```yaml
+metadata:
+  source: https://github.com/example/my-napplet
+  sourceCommit: 0123456789abcdef0123456789abcdef01234567
+  sourceArchive:
+    url: https://dl.example.com/my-napplet-src.tar.gz
+    sha256: c0ffee…
+    mimeType: application/gzip
+```
+
+Config values replace matching sidecar tags. `sourceCommit` must be a full lowercase-hex Git commit ID (40 or 64 characters); `sourceArchive.url` must be an absolute HTTPS URL without credentials or a fragment, with the archive's sha256 and MIME type. Deploy refuses malformed or repeated pins rather than signing tags clients ignore. A `source-commit` is only meaningful next to a repository `source`.
 
 ## Standalone HTML recovery
 
@@ -485,6 +499,27 @@ Root and named events omit lineage tags. Companion snapshots retain the CLI's se
 Decoded icon bytes are hashed and uploaded unchanged alongside the HTML, even when `index.html` is the only file in the deployment directory. No extracted icon file is written. If a sidecar overrides the icon, embedded bytes are used only when both hash and MIME type match that declaration. Remote, unsupported, empty, malformed, and MIME-mismatched icon URLs are ignored. Hash-only sidecars still require the matching blob to be supplied separately. Consumers verify decoding before display according to NIP-5D. Legacy-format deployment retains its previous title/description HTML fallback behavior.
 
 Deployment manifests (current and legacy, including snapshots) and optional Zapstore application events include `["client", "napplet.run"]` before signing. This identifies the publisher using the [NIP-89 client tag](https://github.com/nostr-protocol/nips/blob/master/89.md#client-tag) and does not change artifact hashes. Dry-run templates include the same attribution.
+
+## Presentation media
+
+[NIP-5D §Presentation media](https://github.com/nostr-protocol/nips/pull/2303) describes screenshots and one preview video on the manifest itself, each by the sha256 of its bytes with optional `m`, `dim`, `size`, `alt` and (for the preview) `duration` fields. Current-format deploys handle them in three ways:
+
+- Sidecar or configured `screenshot` / `preview` tags whose `x` hash matches a built file are uploaded with `/index.html` (the Vite plugin writes supplied media to `dist/<sha256>.<ext>`). Entries clients would ignore (no usable `x`, an undecodable `m`, more than one `preview`) fail the deploy instead of being signed.
+- `metadata.screenshots` and `metadata.preview` publish local files kept outside the build directory. Paths resolve relative to the working directory, are hashed, sized, format-sniffed (PNG, JPEG, WebP; WebM or MP4 for the preview) and measured, and replace any sidecar entries of the same kind; an empty list clears them.
+- Automatic deploy capture (below) adds its PNG as a `screenshot` tag unless `metadata.screenshots` is configured.
+
+```yaml
+metadata:
+  screenshots:
+    - shots/board.png
+    - path: shots/editor.webp
+      alt: Editing a note
+  preview:
+    path: shots/demo.webm
+    duration: 8.5
+```
+
+`migrate` drops unusable screenshot and preview metadata from a converted event and says so in its notes. These are CLI behaviors, not protocol requirements; clients verify hashes and decoding before display.
 
 ## Screenshots and Zapstore metadata
 
@@ -537,7 +572,7 @@ Local PNG, JPEG and WebP images are resolved relative to the working directory, 
 
 The listing uses kind `32267` from the [Software Applications proposal](https://github.com/nostr-protocol/nips/pull/1336), with screenshot URLs in `image` tags. It is published as a separate event before the napplet manifests. The current [NIP-5D manifest](https://github.com/nostr-protocol/nips/pull/2303) does not define an application reference tag, so deploy leaves manifest tags and artifact hashes unchanged. This publishes application metadata only, without software release or asset events; acceptance into a particular store's catalog depends on that store.
 
-Deploy starts a local preview for each distinct selected build, captures a temporary PNG, and appends it to the application images for that deployment. Capture failure stops deployment before any upload or relay publication. The temporary image is removed after success or failure. Capture diagnostics go to stderr so `--json` stdout remains valid JSON. No host URL is required. Root and snapshot selections of the same artifact share one capture. To capture an existing shell instead, use `--screenshot <preview-url>`. Use `--screenshot-selector`, `--screenshot-ready-selector`, `--screenshot-width`, `--screenshot-height`, and `--screenshot-delay` for the corresponding capture options. Use the standalone `napplet screenshot` command when you want to keep a PNG on disk.
+Deploy starts a local preview for each distinct selected build, captures a temporary PNG, appends it to the application images for that deployment, and adds the same capture to that build's current-format manifests as a NIP-5D `screenshot` tag (`x`, `m image/png`, `dim`, `size`) so the blob is uploaded once and referenced by hash. Configured `metadata.screenshots` keep their own list instead of the capture. Capture failure stops deployment before any upload or relay publication. The temporary image is removed after success or failure. Capture diagnostics go to stderr so `--json` stdout remains valid JSON. No host URL is required. Root and snapshot selections of the same artifact share one capture. To capture an existing shell instead, use `--screenshot <preview-url>`. Use `--screenshot-selector`, `--screenshot-ready-selector`, `--screenshot-width`, `--screenshot-height`, and `--screenshot-delay` for the corresponding capture options. Use the standalone `napplet screenshot` command when you want to keep a PNG on disk.
 
 ### Standalone regression test
 

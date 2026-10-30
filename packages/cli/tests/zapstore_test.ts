@@ -350,7 +350,12 @@ for (const automatic of [false, true]) {
           assertEquals(images.length, 2);
           assertEquals(images[0], ["image", "https://images.example/existing.png"]);
           assert(images[1][1].startsWith(servers[0]));
-          assertEquals(report.manifests[0].files.length, 1);
+          // The same capture is a NIP-5D screenshot tag on the manifest and an upload file.
+          const shots = report.manifests[0].template.tags.filter((tag: string[]) => tag[0] === "screenshot");
+          assertEquals(shots.length, 1);
+          assertEquals(shots[0].slice(2), ["m image/png", "dim 1x1", `size ${png.length}`]);
+          assert(images[1][1].endsWith(shots[0][1].slice(2)));
+          assertEquals(report.manifests[0].files.map((file: { path: string }) => file.path), ["/index.html", `/screenshot-${shots[0][1].slice(2)}.png`]);
         } else {
           assertEquals(logs.length, 0);
           assert(errors.length > 0);
@@ -477,6 +482,7 @@ Deno.test("deploy defaults capture and publish metadata with independent opt-out
       assertEquals(captured, captures);
       const report = JSON.parse(output[0]);
       assertEquals(!!report.application, published);
+      assertEquals(report.manifests[0].template.tags.filter((tag: string[]) => tag[0] === "screenshot").length, captures);
       if (published) {
         assertEquals(report.application.template.kind, 32267);
         assertEquals(report.application.template.tags.find((tag: string[]) => tag[0] === "name"), ["name", "Notes"]);

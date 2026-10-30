@@ -24,12 +24,20 @@ export interface NappletArchetypeConvention {
 export interface NappletDeployMetadata {
   /** Source URL override; false suppresses embedded and inferred source tags. */
   source?: string | false;
+  /** Full lowercase-hex Git commit ID pinning the `source` repository (NIP-5D §Source). */
+  sourceCommit?: string;
+  /** Independently downloadable source archive (NIP-5D §Source). */
+  sourceArchive?: { url: string; sha256: string; mimeType: string };
   name?: string;
   title?: string;
   description?: string;
   archetypes?: NappletArchetypeConvention[];
   requires?: string[];
   optional?: string[];
+  /** Local PNG/JPEG/WebP files published as `screenshot` tags, in order (NIP-5D §Presentation media). */
+  screenshots?: Array<{ path: string; alt?: string }>;
+  /** Local WebM/MP4 file published as the single `preview` tag. */
+  preview?: { path: string; alt?: string; duration?: number };
 }
 
 /** NappletConfig shape used by shared CLI type helpers. */
