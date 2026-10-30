@@ -46,6 +46,49 @@ export interface Nip5aRequiresOptions {
 /** Supported forms for the `requires` plugin option. */
 export type Nip5aRequiresOption = string[] | Nip5aRequiresOptions;
 
+/** Image formats a NIP-5D client decodes for icons and screenshots. */
+export type Nip5aImageMimeType = 'image/png' | 'image/jpeg' | 'image/webp';
+
+/**
+ * One `screenshot` tag (NIP-5D §Presentation media). Supply `data` to hash, size
+ * and measure the bytes and write them beside `index.html`; or supply `sha256`
+ * for a blob uploaded separately. Declared fields must agree with the bytes.
+ */
+export interface Nip5aScreenshotOption {
+  /** Complete PNG, JPEG or WebP bytes. */
+  data?: Uint8Array;
+  /** Lowercase-hex sha256 of the complete bytes; derived from `data`. */
+  sha256?: string;
+  /** NIP-94 `m`; sniffed from `data`. */
+  mimeType?: Nip5aImageMimeType;
+  /** NIP-94 `dim` as `WIDTHxHEIGHT`; read from PNG/JPEG/WebP headers in `data`. */
+  dim?: string;
+  /** NIP-94 `size` in bytes; derived from `data`. */
+  size?: number;
+  /** NIP-94 `alt` text. */
+  alt?: string;
+}
+
+/** The single `preview` video tag (NIP-5D §Presentation media). */
+export interface Nip5aPreviewOption extends Omit<Nip5aScreenshotOption, 'mimeType'> {
+  /** Complete WebM or MP4 bytes. */
+  data?: Uint8Array;
+  /** NIP-94 `m`, a `video/*` type; sniffed from `data`. */
+  mimeType?: string;
+  /** NIP-71 `duration` in seconds. */
+  duration?: number;
+}
+
+/** Independently downloadable source archive (NIP-5D §Source). */
+export interface Nip5aSourceArchiveOption {
+  /** Absolute HTTPS URL without credentials or a fragment. */
+  url: string;
+  /** Lowercase-hex sha256 of the archive bytes before decompression. */
+  sha256: string;
+  /** Archive MIME type. */
+  mimeType: string;
+}
+
 /** Public configuration for {@link import('./index.js').nip5aManifest}. */
 export interface Nip5aManifestOptions {
   /** Napplet type/dtag identifier (e.g., 'feed', 'chat'). Used as the NIP-5D `d` tag. */
@@ -56,12 +99,20 @@ export interface Nip5aManifestOptions {
   optional?: string[];
   /** Accepted queryless intent identities and advertised parameter names. */
   intents?: Array<{ intent: string; params?: string[] }>;
-  /** Source repository URL. */
+  /** Source repository or archive location (NIP-5D §Source). */
   source?: string;
-  /** Blossom origins holding the artifact and icon blobs. */
+  /** Full lowercase-hex Git commit ID pinning `source`; ignored by clients without a repository source. */
+  sourceCommit?: string;
+  /** Independently downloadable source archive. */
+  sourceArchive?: Nip5aSourceArchiveOption;
+  /** Blossom origins holding the artifact, icon and presentation blobs. */
   servers?: string[];
   /** Icon bytes are embedded for standalone recovery; hash-only callers upload the blob separately. */
-  icon?: { sha256?: string; data?: Uint8Array; mimeType: 'image/png' | 'image/jpeg' | 'image/webp' };
+  icon?: { sha256?: string; data?: Uint8Array; mimeType: Nip5aImageMimeType };
+  /** Screenshot tags in display order; supplied bytes are written to `dist/<sha256>.<ext>`. */
+  screenshots?: Nip5aScreenshotOption[];
+  /** At most one preview video; supplied bytes are written to `dist/<sha256>.<ext>`. */
+  preview?: Nip5aPreviewOption;
   /** Display label; also overrides the ordinary HTML title. */
   title?: string;
   /** Plain-text manifest content, falling back to ordinary HTML description metadata. */

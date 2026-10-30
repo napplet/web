@@ -27,7 +27,7 @@ async function publish(html: string, options: Partial<Nip5aManifestOptions> = {}
   await (plugin.closeBundle as Function).call(context);
   const output = fs.readFileSync(path.join(outDir, 'index.html'), 'utf8');
   const manifest = JSON.parse(fs.readFileSync(path.join(outDir, '.nip5a-manifest.json'), 'utf8')) as { content: string; tags: string[][]; artifactHash: string };
-  return { root, outDir, output, manifest };
+  return { root, outDir, output, manifest, context };
 }
 
 describe('NIP-5D HTML Metadata for Publishing', () => {
@@ -123,5 +123,72 @@ describe('NIP-5D HTML Metadata for Publishing', () => {
     expect(output).toContain('<style>');
     expect(output).toContain('dataset.ready');
     expect(fs.readdirSync(outDir).sort()).toEqual(['.nip5a-manifest.json', 'index.html']);
+  });
+});
+
+// NIP-5D §Presentation media and §Source have no head mapping: sidecar only.
+describe('presentation media and source pins', () => {
+  const jpeg = Buffer.from(icons.find((icon) => icon.mimeType === 'image/jpeg')!.base64, 'base64');
+  const webm = Uint8Array.from([0x1a, 0x45, 0xdf, 0xa3, 0x9f, 0x42, 0x86]);
+  const archive = { url: 'https://dl.example.com/notes-src.tar.gz', sha256: 'c'.repeat(64), mimeType: 'application/gzip' };
+
+  it('emits screenshot, preview and source pin tags in the sidecar, writes blobs, and keeps HTML unchanged', async () => {
+    const { output, manifest, outDir } = await publish(fixtureHtml, {
+      screenshots: [{ data: png, alt: 'Notes list' }, { sha256: 'a'.repeat(64), mimeType: 'image/webp', dim: '800x600' }],
+      preview: { data: webm, dim: '960x600', duration: 8 },
+      sourceCommit: 'b'.repeat(40), sourceArchive: archive,
+    });
+    const names = manifest.tags.map((t) => t[0]);
+    expect(names.slice(names.indexOf('source'), names.indexOf('source-archive') + 1)).toEqual(['source', 'source-commit', 'source-archive']);
+    expect(manifest.tags).toContainEqual(['source-commit', 'b'.repeat(40)]);
+    expect(manifest.tags).toContainEqual(['source-archive', archive.url, archive.sha256, archive.mimeType]);
+    expect(manifest.tags.filter((t) => t[0] === 'screenshot')).toEqual([
+      ['screenshot', `x ${hash(png)}`, 'm image/png', 'dim 1x1', `size ${png.length}`, 'alt Notes list'],
+      ['screenshot', `x ${'a'.repeat(64)}`, 'm image/webp', 'dim 800x600'],
+    ]);
+    expect(manifest.tags.filter((t) => t[0] === 'preview')).toEqual([['preview', `x ${hash(webm)}`, 'm video/webm', 'dim 960x600', `size ${webm.length}`, 'duration 8']]);
+    expect(names.indexOf('icon')).toBeLessThan(names.indexOf('screenshot'));
+    expect(names.indexOf('screenshot')).toBeLessThan(names.indexOf('preview'));
+    expect(fs.readdirSync(outDir).sort()).toEqual(['.nip5a-manifest.json', `${hash(png)}.png`, `${hash(webm)}.webm`, 'index.html'].sort());
+    expect(fs.readFileSync(path.join(outDir, `${hash(png)}.png`))).toEqual(png);
+    expect(output).not.toMatch(/screenshot|preview|source-commit|source-archive/);
+    expect(output).not.toContain('a'.repeat(64));
+    expect(manifest.tags).toContainEqual(['x', hash(output)]);
+    expect(readPublishingMetadata(output).tags.map((t) => t[0])).not.toContain('screenshot');
+  });
+
+  it('does not change the artifact hash when media is added', async () => {
+    const plain = await publish(fixtureHtml);
+    const withMedia = await publish(fixtureHtml, { screenshots: [{ data: jpeg }] });
+    expect(withMedia.output).toBe(plain.output);
+    expect(withMedia.manifest.artifactHash).toBe(plain.manifest.artifactHash);
+  });
+
+  it('warns when a source commit has no source and when recommended media fields are missing', async () => {
+    const { manifest, context } = await publish('<head><meta name="description" content="Minimal"></head>', {
+      sourceCommit: 'b'.repeat(64), screenshots: [{ sha256: 'a'.repeat(64) }],
+    });
+    expect(manifest.tags).toContainEqual(['source-commit', 'b'.repeat(64)]);
+    expect(manifest.tags.some((t) => t[0] === 'source')).toBe(false);
+    expect(context.warn.mock.calls.map(([message]) => message)).toEqual([
+      expect.stringContaining('sourceCommit without a source repository'),
+      expect.stringContaining('recommends an m field'),
+      expect.stringContaining('recommends a dim field'),
+    ]);
+  });
+
+  it.each([
+    [{ sourceCommit: 'B'.repeat(40) }, 'sourceCommit must be a full lowercase-hex Git commit ID'],
+    [{ sourceCommit: 'b'.repeat(41) }, 'sourceCommit must be a full lowercase-hex Git commit ID'],
+    [{ sourceArchive: { ...archive, url: 'http://dl.example.com/src.tgz' } }, 'sourceArchive.url must be an absolute HTTPS URL'],
+    [{ sourceArchive: { ...archive, url: 'https://u:p@dl.example.com/src.tgz' } }, 'sourceArchive.url must be an absolute HTTPS URL'],
+    [{ sourceArchive: { ...archive, url: 'https://dl.example.com/src.tgz#x' } }, 'sourceArchive.url must be an absolute HTTPS URL'],
+    [{ sourceArchive: { ...archive, url: 'not a url' } }, 'sourceArchive.url must be an absolute HTTPS URL'],
+    [{ sourceArchive: { ...archive, sha256: 'C'.repeat(64) } }, 'sourceArchive.sha256 must be a lowercase sha256'],
+    [{ sourceArchive: { ...archive, mimeType: 'gzip' } }, 'sourceArchive.mimeType must be a MIME type'],
+    [{ screenshots: [{ data: png, mimeType: 'image/jpeg' as const }] }, 'screenshots[0]: mimeType image/jpeg does not match'],
+    [{ preview: { data: png } }, 'preview: data must be WebM or MP4 bytes'],
+  ])('fails the build for invalid %j', async (options, message) => {
+    await expect(publish(fixtureHtml, options)).rejects.toThrow(message);
   });
 });
