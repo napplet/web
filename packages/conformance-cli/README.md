@@ -82,3 +82,7 @@ napplet-conformance ./dist --manifest ./signed-event.json
 ```
 
 The CLI and web runtime inject the maintained `@napplet/shim` bindings before subject code. Installation is observed separately from app errors, and private harness observations are excluded from the envelope log. The normal sandbox remains `allow-scripts`; `--allow-same-origin` is a debug setting and correctly fails the sandbox conformance check. Neither domain presence nor manifest declarations grant production permissions. This is implementation guidance; the living [NIP-5D proposal](https://github.com/nostr-protocol/nips/pull/2303) and [NAPs](https://github.com/napplet/naps) define the protocol.
+
+### MOTION integration
+
+The runner loads the maintained shim with the optional motion API and validates motion wire traffic through `@napplet/conformance`. Its reference shell reports unavailable sensors rather than fabricating readings. Real prompts, sensor delivery, revocation, and focus isolation need a motion-capable shell. See the non-normative [MOTION guide](../../apps/docs/naps/motion.md).

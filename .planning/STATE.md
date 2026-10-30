@@ -8,7 +8,7 @@ status: completed
 stopped_at: Phase 164 verified locally and shipped in PR 248 with terminal recordings
 last_updated: "2026-10-26T13:07:06+00:00"
 last_activity: 2026-10-30
-last_activity_desc: Completed quick task 261030-9r6; NIP-5D presentation media and source pins in PR 272
+last_activity_desc: Completed quick task 261030-poe; NAP-MOTION package support
 progress:
   total_phases: 9
   completed_phases: 4
@@ -638,6 +638,7 @@ Items acknowledged and deferred at v0.31.0 milestone close on 2026-05-24:
 | 261007-c0v | Embed NIP-5D publishing metadata and recover standalone HTML deploys ([PR #226](https://github.com/napplet/web/pull/226)) | 2026-10-07 | 4b9cbc79 | [261007-c0v](./quick/261007-c0v-embed-nip-5d-publishing-metadata-and-rec/) |
 | 261010-01a | Optional Zapstore metadata, standalone/inline screenshots, and current protocol context | 2026-10-10 | 46c19178 | [261010-01a](./quick/261010-01a-optional-zapstore-metadata-and-current-p/) |
 | 261015-by5 | Migrate CLI project configuration to YAML with required consent | 2026-10-15 | 5132679b | [261015-by5-migrate-cli-project-configuration-from-j](./quick/261015-by5-migrate-cli-project-configuration-from-j/) |
+| 261030-poe | Add NAP-MOTION package support, conformance, and docs | 2026-10-30 | 18fa00f5 | [261030-poe-add-nap-motion-across-packages-and-docs](./quick/261030-poe-add-nap-motion-across-packages-and-docs/) |
 
 Last session: 2026-07-23T15:44:08.781Z
 Stopped at: Completed 161-16-PLAN.md

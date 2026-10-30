@@ -668,3 +668,7 @@ The runtime binding retains deliveries until a listener registers. Discovery can
 ### GAMEPAD integration
 
 The selected `gamepad` runtime binding installs the cached API, subscribes without SHELL readiness, validates parent state, and unsubscribes during cleanup. See the proposed [NAP-GAMEPAD](https://github.com/napplet/naps/pull/108). The native browser Gamepad API is left untouched pending clarification of the proposal’s optional replacement and NIP-5D’s namespace-only injection rule.
+
+### MOTION integration
+
+Selecting the `motion` domain installs the draft [NAP-MOTION](https://github.com/napplet/naps/pull/124) API before app scripts. It subscribes on first use, validates parent messages, correlates permission requests, copies snapshots, and clears cached samples on focus or grant loss. Cleanup unsubscribes and rejects pending permission requests. Native sensor APIs remain untouched; the host owns sensor denial, grants, and focus/visibility gating. See the non-normative [MOTION guide](../../apps/docs/naps/motion.md).

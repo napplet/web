@@ -546,6 +546,24 @@ describe('nip5aManifest artifact modes', () => {
     expect(result.warnings).toEqual([]);
   });
 
+  it.each([
+    "import { motion } from '@napplet/sdk/motion';",
+    "import { motionState } from '@napplet/nap/motion';",
+    'window.napplet.motion.state();',
+  ])('infers MOTION from %s while preserving optional declarations', async (code) => {
+    for (const optional of [[], ['motion']]) {
+      const fixture = makeFixture();
+      fs.writeFileSync(path.join(fixture.dist, 'index.html'), '<!doctype html>');
+      await runCloseBundle(
+        { nappletType: 'motion-input', optional, requires: { infer: true } },
+        fixture, {}, [{ id: path.join(fixture.root, 'src/main.ts'), code }],
+      );
+      const tags = readManifest(fixture.dist).tags;
+      expect(tags).toContainEqual([optional.length ? 'O' : 'R', 'motion']);
+      expect(tags).not.toContainEqual([optional.length ? 'R' : 'O', 'motion']);
+    }
+  });
+
   it('does not infer requirements from type-only imports or dynamic window access', async () => {
     const fixture = makeFixture();
     fs.writeFileSync(path.join(fixture.dist, 'index.html'), '<!doctype html>');

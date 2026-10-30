@@ -57,14 +57,14 @@ interface RelaySubscribe extends NappletMessage {
 }
 ```
 
-The `type` field domain prefix (`relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `ble`, `webrtc`, `link`, `count`, `lists`, `serial`, `fs`, `common`, `dm`, `shell`, `gamepad`) routes messages to the correct NAP handler via `dispatch()`.
+The `type` field domain prefix (`relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `ble`, `webrtc`, `link`, `count`, `lists`, `serial`, `fs`, `common`, `dm`, `shell`, `gamepad`, `motion`) routes messages to the correct NAP handler via `dispatch()`.
 
 #### `NapDomain`
 
 String literal union of the NAP capability domains.
 
 ```ts
-type NapDomain = 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'cvm' | 'outbox' | 'upload' | 'intent' | 'ble' | 'webrtc' | 'link' | 'count' | 'lists' | 'serial' | 'fs' | 'common' | 'dm' | 'shell' | 'gamepad';
+type NapDomain = 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'cvm' | 'outbox' | 'upload' | 'intent' | 'ble' | 'webrtc' | 'link' | 'count' | 'lists' | 'serial' | 'fs' | 'common' | 'dm' | 'shell' | 'gamepad' | 'motion';
 ```
 
 | Domain    | Scope                                    |
@@ -420,3 +420,7 @@ The runtime binding retains deliveries until a listener registers. Discovery can
 ### GAMEPAD integration
 
 `GamepadState`, `Gamepad`, `GamepadButton`, `GamepadSlot`, `GamepadApi`, and the `gamepad` domain are exported for the proposed [NAP-GAMEPAD](https://github.com/napplet/naps/pull/108). Its fire-and-forget envelopes carry no correlation id.
+
+### MOTION integration
+
+`MotionApi`, `MotionState`, `MotionSample`, `MotionPermissionResult`, `MotionPermission`, `MotionUnavailableReason`, `Vector3`, `RotationRate`, and `Orientation` are exported with the `motion` domain for the draft [NAP-MOTION](https://github.com/napplet/naps/pull/124). This is non-normative package guidance. Only `motion.permission` and its result correlate by `id`; state and sample messages are unsolicited snapshots.

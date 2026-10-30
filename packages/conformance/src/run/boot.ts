@@ -17,6 +17,7 @@
 import { NAP_DOMAINS } from '@napplet/core';
 import { createReferenceShell, type RecordedEnvelope } from '../shell/reference-shell.js';
 import type { BootObservation } from './context.js';
+import { MOTION_RUNTIME_SOURCE } from './motion-prelude.js';
 
 const INTERNAL_BOOT_ERROR = '__nappletConformance.error';
 const INTERNAL_INSTALLED = '__nappletConformance.installed';
@@ -45,7 +46,7 @@ export interface BootOptions {
   settleMs?: number;
   /** Also run a no-domain degraded boot. Default true. */
   runDegraded?: boolean;
-  /** Host-supplied maintained shim IIFE. Without it, only the embedded RESOURCE/GAMEPAD fixtures are available. */
+  /** Host-supplied maintained shim IIFE. Without it, only embedded RESOURCE/GAMEPAD/MOTION fixtures are available. */
   runtimePreludeSource?: string;
   /** Debug only: also grant `allow-same-origin` (a conformant load must NOT need it). Default false. */
   allowSameOrigin?: boolean;
@@ -242,7 +243,7 @@ export function runtimePrelude(domains: readonly string[], runtimePreludeSource?
     return `${runtimePreludeSource}\n;globalThis.NappletShimPrelude.install(${JSON.stringify({ domains })});\n${installed}`;
   }
   return FALLBACK_RUNTIME_OPEN + JSON.stringify(domains) + FALLBACK_RUNTIME_BEFORE_GAMEPAD_TOOLS
-    + GAMEPAD_STATE_TOOLS_SOURCE + FALLBACK_RUNTIME_AFTER_GAMEPAD_TOOLS + installed + FALLBACK_RUNTIME_CLOSE;
+    + GAMEPAD_STATE_TOOLS_SOURCE + FALLBACK_RUNTIME_AFTER_GAMEPAD_TOOLS + MOTION_RUNTIME_SOURCE + installed + FALLBACK_RUNTIME_CLOSE;
 }
 
 function injectRuntime(html: string, url: string, domains: readonly string[], runtimePreludeSource?: string): string {
@@ -286,9 +287,9 @@ async function bootOnce(
   const shell = createReferenceShell();
   const iframe = doc.createElement('iframe');
   iframe.setAttribute('sandbox', opts.allowSameOrigin ? 'allow-scripts allow-same-origin' : 'allow-scripts');
-  // NAP-GAMEPAD Web Projection Guidance: deny the native API with Permissions-Policy.
-  // https://github.com/napplet/naps/pull/108
-  iframe.setAttribute('allow', "gamepad 'none'");
+  // NAP-GAMEPAD and NAP-MOTION Web Projection Guidance; enforcement depends on the browser.
+  // https://github.com/napplet/naps/pull/108 and https://github.com/napplet/naps/pull/124
+  iframe.setAttribute('allow', "gamepad 'none'; accelerometer 'none'; gyroscope 'none'; magnetometer 'none'");
   iframe.setAttribute('aria-hidden', 'true');
   iframe.style.position = 'absolute';
   iframe.style.width = '1px';

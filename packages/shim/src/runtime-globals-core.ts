@@ -1,3 +1,4 @@
+import { motion } from '@napplet/nap/motion/shim';
 import { gamepad } from '@napplet/nap/gamepad/shim';
 import { shell } from '@napplet/nap/shell/shim';
 import type { NapDomain, NappletGlobal } from '@napplet/core';
@@ -44,6 +45,7 @@ import {
 
 
 export function installCoreDomains(domains: ReadonlySet<NapDomain>, napplet: Partial<NappletGlobal>): void {
+  if (domains.has('motion')) napplet.motion = motion;
   if (domains.has('gamepad')) napplet.gamepad = gamepad;
   if (domains.has('shell')) napplet.shell = shell;
   installFoundationDomains(domains, napplet);
