@@ -1,0 +1,8 @@
+{
+  "relays": [
+    "wss://relay.napplet.soy",
+    "wss://relay.damus.io"
+  ],
+  "limit": 80,
+  "timeoutMs": 10000
+}

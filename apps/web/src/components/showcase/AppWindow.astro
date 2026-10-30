@@ -1,0 +1,9 @@
+---
+interface Props { class?: string }
+const { class: className = '' } = Astro.props;
+---
+<div class:list={['app-window', className]}>
+  <div class="app-titlebar"><span class="app-indicator"></span><span class="app-name">Freeze Frame Response</span><span class="app-new-name">Untitled idea</span><span class="app-window-mark">↗</span></div>
+  <div class="app-picture"><img src="/showcase/images/freeze-frame-response-480.webp" alt="" width="480" height="300" decoding="async" /><div class="app-blueprint"><span class="canvas-cross">＋</span><span>Your idea here.</span><i></i><i></i><i></i></div></div>
+  <div class="app-bottom"><span>Pause. Place. Resume.</span><span class="app-play">▶</span></div>
+</div>

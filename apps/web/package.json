@@ -5,16 +5,35 @@
   "type": "module",
   "scripts": {
     "dev": "node ../../scripts/dev-site.mjs --web",
-    "build": "vite build",
-    "preview": "vite preview",
-    "type-check": "svelte-check --tsconfig ./tsconfig.json"
+    "build": "astro build",
+    "preview": "astro preview --host 127.0.0.1",
+    "type-check": "astro check && svelte-check --tsconfig ./tsconfig.json",
+    "test:unit": "vitest run"
   },
   "devDependencies": {
-    "@sveltejs/vite-plugin-svelte": "^5.0.3",
+    "@astrojs/check": "^0.9.10",
+    "@astrojs/sitemap": "^3.7.4",
+    "@astrojs/svelte": "^9.0.1",
+    "@sveltejs/vite-plugin-svelte": "^7.3.1",
     "@tsconfig/svelte": "^5.0.4",
+    "@types/sanitize-html": "^2.16.2",
+    "@types/three": "^0.181.0",
+    "applesauce-common": "^7.0.0",
+    "applesauce-core": "^7.0.3",
+    "applesauce-relay": "^7.0.0",
+    "astro": "^7.3.5",
+    "entities": "^8.1.0",
+    "github-slugger": "^2.0.0",
+    "gsap": "^3.15.0",
+    "marked": "^18.0.14",
+    "nostr-tools": "^2.23.3",
+    "rxjs": "^7.8.2",
+    "sanitize-html": "^2.18.1",
     "svelte": "^5.19.0",
     "svelte-check": "^4.1.4",
+    "three": "^0.181.0",
     "typescript": "^5.9.3",
-    "vite": "^6.4.5"
+    "vite": "^8.3.3",
+    "vitest": "^4.1.12"
   }
 }

@@ -1,0 +1,80 @@
+{
+  "kind": 35129,
+  "id": "3e45de6048a3ca8b6ebe068ef084cb7a33c05657370d7c50522d64a02ee62480",
+  "pubkey": "3aa5817273c3b2f94f491840e0472f049d0f10009e23de63006166bca9b36ea3",
+  "created_at": 1792501852,
+  "tags": [
+    [
+      "x",
+      "b5633add0b6e43317322ebcc40b452159d3d40b16f9879b4ea28701f9b541e5b"
+    ],
+    [
+      "title",
+      "Freeze Frame Response"
+    ],
+    [
+      "presentation",
+      "soy.presentation/1"
+    ],
+    [
+      "screenshot",
+      "65fae2c69fdf7d720487a84195f719a5f11a0222d6c63a96445adb8b3c950530",
+      "image/png"
+    ],
+    [
+      "preview",
+      "cf7428dba39e945996fd2d145d4026b6ea48ee460a326b11d50443aa8e64d93d",
+      "video/webm"
+    ],
+    [
+      "server",
+      "https://blossom.napplet.soy"
+    ],
+    [
+      "O",
+      "storage"
+    ],
+    [
+      "O",
+      "config"
+    ],
+    [
+      "t",
+      "physics"
+    ],
+    [
+      "t",
+      "puzzle"
+    ],
+    [
+      "t",
+      "city"
+    ],
+    [
+      "t",
+      "game"
+    ],
+    [
+      "t",
+      "municipal"
+    ],
+    [
+      "source",
+      "nostr://npub182jczunncwe0jn6frpqwq3e0qjws7yqqnc3auccqv9nte2dnd63scjm4rf/wss%3A%2F%2Fgit.napplet.soy%2F/n-ba52e30d5f2"
+    ],
+    [
+      "source-commit",
+      "d04885dad630e4b5985bc1d1abf36d01848c6400"
+    ],
+    [
+      "source-archive",
+      "https://blossom.napplet.soy/e747ab4f9e35a11fd11bd9cf153edd9d49a1ce20debbbe6910c7df27e2e9924e"
+    ],
+    [
+      "d",
+      "n-ba52e30d5f2"
+    ]
+  ],
+  "content": "A municipal physics puzzle: freeze the blast, place trampolines, funnels and sticky cushions, then resume time and file the damage report.",
+  "sig": "583cec49f6df37e7b888916d082b90645f3e4bc444440d36b0dc7e3c5c48c53b513cb01106d5b52977685211c45806ade98bf6ea248881774420ab6ca4c0d5c5"
+}
