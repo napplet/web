@@ -91,6 +91,18 @@
     }
   },
   {
+    "id": "nostrapps",
+    "name": "nostrapps",
+    "category": "Every kind of app, one launcher",
+    "description": "A browser launcher that fetches nsites, napps and napplets, caches them, and runs each in its own sandboxed window.",
+    "href": "https://nostrapps.com/",
+    "source": "https://github.com/eskema/nostrapps",
+    "platforms": [
+      "Web"
+    ],
+    "status": "Work in progress"
+  },
+  {
     "id": "applesauce-examples",
     "name": "Applesauce loader",
     "category": "Reference host",
