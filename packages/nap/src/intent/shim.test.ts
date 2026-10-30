@@ -124,21 +124,35 @@ describe('@napplet/nap/intent URI binding', () => {
   it('retains ordered deliveries until registration, then closes local callbacks', async () => {
     const { handleIntentMessage, onDelivery, installIntentShim } = await import('./shim.js');
     const cleanup = installIntentShim();
-    const base = { sender: 'catalog-source', archetype: 'note', action: 'open', convention: 'napplet:note/open' };
+    const base = { id: 'delivery-1', sender: 'catalog-source', archetype: 'note', action: 'open', convention: 'napplet:note/open' };
     handleIntentMessage({ type: 'intent.deliver', delivery: { ...base, payload: 1 } });
-    handleIntentMessage({ type: 'intent.deliver', delivery: { ...base, payload: 2 } });
+    handleIntentMessage({ type: 'intent.deliver', delivery: { ...base, id: 'delivery-2', payload: 2 } });
     const callback = vi.fn();
     const subscription = onDelivery(callback);
     expect(callback.mock.calls.map(([delivery]) => delivery.payload)).toEqual([1, 2]);
-    handleIntentMessage({ type: 'intent.deliver', delivery: { ...base, payload: 3 } });
+    handleIntentMessage({ type: 'intent.deliver', delivery: { ...base, id: 'delivery-3', payload: 3 } });
     expect(callback).toHaveBeenCalledTimes(3);
     subscription.close();
-    handleIntentMessage({ type: 'intent.deliver', delivery: { ...base, payload: 4 } });
+    handleIntentMessage({ type: 'intent.deliver', delivery: { ...base, id: 'delivery-4', payload: 4 } });
     const next = vi.fn();
     onDelivery(next);
-    expect(next).toHaveBeenCalledExactlyOnceWith({ ...base, payload: 4 });
+    expect(next).toHaveBeenCalledExactlyOnceWith({ ...base, id: 'delivery-4', payload: 4 });
     cleanup();
     expect(postedMessages).toEqual([]);
+  });
+
+  it('preserves shell provenance and delivery ids through buffering, ignoring malformed deliveries', async () => {
+    const { handleIntentMessage, onDelivery, installIntentShim } = await import('./shim.js');
+    const cleanup = installIntentShim();
+    const delivery = { id: 'shell-delivery', sender: null, archetype: 'note', action: 'open', convention: 'napplet:note/open', payload: { event: 'alice' } };
+    handleIntentMessage({ type: 'intent.deliver', delivery });
+    handleIntentMessage({ type: 'intent.deliver', delivery: { ...delivery, id: '' } });
+    handleIntentMessage({ type: 'intent.deliver', delivery: { ...delivery, sender: undefined } });
+    const callback = vi.fn();
+    const subscription = onDelivery(callback);
+    expect(callback).toHaveBeenCalledExactlyOnceWith(delivery);
+    subscription.close();
+    cleanup();
   });
 
   it('passes catalog contracts through discovery and availability updates', async () => {

@@ -53,6 +53,7 @@ export interface NappletMessage {
  * | `notify`   | Shell-rendered notifications                       |
  * | `config`   | Per-napplet declarative configuration              |
  * | `resource` | Byte-fetching primitive (URL → Blob)               |
+ * | `navigation` | Committed-location reports and retained history |
  * | `ble`      | Runtime-mediated Bluetooth LE/GATT sessions       |
  * | `webrtc`   | Runtime-mediated WebRTC signaling and data sessions |
  * | `link`     | Shell-mediated user-visible link opening           |
@@ -69,7 +70,7 @@ export interface NappletMessage {
  * const isValid = NAP_DOMAINS.includes(domain); // true
  * ```
  */
-export type NapDomain = 'shell' | 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'cvm' | 'outbox' | 'upload' | 'intent' | 'ble' | 'webrtc' | 'link' | 'count' | 'lists' | 'serial' | 'fs' | 'common' | 'dm' | 'gamepad';
+export type NapDomain = 'shell' | 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'cvm' | 'outbox' | 'upload' | 'intent' | 'navigation' | 'ble' | 'webrtc' | 'link' | 'count' | 'lists' | 'serial' | 'fs' | 'common' | 'dm' | 'gamepad';
 
 /**
  * Runtime-accessible constant array of all NAP domain names.
@@ -80,4 +81,4 @@ export type NapDomain = 'shell' | 'relay' | 'identity' | 'storage' | 'inc' | 'th
  * const selected = NAP_DOMAINS.filter((domain) => domain !== 'ble');
  * ```
  */
-export const NAP_DOMAINS: readonly NapDomain[] = ['shell', 'relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent', 'ble', 'webrtc', 'link', 'count', 'lists', 'serial', 'fs', 'common', 'dm', 'gamepad'] as const;
+export const NAP_DOMAINS: readonly NapDomain[] = ['shell', 'relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent', 'navigation', 'ble', 'webrtc', 'link', 'count', 'lists', 'serial', 'fs', 'common', 'dm', 'gamepad'] as const;

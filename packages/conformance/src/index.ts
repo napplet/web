@@ -103,3 +103,8 @@ export {
   report,
 } from './report/reporters.js';
 export type { ReporterFormat } from './report/reporters.js';
+
+export type { ReferenceNavigationOptions } from './shell/reference-navigation.js';
+export type { ReferenceEndpoint } from './shell/reference-responses.js';
+export type { CatalogManifest } from './shell/intent-catalog.js';
+export { catalogId as catalogIdentifier } from './shell/intent-catalog.js';

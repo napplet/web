@@ -12,7 +12,7 @@ describe('domain exposure and lifecycle-independent delivery', () => {
     const identityChanged = vi.fn();
     installed.theme!.onChanged(themeChanged);
     installed.identity!.onChanged(identityChanged);
-    const delivery = { sender: 'catalog-source', archetype: 'note', action: 'open', convention: 'napplet:note/open', payload: { event: 'abc' } };
+    const delivery = { id: 'delivery-1', sender: 'catalog-source', archetype: 'note', action: 'open', convention: 'napplet:note/open', payload: { event: 'abc' } };
     deliver({ type: 'intent.deliver', delivery });
     const received = vi.fn();
     installed.intent!.onDelivery(received);

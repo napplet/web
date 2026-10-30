@@ -23,6 +23,7 @@ const NAP_DOMAINS = [
   'outbox',
   'upload',
   'intent',
+  'navigation',
   'ble',
   'webrtc',
   'link',

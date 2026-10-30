@@ -1,4 +1,5 @@
 import type { GamepadApi } from './gamepad.js';
+import type { NavigationApi } from './navigation.js';
 import type { ShellApi } from './shell.js';
 import type { RelayApi, IncApi, StorageApi, KeysApi } from './global/nostr-api.js';
 
@@ -296,6 +297,8 @@ export interface NappletGlobal {
    * installed handler and owns target lifecycle and payload delivery.
    */
   intent?: IntentApi;
+  /** Committed-location reports and runtime-owned history; requires intent. */
+  navigation?: NavigationApi;
   /**
    * Runtime-mediated Bluetooth LE/GATT sessions (NAP-BLE): the napplet asks
    * the shell to select a user-approved device, operate on exposed GATT

@@ -177,6 +177,11 @@ export const ENVELOPE_SPECS: Record<string, EnvelopeSpec> = {
   'upload.status.result': { dir: 'in' },
   'upload.status.changed': { dir: 'in' },
 
+  // NAP-NAVIGATION #126 Wire Protocol: two request/result pairs.
+  'navigation.report': { dir: 'out', fields: { ...ID, report: 'object' } },
+  'navigation.report.result': { dir: 'in', fields: { ...ID, result: 'object' } },
+  'navigation.get': { dir: 'out', fields: { ...ID } },
+  'navigation.get.result': { dir: 'in', fields: { ...ID, result: 'object' } },
   // ── intent ───────────────────────────────────────────────────────────────
   'intent.invoke': { dir: 'out', fields: { ...ID, request: 'object' } },
   'intent.available': { dir: 'out', fields: { ...ID, archetype: 'string' } },
