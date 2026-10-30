@@ -184,6 +184,16 @@ export const RESPONDERS: Record<string, Responder> = {
   'cvm.request': (e) => ok({ type: 'cvm.request.result', id: e.id, message: {} }),
   'cvm.close': (e) => ok({ type: 'cvm.close.result', id: e.id }),
 
+  // Offline circle fixture: no peers, signer, or retained events.
+  'mesh.info': (e) => ok({ type: 'mesh.info.result', id: e.id, online: false, peers: 0, limits: { publishTtl: 0, subscribeTtl: 0 } }),
+  'mesh.publish': (e) => ok({ type: 'mesh.publish.result', id: e.id, ok: false, error: 'reference shell has no mesh signer or event store' }),
+  'mesh.subscribe': (e) => [
+    { type: 'mesh.eose', subId: e.subId, ttl: 0 },
+    { type: 'mesh.closed', subId: e.subId, reason: 'reference shell complete' },
+  ],
+  'mesh.close': none,
+  'mesh.blobs': (e) => ok({ type: 'mesh.blobs.result', id: e.id, peers: 0, blobs: Object.fromEntries((e.hashes as string[]).map((hash) => [hash.toLowerCase(), 0])) }),
+
   // outbox
   'outbox.getEvent': (e) => ok({ type: 'outbox.getEvent.result', id: e.id }),
   'outbox.query': (e) => ok({ type: 'outbox.query.result', id: e.id, events: [] }),

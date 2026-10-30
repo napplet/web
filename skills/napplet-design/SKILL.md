@@ -46,6 +46,7 @@ Use only domains the current `@napplet/sdk` exports (`napplet-sdk` lists them). 
 | Settings, host look | `config`, `theme` | App-owned settings pages |
 | Keyboard-bound actions, shortcuts, game controls | `keys` action registration | App-owned key capture as the only integration path |
 | Notifications, playback, device bridges | `notify`, `media`, `cvm`, `ble`, `serial`, `fs`, `webrtc` | Browser APIs |
+| Paired-circle messages or offline circle delivery | `mesh` | Raw peer transport, relay fallback that changes the audience |
 | One explicit relay, diagnostics, protocols outside the outbox model | `relay` | Treating relay as the data layer |
 
 For maximum compatibility, plan to register every keyboard-bound action through [NAP-KEYS](https://github.com/napplet/naps/pull/9), including app-local shortcuts and game controls. Give each action a stable ID and label; default keys are suggestions for the shell. This is non-normative authoring guidance; the living proposal defines the contract. Ordinary text input does not need action registration.
@@ -100,3 +101,7 @@ Hand this to `napplet-build`; verify with `napplet-test`. When the request inclu
 ## Optional controller input
 
 This non-normative guidance defers to the living [NAP-GAMEPAD proposal](https://github.com/napplet/naps/pull/108). Check injected `gamepad` presence and call the SDK namespace from `@napplet/sdk/gamepad`. Its cached API exposes `getGamepads()`, `available`, `focused`, and `onChange(handler)`; close listeners on disposal. Keep keyboard or pointer fallbacks, ignore gameplay edges while unfocused, reset held-button baselines on regained focus, preserve null slots, and route controllers by `index`. Use an optional manifest domain when the core task remains usable without controllers. Native controller access belongs to the runtime. Do not add haptics, raw HID access, a correlation id, or a prerequisite SHELL readiness exchange. Reference-mock conformance reports unavailable controllers; verify live focus isolation in a GAMEPAD-capable runtime.
+
+## Circle delivery
+
+For the proposed [NAP-MESH draft](https://github.com/napplet/naps/pull/122), state the intended circle audience and hop budget in the build spec. Circle hops count deliberate pairings, not transport links. Distinguish local-only `ttl: 0` from an omitted TTL using the user's cap. Decide whether `mesh` is required or optional and describe the absent-domain fallback. The host owns pairing, signing, storage, and forwarding; the napplet uses the SDK. Subscription EOSE marks only local backlog, so member backlog and live events can arrive later. Blob availability counts do not download content. This is non-normative guidance; ordinary social delivery stays OUTBOX-first.

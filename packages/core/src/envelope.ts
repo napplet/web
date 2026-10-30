@@ -61,6 +61,7 @@ export interface NappletMessage {
  * | `serial`   | Runtime-mediated serial device access             |
  * | `fs`       | Shell-mediated virtual filesystem access           |
  * | `common`   | Common social actions                              |
+ * | `mesh`     | Hop-limited circle publish, subscribe and blob counts |
  * | `dm`       | Runtime-mediated direct messages                  |
  *
  * @example
@@ -69,7 +70,7 @@ export interface NappletMessage {
  * const isValid = NAP_DOMAINS.includes(domain); // true
  * ```
  */
-export type NapDomain = 'shell' | 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'cvm' | 'outbox' | 'upload' | 'intent' | 'ble' | 'webrtc' | 'link' | 'count' | 'lists' | 'serial' | 'fs' | 'common' | 'dm' | 'gamepad';
+export type NapDomain = 'shell' | 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'cvm' | 'outbox' | 'upload' | 'intent' | 'ble' | 'webrtc' | 'link' | 'count' | 'lists' | 'serial' | 'fs' | 'common' | 'dm' | 'gamepad' | 'mesh';
 
 /**
  * Runtime-accessible constant array of all NAP domain names.
@@ -80,4 +81,4 @@ export type NapDomain = 'shell' | 'relay' | 'identity' | 'storage' | 'inc' | 'th
  * const selected = NAP_DOMAINS.filter((domain) => domain !== 'ble');
  * ```
  */
-export const NAP_DOMAINS: readonly NapDomain[] = ['shell', 'relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent', 'ble', 'webrtc', 'link', 'count', 'lists', 'serial', 'fs', 'common', 'dm', 'gamepad'] as const;
+export const NAP_DOMAINS: readonly NapDomain[] = ['shell', 'relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent', 'ble', 'webrtc', 'link', 'count', 'lists', 'serial', 'fs', 'common', 'dm', 'gamepad', 'mesh'] as const;

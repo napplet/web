@@ -585,3 +585,7 @@ NAPPLET_TEST_STANDALONE=1 deno test --node-modules-dir=none -A packages/cli/test
 ### GAMEPAD integration
 
 GAMEPAD is a bare manifest domain accepted by `init`, `build`, and deployment metadata. Controller fallback apps use `O gamepad`; controller-required apps use `R gamepad`. Live `dev` controller input depends on a GAMEPAD-capable Kehto/Paja release. See the proposed [NAP-GAMEPAD](https://github.com/napplet/naps/pull/108).
+
+### MESH declarations
+
+`mesh` is accepted as a bare required (`R`) or optional (`O`) manifest domain. Use an optional declaration when circle delivery enhances an otherwise usable napplet. Live `dev` calls require a MESH-capable host with a circle backend; declaring the domain does not supply that backend or grant access. This non-normative guidance defers to the proposed [NAP-MESH draft](https://github.com/napplet/naps/pull/122).

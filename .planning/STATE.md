@@ -8,7 +8,7 @@ status: completed
 stopped_at: Phase 164 verified locally and shipped in PR 248 with terminal recordings
 last_updated: "2026-10-26T13:07:06+00:00"
 last_activity: 2026-10-30
-last_activity_desc: Completed quick task 261030-9r6; NIP-5D presentation media and source pins in PR 272
+last_activity_desc: Completed quick task 261030-pp3; NAP-MESH package support in PR 277
 progress:
   total_phases: 9
   completed_phases: 4
@@ -553,6 +553,7 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 
 | Quick ID | Task | Date | Commit | Artifacts |
 |----------|------|------|--------|-----------|
+| 261030-pp3 | Add NAP-MESH across packages and docs | 2026-10-30 | 899f91fc / PR #277 | [261030-pp3](./quick/261030-pp3-add-nap-mesh-across-packages-and-docs/) |
 | 261030-9r6 | Chase NIP-5D presentation media and source pin tags | 2026-10-30 | 0bae4ebe / PR #272 | [261030-9r6](./quick/261030-9r6-chase-nip-5d-presentation-media-and-sour/) |
 | 261028-c9t | Complete NAPP-to-napplet porting skill | 2026-10-28 | 5ac63f25 / PR #270 | [261028-c9t](./quick/261028-c9t-write-a-thorough-napp-to-napplet-porting/) |
 | 261026-jeu | Clear the pinned AI-slop scan findings | 2026-10-26 | 8e811a29 | [261026-jeu](./quick/261026-jeu-reach-100-out-of-100-on-the-pinned-ai-sl/) |

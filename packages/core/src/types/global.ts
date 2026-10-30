@@ -1,3 +1,4 @@
+import type { MeshApi } from './mesh.js';
 import type { GamepadApi } from './gamepad.js';
 import type { ShellApi } from './shell.js';
 import type { RelayApi, IncApi, StorageApi, KeysApi } from './global/nostr-api.js';
@@ -50,6 +51,8 @@ import type {
  * domain to the napplet; absence means the domain is unavailable.
  */
 export interface NappletGlobal {
+  /** Optional hop-limited publish, subscribe and blob counts over the user's circle. */
+  mesh?: MeshApi;
   /** Optional shell-mediated controller input, scoped to this napplet’s focus. */
   gamepad?: GamepadApi;
   /** Optional shell environment; other domains work without it. */

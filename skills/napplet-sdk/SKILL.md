@@ -9,7 +9,7 @@ Napplet implementation code is **SDK-first**: import typed wrappers from `@nappl
 
 ## Domains shipped by the current packages
 
-`shell`, `relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `ble`, `webrtc`, `link`, `count`, `lists`, `serial`, `fs`, `common`, `dm`.
+`shell`, `relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `ble`, `webrtc`, `link`, `count`, `lists`, `serial`, `fs`, `common`, `dm`, `mesh`.
 
 `ifc` is a deprecated INC alias. If a NAP is not in this list, do not implement against it even when a spec PR exists — flag the package/spec gap. `shell` is optional environment information only (see below); there is no `discoverServices()` or `hasService()`, and no domain waits on `shell.ready()`. A missing optional domain simply means "unavailable for this load".
 
@@ -33,6 +33,7 @@ Napplet implementation code is **SDK-first**: import typed wrappers from `@nappl
 | Notifications, badges, notification actions | `notify` |
 | ContextVM / MCP-style native bridge | `cvm` |
 | Bluetooth LE, serial ports, WebRTC signaling, virtual filesystem | `ble`, `serial`, `webrtc`, `fs` |
+| Explicit paired-circle delivery and offline circle messaging | `mesh` (`info`, `publish`, `subscribe`, `blobs`) |
 | One explicit relay, relay diagnostics, protocols outside the outbox model | `relay` (escape hatch only) |
 
 ## Optional-domain availability
@@ -220,3 +221,9 @@ Theme updates reach napplets with the exposed `theme` domain, independently of m
 ## Optional controller input
 
 This non-normative guidance defers to the living [NAP-GAMEPAD proposal](https://github.com/napplet/naps/pull/108). Check injected `gamepad` presence and call the SDK namespace from `@napplet/sdk/gamepad`. Its cached API exposes `getGamepads()`, `available`, `focused`, and `onChange(handler)`; close listeners on disposal. Keep keyboard or pointer fallbacks, ignore gameplay edges while unfocused, reset held-button baselines on regained focus, preserve null slots, and route controllers by `index`. Use an optional manifest domain when the core task remains usable without controllers. Native controller access belongs to the runtime. Do not add haptics, raw HID access, a correlation id, or a prerequisite SHELL readiness exchange. Reference-mock conformance reports unavailable controllers; verify live focus isolation in a GAMEPAD-capable runtime.
+
+## MESH — explicit circle delivery
+
+This non-normative usage guide defers to the [NAP-MESH draft](https://github.com/napplet/naps/pull/122). Use `mesh` from `@napplet/sdk` or the helpers from `@napplet/sdk/mesh` only when the feature targets the user's paired circle. Check `window.napplet?.mesh` for optional use. Publish unsigned templates; the host owns signing, pairing, transport, storage, and forwarding. Keep ordinary social reads/publishes OUTBOX-first.
+
+`ttl` counts circle edges, not radio or network hops. Omit it to use the user's cap, or use `0` for local publish/backlog only. Whole numbers from 0 through 255 are valid inputs; the host clamps reach to its cap. A subscription accepts one filter or a list, delivers `event` records as `RelayEventResult`, and reports effective backlog TTL through `on('eose', ttl => ...)`. EOSE ends local backlog only: keep listening for member backlog and live events. Handle `closed` and call `close()` on disposal. `blobs(hashes)` accepts at most 64 SHA-256 hex hashes and reports member counts without fetching bytes. The SDK is a binding, not a circle backend.

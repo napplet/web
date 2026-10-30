@@ -173,6 +173,20 @@ if (window.napplet?.outbox) {
 }
 ```
 
+### mesh
+
+Optional hop-limited delivery over the user's deliberately paired circle: `info`, `publish`, `subscribe`, and blob availability counts. The host owns circle membership and transport. Use this for explicit circle messaging; ordinary social data remains OUTBOX-first. See the non-normative [MESH guide](/naps/mesh) and the living [NAP-MESH draft](https://github.com/napplet/naps/pull/122).
+
+```ts
+if (window.napplet?.mesh) {
+  const result = await window.napplet.mesh.publish(
+    { kind: 20666, content: 'ding', tags: [['t', 'doorbell']] },
+    { ttl: 2 },
+  );
+  if (!result.ok) console.error(result.error);
+}
+```
+
 ### upload
 
 Shell-mediated file/blob upload over NIP-96 + Blossom rails; the shell signs auth and returns NIP-94 metadata.

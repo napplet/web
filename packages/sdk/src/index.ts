@@ -38,4 +38,6 @@ export * from './nap-runtime.js';
 
 export { shell } from './shell.js';
 
+export { mesh } from './mesh.js';
+
 export { gamepad } from './gamepad.js';

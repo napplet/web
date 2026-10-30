@@ -154,6 +154,20 @@ export const ENVELOPE_SPECS: Record<string, EnvelopeSpec> = {
   'cvm.registry.describe.result': { dir: 'in' },
   'cvm.registry.call.result': { dir: 'in' },
 
+  // NAP-MESH Wire Protocol: https://github.com/napplet/naps/pull/122
+  'mesh.info': { dir: 'out', fields: { ...ID } },
+  'mesh.info.result': { dir: 'in', fields: { ...ID } },
+  'mesh.publish': { dir: 'out', fields: { ...ID, event: 'object' } },
+  'mesh.publish.result': { dir: 'in', fields: { ...ID, ok: 'boolean' } },
+  'mesh.subscribe': { dir: 'out', fields: { ...ID, subId: 'string', filters: 'present' } },
+  'mesh.subscribe.result': { dir: 'in', fields: { ...ID, error: 'string' } },
+  'mesh.event': { dir: 'in', fields: { subId: 'string', result: 'object' } },
+  'mesh.eose': { dir: 'in', fields: { subId: 'string', ttl: 'number' } },
+  'mesh.close': { dir: 'out', fields: { subId: 'string' }, forbiddenFields: ['id'], forbiddenReason: 'NAP-MESH close is fire-and-forget without an id' },
+  'mesh.closed': { dir: 'in', fields: { subId: 'string' } },
+  'mesh.blobs': { dir: 'out', fields: { ...ID, hashes: 'array' } },
+  'mesh.blobs.result': { dir: 'in', fields: { ...ID } },
+
   // ── outbox ───────────────────────────────────────────────────────────────
   'outbox.getEvent': { dir: 'out', fields: { ...ID, eventId: 'string' } },
   'outbox.query': { dir: 'out', fields: { ...ID, filters: 'present' } },

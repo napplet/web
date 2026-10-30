@@ -44,6 +44,7 @@ After runtime injection, the global may be populated with these sub-objects:
 
 | Namespace | What it does |
 | --- | --- |
+| `mesh` | Circle `info`, `publish`, `subscribe`, and blob availability counts; host owns pairing and transport |
 | `outbox` | Outbox-aware `getEvent`, `query`, `subscribe`, `publish`, and `resolveRelays`; default for normal event reads and publishes |
 | `common` | Profile lookup, follow/unfollow, reactions, reports, and NIP-19 helpers |
 | `lists` | NIP-51 list read and mutation helpers |
@@ -147,3 +148,9 @@ await intent.invoke('napplet:profile/open?pubkey=abc123');
 ```
 
 The runtime binding retains deliveries until a listener registers. Discovery candidates expose opaque catalog `id` values and `contracts` with parameter names. INC peers instead use identifiers for running authenticated endpoints. A NAP-INTENT URI may append a bare `#naddr1…` recommendation; the binding sends its coordinate and relay hints as `handlerHint`, outside convention identity and payload. An applicable user default takes precedence. INC URI operations reject fragments. See the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md) and [web projection](https://github.com/napplet/naps/blob/master/projections/web.md).
+
+## MESH runtime binding
+
+Select `mesh` explicitly in `installNappletGlobal({ domains: ['mesh'] })` or `renderNappletRuntimePreludeCall({ domains: ['mesh'] })`. With an explicit allowlist, the injected object provides `info`, `publish`, `subscribe`, and `blobs`, and unselected domains remain absent. The compatibility root installer without options retains its existing all-domains default. A manifest declaration does not grant access.
+
+The binding only carries NAP-MESH messages. The host supplies pairing, signing, event storage, forwarding clamps, and bounded circle-only blob probes. A dependency on NAP-RELAY's types does not automatically expose the `relay` domain. This non-normative guidance defers to the [NAP-MESH draft](https://github.com/napplet/naps/pull/122).

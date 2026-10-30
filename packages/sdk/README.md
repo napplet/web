@@ -137,6 +137,19 @@ Low-level relay operations through the shell's relay pool. Mirrors `window.nappl
 | `publishEncrypted(template, recipient, encryption?)` | `Promise<NostrEvent>` | Send event template for encryption, signing, and broadcast |
 | `query(filters)` | `Promise<RelayEventResult[]>` | One-shot query: collect `RelayEventResult` records until EOSE, resolve |
 
+### `mesh`
+
+The optional `mesh` namespace wraps `window.napplet.mesh`. Import it from `@napplet/sdk`, or import `info`, `publish`, `subscribe`, and `blobs` from `@napplet/sdk/mesh`.
+
+| Method | Returns | Purpose |
+| --- | --- | --- |
+| `info()` | `Promise<MeshInfo>` | Transport availability, reachable member count, and user hop caps |
+| `publish(template, options?)` | `Promise<MeshPublishResult>` | Shell-signed circle publish; `options.ttl` selects reach |
+| `subscribe(filters, options?)` | `MeshSubscription` | `event`, `eose`, and `closed` deliveries; call `close()` on disposal |
+| `blobs(hashes)` | `Promise<MeshBlobsResult>` | Counts of reachable members holding each SHA-256, without downloading |
+
+Feature-gate with `window.napplet?.mesh`. Omitted `ttl` uses the user's cap; explicit zero stays local. `eose` ends only local backlog, not the live stream. This non-normative package guide defers to the [NAP-MESH draft](https://github.com/napplet/naps/pull/122); see [MESH usage](../../apps/docs/naps/mesh.md).
+
 ### `outbox`
 
 Outbox-aware relay routing. Mirrors `window.napplet.outbox`. The napplet supplies filters, event ids, templates, and intent; the shell owns NIP-65 relay discovery, fallback, deduplication, signature validation, signing, and publish fanout.
@@ -429,7 +442,7 @@ Each NAP domain has a string constant re-exported from its package:
 
 ```ts
 import { RELAY_DOMAIN, IDENTITY_DOMAIN, STORAGE_DOMAIN, INC_DOMAIN, THEME_DOMAIN, KEYS_DOMAIN, MEDIA_DOMAIN, NOTIFY_DOMAIN, CONFIG_DOMAIN, RESOURCE_DOMAIN, CVM_DOMAIN, OUTBOX_DOMAIN, UPLOAD_DOMAIN, INTENT_DOMAIN, BLE_DOMAIN, WEBRTC_DOMAIN, LINK_DOMAIN, COUNT_DOMAIN, LISTS_DOMAIN, COMMON_DOMAIN, SERIAL_DOMAIN, DM_DOMAIN } from '@napplet/sdk';
-// Values: 'relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent', 'ble', 'webrtc', 'link', 'count', 'lists', 'common', 'serial', 'fs', 'dm', 'shell', 'gamepad'
+// Values: 'relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent', 'ble', 'webrtc', 'link', 'count', 'lists', 'common', 'serial', 'fs', 'dm', 'shell', 'gamepad', 'mesh'
 ```
 
 These constants are re-exported from the individual domain packages. Use property presence for type-safe conditional logic:

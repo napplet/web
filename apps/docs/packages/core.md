@@ -2,7 +2,7 @@
 
 > JSON envelope types and NAP dispatch infrastructure for the napplet ecosystem.
 
-`@napplet/core` is the single source of truth for all protocol-level definitions. Every other `@napplet/*` package imports its envelope types, dispatch infrastructure, and protocol constants from here. It has **zero dependencies** and no DOM or browser APIs — it works in any JavaScript runtime.
+`@napplet/core` provides shared TypeScript definitions, dispatch infrastructure, and constants for the other `@napplet/*` packages. Protocol authority remains with the living [NIP-5D specification](https://github.com/nostr-protocol/nips/pull/2303) and [NAPs track](https://github.com/napplet/naps); this package guide is non-normative. It has **zero dependencies** and no DOM or browser APIs — it works in any JavaScript runtime.
 
 - **npm:** [`@napplet/core`](https://www.npmjs.com/package/@napplet/core)
 - **JSR:** [`@napplet/core`](https://jsr.io/@napplet/core)
@@ -32,7 +32,7 @@ import {
 - **`NappletMessage`** — base interface for every message: `{ type: string }` in
   `domain.action` format. Concrete message types extend it with payload fields.
 - **`NapDomain`** — string literal union of the NAP capability domains
-  (`'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'cvm' | 'outbox' | 'upload' | 'intent' | 'ble' | 'webrtc' | 'link' | 'count' | 'lists' | 'serial' | 'fs' | 'common' | 'dm' | 'shell' | 'gamepad'`).
+  (`'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'cvm' | 'outbox' | 'upload' | 'intent' | 'ble' | 'webrtc' | 'link' | 'count' | 'lists' | 'serial' | 'fs' | 'common' | 'dm' | 'shell' | 'gamepad' | 'mesh'`).
 - **`NappletGlobal`** — the runtime-injected `window.napplet` namespace with
   optional domain properties.
 - **`NAP_DOMAINS`** — runtime constant array of all domain strings, for iteration
@@ -146,3 +146,7 @@ await intent.invoke('napplet:profile/open?pubkey=abc123');
 ```
 
 The runtime binding retains deliveries until a listener registers. Discovery candidates expose opaque catalog `id` values and `contracts` with parameter names. INC peers instead use identifiers for running authenticated endpoints. A NAP-INTENT URI may append a bare `#naddr1…` recommendation; the binding sends its coordinate and relay hints as `handlerHint`, outside convention identity and payload. An applicable user default takes precedence. INC URI operations reject fragments. See the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md) and [web projection](https://github.com/napplet/naps/blob/master/projections/web.md).
+
+### MESH types
+
+The optional `NappletGlobal.mesh` property uses `MeshApi`, with `MeshInfo`, `MeshLimits`, publish and subscribe options, `MeshPublishResult`, `MeshBlobsResult`, and `MeshSubscription`. `mesh` is included in `NapDomain` and `NAP_DOMAINS`. This non-normative API guide defers to the [NAP-MESH draft](https://github.com/napplet/naps/pull/122); see [MESH usage](/naps/mesh).

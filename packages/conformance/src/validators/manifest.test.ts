@@ -114,17 +114,23 @@ describe('validateManifestEvent — failures', () => {
     },
   );
 
+  it.each(['R', 'O'])('recognizes mesh in the %s capability declaration', (tag) => {
+    const verdict = validateManifestEvent(event({ tags: [['d', 'demo'], ['x', HASH], [tag, 'mesh']] }));
+    expect(verdict.ok).toBe(true);
+    expect(verdict.warnings).toEqual([]);
+  });
+
   it('accepts a manifest whose only unusual R tag is an unknown domain', () => {
     const v = validateManifestEvent(event({
       tags: [
         ['d', 'demo'],
         ['x', HASH],
-        ['R', 'mesh'],
+        ['R', 'future'],
       ],
     }));
     expect(v.ok).toBe(true);
     expect(v.warnings).toEqual([
-      { code: 'unknown-required-nap', message: 'Domain "mesh" is not in this tool\'s registry; check its NAP and runtime availability' },
+      { code: 'unknown-required-nap', message: 'Domain "future" is not in this tool\'s registry; check its NAP and runtime availability' },
     ]);
   });
 });
