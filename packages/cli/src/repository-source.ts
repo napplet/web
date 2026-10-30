@@ -43,17 +43,19 @@ export async function inferRepositorySource(directory: string): Promise<string |
 
 /**
  * Validate an explicit source override without converting clone URLs.
- * @param value Configured HTTP(S) source URL, false to omit, or undefined.
+ * @param value Configured HTTP(S) URL or NIP-34 `nostr://` clone URL, false to omit, or undefined.
  * @returns Validated source setting.
  * @example normalizeSourceOverride('https://github.com/napplet/web')
  */
 export function normalizeSourceOverride(value: unknown): string | false | undefined {
   if (value === undefined || value === false) return value;
-  if (typeof value === "string" && /^https?:\/\//i.test(value.trim())) {
+  if (typeof value === "string" && /^(?:https?|nostr):\/\//i.test(value.trim())) {
     try {
       const url = new URL(value.trim());
       if (["http:", "https:"].includes(url.protocol) && !url.username && !url.password) return url.href;
+      // NIP-5D §Source: a nostr location identifies a NIP-34 repository announcement.
+      if (url.protocol === "nostr:" && value.trim().length > "nostr://".length) return value.trim();
     } catch { /* Report the config field, without echoing a potentially secret value. */ }
   }
-  throw new Error("metadata.source must be an absolute HTTP(S) URL without credentials, or false");
+  throw new Error("metadata.source must be an absolute HTTP(S) or nostr:// URL without credentials, or false");
 }
