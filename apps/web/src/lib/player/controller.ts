@@ -35,6 +35,16 @@ async function discovered(data: RunData): Promise<Playable> {
   };
 }
 
+/** Resolve a Run link to something the player can load: a curated preview or a discovered release's run data. */
+function playableFor(link: HTMLAnchorElement): Promise<Playable> | undefined {
+  if (link.dataset.launch) {
+    const item = NAPPLETS.find(entry => entry.id === link.dataset.launch);
+    return item ? curated(item) : undefined;
+  }
+  if (!link.dataset.run) return undefined;
+  try { return discovered(JSON.parse(link.dataset.run) as RunData); } catch { return undefined; }
+}
+
 /** Attach a single dismissible player with cancellation and focus restoration. */
 export function setupPlayer(): void {
   const dialog = document.querySelector<HTMLDialogElement>('#napplet-player')!;
@@ -107,15 +117,8 @@ export function setupPlayer(): void {
   document.addEventListener('click', event => {
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.defaultPrevented) return;
     const link = (event.target as Element).closest<HTMLAnchorElement>('[data-launch], [data-launch-release]');
-    if (!link) return;
-    let playable: Promise<Playable> | undefined;
-    if (link.dataset.launch) {
-      const item = NAPPLETS.find(entry => entry.id === link.dataset.launch);
-      if (item) playable = curated(item);
-    } else if (link.dataset.run) {
-      try { playable = discovered(JSON.parse(link.dataset.run) as RunData); } catch { return; }
-    }
-    if (!playable) return;
+    const playable = link && playableFor(link);
+    if (!link || !playable) return;
     event.preventDefault();
     opener = link;
     void playable.then(launch);
