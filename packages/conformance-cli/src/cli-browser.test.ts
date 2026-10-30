@@ -36,7 +36,7 @@ it('boots the verified remote snapshot once and rejects a mismatched signature b
     const report = JSON.parse(valid.stdout) as { ok: boolean; checks: { id: string; status: string }[] };
     expect(report.ok).toBe(true);
     const manifestChecks = report.checks.filter((check) => check.id.startsWith('manifest/'));
-    expect(manifestChecks).toHaveLength(4);
+    expect(manifestChecks).toHaveLength(5);
     expect(manifestChecks.every((check) => check.status === 'pass')).toBe(true);
     expect(reads).toBe(1);
     expect(executions).toBe(2); // primary + no-domain pass, both using the verified bytes
@@ -59,7 +59,7 @@ it('keeps missing-manifest checks skipped and reports the actual debug sandbox',
     const normal = await run(process.execPath, [cli, dir, '--reporter', 'json']);
     const report = JSON.parse(normal.stdout) as { checks: { id: string; status: string }[] };
     const manifests = report.checks.filter((check) => check.id.startsWith('manifest/'));
-    expect(manifests).toHaveLength(4);
+    expect(manifests).toHaveLength(5);
     expect(manifests.every((check) => check.status === 'skip')).toBe(true);
     try {
       await run(process.execPath, [cli, dir, '--allow-same-origin', '--reporter', 'json']);

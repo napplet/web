@@ -81,6 +81,19 @@ describe('manifest checks', () => {
     expect(CHECKS.find((c) => c.id === 'manifest/requires-known')?.severity).toBe('warning');
   });
 
+  it('reports unusable icon, media and source pins as a warning-severity advisory only', () => {
+    const ctx = makeContext({
+      manifestEvent: { ...goodEvent, tags: [...goodEvent.tags, ['icon', 'bad', 'image/svg+xml'], ['screenshot', 'm image/png'], ['source-commit', 'a'.repeat(40)]] },
+    });
+    expect(run('manifest/index-html', ctx).status).toBe('pass');
+    expect(run('manifest/media-usable', ctx).status).toBe('fail');
+    expect(CHECKS.find((c) => c.id === 'manifest/media-usable')?.severity).toBe('warning');
+    const usable = makeContext({
+      manifestEvent: { ...goodEvent, tags: [...goodEvent.tags, ['screenshot', `x ${'d'.repeat(64)}`, 'm image/png', 'dim 1200x750']] },
+    });
+    expect(run('manifest/media-usable', usable).status).toBe('pass');
+  });
+
   it.each(['relay.subscribe', 'perm:popups', 'relay storage'])(
     'fails manifest/requires for malformed value %j without a known-domain advisory',
     (req) => {

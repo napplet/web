@@ -61,6 +61,12 @@ export const CHECKS: Check[] = [
   manifestCheck('manifest/requires-known', 'R/O domains are in this toolchain registry (advisory)', [
     'unknown-required-nap',
   ], 'warning'),
+  // NIP-5D §Icon, §Presentation media and §Source: clients ignore these, never fail.
+  manifestCheck('manifest/media-usable', 'Icon, screenshots, preview and source pins are usable (advisory)', [
+    'invalid-icon',
+    'invalid-presentation-media',
+    'unused-source-commit',
+  ], 'warning'),
 
   // ── boot ─────────────────────────────────────────────────────────────────────
   {

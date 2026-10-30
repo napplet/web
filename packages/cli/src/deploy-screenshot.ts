@@ -2,11 +2,14 @@
 import { first, type FlagBag } from "./flags.ts";
 import { runPackageCli } from "./package-runner.ts";
 import { joinPath } from "./path.ts";
-import type { DeployPlan, NappletConfig } from "./types.ts";
+import { buildMediaTag, mediaUploadPath } from "./manifest-media.ts";
+import type { DeployManifestTemplate, DeployPlan, NappletConfig } from "./types.ts";
 
 /** Captured image owned by the current deployment. */
 export interface DeployScreenshot {
   paths: string[];
+  /** Each capture and the built artifact it previewed; a URL capture names no artifact. */
+  captures: Array<{ path: string; indexHtml?: string }>;
   cleanup(): Promise<void>;
 }
 
@@ -54,10 +57,12 @@ export async function captureDeployScreenshot(
   if (!url && !artifacts.length) throw new Error("No selected build to screenshot");
   const directory = await Deno.makeTempDir({ prefix: "napplet-deploy-screenshot-" });
   const paths: string[] = [];
+  const captures: DeployScreenshot["captures"] = [];
   const cleanup = () => Deno.remove(directory, { recursive: true });
   try {
     for (const target of url ? [url] : artifacts) {
       const path = joinPath(directory, `preview-${paths.length}.png`);
+      captures.push(url ? { path } : { path, indexHtml: target });
       const args = url ? [target] : ["--artifact", target];
       args.push("--output", path);
       for (const control of controls) {
@@ -68,9 +73,40 @@ export async function captureDeployScreenshot(
       if (code !== 0) throw new Error(`Screenshot capture failed (exit ${code}); deployment stopped`);
       paths.push(path);
     }
-    return { paths, cleanup };
+    return { paths, captures, cleanup };
   } catch (error) {
     await cleanup();
     throw error;
+  }
+}
+
+/**
+ * Add each capture to the current-format manifests of the artifact it previewed as a
+ * NIP-5D `screenshot` tag, and queue the bytes for upload with the artifact.
+ * Explicit `metadata.screenshots` configuration keeps its own list instead.
+ * @param templates Deployment manifest templates, modified in place before signing.
+ * @param screenshot Capture handle from {@link captureDeployScreenshot}.
+ * @param config Deployment configuration.
+ * @example await attachCapturedScreenshots(templates, screenshot, config)
+ */
+export async function attachCapturedScreenshots(
+  templates: readonly DeployManifestTemplate[],
+  screenshot: DeployScreenshot | undefined,
+  config: Pick<NappletConfig, "metadata">,
+): Promise<void> {
+  if (!screenshot || config.metadata?.screenshots !== undefined) return;
+  for (const capture of screenshot.captures) {
+    const data = await Deno.readFile(capture.path);
+    const { tag, blob } = await buildMediaTag("screenshot", data, { label: "captured screenshot" });
+    for (const manifest of templates) {
+      if (!manifest.template || manifest.format === "legacy") continue;
+      if (capture.indexHtml && manifest.item.candidate.indexHtml !== capture.indexHtml) continue;
+      if (!manifest.template.tags.some((t) => t[0] === "screenshot" && t[1] === `x ${blob.sha256}`)) {
+        manifest.template.tags.push(tag);
+      }
+      if (!manifest.files.some((file) => file.sha256 === blob.sha256)) {
+        manifest.files.push({ path: mediaUploadPath("screenshot", blob), ...blob });
+      }
+    }
   }
 }

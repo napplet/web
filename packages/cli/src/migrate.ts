@@ -1,5 +1,6 @@
 /** Convert verified legacy event JSON into an unsigned current manifest for review. */
 import { verifyEvent } from "nostr-tools";
+import { parseMediaFields, validateMediaAndSourceTags } from "./manifest-media.ts";
 import type { NostrEventTemplate, SignedNostrEvent } from "./types.ts";
 
 export interface MigrationOptions {
@@ -96,6 +97,8 @@ export function migrateManifestEvent(
       throw new Error(`Invalid ${name} metadata cardinality`);
     }
   }
+  const usable = pruneUnusableMedia(tags, notes);
+  validateMediaAndSourceTags(usable);
   return {
     sourceId: event.id,
     sourcePubkey: event.pubkey,
@@ -103,11 +106,26 @@ export function migrateManifestEvent(
       kind: event.kind,
       created_at: options.createdAt ??
         Math.max(Math.floor(Date.now() / 1000), event.created_at + 1),
-      tags: invalidIcons ? tags.filter((tag) => tag[0] !== "icon") : tags,
+      tags: invalidIcons ? usable.filter((tag) => tag[0] !== "icon") : usable,
       content,
     },
     notes,
   };
+}
+
+// NIP-5D §Presentation media: clients ignore unusable entries and a multiplied preview,
+// so the migrated template drops them rather than re-signing ignored metadata.
+function pruneUnusableMedia(tags: string[][], notes: string[]): string[][] {
+  const previews = tags.filter((tag) => tag[0] === "preview");
+  const result = tags.filter((tag) => {
+    if (tag[0] !== "screenshot" && tag[0] !== "preview") return true;
+    if (tag[0] === "preview" && previews.length > 1) return false;
+    return parseMediaFields(tag).problems.length === 0;
+  });
+  if (result.length !== tags.length) {
+    notes.push("Unusable screenshot or preview metadata removed; clients ignore those entries.");
+  }
+  return result;
 }
 
 function convertTags(
