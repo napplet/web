@@ -91,12 +91,22 @@ function hydrateMedia(card: HTMLElement, signal: AbortSignal): void {
   const image = (src: string) => { const element = document.createElement('img'); element.src = src; element.alt = ''; element.decoding = 'async'; return element; };
   if (media.icon) void verifiedImage(media.icon, media.servers, signal).then(src => {
     const slot = card.querySelector('[data-icon]');
-    if (src && slot) { const element = image(src); element.width = 40; element.height = 40; slot.replaceChildren(element); }
+    if (!src || !slot) return;
+    const element = image(src); element.width = 40; element.height = 40; slot.replaceChildren(element);
+    // Without a screenshot or listing art, the verified icon stands in for the artwork.
+    const art = card.querySelector<HTMLElement>('[data-art]');
+    if (art && !art.classList.contains('has-art')) {
+      const large = image(src); large.className = 'art-icon'; art.prepend(large); art.classList.add('has-icon');
+      const source = art.querySelector('[data-art-source]');
+      if (source) source.textContent = 'Manifest icon';
+    }
   });
   if (media.screenshots[0]) void verifiedImage(media.screenshots[0], media.servers, signal).then(src => {
     const art = card.querySelector<HTMLElement>('[data-art]');
     if (!src || !art) return;
     art.querySelector('[data-listing-art]')?.remove();
+    art.querySelector('.art-icon')?.remove();
+    art.classList.remove('has-icon');
     art.prepend(image(src));
     art.classList.add('has-art');
     const source = art.querySelector('[data-art-source]');
