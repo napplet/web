@@ -227,3 +227,12 @@ export type {
   CommonUnfollowMessage,
   CommonUnfollowResultMessage,
 } from '@napplet/nap/common';
+
+export type {
+  MeshApi, MeshLimits, MeshInfo, MeshPublishOptions, MeshPublishResult,
+  MeshSubscribeOptions, MeshSubscription, MeshBlobsResult, MeshMessage,
+  MeshInfoMessage, MeshInfoResultMessage, MeshPublishMessage, MeshPublishResultMessage,
+  MeshSubscribeMessage, MeshSubscribeResultMessage, MeshEventMessage, MeshEoseMessage,
+  MeshCloseMessage, MeshClosedMessage, MeshBlobsMessage, MeshBlobsResultMessage,
+  MeshOutboundMessage, MeshInboundMessage, MeshNapMessage,
+} from '@napplet/nap/mesh/types';

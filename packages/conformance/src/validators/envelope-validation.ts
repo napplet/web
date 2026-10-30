@@ -1,3 +1,4 @@
+import { validateMeshRequest } from './mesh-validation.js';
 import { NAP_DOMAINS } from '@napplet/core';
 import { ENVELOPE_SPECS } from './envelope-specs.js';
 import type {
@@ -216,6 +217,7 @@ export function validateEnvelope(message: unknown): EnvelopeVerdict {
     }
   }
 
+  if (domain === 'mesh') validateMeshRequest(record, errors);
   if (type === 'intent.invoke') {
     validateIntentInvokeRequest(record.request, errors);
   }

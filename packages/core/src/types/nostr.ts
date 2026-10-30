@@ -87,9 +87,9 @@ export interface EventTemplate {
   /** Event content (typically plaintext or JSON string) */
   content: string;
   /** Event tags (NIP-01 tag arrays) */
-  tags: string[][];
-  /** Unix timestamp (seconds since epoch) */
-  created_at: number;
+  tags?: string[][];
+  /** Optional timestamp hint, subject to the domain's shell signing rules. */
+  created_at?: number;
 }
 
 /** A single Nostr tag (NIP-94 / imeta entries are arrays of strings). */

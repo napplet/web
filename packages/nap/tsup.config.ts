@@ -2,6 +2,10 @@ import { defineConfig } from 'tsup';
 
 export default defineConfig({
   entry: {
+    'mesh/index': 'src/mesh/index.ts',
+    'mesh/types': 'src/mesh/types.ts',
+    'mesh/shim': 'src/mesh/shim.ts',
+    'mesh/sdk': 'src/mesh/sdk.ts',
     'gamepad/index': 'src/gamepad/index.ts',
     'gamepad/types': 'src/gamepad/types.ts',
     'gamepad/shim': 'src/gamepad/shim.ts',

@@ -45,7 +45,7 @@ describe('runConformance', () => {
 
   it.each(['R', 'O'])('keeps an unknown %s domain advisory without failing the run', (tag) => {
     const run = runConformance(makeContext({
-      manifestEvent: { ...goodEvent, tags: [...goodEvent.tags, [tag, 'mesh']] },
+      manifestEvent: { ...goodEvent, tags: [...goodEvent.tags, [tag, 'future']] },
     }));
     expect(run.ok).toBe(true);
     expect(run.summary.errors).toBe(0);

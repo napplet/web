@@ -3,7 +3,7 @@
 > Every active napplet NAP domain as layered subpath exports. The package name remains
 > `@napplet/nap` for compatibility.
 
-`@napplet/nap` ships every active NAP domain (relay, storage, inc, keys, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent, ble, webrtc, link, count, lists, common, serial, fs, dm) as independent, tree-shakable subpaths. It sits between the shim/sdk and [`@napplet/core`](./core) in the dependency graph.
+`@napplet/nap` ships every active NAP domain (relay, storage, inc, keys, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent, ble, webrtc, link, count, lists, common, serial, fs, dm, mesh) as independent, tree-shakable subpaths. It sits between the shim/sdk and [`@napplet/core`](./core) in the dependency graph.
 
 - **npm:** [`@napplet/nap`](https://www.npmjs.com/package/@napplet/nap)
 - **JSR:** [`@napplet/nap`](https://jsr.io/@napplet/nap)
@@ -46,9 +46,7 @@ import { notifySend } from '@napplet/nap/notify/sdk';
 ## Tree-shaking contract
 
 - Published with `sideEffects: false`.
-- The `exports` map declares **96 entry points**: 23 active domain barrels,
-  23 active-domain types entries, 23 shim entries, 23 sdk entries, plus the
-  `ifc` compatibility wrapper.
+- Domain exports provide separate barrel, types, shim, and SDK entries, plus the `ifc` compatibility wrapper. Consult the package export map for the complete list.
 - A bundler importing only `@napplet/nap/relay/types` produces zero bytes from
   the other domains.
 
@@ -172,3 +170,7 @@ if (window.napplet?.gamepad) {
 ```
 
 Declare `gamepad` as optional (`O`) when other controls fulfill the core task. Use a hard requirement (`R`) only when the core task needs controller input. The runtime owns controller access and focus isolation; app code does not call native `navigator.getGamepads()` or open raw HID devices. Haptics and remapping are outside this proposal.
+
+## MESH
+
+`@napplet/nap/mesh` and its `/types`, `/shim`, and `/sdk` subpaths implement the proposed [NAP-MESH draft](https://github.com/napplet/naps/pull/122) binding. Consumer helpers are `meshInfo`, `meshPublish`, `meshSubscribe`, and `meshBlobs`; runtime helpers are `installMeshShim` and `handleMeshMessage`. These bindings delegate circle operations to the host. See the non-normative [MESH guide](/naps/mesh).

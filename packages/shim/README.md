@@ -668,3 +668,9 @@ The runtime binding retains deliveries until a listener registers. Discovery can
 ### GAMEPAD integration
 
 The selected `gamepad` runtime binding installs the cached API, subscribes without SHELL readiness, validates parent state, and unsubscribes during cleanup. See the proposed [NAP-GAMEPAD](https://github.com/napplet/naps/pull/108). The native browser Gamepad API is left untouched pending clarification of the proposal’s optional replacement and NIP-5D’s namespace-only injection rule.
+
+## MESH runtime binding
+
+Select `mesh` explicitly in `installNappletGlobal({ domains: ['mesh'] })` or `renderNappletRuntimePreludeCall({ domains: ['mesh'] })`. With an explicit allowlist, the injected object provides `info`, `publish`, `subscribe`, and `blobs`, and unselected domains remain absent. The compatibility root installer without options retains its existing all-domains default. A manifest declaration does not grant access.
+
+The binding only carries NAP-MESH messages. The host supplies pairing, signing, event storage, forwarding clamps, and bounded circle-only blob probes. A dependency on NAP-RELAY's types does not automatically expose the `relay` domain. This non-normative guidance defers to the [NAP-MESH draft](https://github.com/napplet/naps/pull/122).

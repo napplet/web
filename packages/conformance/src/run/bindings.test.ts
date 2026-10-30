@@ -73,9 +73,30 @@ describe('reference runtime bindings', () => {
     } finally { host.close(); }
   });
 
-  it('does not advertise unavailable domains in the fallback runtime', () => {
-    const host = fixture(['inc', 'intent', 'theme', 'resource']);
+  it('round-trips mesh through the built IIFE and offline reference shell', async () => {
+    const host = fixture(['mesh'], source);
     try {
+      expect(Object.keys(host.napplet)).toEqual(['mesh']);
+      const mesh = host.napplet.mesh!;
+      await expect(mesh.info()).resolves.toEqual({ online: false, peers: 0, limits: { publishTtl: 0, subscribeTtl: 0 } });
+      const hash = 'a'.repeat(64);
+      await expect(mesh.blobs([hash])).resolves.toEqual({ peers: 0, blobs: { [hash]: 0 } });
+      await expect(mesh.publish({ kind: 20666, content: 'ding' }, { ttl: 2 })).resolves.toEqual({ ok: false, error: 'reference shell has no mesh signer or event store' });
+      const deliveries: unknown[] = [];
+      const sub = mesh.subscribe({ kinds: [9] }, { ttl: 10 });
+      sub.on('eose', (ttl) => deliveries.push(ttl));
+      sub.on('closed', (reason) => deliveries.push(reason));
+      await Promise.resolve();
+      expect(deliveries).toEqual([0, 'reference shell complete']);
+      expect(host.shell.records.every(record => record.verdict.ok)).toBe(true);
+      sub.close();
+    } finally { host.close(); }
+  });
+
+  it('does not advertise unavailable domains in the fallback runtime', () => {
+    const host = fixture(['inc', 'intent', 'theme', 'resource', 'mesh']);
+    try {
+      expect(host.napplet.mesh).toBeUndefined();
       expect(host.napplet.inc).toBeUndefined();
       expect(host.napplet.intent).toBeUndefined();
       expect(host.napplet.theme).toBeUndefined();

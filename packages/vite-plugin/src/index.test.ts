@@ -546,6 +546,23 @@ describe('nip5aManifest artifact modes', () => {
     expect(result.warnings).toEqual([]);
   });
 
+  it('recognizes mesh imports and preserves required and optional declarations', async () => {
+    for (const optional of [false, true]) {
+      const fixture = makeFixture();
+      fs.writeFileSync(path.join(fixture.dist, 'index.html'), '<!doctype html>');
+      const result = await runCloseBundle(
+        { nappletType: 'circle-chat', optional: optional ? ['mesh'] : [], requires: { infer: true } },
+        fixture,
+        {},
+        [{ id: path.join(fixture.root, 'src/main.ts'), code: "import { info } from '@napplet/sdk/mesh';\nwindow.napplet.mesh.info();" }],
+      );
+      const tags = readManifest(fixture.dist).tags;
+      expect(tags).toContainEqual([optional ? 'O' : 'R', 'mesh']);
+      expect(tags).not.toContainEqual([optional ? 'R' : 'O', 'mesh']);
+      expect(result.warnings).toEqual([]);
+    }
+  });
+
   it('does not infer requirements from type-only imports or dynamic window access', async () => {
     const fixture = makeFixture();
     fs.writeFileSync(path.join(fixture.dist, 'index.html'), '<!doctype html>');
@@ -588,17 +605,17 @@ describe('nip5aManifest artifact modes', () => {
     fs.writeFileSync(path.join(fixture.dist, 'index.html'), '<!doctype html>');
 
     const result = await runCloseBundle(
-      { nappletType: 'explicit-unknown', requires: ['mesh', 'relay'] },
+      { nappletType: 'explicit-unknown', requires: ['future', 'relay'] },
       fixture,
       {},
     );
 
     expect(readManifest(fixture.dist).tags.filter((tag) => tag[0] === 'R')).toEqual([
-      ['R', 'mesh'],
+      ['R', 'future'],
       ['R', 'relay'],
     ]);
     expect(result.warnings.filter((warning) => warning.includes('not in the known NAP list'))).toEqual([
-      '[nip5a-manifest] requires domain(s) not in the known NAP list, emitted as declared: mesh',
+      '[nip5a-manifest] requires domain(s) not in the known NAP list, emitted as declared: future',
     ]);
   });
 
@@ -610,7 +627,7 @@ describe('nip5aManifest artifact modes', () => {
       { nappletType: 'infer-unknown', requires: { infer: true } },
       fixture,
       {},
-      [{ id: path.join(fixture.root, 'src/main.ts'), code: 'window.napplet.mesh?.info();' }],
+      [{ id: path.join(fixture.root, 'src/main.ts'), code: 'window.napplet.future?.info();' }],
     );
 
     expect(readManifest(fixture.dist).tags.some((tag) => tag[0] === 'R')).toBe(false);
@@ -628,16 +645,16 @@ describe('nip5aManifest artifact modes', () => {
     fs.writeFileSync(path.join(fixture.dist, 'index.html'), '<!doctype html>');
     const result = await runCloseBundle({
       nappletType: 'optional-inference',
-      requires: { infer: true, explicit: ['mesh'], mode: 'error' },
+      requires: { infer: true, explicit: ['future'], mode: 'error' },
       optional: ['theme'],
     }, fixture, {}, [
       { id: 'main.ts', code: 'window.napplet.theme;' },
       { id: 'other.ts', code: 'window.napplet.theme;' },
     ]);
     expect(result.warnings).toHaveLength(1);
-    expect(result.warnings[0]).toContain('emitted as declared: mesh');
+    expect(result.warnings[0]).toContain('emitted as declared: future');
     const tags = readManifest(fixture.dist).tags;
-    expect(tags.filter((tag) => tag[0] === 'R')).toEqual([['R', 'mesh']]);
+    expect(tags.filter((tag) => tag[0] === 'R')).toEqual([['R', 'future']]);
     expect(tags.filter((tag) => tag[0] === 'O')).toEqual([['O', 'theme']]);
   });
 

@@ -19,6 +19,7 @@ npm install @napplet/sdk
 
 Top-level namespaced objects that mirror `window.napplet`:
 
+- **`mesh`** — `info`, `publish`, `subscribe`, `blobs`; optional circle delivery ([guide](/naps/mesh))
 - **`outbox`** — `getEvent`, `query`, `subscribe`, `publish`, `resolveRelays`
 - **`common`** — profile lookup, follow/unfollow, reactions, reports, NIP-19 helpers
 - **`lists`** — NIP-51 list read and mutation helpers
@@ -173,3 +174,7 @@ if (window.napplet?.gamepad) {
 ```
 
 Declare `gamepad` as optional (`O`) when other controls fulfill the core task. Use a hard requirement (`R`) only when the core task needs controller input. The runtime owns controller access and focus isolation; app code does not call native `navigator.getGamepads()` or open raw HID devices. Haptics and remapping are outside this proposal.
+
+### MESH imports
+
+Use `import { mesh } from '@napplet/sdk'` or named `info`, `publish`, `subscribe`, and `blobs` imports from `@napplet/sdk/mesh`. Both wrap the injected `window.napplet.mesh` object; check its presence before optional calls. The [MESH guide](/naps/mesh) covers hop budgets, subscriptions, and blob counts. This is non-normative usage guidance for the [NAP-MESH draft](https://github.com/napplet/naps/pull/122).

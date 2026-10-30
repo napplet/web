@@ -251,7 +251,7 @@ for (const format of ["current", "legacy"] as const) {
       await Deno.writeTextFile(`${dir}/index.html`, "index");
       await Deno.writeTextFile(
         `${dir}/.nip5a-manifest.json`,
-        JSON.stringify({ tags: [["requires", "mesh"], ["requires", " relay "], ["requires", ""]] }),
+        JSON.stringify({ tags: [["requires", "future-domain"], ["requires", " relay "], ["requires", ""]] }),
       );
       const candidate: NappletCandidate = {
         name: "dingdong",
@@ -265,7 +265,7 @@ for (const format of ["current", "legacy"] as const) {
 
       const requiredTag = format === "current" ? "R" : "requires";
       assertEquals(manifests[0].template?.tags.filter((tag) => tag[0] === requiredTag), [
-        [requiredTag, "mesh"],
+        [requiredTag, "future-domain"],
         [requiredTag, "relay"],
       ]);
     });

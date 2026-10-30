@@ -6,7 +6,7 @@
 
 ### Package Overview
 
-This package is the single source of truth for all protocol-level definitions in the napplet ecosystem. All other `@napplet/*` packages import their envelope types, dispatch infrastructure, and protocol constants from here.
+This package provides the shared TypeScript definitions, dispatch infrastructure, and constants used by other `@napplet/*` packages. Protocol authority remains with the living [NIP-5D specification](https://github.com/nostr-protocol/nips/pull/2303) and [NAPs track](https://github.com/napplet/naps); these package docs are non-normative.
 
 Zero dependencies. No DOM or browser APIs. Works in any JavaScript runtime.
 
@@ -57,14 +57,14 @@ interface RelaySubscribe extends NappletMessage {
 }
 ```
 
-The `type` field domain prefix (`relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `ble`, `webrtc`, `link`, `count`, `lists`, `serial`, `fs`, `common`, `dm`, `shell`, `gamepad`) routes messages to the correct NAP handler via `dispatch()`.
+The `type` field domain prefix (`relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `ble`, `webrtc`, `link`, `count`, `lists`, `serial`, `fs`, `common`, `dm`, `shell`, `gamepad`, `mesh`) routes messages to the correct NAP handler via `dispatch()`.
 
 #### `NapDomain`
 
 String literal union of the NAP capability domains.
 
 ```ts
-type NapDomain = 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'cvm' | 'outbox' | 'upload' | 'intent' | 'ble' | 'webrtc' | 'link' | 'count' | 'lists' | 'serial' | 'fs' | 'common' | 'dm' | 'shell' | 'gamepad';
+type NapDomain = 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'cvm' | 'outbox' | 'upload' | 'intent' | 'ble' | 'webrtc' | 'link' | 'count' | 'lists' | 'serial' | 'fs' | 'common' | 'dm' | 'shell' | 'gamepad' | 'mesh';
 ```
 
 | Domain    | Scope                                    |
@@ -81,6 +81,7 @@ type NapDomain = 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | '
 | `resource` | Byte-fetching primitive (URL to Blob) |
 | `cvm` | Native ContextVM / MCP-over-Nostr bridge |
 | `outbox` | Outbox-aware relay routing |
+| `mesh` | Hop-limited publish, subscriptions, and blob counts over the user's paired circle |
 | `upload` | Shell-mediated file/blob upload |
 | `intent` | Archetype intent dispatch |
 | `ble` | Runtime-mediated Bluetooth LE/GATT sessions |
@@ -97,7 +98,7 @@ type NapDomain = 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | '
 Runtime constant array of all NAP domain strings. Useful for iteration and validation.
 
 ```ts
-const NAP_DOMAINS: readonly NapDomain[] = ['shell', 'relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent', 'ble', 'webrtc', 'link', 'count', 'lists', 'serial', 'common', 'dm'];
+const NAP_DOMAINS: readonly NapDomain[] = ['shell', 'relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent', 'ble', 'webrtc', 'link', 'count', 'lists', 'serial', 'common', 'dm', 'mesh'];
 
 for (const domain of NAP_DOMAINS) {
   console.log(`Checking support for: ${domain}`);
@@ -420,3 +421,7 @@ The runtime binding retains deliveries until a listener registers. Discovery can
 ### GAMEPAD integration
 
 `GamepadState`, `Gamepad`, `GamepadButton`, `GamepadSlot`, `GamepadApi`, and the `gamepad` domain are exported for the proposed [NAP-GAMEPAD](https://github.com/napplet/naps/pull/108). Its fire-and-forget envelopes carry no correlation id.
+
+## MESH types
+
+`MeshApi`, `MeshInfo`, `MeshLimits`, `MeshPublishOptions`, `MeshPublishResult`, `MeshSubscribeOptions`, `MeshBlobsResult`, and `MeshSubscription` describe the optional `NappletGlobal.mesh` API. `mesh` is included in `NapDomain` and `NAP_DOMAINS`. This is non-normative package guidance; the [NAP-MESH draft](https://github.com/napplet/naps/pull/122) owns the contract.

@@ -130,3 +130,7 @@ With `data`, the plugin derives `x` and `size`, sniffs the format for `m` (PNG, 
 ### GAMEPAD integration
 
 Requirement inference recognizes `@napplet/nap/gamepad`, `@napplet/sdk/gamepad`, and direct GAMEPAD domain reads. Declare `optional: ["gamepad"]` when keyboard or pointer controls fulfill the core task. See the proposed [NAP-GAMEPAD](https://github.com/napplet/naps/pull/108).
+
+## MESH declarations
+
+Requirement inference recognizes `@napplet/nap/mesh`, `@napplet/sdk/mesh`, and direct `window.napplet.mesh` access. Declare `optional: ['mesh']` when circle delivery is an enhancement, or `requires: ['mesh']` when the core task needs it. These produce bare-domain `O` or `R` declarations and do not grant runtime access. This non-normative guidance defers to the [NAP-MESH draft](https://github.com/napplet/naps/pull/122).

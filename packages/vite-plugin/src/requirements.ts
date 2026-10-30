@@ -21,6 +21,7 @@ const NAP_DOMAINS = [
   'resource',
   'cvm',
   'outbox',
+  'mesh',
   'upload',
   'intent',
   'ble',

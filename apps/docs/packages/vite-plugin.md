@@ -126,3 +126,7 @@ nip5aManifest({
 ```
 
 With `data`, the plugin derives `x` and `size`, sniffs the format for `m` (PNG, JPEG or WebP for screenshots; WebM or MP4 for the preview), and reads `dim` from PNG, JPEG and WebP headers. A declared `sha256`, `mimeType`, `size` or `dim` must agree with the bytes or the build fails. Each supplied blob is written to `dist/<sha256>.<ext>` after `index.html` is hashed so deploy tooling can upload it to the declared Blossom servers; `napplet deploy` uploads blobs referenced by these tags. Hash-only entries keep their tag and need the blob uploaded separately. Because the specification says publishers SHOULD include `m` and `dim`, omitting them produces a build warning. `sourceCommit` without a `source` is still emitted but warns, since clients ignore a pin without a repository source; `sourceArchive` is validated for shape only. Clients verify hashes and decoding before display as specified by NIP-5D; declaring media does not grant anything.
+
+## MESH declarations
+
+Requirement inference recognizes `@napplet/nap/mesh`, `@napplet/sdk/mesh`, and direct `window.napplet.mesh` access. Declare `optional: ['mesh']` when circle delivery is an enhancement, or `requires: ['mesh']` when the core task needs it. These produce bare-domain `O` or `R` declarations and do not grant runtime access. This non-normative guidance defers to the [NAP-MESH draft](https://github.com/napplet/naps/pull/122).

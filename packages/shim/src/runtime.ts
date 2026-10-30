@@ -1,3 +1,4 @@
+import { installMeshShim, handleMeshMessage } from '@napplet/nap/mesh/shim';
 import { installGamepadShim, handleGamepadMessage } from '@napplet/nap/gamepad/shim';
 import { handleShellMessage, installShellShim } from '@napplet/nap/shell/shim';
 import {
@@ -107,6 +108,7 @@ const DOMAIN_ROUTERS: ReadonlyArray<readonly [string, DomainHandler]> = [
   ['resource.', handleResourceMessage],
   ['cvm.', handleCvmMessage],
   ['outbox.', handleOutboxMessage],
+  ['mesh.', handleMeshMessage],
   ['upload.', handleUploadMessage],
   ['intent.', handleIntentMessage],
   ['inc.', handleIncMessage],
@@ -187,6 +189,9 @@ function installDomainShim(domain: NapDomain): void {
       return;
     case 'cvm':
       installCvmShim();
+      return;
+    case 'mesh':
+      installMeshShim();
       return;
     case 'outbox':
       installOutboxShim();

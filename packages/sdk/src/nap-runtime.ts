@@ -23,6 +23,8 @@ export { DOMAIN as NOTIFY_DOMAIN } from '@napplet/nap/notify';
 export { DOMAIN as CONFIG_DOMAIN } from '@napplet/nap/config';
 export { DOMAIN as RESOURCE_DOMAIN } from '@napplet/nap/resource';
 export { DOMAIN as CVM_DOMAIN } from '@napplet/nap/cvm';
+export { DOMAIN as MESH_DOMAIN } from '@napplet/nap/mesh';
+export { installMeshShim, meshInfo, meshPublish, meshSubscribe, meshBlobs } from '@napplet/nap/mesh';
 export { DOMAIN as OUTBOX_DOMAIN } from '@napplet/nap/outbox';
 export { DOMAIN as UPLOAD_DOMAIN } from '@napplet/nap/upload';
 export { DOMAIN as INTENT_DOMAIN } from '@napplet/nap/intent';

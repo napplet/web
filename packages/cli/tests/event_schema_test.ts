@@ -201,13 +201,28 @@ Deno.test("current deploy preserves required and optional domains outside the re
     await Deno.writeTextFile(`${dir}/index.html`, html);
     await Deno.writeTextFile(
       `${dir}/.nip5a-manifest.json`,
-      JSON.stringify({ tags: [["R", "mesh"], ["O", "mesh-ui"]] }),
+      JSON.stringify({ tags: [["R", "future-domain"], ["O", "future-ui"]] }),
     );
     const [manifest] = await rootDeploy(dir);
-    assertEquals(domainTags(manifest.template!.tags, "R"), [["R", "mesh"]]);
-    assertEquals(domainTags(manifest.template!.tags, "O"), [["O", "mesh-ui"]]);
+    assertEquals(domainTags(manifest.template!.tags, "R"), [["R", "future-domain"]]);
+    assertEquals(domainTags(manifest.template!.tags, "O"), [["O", "future-ui"]]);
   });
 });
+
+for (const declaration of ["R", "O"] as const) {
+  Deno.test(`current deploy preserves ${declaration} mesh without adding relay grants`, async () => {
+    await withTempDir(async (dir) => {
+      await Deno.writeTextFile(`${dir}/index.html`, html);
+      await Deno.writeTextFile(
+        `${dir}/.nip5a-manifest.json`,
+        JSON.stringify({ tags: [[declaration, "mesh"]] }),
+      );
+      const [manifest] = await rootDeploy(dir);
+      assertEquals(domainTags(manifest.template!.tags, declaration), [[declaration, "mesh"]]);
+      assertEquals(domainTags(manifest.template!.tags, declaration === "R" ? "O" : "R"), []);
+    });
+  });
+}
 
 Deno.test("metadata merge lets sidecar optional domains win over config requirements", async () => {
   await withTempDir(async (dir) => {

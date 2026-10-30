@@ -26,6 +26,8 @@ export interface ReferenceHandlerOptions {
   intents: IntentHandlers;
 }
 
+const MESH_REQUESTS = new Set(['mesh.info', 'mesh.publish', 'mesh.subscribe', 'mesh.blobs']);
+
 /** Create the pure request handler for the reference shell. */
 export function createReferenceHandler(options: ReferenceHandlerOptions) {
   const initialized = new Set<string>();
@@ -34,8 +36,16 @@ export function createReferenceHandler(options: ReferenceHandlerOptions) {
     const verdict = validateEnvelope(envelope);
     options.records.push({ envelope, verdict, timestamp: options.now() });
 
-    if (!type || !verdict.ok) return [];
     const domains = endpoint.domains ?? NAP_DOMAINS;
+    // NAP-MESH Error Handling requires correlated refusal, including before a
+    // subscription opens. It does not send a subsequent mesh.closed.
+    if (type && MESH_REQUESTS.has(type) && (!verdict.ok || !domains.includes('mesh'))) {
+      const env = envelope as Record<string, unknown>;
+      if (typeof env.id !== 'string') return [];
+      const error = !domains.includes('mesh') ? 'mesh not granted' : verdict.errors.map((issue) => issue.message).join('; ');
+      return ok({ type: `${type}.result`, id: env.id, ...(type === 'mesh.publish' ? { ok: false } : {}), error });
+    }
+    if (!type || !verdict.ok) return [];
     if (!domains.includes(type.slice(0, type.indexOf('.')))) return [];
     if (type === 'shell.ready') {
       if (initialized.has(endpoint.id)) return [];

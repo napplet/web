@@ -4,7 +4,8 @@
   "license": "MIT",
   "exports": {
     ".": "./src/index.ts",
-    "./gamepad": "./src/gamepad.ts"
+    "./gamepad": "./src/gamepad.ts",
+    "./mesh": "./src/mesh.ts"
   },
   "imports": {
     "@napplet/core": "jsr:@napplet/core@^0.34.0",

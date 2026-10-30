@@ -74,7 +74,7 @@ describe('manifest checks', () => {
 
   it('reports an unknown requires domain as a warning-severity finding only', () => {
     const ctx = makeContext({
-      manifestEvent: { ...goodEvent, tags: [...goodEvent.tags, ['R', 'mesh']] },
+      manifestEvent: { ...goodEvent, tags: [...goodEvent.tags, ['R', 'future']] },
     });
     expect(run('manifest/requires', ctx).status).toBe('pass');
     expect(run('manifest/requires-known', ctx).status).toBe('fail');

@@ -1,3 +1,4 @@
+import { info as meshInfo, publish as meshPublish, subscribe as meshSubscribe, blobs as meshBlobs } from '@napplet/nap/mesh/shim';
 import type { NapDomain, NappletGlobal } from '@napplet/core';
 import {
   info as resourceInfo,
@@ -144,6 +145,10 @@ function installNetworkDomains(domains: ReadonlySet<NapDomain>, napplet: Partial
         call: cvmRegistryCall,
       },
     };
+  }
+
+  if (domains.has('mesh')) {
+    napplet.mesh = { info: meshInfo, publish: meshPublish, subscribe: meshSubscribe, blobs: meshBlobs };
   }
 
   if (domains.has('outbox')) {
