@@ -10,6 +10,7 @@
  * @packageDocumentation
  */
 
+import type { BootOptions } from '@napplet/conformance';
 import { createServer, type Server, type ServerResponse } from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
 import { join, normalize, extname, resolve } from 'node:path';
@@ -25,6 +26,8 @@ export interface BootConfig {
   runDegraded: boolean;
   runtimePreludeSource: string;
   allowSameOrigin?: boolean;
+  domains?: BootOptions['domains'];
+  maturity?: BootOptions['maturity'];
 }
 
 /** Options for {@link startHarnessServer}. */

@@ -29,6 +29,39 @@ describe('real opaque-origin reference runtime', () => {
     }
   }
 
+  it('enforces maturity before classic and module scripts and blocks direct-message bypass', async () => {
+    const result = await boot(`<!doctype html><html><head><script>
+      if (Object.keys(window.napplet).join(',') !== 'storage') throw new Error('Unexpected exposed domains');
+      window.addEventListener('message', event => {
+        if (event.data?.type === 'llm.select.result') throw new Error('Excluded domain answered direct message');
+      });
+      window.parent.postMessage({ type: 'llm.select', id: 'bypass' }, '*');
+      window.napplet.storage.getItem('theme').then(value => {
+        if (value !== null) throw new Error('Allowed storage failed');
+      });
+    </script><script type="module">
+      if (window.napplet.llm || typeof window.napplet.storage?.getItem !== 'function') throw new Error('Module exposure mismatch');
+    </script></head></html>`, {
+      domains: ['storage', 'llm'], maturity: {}, runDegraded: false, settleMs: 300,
+    });
+    expect(result.bootError).toBeNull();
+    expect(result.installedGlobal).toBe(true);
+    expect(result.emitted.map(record => (record.envelope as { type: string }).type)).toContain('llm.select');
+    expect(result.emitted.every(record => record.verdict.ok)).toBe(true);
+  });
+
+  it('admits one named exploratory domain before code runs', async () => {
+    const result = await boot(`<!doctype html><script>
+      if (Object.keys(window.napplet).join(',') !== 'llm') throw new Error('Unexpected domain selection');
+      window.napplet.llm.select().then(model => {
+        if (model.model !== 'reference-model') throw new Error('Opted-in host unavailable');
+        return window.napplet.llm.describe(model.handle);
+      });
+    </script>`, { domains: ['llm', 'ble'], maturity: { optIn: ['llm'] }, runDegraded: false, settleMs: 300 });
+    expect(result.bootError).toBeNull();
+    expect(result.emitted.some(record => (record.envelope as { type: string }).type === 'llm.describe')).toBe(true);
+  });
+
   it('installs callable INC/INTENT/THEME before subject code and routes real messages', async () => {
     const result = await boot(`<!doctype html><script>
       if (window.napplet.inc) {

@@ -23,6 +23,7 @@ export interface RecordedEnvelope {
 export interface ReferenceHandlerOptions {
   now: () => number;
   records: RecordedEnvelope[];
+  domains?: readonly string[];
   queueDelivery(target: string, delivery: unknown): void;
   intents: IntentHandlers;
 }
@@ -30,6 +31,7 @@ export interface ReferenceHandlerOptions {
 /** Create the pure request handler for the reference shell. */
 export function createReferenceHandler(options: ReferenceHandlerOptions) {
   const initialized = new Set<string>();
+  const hostDomains = options.domains ? new Set(options.domains) : null;
   const llm = createLlmHandlers();
   const handle = (endpoint: ReferenceEndpoint, envelope: unknown): unknown[] => {
     const type = getEnvelopeType(envelope);
@@ -37,7 +39,8 @@ export function createReferenceHandler(options: ReferenceHandlerOptions) {
     options.records.push({ envelope, verdict, timestamp: options.now() });
 
     if (!type || !verdict.ok) return [];
-    const domains = endpoint.domains ?? NAP_DOMAINS;
+    const candidates = endpoint.domains ?? NAP_DOMAINS;
+    const domains = hostDomains ? candidates.filter(domain => hostDomains.has(domain)) : candidates;
     if (!domains.includes(type.slice(0, type.indexOf('.')))) return [];
     if (type === 'shell.ready') {
       if (initialized.has(endpoint.id)) return [];
