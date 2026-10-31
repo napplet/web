@@ -1,28 +1,22 @@
 # @napplet/conformance-cli
 
+## 0.4.3
+
+### Patch Changes
+
+- Add optional NAP maturity policy to the reference host, applying the same
+  resolved domain set to runtime injection and dispatch. Preserve normal
+  conformance coverage and explicit allowlist compatibility. Mirror the policy
+  in the conformance CLI browser-host configuration.
+- Updated dependencies
+  - @napplet/conformance@0.23.0
+
 ## 0.4.2
 
 ### Patch Changes
 
-- 5da4f29: Expose release-time NAP implementation maturity separately from
-  upstream proposal state through `NAP_IMPLEMENTATIONS`, `getNapImplementation`,
-  and `selectNapDomains`. The supported-only selector intersects explicit host
-  candidates with allowed maturity levels and named opt-ins, returning exclusion
-  reasons without granting support or permissions. All maturity levels remain
-  subject to API changes.
-
-  The side-effect-free shim prelude accepts optional maturity policy while
-  preserving existing explicit allowlists and legacy root-import behavior. The
-  reference browser host applies the same resolved domain set to injection and
-  dispatch, including direct-message attempts. Normal conformance runs retain
-  full-domain coverage. Documentation tables and domain labels derive from the
-  implementation catalog.
 - Updated dependencies [932a596]
-- Updated dependencies [5da4f29]
   - @napplet/conformance@0.22.0
-  - @napplet/core@0.36.0
-  - @napplet/shim@0.34.0
-  - @napplet/nap@0.35.1
 
 ## 0.4.1
 

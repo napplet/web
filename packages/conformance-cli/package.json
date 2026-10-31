@@ -1,6 +1,6 @@
 {
   "name": "@napplet/conformance-cli",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "Headless CLI that runs @napplet/conformance against a napplet in real Chromium via Playwright \u2014 the `test:conformance` runner",
   "type": "module",
   "bin": {
