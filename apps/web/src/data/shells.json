@@ -28,6 +28,18 @@
     "status": "Available"
   },
   {
+    "id": "dinos",
+    "name": "DinOS",
+    "category": "A social desktop",
+    "description": "A Linux desktop built around Din, connecting your apps and friends through your Nostr account.",
+    "href": "https://gitworkshop.dev/npub1q3sle0kvfsehgsuexttt3ugjd8xdklxfwwkh559wxckmzddywnws6cd26p/index.ngit.dev/din",
+    "source": "https://gitworkshop.dev/npub1q3sle0kvfsehgsuexttt3ugjd8xdklxfwwkh559wxckmzddywnws6cd26p/index.ngit.dev/din",
+    "platforms": [
+      "Linux"
+    ],
+    "status": "Active development"
+  },
+  {
     "id": "nostrudel",
     "name": "noStrudel",
     "category": "Your social sandbox",
