@@ -7,7 +7,7 @@ import { createReferenceShell } from '../shell/reference-shell.js';
 
 const source = readFileSync(new URL('../../../shim/dist/prelude.global.js', import.meta.url), 'utf8');
 
-function fixture(domains: string[], preludeSource?: string) {
+function fixture(domains: string[], preludeSource: string) {
   const listeners = new Map<string, Set<(event: unknown) => void>>();
   const timers = new Set<ReturnType<typeof setTimeout>>();
   const shell = createReferenceShell();
@@ -73,13 +73,50 @@ describe('reference runtime bindings', () => {
     } finally { host.close(); }
   });
 
-  it('does not advertise unavailable domains in the fallback runtime', () => {
-    const host = fixture(['inc', 'intent', 'theme', 'resource']);
+  it('installs only the domains in the explicit allowlist', () => {
+    const host = fixture(['resource'], source);
     try {
       expect(host.napplet.inc).toBeUndefined();
       expect(host.napplet.intent).toBeUndefined();
       expect(host.napplet.theme).toBeUndefined();
+      expect(host.napplet.gamepad).toBeUndefined();
+      expect(host.napplet.llm).toBeUndefined();
       expect(typeof host.napplet.resource?.bytes).toBe('function');
+    } finally { host.close(); }
+  });
+
+  it('subscribes GAMEPAD on first use and applies the reference shell state', async () => {
+    const host = fixture(['gamepad'], source);
+    try {
+      const api = host.napplet.gamepad!;
+      expect(host.shell.records).toEqual([]);
+      const states: unknown[] = [];
+      const subscription = api.onChange((state) => states.push(state));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      expect(host.shell.records.map(record => (record.envelope as { type: string }).type)).toEqual(['gamepad.subscribe']);
+      expect(host.shell.records.every(record => record.verdict.ok)).toBe(true);
+      expect(states).toEqual([{ available: false, reason: 'unavailable', focused: false, pads: [] }]);
+      expect(api.available).toBe(false);
+      subscription.close();
+    } finally { host.close(); }
+  });
+
+  it('round-trips LLM selection and generation through the reference shell', async () => {
+    const host = fixture(['llm'], source);
+    try {
+      const api = host.napplet.llm!;
+      const model = await api.select({ json: true });
+      expect(model.model).toBe('reference-model');
+      const deltas: string[] = [];
+      const generation = await api.generate(
+        { handle: model.handle, messages: [{ role: 'user', content: [{ type: 'text', text: 'Say hello.' }] }] },
+        { onDelta: (delta) => deltas.push(delta.text) },
+      );
+      expect(generation).toMatchObject({ text: 'Echo: Say hello.', finish: 'stop' });
+      expect(deltas).toHaveLength(1);
+      const types = host.shell.records.map(record => (record.envelope as { type: string }).type);
+      expect(types).toEqual(['llm.select', 'llm.generate']);
+      expect(host.shell.records.every(record => record.verdict.ok)).toBe(true);
     } finally { host.close(); }
   });
 });
