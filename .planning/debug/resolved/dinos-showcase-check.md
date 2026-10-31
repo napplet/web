@@ -1,5 +1,5 @@
 ---
-status: verifying
+status: resolved
 trigger: "Merged DinOS listing fails Link check workflow run 41182473193; open a PR that passes."
 created: 2026-10-31
 updated: 2026-10-31
@@ -20,7 +20,7 @@ Expected: the shell listing addition passes the complete Link check workflow. Ac
 
 ## Current Focus
 
-The one-line copy fix is committed as `0a2bcb4b`; local verification passed. Next action: await the actual pull-request Link check workflow. No protocol behavior or published package changes are needed.
+The one-line copy fix is committed as `0a2bcb4b`; local verification passed. The pull request records the subsequent GitHub Actions result. No protocol behavior or published package changes are needed.
 
 ## Resolution
 
