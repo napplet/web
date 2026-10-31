@@ -1,13 +1,4 @@
-/**
- * NAP-LLM schema types for user-selected, runtime-mediated language model inference.
- *
- * Non-normative note -- the canonical definition lives in napplet/naps#134:
- * <https://github.com/napplet/naps/pull/134>
- *
- * The napplet owns its prompts, conversation, and output validation. The runtime
- * owns connection selection, credentials, disclosure consent, and provider access.
- * Handles are opaque and scoped to the authenticated endpoint and user account.
- */
+/** User-selected, runtime-mediated inference from the living NAP-LLM proposal: https://github.com/napplet/naps/pull/134. */
 
 /** Conversation role of one message. */
 export type LlmRole = 'system' | 'user' | 'assistant';
