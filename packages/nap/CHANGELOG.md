@@ -1,5 +1,12 @@
 # @napplet/nap
 
+## 0.35.1
+
+### Patch Changes
+
+- Updated dependencies [5da4f29]
+  - @napplet/core@0.36.0
+
 ## 0.35.0
 
 ### Minor Changes

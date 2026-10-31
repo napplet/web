@@ -1,6 +1,6 @@
 {
   "name": "@napplet/nap",
-  "version": "0.35.0",
+  "version": "0.35.1",
   "license": "MIT",
   "exports": {
     "./relay": "./src/relay/index.ts",
@@ -113,7 +113,7 @@
     "./llm/sdk": "./src/llm/sdk.ts"
   },
   "imports": {
-    "@napplet/core": "jsr:@napplet/core@^0.35.0",
+    "@napplet/core": "jsr:@napplet/core@^0.36.0",
     "nostr-tools/nip19": "npm:nostr-tools@^2.23.3/nip19"
   },
   "publish": {
