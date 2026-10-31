@@ -130,3 +130,7 @@ With `data`, the plugin derives `x` and `size`, sniffs the format for `m` (PNG, 
 ### GAMEPAD integration
 
 Requirement inference recognizes `@napplet/nap/gamepad`, `@napplet/sdk/gamepad`, and direct GAMEPAD domain reads. Declare `optional: ["gamepad"]` when keyboard or pointer controls fulfill the core task. See the proposed [NAP-GAMEPAD](https://github.com/napplet/naps/pull/108).
+
+### LLM declarations
+
+Requirement inference recognizes static `@napplet/nap/llm` and `@napplet/sdk/llm` imports and direct `window.napplet.llm` access. Root SDK namespace imports are not inferred; declare their domain explicitly. Use `requires: ['llm']` when inference is the napplet's core task, or `optional: ['llm']` with a presence check for an enhancement. Manifest declarations configure no connection and grant no consent. See the living [NAP-LLM proposal](https://github.com/napplet/naps/pull/134).

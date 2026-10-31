@@ -93,7 +93,7 @@ export default defineConfig({
       },
       {
         text: 'NAP domains',
-        items: [{ text: 'NAP domain reference', link: '/naps/' }, { text: 'GAMEPAD', link: '/naps/gamepad' }],
+        items: [{ text: 'NAP domain reference', link: '/naps/' }, { text: 'GAMEPAD', link: '/naps/gamepad' }, { text: 'LLM', link: '/naps/llm' }],
       },
       {
         text: 'Reference',
