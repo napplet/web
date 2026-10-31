@@ -1,9 +1,8 @@
 /**
  * @napplet/core -- Shared protocol types, constants, and topic definitions.
  *
- * This package is the single source of truth for all protocol-level
- * definitions in the napplet ecosystem. All other @napplet/* packages
- * import their protocol types and constants from here.
+ * Shared implementation types and constants for @napplet packages.
+ * The living NIP-5D and NAP specifications remain the protocol authority.
  *
  * Zero dependencies. No DOM or browser APIs.
  *
@@ -26,6 +25,11 @@ export type {
   NapDomain,
 } from './envelope.js';
 export { NAP_DOMAINS } from './envelope.js';
+
+export { NAP_IMPLEMENTATIONS } from './nap-catalog.js';
+export type { NapMaturity, NapProposalStatus, NapImplementationMetadata } from './nap-catalog.js';
+export { getNapImplementation, selectNapDomains } from './nap-maturity.js';
+export type { NapMaturityPolicy, NapDomainSelectionOptions, NapDomainSelection, NapDomainExclusion } from './nap-maturity.js';
 
 export type { NapHandler, NapDispatch } from './dispatch.js';
 export { createDispatch, registerNap, dispatch, getRegisteredDomains } from './dispatch.js';
