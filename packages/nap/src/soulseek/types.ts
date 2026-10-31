@@ -66,7 +66,9 @@ export interface SoulseekInfoMessage extends NappletMessage {
   id: string;
 }
 /** Response to soulseek.info. */
-export type SoulseekInfoResultMessage = { type: 'soulseek.info.result' } & Reply<SoulseekInfo>;
+export type SoulseekInfoResultMessage = {
+  type: 'soulseek.info.result';
+} & Reply<SoulseekInfo>;
 
 /** Request for soulseek.search. */
 export interface SoulseekSearchMessage extends NappletMessage {
@@ -75,7 +77,9 @@ export interface SoulseekSearchMessage extends NappletMessage {
   request: SoulseekSearchRequest;
 }
 /** Response to soulseek.search. */
-export type SoulseekSearchResultMessage = { type: 'soulseek.search.result' } & Reply<SoulseekQuery>;
+export type SoulseekSearchResultMessage = {
+  type: 'soulseek.search.result';
+} & Reply<SoulseekQuery>;
 
 /** Request for soulseek.browse. */
 export interface SoulseekBrowseMessage extends NappletMessage {
@@ -84,7 +88,9 @@ export interface SoulseekBrowseMessage extends NappletMessage {
   username: string;
 }
 /** Response to soulseek.browse. */
-export type SoulseekBrowseResultMessage = { type: 'soulseek.browse.result' } & Reply<SoulseekQuery>;
+export type SoulseekBrowseResultMessage = {
+  type: 'soulseek.browse.result';
+} & Reply<SoulseekQuery>;
 
 /** Request for soulseek.results. Optional fields are omitted, never `null`. */
 export interface SoulseekResultsMessage extends NappletMessage {
@@ -95,7 +101,9 @@ export interface SoulseekResultsMessage extends NappletMessage {
   limit?: number;
 }
 /** Response to soulseek.results. */
-export type SoulseekResultsResultMessage = { type: 'soulseek.results.result' } & Reply<SoulseekQueryPage>;
+export type SoulseekResultsResultMessage = {
+  type: 'soulseek.results.result';
+} & Reply<SoulseekQueryPage>;
 
 /** Request for soulseek.stop. */
 export interface SoulseekStopMessage extends NappletMessage {
@@ -104,7 +112,9 @@ export interface SoulseekStopMessage extends NappletMessage {
   queryId: string;
 }
 /** Response to soulseek.stop. */
-export type SoulseekStopResultMessage = { type: 'soulseek.stop.result' } & Reply<SoulseekQuery>;
+export type SoulseekStopResultMessage = {
+  type: 'soulseek.stop.result';
+} & Reply<SoulseekQuery>;
 
 /** Request for soulseek.download. */
 export interface SoulseekDownloadMessage extends NappletMessage {
@@ -113,7 +123,9 @@ export interface SoulseekDownloadMessage extends NappletMessage {
   fileId: string;
 }
 /** Response to soulseek.download. */
-export type SoulseekDownloadResultMessage = { type: 'soulseek.download.result' } & Reply<SoulseekTransfer>;
+export type SoulseekDownloadResultMessage = {
+  type: 'soulseek.download.result';
+} & Reply<SoulseekTransfer>;
 
 /** Request for soulseek.transfers. */
 export interface SoulseekTransfersMessage extends NappletMessage {
@@ -121,7 +133,9 @@ export interface SoulseekTransfersMessage extends NappletMessage {
   id: string;
 }
 /** Response to soulseek.transfers. */
-export type SoulseekTransfersResultMessage = { type: 'soulseek.transfers.result' } & Reply<SoulseekTransfer[]>;
+export type SoulseekTransfersResultMessage = {
+  type: 'soulseek.transfers.result';
+} & Reply<SoulseekTransfer[]>;
 
 /** Request for soulseek.status. */
 export interface SoulseekStatusMessage extends NappletMessage {
@@ -130,7 +144,9 @@ export interface SoulseekStatusMessage extends NappletMessage {
   transferId: string;
 }
 /** Response to soulseek.status. */
-export type SoulseekStatusResultMessage = { type: 'soulseek.status.result' } & Reply<SoulseekTransfer>;
+export type SoulseekStatusResultMessage = {
+  type: 'soulseek.status.result';
+} & Reply<SoulseekTransfer>;
 
 /** Request for soulseek.pause. */
 export interface SoulseekPauseMessage extends NappletMessage {
@@ -139,7 +155,9 @@ export interface SoulseekPauseMessage extends NappletMessage {
   transferId: string;
 }
 /** Response to soulseek.pause. */
-export type SoulseekPauseResultMessage = { type: 'soulseek.pause.result' } & Reply<SoulseekTransfer>;
+export type SoulseekPauseResultMessage = {
+  type: 'soulseek.pause.result';
+} & Reply<SoulseekTransfer>;
 
 /** Request for soulseek.resume. */
 export interface SoulseekResumeMessage extends NappletMessage {
@@ -148,7 +166,9 @@ export interface SoulseekResumeMessage extends NappletMessage {
   transferId: string;
 }
 /** Response to soulseek.resume. */
-export type SoulseekResumeResultMessage = { type: 'soulseek.resume.result' } & Reply<SoulseekTransfer>;
+export type SoulseekResumeResultMessage = {
+  type: 'soulseek.resume.result';
+} & Reply<SoulseekTransfer>;
 
 /** Request for soulseek.cancel. */
 export interface SoulseekCancelMessage extends NappletMessage {
@@ -157,7 +177,9 @@ export interface SoulseekCancelMessage extends NappletMessage {
   transferId: string;
 }
 /** Response to soulseek.cancel. */
-export type SoulseekCancelResultMessage = { type: 'soulseek.cancel.result' } & Reply<SoulseekTransfer>;
+export type SoulseekCancelResultMessage = {
+  type: 'soulseek.cancel.result';
+} & Reply<SoulseekTransfer>;
 
 /** Request for soulseek.read. `offset` is canonical decimal text. */
 export interface SoulseekReadMessage extends NappletMessage {
@@ -168,7 +190,9 @@ export interface SoulseekReadMessage extends NappletMessage {
   length: number;
 }
 /** Response to soulseek.read. */
-export type SoulseekReadResultMessage = { type: 'soulseek.read.result' } & Reply<SoulseekChunk>;
+export type SoulseekReadResultMessage = {
+  type: 'soulseek.read.result';
+} & Reply<SoulseekChunk>;
 
 /** Request for soulseek.save. */
 export interface SoulseekSaveMessage extends NappletMessage {
@@ -177,7 +201,9 @@ export interface SoulseekSaveMessage extends NappletMessage {
   transferId: string;
 }
 /** Response to soulseek.save. */
-export type SoulseekSaveResultMessage = { type: 'soulseek.save.result' } & Reply<SoulseekSaved>;
+export type SoulseekSaveResultMessage = {
+  type: 'soulseek.save.result';
+} & Reply<SoulseekSaved>;
 
 /** Request for soulseek.release. */
 export interface SoulseekReleaseMessage extends NappletMessage {
@@ -187,7 +213,9 @@ export interface SoulseekReleaseMessage extends NappletMessage {
   handle: string;
 }
 /** Response to soulseek.release. */
-export type SoulseekReleaseResultMessage = { type: 'soulseek.release.result' } & Reply<SoulseekReleased>;
+export type SoulseekReleaseResultMessage = {
+  type: 'soulseek.release.result';
+} & Reply<SoulseekReleased>;
 
 /** Napplet-to-runtime soulseek envelopes. */
 export type SoulseekOutboundMessage =

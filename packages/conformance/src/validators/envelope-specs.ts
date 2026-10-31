@@ -7,6 +7,36 @@ const ID = { id: 'string' } as const;
  * NAP domains, with its direction and (for outbound) required fields.
  */
 export const ENVELOPE_SPECS: Record<string, EnvelopeSpec> = {
+  // NAP-SOULSEEK Wire Protocol: fourteen request/result pairs, no unsolicited messages.
+  // https://github.com/napplet/naps/pull/135
+  'soulseek.info': { dir: 'out', fields: { ...ID } },
+  'soulseek.info.result': { dir: 'in', fields: { ...ID } },
+  'soulseek.search': { dir: 'out', fields: { ...ID, request: 'object' } },
+  'soulseek.search.result': { dir: 'in', fields: { ...ID } },
+  'soulseek.browse': { dir: 'out', fields: { ...ID, username: 'string' } },
+  'soulseek.browse.result': { dir: 'in', fields: { ...ID } },
+  'soulseek.results': { dir: 'out', fields: { ...ID, queryId: 'string' } },
+  'soulseek.results.result': { dir: 'in', fields: { ...ID } },
+  'soulseek.stop': { dir: 'out', fields: { ...ID, queryId: 'string' } },
+  'soulseek.stop.result': { dir: 'in', fields: { ...ID } },
+  'soulseek.download': { dir: 'out', fields: { ...ID, fileId: 'string' } },
+  'soulseek.download.result': { dir: 'in', fields: { ...ID } },
+  'soulseek.transfers': { dir: 'out', fields: { ...ID } },
+  'soulseek.transfers.result': { dir: 'in', fields: { ...ID } },
+  'soulseek.status': { dir: 'out', fields: { ...ID, transferId: 'string' } },
+  'soulseek.status.result': { dir: 'in', fields: { ...ID } },
+  'soulseek.pause': { dir: 'out', fields: { ...ID, transferId: 'string' } },
+  'soulseek.pause.result': { dir: 'in', fields: { ...ID } },
+  'soulseek.resume': { dir: 'out', fields: { ...ID, transferId: 'string' } },
+  'soulseek.resume.result': { dir: 'in', fields: { ...ID } },
+  'soulseek.cancel': { dir: 'out', fields: { ...ID, transferId: 'string' } },
+  'soulseek.cancel.result': { dir: 'in', fields: { ...ID } },
+  'soulseek.read': { dir: 'out', fields: { ...ID, transferId: 'string', offset: 'string', length: 'number' } },
+  'soulseek.read.result': { dir: 'in', fields: { ...ID } },
+  'soulseek.save': { dir: 'out', fields: { ...ID, transferId: 'string' } },
+  'soulseek.save.result': { dir: 'in', fields: { ...ID } },
+  'soulseek.release': { dir: 'out', fields: { ...ID, kind: 'string', handle: 'string' } },
+  'soulseek.release.result': { dir: 'in', fields: { ...ID } },
   // NAP-GAMEPAD Wire Protocol: all three messages are fire-and-forget, without ids.
   // https://github.com/napplet/naps/pull/108
   'gamepad.subscribe': { dir: 'out', forbiddenFields: ['id'], forbiddenReason: 'NAP-GAMEPAD fire-and-forget envelopes do not carry it' },

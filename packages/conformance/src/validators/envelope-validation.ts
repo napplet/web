@@ -1,3 +1,4 @@
+import { validateSoulseekRequest } from './soulseek.js';
 import { NAP_DOMAINS } from '@napplet/core';
 import { ENVELOPE_SPECS } from './envelope-specs.js';
 import type {
@@ -215,6 +216,8 @@ export function validateEnvelope(message: unknown): EnvelopeVerdict {
       });
     }
   }
+
+  if (domain === 'soulseek') validateSoulseekRequest(type, record, errors);
 
   if (type === 'intent.invoke') {
     validateIntentInvokeRequest(record.request, errors);
