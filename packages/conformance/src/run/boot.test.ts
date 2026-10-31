@@ -2,11 +2,16 @@
 import { describe, it, expect } from 'vitest';
 import { bootAndCollect, runtimePrelude } from './boot.js';
 
+// happy-dom does not execute srcdoc scripts, so these DOM-wiring tests never run
+// the prelude. `bindings.test.ts` executes the maintained shim source for real.
+const runtimePreludeSource = '/* maintained shim prelude */';
+
 describe('bootAndCollect — DOM wiring', () => {
   it('does not infer installation from an uninstrumented DOM load and cleans up the iframe', async () => {
     const before = document.querySelectorAll('iframe').length;
     const boot = await bootAndCollect({
       url: 'about:blank',
+      runtimePreludeSource,
       readyTimeoutMs: 60,
       settleMs: 0,
       runDegraded: false,
@@ -21,7 +26,7 @@ describe('bootAndCollect — DOM wiring', () => {
   });
 
   it('keeps installation separate from subject errors and ignores peer telemetry', async () => {
-    const pending = bootAndCollect({ url: 'about:blank', readyTimeoutMs: 60, settleMs: 10, runDegraded: false });
+    const pending = bootAndCollect({ url: 'about:blank', runtimePreludeSource, readyTimeoutMs: 60, settleMs: 10, runDegraded: false });
     await Promise.resolve();
     const frame = document.querySelector('iframe')!;
     expect(frame).not.toBeNull();
@@ -37,6 +42,7 @@ describe('bootAndCollect — DOM wiring', () => {
   it('runs a degraded pass when requested', async () => {
     const boot = await bootAndCollect({
       url: 'about:blank',
+      runtimePreludeSource,
       readyTimeoutMs: 40,
       settleMs: 0,
       runDegraded: true,
@@ -45,73 +51,11 @@ describe('bootAndCollect — DOM wiring', () => {
     expect(boot.degraded!.bootError).toBeNull();
   });
 
-  it('resource prelude methods emit envelopes and resolve shell results', async () => {
-    const posted: Array<Record<string, unknown>> = [];
-    const previousParent = window.parent;
-    Object.defineProperty(window, 'parent', {
-      configurable: true,
-      value: { postMessage: (message: Record<string, unknown>) => {
-        if (!String(message.type).startsWith('__nappletConformance.')) posted.push(message);
-      } },
-    });
-
-    try {
-      Function(runtimePrelude(['resource']))();
-      const napplet = (window as unknown as {
-        napplet: {
-          resource: {
-            bytes(url: string, options?: { servers?: string[] }): Promise<Blob>;
-            bytesMany(requests: Array<{ url: string; servers?: string[] }>): Promise<unknown[]>;
-          };
-        };
-      }).napplet;
-      const promise = napplet.resource.bytes('data:text/plain;base64,aGk=', {
-        servers: ['https://cdn.example'],
-      });
-
-      expect(posted).toEqual([{
-        type: 'resource.bytes',
-        id: expect.any(String),
-        url: 'data:text/plain;base64,aGk=',
-        servers: ['https://cdn.example'],
-      }]);
-
-      window.dispatchEvent(new MessageEvent('message', {
-        source: window.parent,
-        data: {
-          type: 'resource.bytes.result',
-          id: posted[0].id,
-          blob: new Blob(['hi'], { type: 'text/plain' }),
-          mime: 'text/plain',
-        },
-      }));
-
-      expect(await (await promise).text()).toBe('hi');
-
-      const many = napplet.resource.bytesMany([{
-        url: 'blossom:abc.bin',
-        servers: ['https://cdn.example'],
-      }]);
-      expect(posted[1]).toEqual({
-        type: 'resource.bytesMany',
-        id: expect.any(String),
-        requests: [{
-          url: 'blossom:abc.bin',
-          servers: ['https://cdn.example'],
-        }],
-      });
-      window.dispatchEvent(new MessageEvent('message', {
-        source: window.parent,
-        data: {
-          type: 'resource.bytesMany.result',
-          id: posted[1].id,
-          items: [],
-        },
-      }));
-      await expect(many).resolves.toEqual([]);
-    } finally {
-      Object.defineProperty(window, 'parent', { configurable: true, value: previousParent });
-      delete (window as unknown as { napplet?: unknown }).napplet;
-    }
+  it('renders the maintained prelude, the explicit domain allowlist, and the installation probe', () => {
+    const script = runtimePrelude(['resource'], '/* shim */');
+    expect(script.startsWith('/* shim */')).toBe(true);
+    expect(script).toContain('globalThis.NappletShimPrelude.install({"domains":["resource"]});');
+    expect(script).toContain("type: '__nappletConformance.installed', installed: !!window.napplet");
+    expect(script).not.toContain('resource.bytes');
   });
 });

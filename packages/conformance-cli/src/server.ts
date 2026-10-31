@@ -23,7 +23,7 @@ export interface BootConfig {
   readyTimeoutMs: number;
   settleMs: number;
   runDegraded: boolean;
-  runtimePreludeSource?: string;
+  runtimePreludeSource: string;
   allowSameOrigin?: boolean;
 }
 
