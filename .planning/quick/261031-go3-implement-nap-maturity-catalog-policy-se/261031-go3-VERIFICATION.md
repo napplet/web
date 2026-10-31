@@ -1,6 +1,6 @@
 ---
 quick_id: 261031-go3
-status: local-passed
+status: passed
 verified: 2026-10-31
 ---
 
@@ -36,7 +36,7 @@ This is non-normative implementation evidence. The living [NIP-5D](https://githu
 | Required checks | `pnpm build` 12/12; `pnpm type-check` 19/19; `pnpm -r test:unit`; `pnpm test`; `pnpm test:workflow-contracts` 14/14; `git diff --check`. | Pass |
 | AI-slop gate | Pinned scanner 0.12.0 final full scan: 100/100, zero diagnostics, 356 supported files. Core/runtime/docs checkpoint scans also 100. No configuration or rule changes. Base has no `.aislop/config.yml`; used the workflow's pinned version unchanged. | Pass |
 | Release metadata | Changesets authored and consumed via `pnpm version-packages`; npm/JSR versions and changelogs synchronized; JSR export and release-tooling checks pass. Existing main conformance-prelude changeset consumed as part of the release. | Pass |
-| Commit, push and open PR | Shipment recorded in the summary after remote verification. | Pending shipment |
+| Commit, push and open PR | Branch pushed; PR #288 is OPEN and MERGEABLE, with the implementation head verified against GitHub. Summary records the shipment. | Pass |
 
 ## Test evidence and limitations
 

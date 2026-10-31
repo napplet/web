@@ -65,7 +65,7 @@ Branch `feat/cli-terminal-usability` ships guided missing-value recovery, `-i` p
 Phase: 164 (cli-terminal-usability) — verified and shipped
 Plan: 3 of 3
 Status: [PR #248](https://github.com/napplet/web/pull/248) open with six actual terminal screenshots
-Last activity: 2026-10-31 - Completed quick task 261031-er3: require runtimePreludeSource and delete the conformance fallback runtime fixture
+Last activity: 2026-10-31 - Completed quick task 261031-go3: NAP maturity catalog and runtime policy (PR #288)
 
 See phase 163 VERIFICATION.md and COVERAGE.md for evidence and disclosed release/specification/baseline limits. Earlier phase and quick-task records below are historical.
 
@@ -570,6 +570,7 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 
 | Quick ID | Task | Date | Commit | Artifacts |
 |----------|------|------|--------|-----------|
+| 261031-go3 | NAP maturity catalog, policy selection, host enforcement and generated docs (PR #288) | 2026-10-31 | 18d636cf | [261031-go3](./quick/261031-go3-implement-nap-maturity-catalog-policy-se/) |
 | 261031-cbd | Add DinOS to the website shell directory | 2026-10-31 | b7bf6c66 | [261031-cbd](./quick/261031-cbd-add-dinos-to-the-website-shell-list/) |
 | 261031-er3 | Require runtimePreludeSource and delete the conformance fallback runtime fixture | 2026-10-31 | e68eddc4 | [261031-er3](./quick/261031-er3-require-runtimepreludesource-and-delete-/) |
 | 261030-9r6 | Chase NIP-5D presentation media and source pin tags | 2026-10-30 | 0bae4ebe / PR #272 | [261030-9r6](./quick/261030-9r6-chase-nip-5d-presentation-media-and-sour/) |
