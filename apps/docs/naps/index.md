@@ -267,7 +267,7 @@ if (window.napplet?.fs) {
 
 ## Core domain union
 
-[`@napplet/core`](/packages/core) exports a `NapDomain` string union for the foundational domains — `shell`, `relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `ble`, `webrtc`, `link`, `count`, `lists`, `serial`, `fs`, `common`, `dm`, `gamepad` — used as the discriminant for envelope routing and domain presence.
+[`@napplet/core`](/packages/core) exports a `NapDomain` string union for the foundational domains — `shell`, `relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `ble`, `webrtc`, `link`, `count`, `lists`, `serial`, `fs`, `common`, `dm`, `gamepad`, `llm` — used as the discriminant for envelope routing and domain presence.
 
 ## Where to go next
 
@@ -297,3 +297,7 @@ Theme updates reach napplets with the exposed `theme` domain, independently of m
 ### gamepad
 
 Optional focus-scoped controller snapshots. See the non-normative [GAMEPAD guide](./gamepad) and living [NAP-GAMEPAD proposal](https://github.com/napplet/naps/pull/108).
+
+### llm
+
+User-selected, runtime-mediated language model inference. The injected `window.napplet.llm` API exposes `select`, `describe`, `generate`, and `cancel`; generations are stateless, may stream ordered `llm.delta` text before the authoritative result, expose their `requestId` for cancellation, and reject with the specification error code. The shell owns connections, credentials, disclosure consent, and provider access. See the non-normative [LLM guide](./llm) and living [NAP-LLM proposal](https://github.com/napplet/naps/pull/134).

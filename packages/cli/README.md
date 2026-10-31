@@ -585,3 +585,7 @@ NAPPLET_TEST_STANDALONE=1 deno test --node-modules-dir=none -A packages/cli/test
 ### GAMEPAD integration
 
 GAMEPAD is a bare manifest domain accepted by `init`, `build`, and deployment metadata. Controller fallback apps use `O gamepad`; controller-required apps use `R gamepad`. Live `dev` controller input depends on a GAMEPAD-capable Kehto/Paja release. See the proposed [NAP-GAMEPAD](https://github.com/napplet/naps/pull/108).
+
+### LLM capabilities
+
+Use the bare `llm` domain in required or optional deployment metadata. An inference-centred napplet can declare `R llm`; an optional integration uses `O llm` and checks runtime presence. Build and deployment support do not imply that the preview shell has a configured model connection. See the living [NAP-LLM proposal](https://github.com/napplet/naps/pull/134).

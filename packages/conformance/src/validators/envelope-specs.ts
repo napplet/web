@@ -7,6 +7,17 @@ const ID = { id: 'string' } as const;
  * NAP domains, with its direction and (for outbound) required fields.
  */
 export const ENVELOPE_SPECS: Record<string, EnvelopeSpec> = {
+  // NAP-LLM Wire Protocol: four request/result pairs plus the unsolicited delta.
+  // https://github.com/napplet/naps/pull/134
+  'llm.select': { dir: 'out', fields: { ...ID } },
+  'llm.select.result': { dir: 'in', fields: { ...ID } },
+  'llm.describe': { dir: 'out', fields: { ...ID, handle: 'string' } },
+  'llm.describe.result': { dir: 'in', fields: { ...ID } },
+  'llm.generate': { dir: 'out', fields: { ...ID, request: 'object' } },
+  'llm.generate.result': { dir: 'in', fields: { ...ID } },
+  'llm.delta': { dir: 'in', fields: { requestId: 'string', sequence: 'number', text: 'string' } },
+  'llm.cancel': { dir: 'out', fields: { ...ID, requestId: 'string' } },
+  'llm.cancel.result': { dir: 'in', fields: { ...ID } },
   // NAP-GAMEPAD Wire Protocol: all three messages are fire-and-forget, without ids.
   // https://github.com/napplet/naps/pull/108
   'gamepad.subscribe': { dir: 'out', forbiddenFields: ['id'], forbiddenReason: 'NAP-GAMEPAD fire-and-forget envelopes do not carry it' },
