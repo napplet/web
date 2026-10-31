@@ -16,7 +16,7 @@ The selector returns only candidate domains and explains exclusions. Named opt-i
 
 The side-effect-free shim prelude accepts optional maturity policy while preserving legacy explicit allowlists. Legacy root imports remain permissive; a later explicit prelude replaces their namespace before subject scripts. Reference browser boot uses the selected set for both injection and host dispatch, and endpoint grants cannot widen that ceiling. Normal conformance mode retains all domains and unchanged protocol validation.
 
-Documentation and protocol directory labels render directly from the catalog. The guide covers supported-only and named opt-in examples, legacy behavior, host enforcement, required/optional domains, changing APIs, and provenance limits. The adjacent protocol directory's stale NIP-5A manifest link was corrected to NIP-5D.
+Documentation and protocol directory labels render directly from the catalog. Turbo cache inputs include the catalog and renderer, and docs output restoration includes `.vitepress/dist/**`, preventing stale labels after metadata-only changes. The guide covers supported-only and named opt-in examples, legacy behavior, host enforcement, required/optional domains, changing APIs, and provenance limits. The adjacent protocol directory's stale NIP-5A manifest link was corrected to NIP-5D.
 
 ## Verification
 
