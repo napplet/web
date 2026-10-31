@@ -16,7 +16,7 @@ Implemented the draft NAP-SOULSEEK contract (napplet/naps#135, `naps/NAP-SOULSEE
 | SDK, shim, vite-plugin | `aba8b966`: `@napplet/sdk/soulseek`, root exports, runtime binding and router, requirement inference; node, happy-dom, and vitest coverage. |
 | Conformance | `c88cbe8e`: 28 discriminants (271 total), `validateSoulseekRequest`, `reference-soulseek.ts`, embedded prelude, browser round trip; 230 conformance tests and 34 conformance-cli tests. |
 | Docs, skills, changeset | `e92a179d`: `apps/docs/naps/soulseek.md`, nav entry, domain enumerations in every README and docs page, skill guidance, minor/patch changeset. |
-| Repository verification | `pnpm build` 12/12; `pnpm type-check` 19/19; `pnpm -r test:unit` green in every workspace; skills contracts 11/11; `check:jsr` clean. The AI-slop gate runs in CI (`aislop` is not installed locally). |
+| Repository verification | `pnpm build` 12/12; `pnpm type-check` 19/19; `pnpm -r test:unit` green in every workspace; skills contracts 11/11; `check:jsr` clean; aislop 0.12.0 scan 98/100 with only the pre-existing `deepmerge` advisory (the repository baseline). |
 
 ## Binding decisions recorded for reviewers
 
