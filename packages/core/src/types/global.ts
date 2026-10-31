@@ -1,4 +1,5 @@
 import type { GamepadApi } from './gamepad.js';
+import type { SoulseekApi } from './soulseek.js';
 import type { ShellApi } from './shell.js';
 import type { RelayApi, IncApi, StorageApi, KeysApi } from './global/nostr-api.js';
 
@@ -50,6 +51,8 @@ import type {
  * domain to the napplet; absence means the domain is unavailable.
  */
 export interface NappletGlobal {
+  /** Optional runtime-mediated Soulseek discovery and downloads (NAP-SOULSEEK). */
+  soulseek?: SoulseekApi;
   /** Optional shell-mediated controller input, scoped to this napplet’s focus. */
   gamepad?: GamepadApi;
   /** Optional shell environment; other domains work without it. */
