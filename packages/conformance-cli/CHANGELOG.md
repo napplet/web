@@ -10,6 +10,9 @@
   in the conformance CLI browser-host configuration.
 - Updated dependencies
   - @napplet/conformance@0.23.0
+  - @napplet/core@0.36.0
+  - @napplet/shim@0.34.0
+  - @napplet/nap@0.35.1
 
 ## 0.4.2
 

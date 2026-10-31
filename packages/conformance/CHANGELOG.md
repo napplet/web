@@ -9,6 +9,11 @@
   conformance coverage and explicit allowlist compatibility. Mirror the policy
   in the conformance CLI browser-host configuration.
 
+### Patch Changes
+
+- Updated dependencies
+  - @napplet/core@0.36.0
+
 ## 0.22.0
 
 ### Minor Changes
