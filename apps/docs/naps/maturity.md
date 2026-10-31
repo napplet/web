@@ -24,7 +24,7 @@ console.log(llm?.maturity, llm?.proposal.url, llm?.proposal.checkedAt);
 console.log(NAP_IMPLEMENTATIONS.storage.rationale);
 ```
 
-Metadata is bundled at release time. It makes no runtime GitHub requests and does not identify a remote shell's supported protocol revision. An optional `implementationReference` records an upstream revision and the repository evidence for a historical implementation verification. Missing provenance stays missing; a fetched head SHA alone is not verification. The linked living proposal remains authoritative, even when a historical verification revision is recorded.
+Metadata is bundled at release time. It makes no runtime GitHub requests and does not identify a remote shell's supported protocol revision. An optional `implementationReference` records an upstream revision, the repository evidence, and the scope of a historical implementation verification. It does not claim that the whole current implementation matches that revision; later changes are outside the recorded scope. Missing provenance stays missing; a fetched head SHA alone is not verification. The linked living proposal remains authoritative, even when a historical verification revision is recorded.
 
 ## Select supported domains
 

@@ -18,6 +18,7 @@ describe('release-time NAP implementation catalog', () => {
       expect(entry.evidence.length).toBeGreaterThan(0);
       for (const path of entry.evidence) expect(existsSync(new URL(path, root)), path).toBe(true);
       if (entry.implementationReference) {
+        expect(entry.implementationReference.scope.length).toBeGreaterThan(20);
         expect(entry.implementationReference.revision).toMatch(/^[a-f0-9]{40}$/);
         expect(existsSync(new URL(entry.implementationReference.evidence, root))).toBe(true);
       }

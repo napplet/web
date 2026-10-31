@@ -25,6 +25,8 @@ export interface NapImplementationMetadata {
   readonly implementationReference?: {
     readonly revision: string;
     readonly evidence: string;
+    /** What was verified at that revision; later changes are not covered by this record. */
+    readonly scope: string;
   };
 }
 
@@ -47,6 +49,7 @@ export const NAP_IMPLEMENTATIONS: Readonly<Record<NapDomain, NapImplementationMe
     maturity: "supported",
     rationale: "Relay reads, publishing, and subscription lifecycle have maintained shim and integration tests; upstream naming remains under review.",
     evidence: ["packages/nap/src/relay/shim.test.ts"],
+    implementationReference: { revision: "cb8f8eabb2d09439e9d174cb9eb6ef2caad0eca1", evidence: ".planning/quick/260703-ghg-align-napplet-packages-with-nap-relayeve/260703-ghg-SUMMARY.md", scope: "RelayEventResult sidecar migration; subsequent changes are not covered." },
   },
   identity: {
     proposal: { url: "https://github.com/napplet/naps/pull/102", status: "merged", checkedAt: "2026-10-31" },
@@ -101,6 +104,7 @@ export const NAP_IMPLEMENTATIONS: Readonly<Record<NapDomain, NapImplementationMe
     maturity: "supported",
     rationale: "Resource fetching has focused shim and type tests; the reverted merge and reopened proposal do not change that implementation assessment.",
     evidence: ["packages/nap/src/resource/shim.test.ts"],
+    implementationReference: { revision: "8e75eadf317d7fe809415e4755cd48f63cfb63f3", evidence: ".planning/quick/260703-ghg-align-napplet-packages-with-nap-relayeve/260703-ghg-SUMMARY.md", scope: "Shared ResourceSidecarEntry types during the sidecar migration; subsequent resource changes are not covered." },
   },
   cvm: {
     proposal: { url: "https://github.com/napplet/naps/pull/31", status: "in-review", checkedAt: "2026-10-31" },
@@ -113,6 +117,7 @@ export const NAP_IMPLEMENTATIONS: Readonly<Record<NapDomain, NapImplementationMe
     maturity: "supported",
     rationale: "Routing and subscription bindings have focused tests and an integration regression for structured-clone boundaries.",
     evidence: ["packages/nap/src/outbox/shim.test.ts", "packages/nap/src/boundary-integration.test.ts"],
+    implementationReference: { revision: "57db924bac022cc14c67d9fca1a4d92cf1bd4725", evidence: ".planning/quick/260703-ghg-align-napplet-packages-with-nap-relayeve/260703-ghg-SUMMARY.md", scope: "RelayEventResult and stream lifecycle migration; subsequent changes are not covered." },
   },
   upload: {
     proposal: { url: "https://github.com/napplet/naps/pull/33", status: "in-review", checkedAt: "2026-10-31" },
@@ -185,7 +190,7 @@ export const NAP_IMPLEMENTATIONS: Readonly<Record<NapDomain, NapImplementationMe
     maturity: "supported",
     rationale: "Cross-repository delivery includes binding, security, runtime, and conformance verification; the reopened proposal is still subject to change.",
     evidence: ["packages/nap/src/gamepad/shim.test.ts", ".planning/phases/163-nap-gamepad-across-repositories/163-VERIFICATION.md"],
-    implementationReference: { revision: "0b28f77e3dfa0f07dd7c0f9d61a7090ee99f3a5e", evidence: ".planning/phases/163-nap-gamepad-across-repositories/163-SECURITY.md" },
+    implementationReference: { revision: "0b28f77e3dfa0f07dd7c0f9d61a7090ee99f3a5e", evidence: ".planning/phases/163-nap-gamepad-across-repositories/163-SECURITY.md", scope: "Phase 163 binding, runtime isolation, and conformance verification." },
   },
   llm: {
     proposal: { url: "https://github.com/napplet/naps/pull/134", status: "draft", checkedAt: "2026-10-31" },
