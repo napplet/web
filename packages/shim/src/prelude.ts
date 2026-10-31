@@ -4,14 +4,16 @@
  * @module
  */
 
-import { NAP_DOMAINS } from '@napplet/core';
-import type { NapDomain, NappletGlobal } from '@napplet/core';
+import { NAP_DOMAINS, selectNapDomains } from '@napplet/core';
+import type { NapDomain, NappletGlobal, NapMaturityPolicy } from '@napplet/core';
 import { installNappletGlobal } from './runtime.js';
 
 /** Options for installing a constrained `window.napplet` runtime prelude. */
 export interface NappletRuntimePreludeOptions {
   /** Explicit NAP domain allowlist the shell exposes to this napplet. */
   domains: readonly NapDomain[];
+  /** Optional local maturity policy. Omit to preserve the explicit allowlist unchanged. */
+  maturity?: NapMaturityPolicy;
 }
 
 const KNOWN_DOMAINS = new Set<string>(NAP_DOMAINS);
@@ -21,6 +23,9 @@ function normalizePreludeDomains(options: NappletRuntimePreludeOptions): NapDoma
     throw new TypeError('Napplet runtime prelude requires an explicit domains array');
   }
 
+  if (options.maturity) {
+    return [...selectNapDomains({ ...options.maturity, candidates: options.domains }).domains];
+  }
   return options.domains.filter((domain): domain is NapDomain => KNOWN_DOMAINS.has(domain));
 }
 

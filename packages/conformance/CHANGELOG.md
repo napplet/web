@@ -1,5 +1,19 @@
 # @napplet/conformance
 
+## 0.23.0
+
+### Minor Changes
+
+- Add optional NAP maturity policy to the reference host, applying the same
+  resolved domain set to runtime injection and dispatch. Preserve normal
+  conformance coverage and explicit allowlist compatibility. Mirror the policy
+  in the conformance CLI browser-host configuration.
+
+### Patch Changes
+
+- Updated dependencies
+  - @napplet/core@0.36.0
+
 ## 0.22.0
 
 ### Minor Changes

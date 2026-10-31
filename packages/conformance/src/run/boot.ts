@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import { NAP_DOMAINS } from '@napplet/core';
+import { NAP_DOMAINS, selectNapDomains, type NapDomain, type NapMaturityPolicy } from '@napplet/core';
 import { createReferenceShell, type RecordedEnvelope } from '../shell/reference-shell.js';
 import type { BootObservation } from './context.js';
 
@@ -39,6 +39,10 @@ export interface BootCollection {
 export interface BootOptions {
   /** The napplet URL to load. */
   url: string;
+  /** Explicit host candidates; defaults to all domains for conformance coverage. */
+  domains?: readonly NapDomain[];
+  /** Optional local maturity policy; omitted during full-domain conformance testing. */
+  maturity?: NapMaturityPolicy;
   /** Already loaded artifact text. Hosts can supply the exact snapshot they verified instead of fetching again. */
   html?: string;
   /** Milliseconds to await iframe load before declaring boot failure. Default 5000. */
@@ -133,7 +137,7 @@ async function bootOnce(
   doc: Document,
   win: Window,
 ): Promise<SingleBoot> {
-  const shell = createReferenceShell();
+  const shell = createReferenceShell({ domains });
   const iframe = doc.createElement('iframe');
   iframe.setAttribute('sandbox', opts.allowSameOrigin ? 'allow-scripts allow-same-origin' : 'allow-scripts');
   // NAP-GAMEPAD Web Projection Guidance: deny the native API with Permissions-Policy.
@@ -216,7 +220,11 @@ export async function bootAndCollect(options: BootOptions): Promise<BootCollecti
     runtimePreludeSource: options.runtimePreludeSource,
   };
 
-  const primary = await bootOnce(NAP_DOMAINS, resolved, doc, win);
+  const candidates = options.domains ?? NAP_DOMAINS;
+  const domains = options.maturity
+    ? selectNapDomains({ ...options.maturity, candidates }).domains
+    : candidates;
+  const primary = await bootOnce(domains, resolved, doc, win);
 
   let degraded: BootObservation | null = null;
   if (options.runDegraded ?? true) {

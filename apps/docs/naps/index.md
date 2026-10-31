@@ -8,6 +8,12 @@ The protocol is modular by design. A NAP must be **independently implementable**
 
 These domains ship as subpaths of [`@napplet/nap`](/packages/nap) (barrel / `types` / `shim` / `sdk` per domain).
 
+## Implementation maturity
+
+These release-time labels describe our shipped implementation, separately from upstream proposal status. Supported does not mean frozen; experimental does not waive conformance requirements. All capabilities remain subject to change. See [maturity and opt-in policy](/naps/maturity).
+
+<!-- nap-maturity-table -->
+
 ## The domains
 
 Each domain below shows its purpose and a minimal example. Examples assume the runtime injected `window.napplet` before napplet code ran; the same calls are also importable as named helpers from [`@napplet/sdk`](/packages/sdk). Feature-gate optional domains with `if (window.napplet?.domain)` first.
@@ -277,6 +283,8 @@ if (window.napplet?.fs) {
 
 
 ### Optional shell environment
+
+<!-- nap-maturity:shell -->
 
 The runtime may expose `shell` for environment information. `shell.supports(domain)` reads current domain object presence, `shell.services` is empty until environment delivery, and `shell.ready()` / `shell.onReady(handler)` use the retained snapshot. Readiness does not gate other domain calls. See the living [NAP-SHELL](https://github.com/napplet/naps/blob/master/naps/NAP-SHELL.md).
 

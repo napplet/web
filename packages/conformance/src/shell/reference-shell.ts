@@ -22,6 +22,8 @@ export type { RecordedEnvelope } from './reference-handler.js';
 export interface ReferenceShellOptions {
   /** Injectable clock for deterministic tests. Defaults to `Date.now`. */
   now?: () => number;
+  /** Host domain ceiling. Use the same resolved set as the injected prelude. Omit for all-domain conformance. */
+  domains?: readonly string[];
   /** Already verified installed metadata for catalog tests. */
   manifests?: readonly import('./intent-catalog.js').CatalogManifest[];
   /** User preferences, keyed by role. */
@@ -67,6 +69,7 @@ export function createReferenceShell(options: ReferenceShellOptions = {}): Refer
   const handleFrom = createReferenceHandler({
     now: options.now ?? Date.now,
     records,
+    domains: options.domains,
     queueDelivery: deliveries.queue,
     intents: createIntentHandlers(deliveries.queue, options.manifests, options.defaults),
   });

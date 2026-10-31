@@ -16,6 +16,9 @@ on:
       - 'scripts/assemble-site.test.mjs'
       - 'scripts/generate-protocol*'
       - 'scripts/lib/protocol-data.mjs'
+      - 'packages/core/src/nap-catalog.ts'
+      - 'packages/core/src/nap-maturity.ts'
+      - 'scripts/lib/nap-maturity-docs.ts'
       - 'scripts/check-protocol.mjs'
       - '.github/workflows/deploy-site.yml'
   schedule:

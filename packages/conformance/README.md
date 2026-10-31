@@ -7,6 +7,12 @@ Framework-agnostic conformance engine for the napplet protocol. It lets a napple
 
 v1 is **zero-config protocol conformance**: NIP-5D manifest-event validity, boots under `sandbox="allow-scripts"`, receives runtime-injected `window.napplet`, every emitted postMessage envelope validates against the per-NAP validators, graceful degradation when domains are absent, and no forbidden globals.
 
+## Local maturity policy
+
+The reference mock can enforce a resolved host domain ceiling: `createReferenceShell({ domains: selection.domains })`, where `selection` comes from `selectNapDomains` in `@napplet/core`. The same set belongs in the injected prelude. Per-endpoint grants can narrow this ceiling but cannot widen it; excluded requests remain recorded for envelope validation and receive no response.
+
+`bootAndCollect({ ...options, domains: ['storage', 'llm'], maturity: {} })` selects supported candidates before boot and uses that set in both injection and dispatch. A named opt-in such as `maturity: { optIn: ['llm'] }` enables evaluation of that candidate. Normal conformance runs omit maturity filtering and retain full-domain coverage. Experimental status never waives protocol validation. See the [maturity guide](https://napplet.run/docs/naps/maturity.html).
+
 ## What's in the box
 
 - `validateEnvelope(msg)` — runtime validation of any `domain.action` envelope a napplet emits, across all active NAP domains. Catches malformed payloads, unknown types, and napplets that put shell→napplet (inbound) traffic on the wire.

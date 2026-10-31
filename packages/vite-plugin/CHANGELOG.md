@@ -1,5 +1,12 @@
 # @napplet/vite-plugin
 
+## 0.16.4
+
+### Patch Changes
+
+- 9d84822: Refresh the JSR dependency pin to the NAP package released alongside
+  the maturity catalog. Runtime manifest behavior is unchanged.
+
 ## 0.16.3
 
 ### Patch Changes

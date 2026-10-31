@@ -1,5 +1,6 @@
 ---
 import { renderSpec } from '../../lib/render-spec';
+import NapMaturity from '../../components/NapMaturity.astro';
 import ProtocolLayout from '../../layouts/ProtocolLayout.astro';
 import data from '../../data/protocol.json';
 import { domainPath, entryState, type NapEntry } from '../../lib/protocol';
@@ -16,6 +17,7 @@ const deferred = entry.registryStatus?.toLowerCase() === 'deferred';
     <header><p class="eyebrow">{entry.id} {entry.pr ? `/ PR #${entry.pr}` : '/ Merged specification'}</p><h1>{entry.title}</h1><div class="nap-status-line"><span class:list={['nap-badge', `state-${entry.state}`]}>{entryState(entry)}</span>{entry.change === 'amendment' && <span>Proposed amendment</span>}{entry.change === 'removal' && <span>Proposed removal</span>}{deferred && <span class="nap-badge state-deferred">Deferred upstream</span>}</div></header>
     {deferred && <aside class="protocol-notice">The registry marks {entry.statusSource} as deferred. This proposal is dormant and should not be treated as an available protocol capability.</aside>}
     {entry.state !== 'merged' && <aside class="protocol-notice">This is an unmerged proposal. Its API and scope may change during discussion. Participate on the pull request before depending on it.</aside>}
+    <NapMaturity domain={entry.domain} />
     <div class="nap-detail-grid">
       <div>
         <p class="protocol-source-note spec-provenance">Full specification from <a href={entry.documentUrl}>the fetched upstream revision ↗</a>. The document below is rendered from its original Markdown. <a href={entry.sourceUrl}>Follow the latest source on GitHub ↗</a>.</p>
