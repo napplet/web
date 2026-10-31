@@ -26,8 +26,9 @@ describe('release-time NAP implementation catalog', () => {
   });
 
   it('keeps upstream state separate from maturity and protects catalog values', () => {
-    expect(NAP_IMPLEMENTATIONS.storage).toMatchObject({ maturity: 'supported', proposal: { status: 'in-review' } });
-    expect(NAP_IMPLEMENTATIONS.llm).toMatchObject({ maturity: 'exploratory', proposal: { status: 'draft' } });
+    // Proposal states are refreshed automatically; they must not dictate these implementation assessments.
+    expect(NAP_IMPLEMENTATIONS.storage.maturity).toBe('supported');
+    expect(NAP_IMPLEMENTATIONS.llm.maturity).toBe('exploratory');
     expect(Object.isFrozen(NAP_IMPLEMENTATIONS)).toBe(true);
     expect(Object.isFrozen(NAP_IMPLEMENTATIONS.storage.proposal)).toBe(true);
     expect(getNapImplementation('constructor')).toBeUndefined();

@@ -6,6 +6,8 @@
 
 NAP implementation maturity and upstream proposal status are separate release-time signals. All capabilities remain subject to change; supported does not mean frozen, and experimental does not waive conformance requirements. Read the [maturity and opt-in guide](https://napplet.run/docs/naps/maturity.html).
 
+Daily upstream checks open a draft review PR when proposal state or observed specification revisions change. Implementation maturity and verification references require a reviewed assessment. See the guide's scheduled upstream checks section for automation setup and release handling.
+
 ```ts
 import { NAP_IMPLEMENTATIONS, selectNapDomains } from '@napplet/core';
 
