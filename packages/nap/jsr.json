@@ -106,7 +106,11 @@
     "./gamepad": "./src/gamepad/index.ts",
     "./gamepad/types": "./src/gamepad/types.ts",
     "./gamepad/shim": "./src/gamepad/shim.ts",
-    "./gamepad/sdk": "./src/gamepad/sdk.ts"
+    "./gamepad/sdk": "./src/gamepad/sdk.ts",
+    "./llm": "./src/llm/index.ts",
+    "./llm/types": "./src/llm/types.ts",
+    "./llm/shim": "./src/llm/shim.ts",
+    "./llm/sdk": "./src/llm/sdk.ts"
   },
   "imports": {
     "@napplet/core": "jsr:@napplet/core@^0.34.0",

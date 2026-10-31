@@ -2,6 +2,10 @@ import { defineConfig } from 'tsup';
 
 export default defineConfig({
   entry: {
+    'llm/index': 'src/llm/index.ts',
+    'llm/types': 'src/llm/types.ts',
+    'llm/shim': 'src/llm/shim.ts',
+    'llm/sdk': 'src/llm/sdk.ts',
     'gamepad/index': 'src/gamepad/index.ts',
     'gamepad/types': 'src/gamepad/types.ts',
     'gamepad/shim': 'src/gamepad/shim.ts',
