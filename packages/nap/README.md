@@ -1,6 +1,6 @@
 # @napplet/nap
 
-> Every active napplet NAP domain (relay, storage, inc, keys, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent, ble, webrtc, link, count, lists, serial, fs, common, dm, shell, gamepad) as layered subpath exports. The package name remains `@napplet/nap` for compatibility.
+> Every active napplet NAP domain (relay, storage, inc, keys, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent, ble, webrtc, link, count, lists, serial, fs, common, dm, shell, gamepad, torrent) as layered subpath exports. The package name remains `@napplet/nap` for compatibility.
 
 ## Install
 
@@ -53,7 +53,7 @@ sub.on('event', (result) => console.log('new note', result.event));
 sub.close();
 ```
 
-## 22 Active Domains
+## Active Domains
 
 Each domain is an independent subpath. Barrel imports bundle types + shim installer + SDK helpers; granular subpaths isolate each surface.
 
@@ -82,6 +82,7 @@ Each domain is an independent subpath. Barrel imports bundle types + shim instal
 | serial | `@napplet/nap/serial` | `@napplet/nap/serial/types` | `@napplet/nap/serial/shim` | `@napplet/nap/serial/sdk` | Runtime-mediated serial device access — `open`/`write`/`close`/`onEvent`; shell owns permissions, port handles, streams, and lifecycle |
 | fs | `@napplet/nap/fs` | `@napplet/nap/fs/types` | `@napplet/nap/fs/shim` | `@napplet/nap/fs/sdk` | Shell-mediated virtual filesystem access — `info`/`pickFile`/`pickFiles`/`pickDirectory`/`pickSaveFile`/`stat`/`list`/`read`/`write`/`mkdir`/`remove`/`move`/`watch`/`unwatch`/`onChanged`; runtime owns host paths, mounts, backing store, policy, and authorization. Byte payloads use standard padded base64 text on the JSON wire |
 | dm | `@napplet/nap/dm` | `@napplet/nap/dm/types` | `@napplet/nap/dm/shim` | `@napplet/nap/dm/sdk` | Runtime-mediated direct messages — `status`/`conversations`/`messages`/`send`/`subscribe`/`unsubscribe`/`onMessage`; shell owns signing, encryption, relay routing, storage, and policy |
+| torrent | `@napplet/nap/torrent` | `@napplet/nap/torrent/types` | `@napplet/nap/torrent/shim` | `@napplet/nap/torrent/sdk` | Runtime-owned download/seed jobs, verified file reads, metadata export, settings, and job listeners |
 
 ### NAP-FS byte transfer
 
@@ -144,12 +145,12 @@ Each domain exposes up to three patterns (four including the barrel). Pick the s
 - Every subpath in the `exports` map is a discrete entry point; a bundler importing only `@napplet/nap/relay/types` produces zero bytes from unrelated domains
 - Verified end-to-end in Phase 121 with a minimal-consumer smoke test
 
-The `exports` map in `package.json` declares 92 entry points:
+The `exports` map in `package.json` declares the available entry points:
 
-- 22 domain barrels (`@napplet/nap/<domain>`)
-- 22 granular types entries (`@napplet/nap/<domain>/types`)
-- 22 granular shim entries (`@napplet/nap/<domain>/shim`)
-- 22 granular sdk entries (`@napplet/nap/<domain>/sdk`)
+- Domain barrels (`@napplet/nap/<domain>`)
+- Granular types entries (`@napplet/nap/<domain>/types`)
+- Granular shim entries (`@napplet/nap/<domain>/shim`)
+- Granular SDK entries (`@napplet/nap/<domain>/sdk`)
 - 1 deprecated compatibility wrapper (`ifc`) with matching `types`, `shim`, and `sdk` entries
 
 Each entry maps to its own pre-built `.js` + `.d.ts` pair under `dist/<domain>/<surface>.{js,d.ts}`. No root `.` key exists, and there is no top-level `main`/`module`/`types` field — attempting `import '@napplet/nap'` fails with `ERR_PACKAGE_PATH_NOT_EXPORTED` by design.
@@ -300,3 +301,7 @@ if (window.napplet?.gamepad) {
 ```
 
 Declare `gamepad` as optional (`O`) when other controls fulfill the core task. Use a hard requirement (`R`) only when the core task needs controller input. The runtime owns controller access and focus isolation; app code does not call native `navigator.getGamepads()` or open raw HID devices. Haptics and remapping are outside this proposal.
+
+### Runtime-owned torrent jobs
+
+`@napplet/nap/torrent` provides the barrel, `types`, `shim`, and `sdk` subpaths for all 17 NAP-TORRENT operations. SDK helpers use the `torrent` prefix, such as `torrentAdd`, `torrentRead`, and `torrentUpdate`. `torrentOnState`, `torrentOnProgress`, and `torrentOnError` return independently closable subscriptions. A job acknowledgment does not mean a transfer completed. The runtime owns the engine and selected file bytes; `runtimeFileSetId` is an opaque handle, not a path. This non-normative guidance defers to [NAP-TORRENT](https://github.com/napplet/naps/blob/nap-torrent/naps/NAP-TORRENT.md).

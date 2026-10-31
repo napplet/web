@@ -668,3 +668,7 @@ The runtime binding retains deliveries until a listener registers. Discovery can
 ### GAMEPAD integration
 
 The selected `gamepad` runtime binding installs the cached API, subscribes without SHELL readiness, validates parent state, and unsubscribes during cleanup. See the proposed [NAP-GAMEPAD](https://github.com/napplet/naps/pull/108). The native browser Gamepad API is left untouched pending clarification of the proposal’s optional replacement and NIP-5D’s namespace-only injection rule.
+
+### Torrent runtime binding
+
+Select `torrent` in `installNappletGlobal({ domains: ['torrent'] })` or the equivalent runtime prelude options to expose `window.napplet.torrent`. The binding forwards all 17 operations and routes `torrent.state`, `torrent.progress`, and `torrent.error` to local listeners. Requests correlate by `id`; pushes identify jobs by `jobId`. Installing the binding does not install a torrent engine or grant permission: the host supplies policy-bound handlers, scoped jobs, storage, and user consent. See the living [NAP-TORRENT proposal](https://github.com/napplet/naps/blob/nap-torrent/naps/NAP-TORRENT.md).
