@@ -9,7 +9,7 @@ Napplet implementation code is **SDK-first**: import typed wrappers from `@nappl
 
 ## Domains shipped by the current packages
 
-`shell`, `relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `ble`, `webrtc`, `link`, `count`, `lists`, `serial`, `fs`, `common`, `dm`.
+`shell`, `relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `ble`, `webrtc`, `link`, `count`, `lists`, `serial`, `fs`, `common`, `dm`, `soulseek`.
 
 `ifc` is a deprecated INC alias. If a NAP is not in this list, do not implement against it even when a spec PR exists — flag the package/spec gap. `shell` is optional environment information only (see below); there is no `discoverServices()` or `hasService()`, and no domain waits on `shell.ready()`. A missing optional domain simply means "unavailable for this load".
 
@@ -220,3 +220,30 @@ Theme updates reach napplets with the exposed `theme` domain, independently of m
 ## Optional controller input
 
 This non-normative guidance defers to the living [NAP-GAMEPAD proposal](https://github.com/napplet/naps/pull/108). Check injected `gamepad` presence and call the SDK namespace from `@napplet/sdk/gamepad`. Its cached API exposes `getGamepads()`, `available`, `focused`, and `onChange(handler)`; close listeners on disposal. Keep keyboard or pointer fallbacks, ignore gameplay edges while unfocused, reset held-button baselines on regained focus, preserve null slots, and route controllers by `index`. Use an optional manifest domain when the core task remains usable without controllers. Native controller access belongs to the runtime. Do not add haptics, raw HID access, a correlation id, or a prerequisite SHELL readiness exchange. Reference-mock conformance reports unavailable controllers; verify live focus isolation in a GAMEPAD-capable runtime.
+
+### Soulseek discovery and downloads
+
+This non-normative guide follows the living [NAP-SOULSEEK proposal](https://github.com/napplet/naps/pull/135). Import `soulseek` from `@napplet/sdk` or `@napplet/sdk/soulseek`; root exports include prefixed helpers such as `soulseekSearch` and `soulseekRead`. The dedicated subpath also provides bare aliases such as `search` and `read`.
+
+The API exposes `info`, `search`, `browse`, `results`, `stop`, `download`, `transfers`, `status`, `pause`, `resume`, `cancel`, `read`, `save`, and `release`. There are no listeners or pushes: poll `results`, `status`, and `transfers` no faster than `info().pollIntervalMs`. Each method resolves with the proposal's result record; a runtime `Failure` rejects with an `Error` carrying the specification `code`, recognizable with `isSoulseekFailure(error)`, while the binding's own transport timeout rejects without a `code`.
+
+```ts
+import { soulseek, isSoulseekFailure } from '@napplet/sdk/soulseek';
+
+if (window.napplet?.soulseek) {
+  const info = await soulseek.info();
+  if (info.state === 'online') {
+    const query = await soulseek.search({ text: 'field recording' });
+    const page = await soulseek.results(query.queryId, 0, info.maxPageSize);
+    try {
+      const transfer = await soulseek.download(page.files[0].fileId);
+      console.log(transfer.state, transfer.received);
+    } catch (error) {
+      if (isSoulseekFailure(error)) console.warn(error.code, error.message);
+      else throw error;
+    }
+  }
+}
+```
+
+Queries are admitted as `collecting` and settle on later polls; `download` acknowledges admission, not completion. File sizes, received counts, and read offsets are canonical decimal text, never numbers. Handles are endpoint-scoped and never survive a reload. The runtime owns the account, peer networking, storage, content disclosure (`read` needs a separate grant), and saving; peer names and paths are untrusted text.

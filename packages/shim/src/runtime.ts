@@ -1,3 +1,4 @@
+import { installSoulseekShim, handleSoulseekMessage } from '@napplet/nap/soulseek/shim';
 import { installGamepadShim, handleGamepadMessage } from '@napplet/nap/gamepad/shim';
 import { handleShellMessage, installShellShim } from '@napplet/nap/shell/shim';
 import {
@@ -99,6 +100,7 @@ const installedDomainShims = new Set<NapDomain>();
 let messageListenerInstalled = false;
 
 const DOMAIN_ROUTERS: ReadonlyArray<readonly [string, DomainHandler]> = [
+  ['soulseek.', handleSoulseekMessage],
   ['gamepad.', handleGamepadMessage],
   ['shell.', handleShellMessage],
   ['keys.', handleKeysMessage],
@@ -150,6 +152,9 @@ function installDomainShim(domain: NapDomain): void {
   installedDomainShims.add(domain);
 
   switch (domain) {
+    case 'soulseek':
+      installSoulseekShim();
+      return;
     case 'gamepad':
       installGamepadShim();
       return;

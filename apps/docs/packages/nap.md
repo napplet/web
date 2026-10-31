@@ -3,7 +3,7 @@
 > Every active napplet NAP domain as layered subpath exports. The package name remains
 > `@napplet/nap` for compatibility.
 
-`@napplet/nap` ships every active NAP domain (relay, storage, inc, keys, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent, ble, webrtc, link, count, lists, common, serial, fs, dm) as independent, tree-shakable subpaths. It sits between the shim/sdk and [`@napplet/core`](./core) in the dependency graph.
+`@napplet/nap` ships every active NAP domain (relay, storage, inc, keys, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent, ble, webrtc, link, count, lists, common, serial, fs, dm, soulseek) as independent, tree-shakable subpaths. It sits between the shim/sdk and [`@napplet/core`](./core) in the dependency graph.
 
 - **npm:** [`@napplet/nap`](https://www.npmjs.com/package/@napplet/nap)
 - **JSR:** [`@napplet/nap`](https://jsr.io/@napplet/nap)
@@ -172,3 +172,7 @@ if (window.napplet?.gamepad) {
 ```
 
 Declare `gamepad` as optional (`O`) when other controls fulfill the core task. Use a hard requirement (`R`) only when the core task needs controller input. The runtime owns controller access and focus isolation; app code does not call native `navigator.getGamepads()` or open raw HID devices. Haptics and remapping are outside this proposal.
+
+### Runtime-mediated Soulseek
+
+`@napplet/nap/soulseek` provides the barrel, `types`, `shim`, and `sdk` subpaths for all 14 NAP-SOULSEEK operations. SDK helpers use the `soulseek` prefix, such as `soulseekSearch`, `soulseekResults`, and `soulseekRead`, and `isSoulseekFailure` recognizes rejections that carry a specification error code. Search and browse acknowledgments mean admission, not completion; downloads are admitted against frozen file handles the runtime issued. This non-normative guidance defers to the living [NAP-SOULSEEK proposal](https://github.com/napplet/naps/pull/135).

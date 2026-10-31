@@ -1,3 +1,4 @@
+import * as soulseekShim from '@napplet/nap/soulseek/shim';
 import type { NapDomain, NappletGlobal } from '@napplet/core';
 import {
   info as resourceInfo,
@@ -112,6 +113,24 @@ import {
 
 
 export function installServiceDomains(domains: ReadonlySet<NapDomain>, napplet: Partial<NappletGlobal>): void {
+  if (domains.has('soulseek')) {
+    napplet.soulseek = {
+      info: soulseekShim.info,
+      search: soulseekShim.search,
+      browse: soulseekShim.browse,
+      results: soulseekShim.results,
+      stop: soulseekShim.stop,
+      download: soulseekShim.download,
+      transfers: soulseekShim.transfers,
+      status: soulseekShim.status,
+      pause: soulseekShim.pause,
+      resume: soulseekShim.resume,
+      cancel: soulseekShim.cancel,
+      read: soulseekShim.read,
+      save: soulseekShim.save,
+      release: soulseekShim.release,
+    };
+  }
   installNetworkDomains(domains, napplet);
   installDeviceDomains(domains, napplet);
   installFilesystemDomains(domains, napplet);

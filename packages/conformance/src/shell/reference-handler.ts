@@ -1,3 +1,4 @@
+import { createSoulseekHandlers } from './reference-soulseek.js';
 import { NAP_DOMAINS } from '@napplet/core';
 import { validateEnvelope, type EnvelopeVerdict } from '../validators/envelope.js';
 import {
@@ -29,7 +30,8 @@ export interface ReferenceHandlerOptions {
 /** Create the pure request handler for the reference shell. */
 export function createReferenceHandler(options: ReferenceHandlerOptions) {
   const initialized = new Set<string>();
-  return (endpoint: ReferenceEndpoint, envelope: unknown): unknown[] => {
+  const soulseek = createSoulseekHandlers();
+  const handle = (endpoint: ReferenceEndpoint, envelope: unknown): unknown[] => {
     const type = getEnvelopeType(envelope);
     const verdict = validateEnvelope(envelope);
     options.records.push({ envelope, verdict, timestamp: options.now() });
@@ -43,6 +45,7 @@ export function createReferenceHandler(options: ReferenceHandlerOptions) {
       return ok({ type: 'shell.init', capabilities: { domains: [...domains] }, services: [] });
     }
     const env = envelope as Record<string, unknown>;
+    if (type.startsWith('soulseek.')) return soulseek.handle(endpoint, env);
     if (type === 'intent.invoke') return options.intents.handleInvoke(endpoint, env);
     if (type === 'intent.available') {
       return ok({ type: 'intent.available.result', id: env.id, availability: options.intents.availability(env.archetype) });
@@ -55,6 +58,7 @@ export function createReferenceHandler(options: ReferenceHandlerOptions) {
     const responder = RESPONDERS[type];
     return responder ? responder(env) : [];
   };
+  return Object.assign(handle, { reset() { soulseek.reset(); } });
 }
 
 function getEnvelopeType(envelope: unknown): string | undefined {

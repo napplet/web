@@ -65,7 +65,7 @@ Branch `feat/cli-terminal-usability` ships guided missing-value recovery, `-i` p
 Phase: 164 (cli-terminal-usability) — verified and shipped
 Plan: 3 of 3
 Status: [PR #248](https://github.com/napplet/web/pull/248) open with six actual terminal screenshots
-Last activity: 2026-10-26 - Completed quick task 261026-jeu: pinned AI-slop scan 100/100
+Last activity: 2026-10-31 - Completed quick task 261031-bnu: implement NAP-SOULSEEK across the napplet stack (PR #281)
 
 See phase 163 VERIFICATION.md and COVERAGE.md for evidence and disclosed release/specification/baseline limits. Earlier phase and quick-task records below are historical.
 
@@ -571,6 +571,7 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 | Quick ID | Task | Date | Commit | Artifacts |
 |----------|------|------|--------|-----------|
 | 261030-9r6 | Chase NIP-5D presentation media and source pin tags | 2026-10-30 | 0bae4ebe / PR #272 | [261030-9r6](./quick/261030-9r6-chase-nip-5d-presentation-media-and-sour/) |
+| 261031-bnu | Implement NAP-SOULSEEK across the napplet stack | 2026-10-31 | e92a179d / PR #281 | [261031-bnu](./quick/261031-bnu-implement-nap-soulseek-across-the-napp/) |
 | 261030-jgm | App store: manifest media, listing fallback, applesauce discovery, infinite scroll | 2026-10-30 | 9ac7d606 / PR #221 | [261030-jgm](./quick/261030-jgm-improve-the-apps-directory-with-nip-5d-m/) |
 | 261030-ixc | Tell each homepage section's story with GSAP and a three.js frame field | 2026-10-30 | e2c9fb0b / PR #221 | [261030-ixc](./quick/261030-ixc-tell-each-splash-section-s-story-with-gs/) |
 | 261028-bvy | Section-integrated app motion, six public shells and curated/discovered app store | 2026-10-28 | PR #221 | [261028-bvy](./quick/261028-bvy-develop-the-traveling-app-into-section-s/) |

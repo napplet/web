@@ -42,6 +42,7 @@ Use only domains the current `@napplet/sdk` exports (`napplet-sdk` lists them). 
 | Current user pubkey / snapshots | `identity` (read-only) | Polling or `window.nostr` |
 | App state | `storage` | `localStorage` |
 | Avatars, images, JSON, media bytes | `resource` | `fetch`, `<img src=https://…>` |
+| Soulseek search, peer browsing, downloads | `soulseek` | Bundled Soulseek clients, direct peer sockets, local file paths |
 | Uploads, external links | `upload`, `link` | Direct network / `window.open` |
 | Settings, host look | `config`, `theme` | App-owned settings pages |
 | Keyboard-bound actions, shortcuts, game controls | `keys` action registration | App-owned key capture as the only integration path |

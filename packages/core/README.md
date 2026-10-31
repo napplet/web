@@ -57,14 +57,14 @@ interface RelaySubscribe extends NappletMessage {
 }
 ```
 
-The `type` field domain prefix (`relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `ble`, `webrtc`, `link`, `count`, `lists`, `serial`, `fs`, `common`, `dm`, `shell`, `gamepad`) routes messages to the correct NAP handler via `dispatch()`.
+The `type` field domain prefix (`relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `ble`, `webrtc`, `link`, `count`, `lists`, `serial`, `fs`, `common`, `dm`, `shell`, `gamepad`, `soulseek`) routes messages to the correct NAP handler via `dispatch()`.
 
 #### `NapDomain`
 
 String literal union of the NAP capability domains.
 
 ```ts
-type NapDomain = 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'cvm' | 'outbox' | 'upload' | 'intent' | 'ble' | 'webrtc' | 'link' | 'count' | 'lists' | 'serial' | 'fs' | 'common' | 'dm' | 'shell' | 'gamepad';
+type NapDomain = 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'cvm' | 'outbox' | 'upload' | 'intent' | 'ble' | 'webrtc' | 'link' | 'count' | 'lists' | 'serial' | 'fs' | 'common' | 'dm' | 'shell' | 'gamepad' | 'soulseek';
 ```
 
 | Domain    | Scope                                    |
@@ -91,13 +91,14 @@ type NapDomain = 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | '
 | `serial`  | Runtime-mediated serial device access |
 | `common`  | Shell-mediated common social actions |
 | `dm`  | Runtime-mediated direct messages |
+| `soulseek` | Runtime-mediated Soulseek discovery and downloads |
 
 #### `NAP_DOMAINS`
 
 Runtime constant array of all NAP domain strings. Useful for iteration and validation.
 
 ```ts
-const NAP_DOMAINS: readonly NapDomain[] = ['shell', 'relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent', 'ble', 'webrtc', 'link', 'count', 'lists', 'serial', 'common', 'dm'];
+const NAP_DOMAINS: readonly NapDomain[] = ['shell', 'relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent', 'ble', 'webrtc', 'link', 'count', 'lists', 'serial', 'fs', 'common', 'dm', 'gamepad', 'soulseek'];
 
 for (const domain of NAP_DOMAINS) {
   console.log(`Checking support for: ${domain}`);
@@ -420,3 +421,7 @@ The runtime binding retains deliveries until a listener registers. Discovery can
 ### GAMEPAD integration
 
 `GamepadState`, `Gamepad`, `GamepadButton`, `GamepadSlot`, `GamepadApi`, and the `gamepad` domain are exported for the proposed [NAP-GAMEPAD](https://github.com/napplet/naps/pull/108). Its fire-and-forget envelopes carry no correlation id.
+
+### Soulseek types
+
+`SoulseekApi`, the Soulseek records (`SoulseekInfo`, `SoulseekQuery`, `SoulseekFile`, `SoulseekQueryPage`, `SoulseekTransfer`, `SoulseekChunk`, `SoulseekFailure`), and the `soulseek` domain describe the optional `NappletGlobal.soulseek` binding. Byte counts are canonical decimal text and failures use the closed `SoulseekErrorCode` set. This non-normative type guide defers to the living [NAP-SOULSEEK proposal](https://github.com/napplet/naps/pull/135).

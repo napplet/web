@@ -32,6 +32,7 @@ Top-level namespaced objects that mirror `window.napplet`:
 - **`media`** — `createSession`, `reportState`, `onCommand`, …
 - **`notify`** — `send`, `badge`, `onAction`, …
 - **`config`** — `get`, `subscribe`, `openSettings`, `registerSchema`, `schema`
+- **`soulseek`** — Runtime-mediated Soulseek search, browsing, paginated results, transfers, bounded reads, saving, and release
 - **`resource`** — `info`, `bytes`, `bytesMany`, `bytesAsObjectURL`
 
 `identity` is exported as a top-level object and through bare-name helpers:
@@ -173,3 +174,30 @@ if (window.napplet?.gamepad) {
 ```
 
 Declare `gamepad` as optional (`O`) when other controls fulfill the core task. Use a hard requirement (`R`) only when the core task needs controller input. The runtime owns controller access and focus isolation; app code does not call native `navigator.getGamepads()` or open raw HID devices. Haptics and remapping are outside this proposal.
+
+### Soulseek discovery and downloads
+
+This non-normative guide follows the living [NAP-SOULSEEK proposal](https://github.com/napplet/naps/pull/135). Import `soulseek` from `@napplet/sdk` or `@napplet/sdk/soulseek`; root exports include prefixed helpers such as `soulseekSearch` and `soulseekRead`. The dedicated subpath also provides bare aliases such as `search` and `read`.
+
+The API exposes `info`, `search`, `browse`, `results`, `stop`, `download`, `transfers`, `status`, `pause`, `resume`, `cancel`, `read`, `save`, and `release`. There are no listeners or pushes: poll `results`, `status`, and `transfers` no faster than `info().pollIntervalMs`. Each method resolves with the proposal's result record; a runtime `Failure` rejects with an `Error` carrying the specification `code`, recognizable with `isSoulseekFailure(error)`, while the binding's own transport timeout rejects without a `code`.
+
+```ts
+import { soulseek, isSoulseekFailure } from '@napplet/sdk/soulseek';
+
+if (window.napplet?.soulseek) {
+  const info = await soulseek.info();
+  if (info.state === 'online') {
+    const query = await soulseek.search({ text: 'field recording' });
+    const page = await soulseek.results(query.queryId, 0, info.maxPageSize);
+    try {
+      const transfer = await soulseek.download(page.files[0].fileId);
+      console.log(transfer.state, transfer.received);
+    } catch (error) {
+      if (isSoulseekFailure(error)) console.warn(error.code, error.message);
+      else throw error;
+    }
+  }
+}
+```
+
+Queries are admitted as `collecting` and settle on later polls; `download` acknowledges admission, not completion. File sizes, received counts, and read offsets are canonical decimal text, never numbers. Handles are endpoint-scoped and never survive a reload. The runtime owns the account, peer networking, storage, content disclosure (`read` needs a separate grant), and saving; peer names and paths are untrusted text.

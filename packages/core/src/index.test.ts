@@ -52,6 +52,8 @@ describe('@napplet/core exports', () => {
       expect(NAP_DOMAINS).toContain('common');
       expect(NAP_DOMAINS).toContain('dm');
       expect(NAP_DOMAINS).toContain('count');
+      const soulseek: NapDomain = 'soulseek';
+      expect(NAP_DOMAINS).toContain(soulseek);
     });
 
     it('NappletGlobal represents domain availability by property presence', () => {
