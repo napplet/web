@@ -20,6 +20,12 @@ graceful degradation when a domain is absent, and no forbidden globals.
 - **JSR:** [`@napplet/conformance`](https://jsr.io/@napplet/conformance)
 - **Source:** [packages/conformance](https://github.com/napplet/napplet/tree/main/packages/conformance)
 
+## Local maturity policy
+
+The reference mock can enforce a resolved host domain ceiling: `createReferenceShell({ domains: selection.domains })`, where `selection` comes from `selectNapDomains` in `@napplet/core`. The same set belongs in the injected prelude. Per-endpoint grants can narrow this ceiling but cannot widen it; excluded requests remain recorded for envelope validation and receive no response.
+
+`bootAndCollect({ ...options, domains: ['storage', 'llm'], maturity: {} })` selects supported candidates before boot and uses that set in both injection and dispatch. A named opt-in such as `maturity: { optIn: ['llm'] }` enables evaluation of that candidate. Normal conformance runs omit maturity filtering and retain full-domain coverage. Experimental status never waives protocol validation. See the [maturity guide](https://napplet.run/docs/naps/maturity.html).
+
 ## Install
 
 ```bash

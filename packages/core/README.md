@@ -2,6 +2,23 @@
 
 > JSON envelope types and NAP dispatch infrastructure for the napplet ecosystem.
 
+## Implementation maturity
+
+NAP implementation maturity and upstream proposal status are separate release-time signals. All capabilities remain subject to change; supported does not mean frozen, and experimental does not waive conformance requirements. Read the [maturity and opt-in guide](https://napplet.run/docs/naps/maturity.html).
+
+```ts
+import { NAP_IMPLEMENTATIONS, selectNapDomains } from '@napplet/core';
+
+console.log(NAP_IMPLEMENTATIONS.llm.maturity); // exploratory
+const selection = selectNapDomains({
+  candidates: ['storage', 'llm', 'ble'], // already implemented and authorized by the host
+  optIn: ['llm'],
+});
+// selection.domains: ['storage', 'llm']; selection.excluded explains omissions.
+```
+
+Metadata describes the installed package, not a remote shell's protocol revision. Use the selected domains for both runtime injection and host dispatch. Unknown or unclassified candidates remain excluded, including explicit opt-ins. The catalog does not grant permissions or implement missing host support.
+
 ## Getting Started
 
 ### Package Overview

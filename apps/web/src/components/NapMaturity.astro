@@ -1,0 +1,12 @@
+---
+import { getNapImplementation } from '../../../../packages/core/src/nap-maturity';
+interface Props { domain: string | null; }
+const { domain } = Astro.props;
+const implementation = domain ? getNapImplementation(domain) : undefined;
+---
+{implementation && <aside class="protocol-notice" aria-label="Shipped implementation maturity">
+  <strong>Shipped implementation: {implementation.maturity ?? 'unclassified'}</strong>
+  <p>{implementation.rationale}</p>
+  <p>Implementation proposal: <a href={implementation.proposal.url}>{implementation.proposal.status} ↗</a>, checked {implementation.proposal.checkedAt}. This assessment does not imply that every amendment shown here is implemented. All capabilities remain subject to change.</p>
+  <a href="/docs/naps/maturity.html">Maturity and opt-in policy →</a>
+</aside>}

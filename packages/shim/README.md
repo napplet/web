@@ -2,6 +2,25 @@
 
 > Runtime injection helper for napplet iframes. It installs selected `window.napplet` domain objects. No cryptographic dependencies -- the shim sends JSON envelope messages and the shell handles identity.
 
+## Maturity-controlled injection
+
+Use the side-effect-free `@napplet/shim/prelude` entrypoint for policy-controlled hosts. The legacy root `@napplet/shim` import still installs every bundled domain for compatibility.
+
+```ts
+import { selectNapDomains } from '@napplet/core';
+import { renderNappletRuntimePreludeCall } from '@napplet/shim/prelude';
+
+const selection = selectNapDomains({
+  candidates: ['storage', 'llm', 'ble'],
+  optIn: ['llm'],
+});
+const activate = renderNappletRuntimePreludeCall({ domains: selection.domains });
+```
+
+Inline the maintained prelude artifact followed by `activate` before napplet scripts run. Enforce the same `selection.domains` set in host dispatch: hiding a shim object does not block direct `postMessage`. Candidates must already be implemented and authorized for the napplet.
+
+Prelude helpers also accept `maturity: {}` for supported-only filtering or `maturity: { optIn: ['llm'] }` for a named exception. Omitting `maturity` preserves existing explicit allowlist behavior. An explicit install replaces an earlier legacy namespace but cannot undo earlier calls; finish host setup before napplet code executes. See the [maturity guide](https://napplet.run/docs/naps/maturity.html) for classifications, required/optional domain handling, and provenance limits.
+
 ## Getting Started
 
 ### Prerequisites

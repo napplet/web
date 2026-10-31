@@ -11,6 +11,8 @@ Monorepo for the **napplet** SDK -- libraries for building NIP-5D Nostr Web Appl
 
 A **napplet** is a sandboxed web app that runs inside a **shell**. The shell and napplet communicate over `postMessage` using a JSON envelope format (`{ type, ...payload }`) defined by NIP-5D. The napplet never touches `localStorage`, relay connections, or signing keys directly -- the shell proxies everything through NAP interfaces. [Read about napplets in NIP-5D possiblity](https://github.com/nostr-protocol/nips/pull/2303/changes)
 
+NAP proposal status and shipped implementation maturity are separate. All capabilities can change. Inspect `NAP_IMPLEMENTATIONS` from `@napplet/core` and use `selectNapDomains` for local host opt-in policy. See [maturity and opt-in guidance](https://napplet.run/docs/naps/maturity.html).
+
 ## Build a napplet
 
 Install the standalone CLI; Deno is not required:

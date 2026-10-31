@@ -1,4 +1,5 @@
 import { defineConfig } from 'vitepress';
+import { renderNapMaturityMarkdown } from '../../../scripts/lib/nap-maturity-docs';
 
 // Single source of truth for the deploy domain.
 const SITE_URL = 'https://napplet.run';
@@ -7,6 +8,13 @@ const COMMUNITY_URL =
 
 export default defineConfig({
   base: '/docs/',
+  markdown: {
+    config(md) {
+      md.core.ruler.before('normalize', 'nap-maturity', (state) => {
+        state.src = renderNapMaturityMarkdown(state.src, state.env.relativePath ?? '');
+      });
+    },
+  },
   lang: 'en-US',
   // Keep production, source transforms and development prebundling on the same
   // modern target; the optimizer has its own esbuild options.
@@ -93,7 +101,7 @@ export default defineConfig({
       },
       {
         text: 'NAP domains',
-        items: [{ text: 'NAP domain reference', link: '/naps/' }, { text: 'GAMEPAD', link: '/naps/gamepad' }, { text: 'LLM', link: '/naps/llm' }],
+        items: [{ text: 'NAP domain reference', link: '/naps/' }, { text: 'Maturity and opt-in', link: '/naps/maturity' }, { text: 'GAMEPAD', link: '/naps/gamepad' }, { text: 'LLM', link: '/naps/llm' }],
       },
       {
         text: 'Reference',

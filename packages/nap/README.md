@@ -2,6 +2,8 @@
 
 > Every active napplet NAP domain (relay, storage, inc, keys, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent, ble, webrtc, link, count, lists, serial, fs, common, dm, shell, gamepad, llm) as layered subpath exports. The package name remains `@napplet/nap` for compatibility.
 
+NAP proposal status and shipped implementation maturity are separate. All capabilities can change. Inspect `NAP_IMPLEMENTATIONS` from `@napplet/core` and use `selectNapDomains` for local host opt-in policy. See [maturity and opt-in guidance](https://napplet.run/docs/naps/maturity.html).
+
 ## Install
 
 ```bash

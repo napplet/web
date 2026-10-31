@@ -2,6 +2,8 @@
 
 > Named TypeScript exports for napplet developers using a bundler. Wraps `window.napplet` at call time.
 
+NAP proposal status and shipped implementation maturity are separate. All capabilities can change. Inspect `NAP_IMPLEMENTATIONS` from `@napplet/core` and use `selectNapDomains` for local host opt-in policy. See [maturity and opt-in guidance](https://napplet.run/docs/naps/maturity.html).
+
 ## Getting Started
 
 ### Prerequisites
