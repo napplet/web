@@ -668,3 +668,7 @@ The runtime binding retains deliveries until a listener registers. Discovery can
 ### GAMEPAD integration
 
 The selected `gamepad` runtime binding installs the cached API, subscribes without SHELL readiness, validates parent state, and unsubscribes during cleanup. See the proposed [NAP-GAMEPAD](https://github.com/napplet/naps/pull/108). The native browser Gamepad API is left untouched pending clarification of the proposal’s optional replacement and NIP-5D’s namespace-only injection rule.
+
+### Soulseek runtime binding
+
+Select `soulseek` in `installNappletGlobal({ domains: ['soulseek'] })` or the equivalent runtime prelude options to expose `window.napplet.soulseek`. The binding forwards all 14 operations, correlates each result by `id` and type, and rejects a `Failure` as a `SoulseekError` carrying the specification code. NAP-SOULSEEK defines no unsolicited messages, so nothing is pushed and no listeners exist. Installing the binding supplies no account, backend, or consent: the host provides policy-bound handlers, endpoint-scoped handles, storage, and prompts. See the living [NAP-SOULSEEK proposal](https://github.com/napplet/naps/pull/135).

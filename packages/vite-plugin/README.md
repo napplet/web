@@ -130,3 +130,7 @@ With `data`, the plugin derives `x` and `size`, sniffs the format for `m` (PNG, 
 ### GAMEPAD integration
 
 Requirement inference recognizes `@napplet/nap/gamepad`, `@napplet/sdk/gamepad`, and direct GAMEPAD domain reads. Declare `optional: ["gamepad"]` when keyboard or pointer controls fulfill the core task. See the proposed [NAP-GAMEPAD](https://github.com/napplet/naps/pull/108).
+
+### Soulseek declarations
+
+Requirement inference recognizes static `@napplet/nap/soulseek` and `@napplet/sdk/soulseek` imports and direct `window.napplet.soulseek` access. Root SDK namespace imports are not inferred; declare their domain explicitly. Use `requires: ['soulseek']` when discovery or downloads are the napplet's core task, or `optional: ['soulseek']` with a presence check for an enhancement. Manifest declarations start no searches and grant no consent. See the living [NAP-SOULSEEK proposal](https://github.com/napplet/naps/pull/135).

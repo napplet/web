@@ -419,6 +419,7 @@ These are discriminated union types covering all messages in each NAP domain. Us
 | `ListsNapMessage` | `@napplet/nap/lists` | Discriminated union of all lists domain messages |
 | `CommonNapMessage` | `@napplet/nap/common` | Discriminated union of all common domain messages |
 | `GamepadNapMessage` | `@napplet/nap/gamepad` | Subscribe, unsubscribe, and state envelopes without correlation ids |
+| `SoulseekNapMessage` | `@napplet/nap/soulseek` | Fourteen request/result pairs; results carry exactly one of `value` or `error` |
 | `SerialNapMessage` | `@napplet/nap/serial` | Discriminated union of all serial domain messages |
 
 Individual message types (e.g., `RelaySubscribeMessage`, `IdentityGetPublicKeyMessage`) are also re-exported from `@napplet/sdk` for fine-grained typing.
@@ -428,8 +429,8 @@ Individual message types (e.g., `RelaySubscribeMessage`, `IdentityGetPublicKeyMe
 Each NAP domain has a string constant re-exported from its package:
 
 ```ts
-import { RELAY_DOMAIN, IDENTITY_DOMAIN, STORAGE_DOMAIN, INC_DOMAIN, THEME_DOMAIN, KEYS_DOMAIN, MEDIA_DOMAIN, NOTIFY_DOMAIN, CONFIG_DOMAIN, RESOURCE_DOMAIN, CVM_DOMAIN, OUTBOX_DOMAIN, UPLOAD_DOMAIN, INTENT_DOMAIN, BLE_DOMAIN, WEBRTC_DOMAIN, LINK_DOMAIN, COUNT_DOMAIN, LISTS_DOMAIN, COMMON_DOMAIN, SERIAL_DOMAIN, DM_DOMAIN } from '@napplet/sdk';
-// Values: 'relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent', 'ble', 'webrtc', 'link', 'count', 'lists', 'common', 'serial', 'fs', 'dm', 'shell', 'gamepad'
+import { RELAY_DOMAIN, IDENTITY_DOMAIN, STORAGE_DOMAIN, INC_DOMAIN, THEME_DOMAIN, KEYS_DOMAIN, MEDIA_DOMAIN, NOTIFY_DOMAIN, CONFIG_DOMAIN, RESOURCE_DOMAIN, CVM_DOMAIN, OUTBOX_DOMAIN, UPLOAD_DOMAIN, INTENT_DOMAIN, BLE_DOMAIN, WEBRTC_DOMAIN, LINK_DOMAIN, COUNT_DOMAIN, LISTS_DOMAIN, COMMON_DOMAIN, SERIAL_DOMAIN, DM_DOMAIN, SOULSEEK_DOMAIN } from '@napplet/sdk';
+// Values: 'relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent', 'ble', 'webrtc', 'link', 'count', 'lists', 'common', 'serial', 'fs', 'dm', 'shell', 'gamepad', 'soulseek'
 ```
 
 These constants are re-exported from the individual domain packages. Use property presence for type-safe conditional logic:
@@ -527,3 +528,30 @@ if (window.napplet?.gamepad) {
 ```
 
 Declare `gamepad` as optional (`O`) when other controls fulfill the core task. Use a hard requirement (`R`) only when the core task needs controller input. The runtime owns controller access and focus isolation; app code does not call native `navigator.getGamepads()` or open raw HID devices. Haptics and remapping are outside this proposal.
+
+### Soulseek discovery and downloads
+
+This non-normative guide follows the living [NAP-SOULSEEK proposal](https://github.com/napplet/naps/pull/135). Import `soulseek` from `@napplet/sdk` or `@napplet/sdk/soulseek`; root exports include prefixed helpers such as `soulseekSearch` and `soulseekRead`. The dedicated subpath also provides bare aliases such as `search` and `read`.
+
+The API exposes `info`, `search`, `browse`, `results`, `stop`, `download`, `transfers`, `status`, `pause`, `resume`, `cancel`, `read`, `save`, and `release`. There are no listeners or pushes: poll `results`, `status`, and `transfers` no faster than `info().pollIntervalMs`. Each method resolves with the proposal's result record; a runtime `Failure` rejects with an `Error` carrying the specification `code`, recognizable with `isSoulseekFailure(error)`, while the binding's own transport timeout rejects without a `code`.
+
+```ts
+import { soulseek, isSoulseekFailure } from '@napplet/sdk/soulseek';
+
+if (window.napplet?.soulseek) {
+  const info = await soulseek.info();
+  if (info.state === 'online') {
+    const query = await soulseek.search({ text: 'field recording' });
+    const page = await soulseek.results(query.queryId, 0, info.maxPageSize);
+    try {
+      const transfer = await soulseek.download(page.files[0].fileId);
+      console.log(transfer.state, transfer.received);
+    } catch (error) {
+      if (isSoulseekFailure(error)) console.warn(error.code, error.message);
+      else throw error;
+    }
+  }
+}
+```
+
+Queries are admitted as `collecting` and settle on later polls; `download` acknowledges admission, not completion. File sizes, received counts, and read offsets are canonical decimal text, never numbers. Handles are endpoint-scoped and never survive a reload. The runtime owns the account, peer networking, storage, content disclosure (`read` needs a separate grant), and saving; peer names and paths are untrusted text.
