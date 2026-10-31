@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: complete
 ---
 
 # Periodic NAP metadata review

@@ -715,6 +715,7 @@ Surfaced by research (informational — each belongs to a specific phase plan):
 
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
+| 261031-hbe | Schedule reviewed NAP proposal metadata refreshes in PR #288 | 2026-10-31 | c72dd849 | [261031-hbe](./quick/261031-hbe-automate-daily-nap-proposal-metadata-rev/) |
 | 261010-3v2 | Add napplet.run client attribution to CLI publications | 2026-10-10 | 678fb834 | [261010-3v2](./quick/261010-3v2-add-napplet-run-client-attribution-to-cl/) |
 | 261010-3fr | Propose NIP-5D application references and link CLI screenshot metadata | 2026-10-10 | eb6b87e2 | [261010-3fr](./quick/261010-3fr-propose-application-descriptor-links-and/) |
 | 261010-gap | Close PR #228 completeness gaps: handlerHint validation, stale intent/shell docs and skills | 2026-10-10 | 82c54ed3 | [261010-gap-close-pr-228-intent-cascade-gaps](./quick/261010-gap-close-pr-228-intent-cascade-gaps/) |
