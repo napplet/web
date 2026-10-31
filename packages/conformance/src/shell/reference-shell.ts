@@ -80,6 +80,7 @@ export function createReferenceShell(options: ReferenceShellOptions = {}): Refer
     takeDeliveries: deliveries.take,
     reset() {
       records.length = 0;
+      handleFrom.reset();
       deliveries.clear();
     },
   };

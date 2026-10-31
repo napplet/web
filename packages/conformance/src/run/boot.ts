@@ -14,6 +14,7 @@
  * @packageDocumentation
  */
 
+import { LLM_PRELUDE_SOURCE } from './llm-prelude.js';
 import { NAP_DOMAINS } from '@napplet/core';
 import { createReferenceShell, type RecordedEnvelope } from '../shell/reference-shell.js';
 import type { BootObservation } from './context.js';
@@ -45,7 +46,7 @@ export interface BootOptions {
   settleMs?: number;
   /** Also run a no-domain degraded boot. Default true. */
   runDegraded?: boolean;
-  /** Host-supplied maintained shim IIFE. Without it, only the embedded RESOURCE/GAMEPAD fixtures are available. */
+  /** Host-supplied maintained shim IIFE. Without it, only the embedded RESOURCE/GAMEPAD/LLM fixtures are available. */
   runtimePreludeSource?: string;
   /** Debug only: also grant `allow-same-origin` (a conformant load must NOT need it). Default false. */
   allowSameOrigin?: boolean;
@@ -229,6 +230,7 @@ const FALLBACK_RUNTIME_AFTER_GAMEPAD_TOOLS = `;
       return handle;
     };
   }
+  ${LLM_PRELUDE_SOURCE}
   window.napplet = napplet;
   `;
 

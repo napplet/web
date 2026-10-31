@@ -47,6 +47,46 @@ describe('real opaque-origin reference runtime', () => {
     expect(result.emitted.some((record) => (record.envelope as { type: string }).type.startsWith('__nappletConformance'))).toBe(false);
   });
 
+  it('round-trips the LLM binding in a real opaque iframe', async () => {
+    const result = await boot(`<!doctype html><script>
+      (async () => {
+        const llm = window.napplet.llm;
+        if (!llm) return;
+        for (const method of ['configure', 'callTool', 'onDelta']) {
+          if (method in llm) throw new Error('Undefined operation exposed: ' + method);
+        }
+        const model = await llm.select({ json: true });
+        if (model.model !== 'reference-model' || !model.json) throw new Error('Unexpected selection');
+        const described = await llm.describe(model.handle);
+        if (described.handle !== model.handle) throw new Error('Describe changed the handle');
+        const deltas = [];
+        const pending = llm.generate({ handle: model.handle, format: 'json', messages: [{ role: 'user', content: [{ type: 'text', text: 'Return a greeting.' }] }] }, { onDelta: (delta) => deltas.push(delta.text) });
+        if (typeof pending.requestId !== 'string') throw new Error('Missing request id');
+        const generation = await pending;
+        if (generation.finish !== 'stop' || JSON.parse(generation.text).echo !== 'Return a greeting.') throw new Error('Unexpected generation');
+        if (deltas.length !== 1 || !generation.text.startsWith(deltas[0])) throw new Error('Unexpected deltas');
+        if (await llm.cancel(pending.requestId) !== false) throw new Error('Terminal generation should not cancel');
+        const controller = new AbortController();
+        const stalled = llm.generate({ handle: model.handle, messages: [{ role: 'user', content: [{ type: 'text', text: 'wait [[stall]]' }] }] }, { signal: controller.signal });
+        controller.abort();
+        await stalled.then(() => { throw new Error('stalled generation should be cancelled'); }, (error) => {
+          if (error.code !== 'cancelled') throw error;
+        });
+        await llm.describe('unknown').then(() => { throw new Error('unknown handle should expire'); }, (error) => {
+          if (error.code !== 'selection-expired') throw error;
+        });
+      })().catch(error => { setTimeout(() => { throw error; }); });
+    </script>`, { settleMs: 500 });
+    expect(result.installedGlobal).toBe(true);
+    expect(result.bootError).toBeNull();
+    expect(result.degraded?.bootError).toBeNull();
+    const operations = result.emitted.map((record) => (record.envelope as { type: string }).type);
+    for (const action of ['select', 'describe', 'generate', 'cancel']) {
+      expect(operations).toContain('llm.' + action);
+    }
+    expect(result.emitted.every((record) => record.verdict.ok)).toBe(true);
+  });
+
   it('distinguishes a subject failure from successful namespace installation', async () => {
     const result = await boot('<!doctype html><script>throw new Error("subject failed");</script>');
     expect(result.installedGlobal).toBe(true);
