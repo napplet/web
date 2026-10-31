@@ -207,3 +207,24 @@ export {
 export { shellReady, shellSupports, shellOnReady, installShellShim, DOMAIN as SHELL_DOMAIN } from '@napplet/nap/shell';
 
 export { DOMAIN as GAMEPAD_DOMAIN, installGamepadShim, gamepadGetGamepads, gamepadAvailable, gamepadFocused, gamepadOnChange } from '@napplet/nap/gamepad';
+
+export {
+  DOMAIN as SOULSEEK_DOMAIN,
+  SOULSEEK_ERROR_CODES,
+  installSoulseekShim,
+  isSoulseekFailure,
+  soulseekInfo,
+  soulseekSearch,
+  soulseekBrowse,
+  soulseekResults,
+  soulseekStop,
+  soulseekDownload,
+  soulseekTransfers,
+  soulseekStatus,
+  soulseekPause,
+  soulseekResume,
+  soulseekCancel,
+  soulseekRead,
+  soulseekSave,
+  soulseekRelease,
+} from '@napplet/nap/soulseek';
