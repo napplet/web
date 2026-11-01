@@ -1,6 +1,7 @@
 import { base64urlnopad } from "@scure/base";
 import { contentType } from "@std/media-types";
 import { extname } from "@std/path";
+import { networkFetch } from "./network.ts";
 import { joinPath } from "./path.ts";
 import type { NappletSigner } from "./signing.ts";
 import type { DeployManifestTemplate, ManifestFileMapping, SignedNostrEvent } from "./types.ts";
@@ -70,7 +71,7 @@ export async function uploadFilesToServers(
   signer: NappletSigner,
   options: UploadFilesToServersOptions = {},
 ): Promise<ServerUploadResult[]> {
-  const fetcher = options.fetch ?? fetch;
+  const fetcher = options.fetch ?? networkFetch;
   const blobSha256s = [...new Set(files.map((file) => file.sha256))];
   const results: ServerUploadResult[] = [];
   const totalUploads = files.length * servers.length;

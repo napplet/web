@@ -186,6 +186,9 @@ importers:
       parse5:
         specifier: ^7.3.0
         version: 7.3.0
+      rxjs:
+        specifier: ^7.8.1
+        version: 7.8.2
       yaml:
         specifier: 2.9.1
         version: 2.9.1

@@ -131,12 +131,12 @@ Deploy accepts `--source-dir`, `--description`, repeated `--relay`, and repeated
 ```sh
 napplet guide
 napplet create <directory> [--template <path-or-url>] [--force]
-napplet init [--force] [--root] [--source-dir <dir>] [--name <dtag>] [--title <title>] [--description <text>] [--archetype <napplet:archetype/intent>] [--relay <url>] [--server <url>]
+napplet init [--force] [--root] [--source-dir <dir>] [--name <dtag>] [--title <title>] [--description <text>] [--archetype <napplet:archetype/intent>] [--relay <url>] [--server <url>] [--proxy <url>]
 napplet discover [--config <file>] [--all]
 napplet debug [--format current|legacy] [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>]
-napplet deploy [--format current|legacy] [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>] [--prompt-sec] [--zapstore | --no-zapstore] [--no-screenshot] [--screenshot [<preview-url>]] [--dry-run] [--json]
+napplet deploy [--format current|legacy] [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>] [--prompt-sec] [--zapstore | --no-zapstore] [--no-screenshot] [--screenshot [<preview-url>]] [--proxy <url>] [--dry-run] [--json]
 napplet keys store --name <ref> [--sec <secret> | --prompt-sec]
-napplet keys connect --name <ref> [--relay <url> ...] [--config <file>]
+napplet keys connect --name <ref> [--relay <url> ...] [--proxy <url>] [--config <file>]
 napplet keys use --name <ref> [--config <file>]
 napplet keys list
 napplet keys delete --name <ref>
@@ -228,6 +228,19 @@ The human deploy report includes each signed manifest event's short event id plu
 When a built napplet includes a `.nip5a-manifest.json` sidecar, signed or unsigned, deploy preserves additional Nostr tags on root, named, and companion snapshot manifests, including their complete string payloads and repeated values. There is no tag-name allowlist. Explicit config overrides and CLI-managed artifact hashes, identifiers, lineage, server selection, and client attribution still apply. Legacy sidecars translate `requires`/`archetype` to current `R` and `z`/`i`; those names, along with `path` and `description`, remain opaque extra tags when supplied by a current-format event. Current event content is resolved separately from extra `description` tags. Migration likewise preserves additional tags and their multiplicity while converting actual legacy fields.
 
 Deploy also recovers current NIP-5D publishing metadata from the built HTML head, including supported data-URL icon bytes, without a sidecar. Current output requires a non-empty description. See Standalone HTML recovery below for precedence and target handling.
+
+### Proxies
+
+`deploy`, `init` and `keys connect` accept `--proxy <url>` to send their Blossom server and relay traffic through an HTTP or SOCKS5 proxy. Supported schemes are `http://`, `https://`, `socks5://` and `socks5h://`; credentials may be embedded (`socks5://user:pass@host:port`) and are never printed. `socks5h://` resolves host names on the proxy, which is what Tor needs.
+
+```sh
+napplet deploy --proxy socks5h://127.0.0.1:9050
+napplet deploy --proxy http://user:pass@proxy.example:8080
+napplet keys connect --name remote --proxy socks5h://127.0.0.1:9050
+napplet init --proxy socks5h://127.0.0.1:9050
+```
+
+With `--proxy`, every connection these commands make to Blossom servers and relays goes through it: artifact and media uploads, manifest and application-metadata publishing, `init` relay and Blossom suggestions, and remote-signer (NIP-46) relay sessions, including the relay information (NIP-11) documents fetched while connecting. The human deploy plan names the proxy in use. Other commands reject the flag. Managed tools the CLI starts as separate processes, such as screenshot capture, conformance and `paja`, are not proxied by it. A relay the proxy cannot reach is reported as a failed publish.
 
 ## Signing And Keys
 

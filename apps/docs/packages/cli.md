@@ -106,12 +106,12 @@ napplet deploy
 ```bash
 napplet guide
 napplet create <directory> [--template <path-or-url>] [--force]
-napplet init [--force] [--root] [--source-dir <dir>] [--name <dtag>] [--title <title>] [--description <text>] [--archetype <napplet:archetype/intent>] [--relay <url>] [--server <url>]
+napplet init [--force] [--root] [--source-dir <dir>] [--name <dtag>] [--title <title>] [--description <text>] [--archetype <napplet:archetype/intent>] [--relay <url>] [--server <url>] [--proxy <url>]
 napplet discover [--config <file>] [--all]
 napplet debug [--format current|legacy] [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>]
-napplet deploy [--format current|legacy] [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>] [--prompt-sec] [--zapstore | --no-zapstore] [--no-screenshot] [--screenshot [<preview-url>]] [--dry-run]
+napplet deploy [--format current|legacy] [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>] [--prompt-sec] [--zapstore | --no-zapstore] [--no-screenshot] [--screenshot [<preview-url>]] [--proxy <url>] [--dry-run]
 napplet keys store --name <ref> [--sec <secret> | --prompt-sec]
-napplet keys connect --name <ref> [--relay <url> ...] [--config <file>]
+napplet keys connect --name <ref> [--relay <url> ...] [--proxy <url>] [--config <file>]
 napplet keys use --name <ref> [--config <file>]
 napplet keys list
 napplet keys delete --name <ref>
@@ -300,6 +300,17 @@ Local PNG, JPEG and WebP images are resolved relative to the working directory, 
 The listing uses kind `32267` from the [Software Applications proposal](https://github.com/nostr-protocol/nips/pull/1336), with screenshot URLs in `image` tags. It is published as a separate event before the napplet manifests. The current [NIP-5D manifest](https://github.com/nostr-protocol/nips/pull/2303) does not define an application reference tag, so deploy leaves manifest tags and artifact hashes unchanged. This publishes application metadata only, without software release or asset events; acceptance into a particular store's catalog depends on that store.
 
 Deploy starts a local preview for each distinct selected build, captures a temporary PNG, appends it to the application images for that deployment, and adds the same capture to that build's current-format manifests as a NIP-5D `screenshot` tag (`x`, `m image/png`, `dim`, `size`) so the blob is uploaded once and referenced by hash. Configured `metadata.screenshots` keep their own list instead of the capture. Capture failure stops deployment before any upload or relay publication. The temporary image is removed after success or failure. Capture diagnostics go to stderr so `--json` stdout remains valid JSON. No host URL is required. Root and snapshot selections of the same artifact share one capture. To capture an existing shell instead, use `--screenshot <preview-url>`. Use `--screenshot-selector`, `--screenshot-ready-selector`, `--screenshot-width`, `--screenshot-height`, and `--screenshot-delay` for the corresponding capture options. Use the standalone `napplet screenshot` command when you want to keep a PNG on disk.
+
+## Proxies
+
+`deploy`, `init` and `keys connect` accept `--proxy <url>` to send their Blossom server and relay traffic through an HTTP or SOCKS5 proxy. Supported schemes are `http://`, `https://`, `socks5://` and `socks5h://`; embedded credentials (`socks5://user:pass@host:port`) are never printed. Use `socks5h://` to resolve host names on the proxy, as Tor requires.
+
+```sh
+napplet deploy --proxy socks5h://127.0.0.1:9050
+napplet keys connect --name remote --proxy http://proxy.example:8080
+```
+
+The proxy carries artifact and media uploads, manifest and application-metadata publishing, `init` suggestions, and remote-signer (NIP-46) relay sessions with their relay information documents. Managed tools started as separate processes, such as screenshot capture, conformance and `paja`, are not proxied by it. Other commands reject the flag. This is CLI transport configuration; it does not change what is published.
 
 ## Key storage without system helpers
 
