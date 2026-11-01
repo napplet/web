@@ -570,6 +570,7 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 
 | Quick ID | Task | Date | Commit | Artifacts |
 |----------|------|------|--------|-----------|
+| 261101-de9 | NIP-05 nostr.json on napplet.run for napshot | 2026-11-01 | — | [261101-de9](./quick/261101-de9-napplet-run-nip-05-for-napshot/) |
 | 261031-go3 | NAP maturity catalog, policy selection, host enforcement and generated docs (PR #288) | 2026-10-31 | 18d636cf | [261031-go3](./quick/261031-go3-implement-nap-maturity-catalog-policy-se/) |
 | 261031-cbd | Add DinOS to the website shell directory | 2026-10-31 | b7bf6c66 | [261031-cbd](./quick/261031-cbd-add-dinos-to-the-website-shell-list/) |
 | 261031-er3 | Require runtimePreludeSource and delete the conformance fallback runtime fixture | 2026-10-31 | e68eddc4 | [261031-er3](./quick/261031-er3-require-runtimepreludesource-and-delete-/) |
