@@ -65,7 +65,7 @@ try {
   const napshotRequests = [];
   const [conwayFirst, conwaySecond] = mirrorsOf(conwayLabel);
   const [seedFirst, seedSecond] = mirrorsOf(seedLabel);
-  const napshotHosts = new Set([...snapshot.labels.flatMap(mirrorsOf)].map(url => new URL(url).origin));
+  const napshotHosts = new Set(snapshot.labels.flatMap(mirrorsOf).map(url => new URL(url).origin));
   const cors = { 'access-control-allow-origin': '*' };
   await page.route(url => napshotHosts.has(url.origin), route => {
     const url = route.request().url();

@@ -1,20 +1,12 @@
-/**
- * Napshot screenshot fallbacks for releases whose manifest declares no usable screenshot.
- *
- * Napshot (https://github.com/napplet/napshot) publishes signed NIP-32 kind 1985 labels in the `#screenshot`
- * namespace that bind a PNG hash to one exact manifest event. The label profile belongs to napplet/napshot
- * (`docs/protocol.md`); it is not NIP-5D or NAP surface and changes nothing a shell or napplet must do. This site
- * treats a label as display metadata only: it proves who published the preview, never endorses the napplet.
- */
+/** Trusted Napshot screenshot labels (napplet/napshot's NIP-32 profile, not NIP-5D/NAP surface) as display-only fallbacks. */
 import { verifyEvent, validateEvent, type Event } from 'nostr-tools/pure';
 import type { CatalogApp, ManifestMedia } from './catalog';
 import { isSafeMediaUrl } from './media';
 
-/** NIP-32 label kind used by Napshot. */
 export const LABEL_KIND = 1985;
-/** Namespace of Napshot screenshot labels (`L` tag and the third entry of the `l` tag). */
+/** NIP-32 namespace of Napshot screenshot labels. */
 export const SCREENSHOT_NAMESPACE = '#screenshot';
-/** Upper bounds applied before any bytes are requested; Napshot captures are 1200×750 by default. */
+/** Upper bounds applied before any bytes are requested. */
 const MAX_BYTES = 8_000_000;
 const MAX_SIDE = 8192;
 const MAX_MIRRORS = 4;
