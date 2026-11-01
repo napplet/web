@@ -9,6 +9,8 @@ const {
 } = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site);
 const image = new URL('/og.png', Astro.site);
+// Build-time Markdown copy of this page (scripts/assemble-site.mjs); see /docs/guide/agent-access.html.
+const markdown = Astro.url.pathname.endsWith('/') ? `${Astro.url.pathname}index.md` : Astro.url.pathname.replace(/(\.html)?$/, '.md');
 ---
 <!doctype html>
 <html lang="en">
@@ -20,6 +22,7 @@ const image = new URL('/og.png', Astro.site);
     <meta name="theme-color" content="#120820" />
     <link rel="icon" type="image/png" href="/icon.png" />
     <link rel="canonical" href={canonical} />
+    <link rel="alternate" type="text/markdown" href={markdown} />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="napplet" />
     <meta property="og:title" content={title} />

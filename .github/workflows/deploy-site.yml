@@ -1,7 +1,8 @@
 name: Deploy site
 
 # Builds one static artifact with the Astro showcase, preserved explainer, docs,
-# conformance runtime and installers. Both workflows use scripts/assemble-site.mjs.
+# conformance runtime, installers and agent output (Markdown copies, llms.txt,
+# agent skills). Both workflows use scripts/assemble-site.mjs.
 
 on:
   push:
@@ -14,6 +15,13 @@ on:
       - 'package.json'
       - 'scripts/assemble-site.mjs'
       - 'scripts/assemble-site.test.mjs'
+      - 'scripts/lib/agent-markdown.mjs'
+      - 'scripts/lib/agent-readable-site.mjs'
+      - 'scripts/lib/markdown-paths.mjs'
+      - 'scripts/agent-markdown.test.mjs'
+      - 'skills/**'
+      - 'edge/**'
+      - 'scripts/check-markdown-negotiation.mjs'
       - 'scripts/generate-protocol*'
       - 'scripts/lib/protocol-data.mjs'
       - 'packages/core/src/nap-catalog.ts'
@@ -85,7 +93,7 @@ jobs:
         run: pnpm --filter @napplet/conformance-web build --base=/conformance/
 
       - name: Test site assembly
-        run: node --test scripts/assemble-site.test.mjs
+        run: node --test scripts/assemble-site.test.mjs scripts/agent-markdown.test.mjs
 
       - name: Assemble site
         run: node scripts/assemble-site.mjs
@@ -150,6 +158,47 @@ jobs:
           upload: 'true'
           remove: 'false'
           purgePullZone: 'true'
+
+      # ─── Bunny Edge Script: Accept: text/markdown negotiation ──────────────
+      # Deployed after the .md copies reach storage so a rewrite never points at
+      # a missing file. Optional until BUNNY_EDGE_SCRIPT_ID and
+      # BUNNY_EDGE_DEPLOY_KEY are set; see edge/README.md for the pull zone setup.
+      - name: Build Markdown negotiation edge script
+        if: env.DEPLOY_SITE == 'true'
+        run: pnpm build:edge
+
+      - name: Check edge script deploy config
+        if: env.DEPLOY_SITE == 'true'
+        id: edge
+        env:
+          SCRIPT_ID: ${{ secrets.BUNNY_EDGE_SCRIPT_ID }}
+          DEPLOY_KEY: ${{ secrets.BUNNY_EDGE_DEPLOY_KEY }}
+        run: |
+          if [ -n "$SCRIPT_ID" ] && [ -n "$DEPLOY_KEY" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::BUNNY_EDGE_SCRIPT_ID / BUNNY_EDGE_DEPLOY_KEY not set; skipping the Markdown negotiation edge script deploy."
+          fi
+
+      - name: Deploy Markdown negotiation edge script
+        if: steps.edge.outputs.enabled == 'true'
+        uses: BunnyWay/actions/deploy-script@931a74b9c45ea9f9f01435fbbf1649830e67d3b3 # deploy-site@0.1.2 tag commit
+        with:
+          script_id: ${{ secrets.BUNNY_EDGE_SCRIPT_ID }}
+          deploy_key: ${{ secrets.BUNNY_EDGE_DEPLOY_KEY }}
+          file: edge/dist/bunny-middleware.js
+
+      # Live check after the script is published: both representations, twice
+      # (second round from cache), so a URL-only cache key mix-up fails the run.
+      - name: Verify Markdown negotiation on napplet.run
+        if: steps.edge.outputs.enabled == 'true'
+        run: |
+          for attempt in 1 2 3 4 5 6; do
+            node scripts/check-markdown-negotiation.mjs https://napplet.run && exit 0
+            echo "Negotiation not live yet (attempt $attempt); waiting for the script to propagate."
+            sleep 20
+          done
+          exit 1
 
       # nsite-action splits relays/servers on NEWLINES, but NSITE_RELAYS /
       # NSITE_SERVERS are stored space-separated. Normalize any whitespace

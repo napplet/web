@@ -1,10 +1,76 @@
 import { defineConfig } from 'vitepress';
 import { NAP_DOC_GROUPS, renderNapMaturityMarkdown } from '../../../scripts/lib/nap-maturity-docs';
+import { collectPage, markdownAlternate, writeAgentOutput } from './agent-output';
 
 // Single source of truth for the deploy domain.
 const SITE_URL = 'https://napplet.run';
 const COMMUNITY_URL =
   'https://armada.buzz/invite/naddr1qvzqqqyzz5pzpjk98hj7z978r9xc9d2ymagw6tga0lx0s06y8lhpy9twc2kp8uwdqqqqpwqpw5#BAACAwTDEKKhS9_iA_qOc1n4ljVt';
+
+const sidebar = [
+  {
+    text: 'Introduction',
+    items: [
+      { text: 'What are napplets?', link: '/guide/' },
+      { text: 'NIP-5D explained', link: '/guide/nip-5d' },
+      { text: 'Event migration', link: '/guide/event-migration' },
+    ],
+  },
+  {
+    text: 'Getting Started',
+    items: [
+      { text: 'Core concepts', link: '/guide/concepts' },
+      { text: 'Getting started', link: '/guide/getting-started' },
+      { text: 'Note Drafts from scratch', link: '/guide/build-note-drafts-napplet' },
+      {
+        text: 'Note Drafts from boilerplate',
+        link: '/guide/build-note-drafts-napplet-from-boilerplate',
+      },
+      {
+        text: 'Note Drafts with an AI agent',
+        link: '/guide/build-note-drafts-napplet-with-ai-agent-and-skills',
+      },
+      { text: 'Agent skills', link: '/guide/agent-skills' },
+      { text: 'Agent access to napplet.run', link: '/guide/agent-access' },
+    ],
+  },
+  {
+    text: 'Packages',
+    items: [
+      { text: 'Overview', link: '/packages/' },
+      { text: '@napplet/core', link: '/packages/core' },
+      { text: '@napplet/shim', link: '/packages/shim' },
+      { text: '@napplet/sdk', link: '/packages/sdk' },
+      { text: '@napplet/nap', link: '/packages/nap' },
+      { text: '@napplet/vite-plugin', link: '/packages/vite-plugin' },
+      { text: '@napplet/cli', link: '/packages/cli' },
+      { text: '@napplet/conformance', link: '/packages/conformance' },
+      { text: '@napplet/conformance-cli', link: '/packages/conformance-cli' },
+      { text: '@napplet/conformance-web', link: '/packages/conformance-web' },
+      { text: '@napplet/boilerplate', link: '/packages/boilerplate' },
+    ],
+  },
+  {
+    text: 'NAP domains',
+    items: [
+      { text: 'Overview', link: '/naps/' },
+      { text: 'Maturity and opt-in', link: '/naps/maturity' },
+      // One page per domain, grouped by purpose; the same groups render the overview table.
+      ...NAP_DOC_GROUPS.map((group) => ({
+        text: group.title,
+        collapsed: false,
+        items: Object.keys(group.domains).map((domain) => ({
+          text: domain.toUpperCase(),
+          link: `/naps/${domain}`,
+        })),
+      })),
+    ],
+  },
+  {
+    text: 'Reference',
+    items: [{ text: 'NIP-5D spec status', link: '/spec' }],
+  },
+];
 
 export default defineConfig({
   base: '/docs/',
@@ -16,6 +82,10 @@ export default defineConfig({
     },
   },
   lang: 'en-US',
+  // Agent-readable copies: see guide/agent-access.md.
+  transformPageData: collectPage,
+  transformHead: ({ pageData }) => markdownAlternate(pageData),
+  buildEnd: (siteConfig) => writeAgentOutput(siteConfig, sidebar),
   // Keep production, source transforms and development prebundling on the same
   // modern target; the optimizer has its own esbuild options.
   vite: {
@@ -57,69 +127,7 @@ export default defineConfig({
       { text: 'Spec', link: '/spec' },
       { text: 'Community', link: COMMUNITY_URL },
     ],
-    sidebar: [
-      {
-        text: 'Introduction',
-        items: [
-          { text: 'What are napplets?', link: '/guide/' },
-          { text: 'NIP-5D explained', link: '/guide/nip-5d' },
-          { text: 'Event migration', link: '/guide/event-migration' },
-        ],
-      },
-      {
-        text: 'Getting Started',
-        items: [
-          { text: 'Core concepts', link: '/guide/concepts' },
-          { text: 'Getting started', link: '/guide/getting-started' },
-          { text: 'Note Drafts from scratch', link: '/guide/build-note-drafts-napplet' },
-          {
-            text: 'Note Drafts from boilerplate',
-            link: '/guide/build-note-drafts-napplet-from-boilerplate',
-          },
-          {
-            text: 'Note Drafts with an AI agent',
-            link: '/guide/build-note-drafts-napplet-with-ai-agent-and-skills',
-          },
-          { text: 'Agent skills', link: '/guide/agent-skills' },
-        ],
-      },
-      {
-        text: 'Packages',
-        items: [
-          { text: 'Overview', link: '/packages/' },
-          { text: '@napplet/core', link: '/packages/core' },
-          { text: '@napplet/shim', link: '/packages/shim' },
-          { text: '@napplet/sdk', link: '/packages/sdk' },
-          { text: '@napplet/nap', link: '/packages/nap' },
-          { text: '@napplet/vite-plugin', link: '/packages/vite-plugin' },
-          { text: '@napplet/cli', link: '/packages/cli' },
-          { text: '@napplet/conformance', link: '/packages/conformance' },
-          { text: '@napplet/conformance-cli', link: '/packages/conformance-cli' },
-          { text: '@napplet/conformance-web', link: '/packages/conformance-web' },
-          { text: '@napplet/boilerplate', link: '/packages/boilerplate' },
-        ],
-      },
-      {
-        text: 'NAP domains',
-        items: [
-          { text: 'Overview', link: '/naps/' },
-          { text: 'Maturity and opt-in', link: '/naps/maturity' },
-          // One page per domain, grouped by purpose; the same groups render the overview table.
-          ...NAP_DOC_GROUPS.map((group) => ({
-            text: group.title,
-            collapsed: false,
-            items: Object.keys(group.domains).map((domain) => ({
-              text: domain.toUpperCase(),
-              link: `/naps/${domain}`,
-            })),
-          })),
-        ],
-      },
-      {
-        text: 'Reference',
-        items: [{ text: 'NIP-5D spec status', link: '/spec' }],
-      },
-    ],
+    sidebar,
     socialLinks: [
       { icon: 'github', link: 'https://github.com/napplet/napplet' },
     ],
