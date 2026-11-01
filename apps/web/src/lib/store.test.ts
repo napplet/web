@@ -3,8 +3,8 @@ import { of } from 'rxjs';
 import { EventStore } from 'applesauce-core';
 import type { Filter } from 'applesauce-core/helpers';
 import type { RelayPool } from 'applesauce-relay';
-import { finalizeEvent, type Event } from 'nostr-tools/pure';
-import { fetchLabels } from './store';
+import { finalizeEvent, getPublicKey, type Event } from 'nostr-tools/pure';
+import { fetchLabels, previewsFor } from './store';
 
 vi.mock('../data/discovery.json', async () => {
   const { getPublicKey } = await import('nostr-tools/pure');
@@ -58,6 +58,29 @@ describe('live label discovery', () => {
     expect(calls).toEqual(['first', 'second', 'first', 'second']);
     expect(state.store.getEvent(label(80).id)).toBeDefined();
     expect(state.labeled.has(manifest.id)).toBe(true);
+  });
+
+  it('asks only for the releases whose cards want a preview and resolves their verified labels', async () => {
+    const pubkey = getPublicKey(key);
+    const hash = 'a'.repeat(64);
+    const trusted = finalizeEvent({ kind: 1985, created_at: 50, content: 'Signed-out napplet preview captured by Napshot.', tags: [
+      ['L', '#screenshot'], ['l', hash, '#screenshot'], ['e', manifest.id], ['a', `15129:${pubkey}:`], ['p', pubkey],
+      ['screenshot', `x ${hash}`, 'm image/png', 'dim 1200x750', 'size 4096'], ['server', 'https://mirror.example'],
+    ] }, key);
+    const other = finalizeEvent({ kind: 35129, created_at: 2, content: 'Another saved release', tags: [['d', 'other'], ['x', 'b'.repeat(64)], ['title', 'Other']] }, key);
+    const pinned = finalizeEvent({ kind: 5129, created_at: 3, content: 'A pinned snapshot', tags: [['x', 'c'.repeat(64)], ['title', 'Pinned']] }, key);
+    const calls: string[][] = [];
+    const state = discovery((_, filter) => { calls.push(filter['#e'] ?? []); return { events: [trusted], complete: true }; });
+    state.store.add(other);
+    state.store.add(pinned);
+    await fetchLabels(state, new AbortController().signal, [manifest.id, pinned.id, 'f'.repeat(64)]);
+    // One request per relay, naming only the eligible release: the snapshot and the unknown id are never targets.
+    expect(calls).toEqual([[manifest.id], [manifest.id]]);
+    expect(state.labeled.has(manifest.id)).toBe(true);
+    expect(state.labeled.has(other.id)).toBe(false);
+    const previews = previewsFor(state, [manifest.id, other.id]);
+    expect(previews.get(manifest.id)).toMatchObject({ sha256: hash, signer: pubkey, mode: 'signed-out', label: trusted.id });
+    expect(previews.has(other.id)).toBe(false);
   });
 
   it('leaves an aborted pass retryable without issuing requests', async () => {

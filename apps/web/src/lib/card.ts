@@ -1,6 +1,7 @@
 /** One HTML template for discovered release cards, shared by the static build and live discovery. */
 import type { CatalogApp } from './catalog';
 import { usableScreenshot } from './media';
+import { previewTargets } from './napshot';
 import { SHELLS } from './showcase';
 
 const escape = (value: string) => value.replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]!);
@@ -40,7 +41,8 @@ export function releaseCardHtml(app: CatalogApp, index: number): string {
   // browser, where the preview fills in only if the screenshot's bytes fail to verify.
   const screenshot = usableScreenshot(app);
   const napshot = app.napshot && !art ? { sha256: app.napshot.sha256, type: app.napshot.type, dim: app.napshot.dim, size: app.napshot.size, servers: app.napshot.servers, signer: app.napshot.signer, mode: app.napshot.mode } : null;
-  const media = JSON.stringify({ icon: app.icon ?? null, screenshots: screenshot ? [screenshot] : [], servers: app.servers, napshot });
+  // `release` names the manifest a label must bind to, so a card left without artwork can ask the relays for a preview in the browser.
+  const media = JSON.stringify({ icon: app.icon ?? null, screenshots: screenshot ? [screenshot] : [], servers: app.servers, napshot, release: previewTargets([app])[0] ?? null });
   const tags = [...app.archetypes, ...app.topics.filter(topic => !app.archetypes.includes(topic))].slice(0, 5);
   const listingIcon = app.listing?.icon;
   const date = new Date(app.publishedAt * 1000).toISOString().slice(0, 10);
