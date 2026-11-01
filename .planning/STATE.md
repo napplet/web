@@ -570,6 +570,7 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 
 | Quick ID | Task | Date | Commit | Artifacts |
 |----------|------|------|--------|-----------|
+| 261101-nuz | Agent-readable napplet.run: Markdown copies, llms.txt, agent-skills index, Content-Signal, Bunny Accept: text/markdown edge script | 2026-11-01 | 700115fd | [261101-nuz](./quick/261101-nuz-agent-readable-napplet-run-site/) |
 | 261101-n69 | --proxy for HTTP and SOCKS5 proxies on CLI Blossom and relay commands, plus unreachable-relay publish fix | 2026-11-01 | ebd22ec3 | [261101-n69](./quick/261101-n69-add-proxy-for-http-and-socks5-proxies-to/) |
 | 261101-k4q | Five-relay app store discovery pool and an exhaustive refresh pager | 2026-11-01 | fd8ad95a | [261101-k4q](./quick/261101-k4q-expand-the-app-store-discovery-relay-poo/) |
 | 261101-ia5 | Publisher profile name, picture and nostr.at link on app store cards | 2026-11-01 | d34bf184 | [261101-ia5](./quick/261101-ia5-show-publisher-profile-name-picture-and-/) |
