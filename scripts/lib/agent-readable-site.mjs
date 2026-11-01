@@ -108,7 +108,7 @@ export async function writeRootLlms(site, webPages, skillsIndex) {
   ];
   const notes = [
     'napplets are sandboxed Nostr web applets that run inside a host shell and reach signing, storage and relays only through it, over the NIP-5D JSON envelope. This site is the napplet showcase, explainer, NAP directory and SDK documentation.',
-    `Every HTML page has a Markdown copy: \`/path/\` → \`/path/index.md\`, \`/docs/page.html\` → \`/docs/page.md\`. On napplet.run, sending \`Accept: text/markdown\` returns the copy at the page's own URL. See [Agent access to napplet.run](${SITE_URL}/docs/guide/agent-access.md).`,
+    `Every HTML page has a Markdown copy: \`/path/\` → \`/path/index.md\`, \`/docs/page.html\` → \`/docs/page.md\`. On napplet.run, sending \`Accept: text/markdown\` returns the copy at the page's own URL; if it returns HTML, fetch the \`.md\` path. See [Agent access to napplet.run](${SITE_URL}/docs/guide/agent-access.md).`,
     'Everything here is non-normative. NIP-5D (https://github.com/nostr-protocol/nips/pull/2303) and the NAPs (https://github.com/napplet/naps) are the canonical protocol sources.',
   ].join('\n\n');
   await writeFile(path.join(site, 'llms.txt'), renderLlmsTxt({ title: 'napplet', summary: 'Apps that travel: small sandboxed Nostr apps, the shells that host them, and the open NIP-5D protocol between them.', notes, sections }));

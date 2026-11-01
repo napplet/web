@@ -29,7 +29,7 @@ On napplet.run, a `GET` or `HEAD` request whose `Accept` header includes `text/m
 curl -H 'Accept: text/markdown' https://napplet.run/docs/guide/getting-started.html
 ```
 
-The response has `Content-Type: text/markdown; charset=utf-8` and `Vary: Accept`. HTML responses carry `Vary: Accept` and a `Link: <…>; rel="alternate"; type="text/markdown"` header that points at the copy. Header negotiation needs the CDN edge script, so the nsite mirror serves only the `.md` files. Fetch those paths directly when you use the mirror.
+The response has `Content-Type: text/markdown; charset=utf-8` and `Vary: Accept`. HTML responses carry `Vary: Accept` and a `Link: <…>; rel="alternate"; type="text/markdown"` header that points at the copy. Header negotiation needs the CDN edge script, so the nsite mirror serves only the `.md` files. If a request with this header still returns `text/html`, fetch the `.md` path directly.
 
 ## Agent skills discovery
 
