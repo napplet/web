@@ -251,6 +251,7 @@ await withWebFixture(appRoot, async root => {
   let redirectMirror;
   let browser;
   let staticServer;
+  const failures = [];
   try {
     redirectMirror = await startRedirectMirror(root);
     const savedLabels = [
@@ -279,9 +280,12 @@ await withWebFixture(appRoot, async root => {
     await liveLabelScenarios(page, { requested: relays.requested });
     assert.deepEqual(errors, []);
     console.log('Napshot fixtures: saved and live labels, both capture modes, wrong-bytes fall-through, refused private redirect, oversized and failing mirrors, screenshot and listing-art precedence, snapshot and stale-revision exclusion, untrusted-signer rejection, batching and until paging passed.');
+  } catch (error) {
+    failures.push(error);
   } finally {
     const cleanup = await Promise.allSettled([browser?.close(), closeServer(staticServer?.server), closeServer(redirectMirror?.server)]);
-    const failures = cleanup.filter(result => result.status === 'rejected');
-    if (failures.length) throw new AggregateError(failures.map(result => result.reason), 'Fixture resource cleanup failed');
+    for (const result of cleanup) if (result.status === 'rejected') failures.push(result.reason);
   }
+  if (failures.length === 1) throw failures[0];
+  if (failures.length) throw new AggregateError(failures, 'Fixture check and cleanup failed');
 });
