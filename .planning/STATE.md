@@ -65,7 +65,7 @@ Branch `feat/cli-terminal-usability` ships guided missing-value recovery, `-i` p
 Phase: 164 (cli-terminal-usability) — verified and shipped
 Plan: 3 of 3
 Status: [PR #248](https://github.com/napplet/web/pull/248) open with six actual terminal screenshots
-Last activity: 2026-11-01 - Completed quick task 261101-ew8: PR #292 inline review fixes for relay pagination, fixture isolation and CI coverage
+Last activity: 2026-11-01 - Completed quick task 261101-hp2: on-visit Napshot label lookups for saved releases without publisher artwork
 
 See phase 163 VERIFICATION.md and COVERAGE.md for evidence and disclosed release/specification/baseline limits. Earlier phase and quick-task records below are historical.
 
@@ -570,6 +570,7 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 
 | Quick ID | Task | Date | Commit | Artifacts |
 |----------|------|------|--------|-----------|
+| 261101-hp2 | On-visit Napshot label lookups for saved releases without publisher artwork | 2026-11-01 | fa702345 | [261101-hp2](./quick/261101-hp2-look-up-napshot-labels-at-runtime-for-re/) |
 | 261101-ew8 | PR #292 inline review: independent relay pagination, incomplete-batch retries, isolated fixture builds and CI execution | 2026-11-01 | d39acea6 | [261101-ew8](./quick/261101-ew8-resolve-all-five-inline-review-threads-o/) |
 | 261101-e9i | Add Napshot NIP-05 relay hints from its signed NIP-65 event | 2026-11-01 | ad002741 | [261101-e9i](./quick/261101-e9i-add-napshot-nip-05-relay-hints-from-its-/) |
 | 261101-de9 | NIP-05 nostr.json on napplet.run for napshot | 2026-11-01 | — | [261101-de9](./quick/261101-de9-napplet-run-nip-05-for-napshot/) |
