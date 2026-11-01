@@ -30,7 +30,8 @@
     "publish-packages": "turbo run build && pnpm -r --filter='!@napplet/cli' publish --access public --no-git-checks",
     "publish-jsr": "node scripts/sync-jsr-versions.mjs && pnpm -r --filter='./packages/*' --filter='!@napplet/boilerplate' --filter='!@napplet/conformance-cli' exec npx jsr publish --allow-slow-types --allow-dirty",
     "build:edge": "esbuild edge/bunny-middleware.mjs --bundle --format=esm --platform=neutral --conditions=deno --main-fields=module,main --outfile=edge/dist/bunny-middleware.js",
-    "test:agent-output": "node --test scripts/agent-markdown.test.mjs scripts/assemble-site.test.mjs"
+    "test:agent-output": "node --test scripts/agent-markdown.test.mjs scripts/assemble-site.test.mjs",
+    "check:markdown-negotiation": "node scripts/check-markdown-negotiation.mjs"
   },
   "devDependencies": {
     "@bunny.net/edgescript-sdk": "0.13.0",

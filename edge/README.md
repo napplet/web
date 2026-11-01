@@ -16,7 +16,16 @@ A [Bunny Edge Scripting](https://bunny.net/docs/edge-scripting-middleware) middl
 
 ## Caching
 
-The rewrite happens in `onClientRequest`, before the CDN cache lookup, so Bunny stores the HTML page and its Markdown copy under different URLs (`/explainer/` and `/explainer/index.md`). Bunny's cache key does not need to vary on `Accept`, and a cached HTML response can never be served to an agent asking for Markdown, or the reverse. `onClientResponse` also runs on cache hits, so `Vary: Accept` reaches every client and downstream cache, which then keep the two representations apart.
+Bunny's documented behaviour, checked 2026-11-01:
+
+- [Vary Cache](https://bunny.net/docs/cdn/vary-cache.md): the cache key is the request URL. Query strings are ignored unless the URL Query String option is on. The built-in vary options (WebP, AVIF, query string, country, hostname, mobile/desktop, cookie) do not include `Accept`. Varying on another header is "available via internal configuration" through Bunny support.
+- [Middleware scripts](https://bunny.net/docs/edge-scripting-middleware): `onClientRequest` runs before the cache lookup, and a returned request "continue[s] to the cache lookup with the (modified) request". `onClientResponse` runs on every response, including cache hits.
+
+Observed on the live pull zone before this script was deployed: a request with `Accept: text/markdown` for `/` got `content-type: text/html` with `cdn-cache: HIT`. One URL, one cached response, whatever the `Accept` header.
+
+The design follows from that. The rewrite happens in `onClientRequest`, so the HTML page and its Markdown copy are looked up and cached under different URLs (`/explainer/` and `/explainer/index.md`). No `Accept`-based cache key is needed. `onClientResponse` adds `Vary: Accept` on every response, including hits, for browsers and downstream caches.
+
+That Bunny caches the two separately is inferred from the documentation above and has not yet been observed on the CDN. `scripts/check-markdown-negotiation.mjs` tests it: it alternates Markdown and HTML requests for the same page twice, so the second round is served from cache, and fails if either client gets the other representation. The **Deploy site** workflow runs it right after deploying the script.
 
 Both hooks only run when the pull zone has **Run script before cache** enabled (Pull Zone → General → Origin, or `EdgeScriptExecutionPhase: 2` in the Pull Zone API). With it off, the script does nothing and the site behaves as plain static hosting.
 

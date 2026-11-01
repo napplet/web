@@ -21,6 +21,7 @@ on:
       - 'scripts/agent-markdown.test.mjs'
       - 'skills/**'
       - 'edge/**'
+      - 'scripts/check-markdown-negotiation.mjs'
       - 'scripts/generate-protocol*'
       - 'scripts/lib/protocol-data.mjs'
       - 'packages/core/src/nap-catalog.ts'
@@ -186,6 +187,18 @@ jobs:
           script_id: ${{ secrets.BUNNY_EDGE_SCRIPT_ID }}
           deploy_key: ${{ secrets.BUNNY_EDGE_DEPLOY_KEY }}
           file: edge/dist/bunny-middleware.js
+
+      # Live check after the script is published: both representations, twice
+      # (second round from cache), so a URL-only cache key mix-up fails the run.
+      - name: Verify Markdown negotiation on napplet.run
+        if: steps.edge.outputs.enabled == 'true'
+        run: |
+          for attempt in 1 2 3 4 5 6; do
+            node scripts/check-markdown-negotiation.mjs https://napplet.run && exit 0
+            echo "Negotiation not live yet (attempt $attempt); waiting for the script to propagate."
+            sleep 20
+          done
+          exit 1
 
       # nsite-action splits relays/servers on NEWLINES, but NSITE_RELAYS /
       # NSITE_SERVERS are stored space-separated. Normalize any whitespace
