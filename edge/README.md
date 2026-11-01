@@ -21,11 +21,11 @@ Bunny's documented behaviour, checked 2026-11-01:
 - [Vary Cache](https://bunny.net/docs/cdn/vary-cache.md): the cache key is the request URL. Query strings are ignored unless the URL Query String option is on. The built-in vary options (WebP, AVIF, query string, country, hostname, mobile/desktop, cookie) do not include `Accept`. Varying on another header is "available via internal configuration" through Bunny support.
 - [Middleware scripts](https://bunny.net/docs/edge-scripting-middleware): `onClientRequest` runs before the cache lookup, and a returned request "continue[s] to the cache lookup with the (modified) request". `onClientResponse` runs on every response, including cache hits.
 
-Observed on the live pull zone before this script was deployed: a request with `Accept: text/markdown` for `/` got `content-type: text/html` with `cdn-cache: HIT`. One URL, one cached response, whatever the `Accept` header.
+Observed on the live pull zone before the script was deployed: a request with `Accept: text/markdown` for `/` got `content-type: text/html` with `cdn-cache: HIT`. One URL, one cached response, whatever the `Accept` header.
 
 The design follows from that. The rewrite happens in `onClientRequest`, so the HTML page and its Markdown copy are looked up and cached under different URLs (`/explainer/` and `/explainer/index.md`). No `Accept`-based cache key is needed. `onClientResponse` adds `Vary: Accept` on every response, including hits, for browsers and downstream caches.
 
-That Bunny caches the two separately is inferred from the documentation above and has not yet been observed on the CDN. `scripts/check-markdown-negotiation.mjs` tests it: it alternates Markdown and HTML requests for the same page twice, so the second round is served from cache, and fails if either client gets the other representation. The **Deploy site** workflow runs it right after deploying the script.
+Observed on 2026-11-01 after the script went live: `scripts/check-markdown-negotiation.mjs` passed against napplet.run with both representations served as `cdn-cache: HIT` in the second round, Markdown as `text/markdown; charset=utf-8` and HTML as `text/html` with the `Link` header. The two are cached apart, as the documentation implies. The **Deploy site** workflow re-runs this check after every edge script deploy. Bunny adds its own `Vary: Accept-Encoding` as a separate header line; HTTP combines repeated `Vary` lines, so `Accept` is still part of the varying set.
 
 Both hooks only run when the pull zone has **Run script before cache** enabled (Pull Zone → General → Origin, or `EdgeScriptExecutionPhase: 2` in the Pull Zone API). With it off, the script does nothing and the site behaves as plain static hosting.
 
@@ -36,6 +36,10 @@ The nsite mirror cannot negotiate headers; agents using it fetch the `.md` paths
 The **Deploy site** workflow builds and deploys the script after the site upload, once two repository secrets exist. Until then it logs a notice and skips the step.
 
 One-time setup:
+
+Current setup: Middleware script `napplet-run-markdown` (id 100368) on the `napplet` pull zone (id 6017894), with `EdgeScriptExecutionPhase: 2`. To disable negotiation, set the pull zone's `MiddlewareScriptId` to null, or `EdgeScriptExecutionPhase` to 0.
+
+To recreate it:
 
 1. In the Bunny dashboard, create a **Middleware** Edge Script (for example `napplet-run-markdown`) and link it to the napplet.run pull zone.
 2. On that pull zone, enable **Run script before cache** (General → Origin).
