@@ -1,5 +1,16 @@
 /** Progressive enhancement for the Run links. The verifier loads only on click. */
 import { NAPPLETS, type PlayableNapplet } from '../showcase';
+import { bindPlayerFrame, type DocumentBinding, type Replacement } from './binding';
+
+const REPLACED_NOTE = 'so the preview was closed. Retry to load the verified release again.';
+/** Status text when the verified document is replaced (NIP-5D Identity). */
+const REPLACED: Record<Replacement, string> = {
+  'second-load': `This napplet navigated away from its verified release, ${REPLACED_NOTE}`,
+  'port-closed': `This napplet left its verified release, ${REPLACED_NOTE}`,
+  'second-hello': `This napplet restarted outside its verified release, ${REPLACED_NOTE}`,
+  'window-message': `This napplet sent messages outside its verified channel, ${REPLACED_NOTE}`,
+  'invalid-hello': `This napplet did not open its verified channel correctly, ${REPLACED_NOTE}`,
+};
 
 /** Anything the player can load: a curated preview or a discovered release fetched from its publisher's servers. */
 interface Playable {
@@ -45,6 +56,37 @@ function playableFor(link: HTMLAnchorElement): Promise<Playable> | undefined {
   try { return discovered(JSON.parse(link.dataset.run) as RunData); } catch { return undefined; }
 }
 
+/**
+ * Mount a verified document in a fresh sandboxed frame bound to its NIP-5D hello port, and wait for its first load.
+ * This player exposes no NAP domains. Archived demos are not presented as current-protocol conformance examples.
+ * NIP-5D Identity: the preview is bound to the verified document; if it is replaced, the frame is removed.
+ */
+async function mountFrame(stage: HTMLElement, name: string, document: string, sandbox: string, signal: AbortSignal, onReplaced: (reason: Replacement) => void): Promise<DocumentBinding> {
+  const frame = window.document.createElement('iframe');
+  frame.title = `${name} napplet`;
+  frame.sandbox.value = sandbox;
+  frame.referrerPolicy = 'no-referrer';
+  const binding = bindPlayerFrame(frame, window, reason => {
+    frame.remove();
+    onReplaced(reason);
+  });
+  await new Promise<void>((resolve, reject) => {
+    const aborted = () => {
+      binding.release();
+      reject(signal.reason);
+    };
+    signal.addEventListener('abort', aborted, { once: true });
+    void binding.loaded.then(() => {
+      signal.removeEventListener('abort', aborted);
+      resolve();
+    });
+    // Set srcdoc before insertion: an inserted empty frame fires its own about:blank load, which would read as a second load.
+    frame.srcdoc = document;
+    stage.replaceChildren(frame);
+  });
+  return binding;
+}
+
 /** Attach a single dismissible player with cancellation and focus restoration. */
 export function setupPlayer(): void {
   const dialog = document.querySelector<HTMLDialogElement>('#napplet-player')!;
@@ -58,9 +100,13 @@ export function setupPlayer(): void {
   let selected: Playable | undefined;
   let opener: HTMLElement | undefined;
   let previousOverflow = '';
+  let binding: DocumentBinding | undefined;
 
   async function launch(item: Playable) {
     active?.abort();
+    // Release the previous frame's binding before removing it, so its closing port is not read as a replacement.
+    binding?.release();
+    binding = undefined;
     const request = new AbortController();
     active = request;
     selected = item;
@@ -83,21 +129,13 @@ export function setupPlayer(): void {
       const signal = request.signal;
       const document = await item.load(signal);
       signal.throwIfAborted();
-      const frame = window.document.createElement('iframe');
-      frame.title = `${item.name} napplet`;
-      frame.sandbox.value = PLAYER_SANDBOX;
-      frame.referrerPolicy = 'no-referrer';
-      // This player exposes no NAP domains and consumes no inbound messages.
-      // Archived demos are not presented as current-protocol conformance examples.
-      stage.replaceChildren(frame);
-      await new Promise<void>((resolve, reject) => {
-        const aborted = () => reject(signal.reason);
-        signal.addEventListener('abort', aborted, { once: true });
-        frame.addEventListener('load', () => {
-          signal.removeEventListener('abort', aborted);
-          resolve();
-        }, { once: true, signal });
-        frame.srcdoc = document;
+      binding = await mountFrame(stage, item.name, document, PLAYER_SANDBOX, signal, reason => {
+        if (active !== request) return;
+        // A launch still waiting for its first load fails through the catch below with the same message.
+        request.abort(new Error(REPLACED[reason]));
+        stage.setAttribute('aria-busy', 'false');
+        status.textContent = REPLACED[reason];
+        retry.hidden = false;
       });
       signal.throwIfAborted();
       stage.setAttribute('aria-busy', 'false');
@@ -125,6 +163,8 @@ export function setupPlayer(): void {
   });
   retry.addEventListener('click', () => { if (selected) void launch(selected); });
   dialog.addEventListener('close', () => {
+    binding?.release();
+    binding = undefined;
     active?.abort();
     active = undefined;
     stage.replaceChildren();

@@ -68,12 +68,19 @@ export async function verifyRelease(input: unknown, eventId: string, format: str
   return { artifactHash: app.event.tags.find(tag => tag[0] === 'x')![1] };
 }
 
-/** Adapted from soy's verifiedDocument: verify first, then prepend shell policy. */
+/**
+ * NIP-5D Transport bootstrap, run before any napplet script: open a MessageChannel, keep one port private (a listener
+ * keeps it alive for the document's lifetime) and hand the other to the shell once in `napplet.hello`. The player
+ * exposes no NAP domains, so the namespace is empty. https://github.com/nostr-protocol/nips/pull/2303
+ */
+export const PLAYER_BOOTSTRAP = "(()=>{const c=new MessageChannel();c.port1.onmessage=()=>{};window.parent.postMessage({type:'napplet.hello'},'*',[c.port2]);window.napplet=Object.freeze({});})();";
+
+/** Adapted from soy's verifiedDocument: verify first, then prepend shell policy and the bootstrap. */
 export async function verifiedDocument(bytes: Uint8Array, expectedHash: string): Promise<string> {
   if (bytes.length > MAX_PREVIEW_BYTES) throw new Error('This release is too large for the quick preview.');
   if (await sha256(bytes) !== expectedHash) throw new Error('The downloaded napplet does not match its signed hash.');
   const html = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
-  return `<!doctype html><meta http-equiv="Content-Security-Policy" content="${PLAYER_CSP}"><meta name="referrer" content="no-referrer"><script>window.napplet=Object.freeze({});</script>${html}`;
+  return `<!doctype html><meta http-equiv="Content-Security-Policy" content="${PLAYER_CSP}"><meta name="referrer" content="no-referrer"><script>${PLAYER_BOOTSTRAP}</script>${html}`;
 }
 
 /** Read bounded responses so a failed CDN response cannot consume unbounded memory. */

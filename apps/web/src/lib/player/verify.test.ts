@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { finalizeEvent, generateSecretKey } from 'nostr-tools/pure';
 import { NAPPLETS } from '../showcase';
-import { verifyArchivedRelease, verifyRelease, verifiedDocument, sha256 } from './verify';
+import { PLAYER_BOOTSTRAP, verifyArchivedRelease, verifyRelease, verifiedDocument, sha256 } from './verify';
 
 const root = new URL('../../../', import.meta.url);
 function fixture(path: string) { return readFileSync(new URL(`public${path}`, root)); }
@@ -17,7 +17,7 @@ describe('the selected signed releases', () => {
       expect(await sha256(bytes)).toBe(identity.artifactHash);
       const doc = await verifiedDocument(bytes, identity.artifactHash);
       expect(doc.endsWith(bytes.toString())).toBe(true);
-      expect(doc.indexOf('window.napplet=Object.freeze({})')).toBeLessThan(doc.indexOf(bytes.toString()));
+      expect(doc.indexOf(`<script>${PLAYER_BOOTSTRAP}</script>`)).toBeLessThan(doc.indexOf(bytes.toString()));
       expect(doc).toContain("connect-src 'none'");
     });
   }
