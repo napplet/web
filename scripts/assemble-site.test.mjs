@@ -3,7 +3,9 @@ import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
-import { assembleSite } from './assemble-site.mjs';
+import { assembleSite, assertNip05 } from './assemble-site.mjs';
+
+const NIP05 = '{"names":{"napshot":"94b92a261c88f6b14098e6ec15c93bed544380883745f9a030b27d4a5c554f81"}}';
 
 async function fixture(t) {
   const root = await mkdtemp(path.join(os.tmpdir(), 'napplet-site-'));
@@ -22,6 +24,8 @@ async function fixture(t) {
     'apps/web/dist/install.ps1': 'powershell installer',
     'apps/web/public/install.sh': 'shell installer',
     'apps/web/public/install.ps1': 'powershell installer',
+    'apps/web/dist/.well-known/nostr.json': NIP05,
+    'apps/web/public/.well-known/nostr.json': NIP05,
     'apps/docs/.vitepress/dist/index.html': 'docs',
     'apps/docs/.vitepress/dist/guide/index.html': 'guide',
     'apps/conformance/dist/index.html': '<script src="/conformance/assets/app.js"></script>',
@@ -44,12 +48,13 @@ test('assembles real directory routes, nested assets and exact installers, remov
     'docs/index.html': 'docs', 'docs/guide/index.html': 'guide',
     'conformance/assets/app.js': 'conformance',
     'install.sh': 'shell installer', 'install.ps1': 'powershell installer',
+    '.well-known/nostr.json': NIP05,
   })) assert.equal(await readFile(path.join(output, file), 'utf8'), expected);
   await assert.rejects(readFile(path.join(output, 'stale.txt')), { code: 'ENOENT' });
 });
 
 test('missing required pages or social image fails before touching prior output', async (t) => {
-  for (const missing of ['explainer/index.html', 'protocol/index.html', 'protocol/contribute/index.html', 'og.png']) {
+  for (const missing of ['explainer/index.html', 'protocol/index.html', 'protocol/contribute/index.html', 'og.png', '.well-known/nostr.json']) {
     const root = await fixture(t);
     await rm(path.join(root, 'apps/web/dist', missing));
     await assert.rejects(assembleSite(root), { code: 'ENOENT' });
@@ -64,4 +69,21 @@ test('rejects an installer mismatch and conformance built at the root', async (t
   await writeFile(path.join(root, 'apps/web/dist/install.sh'), 'shell installer');
   await writeFile(path.join(root, 'apps/conformance/dist/index.html'), '<script src="/assets/app.js"></script>');
   await assert.rejects(assembleSite(root), /Build conformance with/);
+});
+
+test('rejects a stale or malformed NIP-05 document', async (t) => {
+  const root = await fixture(t);
+  await writeFile(path.join(root, 'apps/web/dist/.well-known/nostr.json'), '{"names":{}}');
+  await assert.rejects(assembleSite(root), /differs from its public source/);
+  for (const bad of ['{"names":{}}', '{"names":{"Napshot":"' + 'a'.repeat(64) + '"}}', '{"names":{"napshot":"npub1abc"}}', 'not json']) {
+    await writeFile(path.join(root, 'apps/web/dist/.well-known/nostr.json'), bad);
+    await writeFile(path.join(root, 'apps/web/public/.well-known/nostr.json'), bad);
+    await assert.rejects(assembleSite(root));
+  }
+});
+
+test('the published NIP-05 document maps napshot to its key', async () => {
+  const text = await readFile(new URL('../apps/web/public/.well-known/nostr.json', import.meta.url), 'utf8');
+  assertNip05(text);
+  assert.equal(JSON.parse(text).names.napshot, '94b92a261c88f6b14098e6ec15c93bed544380883745f9a030b27d4a5c554f81');
 });
