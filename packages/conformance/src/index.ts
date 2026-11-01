@@ -50,6 +50,8 @@ export type {
 export {
   createReferenceShell,
   attachReferenceShell,
+  bindNappletPort,
+  NAPPLET_HELLO,
   REFERENCE_PUBKEY,
 } from './shell/reference-shell.js';
 export type {
@@ -57,8 +59,10 @@ export type {
   ReferenceShellOptions,
   RecordedEnvelope,
   MessageWindowLike,
-  PostTargetLike,
   AttachOptions,
+  PortBinding,
+  PortBindingOptions,
+  TransportViolation,
 } from './shell/reference-shell.js';
 
 // ── context ──────────────────────────────────────────────────────────────────

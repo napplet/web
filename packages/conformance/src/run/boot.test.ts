@@ -39,6 +39,18 @@ describe('bootAndCollect — DOM wiring', () => {
     expect(boot.emitted).toEqual([]);
   });
 
+  it('treats a window-level NAP message as a replaced document and removes the frame', async () => {
+    const before = document.querySelectorAll('iframe').length;
+    const pending = bootAndCollect({ url: 'about:blank', runtimePreludeSource, readyTimeoutMs: 60, settleMs: 10, runDegraded: false });
+    await Promise.resolve();
+    const frame = document.querySelector('iframe')!;
+    window.dispatchEvent(new MessageEvent('message', { source: frame.contentWindow, data: { type: 'storage.get', id: 's1', key: 'k' } }));
+    expect(document.querySelectorAll('iframe').length).toBe(before);
+    const boot = await pending;
+    expect(boot.transportViolations.map((v) => v.kind)).toEqual(['window-message']);
+    expect(boot.emitted).toEqual([]);
+  });
+
   it('runs a degraded pass when requested', async () => {
     const boot = await bootAndCollect({
       url: 'about:blank',

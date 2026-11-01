@@ -177,3 +177,21 @@ describe('degradation + lifecycle checks', () => {
     expect(run('lifecycle/clean-teardown', makeContext({ lifecycle: { listenerLeak: false } })).status).toBe('pass');
   });
 });
+
+describe('NIP-5D port transport checks', () => {
+  it('wire/port-only passes with no violations and fails on window-level NAP traffic', () => {
+    expect(run('wire/port-only', makeContext()).status).toBe('pass');
+    const ctx = makeContext({ transportViolations: [{ kind: 'window-message', detail: 'Window-level "relay.subscribe" message after the napplet.hello handoff' }] });
+    const r = run('wire/port-only', ctx);
+    expect(r.status).toBe('fail');
+    expect(r.detail).toMatch(/relay\.subscribe/);
+    expect(run('wire/port-only', makeContext({ transportViolations: [{ kind: 'second-hello', detail: 'x' }] })).status).toBe('fail');
+  });
+
+  it('lifecycle/keeps-verified-document warns on a second load but leaves wire/port-only alone', () => {
+    const ctx = makeContext({ transportViolations: [{ kind: 'second-load', detail: 'The frame loaded a second document' }] });
+    expect(run('lifecycle/keeps-verified-document', ctx).status).toBe('fail');
+    expect(CHECKS.find((c) => c.id === 'lifecycle/keeps-verified-document')!.severity).toBe('warning');
+    expect(run('wire/port-only', ctx).status).toBe('pass');
+  });
+});
