@@ -6,6 +6,7 @@ import { createHash } from 'node:crypto';
 import { chromium } from 'playwright';
 const require = createRequire(new URL('../apps/web/package.json', import.meta.url));
 const { finalizeEvent, generateSecretKey } = require('nostr-tools/pure');
+const { npubEncode } = require('nostr-tools/nip19');
 const base = process.argv[2] ?? 'http://127.0.0.1:8107';
 const config = JSON.parse(await readFile(new URL('../apps/web/src/data/discovery.json', import.meta.url)));
 const apps = JSON.parse(await readFile(new URL('../apps/web/src/data/apps.json', import.meta.url)));
@@ -18,6 +19,8 @@ const injected = finalizeEvent({ kind: 35129, created_at: Math.floor(Date.now() 
 const demanding = finalizeEvent({ kind: 35129, created_at: Math.floor(Date.now() / 1000) - 1, content: 'Needs identity to work', tags: [['d', 'catalog-browser-demanding'], ['title', 'Demanding release'], ['x', 'b'.repeat(64)], ['server', 'https://blossom.example'], ['R', 'identity']] }, secret);
 // A Software Applications listing from the same publisher that names the release supplies fallback art by URL.
 const listing = finalizeEvent({ kind: 32267, created_at: Math.floor(Date.now() / 1000), content: '# markdown stays out', tags: [['d', 'catalog-browser-vector-0123456789abcdef'], ['name', 'Listing name'], ['latest', `35129:${injected.pubkey}:catalog-browser-vector`], ['image', 'https://listing.example/art.png'], ['icon', 'javascript:alert(1)']] }, secret);
+// The same publisher's kind 0 profile names the key on the card; its content is escaped and only https pictures are shown.
+const profile = finalizeEvent({ kind: 0, created_at: Math.floor(Date.now() / 1000), content: JSON.stringify({ name: 'vector', display_name: 'Vector <b>Publisher</b>', picture: 'https://avatar.example/vector.png', about: 'ignored' }), tags: [] }, secret);
 const manifestKinds = [5129, 15129, 35129];
 // The saved snapshot drives coverage assertions; nothing is pinned to a specific release, label or capture,
 // so the check survives snapshot refreshes. The deterministic label scenarios run in
@@ -30,6 +33,12 @@ const untrustedLabel = finalizeEvent({ kind: 1985, created_at: Math.floor(Date.n
 const [negentropyRelay] = config.relays;
 const browser = await chromium.launch();
 const errors = [];
+
+/** Serve saved profile pictures from a routed 1×1 PNG: the origins come from the snapshot, so nothing is pinned and no real avatar host is contacted. */
+async function routeProfilePictures(page) {
+  const origins = new Set((snapshot.profiles ?? []).flatMap(event => { try { return [new URL(JSON.parse(event.content).picture).origin]; } catch { return []; } }));
+  await page.route(url => origins.has(url.origin), route => route.fulfill({ status: 200, contentType: 'image/png', body: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=', 'base64') }));
+}
 
 /** Serve deterministic NIP-11 documents: the first relay advertises NIP-77, the second does not. */
 async function routeInformation(page) {
@@ -54,6 +63,8 @@ try {
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce' });
   page.on('pageerror', error => errors.push(error.message));
   await page.route('https://listing.example/**', route => route.fulfill({ status: 200, contentType: 'image/png', body: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=', 'base64') }));
+  await page.route('https://avatar.example/**', route => route.fulfill({ status: 200, contentType: 'image/png', body: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=', 'base64') }));
+  await routeProfilePictures(page);
   await page.route('https://blossom.example/**', route => route.fulfill(new URL(route.request().url()).pathname === `/${artifactHash}` ? { status: 200, contentType: 'text/html', headers: { 'access-control-allow-origin': '*' }, body: artifact } : { status: 404, headers: { 'access-control-allow-origin': '*' } }));
   await routeInformation(page);
   const cors = { 'access-control-allow-origin': '*' };
@@ -82,9 +93,11 @@ try {
         assert.deepEqual(filter['#L'], ['#screenshot']);
         assert.ok(filter['#e'].length <= 50, 'label targets are batched');
         socket.send(JSON.stringify(['EVENT', id, untrustedLabel]));
-      } else if (filter.kinds.length === 1 && filter.kinds[0] === 32267) {
+      } else if (filter.kinds.includes(32267)) {
         assert.ok(filter.authors?.includes(injected.pubkey), 'listings are requested for discovered publishers');
+        assert.ok(filter.kinds.includes(0), 'the publishers’ profiles are requested with their listings');
         socket.send(JSON.stringify(['EVENT', id, listing]));
+        socket.send(JSON.stringify(['EVENT', id, profile]));
       } else {
         assert.deepEqual(filter.kinds, manifestKinds);
         if (filter.until === undefined) {
@@ -115,6 +128,8 @@ try {
   assert.ok(saved > 20, 'real saved discoveries are present');
   assert.equal(await page.locator('#discovered-grid a[href*="napplet.soy/n/nevent"]').count(), 0, 'snapshot pointers do not use a shell route that rejects them');
   assert.ok(await page.locator('#discovered-grid [data-listing-art]').count() > 5, 'saved listings supply fallback art without JavaScript verification');
+  assert.equal(await page.locator('#discovered-grid .release-author a[href^="https://nostr.at/npub1"]').count(), saved, 'every saved release links its publisher key to a profile page');
+  assert.ok(await page.locator('#discovered-grid .release-author img.author-picture[src^="https://"]').count() > 0, 'saved profiles supply publisher names and pictures');
   assert.equal(await page.locator('#discovered-grid img[src^="http:"], #discovered-grid img[src^="javascript:"]').count(), 0);
   assert.equal(await page.locator('#store-more button').count(), 0, 'paging has no button; scrolling drives it');
   // Label-driven rendering, mirror behaviour and capture modes run in check-app-store-napshot.mjs
@@ -151,12 +166,18 @@ try {
   await scrollToTheEnd(page);
   assert.deepEqual([...contacted].sort(), [...config.relays].sort(), 'both relays were contacted once the saved collection ran out');
   assert.ok(negotiations >= 1, 'NIP-77 negotiation was attempted on the relay that advertises it');
-  assert.ok(requested.some(filter => filter.kinds[0] === 32267), 'listings were requested after new publishers appeared');
+  assert.ok(requested.some(filter => filter.kinds.includes(32267)), 'listings were requested after new publishers appeared');
   assert.ok(requested.some(filter => typeof filter.until === 'number'), 'relays on the request path were paged with until');
   const card = page.locator('.discovered-card').filter({ hasText: '<script>not markup</script>' });
   assert.equal(await card.count(), 1, 'duplicate signed addresses deduplicate');
   assert.equal(await card.locator('script').count(), 0, 'publisher metadata remains plain text');
   assert.equal(await card.locator('[data-listing-art]').getAttribute('src'), 'https://listing.example/art.png', 'the matching listing supplies art');
+  // The publisher line links the key to its profile and shows the profile's name and picture, escaped.
+  const author = card.locator('.release-author a');
+  assert.equal(await author.getAttribute('href'), `https://nostr.at/${npubEncode(injected.pubkey)}`, 'the publisher links to the key’s profile');
+  assert.equal(await author.locator('span').textContent(), 'Vector <b>Publisher</b>', 'the profile name is shown as text');
+  assert.equal(await author.locator('b').count(), 0, 'profile markup is never rendered');
+  assert.equal(await author.locator('img.author-picture').getAttribute('src'), 'https://avatar.example/vector.png', 'the profile picture is shown');
   assert.equal(await card.locator('[data-listing-icon]').count(), 0, 'non-https listing icons are dropped');
   // Label targeting: unchanged saved releases and newly discovered releases are both targets, batched small.
   // Exhaustive coverage over every eligible release is proven deterministically in check-app-store-napshot.mjs;
@@ -199,6 +220,7 @@ try {
 
   const offline = await browser.newPage();
   await routeInformation(offline);
+  await routeProfilePictures(offline);
   for (const relay of config.relays) await offline.routeWebSocket(relay, socket => socket.close());
   await offline.goto(`${base}/apps/`);
   await offline.getByRole('button', { name: 'Check for new apps' }).click();
@@ -209,6 +231,7 @@ try {
 
   for (const width of [390, 320]) {
     const mobile = await browser.newPage({ viewport: { width, height: 844 } });
+    await routeProfilePictures(mobile);
     await mobile.goto(`${base}/apps/`);
     assert.ok(await mobile.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
     await mobile.getByLabel('Discovered', { exact: true }).check();
@@ -217,6 +240,8 @@ try {
     await mobile.close();
   }
   const noJs = await browser.newPage({ javaScriptEnabled: false });
+  // Without scripting, Chromium loads every lazy image eagerly, so the whole collection's avatars must come from the route.
+  await routeProfilePictures(noJs);
   await noJs.goto(`${base}/apps/`);
   assert.equal(await noJs.locator('[data-launch]').count(), apps.length);
   assert.ok(await noJs.locator('#discovered-grid a').count() > 20);
