@@ -17,11 +17,12 @@ const publicCopies = ['install.sh', 'install.ps1', '.well-known/nostr.json'];
  */
 export function assertNip05(text) {
   const document = JSON.parse(text);
-  const names = Object.entries(document?.names ?? {});
+  assert.ok(document?.names && typeof document.names === 'object' && !Array.isArray(document.names), 'nostr.json names must be an object');
+  const names = Object.entries(document.names);
   assert.ok(names.length > 0, 'nostr.json must map at least one name');
   for (const [name, pubkey] of names) {
     assert.match(name, /^[a-z0-9._-]+$/, `NIP-05 name ${name} must use a-z0-9-_.`);
-    assert.match(String(pubkey), /^[0-9a-f]{64}$/, `NIP-05 key for ${name} must be lowercase hex`);
+    assert.match(pubkey, /^[0-9a-f]{64}$/, `NIP-05 key for ${name} must be lowercase hex`);
   }
 }
 
