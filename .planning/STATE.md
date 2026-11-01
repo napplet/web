@@ -570,6 +570,7 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 
 | Quick ID | Task | Date | Commit | Artifacts |
 |----------|------|------|--------|-----------|
+| 261101-k4q | Five-relay app store discovery pool and an exhaustive refresh pager | 2026-11-01 | fd8ad95a | [261101-k4q](./quick/261101-k4q-expand-the-app-store-discovery-relay-poo/) |
 | 261101-ia5 | Publisher profile name, picture and nostr.at link on app store cards | 2026-11-01 | d34bf184 | [261101-ia5](./quick/261101-ia5-show-publisher-profile-name-picture-and-/) |
 | 261101-hp2 | On-visit Napshot label lookups for saved releases without publisher artwork | 2026-11-01 | fa702345 | [261101-hp2](./quick/261101-hp2-look-up-napshot-labels-at-runtime-for-re/) |
 | 261101-ew8 | PR #292 inline review: independent relay pagination, incomplete-batch retries, isolated fixture builds and CI execution | 2026-11-01 | d39acea6 | [261101-ew8](./quick/261101-ew8-resolve-all-five-inline-review-threads-o/) |

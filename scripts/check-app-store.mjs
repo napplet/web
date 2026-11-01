@@ -40,7 +40,7 @@ async function routeProfilePictures(page) {
   await page.route(url => origins.has(url.origin), route => route.fulfill({ status: 200, contentType: 'image/png', body: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=', 'base64') }));
 }
 
-/** Serve deterministic NIP-11 documents: the first relay advertises NIP-77, the second does not. */
+/** Serve deterministic NIP-11 documents: the first configured relay advertises NIP-77, the others do not. */
 async function routeInformation(page) {
   for (const relay of config.relays) {
     const origin = new URL(relay).origin.replace(/^ws/, 'http');
@@ -164,7 +164,7 @@ try {
   await page.getByLabel('Discovered', { exact: true }).check();
   // Scrolling past the saved collection reconciles with NIP-77 where offered, falls back to requests elsewhere, and pages on.
   await scrollToTheEnd(page);
-  assert.deepEqual([...contacted].sort(), [...config.relays].sort(), 'both relays were contacted once the saved collection ran out');
+  assert.deepEqual([...contacted].sort(), [...config.relays].sort(), 'every configured relay was contacted once the saved collection ran out');
   assert.ok(negotiations >= 1, 'NIP-77 negotiation was attempted on the relay that advertises it');
   assert.ok(requested.some(filter => filter.kinds.includes(32267)), 'listings were requested after new publishers appeared');
   assert.ok(requested.some(filter => typeof filter.until === 'number'), 'relays on the request path were paged with until');
@@ -214,7 +214,7 @@ try {
   await page.getByRole('button', { name: 'Close preview' }).click();
   assert.equal(await card.locator('[data-launch-release]').evaluate(el => el === document.activeElement), true, 'focus returns to the Run link');
   await page.getByRole('button', { name: 'Check again' }).click();
-  await page.locator('#discovery-status').filter({ hasText: /Checked 2\/2/ }).waitFor();
+  await page.locator('#discovery-status').filter({ hasText: `Checked ${config.relays.length}/${config.relays.length}` }).waitFor();
   await page.screenshot({ path: '/tmp/napplet-store-desktop.png', fullPage: true });
   await page.close();
 

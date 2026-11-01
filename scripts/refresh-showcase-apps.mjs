@@ -2,13 +2,14 @@
 import { createRequire } from 'node:module';
 import { readFile, writeFile, rename } from 'node:fs/promises';
 import { collectLabels } from './lib/napshot-labels.mjs';
+import { pageManifests } from './lib/manifest-pager.mjs';
 const require = createRequire(new URL('../apps/web/package.json', import.meta.url));
 const { validateEvent, verifyEvent } = require('nostr-tools/pure');
 const config = JSON.parse(await readFile(new URL('../apps/web/src/data/discovery.json', import.meta.url), 'utf8'));
 const MANIFEST_KINDS = [5129, 15129, 35129];
 const APPLICATION_KIND = 32267;
 const PROFILE_KIND = 0;
-const MAX_EVENTS = config.maxEvents ?? 600;
+const MAX_EVENTS = config.maxEvents ?? 2000;
 
 /** One bounded request; resolves with verified events and whether the relay reached EOSE. */
 function request(url, filter) {
@@ -34,24 +35,9 @@ function request(url, filter) {
   });
 }
 
-/** Page backwards with `until` until a relay runs out of manifests or the cap is reached. */
-async function manifests(url) {
-  const found = new Map();
-  let until;
-  let ok = false;
-  for (let page = 0; page < Math.ceil(MAX_EVENTS / config.limit); page++) {
-    const filter = { kinds: MANIFEST_KINDS, limit: config.limit, ...(until ? { until } : {}) };
-    const result = await request(url, filter);
-    ok ||= result.ok;
-    const fresh = result.events.filter(event => !found.has(event.id));
-    fresh.forEach(event => found.set(event.id, event));
-    if (!result.ok || !fresh.length || result.events.length < config.limit) break;
-    until = Math.min(...result.events.map(event => event.created_at)) - 1;
-  }
-  return { url, ok, events: [...found.values()] };
-}
-
-const results = await Promise.all(config.relays.map(manifests));
+// Each relay is paged independently and exhaustively (see pageManifests): `request` drops oversized frames, so a
+// short page is not the end of a relay's history.
+const results = await Promise.all(config.relays.map(url => pageManifests(request, { url, kinds: MANIFEST_KINDS, limit: config.limit, maxEvents: MAX_EVENTS })));
 if (!results.some(result => result.ok)) throw new Error('No relay completed a query; existing snapshot retained.');
 const events = new Map(results.flatMap(result => result.events).map(event => [event.id, event]));
 
