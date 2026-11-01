@@ -19,18 +19,14 @@ const demanding = finalizeEvent({ kind: 35129, created_at: Math.floor(Date.now()
 // A Software Applications listing from the same publisher that names the release supplies fallback art by URL.
 const listing = finalizeEvent({ kind: 32267, created_at: Math.floor(Date.now() / 1000), content: '# markdown stays out', tags: [['d', 'catalog-browser-vector-0123456789abcdef'], ['name', 'Listing name'], ['latest', `35129:${injected.pubkey}:catalog-browser-vector`], ['image', 'https://listing.example/art.png'], ['icon', 'javascript:alert(1)']] }, secret);
 const manifestKinds = [5129, 15129, 35129];
-// Napshot previews: the saved snapshot carries real trusted labels; their mirrors are routed to exercise the card path.
+// The saved snapshot drives coverage assertions; nothing is pinned to a specific release, label or capture,
+// so the check survives snapshot refreshes. The deterministic label scenarios run in
+// scripts/check-app-store-napshot.mjs against fixture data built by that script.
 const snapshot = JSON.parse(await readFile(new URL('../apps/web/src/data/discovered-apps.json', import.meta.url)));
-const conwayHash = 'bad0176efe3696b229703f2b518c98bd64272416ea19746c63c3166a20603be0';
-const conwayPng = await readFile(new URL(`./data/napshot-${conwayHash}.png`, import.meta.url));
-const labelFor = name => snapshot.labels.find(label => label.tags.some(tag => tag[0] === 'a' && tag[1].endsWith(`:${name}`)));
-const conwayLabel = labelFor('n-644c45e22c7');
-const seedLabel = snapshot.labels.find(label => label.id === 'd09c1977451ac09b58420d580793f1fa66906c75624f5e5def0c1964b9d54c66');
-const mirrorsOf = label => label.tags.filter(tag => tag[0] === 'server').map(tag => tag[1]);
-const hashOf = label => label.tags.find(tag => tag[0] === 'l')[1];
-assert.ok(conwayLabel && seedLabel, 'the saved snapshot carries the Napshot labels this check routes');
+const savedIds = new Set(snapshot.events.map(event => event.id));
 // A label for the demanding release (no other art) from a key the site does not trust; live discovery must ignore it.
-const untrustedLabel = finalizeEvent({ kind: 1985, created_at: Math.floor(Date.now() / 1000), content: 'untrusted', tags: [['L', '#screenshot'], ['l', conwayHash, '#screenshot'], ['e', demanding.id], ['a', `35129:${demanding.pubkey}:catalog-browser-demanding`], ['p', demanding.pubkey], ['screenshot', `x ${conwayHash}`, 'm image/png', 'dim 1200x750', `size ${conwayPng.length}`], ['server', mirrorsOf(conwayLabel)[1]]] }, generateSecretKey());
+const fillerHash = 'c'.repeat(64);
+const untrustedLabel = finalizeEvent({ kind: 1985, created_at: Math.floor(Date.now() / 1000), content: 'untrusted', tags: [['L', '#screenshot'], ['l', fillerHash, '#screenshot'], ['e', demanding.id], ['a', `35129:${demanding.pubkey}:catalog-browser-demanding`], ['p', demanding.pubkey], ['screenshot', `x ${fillerHash}`, 'm image/png', 'dim 1200x750', 'size 4096'], ['server', 'https://napshot-blossom.example']] }, generateSecretKey());
 const [negentropyRelay] = config.relays;
 const browser = await chromium.launch();
 const errors = [];
@@ -60,22 +56,11 @@ try {
   await page.route('https://listing.example/**', route => route.fulfill({ status: 200, contentType: 'image/png', body: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=', 'base64') }));
   await page.route('https://blossom.example/**', route => route.fulfill(new URL(route.request().url()).pathname === `/${artifactHash}` ? { status: 200, contentType: 'text/html', headers: { 'access-control-allow-origin': '*' }, body: artifact } : { status: 404, headers: { 'access-control-allow-origin': '*' } }));
   await routeInformation(page);
-  // Conway: the first mirror serves the wrong (but valid PNG) bytes, the second the real capture.
-  // SeedHammer: the first mirror is oversized, the second fails, so the card keeps its placeholder.
-  const napshotRequests = [];
-  const [conwayFirst, conwaySecond] = mirrorsOf(conwayLabel);
-  const [seedFirst, seedSecond] = mirrorsOf(seedLabel);
-  const napshotHosts = new Set(snapshot.labels.flatMap(mirrorsOf).map(url => new URL(url).origin));
   const cors = { 'access-control-allow-origin': '*' };
-  await page.route(url => napshotHosts.has(url.origin), route => {
-    const url = route.request().url();
-    napshotRequests.push(url);
-    if (url === `${conwayFirst}/${conwayHash}`) return route.fulfill({ status: 200, contentType: 'image/png', headers: cors, body: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=', 'base64') });
-    if (url === `${conwaySecond}/${conwayHash}`) return route.fulfill({ status: 200, contentType: 'image/png', headers: cors, body: conwayPng });
-    if (url === `${seedFirst}/${hashOf(seedLabel)}`) return route.fulfill({ status: 200, contentType: 'image/png', headers: cors, body: Buffer.alloc(9_000_000) });
-    if (url === `${seedSecond}/${hashOf(seedLabel)}`) return route.fulfill({ status: 500, headers: cors });
-    return route.fulfill({ status: 404, headers: cors });
-  });
+  // Real saved labels stay routed offline here; their bytes are exercised deterministically in
+  // check-app-store-napshot.mjs. The origins come from the snapshot, so nothing is pinned.
+  const mirrorOrigins = new Set((snapshot.labels ?? []).flatMap(label => label.tags.filter(tag => tag[0] === 'server' && tag[1]).map(tag => new URL(tag[1]).origin)));
+  await page.route(url => mirrorOrigins.has(url.origin), route => route.fulfill({ status: 404, headers: cors }));
   const contacted = new Set();
   let sockets = 0;
   let negotiations = 0;
@@ -97,7 +82,7 @@ try {
       if (filter.kinds.length === 1 && filter.kinds[0] === 1985) {
         assert.deepEqual(filter.authors, config.screenshotLabelers, 'labels are requested only from trusted signers');
         assert.deepEqual(filter['#L'], ['#screenshot']);
-        assert.ok(filter['#e'].includes(demanding.id), 'labels are requested by exact manifest id');
+        assert.ok(filter['#e'].length <= 50, 'label targets are batched');
         socket.send(JSON.stringify(['EVENT', id, untrustedLabel]));
       } else if (filter.kinds.length === 1 && filter.kinds[0] === 32267) {
         assert.ok(filter.authors?.includes(injected.pubkey), 'listings are requested for discovered publishers');
@@ -123,28 +108,8 @@ try {
   assert.ok(await page.locator('#discovered-grid [data-listing-art]').count() > 5, 'saved listings supply fallback art without JavaScript verification');
   assert.equal(await page.locator('#discovered-grid img[src^="http:"], #discovered-grid img[src^="javascript:"]').count(), 0);
   assert.equal(await page.locator('#store-more button').count(), 0, 'paging has no button; scrolling drives it');
-  // Napshot previews render through the real card path once their bytes verify, falling through bad mirrors.
-  const search = page.getByRole('searchbox', { name: 'Search apps' });
-  await search.fill('Conway');
-  const conway = page.locator('.discovered-card').filter({ hasText: "Conway's Game of Life" }).first();
-  await conway.locator('img[data-napshot]').waitFor();
-  assert.equal(await conway.locator('[data-art-source]').textContent(), 'Napshot preview');
-  assert.equal(await conway.locator('img[data-napshot]').getAttribute('alt'), "Automated signed-out preview of Conway's Game of Life");
-  assert.match(await conway.locator('img[data-napshot]').getAttribute('src'), /^blob:/);
-  assert.deepEqual(napshotRequests.filter(url => url.endsWith(conwayHash)), [`${conwayFirst}/${conwayHash}`, `${conwaySecond}/${conwayHash}`], 'a wrong first mirror falls through to the next');
-  assert.equal(await conway.evaluate(card => card.querySelector('img[data-napshot]').naturalWidth), 1200);
-  await page.screenshot({ path: '/tmp/napplet-store-napshot.png' });
-  await search.fill('SeedHammer');
-  const seed = page.locator('.discovered-card').filter({ hasText: 'SeedHammer 3D viewer' }).first();
-  for (let wait = 0; wait < 50 && !napshotRequests.includes(`${seedSecond}/${hashOf(seedLabel)}`); wait++) await page.waitForTimeout(100);
-  await page.waitForTimeout(300);
-  assert.ok(napshotRequests.includes(`${seedSecond}/${hashOf(seedLabel)}`), 'every mirror is tried before giving up');
-  assert.equal(await seed.locator('img[data-napshot]').count(), 0, 'oversized and failing mirrors leave the placeholder');
-  assert.equal(await seed.locator('.art-monogram').count(), 1);
-  await search.fill('Stick Brawl');
-  await page.waitForTimeout(300);
-  assert.equal(napshotRequests.filter(url => url.endsWith(hashOf(labelFor('n-554b329db93')))).length, 0, 'listing art from the publisher wins; no Napshot request');
-  await search.fill('');
+  // Label-driven rendering, mirror behaviour and capture modes run in check-app-store-napshot.mjs
+  // against dedicated fixtures, so this check no longer pins real snapshot entries.
   // Infinite scroll: twelve cards at first, then another page each time the end comes into view.
   assert.equal(await shown(page), 12);
   await page.locator('#store-more').scrollIntoViewIfNeeded();
@@ -184,7 +149,15 @@ try {
   assert.equal(await card.locator('script').count(), 0, 'publisher metadata remains plain text');
   assert.equal(await card.locator('[data-listing-art]').getAttribute('src'), 'https://listing.example/art.png', 'the matching listing supplies art');
   assert.equal(await card.locator('[data-listing-icon]').count(), 0, 'non-https listing icons are dropped');
-  assert.ok(requested.some(filter => filter.kinds[0] === 1985), 'Napshot labels were requested for discovered releases');
+  // Label targeting: unchanged saved releases and newly discovered releases are both targets, batched small.
+  // Exhaustive coverage over every eligible release is proven deterministically in check-app-store-napshot.mjs;
+  // the production snapshot's catalog acceptance cannot be replicated in this plain-JS check.
+  const labelFilters = requested.filter(filter => filter.kinds.length === 1 && filter.kinds[0] === 1985);
+  assert.ok(labelFilters.length >= 1, 'Napshot labels were requested for discovered releases');
+  const covered = new Set(labelFilters.flatMap(filter => filter['#e']));
+  for (const id of covered) assert.ok(savedIds.has(id) || id === injected.id || id === demanding.id, 'every label target is a manifest the store knows');
+  assert.ok([...covered].some(id => savedIds.has(id)), 'unchanged saved releases are still label targets');
+  assert.ok(covered.has(demanding.id), 'a newly discovered release is a label target');
   assert.equal(await page.locator('.discovered-card').filter({ hasText: 'Demanding release' }).locator('img[data-napshot]').count(), 0, 'a label from an untrusted signer is ignored');
   assert.equal(await page.evaluate(() => window.catalogXss), undefined);
   assert.equal(await page.locator('text=invalid signature').count(), 0);
@@ -241,5 +214,5 @@ try {
   assert.equal(await noJs.locator('#discovered-grid article:visible').count(), await noJs.locator('#discovered-grid article').count(), 'the whole saved collection is readable without JavaScript');
   assert.equal(await noJs.locator('#discover-apps').isVisible(), false);
   assert.deepEqual(errors, []);
-  console.log('App store: six previews, gameplay, filters, scroll paging, NIP-77 attempt with request fallback, listing art, Napshot previews with mirror fallback and untrusted-label rejection, XSS, running a discovered release here, shell links, no relay contact before the end, offline retry, mobile and no-JS passed.');
+  console.log('App store: six previews, gameplay, filters, scroll paging, NIP-77 attempt with request fallback, listing art, batched label targeting with untrusted-label rejection, XSS, running a discovered release here, shell links, no relay contact before the end, offline retry, mobile and no-JS passed.');
 } finally { await browser.close(); }
