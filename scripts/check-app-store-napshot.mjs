@@ -1,11 +1,10 @@
 // Deterministic Napshot preview fixtures: rebuild /apps/ from generated fixture data (a fixture
 // signer in discovery.json, signed fixture manifests and labels, generated PNG captures), serve
 // the fixture build, and exercise the label-driven card path offline. Nothing here is pinned to
-// the production snapshot: a refresh cannot change these results. The source data files are
-// restored in `finally`; the dist output of this run contains fixtures until the next real build.
+// the production snapshot: a refresh cannot change these results. Sources, build output, caches
+// and mirror certificates live in a unique temporary workspace; checkout files are never swapped.
 import assert from 'node:assert/strict';
-import { readFile, writeFile, rm, mkdir } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
+import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { createHash } from 'node:crypto';
 import { createServer } from 'node:http';
@@ -13,27 +12,13 @@ import { createServer as createSecureServer } from 'node:https';
 import { execFileSync } from 'node:child_process';
 import { extname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { tmpdir } from 'node:os';
 import zlib from 'node:zlib';
 import { chromium } from 'playwright';
+import { withWebFixture } from './lib/web-fixture-workspace.mjs';
 const require = createRequire(new URL('../apps/web/package.json', import.meta.url));
 const { finalizeEvent, generateSecretKey, getPublicKey } = require('nostr-tools/pure');
 
-const discoveryUrl = new URL('../apps/web/src/data/discovery.json', import.meta.url);
-const snapshotUrl = new URL('../apps/web/src/data/discovered-apps.json', import.meta.url);
-// Persistent backups: a run that dies before its `finally` (an unhandled rejection, SIGKILL) must not
-// leave fixture data as the next run's "original". Existing backups are treated as the real source.
-const backups = { discovery: join(tmpdir(), 'napplet-check-app-store-napshot-discovery.json'), snapshot: join(tmpdir(), 'napplet-check-app-store-napshot-snapshot.json') };
-let originalDiscovery;
-let originalSnapshot;
-if (existsSync(backups.discovery) && existsSync(backups.snapshot)) {
-  // A previous run crashed after writing fixtures; restore the real data before anything else.
-  [originalDiscovery, originalSnapshot] = await Promise.all([readFile(backups.discovery), readFile(backups.snapshot)]);
-  await Promise.all([writeFile(discoveryUrl, originalDiscovery), writeFile(snapshotUrl, originalSnapshot)]);
-} else {
-  [originalDiscovery, originalSnapshot] = await Promise.all([readFile(discoveryUrl), readFile(snapshotUrl)]);
-  await Promise.all([writeFile(backups.discovery, originalDiscovery), writeFile(backups.snapshot, originalSnapshot)]);
-}
+const appRoot = fileURLToPath(new URL('../apps/web', import.meta.url));
 
 // ─── Generated PNG captures ─────────────────────────────────────────────────
 const crcTable = Array.from({ length: 256 }, (_, n) => { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; return c >>> 0; });
@@ -88,9 +73,8 @@ const label = (target, { mode = 'signed-out', hash: imageHash = detailHash, dim 
 const lateLabel = label(fixtures.late);
 
 /** The redirect mirror: a real HTTPS server, because route-fulfilled 3xx responses are never followed by the browser. */
-async function startRedirectMirror() {
-  const certDir = join(tmpdir(), 'napplet-check-app-store-napshot');
-  await rm(certDir, { recursive: true, force: true });
+async function startRedirectMirror(root) {
+  const certDir = join(root, '.redirect-mirror');
   await mkdir(certDir, { recursive: true });
   execFileSync('openssl', ['req', '-x509', '-newkey', 'rsa:2048', '-nodes', '-keyout', join(certDir, 'key.pem'), '-out', join(certDir, 'cert.pem'), '-days', '1', '-subj', '/CN=napshot-redirect.example']);
   const serverHits = [];
@@ -103,20 +87,32 @@ async function startRedirectMirror() {
     if (request.url === '/steal') { response.writeHead(200, { ...allowCors, 'content-type': 'text/plain' }).end('private'); return; }
     response.writeHead(404, allowCors).end();
   });
-  await new Promise(resolve => secure.listen(0, '127.0.0.1', resolve));
-  return { serverHits, redirectMirror: `https://napshot-redirect.example:${secure.address().port}`, close: () => new Promise(resolve => { secure.close(() => { rm(certDir, { recursive: true, force: true }).then(resolve, resolve); }); }) };
+  await listen(secure);
+  return { server: secure, serverHits, redirectMirror: `https://napshot-redirect.example:${secure.address().port}` };
+}
+
+/** Bind a test server and reject startup failures without leaving an open listener. */
+async function listen(server) {
+  try {
+    await new Promise((resolve, reject) => { server.once('error', reject); server.listen(0, '127.0.0.1', resolve); });
+  } catch (error) { server.close(); throw error; }
+}
+
+/** Close a partially initialized server, including any open keep-alive connections. */
+async function closeServer(server) {
+  if (!server) return;
+  await new Promise(resolve => { server.close(resolve); server.closeAllConnections(); });
 }
 
 /** Serve the fixture site's static build; like CI's `python3 -m http.server`, but on an OS-assigned port. */
-async function startStaticServer() {
-  const dist = fileURLToPath(new URL('../apps/web/dist', import.meta.url));
+async function startStaticServer(dist) {
   const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.png': 'image/png', '.svg': 'image/svg+xml', '.xml': 'application/xml', '.txt': 'text/plain', '.ico': 'image/x-icon' };
   const server = createServer((request, response) => {
     const pathname = decodeURIComponent(new URL(request.url ?? '/', 'http://127.0.0.1').pathname);
     const file = join(dist, (pathname.endsWith('/') ? `${pathname}index.html` : pathname).replace(/^\/+/, ''));
     readFile(file).then(body => { response.writeHead(200, { 'content-type': types[extname(file)] ?? 'application/octet-stream' }); response.end(body); }, () => { response.writeHead(404); response.end('not found'); });
   });
-  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+  await listen(server);
   return { server, base: `http://127.0.0.1:${server.address().port}` };
 }
 
@@ -251,45 +247,41 @@ async function liveLabelScenarios(page, { requested }) {
 }
 
 // ─── Run ─────────────────────────────────────────────────────────────────────
-// The redirect mirror starts first so its port can label the saved fixtures; the data files are
-// written before the build, because the build bundles the snapshot into the page.
-const redirectMirror = await startRedirectMirror();
-const savedLabels = [
-  label(fixtures.plain, { hash: captureHash, dim: '1200x750', size: capture.length, mirrors: ['https://napshot-wrong.example', redirectMirror.redirectMirror, artMirror] }),
-  label(fixtures.identity, { mode: 'preview-identity' }),
-  label(fixtures.svg),
-  label(fixtures.stale1),
-  label(fixtures.broken, { hash: sha256(otherPng), dim: '1200x750', size: 8_000_000, mirrors: ['https://napshot-oversize.example', 'https://napshot-fail.example'] }),
-];
-await writeFile(discoveryUrl, `${JSON.stringify({ relays: fixtureRelays, limit: 80, timeoutMs: 5_000, screenshotLabelers: [labeler] }, null, 2)}\n`);
-await writeFile(snapshotUrl, `${JSON.stringify({ checkedAt: new Date().toISOString(), relays: fixtureRelays, events: Object.values(fixtures).flat(), applications: [listing], labels: savedLabels }, null, 2)}\n`);
-const mirrorHosts = 'MAP napshot-redirect.example 127.0.0.1, MAP napshot-private.example 127.0.0.1';
-const browser = await chromium.launch({ args: [`--host-resolver-rules=${mirrorHosts}`] });
-const errors = [];
-let page;
-let staticServer;
-const restore = async () => { await Promise.all([writeFile(discoveryUrl, originalDiscovery), writeFile(snapshotUrl, originalSnapshot)]); };
-try {
-  execFileSync('pnpm', ['--filter', '@napplet/web', 'build'], { stdio: 'inherit' });
-  staticServer = await startStaticServer();
-  page = await browser.newPage({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce', ignoreHTTPSErrors: true });
-  page.on('pageerror', error => errors.push(error.message));
-  const mirrors = await routeMirrors(page);
-  const relays = await routeFixtureRelays(page);
-  await page.goto(`${staticServer.base}/apps/`, { waitUntil: 'networkidle' });
-  assert.equal(relays.sockets, 0, 'visiting the fixture catalog does not contact relays');
-  await savedLabelScenarios(page, { mirrorRequests: mirrors.mirrorRequests, serverHits: redirectMirror.serverHits });
-  await eligibilityScenarios(page);
-  await exclusionScenarios(page, { mirrorRequests: mirrors.mirrorRequests });
-  await liveLabelScenarios(page, { requested: relays.requested });
-  await page.screenshot({ path: '/tmp/napplet-store-napshot-fixtures.png' });
-  assert.deepEqual(errors, []);
-  console.log('Napshot fixtures: saved and live labels, both capture modes, wrong-bytes fall-through, refused private redirect, oversized and failing mirrors, screenshot and listing-art precedence, snapshot and stale-revision exclusion, untrusted-signer rejection, batching and until paging passed.');
-} finally {
-  await restore().catch(error => console.error(error));
-  await rm(backups.discovery, { force: true }).catch(() => {});
-  await rm(backups.snapshot, { force: true }).catch(() => {});
-  await redirectMirror.close();
-  staticServer?.server.close();
-  await browser.close();
-}
+await withWebFixture(appRoot, async root => {
+  let redirectMirror;
+  let browser;
+  let staticServer;
+  try {
+    redirectMirror = await startRedirectMirror(root);
+    const savedLabels = [
+      label(fixtures.plain, { hash: captureHash, dim: '1200x750', size: capture.length, mirrors: ['https://napshot-wrong.example', redirectMirror.redirectMirror, artMirror] }),
+      label(fixtures.identity, { mode: 'preview-identity' }),
+      label(fixtures.svg),
+      label(fixtures.stale1),
+      label(fixtures.broken, { hash: sha256(otherPng), dim: '1200x750', size: 8_000_000, mirrors: ['https://napshot-oversize.example', 'https://napshot-fail.example'] }),
+    ];
+    await writeFile(join(root, 'src/data/discovery.json'), `${JSON.stringify({ relays: fixtureRelays, limit: 80, timeoutMs: 5_000, screenshotLabelers: [labeler] }, null, 2)}\n`);
+    await writeFile(join(root, 'src/data/discovered-apps.json'), `${JSON.stringify({ checkedAt: new Date().toISOString(), relays: fixtureRelays, events: Object.values(fixtures).flat(), applications: [listing], labels: savedLabels }, null, 2)}\n`);
+    execFileSync('pnpm', ['exec', 'astro', 'build', '--root', root], { cwd: appRoot, stdio: 'inherit' });
+    const mirrorHosts = 'MAP napshot-redirect.example 127.0.0.1, MAP napshot-private.example 127.0.0.1';
+    browser = await chromium.launch({ args: [`--host-resolver-rules=${mirrorHosts}`] });
+    staticServer = await startStaticServer(join(root, 'dist'));
+    const errors = [];
+    const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce', ignoreHTTPSErrors: true });
+    page.on('pageerror', error => errors.push(error.message));
+    const mirrors = await routeMirrors(page);
+    const relays = await routeFixtureRelays(page);
+    await page.goto(`${staticServer.base}/apps/`, { waitUntil: 'networkidle' });
+    assert.equal(relays.sockets, 0, 'visiting the fixture catalog does not contact relays');
+    await savedLabelScenarios(page, { mirrorRequests: mirrors.mirrorRequests, serverHits: redirectMirror.serverHits });
+    await eligibilityScenarios(page);
+    await exclusionScenarios(page, { mirrorRequests: mirrors.mirrorRequests });
+    await liveLabelScenarios(page, { requested: relays.requested });
+    assert.deepEqual(errors, []);
+    console.log('Napshot fixtures: saved and live labels, both capture modes, wrong-bytes fall-through, refused private redirect, oversized and failing mirrors, screenshot and listing-art precedence, snapshot and stale-revision exclusion, untrusted-signer rejection, batching and until paging passed.');
+  } finally {
+    const cleanup = await Promise.allSettled([browser?.close(), closeServer(staticServer?.server), closeServer(redirectMirror?.server)]);
+    const failures = cleanup.filter(result => result.status === 'rejected');
+    if (failures.length) throw new AggregateError(failures.map(result => result.reason), 'Fixture resource cleanup failed');
+  }
+});
