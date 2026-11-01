@@ -70,7 +70,7 @@ describe('Napshot label verification', () => {
     expect(screenshotLabel(label(named, { drop: ['l'], tags: [['l', hash('c'), '#screenshot']] }), named, [signer])).toBeNull();
   });
   it('drops unsafe mirrors and rejects a label with none left', () => {
-    const unsafe = ['http://cdn.example', 'https://user:pass@cdn.example', 'https://localhost', 'https://192.168.1.4', 'https://10.0.0.1', 'https://[::1]', 'https://printer.local', 'https://intranet', 'javascript:alert(1)'];
+    const unsafe = ['http://cdn.example', 'https://user:pass@cdn.example', 'https://localhost', 'https://192.168.1.4', 'https://10.0.0.1', 'https://[::1]', 'https://printer.local', 'https://intranet', 'https://localhost.', 'https://printer.local.', 'https://app.localhost..', 'https://intranet.', 'javascript:alert(1)'];
     expect(screenshotLabel(label(named, { drop: ['server'], tags: unsafe.map(url => ['server', url]) }), named, [signer])).toBeNull();
     const mixed = screenshotLabel(label(named, { tags: [['server', 'http://cdn.example'], ['server', 'https://cdn.one.example/']] }), named, [signer])!;
     expect(mixed.servers).toEqual(['https://cdn.one.example', 'https://cdn.two.example/blobs']);
@@ -137,9 +137,10 @@ describe('attaching previews to catalog entries', () => {
   // This also verifies every manifest signature in the growing snapshot on shared CI runners.
   it('attaches only saved labels bound to eligible revisions it can show', () => {
     const labels = (snapshot as { labels?: Event[] }).labels ?? [];
-    expect(config.screenshotLabelers.length).toBeGreaterThan(0);
-    const apps = withNapshot(snapshot.events.map(event => catalogApp(event)).filter(app => app !== null), labels, config.screenshotLabelers);
-    for (const event of labels) expect(config.screenshotLabelers).toContain(event.pubkey);
+    const labelers: string[] = config.screenshotLabelers ?? [];
+    const apps = withNapshot(snapshot.events.map(event => catalogApp(event)).filter(app => app !== null), labels, labelers);
+    // An empty labeler list is the supported way to disable previews: saved labels are then never attached.
+    if (!labelers.length) expect(apps.filter(app => app.napshot)).toEqual([]);
     const byLabelId = new Map(labels.map(event => [event.id, event]));
     const byEventId = new Map(apps.map(app => [app.event.id, app]));
     for (const app of apps) {
@@ -147,7 +148,8 @@ describe('attaching previews to catalog entries', () => {
       const bound = byLabelId.get(app.napshot.label);
       expect(bound, 'the label is part of the saved snapshot').toBeDefined();
       expect(bound!.tags.find(tag => tag[0] === 'e')?.[1], 'the label names this exact revision').toBe(app.event.id);
-      expect(bound!.pubkey, 'the labeler this site configured signed it').toBe(app.napshot.signer);
+      expect(bound!.pubkey, 'the attached label carries its own signer').toBe(app.napshot.signer);
+      expect(labelers, 'the labeler this site configured signed it').toContain(app.napshot.signer);
       expect(app.event.kind, 'a snapshot never carries a preview').not.toBe(5129);
       expect(usableScreenshot(app), 'a preview only fills in when no usable screenshot exists').toBeUndefined();
     }
