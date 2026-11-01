@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { NAP_IMPLEMENTATIONS } from '../../../../packages/core/src/nap-catalog';
-import { napMaturityTable, renderNapMaturityMarkdown } from '../../../../scripts/lib/nap-maturity-docs';
+import { NAP_DOC_GROUPS, napDomainIndex, napMaturityTable, renderNapMaturityMarkdown } from '../../../../scripts/lib/nap-maturity-docs';
 
 const docs = new URL('../../../docs/', import.meta.url);
 
@@ -13,8 +13,16 @@ describe('catalog-driven documentation', () => {
     }
   });
 
+  it('gives every shipped domain exactly one grouped page in the sidebar and index', () => {
+    const grouped = NAP_DOC_GROUPS.flatMap((group) => Object.keys(group.domains));
+    expect(new Set(grouped).size).toBe(grouped.length);
+    expect([...grouped].sort()).toEqual(Object.keys(NAP_IMPLEMENTATIONS).sort());
+    const index = napDomainIndex();
+    for (const domain of grouped) expect(index).toContain(`[\`${domain}\`](./${domain})`);
+  });
+
   it('labels authored domain pages from the same catalog before rendering examples', () => {
-    for (const domain of ['gamepad', 'llm']) {
+    for (const domain of Object.keys(NAP_IMPLEMENTATIONS)) {
       const source = readFileSync(new URL(`naps/${domain}.md`, docs), 'utf8');
       const rendered = renderNapMaturityMarkdown(source, `naps/${domain}.md`);
       const metadata = NAP_IMPLEMENTATIONS[domain as keyof typeof NAP_IMPLEMENTATIONS];
@@ -29,10 +37,8 @@ describe('catalog-driven documentation', () => {
     const source = readFileSync(new URL('naps/index.md', docs), 'utf8');
     const rendered = renderNapMaturityMarkdown(source, 'naps/index.md');
     expect(rendered).toContain(napMaturityTable());
-    expect(rendered).not.toContain('<!-- nap-maturity');
-    for (const heading of source.matchAll(/^### ([a-z]+)\n/gm)) {
-      expect(rendered).toContain(`${heading[0]}\n> **Implementation:`);
-    }
+    expect(rendered).toContain(napDomainIndex());
+    expect(rendered).not.toContain('<!-- nap-');
     expect(renderNapMaturityMarkdown('# Other\n', 'guide/index.md')).toBe('# Other\n');
   });
 });

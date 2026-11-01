@@ -62,7 +62,7 @@ Napplets run in an iframe sandboxed with **`allow-scripts` only** — crucially 
   `IndexedDB`, or service workers.
 - No direct WebSocket / `fetch` to arbitrary origins (the shell's CSP enforces
   this). External bytes are fetched through the
-  [resource NAP](/naps/#resource) instead.
+  [resource NAP](/naps/resource) instead.
 
 All persistent and privileged state flows through the shell's proxies. The browser enforces the boundary — it is not a matter of the napplet behaving.
 

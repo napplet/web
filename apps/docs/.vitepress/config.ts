@@ -1,5 +1,5 @@
 import { defineConfig } from 'vitepress';
-import { renderNapMaturityMarkdown } from '../../../scripts/lib/nap-maturity-docs';
+import { NAP_DOC_GROUPS, renderNapMaturityMarkdown } from '../../../scripts/lib/nap-maturity-docs';
 
 // Single source of truth for the deploy domain.
 const SITE_URL = 'https://napplet.run';
@@ -101,7 +101,19 @@ export default defineConfig({
       },
       {
         text: 'NAP domains',
-        items: [{ text: 'NAP domain reference', link: '/naps/' }, { text: 'Maturity and opt-in', link: '/naps/maturity' }, { text: 'GAMEPAD', link: '/naps/gamepad' }, { text: 'LLM', link: '/naps/llm' }],
+        items: [
+          { text: 'Overview', link: '/naps/' },
+          { text: 'Maturity and opt-in', link: '/naps/maturity' },
+          // One page per domain, grouped by purpose; the same groups render the overview table.
+          ...NAP_DOC_GROUPS.map((group) => ({
+            text: group.title,
+            collapsed: false,
+            items: Object.keys(group.domains).map((domain) => ({
+              text: domain.toUpperCase(),
+              link: `/naps/${domain}`,
+            })),
+          })),
+        ],
       },
       {
         text: 'Reference',
