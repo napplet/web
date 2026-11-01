@@ -1,12 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { installFakeShell } from '../test-support/fake-shell.js';
 import type { LlmGenerationRequest } from './types.js';
 
-let posted: Record<string, unknown>[];
+let posted: Array<Record<string, unknown>>;
 beforeEach(() => {
-  posted = [];
   vi.resetModules();
   vi.useFakeTimers();
-  vi.stubGlobal('window', { parent: { postMessage: (msg: Record<string, unknown>) => posted.push(msg) } });
+  posted = installFakeShell().sent;
 });
 afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); });
 
@@ -178,7 +178,12 @@ describe('llm request/result contract', () => {
 
   it('releases the timer and request when the transport throws', async () => {
     const shim = await import('./shim.js');
-    vi.stubGlobal('window', { parent: { postMessage: () => { throw new Error('transport closed'); } } });
+    // A fresh realm whose NIP-5D port refuses to send.
+    installFakeShell();
+    vi.stubGlobal('MessageChannel', class {
+      port1 = { onmessage: null, start() {}, close() {}, postMessage() { throw new Error('transport closed'); } };
+      port2 = {};
+    });
     await expect(shim.select()).rejects.toThrow('transport closed');
     expect(vi.getTimerCount()).toBe(0);
   });

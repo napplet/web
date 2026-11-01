@@ -9,7 +9,7 @@
 
 Monorepo for the **napplet** SDK -- libraries for building NIP-5D Nostr Web Applets - "napplets"
 
-A **napplet** is a sandboxed web app that runs inside a **shell**. The shell and napplet communicate over `postMessage` using a JSON envelope format (`{ type, ...payload }`) defined by NIP-5D. The napplet never touches `localStorage`, relay connections, or signing keys directly -- the shell proxies everything through NAP interfaces. [Read about napplets in NIP-5D possiblity](https://github.com/nostr-protocol/nips/pull/2303/changes)
+A **napplet** is a sandboxed web app that runs inside a **shell**. The shell and napplet communicate over a `MessagePort` that the injected runtime hands to the shell in a single `napplet.hello`, using a JSON envelope format (`{ type, ...payload }`) defined by NIP-5D. The napplet never touches `localStorage`, relay connections, or signing keys directly -- the shell proxies everything through NAP interfaces. [Read about napplets in NIP-5D possiblity](https://github.com/nostr-protocol/nips/pull/2303/changes)
 
 NAP proposal status and shipped implementation maturity are separate. All capabilities can change. Inspect `NAP_IMPLEMENTATIONS` from `@napplet/core` and use `selectNapDomains` for local host opt-in policy. See [maturity and opt-in guidance](https://napplet.run/docs/naps/maturity.html).
 
@@ -118,13 +118,14 @@ The same web runtime ships standalone (`apps/conformance`, deployed at `/conform
 Shell runtime                              @napplet/shim
   ShellBridge                                window.napplet.outbox (query/subscribe/publish)
   ├── JSON envelope message routing          window.napplet.inc   (topics/channels)
-  ├── Identity via message.source            window.napplet.storage (get/set/remove)
+  ├── Identity bound to the hello port       window.napplet.storage (get/set/remove)
   ├── ACL enforcement                        window.napplet.resource (bytes/bytesMany/bytesAsObjectURL)
   ├── NAP dispatch (outbox/relay/storage)    window.napplet.domain presence
   └── INC routing
 
-◄────────── postMessage: { type: 'outbox.subscribe', id, filters } ─────────►
-◄────────── postMessage: { type: 'outbox.event', subId, result }   ─────────►
+◄────────── window: { type: 'napplet.hello' } + one MessagePort (once) ─────►
+◄────────── port:   { type: 'outbox.subscribe', id, filters }       ─────────►
+◄────────── port:   { type: 'outbox.event', subId, result }         ─────────►
 
 @napplet/vite-plugin (build time)
   └── NIP-5D manifest generation + R/O capability advertisements

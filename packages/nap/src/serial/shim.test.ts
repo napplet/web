@@ -1,16 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { installFakeShell, type FakeShell } from '../test-support/fake-shell.js';
 
-interface PostedMessage {
-  msg: unknown;
-  targetOrigin: string;
-}
-
-let postedMessages: PostedMessage[];
+let shell: FakeShell;
 let uuidCounter: number;
 let originalCryptoDescriptor: PropertyDescriptor | undefined;
 
 beforeEach(() => {
-  postedMessages = [];
   uuidCounter = 0;
   originalCryptoDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'crypto');
 
@@ -21,16 +16,7 @@ beforeEach(() => {
     },
   });
 
-  Object.defineProperty(globalThis, 'window', {
-    configurable: true,
-    value: {
-      parent: {
-        postMessage(msg: unknown, targetOrigin: string) {
-          postedMessages.push({ msg, targetOrigin });
-        },
-      },
-    },
-  });
+  shell = installFakeShell();
 
   vi.resetModules();
 });
@@ -42,7 +28,7 @@ afterEach(() => {
   } else {
     Reflect.deleteProperty(globalThis, 'crypto');
   }
-  Reflect.deleteProperty(globalThis, 'window');
+  vi.unstubAllGlobals();
 });
 
 describe('@napplet/nap/serial shim', () => {
@@ -55,18 +41,15 @@ describe('@napplet/nap/serial shim', () => {
       label: 'controller',
     });
 
-    expect(postedMessages).toEqual([
+    expect(shell.sent).toEqual([
       {
-        msg: {
-          type: 'serial.open',
-          id: 'serial-test-1',
-          request: {
-            filters: [{ usbVendorId: 9025 }],
-            options: { baudRate: 115200, dataBits: 8, parity: 'none' },
-            label: 'controller',
-          },
+        type: 'serial.open',
+        id: 'serial-test-1',
+        request: {
+          filters: [{ usbVendorId: 9025 }],
+          options: { baudRate: 115200, dataBits: 8, parity: 'none' },
+          label: 'controller',
         },
-        targetOrigin: '*',
       },
     ]);
 
@@ -108,15 +91,12 @@ describe('@napplet/nap/serial shim', () => {
 
     const result = write('serial-1', new Uint8Array([112, 105, 110, 103, 10]));
 
-    expect(postedMessages).toEqual([
+    expect(shell.sent).toEqual([
       {
-        msg: {
-          type: 'serial.write',
-          id: 'serial-test-1',
-          sessionId: 'serial-1',
-          data: [112, 105, 110, 103, 10],
-        },
-        targetOrigin: '*',
+        type: 'serial.write',
+        id: 'serial-test-1',
+        sessionId: 'serial-1',
+        data: [112, 105, 110, 103, 10],
       },
     ]);
 
@@ -130,15 +110,12 @@ describe('@napplet/nap/serial shim', () => {
 
     const result = close('serial-1', 'done');
 
-    expect(postedMessages).toEqual([
+    expect(shell.sent).toEqual([
       {
-        msg: {
-          type: 'serial.close',
-          id: 'serial-test-1',
-          sessionId: 'serial-1',
-          reason: 'done',
-        },
-        targetOrigin: '*',
+        type: 'serial.close',
+        id: 'serial-test-1',
+        sessionId: 'serial-1',
+        reason: 'done',
       },
     ]);
 

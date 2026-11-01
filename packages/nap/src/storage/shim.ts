@@ -5,7 +5,7 @@
  */
 
 /**
- * Storage shim -- napplet-side localStorage-like API over postMessage.
+ * Storage shim -- napplet-side localStorage-like API over the NIP-5D port.
  *
  * Without allow-same-origin, iframes have opaque origins and cannot access
  * localStorage directly. This shim provides an async API that sends
@@ -18,7 +18,7 @@
  *   const allKeys = await window.napplet.storage.keys();
  */
 
-import { postToShell } from '../boundary.js';
+import { onShellMessage, postToShell, type ShellMessage } from '../boundary.js';
 import type {
   StorageScope,
   StorageGetMessage,
@@ -52,10 +52,7 @@ const pendingResponses = new Map<string, PendingRequest>();
 /** Timeout for state requests (5 seconds). */
 const REQUEST_TIMEOUT_MS = 5000;
 
-function handleStateResponse(event: MessageEvent): void {
-  if (event.source !== window.parent) return;
-  const msg = event.data;
-  if (typeof msg !== 'object' || msg === null || typeof msg.type !== 'string') return;
+function handleStateResponse(msg: ShellMessage): void {
   if (!msg.type.startsWith('storage.') || !msg.type.endsWith('.result')) return;
 
   const id = msg.id as string | undefined;
@@ -142,7 +139,7 @@ async function keysScoped(scope?: StorageScope): Promise<string[]> {
 /**
  * Async localStorage-like state API for sandboxed napplets.
  *
- * Routes all state operations through the shell's state proxy via postMessage.
+ * Routes all state operations through the shell's state proxy over the NIP-5D port.
  * Each napplet's state is namespaced by its identity -- napplets cannot read each other's data.
  * A per-napplet 512 KB quota is enforced by the shell.
  *
@@ -238,10 +235,10 @@ export const nappletStorage: NappletStorageApi = {
  * @returns cleanup function that removes the listener
  */
 export function installStorageShim(): () => void {
-  window.addEventListener('message', handleStateResponse);
+  const off = onShellMessage(handleStateResponse);
 
   return () => {
-    window.removeEventListener('message', handleStateResponse);
+    off();
     pendingResponses.clear();
   };
 }

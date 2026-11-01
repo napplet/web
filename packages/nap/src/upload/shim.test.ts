@@ -1,16 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { installFakeShell, type FakeShell } from '../test-support/fake-shell.js';
 
-interface PostedMessage {
-  msg: any;
-  targetOrigin: string;
-}
-
-let postedMessages: PostedMessage[];
+let shell: FakeShell;
 let uuidCounter: number;
 let originalCryptoDescriptor: PropertyDescriptor | undefined;
 
 beforeEach(() => {
-  postedMessages = [];
   uuidCounter = 0;
   originalCryptoDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'crypto');
 
@@ -21,16 +16,7 @@ beforeEach(() => {
     },
   });
 
-  Object.defineProperty(globalThis, 'window', {
-    configurable: true,
-    value: {
-      parent: {
-        postMessage(msg: unknown, targetOrigin: string) {
-          postedMessages.push({ msg, targetOrigin });
-        },
-      },
-    },
-  });
+  shell = installFakeShell();
 
   vi.resetModules();
 });
@@ -42,13 +28,13 @@ afterEach(() => {
   } else {
     Reflect.deleteProperty(globalThis, 'crypto');
   }
-  Reflect.deleteProperty(globalThis, 'window');
+  vi.unstubAllGlobals();
 });
 
 /** Find the most recent posted message of a given type. */
 function lastPosted(type: string): any {
-  for (let i = postedMessages.length - 1; i >= 0; i--) {
-    if (postedMessages[i].msg?.type === type) return postedMessages[i].msg;
+  for (let i = shell.sent.length - 1; i >= 0; i--) {
+    if (shell.sent[i]?.type === type) return shell.sent[i];
   }
   throw new Error(`no posted message of type ${type}`);
 }
@@ -90,11 +76,13 @@ describe('@napplet/nap/upload shim', () => {
   it('posts upload.upload (carrying the raw data) and resolves with the result', async () => {
     const { upload, handleUploadMessage } = await import('./shim.js');
 
-    const data = { byteLength: 18234 } as unknown as ArrayBuffer; // stand-in payload
+    const data = new Uint8Array([137, 80, 78, 71]).buffer; // raw PNG magic bytes
     const promise = upload({ rail: 'nip96', data, filename: 'diagram.png', mimeType: 'image/png' });
     const sent = lastPosted('upload.upload');
     expect(sent.request.rail).toBe('nip96');
-    expect(sent.request.data).toBe(data); // passed by reference (structured clone on real postMessage)
+    // The port structured-clones the envelope, so the shell receives an equal copy of the raw bytes.
+    expect(sent.request.data).toBeInstanceOf(ArrayBuffer);
+    expect(new Uint8Array(sent.request.data)).toEqual(new Uint8Array([137, 80, 78, 71]));
     expect(sent.request.filename).toBe('diagram.png');
 
     handleUploadMessage({

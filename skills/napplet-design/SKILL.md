@@ -9,7 +9,7 @@ Run this before `napplet-build`. Output the spec block at the end; do not write 
 
 ## What a napplet is
 
-A single self-contained `/index.html` that a host **runtime** (shell) loads into an iframe with `sandbox="allow-scripts"` (no `allow-same-origin`, opaque origin) and talks to over `postMessage` using the NIP-5D JSON envelope. The shell owns identity, signing, relays, storage, network, and the window chrome (it shows the napplet's name). The napplet owns UI and logic only. It is an **applet**: small, focused software that may be placed at any size — see `napplet-ui`.
+A single self-contained `/index.html` that a host **runtime** (shell) loads into an iframe with `sandbox="allow-scripts"` (no `allow-same-origin`, opaque origin) and talks to using the NIP-5D JSON envelope over the `MessagePort` the injected runtime hands the shell in `napplet.hello` (reach it only through `window.napplet`; a napplet that posts to `window.parent` itself or navigates its own frame gets torn down). The shell owns identity, signing, relays, storage, network, and the window chrome (it shows the napplet's name). The napplet owns UI and logic only. It is an **applet**: small, focused software that may be placed at any size — see `napplet-ui`.
 
 ## Sandbox authority contract
 

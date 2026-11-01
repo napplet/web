@@ -3,8 +3,9 @@
  *
  * {@link bootAndCollect} loads a napplet into a real `sandbox="allow-scripts"`
  * iframe, injects the maintained `@napplet/shim` prelude before subject scripts,
- * attaches a {@link createReferenceShell reference runtime}, and records
- * host-observable postMessage envelopes.
+ * acts as a NIP-5D shell (binds the `napplet.hello` port, answers over it, and
+ * tears the frame down on any sign the verified document was replaced), and
+ * records host-observable envelopes and transport violations.
  *
  * The host supplies the shim IIFE source. The harness only appends the explicit
  * domain allowlist call, so the napplet sees exactly the bindings the maintained
@@ -18,6 +19,7 @@
 
 import { NAP_DOMAINS, selectNapDomains, type NapDomain, type NapMaturityPolicy } from '@napplet/core';
 import { createReferenceShell, type RecordedEnvelope } from '../shell/reference-shell.js';
+import { bindNappletPort, type TransportViolation } from '../shell/port-binding.js';
 import type { BootObservation } from './context.js';
 
 const INTERNAL_BOOT_ERROR = '__nappletConformance.error';
@@ -31,6 +33,8 @@ export interface BootCollection {
   bootError: string | null;
   /** Envelopes emitted under a fully-capable runtime. */
   emitted: RecordedEnvelope[];
+  /** NIP-5D transport violations from the primary boot (window-level messages, a second hello or load). */
+  transportViolations: TransportViolation[];
   /** Observation from the no-domain degraded boot, or `null`. */
   degraded: BootObservation | null;
 }
@@ -65,6 +69,7 @@ interface SingleBoot {
   installedGlobal: boolean;
   bootError: string | null;
   emitted: RecordedEnvelope[];
+  transportViolations: TransportViolation[];
 }
 
 function sleep(ms: number): Promise<void> {
@@ -151,31 +156,52 @@ async function bootOnce(
 
   let bootError: string | null = null;
   let installedGlobal = false;
-  const listener = (event: MessageEvent): void => {
-    if (event.source !== iframe.contentWindow) return;
-    const data = event.data as { type?: unknown; reason?: unknown; installed?: unknown } | null;
-    if (data && typeof data === 'object' && data.type === INTERNAL_INSTALLED) {
-      installedGlobal = data.installed === true;
-      return;
+  const removeFrame = (): void => {
+    try {
+      iframe.remove();
+    } catch {
+      /* best-effort cleanup */
     }
-    if (data && typeof data === 'object' && data.type === INTERNAL_BOOT_ERROR) {
-      bootError = `napplet boot error: ${String(data.reason ?? 'unknown error')}`;
-      return;
-    }
-    const responses = shell.handle(event.data);
-    const source = event.source as Window | null;
-    for (const response of responses) source?.postMessage(response, '*');
   };
+
+  // The harness's own injected probes report over window messages; they are shell code, not napplet traffic.
+  const internal = (data: unknown): boolean => {
+    const message = data as { type?: unknown; reason?: unknown; installed?: unknown } | null;
+    if (!message || typeof message !== 'object') return false;
+    if (message.type === INTERNAL_INSTALLED) {
+      installedGlobal = message.installed === true;
+      return true;
+    }
+    if (message.type === INTERNAL_BOOT_ERROR) {
+      bootError = `napplet boot error: ${String(message.reason ?? 'unknown error')}`;
+      return true;
+    }
+    return false;
+  };
+
+  // NIP-5D Identity: the binding lives only as long as the verified document.
+  const binding = bindNappletPort({
+    host: win,
+    get source() {
+      return iframe.contentWindow;
+    },
+    onMessage: (envelope) => shell.handle(envelope),
+    onRevoke: removeFrame,
+    isInternal: internal,
+  });
 
   let loaded = false;
   const loadPromise = new Promise<void>((resolve) => {
     iframe.addEventListener('load', () => {
+      if (loaded) {
+        binding.revoke({ kind: 'second-load', detail: 'The frame loaded a second document (navigation or reload)' });
+        return;
+      }
       loaded = true;
       resolve();
-    }, { once: true });
+    });
   });
 
-  win.addEventListener('message', listener);
 
   try {
     const html = opts.html ?? await loadHtml(opts.url);
@@ -195,14 +221,10 @@ async function bootOnce(
     }
   }
 
-  win.removeEventListener('message', listener);
-  try {
-    iframe.remove();
-  } catch {
-    /* best-effort cleanup */
-  }
+  binding.detach();
+  removeFrame();
 
-  return { installedGlobal, bootError, emitted: [...shell.records] };
+  return { installedGlobal, bootError, emitted: [...shell.records], transportViolations: [...binding.violations] };
 }
 
 /**
@@ -229,13 +251,14 @@ export async function bootAndCollect(options: BootOptions): Promise<BootCollecti
   let degraded: BootObservation | null = null;
   if (options.runDegraded ?? true) {
     const d = await bootOnce([], resolved, doc, win);
-    degraded = { bootError: d.bootError, emitted: d.emitted };
+    degraded = { bootError: d.bootError, emitted: d.emitted, transportViolations: d.transportViolations };
   }
 
   return {
     installedGlobal: primary.installedGlobal,
     bootError: primary.bootError,
     emitted: primary.emitted,
+    transportViolations: primary.transportViolations,
     degraded,
   };
 }

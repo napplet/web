@@ -17,7 +17,7 @@ const selection = selectNapDomains({
 const activate = renderNappletRuntimePreludeCall({ domains: selection.domains });
 ```
 
-Inline the maintained prelude artifact followed by `activate` before napplet scripts run. Enforce the same `selection.domains` set in host dispatch: hiding a shim object does not block direct `postMessage`. Candidates must already be implemented and authorized for the napplet.
+Inline the maintained prelude artifact followed by `activate` before napplet scripts run. Enforce the same `selection.domains` set in host dispatch: hiding a shim object is not an authorization check. The prelude opens the NIP-5D channel when it installs: one `napplet.hello` hands the shell a `MessagePort`, and every envelope then travels over that port, so bind the napplet's identity to the port and tear the frame down on a second hello, any other window-level message or a second `load`. Candidates must already be implemented and authorized for the napplet.
 
 Prelude helpers also accept `maturity: {}` for supported-only filtering or `maturity: { optIn: ['llm'] }` for a named exception. Omitting `maturity` preserves existing explicit allowlist behavior. An explicit install replaces an earlier legacy namespace but cannot undo earlier calls; finish host setup before napplet code executes. See the [maturity guide](https://napplet.run/docs/naps/maturity.html) for classifications, required/optional domain handling, and provenance limits.
 

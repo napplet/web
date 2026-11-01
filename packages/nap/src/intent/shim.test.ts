@@ -1,32 +1,19 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { naddrEncode, npubEncode } from 'nostr-tools/nip19';
-interface PostedMessage {
-  msg: Record<string, unknown>;
-  targetOrigin: string;
-}
+import { installFakeShell, type FakeShell } from '../test-support/fake-shell.js';
 
-let postedMessages: PostedMessage[];
+let shell: FakeShell;
 let uuidCounter: number;
 let originalCryptoDescriptor: PropertyDescriptor | undefined;
 
 beforeEach(() => {
-  postedMessages = [];
   uuidCounter = 0;
   originalCryptoDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'crypto');
   Object.defineProperty(globalThis, 'crypto', {
     configurable: true,
     value: { randomUUID: () => `intent-test-${++uuidCounter}` },
   });
-  Object.defineProperty(globalThis, 'window', {
-    configurable: true,
-    value: {
-      parent: {
-        postMessage(msg: Record<string, unknown>, targetOrigin: string) {
-          postedMessages.push({ msg, targetOrigin });
-        },
-      },
-    },
-  });
+  shell = installFakeShell();
   vi.resetModules();
 });
 
@@ -37,12 +24,12 @@ afterEach(() => {
   } else {
     Reflect.deleteProperty(globalThis, 'crypto');
   }
-  Reflect.deleteProperty(globalThis, 'window');
+  vi.unstubAllGlobals();
 });
 
 function lastPosted(type: string): Record<string, unknown> {
-  for (let index = postedMessages.length - 1; index >= 0; index -= 1) {
-    if (postedMessages[index].msg.type === type) return postedMessages[index].msg;
+  for (let index = shell.sent.length - 1; index >= 0; index -= 1) {
+    if (shell.sent[index].type === type) return shell.sent[index];
   }
   throw new Error(`no posted message of type ${type}`);
 }
@@ -111,7 +98,8 @@ describe('@napplet/nap/intent URI binding', () => {
     expect(() => invoke('napplet:note/open?x=1', { payload: {} })).toThrow();
     expect(() => invoke(`napplet:note/open#${naddrEncode({ kind: 35129, pubkey, identifier: 'note' })}`, { handlerHint: { address: `35129:${pubkey}:other` } })).toThrow();
     expect(() => open('napplet:profile/edit')).toThrow();
-    expect(postedMessages).toEqual([]);
+    expect(shell.sent).toEqual([]);
+    expect(shell.windowMessages).toEqual([]);
   });
 
   it.each([{ ok: true }, { ok: false }, undefined])('rejects malformed immediate results', async (result) => {
@@ -138,7 +126,8 @@ describe('@napplet/nap/intent URI binding', () => {
     onDelivery(next);
     expect(next).toHaveBeenCalledExactlyOnceWith({ ...base, payload: 4 });
     cleanup();
-    expect(postedMessages).toEqual([]);
+    expect(shell.sent).toEqual([]);
+    expect(shell.windowMessages).toEqual([]);
   });
 
   it('passes catalog contracts through discovery and availability updates', async () => {

@@ -3,6 +3,7 @@
   "version": "0.35.1",
   "license": "MIT",
   "exports": {
+    "./boundary": "./src/boundary.ts",
     "./relay": "./src/relay/index.ts",
     "./relay/types": "./src/relay/types.ts",
     "./relay/shim": "./src/relay/shim.ts",

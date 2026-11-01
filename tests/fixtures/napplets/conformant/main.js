@@ -1,8 +1,8 @@
 // Conformant napplet fixture. The conformance runtime injects window.napplet
-// before this module runs. The fixture emits only well-formed envelopes in the
-// NAP domains available in this fixture.
+// before this module runs. The fixture talks to the shell only through those
+// domain objects, which carry its envelopes over the NIP-5D napplet.hello port.
 
 if (window.napplet?.storage && window.napplet?.identity) {
-  window.parent.postMessage({ type: 'storage.get', id: 's1', key: 'greeting' }, '*');
-  window.parent.postMessage({ type: 'identity.getPublicKey', id: 'i1' }, '*');
+  window.napplet.storage.getItem('greeting').catch(() => {});
+  window.napplet.identity.getPublicKey().catch(() => {});
 }
