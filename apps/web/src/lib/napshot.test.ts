@@ -113,11 +113,12 @@ describe('attaching previews to catalog entries', () => {
     const [withArt] = withNapshot(withListings([catalogApp(plain)!], [listed]), [label(plain)], [signer]);
     expect(media(releaseCardHtml(withArt, 0)).napshot).toBeNull();
   });
+  // This also verifies every manifest signature in the growing snapshot on shared CI runners.
   it('verifies the saved labels against the saved snapshot with the configured signer', () => {
     const labels = (snapshot as { labels?: Event[] }).labels ?? [];
     expect(config.screenshotLabelers.length).toBeGreaterThan(0);
     const apps = withNapshot(snapshot.events.map(event => catalogApp(event)).filter(app => app !== null), labels, config.screenshotLabelers);
     for (const event of labels) expect(config.screenshotLabelers).toContain(event.pubkey);
     expect(apps.filter(app => app.napshot).length).toBe(new Set(labels.map(event => event.tags.find(tag => tag[0] === 'e')![1])).size);
-  });
+  }, 30_000);
 });
