@@ -2,7 +2,40 @@
 import { normalizeBlossomServer } from 'applesauce-common/helpers';
 import { isImageType, type ManifestMedia } from './catalog';
 
+const MAX_BYTES = 8_000_000;
+const TIMEOUT_MS = 15_000;
 const cache = new Map<string, Promise<string | null>>();
+const issued = new Set<string>();
+
+/** Extra checks for media whose size and dimensions were declared up front (Napshot labels). */
+export interface MediaExpectations {
+  /** Exact byte length; also the read limit, so an unchecked declaration never sizes an allocation. */
+  bytes?: number;
+  /** Exact decoded `WIDTHxHEIGHT`. */
+  dim?: string;
+  /** Fetch `<server>/<sha256>` keeping the server's base path instead of the origin root. */
+  keepPath?: boolean;
+}
+
+const PRIVATE_V4 = [/^0\./, /^10\./, /^127\./, /^169\.254\./, /^172\.(1[6-9]|2\d|3[01])\./, /^192\.168\./, /^100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\./];
+
+/**
+ * Whether a media URL is acceptable to fetch from the browser: HTTPS, no credentials, and not an obviously local host.
+ * @param value Untrusted URL from a manifest or label.
+ * @returns True when the URL passes this site's network policy.
+ * @example isSafeMediaUrl('https://cdn.example/blobs') // true
+ */
+export function isSafeMediaUrl(value: string): boolean {
+  try {
+    const url = new URL(value);
+    const host = url.hostname.toLowerCase().replace(/^\[|\]$/g, '');
+    if (url.protocol !== 'https:' || url.username || url.password || !host.includes('.') && !host.includes(':')) return false;
+    if (host === 'localhost' || host.endsWith('.localhost') || host.endsWith('.local') || host.endsWith('.internal')) return false;
+    if (/^\d+\.\d+\.\d+\.\d+$/.test(host)) return !PRIVATE_V4.some(range => range.test(host));
+    if (host.includes(':')) return !(host === '::1' || host === '::' || /^f[cd]/.test(host) || /^fe[89ab]/.test(host) || host.startsWith('::ffff:'));
+    return true;
+  } catch { return false; }
+}
 
 function magic(bytes: Uint8Array, type: string): boolean {
   const ascii = (start: number, end: number) => String.fromCharCode(...bytes.subarray(start, end));
@@ -21,40 +54,88 @@ async function digest(bytes: Uint8Array): Promise<string> {
   return [...new Uint8Array(hash)].map(byte => byte.toString(16).padStart(2, '0')).join('');
 }
 
-async function fetchVerified(media: ManifestMedia, servers: string[], signal: AbortSignal): Promise<string | null> {
+/** Read at most `limit` bytes, giving up as soon as the body or its declared length exceeds it. */
+async function readBounded(response: Response, limit: number): Promise<Uint8Array | null> {
+  const declared = Number(response.headers.get('content-length') ?? NaN);
+  if (declared > limit) return null;
+  if (!response.body) { const bytes = new Uint8Array(await response.arrayBuffer()); return bytes.byteLength <= limit ? bytes : null; }
+  const reader = response.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.byteLength;
+    if (total > limit) { void reader.cancel(); return null; }
+    chunks.push(value);
+  }
+  const bytes = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
+  return bytes;
+}
+
+function blobUrl(server: string, sha256: string, keepPath: boolean): URL {
+  return keepPath ? new URL(`${server.replace(/\/+$/, '')}/${sha256}`) : new URL(sha256, normalizeBlossomServer(server));
+}
+
+async function fetchVerified(media: ManifestMedia, servers: string[], signal: AbortSignal, expect: MediaExpectations): Promise<string | null> {
+  const limit = Math.min(expect.bytes ?? MAX_BYTES, MAX_BYTES);
   for (const server of servers) {
     try {
-      const response = await fetch(new URL(media.sha256, normalizeBlossomServer(server)), { signal, mode: 'cors', credentials: 'omit', referrerPolicy: 'no-referrer' });
-      if (!response.ok) continue;
-      const bytes = new Uint8Array(await response.arrayBuffer());
-      if (bytes.byteLength > 8_000_000 || await digest(bytes) !== media.sha256) continue;
+      const url = blobUrl(server, media.sha256, expect.keepPath ?? false);
+      if (!isSafeMediaUrl(url.href)) continue;
+      const timed = typeof AbortSignal.any === 'function' ? AbortSignal.any([signal, AbortSignal.timeout(TIMEOUT_MS)]) : signal;
+      const response = await fetch(url, { signal: timed, mode: 'cors', credentials: 'omit', referrerPolicy: 'no-referrer' });
+      // A redirect may land anywhere; the destination must pass the same policy, and the hash decides the rest.
+      if (!response.ok || (response.redirected && !isSafeMediaUrl(response.url))) continue;
+      const bytes = await readBounded(response, limit);
+      if (!bytes || (expect.bytes !== undefined && bytes.byteLength !== expect.bytes)) continue;
+      // The hash is checked before anything decodes the bytes; the response's MIME header is ignored.
+      if (await digest(bytes) !== media.sha256) continue;
       // The declared type must match the decoded format; without a declaration the bytes decide.
       const type = media.type ?? sniff(bytes);
       if (!isImageType(type) || !magic(bytes, type)) continue;
-      const blob = new Blob([bytes], { type });
+      const blob = new Blob([bytes as BlobPart], { type });
       const bitmap = await createImageBitmap(blob);
+      const actual = `${bitmap.width}x${bitmap.height}`;
       bitmap.close();
-      return URL.createObjectURL(blob);
+      if (expect.dim && actual !== expect.dim) continue;
+      const src = URL.createObjectURL(blob);
+      issued.add(src);
+      return src;
     } catch { /* Try the next declared server; absent media falls back to generic artwork. */ }
   }
   return null;
 }
 
 /**
- * Resolve one manifest media blob to an object URL after verifying it, sharing results per hash.
- * @param media Media descriptor from the manifest.
- * @param servers The manifest's declared Blossom servers.
+ * Resolve one media blob to an object URL after verifying it, sharing results per hash and expectations.
+ * @param media Media descriptor from the manifest or a verified Napshot label.
+ * @param servers Blossom servers to try in order; each failure falls through to the next.
  * @param signal Cancellation for navigation.
+ * @param expect Optional declared byte length, dimensions and base-path handling.
  * @returns An object URL for verified bytes, or null.
  * @example const src = await verifiedImage(app.icon, app.servers, controller.signal);
  */
-export function verifiedImage(media: ManifestMedia, servers: string[], signal: AbortSignal): Promise<string | null> {
+export function verifiedImage(media: ManifestMedia, servers: string[], signal: AbortSignal, expect: MediaExpectations = {}): Promise<string | null> {
   if (!servers.length || !crypto?.subtle || typeof createImageBitmap !== 'function') return Promise.resolve(null);
-  let pending = cache.get(media.sha256);
+  const key = `${media.sha256}|${expect.bytes ?? ''}|${expect.dim ?? ''}|${expect.keepPath ? 'path' : 'root'}`;
+  let pending = cache.get(key);
   if (!pending) {
-    pending = fetchVerified(media, servers, signal).catch(() => null);
-    cache.set(media.sha256, pending);
-    void pending.then(result => { if (result === null) cache.delete(media.sha256); });
+    pending = fetchVerified(media, servers, signal, expect).catch(() => null);
+    cache.set(key, pending);
+    void pending.then(result => { if (result === null) cache.delete(key); });
   }
   return pending;
+}
+
+/**
+ * Revoke every object URL this module issued and forget cached results, for page disposal.
+ * @example window.addEventListener('pagehide', releaseImages);
+ */
+export function releaseImages(): void {
+  for (const src of issued) URL.revokeObjectURL(src);
+  issued.clear();
+  cache.clear();
 }

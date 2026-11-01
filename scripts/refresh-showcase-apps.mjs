@@ -66,12 +66,23 @@ for (let index = 0; index < authors.length; index += 50) {
   }
 }
 
+// Napshot screenshot labels (NIP-32 kind 1985, profile owned by napplet/napshot) for root and named releases,
+// requested by exact manifest id from explicitly trusted signers only. The browser re-verifies every label.
+const labelers = config.screenshotLabelers ?? [];
+const targets = [...events.values()].filter(event => event.kind !== 5129).map(event => event.id);
+const labels = new Map();
+for (let index = 0; labelers.length && index < targets.length; index += 50) {
+  const slice = targets.slice(index, index + 50);
+  const found = await Promise.all(config.relays.map(url => request(url, { kinds: [1985], authors: labelers, '#L': ['#screenshot'], '#e': slice, limit: config.limit })));
+  for (const event of found.flatMap(result => result.events)) if (labelers.includes(event.pubkey)) labels.set(event.id, event);
+}
+
 const output = new URL('../apps/web/src/data/discovered-apps.json', import.meta.url);
 const temporary = new URL(`${output.href}.tmp`);
 const byTime = (a, b) => b.created_at - a.created_at || a.id.localeCompare(b.id);
 await writeFile(temporary, JSON.stringify({
   checkedAt: new Date().toISOString(), relays: config.relays,
-  events: [...events.values()].sort(byTime), applications: [...applications.values()].sort(byTime),
+  events: [...events.values()].sort(byTime), applications: [...applications.values()].sort(byTime), labels: [...labels.values()].sort(byTime),
 }, null, 2) + '\n');
 await rename(temporary, output);
-console.log(`Saved ${events.size} signed manifests and ${applications.size} listings. ${JSON.stringify(results.map(({ url, ok, events }) => ({ url, ok, events: events.length })))}`);
+console.log(`Saved ${events.size} signed manifests, ${applications.size} listings and ${labels.size} screenshot labels. ${JSON.stringify(results.map(({ url, ok, events }) => ({ url, ok, events: events.length })))}`);

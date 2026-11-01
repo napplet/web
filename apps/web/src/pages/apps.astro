@@ -4,13 +4,16 @@ import Runner from '../components/Runner.astro';
 import { NAPPLETS, LINKS } from '../lib/showcase';
 import { catalogApp, collapseReleases, latestApps, withListings } from '../lib/catalog';
 import { releaseCardHtml } from '../lib/card';
+import { withNapshot } from '../lib/napshot';
+import config from '../data/discovery.json';
 import snapshot from '../data/discovered-apps.json';
 import '../styles/showcase.css';
 import '../styles/store.css';
-const discovered = withListings(collapseReleases(latestApps(snapshot.events.map(event => catalogApp(event, snapshot.relays)).filter(app => app !== null))), snapshot.applications ?? []);
+const discovered = withNapshot(withListings(collapseReleases(latestApps(snapshot.events.map(event => catalogApp(event, snapshot.relays)).filter(app => app !== null))), snapshot.applications ?? []), (snapshot as { labels?: unknown[] }).labels ?? [], config.screenshotLabelers ?? []);
 const date = snapshot.checkedAt ? new Date(snapshot.checkedAt).toISOString().slice(0, 10) : null;
 const withMedia = discovered.filter(app => app.icon || app.screenshots.length).length;
 const withListing = discovered.filter(app => app.listing).length;
+const withNapshotPreview = discovered.filter(app => app.napshot && !app.listing?.images.length).length;
 ---
 <SiteLayout title="App store — napplet" description="Find your next small obsession. Play curated napplets and discover signed releases from the community.">
   <a class="skip-link" href="#main">Skip to content</a>
@@ -47,6 +50,7 @@ const withListing = discovered.filter(app => app.listing).length;
       <details id="discovery-details" class="discovery-details"><summary>About this collection</summary>
         <p>Discovery uses NIP-5D’s own manifest kinds, verifies publisher signatures, and selects releases with a direct artifact-hash tag and a plain-text description. Legacy aggregate-hash releases stay out of this feed. A signature identifies a publisher; it does not review the code or certify every manifest field. Some publishers still use source-location formats outside the current proposal. Your chosen shell verifies artifacts and decides which services it can provide.</p>
         <p>Artwork comes from the manifest first: icons and screenshots are fetched by hash from the publisher’s declared Blossom servers and shown only after the bytes verify and decode, so they need JavaScript. In this snapshot {withMedia} of {discovered.length} releases declare usable manifest media. When a manifest has none, a Software Applications listing (kind 32267) from the same publisher that names the release supplies listing art by URL; {withListing} releases have one. That pairing is a display convenience of this site, not part of either proposal.</p>
+        <p>When neither the manifest nor a listing supplies artwork, a <a href="https://github.com/napplet/napshot">Napshot</a> preview may fill in: an automated, signed-out capture published as a signed NIP-32 label that names the exact release revision. Only labels from the Napshot signer this site trusts are used, and the image is shown only after its bytes match the labelled hash, size and dimensions. {withNapshotPreview} releases in this snapshot use one. A preview shows who captured it; it is not an endorsement, and apps that need relays or an account may look empty in it.</p>
         <p>The snapshot reads {snapshot.relays.join(' and ')} and shows twelve releases at a time as you scroll. Past the saved collection, the same relays are reconciled with NIP-77 negentropy so only releases this page lacks are downloaded; a relay without NIP-77 is paged with ordinary requests instead. <a href="https://github.com/nostr-protocol/nips/pull/2303">Read the living NIP-5D proposal ↗</a> · <a href="https://github.com/nostr-protocol/nips/pull/1336">Software Applications proposal ↗</a> · <a href="/#shells">Find another shell ↗</a></p>
       </details>
       <noscript><p class="store-footnote">You’re viewing the saved collection. App and shell links work without JavaScript; live discovery, verified manifest artwork and quick play require it.</p></noscript>

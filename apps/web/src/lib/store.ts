@@ -1,7 +1,8 @@
 /** Opt-in public relay discovery for the website, outside any napplet iframe. */
 import { APPLICATION_KIND, catalogApp, collapseReleases, latestApps, withListings, type CatalogApp } from './catalog';
 import { releaseCardHtml } from './card';
-import { verifiedImage } from './media';
+import { releaseImages, verifiedImage } from './media';
+import { LABEL_KIND, previewTargets, SCREENSHOT_NAMESPACE, withNapshot } from './napshot';
 import snapshot from '../data/discovered-apps.json';
 import config from '../data/discovery.json';
 import { gsap } from 'gsap';
@@ -13,6 +14,9 @@ import type { Filter } from 'applesauce-core/helpers';
 
 const MANIFEST_KINDS = [5129, 15129, 35129];
 const PAGE = 12;
+/** Explicitly configured Napshot labelers; an empty list disables screenshot fallbacks. */
+const LABELERS: string[] = config.screenshotLabelers ?? [];
+const savedLabels: unknown[] = (snapshot as { labels?: unknown[] }).labels ?? [];
 
 interface Discovery { pool: RelayPool; store: EventStore; queriedAuthors: Set<string>; receive: number; paged: Set<string>; done: Set<string> }
 
@@ -32,16 +36,16 @@ interface StoreState {
   nudge?: () => void;
 }
 
-/** Collect what the saved snapshot and live discovery know, as display entries with listing fallbacks. */
-function entriesFrom(manifests: unknown[], applications: unknown[], relays: string[]): CatalogApp[] {
-  return withListings(collapseReleases(latestApps(manifests.map(event => catalogApp(event, relays)).filter(app => app !== null))), applications);
+/** Collect what the saved snapshot and live discovery know, as display entries with listing and Napshot fallbacks. */
+function entriesFrom(manifests: unknown[], applications: unknown[], labels: unknown[], relays: string[]): CatalogApp[] {
+  return withNapshot(withListings(collapseReleases(latestApps(manifests.map(event => catalogApp(event, relays)).filter(app => app !== null))), applications), labels, LABELERS);
 }
 
 /** applesauce's pool and store are loaded only after the visitor asks to contact relays. */
 async function openDiscovery(): Promise<Discovery> {
   const [{ RelayPool, SyncDirection }, { EventStore }] = await Promise.all([import('applesauce-relay'), import('applesauce-core')]);
   const store = new EventStore({ verifyEvent });
-  for (const event of [...snapshot.events, ...(snapshot.applications ?? [])]) store.add(event as Event);
+  for (const event of [...snapshot.events, ...(snapshot.applications ?? []), ...savedLabels]) store.add(event as Event);
   return { pool: new RelayPool(), store, queriedAuthors: new Set(), receive: SyncDirection.RECEIVE, paged: new Set(), done: new Set() };
 }
 
@@ -109,6 +113,11 @@ async function discover(discovery: Discovery, until: number | undefined, signal:
     authors.forEach(author => discovery.queriedAuthors.add(author));
     await Promise.all(config.relays.map(url => syncRelay(discovery, url, { kinds: [APPLICATION_KIND], authors: authors.slice(0, 50) }, signal)));
   }
+  // Napshot labels are looked up by exact manifest id, only from explicitly trusted signers.
+  const targets = previewTargets(manifests.map(event => catalogApp(event)).filter(app => app !== null)).slice(0, 100);
+  if (LABELERS.length && targets.length && !signal.aborted) {
+    await Promise.all(config.relays.map(url => requestRelay(discovery, url, { kinds: [LABEL_KIND], authors: LABELERS, '#L': [SCREENSHOT_NAMESPACE], '#e': targets, limit: config.limit }, signal)));
+  }
   return { completed: results.filter(result => result.complete).length, received: manifests.length, paged: discovery.paged.size, oldest: manifests.length ? Math.min(...manifests.map(event => event.created_at)) : undefined };
 }
 
@@ -116,7 +125,10 @@ async function discover(discovery: Discovery, until: number | undefined, signal:
 function hydrateMedia(card: HTMLElement, signal: AbortSignal): void {
   if (card.dataset.hydrated) return;
   card.dataset.hydrated = 'true';
-  let media: { icon: { sha256: string; type: string } | null; screenshots: { sha256: string; type?: string; alt?: string }[]; servers: string[] };
+  let media: {
+    icon: { sha256: string; type: string } | null; screenshots: { sha256: string; type?: string; alt?: string }[]; servers: string[];
+    napshot?: { sha256: string; type: 'image/png'; dim: string; size: number; servers: string[]; signer: string } | null;
+  };
   try { media = JSON.parse(card.dataset.media ?? ''); } catch { return; }
   const image = (src: string) => { const element = document.createElement('img'); element.src = src; element.alt = ''; element.decoding = 'async'; return element; };
   if (media.icon) void verifiedImage(media.icon, media.servers, signal).then(src => {
@@ -142,6 +154,25 @@ function hydrateMedia(card: HTMLElement, signal: AbortSignal): void {
     const source = art.querySelector('[data-art-source]');
     if (source) source.textContent = 'Manifest screenshot';
   });
+  // Author screenshots win; a trusted Napshot label for this exact revision fills in only when none is declared.
+  else if (media.napshot) {
+    const preview = media.napshot;
+    void verifiedImage(preview, preview.servers, signal, { bytes: preview.size, dim: preview.dim, keepPath: true }).then(src => {
+      const art = card.querySelector<HTMLElement>('[data-art]');
+      if (!src || !art) return;
+      const name = card.querySelector('h3')?.textContent ?? 'this napplet';
+      const element = image(src);
+      element.alt = `Automated signed-out preview of ${name}`;
+      element.dataset.napshot = preview.signer;
+      art.querySelector('.art-icon')?.remove();
+      art.classList.remove('has-icon');
+      art.removeAttribute('aria-hidden');
+      art.prepend(element);
+      art.classList.add('has-art', 'has-napshot');
+      const source = art.querySelector<HTMLElement>('[data-art-source]');
+      if (source) { source.textContent = 'Napshot preview'; source.title = 'Captured automatically in a signed-out shell and signed by a trusted Napshot labeler; not an endorsement.'; }
+    });
+  }
 }
 
 /** Apply collection, search and paging to the cards; hydrate what is visible; describe the paging control. */
@@ -208,7 +239,7 @@ async function runDiscovery(state: StoreState, until?: number): Promise<void> {
   const before = new Set(state.entries.map(entry => entry.event.id));
   const result = await discover(state.discovery, until, request.signal);
   if (request.signal.aborted) return;
-  state.entries = entriesFrom(state.discovery.store.getByFilters({ kinds: MANIFEST_KINDS }), state.discovery.store.getByFilters({ kinds: [APPLICATION_KIND] }), config.relays);
+  state.entries = entriesFrom(state.discovery.store.getByFilters({ kinds: MANIFEST_KINDS }), state.discovery.store.getByFilters({ kinds: [APPLICATION_KIND] }), state.discovery.store.getByFilters({ kinds: [LABEL_KIND] }), config.relays);
   const added = state.entries.filter(entry => !before.has(entry.event.id)).map(entry => entry.id);
   if (result.oldest !== undefined) state.oldest = Math.min(state.oldest, result.oldest);
   // Reconciled relays hold nothing more; only relays that fell back to REQ have older pages to walk.
@@ -240,7 +271,7 @@ export function setupStore(): () => void {
   const sentinel = document.querySelector<HTMLElement>('#store-more')!;
   const events = new AbortController();
   const state: StoreState = {
-    entries: entriesFrom(snapshot.events, snapshot.applications ?? [], snapshot.relays),
+    entries: entriesFrom(snapshot.events, snapshot.applications ?? [], savedLabels, snapshot.relays),
     visible: PAGE, oldest: Math.min(...snapshot.events.map(event => event.created_at)),
     exhausted: false, loading: false, failed: false, signal: events.signal, motion: gsap.matchMedia(),
   };
@@ -277,7 +308,7 @@ export function setupStore(): () => void {
     try { await navigator.clipboard.writeText(copy.dataset.copyAddress); copy.textContent = 'Copied ✓'; }
     catch { window.prompt('Copy this napplet address into your shell', copy.dataset.copyAddress); }
   }, { signal: events.signal });
-  const cleanup = () => { state.pass?.abort(); events.abort(); state.motion.revert(); };
+  const cleanup = () => { state.pass?.abort(); events.abort(); state.motion.revert(); releaseImages(); };
   window.addEventListener('pagehide', cleanup, { once: true });
   document.addEventListener('astro:before-swap', cleanup, { once: true });
   return cleanup;
