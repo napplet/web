@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { finalizeEvent, generateSecretKey } from 'nostr-tools/pure';
-import { applicationListing, catalogApp, collapseReleases, latestApps, matchListing, withListings } from './catalog';
-import { releaseCardHtml } from './card';
+import { finalizeEvent, generateSecretKey, getPublicKey } from 'nostr-tools/pure';
+import { npubEncode } from 'nostr-tools/nip19';
+import { applicationListing, authorProfile, catalogApp, collapseReleases, latestApps, matchListing, withListings, withProfiles } from './catalog';
+import { releaseCardHtml, searchText } from './card';
 import snapshot_data from '../data/discovered-apps.json';
 const snapshot = snapshot_data;
 const secret = generateSecretKey();
@@ -114,6 +115,44 @@ describe('manifest media per the current NIP-5D text', () => {
     const app = catalogApp(sign({ tags: [['d', 'fixture'], ['x', hash('a')], ['z', 'game'], ['t', 'Puzzle'], ['t', 'game']] }))!;
     expect(app.archetypes).toEqual(['game']);
     expect(app.topics).toEqual(['puzzle', 'game']);
+  });
+});
+
+describe('publisher profiles', () => {
+  const napplet = catalogApp(sign())!;
+  const profile = (content: unknown, changes: Record<string, unknown> = {}) => finalizeEvent({ kind: 0, created_at: 100, content: typeof content === 'string' ? content : JSON.stringify(content), tags: [], ...changes }, secret);
+  it('reads a display name or name and an https picture from a signed kind 0 event, nothing else', () => {
+    const full = authorProfile(profile({ name: 'alice', display_name: '  Alice <b>Example</b> ', picture: 'https://avatar.example/a.png', about: 'ignored' }))!;
+    expect(full).toMatchObject({ name: 'Alice <b>Example</b>', picture: 'https://avatar.example/a.png', author: getPublicKey(secret) });
+    expect(authorProfile(profile({ name: 'bob', picture: 'http://plain.example/b.png' }))).toMatchObject({ name: 'bob', picture: undefined });
+    expect(authorProfile(profile({ picture: 'https://avatar.example/c.png' }))?.name).toBeUndefined();
+    expect(authorProfile(profile({ name: 'x'.repeat(80) }))?.name).toHaveLength(60);
+    expect(authorProfile(profile({ about: 'no name, no picture' }))).toBeNull();
+    expect(authorProfile(profile('not json'))).toBeNull();
+    expect(authorProfile(profile({ name: 'wrong kind' }, { kind: 1 }))).toBeNull();
+    expect(authorProfile(JSON.parse(JSON.stringify({ ...profile({ name: 'tampered' }), content: '{"name":"evil"}' })))).toBeNull();
+  });
+  it('attaches the newest profile of the same publisher and leaves strangers alone', () => {
+    const older = profile({ name: 'Old name' });
+    const newer = profile({ name: 'New name' }, { created_at: 101 });
+    const stranger = finalizeEvent({ kind: 0, created_at: 200, content: JSON.stringify({ name: 'Stranger' }), tags: [] }, generateSecretKey());
+    expect(withProfiles([napplet], [newer, stranger, older])[0].profile).toMatchObject({ name: 'New name' });
+    expect(withProfiles([napplet], [stranger])[0].profile).toBeUndefined();
+  });
+  it('renders the publisher as a nostr.at link with picture and name, escaped, or the short key without a profile', () => {
+    const pubkey = getPublicKey(secret);
+    const href = `https://nostr.at/${npubEncode(pubkey)}`;
+    const named = withProfiles([napplet], [profile({ display_name: 'Alice <b>Example</b>', picture: 'https://avatar.example/a.png?size="16"' })])[0];
+    const html = releaseCardHtml(named, 0);
+    expect(html).toContain(`<a href="${href}" target="_blank" rel="noopener noreferrer" title="${pubkey}"`);
+    expect(html).toContain('<img class="author-picture" src="https://avatar.example/a.png?size=&quot;16&quot;"');
+    expect(html).toContain('<span>Alice &lt;b&gt;Example&lt;/b&gt;</span>');
+    expect(html).not.toContain('<b>Example</b>');
+    expect(searchText(named)).toContain('Alice <b>Example</b>');
+    const bare = releaseCardHtml(napplet, 0);
+    expect(bare).toContain(`<a href="${href}"`);
+    expect(bare).toContain(`<span>${pubkey.slice(0, 8)}…${pubkey.slice(-6)}</span>`);
+    expect(bare).not.toContain('author-picture');
   });
 });
 

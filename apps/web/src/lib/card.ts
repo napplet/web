@@ -1,4 +1,5 @@
 /** One HTML template for discovered release cards, shared by the static build and live discovery. */
+import { npubEncode } from 'nostr-tools/nip19';
 import type { CatalogApp } from './catalog';
 import { usableScreenshot } from './media';
 import { previewTargets } from './napshot';
@@ -24,7 +25,20 @@ export function runsHere(app: CatalogApp): boolean {
 
 /** Searchable text for a release card. */
 export function searchText(app: CatalogApp): string {
-  return [app.name, app.description, ...app.requirements, ...app.archetypes, ...app.topics, ...(app.listing?.topics ?? [])].join(' ');
+  return [app.name, app.description, app.profile?.name ?? '', ...app.requirements, ...app.archetypes, ...app.topics, ...(app.listing?.topics ?? [])].join(' ');
+}
+
+/** Where the publisher's key can be looked up; the key, not any profile name, identifies the publisher. */
+export function profileHref(pubkey: string): string {
+  return `https://nostr.at/${npubEncode(pubkey)}`;
+}
+
+/** The publisher line: a link to the key's profile, with the picture and name when a profile supplies them. */
+function publisherHtml(app: CatalogApp): string {
+  const shortKey = `${escape(app.author.slice(0, 8))}…${escape(app.author.slice(-6))}`;
+  const picture = app.profile?.picture ? `<img class="author-picture" src="${escape(app.profile.picture)}" alt="" width="16" height="16" loading="lazy" decoding="async" referrerpolicy="no-referrer" />` : '';
+  const name = app.profile?.name ? escape(app.profile.name) : shortKey;
+  return `<a href="${escape(profileHref(app.author))}" target="_blank" rel="noopener noreferrer" title="${escape(app.author)}" data-author="${escape(app.author)}">${picture}<span>${name}</span></a>`;
 }
 
 /**
@@ -55,7 +69,7 @@ export function releaseCardHtml(app: CatalogApp, index: number): string {
     : `<span class="run-unavailable">Needs ${escape(app.requirements.join(', ') || 'a Blossom server')} · open it in a shell</span>`;
   return `<article class="discovered-card" data-app-card data-release="${escape(app.id)}" data-search="${escape(searchText(app))}" data-media="${escape(media)}">
   <div class="discovered-art${art ? ' has-art' : ''}" data-art aria-hidden="true">${art ? `<img src="${escape(art)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-listing-art />` : ''}<span class="art-monogram" aria-hidden="true">${monogram}</span><i class="art-index" aria-hidden="true">${String(index + 1).padStart(2, '0')}</i><em class="art-source" data-art-source>${art ? 'Listing art' : ''}</em></div>
-  <div class="release-head"><span class="release-icon" data-icon>${listingIcon ? `<img src="${escape(listingIcon)}" alt="" width="40" height="40" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-listing-icon />` : `<b>${monogram}</b>`}</span><div class="release-title"><h3>${escape(app.name)}</h3><p class="release-author">Publisher <span title="${escape(app.author)}">${escape(app.author.slice(0, 8))}…${escape(app.author.slice(-6))}</span></p></div><span class="release-date">${date}</span></div>
+  <div class="release-head"><span class="release-icon" data-icon>${listingIcon ? `<img src="${escape(listingIcon)}" alt="" width="40" height="40" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-listing-icon />` : `<b>${monogram}</b>`}</span><div class="release-title"><h3>${escape(app.name)}</h3><p class="release-author">Publisher ${publisherHtml(app)}</p></div><span class="release-date">${date}</span></div>
   <p class="publisher-description">${escape(app.description)}</p>
   ${tags.length ? `<ul class="release-tags" aria-label="Archetypes and topics">${tags.map(tag => `<li>${escape(tag)}</li>`).join('')}</ul>` : ''}
   <p class="release-requirements">${app.requirements.length ? `Needs: ${escape(app.requirements.join(', '))}` : 'No required shell services declared'}${app.optional.length ? ` · Optional: ${escape(app.optional.join(', '))}` : ''}${app.versions ? ` · ${app.versions} pinned ${app.versions === 1 ? 'version' : 'versions'}` : ''}</p>

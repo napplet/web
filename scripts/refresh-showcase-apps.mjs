@@ -7,6 +7,7 @@ const { validateEvent, verifyEvent } = require('nostr-tools/pure');
 const config = JSON.parse(await readFile(new URL('../apps/web/src/data/discovery.json', import.meta.url), 'utf8'));
 const MANIFEST_KINDS = [5129, 15129, 35129];
 const APPLICATION_KIND = 32267;
+const PROFILE_KIND = 0;
 const MAX_EVENTS = config.maxEvents ?? 600;
 
 /** One bounded request; resolves with verified events and whether the relay reached EOSE. */
@@ -55,15 +56,18 @@ if (!results.some(result => result.ok)) throw new Error('No relay completed a qu
 const events = new Map(results.flatMap(result => result.events).map(event => [event.id, event]));
 
 // Application listings (kind 32267) by the same publishers supply fallback artwork; they are a separate proposal.
+// Their kind 0 profiles (NIP-01) name the signing key beside it for display; the key stays the publisher identity.
 const authors = [...new Set([...events.values()].map(event => event.pubkey))];
 const applications = new Map();
+const profiles = new Map();
 for (let index = 0; index < authors.length; index += 50) {
   const slice = authors.slice(index, index + 50);
-  const listings = await Promise.all(config.relays.map(url => request(url, { kinds: [APPLICATION_KIND], authors: slice, limit: config.limit })));
+  const listings = await Promise.all(config.relays.map(url => request(url, { kinds: [PROFILE_KIND, APPLICATION_KIND], authors: slice, limit: config.limit })));
   for (const event of listings.flatMap(result => result.events)) {
-    const key = `${event.pubkey}:${event.tags.find(tag => tag[0] === 'd')?.[1] ?? ''}`;
-    const old = applications.get(key);
-    if (!old || event.created_at > old.created_at) applications.set(key, event);
+    const key = event.kind === PROFILE_KIND ? event.pubkey : `${event.pubkey}:${event.tags.find(tag => tag[0] === 'd')?.[1] ?? ''}`;
+    const newest = event.kind === PROFILE_KIND ? profiles : applications;
+    const old = newest.get(key);
+    if (!old || event.created_at > old.created_at) newest.set(key, event);
   }
 }
 
@@ -84,7 +88,7 @@ const temporary = new URL(`${output.href}.tmp`);
 const byTime = (a, b) => b.created_at - a.created_at || a.id.localeCompare(b.id);
 await writeFile(temporary, JSON.stringify({
   checkedAt: new Date().toISOString(), relays: config.relays,
-  events: [...events.values()].sort(byTime), applications: [...applications.values()].sort(byTime), labels: [...labels].sort(byTime),
+  events: [...events.values()].sort(byTime), applications: [...applications.values()].sort(byTime), profiles: [...profiles.values()].sort(byTime), labels: [...labels].sort(byTime),
 }, null, 2) + '\n');
 await rename(temporary, output);
-console.log(`Saved ${events.size} signed manifests, ${applications.size} listings and ${labels.size} screenshot labels. ${JSON.stringify(results.map(({ url, ok, events }) => ({ url, ok, events: events.length })))}`);
+console.log(`Saved ${events.size} signed manifests, ${applications.size} listings, ${profiles.size} publisher profiles and ${labels.length} screenshot labels. ${JSON.stringify(results.map(({ url, ok, events }) => ({ url, ok, events: events.length })))}`);

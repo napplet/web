@@ -1,5 +1,5 @@
 /** Opt-in public relay discovery for the website, outside any napplet iframe. */
-import { APPLICATION_KIND, catalogApp, collapseReleases, latestApps, withListings, type CatalogApp } from './catalog';
+import { APPLICATION_KIND, PROFILE_KIND, catalogApp, collapseReleases, latestApps, withListings, withProfiles, type CatalogApp } from './catalog';
 import { releaseCardHtml } from './card';
 import { exhaustLabels } from './label-pager.mjs';
 import { releaseImages, verifiedImage } from './media';
@@ -22,6 +22,7 @@ const PREVIEW_DEBOUNCE_MS = 100;
 /** Explicitly configured Napshot labelers; an empty list disables screenshot fallbacks. */
 const LABELERS: string[] = config.screenshotLabelers ?? [];
 const savedLabels: unknown[] = (snapshot as { labels?: unknown[] }).labels ?? [];
+const savedProfiles: unknown[] = (snapshot as { profiles?: unknown[] }).profiles ?? [];
 
 interface Discovery { pool: RelayPool; store: EventStore; queriedAuthors: Set<string>; labeled: Set<string>; receive: number; paged: Set<string>; done: Set<string> }
 
@@ -47,16 +48,16 @@ interface StoreState {
   nudge?: () => void;
 }
 
-/** Collect what the saved snapshot and live discovery know, as display entries with listing and Napshot fallbacks. */
-function entriesFrom(manifests: unknown[], applications: unknown[], labels: unknown[], relays: string[]): CatalogApp[] {
-  return withNapshot(withListings(collapseReleases(latestApps(manifests.map(event => catalogApp(event, relays)).filter(app => app !== null))), applications), labels, LABELERS);
+/** Collect what the saved snapshot and live discovery know, as display entries with listing, profile and Napshot fallbacks. */
+function entriesFrom(manifests: unknown[], applications: unknown[], profiles: unknown[], labels: unknown[], relays: string[]): CatalogApp[] {
+  return withNapshot(withProfiles(withListings(collapseReleases(latestApps(manifests.map(event => catalogApp(event, relays)).filter(app => app !== null))), applications), profiles), labels, LABELERS);
 }
 
 /** applesauce's pool and store are loaded only after the visitor asks to contact relays. */
 async function openDiscovery(): Promise<Discovery> {
   const [{ RelayPool, SyncDirection }, { EventStore }] = await Promise.all([import('applesauce-relay'), import('applesauce-core')]);
   const store = new EventStore({ verifyEvent });
-  for (const event of [...snapshot.events, ...(snapshot.applications ?? []), ...savedLabels]) store.add(event as Event);
+  for (const event of [...snapshot.events, ...(snapshot.applications ?? []), ...savedProfiles, ...savedLabels]) store.add(event as Event);
   return { pool: new RelayPool(), store, queriedAuthors: new Set(), labeled: new Set(), receive: SyncDirection.RECEIVE, paged: new Set(), done: new Set() };
 }
 
@@ -194,7 +195,8 @@ async function discover(discovery: Discovery, until: number | undefined, signal:
   const authors = [...new Set(manifests.map(event => event.pubkey))].filter(author => !discovery.queriedAuthors.has(author));
   if (authors.length && !signal.aborted) {
     authors.forEach(author => discovery.queriedAuthors.add(author));
-    await Promise.all(config.relays.map(url => syncRelay(discovery, url, { kinds: [APPLICATION_KIND], authors: authors.slice(0, 50) }, signal)));
+    // Listings supply artwork and kind 0 profiles name the key; one request per relay covers both for the new publishers.
+    await Promise.all(config.relays.map(url => syncRelay(discovery, url, { kinds: [PROFILE_KIND, APPLICATION_KIND], authors: authors.slice(0, 50) }, signal)));
   }
   // Napshot labels are looked up by exact manifest id, only from explicitly trusted signers, for every eligible release the store knows.
   if (LABELERS.length && !signal.aborted) await fetchLabels(discovery, signal);
@@ -339,7 +341,7 @@ async function runDiscovery(state: StoreState, until?: number): Promise<void> {
   const before = new Set(state.entries.map(entry => entry.event.id));
   const result = await discover(discovery, until, request.signal);
   if (request.signal.aborted) return;
-  state.entries = entriesFrom(discovery.store.getByFilters({ kinds: MANIFEST_KINDS }), discovery.store.getByFilters({ kinds: [APPLICATION_KIND] }), discovery.store.getByFilters({ kinds: [LABEL_KIND] }), config.relays);
+  state.entries = entriesFrom(discovery.store.getByFilters({ kinds: MANIFEST_KINDS }), discovery.store.getByFilters({ kinds: [APPLICATION_KIND] }), discovery.store.getByFilters({ kinds: [PROFILE_KIND] }), discovery.store.getByFilters({ kinds: [LABEL_KIND] }), config.relays);
   const added = state.entries.filter(entry => !before.has(entry.event.id)).map(entry => entry.id);
   if (result.oldest !== undefined) state.oldest = Math.min(state.oldest, result.oldest);
   // Reconciled relays hold nothing more; only relays that fell back to REQ have older pages to walk.
@@ -371,7 +373,7 @@ export function setupStore(): () => void {
   const sentinel = document.querySelector<HTMLElement>('#store-more')!;
   const events = new AbortController();
   const state: StoreState = {
-    entries: entriesFrom(snapshot.events, snapshot.applications ?? [], savedLabels, snapshot.relays),
+    entries: entriesFrom(snapshot.events, snapshot.applications ?? [], savedProfiles, savedLabels, snapshot.relays),
     visible: PAGE, oldest: Math.min(...snapshot.events.map(event => event.created_at)),
     exhausted: false, loading: false, failed: false, synced: false, previews: { wanted: new Map() }, signal: events.signal, motion: gsap.matchMedia(),
   };
