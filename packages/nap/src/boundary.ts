@@ -37,7 +37,7 @@ const listeners = new Set<(message: ShellMessage) => void>();
 function dispatch(event: MessageEvent): void {
   const message = event.data;
   if (typeof message !== 'object' || message === null || typeof message.type !== 'string') return;
-  for (const listener of [...listeners]) listener(message as ShellMessage);
+  for (const listener of listeners) listener(message as ShellMessage);
 }
 
 function ensureConnection(): Connection {

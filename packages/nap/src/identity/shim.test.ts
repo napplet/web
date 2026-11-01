@@ -1,16 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { installFakeShell, type FakeShell } from '../test-support/fake-shell.js';
 
-interface PostedMessage {
-  msg: unknown;
-  targetOrigin: string;
-}
-
-let postedMessages: PostedMessage[];
+let shell: FakeShell;
 let uuidCounter: number;
 let originalCryptoDescriptor: PropertyDescriptor | undefined;
 
 beforeEach(() => {
-  postedMessages = [];
   uuidCounter = 0;
   originalCryptoDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'crypto');
 
@@ -21,16 +16,7 @@ beforeEach(() => {
     },
   });
 
-  Object.defineProperty(globalThis, 'window', {
-    configurable: true,
-    value: {
-      parent: {
-        postMessage(msg: unknown, targetOrigin: string) {
-          postedMessages.push({ msg, targetOrigin });
-        },
-      },
-    },
-  });
+  shell = installFakeShell();
 
   vi.resetModules();
 });
@@ -41,7 +27,8 @@ afterEach(() => {
   } else {
     Reflect.deleteProperty(globalThis, 'crypto');
   }
-  Reflect.deleteProperty(globalThis, 'window');
+  vi.unstubAllGlobals();
+  vi.restoreAllMocks();
 });
 
 describe('@napplet/nap/identity shim', () => {
@@ -50,12 +37,8 @@ describe('@napplet/nap/identity shim', () => {
 
     const result = getPublicKey();
 
-    expect(postedMessages).toEqual([
-      {
-        msg: { type: 'identity.getPublicKey', id: 'identity-test-1' },
-        targetOrigin: '*',
-      },
-    ]);
+    expect(shell.sent).toEqual([{ type: 'identity.getPublicKey', id: 'identity-test-1' }]);
+    expect(shell.windowMessages).toEqual([]);
 
     handleIdentityMessage({
       type: 'identity.getPublicKey.result',

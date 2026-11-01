@@ -1,11 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { installFakeShell, type FakeShell } from '../test-support/fake-shell.js';
 
 let cleanup: (() => void) | undefined;
-let postMessage: ReturnType<typeof vi.fn>;
+let shell: FakeShell;
 
 beforeEach(() => {
-  postMessage = vi.fn();
-  vi.stubGlobal('window', { parent: { postMessage } });
+  shell = installFakeShell();
   vi.stubGlobal('document', {
     querySelector: vi.fn(() => ({
       getAttribute: (name: string) => name === 'content'
@@ -40,7 +40,8 @@ describe('@napplet/nap/config shim', () => {
     }).napplet.config;
     const schema = { type: 'object', properties: { theme: { type: 'string' } } };
     const registration = api.registerSchema(schema);
-    const [request] = postMessage.mock.calls[0] as [{ id: string }];
+    const request = shell.sent[0] as { type: string; id: string };
+    expect(request.type).toBe('config.registerSchema');
     handleConfigMessage({ type: 'config.registerSchema.result', id: request.id, ok: true });
 
     await expect(registration).resolves.toBeUndefined();

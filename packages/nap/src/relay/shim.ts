@@ -19,8 +19,6 @@ import type {
   RelayPublishEncryptedResultMessage,
   RelayQueryMessage,
   RelayEventMessage,
-  RelayEoseMessage,
-  RelayClosedMessage,
   RelayQueryResultMessage,
 } from './types.js';
 import { hydrateResourceCache } from '../resource/shim.js';
@@ -60,13 +58,12 @@ export function subscribe(
   function handleMessage(msg: ShellMessage): void {
     if (!msg.type.startsWith('relay.')) return;
 
-    const typedMsg = msg as unknown as RelayEventMessage | RelayEoseMessage | RelayClosedMessage;
-    if (!('subId' in typedMsg) || typedMsg.subId !== subId) return;
+    if (msg.subId !== subId) return;
 
     if (msg.type === 'relay.event') {
-      const eventMsg = msg as unknown as RelayEventMessage;
-      hydrateResourceCache(eventMsg.result.sidecar?.resources);
-      onEvent(eventMsg.result);
+      const result = msg.result as RelayEventMessage['result'];
+      hydrateResourceCache(result.sidecar?.resources);
+      onEvent(result);
     } else if (msg.type === 'relay.eose') {
       onEose();
     } else if (msg.type === 'relay.closed') {
@@ -131,7 +128,7 @@ export function publish(
     function handleMessage(msg: ShellMessage): void {
       if (msg.type !== 'relay.publish.result' && msg.type !== 'relay.publish.error') return;
 
-      const result = msg as unknown as RelayPublishResultMessage;
+      const result = msg as ShellMessage & Partial<Omit<RelayPublishResultMessage, 'type'>>;
       if (result.id !== publishId) return;
 
       off();
@@ -187,7 +184,7 @@ export function publishEncrypted(
     function handleMessage(msg: ShellMessage): void {
       if (msg.type !== 'relay.publishEncrypted.result') return;
 
-      const result = msg as unknown as RelayPublishEncryptedResultMessage;
+      const result = msg as ShellMessage & Partial<Omit<RelayPublishEncryptedResultMessage, 'type'>>;
       if (result.id !== requestId) return;
 
       off();
@@ -235,7 +232,7 @@ export function query(filters: NostrFilter | NostrFilter[]): Promise<RelayEventR
     function handleMessage(msg: ShellMessage): void {
       if (msg.type !== 'relay.query.result') return;
 
-      const result = msg as unknown as RelayQueryResultMessage;
+      const result = msg as ShellMessage & Partial<Omit<RelayQueryResultMessage, 'type'>>;
       if (result.id !== queryId) return;
 
       off();

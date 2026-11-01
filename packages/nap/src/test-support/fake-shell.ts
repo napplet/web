@@ -46,18 +46,30 @@ export interface FakeShell {
   last(): Record<string, unknown> | undefined;
   /** Deliver a shell -> napplet envelope over the port, synchronously. */
   deliver(message: unknown): void;
+  /** Run `listener` synchronously for each envelope the napplet sends (e.g. to reply in-line). */
+  onSend(listener: (message: Record<string, unknown>) => void): void;
 }
 
 // The napplet realm keeps one port for its lifetime, so the bound shell end
 // outlives individual tests that share a window (happy-dom).
 let shellPort: FakePort | null = null;
-let active: { sent: Array<Record<string, unknown>>; hellos: number; windowMessages: unknown[] } | null = null;
+let active: {
+  sent: Array<Record<string, unknown>>;
+  hellos: number;
+  windowMessages: unknown[];
+  onSend: Array<(message: Record<string, unknown>) => void>;
+} | null = null;
 
 function capture(message: unknown, _origin?: unknown, transfer?: unknown): void {
   const ports = Array.isArray(transfer) ? transfer : [];
   if (message && typeof message === 'object' && (message as { type?: unknown }).type === 'napplet.hello' && ports.length === 1) {
     const port = ports[0] as FakePort;
-    port.onmessage = (event) => active?.sent.push(event.data as Record<string, unknown>);
+    port.onmessage = (event) => {
+      if (!active) return;
+      const data = event.data as Record<string, unknown>;
+      active.sent.push(data);
+      for (const listener of active.onSend) listener(data);
+    };
     shellPort = port;
     if (active) active.hellos += 1;
     return;
@@ -77,7 +89,12 @@ function capture(message: unknown, _origin?: unknown, transfer?: unknown): void 
  */
 export function installFakeShell(windowExtras: Record<string, unknown> = {}): FakeShell {
   vi.stubGlobal('MessageChannel', FakeMessageChannel);
-  const state = { sent: [] as Array<Record<string, unknown>>, hellos: 0, windowMessages: [] as unknown[] };
+  const state = {
+    sent: [] as Array<Record<string, unknown>>,
+    hellos: 0,
+    windowMessages: [] as unknown[],
+    onSend: [] as Array<(message: Record<string, unknown>) => void>,
+  };
   active = state;
   const dom = typeof window !== 'undefined' && typeof (window as { dispatchEvent?: unknown }).dispatchEvent === 'function';
   if (dom && Object.keys(windowExtras).length === 0) {
@@ -100,6 +117,9 @@ export function installFakeShell(windowExtras: Record<string, unknown> = {}): Fa
     deliver(message) {
       if (!shellPort) throw new Error('fake shell: no napplet.hello port has been handed over yet');
       shellPort.postMessage(message);
+    },
+    onSend(listener) {
+      state.onSend.push(listener);
     },
   };
 }
