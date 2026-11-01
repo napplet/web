@@ -570,6 +570,7 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 
 | Quick ID | Task | Date | Commit | Artifacts |
 |----------|------|------|--------|-----------|
+| 261101-crf | Address the Copilot review on PR #289: refuse mirror redirects before following, share screenshot eligibility, batch and exhaust label discovery, capture-mode wording, refresh-proof tests and a deterministic fixture browser check | 2026-11-01 | fcca9786 | [261101-crf](./quick/261101-crf-address-copilot-review-comments-on-pr-289/) |
 | 261101-cyx | Napshot screenshot fallbacks for app-store releases without screenshots | 2026-11-01 | 331dbf1a | [261101-cyx](./quick/261101-cyx-napshot-screenshot-fallbacks-in-app-stor/) |
 | 261031-go3 | NAP maturity catalog, policy selection, host enforcement and generated docs (PR #288) | 2026-10-31 | 18d636cf | [261031-go3](./quick/261031-go3-implement-nap-maturity-catalog-policy-se/) |
 | 261031-cbd | Add DinOS to the website shell directory | 2026-10-31 | b7bf6c66 | [261031-cbd](./quick/261031-cbd-add-dinos-to-the-website-shell-list/) |
