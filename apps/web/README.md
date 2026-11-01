@@ -101,6 +101,10 @@ The onboarding check starts its own Astro development server and exercises the p
 
 The deployment workflow uploads the resulting `site/` directory to Bunny storage and purges the pull zone. Bunny is the canonical deployment; nsite is an optional mirror. The existing Bunny storage zone, endpoint, password, API key, and pull-zone ID remain GitHub Actions secrets. Website, docs, conformance, lockfile, or assembly changes trigger deployment after merging to `main` and trigger the corresponding pull-request link check. Configure credentials with `scripts/setup-site-secrets.sh`.
 
+### NIP-05 identifiers
+
+`apps/web/public/.well-known/nostr.json` publishes [NIP-05](https://github.com/nostr-protocol/nips/blob/master/05.md) names for `napplet.run`. Today it maps `napshot@napplet.run` to the napplet Napshot instance's signing key. Add a name by editing that file, using lowercase `a-z0-9-_.` names and lowercase hex public keys. Assembly rejects a malformed document or a build that differs from the source. NIP-05 also asks servers to send `Access-Control-Allow-Origin: *` so browser clients can read the file. That header comes from the Bunny pull zone's CORS settings (`json` in the CORS extension list, or an edge rule for `/.well-known/nostr.json`), not from this repository.
+
 ## Homepage presentation checks
 
 `node scripts/check-showcase.mjs <assembled-site-url>` checks the four builder paths, the single below-fold network explanation, current signed previews, mobile layouts, no-JavaScript content, and section-specific GSAP choreography. It also switches reduced motion during a session to check cleanup. Regenerate the matching 1200×630 social card with `node scripts/generate-social-card.mjs` after changing its headline or visual motif.
