@@ -142,7 +142,7 @@ const napplet = (window as Window & { napplet: NappletGlobal }).napplet;
 
 ## Wire format
 
-The shim communicates with the shell using JSON envelope messages (`{ type: 'domain.action', ...payload }`). Outbound messages go via `window.parent.postMessage(msg, '*')`; inbound arrive via a `message` listener. Request/response pairs are correlated by an `id` field. The shim package README documents the full per-domain outbound and inbound message catalog.
+The shim communicates with the shell using JSON envelope messages (`{ type: 'domain.action', ...payload }`). `installNappletGlobal` first opens the NIP-5D channel: it creates a `MessageChannel`, keeps one port private and hands the other to the shell once in `napplet.hello`. Outbound and inbound envelopes then travel only over that port; window-level messages are ignored. Request/response pairs are correlated by an `id` field. The shim package README documents the full per-domain outbound and inbound message catalog.
 
 ## See also
 

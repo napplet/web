@@ -5,7 +5,7 @@ description: Use when implementing a napplet from a napplet-design spec - scaffo
 
 # Building a Napplet
 
-Implements a `napplet-design` spec. A napplet is one self-contained `/index.html` loaded into a `sandbox="allow-scripts"` iframe; all host access is proxied over postMessage per NIP-5D (<https://github.com/nostr-protocol/nips/pull/2303>) and the NAPs (<https://github.com/napplet/naps>). Never invent wire surface; flag gaps. Before writing any markup or CSS, load `napplet-ui`; while calling shell capabilities, use `napplet-sdk`; for cross-napplet features, `napplet-interop`.
+Implements a `napplet-design` spec. A napplet is one self-contained `/index.html` loaded into a `sandbox="allow-scripts"` iframe; all host access goes through `window.napplet`, which the runtime carries over the NIP-5D `napplet.hello` MessagePort (never call `window.parent.postMessage` or navigate the frame yourself) per NIP-5D (<https://github.com/nostr-protocol/nips/pull/2303>) and the NAPs (<https://github.com/napplet/naps>). Never invent wire surface; flag gaps. Before writing any markup or CSS, load `napplet-ui`; while calling shell capabilities, use `napplet-sdk`; for cross-napplet features, `napplet-interop`.
 
 ## Pre-code gate: sandbox authority
 

@@ -239,7 +239,7 @@ This is the **napplet** monorepo — npm packages for the napplet protocol. Napp
 
 - **JSON Envelope**: All messages use `{ type: "domain.action", ...payload }` format via postMessage. NIP-5D defines the envelope; NAP specs define message types per domain.
 - **NAPs**: Napplet Unified Blueprints — modular interface specs (relay, identity, storage, inc, theme, keys, media, notify). Each NAP owns a message domain. Shells implement the NAPs they support.
-- **Identity**: Shell identifies napplets via unforgeable `MessageEvent.source` at iframe creation. No handshake needed.
+- **Identity**: The runtime hands the shell one `MessagePort` in `napplet.hello` before napplet code runs; the shell binds `(dTag, artifactHash)` to that port and revokes it if the frame's document is replaced (NIP-5D §Transport, §Identity).
 - **ACL**: Consult current NIP-5D and NAPs for capability identity and authorization. Current manifests use the artifact hash; historical aggregate hashes belong to legacy formats.
 - **Storage scoping**: Follow the current NAP-STORAGE specification for storage identity and isolation.
 - **Sandbox**: `allow-scripts` only — no `allow-same-origin`. Everything is proxied via the shell.
@@ -384,7 +384,7 @@ A portable SDK for the napplet protocol — sandboxed Nostr mini-apps that run i
 
 - Framework-agnostic (no Svelte, React, Vue dependencies)
 - JSON envelope wire format: `{ type: "domain.action", ...payload }` via postMessage
-- Identity via unforgeable `MessageEvent.source` at iframe creation — no handshake
+- Identity bound to the per-document `MessagePort` handed over in `napplet.hello`; all NAP traffic rides that port
 - Modular NAP architecture: each NAP owns a message domain (relay, identity, storage, inc, theme, keys, media, notify)
 - Core dispatch: `registerNap(domain, handler)` routes messages by domain prefix
 - Capability identity and storage isolation follow current NIP-5D and NAP-STORAGE; historical aggregate-hash descriptions are not current protocol guidance.

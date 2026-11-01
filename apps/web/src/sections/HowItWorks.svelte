@@ -10,8 +10,8 @@
     },
     {
       n: '02',
-      t: 'Identity without a handshake',
-      d: 'The shell binds each iframe’s unforgeable MessageEvent.source to a napplet at creation. No login dance, no spoofing.',
+      t: 'Identity bound to the document',
+      d: 'The verified app hands the shell a private channel before any of its code runs. If the frame loads anything else, the shell cuts the channel and drops the app.',
     },
     {
       n: '03',
