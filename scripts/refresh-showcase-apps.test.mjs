@@ -58,6 +58,32 @@ test('collectLabels keeps previous trusted labels and drops untrusted ones, new 
   assert.equal(complete, 1);
 });
 
+test('collectLabels pages unequal relay histories independently and merges duplicate events', async () => {
+  const newer = [label(labelers[0], 0, 100), label(labelers[0], 1, 90), label(labelers[0], 2, 80)];
+  const older = label(labelers[0], 3, 10);
+  const histories = { first: newer, second: [older], third: [newer[0]] };
+  const calls = [];
+  const request = async (url, filter) => {
+    calls.push([url, filter.until]);
+    return { events: histories[url].filter(event => event.created_at <= (filter.until ?? Infinity)).slice(0, filter.limit), ok: true };
+  };
+  const { labels, complete } = await collectLabels(request, { relays: Object.keys(histories), labelers, targets: [target(0)], limit: 2 });
+  assert.deepEqual(labels.map(event => event.id).sort(), [...newer, older].map(event => event.id).sort());
+  assert.deepEqual(calls.filter(([url]) => url === 'first'), [['first', undefined], ['first', 89]]);
+  assert.equal(calls.filter(([url]) => url === 'second').length, 1);
+  assert.equal(calls.filter(([url]) => url === 'third').length, 1);
+  assert.equal(complete, 1);
+});
+
+test('collectLabels does not count an interrupted later page as a completed relay history', async () => {
+  const previous = [label(labelers[0], 9)];
+  const firstPage = [label(labelers[0], 0, 100), label(labelers[0], 1, 90)];
+  const request = async (_url, filter) => ({ events: filter.until === undefined ? firstPage : [], ok: filter.until === undefined });
+  const { labels, complete } = await collectLabels(request, { relays: ['first'], labelers, targets: [target(0)], previous, limit: 2 });
+  assert.equal(complete, 0);
+  assert.equal(labels.length, 3, 'partial results preserve previously saved labels');
+});
+
 test('collectLabels reports a pass no relay completed so the caller can keep the existing snapshot', async () => {
   const request = async () => ({ events: [], ok: false });
   const previous = [label(labelers[0], 3)];

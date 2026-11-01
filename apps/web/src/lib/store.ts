@@ -107,27 +107,30 @@ export async function syncRelay(discovery: Discovery, url: string, filter: Filte
  * and a relay page that comes back full is paged with `until` so candidates are not silently dropped.
  * @param discovery Open pool and store, tracking the targets already asked about this session.
  * @param signal Cancellation for this discovery pass.
+ * @returns Resolves after each target batch has finished or failed.
  * @example await fetchLabels(discovery, controller.signal);
  */
-async function fetchLabels(discovery: Discovery, signal: AbortSignal): Promise<void> {
+export async function fetchLabels(discovery: Discovery, signal: AbortSignal): Promise<void> {
   const targets = previewTargets(discovery.store.getByFilters({ kinds: MANIFEST_KINDS }).map(event => catalogApp(event)).filter(app => app !== null))
     .filter(id => !discovery.labeled.has(id));
   if (!targets.length) return;
-  // The batches run together, and each marks its targets queried only after its rounds settle, so an
-  // aborted pass does not permanently skip them; `labeled` keeps later passes from re-asking.
-  await Promise.all(Array.from({ length: Math.ceil(targets.length / LABEL_TARGETS) }, (_, index) => {
+  await Promise.all(Array.from({ length: Math.ceil(targets.length / LABEL_TARGETS) }, async (_, index) => {
     const batch = targets.slice(index * LABEL_TARGETS, (index + 1) * LABEL_TARGETS);
-    return (async () => {
+    const completed = await Promise.all(config.relays.map(async url => {
       let until: number | undefined;
-      for (;;) {
+      while (!signal.aborted) {
         const filter: Filter = { kinds: [LABEL_KIND], authors: LABELERS, '#L': [SCREENSHOT_NAMESPACE], '#e': batch, limit: config.limit, ...(until !== undefined ? { until } : {}) };
-        const pages = await Promise.all(config.relays.map(url => requestRelay(discovery, url, filter, signal)));
-        // A short page on every relay, or none of them finishing, is the end of this batch.
-        if (signal.aborted || !pages.some(page => page.complete && page.events.length >= config.limit)) break;
-        until = Math.min(...pages.flatMap(page => page.events).map(event => event.created_at)) - 1;
+        const page = await requestRelay(discovery, url, filter, signal);
+        if (!page.complete) return false;
+        if (page.events.length < config.limit) return true;
+        const next = Math.min(...page.events.map(event => event.created_at)) - 1;
+        if (until !== undefined && next >= until) return false;
+        until = next;
       }
-      if (!signal.aborted) batch.forEach(id => discovery.labeled.add(id));
-    })();
+      return false;
+    }));
+    // A failed relay may hold labels absent from the others; retry that batch on the next pass.
+    if (!signal.aborted && completed.length && completed.every(Boolean)) batch.forEach(id => discovery.labeled.add(id));
   }));
 }
 

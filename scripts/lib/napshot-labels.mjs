@@ -26,20 +26,21 @@ export async function collectLabels(request, { relays, labelers, targets, previo
   for (let index = 0; index < targets.length; index += LABEL_BATCH) {
     const ids = targets.slice(index, index + LABEL_BATCH);
     const found = new Map();
-    let batchComplete = false;
-    let until;
     batches++;
-    for (;;) {
-      const filter = { kinds: [LABEL_KIND], authors: labelers, '#L': [SCREENSHOT_NAMESPACE], '#e': ids, limit, ...(until !== undefined ? { until } : {}) };
-      const pages = await Promise.all(relays.map(url => request(url, filter)));
-      const events = pages.flatMap(page => page.events);
-      for (const event of events) if (labelers.includes(event.pubkey)) found.set(event.id, event);
-      if (pages.some(page => page.ok)) batchComplete = true;
-      // A full page from a relay that reached EOSE has more behind it; a short page, or none finishing, ends the batch.
-      if (!events.length || !pages.some(page => page.ok && page.events.length >= limit)) break;
-      until = Math.min(...events.map(event => event.created_at)) - 1;
-    }
-    if (batchComplete) complete++;
+    const completed = await Promise.all(relays.map(async url => {
+      let until;
+      for (;;) {
+        const filter = { kinds: [LABEL_KIND], authors: labelers, '#L': [SCREENSHOT_NAMESPACE], '#e': ids, limit, ...(until !== undefined ? { until } : {}) };
+        const page = await request(url, filter);
+        for (const event of page.events) if (labelers.includes(event.pubkey)) found.set(event.id, event);
+        if (!page.ok) return false;
+        if (page.events.length < limit) return true;
+        const next = Math.min(...page.events.map(event => event.created_at)) - 1;
+        if (until !== undefined && next >= until) return false;
+        until = next;
+      }
+    }));
+    if (completed.some(Boolean)) complete++;
     for (const event of found.values()) labels.set(event.id, event);
   }
   return { labels: [...labels.values()], complete, batches };
