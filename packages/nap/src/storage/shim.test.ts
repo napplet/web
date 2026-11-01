@@ -1,25 +1,17 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { installFakeShell, type FakeShell } from '../test-support/fake-shell.js';
 
-interface PostedMessage {
-  msg: Record<string, unknown>;
-  targetOrigin: string;
-}
-
-let postedMessages: PostedMessage[];
+let shell: FakeShell;
 let uuidCounter: number;
-let messageListener: ((event: { source: unknown; data: unknown }) => void) | null;
-let mockParent: { postMessage(msg: unknown, targetOrigin: string): void };
 let originalCryptoDescriptor: PropertyDescriptor | undefined;
 
-/** Deliver a shell -> napplet result envelope to the installed message listener. */
+/** Deliver a shell -> napplet result envelope over the NIP-5D port. */
 function deliverResult(data: Record<string, unknown>): void {
-  messageListener?.({ source: mockParent, data });
+  shell.deliver(data);
 }
 
 beforeEach(() => {
-  postedMessages = [];
   uuidCounter = 0;
-  messageListener = null;
   originalCryptoDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'crypto');
 
   Object.defineProperty(globalThis, 'crypto', {
@@ -29,24 +21,7 @@ beforeEach(() => {
     },
   });
 
-  mockParent = {
-    postMessage(msg: unknown, targetOrigin: string) {
-      postedMessages.push({ msg: msg as Record<string, unknown>, targetOrigin });
-    },
-  };
-
-  Object.defineProperty(globalThis, 'window', {
-    configurable: true,
-    value: {
-      parent: mockParent,
-      addEventListener(type: string, listener: (event: { source: unknown; data: unknown }) => void) {
-        if (type === 'message') messageListener = listener;
-      },
-      removeEventListener(type: string) {
-        if (type === 'message') messageListener = null;
-      },
-    },
-  });
+  shell = installFakeShell();
 });
 
 afterEach(() => {
@@ -55,7 +30,7 @@ afterEach(() => {
   } else {
     Reflect.deleteProperty(globalThis, 'crypto');
   }
-  Reflect.deleteProperty(globalThis, 'window');
+  vi.unstubAllGlobals();
 });
 
 describe('@napplet/nap/storage shim', () => {
@@ -79,13 +54,13 @@ describe('@napplet/nap/storage shim', () => {
     deliverResult({ type: 'storage.keys.result', id: 'storage-test-4', keys: ['k'] });
     await expect(keys).resolves.toEqual(['k']);
 
-    expect(postedMessages.map((p) => p.msg)).toEqual([
+    expect(shell.sent).toEqual([
       { type: 'storage.get', id: 'storage-test-1', key: 'k' },
       { type: 'storage.set', id: 'storage-test-2', key: 'k', value: 'v' },
       { type: 'storage.remove', id: 'storage-test-3', key: 'k' },
       { type: 'storage.keys', id: 'storage-test-4' },
     ]);
-    for (const { msg } of postedMessages) {
+    for (const msg of shell.sent) {
       expect('scope' in msg).toBe(false);
     }
   });
@@ -110,7 +85,7 @@ describe('@napplet/nap/storage shim', () => {
     deliverResult({ type: 'storage.keys.result', id: 'storage-test-4', keys: ['k'] });
     await expect(keys).resolves.toEqual(['k']);
 
-    expect(postedMessages.map((p) => p.msg)).toEqual([
+    expect(shell.sent).toEqual([
       { type: 'storage.get', id: 'storage-test-1', key: 'k', scope: 'instance' },
       { type: 'storage.set', id: 'storage-test-2', key: 'k', value: 'v', scope: 'instance' },
       { type: 'storage.remove', id: 'storage-test-3', key: 'k', scope: 'instance' },

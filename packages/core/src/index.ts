@@ -231,9 +231,10 @@ export type {
 export { TOPICS } from './topics.js';
 export type { TopicKey, TopicValue } from './topics.js';
 
-export type { CloneMode, PostMessageTarget } from './boundary.js';
+export type { CloneMode, EnvelopePort, PostMessageTarget } from './boundary.js';
 export {
   sendEnvelope,
+  sendPortEnvelope,
   toCloneableSnapshot,
   setCloneMode,
   getCloneMode,

@@ -2,8 +2,8 @@
  * @napplet/core -- iframe boundary helpers for clone-safe `postMessage`.
  *
  * Every NAP shim crosses the napplet ⇄ shell boundary by posting a JSON
- * envelope through `window.parent.postMessage(msg, '*')`, which **structured-
- * clones** its argument. Framework reactive values -- Svelte 5 `$state`, Vue
+ * envelope over the `MessagePort` that NIP-5D's `napplet.hello` hands to the
+ * shell, which **structured-clones** its argument. Framework reactive values -- Svelte 5 `$state`, Vue
  * `reactive`, Solid stores -- are `Proxy` objects that are NOT structured-
  * cloneable, so `postMessage` throws a `DataCloneError`. In an async/Promise
  * path that throw becomes an unhandled rejection that gets silently swallowed,
@@ -22,7 +22,7 @@
  * - **`'snapshot'`** -- always snapshot before posting (eager normalization).
  *
  * NOTE: this module references no browser globals. The post target is passed
- * in by the caller (NAP shims pass `window.parent`), so `@napplet/core` stays
+ * in by the caller (NAP shims pass the bound port), so `@napplet/core` stays
  * DOM-free. These helpers are pure SDK plumbing: the bytes placed on the wire
  * are identical plain envelopes either way, so nothing here is protocol surface.
  *
@@ -192,32 +192,9 @@ function cloneError(type: string, cause: unknown): Error {
   return err;
 }
 
-/**
- * Post a JSON envelope to the shell across the iframe boundary, handling
- * non-structured-cloneable arguments per the active {@link CloneMode}.
- *
- * This is the single boundary chokepoint every NAP shim uses instead of calling
- * `target.postMessage(msg, '*')` directly, so that a `DataCloneError` is either
- * transparently recovered (`'auto'`/`'snapshot'`) or raised as a loud,
- * actionable, synchronous error (`'strict'`, or any mode when the value is
- * genuinely non-cloneable) rather than swallowed in an async path.
- *
- * @param target - The post target (NAP shims pass `window.parent`).
- * @param message - The envelope; must carry a `type` discriminator.
- * @param targetOrigin - The `postMessage` target origin (defaults to `'*'`).
- * @throws {Error} `NappletDataCloneError` if the message cannot be made cloneable.
- *
- * @example
- * ```ts
- * import { sendEnvelope } from '@napplet/core';
- * sendEnvelope(window.parent, { type: 'outbox.subscribe', id, subId, filters });
- * ```
- */
-export function sendEnvelope<T extends { type: string }>(
-  target: PostMessageTarget,
-  message: T,
-  targetOrigin = '*',
-): void {
+type Deliver = (message: unknown) => void;
+
+function deliverEnvelope(post: Deliver, message: { type: string }): void {
   if (cloneMode === 'snapshot') {
     let snap: unknown;
     try {
@@ -226,7 +203,7 @@ export function sendEnvelope<T extends { type: string }>(
       throw cloneError(message.type, cause);
     }
     try {
-      target.postMessage(snap, targetOrigin);
+      post(snap);
     } catch (cause) {
       if (isDataCloneError(cause)) throw cloneError(message.type, cause);
       throw cause;
@@ -235,7 +212,7 @@ export function sendEnvelope<T extends { type: string }>(
   }
 
   try {
-    target.postMessage(message, targetOrigin);
+    post(message);
     return;
   } catch (cause) {
     if (!isDataCloneError(cause)) throw cause;
@@ -243,7 +220,7 @@ export function sendEnvelope<T extends { type: string }>(
 
     // 'auto': snapshot-and-retry, then warn once per message type.
     try {
-      target.postMessage(toCloneableSnapshot(message), targetOrigin);
+      post(toCloneableSnapshot(message));
     } catch {
       throw cloneError(message.type, cause);
     }
@@ -257,4 +234,61 @@ export function sendEnvelope<T extends { type: string }>(
       );
     }
   }
+}
+
+/**
+ * Post a JSON envelope to a window-like target, handling non-structured-
+ * cloneable arguments per the active {@link CloneMode}.
+ *
+ * NIP-5D carries NAP messages over the `MessagePort` handed over in
+ * `napplet.hello`, so NAP shims use {@link sendPortEnvelope}. This helper stays
+ * for callers that post to a window (for example a shell's own frames).
+ *
+ * @param target - The post target.
+ * @param message - The envelope; must carry a `type` discriminator.
+ * @param targetOrigin - The `postMessage` target origin (defaults to `'*'`).
+ * @throws {Error} `NappletDataCloneError` if the message cannot be made cloneable.
+ *
+ * @example
+ * ```ts
+ * import { sendEnvelope } from '@napplet/core';
+ * sendEnvelope(frame.contentWindow, { type: 'example.ping' });
+ * ```
+ */
+export function sendEnvelope<T extends { type: string }>(
+  target: PostMessageTarget,
+  message: T,
+  targetOrigin = '*',
+): void {
+  deliverEnvelope((value) => target.postMessage(value, targetOrigin), message);
+}
+
+/** Minimal port target -- a `MessagePort` satisfies this without DOM types. */
+export interface EnvelopePort {
+  postMessage(message: unknown): void;
+}
+
+/**
+ * Post a JSON envelope over a `MessagePort`, handling non-structured-cloneable
+ * arguments per the active {@link CloneMode}.
+ *
+ * This is the single boundary chokepoint NAP shims use: NIP-5D carries every
+ * NAP message over the port the bootstrap handed to the shell in
+ * `napplet.hello`, so a `DataCloneError` is either transparently recovered
+ * (`'auto'`/`'snapshot'`) or raised as a loud, actionable, synchronous error
+ * (`'strict'`, or any mode when the value is genuinely non-cloneable) rather
+ * than swallowed in an async path.
+ *
+ * @param port - The bound port.
+ * @param message - The envelope; must carry a `type` discriminator.
+ * @throws {Error} `NappletDataCloneError` if the message cannot be made cloneable.
+ *
+ * @example
+ * ```ts
+ * import { sendPortEnvelope } from '@napplet/core';
+ * sendPortEnvelope(port, { type: 'outbox.subscribe', id, subId, filters });
+ * ```
+ */
+export function sendPortEnvelope<T extends { type: string }>(port: EnvelopePort, message: T): void {
+  deliverEnvelope((value) => port.postMessage(value), message);
 }
