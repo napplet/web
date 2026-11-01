@@ -69,6 +69,7 @@ Example: napplet create my-napplet -i`,
   --archetype <URI>       Convention such as napplet:note/open
   --relay <url>           Publishing relay (repeatable)
   --server <origin>       Blossom server (repeatable)
+  --proxy <url>           Route suggestion lookups through an HTTP or SOCKS5 proxy
   --force                 Replace existing configuration
 
 Existing settings are preserved unless --force is supplied.
@@ -82,6 +83,8 @@ Missing values are requested in an interactive terminal.`,
   --description <text>   Override the manifest description
   --relay <url>          Override publishing relays (repeatable)
   --server <origin>      Override Blossom servers (repeatable)
+  --proxy <url>          Route Blossom, relay and remote-signer traffic through a proxy:
+                         http://, https://, socks5:// or socks5h://host:port
   --name <name>          Select a named target (repeatable)
   --root                 Publish the root target
   --snapshot             Also create an immutable snapshot
@@ -99,13 +102,15 @@ Capture controls: --screenshot-selector, --screenshot-ready-selector,
 
 Examples:
   napplet deploy --dry-run
-  napplet deploy -i --format current --json`,
+  napplet deploy -i --format current --json
+  napplet deploy --proxy socks5h://127.0.0.1:9050`,
   keys: `Usage: napplet keys <store|connect|use|list|delete|doctor> [options]
 
   --name <reference>     Local key reference
   --sec <secret>         Secret to store; never written to project config
   --prompt-sec           Read hidden or explicitly piped secret input
   --relay <url>          Remote signer connection relay (repeatable)
+  --proxy <url>          keys connect: reach signer relays through an HTTP or SOCKS5 proxy
   --config <file>        Project to configure with keys use/connect
 
 keys connect requires interactive approval on your signer.
