@@ -5,7 +5,9 @@ import path from 'node:path';
 import test from 'node:test';
 import { assembleSite, assertNip05 } from './assemble-site.mjs';
 
-const NIP05 = '{"names":{"napshot":"94b92a261c88f6b14098e6ec15c93bed544380883745f9a030b27d4a5c554f81"}}';
+const NAPSHOT_PUBKEY = '94b92a261c88f6b14098e6ec15c93bed544380883745f9a030b27d4a5c554f81';
+const NAPSHOT_RELAYS = ['wss://relay.napplet.soy/', 'wss://relay.primal.net/'];
+const NIP05 = JSON.stringify({ names: { napshot: NAPSHOT_PUBKEY }, relays: { [NAPSHOT_PUBKEY]: NAPSHOT_RELAYS } });
 
 async function fixture(t) {
   const root = await mkdtemp(path.join(os.tmpdir(), 'napplet-site-'));
@@ -82,8 +84,10 @@ test('rejects a stale or malformed NIP-05 document', async (t) => {
   }
 });
 
-test('the published NIP-05 document maps napshot to its key', async () => {
+test('the published NIP-05 document maps napshot to its key and NIP-65 relay hints', async () => {
   const text = await readFile(new URL('../apps/web/public/.well-known/nostr.json', import.meta.url), 'utf8');
   assertNip05(text);
-  assert.equal(JSON.parse(text).names.napshot, '94b92a261c88f6b14098e6ec15c93bed544380883745f9a030b27d4a5c554f81');
+  const document = JSON.parse(text);
+  assert.equal(document.names.napshot, NAPSHOT_PUBKEY);
+  assert.deepEqual(document.relays?.[document.names.napshot], NAPSHOT_RELAYS);
 });
