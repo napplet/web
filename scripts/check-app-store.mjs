@@ -214,7 +214,7 @@ try {
   await page.getByRole('button', { name: 'Close preview' }).click();
   assert.equal(await card.locator('[data-launch-release]').evaluate(el => el === document.activeElement), true, 'focus returns to the Run link');
   await page.getByRole('button', { name: 'Check again' }).click();
-  await page.locator('#discovery-status').filter({ hasText: /Checked 2\/2/ }).waitFor();
+  await page.locator('#discovery-status').filter({ hasText: `Checked ${config.relays.length}/${config.relays.length}` }).waitFor();
   await page.screenshot({ path: '/tmp/napplet-store-desktop.png', fullPage: true });
   await page.close();
 
