@@ -52,6 +52,8 @@ const fixtures = {
   identity: manifest('napshot-identity', 'Identity fixture', 1_000),
   svg: manifest('napshot-svg', 'Svg fixture', 1_000, [shotTag(detailHash, 'image/svg+xml')]),
   shot: manifest('napshot-shot', 'Shot fixture', 1_000, [shotTag(sha256(detail), 'image/png')]),
+  // Declares a PNG screenshot whose bytes no mirror serves, so it can only fail verification in the browser.
+  deadShot: manifest('napshot-dead-shot', 'Unverified art fixture', 1_000, [shotTag('9'.repeat(64), 'image/png')]),
   listed: manifest('napshot-listed', 'Listed fixture', 1_000),
   pinned: manifest('napshot-pinned', 'Pinned fixture', 1_000, [], 5129),
   stale1: manifest('napshot-stale', 'Stale fixture', 900),
@@ -155,7 +157,6 @@ async function routeFixtureRelays(page) {
         assert.deepEqual(filter.authors, [labeler], 'labels are requested only from the configured fixture signer');
         assert.deepEqual(filter['#L'], ['#screenshot']);
         assert.ok(filter['#e'].length <= 50, 'label targets are batched');
-        assert.ok(!filter['#e'].includes(fixtures.shot.id), 'a release with a usable screenshot is never a label target');
         assert.ok(!filter['#e'].includes(fixtures.pinned.id), 'a snapshot is never a label target');
         const key = `${relay}|${JSON.stringify(filter['#e'])}`;
         const pages = servedPages.get(key) ?? 0;
@@ -179,7 +180,7 @@ async function savedLabelScenarios(page, { mirrorRequests, serverHits }) {
   await previewOf('Plain fixture').waitFor();
   assert.equal(await previewOf('Plain fixture').getAttribute('alt'), 'Automated signed-out preview of Plain fixture');
   assert.match(await previewOf('Plain fixture').getAttribute('src'), /^blob:/);
-  assert.equal(await card('Plain fixture').locator('[data-art-source]').textContent(), 'Napshot preview');
+  assert.equal(await card('Plain fixture').locator('[data-art-source]').textContent(), 'Napshot preview · signed out', 'the capture mode is visible, not only in a tooltip');
   assert.equal(await titleOf('Plain fixture'), 'Captured automatically in a signed-out shell and signed by a trusted Napshot labeler; not an endorsement.');
   assert.equal(await previewOf('Plain fixture').evaluate(element => element.naturalWidth), 1200);
   assert.deepEqual(mirrorRequests.filter(url => url.endsWith(captureHash)), [`https://napshot-wrong.example/${captureHash}`, `${artMirror}/${captureHash}`], 'a wrong mirror falls through to the good one');
@@ -188,19 +189,23 @@ async function savedLabelScenarios(page, { mirrorRequests, serverHits }) {
   await search.fill('Identity fixture');
   await previewOf('Identity fixture').waitFor();
   assert.equal(await previewOf('Identity fixture').getAttribute('alt'), 'Automated preview of Identity fixture captured with a read-only preview identity');
+  assert.equal(await card('Identity fixture').locator('[data-art-source]').textContent(), 'Napshot preview · preview identity');
   assert.equal(await titleOf('Identity fixture'), 'Captured automatically with a read-only preview identity and signed by a trusted Napshot labeler; not an endorsement.');
 }
 
-/** Eligibility: an undecodable screenshot yields to the preview; usable screenshots and listing art never do. */
+/** Eligibility: an undecodable or unverifiable screenshot yields to the preview; a verified screenshot and listing art never do. */
 async function eligibilityScenarios(page) {
   const search = page.getByRole('searchbox', { name: 'Search apps' });
   const card = (title) => page.locator('.discovered-card').filter({ hasText: title }).first();
   const previewOf = (title) => card(title).locator('img[data-napshot]');
   await search.fill('Svg fixture');
   await previewOf('Svg fixture').waitFor();
+  await search.fill('Unverified art fixture');
+  await previewOf('Unverified art fixture').waitFor();
   await search.fill('Shot fixture');
+  await card('Shot fixture').locator('[data-art-source]').filter({ hasText: 'Manifest screenshot' }).waitFor();
   await page.waitForTimeout(300);
-  assert.equal(await previewOf('Shot fixture').count(), 0, 'a usable author screenshot is never replaced by a preview');
+  assert.equal(await previewOf('Shot fixture').count(), 0, 'a verified author screenshot is never replaced by its labelled preview');
   await search.fill('Listed fixture');
   await page.waitForTimeout(300);
   assert.equal(await card('Listed fixture').locator('[data-listing-art]').count(), 1);
@@ -225,7 +230,7 @@ async function exclusionScenarios(page, { mirrorRequests }) {
   assert.equal(await previewOf('Pinned fixture').count(), 0, 'a snapshot never carries a preview');
   await search.fill('Overflow fixture');
   await page.waitForTimeout(500);
-  assert.equal(await page.locator('img[data-napshot]').count(), 3, 'only the three verified fixture previews are on the page');
+  assert.equal(await page.locator('img[data-napshot]').count(), 4, 'only the four verified fixture previews are on the page');
   await search.fill('');
 }
 
@@ -239,7 +244,7 @@ async function liveLabelScenarios(page, { requested }) {
   await previewOf('Late fixture').waitFor();
   const labelFilters = requested.filter(filter => filter.kinds?.length === 1 && filter.kinds[0] === 1985);
   const covered = new Set(labelFilters.flatMap(filter => filter['#e']));
-  const eligible = [fixtures.plain, fixtures.identity, fixtures.svg, fixtures.stale, fixtures.late, fixtures.broken, fixtures.listed, ...fixtures.overflow].map(event => event.id);
+  const eligible = [fixtures.plain, fixtures.identity, fixtures.svg, fixtures.shot, fixtures.deadShot, fixtures.stale, fixtures.late, fixtures.broken, fixtures.listed, ...fixtures.overflow].map(event => event.id);
   for (const id of eligible) assert.ok(covered.has(id), `every eligible fixture release is a label target: ${id.slice(0, 12)}`);
   assert.equal(covered.size, eligible.length);
   assert.ok(labelFilters.length >= 2, 'the targets are split into batches');
@@ -258,6 +263,8 @@ await withWebFixture(appRoot, async root => {
       label(fixtures.plain, { hash: captureHash, dim: '1200x750', size: capture.length, mirrors: ['https://napshot-wrong.example', redirectMirror.redirectMirror, artMirror] }),
       label(fixtures.identity, { mode: 'preview-identity' }),
       label(fixtures.svg),
+      label(fixtures.shot),
+      label(fixtures.deadShot),
       label(fixtures.stale1),
       label(fixtures.broken, { hash: sha256(otherPng), dim: '1200x750', size: 8_000_000, mirrors: ['https://napshot-oversize.example', 'https://napshot-fail.example'] }),
     ];
@@ -279,7 +286,7 @@ await withWebFixture(appRoot, async root => {
     await exclusionScenarios(page, { mirrorRequests: mirrors.mirrorRequests });
     await liveLabelScenarios(page, { requested: relays.requested });
     assert.deepEqual(errors, []);
-    console.log('Napshot fixtures: saved and live labels, both capture modes, wrong-bytes fall-through, refused private redirect, oversized and failing mirrors, screenshot and listing-art precedence, snapshot and stale-revision exclusion, untrusted-signer rejection, batching and until paging passed.');
+    console.log('Napshot fixtures: saved and live labels, both capture modes, wrong-bytes fall-through, refused private redirect, oversized and failing mirrors, verified-screenshot and listing-art precedence, failed-screenshot fallback, visible capture modes, snapshot and stale-revision exclusion, untrusted-signer rejection, batching and until paging passed.');
   } catch (error) {
     failures.push(error);
   } finally {

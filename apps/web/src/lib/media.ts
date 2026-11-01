@@ -28,7 +28,8 @@ const PRIVATE_V4 = [/^0\./, /^10\./, /^127\./, /^169\.254\./, /^172\.(1[6-9]|2\d
 export function isSafeMediaUrl(value: string): boolean {
   try {
     const url = new URL(value);
-    const host = url.hostname.toLowerCase().replace(/^\[|\]$/g, '');
+    // A trailing DNS root dot names the same host (`localhost.`, `printer.local.`), so it cannot dodge the checks below.
+    const host = url.hostname.toLowerCase().replace(/^\[|\]$/g, '').replace(/\.+$/, '');
     if (url.protocol !== 'https:' || url.username || url.password || !host.includes('.') && !host.includes(':')) return false;
     if (host === 'localhost' || host.endsWith('.localhost') || host.endsWith('.local') || host.endsWith('.internal')) return false;
     if (/^\d+\.\d+\.\d+\.\d+$/.test(host)) return !PRIVATE_V4.some(range => range.test(host));
@@ -93,16 +94,28 @@ export function usableScreenshot(app: CatalogApp): ManifestMedia | undefined {
   }));
 }
 
+/** The page's cancellation plus a per-request timeout, composed by hand where `AbortSignal.any` is unavailable. */
+function timed(signal: AbortSignal): { signal: AbortSignal; release: () => void } {
+  if (typeof AbortSignal.any === 'function' && typeof AbortSignal.timeout === 'function') return { signal: AbortSignal.any([signal, AbortSignal.timeout(TIMEOUT_MS)]), release: () => {} };
+  const controller = new AbortController();
+  const abort = () => controller.abort();
+  const timer = setTimeout(abort, TIMEOUT_MS);
+  if (signal.aborted) abort(); else signal.addEventListener('abort', abort, { once: true });
+  return { signal: controller.signal, release: () => { clearTimeout(timer); signal.removeEventListener('abort', abort); } };
+}
+
 async function fetchVerified(media: ManifestMedia, servers: string[], signal: AbortSignal, expect: MediaExpectations): Promise<string | null> {
   const limit = Math.min(expect.bytes ?? MAX_BYTES, MAX_BYTES);
   for (const server of servers) {
+    let deadline: ReturnType<typeof timed> | undefined;
     try {
       const url = blobUrl(server, media.sha256, expect.keepPath ?? false);
       if (!isSafeMediaUrl(url.href)) continue;
-      const timed = typeof AbortSignal.any === 'function' ? AbortSignal.any([signal, AbortSignal.timeout(TIMEOUT_MS)]) : signal;
+      // The timeout spans the body read as well, so a stalled mirror cannot hold up the ones after it.
+      deadline = timed(signal);
       // Redirects are refused before the browser can follow them: a followed response only surfaces after its
       // destination was already requested, and no public mirror may aim this visitor's browser at a private host.
-      const response = await fetch(url, { signal: timed, mode: 'cors', credentials: 'omit', referrerPolicy: 'no-referrer', redirect: 'error' });
+      const response = await fetch(url, { signal: deadline.signal, mode: 'cors', credentials: 'omit', referrerPolicy: 'no-referrer', redirect: 'error' });
       if (!response.ok) continue;
       const bytes = await readBounded(response, limit);
       if (!bytes || (expect.bytes !== undefined && bytes.byteLength !== expect.bytes)) continue;
@@ -116,16 +129,18 @@ async function fetchVerified(media: ManifestMedia, servers: string[], signal: Ab
       const actual = `${bitmap.width}x${bitmap.height}`;
       bitmap.close();
       if (expect.dim && actual !== expect.dim) continue;
+      // Hashing and decoding outlive the fetch; a page disposed meanwhile must not be issued a URL releaseImages() never sees.
+      if (signal.aborted) return null;
       const src = URL.createObjectURL(blob);
       issued.add(src);
       return src;
-    } catch { /* Try the next declared server; absent media falls back to generic artwork. */ }
+    } catch { /* Try the next declared server; absent media falls back to generic artwork. */ } finally { deadline?.release(); }
   }
   return null;
 }
 
 /**
- * Resolve one media blob to an object URL after verifying it, sharing results per hash and expectations.
+ * Resolve one media blob to an object URL after verifying it, sharing results per hash, declared type, mirror list and expectations.
  * @param media Media descriptor from the manifest or a verified Napshot label.
  * @param servers Blossom servers to try in order; each failure falls through to the next.
  * @param signal Cancellation for navigation.
@@ -135,7 +150,8 @@ async function fetchVerified(media: ManifestMedia, servers: string[], signal: Ab
  */
 export function verifiedImage(media: ManifestMedia, servers: string[], signal: AbortSignal, expect: MediaExpectations = {}): Promise<string | null> {
   if (!servers.length || !crypto?.subtle || typeof createImageBitmap !== 'function') return Promise.resolve(null);
-  const key = `${media.sha256}|${expect.bytes ?? ''}|${expect.dim ?? ''}|${expect.keepPath ? 'path' : 'root'}`;
+  // Every input to the verification and fetch policy is part of the key, so one entry's failing mirrors never answer for another's.
+  const key = JSON.stringify([media.sha256, media.type ?? null, servers, expect.bytes ?? null, expect.dim ?? null, expect.keepPath ?? false]);
   let pending = cache.get(key);
   if (!pending) {
     pending = fetchVerified(media, servers, signal, expect).catch(() => null);

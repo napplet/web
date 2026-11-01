@@ -1,7 +1,7 @@
 /** Trusted Napshot screenshot labels (napplet/napshot's NIP-32 profile, not NIP-5D/NAP surface) as display-only fallbacks. */
 import { verifyEvent, validateEvent, type Event } from 'nostr-tools/pure';
 import type { CatalogApp, ManifestMedia } from './catalog';
-import { isSafeMediaUrl, usableScreenshot } from './media';
+import { isSafeMediaUrl } from './media';
 
 export const LABEL_KIND = 1985;
 /** NIP-32 namespace of Napshot screenshot labels. */
@@ -121,7 +121,9 @@ export function choosePreview(candidates: { preview: NapshotScreenshot; createdA
 }
 
 /**
- * Attach Napshot previews to entries that need one. A screenshot the renderer can actually fetch and decode wins, and snapshots (5129) never get one.
+ * Attach Napshot previews to root and named releases; snapshots (5129) never get one.
+ * A declared author screenshot does not suppress the preview here, because its bytes are only verified in the browser:
+ * the card tries the screenshot first and falls back to the preview only when that verification fails.
  * @param apps Verified catalog entries.
  * @param labels Untrusted kind 1985 events from the snapshot or relays.
  * @param signers Explicitly trusted labeler public keys.
@@ -138,7 +140,7 @@ export function withNapshot(apps: CatalogApp[], labels: readonly unknown[], sign
     for (const tag of tags) if (Array.isArray(tag) && tag[0] === 'e' && typeof tag[1] === 'string') byTarget.set(tag[1], [...(byTarget.get(tag[1]) ?? []), label as Event]);
   }
   return apps.map(app => {
-    if (usableScreenshot(app) || app.event.kind === 5129) return app;
+    if (app.event.kind === 5129) return app;
     const candidates = (byTarget.get(app.event.id) ?? []).flatMap(event => {
       const preview = screenshotLabel(event, app.event, trusted);
       return preview ? [{ preview, createdAt: event.created_at }] : [];
@@ -151,9 +153,9 @@ export function withNapshot(apps: CatalogApp[], labels: readonly unknown[], sign
 /**
  * Manifest event ids that may receive a Napshot preview, for building a `#e` label query.
  * @param apps Verified catalog entries.
- * @returns Ids of root and named releases without a screenshot the renderer could fetch and decode.
+ * @returns Ids of root and named releases; an author screenshot may still fail verification, so it does not exclude a release.
  * @example const filter = { kinds: [1985], authors: signers, '#L': ['#screenshot'], '#e': previewTargets(apps) };
  */
 export function previewTargets(apps: CatalogApp[]): string[] {
-  return apps.filter(app => !usableScreenshot(app) && app.event.kind !== 5129).map(app => app.event.id);
+  return apps.filter(app => app.event.kind !== 5129).map(app => app.event.id);
 }

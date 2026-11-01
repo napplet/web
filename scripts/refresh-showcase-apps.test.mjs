@@ -45,7 +45,7 @@ test('collectLabels pages a full relay page with until until a page comes back s
   const { labels, complete } = await collectLabels(request, { relays: ['wss://one.example'], labelers, targets: [target(0)], limit: 80 });
   assert.equal(calls.length, 2);
   assert.equal(calls[0].until, undefined);
-  assert.equal(calls[1].until, 99, 'the next page starts below the full page\u2019s oldest event');
+  assert.equal(calls[1].until, 100, 'the next page re-reads the full page\u2019s oldest timestamp inclusively');
   assert.equal(complete, 1);
   assert.deepEqual(labels, [trusted]);
 });
@@ -69,10 +69,19 @@ test('collectLabels pages unequal relay histories independently and merges dupli
   };
   const { labels, complete } = await collectLabels(request, { relays: Object.keys(histories), labelers, targets: [target(0)], limit: 2 });
   assert.deepEqual(labels.map(event => event.id).sort(), [...newer, older].map(event => event.id).sort());
-  assert.deepEqual(calls.filter(([url]) => url === 'first'), [['first', undefined], ['first', 89]]);
+  assert.deepEqual(calls.filter(([url]) => url === 'first'), [['first', undefined], ['first', 90], ['first', 80]]);
   assert.equal(calls.filter(([url]) => url === 'second').length, 1);
   assert.equal(calls.filter(([url]) => url === 'third').length, 1);
   assert.equal(complete, 1);
+});
+
+test('collectLabels reports a batch whose single target saturates one timestamp as incomplete', async () => {
+  // Every page is full of labels at one second, so the boundary can never be proven exhausted.
+  const crowded = Array.from({ length: 4 }, (_, index) => label(labelers[0], index, 70));
+  const request = async (_url, filter) => ({ events: crowded.slice(0, filter.limit), ok: true });
+  const { labels, complete } = await collectLabels(request, { relays: ['first'], labelers, targets: [target(0)], limit: 2 });
+  assert.equal(complete, 0);
+  assert.equal(labels.length, 2, 'what was seen is still kept');
 });
 
 test('collectLabels does not count an interrupted later page as a completed relay history', async () => {
