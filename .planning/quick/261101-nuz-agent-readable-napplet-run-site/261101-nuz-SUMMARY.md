@@ -21,3 +21,7 @@ status: complete
 ## Pending
 
 Bunny dashboard setup (middleware script, Run script before cache, two secrets) and the post-deploy isitagentready re-scan. Before: level 1, failing linkHeaders, markdownNegotiation, contentSignals, agentSkills.
+
+## Caching follow-up
+
+Bunny's cache key is the URL alone (Vary Cache docs; observed live: `Accept: text/markdown` on `/` → `text/html`, `cdn-cache: HIT`). Cache separation of the rewritten `.md` URL is inferred from the middleware docs; `scripts/check-markdown-negotiation.mjs` verifies it live and runs in Deploy site right after the edge script publishes.
