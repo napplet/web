@@ -80,7 +80,7 @@ pnpm -r test:unit
 pnpm --filter @napplet/web build
 pnpm --filter @napplet/docs build
 pnpm --filter @napplet/conformance-web build --base=/conformance/
-node --test scripts/assemble-site.test.mjs
+node --test scripts/assemble-site.test.mjs scripts/agent-markdown.test.mjs
 node scripts/assemble-site.mjs
 pnpm exec playwright install chromium
 pnpm test:spa-onboarding
@@ -101,7 +101,9 @@ The onboarding check starts its own Astro development server and exercises the p
 
 `scripts/assemble-site.mjs` is shared by the deployment and link-check workflows. It places the homepage at `/`, the explainer at `/explainer/`, documentation at `/docs/`, and the conformance runtime at `/conformance/`. It checks for social artwork, robots and sitemap files, verifies the installer copies, and rejects conformance HTML built with the wrong base before replacing the previous artifact.
 
-The deployment workflow uploads the resulting `site/` directory to Bunny storage and purges the pull zone. Bunny is the canonical deployment; nsite is an optional mirror. The existing Bunny storage zone, endpoint, password, API key, and pull-zone ID remain GitHub Actions secrets. Website, docs, conformance, lockfile, or assembly changes trigger deployment after merging to `main` and trigger the corresponding pull-request link check. Configure credentials with `scripts/setup-site-secrets.sh`.
+Assembly also writes the agent output described in [Agent access to napplet.run](../docs/guide/agent-access.md): a Markdown copy next to every web page (`/index.md`, `/explainer/index.md`, `/protocol/…/index.md`), the root `/llms.txt` and `/llms-full.txt`, and `/.well-known/agent-skills/` built from `skills/`. The docs build writes its own `.md` copies and `/docs/llms.txt`. The build fails if any page lacks its `<link rel="alternate" type="text/markdown">` tag or copy, if an `llms.txt` link points at a missing file, or if a skill digest does not match the bytes served. `Accept: text/markdown` negotiation runs in the Bunny edge script in [`edge/`](../../edge/README.md).
+
+The deployment workflow uploads the resulting `site/` directory to Bunny storage and purges the pull zone. Bunny is the canonical deployment; nsite is an optional mirror. The existing Bunny storage zone, endpoint, password, API key, and pull-zone ID remain GitHub Actions secrets. After the upload, the workflow deploys the edge script when `BUNNY_EDGE_SCRIPT_ID` and `BUNNY_EDGE_DEPLOY_KEY` are set. Website, docs, conformance, lockfile, or assembly changes trigger deployment after merging to `main` and trigger the corresponding pull-request link check. Configure credentials with `scripts/setup-site-secrets.sh`.
 
 ### NIP-05 identifiers
 

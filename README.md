@@ -188,7 +188,7 @@ pnpm --filter @napplet/conformance-web dev # conformance runtime
 
 Documentation development prebundling uses the same `esnext` target as production builds and source transforms. Keep `optimizeDeps.esbuildOptions.target` aligned with the other docs Vite targets when updating the toolchain.
 
-`scripts/assemble-site.mjs` creates the same static artifact for link checks and `.github/workflows/deploy-site.yml`: showcase at `/`, original explainer at `/explainer/`, docs at `/docs/`, and conformance at `/conformance/`. Bunny is the canonical deployment target; nsite is an optional mirror. Configure deploy secrets with `scripts/setup-site-secrets.sh`.
+`scripts/assemble-site.mjs` creates the same static artifact for link checks and `.github/workflows/deploy-site.yml`: showcase at `/`, original explainer at `/explainer/`, docs at `/docs/`, and conformance at `/conformance/`, plus Markdown copies of every page, `/llms.txt` and the `/.well-known/agent-skills/` index for agents ([Agent access](apps/docs/guide/agent-access.md)). Bunny is the canonical deployment target, with `Accept: text/markdown` negotiation in the [`edge/`](edge/README.md) script; nsite is an optional mirror. Configure deploy secrets with `scripts/setup-site-secrets.sh`.
 
 ## Related
 
