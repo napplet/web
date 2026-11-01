@@ -19,6 +19,9 @@ overrides:
   esbuild: ^0.28.1
   # Patch legacy Vite consumers while preserving Astro’s Vite 8 requirement.
   "vite@<7": ^6.4.5
+  # The Bunny edge SDK pulls @hono/node-server only for its Node dev server, which the
+  # deno-condition edge bundle does not include; 2.1.3 clears the moderate advisory.
+  "@bunny.net/edgescript-sdk>@hono/node-server": ^2.1.3
 
   nanoid@3: ^3.3.18
   devalue: ^5.9.3
