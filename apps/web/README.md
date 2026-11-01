@@ -103,6 +103,12 @@ The onboarding check starts its own Astro development server and exercises the p
 
 The deployment workflow uploads the resulting `site/` directory to Bunny storage and purges the pull zone. Bunny is the canonical deployment; nsite is an optional mirror. The existing Bunny storage zone, endpoint, password, API key, and pull-zone ID remain GitHub Actions secrets. Website, docs, conformance, lockfile, or assembly changes trigger deployment after merging to `main` and trigger the corresponding pull-request link check. Configure credentials with `scripts/setup-site-secrets.sh`.
 
+### NIP-05 identifiers
+
+`apps/web/public/.well-known/nostr.json` publishes [NIP-05](https://github.com/nostr-protocol/nips/blob/master/05.md) names for `napplet.run`. Today it maps `napshot@napplet.run` to the napplet Napshot instance's signing key. Add a name by editing that file, using lowercase `a-z0-9-_.` names and lowercase hex public keys. Assembly rejects a malformed document or a build that differs from the source. NIP-05 also asks servers to send `Access-Control-Allow-Origin: *` so browser clients can read the file. The Bunny `napplet` pull zone has a `NIP-05 browser discovery CORS` edge rule that sets this response header for `https://napplet.run/.well-known/nostr.json`, including requests with query parameters. This rule is managed in Bunny, independently of site deployment.
+
+The document also supplies NIP-05 relay hints under `relays`, keyed by the same public key. Napshot's hints are `wss://relay.napplet.soy/` and `wss://relay.primal.net/`, taken from its signature-verified [NIP-65](https://github.com/nostr-protocol/nips/blob/master/65.md) kind 10002 event `ab47c2c3d95696ef4bfc88e2edd06986757b63580dfedbe331b88fccfce16a42`. These are static hints: when the published relay list changes, update this mapping and the publication test in `scripts/assemble-site.test.mjs` from the latest verified event.
+
 ## Homepage presentation checks
 
 `node scripts/check-showcase.mjs <assembled-site-url>` checks the four builder paths, the single below-fold network explanation, current signed previews, mobile layouts, no-JavaScript content, and section-specific GSAP choreography. It also switches reduced motion during a session to check cleanup. Regenerate the matching 1200×630 social card with `node scripts/generate-social-card.mjs` after changing its headline or visual motif.
