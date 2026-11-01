@@ -234,6 +234,23 @@ async function exclusionScenarios(page, { mirrorRequests }) {
   await search.fill('');
 }
 
+/** Visiting: a saved release without publisher artwork asks for its label as its card comes into view; nothing else is requested before discovery. */
+async function visitLabelScenarios(page, { requested }) {
+  const search = page.getByRole('searchbox', { name: 'Search apps' });
+  const previewOf = (title) => page.locator('.discovered-card').filter({ hasText: title }).first().locator('img[data-napshot]');
+  await search.fill('Late fixture');
+  await previewOf('Late fixture').waitFor();
+  assert.equal(await previewOf('Late fixture').getAttribute('alt'), 'Automated signed-out preview of Late fixture', 'the late label renders on visit, without a discovery pass');
+  assert.ok(requested.every(filter => filter.kinds?.length === 1 && filter.kinds[0] === 1985), 'before discovery, relays are asked only for labels');
+  const targets = new Set(requested.flatMap(filter => filter['#e']));
+  assert.ok(targets.has(fixtures.late.id), 'a card without artwork asks for its own revision');
+  assert.ok(targets.has(fixtures.stale.id), 'a release whose saved label names a previous revision asks again');
+  for (const [name, fixture] of [['listing art', fixtures.listed], ['a verified author screenshot', fixtures.shot], ['a saved preview', fixtures.plain], ['a snapshot', fixtures.pinned]]) {
+    assert.ok(!targets.has(fixture.id), `${name} never asks the relays for a preview`);
+  }
+  await search.fill('');
+}
+
 /** Live discovery: the label published after the snapshot was saved still appears, batched and paged. */
 async function liveLabelScenarios(page, { requested }) {
   const search = page.getByRole('searchbox', { name: 'Search apps' });
@@ -280,13 +297,13 @@ await withWebFixture(appRoot, async root => {
     const mirrors = await routeMirrors(page);
     const relays = await routeFixtureRelays(page);
     await page.goto(`${staticServer.base}/apps/`, { waitUntil: 'networkidle' });
-    assert.equal(relays.sockets, 0, 'visiting the fixture catalog does not contact relays');
     await savedLabelScenarios(page, { mirrorRequests: mirrors.mirrorRequests, serverHits: redirectMirror.serverHits });
     await eligibilityScenarios(page);
     await exclusionScenarios(page, { mirrorRequests: mirrors.mirrorRequests });
+    await visitLabelScenarios(page, { requested: relays.requested });
     await liveLabelScenarios(page, { requested: relays.requested });
     assert.deepEqual(errors, []);
-    console.log('Napshot fixtures: saved and live labels, both capture modes, wrong-bytes fall-through, refused private redirect, oversized and failing mirrors, verified-screenshot and listing-art precedence, failed-screenshot fallback, visible capture modes, snapshot and stale-revision exclusion, untrusted-signer rejection, batching and until paging passed.');
+    console.log('Napshot fixtures: saved, on-visit and live labels, both capture modes, wrong-bytes fall-through, refused private redirect, oversized and failing mirrors, verified-screenshot and listing-art precedence, failed-screenshot fallback, visible capture modes, snapshot and stale-revision exclusion, untrusted-signer rejection, batching and until paging passed.');
   } catch (error) {
     failures.push(error);
   } finally {

@@ -62,11 +62,9 @@ try {
   const mirrorOrigins = new Set((snapshot.labels ?? []).flatMap(label => label.tags.filter(tag => tag[0] === 'server' && tag[1]).map(tag => new URL(tag[1]).origin)));
   await page.route(url => mirrorOrigins.has(url.origin), route => route.fulfill({ status: 404, headers: cors }));
   const contacted = new Set();
-  let sockets = 0;
   let negotiations = 0;
   const requested = [];
   for (const relay of config.relays) await page.routeWebSocket(relay, socket => {
-    sockets++;
     contacted.add(relay);
     socket.onMessage(data => {
       const [type, id, filter] = JSON.parse(data);
@@ -99,7 +97,18 @@ try {
     });
   });
   await page.goto(`${base}/apps/`, { waitUntil: 'networkidle' });
-  assert.equal(sockets, 0, 'visiting the catalog does not contact relays');
+  // Visible cards with no publisher artwork and no saved preview ask the relays for a trusted label; nothing else is
+  // requested before the end of the saved collection. The snapshot decides how many such cards are on screen.
+  const artless = () => page.locator('#discovered-grid article:not([hidden])').evaluateAll(cards => cards.filter(card => {
+    const media = JSON.parse(card.dataset.media ?? '{}');
+    return !card.querySelector('[data-listing-art]') && !media.screenshots?.length && !media.napshot;
+  }).length);
+  const onlyLabels = (moment) => {
+    assert.ok(requested.every(filter => filter.kinds.length === 1 && filter.kinds[0] === 1985), `${moment} asks relays only for trusted labels`);
+    assert.equal(negotiations, 0, `${moment} starts no manifest reconciliation`);
+  };
+  if (await artless() > 0) for (let waited = 0; !requested.length && waited < 10_000; waited += 100) await page.waitForTimeout(100);
+  onlyLabels('visiting the catalog');
   assert.equal(await page.locator('[data-launch]').count(), apps.length);
   const cards = page.locator('#discovered-grid article');
   const saved = await cards.count();
@@ -114,7 +123,7 @@ try {
   assert.equal(await shown(page), 12);
   await page.locator('#store-more').scrollIntoViewIfNeeded();
   await page.waitForFunction(() => document.querySelectorAll('#discovered-grid article:not([hidden])').length >= 24);
-  assert.equal(sockets, 0, 'paging the saved collection still contacts no relay');
+  onlyLabels('paging the saved collection');
   for (const app of apps) {
     await page.locator(`[data-launch="${app.id}"]`).scrollIntoViewIfNeeded();
     await page.locator(`[data-launch="${app.id}"]`).click();
@@ -214,5 +223,5 @@ try {
   assert.equal(await noJs.locator('#discovered-grid article:visible').count(), await noJs.locator('#discovered-grid article').count(), 'the whole saved collection is readable without JavaScript');
   assert.equal(await noJs.locator('#discover-apps').isVisible(), false);
   assert.deepEqual(errors, []);
-  console.log('App store: six previews, gameplay, filters, scroll paging, NIP-77 attempt with request fallback, listing art, batched label targeting with untrusted-label rejection, XSS, running a discovered release here, shell links, no relay contact before the end, offline retry, mobile and no-JS passed.');
+  console.log('App store: six previews, gameplay, filters, scroll paging, NIP-77 attempt with request fallback, listing art, batched label targeting with untrusted-label rejection, XSS, running a discovered release here, shell links, label-only relay contact before the end, offline retry, mobile and no-JS passed.');
 } finally { await browser.close(); }
