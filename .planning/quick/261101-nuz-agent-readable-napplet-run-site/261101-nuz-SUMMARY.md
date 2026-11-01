@@ -25,3 +25,7 @@ Bunny dashboard setup (middleware script, Run script before cache, two secrets) 
 ## Caching follow-up
 
 Bunny's cache key is the URL alone (Vary Cache docs; observed live: `Accept: text/markdown` on `/` → `text/html`, `cdn-cache: HIT`). Cache separation of the rewritten `.md` URL is inferred from the middleware docs; `scripts/check-markdown-negotiation.mjs` verifies it live and runs in Deploy site right after the edge script publishes.
+
+## Live result (2026-11-01, after deploy)
+
+Edge script 100368 is live on pull zone 6017894; `check-markdown-negotiation.mjs` passes on napplet.run and in Deploy site run 41328313469. isitagentready on napplet.run: linkHeaders, markdownNegotiation and agentSkills fail → pass. contentSignals and the level (1) are **pending**: the scanner keeps reading the pre-deploy `robots.txt` (15 scans, 16:24–17:43 UTC, including after a Bunny purge), while napplet.b-cdn.net, the same zone, scores level 4.
