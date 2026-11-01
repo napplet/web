@@ -31,6 +31,16 @@ describe('verified media fetches', () => {
     expect(fetch.mock.calls.map(([url]) => url.hostname)).toEqual(['stall.example', 'good.example']);
   });
 
+  it('issues no object URL to a page disposed while the bytes were being verified', async () => {
+    const controller = new AbortController();
+    vi.stubGlobal('fetch', async () => new Response(png));
+    vi.stubGlobal('createImageBitmap', async () => { controller.abort(); return { width: 2, height: 1, close: () => {} }; });
+    const create = vi.spyOn(URL, 'createObjectURL');
+    onTestFinished(() => create.mockRestore());
+    await expect(verifiedImage({ sha256: hash, type: 'image/png' }, ['https://good.example'], controller.signal)).resolves.toBeNull();
+    expect(create).not.toHaveBeenCalled();
+  });
+
   it('does not let one mirror list answer for another sharing a hash', async () => {
     vi.stubGlobal('fetch', async (url: URL) => url.hostname === 'bad.example' ? new Response(null, { status: 404 }) : new Response(png));
     const signal = new AbortController().signal;

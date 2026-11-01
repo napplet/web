@@ -129,6 +129,8 @@ async function fetchVerified(media: ManifestMedia, servers: string[], signal: Ab
       const actual = `${bitmap.width}x${bitmap.height}`;
       bitmap.close();
       if (expect.dim && actual !== expect.dim) continue;
+      // Hashing and decoding outlive the fetch; a page disposed meanwhile must not be issued a URL releaseImages() never sees.
+      if (signal.aborted) return null;
       const src = URL.createObjectURL(blob);
       issued.add(src);
       return src;
