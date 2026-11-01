@@ -311,11 +311,20 @@ function applyFilters(state: StoreState): void {
   else note.textContent = 'Keep scrolling to look on public relays.';
 }
 
+/** A profile picture whose host does not answer, or is not an image, leaves the name alone instead of a broken frame. */
+function pruneBrokenPictures(grid: HTMLElement, signal: AbortSignal): void {
+  grid.querySelectorAll<HTMLImageElement>('img.author-picture').forEach(picture => {
+    if (picture.complete && picture.naturalWidth === 0) { picture.remove(); return; }
+    picture.addEventListener('error', () => picture.remove(), { once: true, signal });
+  });
+}
+
 /** Rebuild the grid from the entries; the template escapes publisher text and the parser is inert. */
 function renderEntries(state: StoreState, added: string[] = []): void {
   const grid = document.querySelector<HTMLElement>('#discovered-grid')!;
   const parsed = new DOMParser().parseFromString(state.entries.map(releaseCardHtml).join(''), 'text/html');
   grid.replaceChildren(...parsed.body.children);
+  pruneBrokenPictures(grid, state.signal);
   grid.querySelectorAll<HTMLButtonElement>('[data-copy-address]').forEach(copy => { copy.hidden = false; });
   applyFilters(state);
   const fresh = added.map(id => grid.querySelector<HTMLElement>(`[data-release="${CSS.escape(id)}"]`)).filter((card): card is HTMLElement => card !== null && !card.hidden);
@@ -383,6 +392,7 @@ export function setupStore(): () => void {
   controls.hidden = false;
   button.hidden = false;
   grid.querySelectorAll<HTMLButtonElement>('[data-copy-address]').forEach(copy => { copy.hidden = false; });
+  pruneBrokenPictures(grid, events.signal);
   const filter = () => applyFilters(state);
   search.addEventListener('input', filter, { signal: events.signal });
   controls.addEventListener('change', filter, { signal: events.signal });

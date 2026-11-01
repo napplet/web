@@ -34,6 +34,12 @@ const [negentropyRelay] = config.relays;
 const browser = await chromium.launch();
 const errors = [];
 
+/** Serve saved profile pictures from a routed 1×1 PNG: the origins come from the snapshot, so nothing is pinned and no real avatar host is contacted. */
+async function routeProfilePictures(page) {
+  const origins = new Set((snapshot.profiles ?? []).flatMap(event => { try { return [new URL(JSON.parse(event.content).picture).origin]; } catch { return []; } }));
+  await page.route(url => origins.has(url.origin), route => route.fulfill({ status: 200, contentType: 'image/png', body: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=', 'base64') }));
+}
+
 /** Serve deterministic NIP-11 documents: the first relay advertises NIP-77, the second does not. */
 async function routeInformation(page) {
   for (const relay of config.relays) {
@@ -58,6 +64,7 @@ try {
   page.on('pageerror', error => errors.push(error.message));
   await page.route('https://listing.example/**', route => route.fulfill({ status: 200, contentType: 'image/png', body: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=', 'base64') }));
   await page.route('https://avatar.example/**', route => route.fulfill({ status: 200, contentType: 'image/png', body: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=', 'base64') }));
+  await routeProfilePictures(page);
   await page.route('https://blossom.example/**', route => route.fulfill(new URL(route.request().url()).pathname === `/${artifactHash}` ? { status: 200, contentType: 'text/html', headers: { 'access-control-allow-origin': '*' }, body: artifact } : { status: 404, headers: { 'access-control-allow-origin': '*' } }));
   await routeInformation(page);
   const cors = { 'access-control-allow-origin': '*' };
@@ -213,6 +220,7 @@ try {
 
   const offline = await browser.newPage();
   await routeInformation(offline);
+  await routeProfilePictures(offline);
   for (const relay of config.relays) await offline.routeWebSocket(relay, socket => socket.close());
   await offline.goto(`${base}/apps/`);
   await offline.getByRole('button', { name: 'Check for new apps' }).click();
@@ -223,6 +231,7 @@ try {
 
   for (const width of [390, 320]) {
     const mobile = await browser.newPage({ viewport: { width, height: 844 } });
+    await routeProfilePictures(mobile);
     await mobile.goto(`${base}/apps/`);
     assert.ok(await mobile.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
     await mobile.getByLabel('Discovered', { exact: true }).check();
@@ -231,6 +240,8 @@ try {
     await mobile.close();
   }
   const noJs = await browser.newPage({ javaScriptEnabled: false });
+  // Without scripting, Chromium loads every lazy image eagerly, so the whole collection's avatars must come from the route.
+  await routeProfilePictures(noJs);
   await noJs.goto(`${base}/apps/`);
   assert.equal(await noJs.locator('[data-launch]').count(), apps.length);
   assert.ok(await noJs.locator('#discovered-grid a').count() > 20);
