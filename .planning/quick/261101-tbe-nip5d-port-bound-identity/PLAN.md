@@ -2,7 +2,7 @@
 quick_id: 261101-tbe
 slug: nip5d-port-bound-identity
 date: 2026-11-01
-status: in-progress
+status: complete
 ---
 
 # Chase NIP-5D port-bound identity
