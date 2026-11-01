@@ -7,7 +7,7 @@ status: complete
 
 # Summary: agent-readable napplet.run
 
-- Build-time output on every surface: 75 page `.md` copies (49 web, 26 docs) with matching `<link rel="alternate" type="text/markdown">`, `/llms.txt`, `/llms-full.txt`, `/docs/llms.txt`, `/docs/llms-full.txt`, and `/.well-known/agent-skills/` (10 `skill-md` entries, 1 reproducible `.tar.gz` for `napplet-port-napp`).
+- Build-time output on every surface: 76 page `.md` copies (49 web, 27 docs) with matching `<link rel="alternate" type="text/markdown">`, `/llms.txt`, `/llms-full.txt`, `/docs/llms.txt`, `/docs/llms-full.txt`, and `/.well-known/agent-skills/` (10 `skill-md` entries, 1 reproducible `.tar.gz` for `napplet-port-napp`).
 - `assemble-site.mjs` fails the build on a missing alternate link or copy, a dangling llms.txt link, or a skill digest mismatch.
 - `robots.txt` Content-Signal: `search=yes, ai-input=yes, ai-train=no`.
 - Bunny middleware in `edge/` (before-cache rewrite to `.md`, `Vary: Accept`, `Link` on HTML). Verified with the real `@bunny.net/edgescript-sdk` 0.13.0 under Deno against the assembled site; deploy step gated on `BUNNY_EDGE_SCRIPT_ID` / `BUNNY_EDGE_DEPLOY_KEY`.
