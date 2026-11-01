@@ -2,7 +2,7 @@
 import { APPLICATION_KIND, catalogApp, collapseReleases, latestApps, withListings, type CatalogApp } from './catalog';
 import { releaseCardHtml } from './card';
 import { releaseImages, verifiedImage } from './media';
-import { LABEL_KIND, previewTargets, SCREENSHOT_NAMESPACE, withNapshot } from './napshot';
+import { LABEL_KIND, previewTargets, SCREENSHOT_NAMESPACE, withNapshot, type NapshotMode } from './napshot';
 import snapshot from '../data/discovered-apps.json';
 import config from '../data/discovery.json';
 import { gsap } from 'gsap';
@@ -14,11 +14,13 @@ import type { Filter } from 'applesauce-core/helpers';
 
 const MANIFEST_KINDS = [5129, 15129, 35129];
 const PAGE = 12;
+/** Batch size for `#e` label targets; relays cap single-letter tag arrays, and this stays well inside every limit. */
+const LABEL_TARGETS = 50;
 /** Explicitly configured Napshot labelers; an empty list disables screenshot fallbacks. */
 const LABELERS: string[] = config.screenshotLabelers ?? [];
 const savedLabels: unknown[] = (snapshot as { labels?: unknown[] }).labels ?? [];
 
-interface Discovery { pool: RelayPool; store: EventStore; queriedAuthors: Set<string>; receive: number; paged: Set<string>; done: Set<string> }
+interface Discovery { pool: RelayPool; store: EventStore; queriedAuthors: Set<string>; labeled: Set<string>; receive: number; paged: Set<string>; done: Set<string> }
 
 /** Page state shared by filtering, paging and live discovery. */
 interface StoreState {
@@ -46,7 +48,7 @@ async function openDiscovery(): Promise<Discovery> {
   const [{ RelayPool, SyncDirection }, { EventStore }] = await Promise.all([import('applesauce-relay'), import('applesauce-core')]);
   const store = new EventStore({ verifyEvent });
   for (const event of [...snapshot.events, ...(snapshot.applications ?? []), ...savedLabels]) store.add(event as Event);
-  return { pool: new RelayPool(), store, queriedAuthors: new Set(), receive: SyncDirection.RECEIVE, paged: new Set(), done: new Set() };
+  return { pool: new RelayPool(), store, queriedAuthors: new Set(), labeled: new Set(), receive: SyncDirection.RECEIVE, paged: new Set(), done: new Set() };
 }
 
 /**
@@ -99,6 +101,36 @@ export async function syncRelay(discovery: Discovery, url: string, filter: Filte
   return { ...await requestRelay(discovery, url, { ...filter, limit: config.limit }, signal), method: 'req' };
 }
 
+/**
+ * Request Napshot labels for every eligible release the store knows and this session has not asked about yet.
+ * Saved entries are included, so a preview published for an unchanged manifest still appears; targets are batched,
+ * and a relay page that comes back full is paged with `until` so candidates are not silently dropped.
+ * @param discovery Open pool and store, tracking the targets already asked about this session.
+ * @param signal Cancellation for this discovery pass.
+ * @example await fetchLabels(discovery, controller.signal);
+ */
+async function fetchLabels(discovery: Discovery, signal: AbortSignal): Promise<void> {
+  const targets = previewTargets(discovery.store.getByFilters({ kinds: MANIFEST_KINDS }).map(event => catalogApp(event)).filter(app => app !== null))
+    .filter(id => !discovery.labeled.has(id));
+  if (!targets.length) return;
+  // The batches run together, and each marks its targets queried only after its rounds settle, so an
+  // aborted pass does not permanently skip them; `labeled` keeps later passes from re-asking.
+  await Promise.all(Array.from({ length: Math.ceil(targets.length / LABEL_TARGETS) }, (_, index) => {
+    const batch = targets.slice(index * LABEL_TARGETS, (index + 1) * LABEL_TARGETS);
+    return (async () => {
+      let until: number | undefined;
+      for (;;) {
+        const filter: Filter = { kinds: [LABEL_KIND], authors: LABELERS, '#L': [SCREENSHOT_NAMESPACE], '#e': batch, limit: config.limit, ...(until !== undefined ? { until } : {}) };
+        const pages = await Promise.all(config.relays.map(url => requestRelay(discovery, url, filter, signal)));
+        // A short page on every relay, or none of them finishing, is the end of this batch.
+        if (signal.aborted || !pages.some(page => page.complete && page.events.length >= config.limit)) break;
+        until = Math.min(...pages.flatMap(page => page.events).map(event => event.created_at)) - 1;
+      }
+      if (!signal.aborted) batch.forEach(id => discovery.labeled.add(id));
+    })();
+  }));
+}
+
 /** Reconcile manifests with every relay (or page the ones without NIP-77), then fetch listings for new publishers. */
 async function discover(discovery: Discovery, until: number | undefined, signal: AbortSignal): Promise<{ completed: number; received: number; oldest?: number; paged: number }> {
   const relays = until ? config.relays.filter(url => discovery.paged.has(url) && !discovery.done.has(url)) : config.relays;
@@ -113,12 +145,16 @@ async function discover(discovery: Discovery, until: number | undefined, signal:
     authors.forEach(author => discovery.queriedAuthors.add(author));
     await Promise.all(config.relays.map(url => syncRelay(discovery, url, { kinds: [APPLICATION_KIND], authors: authors.slice(0, 50) }, signal)));
   }
-  // Napshot labels are looked up by exact manifest id, only from explicitly trusted signers.
-  const targets = previewTargets(manifests.map(event => catalogApp(event)).filter(app => app !== null)).slice(0, 100);
-  if (LABELERS.length && targets.length && !signal.aborted) {
-    await Promise.all(config.relays.map(url => requestRelay(discovery, url, { kinds: [LABEL_KIND], authors: LABELERS, '#L': [SCREENSHOT_NAMESPACE], '#e': targets, limit: config.limit }, signal)));
-  }
+  // Napshot labels are looked up by exact manifest id, only from explicitly trusted signers, for every eligible release the store knows.
+  if (LABELERS.length && !signal.aborted) await fetchLabels(discovery, signal);
   return { completed: results.filter(result => result.complete).length, received: manifests.length, paged: discovery.paged.size, oldest: manifests.length ? Math.min(...manifests.map(event => event.created_at)) : undefined };
+}
+
+/** Accessible text for the capture mode the verified label's signed content announced. */
+function napshotCopy(mode: NapshotMode): { alt: (name: string) => string; title: string } {
+  if (mode === 'signed-out') return { alt: name => `Automated signed-out preview of ${name}`, title: 'Captured automatically in a signed-out shell and signed by a trusted Napshot labeler; not an endorsement.' };
+  if (mode === 'preview-identity') return { alt: name => `Automated preview of ${name} captured with a read-only preview identity`, title: 'Captured automatically with a read-only preview identity and signed by a trusted Napshot labeler; not an endorsement.' };
+  return { alt: name => `Automated preview of ${name}`, title: 'Captured automatically and signed by a trusted Napshot labeler; not an endorsement.' };
 }
 
 /** Swap generic artwork for manifest media once its bytes verify. */
@@ -127,7 +163,7 @@ function hydrateMedia(card: HTMLElement, signal: AbortSignal): void {
   card.dataset.hydrated = 'true';
   let media: {
     icon: { sha256: string; type: string } | null; screenshots: { sha256: string; type?: string; alt?: string }[]; servers: string[];
-    napshot?: { sha256: string; type: 'image/png'; dim: string; size: number; servers: string[]; signer: string } | null;
+    napshot?: { sha256: string; type: 'image/png'; dim: string; size: number; servers: string[]; signer: string; mode: NapshotMode } | null;
   };
   try { media = JSON.parse(card.dataset.media ?? ''); } catch { return; }
   const image = (src: string) => { const element = document.createElement('img'); element.src = src; element.alt = ''; element.decoding = 'async'; return element; };
@@ -161,8 +197,9 @@ function hydrateMedia(card: HTMLElement, signal: AbortSignal): void {
       const art = card.querySelector<HTMLElement>('[data-art]');
       if (!src || !art) return;
       const name = card.querySelector('h3')?.textContent ?? 'this napplet';
+      const copy = napshotCopy(preview.mode);
       const element = image(src);
-      element.alt = `Automated signed-out preview of ${name}`;
+      element.alt = copy.alt(name);
       element.dataset.napshot = preview.signer;
       art.querySelector('.art-icon')?.remove();
       art.classList.remove('has-icon');
@@ -170,7 +207,7 @@ function hydrateMedia(card: HTMLElement, signal: AbortSignal): void {
       art.prepend(element);
       art.classList.add('has-art', 'has-napshot');
       const source = art.querySelector<HTMLElement>('[data-art-source]');
-      if (source) { source.textContent = 'Napshot preview'; source.title = 'Captured automatically in a signed-out shell and signed by a trusted Napshot labeler; not an endorsement.'; }
+      if (source) { source.textContent = 'Napshot preview'; source.title = copy.title; }
     });
   }
 }
