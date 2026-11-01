@@ -127,7 +127,7 @@ export const CHECKS: Check[] = [
     severity: 'error',
     title: 'Sends NAP messages only over the napplet.hello port',
     run: (ctx) => {
-      const bad = ctx.transportViolations.filter((v) => v.kind !== 'second-load' && v.kind !== 'port-closed');
+      const bad = ctx.transportViolations.filter((v) => v.kind === 'window-message' || v.kind === 'invalid-hello');
       if (bad.length === 0) return result.pass();
       return result.fail(`${bad[0].detail}; a NIP-5D shell revokes the napplet and removes its frame`, bad);
     },
@@ -147,7 +147,7 @@ export const CHECKS: Check[] = [
   },
 
   // ── lifecycle ─────────────────────────────────────────────────────────────────
-  // NIP-5D Identity: a second load means the verified document was replaced, so the shell revokes and removes the frame.
+  // NIP-5D Identity: a second load or hello means the verified document was replaced, so the shell revokes and removes the frame.
   // NIP-5D does not forbid navigating, so this is an advisory. https://github.com/nostr-protocol/nips/pull/2303
   {
     id: 'lifecycle/keeps-verified-document',
@@ -155,7 +155,8 @@ export const CHECKS: Check[] = [
     severity: 'warning',
     title: 'Keeps its verified document (no navigation or reload)',
     run: (ctx) => {
-      const replaced = ctx.transportViolations.filter((v) => v.kind === 'second-load' || v.kind === 'port-closed');
+      // A reload re-runs the bootstrap, so its second hello can arrive before the second load event.
+      const replaced = ctx.transportViolations.filter((v) => v.kind === 'second-load' || v.kind === 'second-hello' || v.kind === 'port-closed');
       if (replaced.length === 0) return result.pass();
       return result.fail(`${replaced[0].detail}; a NIP-5D shell revokes the napplet's identity and grants and removes its frame`, replaced);
     },

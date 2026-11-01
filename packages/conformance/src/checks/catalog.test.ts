@@ -185,7 +185,8 @@ describe('NIP-5D port transport checks', () => {
     const r = run('wire/port-only', ctx);
     expect(r.status).toBe('fail');
     expect(r.detail).toMatch(/relay\.subscribe/);
-    expect(run('wire/port-only', makeContext({ transportViolations: [{ kind: 'second-hello', detail: 'x' }] })).status).toBe('fail');
+    expect(run('wire/port-only', makeContext({ transportViolations: [{ kind: 'invalid-hello', detail: 'x' }] })).status).toBe('fail');
+    expect(run('lifecycle/keeps-verified-document', makeContext({ transportViolations: [{ kind: 'second-hello', detail: 'x' }] })).status).toBe('fail');
   });
 
   it('lifecycle/keeps-verified-document warns on a second load but leaves wire/port-only alone', () => {

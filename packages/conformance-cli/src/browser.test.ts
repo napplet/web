@@ -29,13 +29,9 @@ describe('real opaque-origin reference runtime', () => {
     }
   }
 
-  it('enforces maturity before classic and module scripts and blocks direct-message bypass', async () => {
+  it('enforces maturity before classic and module scripts over the napplet.hello port', async () => {
     const result = await boot(`<!doctype html><html><head><script>
       if (Object.keys(window.napplet).join(',') !== 'storage') throw new Error('Unexpected exposed domains');
-      window.addEventListener('message', event => {
-        if (event.data?.type === 'llm.select.result') throw new Error('Excluded domain answered direct message');
-      });
-      window.parent.postMessage({ type: 'llm.select', id: 'bypass' }, '*');
       window.napplet.storage.getItem('theme').then(value => {
         if (value !== null) throw new Error('Allowed storage failed');
       });
@@ -46,8 +42,26 @@ describe('real opaque-origin reference runtime', () => {
     });
     expect(result.bootError).toBeNull();
     expect(result.installedGlobal).toBe(true);
-    expect(result.emitted.map(record => (record.envelope as { type: string }).type)).toContain('llm.select');
+    expect(result.transportViolations).toEqual([]);
+    expect(result.emitted.map(record => (record.envelope as { type: string }).type)).toEqual(['storage.get']);
     expect(result.emitted.every(record => record.verdict.ok)).toBe(true);
+  });
+
+  it('revokes a napplet that bypasses the port with a window-level message', async () => {
+    const result = await boot(`<!doctype html><script>
+      window.parent.postMessage({ type: 'llm.select', id: 'bypass' }, '*');
+    </script>`, { domains: ['storage', 'llm'], maturity: {}, runDegraded: false, settleMs: 300 });
+    expect(result.transportViolations.map(v => v.kind)).toEqual(['window-message']);
+    expect(result.emitted).toEqual([]);
+  });
+
+  it('revokes a napplet that navigates its own frame', async () => {
+    const result = await boot(`<!doctype html><script>
+      window.napplet.storage.getItem('theme');
+      setTimeout(() => location.reload(), 50);
+    </script>`, { domains: ['storage'], runDegraded: false, settleMs: 600 });
+    // The reloaded document re-runs the bootstrap, so its hello may beat the second load event.
+    expect(result.transportViolations.map(v => v.kind)).toEqual([expect.stringMatching(/^second-(load|hello)$/)]);
   });
 
   it('admits one named exploratory domain before code runs', async () => {
