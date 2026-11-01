@@ -1,4 +1,5 @@
 ---
+import { FRAME_POLICY } from '../lib/player/frame-policy';
 interface Props {
   title?: string;
   description?: string;
@@ -17,6 +18,10 @@ const markdown = Astro.url.pathname.endsWith('/') ? `${Astro.url.pathname}index.
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Locks the napplet preview frame to its verified srcdoc document: every navigation of a child frame, including one
+         the napplet starts before its first load (which no NIP-5D replacement signal can observe), is checked against this
+         page's frame-src. srcdoc is not fetched, so it still loads. The player refuses to run without this policy. -->
+    <meta http-equiv="Content-Security-Policy" content={FRAME_POLICY} />
     <title>{title}</title>
     <meta name="description" content={description} />
     <meta name="theme-color" content="#120820" />

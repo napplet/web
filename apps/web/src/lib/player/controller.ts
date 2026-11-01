@@ -1,6 +1,7 @@
 /** Progressive enhancement for the Run links. The verifier loads only on click. */
 import { NAPPLETS, type PlayableNapplet } from '../showcase';
 import { bindPlayerFrame, type DocumentBinding, type Replacement } from './binding';
+import { hasFramePolicy } from './frame-policy';
 
 const REPLACED_NOTE = 'so the preview was closed. Retry to load the verified release again.';
 /** Status text when the verified document is replaced (NIP-5D Identity). */
@@ -125,6 +126,8 @@ export function setupPlayer(): void {
     }
     const timeout = window.setTimeout(() => request.abort(new Error('The download timed out. Please try again.')), 15000);
     try {
+      // Fail closed: without the page's frame-src lock a napplet could navigate its frame before the first load undetected.
+      if (!hasFramePolicy(window.document)) throw new Error('This page cannot lock the preview to its verified release, so it will not run here.');
       const { PLAYER_SANDBOX } = await import('./verify');
       const signal = request.signal;
       const document = await item.load(signal);
