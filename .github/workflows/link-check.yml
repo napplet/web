@@ -18,6 +18,8 @@ on:
       - 'scripts/check-protocol-browser.mjs'
       - 'scripts/check-app-store.mjs'
       - 'scripts/check-app-store-napshot.mjs'
+      - 'scripts/lib/web-fixture-workspace.mjs'
+      - 'scripts/web-fixture-workspace.test.mjs'
       - 'scripts/refresh-showcase-apps*'
       - 'scripts/lib/napshot-labels.mjs'
       - 'scripts/generate-protocol*'
@@ -40,6 +42,8 @@ on:
       - 'scripts/check-protocol-browser.mjs'
       - 'scripts/check-app-store.mjs'
       - 'scripts/check-app-store-napshot.mjs'
+      - 'scripts/lib/web-fixture-workspace.mjs'
+      - 'scripts/web-fixture-workspace.test.mjs'
       - 'scripts/refresh-showcase-apps*'
       - 'scripts/lib/napshot-labels.mjs'
       - 'scripts/generate-protocol*'
@@ -125,3 +129,6 @@ jobs:
           node scripts/check-showcase.mjs http://localhost:8099
           node scripts/check-app-store.mjs http://localhost:8099
           node scripts/check-protocol-browser.mjs http://localhost:8099
+
+      - name: Verify Napshot preview fixtures
+        run: node scripts/check-app-store-napshot.mjs
