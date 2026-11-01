@@ -7,3 +7,5 @@ Add the recommended public-key-to-relay-URL mapping from [NIP-05](https://github
 3. Run the assembly tests, build, type checking, recursive unit tests, and pinned slop scan; verify the built public copy. Commit, push, and open a PR.
 
 The user is handling Bunny tooling separately; HTTP CORS configuration is outside this change. This static web change has no npm/JSR package output and needs no changeset. This plan is non-normative; the linked specifications govern the document formats.
+
+Scope update: the user subsequently installed and configured the Bunny CLI and skills. Use the configured CLI to inspect the live pull zone, add a response-header rule limited to the NIP-05 URL, and verify HTTP and cross-origin browser access. Record the operational change in the README and summary.
