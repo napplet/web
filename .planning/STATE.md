@@ -65,7 +65,7 @@ Branch `feat/cli-terminal-usability` ships guided missing-value recovery, `-i` p
 Phase: 164 (cli-terminal-usability) — verified and shipped
 Plan: 3 of 3
 Status: [PR #248](https://github.com/napplet/web/pull/248) open with six actual terminal screenshots
-Last activity: 2026-11-01 - Completed quick task 261101-tbe: NIP-5D port-bound identity
+Last activity: 2026-11-01 - Completed quick task 261101-vx0: napplet.run player NIP-5D document binding
 
 See phase 163 VERIFICATION.md and COVERAGE.md for evidence and disclosed release/specification/baseline limits. Earlier phase and quick-task records below are historical.
 
@@ -570,6 +570,7 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 
 | Quick ID | Task | Date | Commit | Artifacts |
 |----------|------|------|--------|-----------|
+| 261101-vx0 | napplet.run player: NIP-5D napplet.hello bootstrap and document binding (frame removed on navigation, reload or window-level messages) | 2026-11-01 | — | [261101-vx0](./quick/261101-vx0-player-port-bound-identity/) |
 | 261101-tbe | NIP-5D port-bound identity: napplet.hello MessagePort transport in core/nap/shim, conformance port binding and replacement checks | 2026-11-01 | 9c9620c1 | [261101-tbe](./quick/261101-tbe-nip5d-port-bound-identity/) |
 | 261101-nuz | Agent-readable napplet.run: Markdown copies, llms.txt, agent-skills index, Content-Signal, Bunny Accept: text/markdown edge script | 2026-11-01 | 700115fd | [261101-nuz](./quick/261101-nuz-agent-readable-napplet-run-site/) |
 | 261101-n69 | --proxy for HTTP and SOCKS5 proxies on CLI Blossom and relay commands, plus unreachable-relay publish fix | 2026-11-01 | ebd22ec3 | [261101-n69](./quick/261101-n69-add-proxy-for-http-and-socks5-proxies-to/) |
