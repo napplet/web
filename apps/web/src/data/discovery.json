@@ -1,7 +1,10 @@
 {
   "relays": [
     "wss://relay.napplet.soy",
-    "wss://relay.damus.io"
+    "wss://relay.damus.io",
+    "wss://relay.ditto.pub",
+    "wss://relay.primal.net",
+    "wss://relay.nostr.com"
   ],
   "limit": 80,
   "timeoutMs": 10000,

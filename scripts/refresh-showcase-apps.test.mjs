@@ -1,7 +1,42 @@
-// Unit tests for the pure Napshot label collection used by scripts/refresh-showcase-apps.mjs.
+// Unit tests for the pure manifest paging and Napshot label collection used by scripts/refresh-showcase-apps.mjs.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { collectLabels, LABEL_BATCH } from './lib/napshot-labels.mjs';
+import { pageManifests } from './lib/manifest-pager.mjs';
+
+const manifest = (index, created) => ({ id: `m${index}`, kind: 35129, created_at: created, pubkey: 'p'.repeat(64), tags: [['d', `app-${index}`]] });
+/** A relay whose history is `events` (newest first) and which serves `limit` per page, hiding `dropped` ids as an oversized frame would be. */
+const history = (events, dropped = []) => async (_url, filter) => ({ ok: true, events: events.filter(event => event.created_at <= (filter.until ?? Infinity)).slice(0, filter.limit).filter(event => !dropped.includes(event.id)) });
+
+test('pageManifests keeps paging past a page the request shortened and stops only on an empty page', async () => {
+  // Three full pages of two, with the oldest event of the first page dropped as an oversized frame would be: the
+  // inclusive re-read of that boundary adds nothing, so the walk steps past the second instead of giving up.
+  const events = [manifest(0, 60), manifest(1, 50), manifest(2, 40), manifest(3, 30), manifest(4, 20), manifest(5, 10)];
+  const calls = [];
+  const request = async (url, filter) => { calls.push(filter.until); return history(events, ['m1'])(url, filter); };
+  const { ok, events: found } = await pageManifests(request, { url: 'wss://one.example', kinds: [35129], limit: 2, maxEvents: 100 });
+  assert.equal(ok, true);
+  assert.deepEqual(found.map(event => event.id), ['m0', 'm2', 'm3', 'm4', 'm5'], 'every event behind the short page is still collected');
+  assert.deepEqual(calls, [undefined, 60, 59, 40, 30, 20, 10, 9], 'each page re-reads the previous oldest timestamp inclusively, steps past a boundary that adds nothing, and ends on an empty page');
+});
+
+test('pageManifests does not skip manifests sharing the page-boundary second', async () => {
+  const events = [manifest(0, 60), manifest(1, 50), manifest(2, 50), manifest(3, 40)];
+  const { events: found } = await pageManifests(history(events), { url: 'wss://one.example', kinds: [35129], limit: 2, maxEvents: 100 });
+  // The first page ends at 50 with one of the two events at that second; re-reading 50 inclusively yields the other.
+  assert.deepEqual(found.map(event => event.id).sort(), ['m0', 'm1', 'm2', 'm3']);
+});
+
+test('pageManifests stops at the cap and reports a relay that never reached EOSE', async () => {
+  const events = Array.from({ length: 10 }, (_, index) => manifest(index, 100 - index));
+  const capped = await pageManifests(history(events), { url: 'wss://one.example', kinds: [35129], limit: 3, maxEvents: 5 });
+  assert.equal(capped.events.length, 5, 'the cap is checked between pages: three new, then two more past the inclusive boundary');
+  const failed = await pageManifests(async () => ({ ok: false, events: [] }), { url: 'wss://two.example', kinds: [35129], limit: 3, maxEvents: 5 });
+  assert.deepEqual(failed, { url: 'wss://two.example', ok: false, events: [] });
+  const interrupted = await pageManifests(async (_url, filter) => (filter.until === undefined ? { ok: true, events: events.slice(0, 3) } : { ok: false, events: [] }), { url: 'wss://three.example', kinds: [35129], limit: 3, maxEvents: 50 });
+  assert.equal(interrupted.ok, true, 'one completed page counts the relay as having answered');
+  assert.equal(interrupted.events.length, 3, 'what was seen is kept when a later page fails');
+});
 
 const labelers = ['a'.repeat(64)];
 const stranger = 'f'.repeat(64);
