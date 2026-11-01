@@ -1,6 +1,6 @@
 /** Render manifest media only from bytes whose hash and format were verified, as NIP-5D requires. */
 import { normalizeBlossomServer } from 'applesauce-common/helpers';
-import { isImageType, type ManifestMedia } from './catalog';
+import { isImageType, type CatalogApp, type ManifestMedia } from './catalog';
 
 const MAX_BYTES = 8_000_000;
 const TIMEOUT_MS = 15_000;
@@ -79,6 +79,20 @@ function blobUrl(server: string, sha256: string, keepPath: boolean): URL {
   return keepPath ? new URL(`${server.replace(/\/+$/, '')}/${sha256}`) : new URL(sha256, normalizeBlossomServer(server));
 }
 
+/**
+ * The author screenshot the renderer can actually fetch and decode, if any.
+ * A screenshot whose declared type the renderer cannot decode, or whose every mirror fails the fetch policy, is not usable author art:
+ * Napshot eligibility and card media treat it as absent so a valid preview can still fill in.
+ * @param app Verified catalog entry.
+ * @returns The first screenshot whose bytes the renderer would attempt, or undefined.
+ * @example const shot = usableScreenshot(app);
+ */
+export function usableScreenshot(app: CatalogApp): ManifestMedia | undefined {
+  return app.screenshots.find(media => (media.type === undefined || isImageType(media.type)) && app.servers.some(server => {
+    try { return isSafeMediaUrl(blobUrl(server, media.sha256, false).href); } catch { return false; }
+  }));
+}
+
 async function fetchVerified(media: ManifestMedia, servers: string[], signal: AbortSignal, expect: MediaExpectations): Promise<string | null> {
   const limit = Math.min(expect.bytes ?? MAX_BYTES, MAX_BYTES);
   for (const server of servers) {
@@ -86,9 +100,10 @@ async function fetchVerified(media: ManifestMedia, servers: string[], signal: Ab
       const url = blobUrl(server, media.sha256, expect.keepPath ?? false);
       if (!isSafeMediaUrl(url.href)) continue;
       const timed = typeof AbortSignal.any === 'function' ? AbortSignal.any([signal, AbortSignal.timeout(TIMEOUT_MS)]) : signal;
-      const response = await fetch(url, { signal: timed, mode: 'cors', credentials: 'omit', referrerPolicy: 'no-referrer' });
-      // A redirect may land anywhere; the destination must pass the same policy, and the hash decides the rest.
-      if (!response.ok || (response.redirected && !isSafeMediaUrl(response.url))) continue;
+      // Redirects are refused before the browser can follow them: a followed response only surfaces after its
+      // destination was already requested, and no public mirror may aim this visitor's browser at a private host.
+      const response = await fetch(url, { signal: timed, mode: 'cors', credentials: 'omit', referrerPolicy: 'no-referrer', redirect: 'error' });
+      if (!response.ok) continue;
       const bytes = await readBounded(response, limit);
       if (!bytes || (expect.bytes !== undefined && bytes.byteLength !== expect.bytes)) continue;
       // The hash is checked before anything decodes the bytes; the response's MIME header is ignored.

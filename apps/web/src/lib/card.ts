@@ -1,5 +1,6 @@
 /** One HTML template for discovered release cards, shared by the static build and live discovery. */
 import type { CatalogApp } from './catalog';
+import { usableScreenshot } from './media';
 import { SHELLS } from './showcase';
 
 const escape = (value: string) => value.replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]!);
@@ -35,9 +36,10 @@ export function searchText(app: CatalogApp): string {
 export function releaseCardHtml(app: CatalogApp, index: number): string {
   const art = app.listing?.images[0];
   const monogram = escape(app.name.slice(0, 1).toUpperCase());
-  // Publisher imagery (manifest screenshot or listing art) wins over the automated preview.
-  const napshot = app.napshot && !art ? { sha256: app.napshot.sha256, type: app.napshot.type, dim: app.napshot.dim, size: app.napshot.size, servers: app.napshot.servers, signer: app.napshot.signer } : null;
-  const media = JSON.stringify({ icon: app.icon ?? null, screenshots: app.screenshots.slice(0, 1), servers: app.servers, napshot });
+  // Publisher imagery (a screenshot the renderer can use, or listing art) wins over the automated preview.
+  const screenshot = usableScreenshot(app);
+  const napshot = app.napshot && !art ? { sha256: app.napshot.sha256, type: app.napshot.type, dim: app.napshot.dim, size: app.napshot.size, servers: app.napshot.servers, signer: app.napshot.signer, mode: app.napshot.mode } : null;
+  const media = JSON.stringify({ icon: app.icon ?? null, screenshots: screenshot ? [screenshot] : [], servers: app.servers, napshot });
   const tags = [...app.archetypes, ...app.topics.filter(topic => !app.archetypes.includes(topic))].slice(0, 5);
   const listingIcon = app.listing?.icon;
   const date = new Date(app.publishedAt * 1000).toISOString().slice(0, 10);

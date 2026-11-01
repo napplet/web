@@ -65,7 +65,7 @@ Branch `feat/cli-terminal-usability` ships guided missing-value recovery, `-i` p
 Phase: 164 (cli-terminal-usability) — verified and shipped
 Plan: 3 of 3
 Status: [PR #248](https://github.com/napplet/web/pull/248) open with six actual terminal screenshots
-Last activity: 2026-10-31 - Completed quick task 261031-go3: NAP maturity catalog and runtime policy (PR #288)
+Last activity: 2026-11-01 - Completed quick task 261101-ew8: PR #292 inline review fixes for relay pagination, fixture isolation and CI coverage
 
 See phase 163 VERIFICATION.md and COVERAGE.md for evidence and disclosed release/specification/baseline limits. Earlier phase and quick-task records below are historical.
 
@@ -570,6 +570,8 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 
 | Quick ID | Task | Date | Commit | Artifacts |
 |----------|------|------|--------|-----------|
+| 261101-ew8 | PR #292 inline review: independent relay pagination, incomplete-batch retries, isolated fixture builds and CI execution | 2026-11-01 | d39acea6 | [261101-ew8](./quick/261101-ew8-resolve-all-five-inline-review-threads-o/) |
+| 261101-crf | Address the Copilot review on PR #289: refuse mirror redirects before following, share screenshot eligibility, batch and exhaust label discovery, capture-mode wording, refresh-proof tests and a deterministic fixture browser check | 2026-11-01 | fcca9786 | [261101-crf](./quick/261101-crf-address-copilot-review-comments-on-pr-289/) |
 | 261101-cyx | Napshot screenshot fallbacks for app-store releases without screenshots | 2026-11-01 | 331dbf1a | [261101-cyx](./quick/261101-cyx-napshot-screenshot-fallbacks-in-app-stor/) |
 | 261031-go3 | NAP maturity catalog, policy selection, host enforcement and generated docs (PR #288) | 2026-10-31 | 18d636cf | [261031-go3](./quick/261031-go3-implement-nap-maturity-catalog-policy-se/) |
 | 261031-cbd | Add DinOS to the website shell directory | 2026-10-31 | b7bf6c66 | [261031-cbd](./quick/261031-cbd-add-dinos-to-the-website-shell-list/) |

@@ -1,7 +1,7 @@
 /** Trusted Napshot screenshot labels (napplet/napshot's NIP-32 profile, not NIP-5D/NAP surface) as display-only fallbacks. */
 import { verifyEvent, validateEvent, type Event } from 'nostr-tools/pure';
 import type { CatalogApp, ManifestMedia } from './catalog';
-import { isSafeMediaUrl } from './media';
+import { isSafeMediaUrl, usableScreenshot } from './media';
 
 export const LABEL_KIND = 1985;
 /** NIP-32 namespace of Napshot screenshot labels. */
@@ -12,6 +12,12 @@ const MAX_SIDE = 8192;
 const MAX_MIRRORS = 4;
 const HASH = /^[0-9a-f]{64}$/;
 const PUBKEY = /^[0-9a-f]{64}$/;
+/** Capture modes the label's signed content can announce, per napplet/napshot's wire contract. */
+const SIGNED_OUT_CONTENT = 'Signed-out napplet preview captured by Napshot.';
+const PREVIEW_IDENTITY_CONTENT = 'Napplet preview captured by Napshot with a read-only preview identity.';
+
+/** How the capture was made, taken from the verified label's signed content; unknown wording stays unspecified. */
+export type NapshotMode = 'signed-out' | 'preview-identity' | 'unspecified';
 
 /** A verified, revision-bound Napshot preview ready for byte verification in the browser. */
 export interface NapshotScreenshot extends ManifestMedia {
@@ -25,6 +31,8 @@ export interface NapshotScreenshot extends ManifestMedia {
   signer: string;
   /** Label event id, for provenance. */
   label: string;
+  /** Capture mode announced by the label's signed content. */
+  mode: NapshotMode;
 }
 
 /** Strict parse of the label's `screenshot` tag: one each of `x`, `m image/png`, `dim`, `size`; no duplicates. */
@@ -93,7 +101,9 @@ export function screenshotLabel(input: unknown, manifest: Event, signers: readon
     if (!fields || label?.[1] !== fields.sha256) return null;
     const servers = mirrors(tags);
     if (!servers.length) return null;
-    return { ...fields, type: 'image/png', servers, signer: event.pubkey, label: event.id };
+    // The capture mode is taken from the signed content, so the announcement cannot be forged by a relay.
+    const mode: NapshotMode = event.content === SIGNED_OUT_CONTENT ? 'signed-out' : event.content === PREVIEW_IDENTITY_CONTENT ? 'preview-identity' : 'unspecified';
+    return { ...fields, type: 'image/png', servers, signer: event.pubkey, label: event.id, mode };
   } catch { return null; }
 }
 
@@ -111,7 +121,7 @@ export function choosePreview(candidates: { preview: NapshotScreenshot; createdA
 }
 
 /**
- * Attach Napshot previews to entries that need one. Author screenshots always win, and snapshots (5129) never get one.
+ * Attach Napshot previews to entries that need one. A screenshot the renderer can actually fetch and decode wins, and snapshots (5129) never get one.
  * @param apps Verified catalog entries.
  * @param labels Untrusted kind 1985 events from the snapshot or relays.
  * @param signers Explicitly trusted labeler public keys.
@@ -128,7 +138,7 @@ export function withNapshot(apps: CatalogApp[], labels: readonly unknown[], sign
     for (const tag of tags) if (Array.isArray(tag) && tag[0] === 'e' && typeof tag[1] === 'string') byTarget.set(tag[1], [...(byTarget.get(tag[1]) ?? []), label as Event]);
   }
   return apps.map(app => {
-    if (app.screenshots.length || app.event.kind === 5129) return app;
+    if (usableScreenshot(app) || app.event.kind === 5129) return app;
     const candidates = (byTarget.get(app.event.id) ?? []).flatMap(event => {
       const preview = screenshotLabel(event, app.event, trusted);
       return preview ? [{ preview, createdAt: event.created_at }] : [];
@@ -141,9 +151,9 @@ export function withNapshot(apps: CatalogApp[], labels: readonly unknown[], sign
 /**
  * Manifest event ids that may receive a Napshot preview, for building a `#e` label query.
  * @param apps Verified catalog entries.
- * @returns Ids of root and named releases without a usable author screenshot.
+ * @returns Ids of root and named releases without a screenshot the renderer could fetch and decode.
  * @example const filter = { kinds: [1985], authors: signers, '#L': ['#screenshot'], '#e': previewTargets(apps) };
  */
 export function previewTargets(apps: CatalogApp[]): string[] {
-  return apps.filter(app => !app.screenshots.length && app.event.kind !== 5129).map(app => app.event.id);
+  return apps.filter(app => !usableScreenshot(app) && app.event.kind !== 5129).map(app => app.event.id);
 }
