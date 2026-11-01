@@ -5,6 +5,7 @@ import {
   getNappletArchetypes, getNappletIcon, getNappletIdentifier, getNappletOptionalDomains, getNappletParentPointer,
   getNappletRequiredDomains, getNappletRootPointer, getNappletServers, getNappletSource, getNappletTitle, isSha256, isValidNapplet,
 } from 'applesauce-common/helpers';
+import type { NapshotScreenshot } from './napshot';
 
 /** Kind of the Software Applications proposal (nostr-protocol/nips#1336), separate from napplet manifests. */
 export const APPLICATION_KIND = 32267;
@@ -35,6 +36,8 @@ export interface CatalogApp {
   coordinate?: string;
   pointer: string;
   listing?: Listing;
+  /** Trusted Napshot preview for this exact revision, used only when the manifest has no usable screenshot. */
+  napshot?: NapshotScreenshot;
   /** Snapshots folded into this entry as pinned versions of the same napplet. */
   versions: number;
   /** Newest publication among the entry and its folded snapshots. */

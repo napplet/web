@@ -1,7 +1,9 @@
 /** Opt-in public relay discovery for the website, outside any napplet iframe. */
 import { APPLICATION_KIND, catalogApp, collapseReleases, latestApps, withListings, type CatalogApp } from './catalog';
 import { releaseCardHtml } from './card';
-import { verifiedImage } from './media';
+import { exhaustLabels } from './label-pager.mjs';
+import { releaseImages, verifiedImage } from './media';
+import { LABEL_KIND, previewTargets, SCREENSHOT_NAMESPACE, withNapshot, type NapshotMode } from './napshot';
 import snapshot from '../data/discovered-apps.json';
 import config from '../data/discovery.json';
 import { gsap } from 'gsap';
@@ -13,8 +15,13 @@ import type { Filter } from 'applesauce-core/helpers';
 
 const MANIFEST_KINDS = [5129, 15129, 35129];
 const PAGE = 12;
+/** Batch size for `#e` label targets; relays cap single-letter tag arrays, and this stays well inside every limit. */
+const LABEL_TARGETS = 50;
+/** Explicitly configured Napshot labelers; an empty list disables screenshot fallbacks. */
+const LABELERS: string[] = config.screenshotLabelers ?? [];
+const savedLabels: unknown[] = (snapshot as { labels?: unknown[] }).labels ?? [];
 
-interface Discovery { pool: RelayPool; store: EventStore; queriedAuthors: Set<string>; receive: number; paged: Set<string>; done: Set<string> }
+interface Discovery { pool: RelayPool; store: EventStore; queriedAuthors: Set<string>; labeled: Set<string>; receive: number; paged: Set<string>; done: Set<string> }
 
 /** Page state shared by filtering, paging and live discovery. */
 interface StoreState {
@@ -32,17 +39,17 @@ interface StoreState {
   nudge?: () => void;
 }
 
-/** Collect what the saved snapshot and live discovery know, as display entries with listing fallbacks. */
-function entriesFrom(manifests: unknown[], applications: unknown[], relays: string[]): CatalogApp[] {
-  return withListings(collapseReleases(latestApps(manifests.map(event => catalogApp(event, relays)).filter(app => app !== null))), applications);
+/** Collect what the saved snapshot and live discovery know, as display entries with listing and Napshot fallbacks. */
+function entriesFrom(manifests: unknown[], applications: unknown[], labels: unknown[], relays: string[]): CatalogApp[] {
+  return withNapshot(withListings(collapseReleases(latestApps(manifests.map(event => catalogApp(event, relays)).filter(app => app !== null))), applications), labels, LABELERS);
 }
 
 /** applesauce's pool and store are loaded only after the visitor asks to contact relays. */
 async function openDiscovery(): Promise<Discovery> {
   const [{ RelayPool, SyncDirection }, { EventStore }] = await Promise.all([import('applesauce-relay'), import('applesauce-core')]);
   const store = new EventStore({ verifyEvent });
-  for (const event of [...snapshot.events, ...(snapshot.applications ?? [])]) store.add(event as Event);
-  return { pool: new RelayPool(), store, queriedAuthors: new Set(), receive: SyncDirection.RECEIVE, paged: new Set(), done: new Set() };
+  for (const event of [...snapshot.events, ...(snapshot.applications ?? []), ...savedLabels]) store.add(event as Event);
+  return { pool: new RelayPool(), store, queriedAuthors: new Set(), labeled: new Set(), receive: SyncDirection.RECEIVE, paged: new Set(), done: new Set() };
 }
 
 /**
@@ -95,9 +102,39 @@ export async function syncRelay(discovery: Discovery, url: string, filter: Filte
   return { ...await requestRelay(discovery, url, { ...filter, limit: config.limit }, signal), method: 'req' };
 }
 
+/**
+ * Request Napshot labels for every eligible release the store knows and this session has not asked about yet.
+ * Saved entries are included, so a preview published for an unchanged manifest still appears; targets are batched,
+ * and each relay is walked with an inclusive `until` (see exhaustLabels) so neither a request cap nor labels sharing a
+ * page-boundary timestamp silently drop candidates.
+ * @param discovery Open pool and store, tracking the targets already asked about this session.
+ * @param signal Cancellation for this discovery pass.
+ * @returns Resolves after each target batch has finished or failed.
+ * @example await fetchLabels(discovery, controller.signal);
+ */
+export async function fetchLabels(discovery: Discovery, signal: AbortSignal): Promise<void> {
+  const targets = previewTargets(discovery.store.getByFilters({ kinds: MANIFEST_KINDS }).map(event => catalogApp(event)).filter(app => app !== null))
+    .filter(id => !discovery.labeled.has(id));
+  if (!targets.length) return;
+  await Promise.all(Array.from({ length: Math.ceil(targets.length / LABEL_TARGETS) }, async (_, index) => {
+    const batch = targets.slice(index * LABEL_TARGETS, (index + 1) * LABEL_TARGETS);
+    const completed = await Promise.all(config.relays.map(url => exhaustLabels(async (ids, until) => {
+      if (signal.aborted) return { events: [], ok: false };
+      const filter: Filter = { kinds: [LABEL_KIND], authors: LABELERS, '#L': [SCREENSHOT_NAMESPACE], '#e': ids, limit: config.limit, ...(until !== undefined ? { until } : {}) };
+      const page = await requestRelay(discovery, url, filter, signal);
+      return { events: page.events, ok: page.complete };
+    }, batch, config.limit)));
+    // A failed relay may hold labels absent from the others; retry that batch on the next pass.
+    if (!signal.aborted && completed.length && completed.every(Boolean)) batch.forEach(id => discovery.labeled.add(id));
+  }));
+}
+
 /** Reconcile manifests with every relay (or page the ones without NIP-77), then fetch listings for new publishers. */
 async function discover(discovery: Discovery, until: number | undefined, signal: AbortSignal): Promise<{ completed: number; received: number; oldest?: number; paged: number }> {
   const relays = until ? config.relays.filter(url => discovery.paged.has(url) && !discovery.done.has(url)) : config.relays;
+  // A fresh pass ("Check again") asks about every eligible release again, so a preview published since the last pass appears;
+  // paging through older manifests keeps the session's answers and only asks about releases it has not covered yet.
+  if (!until) discovery.labeled.clear();
   const results = await Promise.all(relays.map(url => until
     ? requestRelay(discovery, url, { kinds: MANIFEST_KINDS, limit: config.limit, until }, signal)
     : syncRelay(discovery, url, { kinds: MANIFEST_KINDS }, signal)));
@@ -109,14 +146,29 @@ async function discover(discovery: Discovery, until: number | undefined, signal:
     authors.forEach(author => discovery.queriedAuthors.add(author));
     await Promise.all(config.relays.map(url => syncRelay(discovery, url, { kinds: [APPLICATION_KIND], authors: authors.slice(0, 50) }, signal)));
   }
+  // Napshot labels are looked up by exact manifest id, only from explicitly trusted signers, for every eligible release the store knows.
+  if (LABELERS.length && !signal.aborted) await fetchLabels(discovery, signal);
   return { completed: results.filter(result => result.complete).length, received: manifests.length, paged: discovery.paged.size, oldest: manifests.length ? Math.min(...manifests.map(event => event.created_at)) : undefined };
+}
+
+/**
+ * Text for the capture mode the verified label's signed content announced. `badge` is rendered visibly, so keyboard and touch
+ * users see the mode without the `title` tooltip, which only adds the longer explanation.
+ */
+function napshotCopy(mode: NapshotMode): { alt: (name: string) => string; badge: string; title: string } {
+  if (mode === 'signed-out') return { alt: name => `Automated signed-out preview of ${name}`, badge: 'Napshot preview · signed out', title: 'Captured automatically in a signed-out shell and signed by a trusted Napshot labeler; not an endorsement.' };
+  if (mode === 'preview-identity') return { alt: name => `Automated preview of ${name} captured with a read-only preview identity`, badge: 'Napshot preview · preview identity', title: 'Captured automatically with a read-only preview identity and signed by a trusted Napshot labeler; not an endorsement.' };
+  return { alt: name => `Automated preview of ${name}`, badge: 'Napshot preview', title: 'Captured automatically and signed by a trusted Napshot labeler; not an endorsement.' };
 }
 
 /** Swap generic artwork for manifest media once its bytes verify. */
 function hydrateMedia(card: HTMLElement, signal: AbortSignal): void {
   if (card.dataset.hydrated) return;
   card.dataset.hydrated = 'true';
-  let media: { icon: { sha256: string; type: string } | null; screenshots: { sha256: string; type?: string; alt?: string }[]; servers: string[] };
+  let media: {
+    icon: { sha256: string; type: string } | null; screenshots: { sha256: string; type?: string; alt?: string }[]; servers: string[];
+    napshot?: { sha256: string; type: 'image/png'; dim: string; size: number; servers: string[]; signer: string; mode: NapshotMode } | null;
+  };
   try { media = JSON.parse(card.dataset.media ?? ''); } catch { return; }
   const image = (src: string) => { const element = document.createElement('img'); element.src = src; element.alt = ''; element.decoding = 'async'; return element; };
   if (media.icon) void verifiedImage(media.icon, media.servers, signal).then(src => {
@@ -131,9 +183,31 @@ function hydrateMedia(card: HTMLElement, signal: AbortSignal): void {
       if (source) source.textContent = 'Manifest icon';
     }
   });
+  // Author screenshots win; a trusted Napshot label for this exact revision fills in when none is declared or its bytes fail to verify.
+  const showNapshot = () => {
+    if (!media.napshot || signal.aborted) return;
+    const preview = media.napshot;
+    void verifiedImage(preview, preview.servers, signal, { bytes: preview.size, dim: preview.dim, keepPath: true }).then(src => {
+      const art = card.querySelector<HTMLElement>('[data-art]');
+      if (!src || !art) return;
+      const name = card.querySelector('h3')?.textContent ?? 'this napplet';
+      const copy = napshotCopy(preview.mode);
+      const element = image(src);
+      element.alt = copy.alt(name);
+      element.dataset.napshot = preview.signer;
+      art.querySelector('.art-icon')?.remove();
+      art.classList.remove('has-icon');
+      art.removeAttribute('aria-hidden');
+      art.prepend(element);
+      art.classList.add('has-art', 'has-napshot');
+      const source = art.querySelector<HTMLElement>('[data-art-source]');
+      if (source) { source.textContent = copy.badge; source.title = copy.title; }
+    });
+  };
   if (media.screenshots[0]) void verifiedImage(media.screenshots[0], media.servers, signal).then(src => {
     const art = card.querySelector<HTMLElement>('[data-art]');
-    if (!src || !art) return;
+    if (!src) { showNapshot(); return; }
+    if (!art) return;
     art.querySelector('[data-listing-art]')?.remove();
     art.querySelector('.art-icon')?.remove();
     art.classList.remove('has-icon');
@@ -142,6 +216,7 @@ function hydrateMedia(card: HTMLElement, signal: AbortSignal): void {
     const source = art.querySelector('[data-art-source]');
     if (source) source.textContent = 'Manifest screenshot';
   });
+  else showNapshot();
 }
 
 /** Apply collection, search and paging to the cards; hydrate what is visible; describe the paging control. */
@@ -208,7 +283,7 @@ async function runDiscovery(state: StoreState, until?: number): Promise<void> {
   const before = new Set(state.entries.map(entry => entry.event.id));
   const result = await discover(state.discovery, until, request.signal);
   if (request.signal.aborted) return;
-  state.entries = entriesFrom(state.discovery.store.getByFilters({ kinds: MANIFEST_KINDS }), state.discovery.store.getByFilters({ kinds: [APPLICATION_KIND] }), config.relays);
+  state.entries = entriesFrom(state.discovery.store.getByFilters({ kinds: MANIFEST_KINDS }), state.discovery.store.getByFilters({ kinds: [APPLICATION_KIND] }), state.discovery.store.getByFilters({ kinds: [LABEL_KIND] }), config.relays);
   const added = state.entries.filter(entry => !before.has(entry.event.id)).map(entry => entry.id);
   if (result.oldest !== undefined) state.oldest = Math.min(state.oldest, result.oldest);
   // Reconciled relays hold nothing more; only relays that fell back to REQ have older pages to walk.
@@ -240,7 +315,7 @@ export function setupStore(): () => void {
   const sentinel = document.querySelector<HTMLElement>('#store-more')!;
   const events = new AbortController();
   const state: StoreState = {
-    entries: entriesFrom(snapshot.events, snapshot.applications ?? [], snapshot.relays),
+    entries: entriesFrom(snapshot.events, snapshot.applications ?? [], savedLabels, snapshot.relays),
     visible: PAGE, oldest: Math.min(...snapshot.events.map(event => event.created_at)),
     exhausted: false, loading: false, failed: false, signal: events.signal, motion: gsap.matchMedia(),
   };
@@ -277,7 +352,7 @@ export function setupStore(): () => void {
     try { await navigator.clipboard.writeText(copy.dataset.copyAddress); copy.textContent = 'Copied ✓'; }
     catch { window.prompt('Copy this napplet address into your shell', copy.dataset.copyAddress); }
   }, { signal: events.signal });
-  const cleanup = () => { state.pass?.abort(); events.abort(); state.motion.revert(); };
+  const cleanup = () => { state.pass?.abort(); events.abort(); state.motion.revert(); releaseImages(); };
   window.addEventListener('pagehide', cleanup, { once: true });
   document.addEventListener('astro:before-swap', cleanup, { once: true });
   return cleanup;

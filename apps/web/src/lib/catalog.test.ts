@@ -10,12 +10,13 @@ const sign = (changes: Record<string, unknown> = {}) => finalizeEvent({ kind: 35
 const listing = (tags: string[][], changes: Record<string, unknown> = {}) => finalizeEvent({ kind: 32267, created_at: 100, content: '**markdown**', tags, ...changes }, secret);
 
 describe('catalog release selection', () => {
+  // Verifying every signature in the growing snapshot can exceed 5s on shared CI runners.
   it('reads actual signed upstream current manifests without accepting historical aggregates', () => {
     const selected = snapshot.events.map(event => catalogApp(event)).filter(app => app !== null);
     expect(selected.length).toBeGreaterThan(10);
     expect(selected.some(app => app.name === 'Stick Brawl')).toBe(true);
     for (const event of snapshot.events.filter(event => event.tags.some(tag => tag[0] === 'x' && tag[2] === 'aggregate'))) expect(catalogApp(event)).toBeNull();
-  });
+  }, 30_000);
   it('preserves publisher descriptions as text, signatures, requirements and address hints', () => {
     const event = sign({ tags: [['d', 'fixture'], ['x', hash('a')], ['R', 'storage'], ['O', 'theme']] });
     const app = catalogApp(event, ['wss://relay.example'])!;

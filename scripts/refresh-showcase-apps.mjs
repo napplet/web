@@ -1,6 +1,7 @@
 // Snapshot signed relay events for offline catalog rendering. No signing or execution.
 import { createRequire } from 'node:module';
 import { readFile, writeFile, rename } from 'node:fs/promises';
+import { collectLabels } from './lib/napshot-labels.mjs';
 const require = createRequire(new URL('../apps/web/package.json', import.meta.url));
 const { validateEvent, verifyEvent } = require('nostr-tools/pure');
 const config = JSON.parse(await readFile(new URL('../apps/web/src/data/discovery.json', import.meta.url), 'utf8'));
@@ -66,12 +67,24 @@ for (let index = 0; index < authors.length; index += 50) {
   }
 }
 
+// Napshot screenshot labels (NIP-32 kind 1985, profile owned by napplet/napshot) for root and named
+// releases, requested by exact manifest id from explicitly trusted signers only. The browser re-verifies
+// every label. Batches are paged with `until`, previously saved trusted labels are kept so a partial
+// pass cannot remove shipped previews, and a pass no relay answers aborts with the snapshot intact.
 const output = new URL('../apps/web/src/data/discovered-apps.json', import.meta.url);
+let previousLabels = [];
+try { previousLabels = JSON.parse(await readFile(output, 'utf8')).labels ?? []; } catch { previousLabels = []; }
+const labelers = config.screenshotLabelers ?? [];
+const targets = [...events.values()].filter(event => event.kind !== 5129).map(event => event.id);
+const pass = await collectLabels(request, { relays: config.relays, labelers, targets, previous: previousLabels, limit: config.limit });
+if (pass.batches && !pass.complete) throw new Error('No relay completed a label query; existing snapshot retained.');
+const labels = pass.labels;
+
 const temporary = new URL(`${output.href}.tmp`);
 const byTime = (a, b) => b.created_at - a.created_at || a.id.localeCompare(b.id);
 await writeFile(temporary, JSON.stringify({
   checkedAt: new Date().toISOString(), relays: config.relays,
-  events: [...events.values()].sort(byTime), applications: [...applications.values()].sort(byTime),
+  events: [...events.values()].sort(byTime), applications: [...applications.values()].sort(byTime), labels: [...labels].sort(byTime),
 }, null, 2) + '\n');
 await rename(temporary, output);
-console.log(`Saved ${events.size} signed manifests and ${applications.size} listings. ${JSON.stringify(results.map(({ url, ok, events }) => ({ url, ok, events: events.length })))}`);
+console.log(`Saved ${events.size} signed manifests, ${applications.size} listings and ${labels.size} screenshot labels. ${JSON.stringify(results.map(({ url, ok, events }) => ({ url, ok, events: events.length })))}`);

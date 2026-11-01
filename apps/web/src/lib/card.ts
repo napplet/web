@@ -1,5 +1,6 @@
 /** One HTML template for discovered release cards, shared by the static build and live discovery. */
 import type { CatalogApp } from './catalog';
+import { usableScreenshot } from './media';
 import { SHELLS } from './showcase';
 
 const escape = (value: string) => value.replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]!);
@@ -35,7 +36,11 @@ export function searchText(app: CatalogApp): string {
 export function releaseCardHtml(app: CatalogApp, index: number): string {
   const art = app.listing?.images[0];
   const monogram = escape(app.name.slice(0, 1).toUpperCase());
-  const media = JSON.stringify({ icon: app.icon ?? null, screenshots: app.screenshots.slice(0, 1), servers: app.servers });
+  // Publisher imagery wins over the automated preview: listing art excludes it here, and a screenshot is tried first in the
+  // browser, where the preview fills in only if the screenshot's bytes fail to verify.
+  const screenshot = usableScreenshot(app);
+  const napshot = app.napshot && !art ? { sha256: app.napshot.sha256, type: app.napshot.type, dim: app.napshot.dim, size: app.napshot.size, servers: app.napshot.servers, signer: app.napshot.signer, mode: app.napshot.mode } : null;
+  const media = JSON.stringify({ icon: app.icon ?? null, screenshots: screenshot ? [screenshot] : [], servers: app.servers, napshot });
   const tags = [...app.archetypes, ...app.topics.filter(topic => !app.archetypes.includes(topic))].slice(0, 5);
   const listingIcon = app.listing?.icon;
   const date = new Date(app.publishedAt * 1000).toISOString().slice(0, 10);
@@ -46,7 +51,7 @@ export function releaseCardHtml(app: CatalogApp, index: number): string {
     ? `<a class="run-link" href="${escape(openHref(app))}" data-launch-release="${escape(app.id)}" data-run="${escape(run)}"><span class="play-symbol" aria-hidden="true">▶</span> Run here</a>`
     : `<span class="run-unavailable">Needs ${escape(app.requirements.join(', ') || 'a Blossom server')} · open it in a shell</span>`;
   return `<article class="discovered-card" data-app-card data-release="${escape(app.id)}" data-search="${escape(searchText(app))}" data-media="${escape(media)}">
-  <div class="discovered-art${art ? ' has-art' : ''}" data-art aria-hidden="true">${art ? `<img src="${escape(art)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-listing-art />` : ''}<span class="art-monogram">${monogram}</span><i class="art-index">${String(index + 1).padStart(2, '0')}</i><em class="art-source" data-art-source>${art ? 'Listing art' : ''}</em></div>
+  <div class="discovered-art${art ? ' has-art' : ''}" data-art aria-hidden="true">${art ? `<img src="${escape(art)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-listing-art />` : ''}<span class="art-monogram" aria-hidden="true">${monogram}</span><i class="art-index" aria-hidden="true">${String(index + 1).padStart(2, '0')}</i><em class="art-source" data-art-source>${art ? 'Listing art' : ''}</em></div>
   <div class="release-head"><span class="release-icon" data-icon>${listingIcon ? `<img src="${escape(listingIcon)}" alt="" width="40" height="40" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-listing-icon />` : `<b>${monogram}</b>`}</span><div class="release-title"><h3>${escape(app.name)}</h3><p class="release-author">Publisher <span title="${escape(app.author)}">${escape(app.author.slice(0, 8))}…${escape(app.author.slice(-6))}</span></p></div><span class="release-date">${date}</span></div>
   <p class="publisher-description">${escape(app.description)}</p>
   ${tags.length ? `<ul class="release-tags" aria-label="Archetypes and topics">${tags.map(tag => `<li>${escape(tag)}</li>`).join('')}</ul>` : ''}

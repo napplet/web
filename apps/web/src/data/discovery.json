@@ -4,5 +4,8 @@
     "wss://relay.damus.io"
   ],
   "limit": 80,
-  "timeoutMs": 10000
+  "timeoutMs": 10000,
+  "screenshotLabelers": [
+    "94b92a261c88f6b14098e6ec15c93bed544380883745f9a030b27d4a5c554f81"
+  ]
 }

@@ -19,6 +19,14 @@ const demanding = finalizeEvent({ kind: 35129, created_at: Math.floor(Date.now()
 // A Software Applications listing from the same publisher that names the release supplies fallback art by URL.
 const listing = finalizeEvent({ kind: 32267, created_at: Math.floor(Date.now() / 1000), content: '# markdown stays out', tags: [['d', 'catalog-browser-vector-0123456789abcdef'], ['name', 'Listing name'], ['latest', `35129:${injected.pubkey}:catalog-browser-vector`], ['image', 'https://listing.example/art.png'], ['icon', 'javascript:alert(1)']] }, secret);
 const manifestKinds = [5129, 15129, 35129];
+// The saved snapshot drives coverage assertions; nothing is pinned to a specific release, label or capture,
+// so the check survives snapshot refreshes. The deterministic label scenarios run in
+// scripts/check-app-store-napshot.mjs against fixture data built by that script.
+const snapshot = JSON.parse(await readFile(new URL('../apps/web/src/data/discovered-apps.json', import.meta.url)));
+const savedIds = new Set(snapshot.events.map(event => event.id));
+// A label for the demanding release (no other art) from a key the site does not trust; live discovery must ignore it.
+const fillerHash = 'c'.repeat(64);
+const untrustedLabel = finalizeEvent({ kind: 1985, created_at: Math.floor(Date.now() / 1000), content: 'untrusted', tags: [['L', '#screenshot'], ['l', fillerHash, '#screenshot'], ['e', demanding.id], ['a', `35129:${demanding.pubkey}:catalog-browser-demanding`], ['p', demanding.pubkey], ['screenshot', `x ${fillerHash}`, 'm image/png', 'dim 1200x750', 'size 4096'], ['server', 'https://napshot-blossom.example']] }, generateSecretKey());
 const [negentropyRelay] = config.relays;
 const browser = await chromium.launch();
 const errors = [];
@@ -48,6 +56,11 @@ try {
   await page.route('https://listing.example/**', route => route.fulfill({ status: 200, contentType: 'image/png', body: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=', 'base64') }));
   await page.route('https://blossom.example/**', route => route.fulfill(new URL(route.request().url()).pathname === `/${artifactHash}` ? { status: 200, contentType: 'text/html', headers: { 'access-control-allow-origin': '*' }, body: artifact } : { status: 404, headers: { 'access-control-allow-origin': '*' } }));
   await routeInformation(page);
+  const cors = { 'access-control-allow-origin': '*' };
+  // Real saved labels stay routed offline here; their bytes are exercised deterministically in
+  // check-app-store-napshot.mjs. The origins come from the snapshot, so nothing is pinned.
+  const mirrorOrigins = new Set((snapshot.labels ?? []).flatMap(label => label.tags.filter(tag => tag[0] === 'server' && tag[1]).map(tag => new URL(tag[1]).origin)));
+  await page.route(url => mirrorOrigins.has(url.origin), route => route.fulfill({ status: 404, headers: cors }));
   const contacted = new Set();
   let sockets = 0;
   let negotiations = 0;
@@ -66,7 +79,12 @@ try {
       }
       if (type !== 'REQ') return;
       requested.push(filter);
-      if (filter.kinds.length === 1 && filter.kinds[0] === 32267) {
+      if (filter.kinds.length === 1 && filter.kinds[0] === 1985) {
+        assert.deepEqual(filter.authors, config.screenshotLabelers, 'labels are requested only from trusted signers');
+        assert.deepEqual(filter['#L'], ['#screenshot']);
+        assert.ok(filter['#e'].length <= 50, 'label targets are batched');
+        socket.send(JSON.stringify(['EVENT', id, untrustedLabel]));
+      } else if (filter.kinds.length === 1 && filter.kinds[0] === 32267) {
         assert.ok(filter.authors?.includes(injected.pubkey), 'listings are requested for discovered publishers');
         socket.send(JSON.stringify(['EVENT', id, listing]));
       } else {
@@ -90,6 +108,8 @@ try {
   assert.ok(await page.locator('#discovered-grid [data-listing-art]').count() > 5, 'saved listings supply fallback art without JavaScript verification');
   assert.equal(await page.locator('#discovered-grid img[src^="http:"], #discovered-grid img[src^="javascript:"]').count(), 0);
   assert.equal(await page.locator('#store-more button').count(), 0, 'paging has no button; scrolling drives it');
+  // Label-driven rendering, mirror behaviour and capture modes run in check-app-store-napshot.mjs
+  // against dedicated fixtures, so this check no longer pins real snapshot entries.
   // Infinite scroll: twelve cards at first, then another page each time the end comes into view.
   assert.equal(await shown(page), 12);
   await page.locator('#store-more').scrollIntoViewIfNeeded();
@@ -129,6 +149,16 @@ try {
   assert.equal(await card.locator('script').count(), 0, 'publisher metadata remains plain text');
   assert.equal(await card.locator('[data-listing-art]').getAttribute('src'), 'https://listing.example/art.png', 'the matching listing supplies art');
   assert.equal(await card.locator('[data-listing-icon]').count(), 0, 'non-https listing icons are dropped');
+  // Label targeting: unchanged saved releases and newly discovered releases are both targets, batched small.
+  // Exhaustive coverage over every eligible release is proven deterministically in check-app-store-napshot.mjs;
+  // the production snapshot's catalog acceptance cannot be replicated in this plain-JS check.
+  const labelFilters = requested.filter(filter => filter.kinds.length === 1 && filter.kinds[0] === 1985);
+  assert.ok(labelFilters.length >= 1, 'Napshot labels were requested for discovered releases');
+  const covered = new Set(labelFilters.flatMap(filter => filter['#e']));
+  for (const id of covered) assert.ok(savedIds.has(id) || id === injected.id || id === demanding.id, 'every label target is a manifest the store knows');
+  assert.ok([...covered].some(id => savedIds.has(id)), 'unchanged saved releases are still label targets');
+  assert.ok(covered.has(demanding.id), 'a newly discovered release is a label target');
+  assert.equal(await page.locator('.discovered-card').filter({ hasText: 'Demanding release' }).locator('img[data-napshot]').count(), 0, 'a label from an untrusted signer is ignored');
   assert.equal(await page.evaluate(() => window.catalogXss), undefined);
   assert.equal(await page.locator('text=invalid signature').count(), 0);
   assert.equal(await shown(page), await cards.count(), 'every release was revealed by scrolling');
@@ -184,5 +214,5 @@ try {
   assert.equal(await noJs.locator('#discovered-grid article:visible').count(), await noJs.locator('#discovered-grid article').count(), 'the whole saved collection is readable without JavaScript');
   assert.equal(await noJs.locator('#discover-apps').isVisible(), false);
   assert.deepEqual(errors, []);
-  console.log('App store: six previews, gameplay, filters, scroll paging, NIP-77 attempt with request fallback, listing art, XSS, running a discovered release here, shell links, no relay contact before the end, offline retry, mobile and no-JS passed.');
+  console.log('App store: six previews, gameplay, filters, scroll paging, NIP-77 attempt with request fallback, listing art, batched label targeting with untrusted-label rejection, XSS, running a discovered release here, shell links, no relay contact before the end, offline retry, mobile and no-JS passed.');
 } finally { await browser.close(); }
