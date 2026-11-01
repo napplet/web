@@ -1,5 +1,21 @@
 # @napplet/cli
 
+## 0.14.0
+
+### Minor Changes
+
+- 00d10c8: Add `--proxy <url>` to `deploy`, `init` and `keys connect`, routing Blossom uploads,
+  relay publishing, `init` suggestions and remote-signer (NIP-46) relay sessions, including their
+  relay information documents, through an `http://`, `https://`, `socks5://` or `socks5h://` proxy.
+  Embedded proxy credentials are never printed, the deploy plan names the proxy in use, and other
+  commands reject the flag.
+
+### Patch Changes
+
+- 00d10c8: Report a relay that deploy could not connect to as a failed publish. nostr-tools resolves
+  unreachable relays with a `connection failure` reason instead of rejecting, which the deploy
+  report previously counted as published.
+
 ## 0.13.1
 
 ### Patch Changes
