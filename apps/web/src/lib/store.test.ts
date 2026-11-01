@@ -35,11 +35,12 @@ describe('live label discovery', () => {
     });
     await fetchLabels(state, new AbortController().signal);
     expect(state.store.getByFilters({ kinds: [1985] }).map(event => event.created_at).sort((a, b) => b - a)).toEqual([100, 90, 80, 10]);
-    expect(calls.filter(([url]) => url === 'first')).toEqual([['first', undefined], ['first', 89]]);
+    // The boundary timestamp is re-read inclusively, so labels sharing it are never skipped.
+    expect(calls.filter(([url]) => url === 'first')).toEqual([['first', undefined], ['first', 90], ['first', 80]]);
     expect(calls.filter(([url]) => url === 'second')).toEqual([['second', undefined]]);
     expect(state.labeled.has(manifest.id)).toBe(true);
     await fetchLabels(state, new AbortController().signal);
-    expect(calls).toHaveLength(3);
+    expect(calls).toHaveLength(4);
   });
 
   it('retries an incomplete batch and keeps successful results from the previous pass', async () => {
