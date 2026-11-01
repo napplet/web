@@ -36,7 +36,8 @@ export function searchText(app: CatalogApp): string {
 export function releaseCardHtml(app: CatalogApp, index: number): string {
   const art = app.listing?.images[0];
   const monogram = escape(app.name.slice(0, 1).toUpperCase());
-  // Publisher imagery (a screenshot the renderer can use, or listing art) wins over the automated preview.
+  // Publisher imagery wins over the automated preview: listing art excludes it here, and a screenshot is tried first in the
+  // browser, where the preview fills in only if the screenshot's bytes fail to verify.
   const screenshot = usableScreenshot(app);
   const napshot = app.napshot && !art ? { sha256: app.napshot.sha256, type: app.napshot.type, dim: app.napshot.dim, size: app.napshot.size, servers: app.napshot.servers, signer: app.napshot.signer, mode: app.napshot.mode } : null;
   const media = JSON.stringify({ icon: app.icon ?? null, screenshots: screenshot ? [screenshot] : [], servers: app.servers, napshot });

@@ -151,11 +151,14 @@ async function discover(discovery: Discovery, until: number | undefined, signal:
   return { completed: results.filter(result => result.complete).length, received: manifests.length, paged: discovery.paged.size, oldest: manifests.length ? Math.min(...manifests.map(event => event.created_at)) : undefined };
 }
 
-/** Accessible text for the capture mode the verified label's signed content announced. */
-function napshotCopy(mode: NapshotMode): { alt: (name: string) => string; title: string } {
-  if (mode === 'signed-out') return { alt: name => `Automated signed-out preview of ${name}`, title: 'Captured automatically in a signed-out shell and signed by a trusted Napshot labeler; not an endorsement.' };
-  if (mode === 'preview-identity') return { alt: name => `Automated preview of ${name} captured with a read-only preview identity`, title: 'Captured automatically with a read-only preview identity and signed by a trusted Napshot labeler; not an endorsement.' };
-  return { alt: name => `Automated preview of ${name}`, title: 'Captured automatically and signed by a trusted Napshot labeler; not an endorsement.' };
+/**
+ * Text for the capture mode the verified label's signed content announced. `badge` is rendered visibly, so keyboard and touch
+ * users see the mode without the `title` tooltip, which only adds the longer explanation.
+ */
+function napshotCopy(mode: NapshotMode): { alt: (name: string) => string; badge: string; title: string } {
+  if (mode === 'signed-out') return { alt: name => `Automated signed-out preview of ${name}`, badge: 'Napshot preview · signed out', title: 'Captured automatically in a signed-out shell and signed by a trusted Napshot labeler; not an endorsement.' };
+  if (mode === 'preview-identity') return { alt: name => `Automated preview of ${name} captured with a read-only preview identity`, badge: 'Napshot preview · preview identity', title: 'Captured automatically with a read-only preview identity and signed by a trusted Napshot labeler; not an endorsement.' };
+  return { alt: name => `Automated preview of ${name}`, badge: 'Napshot preview', title: 'Captured automatically and signed by a trusted Napshot labeler; not an endorsement.' };
 }
 
 /** Swap generic artwork for manifest media once its bytes verify. */
@@ -180,19 +183,9 @@ function hydrateMedia(card: HTMLElement, signal: AbortSignal): void {
       if (source) source.textContent = 'Manifest icon';
     }
   });
-  if (media.screenshots[0]) void verifiedImage(media.screenshots[0], media.servers, signal).then(src => {
-    const art = card.querySelector<HTMLElement>('[data-art]');
-    if (!src || !art) return;
-    art.querySelector('[data-listing-art]')?.remove();
-    art.querySelector('.art-icon')?.remove();
-    art.classList.remove('has-icon');
-    art.prepend(image(src));
-    art.classList.add('has-art');
-    const source = art.querySelector('[data-art-source]');
-    if (source) source.textContent = 'Manifest screenshot';
-  });
-  // Author screenshots win; a trusted Napshot label for this exact revision fills in only when none is declared.
-  else if (media.napshot) {
+  // Author screenshots win; a trusted Napshot label for this exact revision fills in when none is declared or its bytes fail to verify.
+  const showNapshot = () => {
+    if (!media.napshot || signal.aborted) return;
     const preview = media.napshot;
     void verifiedImage(preview, preview.servers, signal, { bytes: preview.size, dim: preview.dim, keepPath: true }).then(src => {
       const art = card.querySelector<HTMLElement>('[data-art]');
@@ -208,9 +201,22 @@ function hydrateMedia(card: HTMLElement, signal: AbortSignal): void {
       art.prepend(element);
       art.classList.add('has-art', 'has-napshot');
       const source = art.querySelector<HTMLElement>('[data-art-source]');
-      if (source) { source.textContent = 'Napshot preview'; source.title = copy.title; }
+      if (source) { source.textContent = copy.badge; source.title = copy.title; }
     });
-  }
+  };
+  if (media.screenshots[0]) void verifiedImage(media.screenshots[0], media.servers, signal).then(src => {
+    const art = card.querySelector<HTMLElement>('[data-art]');
+    if (!src) { showNapshot(); return; }
+    if (!art) return;
+    art.querySelector('[data-listing-art]')?.remove();
+    art.querySelector('.art-icon')?.remove();
+    art.classList.remove('has-icon');
+    art.prepend(image(src));
+    art.classList.add('has-art');
+    const source = art.querySelector('[data-art-source]');
+    if (source) source.textContent = 'Manifest screenshot';
+  });
+  else showNapshot();
 }
 
 /** Apply collection, search and paging to the cards; hydrate what is visible; describe the paging control. */

@@ -95,15 +95,16 @@ describe('Napshot label verification', () => {
 });
 
 describe('attaching previews to catalog entries', () => {
-  it('keeps author screenshots first and only labels root/named releases without one', () => {
+  it('labels root and named releases, including ones whose screenshot may still fail verification', () => {
     const plain = manifest();
     const withShot = manifest({ tags: [['d', 'shot'], ['x', hash('a')], ['screenshot', `x ${hash('d')}`, 'm image/png'], ['server', 'https://blossom.example']] });
     const pinned = manifest({ kind: 5129, tags: [['x', hash('e')]] });
     const apps = [plain, withShot, pinned].map(event => catalogApp(event)!);
-    expect(previewTargets(apps)).toEqual([plain.id]);
+    expect(previewTargets(apps)).toEqual([plain.id, withShot.id]);
     const [a, b, c] = withNapshot(apps, [label(plain), label(withShot), label(pinned)], [signer]);
     expect(a.napshot?.sha256).toBe(hash('b'));
-    expect(b.napshot).toBeUndefined();
+    // Kept as a fallback: the card tries the author screenshot first and uses this only if those bytes fail to verify.
+    expect(b.napshot?.sha256).toBe(hash('b'));
     expect(c.napshot).toBeUndefined();
     expect(withNapshot(apps, [label(plain)], [])[0].napshot, 'empty trust list').toBeUndefined();
     expect(withNapshot(apps, [label(plain, { key: stranger })], [signer])[0].napshot, 'untrusted signer').toBeUndefined();
@@ -114,7 +115,7 @@ describe('attaching previews to catalog entries', () => {
     const svgShot = manifest({ tags: [['d', 'svg'], ['x', hash('a')], ['screenshot', `x ${hash('f')}`, 'm image/svg+xml'], ['server', 'https://blossom.example']] });
     const serverless = manifest({ tags: [['d', 'noserver'], ['x', hash('a')], ['screenshot', `x ${hash('f')}`, 'm image/png'], ['server', 'http://insecure.example']] });
     const apps = [plain, svgShot, serverless].map(event => catalogApp(event)!);
-    // A screenshot the renderer cannot use does not block a preview, but a usable one still does.
+    // None of these declares a screenshot the renderer could use; a usable one is tried first in the browser instead.
     expect(usableScreenshot(apps[0])).toBeUndefined();
     expect(usableScreenshot(apps[1])).toBeUndefined();
     expect(usableScreenshot(apps[2])).toBeUndefined();
@@ -124,7 +125,7 @@ describe('attaching previews to catalog entries', () => {
     const labelled = withNapshot(apps, [label(svgShot), label(serverless)], [signer]);
     expect(labelled.map(app => app.napshot?.sha256)).toEqual([undefined, hash('b'), hash('b')]);
   });
-  it('carries the preview in card media only when no publisher imagery exists', () => {
+  it('carries the preview in card media unless listing art exists, beside any screenshot it falls back from', () => {
     const plain = manifest();
     const [app] = withNapshot([catalogApp(plain)!], [label(plain)], [signer]);
     const unescape = (value: string) => value.replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
@@ -133,6 +134,11 @@ describe('attaching previews to catalog entries', () => {
     const listed = finalizeEvent({ kind: 32267, created_at: 100, content: '', tags: [['d', 'fixture-1'], ['name', 'Fixture'], ['image', 'https://art.example/a.png']] }, author);
     const [withArt] = withNapshot(withListings([catalogApp(plain)!], [listed]), [label(plain)], [signer]);
     expect(media(releaseCardHtml(withArt, 0)).napshot).toBeNull();
+    const shot = manifest({ tags: [['d', 'shot'], ['x', hash('a')], ['screenshot', `x ${hash('d')}`, 'm image/png'], ['server', 'https://blossom.example']] });
+    const [withShot] = withNapshot([catalogApp(shot)!], [label(shot)], [signer]);
+    const shotMedia = media(releaseCardHtml(withShot, 0));
+    expect(shotMedia.screenshots.map((item: { sha256: string }) => item.sha256)).toEqual([hash('d')]);
+    expect(shotMedia.napshot, 'the preview rides along in case the screenshot fails to verify').toMatchObject({ sha256: hash('b') });
   });
   // This also verifies every manifest signature in the growing snapshot on shared CI runners.
   it('attaches only saved labels bound to eligible revisions it can show', () => {
@@ -151,11 +157,10 @@ describe('attaching previews to catalog entries', () => {
       expect(bound!.pubkey, 'the attached label carries its own signer').toBe(app.napshot.signer);
       expect(labelers, 'the labeler this site configured signed it').toContain(app.napshot.signer);
       expect(app.event.kind, 'a snapshot never carries a preview').not.toBe(5129);
-      expect(usableScreenshot(app), 'a preview only fills in when no usable screenshot exists').toBeUndefined();
     }
     for (const event of labels) {
       const target = byEventId.get(event.tags.find(tag => tag[0] === 'e')?.[1] ?? '');
-      if (target && (target.event.kind === 5129 || usableScreenshot(target))) expect(target.napshot, 'an ineligible revision never carries a preview').toBeUndefined();
+      if (target?.event.kind === 5129) expect(target.napshot, 'a snapshot never carries a preview').toBeUndefined();
     }
   }, 30_000);
 });
