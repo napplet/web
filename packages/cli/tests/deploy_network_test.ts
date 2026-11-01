@@ -4,6 +4,7 @@ import {
   executeNetworkDeploy,
   type NetworkDeployProgress,
   networkDeploySucceeded,
+  publishEventWithSimplePool,
   type RelayPublishResult,
 } from "../src/deploy-network.ts";
 import { computeAggregateHash } from "../src/manifest.ts";
@@ -497,3 +498,12 @@ function manifest(
     signedEvent,
   };
 }
+
+Deno.test("publishEventWithSimplePool reports a relay it cannot reach as a failed publish", async () => {
+  // nostr-tools resolves with a "connection failure" reason instead of rejecting; this test has no network access.
+  const signer = createPrivateKeySigner(privateKeyHex);
+  const event = await signer.sign({ kind: 1, created_at: 1, tags: [], content: "unreachable" });
+  const [result] = await publishEventWithSimplePool(["ws://127.0.0.1:1"], event);
+  assertEquals(result.success, false);
+  assert(result.error?.startsWith("connection failure"), result.error);
+});

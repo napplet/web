@@ -242,8 +242,12 @@ export async function publishEventWithSimplePool(
     );
     return relays.map((relay, index) => {
       const result = settled[index];
-      if (result?.status === "fulfilled") {
+      // nostr-tools resolves, rather than rejects, when it cannot reach a relay at all.
+      if (result?.status === "fulfilled" && !String(result.value).startsWith("connection failure")) {
         return { relay, eventId: event.id, success: true };
+      }
+      if (result?.status === "fulfilled") {
+        return { relay, eventId: event.id, success: false, error: String(result.value) };
       }
       const reason = result?.status === "rejected" ? result.reason : "publish did not run";
       return {
