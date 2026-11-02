@@ -571,7 +571,7 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 | Quick ID | Task | Date | Commit | Artifacts |
 |----------|------|------|--------|-----------|
 | 261103-rsl | Point every napplet/napplet repository reference (docs, READMEs, skills, CLI, installers, package metadata) at napplet/web | 2026-11-03 | — | [261103-rsl](./quick/261103-rsl-repo-slug-napplet-web/) |
-| 261102-wmc | napplet.run WebMCP tools (list_pages, read_page, search_napplets, list_agent_skills, open_page) and /apps/catalog.json | 2026-11-02 | — | [261102-wmc](./quick/261102-wmc-site-webmcp-tools/) |
+| 261102-wmc | napplet.run WebMCP tools (list_pages, search_docs, read_page, search_napplets, list_agent_skills, open_page) and /apps/catalog.json | 2026-11-02 | — | [261102-wmc](./quick/261102-wmc-site-webmcp-tools/) |
 | 261101-wei | napplet.run player frame locked to its verified document with page frame-src 'none' (closes navigation-before-first-load) | 2026-11-01 | — | [261101-wei](./quick/261101-wei-player-frame-navigation-lock/) |
 | 261101-vx0 | napplet.run player: NIP-5D napplet.hello bootstrap and document binding (frame removed on navigation, reload or window-level messages) | 2026-11-01 | — | [261101-vx0](./quick/261101-vx0-player-port-bound-identity/) |
 | 261101-tbe | NIP-5D port-bound identity: napplet.hello MessagePort transport in core/nap/shim, conformance port binding and replacement checks | 2026-11-01 | 9c9620c1 | [261101-tbe](./quick/261101-tbe-nip5d-port-bound-identity/) |
