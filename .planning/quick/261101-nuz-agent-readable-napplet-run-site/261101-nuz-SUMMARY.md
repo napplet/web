@@ -29,3 +29,9 @@ Bunny's cache key is the URL alone (Vary Cache docs; observed live: `Accept: tex
 ## Live result (2026-11-01, after deploy)
 
 Edge script 100368 is live on pull zone 6017894; `check-markdown-negotiation.mjs` passes on napplet.run and in Deploy site run 41328313469. isitagentready on napplet.run: linkHeaders, markdownNegotiation and agentSkills fail → pass. contentSignals and the level (1) are **pending**: the scanner keeps reading the pre-deploy `robots.txt` (15 scans, 16:24–17:43 UTC, including after a Bunny purge), while napplet.b-cdn.net, the same zone, scores level 4.
+
+## Live result (2026-11-02)
+
+The stale `robots.txt` has cleared. isitagentready on napplet.run (scan 2026-11-02T14:18:57Z): **level 4, Agent-Integrated**, with robotsTxt, sitemap, linkHeaders, markdownNegotiation, robotsTxtAiRules, contentSignals and agentSkills passing. The scanner fetches through Cloudflare (`cf-cache-status: DYNAMIC` in its evidence), which fits the earlier suspicion that its own fetch layer, not Bunny, held the old copy.
+
+Still failing: dnsAid, apiCatalog, oauthDiscovery, oauthProtectedResource, authMd, mcpServerCard, a2aAgentCard, webMcp, ard and personalAgentProtocol. Each describes an HTTP API, auth server, MCP server or agent endpoint, and napplet.run, a static site, has none. Publishing those documents would advertise surface that does not exist, so they are out of scope unless such a service is built.
