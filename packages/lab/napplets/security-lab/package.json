@@ -1,0 +1,45 @@
+{
+  "name": "@napplet/lab-security",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Security Lab: a NIP-5D napplet that probes the sandbox, CSP, namespace and runtime boundaries of the shell hosting it (part of @napplet/lab).",
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/napplet/napplet.git",
+    "directory": "packages/lab/napplets/security-lab"
+  },
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "paja": "kehto paja --target-url http://127.0.0.1:9504 -- pnpm vite --host 127.0.0.1",
+    "build": "vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "type-check": "tsc --noEmit",
+    "test:unit": "vitest run",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "conformance": "pnpm build && napplet-conformance dist",
+    "test:conformance": "pnpm conformance",
+    "test:paja": "pnpm build && node scripts/paja-check.mjs",
+    "verify": "pnpm type-check && pnpm test:unit && pnpm build && node scripts/paja-check.mjs"
+  },
+  "dependencies": {
+    "@napplet/sdk": "workspace:*",
+    "svelte": "^5.57.3"
+  },
+  "devDependencies": {
+    "@kehto/cli": "0.5.13",
+    "@kehto/paja": "0.28.1",
+    "@napplet/conformance": "workspace:*",
+    "@napplet/conformance-cli": "workspace:*",
+    "@napplet/vite-plugin": "workspace:*",
+    "@sveltejs/vite-plugin-svelte": "^7.3.1",
+    "@types/node": "^22.15.0",
+    "jsdom": "^30.1.3",
+    "playwright": "^1.59.1",
+    "typescript": "^5.9.3",
+    "vite": "^8.3.5",
+    "vitest": "^4.1.12"
+  }
+}
