@@ -1,7 +1,8 @@
 /**
  * WebMCP tools for napplet.run (https://webmachinelearning.github.io/webmcp/). They let an agent in the visitor's
- * browser find and read pages, search the app store's build snapshot, list the agent skills and open a page. They only
- * read files this site already publishes (llms.txt, the Markdown copies, /apps/catalog.json and the Agent Skills index)
+ * browser find, search and read pages (including /docs), search the app store's build snapshot, list the agent skills and
+ * open a page. They only read files this site already publishes (llms.txt, /docs/llms-full.txt, the Markdown copies,
+ * /apps/catalog.json and the Agent Skills index)
  * and never contact relays, run napplets or sign anything. Website plumbing, not napplet protocol; see
  * /docs/guide/agent-access.html.
  */
@@ -134,6 +135,63 @@ export function searchApps(apps: AgentApp[], query: unknown, collection: unknown
     .filter(app => matchesAll(`${app.name} ${app.description} ${app.topics.join(' ')} ${app.authorName ?? ''}`.toLocaleLowerCase(), words));
 }
 
+/** One docs page from `/docs/llms-full.txt`. */
+export interface DocsPage { title: string; path: string; markdown: string }
+
+/** One `search_docs` hit. */
+export interface DocsHit { title: string; url: string; markdownUrl: string; matches: number; snippet: string }
+
+const SNIPPET_CHARS = 240;
+
+/**
+ * Split `/docs/llms-full.txt` into its pages. Each page starts with a `<!-- <page>.md URL -->` marker line.
+ * @param text llms-full.txt contents.
+ * @returns Pages in file order, each with its first `#` heading as the title and its Markdown copy's path.
+ * @example parseDocsCorpus('<!-- https://napplet.run/docs/guide/concepts.md -->\n\n# Core concepts\n…')
+ */
+export function parseDocsCorpus(text: string): DocsPage[] {
+  const pages: DocsPage[] = [];
+  const parts = text.split(/^<!-- (https?:\/\/\S+\.md) -->$/m);
+  for (let index = 1; index + 1 < parts.length; index += 2) {
+    let path: string;
+    try { path = new URL(parts[index]).pathname; } catch { continue; }
+    if (!path.startsWith('/docs/')) continue;
+    const markdown = parts[index + 1].replace(/\n---\n*$/, '').trim();
+    pages.push({ title: /^#\s+(.+)$/m.exec(markdown)?.[1].trim() ?? path, path, markdown });
+  }
+  return pages;
+}
+
+function snippetAt(markdown: string, at: number): string {
+  const start = Math.max(0, at - SNIPPET_CHARS / 3);
+  const text = markdown.slice(start, start + SNIPPET_CHARS).replace(/\s+/g, ' ').trim();
+  return `${start > 0 ? '…' : ''}${text}${start + SNIPPET_CHARS < markdown.length ? '…' : ''}`;
+}
+
+/**
+ * Full-text search over the docs pages. Every query word must appear in the page; pages rank by how often the words
+ * occur, with a boost for words in the title.
+ * @param pages Pages from {@link parseDocsCorpus}.
+ * @param query Words to match, case-insensitively.
+ * @param origin This site's origin, for the result URLs.
+ * @returns Hits, best first, each with a snippet around the first match.
+ * @example searchDocs(pages, 'storage quota', 'https://napplet.run')
+ */
+export function searchDocs(pages: DocsPage[], query: unknown, origin: string): DocsHit[] {
+  const words = terms(query);
+  if (!words.length) return [];
+  const hits: DocsHit[] = [];
+  for (const page of pages) {
+    const body = page.markdown.toLocaleLowerCase();
+    const counts = words.map(word => body.split(word).length - 1);
+    if (counts.some(count => count === 0)) continue;
+    const title = page.title.toLocaleLowerCase();
+    const matches = counts.reduce((sum, count) => sum + count, 0) + 10 * words.filter(word => title.includes(word)).length;
+    hits.push({ title: page.title, url: new URL(htmlPath(page.path), origin).href, markdownUrl: new URL(page.path, origin).href, matches, snippet: snippetAt(page.markdown, body.indexOf(words[0])) });
+  }
+  return hits.sort((a, b) => b.matches - a.matches);
+}
+
 async function fetchOk(env: ToolEnvironment, path: string, signal?: AbortSignal) {
   const response = await env.fetch(new URL(path, env.origin).href, { signal });
   if (!response.ok) throw new Error(`${path} returned HTTP ${response.status}`);
@@ -142,25 +200,26 @@ async function fetchOk(env: ToolEnvironment, path: string, signal?: AbortSignal)
 
 const pathInput = (description: string) => ({ type: 'object', properties: { path: { type: 'string', description } }, required: ['path'], additionalProperties: false });
 
-/**
- * Build the napplet.run tool set.
- * @param env Origin, fetch and navigation for the current page.
- * @returns Tools ready for `registerTool()`.
- * @example const tools = agentTools({ origin: location.origin, fetch: (u, i) => fetch(u, i), navigate: u => location.assign(u) });
- */
-export function agentTools(env: ToolEnvironment): ModelContextTool[] {
-  let catalog: Promise<AgentCatalog> | undefined;
-  const loadCatalog = (signal?: AbortSignal) => {
-    catalog ??= fetchOk(env, '/apps/catalog.json', signal).then(response => response.json() as Promise<AgentCatalog>);
-    catalog.catch(() => { catalog = undefined; });
-    return catalog;
+/** Fetch and parse one site file on first use; a failed load is retried on the next call. */
+function cached<T>(load: (signal?: AbortSignal) => Promise<T>): (signal?: AbortSignal) => Promise<T> {
+  let value: Promise<T> | undefined;
+  return signal => {
+    value ??= load(signal);
+    value.catch(() => { value = undefined; });
+    return value;
   };
-  const readOnly = { readOnlyHint: true };
+}
+
+const readOnly = { readOnlyHint: true };
+
+/** Tools that find and read site pages, including /docs. */
+function pageTools(env: ToolEnvironment): ModelContextTool[] {
+  const loadCorpus = cached(async signal => parseDocsCorpus(await (await fetchOk(env, '/docs/llms-full.txt', signal)).text()));
   return [
     {
       name: 'list_pages',
       title: 'List site pages',
-      description: 'List the pages of napplet.run (home, app store, explainer, NAP directory and SDK docs) from its llms.txt index, optionally filtered by words in the title or description. Each page has a Markdown copy that read_page returns.',
+      description: 'List the pages of napplet.run (home, app store, explainer, NAP directory and every /docs page: guides, tutorials, package and NAP domain reference) from its llms.txt index, optionally filtered by words in the title or description. Each page has a Markdown copy that read_page returns. To search inside the docs, use search_docs.',
       inputSchema: { type: 'object', properties: { query: { type: 'string', description: 'Words that must all appear, for example "getting started"' }, limit: { type: 'integer', minimum: 1, maximum: MAX_RESULTS, description: 'Most pages to return (default 50)' } }, additionalProperties: false },
       annotations: readOnly,
       async execute(input, options) {
@@ -169,9 +228,20 @@ export function agentTools(env: ToolEnvironment): ModelContextTool[] {
       },
     },
     {
+      name: 'search_docs',
+      title: 'Search the docs',
+      description: 'Full-text search of the napplet SDK docs under /docs (guides, tutorials, @napplet/* package reference and NAP domain reference). Returns the best-matching pages with a snippet each; pass a result\'s url to read_page for the whole page. The docs are non-normative: NIP-5D and the NAPs are the canonical protocol sources.',
+      inputSchema: { type: 'object', properties: { query: { type: 'string', description: 'Words that must all appear on the page, for example "storage quota"' }, limit: { type: 'integer', minimum: 1, maximum: MAX_RESULTS, description: 'Most pages to return (default 5)' } }, required: ['query'], additionalProperties: false },
+      annotations: readOnly,
+      async execute(input, options) {
+        const hits = searchDocs(await loadCorpus(options?.signal), input.query, env.origin);
+        return { total: hits.length, results: hits.slice(0, limitOf(input.limit, 5)) };
+      },
+    },
+    {
       name: 'read_page',
       title: 'Read a page as Markdown',
-      description: 'Return the Markdown copy of a napplet.run page, such as "/", "/explainer/", "/protocol/" or "/docs/guide/getting-started.html". Use list_pages to find paths. Only pages on this site can be read.',
+      description: 'Return the Markdown copy of a napplet.run page, such as "/", "/explainer/", "/protocol/" or "/docs/guide/getting-started.html". Use list_pages or search_docs to find paths. Only pages on this site can be read.',
       inputSchema: pathInput('Path or URL of a page on this site'),
       annotations: readOnly,
       async execute(input, options) {
@@ -183,6 +253,13 @@ export function agentTools(env: ToolEnvironment): ModelContextTool[] {
         return { url: new URL(htmlPath(copy), env.origin).href, markdownUrl: new URL(copy, env.origin).href, truncated, markdown: truncated ? markdown.slice(0, MAX_PAGE_CHARS) : markdown };
       },
     },
+  ];
+}
+
+/** Tools for the app store, the agent skills and navigation. */
+function siteTools(env: ToolEnvironment): ModelContextTool[] {
+  const loadCatalog = cached(async signal => (await fetchOk(env, '/apps/catalog.json', signal)).json() as Promise<AgentCatalog>);
+  return [
     {
       name: 'search_napplets',
       title: 'Search the app store',
@@ -220,6 +297,16 @@ export function agentTools(env: ToolEnvironment): ModelContextTool[] {
       },
     },
   ];
+}
+
+/**
+ * Build the napplet.run tool set.
+ * @param env Origin, fetch and navigation for the current page.
+ * @returns Tools ready for `registerTool()`.
+ * @example const tools = agentTools({ origin: location.origin, fetch: (u, i) => fetch(u, i), navigate: u => location.assign(u) });
+ */
+export function agentTools(env: ToolEnvironment): ModelContextTool[] {
+  return [...pageTools(env), ...siteTools(env)];
 }
 
 /**
