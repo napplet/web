@@ -39,3 +39,17 @@ export interface ProbeDefinition {
   spec: string;
   run: () => Promise<ProbeResult>;
 }
+
+/** Fields a probe group shares; every probe in the group may still override them. */
+export type ProbeDefaults = Partial<Pick<ProbeDefinition, 'level' | 'category' | 'ownerArea' | 'spec' | 'severity' | 'expectedResult'>>;
+
+/** The per-probe remainder once group defaults are applied. */
+export type ProbeSpec = Omit<ProbeDefinition, keyof ProbeDefaults> & ProbeDefaults;
+
+/**
+ * Build a group of probes that share level/category/owner/spec defaults, so a
+ * catalogue reads as "what differs" instead of repeating the same six fields.
+ */
+export function defineProbes(defaults: ProbeDefaults, probes: ProbeSpec[]): ProbeDefinition[] {
+  return probes.map((probe) => ({ ...defaults, ...probe } as ProbeDefinition));
+}

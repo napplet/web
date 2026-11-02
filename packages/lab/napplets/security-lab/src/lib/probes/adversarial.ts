@@ -4,7 +4,7 @@
 
 import { pass, fail, info, errorText, short } from '../probe-result';
 import { expectParentInaccessible, expectAmbientNostrAbsent, getAmbientNostr, AMBIENT_SIGNER_LABEL, sleep, LT, tag, closeTag } from './helpers';
-import type { ProbeDefinition } from './types';
+import { defineProbes, type ProbeDefinition } from './types';
 
 type NestedReport = { token: string; stage: string; got: unknown[] };
 
@@ -50,7 +50,7 @@ export function nestedHelloSource(token: string): string {
   ].join('');
 }
 
-export const adversarialProbes: ProbeDefinition[] = [
+const boundaryProbes: ProbeDefinition[] = [
   {
     id: 'nested.hello.dropped',
     level: 'safe-adversarial',
@@ -147,10 +147,10 @@ export const adversarialProbes: ProbeDefinition[] = [
     // Availability only: constructing a peer connection with no ICE servers
     // and no offer contacts nothing, and we never do more than that.
     run: async () => {
-      const ctor = (window as unknown as Record<string, unknown>).RTCPeerConnection;
+      const ctor: unknown = Reflect.get(window, 'RTCPeerConnection');
       if (typeof ctor !== 'function') return pass('Absent', 'RTCPeerConnection is not defined in this realm');
       try {
-        const pc = new (ctor as typeof RTCPeerConnection)();
+        const pc = Reflect.construct(ctor, []) as RTCPeerConnection;
         pc.close();
         return info('Available', 'RTCPeerConnection is constructible; shells wanting to close this need a host policy outside NIP-5D (NAP-WEBRTC mediates the sanctioned path)');
       } catch (err) {
@@ -171,10 +171,10 @@ export const adversarialProbes: ProbeDefinition[] = [
     run: async () => {
       const key = '__nappletLabPrototypeMarker';
       try {
-        (Object.prototype as Record<string, unknown>)[key] = 'inert-marker';
-        return await expectParentInaccessible(() => (window.parent as unknown as Record<string, unknown>)[key]);
+        Reflect.set(Object.prototype, key, 'inert-marker');
+        return await expectParentInaccessible(() => Reflect.get(window.parent, key));
       } finally {
-        delete (Object.prototype as Record<string, unknown>)[key];
+        Reflect.deleteProperty(Object.prototype, key);
       }
     },
   },
@@ -190,42 +190,41 @@ export const adversarialProbes: ProbeDefinition[] = [
     spec: 'Security Considerations (CSP advisory)',
     run: async () => {
       const marker = '__nappletLabInjected';
-      const win = window as unknown as Record<string, unknown>;
-      delete win[marker];
+      Reflect.deleteProperty(window, marker);
+      // Markup parsed by DOMParser yields "already started" script elements:
+      // inserting them must not execute them, and the shell's CSP must not
+      // change that. Built without literal tag text (see helpers.tag).
+      const markup = `${tag('script')}window.${marker}=true;${closeTag('script')}${tag('span')}inert${closeTag('span')}`;
+      const parsed = new DOMParser().parseFromString(markup, 'text/html');
       const container = document.createElement('div');
-      container.innerHTML = `${tag('script')}window.${marker}=true;${closeTag('script')}${tag('span')}inert${closeTag('span')}`;
+      for (const node of Array.from(parsed.body.childNodes)) container.append(document.importNode(node, true));
       document.body.append(container);
       await sleep(100);
-      const executed = Boolean(win[marker]);
+      const executed = Reflect.get(window, marker) === true;
       container.remove();
-      delete win[marker];
+      Reflect.deleteProperty(window, marker);
       return executed
         ? fail('Executed', 'Injected script marker changed window state')
         : pass('Inert', 'Injected script markup did not execute');
     },
   },
+];
+
+const ambientSignerProbes = defineProbes(
+  { level: 'safe-adversarial', category: 'NIP-07', ownerArea: 'Runtime', spec: 'Security Considerations §7', severity: 'critical' },
+  [
   {
     id: 'nostr.sign.ambient',
-    level: 'safe-adversarial',
-    category: 'NIP-07',
     probe: 'Ambient signing method',
     expected: 'Ambient signing is absent/unreachable; signing is shell-mediated',
     expectedResult: 'absent',
-    severity: 'critical',
-    ownerArea: 'Runtime',
-    spec: 'Security Considerations §7',
     run: () => expectAmbientNostrAbsent('signEvent'),
   },
   {
     id: 'nostr.encrypt.ambient',
-    level: 'safe-adversarial',
-    category: 'NIP-07',
     probe: 'Ambient encryption methods',
     expected: 'Ambient encryption/decryption is absent/unreachable; napplets produce cleartext only',
     expectedResult: 'absent',
-    severity: 'critical',
-    ownerArea: 'Runtime',
-    spec: 'Security Considerations §7',
     run: async () => {
       const nip04 = await expectAmbientNostrAbsent('nip04.encrypt');
       const nip44 = await expectAmbientNostrAbsent('nip44.encrypt');
@@ -236,28 +235,21 @@ export const adversarialProbes: ProbeDefinition[] = [
   },
   {
     id: 'nostr.publish.ambient',
-    level: 'safe-adversarial',
-    category: 'NIP-07',
     probe: 'Ambient publish method',
     expected: 'Ambient publish is absent/unreachable',
     expectedResult: 'absent',
-    severity: 'critical',
-    ownerArea: 'Runtime',
-    spec: 'Security Considerations §7',
     run: () => expectAmbientNostrAbsent('publish'),
   },
   {
     id: 'nostr.encrypted-note.canary',
-    level: 'safe-adversarial',
-    category: 'NIP-07',
     probe: 'Encrypted-note-shaped ambient payload',
     expected: 'No ambient surface exists through which a ciphertext-bearing event could be signed or broadcast',
     expectedResult: 'unusable',
-    severity: 'critical',
-    ownerArea: 'Runtime',
-    spec: 'Security Considerations §7',
     run: async () => getAmbientNostr()
       ? fail('Ambient NIP-07 present', 'Refusing to invoke encrypted-note-shaped canary because an ambient signer exists')
       : pass('No ambient path', `No ${AMBIENT_SIGNER_LABEL} surface for an encrypted-note-shaped payload`),
   },
-];
+  ],
+);
+
+export const adversarialProbes: ProbeDefinition[] = [...boundaryProbes, ...ambientSignerProbes];

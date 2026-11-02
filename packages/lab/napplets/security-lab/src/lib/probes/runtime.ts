@@ -2,42 +2,52 @@
 // NAP port behind it are the only legitimate way out of the sandbox.
 
 import { identity, inc, relay, resource, storage, themeGet } from '@napplet/sdk';
-import { pass, fail, warning, skipped, errorText, short } from '../probe-result';
-import { inspectNamespace, checkDeclaredDomains } from '../namespace';
+import { pass, fail, warning, skipped, errorText, short, type ProbeResult } from '../probe-result';
+import { inspectNamespace, checkDeclaredDomains, type NamespaceInspection } from '../namespace';
 import { REQUIRED_DOMAINS, OPTIONAL_DOMAINS } from '../manifest';
+import { RESOURCE_PROBE_URLS } from '../probe-targets';
 import { timeout } from './helpers';
-import type { ProbeDefinition } from './types';
+import { defineProbes, type ProbeDefinition } from './types';
 
-export const runtimeProbes: ProbeDefinition[] = [
+/** Run a probe over a fresh inspection of window.napplet. */
+function inspecting(evaluate: (ns: NamespaceInspection) => ProbeResult): () => Promise<ProbeResult> {
+  return async () => evaluate(inspectNamespace(window));
+}
+
+/** Await a NAP call with a deadline; the shell refusing or stalling is a warning, never a fail. */
+async function viaRuntime<T>(name: string, call: () => Promise<T>, ms: number, describe: (value: T) => string): Promise<ProbeResult> {
+  try {
+    const value = await timeout(call(), ms);
+    return value === 'timeout'
+      ? warning('Timed out', `${name} did not resolve before timeout`)
+      : pass('Allowed via runtime', describe(value));
+  } catch (err) {
+    return warning('Runtime denied/unavailable', errorText(err));
+  }
+}
+
+const namespaceProbes = defineProbes(
+  { level: 'runtime-mediated', category: 'Namespace', ownerArea: 'Runtime' },
+  [
   {
     id: 'runtime.namespace.present',
-    level: 'runtime-mediated',
-    category: 'Namespace',
     probe: 'window.napplet injected before napplet code',
     expected: 'Shells MUST inject window.napplet before any napplet script runs',
     expectedResult: 'present',
     severity: 'critical',
-    ownerArea: 'Runtime',
     spec: 'Transport (injection)',
-    run: async () => {
-      const ns = inspectNamespace(window);
-      return ns.present
-        ? pass('Present', `window.napplet exposes ${ns.domains.length} domain(s): ${ns.domains.join(', ') || 'none'}`)
-        : fail('Absent', 'window.napplet is missing; nothing was injected (or the lab is running outside a NIP-5D shell)');
-    },
+    run: inspecting((ns) => ns.present
+      ? pass('Present', `window.napplet exposes ${ns.domains.length} domain(s): ${ns.domains.join(', ') || 'none'}`)
+      : fail('Absent', 'window.napplet is missing; nothing was injected (or the lab is running outside a NIP-5D shell)')),
   },
   {
     id: 'runtime.namespace.shape',
-    level: 'runtime-mediated',
-    category: 'Namespace',
     probe: 'Namespace contains only NAP domain objects',
     expected: 'window.napplet MUST contain only the domain objects the shell exposes, named as bare NAP domains',
     expectedResult: 'present',
     severity: 'medium',
-    ownerArea: 'Runtime',
     spec: 'Transport (injection); Runtime Domain Availability',
-    run: async () => {
-      const ns = inspectNamespace(window);
+    run: inspecting((ns) => {
       if (!ns.present) return skipped('window.napplet is absent');
       const problems: string[] = [];
       if (ns.invalidKeys.length) problems.push(`non-object members: ${ns.invalidKeys.join(', ')}`);
@@ -45,28 +55,25 @@ export const runtimeProbes: ProbeDefinition[] = [
       return problems.length
         ? fail('Extra members', problems.join('; '))
         : pass('Domain objects only', `${ns.domains.length} member(s), all objects with bare domain names`);
-    },
+    }),
   },
   {
     id: 'runtime.port.unreachable',
-    level: 'runtime-mediated',
-    category: 'Namespace',
     probe: 'NAP MessagePort not reachable from napplet code',
     expected: 'The bootstrap MUST keep its port private; no MessagePort is reachable from window or window.napplet',
     expectedResult: 'absent',
     severity: 'critical',
-    ownerArea: 'Runtime',
     spec: 'Transport (port handoff); Security Considerations §3',
-    run: async () => {
-      const ns = inspectNamespace(window);
-      return ns.reachablePorts.length
-        ? fail('Port reachable', `MessagePort found at ${ns.reachablePorts.join(', ')}; napplet code could forge NAP envelopes`)
-        : pass('Unreachable', 'No MessagePort instance reachable from window globals or window.napplet (depth 4)');
-    },
+    run: inspecting((ns) => ns.reachablePorts.length
+      ? fail('Port reachable', `MessagePort found at ${ns.reachablePorts.join(', ')}; napplet code could forge NAP envelopes`)
+      : pass('Unreachable', 'No MessagePort instance reachable from window globals or window.napplet (depth 4)')),
   },
+  ],
+);
+
+const manifestProbes = defineProbes({ level: 'runtime-mediated' }, [
   {
     id: 'runtime.declared.required',
-    level: 'runtime-mediated',
     category: 'Manifest',
     probe: 'Declared R domains are exposed',
     expected: 'Every manifest R domain is present; a shell missing one SHOULD reject or warn',
@@ -74,8 +81,7 @@ export const runtimeProbes: ProbeDefinition[] = [
     severity: 'medium',
     ownerArea: 'manifest',
     spec: 'Required and Optional Capabilities',
-    run: async () => {
-      const ns = inspectNamespace(window);
+    run: inspecting((ns) => {
       if (!ns.present) return skipped('window.napplet is absent');
       const { present, missing } = checkDeclaredDomains(ns, REQUIRED_DOMAINS);
       const optional = checkDeclaredDomains(ns, OPTIONAL_DOMAINS);
@@ -83,59 +89,34 @@ export const runtimeProbes: ProbeDefinition[] = [
       return missing.length
         ? warning('Missing R domains', `missing: ${missing.join(', ')}; present: ${present.join(', ') || 'none'}; ${optionalNote}`)
         : pass('All present', `R domains present: ${present.join(', ')}; ${optionalNote}`);
-    },
+    }),
   },
+]);
+
+const napProbes = defineProbes(
+  { level: 'runtime-mediated', category: 'Runtime', ownerArea: 'SDK', expectedResult: 'allowed-via-runtime' },
+  [
   {
     id: 'runtime.identity.get',
-    level: 'runtime-mediated',
-    category: 'Runtime',
     probe: 'Shell-mediated identity request',
     expected: 'Identity resolves only through the NAP-IDENTITY domain',
-    expectedResult: 'allowed-via-runtime',
     severity: 'medium',
-    ownerArea: 'SDK',
     spec: 'NAP-IDENTITY',
-    run: async () => {
-      try {
-        const pubkey = await timeout(identity.getPublicKey(), 1200);
-        return pubkey === 'timeout'
-          ? warning('Timed out', 'identity.getPublicKey did not resolve before timeout')
-          : pass('Allowed via runtime', `pubkey=${String(pubkey).slice(0, 12)}...`);
-      } catch (err) {
-        return warning('Runtime denied/unavailable', errorText(err));
-      }
-    },
+    run: () => viaRuntime('identity.getPublicKey', () => identity.getPublicKey(), 1200, (pubkey) => `pubkey=${String(pubkey).slice(0, 12)}...`),
   },
   {
     id: 'runtime.relay.query',
-    level: 'runtime-mediated',
-    category: 'Runtime',
     probe: 'Shell-mediated relay query',
     expected: 'Relay access resolves only through the NAP-RELAY domain (direct WebSocket is blocked above)',
-    expectedResult: 'allowed-via-runtime',
     severity: 'medium',
-    ownerArea: 'SDK',
     spec: 'NAP-RELAY',
-    run: async () => {
-      try {
-        const events = await timeout(relay.query([{ kinds: [0], limit: 1 }]), 1600);
-        return events === 'timeout'
-          ? warning('Timed out', 'relay.query did not resolve before timeout')
-          : pass('Allowed via runtime', `${events.length} event(s) returned`);
-      } catch (err) {
-        return warning('Runtime denied/unavailable', errorText(err));
-      }
-    },
+    run: () => viaRuntime('relay.query', () => relay.query([{ kinds: [0], limit: 1 }]), 1600, (events) => `${events.length} event(s) returned`),
   },
   {
     id: 'runtime.inc.emit',
-    level: 'runtime-mediated',
-    category: 'Runtime',
     probe: 'Shell-mediated INC emit',
     expected: 'INC emits only through the NAP-INC domain',
-    expectedResult: 'allowed-via-runtime',
     severity: 'low',
-    ownerArea: 'SDK',
     spec: 'NAP-INC',
     run: async () => {
       try {
@@ -148,13 +129,9 @@ export const runtimeProbes: ProbeDefinition[] = [
   },
   {
     id: 'runtime.storage',
-    level: 'runtime-mediated',
-    category: 'Runtime',
     probe: 'Shell-mediated napplet storage',
     expected: 'Storage round-trips only through the NAP-STORAGE domain (browser storage is denied above)',
-    expectedResult: 'allowed-via-runtime',
     severity: 'medium',
-    ownerArea: 'SDK',
     spec: 'NAP-STORAGE',
     run: async () => {
       try {
@@ -172,22 +149,15 @@ export const runtimeProbes: ProbeDefinition[] = [
   },
   {
     id: 'runtime.resource.request',
-    level: 'runtime-mediated',
-    category: 'Runtime',
     probe: 'Shell-mediated resource request',
     expected: 'Bytes for an https URL arrive via NAP-RESOURCE while direct fetch is CSP-blocked',
-    expectedResult: 'allowed-via-runtime',
     severity: 'high',
-    ownerArea: 'SDK',
     spec: 'NAP-RESOURCE',
     run: async () => {
-      // A `data:` URL would defeat the test: the SDK short-circuits it to a
-      // direct fetch(). A public https URL only resolves if the shell mediated.
-      // Browser-hosted shells fetch with the browser, so the candidates all
-      // send `Access-Control-Allow-Origin: *`; the first success is the proof.
-      const candidates = ['https://blossom.primal.net/', 'https://cdn.hzrd149.com/', 'https://api.github.com/zen'];
+      // See RESOURCE_PROBE_URLS: hosts the napplet cannot reach directly, so a
+      // returned Blob is proof the shell mediated. First success wins.
       const failures: string[] = [];
-      for (const url of candidates) {
+      for (const url of RESOURCE_PROBE_URLS) {
         try {
           const blob = await timeout(resource.bytes(url), 6000);
           if (blob === 'timeout') {
@@ -204,24 +174,16 @@ export const runtimeProbes: ProbeDefinition[] = [
   },
   {
     id: 'runtime.theme.get',
-    level: 'runtime-mediated',
-    category: 'Runtime',
     probe: 'Shell-mediated theme request',
     expected: 'Theme arrives over the NAP port, never via a window-level theme.get message',
-    expectedResult: 'allowed-via-runtime',
     severity: 'low',
-    ownerArea: 'SDK',
     spec: 'NAP-THEME',
     run: async () => {
       if (!inspectNamespace(window).domains.includes('theme')) return skipped('theme domain not exposed (declared optional; lab degrades to its fallback palette)');
-      try {
-        const theme = await timeout(themeGet(), 1500);
-        return theme === 'timeout'
-          ? warning('Timed out', 'theme.get did not resolve before timeout')
-          : pass('Allowed via runtime', `theme ${theme.title ? `"${theme.title}" ` : ''}bg=${theme.colors?.background} text=${theme.colors?.text} primary=${theme.colors?.primary}`);
-      } catch (err) {
-        return warning('Runtime denied/unavailable', errorText(err));
-      }
+      return viaRuntime('theme.get', () => themeGet(), 1500, (theme) => `theme ${theme.title ? `"${theme.title}" ` : ''}bg=${theme.colors?.background} text=${theme.colors?.text} primary=${theme.colors?.primary}`);
     },
   },
-];
+  ],
+);
+
+export const runtimeProbes: ProbeDefinition[] = [...namespaceProbes, ...manifestProbes, ...napProbes];

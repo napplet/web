@@ -1,8 +1,10 @@
 import { pass, fail, warning, errorText, short, type ProbeResult } from '../probe-result';
 import { inspectCspMeta, effectiveSources } from '../csp';
 
+import { UNRESOLVABLE_URL } from '../probe-targets';
+
 /** A host that can never resolve, so every "denied" probe is deterministic. */
-export const EXTERNAL_URL = 'https://example.invalid/napplet-lab-probe';
+export const EXTERNAL_URL = UNRESOLVABLE_URL;
 
 export function timeout<T>(promise: Promise<T>, ms = 900): Promise<T | 'timeout'> {
   return new Promise((resolve, reject) => {
@@ -71,7 +73,7 @@ export const AMBIENT_SIGNER_LABEL = ['window', 'nostr'].join('.');
 
 export function getAmbientNostr(): Record<string, unknown> | undefined {
   const key = ['nos', 'tr'].join('');
-  const value = Reflect.get(window as unknown as object, key);
+  const value = Reflect.get(window, key);
   return value && typeof value === 'object' ? (value as Record<string, unknown>) : undefined;
 }
 

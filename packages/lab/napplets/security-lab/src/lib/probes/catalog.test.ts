@@ -76,7 +76,11 @@ describe('probe catalog', () => {
     // Nested-frame hello is posted from the *nested* document's realm (its source
     // text lives in a string), so it is the only allowed occurrence outside
     // destructive.ts.
-    const safeFiles = ['src/lib/probes/baseline.ts', 'src/lib/probes/runtime.ts', 'src/lib/probes/helpers.ts', 'src/main.ts', 'src/App.svelte'];
+    const safeFiles = [
+      'src/lib/probes/baseline.ts', 'src/lib/probes/baseline-sandbox.ts', 'src/lib/probes/baseline-csp.ts',
+      'src/lib/probes/baseline-storage.ts', 'src/lib/probes/baseline-network.ts',
+      'src/lib/probes/runtime.ts', 'src/lib/probes/helpers.ts', 'src/main.ts', 'src/App.svelte',
+    ];
     for (const file of safeFiles) {
       expect(read(file), file).not.toMatch(/window\.parent\.postMessage|parent\.postMessage\(/);
     }
@@ -128,7 +132,9 @@ describe('artifact safety', () => {
     const files = [
       'src/main.ts', 'src/App.svelte', 'src/lib/csp.ts', 'src/lib/namespace.ts', 'src/lib/theme.ts',
       'src/lib/runner.ts', 'src/lib/probe-result.ts', 'src/lib/manifest.ts', 'src/lib/columns.ts', 'src/lib/preferences.ts',
-      'src/lib/probes/helpers.ts', 'src/lib/probes/baseline.ts', 'src/lib/probes/runtime.ts',
+      'src/lib/probe-targets.ts',
+      'src/lib/probes/helpers.ts', 'src/lib/probes/baseline.ts', 'src/lib/probes/baseline-sandbox.ts', 'src/lib/probes/baseline-csp.ts',
+      'src/lib/probes/baseline-storage.ts', 'src/lib/probes/baseline-network.ts', 'src/lib/probes/runtime.ts',
       'src/lib/probes/adversarial.ts', 'src/lib/probes/destructive.ts', 'src/lib/probes/index.ts',
     ];
     const forbidden = /<\/?(?:meta|head|html|body|script|link|style|base)\b/i;
