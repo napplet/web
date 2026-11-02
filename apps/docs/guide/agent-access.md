@@ -47,11 +47,12 @@ Verify the digest before using a skill. To install the skills into a coding agen
 
 ## WebMCP tools
 
-Every page outside the docs registers [WebMCP](https://webmachinelearning.github.io/webmcp/) tools when the browser supports them, so an agent working in the visitor's browser can use the site without scraping it. The tools read the same files listed above. They never contact relays, run a napplet or sign anything.
+Every page, including the docs, registers [WebMCP](https://webmachinelearning.github.io/webmcp/) tools when the browser supports them, so an agent working in the visitor's browser can use the site without scraping it. The tools read the same files listed above. They never contact relays, run a napplet or sign anything.
 
 | Tool | Does |
 | --- | --- |
-| `list_pages` | Lists the pages in `/llms.txt`, optionally filtered by `query` words. |
+| `list_pages` | Lists the pages in `/llms.txt`, docs included, optionally filtered by `query` words in titles and descriptions. |
+| `search_docs` | Full-text search of the `/docs` pages in `/docs/llms-full.txt`, best matches first, each with a snippet and its URL. |
 | `read_page` | Returns the Markdown copy of one page on this site, given its `path`. |
 | `search_napplets` | Searches `/apps/catalog.json` by `query`, within a `collection` (`all`, `curated` or `discovered`). |
 | `list_agent_skills` | Lists the agent skills from the Agent Skills index, with absolute URLs. |
