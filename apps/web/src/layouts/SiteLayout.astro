@@ -47,5 +47,12 @@ const markdown = Astro.url.pathname.endsWith('/') ? `${Astro.url.pathname}index.
       sameAs: ['https://github.com/napplet/web', 'https://github.com/napplet/naps'],
     }).replace(/</g, '\\u003c')} />
   </head>
-  <body><slot /></body>
+  <body>
+    <slot />
+    <script>
+      // WebMCP tools for agents in the visitor's browser; a no-op where the browser has no ModelContext.
+      import { registerAgentTools } from '../lib/agent-tools';
+      registerAgentTools();
+    </script>
+  </body>
 </html>
