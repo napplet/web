@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { agentTools, filterPages, htmlPath, markdownPath, MAX_PAGE_CHARS, parseLlmsTxt, registerAgentTools, sameOriginUrl, searchApps, type ModelContextTool, type ToolEnvironment } from './agent-tools';
+import { agentTools, filterPages, parseDocsCorpus, searchDocs, htmlPath, markdownPath, MAX_PAGE_CHARS, parseLlmsTxt, registerAgentTools, sameOriginUrl, searchApps, type ModelContextTool, type ToolEnvironment } from './agent-tools';
 import type { AgentApp } from './agent-catalog';
 
 const ORIGIN = 'https://napplet.run';
@@ -75,6 +75,50 @@ describe('llms.txt', () => {
   });
 });
 
+const CORPUS = `# napplet docs
+
+> Documentation.
+
+<!-- https://napplet.run/docs/guide/concepts.md -->
+
+# Core concepts
+
+Storage is scoped per napplet. The storage quota is enforced by the shell.
+
+---
+
+<!-- https://napplet.run/docs/naps/storage.md -->
+
+# STORAGE
+
+Scoped key-value storage with a quota.
+
+---
+
+<!-- https://example.com/docs/elsewhere.md -->
+
+# Elsewhere
+
+storage quota
+`;
+
+describe('docs search', () => {
+  it('splits llms-full.txt into same-site docs pages', () => {
+    const pages = parseDocsCorpus(CORPUS);
+    expect(pages.map(page => [page.title, page.path])).toEqual([['Core concepts', '/docs/guide/concepts.md'], ['STORAGE', '/docs/naps/storage.md'], ['Elsewhere', '/docs/elsewhere.md']]);
+    expect(pages[0].markdown.endsWith('enforced by the shell.')).toBe(true);
+  });
+
+  it('needs every word, ranks by occurrences with a title boost and links the page', () => {
+    const hits = searchDocs(parseDocsCorpus(CORPUS).slice(0, 2), 'storage quota', ORIGIN);
+    expect(hits.map(hit => hit.title)).toEqual(['STORAGE', 'Core concepts']);
+    expect(hits[0]).toMatchObject({ url: 'https://napplet.run/docs/naps/storage.html', markdownUrl: 'https://napplet.run/docs/naps/storage.md' });
+    expect(hits[1].snippet).toContain('Storage is scoped');
+    expect(searchDocs(parseDocsCorpus(CORPUS), 'storage relay', ORIGIN)).toEqual([]);
+    expect(searchDocs(parseDocsCorpus(CORPUS), '', ORIGIN)).toEqual([]);
+  });
+});
+
 describe('searchApps', () => {
   it('matches names, descriptions, topics and author names within a collection', () => {
     expect(searchApps(APPS, 'puzzle', 'all').map(app => app.name)).toEqual(['Freeze Frame Response']);
@@ -130,6 +174,16 @@ describe('agentTools', () => {
     expect(fetch).toHaveBeenCalledTimes(1);
   });
 
+  it('search_docs loads llms-full.txt once and applies the limit', async () => {
+    const { env, fetch } = environment({ '/docs/llms-full.txt': CORPUS });
+    const search = agentTools(env).find(candidate => candidate.name === 'search_docs')!;
+    const result = await search.execute({ query: 'quota', limit: 1 }) as { total: number; results: { title: string }[] };
+    expect(result.total).toBe(3);
+    expect(result.results.map(hit => hit.title)).toEqual(['Core concepts']);
+    await search.execute({ query: 'scoped' });
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
   it('list_agent_skills resolves skill URLs against the site', async () => {
     const { env } = environment({ '/.well-known/agent-skills/index.json': JSON.stringify({ skills: [{ name: 'napplet-build', description: 'Build', url: '/.well-known/agent-skills/napplet-build/SKILL.md', digest: 'sha256:00' }] }) });
     await expect(tool(env, 'list_agent_skills').execute({})).resolves.toEqual({ skills: [{ name: 'napplet-build', description: 'Build', url: 'https://napplet.run/.well-known/agent-skills/napplet-build/SKILL.md', digest: 'sha256:00' }] });
@@ -148,14 +202,14 @@ describe('registerAgentTools', () => {
   it('registers every tool with one abort signal', () => {
     const registered: [ModelContextTool, { signal?: AbortSignal } | undefined][] = [];
     const controller = registerAgentTools({ registerTool: async (candidate, options) => { registered.push([candidate, options]); } }, environment({}).env);
-    expect(registered.map(([candidate]) => candidate.name)).toEqual(['list_pages', 'read_page', 'search_napplets', 'list_agent_skills', 'open_page']);
+    expect(registered.map(([candidate]) => candidate.name)).toEqual(['list_pages', 'search_docs', 'read_page', 'search_napplets', 'list_agent_skills', 'open_page']);
     expect(registered.every(([, options]) => options?.signal === controller!.signal)).toBe(true);
   });
 
   it('keeps going when one registration rejects or throws', () => {
     const names: string[] = [];
     registerAgentTools({ registerTool: (candidate) => { names.push(candidate.name); if (candidate.name === 'read_page') throw new Error('duplicate'); return Promise.reject(new Error('duplicate')); } }, environment({}).env);
-    expect(names).toHaveLength(5);
+    expect(names).toHaveLength(6);
   });
 
   it('does nothing without WebMCP', () => {
