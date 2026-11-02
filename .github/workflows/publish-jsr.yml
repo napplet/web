@@ -72,8 +72,10 @@ jobs:
       # publish set. The pure @napplet/conformance engine still publishes to JSR.
       # Agent skills live in the repo-root skills/ directory and are installed
       # with the skills.sh CLI, so they are not published as a package.
+      # @napplet/lab is private (lab napplets and harnesses) and is not a Deno
+      # workspace member, so it is excluded too.
       - name: Publish to JSR (topologically ordered)
-        run: pnpm -r --workspace-concurrency=1 --filter='./packages/*' --filter='!@napplet/boilerplate' --filter='!@napplet/conformance-cli' exec npx jsr publish --allow-slow-types --allow-dirty
+        run: pnpm -r --workspace-concurrency=1 --filter='./packages/*' --filter='!@napplet/boilerplate' --filter='!@napplet/conformance-cli' --filter='!@napplet/lab' exec npx jsr publish --allow-slow-types --allow-dirty
 
   build-cli-binaries:
     if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
