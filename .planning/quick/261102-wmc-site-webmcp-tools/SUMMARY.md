@@ -19,3 +19,9 @@ Six WebMCP tools register on every page of napplet.run, the VitePress docs inclu
 ## Pending
 
 The isitagentready `webMcp` check needs the deploy; re-scan after merge.
+
+## Follow-up (2026-11-03)
+
+#309 merged at 8fe5b919, before the search_docs and docs-page commits were pushed, so the deploy served five tools and no docs-page registration. They landed again on `feat/site-webmcp-docs-search`, together with a `window.modelContext` fallback and a retry on `DOMContentLoaded` and `load`. Chrome 149 with `--enable-features=WebMCP` lists all six tools on `/docs/guide/getting-started.html` and `/apps/`; `search_docs` and `read_page` run without page errors.
+
+amiagentready.com reports "No WebMCP yet" because it reads static source and looks for an older pattern: it fails Chrome's own react-flightsearch demo, which uses `document.modelContext`, and its WebMCP check is unscored. isitagentready, which runs the page, passes.
