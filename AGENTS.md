@@ -193,7 +193,7 @@ back — **do not wait to be told to push or open a PR**:
 6. atomic commits made
 7. `git push -u origin <branch>`
 8. `gh pr create` with a clear body: what, why, any surfaced decision, verification
-   output, and out-of-scope notes.
+   output, and out-of-scope notes (see "Writing issues, PRs, and reviews").
 
 `/gsd:ship` performs steps 6–8 (PR + review) inside a GSD flow. Outward-facing actions
 (push, PR, publish) are authorized as the closing step of the task you were given — you
@@ -211,6 +211,34 @@ Publishing runs from GitHub Actions on push to `main`; do not `pnpm publish-*` l
    syncs JSR versions).
 3. Commit, push, open the release PR. Merging to `main` runs the **Publish** (npm) and
    **Publish to JSR** workflows; `pnpm publish -r` skips already-published versions.
+
+## Writing issues, PRs, and reviews
+
+Issues, PR bodies, review comments, and replies on GitHub use a casual, collegial voice. Write like a peer leaving notes for someone you work with, not like a spec or an audit report. The content stays precise and verifiable; only the tone relaxes.
+
+- Open with what works before what doesn't ("Nice work, this gets us most of the way.").
+- Use contractions and short sentences. Ask rather than order: "Could we pin down where the results go?", "Mind dropping it from this PR?", "Did you mean positive?"
+- Name the concrete problem in a sentence or two, then suggest a fix. When there are several reasonable fixes, offer them as short bullets and say "either works".
+- Label small things as `Nit:` and keep them to one line.
+- Keep normative words (MUST, SHOULD) for quoting or proposing spec text, not for talking to people.
+- Stay neutral about vendors and implementations. A generic contract such as a NAP is argued from the contract, using patterns ("several providers return opaque reasoning state"), not from what one product, shell, or runtime does.
+- For a review, put each point inline on the line it concerns. Keep the review body for the summary and for points that don't sit on a changed line.
+- A PR body says what changed, why, which NIP-5D or NAP text it relies on (for protocol-touching work), the verification output, and known gaps. Say plainly what was not run or not proven.
+
+Example inline review comment:
+
+> This only works in one direction. Providers aren't consistent about the stop reason when a turn contains tool calls, so could we also say that any result containing a `toolCall` part has `finish: "toolUse"`, whatever the provider reported?
+
+### Filing an issue in another repository
+
+When the root cause is in a dependency, a runtime that consumes these packages, or the spec (NAP text in `napplet/naps`, NIP-5D in `nostr-protocol/nips`), don't hide it with a local workaround. Distill the failure into that project's own public API, CLI, protocol contract, or a minimal fixture, then file it there. Spec gaps still follow protocol-fidelity rule 2: propose them on the NAPs track rather than inventing surface here.
+
+- The issue must make sense in isolation to a maintainer who has never seen this repo and won't open its branches, issues, PRs, planning notes, or logs.
+- Don't reference this repo's PR numbers, issue numbers, branch names, or internal package context unless the maintainer asks for that background later.
+- Frame it around the other project only: affected package and version, public API or command, protocol field or contract, expected behavior, actual behavior, exact error or output, environment, and a minimal reproduction that runs without this repo.
+- Don't ask the maintainer to read a PR here, clone this repo, or infer the bug from this repo's behavior.
+
+Keep coordination here. Once the issue exists, open a tracking issue in `napplet/web` that links to it, summarizes the local impact, names any workaround, and states the condition for removing that workaround. A workaround is allowed only when the user asks for one or work here is otherwise blocked; keep it narrow, documented, tested, and tied to the external issue for removal.
 
 ## Project Overview
 
