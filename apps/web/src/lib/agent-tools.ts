@@ -318,7 +318,7 @@ export function agentTools(env: ToolEnvironment): ModelContextTool[] {
  * @example registerAgentTools();
  */
 export function registerAgentTools(
-  context: ModelContextLike | null | undefined = (document as { modelContext?: ModelContextLike }).modelContext ?? (navigator as { modelContext?: ModelContextLike }).modelContext,
+  context: ModelContextLike | null | undefined = findModelContext(),
   env: ToolEnvironment = { origin: location.origin, fetch: (url, init) => fetch(url, init), navigate: url => location.assign(url) },
 ): AbortController | null {
   if (typeof context?.registerTool !== 'function') return null;
@@ -330,4 +330,34 @@ export function registerAgentTools(
     } catch { /* best-effort */ }
   }
   return controller;
+}
+
+type ContextHost = { modelContext?: ModelContextLike };
+
+/**
+ * Find the browser's ModelContext: `document.modelContext` per the WebMCP draft, then `navigator.modelContext` (early
+ * Chrome builds), then `window.modelContext` (some polyfills and inspectors).
+ * @param hosts Objects to look on, in order; defaults to the page's document, navigator and window.
+ * @returns The first context found, or undefined.
+ * @example findModelContext()?.registerTool
+ */
+export function findModelContext(hosts: ContextHost[] = [document, navigator, window] as ContextHost[]): ModelContextLike | undefined {
+  return hosts.map(host => host.modelContext).find(context => typeof context?.registerTool === 'function');
+}
+
+/**
+ * Register the tools now, or on DOMContentLoaded or load when the browser exposes ModelContext after this script runs.
+ * @param target Where to wait for the load events; defaults to the window.
+ * @param register Registration step; defaults to {@link registerAgentTools} with the page's context.
+ * @example registerAgentToolsWhenReady();
+ */
+export function registerAgentToolsWhenReady(target: Pick<EventTarget, 'addEventListener' | 'removeEventListener'> = window, register: () => AbortController | null = () => registerAgentTools()): void {
+  if (register()) return;
+  const retry = () => {
+    if (!register()) return;
+    target.removeEventListener('DOMContentLoaded', retry);
+    target.removeEventListener('load', retry);
+  };
+  target.addEventListener('DOMContentLoaded', retry);
+  target.addEventListener('load', retry);
 }

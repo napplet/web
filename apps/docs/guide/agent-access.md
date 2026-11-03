@@ -58,7 +58,7 @@ Every page, including the docs, registers [WebMCP](https://webmachinelearning.gi
 | `list_agent_skills` | Lists the agent skills from the Agent Skills index, with absolute URLs. |
 | `open_page` | Navigates the tab to a page on this site. It is the only tool that is not read-only. |
 
-`read_page` and `open_page` refuse anything outside napplet.run. The page looks for `document.modelContext` and falls back to `navigator.modelContext`, which is where Chrome 149 exposes the API behind `--enable-features=WebMCP`. In a browser without WebMCP, the page registers nothing.
+`read_page` and `open_page` refuse anything outside napplet.run. The page looks for `document.modelContext`, then `navigator.modelContext` (where Chrome 149 exposes the API behind `--enable-features=WebMCP`), then `window.modelContext`. If none is there when the script runs, it tries again on `DOMContentLoaded` and `load`. In a browser without WebMCP, the page registers nothing.
 
 ## Usage preferences
 

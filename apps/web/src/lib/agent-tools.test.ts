@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { agentTools, filterPages, parseDocsCorpus, searchDocs, htmlPath, markdownPath, MAX_PAGE_CHARS, parseLlmsTxt, registerAgentTools, sameOriginUrl, searchApps, type ModelContextTool, type ToolEnvironment } from './agent-tools';
+import { agentTools, filterPages, parseDocsCorpus, searchDocs, htmlPath, markdownPath, MAX_PAGE_CHARS, parseLlmsTxt, findModelContext, registerAgentTools, registerAgentToolsWhenReady, sameOriginUrl, searchApps, type ModelContextTool, type ToolEnvironment } from './agent-tools';
 import type { AgentApp } from './agent-catalog';
 
 const ORIGIN = 'https://napplet.run';
@@ -214,5 +214,36 @@ describe('registerAgentTools', () => {
 
   it('does nothing without WebMCP', () => {
     expect(registerAgentTools(null, environment({}).env)).toBeNull();
+  });
+});
+
+describe('findModelContext', () => {
+  it('prefers document, then navigator, then window, skipping objects without registerTool', () => {
+    const context = { registerTool: () => undefined };
+    const late = { registerTool: () => undefined };
+    expect(findModelContext([{}, { modelContext: context }, { modelContext: late }])).toBe(context);
+    expect(findModelContext([{ modelContext: {} as never }, {}, { modelContext: late }])).toBe(late);
+    expect(findModelContext([{}, {}, {}])).toBeUndefined();
+  });
+});
+
+describe('registerAgentToolsWhenReady', () => {
+  it('registers at once when the context is already there', () => {
+    const target = new EventTarget();
+    const register = vi.fn(() => new AbortController());
+    registerAgentToolsWhenReady(target, register);
+    target.dispatchEvent(new Event('load'));
+    expect(register).toHaveBeenCalledTimes(1);
+  });
+
+  it('retries on DOMContentLoaded and load, then stops once registered', () => {
+    const target = new EventTarget();
+    let calls = 0;
+    const register = vi.fn(() => (++calls < 3 ? null : new AbortController()));
+    registerAgentToolsWhenReady(target, register);
+    target.dispatchEvent(new Event('DOMContentLoaded'));
+    target.dispatchEvent(new Event('load'));
+    target.dispatchEvent(new Event('load'));
+    expect(register).toHaveBeenCalledTimes(3);
   });
 });
