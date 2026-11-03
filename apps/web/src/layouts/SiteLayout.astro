@@ -51,8 +51,8 @@ const markdown = Astro.url.pathname.endsWith('/') ? `${Astro.url.pathname}index.
     <slot />
     <script>
       // WebMCP tools for agents in the visitor's browser; a no-op where the browser has no ModelContext.
-      import { registerAgentTools } from '../lib/agent-tools';
-      registerAgentTools();
+      import { registerAgentToolsWhenReady } from '../lib/agent-tools';
+      registerAgentToolsWhenReady();
     </script>
   </body>
 </html>
