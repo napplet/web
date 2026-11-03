@@ -4,29 +4,29 @@
 
 A **napplet** is a sandboxed Nostr iframe applet (NIP-5D). The skills carry the exact, verified package surface and protocol constraints an agent needs so that one well-scoped prompt produces a working, conformant, compact napplet that looks right at any frame size.
 
-- **Source:** [`skills/`](https://github.com/napplet/napplet/tree/main/skills) in the napplet monorepo
+- **Source:** [`skills/`](https://github.com/napplet/web/tree/main/skills) in the napplet monorepo
 - **Format:** one `SKILL.md` per skill with YAML `name` / `description` frontmatter — the format Claude Code, Codex, Cursor, and most agents consume
 
 ## Install
 
 ```bash
-npx skills add napplet/napplet
+npx skills add napplet/web
 ```
 
 The CLI detects which coding agents are installed and places the skills where each one reads them (`.claude/skills/`, `.agents/skills/` for Codex and Cursor, and the matching directory for other agents), symlinking to one canonical copy by default. Useful flags:
 
 ```bash
-npx skills add napplet/napplet --list                    # see what ships
-npx skills add napplet/napplet -a claude-code            # one agent (also: codex, cursor, gemini-cli, github-copilot, …)
-npx skills add napplet/napplet -g                        # global, all projects
-npx skills add napplet/napplet --skill napplet-make      # a single skill
-npx skills add napplet/napplet --skill napplet-icon      # icon design and generation
-npx skills add napplet/napplet --skill napplet-port-napp # nostrapps NAPP migration
-npx skills add napplet/napplet --skill napplet-ui --skill napplet-sdk
+npx skills add napplet/web --list                    # see what ships
+npx skills add napplet/web -a claude-code            # one agent (also: codex, cursor, gemini-cli, github-copilot, …)
+npx skills add napplet/web -g                        # global, all projects
+npx skills add napplet/web --skill napplet-make      # a single skill
+npx skills add napplet/web --skill napplet-icon      # icon design and generation
+npx skills add napplet/web --skill napplet-port-napp # nostrapps NAPP migration
+npx skills add napplet/web --skill napplet-ui --skill napplet-sdk
 npx skills update                                        # pull the latest skill text
 ```
 
-Agents that read skills by name can then invoke `/napplet-make`, `/napplet-ui`, and so on. Agents without a skills directory can be pointed at a skill file directly (`npx skills use napplet/napplet --skill napplet-make | claude`).
+Agents that read skills by name can then invoke `/napplet-make`, `/napplet-ui`, and so on. Agents without a skills directory can be pointed at a skill file directly (`npx skills use napplet/web --skill napplet-make | claude`).
 
 ## The skills
 

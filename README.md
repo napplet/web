@@ -2,10 +2,10 @@
 
 # napplet
 
-[![CI](https://github.com/napplet/napplet/actions/workflows/ci.yml/badge.svg)](https://github.com/napplet/napplet/actions/workflows/ci.yml)
+[![CI](https://github.com/napplet/web/actions/workflows/ci.yml/badge.svg)](https://github.com/napplet/web/actions/workflows/ci.yml)
 [![AI Slop Score](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fnapplet%2Fweb%2Fbadges%2Faislop-score.json)](https://github.com/napplet/web/actions/workflows/ai-slop.yml)
-[![Publish](https://github.com/napplet/napplet/actions/workflows/publish.yml/badge.svg)](https://github.com/napplet/napplet/actions/workflows/publish.yml)
-[![Publish to JSR](https://github.com/napplet/napplet/actions/workflows/publish-jsr.yml/badge.svg)](https://github.com/napplet/napplet/actions/workflows/publish-jsr.yml)
+[![Publish](https://github.com/napplet/web/actions/workflows/publish.yml/badge.svg)](https://github.com/napplet/web/actions/workflows/publish.yml)
+[![Publish to JSR](https://github.com/napplet/web/actions/workflows/publish-jsr.yml/badge.svg)](https://github.com/napplet/web/actions/workflows/publish-jsr.yml)
 
 Monorepo for the **napplet** SDK -- libraries for building NIP-5D Nostr Web Applets - "napplets"
 
@@ -31,7 +31,7 @@ Run `napplet --version` (also `-v` or `version`) to identify the installed CLI. 
 napplet create my-napplet
 cd my-napplet
 napplet init
-npx skills add napplet/napplet     # agent skills via skills.sh (Claude Code, Codex, Cursor, …)
+npx skills add napplet/web     # agent skills via skills.sh (Claude Code, Codex, Cursor, …)
 pnpm install
 # Ask your agent to build the napplet, then verify and preview it.
 pnpm verify
@@ -43,9 +43,9 @@ napplet deploy
 
 The CLI supports `napplet screenshot --output preview.png`. `napplet deploy` captures a screenshot and publishes a separate Zapstore application event by default; use `--no-screenshot` and/or `--no-zapstore` to opt out. See the [CLI guide](packages/cli/README.md#screenshots-and-zapstore-metadata) for configuration, browser setup, and dry-run examples.
 
-Use the [`napplet-icon` skill](skills/napplet-icon/SKILL.md) to design, generate, and refine an app icon, check it at small sizes, and prepare it for NIP-5D integration. Install it with `npx skills add napplet/napplet --skill napplet-icon`; see the [agent skills guide](apps/docs/guide/agent-skills.md) for the complete workflow.
+Use the [`napplet-icon` skill](skills/napplet-icon/SKILL.md) to design, generate, and refine an app icon, check it at small sizes, and prepare it for NIP-5D integration. Install it with `npx skills add napplet/web --skill napplet-icon`; see the [agent skills guide](apps/docs/guide/agent-skills.md) for the complete workflow.
 
-Use [`napplet-port-napp`](skills/napplet-port-napp/SKILL.md) to port an [eskema/nostrapps NAPP](https://github.com/eskema/nostrapps/blob/main/NAPP.md) through bridge replacement, implementation and behavior verification. Install it with `npx skills add napplet/napplet --skill napplet-port-napp`.
+Use [`napplet-port-napp`](skills/napplet-port-napp/SKILL.md) to port an [eskema/nostrapps NAPP](https://github.com/eskema/nostrapps/blob/main/NAPP.md) through bridge replacement, implementation and behavior verification. Install it with `npx skills add napplet/web --skill napplet-port-napp`.
 
 ## Event schema compatibility
 

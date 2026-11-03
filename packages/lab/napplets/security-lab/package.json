@@ -7,7 +7,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/napplet/napplet.git",
+    "url": "git+https://github.com/napplet/web.git",
     "directory": "packages/lab/napplets/security-lab"
   },
   "scripts": {

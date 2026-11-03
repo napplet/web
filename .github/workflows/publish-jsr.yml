@@ -2,7 +2,7 @@ name: Publish to JSR
 
 # JSR publish runs INDEPENDENTLY of the npm Publish workflow so a broken
 # npm token or scope-permission issue does not block JSR releases. JSR uses
-# OIDC (id-token: write) for auth — no secret required once napplet/napplet
+# OIDC (id-token: write) for auth — no secret required once napplet/web
 # is linked under the @napplet scope on jsr.io.
 #
 # Trigger model:
@@ -25,7 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      # id-token: write enables JSR's OIDC-based publish. Once napplet/napplet
+      # id-token: write enables JSR's OIDC-based publish. Once napplet/web
       # is linked under the @napplet scope at jsr.io/@napplet/settings, this
       # is the only auth needed — no JSR_TOKEN secret required.
       id-token: write

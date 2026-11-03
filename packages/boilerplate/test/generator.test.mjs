@@ -85,7 +85,7 @@ test('completion output routes through init, skills, verify, and dry-run deploy'
     force: false,
   });
   assert.match(output, /napplet init/);
-  assert.match(output, /npx skills add napplet\/napplet/);
+  assert.match(output, /npx skills add napplet\/web/);
   assert.match(output, /pnpm verify/);
   assert.match(output, /napplet deploy --dry-run/);
 });

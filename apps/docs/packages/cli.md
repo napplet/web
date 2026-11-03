@@ -16,7 +16,7 @@ The generated Vite project and optional skills.sh CLI still need their own devel
 
 - **npm:** [`@napplet/cli`](https://www.npmjs.com/package/@napplet/cli)
 - **JSR:** [`@napplet/cli`](https://jsr.io/@napplet/cli)
-- **Source:** [packages/cli](https://github.com/napplet/napplet/tree/main/packages/cli)
+- **Source:** [packages/cli](https://github.com/napplet/web/tree/main/packages/cli)
 
 ## Install
 
@@ -32,7 +32,7 @@ curl -fsSL https://napplet.run/install.sh | sh
 irm https://napplet.run/install.ps1 | iex
 ```
 
-The installers download from the [stable CLI release](https://github.com/napplet/napplet/releases/tag/napplet-cli) and verify the asset against its `SHA256SUMS`. Linux and macOS support x64 and ARM64; Windows supports x64.
+The installers download from the [stable CLI release](https://github.com/napplet/web/releases/tag/napplet-cli) and verify the asset against its `SHA256SUMS`. Linux and macOS support x64 and ARM64; Windows supports x64.
 
 ### Check the installed version
 
@@ -75,7 +75,7 @@ Run the same path for every new project:
 napplet create my-napplet
 cd my-napplet
 napplet init
-npx skills add napplet/napplet
+npx skills add napplet/web
 pnpm install
 # Ask your agent to build the napplet.
 pnpm verify
@@ -88,7 +88,7 @@ napplet deploy
   targets in `.napplet/config.yaml`. In an interactive terminal it guides setup and shows live suggestions from
   relays such as `wss://relaypag.es`, and suggests Blossom servers from kind
   `10063` server-list events.
-- `npx skills add napplet/napplet` installs the `napplet-*` agent skills for whichever coding agents you use; it is the skills.sh CLI, not a `napplet` subcommand.
+- `npx skills add napplet/web` installs the `napplet-*` agent skills for whichever coding agents you use; it is the skills.sh CLI, not a `napplet` subcommand.
 - `napplet debug` prints resolved config, discovered napplets, deploy targets, manifest templates, and signing readiness without network writes. Manifest template failures (for example a missing description, or built files a current deploy would drop) are reported in `manifests.error` instead of aborting, and `--format current|legacy` selects the event format inspected.
 - `napplet deploy --dry-run` builds the same deploy plan and signed manifest
   events without uploading or publishing.

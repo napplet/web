@@ -6,7 +6,7 @@
 
 - **npm:** [`@napplet/core`](https://www.npmjs.com/package/@napplet/core)
 - **JSR:** [`@napplet/core`](https://jsr.io/@napplet/core)
-- **Source:** [packages/core](https://github.com/napplet/napplet/tree/main/packages/core)
+- **Source:** [packages/core](https://github.com/napplet/web/tree/main/packages/core)
 
 ## Implementation maturity
 

@@ -7,7 +7,7 @@
 
 - **npm:** [`@napplet/nap`](https://www.npmjs.com/package/@napplet/nap)
 - **JSR:** [`@napplet/nap`](https://jsr.io/@napplet/nap)
-- **Source:** [packages/nap](https://github.com/napplet/napplet/tree/main/packages/nap)
+- **Source:** [packages/nap](https://github.com/napplet/web/tree/main/packages/nap)
 
 NAP proposal status and shipped implementation maturity are separate. All capabilities can change. Inspect `NAP_IMPLEMENTATIONS` from `@napplet/core` and use `selectNapDomains` for local host opt-in policy. See [maturity and opt-in guidance](https://napplet.run/docs/naps/maturity.html).
 

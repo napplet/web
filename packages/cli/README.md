@@ -26,7 +26,7 @@ curl -fsSL https://napplet.run/install.sh | sh
 irm https://napplet.run/install.ps1 | iex
 ```
 
-The installers download a supported asset from the [stable CLI release](https://github.com/napplet/napplet/releases/tag/napplet-cli) and verify it against `SHA256SUMS` before replacing the executable. Supported assets are Linux x64 / ARM64, macOS x64 / ARM64, and Windows x64.
+The installers download a supported asset from the [stable CLI release](https://github.com/napplet/web/releases/tag/napplet-cli) and verify it against `SHA256SUMS` before replacing the executable. Supported assets are Linux x64 / ARM64, macOS x64 / ARM64, and Windows x64.
 
 ### Check the installed version
 
@@ -93,7 +93,7 @@ The primary developer path is ordered and composable:
 napplet create my-napplet
 cd my-napplet
 napplet init
-npx skills add napplet/napplet
+npx skills add napplet/web
 pnpm install
 # Ask your agent to build the napplet.
 pnpm verify
@@ -105,7 +105,7 @@ What each step does:
 
 - `napplet create` delegates to `@napplet/boilerplate` and creates the starter only.
 - `napplet init` owns deployment name, title, description, archetype roles and conventions, relays, and Blossom servers in `.napplet/config.yaml`; scripts can pass the same fields explicitly.
-- `npx skills add napplet/napplet` installs the `napplet-*` agent skills through the skills.sh CLI (Claude Code, Codex, Cursor, and 70+ other agents); it is not a `napplet` subcommand.
+- `npx skills add napplet/web` installs the `napplet-*` agent skills through the skills.sh CLI (Claude Code, Codex, Cursor, and 70+ other agents); it is not a `napplet` subcommand.
 - `napplet debug` prints resolved config, discovered napplets, deploy targets, manifest templates, and signing readiness without uploading or publishing. Manifest template failures (for example a missing description, or built files a current deploy would drop) are reported in `manifests.error` instead of aborting, and `--format current|legacy` selects the event format inspected.
 - `napplet deploy --dry-run` builds the same deploy plan and signed manifest events without network writes. Interactive terminals get a readable report with copyable NIP-19 pointers.
 - `napplet deploy` uploads files to configured Blossom servers and publishes signed root, named, and optional snapshot manifest events to configured relays. Use `--json` for CI / machine output.

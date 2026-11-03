@@ -225,7 +225,7 @@ This is the **napplet** monorepo — npm packages for the napplet protocol. Napp
 - `packages/nap` — **@napplet/nap** — NAP domain subpaths (`@napplet/nap/relay`, `@napplet/nap/identity`, etc.)
 - `packages/boilerplate` — **@napplet/boilerplate** — Interactive `npx` generator for the `github.com/napplet/boilerplate` template
 - `packages/lab` — **@napplet/lab** (private) — Tooling for probing napplets and shells; holds lab napplets under `napplets/*` (first: `@napplet/lab-security`, the Security Lab). Lab napplets are apps, not SDK packages: the zero-framework rule below applies to published packages, and a lab napplet may use a UI framework.
-- `skills/` — the `napplet-*` agent skills (`SKILL.md` per skill), installed with the skills.sh CLI (`npx skills add napplet/napplet`); not an npm package
+- `skills/` — the `napplet-*` agent skills (`SKILL.md` per skill), installed with the skills.sh CLI (`npx skills add napplet/web`); not an npm package
 
 ## Tech Stack
 
