@@ -65,7 +65,7 @@ Branch `feat/cli-terminal-usability` ships guided missing-value recovery, `-i` p
 Phase: 164 (cli-terminal-usability) — verified and shipped
 Plan: 3 of 3
 Status: [PR #248](https://github.com/napplet/web/pull/248) open with six actual terminal screenshots
-Last activity: 2026-11-02 - Completed quick task 261102-wmc: WebMCP tools on napplet.run
+Last activity: 2026-11-03 - Completed quick task 261103-rsl: repository references point at napplet/web
 
 See phase 163 VERIFICATION.md and COVERAGE.md for evidence and disclosed release/specification/baseline limits. Earlier phase and quick-task records below are historical.
 
@@ -415,7 +415,7 @@ Status: M1+M2+M3+M4 COMPLETE. Final gate green: build(11), type-check(14), test:
 - NOTE FOR USER: README on main already had a `v0.32.0 — Read-Only NAP-IDENTITY` changelog entry (pre-existing) that collides with this milestone's v0.32.0 label. Left it untouched; added conformance additively. Milestone version label may need reconciliation (this work could be v0.33.0). Surfaced in PR.
 - NOTE: aislop's 1 error = vite (high, upgrade 6.4.3+) + 1 warn = js-yaml — both environmental dependency advisories, not introduced here; out of scope (separate dep-bump like v0.31.0).
 
-Last activity: 2026-11-02 - Completed quick task 261102-wmc: WebMCP tools on napplet.run
+Last activity: 2026-11-03 - Completed quick task 261103-rsl: repository references point at napplet/web
 
 ### Phase 150 record (CLI-01..06) — COMPLETE (b7a7f7e)
 
@@ -570,6 +570,7 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 
 | Quick ID | Task | Date | Commit | Artifacts |
 |----------|------|------|--------|-----------|
+| 261103-rsl | Point every napplet/napplet repository reference (docs, READMEs, skills, CLI, installers, package metadata) at napplet/web | 2026-11-03 | — | [261103-rsl](./quick/261103-rsl-repo-slug-napplet-web/) |
 | 261102-wmc | napplet.run WebMCP tools (list_pages, read_page, search_napplets, list_agent_skills, open_page) and /apps/catalog.json | 2026-11-02 | — | [261102-wmc](./quick/261102-wmc-site-webmcp-tools/) |
 | 261101-wei | napplet.run player frame locked to its verified document with page frame-src 'none' (closes navigation-before-first-load) | 2026-11-01 | — | [261101-wei](./quick/261101-wei-player-frame-navigation-lock/) |
 | 261101-vx0 | napplet.run player: NIP-5D napplet.hello bootstrap and document binding (frame removed on navigation, reload or window-level messages) | 2026-11-01 | — | [261101-vx0](./quick/261101-vx0-player-port-bound-identity/) |
