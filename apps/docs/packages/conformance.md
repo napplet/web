@@ -20,7 +20,7 @@ The harness acts as a NIP-5D shell for the [port-bound identity](https://github.
 
 - **npm:** [`@napplet/conformance`](https://www.npmjs.com/package/@napplet/conformance)
 - **JSR:** [`@napplet/conformance`](https://jsr.io/@napplet/conformance)
-- **Source:** [packages/conformance](https://github.com/napplet/napplet/tree/main/packages/conformance)
+- **Source:** [packages/conformance](https://github.com/napplet/web/tree/main/packages/conformance)
 
 ## Local maturity policy
 

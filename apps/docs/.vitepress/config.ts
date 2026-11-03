@@ -129,7 +129,7 @@ export default defineConfig({
     ],
     sidebar,
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/napplet/napplet' },
+      { icon: 'github', link: 'https://github.com/napplet/web' },
     ],
     search: {
       provider: 'local',

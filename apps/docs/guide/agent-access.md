@@ -39,7 +39,7 @@ The response has `Content-Type: text/markdown; charset=utf-8` and `Vary: Accept`
 - A skill that is only a `SKILL.md` is served at `/.well-known/agent-skills/<name>/SKILL.md`.
 - A skill with supporting files is served as `/.well-known/agent-skills/<name>.tar.gz`, with `SKILL.md` at the archive root.
 
-Verify the digest before using a skill. To install the skills into a coding agent instead, use `npx skills add napplet/napplet` as described in [Agent skills](./agent-skills).
+Verify the digest before using a skill. To install the skills into a coding agent instead, use `npx skills add napplet/web` as described in [Agent skills](./agent-skills).
 
 ## App store index
 

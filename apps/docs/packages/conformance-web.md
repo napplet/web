@@ -10,7 +10,7 @@ for a NIP-5D napplet manifest event and it runs the
 per-check pass/fail tree, the recorded envelope log, and a manifest inspector.
 
 - **npm:** [`@napplet/conformance-web`](https://www.npmjs.com/package/@napplet/conformance-web)
-- **Source:** [apps/conformance](https://github.com/napplet/napplet/tree/main/apps/conformance)
+- **Source:** [apps/conformance](https://github.com/napplet/web/tree/main/apps/conformance)
 
 ## Use the hosted app
 

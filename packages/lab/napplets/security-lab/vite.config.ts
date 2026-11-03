@@ -14,7 +14,7 @@ export default defineConfig({
       description: NAPPLET_DESCRIPTION,
       requires: [...REQUIRED_DOMAINS],
       optional: [...OPTIONAL_DOMAINS],
-      source: 'https://github.com/napplet/napplet',
+      source: 'https://github.com/napplet/web',
       icon: { data: readFileSync(new URL('./icon.png', import.meta.url)), mimeType: 'image/png' },
       artifactMode: 'single-file',
     }),

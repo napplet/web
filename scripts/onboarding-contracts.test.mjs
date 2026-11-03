@@ -15,7 +15,7 @@ test('primary onboarding docs use the same ordered CLI workflow', async () => {
   const commands = [
     'napplet create',
     'napplet init',
-    'npx skills add napplet/napplet',
+    'npx skills add napplet/web',
     'pnpm verify',
     'napplet deploy --dry-run',
     'napplet deploy',

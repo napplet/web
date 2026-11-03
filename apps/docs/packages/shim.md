@@ -7,7 +7,7 @@
 
 - **npm:** [`@napplet/shim`](https://www.npmjs.com/package/@napplet/shim)
 - **JSR:** [`@napplet/shim`](https://jsr.io/@napplet/shim)
-- **Source:** [packages/shim](https://github.com/napplet/napplet/tree/main/packages/shim)
+- **Source:** [packages/shim](https://github.com/napplet/web/tree/main/packages/shim)
 
 ## Maturity-controlled injection
 

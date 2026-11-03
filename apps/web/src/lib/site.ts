@@ -1,5 +1,5 @@
 export const LINKS = {
-  github: 'https://github.com/napplet/napplet',
+  github: 'https://github.com/napplet/web',
   githubOrg: 'https://github.com/napplet',
   docs: '/docs/',
   community:
