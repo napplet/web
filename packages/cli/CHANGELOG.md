@@ -1,5 +1,14 @@
 # @napplet/cli
 
+## 0.14.1
+
+### Patch Changes
+
+- fb5bdaf: Point repository links and the `npx skills add` command at `napplet/web`, the
+  repository's current name.
+- Updated dependencies [fb5bdaf]
+  - @napplet/boilerplate@0.4.2
+
 ## 0.14.0
 
 ### Minor Changes
