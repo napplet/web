@@ -217,4 +217,6 @@ export {
   llmDescribe,
   llmGenerate,
   llmCancel,
+  llmText,
+  llmToolCalls,
 } from '@napplet/nap/llm';

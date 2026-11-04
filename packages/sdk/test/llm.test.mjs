@@ -44,3 +44,12 @@ test('Failure recognition and the known error code list reach SDK consumers', ()
   assert.equal(subpath.isLlmFailure(Object.assign(new Error('new'), { code: 'future-code' })), true);
   assert.equal(subpath.isLlmFailure(new Error('llm.generate timed out')), false);
 });
+
+test('generation helpers read text and authoritative tool calls from Generation.content', () => {
+  const call = { type: 'toolCall', toolCallId: 'call_1', name: 'get_weather', arguments: { city: 'Berlin' } };
+  assert.equal(root.llmText, subpath.llmText);
+  assert.equal(root.llmToolCalls, subpath.llmToolCalls);
+  assert.equal(subpath.llmText({ content: [{ type: 'thinking', text: 'x' }, { type: 'text', text: 'Hi' }], finish: 'stop' }), 'Hi');
+  assert.deepEqual(subpath.llmToolCalls({ content: [call], finish: 'toolUse' }), [call]);
+  assert.deepEqual(subpath.llmToolCalls({ content: [call], finish: 'length' }), []);
+});

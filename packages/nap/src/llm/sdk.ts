@@ -3,10 +3,12 @@ import type {
   LlmApi,
   LlmFailure,
   LlmGenerateOptions,
+  LlmGeneration,
   LlmGenerationRequest,
   LlmModel,
   LlmPendingGeneration,
   LlmRequirements,
+  LlmToolCallPart,
   NappletGlobal,
 } from '@napplet/core';
 
@@ -46,7 +48,7 @@ export function llmDescribe(handle: string): Promise<LlmModel> {
 }
 
 /** Delegate llm.generate to the current runtime.
- * @param request The complete conversation, handle, and optional format.
+ * @param request The complete conversation, handle, and optional format, limits, and tools.
  * @param options Optional abort signal and delta listener.
  * @returns The pending Generation, exposing `requestId`.
  * @example const generation = await llmGenerate({ handle, messages, format: 'json' });
@@ -62,4 +64,25 @@ export function llmGenerate(request: LlmGenerationRequest, options?: LlmGenerate
  */
 export function llmCancel(requestId: string): Promise<boolean> {
   return requireLlm().cancel(requestId);
+}
+
+/** Concatenate a generation's text parts in order, skipping thinking and tool calls.
+ * For `format: "json"`, NAP-LLM requires this concatenation of a `stop` result to parse as a JSON object.
+ * @param generation A terminal Generation.
+ * @returns The text output; empty when the generation carries no text parts.
+ * @example const data = JSON.parse(llmText(await llmGenerate({ handle, messages, format: 'json' })));
+ */
+export function llmText(generation: LlmGeneration): string {
+  return generation.content.map((part) => (part.type === 'text' ? part.text : '')).join('');
+}
+
+/** The tool calls a napplet may consider executing: those of an authoritative `toolUse` result only.
+ * Calls are requests, not authorization; validate them and obtain any separately required authority first.
+ * @param generation A terminal Generation (never a delta).
+ * @returns The `toolCall` parts when `finish` is `toolUse`; otherwise an empty list.
+ * @example for (const call of llmToolCalls(generation)) results.push(await runTool(call));
+ */
+export function llmToolCalls(generation: LlmGeneration): LlmToolCallPart[] {
+  if (generation.finish !== 'toolUse') return [];
+  return generation.content.filter((part): part is LlmToolCallPart => part.type === 'toolCall');
 }
