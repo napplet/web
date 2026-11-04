@@ -303,6 +303,175 @@ Deno.test("executeNetworkDeploy retries without server scope on server URL misma
   });
 });
 
+Deno.test("executeNetworkDeploy retries without server scope when a gateway masks the auth failure", async () => {
+  await withTempDir(async (dir) => {
+    await Deno.writeTextFile(`${dir}/index.html`, "index");
+    const manifests = await manifestsFor(dir);
+    const calls: FetchCall[] = [];
+    const { publish } = fakePublish();
+    let attempts = 0;
+
+    const result = await executeNetworkDeploy(
+      manifests,
+      { relays: ["wss://relay.example"], blossomServers: ["https://blob.example"] },
+      signer,
+      {
+        fetch: createFakeFetch(calls, {
+          putResponse: () => {
+            attempts += 1;
+            if (attempts === 1) {
+              return new Response("<html>Bad Gateway</html>", {
+                status: 502,
+                headers: { "content-type": "text/html" },
+              });
+            }
+            return new Response(JSON.stringify({ sha256 }), {
+              status: 201,
+              headers: { "content-type": "application/json" },
+            });
+          },
+        }),
+        publish,
+        now: () => 123,
+      },
+    );
+
+    assertEquals(result.uploaded[0].success, true);
+    const puts = calls.filter((call) => call.method === "PUT");
+    assertEquals(puts.length, 2);
+    assertEquals(
+      decodeAuthEvent(puts[0].authorization ?? "").tags.find((tag) => tag[0] === "server")?.[1],
+      "blob.example",
+    );
+    assertEquals(
+      decodeAuthEvent(puts[1].authorization ?? "").tags.some((tag) => tag[0] === "server"),
+      false,
+    );
+  });
+});
+
+for (const status of [502, 503, 504]) {
+  Deno.test(`executeNetworkDeploy tries every auth attempt on a persistent gateway ${status}`, async () => {
+    await withTempDir(async (dir) => {
+      await Deno.writeTextFile(`${dir}/index.html`, "index");
+      const manifests = await manifestsFor(dir);
+      const calls: FetchCall[] = [];
+      const { publish, events } = fakePublish();
+
+      const result = await executeNetworkDeploy(
+        manifests,
+        { relays: ["wss://relay.example"], blossomServers: ["https://blob.example"] },
+        signer,
+        {
+          fetch: createFakeFetch(calls, {
+            putResponse: () => new Response("bad gateway", { status }),
+          }),
+          publish,
+          now: () => 123,
+        },
+      );
+
+      const puts = calls.filter((call) => call.method === "PUT");
+      assertEquals(puts.length, 3);
+      assertEquals(result.uploaded[0].success, false);
+      assert(result.uploaded[0].error?.includes(`HTTP ${status}`), result.uploaded[0].error);
+      assertEquals(result.published.length, 0);
+      assertEquals(events.length, 0);
+      assertEquals(
+        decodeAuthEvent(puts[0].authorization ?? "").tags.find((tag) => tag[0] === "server")?.[1],
+        "blob.example",
+      );
+      assertEquals(
+        decodeAuthEvent(puts[1].authorization ?? "").tags.some((tag) => tag[0] === "server"),
+        false,
+      );
+      assertEquals(
+        decodeStandardAuthEvent(puts[2].authorization ?? "").tags.some((tag) =>
+          tag[0] === "server"
+        ),
+        false,
+      );
+    });
+  });
+}
+
+Deno.test("executeNetworkDeploy does not retry other 5xx responses, whatever their body says", async () => {
+  const responses: { status: number; body: string }[] = [
+    { status: 500, body: "nope" },
+    { status: 500, body: "upstream returned HTTP 502" },
+    { status: 500, body: "upstream returned HTTP 401: invalid authorization" },
+    { status: 501, body: "nope" },
+    { status: 505, body: "nope" },
+  ];
+  for (const { status, body } of responses) {
+    await withTempDir(async (dir) => {
+      await Deno.writeTextFile(`${dir}/index.html`, "index");
+      const manifests = await manifestsFor(dir);
+      const calls: FetchCall[] = [];
+      const { publish } = fakePublish();
+
+      const result = await executeNetworkDeploy(
+        manifests,
+        { relays: ["wss://relay.example"], blossomServers: ["https://blob.example"] },
+        signer,
+        {
+          fetch: createFakeFetch(calls, {
+            putResponse: () => new Response(body, { status }),
+          }),
+          publish,
+          now: () => 123,
+        },
+      );
+
+      assertEquals(calls.filter((call) => call.method === "PUT").length, 1);
+      assertEquals(result.uploaded[0].success, false);
+      assert(result.uploaded[0].error?.includes(`HTTP ${status}`), result.uploaded[0].error);
+    });
+  }
+});
+
+Deno.test("executeNetworkDeploy sends later files straight to the token that got past the gateway", async () => {
+  await withTempDir(async (dir) => {
+    await Deno.writeTextFile(`${dir}/index.html`, "index");
+    await Deno.writeTextFile(`${dir}/app.js`, "app");
+    const manifests = await manifestsFor(dir, [
+      { path: "/index.html", sha256 },
+      { path: "/app.js", sha256: secondSha256 },
+    ]);
+    const calls: FetchCall[] = [];
+    const { publish } = fakePublish();
+    const serverTag = (call: FetchCall) =>
+      decodeAuthEvent(call.authorization ?? "").tags.find((tag) => tag[0] === "server")?.[1];
+
+    const result = await executeNetworkDeploy(
+      manifests,
+      { relays: ["wss://relay.example"], blossomServers: ["https://blob.example"] },
+      signer,
+      {
+        fetch: createFakeFetch(calls, {
+          putResponse: () => {
+            // The fake records the call before asking for a response, so the last call is this PUT.
+            const call = calls[calls.length - 1];
+            if (serverTag(call)) return new Response("<html>Bad Gateway</html>", { status: 502 });
+            return new Response(JSON.stringify({ sha256: call.xSha256 }), {
+              status: 201,
+              headers: { "content-type": "application/json" },
+            });
+          },
+        }),
+        publish,
+        now: () => 123,
+      },
+    );
+
+    const puts = calls.filter((call) => call.method === "PUT");
+    assertEquals(puts.map((call) => call.xSha256), [sha256, sha256, secondSha256]);
+    assertEquals(puts.map(serverTag), ["blob.example", undefined, undefined]);
+    assertEquals(result.uploaded.map((upload) => upload.success), [true, true]);
+    assertEquals(networkDeploySucceeded(result, manifests), true);
+  });
+});
+
 Deno.test("executeNetworkDeploy retries with legacy base64 auth when base64url is rejected", async () => {
   await withTempDir(async (dir) => {
     await Deno.writeTextFile(`${dir}/index.html`, "index");
