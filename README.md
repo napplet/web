@@ -223,4 +223,4 @@ Declare `gamepad` as optional (`O`) when other controls fulfill the core task. U
 
 ## Language model support
 
-The packages expose the proposed [NAP-LLM](https://github.com/napplet/naps/pull/134) through `window.napplet.llm`, `@napplet/sdk`, `@napplet/sdk/llm`, and the layered `@napplet/nap/llm` subpaths. Napplets ask the user to select a model connection, submit stateless generations with optional streamed deltas, and cancel them; the runtime supplies the connections, credentials, disclosure consent, and provider access. See the non-normative [LLM guide](apps/docs/naps/llm.md).
+The packages expose the proposed [NAP-LLM](https://github.com/napplet/naps/pull/134) through `window.napplet.llm`, `@napplet/sdk`, `@napplet/sdk/llm`, and the layered `@napplet/nap/llm` subpaths. Napplets ask the user to select a model connection, submit stateless generations (optionally with tool definitions the napplet itself executes) with optional streamed deltas, and cancel them; the runtime supplies the connections, credentials, disclosure consent, and provider access. See the non-normative [LLM guide](apps/docs/naps/llm.md).
