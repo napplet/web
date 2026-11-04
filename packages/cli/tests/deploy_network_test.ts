@@ -303,6 +303,53 @@ Deno.test("executeNetworkDeploy retries without server scope on server URL misma
   });
 });
 
+Deno.test("executeNetworkDeploy retries without server scope when a gateway masks the auth failure", async () => {
+  await withTempDir(async (dir) => {
+    await Deno.writeTextFile(`${dir}/index.html`, "index");
+    const manifests = await manifestsFor(dir);
+    const calls: FetchCall[] = [];
+    const { publish } = fakePublish();
+    let attempts = 0;
+
+    const result = await executeNetworkDeploy(
+      manifests,
+      { relays: ["wss://relay.example"], blossomServers: ["https://blob.example"] },
+      signer,
+      {
+        fetch: createFakeFetch(calls, {
+          putResponse: () => {
+            attempts += 1;
+            if (attempts === 1) {
+              return new Response("<html>Bad Gateway</html>", {
+                status: 502,
+                headers: { "content-type": "text/html" },
+              });
+            }
+            return new Response(JSON.stringify({ sha256 }), {
+              status: 201,
+              headers: { "content-type": "application/json" },
+            });
+          },
+        }),
+        publish,
+        now: () => 123,
+      },
+    );
+
+    assertEquals(result.uploaded[0].success, true);
+    const puts = calls.filter((call) => call.method === "PUT");
+    assertEquals(puts.length, 2);
+    assertEquals(
+      decodeAuthEvent(puts[0].authorization ?? "").tags.find((tag) => tag[0] === "server")?.[1],
+      "blob.example",
+    );
+    assertEquals(
+      decodeAuthEvent(puts[1].authorization ?? "").tags.some((tag) => tag[0] === "server"),
+      false,
+    );
+  });
+});
+
 Deno.test("executeNetworkDeploy retries with legacy base64 auth when base64url is rejected", async () => {
   await withTempDir(async (dir) => {
     await Deno.writeTextFile(`${dir}/index.html`, "index");
