@@ -91,14 +91,38 @@ function sendRequest<T>(type: LlmOutboundMessage['type'], payload: Record<string
   });
 }
 
+const DELTA_EVENTS = new Set(['start', 'delta', 'end']);
+const DELTA_BLOCKS = new Set(['text', 'thinking', 'toolCall']);
+const isIndex = (value: unknown): value is number => typeof value === 'number' && Number.isInteger(value) && value >= 0;
+
+/**
+ * Read the NAP-LLM Delta fields of an `llm.delta` envelope, or `undefined` when it
+ * does not match the schema: `text` only on `delta` events, `toolCallId` and
+ * `name` only (and both) on a `toolCall` `start`.
+ */
+function readDelta(message: { [key: string]: unknown }): LlmDelta | undefined {
+  const { requestId, sequence, event, block, blockIndex, text, toolCallId, name } = message;
+  if ('id' in message || typeof requestId !== 'string' || !requestId || !isIndex(sequence) || !isIndex(blockIndex)) return undefined;
+  if (typeof event !== 'string' || !DELTA_EVENTS.has(event) || typeof block !== 'string' || !DELTA_BLOCKS.has(block)) return undefined;
+  if ((event === 'delta') !== (typeof text === 'string') || (event !== 'delta' && text !== undefined)) return undefined;
+  const callStart = event === 'start' && block === 'toolCall';
+  if (callStart && (typeof toolCallId !== 'string' || !toolCallId || typeof name !== 'string')) return undefined;
+  if (!callStart && (toolCallId !== undefined || name !== undefined)) return undefined;
+  const delta: LlmDelta = { requestId, sequence, event: event as LlmDelta['event'], block: block as LlmDelta['block'], blockIndex };
+  if (event === 'delta') delta.text = text as string;
+  if (callStart) Object.assign(delta, { toolCallId, name });
+  return delta;
+}
+
 function handleDelta(message: { type: string; [key: string]: unknown }): void {
-  if ('id' in message || typeof message.requestId !== 'string' || typeof message.sequence !== 'number' || typeof message.text !== 'string') return;
-  const entry = pending.get(message.requestId);
+  const delta = readDelta(message);
+  if (!delta) return;
+  const entry = pending.get(delta.requestId);
   if (!entry || entry.type !== 'llm.generate.result') return;
-  // A gap means text was lost; the terminal result is authoritative, so stop provisional delivery.
-  if (message.sequence !== entry.nextSequence) { entry.nextSequence = Number.POSITIVE_INFINITY; return; }
+  // A gap means content was lost; the terminal result is authoritative, so stop provisional delivery.
+  if (delta.sequence !== entry.nextSequence) { entry.nextSequence = Number.POSITIVE_INFINITY; return; }
   entry.nextSequence += 1;
-  entry.onDelta?.({ requestId: message.requestId, sequence: message.sequence, text: message.text });
+  entry.onDelta?.(delta);
 }
 
 /** Route a trusted runtime envelope to its pending request or delta listener.
@@ -142,10 +166,10 @@ export function describe(handle: string): Promise<LlmModel> {
 }
 
 /** Submit one stateless generation. The runtime obtains disclosure consent before any provider submission.
- * @param request The complete conversation, handle, and optional format.
+ * @param request The complete conversation, handle, and optional format, limits, and tools.
  * @param options Optional abort signal (maps to `llm.cancel`) and delta listener.
  * @returns The terminal Generation, with the request id exposed as `requestId`.
- * @example const pending = generate({ handle, messages }, { onDelta: (d) => show(d.text) }); await pending;
+ * @example const pending = generate({ handle, messages }, { onDelta: (d) => { if (d.event === 'delta' && d.block === 'text') show(d.text); } }); await pending;
  */
 export function generate(request: LlmGenerationRequest, options: LlmGenerateOptions = {}): LlmPendingGeneration {
   const id = crypto.randomUUID();

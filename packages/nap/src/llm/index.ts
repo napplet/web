@@ -4,6 +4,6 @@ import { DOMAIN } from './types.js';
 export { DOMAIN, LLM_ERROR_CODES } from './types.js';
 export type * from './types.js';
 export { LlmError, select, describe, generate, cancel, installLlmShim, handleLlmMessage } from './shim.js';
-export { isLlmFailure, llmSelect, llmDescribe, llmGenerate, llmCancel } from './sdk.js';
+export { isLlmFailure, llmSelect, llmDescribe, llmGenerate, llmCancel, llmText, llmToolCalls } from './sdk.js';
 
 registerNap(DOMAIN, () => { /* The runtime supplies the domain handler. */ });

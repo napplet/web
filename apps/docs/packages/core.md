@@ -166,4 +166,4 @@ The runtime binding retains deliveries until a listener registers. Discovery can
 
 ## LLM types
 
-`LlmApi` and the LLM records describe `NappletGlobal.llm`, an optional domain for user-selected, runtime-mediated language model inference: connection selection and revalidation, stateless generation with optional ordered deltas, and cancellation. `LlmErrorCode` lists the specification categories while staying open, because unknown codes remain failures. See the non-normative [LLM guide](/naps/llm) and living [NAP-LLM proposal](https://github.com/napplet/naps/pull/134).
+`LlmApi` and the LLM records describe `NappletGlobal.llm`, an optional domain for user-selected, runtime-mediated language model inference: connection selection and revalidation, stateless generation with tool definitions, content parts, and optional block-lifecycle deltas, and cancellation. `LlmErrorCode` lists the specification categories while staying open, because unknown codes remain failures. See the non-normative [LLM guide](/naps/llm) and living [NAP-LLM proposal](https://github.com/napplet/naps/pull/134).
