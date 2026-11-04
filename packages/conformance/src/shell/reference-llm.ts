@@ -7,11 +7,16 @@ import type { ReferenceEndpoint } from './reference-responses.js';
  * This fixture has no provider, credentials, or consent dialog. It models one
  * user-configured connection and treats disclosure consent as granted, so napplets
  * can exercise endpoint-scoped handles, requirement matching, stateless
- * generation with one streamed delta, the cancellation race, and the error codes.
- * Fixture markers in the last user text part steer deterministic outcomes:
- * `[[stall]]` leaves the generation active until `llm.cancel`, `[[decline]]`
- * models a declined consent prompt, and `[[refuse]]` models a provider refusal.
- * Passing it proves protocol shape, not live inference support.
+ * generation with block-lifecycle deltas, tool calls, the cancellation race, and
+ * the error codes. Fixture markers in the last user text part steer deterministic
+ * outcomes: `[[stall]]` leaves the generation active until `llm.cancel`,
+ * `[[decline]]` models a declined consent prompt, `[[refuse]]` models a provider
+ * refusal, `[[think]]` adds a display-only thinking block, and `[[tool]]` asks
+ * for a call to the first supplied tool (as do `required` and named choices).
+ * The fixture provider has no native tool-error flag, so a `toolResult` with
+ * `isError: true` is echoed with the specified `Tool execution failed.` prefix.
+ * It never executes a tool call. Passing it proves protocol shape, not live
+ * inference support.
  */
 
 type RecordValue = Record<string, unknown>;
@@ -33,6 +38,8 @@ export const REFERENCE_LLM_CONNECTION = {
   route: 'Reference shell → reference provider (no network)',
   images: true,
   json: true,
+  tools: true,
+  toolChoiceModes: ['auto', 'none', 'required', 'tool'],
 } as const;
 
 const fail = (code: string, message: string): Outcome => ({ error: { code, message } });
@@ -49,7 +56,7 @@ function sessionFor(sessions: Map<string, Session>, endpoint: ReferenceEndpoint)
 }
 
 function modelFor(handle: string): RecordValue {
-  return { handle, ...REFERENCE_LLM_CONNECTION };
+  return { handle, ...REFERENCE_LLM_CONNECTION, toolChoiceModes: [...REFERENCE_LLM_CONNECTION.toolChoiceModes] };
 }
 
 function select(session: Session, envelope: RecordValue): Outcome {
@@ -69,6 +76,12 @@ function describe(session: Session, envelope: RecordValue): Outcome {
   return { model: modelFor(handle) };
 }
 
+const texts = (content: unknown): string =>
+  (Array.isArray(content) ? content : []).map((part) => {
+    const item = object(part);
+    return item.type === 'text' && typeof item.text === 'string' ? item.text : '';
+  }).join('');
+
 function lastUserText(request: RecordValue): string {
   const messages = Array.isArray(request.messages) ? request.messages : [];
   let text = '';
@@ -83,6 +96,42 @@ function lastUserText(request: RecordValue): string {
   return text;
 }
 
+/** Trailing tool results as the fixture provider sees them: no native error flag, so failures carry the specified prefix. */
+function trailingToolResults(request: RecordValue): string[] {
+  const messages = (Array.isArray(request.messages) ? request.messages : []).map(object);
+  const results: string[] = [];
+  for (let index = messages.length - 1; index >= 0 && messages[index].role === 'toolResult'; index -= 1) {
+    const result = messages[index];
+    results.unshift(`${result.toolName}: ${result.isError === true ? 'Tool execution failed.' : ''}${texts(result.content)}`);
+  }
+  return results;
+}
+
+/** The tool the fixture model calls, or `undefined` when the request does not ask for one. */
+function chosenTool(request: RecordValue, prompt: string): string | undefined {
+  const tools = Array.isArray(request.tools) ? request.tools.map(object) : [];
+  if (!tools.length || request.toolChoice === 'none') return undefined;
+  const choice = request.toolChoice;
+  if (typeof choice === 'object' && choice !== null) return String(object(choice).name);
+  if (choice === 'required' || prompt.includes('[[tool]]')) return String(tools[0].name);
+  return undefined;
+}
+
+/** Block-lifecycle deltas for completed content, one fragment per block (NAP-LLM Delta). */
+function deltasFor(id: string, content: RecordValue[]): RecordValue[] {
+  const events: RecordValue[] = [];
+  const push = (event: RecordValue): void => { events.push({ type: 'llm.delta', requestId: id, sequence: events.length, ...event }); };
+  content.forEach((part, blockIndex) => {
+    const block = String(part.type);
+    push(block === 'toolCall'
+      ? { event: 'start', block, blockIndex, toolCallId: part.toolCallId, name: part.name }
+      : { event: 'start', block, blockIndex });
+    push({ event: 'delta', block, blockIndex, text: block === 'toolCall' ? JSON.stringify(part.arguments) : part.text });
+    push({ event: 'end', block, blockIndex });
+  });
+  return events;
+}
+
 function generate(session: Session, id: string, envelope: RecordValue): unknown[] {
   const reply = (outcome: Outcome): unknown[] => [{ type: 'llm.generate.result', id, ...outcome }];
   if (session.active.has(id)) return reply(fail('invalid-request', 'Request id is still active'));
@@ -94,14 +143,24 @@ function generate(session: Session, id: string, envelope: RecordValue): unknown[
     session.active.set(id, envelope);
     return [];
   }
-  if (prompt.includes('[[refuse]]')) return reply({ result: { text: '', finish: 'refusal' } });
-  const output = request.format === 'json' ? JSON.stringify({ echo: prompt }) : `Echo: ${prompt}`;
+  if (prompt.includes('[[refuse]]')) return reply({ result: { content: [], finish: 'refusal' } });
+  const content: RecordValue[] = [];
+  if (prompt.includes('[[think]]')) content.push({ type: 'thinking', text: 'Reference reasoning.' });
+  const tool = chosenTool(request, prompt);
+  const results = trailingToolResults(request);
+  let finish = 'stop';
+  if (tool !== undefined) {
+    session.sequence += 1;
+    content.push({ type: 'toolCall', toolCallId: `reference-call-${session.sequence}`, name: tool, arguments: {} });
+    finish = 'toolUse';
+  } else {
+    const echo = results.length ? `Tool results: ${results.join('; ')}` : prompt;
+    content.push({ type: 'text', text: request.format === 'json' ? JSON.stringify({ echo }) : `Echo: ${echo}` });
+  }
+  const output = JSON.stringify(content);
   const usage = { inputTokens: JSON.stringify(request.messages).length, outputTokens: output.length };
-  // One streamed delta, then the authoritative terminal result (NAP-LLM Wire Protocol).
-  return [
-    { type: 'llm.delta', requestId: id, sequence: 0, text: output.slice(0, Math.ceil(output.length / 2)) },
-    ...reply({ result: { text: output, finish: 'stop', usage } }),
-  ];
+  // Streamed block lifecycle, then the authoritative terminal result (NAP-LLM Wire Protocol).
+  return [...deltasFor(id, content), ...reply({ result: { content, finish, usage } })];
 }
 
 function cancel(session: Session, id: string, envelope: RecordValue): unknown[] {

@@ -107,11 +107,19 @@ describe('real opaque-origin reference runtime', () => {
         const described = await llm.describe(model.handle);
         if (described.handle !== model.handle) throw new Error('Describe changed the handle');
         const deltas = [];
-        const pending = llm.generate({ handle: model.handle, format: 'json', messages: [{ role: 'user', content: [{ type: 'text', text: 'Return a greeting.' }] }] }, { onDelta: (delta) => deltas.push(delta.text) });
+        const pending = llm.generate({ handle: model.handle, format: 'json', messages: [{ role: 'user', content: [{ type: 'text', text: 'Return a greeting.' }] }] }, { onDelta: (delta) => deltas.push(delta) });
         if (typeof pending.requestId !== 'string') throw new Error('Missing request id');
         const generation = await pending;
-        if (generation.finish !== 'stop' || JSON.parse(generation.text).echo !== 'Return a greeting.') throw new Error('Unexpected generation');
-        if (deltas.length !== 1 || !generation.text.startsWith(deltas[0])) throw new Error('Unexpected deltas');
+        const output = generation.content.filter((part) => part.type === 'text').map((part) => part.text).join('');
+        if (generation.finish !== 'stop' || JSON.parse(output).echo !== 'Return a greeting.') throw new Error('Unexpected generation');
+        if (deltas.map((delta) => delta.event).join() !== 'start,delta,end' || deltas[1].text !== output) throw new Error('Unexpected deltas');
+        const tools = [{ name: 'get_weather', parameters: { type: 'object', properties: { city: { type: 'string' } } } }];
+        const called = await llm.generate({ handle: model.handle, tools, toolChoice: 'required', messages: [{ role: 'user', content: [{ type: 'text', text: 'Weather?' }] }] });
+        const call = called.content[0];
+        if (called.finish !== 'toolUse' || call.type !== 'toolCall' || call.name !== 'get_weather') throw new Error('Unexpected tool call');
+        const answered = await llm.generate({ handle: model.handle, tools, messages: [{ role: 'user', content: [{ type: 'text', text: 'Weather?' }] },
+          { role: 'assistant', content: called.content }, { role: 'toolResult', toolCallId: call.toolCallId, toolName: call.name, content: [{ type: 'text', text: 'clear' }] }] });
+        if (answered.finish !== 'stop' || answered.content[0].text !== 'Echo: Tool results: get_weather: clear') throw new Error('Unexpected tool continuation');
         if (await llm.cancel(pending.requestId) !== false) throw new Error('Terminal generation should not cancel');
         const controller = new AbortController();
         const stalled = llm.generate({ handle: model.handle, messages: [{ role: 'user', content: [{ type: 'text', text: 'wait [[stall]]' }] }] }, { signal: controller.signal });
