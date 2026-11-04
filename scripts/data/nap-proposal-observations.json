@@ -384,11 +384,11 @@
     "llm": {
       "url": "https://github.com/napplet/naps/pull/134",
       "status": "draft",
-      "headRevision": "ab7c36a5c12ce40a60fced3f8c0df7f34a7ced48",
+      "headRevision": "3e10939cf788878bbdcc022c101f0ac6193f316c",
       "specFiles": [
         {
           "path": "naps/NAP-LLM.md",
-          "revision": "c589206cf69dda115fa4026c9ce3db595cebdbd1"
+          "revision": "89d571c78b1668759a4c1f98fa12ffe4af5db2a5"
         }
       ],
       "registryStatuses": []

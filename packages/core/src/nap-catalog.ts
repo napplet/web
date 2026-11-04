@@ -193,7 +193,7 @@ export const NAP_IMPLEMENTATIONS: Readonly<Record<NapDomain, NapImplementationMe
     implementationReference: { revision: "0b28f77e3dfa0f07dd7c0f9d61a7090ee99f3a5e", evidence: ".planning/phases/163-nap-gamepad-across-repositories/163-SECURITY.md", scope: "Phase 163 binding, runtime isolation, and conformance verification." },
   },
   llm: {
-    proposal: { url: "https://github.com/napplet/naps/pull/134", status: "draft", checkedAt: "2026-11-04" },
+    proposal: { url: "https://github.com/napplet/naps/pull/134", status: "draft", checkedAt: "2026-10-31" },
     maturity: "exploratory",
     rationale: "Early published draft has binding and mock-runtime tests; provider behavior and API design remain exploratory.",
     evidence: ["packages/nap/src/llm/shim.test.ts", "packages/conformance-cli/src/browser.test.ts"],
