@@ -38,10 +38,11 @@ export function createReferenceHandler(options: ReferenceHandlerOptions) {
     const verdict = validateEnvelope(envelope);
     options.records.push({ envelope, verdict, timestamp: options.now() });
 
-    if (!type || !verdict.ok) return [];
+    if (!type) return [];
     const candidates = endpoint.domains ?? NAP_DOMAINS;
     const domains = hostDomains ? candidates.filter(domain => hostDomains.has(domain)) : candidates;
     if (!domains.includes(type.slice(0, type.indexOf('.')))) return [];
+    if (!verdict.ok) return llmInvalidRequest(type, envelope as Record<string, unknown>, verdict);
     if (type === 'shell.ready') {
       if (initialized.has(endpoint.id)) return [];
       initialized.add(endpoint.id);
@@ -62,6 +63,21 @@ export function createReferenceHandler(options: ReferenceHandlerOptions) {
     return responder ? responder(env) : [];
   };
   return Object.assign(handle, { reset() { llm.reset(); } });
+}
+
+/** NAP-LLM request types; each has a `.result` terminal type. */
+const LLM_REQUESTS = new Set(['llm.select', 'llm.describe', 'llm.generate', 'llm.cancel']);
+
+/**
+ * NAP-LLM Wire Protocol: a routable, validly correlated request receives exactly
+ * one terminal result, and malformed input is `invalid-request`
+ * (https://github.com/napplet/naps/pull/134). Uncorrelated envelopes, napplet-emitted
+ * results, and other domains' invalid envelopes stay discarded.
+ */
+function llmInvalidRequest(type: string, envelope: Record<string, unknown>, verdict: EnvelopeVerdict): unknown[] {
+  if (!LLM_REQUESTS.has(type) || typeof envelope.id !== 'string' || !envelope.id) return [];
+  const reason = verdict.errors[0]?.message ?? 'Malformed request';
+  return [{ type: `${type}.result`, id: envelope.id, error: { code: 'invalid-request', message: reason } }];
 }
 
 function getEnvelopeType(envelope: unknown): string | undefined {
