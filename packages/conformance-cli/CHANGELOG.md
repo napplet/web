@@ -1,5 +1,16 @@
 # @napplet/conformance-cli
 
+## 0.6.1
+
+### Patch Changes
+
+- a975c13: The reference shell now answers a malformed but correlated NAP-LLM
+  request with its `.result` carrying an `invalid-request` error, instead of
+  silently discarding it. Uncorrelated envelopes, napplet-emitted results, and
+  ungranted domains are still discarded.
+- Updated dependencies [a975c13]
+  - @napplet/conformance@0.25.1
+
 ## 0.6.0
 
 ### Minor Changes
