@@ -1,6 +1,8 @@
 # @napplet/nap
 
-> Every active napplet NAP domain (relay, storage, inc, keys, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent, navigation, ble, webrtc, link, count, lists, serial, fs, common, dm, shell, gamepad) as layered subpath exports. The package name remains `@napplet/nap` for compatibility.
+> Every active napplet NAP domain (relay, storage, inc, keys, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent, navigation, ble, webrtc, link, count, lists, serial, fs, common, dm, shell, gamepad, llm) as layered subpath exports. The package name remains `@napplet/nap` for compatibility.
+
+NAP proposal status and shipped implementation maturity are separate. All capabilities can change. Inspect `NAP_IMPLEMENTATIONS` from `@napplet/core` and use `selectNapDomains` for local host opt-in policy. See [maturity and opt-in guidance](https://napplet.run/docs/naps/maturity.html).
 
 ## Install
 
@@ -82,6 +84,7 @@ Each domain is an independent subpath. Barrel imports bundle types + shim instal
 | common | `@napplet/nap/common` | `@napplet/nap/common/types` | `@napplet/nap/common/shim` | `@napplet/nap/common/sdk` | Common social actions — public NIP-19 helpers, profile lookup returning `RelayEventResult`, follows, follow/unfollow, reactions, and reports; shell owns identity/signing/publishing |
 | serial | `@napplet/nap/serial` | `@napplet/nap/serial/types` | `@napplet/nap/serial/shim` | `@napplet/nap/serial/sdk` | Runtime-mediated serial device access — `open`/`write`/`close`/`onEvent`; shell owns permissions, port handles, streams, and lifecycle |
 | fs | `@napplet/nap/fs` | `@napplet/nap/fs/types` | `@napplet/nap/fs/shim` | `@napplet/nap/fs/sdk` | Shell-mediated virtual filesystem access — `info`/`pickFile`/`pickFiles`/`pickDirectory`/`pickSaveFile`/`stat`/`list`/`read`/`write`/`mkdir`/`remove`/`move`/`watch`/`unwatch`/`onChanged`; runtime owns host paths, mounts, backing store, policy, and authorization. Byte payloads use standard padded base64 text on the JSON wire |
+| llm | `@napplet/nap/llm` | `@napplet/nap/llm/types` | `@napplet/nap/llm/shim` | `@napplet/nap/llm/sdk` | User-selected, runtime-mediated language model inference — `select`/`describe`/`generate`/`cancel`; generations are stateless, may stream ordered `llm.delta` text, and expose `requestId`; shell owns connections, credentials, consent, and provider access |
 | dm | `@napplet/nap/dm` | `@napplet/nap/dm/types` | `@napplet/nap/dm/shim` | `@napplet/nap/dm/sdk` | Runtime-mediated direct messages — `status`/`conversations`/`messages`/`send`/`subscribe`/`unsubscribe`/`onMessage`; shell owns signing, encryption, relay routing, storage, and policy |
 
 ### NAP-FS byte transfer
@@ -228,7 +231,7 @@ import { mediaCreateSession } from '@napplet/nap/media/sdk';
 import type { MediaNapMessage } from '@napplet/nap/media/types';
 ```
 
-Domain barrels are also available at `@napplet/nap/relay`, `@napplet/nap/storage`, `@napplet/nap/inc`, `@napplet/nap/keys`, `@napplet/nap/theme`, `@napplet/nap/media`, `@napplet/nap/notify`, `@napplet/nap/identity`, `@napplet/nap/config`, `@napplet/nap/resource`, `@napplet/nap/cvm`, `@napplet/nap/outbox`, `@napplet/nap/upload`, `@napplet/nap/intent`, `@napplet/nap/ble`, `@napplet/nap/webrtc`, `@napplet/nap/link`, `@napplet/nap/count`, `@napplet/nap/lists`, `@napplet/nap/common`, `@napplet/nap/serial`, `@napplet/nap/fs`, `@napplet/nap/dm`, `@napplet/nap/shell`, and `@napplet/nap/gamepad`.
+Domain barrels are also available at `@napplet/nap/relay`, `@napplet/nap/storage`, `@napplet/nap/inc`, `@napplet/nap/keys`, `@napplet/nap/theme`, `@napplet/nap/media`, `@napplet/nap/notify`, `@napplet/nap/identity`, `@napplet/nap/config`, `@napplet/nap/resource`, `@napplet/nap/cvm`, `@napplet/nap/outbox`, `@napplet/nap/upload`, `@napplet/nap/intent`, `@napplet/nap/ble`, `@napplet/nap/webrtc`, `@napplet/nap/link`, `@napplet/nap/count`, `@napplet/nap/lists`, `@napplet/nap/common`, `@napplet/nap/serial`, `@napplet/nap/fs`, `@napplet/nap/dm`, `@napplet/nap/shell`, `@napplet/nap/gamepad`, and `@napplet/nap/llm`.
 
 ## Optional Peer Dependency
 
@@ -318,3 +321,7 @@ if (window.napplet?.navigation && window.napplet?.intent) {
 ```
 
 This non-normative example follows the [NAP-NAVIGATION draft](https://github.com/napplet/naps/pull/126) and [NAP-INTENT delivery draft](https://github.com/napplet/naps/pull/128). Use a fresh increasing revision for each new committed-state report, including recovery after rejection. Reuse a revision only to retry identical report content. Read the [navigation guide](../../apps/docs/naps/navigation.md) before connecting a router.
+
+### Language model inference
+
+`@napplet/nap/llm` provides the barrel, `types`, `shim`, and `sdk` subpaths for the four NAP-LLM operations. SDK helpers use the `llm` prefix (`llmSelect`, `llmDescribe`, `llmGenerate`, `llmCancel`); `isLlmFailure` recognizes rejections that carry a specification error code, and `LLM_ERROR_CODES` lists the known codes; `llmText` concatenates a generation's text parts and `llmToolCalls` returns tool calls only from a `toolUse` result. `generate` exposes the generation's `requestId`, delivers ordered block-lifecycle deltas to an `onDelta` listener, and maps an abort signal to `llm.cancel`; the generation still settles through its own result. Selection does not authorize disclosure, and handles are endpoint-scoped. This non-normative guidance defers to the living [NAP-LLM proposal](https://github.com/napplet/naps/pull/134).

@@ -1,11 +1,12 @@
 // Proves the reported DX failure (napplet/web#67) is fixed end-to-end through a
 // real NAP shim: a Svelte/Vue-style reactive Proxy passed to outbox.subscribe()
-// is no longer silently dropped at the postMessage boundary. The mocked
-// window.parent.postMessage here throws a DataCloneError on non-cloneable input,
-// mirroring the browser's structured-clone behavior.
+// is no longer silently dropped at the NIP-5D port boundary. The fake shell's
+// port structured-clones every envelope, so a reactive proxy throws a real
+// DataCloneError exactly as a browser MessagePort would.
 
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { setCloneMode, clearCloneWarnings } from '@napplet/core';
+import { installFakeShell, type FakeShell } from './test-support/fake-shell.js';
 
 const PROXIES = new WeakSet<object>();
 
@@ -16,31 +17,10 @@ function reactive<T extends object>(obj: T): T {
   return p;
 }
 
-function assertCloneable(value: unknown, seen = new WeakSet<object>()): void {
-  if (value === null || typeof value !== 'object') {
-    if (typeof value === 'function') throw dataCloneError();
-    return;
-  }
-  const obj = value as object;
-  if (PROXIES.has(obj)) throw dataCloneError();
-  if (seen.has(obj)) return;
-  seen.add(obj);
-  if (obj instanceof Date || ArrayBuffer.isView(obj)) return;
-  if (Array.isArray(obj)) { for (const v of obj) assertCloneable(v, seen); return; }
-  for (const k of Object.keys(obj)) assertCloneable((obj as Record<string, unknown>)[k], seen);
-}
-
-function dataCloneError(): Error {
-  const err = new Error('could not be cloned');
-  err.name = 'DataCloneError';
-  return err;
-}
-
-let posted: any[];
+let shell: FakeShell;
 let uuid: number;
 
 beforeEach(() => {
-  posted = [];
   uuid = 0;
   setCloneMode('auto');
   clearCloneWarnings();
@@ -48,26 +28,27 @@ beforeEach(() => {
     configurable: true,
     value: { randomUUID: () => `id-${++uuid}` },
   });
-  Object.defineProperty(globalThis, 'window', {
-    configurable: true,
-    value: {
-      parent: {
-        postMessage(msg: unknown) {
-          assertCloneable(msg); // throws DataCloneError on a reactive proxy
-          posted.push(msg);
-        },
-      },
-    },
-  });
+  shell = installFakeShell();
 });
 
 afterEach(() => {
   setCloneMode('auto');
-  Reflect.deleteProperty(globalThis, 'window');
+  vi.unstubAllGlobals();
   Reflect.deleteProperty(globalThis, 'crypto');
 });
 
+/** Find the last envelope of a given type the napplet sent over the port. */
+function sentOfType(type: string): any {
+  return [...shell.sent].reverse().find((m) => m.type === type);
+}
+
 describe('NAP shim boundary recovery (napplet/web#67)', () => {
+  it('the fake port rejects a reactive proxy with a real DataCloneError', () => {
+    expect(() => structuredClone(reactive([{ kinds: [1] }]))).toThrow(
+      expect.objectContaining({ name: 'DataCloneError' }),
+    );
+  });
+
   it('auto: outbox.subscribe with a reactive proxy reaches the shell as a snapshot', async () => {
     const { subscribe } = await import('./outbox/shim.js');
     const filters = reactive([{ kinds: [1] }]);
@@ -78,11 +59,12 @@ describe('NAP shim boundary recovery (napplet/web#67)', () => {
     const sub = subscribe(filters, { relays, live: true } as any);
     expect(sub).toBeTruthy();
 
-    const sent = posted.find((m) => m.type === 'outbox.subscribe');
+    const sent = sentOfType('outbox.subscribe');
     expect(sent).toBeTruthy();
     expect(sent.filters).toEqual([{ kinds: [1] }]);
     expect(PROXIES.has(sent.filters)).toBe(false);
     expect(sent.options.relays).toEqual(['wss://a']);
+    expect(shell.windowMessages).toEqual([]);
   });
 
   it('strict: the same call throws a loud, actionable, synchronous error', async () => {
@@ -90,13 +72,13 @@ describe('NAP shim boundary recovery (napplet/web#67)', () => {
     const { subscribe } = await import('./outbox/shim.js');
     const filters = reactive([{ kinds: [1] }]);
     expect(() => subscribe(filters)).toThrow(/outbox\.subscribe/);
-    expect(posted.find((m) => m.type === 'outbox.subscribe')).toBeUndefined();
+    expect(sentOfType('outbox.subscribe')).toBeUndefined();
   });
 
   it('auto: a plain (already-cloneable) call is posted untouched', async () => {
     const { query } = await import('./outbox/shim.js');
     void query([{ kinds: [1] }]);
-    const sent = posted.find((m) => m.type === 'outbox.query');
+    const sent = sentOfType('outbox.query');
     expect(sent).toBeTruthy();
     expect(sent.filters).toEqual([{ kinds: [1] }]);
   });

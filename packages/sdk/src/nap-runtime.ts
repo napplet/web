@@ -208,3 +208,16 @@ export { shellReady, shellSupports, shellOnReady, installShellShim, DOMAIN as SH
 
 export { DOMAIN as GAMEPAD_DOMAIN, installGamepadShim, gamepadGetGamepads, gamepadAvailable, gamepadFocused, gamepadOnChange } from '@napplet/nap/gamepad';
 export { DOMAIN as NAVIGATION_DOMAIN, installNavigationShim, navigationReport, navigationGet } from '@napplet/nap/navigation';
+
+export {
+  DOMAIN as LLM_DOMAIN,
+  LLM_ERROR_CODES,
+  installLlmShim,
+  isLlmFailure,
+  llmSelect,
+  llmDescribe,
+  llmGenerate,
+  llmCancel,
+  llmText,
+  llmToolCalls,
+} from '@napplet/nap/llm';

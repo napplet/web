@@ -1,6 +1,6 @@
 {
   "name": "@napplet/boilerplate",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "Project scaffold generator for the napplet boilerplate template",
   "type": "module",
   "main": "./dist/index.js",
@@ -36,7 +36,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/napplet/napplet.git",
+    "url": "git+https://github.com/napplet/web.git",
     "directory": "packages/boilerplate"
   },
   "keywords": [

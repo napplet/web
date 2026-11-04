@@ -7,7 +7,9 @@
 
 - **npm:** [`@napplet/sdk`](https://www.npmjs.com/package/@napplet/sdk)
 - **JSR:** [`@napplet/sdk`](https://jsr.io/@napplet/sdk)
-- **Source:** [packages/sdk](https://github.com/napplet/napplet/tree/main/packages/sdk)
+- **Source:** [packages/sdk](https://github.com/napplet/web/tree/main/packages/sdk)
+
+NAP proposal status and shipped implementation maturity are separate. All capabilities can change. Inspect `NAP_IMPLEMENTATIONS` from `@napplet/core` and use `selectNapDomains` for local host opt-in policy. See [maturity and opt-in guidance](https://napplet.run/docs/naps/maturity.html).
 
 ## Install
 
@@ -33,6 +35,7 @@ Top-level namespaced objects that mirror `window.napplet`:
 - **`media`** — `createSession`, `reportState`, `onCommand`, …
 - **`notify`** — `send`, `badge`, `onAction`, …
 - **`config`** — `get`, `subscribe`, `openSettings`, `registerSchema`, `schema`
+- **`llm`** — User-selected, runtime-mediated language model inference: `select`, `describe`, `generate`, `cancel`
 - **`resource`** — `info`, `bytes`, `bytesMany`, `bytesAsObjectURL`
 
 `identity` is exported as a top-level object and through bare-name helpers:
@@ -174,6 +177,33 @@ if (window.napplet?.gamepad) {
 ```
 
 Declare `gamepad` as optional (`O`) when other controls fulfill the core task. Use a hard requirement (`R`) only when the core task needs controller input. The runtime owns controller access and focus isolation; app code does not call native `navigator.getGamepads()` or open raw HID devices. Haptics and remapping are outside this proposal.
+
+### Language model inference
+
+This non-normative guide follows the living [NAP-LLM proposal](https://github.com/napplet/naps/pull/134). Import `llm` from `@napplet/sdk` or `@napplet/sdk/llm`; root exports include prefixed helpers such as `llmSelect` and `llmGenerate`. The dedicated subpath also provides bare aliases such as `select` and `generate`.
+
+The API exposes `select`, `describe`, `generate`, and `cancel`. `generate` returns a pending promise that exposes `requestId`; pass `onDelta` for ordered provisional `start` / `delta` / `end` block events and `signal` to map an abort to `llm.cancel`, and replace provisional output with the terminal `content` parts. `llmText(generation)` concatenates the text parts; `llmToolCalls(generation)` returns tool calls only from a `finish: "toolUse"` result. Each method resolves with the proposal's result record; a runtime `Error` record rejects with an `Error` carrying the specification `code`, recognizable with `isLlmFailure(error)`, while the binding's own transport timeout rejects without a `code`.
+
+```ts
+import { llm, isLlmFailure, llmText } from '@napplet/sdk/llm';
+
+if (window.napplet?.llm) {
+  try {
+    const model = await llm.select({ json: true });
+    const generation = await llm.generate({
+      handle: model.handle,
+      messages: [{ role: 'user', content: [{ type: 'text', text: 'Return a JSON object with a greeting.' }] }],
+      format: 'json',
+    });
+    if (generation.finish === 'stop') render(JSON.parse(llmText(generation)));
+  } catch (error) {
+    if (isLlmFailure(error)) console.warn(error.code, error.message);
+    else throw error;
+  }
+}
+```
+
+Selection does not authorize disclosure: the runtime obtains consent before each generation and may answer `user-cancelled`. Only `finish: "stop"` is complete output. Tool calls are requests the napplet validates and executes itself, if at all, through separately authorized capabilities; the runtime never executes them, and tool results re-enter the conversation as untrusted input. Handles are endpoint-scoped and expire when the connection, account, or endpoint changes. The runtime owns connections, credentials, consent, and provider access; model output is untrusted data.
 
 ## Navigation history
 

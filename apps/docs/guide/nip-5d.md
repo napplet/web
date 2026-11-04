@@ -35,8 +35,8 @@ this page, the packages, or any test.
 
 ## Transport
 
-- Napplets send messages with `window.parent.postMessage(msg, '*')`; the shell
-  replies with `iframeWindow.postMessage(msg, '*')`.
+- Before any napplet script runs, the shell-injected bootstrap creates a `MessageChannel`, keeps one port private, and hands the other to the shell exactly once: `window.parent.postMessage({ type: "napplet.hello" }, '*', [port])`.
+- That handoff is the only window-level message a napplet sends. Every NAP message in both directions travels over the port. Shells do not send NAP messages with `iframeWindow.postMessage` and do not transfer a port into the iframe.
 - Napplets MUST be embedded with `sandbox="allow-scripts"` and **without**
   `allow-same-origin`.
 - Napplets have **no access** to `localStorage`, `sessionStorage`, `IndexedDB`,
@@ -67,14 +67,10 @@ The `type` prefix before the first `.` is the **domain**, and routes the message
 
 ## Identity
 
-- The shell assigns a napplet's identity **at iframe creation time**, with no
-  negotiation or handshake.
-- It maps the iframe's `Window` reference to the napplet's `(dTag, artifactHash)`
-  tuple, verified against the signed NIP-5D manifest and artifact bytes.
-- The shell MUST verify `MessageEvent.source` on **every** inbound message.
-  `MessageEvent.source` is an **unforgeable** sender identity — origin validation
-  uses `source`, not `event.origin`.
-- Messages from unmapped `Window` references are silently dropped.
+- The shell computes `(dTag, artifactHash)` from the signed NIP-5D manifest and the verified artifact bytes **before** the iframe runs, and injects those bytes with the bootstrap via `srcdoc`.
+- It accepts a `napplet.hello` only when `MessageEvent.source` is the `contentWindow` of an iframe it created and exactly one port is attached, and binds the identity to **that port**. Origin checks use the port binding, not `event.origin`.
+- Identity belongs to the verified **document**, not the iframe or its `Window`: a `Window` survives same-frame navigation and an injected `meta` CSP does not carry over, so a napplet could otherwise replace itself with unverified content and keep its grants.
+- A second hello, any other window-level message, a second `load` event or the port closing tells the shell the document was replaced. The shell closes the port, revokes the identity and every grant attached to it, and removes the iframe. It may then create a fresh iframe from the verified bytes.
 
 ## Manifest and NAP negotiation
 
@@ -100,7 +96,7 @@ The web binding normalizes developer-facing URI input before `postMessage` for I
 
 Intent calls derive archetype and action from the URI. An `ok: true` result means the runtime accepted delivery responsibility and includes the normalized identity and handler catalog identifier; an `ok: false` result includes `error`. Targets receive runtime-attested `IntentDelivery` values through `onDelivery`, including deliveries retained before registration. Each delivery has a runtime-assigned `id`; `sender` is the source catalog identifier, or `null` for a shell-originated request. These fields follow the [NAP-INTENT delivery draft](https://github.com/napplet/naps/pull/128). Behavior hints are `focus` and `reuse`. This non-normative guidance defers to the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md).
 
-At this web projection's trust boundary, the host authenticates the source iframe with `MessageEvent.source` and derives the NAP-level `sender` from that endpoint. A napplet does not provide sender. On other carriers the endpoint mechanism differs, while the runtime-attested sender contract stays the same. Receivers treat sender as provenance and payload as untrusted.
+At this web projection's trust boundary, the host authenticates the napplet by the port bound in `napplet.hello` and derives the NAP-level `sender` from that endpoint. A napplet does not provide sender. On other carriers the endpoint mechanism differs, while the runtime-attested sender contract stays the same. Receivers treat sender as provenance and payload as untrusted.
 
 This non-normative guide defers to the living [NAP-INC](https://github.com/napplet/naps/blob/master/naps/NAP-INC.md), [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md), and [web projection](https://github.com/napplet/naps/blob/master/projections/web.md).
 
@@ -111,8 +107,8 @@ This non-normative guide defers to the living [NAP-INC](https://github.com/nappl
 - Adding `allow-same-origin` would grant the napplet a real origin (letting it
   register a service worker, reach same-origin storage, etc.) — so it is
   **prohibited**.
-- `MessageEvent.source` provides the unforgeable sender identity used for origin
-  validation.
+- The port handed over in `napplet.hello` is the sender identity. Only the verified document's bootstrap holds the other end, so a navigated or reloaded document has no NAP channel, identity or grants.
+- An injected `meta` CSP does not restrict a document navigating its own frame, so a napplet can disclose data it was given by encoding it in a navigation URL. Revocation stops further access but cannot recall what was sent; shells should treat data released to a napplet as disclosable by it.
 - Shells MUST **not** sign or broadcast events containing ciphertext received
   from a napplet.
 - The protocol does **not** protect against compromised browsers, malicious

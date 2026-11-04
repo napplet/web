@@ -5,7 +5,7 @@
 `@napplet/boilerplate` is the package-backed generator used by the primary CLI. It clones the [`github.com/napplet/boilerplate`](https://github.com/napplet/boilerplate) template — a Vite + TypeScript napplet starter — and derives the package name from the destination. Deployment name, title, description, and archetypes are owned later by `napplet init`.
 
 - **npm:** [`@napplet/boilerplate`](https://www.npmjs.com/package/@napplet/boilerplate)
-- **Source:** [packages/boilerplate](https://github.com/napplet/napplet/tree/main/packages/boilerplate)
+- **Source:** [packages/boilerplate](https://github.com/napplet/web/tree/main/packages/boilerplate)
 
 ## Usage
 

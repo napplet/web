@@ -1,3 +1,4 @@
+import { installLlmShim, handleLlmMessage } from '@napplet/nap/llm/shim';
 import { installGamepadShim, handleGamepadMessage } from '@napplet/nap/gamepad/shim';
 import { installNavigationShim, handleNavigationMessage } from '@napplet/nap/navigation/shim';
 import { handleShellMessage, installShellShim } from '@napplet/nap/shell/shim';
@@ -86,6 +87,7 @@ import {
   installDmShim,
   handleDmMessage,
 } from '@napplet/nap/dm/shim';
+import { connectShell, onShellMessage, type ShellMessage } from '@napplet/nap/boundary';
 import { createNappletGlobal } from './runtime-globals.js';
 
 export interface NappletShimInstallOptions {
@@ -100,6 +102,7 @@ const installedDomainShims = new Set<NapDomain>();
 let messageListenerInstalled = false;
 
 const DOMAIN_ROUTERS: ReadonlyArray<readonly [string, DomainHandler]> = [
+  ['llm.', handleLlmMessage],
   ['gamepad.', handleGamepadMessage],
   ['shell.', handleShellMessage],
   ['keys.', handleKeysMessage],
@@ -126,12 +129,7 @@ const DOMAIN_ROUTERS: ReadonlyArray<readonly [string, DomainHandler]> = [
   ['config.', handleConfigMessage],
 ];
 
-function handleEnvelopeMessage(event: MessageEvent): void {
-  if (event.source !== window.parent) return;
-  const msg = event.data;
-  if (typeof msg !== 'object' || msg === null || typeof msg.type !== 'string') return;
-
-  const typed = msg as { type: string; [key: string]: unknown };
+function handleEnvelopeMessage(typed: ShellMessage): void {
   const type = typed.type;
   for (const [prefix, route] of DOMAIN_ROUTERS) {
     const domain = prefix.slice(0, -1) as NapDomain;
@@ -152,6 +150,9 @@ function installDomainShim(domain: NapDomain): void {
   installedDomainShims.add(domain);
 
   switch (domain) {
+    case 'llm':
+      installLlmShim();
+      return;
     case 'gamepad':
       installGamepadShim();
       return;
@@ -235,17 +236,21 @@ function installDomainShim(domain: NapDomain): void {
 /**
  * Install the runtime-provided `window.napplet` namespace.
  *
- * Runtimes call this before any napplet script executes. Domain properties are
- * only present when the runtime exposes that NAP to the napplet.
+ * Runtimes call this before any napplet script executes. It opens the NIP-5D
+ * channel first: a `MessageChannel` whose private port carries every NAP
+ * message, with the other port handed to the shell once in `napplet.hello`.
+ * Domain properties are only present when the runtime exposes that NAP to the
+ * napplet.
  */
 export function installNappletGlobal(options: NappletShimInstallOptions = {}): NappletGlobal {
+  connectShell();
   const domains = normalizeDomains(options.domains);
   const napplet = createNappletGlobal(domains);
 
   (window as Window & typeof globalThis & { napplet: NappletGlobal }).napplet = napplet;
 
   if (!messageListenerInstalled) {
-    window.addEventListener('message', handleEnvelopeMessage);
+    onShellMessage(handleEnvelopeMessage);
     messageListenerInstalled = true;
   }
 

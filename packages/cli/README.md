@@ -26,7 +26,7 @@ curl -fsSL https://napplet.run/install.sh | sh
 irm https://napplet.run/install.ps1 | iex
 ```
 
-The installers download a supported asset from the [stable CLI release](https://github.com/napplet/napplet/releases/tag/napplet-cli) and verify it against `SHA256SUMS` before replacing the executable. Supported assets are Linux x64 / ARM64, macOS x64 / ARM64, and Windows x64.
+The installers download a supported asset from the [stable CLI release](https://github.com/napplet/web/releases/tag/napplet-cli) and verify it against `SHA256SUMS` before replacing the executable. Supported assets are Linux x64 / ARM64, macOS x64 / ARM64, and Windows x64.
 
 ### Check the installed version
 
@@ -93,7 +93,7 @@ The primary developer path is ordered and composable:
 napplet create my-napplet
 cd my-napplet
 napplet init
-npx skills add napplet/napplet
+npx skills add napplet/web
 pnpm install
 # Ask your agent to build the napplet.
 pnpm verify
@@ -105,7 +105,7 @@ What each step does:
 
 - `napplet create` delegates to `@napplet/boilerplate` and creates the starter only.
 - `napplet init` owns deployment name, title, description, archetype roles and conventions, relays, and Blossom servers in `.napplet/config.yaml`; scripts can pass the same fields explicitly.
-- `npx skills add napplet/napplet` installs the `napplet-*` agent skills through the skills.sh CLI (Claude Code, Codex, Cursor, and 70+ other agents); it is not a `napplet` subcommand.
+- `npx skills add napplet/web` installs the `napplet-*` agent skills through the skills.sh CLI (Claude Code, Codex, Cursor, and 70+ other agents); it is not a `napplet` subcommand.
 - `napplet debug` prints resolved config, discovered napplets, deploy targets, manifest templates, and signing readiness without uploading or publishing. Manifest template failures (for example a missing description, or built files a current deploy would drop) are reported in `manifests.error` instead of aborting, and `--format current|legacy` selects the event format inspected.
 - `napplet deploy --dry-run` builds the same deploy plan and signed manifest events without network writes. Interactive terminals get a readable report with copyable NIP-19 pointers.
 - `napplet deploy` uploads files to configured Blossom servers and publishes signed root, named, and optional snapshot manifest events to configured relays. Use `--json` for CI / machine output.
@@ -131,12 +131,12 @@ Deploy accepts `--source-dir`, `--description`, repeated `--relay`, and repeated
 ```sh
 napplet guide
 napplet create <directory> [--template <path-or-url>] [--force]
-napplet init [--force] [--root] [--source-dir <dir>] [--name <dtag>] [--title <title>] [--description <text>] [--archetype <napplet:archetype/intent>] [--relay <url>] [--server <url>]
+napplet init [--force] [--root] [--source-dir <dir>] [--name <dtag>] [--title <title>] [--description <text>] [--archetype <napplet:archetype/intent>] [--relay <url>] [--server <url>] [--proxy <url>]
 napplet discover [--config <file>] [--all]
 napplet debug [--format current|legacy] [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>]
-napplet deploy [--format current|legacy] [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>] [--prompt-sec] [--zapstore | --no-zapstore] [--no-screenshot] [--screenshot [<preview-url>]] [--dry-run] [--json]
+napplet deploy [--format current|legacy] [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>] [--prompt-sec] [--zapstore | --no-zapstore] [--no-screenshot] [--screenshot [<preview-url>]] [--proxy <url>] [--dry-run] [--json]
 napplet keys store --name <ref> [--sec <secret> | --prompt-sec]
-napplet keys connect --name <ref> [--relay <url> ...] [--config <file>]
+napplet keys connect --name <ref> [--relay <url> ...] [--proxy <url>] [--config <file>]
 napplet keys use --name <ref> [--config <file>]
 napplet keys list
 napplet keys delete --name <ref>
@@ -228,6 +228,19 @@ The human deploy report includes each signed manifest event's short event id plu
 When a built napplet includes a `.nip5a-manifest.json` sidecar, signed or unsigned, deploy preserves additional Nostr tags on root, named, and companion snapshot manifests, including their complete string payloads and repeated values. There is no tag-name allowlist. Explicit config overrides and CLI-managed artifact hashes, identifiers, lineage, server selection, and client attribution still apply. Legacy sidecars translate `requires`/`archetype` to current `R` and `z`/`i`; those names, along with `path` and `description`, remain opaque extra tags when supplied by a current-format event. Current event content is resolved separately from extra `description` tags. Migration likewise preserves additional tags and their multiplicity while converting actual legacy fields.
 
 Deploy also recovers current NIP-5D publishing metadata from the built HTML head, including supported data-URL icon bytes, without a sidecar. Current output requires a non-empty description. See Standalone HTML recovery below for precedence and target handling.
+
+### Proxies
+
+`deploy`, `init` and `keys connect` accept `--proxy <url>` to send their Blossom server and relay traffic through an HTTP or SOCKS5 proxy. Supported schemes are `http://`, `https://`, `socks5://` and `socks5h://`; credentials may be embedded (`socks5://user:pass@host:port`) and are never printed. `socks5h://` resolves host names on the proxy, which is what Tor needs.
+
+```sh
+napplet deploy --proxy socks5h://127.0.0.1:9050
+napplet deploy --proxy http://user:pass@proxy.example:8080
+napplet keys connect --name remote --proxy socks5h://127.0.0.1:9050
+napplet init --proxy socks5h://127.0.0.1:9050
+```
+
+With `--proxy`, every connection these commands make to Blossom servers and relays goes through it: artifact and media uploads, manifest and application-metadata publishing, `init` relay and Blossom suggestions, and remote-signer (NIP-46) relay sessions, including the relay information (NIP-11) documents fetched while connecting. The human deploy plan names the proxy in use. Other commands reject the flag. Managed tools the CLI starts as separate processes, such as screenshot capture, conformance and `paja`, are not proxied by it. A relay the proxy cannot reach is reported as a failed publish.
 
 ## Signing And Keys
 
@@ -585,3 +598,7 @@ NAPPLET_TEST_STANDALONE=1 deno test --node-modules-dir=none -A packages/cli/test
 ### GAMEPAD integration
 
 GAMEPAD is a bare manifest domain accepted by `init`, `build`, and deployment metadata. Controller fallback apps use `O gamepad`; controller-required apps use `R gamepad`. Live `dev` controller input depends on a GAMEPAD-capable Kehto/Paja release. See the proposed [NAP-GAMEPAD](https://github.com/napplet/naps/pull/108).
+
+### LLM capabilities
+
+Use the bare `llm` domain in required or optional deployment metadata. An inference-centred napplet can declare `R llm`; an optional integration uses `O llm` and checks runtime presence. Build and deployment support do not imply that the preview shell has a configured model connection. See the living [NAP-LLM proposal](https://github.com/napplet/naps/pull/134).

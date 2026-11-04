@@ -238,13 +238,13 @@ describe('validateEnvelope — optional shell domain', () => {
 });
 
 describe('ENVELOPE_SPECS invariants', () => {
-  it('has 247 discriminants split 119 outbound / 128 inbound', () => {
+  it('has 256 discriminants split 123 outbound / 133 inbound', () => {
     const all = knownEnvelopeTypes();
-    expect(all).toHaveLength(247);
+    expect(all).toHaveLength(256);
     const out = all.filter((t) => ENVELOPE_SPECS[t].dir === 'out');
     const inbound = all.filter((t) => ENVELOPE_SPECS[t].dir === 'in');
-    expect(out).toHaveLength(119);
-    expect(inbound).toHaveLength(128);
+    expect(out).toHaveLength(123);
+    expect(inbound).toHaveLength(133);
   });
 
   it('declares canonical inbound INC carrier fields', () => {

@@ -1,0 +1,397 @@
+{
+  "version": 1,
+  "observations": {
+    "shell": {
+      "url": "https://github.com/napplet/naps/pull/101",
+      "status": "merged",
+      "headRevision": "04d433674bce16795e860f9006bfa87a8e02e25c",
+      "specFiles": [
+        {
+          "path": "naps/NAP-SHELL.md",
+          "revision": "3734b0273e2e4c0769415a6e983a07df26f8b8ea"
+        }
+      ],
+      "registryStatuses": [
+        {
+          "id": "NAP-SHELL",
+          "status": "Draft"
+        }
+      ]
+    },
+    "relay": {
+      "url": "https://github.com/napplet/naps/pull/2",
+      "status": "in-review",
+      "headRevision": "9f30b3505335a52c574ff570576687d6467021ff",
+      "specFiles": [
+        {
+          "path": "naps/NAP-RELAY.md",
+          "revision": "cf33457d60c7b0e68b7fa54d5d8c51bf4b8ac2a2"
+        }
+      ],
+      "registryStatuses": [
+        {
+          "id": "NAP-RELAY",
+          "status": "Draft"
+        }
+      ]
+    },
+    "identity": {
+      "url": "https://github.com/napplet/naps/pull/102",
+      "status": "merged",
+      "headRevision": "74afad8a93c043b37188cc193863800a5502d34c",
+      "specFiles": [
+        {
+          "path": "naps/NAP-IDENTITY.md",
+          "revision": "e897ba0e09bf0a85d9d045ba1211714389372409"
+        }
+      ],
+      "registryStatuses": [
+        {
+          "id": "NAP-IDENTITY",
+          "status": "Draft"
+        }
+      ]
+    },
+    "storage": {
+      "url": "https://github.com/napplet/naps/pull/3",
+      "status": "in-review",
+      "headRevision": "4f4cf0ca7ecbd24c284a5d63bcd85e3de6af37ca",
+      "specFiles": [
+        {
+          "path": "naps/NAP-STORAGE.md",
+          "revision": "6a7a35fd6c67f3ebe3ca53ba88e7a69d03f7f323"
+        }
+      ],
+      "registryStatuses": [
+        {
+          "id": "NAP-STORAGE",
+          "status": "Draft"
+        }
+      ]
+    },
+    "inc": {
+      "url": "https://github.com/napplet/naps/pull/104",
+      "status": "merged",
+      "headRevision": "2578336467bb80fdcd60b250c7159f281f6b9cc9",
+      "specFiles": [
+        {
+          "path": "naps/NAP-INC.md",
+          "revision": "685de1a5335fb3b080bf179ec5a53ce971bbbef9"
+        }
+      ],
+      "registryStatuses": [
+        {
+          "id": "NAP-INC",
+          "status": "Draft"
+        }
+      ]
+    },
+    "theme": {
+      "url": "https://github.com/napplet/naps/pull/103",
+      "status": "merged",
+      "headRevision": "50f918ccdcb5b94a6465c84e12036275e8984da7",
+      "specFiles": [
+        {
+          "path": "naps/NAP-THEME.md",
+          "revision": "4f510ec2670fecd90980877f75ada75ed55d18a8"
+        }
+      ],
+      "registryStatuses": [
+        {
+          "id": "NAP-THEME",
+          "status": "Draft"
+        }
+      ]
+    },
+    "keys": {
+      "url": "https://github.com/napplet/naps/pull/9",
+      "status": "in-review",
+      "headRevision": "8869a4cf77b023f4b049f47c546910a0280dc1a6",
+      "specFiles": [
+        {
+          "path": "naps/NAP-KEYS.md",
+          "revision": "57946fb2adc9e28bf0e8fcc7b5438310774201f7"
+        }
+      ],
+      "registryStatuses": [
+        {
+          "id": "NAP-KEYS",
+          "status": "Draft"
+        }
+      ]
+    },
+    "media": {
+      "url": "https://github.com/napplet/naps/pull/10",
+      "status": "in-review",
+      "headRevision": "7806f438530251fce5129f8e6239d6b642278759",
+      "specFiles": [
+        {
+          "path": "naps/NAP-MEDIA.md",
+          "revision": "08faeb836088578f63105425287edcda5e0c1eec"
+        }
+      ],
+      "registryStatuses": [
+        {
+          "id": "NAP-MEDIA",
+          "status": "Draft"
+        }
+      ]
+    },
+    "notify": {
+      "url": "https://github.com/napplet/naps/pull/11",
+      "status": "in-review",
+      "headRevision": "67877ef6c31ec8acee3125c1d8b4c781010e37dc",
+      "specFiles": [
+        {
+          "path": "naps/NAP-NOTIFY.md",
+          "revision": "fcdf12ff914e068b08f0e7c534becaf56be579eb"
+        }
+      ],
+      "registryStatuses": [
+        {
+          "id": "NAP-NOTIFY",
+          "status": "Draft"
+        }
+      ]
+    },
+    "config": {
+      "url": "https://github.com/napplet/naps/pull/14",
+      "status": "draft",
+      "headRevision": "bed9cb5b1e7c9b5babee8870aa18b12949af1d62",
+      "specFiles": [
+        {
+          "path": "naps/NAP-CONFIG.md",
+          "revision": "bfdeeabb759cca305e03f123697b0406e84b6731"
+        }
+      ],
+      "registryStatuses": [
+        {
+          "id": "NAP-CONFIG",
+          "status": "Draft"
+        }
+      ]
+    },
+    "resource": {
+      "url": "https://github.com/napplet/naps/pull/80",
+      "status": "in-review",
+      "headRevision": "ae5b9c64ab8a4d8909f288829a01e99d6bd713bc",
+      "specFiles": [
+        {
+          "path": "naps/NAP-RESOURCE.md",
+          "revision": "138d85860b1eff920d7caa525482f8dbf2b6e851"
+        }
+      ],
+      "registryStatuses": [
+        {
+          "id": "NAP-RESOURCE",
+          "status": "Draft"
+        }
+      ]
+    },
+    "cvm": {
+      "url": "https://github.com/napplet/naps/pull/31",
+      "status": "in-review",
+      "headRevision": "28cf1bdb5c6412bfbfcecb79a5a5121e18376f2f",
+      "specFiles": [
+        {
+          "path": "naps/NAP-CVM.md",
+          "revision": "900f7e006af1e1d63411e6c1cb3b6584ae34478e"
+        }
+      ],
+      "registryStatuses": [
+        {
+          "id": "NAP-CVM",
+          "status": "Draft"
+        }
+      ]
+    },
+    "outbox": {
+      "url": "https://github.com/napplet/naps/pull/32",
+      "status": "in-review",
+      "headRevision": "8865f73d52a4864afee145f28d26520476273927",
+      "specFiles": [
+        {
+          "path": "naps/NAP-OUTBOX.md",
+          "revision": "35f5bbcabc185dd3ea762aefcb9ece42a9489af1"
+        }
+      ],
+      "registryStatuses": [
+        {
+          "id": "NAP-OUTBOX",
+          "status": "Draft"
+        }
+      ]
+    },
+    "upload": {
+      "url": "https://github.com/napplet/naps/pull/33",
+      "status": "in-review",
+      "headRevision": "f5cc981e527e2cc1572793a7a6e5082e5271ac49",
+      "specFiles": [
+        {
+          "path": "naps/NAP-UPLOAD.md",
+          "revision": "8723c4b9e01db42af4c268512bed95c4525908ba"
+        }
+      ],
+      "registryStatuses": [
+        {
+          "id": "NAP-UPLOAD",
+          "status": "Draft"
+        }
+      ]
+    },
+    "intent": {
+      "url": "https://github.com/napplet/naps/pull/91",
+      "status": "merged",
+      "headRevision": "33ac4ae790da8dc265d00823d65bd1147f45894b",
+      "specFiles": [
+        {
+          "path": "naps/NAP-INTENT.md",
+          "revision": "5d9bec5049fa543b6be7c099cceda47aa4a4dcd2"
+        }
+      ],
+      "registryStatuses": [
+        {
+          "id": "NAP-INTENT",
+          "status": "Draft"
+        }
+      ]
+    },
+    "ble": {
+      "url": "https://github.com/napplet/naps/pull/62",
+      "status": "in-review",
+      "headRevision": "b46b86913c23cd509d2ace14f1de55b0c451e0f9",
+      "specFiles": [
+        {
+          "path": "naps/NAP-BLE.md",
+          "revision": "63139a017fc9cb576795a61d03477c3e2bbd1046"
+        }
+      ],
+      "registryStatuses": []
+    },
+    "webrtc": {
+      "url": "https://github.com/napplet/naps/pull/59",
+      "status": "in-review",
+      "headRevision": "69523e8cf44c8653155c5e77d25340d4ea3d0887",
+      "specFiles": [
+        {
+          "path": "naps/NAP-WEBRTC.md",
+          "revision": "8dc880315353b084198be1ba99cf4afee7f490ea"
+        }
+      ],
+      "registryStatuses": []
+    },
+    "link": {
+      "url": "https://github.com/napplet/naps/pull/53",
+      "status": "in-review",
+      "headRevision": "50a2cd45e76f06e87b87e93842badf4c61f17bde",
+      "specFiles": [
+        {
+          "path": "naps/NAP-LINK.md",
+          "revision": "23ab93c16c69a08682583458fc7f35cc16fae4e9"
+        }
+      ],
+      "registryStatuses": [
+        {
+          "id": "NAP-LINK",
+          "status": "Draft"
+        }
+      ]
+    },
+    "count": {
+      "url": "https://github.com/napplet/naps/pull/69",
+      "status": "in-review",
+      "headRevision": "9353a0c6c02c595f7e65ebd6df3802a7a45fc6bf",
+      "specFiles": [
+        {
+          "path": "naps/NAP-COUNT.md",
+          "revision": "570f25f08e5add617b0c7d0b89fa41a26a60f132"
+        }
+      ],
+      "registryStatuses": []
+    },
+    "lists": {
+      "url": "https://github.com/napplet/naps/pull/68",
+      "status": "in-review",
+      "headRevision": "7cf00cdb7bca6bb59dc5ef082e9fe8ac9278fa46",
+      "specFiles": [
+        {
+          "path": "naps/NAP-LISTS.md",
+          "revision": "635f82669be48c03e1efed054810249947362815"
+        }
+      ],
+      "registryStatuses": []
+    },
+    "serial": {
+      "url": "https://github.com/napplet/naps/pull/61",
+      "status": "in-review",
+      "headRevision": "0c6e88ab8003f5bf88c8ddee5b5e3cd382ab7e1c",
+      "specFiles": [
+        {
+          "path": "naps/NAP-SERIAL.md",
+          "revision": "a99cb928244f1ff7b4c154d9efd75da57aaf74e0"
+        }
+      ],
+      "registryStatuses": []
+    },
+    "fs": {
+      "url": "https://github.com/napplet/naps/pull/88",
+      "status": "in-review",
+      "headRevision": "bd1b9e912f05203bf38f7a1b04f920744fe6d625",
+      "specFiles": [
+        {
+          "path": "naps/NAP-FS.md",
+          "revision": "039609739162efbc4de09cca97cbebb641b519d1"
+        }
+      ],
+      "registryStatuses": []
+    },
+    "common": {
+      "url": "https://github.com/napplet/naps/pull/67",
+      "status": "in-review",
+      "headRevision": "8cd0eae8550575771bb616a384e2dfbcade31673",
+      "specFiles": [
+        {
+          "path": "naps/NAP-COMMON.md",
+          "revision": "31fad750a91939012fabd211a402089035ea677f"
+        }
+      ],
+      "registryStatuses": []
+    },
+    "dm": {
+      "url": "https://github.com/napplet/naps/pull/74",
+      "status": "draft",
+      "headRevision": "2c4e4423f40e72675822225acacea2ee5889ade2",
+      "specFiles": [
+        {
+          "path": "naps/NAP-DM.md",
+          "revision": "9f837bbc99679c16c85e8a89e978852fff109b6d"
+        }
+      ],
+      "registryStatuses": []
+    },
+    "gamepad": {
+      "url": "https://github.com/napplet/naps/pull/130",
+      "status": "in-review",
+      "headRevision": "0b28f77e3dfa0f07dd7c0f9d61a7090ee99f3a5e",
+      "specFiles": [
+        {
+          "path": "naps/NAP-GAMEPAD.md",
+          "revision": "e213884e1bf826007ba0bef3e9e797e89e9ad20b"
+        }
+      ],
+      "registryStatuses": []
+    },
+    "llm": {
+      "url": "https://github.com/napplet/naps/pull/134",
+      "status": "draft",
+      "headRevision": "3e10939cf788878bbdcc022c101f0ac6193f316c",
+      "specFiles": [
+        {
+          "path": "naps/NAP-LLM.md",
+          "revision": "89d571c78b1668759a4c1f98fa12ffe4af5db2a5"
+        }
+      ],
+      "registryStatuses": []
+    }
+  }
+}

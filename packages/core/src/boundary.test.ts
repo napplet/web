@@ -3,6 +3,7 @@ import {
   clearCloneWarnings,
   getCloneMode,
   sendEnvelope,
+  sendPortEnvelope,
   setCloneMode,
   toCloneableSnapshot,
   type PostMessageTarget,
@@ -218,5 +219,39 @@ describe('clone mode accessors', () => {
     expect(getCloneMode()).toBe('snapshot');
     setCloneMode('auto');
     expect(getCloneMode()).toBe('auto');
+  });
+});
+
+describe('sendPortEnvelope', () => {
+  function makePort() {
+    const sent: unknown[][] = [];
+    return {
+      sent,
+      postMessage(...args: unknown[]) {
+        assertCloneable(args[0]);
+        sent.push(args);
+      },
+    };
+  }
+
+  it('posts the envelope with no target origin, as MessagePort.postMessage expects', () => {
+    const port = makePort();
+    sendPortEnvelope(port, { type: 'storage.get', id: '1', key: 'k' });
+    expect(port.sent).toEqual([[{ type: 'storage.get', id: '1', key: 'k' }]]);
+  });
+
+  it('applies the same auto-recovery as sendEnvelope', () => {
+    const port = makePort();
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    sendPortEnvelope(port, { type: 'outbox.subscribe', filters: reactive([{ kinds: [1] }]) });
+    expect(port.sent[0]).toEqual([{ type: 'outbox.subscribe', filters: [{ kinds: [1] }] }]);
+    expect(warn).toHaveBeenCalledTimes(1);
+    warn.mockRestore();
+  });
+
+  it('throws the actionable error in strict mode', () => {
+    setCloneMode('strict');
+    const port = makePort();
+    expect(() => sendPortEnvelope(port, { type: 'relay.publish', template: reactive({ kind: 1 }) })).toThrow(/relay\.publish/);
   });
 });

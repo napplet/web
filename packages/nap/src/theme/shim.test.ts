@@ -1,12 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { installFakeShell, type FakeShell } from '../test-support/fake-shell.js';
 import type { Theme } from './types.js';
 
-interface PostedMessage {
-  msg: unknown;
-  targetOrigin: string;
-}
-
-let postedMessages: PostedMessage[];
+let shell: FakeShell;
 let uuidCounter: number;
 let originalCryptoDescriptor: PropertyDescriptor | undefined;
 
@@ -16,7 +12,6 @@ const SAMPLE_THEME: Theme = {
 };
 
 beforeEach(() => {
-  postedMessages = [];
   uuidCounter = 0;
   originalCryptoDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'crypto');
 
@@ -27,16 +22,7 @@ beforeEach(() => {
     },
   });
 
-  Object.defineProperty(globalThis, 'window', {
-    configurable: true,
-    value: {
-      parent: {
-        postMessage(msg: unknown, targetOrigin: string) {
-          postedMessages.push({ msg, targetOrigin });
-        },
-      },
-    },
-  });
+  shell = installFakeShell();
 
   vi.resetModules();
 });
@@ -47,7 +33,7 @@ afterEach(() => {
   } else {
     Reflect.deleteProperty(globalThis, 'crypto');
   }
-  Reflect.deleteProperty(globalThis, 'window');
+  vi.unstubAllGlobals();
 });
 
 describe('@napplet/nap/theme shim', () => {
@@ -56,8 +42,8 @@ describe('@napplet/nap/theme shim', () => {
 
     const result = get();
 
-    expect(postedMessages).toEqual([
-      { msg: { type: 'theme.get', id: 'theme-test-1' }, targetOrigin: '*' },
+    expect(shell.sent).toEqual([
+      { type: 'theme.get', id: 'theme-test-1' },
     ]);
 
     handleThemeMessage({

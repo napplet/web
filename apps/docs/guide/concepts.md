@@ -10,7 +10,7 @@ Every message between a napplet and its shell is a JSON object with a `type` fie
 { type: "domain.action", ...payload }
 ```
 
-The shim sends outbound messages with `window.parent.postMessage(msg, '*')` and listens for inbound ones with `window.addEventListener('message', …)`. Request / response pairs are correlated by an `id` field. The base type is [`NappletMessage`](/packages/core) in `@napplet/core`; each NAP domain extends it with its own concrete message types.
+Before any napplet script runs, the runtime opens a `MessageChannel`, keeps one port private, and hands the other to the shell once in a `napplet.hello` window message. The shim then sends and receives every envelope over that port. Request / response pairs are correlated by an `id` field. The base type is [`NappletMessage`](/packages/core) in `@napplet/core`; each NAP domain extends it with its own concrete message types.
 
 ```ts
 // outbound: napplet -> shell
@@ -62,13 +62,13 @@ Napplets run in an iframe sandboxed with **`allow-scripts` only** — crucially 
   `IndexedDB`, or service workers.
 - No direct WebSocket / `fetch` to arbitrary origins (the shell's CSP enforces
   this). External bytes are fetched through the
-  [resource NAP](/naps/#resource) instead.
+  [resource NAP](/naps/resource) instead.
 
 All persistent and privileged state flows through the shell's proxies. The browser enforces the boundary — it is not a matter of the napplet behaving.
 
 ## Identity
 
-The shell assigns each napplet an identity **at iframe creation time**, with no handshake. It maps the iframe's `Window` reference to the napplet's `(dTag, artifactHash)` tuple verified against the NIP-5D manifest and verifies `MessageEvent.source` on **every** inbound message. `MessageEvent.source` is unforgeable, so this is how the shell knows which napplet a message came from. Messages from unmapped windows are silently dropped.
+The shell computes each napplet's `(dTag, artifactHash)` from the verified NIP-5D manifest and artifact bytes before the iframe runs. It accepts one `napplet.hello` from the `contentWindow` of an iframe it created and binds that identity to the port the hello carries, so it knows which napplet a message came from by the port it arrived on. The binding lasts as long as that one document: a second hello, any other window-level message, a second `load` or the port closing makes the shell revoke the identity and its grants and remove the frame. See [NIP-5D §Identity](https://github.com/nostr-protocol/nips/pull/2303).
 
 ## ACL and storage
 

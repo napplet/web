@@ -2,6 +2,25 @@
 
 > Runtime injection helper for napplet iframes. It installs selected `window.napplet` domain objects. No cryptographic dependencies -- the shim sends JSON envelope messages and the shell handles identity.
 
+## Maturity-controlled injection
+
+Use the side-effect-free `@napplet/shim/prelude` entrypoint for policy-controlled hosts. The legacy root `@napplet/shim` import still installs every bundled domain for compatibility.
+
+```ts
+import { selectNapDomains } from '@napplet/core';
+import { renderNappletRuntimePreludeCall } from '@napplet/shim/prelude';
+
+const selection = selectNapDomains({
+  candidates: ['storage', 'llm', 'ble'],
+  optIn: ['llm'],
+});
+const activate = renderNappletRuntimePreludeCall({ domains: selection.domains });
+```
+
+Inline the maintained prelude artifact followed by `activate` before napplet scripts run. Enforce the same `selection.domains` set in host dispatch: hiding a shim object is not an authorization check. The prelude opens the NIP-5D channel when it installs: one `napplet.hello` hands the shell a `MessagePort`, and every envelope then travels over that port, so bind the napplet's identity to the port and tear the frame down on a second hello, any other window-level message or a second `load`. Candidates must already be implemented and authorized for the napplet.
+
+Prelude helpers also accept `maturity: {}` for supported-only filtering or `maturity: { optIn: ['llm'] }` for a named exception. Omitting `maturity` preserves existing explicit allowlist behavior. An explicit install replaces an earlier legacy namespace but cannot undo earlier calls; finish host setup before napplet code executes. See the [maturity guide](https://napplet.run/docs/naps/maturity.html) for classifications, required/optional domain handling, and provenance limits.
+
 ## Getting Started
 
 ### Prerequisites
@@ -681,7 +700,7 @@ The selected `gamepad` runtime binding installs the cached API, subscribes witho
 
 ### `window.napplet.navigation`
 
-When both `navigation` and `intent` are selected, the runtime binding exposes `report(report)` and `get()`, routes `navigation.report.result` / `navigation.get.result`, and correlates responses only from the parent. Runtime history remains outside the iframe binding. Expose both `navigation` and its required `intent` domain explicitly; selecting navigation never grants another domain automatically. Neither domain waits for a SHELL handshake.
+When both `navigation` and `intent` are selected, the runtime binding exposes `report(report)` and `get()`, routes `navigation.report.result` / `navigation.get.result`, and correlates responses arriving over the `napplet.hello` port. Runtime history remains outside the iframe binding. Expose both `navigation` and its required `intent` domain explicitly; selecting navigation never grants another domain automatically. Neither domain waits for a SHELL handshake.
 
 ```ts
 import { installNappletRuntimePrelude } from '@napplet/shim/prelude';
@@ -690,3 +709,7 @@ installNappletRuntimePrelude({ domains: ['intent', 'navigation'] });
 ```
 
 Application code consumes this namespace through the SDK. The binding does not intercept native History API calls, assign report revisions, or invent a navigation listener. This non-normative guide follows the [NAP-NAVIGATION draft](https://github.com/napplet/naps/pull/126) and [NAP-INTENT delivery draft](https://github.com/napplet/naps/pull/128); the [navigation guide](../../apps/docs/naps/navigation.md) covers committed reports and delivery correlation.
+
+### LLM runtime binding
+
+Select `llm` in `installNappletGlobal({ domains: ['llm'] })` or the equivalent runtime prelude options to expose `window.napplet.llm`. The binding forwards `select`, `describe`, `generate`, and `cancel`, correlates each result by `id` and type, routes `llm.delta` only to the generation that owns its `requestId`, drops deltas that do not match the Delta schema (`start` / `delta` / `end` events, `text` only on `delta`, `toolCallId` and `name` only on a `toolCall` start), stops provisional delivery on a sequence gap, rejects an `Error` record as an `LlmError` carrying the specification code, and maps an abort signal to `llm.cancel`. Installing the binding supplies no connection, consent, or provider: the host provides policy-bound handlers, endpoint-scoped handles, and prompts. See the living [NAP-LLM proposal](https://github.com/napplet/naps/pull/134).

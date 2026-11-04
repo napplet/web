@@ -1,4 +1,5 @@
 import { navigationReportError } from './navigation.js';
+import { validateLlmRequest } from './llm.js';
 import { NAP_DOMAINS } from '@napplet/core';
 import { ENVELOPE_SPECS } from './envelope-specs.js';
 import type {
@@ -226,6 +227,9 @@ export function validateEnvelope(message: unknown): EnvelopeVerdict {
       if (message) errors.push({ code: 'invalid-navigation-report', message, field: 'report' });
     }
   }
+
+  if (domain === 'llm') validateLlmRequest(type, record, errors);
+
   if (type === 'intent.invoke') {
     validateIntentInvokeRequest(record.request, errors);
   }

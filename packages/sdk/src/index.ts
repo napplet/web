@@ -40,3 +40,5 @@ export { shell } from './shell.js';
 
 export { gamepad } from './gamepad.js';
 export { navigation } from './navigation.js';
+
+export { llm } from './llm.js';

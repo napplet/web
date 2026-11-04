@@ -1,8 +1,9 @@
 {
   "name": "@napplet/nap",
-  "version": "0.34.0",
+  "version": "0.37.0",
   "license": "MIT",
   "exports": {
+    "./boundary": "./src/boundary.ts",
     "./relay": "./src/relay/index.ts",
     "./relay/types": "./src/relay/types.ts",
     "./relay/shim": "./src/relay/shim.ts",
@@ -110,10 +111,14 @@
     "./navigation": "./src/navigation/index.ts",
     "./navigation/types": "./src/navigation/types.ts",
     "./navigation/shim": "./src/navigation/shim.ts",
-    "./navigation/sdk": "./src/navigation/sdk.ts"
+    "./navigation/sdk": "./src/navigation/sdk.ts",
+    "./llm": "./src/llm/index.ts",
+    "./llm/types": "./src/llm/types.ts",
+    "./llm/shim": "./src/llm/shim.ts",
+    "./llm/sdk": "./src/llm/sdk.ts"
   },
   "imports": {
-    "@napplet/core": "jsr:@napplet/core@^0.34.0",
+    "@napplet/core": "jsr:@napplet/core@^0.38.0",
     "nostr-tools/nip19": "npm:nostr-tools@^2.23.3/nip19"
   },
   "publish": {

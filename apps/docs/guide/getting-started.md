@@ -48,7 +48,7 @@ At runtime, INC `emit` and intent `invoke/open` may accept `napplet:<archetype>/
 ## 4. Install agent skills
 
 ```bash
-npx skills add napplet/napplet
+npx skills add napplet/web
 ```
 
 The open [skills CLI](https://skills.sh) detects the coding agents on your machine (Claude Code, Codex, Cursor, Gemini CLI, Copilot, and many more) and installs the `napplet-*` skills where each agent reads them. Add `-g` for a global install, `--skill napplet-make` for a single skill, or `-a claude-code` to target one agent. See [Agent skills](./agent-skills) for what each skill does.

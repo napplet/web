@@ -35,15 +35,15 @@ napplet init --name notedrafts --title "Note Drafts" \
 The skills live in the napplet repository and install with the open [skills CLI](https://skills.sh), which detects your coding agents and places each skill where that agent reads it:
 
 ```bash
-npx skills add napplet/napplet
+npx skills add napplet/web
 ```
 
 Useful variants:
 
 ```bash
-npx skills add napplet/napplet -a claude-code          # one agent
-npx skills add napplet/napplet -g                      # global, all projects
-npx skills add napplet/napplet --skill napplet-make    # a single skill
+npx skills add napplet/web -a claude-code          # one agent
+npx skills add napplet/web -g                      # global, all projects
+npx skills add napplet/web --skill napplet-make    # a single skill
 ```
 
 Install the full set for this tutorial; `napplet-make` routes the work through the others.

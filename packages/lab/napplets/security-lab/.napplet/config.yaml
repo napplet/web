@@ -1,0 +1,31 @@
+version: 1
+sourceDir: .
+relays:
+  - wss://relay.primal.net
+  - wss://relay.damus.io
+blossomServers:
+  - https://cdn.hzrd149.com
+  - https://blossom.primal.net
+defaultTarget: named
+named:
+  - security-lab
+discover:
+  enabled: true
+  roots:
+    - .
+signing:
+  mode: interactive
+  keyReference: e771af0b05c8e95fcdf6feb3500544d2fb1ccd384788e9f490bb3ee28e8ed66f
+  pubkey: e771af0b05c8e95fcdf6feb3500544d2fb1ccd384788e9f490bb3ee28e8ed66f
+  relays:
+    - wss://relay.primal.net
+conformance:
+  command: napplet-conformance
+paja:
+  command: kehto
+metadata:
+  name: security-lab
+  title: Security Lab
+  description: Probes the sandbox, CSP, namespace and runtime boundaries of the NIP-5D shell hosting it.
+  archetypes: []
+bunkerPubkey: e771af0b05c8e95fcdf6feb3500544d2fb1ccd384788e9f490bb3ee28e8ed66f

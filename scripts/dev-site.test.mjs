@@ -3,6 +3,36 @@ import { createServer } from 'node:http';
 import { once } from 'node:events';
 import test from 'node:test';
 import { startSite } from './dev-site.mjs';
+import config from '../apps/web/astro.config.mjs';
+
+test('docs redirect uses the supplied origin and preserves the path and query', async () => {
+  const previous = process.env.NAPPLET_DOCS_ORIGIN;
+  process.env.NAPPLET_DOCS_ORIGIN = 'http://127.0.0.1:62137';
+  try {
+    let middleware;
+    const integration = config.integrations.find(({ name }) => name === 'local-development');
+    integration.hooks['astro:server:setup']({ server: {
+      middlewares: { use: (handler) => { middleware = handler; } },
+    } });
+    for (const url of ['/docs', '/docs/', '/docs?query=napplet', '/docs/guide/getting-started.html?q=1']) {
+      let status;
+      let headers;
+      middleware({ url }, {
+        writeHead: (code, value) => { status = code; headers = value; }, end() {},
+      }, () => assert.fail('Docs request was not redirected'));
+      assert.equal(status, 307);
+      assert.equal(headers.Location, `http://127.0.0.1:62137${url}`);
+    }
+    for (const url of ['/', '/explainer/', '/docs-other']) {
+      let next = false;
+      middleware({ url }, {}, () => { next = true; });
+      assert.equal(next, true);
+    }
+  } finally {
+    if (previous === undefined) delete process.env.NAPPLET_DOCS_ORIGIN;
+    else process.env.NAPPLET_DOCS_ORIGIN = previous;
+  }
+});
 
 test('paired launches bind distinct available ports and close every listener', async (t) => {
   const servers = [];
@@ -84,7 +114,6 @@ test('startup preserves the original error when cleanup also fails', async () =>
     else process.env.NAPPLET_DOCS_ORIGIN = previous;
   }
 });
-
 
 test('standalone docs do not start a website or assume a fixed port', async () => {
   const previous = process.env.NAPPLET_DOCS_ORIGIN;

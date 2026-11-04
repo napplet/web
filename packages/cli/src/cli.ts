@@ -20,6 +20,7 @@ import { PromptCancelledError } from "./prompt.ts";
 import { canPrompt, resolveInteraction, withInteraction } from "./interaction.ts";
 import { decorateReport, paint, renderBanner } from "./terminal.ts";
 import { runCommand, splitCommand } from "./process.ts";
+import { closeProxy, configureProxy, PROXY_COMMANDS } from "./network.ts";
 import { resolveSigningMethod } from "./signing.ts";
 import type { DeploySelection } from "./types.ts";
 import cliMetadata from "../deno.json" with { type: "json" };
@@ -85,50 +86,77 @@ async function dispatch(parsed: ParsedArgs, options: CliMainOptions): Promise<nu
       console.log(decorateReport(commandHelp(parsed.command)));
       return 0;
     }
-    await migrateCommandConfig(parsed, options.configMigration);
-    switch (parsed.command) {
-      case "version":
-      case "--version":
-      case "-v":
-        console.log(`napplet ${cliMetadata.version}`);
-        return 0;
-      case "help":
-      case "--help":
-      case "-h":
-        console.log(decorateReport(HELP));
-        return 0;
-      case "migrate":
-        return await commandMigrate(parsed.rest);
-      case "init":
-        return await commandInit(parsed.rest);
-      case "guide":
-        return commandGuide();
-      case "create":
-        return await (options.runCreate ?? ((args) => runPackageCli("@napplet/boilerplate", args)))(
-          canPrompt() ? parsed.rest : [...parsed.rest, "--yes"],
-        );
-      case "screenshot":
-        return await (options.runScreenshot ?? ((args) => runPackageCli("@napplet/conformance-cli", args)))(parsed.rest);
-      case "discover":
-        return await commandDiscover(parsed.rest);
-      case "deploy":
-        return await commandDeploy(parsed.rest, options.runScreenshot);
-      case "debug":
-        return await commandDebug(parsed.rest);
-      case "keys":
-        return await commandKeys(parsed.rest, HELP);
-      case "conformance":
-        return await commandConformance(parsed.rest);
-      case "paja":
-        return await commandPaja(parsed.rest);
-      default:
-        console.error(`Unknown command: ${parsed.command}\n`);
-        console.error(HELP);
-        return 2;
+    configureProxy(proxyFor(parsed, own));
+    try {
+      await migrateCommandConfig(parsed, options.configMigration);
+      return await route(parsed, options);
+    } finally {
+      closeProxy();
     }
   } catch (error) {
     console.error(paint(error instanceof Error ? error.message : String(error), "error"));
     return error instanceof PromptCancelledError ? 130 : 1;
+  }
+}
+
+/**
+ * Read `--proxy` for a command that reaches Blossom servers or relays.
+ * @param parsed Parsed command.
+ * @param own Command arguments before any `--` passthrough.
+ * @returns The proxy URL, or undefined when none was given.
+ * @example proxyFor(parseCommand(["deploy", "--proxy", "socks5h://127.0.0.1:9050"]), ["--proxy", "socks5h://127.0.0.1:9050"])
+ */
+export function proxyFor(parsed: ParsedArgs, own: string[]): string | undefined {
+  if (!own.includes("--proxy")) return undefined;
+  const scope = parsed.command === "keys" ? `keys ${parsed.rest[0]}` : parsed.command;
+  if (!(PROXY_COMMANDS as readonly string[]).includes(scope)) {
+    throw new Error(`--proxy applies only to commands that reach Blossom servers or relays: ${PROXY_COMMANDS.join(", ")}.`);
+  }
+  const values = collectFlags(own).values.get("proxy") ?? [];
+  if (values.length > 1) throw new Error("Pass --proxy once.");
+  return values[0];
+}
+
+async function route(parsed: ParsedArgs, options: CliMainOptions): Promise<number> {
+  switch (parsed.command) {
+    case "version":
+    case "--version":
+    case "-v":
+      console.log(`napplet ${cliMetadata.version}`);
+      return 0;
+    case "help":
+    case "--help":
+    case "-h":
+      console.log(decorateReport(HELP));
+      return 0;
+    case "migrate":
+      return await commandMigrate(parsed.rest);
+    case "init":
+      return await commandInit(parsed.rest);
+    case "guide":
+      return commandGuide();
+    case "create":
+      return await (options.runCreate ?? ((args) => runPackageCli("@napplet/boilerplate", args)))(
+        canPrompt() ? parsed.rest : [...parsed.rest, "--yes"],
+      );
+    case "screenshot":
+      return await (options.runScreenshot ?? ((args) => runPackageCli("@napplet/conformance-cli", args)))(parsed.rest);
+    case "discover":
+      return await commandDiscover(parsed.rest);
+    case "deploy":
+      return await commandDeploy(parsed.rest, options.runScreenshot);
+    case "debug":
+      return await commandDebug(parsed.rest);
+    case "keys":
+      return await commandKeys(parsed.rest, HELP);
+    case "conformance":
+      return await commandConformance(parsed.rest);
+    case "paja":
+      return await commandPaja(parsed.rest);
+    default:
+      console.error(`Unknown command: ${parsed.command}\n`);
+      console.error(HELP);
+      return 2;
   }
 }
 

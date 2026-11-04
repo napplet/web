@@ -1,7 +1,7 @@
 import { defineConfig } from 'tsup';
 
 export default defineConfig({
-  entry: { index: 'src/index.ts', gamepad: 'src/gamepad.ts', navigation: 'src/navigation.ts' },
+  entry: { index: 'src/index.ts', gamepad: 'src/gamepad.ts', navigation: 'src/navigation.ts', llm: 'src/llm.ts' },
   format: ['esm'],
   dts: true,
   sourcemap: true,
