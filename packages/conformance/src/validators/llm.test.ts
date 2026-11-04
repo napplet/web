@@ -155,11 +155,28 @@ describe('reference LLM shell', () => {
     expect(code(shell, 'describe', { handle })).toBe('selection-expired');
   });
 
-  it('discards envelopes the validator rejects, napplet-emitted results, and ungranted domains', () => {
+  it('answers a malformed but correlated request with invalid-request, without starting a generation', () => {
     const shell = createReferenceShell();
-    expect(shell.handleFrom(endpoint, { type: 'llm.generate', id: 'bad', request: { handle: 'h1', messages: [] } })).toEqual([]);
+    const { handle } = value(shell, 'select', 'model') as { handle: string };
+    const malformed = shell.handleFrom(endpoint, { type: 'llm.generate', id: 'bad', request: { handle, messages: [] } });
+    expect(malformed).toEqual([{ type: 'llm.generate.result', id: 'bad', error: { code: 'invalid-request', message: expect.any(String) } }]);
+    expect(shell.handleFrom(endpoint, { type: 'llm.select', id: 's9', requirements: null })).toEqual([
+      { type: 'llm.select.result', id: 's9', error: { code: 'invalid-request', message: expect.any(String) } },
+    ]);
+    expect(shell.handleFrom(endpoint, { type: 'llm.cancel', id: 'c9', requestId: 'g1', handle })).toEqual([
+      { type: 'llm.cancel.result', id: 'c9', error: { code: 'invalid-request', message: expect.any(String) } },
+    ]);
+    // The rejected id never became active, so it is free for a well-formed request.
+    expect(send(shell, 'generate', prompt(handle, 'fresh'), endpoint, 'bad').at(-1)).toMatchObject({ type: 'llm.generate.result', id: 'bad', result: expect.any(Object) });
+  });
+
+  it('discards uncorrelated requests, napplet-emitted results, and ungranted domains', () => {
+    const shell = createReferenceShell();
+    expect(shell.handleFrom(endpoint, { type: 'llm.generate', request: { handle: 'h1', messages: [] } })).toEqual([]);
+    expect(shell.handleFrom(endpoint, { type: 'llm.generate', id: '', request: { handle: 'h1', messages: [] } })).toEqual([]);
     expect(shell.handleFrom(endpoint, { type: 'llm.select.result', id: 'bad', model: {} })).toEqual([]);
     expect(shell.handleFrom(endpoint, { type: 'llm.delta', requestId: 'g1', sequence: 0, text: 'x' })).toEqual([]);
     expect(shell.handleFrom({ ...endpoint, domains: ['relay'] }, { type: 'llm.select', id: 'ungranted' })).toEqual([]);
+    expect(shell.handleFrom({ ...endpoint, domains: ['relay'] }, { type: 'llm.select', id: 'ungranted', requirements: null })).toEqual([]);
   });
 });
