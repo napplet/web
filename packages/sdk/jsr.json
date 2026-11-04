@@ -5,6 +5,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./gamepad": "./src/gamepad.ts",
+    "./navigation": "./src/navigation.ts",
     "./llm": "./src/llm.ts"
   },
   "imports": {

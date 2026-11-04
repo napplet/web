@@ -18,8 +18,10 @@
  */
 
 import { NAP_DOMAINS, selectNapDomains, type NapDomain, type NapMaturityPolicy } from '@napplet/core';
-import { createReferenceShell, type RecordedEnvelope } from '../shell/reference-shell.js';
+import { createReferenceShell, REFERENCE_ENDPOINT, type RecordedEnvelope } from '../shell/reference-shell.js';
 import { bindNappletPort, type TransportViolation } from '../shell/port-binding.js';
+import { catalogId, type CatalogManifest } from '../shell/intent-catalog.js';
+import type { NappletManifestEvent } from '../validators/manifest.js';
 import type { BootObservation } from './context.js';
 
 const INTERNAL_BOOT_ERROR = '__nappletConformance.error';
@@ -49,6 +51,8 @@ export interface BootOptions {
   maturity?: NapMaturityPolicy;
   /** Already loaded artifact text. Hosts can supply the exact snapshot they verified instead of fetching again. */
   html?: string;
+  /** Host-verified manifest for this artifact; omitted for unsigned fixture runs. */
+  verifiedManifest?: NappletManifestEvent;
   /** Milliseconds to await iframe load before declaring boot failure. Default 5000. */
   readyTimeoutMs?: number;
   /** Milliseconds to keep recording envelopes after boot. Default 600. */
@@ -138,11 +142,18 @@ async function loadHtml(url: string): Promise<string> {
 /** Boot the napplet once with the given injected domain set and collect what's observable. */
 async function bootOnce(
   domains: readonly string[],
-  opts: Required<Pick<BootOptions, 'url' | 'readyTimeoutMs' | 'settleMs' | 'allowSameOrigin' | 'runtimePreludeSource'>> & Pick<BootOptions, 'html'>,
+  opts: Required<Pick<BootOptions, 'url' | 'readyTimeoutMs' | 'settleMs' | 'allowSameOrigin' | 'runtimePreludeSource'>> & Pick<BootOptions, 'html' | 'verifiedManifest'>,
   doc: Document,
   win: Window,
 ): Promise<SingleBoot> {
   const shell = createReferenceShell({ domains });
+  const manifest = opts.verifiedManifest;
+  if (manifest && (![5129, 15129, 35129].includes(manifest.kind) || !manifest.id || !manifest.pubkey)) {
+    throw new Error('Boot requires a complete host-verified napplet manifest');
+  }
+  const endpoint = manifest
+    ? { id: 'subject', catalogId: catalogId(manifest as CatalogManifest), manifest: manifest as CatalogManifest, domains }
+    : { ...REFERENCE_ENDPOINT, domains };
   const iframe = doc.createElement('iframe');
   iframe.setAttribute('sandbox', opts.allowSameOrigin ? 'allow-scripts allow-same-origin' : 'allow-scripts');
   // NAP-GAMEPAD Web Projection Guidance: deny the native API with Permissions-Policy.
@@ -185,8 +196,11 @@ async function bootOnce(
     get source() {
       return iframe.contentWindow;
     },
-    onMessage: (envelope) => shell.handle(envelope),
-    onRevoke: removeFrame,
+    onMessage: (envelope) => shell.handleFrom(endpoint, envelope),
+    onRevoke: () => {
+      shell.terminateEndpoint(endpoint.id);
+      removeFrame();
+    },
     isInternal: internal,
   });
 
@@ -222,6 +236,7 @@ async function bootOnce(
   }
 
   binding.detach();
+  shell.terminateEndpoint(endpoint.id);
   removeFrame();
 
   return { installedGlobal, bootError, emitted: [...shell.records], transportViolations: [...binding.violations] };
@@ -236,6 +251,7 @@ export async function bootAndCollect(options: BootOptions): Promise<BootCollecti
   const resolved = {
     url: options.url,
     html: options.html,
+    verifiedManifest: options.verifiedManifest,
     readyTimeoutMs: options.readyTimeoutMs ?? 5000,
     settleMs: options.settleMs ?? 600,
     allowSameOrigin: options.allowSameOrigin ?? false,

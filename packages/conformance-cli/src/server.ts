@@ -10,7 +10,7 @@
  * @packageDocumentation
  */
 
-import type { BootOptions } from '@napplet/conformance';
+import type { BootOptions, NappletManifestEvent } from '@napplet/conformance';
 import { createServer, type Server, type ServerResponse } from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
 import { join, normalize, extname, resolve } from 'node:path';
@@ -21,6 +21,7 @@ import { MIME } from './static.js';
 export interface BootConfig {
   url: string;
   html?: string;
+  verifiedManifest?: NappletManifestEvent;
   readyTimeoutMs: number;
   settleMs: number;
   runDegraded: boolean;

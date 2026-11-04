@@ -131,6 +131,12 @@ export const NAP_IMPLEMENTATIONS: Readonly<Record<NapDomain, NapImplementationMe
     rationale: "Convention normalization and dispatch have focused binding and reference-runtime integration tests.",
     evidence: ["packages/nap/src/intent/shim.test.ts"],
   },
+  navigation: {
+    proposal: { url: "https://github.com/napplet/naps/pull/126", status: "in-review", checkedAt: "2026-11-04" },
+    maturity: "exploratory",
+    rationale: "Binding and reference-runtime tests cover an earlier published draft revision; later upstream changes are not yet reconciled, so the API remains exploratory.",
+    evidence: ["packages/nap/src/navigation/shim.test.ts", "packages/conformance/src/shell/reference-navigation.test.ts"],
+  },
   ble: {
     proposal: { url: "https://github.com/napplet/naps/pull/62", status: "in-review", checkedAt: "2026-10-31" },
     maturity: "experimental",

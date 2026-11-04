@@ -260,7 +260,7 @@ describe('reference LLM shell', () => {
     expect(shell.handleFrom(endpoint, { type: 'llm.generate', id: '', request: { handle: 'h1', messages: [] } })).toEqual([]);
     expect(shell.handleFrom(endpoint, { type: 'llm.select.result', id: 'bad', model: {} })).toEqual([]);
     expect(shell.handleFrom(endpoint, { type: 'llm.delta', requestId: 'g1', sequence: 0, event: 'start', block: 'text', blockIndex: 0 })).toEqual([]);
-    expect(shell.handleFrom({ ...endpoint, domains: ['relay'] }, { type: 'llm.select', id: 'ungranted' })).toEqual([]);
-    expect(shell.handleFrom({ ...endpoint, domains: ['relay'] }, { type: 'llm.select', id: 'ungranted', requirements: null })).toEqual([]);
+    expect(shell.handleFrom({ ...endpoint, id: 'ungranted', domains: ['relay'] }, { type: 'llm.select', id: 'ungranted' })).toEqual([]);
+    expect(shell.handleFrom({ ...endpoint, id: 'ungranted', domains: ['relay'] }, { type: 'llm.select', id: 'ungranted', requirements: null })).toEqual([]);
   });
 });

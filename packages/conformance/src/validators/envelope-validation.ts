@@ -1,3 +1,4 @@
+import { navigationReportError } from './navigation.js';
 import { validateLlmRequest } from './llm.js';
 import { NAP_DOMAINS } from '@napplet/core';
 import { ENVELOPE_SPECS } from './envelope-specs.js';
@@ -57,12 +58,14 @@ function validateIntentInvokeRequest(request: unknown, errors: EnvelopeError[]):
   }
   if (intent.handlerHint !== undefined) validateIntentHandlerHint(intent.handlerHint, errors);
 
-  if ('sender' in intent) {
-    errors.push({
-      code: 'forbidden-field',
-      message: 'Intent request does not define a caller-supplied sender field',
-      field: 'request.sender',
-    });
+  for (const field of ['sender', 'id', 'deliveryId', 'instance', 'instanceId', 'endpointId']) {
+    if (field in intent) {
+      errors.push({
+        code: 'forbidden-field',
+        message: `Intent request does not define a caller-supplied ${field} field`,
+        field: `request.${field}`,
+      });
+    }
   }
 }
 
@@ -214,6 +217,14 @@ export function validateEnvelope(message: unknown): EnvelopeVerdict {
         message: `Field "${field}" cannot be emitted by a napplet: ${spec.forbiddenReason ?? 'it must be runtime-derived'}`,
         field,
       });
+    }
+  }
+
+  if (type === 'navigation.report' || type === 'navigation.get') {
+    if (record.id === '') errors.push({ code: 'wrong-type', message: 'Navigation request id must be non-empty', field: 'id' });
+    if (type === 'navigation.report') {
+      const message = navigationReportError(record.report);
+      if (message) errors.push({ code: 'invalid-navigation-report', message, field: 'report' });
     }
   }
 

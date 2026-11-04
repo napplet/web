@@ -1,5 +1,6 @@
 import { installLlmShim, handleLlmMessage } from '@napplet/nap/llm/shim';
 import { installGamepadShim, handleGamepadMessage } from '@napplet/nap/gamepad/shim';
+import { installNavigationShim, handleNavigationMessage } from '@napplet/nap/navigation/shim';
 import { handleShellMessage, installShellShim } from '@napplet/nap/shell/shim';
 import {
   NAP_DOMAINS,
@@ -112,6 +113,7 @@ const DOMAIN_ROUTERS: ReadonlyArray<readonly [string, DomainHandler]> = [
   ['outbox.', handleOutboxMessage],
   ['upload.', handleUploadMessage],
   ['intent.', handleIntentMessage],
+  ['navigation.', handleNavigationMessage],
   ['inc.', handleIncMessage],
   ['ble.', handleBleMessage],
   ['webrtc.', handleWebrtcMessage],
@@ -197,6 +199,9 @@ function installDomainShim(domain: NapDomain): void {
       return;
     case 'intent':
       installIntentShim();
+      return;
+    case 'navigation':
+      installNavigationShim();
       return;
     case 'ble':
       installBleShim();

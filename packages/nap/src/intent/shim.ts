@@ -67,6 +67,15 @@ function isIntentResult(value: unknown): value is IntentResult {
     && typeof result.handler === 'string';
 }
 
+function isIntentDelivery(value: unknown): value is IntentDelivery {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) return false;
+  const delivery = value as Record<string, unknown>;
+  if (typeof delivery.id !== 'string' || !delivery.id) return false;
+  if (delivery.sender !== null && typeof delivery.sender !== 'string') return false;
+  const match = typeof delivery.convention === 'string' ? /^napplet:([^/?#]+)\/([^/?#]+)$/.exec(delivery.convention) : null;
+  return !!match && match[1] === delivery.archetype && match[2] === delivery.action;
+}
+
 function handleInvokeResult(msg: IntentInvokeResultMessage): void {
   const pending = pendingInvoke.get(msg.id);
   if (!pending) return;
@@ -122,6 +131,7 @@ export function handleIntentMessage(msg: { type: string; [key: string]: unknown 
   } else if (isMessageType<IntentHandlersResultMessage>(msg, 'intent.handlers.result')) {
     handleHandlersResult(msg);
   } else if (isMessageType<IntentDeliverMessage>(msg, 'intent.deliver')) {
+    if (!isIntentDelivery(msg.delivery)) return;
     if (deliveryHandlers.size === 0) deliveries.push(msg.delivery);
     else for (const callback of deliveryHandlers) callback(msg.delivery);
   } else if (isMessageType<IntentChangedMessage>(msg, 'intent.changed')) {

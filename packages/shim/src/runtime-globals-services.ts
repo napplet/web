@@ -1,5 +1,6 @@
 import * as llmShim from '@napplet/nap/llm/shim';
 import type { NapDomain, NappletGlobal } from '@napplet/core';
+import { report as navigationReport, get as navigationGet } from '@napplet/nap/navigation/shim';
 import {
   info as resourceInfo,
   bytes as resourceBytes,
@@ -127,6 +128,11 @@ export function installServiceDomains(domains: ReadonlySet<NapDomain>, napplet: 
 }
 
 function installNetworkDomains(domains: ReadonlySet<NapDomain>, napplet: Partial<NappletGlobal>): void {
+  // NAP-NAVIGATION's required layering dependency never grants another domain.
+  if (domains.has('navigation') && domains.has('intent')) {
+    napplet.navigation = { report: navigationReport, get: navigationGet };
+  }
+
   if (domains.has('resource')) {
     napplet.resource = {
       info: resourceInfo,
