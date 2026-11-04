@@ -2,11 +2,12 @@ import { describe, it, expect } from 'vitest';
 import {
   createReferenceShell,
   attachReferenceShell,
+  REFERENCE_ENDPOINT,
   REFERENCE_PUBKEY,
   type ReferenceEndpoint,
   type MessageWindowLike,
 } from './reference-shell.js';
-import { REFERENCE_HANDLER } from './reference-responses.js';
+import { REFERENCE_HANDLER, REFERENCE_MANIFEST } from './reference-responses.js';
 
 const authenticatedSource: ReferenceEndpoint = { id: 'authenticated-source-endpoint', catalogId: 'authenticated-source' };
 
@@ -260,5 +261,57 @@ describe('attachReferenceShell', () => {
     binding.detach();
     channel.port1.close();
     expect(listener).toBeUndefined();
+  });
+
+  describe('revocation', () => {
+    const endpoint: ReferenceEndpoint = { id: 'viewer', catalogId: REFERENCE_HANDLER };
+    const host: MessageWindowLike = { addEventListener: () => {}, removeEventListener: () => {} };
+    const replaced = { kind: 'second-load', detail: 'The frame loaded a second document' } as const;
+    const withHistory = () => {
+      const shell = createReferenceShell({ manifests: [REFERENCE_MANIFEST] });
+      shell.handleFrom(endpoint, { type: 'navigation.report', id: 'r1', report: { revision: 1, location: { convention: 'napplet:note/open', payload: { event: 'alice' } } } });
+      expect(shell.navigationView(endpoint.id).entries).toHaveLength(1);
+      return shell;
+    };
+
+    it('terminates the endpoint before the host removes the frame, and only once', () => {
+      const shell = withHistory();
+      const authorityAtRevoke: boolean[] = [];
+      const binding = attachReferenceShell(shell, {
+        host,
+        expectedSource: {},
+        endpoint,
+        onRevoke: () => authorityAtRevoke.push(shell.registerEndpoint(endpoint)),
+      });
+      binding.revoke(replaced);
+      binding.revoke(replaced);
+      expect(authorityAtRevoke).toEqual([false]);
+      expect(shell.navigationView(endpoint.id)).toEqual({ entries: [], index: null, reportRevision: null, status: 'unreported' });
+      expect(shell.handleFrom(endpoint, { type: 'navigation.get', id: 'after-revoke' })).toEqual([]);
+      expect(shell.registerEndpoint(endpoint)).toBe(false);
+    });
+
+    it('terminates the default reference endpoint when none was supplied', () => {
+      const shell = createReferenceShell();
+      attachReferenceShell(shell, { host, expectedSource: {} }).revoke(replaced);
+      expect(shell.registerEndpoint(REFERENCE_ENDPOINT)).toBe(false);
+      expect(shell.handle({ type: 'storage.get', id: 'after-revoke', key: 'k' })).toEqual([]);
+    });
+
+    it('terminates without a host onRevoke callback', () => {
+      const shell = withHistory();
+      attachReferenceShell(shell, { host, expectedSource: {}, endpoint }).revoke(replaced);
+      expect(shell.registerEndpoint(endpoint)).toBe(false);
+    });
+
+    it('leaves the endpoint alive on detach, which is host teardown and not a revocation', () => {
+      const shell = withHistory();
+      let revocations = 0;
+      const binding = attachReferenceShell(shell, { host, expectedSource: {}, endpoint, onRevoke: () => { revocations += 1; } });
+      binding.detach();
+      expect(revocations).toBe(0);
+      expect(shell.navigationView(endpoint.id).entries).toHaveLength(1);
+      expect(shell.registerEndpoint(endpoint)).toBe(true);
+    });
   });
 });

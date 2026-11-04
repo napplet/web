@@ -125,7 +125,7 @@ GAMEPAD validation recognizes only `gamepad.subscribe`, `gamepad.unsubscribe`, a
 
 ## Reference navigation history
 
-The reference shell implements the [NAP-NAVIGATION draft](https://github.com/napplet/naps/pull/126) with the [NAP-INTENT delivery draft](https://github.com/napplet/naps/pull/128). This is non-normative testing guidance, not a production shell policy. Bind a live endpoint with `registerEndpoint(endpoint)` and its already verified `manifest` before exercising history. Each endpoint keeps independent reports, visits, delivery IDs, and pending traversal state.
+The reference shell implements the [NAP-NAVIGATION draft](https://github.com/napplet/naps/pull/126) with the [NAP-INTENT delivery draft](https://github.com/napplet/naps/pull/128). This is non-normative testing guidance, not a production shell policy. Bind a live endpoint with `registerEndpoint(endpoint)` and its already verified `manifest` before exercising history. Each endpoint keeps independent reports, visits, delivery IDs, and pending traversal state. A host domain ceiling from `createReferenceShell({ domains })` also bounds history and intent delivery, and revoking a port binding ends the endpoint and discards its history; `detach()` alone does not.
 
 `navigation.report` / `navigation.get` receive correlated results, including structured rejections for recognized requests with usable IDs. Validation covers report shape, exact advertised conventions and parameter lists, JSON values, revision ordering, and rejection recovery. Runtime tests cover retained history, duplicate invocations, traversal correlation, timeout/late reports, and endpoint isolation.
 

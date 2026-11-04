@@ -92,7 +92,7 @@ export interface ReferenceShell {
 export function createReferenceShell(options: ReferenceShellOptions = {}): ReferenceShell {
   const records: RecordedEnvelope[] = [];
   const deliveries = createDeliveryQueue();
-  const endpoints = createEndpointRegistry(options.manifests ?? [REFERENCE_MANIFEST]);
+  const endpoints = createEndpointRegistry(options.manifests ?? [REFERENCE_MANIFEST], options.domains);
   const intents = createIntentHandlers(deliveries.queue, endpoints, options.manifests, options.defaults);
   const navigation = createReferenceNavigation(endpoints, intents, options.now ?? Date.now, options.navigation);
   const handler = createReferenceHandler({
@@ -172,7 +172,7 @@ export interface AttachOptions {
   expectedSource: unknown;
   /** Authenticated endpoint for accepted messages. */
   endpoint?: ReferenceEndpoint;
-  /** Called when the binding is revoked; remove the frame here. */
+  /** Called once when the binding is revoked, after the shell ends the endpoint; remove the frame here. */
   onRevoke?(violation: TransportViolation): void;
 }
 
@@ -180,7 +180,8 @@ export interface AttachOptions {
  * Bind a {@link ReferenceShell} to a napplet frame the NIP-5D way: accept one
  * `napplet.hello` from `expectedSource`, answer NAP messages over its port, and
  * revoke on a second hello, any other window-level message or the port closing.
- * Report a second frame `load` with the returned binding's `revoke`.
+ * Report a second frame `load` with the returned binding's `revoke`. Revoking ends
+ * the endpoint in the shell; `detach()` is host teardown and leaves it alive.
  * @param shell The reference shell.
  * @param options Host window, frame source and endpoint.
  * @returns The live port binding; call `detach()` to stop.
@@ -190,10 +191,14 @@ export interface AttachOptions {
  * ```
  */
 export function attachReferenceShell(shell: ReferenceShell, options: AttachOptions): PortBinding {
+  const endpoint = options.endpoint ?? REFERENCE_ENDPOINT;
   return bindNappletPort({
     host: options.host,
     source: options.expectedSource,
-    onMessage: (envelope) => shell.handleFrom(options.endpoint ?? REFERENCE_ENDPOINT, envelope),
-    onRevoke: options.onRevoke,
+    onMessage: (envelope) => shell.handleFrom(endpoint, envelope),
+    onRevoke: (violation) => {
+      shell.terminateEndpoint(endpoint.id);
+      options.onRevoke?.(violation);
+    },
   });
 }

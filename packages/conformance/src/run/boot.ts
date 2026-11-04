@@ -197,7 +197,10 @@ async function bootOnce(
       return iframe.contentWindow;
     },
     onMessage: (envelope) => shell.handleFrom(endpoint, envelope),
-    onRevoke: removeFrame,
+    onRevoke: () => {
+      shell.terminateEndpoint(endpoint.id);
+      removeFrame();
+    },
     isInternal: internal,
   });
 

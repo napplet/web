@@ -9,7 +9,8 @@ export interface LiveEndpoint {
   deliveries: Map<string, IntentDelivery>;
 }
 
-export function createEndpointRegistry(manifests: readonly CatalogManifest[]) {
+export function createEndpointRegistry(manifests: readonly CatalogManifest[], hostDomains?: readonly string[]) {
+  const ceiling = hostDomains ? new Set(hostDomains) : null;
   const live = new Map<string, LiveEndpoint>();
   const terminated = new Set<string>();
   let nextDelivery = 0;
@@ -28,7 +29,7 @@ export function createEndpointRegistry(manifests: readonly CatalogManifest[]) {
     find: (catalog: string) => [...live.values()].find((item) => item.endpoint.catalogId === catalog),
     hasDomain(id: string, domain: string): boolean {
       const bound = live.get(id);
-      return !!bound && (bound.endpoint.domains ?? NAP_DOMAINS).includes(domain);
+      return !!bound && (!ceiling || ceiling.has(domain)) && (bound.endpoint.domains ?? NAP_DOMAINS).includes(domain);
     },
     issue(id: string, invocation: Omit<IntentDelivery, 'id'>): IntentDelivery | undefined {
       const bound = live.get(id);

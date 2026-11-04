@@ -335,6 +335,44 @@ describe('NAVIGATION traversal conformance', () => {
   });
 });
 
+describe('host domain ceiling', () => {
+  const request = { archetype: 'note', action: 'open', convention: 'napplet:note/open', payload: { event: 'alice' } };
+  const bounded = (domains: string[]) => {
+    const shell = createReferenceShell({ manifests: [REFERENCE_MANIFEST], domains });
+    shell.registerEndpoint(endpoint);
+    return shell;
+  };
+  const read = (shell: ReturnType<typeof bounded>) => shell.handleFrom(endpoint, { type: 'navigation.get', id: 'read' })[0];
+
+  it('denies history and intent delivery for an endpoint the host withheld them from', () => {
+    const shell = bounded(['storage']);
+    expect(read(shell)).toMatchObject({ type: 'navigation.get.result', id: 'read', result: { ok: false, error: { code: 'denied' } } });
+    expect(report(shell, 1)).toMatchObject({ ok: false, error: { code: 'denied' } });
+    expect(shell.revisit(endpoint.id, 'visit')).toMatchObject({ ok: false, error: { code: 'denied' } });
+    expect(shell.deliverIntent(endpoint.id, request)).toBeUndefined();
+  });
+
+  it('requires both navigation and intent in the ceiling', () => {
+    expect(read(bounded(['navigation']))).toMatchObject({ result: { ok: false, error: { code: 'denied' } } });
+    expect(read(bounded(['intent']))).toMatchObject({ result: { ok: false, error: { code: 'denied' } } });
+  });
+
+  it('snapshots the ceiling when the shell is created', () => {
+    const domains = ['storage'];
+    const shell = bounded(domains);
+    domains.push('navigation', 'intent');
+    expect(read(shell)).toMatchObject({ result: { ok: false, error: { code: 'denied' } } });
+    expect(shell.deliverIntent(endpoint.id, request)).toBeUndefined();
+  });
+
+  it('serves history as usual when the ceiling includes navigation and intent', () => {
+    const shell = bounded(['navigation', 'intent']);
+    expect(report(shell, 1).ok).toBe(true);
+    expect(read(shell)).toMatchObject({ result: { ok: true, view: { status: 'current', entries: [{ location: location() }] } } });
+    expect(shell.deliverIntent(endpoint.id, request)?.convention).toBe('napplet:note/open');
+  });
+});
+
 describe('INTENT delivery identity and provenance', () => {
   const request = { archetype: 'note', action: 'open', convention: 'napplet:note/open', payload: { event: 'alice' } };
   it('targets only the selected live instance, retaining ids/content on retry', () => {
