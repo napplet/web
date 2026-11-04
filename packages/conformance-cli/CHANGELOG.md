@@ -1,5 +1,29 @@
 # @napplet/conformance-cli
 
+## 0.6.0
+
+### Minor Changes
+
+- bf4c649: Follow the living NAP-LLM draft (napplet/naps#134 with the merged
+  tool-use revision #138). Breaking: `LlmGeneration.text` is replaced by
+  `content` parts (`text`, `thinking`, `toolCall`), and `llm.delta` now carries
+  `start` / `delta` / `end` block events with `block` and `blockIndex`. Added:
+  tool definitions and `toolChoice`, `toolCall` and `thinking` parts, the
+  `toolResult` role with `isError`, `maxTokens` and `temperature`,
+  `finish: "toolUse"`, cache and reasoning usage counts, and `tools` /
+  `toolChoiceModes` on requirements and models. The SDK adds `llmText` and
+  `llmToolCalls`. Conformance validates tool requests and result adjacency, and
+  the reference shell streams block lifecycles and returns tool calls on request
+  without executing them.
+
+### Patch Changes
+
+- Updated dependencies [bf4c649]
+  - @napplet/core@0.38.0
+  - @napplet/nap@0.37.0
+  - @napplet/shim@0.36.0
+  - @napplet/conformance@0.25.0
+
 ## 0.5.0
 
 ### Minor Changes
