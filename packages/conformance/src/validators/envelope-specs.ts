@@ -15,7 +15,7 @@ export const ENVELOPE_SPECS: Record<string, EnvelopeSpec> = {
   'llm.describe.result': { dir: 'in', fields: { ...ID } },
   'llm.generate': { dir: 'out', fields: { ...ID, request: 'object' } },
   'llm.generate.result': { dir: 'in', fields: { ...ID } },
-  'llm.delta': { dir: 'in', fields: { requestId: 'string', sequence: 'number', text: 'string' } },
+  'llm.delta': { dir: 'in', fields: { requestId: 'string', sequence: 'number', event: 'string', block: 'string', blockIndex: 'number' } },
   'llm.cancel': { dir: 'out', fields: { ...ID, requestId: 'string' } },
   'llm.cancel.result': { dir: 'in', fields: { ...ID } },
   // NAP-GAMEPAD Wire Protocol: all three messages are fire-and-forget, without ids.

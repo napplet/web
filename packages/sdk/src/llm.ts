@@ -37,4 +37,6 @@ export {
   llmGenerate as generate,
   llmCancel,
   llmCancel as cancel,
+  llmText,
+  llmToolCalls,
 } from '@napplet/nap/llm/sdk';

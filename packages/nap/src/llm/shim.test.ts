@@ -10,10 +10,11 @@ beforeEach(() => {
 });
 afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); });
 
-// Records follow the living NAP-LLM examples (napplet/naps#134).
-const model = { handle: 'h1', name: 'My connection', model: 'chosen-model', route: 'Local shell → inference provider', images: false, json: true };
-const request: LlmGenerationRequest = { handle: 'h1', messages: [{ role: 'user', content: [{ type: 'text', text: 'Return a JSON object with a greeting.' }] }], format: 'json' };
-const generation = { text: '{"greeting":"Hello"}', finish: 'stop', usage: { inputTokens: 12, outputTokens: 7 } };
+// Records follow the living NAP-LLM examples (napplet/naps#134, head of branch nap-llm).
+const model = { handle: 'h1', name: 'My connection', model: 'chosen-model', route: 'Local shell → inference provider', images: false, json: true, tools: true, toolChoiceModes: ['auto', 'none', 'required', 'tool'] };
+const request: LlmGenerationRequest = { handle: 'h1', messages: [{ role: 'user', content: [{ type: 'text', text: 'Return a JSON object with a greeting.' }] }], format: 'json', maxTokens: 128, temperature: 0.7 };
+const generation = { content: [{ type: 'text', text: '{"greeting":"Hello"}' }], finish: 'stop', usage: { inputTokens: 12, outputTokens: 7 } };
+const text = (sequence: number, fragment: string) => ({ sequence, event: 'delta', block: 'text', blockIndex: 0, text: fragment });
 
 describe('llm request/result contract', () => {
   it('exposes exactly the four operations plus the binding helpers', async () => {
@@ -52,33 +53,80 @@ describe('llm request/result contract', () => {
     const deltas: unknown[] = [];
     const pending = shim.generate(request, { onDelta: (delta) => deltas.push(delta) });
     const other = shim.generate(request);
-    shim.handleLlmMessage({ type: 'llm.delta', requestId: pending.requestId, sequence: 0, text: '{"greeting":' });
-    shim.handleLlmMessage({ type: 'llm.delta', requestId: pending.requestId, sequence: 1, text: '"Hello"}' });
-    shim.handleLlmMessage({ type: 'llm.delta', requestId: other.requestId, sequence: 0, text: 'ignored by the first' });
-    shim.handleLlmMessage({ type: 'llm.delta', requestId: 'unknown', sequence: 0, text: 'dropped' });
-    shim.handleLlmMessage({ type: 'llm.delta', requestId: pending.requestId, id: 'forbidden', sequence: 2, text: 'dropped' });
+    const start = { sequence: 0, event: 'start', block: 'text', blockIndex: 0 };
+    const end = { sequence: 3, event: 'end', block: 'text', blockIndex: 0 };
+    shim.handleLlmMessage({ type: 'llm.delta', requestId: pending.requestId, ...start });
+    shim.handleLlmMessage({ type: 'llm.delta', requestId: pending.requestId, ...text(1, '{"greeting":') });
+    shim.handleLlmMessage({ type: 'llm.delta', requestId: pending.requestId, ...text(2, '"Hello"}') });
+    shim.handleLlmMessage({ type: 'llm.delta', requestId: other.requestId, ...start });
+    shim.handleLlmMessage({ type: 'llm.delta', requestId: 'unknown', ...start });
+    shim.handleLlmMessage({ type: 'llm.delta', requestId: pending.requestId, id: 'forbidden', ...end });
+    shim.handleLlmMessage({ type: 'llm.delta', requestId: pending.requestId, ...end });
     expect(deltas).toEqual([
-      { requestId: pending.requestId, sequence: 0, text: '{"greeting":' },
-      { requestId: pending.requestId, sequence: 1, text: '"Hello"}' },
+      { requestId: pending.requestId, ...start },
+      { requestId: pending.requestId, ...text(1, '{"greeting":') },
+      { requestId: pending.requestId, ...text(2, '"Hello"}') },
+      { requestId: pending.requestId, ...end },
     ]);
     shim.handleLlmMessage({ type: 'llm.generate.result', id: pending.requestId, result: generation });
     await expect(pending).resolves.toEqual(generation);
-    shim.handleLlmMessage({ type: 'llm.delta', requestId: pending.requestId, sequence: 2, text: 'after terminal' });
-    expect(deltas).toHaveLength(2);
+    shim.handleLlmMessage({ type: 'llm.delta', requestId: pending.requestId, ...text(4, 'after terminal') });
+    expect(deltas).toHaveLength(4);
     shim.handleLlmMessage({ type: 'llm.generate.result', id: other.requestId, result: generation });
     await other;
+  });
+
+  it('carries the tool call id and name on a toolCall start and resolves the toolUse result', async () => {
+    const shim = await import('./shim.js');
+    const deltas: unknown[] = [];
+    const tools = [{ name: 'get_weather', description: 'Look up current weather', parameters: { type: 'object', properties: { city: { type: 'string' } }, required: ['city'] } }];
+    const toolRequest: LlmGenerationRequest = { handle: 'h1', messages: request.messages, tools, toolChoice: 'auto' };
+    const pending = shim.generate(toolRequest, { onDelta: (delta) => deltas.push(delta) });
+    expect(posted[0]).toEqual({ type: 'llm.generate', id: pending.requestId, request: toolRequest });
+    const requestId = pending.requestId;
+    const lifecycle = [
+      { requestId, sequence: 0, event: 'start', block: 'toolCall', blockIndex: 0, toolCallId: 'call_1', name: 'get_weather' },
+      { requestId, sequence: 1, event: 'delta', block: 'toolCall', blockIndex: 0, text: '{"city":"Berlin"}' },
+      { requestId, sequence: 2, event: 'end', block: 'toolCall', blockIndex: 0 },
+    ];
+    for (const delta of lifecycle) shim.handleLlmMessage({ type: 'llm.delta', ...delta });
+    expect(deltas).toEqual(lifecycle);
+    const result = { content: [{ type: 'toolCall', toolCallId: 'call_1', name: 'get_weather', arguments: { city: 'Berlin' } }], finish: 'toolUse', usage: { inputTokens: 31, outputTokens: 12, cacheReadTokens: 0, reasoningTokens: 3 } };
+    shim.handleLlmMessage({ type: 'llm.generate.result', id: requestId, result });
+    await expect(pending).resolves.toEqual(result);
+  });
+
+  it.each([
+    ['text on a start', { event: 'start', block: 'text', blockIndex: 0, text: 'x' }],
+    ['missing delta text', { event: 'delta', block: 'text', blockIndex: 0 }],
+    ['unknown event', { event: 'chunk', block: 'text', blockIndex: 0, text: 'x' }],
+    ['unknown block', { event: 'start', block: 'image', blockIndex: 0 }],
+    ['negative block index', { event: 'start', block: 'text', blockIndex: -1 }],
+    ['fractional sequence', { event: 'start', block: 'text', blockIndex: 0, sequence: 0.5 }],
+    ['toolCall start without id', { event: 'start', block: 'toolCall', blockIndex: 0, name: 'get_weather' }],
+    ['call id outside a toolCall start', { event: 'end', block: 'toolCall', blockIndex: 0, toolCallId: 'call_1' }],
+    ['legacy text-only delta', { text: 'Hel' }],
+  ])('drops a delta that does not match the Delta schema: %s', async (_label, fields) => {
+    const shim = await import('./shim.js');
+    const deltas: unknown[] = [];
+    const pending = shim.generate(request, { onDelta: (delta) => deltas.push(delta) });
+    shim.handleLlmMessage({ type: 'llm.delta', requestId: pending.requestId, sequence: 0, ...fields });
+    expect(deltas).toEqual([]);
+    shim.handleLlmMessage({ type: 'llm.generate.result', id: pending.requestId, result: generation });
+    await pending;
   });
 
   it('stops provisional delivery after a sequence gap but still resolves the terminal result', async () => {
     const shim = await import('./shim.js');
     const deltas: number[] = [];
     const pending = shim.generate(request, { onDelta: (delta) => deltas.push(delta.sequence) });
-    shim.handleLlmMessage({ type: 'llm.delta', requestId: pending.requestId, sequence: 0, text: 'a' });
-    shim.handleLlmMessage({ type: 'llm.delta', requestId: pending.requestId, sequence: 2, text: 'c' });
-    shim.handleLlmMessage({ type: 'llm.delta', requestId: pending.requestId, sequence: 3, text: 'd' });
+    shim.handleLlmMessage({ type: 'llm.delta', requestId: pending.requestId, ...text(0, 'a') });
+    shim.handleLlmMessage({ type: 'llm.delta', requestId: pending.requestId, ...text(2, 'c') });
+    shim.handleLlmMessage({ type: 'llm.delta', requestId: pending.requestId, ...text(3, 'd') });
     expect(deltas).toEqual([0]);
-    shim.handleLlmMessage({ type: 'llm.generate.result', id: pending.requestId, result: { text: 'abcd', finish: 'stop' } });
-    await expect(pending).resolves.toEqual({ text: 'abcd', finish: 'stop' });
+    const complete = { content: [{ type: 'text', text: 'abcd' }], finish: 'stop' };
+    shim.handleLlmMessage({ type: 'llm.generate.result', id: pending.requestId, result: complete });
+    await expect(pending).resolves.toEqual(complete);
   });
 
   it('maps an abort signal to llm.cancel and settles the generation through its own result', async () => {

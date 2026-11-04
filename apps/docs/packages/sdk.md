@@ -181,10 +181,10 @@ Declare `gamepad` as optional (`O`) when other controls fulfill the core task. U
 
 This non-normative guide follows the living [NAP-LLM proposal](https://github.com/napplet/naps/pull/134). Import `llm` from `@napplet/sdk` or `@napplet/sdk/llm`; root exports include prefixed helpers such as `llmSelect` and `llmGenerate`. The dedicated subpath also provides bare aliases such as `select` and `generate`.
 
-The API exposes `select`, `describe`, `generate`, and `cancel`. `generate` returns a pending promise that exposes `requestId`; pass `onDelta` for ordered provisional text and `signal` to map an abort to `llm.cancel`, and replace provisional text with the terminal `text`. Each method resolves with the proposal's result record; a runtime `Error` record rejects with an `Error` carrying the specification `code`, recognizable with `isLlmFailure(error)`, while the binding's own transport timeout rejects without a `code`.
+The API exposes `select`, `describe`, `generate`, and `cancel`. `generate` returns a pending promise that exposes `requestId`; pass `onDelta` for ordered provisional `start` / `delta` / `end` block events and `signal` to map an abort to `llm.cancel`, and replace provisional output with the terminal `content` parts. `llmText(generation)` concatenates the text parts; `llmToolCalls(generation)` returns tool calls only from a `finish: "toolUse"` result. Each method resolves with the proposal's result record; a runtime `Error` record rejects with an `Error` carrying the specification `code`, recognizable with `isLlmFailure(error)`, while the binding's own transport timeout rejects without a `code`.
 
 ```ts
-import { llm, isLlmFailure } from '@napplet/sdk/llm';
+import { llm, isLlmFailure, llmText } from '@napplet/sdk/llm';
 
 if (window.napplet?.llm) {
   try {
@@ -194,7 +194,7 @@ if (window.napplet?.llm) {
       messages: [{ role: 'user', content: [{ type: 'text', text: 'Return a JSON object with a greeting.' }] }],
       format: 'json',
     });
-    if (generation.finish === 'stop') render(JSON.parse(generation.text));
+    if (generation.finish === 'stop') render(JSON.parse(llmText(generation)));
   } catch (error) {
     if (isLlmFailure(error)) console.warn(error.code, error.message);
     else throw error;
@@ -202,4 +202,4 @@ if (window.napplet?.llm) {
 }
 ```
 
-Selection does not authorize disclosure: the runtime obtains consent before each generation and may answer `user-cancelled`. Only `finish: "stop"` is complete output. Handles are endpoint-scoped and expire when the connection, account, or endpoint changes. The runtime owns connections, credentials, consent, and provider access; model output is untrusted text.
+Selection does not authorize disclosure: the runtime obtains consent before each generation and may answer `user-cancelled`. Only `finish: "stop"` is complete output. Tool calls are requests the napplet validates and executes itself, if at all, through separately authorized capabilities; the runtime never executes them, and tool results re-enter the conversation as untrusted input. Handles are endpoint-scoped and expire when the connection, account, or endpoint changes. The runtime owns connections, credentials, consent, and provider access; model output is untrusted data.

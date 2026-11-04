@@ -29,6 +29,15 @@ export type {
   LlmRole,
   LlmTextPart,
   LlmUsage,
+  LlmDeltaBlock,
+  LlmDeltaEvent,
+  LlmNamedToolChoice,
+  LlmOutputPart,
+  LlmThinkingPart,
+  LlmTool,
+  LlmToolCallPart,
+  LlmToolChoice,
+  LlmToolChoiceMode,
 } from '@napplet/core';
 
 /** LLM domain discriminator. */

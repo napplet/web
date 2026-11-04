@@ -139,10 +139,10 @@ describe('reference runtime bindings', () => {
       const deltas: string[] = [];
       const generation = await api.generate(
         { handle: model.handle, messages: [{ role: 'user', content: [{ type: 'text', text: 'Say hello.' }] }] },
-        { onDelta: (delta) => deltas.push(delta.text) },
+        { onDelta: (delta) => deltas.push(delta.event) },
       );
-      expect(generation).toMatchObject({ text: 'Echo: Say hello.', finish: 'stop' });
-      expect(deltas).toHaveLength(1);
+      expect(generation).toMatchObject({ content: [{ type: 'text', text: 'Echo: Say hello.' }], finish: 'stop' });
+      expect(deltas).toEqual(['start', 'delta', 'end']);
       const types = host.shell.records.map(record => (record.envelope as { type: string }).type);
       expect(types).toEqual(['llm.select', 'llm.generate']);
       expect(host.shell.records.every(record => record.verdict.ok)).toBe(true);
