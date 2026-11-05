@@ -56,6 +56,15 @@ describe('NAP-BLOSSOM published wire surface', () => {
     expect(validateEnvelope({ type: 'blossom.reorderServers', id: 'test', servers: [] }).ok).toBe(true);
   });
 
+  it('answers a malformed but correlated request with a top-level invalid-request error', () => {
+    const shell = createReferenceShell();
+    expect(shell.handle({ type: 'blossom.checkUpload', id: 'bad', request: { server, sha256, size: -1, type: 'text/plain' } })).toEqual([
+      { type: 'blossom.checkUpload.result', id: 'bad', error: 'invalid-request' },
+    ]);
+    expect(shell.handle({ type: 'blossom.get', request: { server, sha256: 'A'.repeat(64) } })).toEqual([]);
+    expect(shell.handle({ type: 'blossom.get.result', id: 'echo', result: {} })).toEqual([]);
+  });
+
   it('returns correlated typed failures without pretending network or server-list operations succeeded', () => {
     const shell = createReferenceShell();
     for (const [action, fields] of Object.entries(requests)) {
