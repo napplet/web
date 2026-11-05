@@ -108,12 +108,29 @@ describe('NAP-BLOSSOM wire binding', () => {
   });
 
   it('expires unanswered calls and ignores late responses', async () => {
-    const promise = blossom.get(blobRequest);
-    const rejection = expect(promise).rejects.toThrow('blossom.get timed out');
+    const promise = blossom.check(blobRequest);
+    const rejection = expect(promise).rejects.toThrow('blossom.check timed out');
     await vi.advanceTimersByTimeAsync(30_000);
     await rejection;
-    respond({ ok: true, status: 200, blob: new Blob([]) });
+    respond({ ok: true, status: 200, headers: {} });
     expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it.each([
+    ['get', () => blossom.get(blobRequest)],
+    ['upload', () => blossom.upload({ server, data: new Blob(['abc']) })],
+    ['mirror', () => blossom.mirror({ server, url: `${server}/${sha256}.pdf` })],
+    ['media', () => blossom.media({ server, data: new Blob(['abc']) })],
+  ] as const)('keeps a long-running %s transfer pending past the metadata deadline', async (operation, invoke) => {
+    const promise = invoke();
+    await vi.advanceTimersByTimeAsync(30_000);
+    const result = { ok: true, status: 200 };
+    respond(result);
+    await expect(promise).resolves.toEqual(result);
+    const late = invoke();
+    const rejection = expect(late).rejects.toThrow(`blossom.${operation} timed out`);
+    await vi.advanceTimersByTimeAsync(1_800_000);
+    await rejection;
   });
 
   it('cleans up pending requests and permits a fresh installation', async () => {

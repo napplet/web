@@ -21,7 +21,15 @@ import type {
 } from './types.js';
 export { parseUri, formatUri } from './uri.js';
 
+/** Local transport deadline for metadata and server-list operations. */
 const REQUEST_TIMEOUT_MS = 30_000;
+/**
+ * Local safety net for a lost result on byte transfers (`get`, `upload`, `mirror`,
+ * `media`). The shell bounds the network work itself and reports `timeout`; this
+ * only settles a request whose result never arrives, without abandoning a large
+ * transfer the shell is still completing.
+ */
+const TRANSFER_TIMEOUT_MS = 1_800_000;
 const pending = new Map<string, {
   type: string;
   resolve: (result: unknown) => void;
@@ -30,12 +38,12 @@ const pending = new Map<string, {
 }>();
 let installed = false;
 
-function sendRequest<T>(type: BlossomOutboundMessage['type'], payload: Record<string, unknown> = {}): Promise<T> {
+function sendRequest<T>(type: BlossomOutboundMessage['type'], payload: Record<string, unknown> = {}, timeoutMs = REQUEST_TIMEOUT_MS): Promise<T> {
   const id = crypto.randomUUID();
   return new Promise<T>((resolve, reject) => {
     const timeout = setTimeout(() => {
       if (pending.delete(id)) reject(new Error(`${type} timed out`));
-    }, REQUEST_TIMEOUT_MS);
+    }, timeoutMs);
     pending.set(id, { type: `${type}.result`, resolve: (result) => resolve(result as T), reject, timeout });
     try { postToShell({ type, id, ...payload }); }
     catch (error) {
@@ -98,7 +106,7 @@ export function check(request: BlossomBlobCheckRequest): Promise<BlossomBlobChec
  * @returns Runtime outcome, including typed failures.
  * @example const result = await get(request);
  */
-export function get(request: BlossomGetRequest): Promise<BlossomBytesResult> { return sendRequest('blossom.get', { request }); }
+export function get(request: BlossomGetRequest): Promise<BlossomBytesResult> { return sendRequest('blossom.get', { request }, TRANSFER_TIMEOUT_MS); }
 
 /**
  * Check advisory upload requirements.
@@ -114,7 +122,7 @@ export function checkUpload(request: BlossomCheckRequest): Promise<BlossomCheckR
  * @returns Runtime outcome, including typed failures.
  * @example const result = await upload(request);
  */
-export function upload(request: BlossomUploadRequest): Promise<BlossomDescriptorResult> { return sendRequest('blossom.upload', { request }); }
+export function upload(request: BlossomUploadRequest): Promise<BlossomDescriptorResult> { return sendRequest('blossom.upload', { request }, TRANSFER_TIMEOUT_MS); }
 
 /**
  * Ask the selected server to mirror a blob.
@@ -122,7 +130,7 @@ export function upload(request: BlossomUploadRequest): Promise<BlossomDescriptor
  * @returns Runtime outcome, including typed failures.
  * @example const result = await mirror(request);
  */
-export function mirror(request: BlossomMirrorRequest): Promise<BlossomDescriptorResult> { return sendRequest('blossom.mirror', { request }); }
+export function mirror(request: BlossomMirrorRequest): Promise<BlossomDescriptorResult> { return sendRequest('blossom.mirror', { request }, TRANSFER_TIMEOUT_MS); }
 
 /**
  * Check advisory media requirements.
@@ -138,7 +146,7 @@ export function checkMedia(request: BlossomCheckRequest): Promise<BlossomCheckRe
  * @returns Runtime outcome, including typed failures.
  * @example const result = await media(request);
  */
-export function media(request: BlossomMediaRequest): Promise<BlossomDescriptorResult> { return sendRequest('blossom.media', { request }); }
+export function media(request: BlossomMediaRequest): Promise<BlossomDescriptorResult> { return sendRequest('blossom.media', { request }, TRANSFER_TIMEOUT_MS); }
 
 /**
  * List blobs using the optional server endpoint.
