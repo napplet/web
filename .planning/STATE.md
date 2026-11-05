@@ -7,8 +7,8 @@ current_phase_name: cli-terminal-usability
 status: completed
 stopped_at: Phase 164 verified locally and shipped in PR 248 with terminal recordings
 last_updated: "2026-10-30T14:30:00+00:00"
-last_activity: 2026-10-30
-last_activity_desc: Merged main (PR 272 presentation media) into the showcase and app store branch for PR 221
+last_activity: 2026-11-05
+last_activity_desc: Removed DinOS from the napplet.run shell directory
 progress:
   total_phases: 9
   completed_phases: 4
@@ -570,6 +570,7 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 
 | Quick ID | Task | Date | Commit | Artifacts |
 |----------|------|------|--------|-----------|
+| 261105-rds | Remove DinOS from the napplet.run shell directory | 2026-11-05 | — | — |
 | 261103-rsl | Point every napplet/napplet repository reference (docs, READMEs, skills, CLI, installers, package metadata) at napplet/web | 2026-11-03 | — | [261103-rsl](./quick/261103-rsl-repo-slug-napplet-web/) |
 | 261102-wmc | napplet.run WebMCP tools (list_pages, search_docs, read_page, search_napplets, list_agent_skills, open_page) and /apps/catalog.json | 2026-11-02 | — | [261102-wmc](./quick/261102-wmc-site-webmcp-tools/) |
 | 261101-wei | napplet.run player frame locked to its verified document with page frame-src 'none' (closes navigation-before-first-load) | 2026-11-01 | — | [261101-wei](./quick/261101-wei-player-frame-navigation-lock/) |
