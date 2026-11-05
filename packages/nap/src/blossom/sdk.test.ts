@@ -37,8 +37,15 @@ describe('NAP-BLOSSOM application helpers', () => {
       const prefixed = `blossom${name[0].toUpperCase()}${name.slice(1)}` as keyof typeof sdk;
       expect(sdk[name]).toBe(sdk[prefixed]);
     }
-    vi.stubGlobal('window', { napplet: { blossom: { parseUri, formatUri } } });
     const uri = `blossom:${sha256}.pdf`;
     expect(sdk.blossomFormatUri(sdk.blossomParseUri(uri))).toBe(uri);
+  });
+  it('runs the URI helpers locally when no blossom domain is injected', () => {
+    const uri = `blossom:${sha256}.pdf?sz=184292`;
+    for (const global of [undefined, { napplet: {} }]) {
+      vi.stubGlobal('window', global);
+      expect(sdk.parseUri(uri)).toEqual(parseUri(uri));
+      expect(sdk.formatUri(parseUri(uri))).toBe(formatUri(parseUri(uri)));
+    }
   });
 });

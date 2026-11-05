@@ -2,7 +2,6 @@
 import type {
   NappletGlobal,
   BlossomApi,
-  BlossomUri,
   BlossomBlobCheckRequest,
   BlossomGetRequest,
   BlossomCheckRequest,
@@ -156,22 +155,5 @@ export function blossomReorderServers(servers: string[]): Promise<BlossomServerL
 /** Ergonomic alias for {@link blossomReorderServers}. */
 export { blossomReorderServers as reorderServers };
 
-/**
- * Parse a BUD-10 URI locally through the injected domain.
- * @param uri Blob reference.
- * @returns Parsed reference.
- * @example const result = blossomParseUri(uri);
- */
-export function blossomParseUri(uri: string): BlossomUri { return requireBlossom().parseUri(uri); }
-/** Ergonomic alias for {@link blossomParseUri}. */
-export { blossomParseUri as parseUri };
-
-/**
- * Format a BUD-10 URI locally through the injected domain.
- * @param uri Blob reference.
- * @returns Blossom URI.
- * @example const result = blossomFormatUri(uri);
- */
-export function blossomFormatUri(uri: BlossomUri): string { return requireBlossom().formatUri(uri); }
-/** Ergonomic alias for {@link blossomFormatUri}. */
-export { blossomFormatUri as formatUri };
+// BUD-10 URI helpers are local and send no message, so they work without an injected domain.
+export { parseUri as blossomParseUri, parseUri, formatUri as blossomFormatUri, formatUri } from './uri.js';
