@@ -1,7 +1,7 @@
-import { SimplePool } from "nostr-tools/pool";
 import type { Event as NostrToolsEvent } from "nostr-tools/core";
 import { collectDeployFilePayloads, uploadFilesToServers } from "./blossom-upload.ts";
 import type { ServerUploadResult, UploadResultProgress } from "./blossom-upload.ts";
+import { networkRelayPool } from "./network.ts";
 import type { NappletSigner } from "./signing.ts";
 import type { DeployManifestTemplate, SignedNostrEvent } from "./types.ts";
 import type { ZapstorePublication } from "./zapstore.ts";
@@ -235,15 +235,19 @@ export async function publishEventWithSimplePool(
   relays: string[],
   event: SignedNostrEvent,
 ): Promise<RelayPublishResult[]> {
-  const pool = new SimplePool();
+  const pool = networkRelayPool();
   try {
     const settled = await Promise.allSettled(
       pool.publish(relays, event as NostrToolsEvent, { maxWait: 15_000 }),
     );
     return relays.map((relay, index) => {
       const result = settled[index];
-      if (result?.status === "fulfilled") {
+      // nostr-tools resolves, rather than rejects, when it cannot reach a relay at all.
+      if (result?.status === "fulfilled" && !String(result.value).startsWith("connection failure")) {
         return { relay, eventId: event.id, success: true };
+      }
+      if (result?.status === "fulfilled") {
+        return { relay, eventId: event.id, success: false, error: String(result.value) };
       }
       const reason = result?.status === "rejected" ? result.reason : "publish did not run";
       return {

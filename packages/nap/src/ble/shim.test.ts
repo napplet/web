@@ -1,12 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { installFakeShell, type FakeShell } from '../test-support/fake-shell.js';
 
-const posted: Array<Record<string, unknown>> = [];
+let shell: FakeShell;
 const target = { service: 'battery_service', characteristic: 'battery_level' };
 let uuidCounter = 0;
 let originalCryptoDescriptor: PropertyDescriptor | undefined;
 
 beforeEach(() => {
-  posted.length = 0;
   uuidCounter = 0;
   originalCryptoDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'crypto');
 
@@ -17,16 +17,7 @@ beforeEach(() => {
     },
   });
 
-  Object.defineProperty(globalThis, 'window', {
-    configurable: true,
-    value: {
-      parent: {
-        postMessage(msg: Record<string, unknown>) {
-          posted.push(msg);
-        },
-      },
-    },
-  });
+  shell = installFakeShell();
 
   vi.resetModules();
 });
@@ -38,7 +29,7 @@ afterEach(() => {
   } else {
     Reflect.deleteProperty(globalThis, 'crypto');
   }
-  Reflect.deleteProperty(globalThis, 'window');
+  vi.unstubAllGlobals();
 });
 
 describe('ble shim', () => {
@@ -46,7 +37,7 @@ describe('ble shim', () => {
     const { handleBleMessage, open } = await import('./shim.js');
 
     const promise = open({ filters: [{ services: ['heart_rate'] }], label: 'heart monitor' });
-    expect(posted[0]).toEqual({
+    expect(shell.sent[0]).toEqual({
       type: 'ble.open',
       id: 'id-1',
       request: { filters: [{ services: ['heart_rate'] }], label: 'heart monitor' },
@@ -100,7 +91,7 @@ describe('ble shim', () => {
     handleBleMessage({ type: 'ble.close.result', id: 'id-4' });
     await expect(closePromise).resolves.toBeUndefined();
 
-    expect(posted.map((m) => m.type)).toEqual([
+    expect(shell.sent.map((m) => m.type)).toEqual([
       'ble.write',
       'ble.subscribe',
       'ble.unsubscribe',

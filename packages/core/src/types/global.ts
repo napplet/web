@@ -1,5 +1,6 @@
 import type { BlossomApi } from './blossom.js';
 import type { GamepadApi } from './gamepad.js';
+import type { LlmApi } from './llm.js';
 import type { ShellApi } from './shell.js';
 import type { RelayApi, IncApi, StorageApi, KeysApi } from './global/nostr-api.js';
 
@@ -51,6 +52,8 @@ import type {
  * domain to the napplet; absence means the domain is unavailable.
  */
 export interface NappletGlobal {
+  /** Optional user-selected, runtime-mediated language model inference (NAP-LLM). */
+  llm?: LlmApi;
   /** Optional low-level Blossom blob endpoints and server-list helpers. */
   blossom?: BlossomApi;
   /** Optional shell-mediated controller input, scoped to this napplet’s focus. */

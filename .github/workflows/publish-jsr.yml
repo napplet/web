@@ -2,7 +2,7 @@ name: Publish to JSR
 
 # JSR publish runs INDEPENDENTLY of the npm Publish workflow so a broken
 # npm token or scope-permission issue does not block JSR releases. JSR uses
-# OIDC (id-token: write) for auth — no secret required once napplet/napplet
+# OIDC (id-token: write) for auth — no secret required once napplet/web
 # is linked under the @napplet scope on jsr.io.
 #
 # Trigger model:
@@ -25,7 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      # id-token: write enables JSR's OIDC-based publish. Once napplet/napplet
+      # id-token: write enables JSR's OIDC-based publish. Once napplet/web
       # is linked under the @napplet scope at jsr.io/@napplet/settings, this
       # is the only auth needed — no JSR_TOKEN secret required.
       id-token: write
@@ -72,8 +72,10 @@ jobs:
       # publish set. The pure @napplet/conformance engine still publishes to JSR.
       # Agent skills live in the repo-root skills/ directory and are installed
       # with the skills.sh CLI, so they are not published as a package.
+      # @napplet/lab is private (lab napplets and harnesses) and is not a Deno
+      # workspace member, so it is excluded too.
       - name: Publish to JSR (topologically ordered)
-        run: pnpm -r --workspace-concurrency=1 --filter='./packages/*' --filter='!@napplet/boilerplate' --filter='!@napplet/conformance-cli' exec npx jsr publish --allow-slow-types --allow-dirty
+        run: pnpm -r --workspace-concurrency=1 --filter='./packages/*' --filter='!@napplet/boilerplate' --filter='!@napplet/conformance-cli' --filter='!@napplet/lab' exec npx jsr publish --allow-slow-types --allow-dirty
 
   build-cli-binaries:
     if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'

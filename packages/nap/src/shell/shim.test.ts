@@ -1,8 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { installFakeShell, type FakeShell } from '../test-support/fake-shell.js';
+
+let fakeShell: FakeShell;
 
 beforeEach(() => {
   vi.resetModules();
-  vi.stubGlobal('window', { napplet: { shell: {}, identity: {}, theme: {} }, parent: { postMessage: vi.fn() } });
+  fakeShell = installFakeShell({ napplet: { shell: {}, identity: {}, theme: {} } });
 });
 afterEach(() => { vi.unstubAllGlobals(); });
 
@@ -17,7 +20,8 @@ describe('optional NAP-SHELL environment', () => {
     installShellShim();
     const first = ready();
     const second = ready();
-    expect(window.parent.postMessage).toHaveBeenCalledExactlyOnceWith({ type: 'shell.ready' }, '*');
+    expect(fakeShell.sent).toEqual([{ type: 'shell.ready' }]);
+    expect(fakeShell.windowMessages).toEqual([]);
     const environment = { capabilities: { domains: ['shell'] }, services: ['settings'] };
     handleShellMessage({ type: 'shell.init', ...environment });
     await expect(first).resolves.toEqual(environment);

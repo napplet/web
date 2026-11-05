@@ -47,7 +47,7 @@ function sendRequest<T>(type: BlossomOutboundMessage['type'], payload: Record<st
 }
 
 /**
- * Correlate a result from the runtime's parent-source-checked router.
+ * Correlate a result delivered over the runtime's NIP-5D port.
  * @param message Incoming envelope.
  * @returns Nothing; unrelated IDs and result types are ignored.
  * @example handleBlossomMessage({ type: 'blossom.servers.result', id, result });

@@ -10,7 +10,7 @@ protocol **before** publishing — locally and in CI. It is a
 the napplet sandbox.
 
 - **npm:** [`@napplet/conformance-cli`](https://www.npmjs.com/package/@napplet/conformance-cli)
-- **Source:** [packages/conformance-cli](https://github.com/napplet/napplet/tree/main/packages/conformance-cli)
+- **Source:** [packages/conformance-cli](https://github.com/napplet/web/tree/main/packages/conformance-cli)
 
 ## Usage
 

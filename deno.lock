@@ -1863,6 +1863,7 @@
           "npm:fflate@0.8.3",
           "npm:nostr-tools@^2.23.3",
           "npm:parse5@^7.3.0",
+          "npm:rxjs@^7.8.1",
           "npm:yaml@2.9.1"
         ],
         "packageJson": {
@@ -1874,6 +1875,7 @@
             "npm:fflate@0.8.3",
             "npm:nostr-tools@^2.23.3",
             "npm:parse5@^7.3.0",
+            "npm:rxjs@^7.8.1",
             "npm:yaml@2.9.1"
           ]
         }

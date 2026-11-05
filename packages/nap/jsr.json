@@ -1,8 +1,9 @@
 {
   "name": "@napplet/nap",
-  "version": "0.34.0",
+  "version": "0.37.0",
   "license": "MIT",
   "exports": {
+    "./boundary": "./src/boundary.ts",
     "./relay": "./src/relay/index.ts",
     "./relay/types": "./src/relay/types.ts",
     "./relay/shim": "./src/relay/shim.ts",
@@ -107,13 +108,17 @@
     "./gamepad/types": "./src/gamepad/types.ts",
     "./gamepad/shim": "./src/gamepad/shim.ts",
     "./gamepad/sdk": "./src/gamepad/sdk.ts",
+    "./llm": "./src/llm/index.ts",
+    "./llm/types": "./src/llm/types.ts",
+    "./llm/shim": "./src/llm/shim.ts",
+    "./llm/sdk": "./src/llm/sdk.ts",
     "./blossom": "./src/blossom/index.ts",
     "./blossom/types": "./src/blossom/types.ts",
     "./blossom/shim": "./src/blossom/shim.ts",
     "./blossom/sdk": "./src/blossom/sdk.ts"
   },
   "imports": {
-    "@napplet/core": "jsr:@napplet/core@^0.34.0",
+    "@napplet/core": "jsr:@napplet/core@^0.38.0",
     "nostr-tools/nip19": "npm:nostr-tools@^2.23.3/nip19"
   },
   "publish": {

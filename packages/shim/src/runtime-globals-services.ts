@@ -1,3 +1,4 @@
+import * as llmShim from '@napplet/nap/llm/shim';
 import * as blossom from '@napplet/nap/blossom/shim';
 import type { NapDomain, NappletGlobal } from '@napplet/core';
 import {
@@ -113,6 +114,14 @@ import {
 
 
 export function installServiceDomains(domains: ReadonlySet<NapDomain>, napplet: Partial<NappletGlobal>): void {
+  if (domains.has('llm')) {
+    napplet.llm = {
+      select: llmShim.select,
+      describe: llmShim.describe,
+      generate: llmShim.generate,
+      cancel: llmShim.cancel,
+    };
+  }
   installNetworkDomains(domains, napplet);
   installDeviceDomains(domains, napplet);
   installFilesystemDomains(domains, napplet);

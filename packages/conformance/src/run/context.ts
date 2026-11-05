@@ -11,6 +11,7 @@
  */
 
 import type { RecordedEnvelope } from '../shell/reference-shell.js';
+import type { TransportViolation } from '../shell/port-binding.js';
 import type { NappletManifestEvent } from '../validators/manifest.js';
 
 /** The sandbox attributes a host used to load the napplet iframe. */
@@ -27,6 +28,8 @@ export interface BootObservation {
   bootError: string | null;
   /** Envelopes the napplet emitted during this boot, recorded by the reference shell. */
   emitted: RecordedEnvelope[];
+  /** NIP-5D transport violations during this boot. Omitted by hosts that predate the port model. */
+  transportViolations?: TransportViolation[];
 }
 
 /**
@@ -46,6 +49,8 @@ export interface ConformanceContext {
   bootError: string | null;
   /** Envelopes emitted under a fully-capable shell. */
   emitted: RecordedEnvelope[];
+  /** NIP-5D transport violations during the primary boot: window-level messages, a second hello, a second load. */
+  transportViolations: TransportViolation[];
   /** Forbidden globals the napplet tried to access, e.g. `['window.nostr']`. */
   forbiddenGlobals: string[];
   /**
@@ -64,6 +69,7 @@ export interface BootCollectionLike {
   installedGlobal: boolean;
   bootError: string | null;
   emitted: RecordedEnvelope[];
+  transportViolations?: TransportViolation[];
   degraded: BootObservation | null;
 }
 
@@ -95,6 +101,7 @@ export function buildContext(input: BuildContextInput): ConformanceContext {
     installedGlobal: input.boot.installedGlobal,
     bootError: input.boot.bootError,
     emitted: input.boot.emitted,
+    transportViolations: input.boot.transportViolations ?? [],
     forbiddenGlobals: input.forbiddenGlobals ?? [],
     degraded: input.boot.degraded,
     lifecycle: input.lifecycle ?? null,
@@ -113,6 +120,7 @@ export function makeContext(overrides: Partial<ConformanceContext> = {}): Confor
     installedGlobal: true,
     bootError: null,
     emitted: [],
+    transportViolations: [],
     forbiddenGlobals: [],
     degraded: null,
     lifecycle: null,

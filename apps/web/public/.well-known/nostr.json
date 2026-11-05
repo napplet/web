@@ -1,0 +1,11 @@
+{
+  "names": {
+    "napshot": "94b92a261c88f6b14098e6ec15c93bed544380883745f9a030b27d4a5c554f81"
+  },
+  "relays": {
+    "94b92a261c88f6b14098e6ec15c93bed544380883745f9a030b27d4a5c554f81": [
+      "wss://relay.napplet.soy/",
+      "wss://relay.primal.net/"
+    ]
+  }
+}

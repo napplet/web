@@ -6,22 +6,46 @@
       "persistent": true
     },
     "build": {
-      "dependsOn": ["^build"],
-      "outputs": ["dist/**"]
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": [
+        "dist/**"
+      ]
     },
     "test": {
-      "dependsOn": ["build"]
+      "dependsOn": [
+        "build"
+      ]
     },
     "test:unit": {
-      "dependsOn": ["build"],
-      "outputs": ["coverage/**"]
+      "dependsOn": [
+        "build"
+      ],
+      "outputs": [
+        "coverage/**"
+      ]
     },
     "test:e2e": {
-      "dependsOn": ["^build"],
+      "dependsOn": [
+        "^build"
+      ],
       "cache": false
     },
     "type-check": {
-      "dependsOn": ["^build"]
+      "dependsOn": [
+        "^build"
+      ]
+    },
+    "@napplet/docs#build": {
+      "outputs": [
+        ".vitepress/dist/**"
+      ]
     }
-  }
+  },
+  "globalDependencies": [
+    "packages/core/src/nap-catalog.ts",
+    "packages/core/src/nap-maturity.ts",
+    "scripts/lib/nap-maturity-docs.ts"
+  ]
 }

@@ -1,17 +1,17 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { setCloneMode } from '@napplet/core';
+import { installFakeShell, type FakeShell } from '../test-support/fake-shell.js';
 import * as blossom from './shim.js';
 
 const server = 'https://cdn.example.com';
 const sha256 = 'b1674191a88ec5cdd733e4240a81803105dc412d6c6708d53ab94fc248f4f553';
 const pubkey = 'ec4425ff5e9446080d2f70440188e3ca5d6da8713db7bdeef73d0ed54d9093f0';
-const postMessage = vi.fn();
+let shell: FakeShell;
 let cleanup: () => void;
 
 beforeEach(() => {
   vi.useFakeTimers();
-  vi.stubGlobal('window', { parent: { postMessage } });
-  postMessage.mockReset();
+  shell = installFakeShell();
   cleanup = blossom.installBlossomShim();
 });
 afterEach(() => {
@@ -21,7 +21,7 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-function sent(): { type: string; id: string; [key: string]: unknown } { return postMessage.mock.lastCall![0]; }
+function sent(): { type: string; id: string; [key: string]: unknown } { return shell.last() as { type: string; id: string; [key: string]: unknown }; }
 function respond(result: unknown): void {
   const message = sent();
   blossom.handleBlossomMessage({ type: `${message.type}.result`, id: message.id, result });
@@ -48,7 +48,7 @@ describe('NAP-BLOSSOM wire binding', () => {
   it.each(cases)('%s sends the specified envelope and preserves typed outcomes', async (operation, invoke, payload, result) => {
     const promise = invoke();
     expect(sent()).toEqual({ type: `blossom.${operation}`, id: expect.any(String), ...payload });
-    expect(postMessage.mock.lastCall![1]).toBe('*');
+    expect(shell.windowMessages).toEqual([]);
     respond(result);
     await expect(promise).resolves.toEqual(result);
     expect(vi.getTimerCount()).toBe(0);
@@ -59,7 +59,11 @@ describe('NAP-BLOSSOM wire binding', () => {
       const request = { server, data, sha256, type: 'application/octet-stream', size: data instanceof Blob ? data.size : data.byteLength };
       const promise = blossom[operation](request);
       expect(sent()).toEqual({ type: `blossom.${operation}`, id: expect.any(String), request });
-      expect((sent().request as typeof request).data).toBe(data);
+      // The port delivers a structured clone: the native type and exact bytes survive, never base64.
+      const received = (sent().request as typeof request).data;
+      expect(received).toBeInstanceOf(data instanceof Blob ? Blob : ArrayBuffer);
+      const bytes = (value: Blob | ArrayBuffer) => value instanceof Blob ? value.arrayBuffer() : Promise.resolve(value);
+      expect(new Uint8Array(await bytes(received))).toEqual(new Uint8Array(await bytes(data)));
       const result = { ok: true, status: 201, descriptor: { url: `${server}/${sha256}.bin`, sha256, size: request.size, type: request.type, uploaded: 1725105921, nip94: [['x', sha256]], customMetadata: 42 } };
       respond(result);
       await expect(promise).resolves.toEqual(result);
@@ -129,14 +133,15 @@ describe('NAP-BLOSSOM wire binding', () => {
 
   it('removes pending state when posting throws', async () => {
     setCloneMode('strict');
-    postMessage.mockImplementationOnce(() => { throw new Error('transport unavailable'); });
-    await expect(blossom.servers()).rejects.toThrow('transport unavailable');
+    const uncloneable = { ...blobRequest, purpose: (() => 'read') as unknown as string };
+    await expect(blossom.get(uncloneable)).rejects.toThrow();
     expect(vi.getTimerCount()).toBe(0);
   });
 
   it('URI helpers and installation never send wire messages', () => {
     const reference = { sha256, extension: '.pdf', servers: [server], authors: [pubkey] };
     expect(blossom.parseUri(blossom.formatUri(reference))).toEqual(reference);
-    expect(postMessage).not.toHaveBeenCalled();
+    expect(shell.sent).toEqual([]);
+    expect(shell.hellos).toBe(0);
   });
 });

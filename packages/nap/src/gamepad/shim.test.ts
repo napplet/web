@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { installFakeShell, type FakeShell } from '../test-support/fake-shell.js';
 import type { GamepadState } from './types.js';
 
 // Connected and neutral examples from NAP-GAMEPAD Wire Protocol, proposal #108.
@@ -15,11 +16,10 @@ const neutral: GamepadState = {
   pads: [null, { ...focused.pads[1]!, timestamp: 0, axes: [0, 0, 0, 0], buttons: [{ value: 0, pressed: false, touched: false }, { value: 0, pressed: false, touched: false }] }],
 };
 
-let post: ReturnType<typeof vi.fn>;
+let shell: FakeShell;
 beforeEach(() => {
   vi.resetModules();
-  post = vi.fn();
-  vi.stubGlobal('window', { parent: { postMessage: post } });
+  shell = installFakeShell();
 });
 afterEach(() => vi.unstubAllGlobals());
 
@@ -28,16 +28,17 @@ describe('NAP-GAMEPAD cached binding', () => {
     const shim = await import('./shim.js');
     const cleanup = shim.installGamepadShim();
     const duplicate = shim.installGamepadShim();
-    expect(post).not.toHaveBeenCalled();
+    expect(shell.sent).toEqual([]);
     expect(shim.gamepad.available).toBe(true);
     expect(shim.gamepad.focused).toBe(false);
     expect(shim.getGamepads()).toEqual([]);
-    expect(post.mock.calls).toEqual([[{ type: 'gamepad.subscribe' }, '*']]);
+    expect(shell.sent).toEqual([{ type: 'gamepad.subscribe' }]);
     duplicate();
-    expect(post).toHaveBeenCalledTimes(1);
+    expect(shell.sent).toHaveLength(1);
     cleanup(); cleanup();
-    expect(post.mock.calls[1]).toEqual([{ type: 'gamepad.unsubscribe' }, '*']);
-    expect(post).toHaveBeenCalledTimes(2);
+    expect(shell.sent[1]).toEqual({ type: 'gamepad.unsubscribe' });
+    expect(shell.sent).toHaveLength(2);
+    expect(shell.windowMessages).toEqual([]);
   });
 
   it('preserves empty slots, indexes and complete focused/neutral/blocked states', async () => {
@@ -52,7 +53,7 @@ describe('NAP-GAMEPAD cached binding', () => {
       expect(shim.gamepad.focused).toBe(state.focused);
       expect(shim.getGamepads()).toEqual(state.pads);
     }
-    expect(post).toHaveBeenCalledTimes(1);
+    expect(shell.sent).toHaveLength(1);
     cleanup();
   });
 
@@ -90,7 +91,7 @@ describe('NAP-GAMEPAD cached binding', () => {
     const shim = await import('./shim.js');
     const cleanup = shim.installGamepadShim();
     cleanup();
-    expect(post).not.toHaveBeenCalled();
+    expect(shell.sent).toEqual([]);
   });
 
   it('keeps delivering to later listeners when one throws', async () => {

@@ -20,15 +20,14 @@ import {
   ifcOn,
   installIfcShim,
 } from './ifc/index.js';
+import { installFakeShell, type FakeShell } from './test-support/fake-shell.js';
 
+let shell: FakeShell;
 let incEmitSpy: ReturnType<typeof vi.fn>;
 
 beforeEach(() => {
   incEmitSpy = vi.fn();
-  vi.stubGlobal('window', {
-    parent: { postMessage: vi.fn() },
-    napplet: { inc: { emit: incEmitSpy } },
-  });
+  shell = installFakeShell({ napplet: { inc: { emit: incEmitSpy } } });
 });
 
 afterEach(() => {
@@ -66,11 +65,11 @@ describe('INC topic routing', () => {
     it('posts a stable topic with a shallow decoded text payload', () => {
       emit('napplet:profile/open?pubkey=abc%20123&marker=a+b');
 
-      expect(window.parent.postMessage).toHaveBeenCalledWith({
+      expect(shell.last()).toEqual({
         type: 'inc.emit',
         topic: 'napplet:profile/open',
         payload: { pubkey: 'abc 123', marker: 'a+b' },
-      }, '*');
+      });
     });
 
     it.each([
@@ -82,11 +81,11 @@ describe('INC topic routing', () => {
     ])('forwards a queryless opaque payload unchanged: $payload', ({ payload }) => {
       emit('napplet:profile/open', payload);
 
-      expect(window.parent.postMessage).toHaveBeenCalledWith({
+      expect(shell.last()).toEqual({
         type: 'inc.emit',
         topic: 'napplet:profile/open',
         payload,
-      }, '*');
+      });
     });
 
     it('forwards the clean-break incEmit payload without legacy arguments', () => {
@@ -101,10 +100,10 @@ describe('INC topic routing', () => {
     ])('forwards non-documented topic text unchanged: %s', (topic) => {
       emit(topic);
 
-      expect(window.parent.postMessage).toHaveBeenCalledWith({
+      expect(shell.last()).toEqual({
         type: 'inc.emit',
         topic,
-      }, '*');
+      });
     });
 
     it.each([
@@ -116,13 +115,13 @@ describe('INC topic routing', () => {
       { name: 'query with explicit payload', topic: 'napplet:profile/open?pubkey=abc123', payload: {} },
     ])('rejects a $name before postMessage', ({ topic, payload }) => {
       expect(() => emit(topic, payload)).toThrow();
-      expect(window.parent.postMessage).not.toHaveBeenCalled();
+      expect(shell.sent).toEqual([]);
     });
 
     it('preserves plus signs and keeps every query value as text', () => {
       emit('napplet:profile/open?literal=a+b&escaped=%2B&boolean=true&number=42&null=null');
 
-      expect(window.parent.postMessage).toHaveBeenCalledWith({
+      expect(shell.last()).toEqual({
         type: 'inc.emit',
         topic: 'napplet:profile/open',
         payload: {
@@ -132,7 +131,7 @@ describe('INC topic routing', () => {
           number: '42',
           null: 'null',
         },
-      }, '*');
+      });
     });
   });
 
@@ -162,19 +161,19 @@ describe('INC topic routing', () => {
     'napplet:profile/open#details',
   ])('rejects a non-stable convention subscription before postMessage: %s', (topic) => {
     expect(() => on(topic, vi.fn())).toThrow(/stable queryless topic/);
-    expect(window.parent.postMessage).not.toHaveBeenCalled();
+    expect(shell.sent).toEqual([]);
   });
 
   it('keeps non-convention subscription topics opaque even when they contain a query', () => {
     const subscription = on('custom:topic?name=value', vi.fn());
 
-    expect(window.parent.postMessage).toHaveBeenCalledWith(
+    expect(shell.sent).toContainEqual(
       expect.objectContaining({
         type: 'inc.subscribe',
         topic: 'custom:topic?name=value',
       }),
-      '*',
     );
+    expect(shell.windowMessages).toEqual([]);
 
     subscription.close();
   });
@@ -217,7 +216,7 @@ describe('INC topic routing', () => {
 describe('INC symmetric channels', () => {
   it('returns canonical channel info snapshots', async () => {
     const promise = list();
-    const posted = vi.mocked(window.parent.postMessage).mock.calls.at(-1)?.[0] as {
+    const posted = shell.last() as {
       id: string;
     };
     handleIncMessage({
@@ -233,7 +232,7 @@ describe('INC symmetric channels', () => {
 
   it('resolves an outbound open to a symmetric opaque handle', async () => {
     const promise = open('profile-viewer');
-    const posted = vi.mocked(window.parent.postMessage).mock.calls.at(-1)?.[0] as {
+    const posted = shell.last() as {
       id: string;
     };
     handleIncMessage({

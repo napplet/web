@@ -9,7 +9,7 @@ Napplet implementation code is **SDK-first**: import typed wrappers from `@nappl
 
 ## Domains shipped by the current packages
 
-`shell`, `relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `ble`, `webrtc`, `link`, `count`, `lists`, `serial`, `fs`, `common`, `dm`, `gamepad`, `blossom`.
+`shell`, `relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `ble`, `webrtc`, `link`, `count`, `lists`, `serial`, `fs`, `common`, `dm`, `gamepad`, `llm`, `blossom`.
 
 `ifc` is a deprecated INC alias. If a NAP is not in this list, do not implement against it even when a spec PR exists — flag the package/spec gap. `shell` is optional environment information only (see below); there is no `discoverServices()` or `hasService()`, and no domain waits on `shell.ready()`. A missing optional domain simply means "unavailable for this load".
 
@@ -221,6 +221,33 @@ Theme updates reach napplets with the exposed `theme` domain, independently of m
 ## Optional controller input
 
 This non-normative guidance defers to the living [NAP-GAMEPAD proposal](https://github.com/napplet/naps/pull/108). Check injected `gamepad` presence and call the SDK namespace from `@napplet/sdk/gamepad`. Its cached API exposes `getGamepads()`, `available`, `focused`, and `onChange(handler)`; close listeners on disposal. Keep keyboard or pointer fallbacks, ignore gameplay edges while unfocused, reset held-button baselines on regained focus, preserve null slots, and route controllers by `index`. Use an optional manifest domain when the core task remains usable without controllers. Native controller access belongs to the runtime. Do not add haptics, raw HID access, a correlation id, or a prerequisite SHELL readiness exchange. Reference-mock conformance reports unavailable controllers; verify live focus isolation in a GAMEPAD-capable runtime.
+
+### Language model inference
+
+This non-normative guide follows the living [NAP-LLM proposal](https://github.com/napplet/naps/pull/134). Import `llm` from `@napplet/sdk` or `@napplet/sdk/llm`; root exports include prefixed helpers such as `llmSelect` and `llmGenerate`. The dedicated subpath also provides bare aliases such as `select` and `generate`.
+
+The API exposes `select`, `describe`, `generate`, and `cancel`. `generate` returns a pending promise that exposes `requestId`; pass `onDelta` for ordered provisional `start` / `delta` / `end` block events and `signal` to map an abort to `llm.cancel`, and replace provisional output with the terminal `content` parts. `llmText(generation)` concatenates the text parts; `llmToolCalls(generation)` returns tool calls only from a `finish: "toolUse"` result. Each method resolves with the proposal's result record; a runtime `Error` record rejects with an `Error` carrying the specification `code`, recognizable with `isLlmFailure(error)`, while the binding's own transport timeout rejects without a `code`.
+
+```ts
+import { llm, isLlmFailure, llmText } from '@napplet/sdk/llm';
+
+if (window.napplet?.llm) {
+  try {
+    const model = await llm.select({ json: true });
+    const generation = await llm.generate({
+      handle: model.handle,
+      messages: [{ role: 'user', content: [{ type: 'text', text: 'Return a JSON object with a greeting.' }] }],
+      format: 'json',
+    });
+    if (generation.finish === 'stop') render(JSON.parse(llmText(generation)));
+  } catch (error) {
+    if (isLlmFailure(error)) console.warn(error.code, error.message);
+    else throw error;
+  }
+}
+```
+
+Selection does not authorize disclosure: the runtime obtains consent before each generation and may answer `user-cancelled`. Only `finish: "stop"` is complete output. Tool calls are requests the napplet validates and executes itself, if at all, through separately authorized capabilities; the runtime never executes them, and tool results re-enter the conversation as untrusted input. Handles are endpoint-scoped and expire when the connection, account, or endpoint changes. The runtime owns connections, credentials, consent, and provider access; model output is untrusted data.
 
 ## Blossom
 

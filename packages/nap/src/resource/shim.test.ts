@@ -1,13 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { installFakeShell, type FakeShell } from '../test-support/fake-shell.js';
 import type { ResourceBytesItem, ResourceInfo } from './types.js';
 
-const posted: Array<Record<string, unknown>> = [];
+let shell: FakeShell;
 let uuidCounter = 0;
 let originalCryptoDescriptor: PropertyDescriptor | undefined;
 let originalFetchDescriptor: PropertyDescriptor | undefined;
 
 beforeEach(() => {
-  posted.length = 0;
   uuidCounter = 0;
   originalCryptoDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'crypto');
   originalFetchDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'fetch');
@@ -19,16 +19,7 @@ beforeEach(() => {
     },
   });
 
-  Object.defineProperty(globalThis, 'window', {
-    configurable: true,
-    value: {
-      parent: {
-        postMessage(msg: Record<string, unknown>) {
-          posted.push(msg);
-        },
-      },
-    },
-  });
+  shell = installFakeShell();
 
   vi.resetModules();
 });
@@ -45,12 +36,12 @@ afterEach(() => {
   } else {
     Reflect.deleteProperty(globalThis, 'fetch');
   }
-  Reflect.deleteProperty(globalThis, 'window');
+  vi.unstubAllGlobals();
 });
 
 function lastPosted(type: string): Record<string, unknown> {
-  for (let i = posted.length - 1; i >= 0; i--) {
-    if (posted[i].type === type) return posted[i];
+  for (let i = shell.sent.length - 1; i >= 0; i--) {
+    if (shell.sent[i].type === type) return shell.sent[i];
   }
   throw new Error(`no posted message of type ${type}`);
 }
@@ -109,7 +100,7 @@ describe('@napplet/nap/resource shim', () => {
     const blob = await bytes('data:text/plain;base64,aGk=');
 
     expect(fetchSpy).not.toHaveBeenCalled();
-    expect(posted).toHaveLength(0);
+    expect(shell.sent).toHaveLength(0);
     expect(blob.type).toBe('text/plain');
     await expect(blob.text()).resolves.toBe('hi');
   });
@@ -188,7 +179,7 @@ describe('@napplet/nap/resource shim', () => {
     const { bytesMany } = await import('./shim.js');
 
     await expect(bytesMany([])).rejects.toThrow('invalid-request');
-    expect(posted).toHaveLength(0);
+    expect(shell.sent).toHaveLength(0);
   });
 
   it('sends resource.cancel on bytesMany abort and drops late results', async () => {

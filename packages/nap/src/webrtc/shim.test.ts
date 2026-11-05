@@ -1,11 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { installFakeShell, type FakeShell } from '../test-support/fake-shell.js';
 
-const posted: Array<Record<string, unknown>> = [];
+let shell: FakeShell;
 let uuidCounter = 0;
 let originalCryptoDescriptor: PropertyDescriptor | undefined;
 
 beforeEach(() => {
-  posted.length = 0;
   uuidCounter = 0;
   originalCryptoDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'crypto');
 
@@ -16,16 +16,7 @@ beforeEach(() => {
     },
   });
 
-  Object.defineProperty(globalThis, 'window', {
-    configurable: true,
-    value: {
-      parent: {
-        postMessage(msg: Record<string, unknown>) {
-          posted.push(msg);
-        },
-      },
-    },
-  });
+  shell = installFakeShell();
 
   vi.resetModules();
 });
@@ -37,7 +28,7 @@ afterEach(() => {
   } else {
     Reflect.deleteProperty(globalThis, 'crypto');
   }
-  Reflect.deleteProperty(globalThis, 'window');
+  vi.unstubAllGlobals();
 });
 
 describe('webrtc shim', () => {
@@ -49,7 +40,7 @@ describe('webrtc shim', () => {
       channel: 'chat',
       protocol: 'chat:live',
     });
-    expect(posted[0]).toEqual({
+    expect(shell.sent[0]).toEqual({
       type: 'webrtc.open',
       id: 'id-1',
       request: {
@@ -86,7 +77,7 @@ describe('webrtc shim', () => {
     const { close, handleWebrtcMessage, send } = await import('./shim.js');
 
     const sendPromise = send('sess-1', { body: 'hello' });
-    expect(posted[0]).toEqual({
+    expect(shell.sent[0]).toEqual({
       type: 'webrtc.send',
       id: 'id-1',
       sessionId: 'sess-1',
@@ -96,7 +87,7 @@ describe('webrtc shim', () => {
     await expect(sendPromise).resolves.toBeUndefined();
 
     const closePromise = close('sess-1', 'done');
-    expect(posted[1]).toEqual({
+    expect(shell.sent[1]).toEqual({
       type: 'webrtc.close',
       id: 'id-2',
       sessionId: 'sess-1',

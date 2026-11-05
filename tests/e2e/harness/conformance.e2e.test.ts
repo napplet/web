@@ -34,6 +34,7 @@ describe('napplet-conformance CLI e2e', () => {
     expect(stdout).toContain('[PASS] wire/envelope-well-formed');
     expect(stdout).toContain('[PASS] boot/installs-global');
     expect(stdout).toContain('[PASS] degrade/domain-absence');
+    expect(stdout).toContain('[PASS] wire/port-only');
     expect(code).toBe(0);
   });
 
@@ -52,7 +53,7 @@ describe('napplet-conformance CLI e2e', () => {
   it('fails the broken fixture with exit 1', async () => {
     const { code, stdout } = await runCli([fixture('broken')]);
     expect(stdout).toContain('RESULT: NON-CONFORMANT');
-    expect(stdout).toContain('[FAIL] wire/envelope-well-formed');
+    expect(stdout).toContain('[FAIL] wire/port-only');
     expect(code).toBe(1);
   });
 

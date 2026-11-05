@@ -3,11 +3,13 @@
 > Every active napplet NAP domain as layered subpath exports. The package name remains
 > `@napplet/nap` for compatibility.
 
-`@napplet/nap` ships every active NAP domain (relay, storage, inc, keys, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent, ble, webrtc, link, count, lists, common, serial, fs, dm) as independent, tree-shakable subpaths. It sits between the shim/sdk and [`@napplet/core`](./core) in the dependency graph.
+`@napplet/nap` ships every active NAP domain (relay, storage, inc, keys, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent, ble, webrtc, link, count, lists, common, serial, fs, dm, llm) as independent, tree-shakable subpaths. It sits between the shim/sdk and [`@napplet/core`](./core) in the dependency graph.
 
 - **npm:** [`@napplet/nap`](https://www.npmjs.com/package/@napplet/nap)
 - **JSR:** [`@napplet/nap`](https://jsr.io/@napplet/nap)
-- **Source:** [packages/nap](https://github.com/napplet/napplet/tree/main/packages/nap)
+- **Source:** [packages/nap](https://github.com/napplet/web/tree/main/packages/nap)
+
+NAP proposal status and shipped implementation maturity are separate. All capabilities can change. Inspect `NAP_IMPLEMENTATIONS` from `@napplet/core` and use `selectNapDomains` for local host opt-in policy. See [maturity and opt-in guidance](https://napplet.run/docs/naps/maturity.html).
 
 ## Install
 
@@ -172,6 +174,10 @@ if (window.napplet?.gamepad) {
 ```
 
 Declare `gamepad` as optional (`O`) when other controls fulfill the core task. Use a hard requirement (`R`) only when the core task needs controller input. The runtime owns controller access and focus isolation; app code does not call native `navigator.getGamepads()` or open raw HID devices. Haptics and remapping are outside this proposal.
+
+### Language model inference
+
+`@napplet/nap/llm` provides the barrel, `types`, `shim`, and `sdk` subpaths for the four NAP-LLM operations. SDK helpers use the `llm` prefix (`llmSelect`, `llmDescribe`, `llmGenerate`, `llmCancel`), `isLlmFailure` recognizes rejections that carry a specification error code, and `LLM_ERROR_CODES` lists the known codes; `llmText` concatenates a generation's text parts and `llmToolCalls` returns tool calls only from a `toolUse` result. `generate` exposes the generation's `requestId`, streams ordered block-lifecycle deltas to an `onDelta` listener, and maps an abort signal to `llm.cancel`. Selection does not authorize disclosure; the runtime consents each generation. This non-normative guidance defers to the living [NAP-LLM proposal](https://github.com/napplet/naps/pull/134).
 
 ## Blossom blob access
 

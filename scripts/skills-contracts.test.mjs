@@ -170,7 +170,7 @@ test('docs and website point at the skills.sh install command and the new skill 
   ];
   for (const file of files) {
     const source = await readFile(path.join(root, file), 'utf8');
-    assert.match(source, /npx skills add napplet\/napplet/, file);
+    assert.match(source, /npx skills add napplet\/web/, file);
     assert.doesNotMatch(source, /napplet skills (?:install|list|print)|@napplet\/skills/, file);
   }
   const reference = await readFile(path.join(root, 'apps/docs/guide/agent-skills.md'), 'utf8');
