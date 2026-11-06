@@ -1,5 +1,16 @@
 # @napplet/core
 
+## 0.39.0
+
+### Minor Changes
+
+- ad26f5b: Add support for the proposed NAP-BLOSSOM domain: typed blob
+  operations, ordered BUD-03 server-list helpers, local BUD-10 URI helpers,
+  optional runtime injection and SDK subpath exports. Conformance validates
+  Blossom request envelopes and provides deterministic unavailable responses
+  without network or signing access. Vite requirement inference recognizes
+  Blossom imports while preserving explicit optional declarations.
+
 ## 0.38.0
 
 ### Minor Changes

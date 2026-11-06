@@ -1,5 +1,21 @@
 # @napplet/conformance-cli
 
+## 0.6.2
+
+### Patch Changes
+
+- ad26f5b: Add support for the proposed NAP-BLOSSOM domain: typed blob
+  operations, ordered BUD-03 server-list helpers, local BUD-10 URI helpers,
+  optional runtime injection and SDK subpath exports. Conformance validates
+  Blossom request envelopes and provides deterministic unavailable responses
+  without network or signing access. Vite requirement inference recognizes
+  Blossom imports while preserving explicit optional declarations.
+- Updated dependencies [ad26f5b]
+  - @napplet/core@0.39.0
+  - @napplet/nap@0.38.0
+  - @napplet/shim@0.37.0
+  - @napplet/conformance@0.26.0
+
 ## 0.6.1
 
 ### Patch Changes
