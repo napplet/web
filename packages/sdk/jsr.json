@@ -1,6 +1,6 @@
 {
   "name": "@napplet/sdk",
-  "version": "0.32.0",
+  "version": "0.33.0",
   "license": "MIT",
   "exports": {
     ".": "./src/index.ts",
@@ -9,8 +9,8 @@
     "./blossom": "./src/blossom.ts"
   },
   "imports": {
-    "@napplet/core": "jsr:@napplet/core@^0.38.0",
-    "@napplet/nap": "jsr:@napplet/nap@^0.37.0"
+    "@napplet/core": "jsr:@napplet/core@^0.39.0",
+    "@napplet/nap": "jsr:@napplet/nap@^0.38.0"
   },
   "publish": {
     "include": [
