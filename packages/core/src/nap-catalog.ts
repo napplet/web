@@ -198,6 +198,12 @@ export const NAP_IMPLEMENTATIONS: Readonly<Record<NapDomain, NapImplementationMe
     rationale: "Early published draft has binding and mock-runtime tests; provider behavior and API design remain exploratory.",
     evidence: ["packages/nap/src/llm/shim.test.ts", "packages/conformance-cli/src/browser.test.ts"],
   },
+  blossom: {
+    proposal: { url: "https://github.com/napplet/naps/pull/71", status: "in-review", checkedAt: "2026-11-05" },
+    maturity: "exploratory",
+    rationale: "Binding and validator tests cover the wire contract, but the reference host only returns typed unavailable results; live endpoint, authentication, and integrity behavior are unproven.",
+    evidence: ["packages/nap/src/blossom/shim.test.ts", "packages/conformance/src/validators/blossom.test.ts", "packages/conformance-cli/src/browser.test.ts"],
+  },
 };
 
 // Protect release metadata against accidental consumer mutation.

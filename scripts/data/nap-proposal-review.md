@@ -30,5 +30,6 @@ Non-normative upstream observations. Review upstream changes against our impleme
 | [dm](https://github.com/napplet/naps/pull/74) | first observation (not implementation verification) |
 | [gamepad](https://github.com/napplet/naps/pull/130) | first observation (not implementation verification) |
 | [llm](https://github.com/napplet/naps/pull/134) | first observation (not implementation verification) |
+| [blossom](https://github.com/napplet/naps/pull/71) | first observation (not implementation verification) |
 
 Observed revisions in scripts/data/nap-proposal-observations.json are change-detection baselines, not verified implementation revisions or pinned specifications. Merging acknowledges this observation; it does not certify conformance. Retirement warnings require the dependent-surface sweep prescribed by AGENTS.md.

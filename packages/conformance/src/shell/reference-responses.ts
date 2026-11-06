@@ -1,3 +1,5 @@
+import { blossomEndpointResponse, blossomServerListResponse } from './reference-blossom.js';
+
 /** A 64-hex reference user pubkey the shell reports for identity queries. */
 export const REFERENCE_PUBKEY: string = 'f'.repeat(64);
 
@@ -74,6 +76,21 @@ function dataUrlToBlob(url: unknown): { blob: Blob; mime: string } | null {
  * envelopes, not the shell's responses.
  */
 export const RESPONDERS: Record<string, Responder> = {
+  // NAP-BLOSSOM: deterministic failures; this fixture performs no network or signing.
+  'blossom.check': blossomEndpointResponse,
+  'blossom.get': blossomEndpointResponse,
+  'blossom.checkUpload': blossomEndpointResponse,
+  'blossom.upload': blossomEndpointResponse,
+  'blossom.mirror': blossomEndpointResponse,
+  'blossom.checkMedia': blossomEndpointResponse,
+  'blossom.media': blossomEndpointResponse,
+  'blossom.list': blossomEndpointResponse,
+  'blossom.delete': blossomEndpointResponse,
+  'blossom.servers': blossomServerListResponse,
+  'blossom.addServer': blossomServerListResponse,
+  'blossom.removeServer': blossomServerListResponse,
+  'blossom.reorderServers': blossomServerListResponse,
+
   // This transport-neutral mock has no controller API. Production shells use a host reader.
   'gamepad.subscribe': () => ok({ type: 'gamepad.state', available: false, reason: 'unavailable', focused: false, pads: [] }),
   'gamepad.unsubscribe': none,

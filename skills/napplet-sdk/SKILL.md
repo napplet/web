@@ -9,7 +9,7 @@ Napplet implementation code is **SDK-first**: import typed wrappers from `@nappl
 
 ## Domains shipped by the current packages
 
-`shell`, `relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `ble`, `webrtc`, `link`, `count`, `lists`, `serial`, `fs`, `common`, `dm`, `llm`.
+`shell`, `relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `ble`, `webrtc`, `link`, `count`, `lists`, `serial`, `fs`, `common`, `dm`, `gamepad`, `llm`, `blossom`.
 
 `ifc` is a deprecated INC alias. If a NAP is not in this list, do not implement against it even when a spec PR exists — flag the package/spec gap. `shell` is optional environment information only (see below); there is no `discoverServices()` or `hasService()`, and no domain waits on `shell.ready()`. A missing optional domain simply means "unavailable for this load".
 
@@ -24,6 +24,7 @@ Napplet implementation code is **SDK-first**: import typed wrappers from `@nappl
 | Persist app state | `storage` |
 | External bytes (images, avatars, JSON, WASM side files, media) | `resource` |
 | Shell-mediated upload of user files/blobs | `upload` |
+| Explicit Blossom servers, blob operations, BUD-03 server lists and BUD-10 URI helpers | `blossom` |
 | Open an external URL under shell policy | `link` |
 | Talk to other napplets | `inc`, `intent` (see `napplet-interop`) |
 | User-configurable settings | `config` |
@@ -247,3 +248,7 @@ if (window.napplet?.llm) {
 ```
 
 Selection does not authorize disclosure: the runtime obtains consent before each generation and may answer `user-cancelled`. Only `finish: "stop"` is complete output. Tool calls are requests the napplet validates and executes itself, if at all, through separately authorized capabilities; the runtime never executes them, and tool results re-enter the conversation as untrusted input. Handles are endpoint-scoped and expire when the connection, account, or endpoint changes. The runtime owns connections, credentials, consent, and provider access; model output is untrusted data.
+
+## Blossom
+
+This non-normative guidance defers to the living [NAP-BLOSSOM proposal](https://github.com/napplet/naps/pull/71). Import `blossom` from `@napplet/sdk/blossom`; check `window.napplet?.blossom` for optional features. Use it for explicit server-directed blob operations and ordered BUD-03 server-list helpers. `parseUri` and `formatUri` are local BUD-10 helpers. Keep generic fetching on `resource` and runtime-selected uploads on `upload`. Pass `Blob` or `ArrayBuffer` unchanged; handle typed `ok: false` results separately from rejected promises. The runtime owns auth tokens, signing, integrity verification and network policy. Reference conformance returns typed unavailable results without network access.

@@ -224,3 +224,7 @@ Declare `gamepad` as optional (`O`) when other controls fulfill the core task. U
 ## Language model support
 
 The packages expose the proposed [NAP-LLM](https://github.com/napplet/naps/pull/134) through `window.napplet.llm`, `@napplet/sdk`, `@napplet/sdk/llm`, and the layered `@napplet/nap/llm` subpaths. Napplets ask the user to select a model connection, submit stateless generations (optionally with tool definitions the napplet itself executes) with optional streamed deltas, and cancel them; the runtime supplies the connections, credentials, disclosure consent, and provider access. See the non-normative [LLM guide](apps/docs/naps/llm.md).
+
+## Blossom blob access
+
+The SDK exposes `blossom` from `@napplet/sdk` and `@napplet/sdk/blossom` for server-directed blob operations, ordered BUD-03 server-list helpers and local BUD-10 URI parsing/formatting. Check `window.napplet?.blossom` before optional use. Binary fields remain `Blob` or `ArrayBuffer`; endpoint failures resolve with `ok: false`, while malformed-envelope errors and transport failures reject. Use `resource` for generic retrieval and `upload` when the runtime should choose storage. See the non-normative [BLOSSOM guide](https://napplet.run/docs/naps/blossom.html) and living [NAP-BLOSSOM proposal](https://github.com/napplet/naps/pull/71).

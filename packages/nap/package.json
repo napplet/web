@@ -1,7 +1,7 @@
 {
   "name": "@napplet/nap",
   "version": "0.37.0",
-  "description": "The active napplet NAP domains (relay, storage, inc, keys, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent, ble, webrtc, link, count, lists, serial, fs, common, dm, shell, gamepad, llm) as layered subpath exports",
+  "description": "The active napplet NAP domains (relay, storage, inc, keys, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent, ble, webrtc, link, count, lists, serial, fs, common, dm, shell, gamepad, llm, blossom) as layered subpath exports",
   "type": "module",
   "exports": {
     "./boundary": {
@@ -439,6 +439,22 @@
     "./llm/sdk": {
       "types": "./dist/llm/sdk.d.ts",
       "import": "./dist/llm/sdk.js"
+    },
+    "./blossom": {
+      "types": "./dist/blossom/index.d.ts",
+      "import": "./dist/blossom/index.js"
+    },
+    "./blossom/types": {
+      "types": "./dist/blossom/types.d.ts",
+      "import": "./dist/blossom/types.js"
+    },
+    "./blossom/shim": {
+      "types": "./dist/blossom/shim.d.ts",
+      "import": "./dist/blossom/shim.js"
+    },
+    "./blossom/sdk": {
+      "types": "./dist/blossom/sdk.d.ts",
+      "import": "./dist/blossom/sdk.js"
     }
   },
   "files": [

@@ -124,3 +124,7 @@ verification scenarios:
 ```
 
 The stop condition is not "the old app compiles". It is "the napplet no longer owns authority that belongs to the shell, has no website chrome, and every feature maps to a current NIP-5D / NAP / package surface".
+
+## Blossom boundary
+
+For explicit Blossom server operations, use the optional `blossom` SDK domain defined by the living [NAP-BLOSSOM proposal](https://github.com/napplet/naps/pull/71). Keep generic byte retrieval on `resource` and runtime-selected storage on `upload`. The host owns endpoint access, authorization, signing and server-list publication. This guidance is non-normative; check the proposal for operation contracts.

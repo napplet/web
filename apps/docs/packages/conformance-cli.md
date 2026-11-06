@@ -68,3 +68,5 @@ napplet-conformance ./dist --manifest ./signed-event.json
 ```
 
 The CLI and web runtime inject the maintained `@napplet/shim` bindings before subject code. Installation is observed separately from app errors, and private harness observations are excluded from the envelope log. The normal sandbox remains `allow-scripts`; `--allow-same-origin` is a debug setting and correctly fails the sandbox conformance check. Neither domain presence nor manifest declarations grant production permissions. This is implementation guidance; the living [NIP-5D proposal](https://github.com/nostr-protocol/nips/pull/2303) and [NAPs](https://github.com/napplet/naps) define the protocol.
+
+BLOSSOM calls use the maintained runtime prelude and reference shell. Reference results report unavailable endpoints or identity rather than performing network requests or signing. The headless harness tests native `Blob` and `ArrayBuffer` requests across an opaque-origin iframe and the no-domain fallback. See the non-normative [BLOSSOM guide](https://napplet.run/docs/naps/blossom.html).

@@ -42,7 +42,10 @@ export function createReferenceHandler(options: ReferenceHandlerOptions) {
     const candidates = endpoint.domains ?? NAP_DOMAINS;
     const domains = hostDomains ? candidates.filter(domain => hostDomains.has(domain)) : candidates;
     if (!domains.includes(type.slice(0, type.indexOf('.')))) return [];
-    if (!verdict.ok) return llmInvalidRequest(type, envelope as Record<string, unknown>, verdict);
+    if (!verdict.ok) {
+      const env = envelope as Record<string, unknown>;
+      return type.startsWith('blossom.') ? blossomInvalidRequest(type, env) : llmInvalidRequest(type, env, verdict);
+    }
     if (type === 'shell.ready') {
       if (initialized.has(endpoint.id)) return [];
       initialized.add(endpoint.id);
@@ -78,6 +81,17 @@ function llmInvalidRequest(type: string, envelope: Record<string, unknown>, verd
   if (!LLM_REQUESTS.has(type) || typeof envelope.id !== 'string' || !envelope.id) return [];
   const reason = verdict.errors[0]?.message ?? 'Malformed request';
   return [{ type: `${type}.result`, id: envelope.id, error: { code: 'invalid-request', message: reason } }];
+}
+
+/**
+ * NAP-BLOSSOM Shell Behavior: the shell responds to every request with a result
+ * carrying the same `id`; the top-level `error` is reserved for malformed envelopes
+ * where no typed result can be constructed (https://github.com/napplet/naps/pull/71).
+ * Uncorrelated envelopes and napplet-emitted results stay discarded.
+ */
+function blossomInvalidRequest(type: string, envelope: Record<string, unknown>): unknown[] {
+  if (!RESPONDERS[type] || typeof envelope.id !== 'string' || !envelope.id) return [];
+  return [{ type: `${type}.result`, id: envelope.id, error: 'invalid-request' }];
 }
 
 function getEnvelopeType(envelope: unknown): string | undefined {

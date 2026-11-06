@@ -7,6 +7,11 @@ export default defineConfig({
     'llm/types': 'src/llm/types.ts',
     'llm/shim': 'src/llm/shim.ts',
     'llm/sdk': 'src/llm/sdk.ts',
+    'blossom/index': 'src/blossom/index.ts',
+    'blossom/types': 'src/blossom/types.ts',
+    'blossom/shim': 'src/blossom/shim.ts',
+    'blossom/sdk': 'src/blossom/sdk.ts',
+
     'gamepad/index': 'src/gamepad/index.ts',
     'gamepad/types': 'src/gamepad/types.ts',
     'gamepad/shim': 'src/gamepad/shim.ts',

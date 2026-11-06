@@ -1,3 +1,4 @@
+import { validateBlossomFields } from './blossom-validation.js';
 import { validateLlmRequest } from './llm.js';
 import { NAP_DOMAINS } from '@napplet/core';
 import { ENVELOPE_SPECS } from './envelope-specs.js';
@@ -218,6 +219,7 @@ export function validateEnvelope(message: unknown): EnvelopeVerdict {
   }
 
   if (domain === 'llm') validateLlmRequest(type, record, errors);
+  if (domain === 'blossom') validateBlossomFields(record, errors);
 
   if (type === 'intent.invoke') {
     validateIntentInvokeRequest(record.request, errors);

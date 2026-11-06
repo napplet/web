@@ -602,3 +602,5 @@ GAMEPAD is a bare manifest domain accepted by `init`, `build`, and deployment me
 ### LLM capabilities
 
 Use the bare `llm` domain in required or optional deployment metadata. An inference-centred napplet can declare `R llm`; an optional integration uses `O llm` and checks runtime presence. Build and deployment support do not imply that the preview shell has a configured model connection. See the living [NAP-LLM proposal](https://github.com/napplet/naps/pull/134).
+
+BLOSSOM capability declarations use the bare `blossom` domain in required (`R`) or optional (`O`) manifest tags. Deployment preserves either declaration; this does not grant runtime access. The CLI's own Blossom deployment uploader is separate from [NAP-BLOSSOM](https://github.com/napplet/naps/pull/71), which a compatible host injects for napplet calls.

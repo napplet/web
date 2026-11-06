@@ -220,3 +220,21 @@ export {
   llmText,
   llmToolCalls,
 } from '@napplet/nap/llm';
+export { DOMAIN as BLOSSOM_DOMAIN, installBlossomShim } from '@napplet/nap/blossom';
+export {
+  blossomCheck,
+  blossomGet,
+  blossomCheckUpload,
+  blossomUpload,
+  blossomMirror,
+  blossomCheckMedia,
+  blossomMedia,
+  blossomList,
+  blossomDelete,
+  blossomServers,
+  blossomAddServer,
+  blossomRemoveServer,
+  blossomReorderServers,
+  blossomParseUri,
+  blossomFormatUri,
+} from '@napplet/nap/blossom/sdk';

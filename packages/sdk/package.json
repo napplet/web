@@ -18,6 +18,10 @@
     "./llm": {
       "types": "./dist/llm.d.ts",
       "import": "./dist/llm.js"
+    },
+    "./blossom": {
+      "types": "./dist/blossom.d.ts",
+      "import": "./dist/blossom.js"
     }
   },
   "files": [

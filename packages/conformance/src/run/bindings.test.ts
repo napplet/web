@@ -63,7 +63,7 @@ function fixture(domains: string[], preludeSource: string) {
   // The isolated realm executes the actual maintained IIFE as a classic script.
   // It does not substitute domain methods or evaluate an app-owned shim.
   const script = runtimePrelude(domains, preludeSource);
-  runInNewContext(script, { window: target, crypto: globalThis.crypto, console, Blob, URL, TextDecoder, TextEncoder, MessageChannel: Channel, structuredClone, queueMicrotask, setTimeout: schedule, clearTimeout });
+  runInNewContext(script, { window: target, crypto: globalThis.crypto, console, Blob, URL, URLSearchParams, TextDecoder, TextEncoder, MessageChannel: Channel, structuredClone, queueMicrotask, setTimeout: schedule, clearTimeout });
   return {
     napplet: (target as typeof target & { napplet: NappletGlobal }).napplet,
     shell,
@@ -102,9 +102,29 @@ describe('reference runtime bindings', () => {
     } finally { host.close(); }
   });
 
+  it('round-trips Blossom bytes and typed failures through the maintained prelude', async () => {
+    const host = fixture(['blossom'], source);
+    try {
+      expect(Object.keys(host.napplet)).toEqual(['blossom']);
+      const blossom = host.napplet.blossom!;
+      const data = new Blob(['abc']);
+      await expect(blossom.upload({ server: 'https://cdn.example.com', data })).resolves.toEqual({ ok: false, status: 0, error: 'unsupported' });
+      const envelope = host.shell.records[0].envelope as { request: { data: Blob } };
+      expect(envelope.request.data).toBeInstanceOf(Blob);
+      await expect(envelope.request.data.text()).resolves.toBe('abc');
+      await expect(blossom.servers()).resolves.toEqual({ ok: false, servers: [], error: 'server-list-unavailable' });
+      const before = host.shell.records.length;
+      const uri = blossom.formatUri({ sha256: 'a'.repeat(64), extension: '.bin', servers: [], authors: [] });
+      expect(blossom.parseUri(uri).sha256).toBe('a'.repeat(64));
+      expect(host.shell.records).toHaveLength(before);
+      expect(host.shell.records.every(record => record.verdict.ok)).toBe(true);
+    } finally { host.close(); }
+  });
+
   it('installs only the domains in the explicit allowlist', () => {
     const host = fixture(['resource'], source);
     try {
+      expect(host.napplet.blossom).toBeUndefined();
       expect(host.napplet.inc).toBeUndefined();
       expect(host.napplet.intent).toBeUndefined();
       expect(host.napplet.theme).toBeUndefined();

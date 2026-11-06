@@ -589,6 +589,7 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 | 261031-go3 | NAP maturity catalog, policy selection, host enforcement and generated docs (PR #288) | 2026-10-31 | 18d636cf | [261031-go3](./quick/261031-go3-implement-nap-maturity-catalog-policy-se/) |
 | 261031-cbd | Add DinOS to the website shell directory | 2026-10-31 | b7bf6c66 | [261031-cbd](./quick/261031-cbd-add-dinos-to-the-website-shell-list/) |
 | 261031-er3 | Require runtimePreludeSource and delete the conformance fallback runtime fixture | 2026-10-31 | e68eddc4 | [261031-er3](./quick/261031-er3-require-runtimepreludesource-and-delete-/) |
+| 261030-ppe | Add NAP-BLOSSOM across packages and docs | 2026-10-30 | d4147798 / PR #276 | [261030-ppe](./quick/261030-ppe-add-nap-blossom-support/) |
 | 261030-9r6 | Chase NIP-5D presentation media and source pin tags | 2026-10-30 | 0bae4ebe / PR #272 | [261030-9r6](./quick/261030-9r6-chase-nip-5d-presentation-media-and-sour/) |
 | 261030-jgm | App store: manifest media, listing fallback, applesauce discovery, infinite scroll | 2026-10-30 | 9ac7d606 / PR #221 | [261030-jgm](./quick/261030-jgm-improve-the-apps-directory-with-nip-5d-m/) |
 | 261030-ixc | Tell each homepage section's story with GSAP and a three.js frame field | 2026-10-30 | e2c9fb0b / PR #221 | [261030-ixc](./quick/261030-ixc-tell-each-splash-section-s-story-with-gs/) |

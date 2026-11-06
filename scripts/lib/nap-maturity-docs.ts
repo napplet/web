@@ -96,6 +96,7 @@ export const NAP_DOC_GROUPS: readonly NapDocGroup[] = [
       fs: 'Virtual filesystem — pickers, reads, writes, and change events.',
       resource: 'Sandboxed byte fetching over https, blossom, nostr, and data URIs.',
       upload: 'File and blob upload over NIP-96 and Blossom rails.',
+      blossom: 'Server-directed Blossom blob operations and ordered user server lists.',
       cvm: 'ContextVM bridge — MCP tools and resources over Nostr.',
     },
   },

@@ -111,7 +111,11 @@
     "./llm": "./src/llm/index.ts",
     "./llm/types": "./src/llm/types.ts",
     "./llm/shim": "./src/llm/shim.ts",
-    "./llm/sdk": "./src/llm/sdk.ts"
+    "./llm/sdk": "./src/llm/sdk.ts",
+    "./blossom": "./src/blossom/index.ts",
+    "./blossom/types": "./src/blossom/types.ts",
+    "./blossom/shim": "./src/blossom/shim.ts",
+    "./blossom/sdk": "./src/blossom/sdk.ts"
   },
   "imports": {
     "@napplet/core": "jsr:@napplet/core@^0.38.0",

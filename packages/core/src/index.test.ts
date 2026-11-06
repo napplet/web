@@ -54,6 +54,7 @@ describe('@napplet/core exports', () => {
       expect(NAP_DOMAINS).toContain('count');
       const llm: NapDomain = 'llm';
       expect(NAP_DOMAINS).toContain(llm);
+      expect(NAP_DOMAINS).toContain('blossom');
     });
 
     it('NappletGlobal represents domain availability by property presence', () => {
