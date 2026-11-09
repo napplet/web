@@ -295,6 +295,7 @@ async function main(argv: string[]): Promise<number> {
     bootConfig: {
       url: bootUrl,
       html: manifestHtml,
+      ...(manifestEvent ? { verifiedManifest: manifestEvent } : {}),
       readyTimeoutMs: opts.readyTimeoutMs,
       settleMs: opts.settleMs,
       runDegraded: opts.runDegraded,

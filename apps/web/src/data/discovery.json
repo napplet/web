@@ -1,8 +1,14 @@
 {
   "relays": [
     "wss://relay.napplet.soy",
-    "wss://relay.damus.io"
+    "wss://relay.damus.io",
+    "wss://relay.ditto.pub",
+    "wss://relay.primal.net",
+    "wss://relay.nostr.com"
   ],
   "limit": 80,
-  "timeoutMs": 10000
+  "timeoutMs": 10000,
+  "screenshotLabelers": [
+    "94b92a261c88f6b14098e6ec15c93bed544380883745f9a030b27d4a5c554f81"
+  ]
 }

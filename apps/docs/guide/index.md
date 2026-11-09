@@ -32,7 +32,7 @@ The napplet never calls a signer, relay connection, or `localStorage` directly. 
 
 ## NIP-5D in one paragraph
 
-NIP-5D defines the napplet-shell protocol. All messages are JSON objects with a `type` field in `domain.action` format - `{ type: "outbox.query", ...payload }` - sent over `postMessage`. The shell assigns each napplet an identity at iframe creation time by mapping the iframe's unforgeable `MessageEvent.source` to a `(dTag, artifactHash)` tuple from the napplet's NIP-5A manifest, so no handshake is needed. Capability domains (**NAPs** — modular *Nostr Applet Protocol* contracts) are negotiated declaratively via manifest `R` tags and queried at runtime with `window.napplet?.domain`. Read the full [NIP-5D explanation](./nip-5d).
+NIP-5D defines the napplet-shell protocol. All messages are JSON objects with a `type` field in `domain.action` format - `{ type: "outbox.query", ...payload }` - sent over a `MessagePort` that the runtime hands to the shell in a single `napplet.hello` before any napplet script runs. The shell binds that port to the `(dTag, artifactHash)` it verified from the napplet's NIP-5D manifest and artifact bytes, and revokes the binding if the frame's document is replaced. Capability domains (**NAPs** — modular *Nostr Applet Protocol* contracts) are negotiated declaratively via manifest `R` tags and queried at runtime with `window.napplet?.domain`. Read the full [NIP-5D explanation](./nip-5d).
 
 Archetype roles use stable identities such as `napplet:note/open`. Manifest discovery, subscriptions, normalized wire identities, and handler routing keep that complete queryless string and match it exactly. INC `emit` may transpose URI query pairs into a text payload before sending the queryless identity.
 

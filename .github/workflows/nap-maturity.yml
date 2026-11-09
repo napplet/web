@@ -1,0 +1,62 @@
+name: NAP metadata review
+
+on:
+  schedule:
+    - cron: '43 5 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nap-metadata-review
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.9.5
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test:nap-maturity
+      - name: Observe upstream proposal and document changes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: pnpm refresh:nap-maturity
+      - name: Detect review changes
+        id: changes
+        run: |
+          if test -n "$(git status --porcelain -- packages/core/src/nap-catalog.ts scripts/data/nap-proposal-observations.json scripts/data/nap-proposal-review.md .changeset/nap-proposal-refresh.md)"; then
+            echo 'changed=true' >> "$GITHUB_OUTPUT"
+          fi
+      # Validate here as well: PRs created with GITHUB_TOKEN do not trigger PR workflows.
+      - if: steps.changes.outputs.changed == 'true'
+        run: pnpm build && pnpm type-check && pnpm -r test:unit && pnpm test:workflow-contracts
+      - name: Maintain one draft review PR
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8
+        with:
+          token: ${{ secrets.NAP_MATURITY_BOT_TOKEN || github.token }}
+          branch: chore/nap-proposal-refresh
+          delete-branch: true
+          title: 'chore(core): review upstream NAP proposal changes'
+          commit-message: 'chore(core): refresh observed NAP proposal metadata'
+          draft: always-true
+          body-path: scripts/data/nap-proposal-review.md
+          add-paths: |
+            packages/core/src/nap-catalog.ts
+            scripts/data/nap-proposal-observations.json
+            scripts/data/nap-proposal-review.md
+            .changeset/nap-proposal-refresh.md

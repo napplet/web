@@ -2,6 +2,25 @@
 
 > JSON envelope types and NAP dispatch infrastructure for the napplet ecosystem.
 
+## Implementation maturity
+
+NAP implementation maturity and upstream proposal status are separate release-time signals. All capabilities remain subject to change; supported does not mean frozen, and experimental does not waive conformance requirements. Read the [maturity and opt-in guide](https://napplet.run/docs/naps/maturity.html).
+
+Daily upstream checks open a draft review PR when proposal state or observed specification revisions change. Implementation maturity and verification references require a reviewed assessment. See the guide's scheduled upstream checks section for automation setup and release handling.
+
+```ts
+import { NAP_IMPLEMENTATIONS, selectNapDomains } from '@napplet/core';
+
+console.log(NAP_IMPLEMENTATIONS.llm.maturity); // exploratory
+const selection = selectNapDomains({
+  candidates: ['storage', 'llm', 'ble'], // already implemented and authorized by the host
+  optIn: ['llm'],
+});
+// selection.domains: ['storage', 'llm']; selection.excluded explains omissions.
+```
+
+Metadata describes the installed package, not a remote shell's protocol revision. Use the selected domains for both runtime injection and host dispatch. Unknown or unclassified candidates remain excluded, including explicit opt-ins. The catalog does not grant permissions or implement missing host support.
+
 ## Getting Started
 
 ### Package Overview
@@ -57,14 +76,14 @@ interface RelaySubscribe extends NappletMessage {
 }
 ```
 
-The `type` field domain prefix (`relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `ble`, `webrtc`, `link`, `count`, `lists`, `serial`, `fs`, `common`, `dm`, `shell`, `gamepad`, `soulseek`) routes messages to the correct NAP handler via `dispatch()`.
+The `type` field domain prefix (`relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `navigation`, `ble`, `webrtc`, `link`, `count`, `lists`, `serial`, `fs`, `common`, `dm`, `shell`, `gamepad`, `llm`, `blossom`, `catalog`, `torrent`, `soulseek`) routes messages to the correct NAP handler via `dispatch()`.
 
 #### `NapDomain`
 
 String literal union of the NAP capability domains.
 
 ```ts
-type NapDomain = 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'cvm' | 'outbox' | 'upload' | 'intent' | 'ble' | 'webrtc' | 'link' | 'count' | 'lists' | 'serial' | 'fs' | 'common' | 'dm' | 'shell' | 'gamepad' | 'soulseek';
+type NapDomain = 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'cvm' | 'outbox' | 'upload' | 'intent' | 'navigation' | 'ble' | 'webrtc' | 'link' | 'count' | 'lists' | 'serial' | 'fs' | 'common' | 'dm' | 'shell' | 'gamepad' | 'llm' | 'blossom' | 'catalog' | 'torrent' | 'soulseek';
 ```
 
 | Domain    | Scope                                    |
@@ -83,6 +102,7 @@ type NapDomain = 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | '
 | `outbox` | Outbox-aware relay routing |
 | `upload` | Shell-mediated file/blob upload |
 | `intent` | Archetype intent dispatch |
+| `navigation` | Runtime-owned history of reported intent locations |
 | `ble` | Runtime-mediated Bluetooth LE/GATT sessions |
 | `webrtc` | Runtime-mediated WebRTC data sessions |
 | `link` | Shell-mediated external link opening |
@@ -91,6 +111,8 @@ type NapDomain = 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | '
 | `serial`  | Runtime-mediated serial device access |
 | `common`  | Shell-mediated common social actions |
 | `dm`  | Runtime-mediated direct messages |
+| `llm` | User-selected, runtime-mediated language model inference |
+| `torrent` | Runtime-owned torrent transfers and verified content access |
 | `soulseek` | Runtime-mediated Soulseek discovery and downloads |
 
 #### `NAP_DOMAINS`
@@ -98,7 +120,7 @@ type NapDomain = 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | '
 Runtime constant array of all NAP domain strings. Useful for iteration and validation.
 
 ```ts
-const NAP_DOMAINS: readonly NapDomain[] = ['shell', 'relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent', 'ble', 'webrtc', 'link', 'count', 'lists', 'serial', 'fs', 'common', 'dm', 'gamepad', 'soulseek'];
+const NAP_DOMAINS: readonly NapDomain[] = ['shell', 'relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent', 'navigation', 'ble', 'webrtc', 'link', 'count', 'lists', 'serial', 'fs', 'common', 'dm', 'gamepad', 'llm', 'blossom', 'catalog', 'torrent', 'soulseek'];
 
 for (const domain of NAP_DOMAINS) {
   console.log(`Checking support for: ${domain}`);
@@ -117,7 +139,7 @@ if (window.napplet?.relay) {
 
 #### `IntentApi`
 
-Intent calls derive archetype and action from the URI. An `ok: true` result means the runtime accepted delivery responsibility and includes the normalized identity and handler catalog identifier; an `ok: false` result includes `error`. Targets receive runtime-attested `IntentDelivery` values through `onDelivery`, including deliveries retained before registration. Behavior hints are `focus` and `reuse`. This non-normative guidance defers to the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md).
+Intent calls derive archetype and action from the URI. An `ok: true` result means the runtime accepted delivery responsibility and includes the normalized identity and handler catalog identifier; an `ok: false` result includes `error`. Targets receive runtime-attested `IntentDelivery` values through `onDelivery`, including deliveries retained before registration. Each delivery has a runtime-assigned `id`; `sender` is the source catalog identifier, or `null` for a shell-originated request. These fields follow the [NAP-INTENT delivery draft](https://github.com/napplet/naps/pull/128). Behavior hints are `focus` and `reuse`. This non-normative guidance defers to the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md).
 
 ```ts
 const result = await window.napplet.intent?.open('napplet:profile/open', { payload: { pubkey: 'abc123' }, behavior: { reuse: false } });
@@ -128,7 +150,7 @@ if (result?.ok) {
 }
 ```
 
-Intent calls derive archetype and action from the URI. An `ok: true` result means the runtime accepted delivery responsibility and includes the normalized identity and handler catalog identifier; an `ok: false` result includes `error`. Targets receive runtime-attested `IntentDelivery` values through `onDelivery`, including deliveries retained before registration. Behavior hints are `focus` and `reuse`. This non-normative guidance defers to the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md).
+Intent calls derive archetype and action from the URI. An `ok: true` result means the runtime accepted delivery responsibility and includes the normalized identity and handler catalog identifier; an `ok: false` result includes `error`. Targets receive runtime-attested `IntentDelivery` values through `onDelivery`, including deliveries retained before registration. Each delivery has a runtime-assigned `id`; `sender` is the source catalog identifier, or `null` for a shell-originated request. These fields follow the [NAP-INTENT delivery draft](https://github.com/napplet/naps/pull/128). Behavior hints are `focus` and `reuse`. This non-normative guidance defers to the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md).
 
 ---
 
@@ -410,8 +432,8 @@ The runtime may expose `shell` for environment information. `shell.supports(doma
 ```ts
 import { intent } from '@napplet/sdk';
 
-intent.onDelivery(({ sender, convention, payload }) => {
-  console.log(sender, convention, payload);
+intent.onDelivery(({ id, sender, convention, payload }) => {
+  console.log(id, sender, convention, payload);
 });
 await intent.invoke('napplet:profile/open?pubkey=abc123');
 ```
@@ -421,6 +443,23 @@ The runtime binding retains deliveries until a listener registers. Discovery can
 ### GAMEPAD integration
 
 `GamepadState`, `Gamepad`, `GamepadButton`, `GamepadSlot`, `GamepadApi`, and the `gamepad` domain are exported for the proposed [NAP-GAMEPAD](https://github.com/napplet/naps/pull/108). Its fire-and-forget envelopes carry no correlation id.
+### Navigation types
+
+`NapDomain` and `NAP_DOMAINS` include `navigation`; `NappletGlobal.navigation` is an optional `NavigationApi` with `report(report): Promise<NavigationResult>` and `get(): Promise<NavigationResult>`. Core exports `NavigationJsonValue`, `NavigationLocation`, `NavigationReport`, `NavigationEntry`, `NavigationView`, `NavigationError`, and `NavigationResult`. Reports describe one committed location; entries and the current index are runtime-owned result fields. `NavigationResult` distinguishes accepted results from structured rejection codes while carrying the retained view in either case.
+
+This non-normative type guide follows the [NAP-NAVIGATION draft](https://github.com/napplet/naps/pull/126) and [NAP-INTENT delivery draft](https://github.com/napplet/naps/pull/128). `IntentDelivery.id` identifies one delivery to a live endpoint; `sender: null` denotes a shell request. Neither field grants authority or proves completion.
+
+### LLM types
+
+`LlmApi`, the LLM records (`LlmRequirements`, `LlmModel`, `LlmGenerationRequest`, `LlmMessage`, `LlmPart`, `LlmTool`, `LlmToolChoice`, `LlmToolCallPart`, `LlmThinkingPart`, `LlmGeneration`, `LlmDelta`, `LlmFailure`), and the `llm` domain describe the optional `NappletGlobal.llm` binding for user-selected, runtime-mediated inference. `LlmErrorCode` names the specification categories while staying open, because unknown codes remain failures. This non-normative type guide defers to the living [NAP-LLM proposal](https://github.com/napplet/naps/pull/134).
+
+## Catalog types
+
+`CatalogApi`, `CatalogSnapshot`, `NappletIdentity`, `NappletDescriptor`, `ArchetypeDescriptor`, `IntentDescriptor`, and `ArchetypeHandler` describe the [NAP-CATALOG draft](https://github.com/napplet/naps/pull/95). `NappletGlobal.catalog` is optional; `NapDomain` and `NAP_DOMAINS` include `catalog`. This is non-normative package guidance.
+
+### Torrent types
+
+`TorrentApi`, torrent record types, and the `torrent` domain describe the optional `NappletGlobal.torrent` transfer binding. Types include v1/v2/hybrid hashes, verified read results, metadata exports, revisioned settings, and job retention; they do not import Nostr event or relay result schemas. This non-normative type guide defers to the living [NAP-TORRENT proposal](https://github.com/napplet/naps/blob/nap-torrent/naps/NAP-TORRENT.md).
 
 ### Soulseek types
 

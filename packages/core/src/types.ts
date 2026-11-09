@@ -13,6 +13,7 @@ export type * from './types/cvm.js';
 export type * from './types/outbox.js';
 export type * from './types/upload.js';
 export type * from './types/intent.js';
+export type * from './types/navigation.js';
 export type * from './types/ble.js';
 export type * from './types/webrtc.js';
 export type * from './types/link.js';
@@ -38,5 +39,10 @@ export type {
 export type * from './types/shell.js';
 
 export type * from './types/gamepad.js';
+
+export type * from './types/llm.js';
+export type * from './types/blossom.js';
+export type * from './types/catalog.js';
+export type * from './types/torrent.js';
 
 export type * from './types/soulseek.js';

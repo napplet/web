@@ -53,7 +53,7 @@ export const APP_TOOLS: ShowcaseItem[] = [
   {
     id: 'skills', name: 'Agent skills', category: '04 / Build with an agent',
     description: 'Give your coding agent the napplet design, build, and verification workflow.',
-    href: '/docs/guide/agent-skills.html', source: 'https://github.com/napplet/web/tree/main/packages/skills',
+    href: '/docs/guide/agent-skills.html', source: 'https://github.com/napplet/web/tree/main/skills',
   },
 ];
 

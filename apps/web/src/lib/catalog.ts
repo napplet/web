@@ -5,9 +5,15 @@ import {
   getNappletArchetypes, getNappletIcon, getNappletIdentifier, getNappletOptionalDomains, getNappletParentPointer,
   getNappletRequiredDomains, getNappletRootPointer, getNappletServers, getNappletSource, getNappletTitle, isSha256, isValidNapplet,
 } from 'applesauce-common/helpers';
+import type { NapshotScreenshot } from './napshot';
 
 /** Kind of the Software Applications proposal (nostr-protocol/nips#1336), separate from napplet manifests. */
 export const APPLICATION_KIND = 32267;
+/** NIP-01 profile metadata; names the signing key for display and never replaces it as the publisher identity. */
+export const PROFILE_KIND = 0;
+
+/** Display fields from a publisher's kind 0 profile: a name, an HTTPS picture, or both. */
+export interface Profile { name?: string; picture?: string; publishedAt: number }
 const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp'] as const;
 export type ImageType = typeof IMAGE_TYPES[number];
 
@@ -35,6 +41,10 @@ export interface CatalogApp {
   coordinate?: string;
   pointer: string;
   listing?: Listing;
+  /** The publisher's newest kind 0 profile from the same relays, for the name and picture beside the key. */
+  profile?: Profile;
+  /** Trusted Napshot preview for this exact revision, used only when the manifest has no usable screenshot. */
+  napshot?: NapshotScreenshot;
   /** Snapshots folded into this entry as pinned versions of the same napplet. */
   versions: number;
   /** Newest publication among the entry and its folded snapshots. */
@@ -230,6 +240,50 @@ export function matchListing(app: CatalogApp, listings: ReturnType<typeof applic
 export function withListings(apps: CatalogApp[], applications: unknown[]): CatalogApp[] {
   const listings = applications.map(applicationListing).filter(listing => listing !== null);
   return apps.map(app => ({ ...app, listing: matchListing(app, listings) }));
+}
+
+/**
+ * Read a signed kind 0 profile for display: a display name or name, and an HTTPS picture. Everything else in the
+ * JSON is ignored, and a profile with neither field is not worth attaching.
+ * @param input Untrusted relay event.
+ * @returns Display fields with the signing key, or null when the event is not a usable profile.
+ * @example const profile = authorProfile(event);
+ */
+export function authorProfile(input: unknown): (Profile & { author: string }) | null {
+  try {
+    if (!validateEvent(input) || !verifyEvent(input as Event)) return null;
+    const event = input as Event;
+    if (event.kind !== PROFILE_KIND) return null;
+    const content: unknown = JSON.parse(event.content);
+    if (!content || typeof content !== 'object') return null;
+    const text = (key: string) => { const value = (content as Record<string, unknown>)[key]; return typeof value === 'string' ? value.replace(/\s+/g, ' ').trim() : ''; };
+    const name = (text('display_name') || text('name')).slice(0, 60) || undefined;
+    const picture = httpsUrl(text('picture'));
+    if (!name && !picture) return null;
+    return { name, picture, publishedAt: event.created_at, author: event.pubkey };
+  } catch { return null; }
+}
+
+/**
+ * Attach each publisher's newest profile to their catalog entries.
+ * @param apps Verified catalog entries.
+ * @param profiles Untrusted kind 0 events.
+ * @returns The same entries with `profile` filled where the publisher has one.
+ * @example const apps = withProfiles(entries, snapshot.profiles);
+ */
+export function withProfiles(apps: CatalogApp[], profiles: unknown[]): CatalogApp[] {
+  const newest = new Map<string, Profile & { author: string }>();
+  for (const profile of profiles.map(authorProfile)) {
+    if (!profile) continue;
+    const old = newest.get(profile.author);
+    if (!old || profile.publishedAt > old.publishedAt) newest.set(profile.author, profile);
+  }
+  return apps.map(app => {
+    const found = newest.get(app.author);
+    if (!found) return app;
+    const { author: _author, ...profile } = found;
+    return { ...app, profile };
+  });
 }
 
 /** Whether a MIME type is one the catalog will decode and render. */

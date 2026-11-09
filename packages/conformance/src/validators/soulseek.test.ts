@@ -242,6 +242,6 @@ describe('reference Soulseek shell', () => {
     const shell = createReferenceShell();
     expect(shell.handleFrom(endpoint, { type: 'soulseek.read', id: 'bad', transferId: 't', offset: '00', length: 1 })).toEqual([]);
     expect(shell.handleFrom(endpoint, { type: 'soulseek.info.result', id: 'bad', value: {} })).toEqual([]);
-    expect(shell.handleFrom({ ...endpoint, domains: ['relay'] }, { type: 'soulseek.info', id: 'ungranted' })).toEqual([]);
+    expect(shell.handleFrom({ id: 'ungranted', catalogId: 'ungranted', domains: ['relay'] }, { type: 'soulseek.info', id: 'ungranted' })).toEqual([]);
   });
 });

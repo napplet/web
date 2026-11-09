@@ -2,6 +2,25 @@
 
 > Runtime injection helper for napplet iframes. It installs selected `window.napplet` domain objects. No cryptographic dependencies -- the shim sends JSON envelope messages and the shell handles identity.
 
+## Maturity-controlled injection
+
+Use the side-effect-free `@napplet/shim/prelude` entrypoint for policy-controlled hosts. The legacy root `@napplet/shim` import still installs every bundled domain for compatibility.
+
+```ts
+import { selectNapDomains } from '@napplet/core';
+import { renderNappletRuntimePreludeCall } from '@napplet/shim/prelude';
+
+const selection = selectNapDomains({
+  candidates: ['storage', 'llm', 'ble'],
+  optIn: ['llm'],
+});
+const activate = renderNappletRuntimePreludeCall({ domains: selection.domains });
+```
+
+Inline the maintained prelude artifact followed by `activate` before napplet scripts run. Enforce the same `selection.domains` set in host dispatch: hiding a shim object is not an authorization check. The prelude opens the NIP-5D channel when it installs: one `napplet.hello` hands the shell a `MessagePort`, and every envelope then travels over that port, so bind the napplet's identity to the port and tear the frame down on a second hello, any other window-level message or a second `load`. Candidates must already be implemented and authorized for the napplet.
+
+Prelude helpers also accept `maturity: {}` for supported-only filtering or `maturity: { optIn: ['llm'] }` for a named exception. Omitting `maturity` preserves existing explicit allowlist behavior. An explicit install replaces an earlier legacy namespace but cannot undo earlier calls; finish host setup before napplet code executes. See the [maturity guide](https://napplet.run/docs/naps/maturity.html) for classifications, required/optional domain handling, and provenance limits.
+
 ## Getting Started
 
 ### Prerequisites
@@ -212,6 +231,8 @@ Messages are posted to the shell through `@napplet/core`'s clone-safe `sendEnvel
 { type: 'inc.unsubscribe', topic: string }
 
 { type: 'intent.invoke', id: string, request: { archetype: string, action: string, convention: string, payload?: unknown } }
+{ type: 'navigation.report', id: string, report: NavigationReport }
+{ type: 'navigation.get', id: string }
 
 { type: 'storage.get', id: string, key: string, scope?: 'shared' | 'instance' }
 { type: 'storage.set', id: string, key: string, value: string, scope?: 'shared' | 'instance' }
@@ -280,6 +301,9 @@ Messages received via `window.addEventListener('message', ...)`:
 { type: 'inc.channel.opened', channelId: string, peer: string }
 
 { type: 'intent.invoke.result', id: string, result: { ok: true, archetype: string, action: string, convention: string, handler: string } | { ok: false, error: string } }
+{ type: 'intent.deliver', delivery: IntentDelivery } // delivery.id; sender: string | null
+{ type: 'navigation.report.result', id: string, result: NavigationResult }
+{ type: 'navigation.get.result', id: string, result: NavigationResult }
 
 { type: 'storage.get.result', id: string, value?: string | null, error?: string }
 { type: 'storage.set.result', id: string, error?: string }
@@ -350,6 +374,11 @@ window.napplet = {
     available(archetype): Promise<IntentAvailability>;
     handlers(): Promise<IntentAvailability[]>;
     onChanged(callback): { close(): void };
+    onDelivery(callback): { close(): void };
+  },
+  navigation: {
+    report(report: NavigationReport): Promise<NavigationResult>;
+    get(): Promise<NavigationResult>;
   },
   storage: {
     getItem(key): Promise<string | null>;
@@ -476,7 +505,7 @@ const result = await window.napplet.intent.open('napplet:profile/open', { payloa
 if (!result.ok) throw new Error(result.error);
 ```
 
-Intent calls derive archetype and action from the URI. An `ok: true` result means the runtime accepted delivery responsibility and includes the normalized identity and handler catalog identifier; an `ok: false` result includes `error`. Targets receive runtime-attested `IntentDelivery` values through `onDelivery`, including deliveries retained before registration. Behavior hints are `focus` and `reuse`. This non-normative guidance defers to the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md).
+Intent calls derive archetype and action from the URI. An `ok: true` result means the runtime accepted delivery responsibility and includes the normalized identity and handler catalog identifier; an `ok: false` result includes `error`. Targets receive runtime-attested `IntentDelivery` values through `onDelivery`, including deliveries retained before registration. Each delivery has a runtime-assigned `id`; `sender` is the source catalog identifier, or `null` for a shell-originated request. These fields follow the [NAP-INTENT delivery draft](https://github.com/napplet/naps/pull/128). Behavior hints are `focus` and `reuse`. This non-normative guidance defers to the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md).
 
 ### `window.napplet.storage`
 
@@ -657,8 +686,8 @@ The runtime may expose `shell` for environment information. `shell.supports(doma
 ```ts
 import { intent } from '@napplet/sdk';
 
-intent.onDelivery(({ sender, convention, payload }) => {
-  console.log(sender, convention, payload);
+intent.onDelivery(({ id, sender, convention, payload }) => {
+  console.log(id, sender, convention, payload);
 });
 await intent.invoke('napplet:profile/open?pubkey=abc123');
 ```
@@ -668,6 +697,33 @@ The runtime binding retains deliveries until a listener registers. Discovery can
 ### GAMEPAD integration
 
 The selected `gamepad` runtime binding installs the cached API, subscribes without SHELL readiness, validates parent state, and unsubscribes during cleanup. See the proposed [NAP-GAMEPAD](https://github.com/napplet/naps/pull/108). The native browser Gamepad API is left untouched pending clarification of the proposal’s optional replacement and NIP-5D’s namespace-only injection rule.
+### `window.napplet.navigation`
+
+When both `navigation` and `intent` are selected, the runtime binding exposes `report(report)` and `get()`, routes `navigation.report.result` / `navigation.get.result`, and correlates responses arriving over the `napplet.hello` port. Runtime history remains outside the iframe binding. Expose both `navigation` and its required `intent` domain explicitly; selecting navigation never grants another domain automatically. Neither domain waits for a SHELL handshake.
+
+```ts
+import { installNappletRuntimePrelude } from '@napplet/shim/prelude';
+
+installNappletRuntimePrelude({ domains: ['intent', 'navigation'] });
+```
+
+Application code consumes this namespace through the SDK. The binding does not intercept native History API calls, assign report revisions, or invent a navigation listener. This non-normative guide follows the [NAP-NAVIGATION draft](https://github.com/napplet/naps/pull/126) and [NAP-INTENT delivery draft](https://github.com/napplet/naps/pull/128); the [navigation guide](../../apps/docs/naps/navigation.md) covers committed reports and delivery correlation.
+
+### LLM runtime binding
+
+Select `llm` in `installNappletGlobal({ domains: ['llm'] })` or the equivalent runtime prelude options to expose `window.napplet.llm`. The binding forwards `select`, `describe`, `generate`, and `cancel`, correlates each result by `id` and type, routes `llm.delta` only to the generation that owns its `requestId`, drops deltas that do not match the Delta schema (`start` / `delta` / `end` events, `text` only on `delta`, `toolCallId` and `name` only on a `toolCall` start), stops provisional delivery on a sequence gap, rejects an `Error` record as an `LlmError` carrying the specification code, and maps an abort signal to `llm.cancel`. Installing the binding supplies no connection, consent, or provider: the host provides policy-bound handlers, endpoint-scoped handles, and prompts. See the living [NAP-LLM proposal](https://github.com/napplet/naps/pull/134).
+
+## Optional BLOSSOM binding
+
+Include `blossom` in the host's explicit domain allowlist to inject `window.napplet.blossom`. The binding correlates the draft's request/result messages, preserves structured-clone bytes and provides local BUD-10 URI helpers. Host code supplies the Blossom endpoint backend, authentication, integrity checks and network policy. See the living [NAP-BLOSSOM proposal](https://github.com/napplet/naps/pull/71) and non-normative [BLOSSOM guide](https://napplet.run/docs/naps/blossom.html).
+
+## Catalog injection
+
+Include `catalog` in the prelude or installer domain allowlist to expose `window.napplet.catalog.get()`. Requests use `catalog.get` and responses use `catalog.get.result`, correlated by `id`. The shim transports the snapshot; the host supplies verified manifest metadata and caller policy. No `intent` or `shell` domain is required. This non-normative guidance defers to the [NAP-CATALOG draft](https://github.com/napplet/naps/pull/95).
+
+### Torrent runtime binding
+
+Select `torrent` in `installNappletGlobal({ domains: ['torrent'] })` or the equivalent runtime prelude options to expose `window.napplet.torrent`. The binding forwards all 17 operations and routes `torrent.state`, `torrent.progress`, and `torrent.error` to local listeners. Requests correlate by `id`; pushes identify jobs by `jobId`. Installing the binding does not install a torrent engine or grant permission: the host supplies policy-bound handlers, scoped jobs, storage, and user consent. See the living [NAP-TORRENT proposal](https://github.com/napplet/naps/blob/nap-torrent/naps/NAP-TORRENT.md).
 
 ### Soulseek runtime binding
 

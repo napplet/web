@@ -1,18 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { installFakeShell, type FakeShell } from '../test-support/fake-shell.js';
 
-interface PostedMessage {
-  msg: any;
-  targetOrigin: string;
-}
-
-let postedMessages: PostedMessage[];
-let messageListener: ((event: { source: unknown; data: unknown }) => void) | null;
+let shell: FakeShell;
 let uuidCounter: number;
 let originalCryptoDescriptor: PropertyDescriptor | undefined;
 
 beforeEach(() => {
-  postedMessages = [];
-  messageListener = null;
   uuidCounter = 0;
   originalCryptoDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'crypto');
 
@@ -23,24 +16,7 @@ beforeEach(() => {
     },
   });
 
-  const parent = {
-    postMessage(msg: unknown, targetOrigin: string) {
-      postedMessages.push({ msg, targetOrigin });
-    },
-  };
-
-  Object.defineProperty(globalThis, 'window', {
-    configurable: true,
-    value: {
-      parent,
-      addEventListener(type: string, listener: (event: { source: unknown; data: unknown }) => void) {
-        if (type === 'message') messageListener = listener;
-      },
-      removeEventListener(type: string, listener: (event: { source: unknown; data: unknown }) => void) {
-        if (type === 'message' && messageListener === listener) messageListener = null;
-      },
-    },
-  });
+  shell = installFakeShell();
 
   vi.resetModules();
 });
@@ -52,19 +28,18 @@ afterEach(() => {
   } else {
     Reflect.deleteProperty(globalThis, 'crypto');
   }
-  Reflect.deleteProperty(globalThis, 'window');
+  vi.unstubAllGlobals();
 });
 
 function lastPosted(type: string): any {
-  for (let i = postedMessages.length - 1; i >= 0; i--) {
-    if (postedMessages[i].msg?.type === type) return postedMessages[i].msg;
+  for (let i = shell.sent.length - 1; i >= 0; i--) {
+    if (shell.sent[i]?.type === type) return shell.sent[i];
   }
   throw new Error(`no posted message of type ${type}`);
 }
 
 function emitFromParent(data: unknown): void {
-  if (!messageListener) throw new Error('no message listener registered');
-  messageListener({ source: window.parent, data });
+  shell.deliver(data);
 }
 
 describe('@napplet/nap/relay shim', () => {

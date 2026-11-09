@@ -2,11 +2,12 @@ import { describe, it, expect } from 'vitest';
 import {
   createReferenceShell,
   attachReferenceShell,
+  REFERENCE_ENDPOINT,
   REFERENCE_PUBKEY,
   type ReferenceEndpoint,
   type MessageWindowLike,
 } from './reference-shell.js';
-import { REFERENCE_HANDLER } from './reference-responses.js';
+import { REFERENCE_HANDLER, REFERENCE_MANIFEST } from './reference-responses.js';
 
 const authenticatedSource: ReferenceEndpoint = { id: 'authenticated-source-endpoint', catalogId: 'authenticated-source' };
 
@@ -94,7 +95,7 @@ describe('createReferenceShell — record + respond', () => {
     ]);
     expect(shell.takeDeliveries(REFERENCE_HANDLER)).toEqual([{
       type: 'intent.deliver',
-      delivery: { sender: 'source-at-acceptance', archetype: 'note', action: 'open', convention: 'napplet:note/open', payload: { event: 'abc123' } },
+      delivery: { id: expect.any(String), sender: 'source-at-acceptance', archetype: 'note', action: 'open', convention: 'napplet:note/open', payload: { event: 'abc123' } },
     }]);
   });
 
@@ -226,7 +227,7 @@ describe('createReferenceShell — record + respond', () => {
 });
 
 describe('attachReferenceShell', () => {
-  it('wires message events to responses and honors the source guard', () => {
+  it('answers over the napplet.hello port and ignores other sources', async () => {
     let listener: ((e: MessageEvent) => void) | undefined;
     const host: MessageWindowLike = {
       addEventListener: (_t, l) => {
@@ -236,21 +237,81 @@ describe('attachReferenceShell', () => {
         listener = undefined;
       },
     };
-    const posted: unknown[] = [];
-    const target = { postMessage: (m: unknown) => posted.push(m) };
     const nappletWindow = {};
+    const channel = new MessageChannel();
+    const replies: unknown[] = [];
+    const reply = new Promise<void>((resolve) => {
+      channel.port1.onmessage = (event) => {
+        replies.push(event.data);
+        resolve();
+      };
+    });
 
     const shell = createReferenceShell();
-    const detach = attachReferenceShell(shell, { host, target, expectedSource: nappletWindow });
-    expect(typeof listener).toBe('function');
+    const binding = attachReferenceShell(shell, { host, expectedSource: nappletWindow });
+    listener!({ source: {}, data: { type: 'napplet.hello' }, ports: [channel.port2] } as unknown as MessageEvent);
+    expect(binding.bound).toBe(false);
 
-    listener!({ source: {}, data: { type: 'storage.get', id: '1', key: 'k' } } as unknown as MessageEvent);
-    expect(posted).toHaveLength(0);
+    listener!({ source: nappletWindow, data: { type: 'napplet.hello' }, ports: [channel.port2] } as unknown as MessageEvent);
+    expect(binding.bound).toBe(true);
+    channel.port1.postMessage({ type: 'storage.get', id: '1', key: 'k' });
+    await reply;
+    expect(replies).toEqual([{ type: 'storage.get.result', id: '1', value: null }]);
 
-    listener!({ source: nappletWindow, data: { type: 'storage.get', id: '1', key: 'k' } } as unknown as MessageEvent);
-    expect(posted).toEqual([{ type: 'storage.get.result', id: '1', value: null }]);
-
-    detach();
+    binding.detach();
+    channel.port1.close();
     expect(listener).toBeUndefined();
+  });
+
+  describe('revocation', () => {
+    const endpoint: ReferenceEndpoint = { id: 'viewer', catalogId: REFERENCE_HANDLER };
+    const host: MessageWindowLike = { addEventListener: () => {}, removeEventListener: () => {} };
+    const replaced = { kind: 'second-load', detail: 'The frame loaded a second document' } as const;
+    const withHistory = () => {
+      const shell = createReferenceShell({ manifests: [REFERENCE_MANIFEST] });
+      shell.handleFrom(endpoint, { type: 'navigation.report', id: 'r1', report: { revision: 1, location: { convention: 'napplet:note/open', payload: { event: 'alice' } } } });
+      expect(shell.navigationView(endpoint.id).entries).toHaveLength(1);
+      return shell;
+    };
+
+    it('terminates the endpoint before the host removes the frame, and only once', () => {
+      const shell = withHistory();
+      const authorityAtRevoke: boolean[] = [];
+      const binding = attachReferenceShell(shell, {
+        host,
+        expectedSource: {},
+        endpoint,
+        onRevoke: () => authorityAtRevoke.push(shell.registerEndpoint(endpoint)),
+      });
+      binding.revoke(replaced);
+      binding.revoke(replaced);
+      expect(authorityAtRevoke).toEqual([false]);
+      expect(shell.navigationView(endpoint.id)).toEqual({ entries: [], index: null, reportRevision: null, status: 'unreported' });
+      expect(shell.handleFrom(endpoint, { type: 'navigation.get', id: 'after-revoke' })).toEqual([]);
+      expect(shell.registerEndpoint(endpoint)).toBe(false);
+    });
+
+    it('terminates the default reference endpoint when none was supplied', () => {
+      const shell = createReferenceShell();
+      attachReferenceShell(shell, { host, expectedSource: {} }).revoke(replaced);
+      expect(shell.registerEndpoint(REFERENCE_ENDPOINT)).toBe(false);
+      expect(shell.handle({ type: 'storage.get', id: 'after-revoke', key: 'k' })).toEqual([]);
+    });
+
+    it('terminates without a host onRevoke callback', () => {
+      const shell = withHistory();
+      attachReferenceShell(shell, { host, expectedSource: {}, endpoint }).revoke(replaced);
+      expect(shell.registerEndpoint(endpoint)).toBe(false);
+    });
+
+    it('leaves the endpoint alive on detach, which is host teardown and not a revocation', () => {
+      const shell = withHistory();
+      let revocations = 0;
+      const binding = attachReferenceShell(shell, { host, expectedSource: {}, endpoint, onRevoke: () => { revocations += 1; } });
+      binding.detach();
+      expect(revocations).toBe(0);
+      expect(shell.navigationView(endpoint.id).entries).toHaveLength(1);
+      expect(shell.registerEndpoint(endpoint)).toBe(true);
+    });
   });
 });

@@ -207,6 +207,64 @@ export {
 export { shellReady, shellSupports, shellOnReady, installShellShim, DOMAIN as SHELL_DOMAIN } from '@napplet/nap/shell';
 
 export { DOMAIN as GAMEPAD_DOMAIN, installGamepadShim, gamepadGetGamepads, gamepadAvailable, gamepadFocused, gamepadOnChange } from '@napplet/nap/gamepad';
+export { DOMAIN as NAVIGATION_DOMAIN, installNavigationShim, navigationReport, navigationGet } from '@napplet/nap/navigation';
+
+export {
+  DOMAIN as TORRENT_DOMAIN,
+  installTorrentShim,
+  torrentCapabilities,
+  torrentPickFiles,
+  torrentAdd,
+  torrentStatus,
+  torrentJobs,
+  torrentFiles,
+  torrentSelectFiles,
+  torrentPause,
+  torrentResume,
+  torrentRemove,
+  torrentMetadata,
+  torrentRead,
+  torrentExportMetainfo,
+  torrentSaveFile,
+  torrentOpenFile,
+  torrentCancel,
+  torrentUpdate,
+  torrentOnState,
+  torrentOnProgress,
+  torrentOnError,
+} from '@napplet/nap/torrent';
+
+export {
+  DOMAIN as LLM_DOMAIN,
+  LLM_ERROR_CODES,
+  installLlmShim,
+  isLlmFailure,
+  llmSelect,
+  llmDescribe,
+  llmGenerate,
+  llmCancel,
+  llmText,
+  llmToolCalls,
+} from '@napplet/nap/llm';
+export { DOMAIN as BLOSSOM_DOMAIN, installBlossomShim } from '@napplet/nap/blossom';
+export {
+  blossomCheck,
+  blossomGet,
+  blossomCheckUpload,
+  blossomUpload,
+  blossomMirror,
+  blossomCheckMedia,
+  blossomMedia,
+  blossomList,
+  blossomDelete,
+  blossomServers,
+  blossomAddServer,
+  blossomRemoveServer,
+  blossomReorderServers,
+  blossomParseUri,
+  blossomFormatUri,
+} from '@napplet/nap/blossom/sdk';
+export { DOMAIN as CATALOG_DOMAIN, installCatalogShim, catalogGet } from '@napplet/nap/catalog';
 
 export {
   DOMAIN as SOULSEEK_DOMAIN,

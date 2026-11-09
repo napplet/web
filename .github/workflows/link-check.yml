@@ -16,10 +16,22 @@ on:
       - 'scripts/check-showcase.mjs'
       - 'scripts/check-protocol.mjs'
       - 'scripts/check-protocol-browser.mjs'
+      - 'scripts/check-app-store.mjs'
+      - 'scripts/check-app-store-napshot.mjs'
+      - 'scripts/lib/web-fixture-workspace.mjs'
+      - 'scripts/web-fixture-workspace.test.mjs'
+      - 'scripts/refresh-showcase-apps*'
+      - 'scripts/lib/napshot-labels.mjs'
       - 'scripts/generate-protocol*'
       - 'scripts/lib/protocol-data.mjs'
       - 'scripts/assemble-site.mjs'
       - 'scripts/assemble-site.test.mjs'
+      - 'scripts/lib/agent-markdown.mjs'
+      - 'scripts/lib/agent-readable-site.mjs'
+      - 'scripts/lib/markdown-paths.mjs'
+      - 'scripts/agent-markdown.test.mjs'
+      - 'skills/**'
+      - 'edge/**'
       - '.github/workflows/link-check.yml'
       - '.github/workflows/deploy-site.yml'
   pull_request:
@@ -34,10 +46,22 @@ on:
       - 'scripts/check-showcase.mjs'
       - 'scripts/check-protocol.mjs'
       - 'scripts/check-protocol-browser.mjs'
+      - 'scripts/check-app-store.mjs'
+      - 'scripts/check-app-store-napshot.mjs'
+      - 'scripts/lib/web-fixture-workspace.mjs'
+      - 'scripts/web-fixture-workspace.test.mjs'
+      - 'scripts/refresh-showcase-apps*'
+      - 'scripts/lib/napshot-labels.mjs'
       - 'scripts/generate-protocol*'
       - 'scripts/lib/protocol-data.mjs'
       - 'scripts/assemble-site.mjs'
       - 'scripts/assemble-site.test.mjs'
+      - 'scripts/lib/agent-markdown.mjs'
+      - 'scripts/lib/agent-readable-site.mjs'
+      - 'scripts/lib/markdown-paths.mjs'
+      - 'scripts/agent-markdown.test.mjs'
+      - 'skills/**'
+      - 'edge/**'
       - '.github/workflows/link-check.yml'
       - '.github/workflows/deploy-site.yml'
   workflow_dispatch:
@@ -79,7 +103,7 @@ jobs:
         run: pnpm --filter @napplet/conformance-web build --base=/conformance/
 
       - name: Test site assembly
-        run: node --test scripts/assemble-site.test.mjs
+        run: node --test scripts/assemble-site.test.mjs scripts/agent-markdown.test.mjs
 
       - name: Assemble site
         run: node scripts/assemble-site.mjs
@@ -117,3 +141,6 @@ jobs:
           node scripts/check-showcase.mjs http://localhost:8099
           node scripts/check-app-store.mjs http://localhost:8099
           node scripts/check-protocol-browser.mjs http://localhost:8099
+
+      - name: Verify Napshot preview fixtures
+        run: node scripts/check-app-store-napshot.mjs

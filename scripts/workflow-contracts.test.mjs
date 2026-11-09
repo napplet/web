@@ -6,6 +6,28 @@ const workflow = await readFile(new URL('../.github/workflows/publish-jsr.yml', 
 const standaloneWorkflow = await readFile(new URL('../.github/workflows/standalone-cli.yml', import.meta.url), 'utf8');
 const cliConfig = JSON.parse(await readFile(new URL('../packages/cli/deno.json', import.meta.url), 'utf8'));
 
+test('link checks execute Napshot fixture coverage after all production-site checks', async () => {
+  const content = await readFile(new URL('../.github/workflows/link-check.yml', import.meta.url), 'utf8');
+  const fixtureStep = content.indexOf('run: node scripts/check-app-store-napshot.mjs');
+  assert.ok(fixtureStep > 0, 'the fixture script must execute, not merely appear in trigger paths');
+  for (const command of ['check-links.mjs', 'check-showcase.mjs', 'check-app-store.mjs', 'check-protocol-browser.mjs']) {
+    const productionCheck = content.indexOf(`node scripts/${command} http://localhost:8099`);
+    assert.ok(productionCheck > 0 && productionCheck < fixtureStep, `${command} must finish before fixtures run`);
+  }
+});
+
+test('NAP refresh is scheduled, manually recoverable, scoped to one draft review PR, and validated', async () => {
+  const content = await readFile(new URL('../.github/workflows/nap-maturity.yml', import.meta.url), 'utf8');
+  assert.match(content, /cron: '43 5 \* \* \*'/);
+  assert.match(content, /workflow_dispatch:/);
+  assert.match(content, /branch: chore\/nap-proposal-refresh/);
+  assert.match(content, /draft: always-true/);
+  assert.match(content, /NAP_MATURITY_BOT_TOKEN \|\| github.token/);
+  assert.match(content, /pnpm build && pnpm type-check && pnpm -r test:unit/);
+  assert.match(content, /add-paths: \|\s*\n\s*packages\/core\/src\/nap-catalog.ts/);
+  assert.doesNotMatch(content, /gh pr merge|publish-packages|publish-jsr|pull_request_target:/);
+});
+
 test('JSR publication runs on every main push and supports manual recovery', () => {
   const triggers = workflow.split('\non:\n')[1]?.split('\nconcurrency:')[0];
   assert.ok(triggers, 'workflow must declare its triggers');

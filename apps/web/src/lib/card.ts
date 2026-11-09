@@ -1,5 +1,8 @@
 /** One HTML template for discovered release cards, shared by the static build and live discovery. */
+import { npubEncode } from 'nostr-tools/nip19';
 import type { CatalogApp } from './catalog';
+import { usableScreenshot } from './media';
+import { previewTargets } from './napshot';
 import { SHELLS } from './showcase';
 
 const escape = (value: string) => value.replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]!);
@@ -22,7 +25,20 @@ export function runsHere(app: CatalogApp): boolean {
 
 /** Searchable text for a release card. */
 export function searchText(app: CatalogApp): string {
-  return [app.name, app.description, ...app.requirements, ...app.archetypes, ...app.topics, ...(app.listing?.topics ?? [])].join(' ');
+  return [app.name, app.description, app.profile?.name ?? '', ...app.requirements, ...app.archetypes, ...app.topics, ...(app.listing?.topics ?? [])].join(' ');
+}
+
+/** Where the publisher's key can be looked up; the key, not any profile name, identifies the publisher. */
+export function profileHref(pubkey: string): string {
+  return `https://nostr.at/${npubEncode(pubkey)}`;
+}
+
+/** The publisher line: a link to the key's profile, with the picture and name when a profile supplies them. */
+function publisherHtml(app: CatalogApp): string {
+  const shortKey = `${escape(app.author.slice(0, 8))}…${escape(app.author.slice(-6))}`;
+  const picture = app.profile?.picture ? `<img class="author-picture" src="${escape(app.profile.picture)}" alt="" width="16" height="16" loading="lazy" decoding="async" referrerpolicy="no-referrer" />` : '';
+  const name = app.profile?.name ? escape(app.profile.name) : shortKey;
+  return `<a href="${escape(profileHref(app.author))}" target="_blank" rel="noopener noreferrer" title="${escape(app.author)}" data-author="${escape(app.author)}">${picture}<span>${name}</span></a>`;
 }
 
 /**
@@ -35,7 +51,13 @@ export function searchText(app: CatalogApp): string {
 export function releaseCardHtml(app: CatalogApp, index: number): string {
   const art = app.listing?.images[0];
   const monogram = escape(app.name.slice(0, 1).toUpperCase());
-  const media = JSON.stringify({ icon: app.icon ?? null, screenshots: app.screenshots.slice(0, 1), servers: app.servers });
+  // Publisher imagery wins over the automated preview: listing art excludes it here, and a screenshot is tried first in the
+  // browser, where the preview fills in only if the screenshot's bytes fail to verify.
+  const screenshot = usableScreenshot(app);
+  const napshot = app.napshot && !art ? { sha256: app.napshot.sha256, type: app.napshot.type, dim: app.napshot.dim, size: app.napshot.size, servers: app.napshot.servers, signer: app.napshot.signer, mode: app.napshot.mode } : null;
+  // `release` names the manifest a label must bind to, so a card left without artwork can ask the relays for a preview in the browser;
+  // listing art excludes that lookup just as it excludes a saved preview.
+  const media = JSON.stringify({ icon: app.icon ?? null, screenshots: screenshot ? [screenshot] : [], servers: app.servers, napshot, release: art ? null : previewTargets([app])[0] ?? null });
   const tags = [...app.archetypes, ...app.topics.filter(topic => !app.archetypes.includes(topic))].slice(0, 5);
   const listingIcon = app.listing?.icon;
   const date = new Date(app.publishedAt * 1000).toISOString().slice(0, 10);
@@ -46,8 +68,8 @@ export function releaseCardHtml(app: CatalogApp, index: number): string {
     ? `<a class="run-link" href="${escape(openHref(app))}" data-launch-release="${escape(app.id)}" data-run="${escape(run)}"><span class="play-symbol" aria-hidden="true">▶</span> Run here</a>`
     : `<span class="run-unavailable">Needs ${escape(app.requirements.join(', ') || 'a Blossom server')} · open it in a shell</span>`;
   return `<article class="discovered-card" data-app-card data-release="${escape(app.id)}" data-search="${escape(searchText(app))}" data-media="${escape(media)}">
-  <div class="discovered-art${art ? ' has-art' : ''}" data-art aria-hidden="true">${art ? `<img src="${escape(art)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-listing-art />` : ''}<span class="art-monogram">${monogram}</span><i class="art-index">${String(index + 1).padStart(2, '0')}</i><em class="art-source" data-art-source>${art ? 'Listing art' : ''}</em></div>
-  <div class="release-head"><span class="release-icon" data-icon>${listingIcon ? `<img src="${escape(listingIcon)}" alt="" width="40" height="40" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-listing-icon />` : `<b>${monogram}</b>`}</span><div class="release-title"><h3>${escape(app.name)}</h3><p class="release-author">Publisher <span title="${escape(app.author)}">${escape(app.author.slice(0, 8))}…${escape(app.author.slice(-6))}</span></p></div><span class="release-date">${date}</span></div>
+  <div class="discovered-art${art ? ' has-art' : ''}" data-art aria-hidden="true">${art ? `<img src="${escape(art)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-listing-art />` : ''}<span class="art-monogram" aria-hidden="true">${monogram}</span><i class="art-index" aria-hidden="true">${String(index + 1).padStart(2, '0')}</i><em class="art-source" data-art-source>${art ? 'Listing art' : ''}</em></div>
+  <div class="release-head"><span class="release-icon" data-icon>${listingIcon ? `<img src="${escape(listingIcon)}" alt="" width="40" height="40" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-listing-icon />` : `<b>${monogram}</b>`}</span><div class="release-title"><h3>${escape(app.name)}</h3><p class="release-author">Publisher ${publisherHtml(app)}</p></div><span class="release-date">${date}</span></div>
   <p class="publisher-description">${escape(app.description)}</p>
   ${tags.length ? `<ul class="release-tags" aria-label="Archetypes and topics">${tags.map(tag => `<li>${escape(tag)}</li>`).join('')}</ul>` : ''}
   <p class="release-requirements">${app.requirements.length ? `Needs: ${escape(app.requirements.join(', '))}` : 'No required shell services declared'}${app.optional.length ? ` · Optional: ${escape(app.optional.join(', '))}` : ''}${app.versions ? ` · ${app.versions} pinned ${app.versions === 1 ? 'version' : 'versions'}` : ''}</p>

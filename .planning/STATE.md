@@ -7,8 +7,8 @@ current_phase_name: cli-terminal-usability
 status: completed
 stopped_at: Phase 164 verified locally and shipped in PR 248 with terminal recordings
 last_updated: "2026-10-30T14:30:00+00:00"
-last_activity: 2026-10-30
-last_activity_desc: Merged main (PR 272 presentation media) into the showcase and app store branch for PR 221
+last_activity: 2026-11-05
+last_activity_desc: Removed DinOS from the napplet.run shell directory
 progress:
   total_phases: 9
   completed_phases: 4
@@ -65,7 +65,7 @@ Branch `feat/cli-terminal-usability` ships guided missing-value recovery, `-i` p
 Phase: 164 (cli-terminal-usability) — verified and shipped
 Plan: 3 of 3
 Status: [PR #248](https://github.com/napplet/web/pull/248) open with six actual terminal screenshots
-Last activity: 2026-10-31 - Completed quick task 261031-bnu: implement NAP-SOULSEEK across the napplet stack (PR #281)
+Last activity: 2026-11-04 - Completed quick task 261104-kdn: merged main into PR #280 and resolved its conflicts
 
 See phase 163 VERIFICATION.md and COVERAGE.md for evidence and disclosed release/specification/baseline limits. Earlier phase and quick-task records below are historical.
 
@@ -415,7 +415,7 @@ Status: M1+M2+M3+M4 COMPLETE. Final gate green: build(11), type-check(14), test:
 - NOTE FOR USER: README on main already had a `v0.32.0 — Read-Only NAP-IDENTITY` changelog entry (pre-existing) that collides with this milestone's v0.32.0 label. Left it untouched; added conformance additively. Milestone version label may need reconciliation (this work could be v0.33.0). Surfaced in PR.
 - NOTE: aislop's 1 error = vite (high, upgrade 6.4.3+) + 1 warn = js-yaml — both environmental dependency advisories, not introduced here; out of scope (separate dep-bump like v0.31.0).
 
-Last activity: 2026-06-16 — Phase 150 (b7a7f7e) CLI+fixtures+e2e+CI; Phase 151 apps/conformance web runtime verified live (CONFORMANT, 2 envelopes, manifest inspector) + deploy wiring at /conformance
+Last activity: 2026-11-04 - Completed quick task 261104-kdn: merged main into PR #280 and resolved its conflicts
 
 ### Phase 150 record (CLI-01..06) — COMPLETE (b7a7f7e)
 
@@ -570,6 +570,28 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 
 | Quick ID | Task | Date | Commit | Artifacts |
 |----------|------|------|--------|-----------|
+| 261105-rds | Remove DinOS from the napplet.run shell directory | 2026-11-05 | — | — |
+| 261103-rsl | Point every napplet/napplet repository reference (docs, READMEs, skills, CLI, installers, package metadata) at napplet/web | 2026-11-03 | — | [261103-rsl](./quick/261103-rsl-repo-slug-napplet-web/) |
+| 261102-wmc | napplet.run WebMCP tools (list_pages, search_docs, read_page, search_napplets, list_agent_skills, open_page) and /apps/catalog.json | 2026-11-02 | — | [261102-wmc](./quick/261102-wmc-site-webmcp-tools/) |
+| 261101-wei | napplet.run player frame locked to its verified document with page frame-src 'none' (closes navigation-before-first-load) | 2026-11-01 | — | [261101-wei](./quick/261101-wei-player-frame-navigation-lock/) |
+| 261101-vx0 | napplet.run player: NIP-5D napplet.hello bootstrap and document binding (frame removed on navigation, reload or window-level messages) | 2026-11-01 | — | [261101-vx0](./quick/261101-vx0-player-port-bound-identity/) |
+| 261101-tbe | NIP-5D port-bound identity: napplet.hello MessagePort transport in core/nap/shim, conformance port binding and replacement checks | 2026-11-01 | 9c9620c1 | [261101-tbe](./quick/261101-tbe-nip5d-port-bound-identity/) |
+| 261101-nuz | Agent-readable napplet.run: Markdown copies, llms.txt, agent-skills index, Content-Signal, Bunny Accept: text/markdown edge script | 2026-11-01 | 700115fd | [261101-nuz](./quick/261101-nuz-agent-readable-napplet-run-site/) |
+| 261101-n69 | --proxy for HTTP and SOCKS5 proxies on CLI Blossom and relay commands, plus unreachable-relay publish fix | 2026-11-01 | ebd22ec3 | [261101-n69](./quick/261101-n69-add-proxy-for-http-and-socks5-proxies-to/) |
+| 261101-k4q | Five-relay app store discovery pool and an exhaustive refresh pager | 2026-11-01 | fd8ad95a | [261101-k4q](./quick/261101-k4q-expand-the-app-store-discovery-relay-poo/) |
+| 261101-ia5 | Publisher profile name, picture and nostr.at link on app store cards | 2026-11-01 | d34bf184 | [261101-ia5](./quick/261101-ia5-show-publisher-profile-name-picture-and-/) |
+| 261101-hp2 | On-visit Napshot label lookups for saved releases without publisher artwork | 2026-11-01 | fa702345 | [261101-hp2](./quick/261101-hp2-look-up-napshot-labels-at-runtime-for-re/) |
+| 261101-ew8 | PR #292 inline review: independent relay pagination, incomplete-batch retries, isolated fixture builds and CI execution | 2026-11-01 | d39acea6 | [261101-ew8](./quick/261101-ew8-resolve-all-five-inline-review-threads-o/) |
+| 261101-e9i | Add Napshot NIP-05 relay hints from its signed NIP-65 event | 2026-11-01 | ad002741 | [261101-e9i](./quick/261101-e9i-add-napshot-nip-05-relay-hints-from-its-/) |
+| 261101-de9 | NIP-05 nostr.json on napplet.run for napshot | 2026-11-01 | — | [261101-de9](./quick/261101-de9-napplet-run-nip-05-for-napshot/) |
+| 261101-crf | Address the Copilot review on PR #289: refuse mirror redirects before following, share screenshot eligibility, batch and exhaust label discovery, capture-mode wording, refresh-proof tests and a deterministic fixture browser check | 2026-11-01 | fcca9786 | [261101-crf](./quick/261101-crf-address-copilot-review-comments-on-pr-289/) |
+| 261101-cyx | Napshot screenshot fallbacks for app-store releases without screenshots | 2026-11-01 | 331dbf1a | [261101-cyx](./quick/261101-cyx-napshot-screenshot-fallbacks-in-app-stor/) |
+| 261031-go3 | NAP maturity catalog, policy selection, host enforcement and generated docs (PR #288) | 2026-10-31 | 18d636cf | [261031-go3](./quick/261031-go3-implement-nap-maturity-catalog-policy-se/) |
+| 261031-cbd | Add DinOS to the website shell directory | 2026-10-31 | b7bf6c66 | [261031-cbd](./quick/261031-cbd-add-dinos-to-the-website-shell-list/) |
+| 261031-er3 | Require runtimePreludeSource and delete the conformance fallback runtime fixture | 2026-10-31 | e68eddc4 | [261031-er3](./quick/261031-er3-require-runtimepreludesource-and-delete-/) |
+| 261030-ppe | Add NAP-BLOSSOM across packages and docs | 2026-10-30 | d4147798 / PR #276 | [261030-ppe](./quick/261030-ppe-add-nap-blossom-support/) |
+| 261030-pog | Add NAP-CATALOG across packages and docs | 2026-10-30 | b1933bd0 / PR #275 | [261030-pog](./quick/261030-pog-add-nap-catalog-support-across-relevant-/) |
+| 261030-pnj | Add draft NAP-NAVIGATION and correlated INTENT delivery support | 2026-10-30 | 88cf543f / PR #280 | [261030-pnj](./quick/261030-pnj-add-nap-navigation-across-relevant-packa/) |
 | 261030-9r6 | Chase NIP-5D presentation media and source pin tags | 2026-10-30 | 0bae4ebe / PR #272 | [261030-9r6](./quick/261030-9r6-chase-nip-5d-presentation-media-and-sour/) |
 | 261031-bnu | Implement NAP-SOULSEEK across the napplet stack | 2026-10-31 | e92a179d / PR #281 | [261031-bnu](./quick/261031-bnu-implement-nap-soulseek-across-the-napp/) |
 | 261030-jgm | App store: manifest media, listing fallback, applesauce discovery, infinite scroll | 2026-10-30 | 9ac7d606 / PR #221 | [261030-jgm](./quick/261030-jgm-improve-the-apps-directory-with-nip-5d-m/) |
@@ -713,6 +735,9 @@ Surfaced by research (informational — each belongs to a specific phase plan):
 
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
+| 261104-kdn | Merge main into PR #280 (NAP-NAVIGATION) and resolve conflicts | 2026-11-04 | 5d7d2116 | [261104-kdn](./quick/261104-kdn-resolve-pr-280-merge-conflicts-with-main/) |
+| 261104-iwc | Try the next Blossom auth token after a gateway error (web#269) | 2026-11-04 | 26e2e391 | [261104-iwc](./quick/261104-iwc-fix-blossom-upload-auth-fallback-masked-/) |
+| 261031-hbe | Schedule reviewed NAP proposal metadata refreshes in PR #288 | 2026-10-31 | c72dd849 | [261031-hbe](./quick/261031-hbe-automate-daily-nap-proposal-metadata-rev/) |
 | 261010-3v2 | Add napplet.run client attribution to CLI publications | 2026-10-10 | 678fb834 | [261010-3v2](./quick/261010-3v2-add-napplet-run-client-attribution-to-cl/) |
 | 261010-3fr | Propose NIP-5D application references and link CLI screenshot metadata | 2026-10-10 | eb6b87e2 | [261010-3fr](./quick/261010-3fr-propose-application-descriptor-links-and/) |
 | 261010-gap | Close PR #228 completeness gaps: handlerHint validation, stale intent/shell docs and skills | 2026-10-10 | 82c54ed3 | [261010-gap-close-pr-228-intent-cascade-gaps](./quick/261010-gap-close-pr-228-intent-cascade-gaps/) |

@@ -1,5 +1,9 @@
+import * as llmShim from '@napplet/nap/llm/shim';
+import * as blossom from '@napplet/nap/blossom/shim';
+import * as torrentShim from '@napplet/nap/torrent/shim';
 import * as soulseekShim from '@napplet/nap/soulseek/shim';
 import type { NapDomain, NappletGlobal } from '@napplet/core';
+import { report as navigationReport, get as navigationGet } from '@napplet/nap/navigation/shim';
 import {
   info as resourceInfo,
   bytes as resourceBytes,
@@ -131,12 +135,83 @@ export function installServiceDomains(domains: ReadonlySet<NapDomain>, napplet: 
       release: soulseekShim.release,
     };
   }
+  if (domains.has('torrent')) {
+    napplet.torrent = {
+      capabilities: torrentShim.capabilities,
+      pickFiles: torrentShim.pickFiles,
+      add: torrentShim.add,
+      status: torrentShim.status,
+      jobs: torrentShim.jobs,
+      files: torrentShim.files,
+      selectFiles: torrentShim.selectFiles,
+      pause: torrentShim.pause,
+      resume: torrentShim.resume,
+      remove: torrentShim.remove,
+      metadata: torrentShim.metadata,
+      read: torrentShim.read,
+      exportMetainfo: torrentShim.exportMetainfo,
+      saveFile: torrentShim.saveFile,
+      openFile: torrentShim.openFile,
+      cancel: torrentShim.cancel,
+      update: torrentShim.update,
+      onState: torrentShim.onState,
+      onProgress: torrentShim.onProgress,
+      onError: torrentShim.onError,
+    };
+  }
+  if (domains.has('llm')) {
+    napplet.llm = {
+      select: llmShim.select,
+      describe: llmShim.describe,
+      generate: llmShim.generate,
+      cancel: llmShim.cancel,
+    };
+  }
+  installIntentDomains(domains, napplet);
   installNetworkDomains(domains, napplet);
   installDeviceDomains(domains, napplet);
   installFilesystemDomains(domains, napplet);
 }
 
+function installIntentDomains(domains: ReadonlySet<NapDomain>, napplet: Partial<NappletGlobal>): void {
+  if (domains.has('intent')) {
+    napplet.intent = {
+      invoke: intentInvoke,
+      open: intentOpen,
+      available: intentAvailable,
+      handlers: intentHandlers,
+      onChanged: intentOnChanged,
+      onDelivery: intentOnDelivery,
+    };
+  }
+
+  // NAP-NAVIGATION's required layering dependency never grants another domain.
+  if (domains.has('navigation') && domains.has('intent')) {
+    napplet.navigation = { report: navigationReport, get: navigationGet };
+  }
+}
+
 function installNetworkDomains(domains: ReadonlySet<NapDomain>, napplet: Partial<NappletGlobal>): void {
+  if (domains.has('blossom')) {
+    napplet.blossom = {
+      check: blossom.check,
+      get: blossom.get,
+      checkUpload: blossom.checkUpload,
+      upload: blossom.upload,
+      mirror: blossom.mirror,
+      checkMedia: blossom.checkMedia,
+      media: blossom.media,
+      list: blossom.list,
+      delete: blossom.deleteBlob,
+      servers: blossom.servers,
+      addServer: blossom.addServer,
+      removeServer: blossom.removeServer,
+      reorderServers: blossom.reorderServers,
+      parseUri: blossom.parseUri,
+      formatUri: blossom.formatUri,
+    };
+  }
+
   if (domains.has('resource')) {
     napplet.resource = {
       info: resourceInfo,
@@ -181,17 +256,6 @@ function installNetworkDomains(domains: ReadonlySet<NapDomain>, napplet: Partial
       upload: uploadUpload,
       status: uploadStatusFn,
       onStatus: uploadOnStatus,
-    };
-  }
-
-  if (domains.has('intent')) {
-    napplet.intent = {
-      invoke: intentInvoke,
-      open: intentOpen,
-      available: intentAvailable,
-      handlers: intentHandlers,
-      onChanged: intentOnChanged,
-      onDelivery: intentOnDelivery,
     };
   }
 

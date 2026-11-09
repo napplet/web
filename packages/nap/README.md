@@ -1,6 +1,8 @@
 # @napplet/nap
 
-> Every active napplet NAP domain (relay, storage, inc, keys, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent, ble, webrtc, link, count, lists, serial, fs, common, dm, shell, gamepad, soulseek) as layered subpath exports. The package name remains `@napplet/nap` for compatibility.
+> Every active napplet NAP domain (relay, storage, inc, keys, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent, navigation, ble, webrtc, link, count, lists, serial, fs, common, dm, shell, gamepad, llm, blossom, catalog, torrent, soulseek) as layered subpath exports. The package name remains `@napplet/nap` for compatibility.
+
+NAP proposal status and shipped implementation maturity are separate. All capabilities can change. Inspect `NAP_IMPLEMENTATIONS` from `@napplet/core` and use `selectNapDomains` for local host opt-in policy. See [maturity and opt-in guidance](https://napplet.run/docs/naps/maturity.html).
 
 ## Install
 
@@ -53,7 +55,7 @@ sub.on('event', (result) => console.log('new note', result.event));
 sub.close();
 ```
 
-## 22 Active Domains
+## Active Domains
 
 Each domain is an independent subpath. Barrel imports bundle types + shim installer + SDK helpers; granular subpaths isolate each surface.
 
@@ -71,8 +73,10 @@ Each domain is an independent subpath. Barrel imports bundle types + shim instal
 | resource | `@napplet/nap/resource` | `@napplet/nap/resource/types` | `@napplet/nap/resource/shim` | `@napplet/nap/resource/sdk` | Sandboxed byte fetching (https/blossom/nostr/data) via `bytes(url, options?) → Blob` |
 | cvm | `@napplet/nap/cvm` | `@napplet/nap/cvm/types` | `@napplet/nap/cvm/shim` | `@napplet/nap/cvm/sdk` | Native ContextVM bridge — MCP-over-Nostr (`discover`/`listTools`/`callTool`/`listResources`/`readResource`/`registry.*`); shell owns transport, registry selection, and tool policy |
 | outbox | `@napplet/nap/outbox` | `@napplet/nap/outbox/types` | `@napplet/nap/outbox/shim` | `@napplet/nap/outbox/sdk` | Outbox-aware relay routing — `getEvent`/`query`/`subscribe`/`publish`/`resolveRelays`; shell owns NIP-65 relay discovery, dedup, and fanout |
+| blossom | `@napplet/nap/blossom` | `@napplet/nap/blossom/types` | `@napplet/nap/blossom/shim` | `@napplet/nap/blossom/sdk` | Server-directed Blossom blob operations, BUD-03 server lists and local BUD-10 URI helpers |
 | upload | `@napplet/nap/upload` | `@napplet/nap/upload/types` | `@napplet/nap/upload/shim` | `@napplet/nap/upload/sdk` | Shell-mediated file/blob upload — `info`/`upload`/`status`/`onStatus` over NIP-96 + Blossom rails; shell signs auth, returns NIP-94 metadata |
 | intent | `@napplet/nap/intent` | `@napplet/nap/intent/types` | `@napplet/nap/intent/shim` | `@napplet/nap/intent/sdk` | Archetype intent dispatch — `invoke`/`open`/`available`/`handlers`/`onChanged`; invoke another napplet by role, shell resolves the default handler |
+| navigation | `@napplet/nap/navigation` | `@napplet/nap/navigation/types` | `@napplet/nap/navigation/shim` | `@napplet/nap/navigation/sdk` | Report committed intent locations and read runtime-owned instance history; requires INTENT |
 | ble | `@napplet/nap/ble` | `@napplet/nap/ble/types` | `@napplet/nap/ble/shim` | `@napplet/nap/ble/sdk` | Runtime-mediated Bluetooth LE/GATT sessions — `open`/`services`/`read`/`write`/`subscribe`/`unsubscribe`/`close`/`onEvent`; shell owns chooser UI, permissions, device handles, and lifecycle |
 | webrtc | `@napplet/nap/webrtc` | `@napplet/nap/webrtc/types` | `@napplet/nap/webrtc/shim` | `@napplet/nap/webrtc/sdk` | Runtime-mediated WebRTC data sessions — `open`/`send`/`close`/`onEvent`; shell owns signaling, SDP, ICE, and peer-connection lifecycle |
 | link | `@napplet/nap/link` | `@napplet/nap/link/types` | `@napplet/nap/link/shim` | `@napplet/nap/link/sdk` | Shell-mediated external link opening — `open(url, options?)`; shell owns navigation, policy, prompting, and opener isolation |
@@ -81,8 +85,11 @@ Each domain is an independent subpath. Barrel imports bundle types + shim instal
 | common | `@napplet/nap/common` | `@napplet/nap/common/types` | `@napplet/nap/common/shim` | `@napplet/nap/common/sdk` | Common social actions — public NIP-19 helpers, profile lookup returning `RelayEventResult`, follows, follow/unfollow, reactions, and reports; shell owns identity/signing/publishing |
 | serial | `@napplet/nap/serial` | `@napplet/nap/serial/types` | `@napplet/nap/serial/shim` | `@napplet/nap/serial/sdk` | Runtime-mediated serial device access — `open`/`write`/`close`/`onEvent`; shell owns permissions, port handles, streams, and lifecycle |
 | fs | `@napplet/nap/fs` | `@napplet/nap/fs/types` | `@napplet/nap/fs/shim` | `@napplet/nap/fs/sdk` | Shell-mediated virtual filesystem access — `info`/`pickFile`/`pickFiles`/`pickDirectory`/`pickSaveFile`/`stat`/`list`/`read`/`write`/`mkdir`/`remove`/`move`/`watch`/`unwatch`/`onChanged`; runtime owns host paths, mounts, backing store, policy, and authorization. Byte payloads use standard padded base64 text on the JSON wire |
+| llm | `@napplet/nap/llm` | `@napplet/nap/llm/types` | `@napplet/nap/llm/shim` | `@napplet/nap/llm/sdk` | User-selected, runtime-mediated language model inference — `select`/`describe`/`generate`/`cancel`; generations are stateless, may stream ordered `llm.delta` text, and expose `requestId`; shell owns connections, credentials, consent, and provider access |
 | soulseek | `@napplet/nap/soulseek` | `@napplet/nap/soulseek/types` | `@napplet/nap/soulseek/shim` | `@napplet/nap/soulseek/sdk` | Runtime-mediated Soulseek discovery and downloads — `info`/`search`/`browse`/`results`/`stop`/`download`/`transfers`/`status`/`pause`/`resume`/`cancel`/`read`/`save`/`release`; shell owns the account, peers, storage, content disclosure, and saving. Byte counts are canonical decimal text |
 | dm | `@napplet/nap/dm` | `@napplet/nap/dm/types` | `@napplet/nap/dm/shim` | `@napplet/nap/dm/sdk` | Runtime-mediated direct messages — `status`/`conversations`/`messages`/`send`/`subscribe`/`unsubscribe`/`onMessage`; shell owns signing, encryption, relay routing, storage, and policy |
+| catalog | `@napplet/nap/catalog` | `@napplet/nap/catalog/types` | `@napplet/nap/catalog/shim` | `@napplet/nap/catalog/sdk` | Read-only available napplets and current handler selectors |
+| torrent | `@napplet/nap/torrent` | `@napplet/nap/torrent/types` | `@napplet/nap/torrent/shim` | `@napplet/nap/torrent/sdk` | Runtime-owned download/seed jobs, verified file reads, metadata export, settings, and job listeners |
 
 ### NAP-FS byte transfer
 
@@ -107,7 +114,7 @@ const result = await intentOpen('napplet:profile/open', { payload: { pubkey: 'ab
 if (!result.ok) throw new Error(result.error);
 ```
 
-Intent calls derive archetype and action from the URI. An `ok: true` result means the runtime accepted delivery responsibility and includes the normalized identity and handler catalog identifier; an `ok: false` result includes `error`. Targets receive runtime-attested `IntentDelivery` values through `onDelivery`, including deliveries retained before registration. Behavior hints are `focus` and `reuse`. This non-normative guidance defers to the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md).
+Intent calls derive archetype and action from the URI. An `ok: true` result means the runtime accepted delivery responsibility and includes the normalized identity and handler catalog identifier; an `ok: false` result includes `error`. Targets receive runtime-attested `IntentDelivery` values through `onDelivery`, including deliveries retained before registration. Each delivery has a runtime-assigned `id`; `sender` is the source catalog identifier, or `null` for a shell-originated request. These fields follow the [NAP-INTENT delivery draft](https://github.com/napplet/naps/pull/128). Behavior hints are `focus` and `reuse`. This non-normative guidance defers to the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md).
 
 NAP-INC topics use the same opaque-string boundary. Use the current advisory open names such as `napplet:note/open`, `napplet:profile/open`, and `napplet:dm/open` when they fit the receiving napplet's documented local choice.
 
@@ -145,12 +152,12 @@ Each domain exposes up to three patterns (four including the barrel). Pick the s
 - Every subpath in the `exports` map is a discrete entry point; a bundler importing only `@napplet/nap/relay/types` produces zero bytes from unrelated domains
 - Verified end-to-end in Phase 121 with a minimal-consumer smoke test
 
-The `exports` map in `package.json` declares 92 entry points:
+The `exports` map in `package.json` declares the available entry points:
 
-- 22 domain barrels (`@napplet/nap/<domain>`)
-- 22 granular types entries (`@napplet/nap/<domain>/types`)
-- 22 granular shim entries (`@napplet/nap/<domain>/shim`)
-- 22 granular sdk entries (`@napplet/nap/<domain>/sdk`)
+- Domain barrels (`@napplet/nap/<domain>`)
+- Granular types entries (`@napplet/nap/<domain>/types`)
+- Granular shim entries (`@napplet/nap/<domain>/shim`)
+- Granular SDK entries (`@napplet/nap/<domain>/sdk`)
 - 1 deprecated compatibility wrapper (`ifc`) with matching `types`, `shim`, and `sdk` entries
 
 Each entry maps to its own pre-built `.js` + `.d.ts` pair under `dist/<domain>/<surface>.{js,d.ts}`. No root `.` key exists, and there is no top-level `main`/`module`/`types` field — attempting `import '@napplet/nap'` fails with `ERR_PACKAGE_PATH_NOT_EXPORTED` by design.
@@ -228,7 +235,7 @@ import { mediaCreateSession } from '@napplet/nap/media/sdk';
 import type { MediaNapMessage } from '@napplet/nap/media/types';
 ```
 
-Domain barrels are also available at `@napplet/nap/relay`, `@napplet/nap/storage`, `@napplet/nap/inc`, `@napplet/nap/keys`, `@napplet/nap/theme`, `@napplet/nap/media`, `@napplet/nap/notify`, `@napplet/nap/identity`, `@napplet/nap/config`, `@napplet/nap/resource`, `@napplet/nap/cvm`, `@napplet/nap/outbox`, `@napplet/nap/upload`, `@napplet/nap/intent`, `@napplet/nap/ble`, `@napplet/nap/webrtc`, `@napplet/nap/link`, `@napplet/nap/count`, `@napplet/nap/lists`, `@napplet/nap/common`, `@napplet/nap/serial`, `@napplet/nap/fs`, `@napplet/nap/dm`, `@napplet/nap/shell`, `@napplet/nap/gamepad`, and `@napplet/nap/soulseek`.
+Domain barrels are also available at `@napplet/nap/relay`, `@napplet/nap/storage`, `@napplet/nap/inc`, `@napplet/nap/keys`, `@napplet/nap/theme`, `@napplet/nap/media`, `@napplet/nap/notify`, `@napplet/nap/identity`, `@napplet/nap/config`, `@napplet/nap/resource`, `@napplet/nap/cvm`, `@napplet/nap/outbox`, `@napplet/nap/upload`, `@napplet/nap/intent`, `@napplet/nap/ble`, `@napplet/nap/webrtc`, `@napplet/nap/link`, `@napplet/nap/count`, `@napplet/nap/lists`, `@napplet/nap/common`, `@napplet/nap/serial`, `@napplet/nap/fs`, `@napplet/nap/dm`, `@napplet/nap/shell`, `@napplet/nap/gamepad`, `@napplet/nap/llm`, `@napplet/nap/catalog`, and `@napplet/nap/soulseek`.
 
 ## Optional Peer Dependency
 
@@ -274,8 +281,8 @@ The runtime may expose `shell` for environment information. `shell.supports(doma
 ```ts
 import { intent } from '@napplet/sdk';
 
-intent.onDelivery(({ sender, convention, payload }) => {
-  console.log(sender, convention, payload);
+intent.onDelivery(({ id, sender, convention, payload }) => {
+  console.log(id, sender, convention, payload);
 });
 await intent.invoke('napplet:profile/open?pubkey=abc123');
 ```
@@ -301,6 +308,38 @@ if (window.napplet?.gamepad) {
 ```
 
 Declare `gamepad` as optional (`O`) when other controls fulfill the core task. Use a hard requirement (`R`) only when the core task needs controller input. The runtime owns controller access and focus isolation; app code does not call native `navigator.getGamepads()` or open raw HID devices. Haptics and remapping are outside this proposal.
+### Navigation helpers
+
+`@napplet/nap/navigation` and `@napplet/nap/navigation/sdk` export `navigationReport` and `navigationGet`, with `report` and `get` aliases. They call the injected domain; application code does not install its own binding. Runtime authors use `installNavigationShim` and `handleNavigationMessage` from `@napplet/nap/navigation/shim`. Wire types are available from `@napplet/nap/navigation/types`.
+
+```ts
+import { report, get } from '@napplet/nap/navigation/sdk';
+
+if (window.napplet?.navigation && window.napplet?.intent) {
+  const result = await report({ revision: 1, location: null });
+  if (!result.ok) console.error(result.error.code);
+  const latest = await get();
+  console.log(latest.view.status);
+}
+```
+
+This non-normative example follows the [NAP-NAVIGATION draft](https://github.com/napplet/naps/pull/126) and [NAP-INTENT delivery draft](https://github.com/napplet/naps/pull/128). Use a fresh increasing revision for each new committed-state report, including recovery after rejection. Reuse a revision only to retry identical report content. Read the [navigation guide](../../apps/docs/naps/navigation.md) before connecting a router.
+
+### Language model inference
+
+`@napplet/nap/llm` provides the barrel, `types`, `shim`, and `sdk` subpaths for the four NAP-LLM operations. SDK helpers use the `llm` prefix (`llmSelect`, `llmDescribe`, `llmGenerate`, `llmCancel`); `isLlmFailure` recognizes rejections that carry a specification error code, and `LLM_ERROR_CODES` lists the known codes; `llmText` concatenates a generation's text parts and `llmToolCalls` returns tool calls only from a `toolUse` result. `generate` exposes the generation's `requestId`, delivers ordered block-lifecycle deltas to an `onDelta` listener, and maps an abort signal to `llm.cancel`; the generation still settles through its own result. Selection does not authorize disclosure, and handles are endpoint-scoped. This non-normative guidance defers to the living [NAP-LLM proposal](https://github.com/napplet/naps/pull/134).
+
+## Blossom blob access
+
+The SDK exposes `blossom` from `@napplet/sdk` and `@napplet/sdk/blossom` for server-directed blob operations, ordered BUD-03 server-list helpers and local BUD-10 URI parsing/formatting. Check `window.napplet?.blossom` before optional use. Binary fields remain `Blob` or `ArrayBuffer`; endpoint failures resolve with `ok: false`, while malformed-envelope errors and transport failures reject. Use `resource` for generic retrieval and `upload` when the runtime should choose storage. See the non-normative [BLOSSOM guide](https://napplet.run/docs/naps/blossom.html) and living [NAP-BLOSSOM proposal](https://github.com/napplet/naps/pull/71).
+
+## Catalog discovery
+
+The [NAP-CATALOG draft](https://github.com/napplet/naps/pull/95) is available at `@napplet/nap/catalog`, with `/types`, `/shim`, and `/sdk` layers on npm and JSR. Consumer helpers `catalogGet()` and its `/sdk` alias `get()` read `CatalogSnapshot`; runtime helpers install and route `catalog.get` / `catalog.get.result`. See the [non-normative guide](../../apps/docs/naps/catalog.md).
+
+### Runtime-owned torrent jobs
+
+`@napplet/nap/torrent` provides the barrel, `types`, `shim`, and `sdk` subpaths for all 17 NAP-TORRENT operations. SDK helpers use the `torrent` prefix, such as `torrentAdd`, `torrentRead`, and `torrentUpdate`. `torrentOnState`, `torrentOnProgress`, and `torrentOnError` return independently closable subscriptions. A job acknowledgment does not mean a transfer completed. The runtime owns the engine and selected file bytes; `runtimeFileSetId` is an opaque handle, not a path. This non-normative guidance defers to [NAP-TORRENT](https://github.com/napplet/naps/blob/nap-torrent/naps/NAP-TORRENT.md).
 
 ### Runtime-mediated Soulseek
 

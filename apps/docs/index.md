@@ -25,7 +25,7 @@ features:
   - title: Every request brokered
     details: Napplets never call a signer, relay, or store directly. Every request is brokered through the shell over postMessage — to a remote signer, an extension, or the shell's own services. No window.nostr is installed.
   - title: Browser-enforced sandbox
-    details: The iframe uses allow-scripts only — no allow-same-origin. Identity is assigned at iframe creation via the unforgeable MessageEvent.source. No handshake required.
+    details: The iframe uses allow-scripts only — no allow-same-origin. Identity is bound to the MessagePort the verified document hands over in napplet.hello, and revoked if the frame navigates.
   - title: Modular NAP domains
     details: Capabilities are split into NAP domains (relay, storage, inc, identity, and more). Shells implement the domains they support; napplets gate on domain presence.
   - title: Just a JSON envelope

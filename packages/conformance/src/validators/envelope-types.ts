@@ -33,6 +33,7 @@ export interface EnvelopeError {
     | 'missing-field'
     | 'wrong-type'
     | 'forbidden-field'
+    | 'invalid-navigation-report'
     | 'invalid-intent-request'
     | 'invalid-resource-request';
   /** Human-readable explanation. */

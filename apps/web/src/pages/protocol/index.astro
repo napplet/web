@@ -1,4 +1,5 @@
 ---
+import { getNapImplementation } from '../../../../../packages/core/src/nap-maturity';
 import ProtocolLayout from '../../layouts/ProtocolLayout.astro';
 import data from '../../data/protocol.json';
 import { entryState } from '../../lib/protocol';
@@ -15,13 +16,13 @@ const proposed = data.entries.length - merged;
     <div class="protocol-actions"><a class="button button-primary" href="#directory">Explore the NAPs ↓</a><a class="button button-secondary" href="/protocol/contribute/">Propose a NAP →</a></div>
   </div>
   <div class="protocol-foundations" aria-label="Protocol foundations">
-    <a href="https://github.com/nostr-protocol/nips/blob/master/5A.md"><span class="eyebrow">01 / Identity</span><h2>NIP-5A ↗</h2><p>The manifest that describes a napplet.</p></a>
+    <a href="https://github.com/nostr-protocol/nips/pull/2303"><span class="eyebrow">01 / Identity</span><h2>NIP-5D ↗</h2><p>The manifest that describes a napplet.</p></a>
     <a href="https://github.com/nostr-protocol/nips/pull/2303"><span class="eyebrow">02 / Web projection</span><h2>NIP-5D ↗</h2><p>The proposed web binding between applet and shell.</p></a>
     <a href={data.repository}><span class="eyebrow">03 / Capabilities</span><h2>NAPs ↗</h2><p>The contracts, their registry, and open discussion.</p></a>
   </div>
   <section id="directory" class="protocol-directory" aria-labelledby="directory-title">
     <div class="directory-heading"><div><p class="eyebrow">The capability directory</p><h2 id="directory-title">Merged &amp; in motion.</h2></div><p class="directory-count"><strong>{merged}</strong> merged · <strong>{proposed}</strong> proposed changes</p></div>
-    <p class="protocol-note-text">“Merged” means a spec file exists on the repository’s default branch. Open and draft PRs are proposals, including amendments. Upstream status is shown separately; deferred proposals are dormant.</p>
+    <p class="protocol-note-text">“Merged” means a spec file exists on the repository’s default branch. Open and draft PRs are proposals, including amendments. Upstream status is shown separately; deferred proposals are dormant. Shipped implementation maturity is a domain-wide package assessment, not proof that every amendment is implemented. All capabilities remain subject to change.</p>
     <div id="nap-filters" class="nap-filters" hidden>
       <label>Find a capability<input id="nap-search" type="search" placeholder="Search name, domain, or description" /></label>
       <label>Show<select id="nap-state"><option value="all">All specifications</option><option value="merged">Merged</option><option value="proposals">Open proposals</option><option value="deferred">Deferred</option></select></label>
@@ -30,12 +31,15 @@ const proposed = data.entries.length - merged;
     <div class="nap-table-scroll" role="region" aria-label="NAP specifications table; scroll horizontally on small screens" tabindex="0">
       <table class="nap-table">
         <caption class="visually-hidden">Merged NAP specifications and open NAP pull requests</caption>
-        <thead><tr><th scope="col">NAP / domain</th><th scope="col">Capability</th><th scope="col">Repository state</th><th scope="col">Upstream status</th></tr></thead>
+        <thead><tr><th scope="col">NAP / domain</th><th scope="col">Capability</th><th scope="col">Repository state</th><th scope="col">Upstream status</th><th scope="col">Shipped implementation</th></tr></thead>
         <tbody>{entries.map(entry => <tr data-nap-row data-state={entry.state} data-deferred={entry.registryStatus?.toLowerCase() === 'deferred' ? 'true' : 'false'} data-search={`${entry.id} ${entry.domain ?? ''} ${entry.title} ${entry.description}`.toLowerCase()}>
           <th scope="row"><a href={`/protocol/${entry.slug}/`}>{entry.id} <span aria-hidden="true">→</span></a><small>{entry.domain ?? 'Domain not declared'}</small></th>
           <td><a href={`/protocol/${entry.slug}/`}>{entry.title}</a>{entry.change === 'amendment' && <small>Proposed amendment</small>}{entry.change === 'removal' && <small>Proposed removal</small>}</td>
           <td><span class:list={['nap-badge', `state-${entry.state}`]}>{entryState(entry)}</span>{entry.pr && <small>PR #{entry.pr}</small>}</td>
           <td>{entry.registryStatus ?? 'Not listed'}{entry.declaredStatus && <small>Document: {entry.declaredStatus}</small>}</td>
+          <td>{entry.domain && getNapImplementation(entry.domain)
+            ? <a href="/docs/naps/maturity.html">{getNapImplementation(entry.domain)?.maturity ?? 'unclassified'}</a>
+            : 'Not shipped'}</td>
         </tr>)}</tbody>
       </table>
     </div>

@@ -1,9 +1,13 @@
 {
   "name": "@napplet/nap",
-  "version": "0.34.0",
-  "description": "The active napplet NAP domains (relay, storage, inc, keys, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent, ble, webrtc, link, count, lists, serial, fs, common, dm, shell, gamepad, soulseek) as layered subpath exports",
+  "version": "0.38.0",
+  "description": "The active napplet NAP domains (relay, storage, inc, keys, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent, navigation, ble, webrtc, link, count, lists, serial, fs, common, dm, shell, gamepad, llm, blossom, catalog, torrent, soulseek) as layered subpath exports",
   "type": "module",
   "exports": {
+    "./boundary": {
+      "types": "./dist/boundary.d.ts",
+      "import": "./dist/boundary.js"
+    },
     "./relay": {
       "types": "./dist/relay/index.d.ts",
       "import": "./dist/relay/index.js"
@@ -419,6 +423,86 @@
     "./gamepad/sdk": {
       "types": "./dist/gamepad/sdk.d.ts",
       "import": "./dist/gamepad/sdk.js"
+    },
+    "./navigation": {
+      "types": "./dist/navigation/index.d.ts",
+      "import": "./dist/navigation/index.js"
+    },
+    "./navigation/types": {
+      "types": "./dist/navigation/types.d.ts",
+      "import": "./dist/navigation/types.js"
+    },
+    "./navigation/shim": {
+      "types": "./dist/navigation/shim.d.ts",
+      "import": "./dist/navigation/shim.js"
+    },
+    "./navigation/sdk": {
+      "types": "./dist/navigation/sdk.d.ts",
+      "import": "./dist/navigation/sdk.js"
+    },
+    "./llm": {
+      "types": "./dist/llm/index.d.ts",
+      "import": "./dist/llm/index.js"
+    },
+    "./llm/types": {
+      "types": "./dist/llm/types.d.ts",
+      "import": "./dist/llm/types.js"
+    },
+    "./llm/shim": {
+      "types": "./dist/llm/shim.d.ts",
+      "import": "./dist/llm/shim.js"
+    },
+    "./llm/sdk": {
+      "types": "./dist/llm/sdk.d.ts",
+      "import": "./dist/llm/sdk.js"
+    },
+    "./blossom": {
+      "types": "./dist/blossom/index.d.ts",
+      "import": "./dist/blossom/index.js"
+    },
+    "./blossom/types": {
+      "types": "./dist/blossom/types.d.ts",
+      "import": "./dist/blossom/types.js"
+    },
+    "./blossom/shim": {
+      "types": "./dist/blossom/shim.d.ts",
+      "import": "./dist/blossom/shim.js"
+    },
+    "./blossom/sdk": {
+      "types": "./dist/blossom/sdk.d.ts",
+      "import": "./dist/blossom/sdk.js"
+    },
+    "./catalog": {
+      "types": "./dist/catalog/index.d.ts",
+      "import": "./dist/catalog/index.js"
+    },
+    "./catalog/types": {
+      "types": "./dist/catalog/types.d.ts",
+      "import": "./dist/catalog/types.js"
+    },
+    "./catalog/shim": {
+      "types": "./dist/catalog/shim.d.ts",
+      "import": "./dist/catalog/shim.js"
+    },
+    "./catalog/sdk": {
+      "types": "./dist/catalog/sdk.d.ts",
+      "import": "./dist/catalog/sdk.js"
+    },
+    "./torrent": {
+      "types": "./dist/torrent/index.d.ts",
+      "import": "./dist/torrent/index.js"
+    },
+    "./torrent/types": {
+      "types": "./dist/torrent/types.d.ts",
+      "import": "./dist/torrent/types.js"
+    },
+    "./torrent/shim": {
+      "types": "./dist/torrent/shim.d.ts",
+      "import": "./dist/torrent/shim.js"
+    },
+    "./torrent/sdk": {
+      "types": "./dist/torrent/sdk.d.ts",
+      "import": "./dist/torrent/sdk.js"
     },
     "./soulseek": {
       "types": "./dist/soulseek/index.d.ts",

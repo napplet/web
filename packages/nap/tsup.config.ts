@@ -2,6 +2,28 @@ import { defineConfig } from 'tsup';
 
 export default defineConfig({
   entry: {
+    'navigation/index': 'src/navigation/index.ts',
+    'navigation/types': 'src/navigation/types.ts',
+    'navigation/shim': 'src/navigation/shim.ts',
+    'navigation/sdk': 'src/navigation/sdk.ts',
+    boundary: 'src/boundary.ts',
+    'llm/index': 'src/llm/index.ts',
+    'llm/types': 'src/llm/types.ts',
+    'llm/shim': 'src/llm/shim.ts',
+    'llm/sdk': 'src/llm/sdk.ts',
+    'blossom/index': 'src/blossom/index.ts',
+    'blossom/types': 'src/blossom/types.ts',
+    'blossom/shim': 'src/blossom/shim.ts',
+    'blossom/sdk': 'src/blossom/sdk.ts',
+    'catalog/index': 'src/catalog/index.ts',
+    'catalog/types': 'src/catalog/types.ts',
+    'catalog/shim': 'src/catalog/shim.ts',
+    'catalog/sdk': 'src/catalog/sdk.ts',
+    'torrent/index': 'src/torrent/index.ts',
+    'torrent/types': 'src/torrent/types.ts',
+    'torrent/shim': 'src/torrent/shim.ts',
+    'torrent/sdk': 'src/torrent/sdk.ts',
+
     'soulseek/index': 'src/soulseek/index.ts',
     'soulseek/types': 'src/soulseek/types.ts',
     'soulseek/shim': 'src/soulseek/shim.ts',

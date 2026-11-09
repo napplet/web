@@ -7,7 +7,26 @@
 
 - **npm:** [`@napplet/shim`](https://www.npmjs.com/package/@napplet/shim)
 - **JSR:** [`@napplet/shim`](https://jsr.io/@napplet/shim)
-- **Source:** [packages/shim](https://github.com/napplet/napplet/tree/main/packages/shim)
+- **Source:** [packages/shim](https://github.com/napplet/web/tree/main/packages/shim)
+
+## Maturity-controlled injection
+
+Use the side-effect-free `@napplet/shim/prelude` entrypoint for policy-controlled hosts. The legacy root `@napplet/shim` import still installs every bundled domain for compatibility.
+
+```ts
+import { selectNapDomains } from '@napplet/core';
+import { renderNappletRuntimePreludeCall } from '@napplet/shim/prelude';
+
+const selection = selectNapDomains({
+  candidates: ['storage', 'llm', 'ble'],
+  optIn: ['llm'],
+});
+const activate = renderNappletRuntimePreludeCall({ domains: selection.domains });
+```
+
+Inline the maintained prelude artifact followed by `activate` before napplet scripts run. Enforce the same `selection.domains` set in host dispatch: hiding a shim object does not block direct `postMessage`. Candidates must already be implemented and authorized for the napplet.
+
+Prelude helpers also accept `maturity: {}` for supported-only filtering or `maturity: { optIn: ['llm'] }` for a named exception. Omitting `maturity` preserves existing explicit allowlist behavior. An explicit install replaces an earlier legacy namespace but cannot undo earlier calls; finish host setup before napplet code executes. See the [maturity guide](https://napplet.run/docs/naps/maturity.html) for classifications, required/optional domain handling, and provenance limits.
 
 ## Install
 
@@ -52,6 +71,7 @@ After runtime injection, the global may be populated with these sub-objects:
 | `relay` | Low-level explicit relay proxy for relay-local escape hatches |
 | `inc` | Inter-napplet communication: `emit`, `on` |
 | `intent` | Archetype-based intent invocation, discovery, and availability changes |
+| `navigation` | Committed-location reports and runtime-owned instance history; requires INTENT |
 | `storage` | Scoped key-value storage: `getItem`, `setItem`, `removeItem`, `keys` (512 KB quota), plus `storage.instance.*` for per-instance scope |
 | `keys` | Keyboard forwarding + action keybindings: `registerAction`, `unregisterAction`, `onAction` |
 | `media` | Ownership-aware media sessions: `createSession`, `reportState`, `onCommand`, … |
@@ -107,7 +127,7 @@ Fragments, malformed percent escapes, repeated decoded names, and a queried URI 
 
 ### Intent dispatch injection
 
-Intent calls derive archetype and action from the URI. An `ok: true` result means the runtime accepted delivery responsibility and includes the normalized identity and handler catalog identifier; an `ok: false` result includes `error`. Targets receive runtime-attested `IntentDelivery` values through `onDelivery`, including deliveries retained before registration. Behavior hints are `focus` and `reuse`. This non-normative guidance defers to the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md).
+Intent calls derive archetype and action from the URI. An `ok: true` result means the runtime accepted delivery responsibility and includes the normalized identity and handler catalog identifier; an `ok: false` result includes `error`. Targets receive runtime-attested `IntentDelivery` values through `onDelivery`, including deliveries retained before registration. Each delivery has a runtime-assigned `id`; `sender` is the source catalog identifier, or `null` for a shell-originated request. These fields follow the [NAP-INTENT delivery draft](https://github.com/napplet/naps/pull/128). Behavior hints are `focus` and `reuse`. This non-normative guidance defers to the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md).
 
 This behavior defers to the living [NAP-INC](https://github.com/napplet/naps/blob/master/naps/NAP-INC.md) and [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md) documents.
 
@@ -123,7 +143,7 @@ const napplet = (window as Window & { napplet: NappletGlobal }).napplet;
 
 ## Wire format
 
-The shim communicates with the shell using JSON envelope messages (`{ type: 'domain.action', ...payload }`). Outbound messages go via `window.parent.postMessage(msg, '*')`; inbound arrive via a `message` listener. Request/response pairs are correlated by an `id` field. The shim package README documents the full per-domain outbound and inbound message catalog.
+The shim communicates with the shell using JSON envelope messages (`{ type: 'domain.action', ...payload }`). `installNappletGlobal` first opens the NIP-5D channel: it creates a `MessageChannel`, keeps one port private and hands the other to the shell once in `napplet.hello`. Outbound and inbound envelopes then travel only over that port; window-level messages are ignored. Request/response pairs are correlated by an `id` field. The shim package README documents the full per-domain outbound and inbound message catalog.
 
 ## See also
 
@@ -140,13 +160,35 @@ The runtime may expose `shell` for environment information. `shell.supports(doma
 ```ts
 import { intent } from '@napplet/sdk';
 
-intent.onDelivery(({ sender, convention, payload }) => {
-  console.log(sender, convention, payload);
+intent.onDelivery(({ id, sender, convention, payload }) => {
+  console.log(id, sender, convention, payload);
 });
 await intent.invoke('napplet:profile/open?pubkey=abc123');
 ```
 
 The runtime binding retains deliveries until a listener registers. Discovery candidates expose opaque catalog `id` values and `contracts` with parameter names. INC peers instead use identifiers for running authenticated endpoints. A NAP-INTENT URI may append a bare `#naddr1…` recommendation; the binding sends its coordinate and relay hints as `handlerHint`, outside convention identity and payload. An applicable user default takes precedence. INC URI operations reject fragments. See the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md) and [web projection](https://github.com/napplet/naps/blob/master/projections/web.md).
+
+### LLM runtime binding
+
+Select `llm` in `installNappletGlobal({ domains: ['llm'] })` or the equivalent runtime prelude options to expose `window.napplet.llm`. The binding forwards `select`, `describe`, `generate`, and `cancel`, correlates each result by `id` and type, routes `llm.delta` only to the generation that owns its `requestId`, drops deltas that do not match the Delta schema (`start` / `delta` / `end` events, `text` only on `delta`, `toolCallId` and `name` only on a `toolCall` start), stops provisional delivery on a sequence gap, rejects an `Error` record as an error carrying the specification code, and maps an abort signal to `llm.cancel`. Installing the binding supplies no connection, consent, or provider: the host provides policy-bound handlers, endpoint-scoped handles, and prompts. See the living [NAP-LLM proposal](https://github.com/napplet/naps/pull/134).
+
+## Navigation history
+
+Expose `navigation` and `intent` explicitly in the runtime prelude domain list. The navigation binding routes correlated results from the `napplet.hello` port; it neither owns history nor intercepts native routing APIs. Navigation does not depend on a SHELL handshake. This non-normative guidance targets the [NAP-NAVIGATION draft](https://github.com/napplet/naps/pull/126) and [NAP-INTENT delivery draft](https://github.com/napplet/naps/pull/128). See [Navigation](/naps/navigation) for runtime availability, manifest declarations, serialized reporting, and recovery.
+
+## Optional BLOSSOM binding
+
+Include `blossom` in the host's explicit domain allowlist to inject `window.napplet.blossom`. The binding correlates the draft's request/result messages, preserves structured-clone bytes and provides local BUD-10 URI helpers. Host code supplies the Blossom endpoint backend, authentication, integrity checks and network policy. See the living [NAP-BLOSSOM proposal](https://github.com/napplet/naps/pull/71) and non-normative [BLOSSOM guide](https://napplet.run/docs/naps/blossom.html).
+
+## Catalog support
+
+Add `catalog` to the runtime allowlist to inject `window.napplet.catalog.get()`. The host supplies catalog snapshots; the shim handles request correlation and parent message routing. This implements the [NAP-CATALOG draft](https://github.com/napplet/naps/pull/95). See the [non-normative catalog guide](/naps/catalog) for types, layered exports, SDK usage, runtime injection, and selector handling.
+
+The runtime binding retains deliveries until a listener registers. Discovery candidates expose opaque catalog `id` values and `contracts` with parameter names. INC peers instead use identifiers for running authenticated endpoints. A NAP-INTENT URI may append a bare `#naddr1…` recommendation; the binding sends its coordinate and relay hints as `handlerHint`, outside convention identity and payload. An applicable user default takes precedence. INC URI operations reject fragments. See the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md) and [web projection](https://github.com/napplet/naps/blob/master/projections/web.md).
+
+### Torrent runtime binding
+
+Select `torrent` in `installNappletGlobal({ domains: ['torrent'] })` or the equivalent runtime prelude options to expose `window.napplet.torrent`. The binding forwards all 17 operations and routes `torrent.state`, `torrent.progress`, and `torrent.error` to local listeners. Requests correlate by `id`; pushes identify jobs by `jobId`. Installing the binding does not install a torrent engine or grant permission: the host supplies policy-bound handlers, scoped jobs, storage, and user consent. See the living [NAP-TORRENT proposal](https://github.com/napplet/naps/blob/nap-torrent/naps/NAP-TORRENT.md).
 
 ### Soulseek runtime binding
 

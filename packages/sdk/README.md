@@ -2,6 +2,8 @@
 
 > Named TypeScript exports for napplet developers using a bundler. Wraps `window.napplet` at call time.
 
+NAP proposal status and shipped implementation maturity are separate. All capabilities can change. Inspect `NAP_IMPLEMENTATIONS` from `@napplet/core` and use `selectNapDomains` for local host opt-in policy. See [maturity and opt-in guidance](https://napplet.run/docs/naps/maturity.html).
+
 ## Getting Started
 
 ### Prerequisites
@@ -195,7 +197,7 @@ if (!result.ok) throw new Error(result.error);
 console.log(`Accepted by ${result.handler}`);
 ```
 
-Intent calls derive archetype and action from the URI. An `ok: true` result means the runtime accepted delivery responsibility and includes the normalized identity and handler catalog identifier; an `ok: false` result includes `error`. Targets receive runtime-attested `IntentDelivery` values through `onDelivery`, including deliveries retained before registration. Behavior hints are `focus` and `reuse`. This non-normative guidance defers to the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md).
+Intent calls derive archetype and action from the URI. An `ok: true` result means the runtime accepted delivery responsibility and includes the normalized identity and handler catalog identifier; an `ok: false` result includes `error`. Targets receive runtime-attested `IntentDelivery` values through `onDelivery`, including deliveries retained before registration. Each delivery has a runtime-assigned `id`; `sender` is the source catalog identifier, or `null` for a shell-originated request. These fields follow the [NAP-INTENT delivery draft](https://github.com/napplet/naps/pull/128). Behavior hints are `focus` and `reuse`. This non-normative guidance defers to the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md).
 
 ### `storage`
 
@@ -419,6 +421,8 @@ These are discriminated union types covering all messages in each NAP domain. Us
 | `ListsNapMessage` | `@napplet/nap/lists` | Discriminated union of all lists domain messages |
 | `CommonNapMessage` | `@napplet/nap/common` | Discriminated union of all common domain messages |
 | `GamepadNapMessage` | `@napplet/nap/gamepad` | Subscribe, unsubscribe, and state envelopes without correlation ids |
+| `LlmNapMessage` | `@napplet/nap/llm` | Four request/result pairs plus the unsolicited `llm.delta`; results carry exactly one of their success field or `error` |
+| `TorrentNapMessage` | `@napplet/nap/torrent` | Request, result, and job push envelopes |
 | `SoulseekNapMessage` | `@napplet/nap/soulseek` | Fourteen request/result pairs; results carry exactly one of `value` or `error` |
 | `SerialNapMessage` | `@napplet/nap/serial` | Discriminated union of all serial domain messages |
 
@@ -429,8 +433,8 @@ Individual message types (e.g., `RelaySubscribeMessage`, `IdentityGetPublicKeyMe
 Each NAP domain has a string constant re-exported from its package:
 
 ```ts
-import { RELAY_DOMAIN, IDENTITY_DOMAIN, STORAGE_DOMAIN, INC_DOMAIN, THEME_DOMAIN, KEYS_DOMAIN, MEDIA_DOMAIN, NOTIFY_DOMAIN, CONFIG_DOMAIN, RESOURCE_DOMAIN, CVM_DOMAIN, OUTBOX_DOMAIN, UPLOAD_DOMAIN, INTENT_DOMAIN, BLE_DOMAIN, WEBRTC_DOMAIN, LINK_DOMAIN, COUNT_DOMAIN, LISTS_DOMAIN, COMMON_DOMAIN, SERIAL_DOMAIN, DM_DOMAIN, SOULSEEK_DOMAIN } from '@napplet/sdk';
-// Values: 'relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent', 'ble', 'webrtc', 'link', 'count', 'lists', 'common', 'serial', 'fs', 'dm', 'shell', 'gamepad', 'soulseek'
+import { RELAY_DOMAIN, IDENTITY_DOMAIN, STORAGE_DOMAIN, INC_DOMAIN, THEME_DOMAIN, KEYS_DOMAIN, MEDIA_DOMAIN, NOTIFY_DOMAIN, CONFIG_DOMAIN, RESOURCE_DOMAIN, CVM_DOMAIN, OUTBOX_DOMAIN, UPLOAD_DOMAIN, INTENT_DOMAIN, BLE_DOMAIN, WEBRTC_DOMAIN, LINK_DOMAIN, COUNT_DOMAIN, LISTS_DOMAIN, COMMON_DOMAIN, SERIAL_DOMAIN, DM_DOMAIN, LLM_DOMAIN, BLOSSOM_DOMAIN, CATALOG_DOMAIN, TORRENT_DOMAIN, SOULSEEK_DOMAIN } from '@napplet/sdk';
+// Values: 'relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent', 'ble', 'webrtc', 'link', 'count', 'lists', 'common', 'serial', 'fs', 'dm', 'shell', 'gamepad', 'llm', 'blossom', 'catalog', 'torrent', 'soulseek'
 ```
 
 These constants are re-exported from the individual domain packages. Use property presence for type-safe conditional logic:
@@ -501,8 +505,8 @@ The runtime may expose `shell` for environment information. `shell.supports(doma
 ```ts
 import { intent } from '@napplet/sdk';
 
-intent.onDelivery(({ sender, convention, payload }) => {
-  console.log(sender, convention, payload);
+intent.onDelivery(({ id, sender, convention, payload }) => {
+  console.log(id, sender, convention, payload);
 });
 await intent.invoke('napplet:profile/open?pubkey=abc123');
 ```
@@ -528,6 +532,79 @@ if (window.napplet?.gamepad) {
 ```
 
 Declare `gamepad` as optional (`O`) when other controls fulfill the core task. Use a hard requirement (`R`) only when the core task needs controller input. The runtime owns controller access and focus isolation; app code does not call native `navigator.getGamepads()` or open raw HID devices. Haptics and remapping are outside this proposal.
+### `navigation`
+
+Import `navigation` from `@napplet/sdk` or `@napplet/sdk/navigation`. Both expose `report(report)` and `get()` returning `Promise<NavigationResult>`. Named `navigationReport` / `navigationGet` helpers are available from the root and navigation subpath; the subpath also exports `report` / `get` aliases and navigation types.
+
+```ts
+import { navigation } from '@napplet/sdk/navigation';
+
+if (window.napplet?.navigation && window.napplet?.intent) {
+  const result = await navigation.report({ revision: 1, location: null });
+  if (!result.ok) console.error(result.error.code);
+}
+```
+
+Report an initial and every subsequent committed view; `null` means no eligible advertised invocation represents it. The runtime owns history and Back/Forward requests, delivered through `intent.onDelivery`. Serialize transitions and reports, carry the responsible `delivery.id` as `deliveryId`, and inspect structured rejections before relying on shell history. Missing domains use the SDK's normal unavailable-domain error. This non-normative API guide follows the [NAP-NAVIGATION draft](https://github.com/napplet/naps/pull/126) and [NAP-INTENT delivery draft](https://github.com/napplet/naps/pull/128); see the [router integration guide](../../apps/docs/naps/navigation.md).
+
+### Language model inference
+
+This non-normative guide follows the living [NAP-LLM proposal](https://github.com/napplet/naps/pull/134). Import `llm` from `@napplet/sdk` or `@napplet/sdk/llm`; root exports include prefixed helpers such as `llmSelect` and `llmGenerate`. The dedicated subpath also provides bare aliases such as `select` and `generate`.
+
+The API exposes `select`, `describe`, `generate`, and `cancel`. `generate` returns a pending promise that exposes `requestId`; pass `onDelta` for ordered provisional `start` / `delta` / `end` block events and `signal` to map an abort to `llm.cancel`, and replace provisional output with the terminal `content` parts. `llmText(generation)` concatenates the text parts; `llmToolCalls(generation)` returns tool calls only from a `finish: "toolUse"` result. Each method resolves with the proposal's result record; a runtime `Error` record rejects with an `Error` carrying the specification `code`, recognizable with `isLlmFailure(error)`, while the binding's own transport timeout rejects without a `code`.
+
+```ts
+import { llm, isLlmFailure, llmText } from '@napplet/sdk/llm';
+
+if (window.napplet?.llm) {
+  try {
+    const model = await llm.select({ json: true });
+    const generation = await llm.generate({
+      handle: model.handle,
+      messages: [{ role: 'user', content: [{ type: 'text', text: 'Return a JSON object with a greeting.' }] }],
+      format: 'json',
+    });
+    if (generation.finish === 'stop') render(JSON.parse(llmText(generation)));
+  } catch (error) {
+    if (isLlmFailure(error)) console.warn(error.code, error.message);
+    else throw error;
+  }
+}
+```
+
+Selection does not authorize disclosure: the runtime obtains consent before each generation and may answer `user-cancelled`. Only `finish: "stop"` is complete output. Tool calls are requests the napplet validates and executes itself, if at all, through separately authorized capabilities; the runtime never executes them, and tool results re-enter the conversation as untrusted input. Handles are endpoint-scoped and expire when the connection, account, or endpoint changes. The runtime owns connections, credentials, consent, and provider access; model output is untrusted data.
+
+## Blossom blob access
+
+The SDK exposes `blossom` from `@napplet/sdk` and `@napplet/sdk/blossom` for server-directed blob operations, ordered BUD-03 server-list helpers and local BUD-10 URI parsing/formatting. Check `window.napplet?.blossom` before optional use. Binary fields remain `Blob` or `ArrayBuffer`; endpoint failures resolve with `ok: false`, while malformed-envelope errors and transport failures reject. Use `resource` for generic retrieval and `upload` when the runtime should choose storage. See the non-normative [BLOSSOM guide](https://napplet.run/docs/naps/blossom.html) and living [NAP-BLOSSOM proposal](https://github.com/napplet/naps/pull/71).
+
+## Catalog discovery
+
+Import `catalog` or `catalogGet` from `@napplet/sdk`, or `catalog` / `get` from `@napplet/sdk/catalog`. After checking `window.napplet?.catalog`, call `await catalog.get()` to read a `CatalogSnapshot`. The domain is independent of `intent` and `shell` readiness. Empty snapshots succeed; runtime errors and timeouts reject. Preserve opaque selectors exactly and render metadata as text. This non-normative guidance defers to the [NAP-CATALOG draft](https://github.com/napplet/naps/pull/95); see the [catalog guide](../../apps/docs/naps/catalog.md).
+
+### Torrent transfers and content
+
+This non-normative guide follows the living [NAP-TORRENT proposal](https://github.com/napplet/naps/blob/nap-torrent/naps/NAP-TORRENT.md). Import `torrent` from `@napplet/sdk` or `@napplet/sdk/torrent`; root exports include prefixed helpers such as `torrentAdd` and `torrentRead`. The dedicated subpath also provides bare aliases such as `add` and `read`.
+
+The API exposes `capabilities`, `pickFiles`, `add`, `status`, `jobs`, `files`, `selectFiles`, `pause`, `resume`, `remove`, `metadata`, `read`, `exportMetainfo`, `saveFile`, `openFile`, `cancel`, and `update`. Listen with `onState`, `onProgress`, and `onError`; close subscriptions when their owning view is disposed. Typed `ok: false` refusals resolve as results; top-level errors and request timeouts reject.
+
+```ts
+import { torrent } from '@napplet/sdk/torrent';
+
+if (window.napplet?.torrent) {
+  const ack = await torrent.add({
+    source: {
+      sourceType: 'infohash',
+      hashes: { v1: '0123456789abcdef0123456789abcdef01234567' },
+    },
+    options: { mode: 'download', startPaused: true },
+  });
+  if (!ack.ok) console.error(ack.error, ack.reason);
+  else console.log(await torrent.status(ack.jobId));
+}
+```
+
+`add` acknowledges job creation, not completion. The runtime owns the engine, consent, storage, and network policy. A file-picker grant authorizes seeding only; reading, saving, or opening that data needs separate authorization. Discovery, Nostr event conversion, publishing, and comments belong to other capabilities or napplet libraries, outside `torrent`.
 
 ### Soulseek discovery and downloads
 

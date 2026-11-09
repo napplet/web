@@ -1,3 +1,5 @@
+import { blossomEndpointResponse, blossomServerListResponse } from './reference-blossom.js';
+
 /** A 64-hex reference user pubkey the shell reports for identity queries. */
 export const REFERENCE_PUBKEY: string = 'f'.repeat(64);
 
@@ -9,15 +11,18 @@ export interface ReferenceEndpoint {
   catalogId: string;
   /** Exposed domains; omitted by the default all-domain fixture. */
   domains?: readonly string[];
+  /** Verified manifest bound by the host, never read from a napplet envelope. */
+  manifest?: import('./intent-catalog.js').CatalogManifest;
 }
 
 /** Default authenticated reference endpoint. */
-export const REFERENCE_ENDPOINT: ReferenceEndpoint = { id: 'reference-source-endpoint', catalogId: 'reference-source' };
+
 
 /** A placeholder blob URL for canned upload responses. `.invalid` is reserved (RFC 2606) and never resolves. */
 const REFERENCE_BLOB_URL = 'https://reference.invalid/blob';
 export const REFERENCE_HANDLER = `named:${REFERENCE_PUBKEY}:reference-handler`;
-export const REFERENCE_MANIFEST = { kind: 35129 as const, pubkey: REFERENCE_PUBKEY, id: '0'.repeat(64), tags: [['d', 'reference-handler'], ['z', 'note'], ['i', 'napplet:note/open', 'event']] };
+export const REFERENCE_MANIFEST = { kind: 35129 as const, pubkey: REFERENCE_PUBKEY, id: '0'.repeat(64), content: 'Displays a Nostr note.', tags: [['d', 'reference-handler'], ['x', 'c'.repeat(64)], ['z', 'note'], ['i', 'napplet:note/open', 'event']] };
+export const REFERENCE_ENDPOINT: ReferenceEndpoint = { id: 'reference-source-endpoint', catalogId: 'reference-source', manifest: REFERENCE_MANIFEST };
 export const REFERENCE_SUBSCRIBER = 'reference-subscriber';
 export const REFERENCE_CONVENTION = 'napplet:note/open';
 
@@ -74,6 +79,21 @@ function dataUrlToBlob(url: unknown): { blob: Blob; mime: string } | null {
  * envelopes, not the shell's responses.
  */
 export const RESPONDERS: Record<string, Responder> = {
+  // NAP-BLOSSOM: deterministic failures; this fixture performs no network or signing.
+  'blossom.check': blossomEndpointResponse,
+  'blossom.get': blossomEndpointResponse,
+  'blossom.checkUpload': blossomEndpointResponse,
+  'blossom.upload': blossomEndpointResponse,
+  'blossom.mirror': blossomEndpointResponse,
+  'blossom.checkMedia': blossomEndpointResponse,
+  'blossom.media': blossomEndpointResponse,
+  'blossom.list': blossomEndpointResponse,
+  'blossom.delete': blossomEndpointResponse,
+  'blossom.servers': blossomServerListResponse,
+  'blossom.addServer': blossomServerListResponse,
+  'blossom.removeServer': blossomServerListResponse,
+  'blossom.reorderServers': blossomServerListResponse,
+
   // This transport-neutral mock has no controller API. Production shells use a host reader.
   'gamepad.subscribe': () => ok({ type: 'gamepad.state', available: false, reason: 'unavailable', focused: false, pads: [] }),
   'gamepad.unsubscribe': none,
