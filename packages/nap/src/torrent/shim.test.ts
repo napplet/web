@@ -1,11 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { installFakeShell, type FakeShell } from '../test-support/fake-shell.js';
 
+let shell: FakeShell;
 let posted: Record<string, unknown>[];
 beforeEach(() => {
-  posted = [];
   vi.resetModules();
   vi.useFakeTimers();
-  vi.stubGlobal('window', { parent: { postMessage: (msg: Record<string, unknown>) => posted.push(msg) } });
+  shell = installFakeShell();
+  posted = shell.sent;
 });
 afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); });
 
@@ -122,7 +124,7 @@ it('preserves optional picker and job filters without inserting defaults', async
 
 it('releases timer and request when the transport throws', async () => {
   const shim = await import('./shim.js');
-  vi.stubGlobal('window', { parent: { postMessage: () => { throw new Error('transport closed'); } } });
+  shell.onSend(() => { throw new Error('transport closed'); });
   await expect(shim.jobs()).rejects.toThrow('transport closed');
   expect(vi.getTimerCount()).toBe(0);
 });

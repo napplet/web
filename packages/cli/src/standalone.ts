@@ -6,7 +6,7 @@
  * This file is excluded from the JSR package. Release compilation resolves and
  * embeds the maintained workspace package CLI so create needs no Node.js
  * process or package resolver at runtime. Agent skills are installed with the
- * skills.sh CLI (`npx skills add napplet/napplet`), not by this binary.
+ * skills.sh CLI (`npx skills add napplet/web`), not by this binary.
  */
 
 import { runCli as runBoilerplateCli } from "@napplet/boilerplate";

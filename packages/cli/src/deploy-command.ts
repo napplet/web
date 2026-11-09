@@ -9,6 +9,7 @@ import { selectManifestFormat } from "./manifest-format.ts";
 import { createDeployManifestTemplates } from "./manifest.ts";
 import { createDeployProgressReporter, isTerminalOutput, renderDeployReport } from "./output.ts";
 import { canPrompt } from "./interaction.ts";
+import { activeProxy } from "./network.ts";
 import { resolveSigningMethod, signDeployManifestTemplates } from "./signing.ts";
 import type { DeploySelection } from "./types.ts";
 import { inferZapstoreConfig, prepareZapstorePublication } from "./zapstore.ts";
@@ -130,6 +131,8 @@ async function prepareDeploy(argv: string[]) {
     for (const item of plan.items) console.error(`  ${config.metadata?.title ?? item.dTag ?? item.candidate.name}  /  ${item.target}${item.dTag ? `:${item.dTag}` : ""}`);
     console.error(`  Relays: ${config.relays.join(", ") || "none (preview)"}`);
     console.error(`  Blossom: ${config.blossomServers.join(", ") || "artifact hints / preview"}`);
+    const proxy = activeProxy();
+    if (proxy) console.error(`  Proxy: ${proxy}`);
     console.error(paint(dryRun ? "  Dry run: no uploads or publications.\n" : "  Preparing signer and artifacts...\n", "muted"));
   }
   if (!dryRun && canPrompt() && signing.type === "none") {

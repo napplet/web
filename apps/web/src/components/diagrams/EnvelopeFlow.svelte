@@ -137,7 +137,7 @@
 
 <div class="envelope">
   <div class="flow" role="img"
-    aria-label="A napplet sends a JSON envelope over postMessage to the shell. The shell verifies identity from the message source, checks the ACL and dispatches the NAP, then talks to the capability backend over the network and streams results back. The diagram rotates through the relay, storage, media, notify, theme, value, upload, resource and cvm domains.">
+    aria-label="A napplet sends a JSON envelope over postMessage to the shell. The shell verifies identity from the port the message arrived on, checks the ACL and dispatches the NAP, then talks to the capability backend over the network and streams results back. The diagram rotates through the relay, storage, media, notify, theme, value, upload, resource and cvm domains.">
     <!-- Napplet node -->
     <div class="node node-napplet">
       <span class="node-kind">sandboxed iframe</span>

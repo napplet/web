@@ -1,16 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { installFakeShell, type FakeShell } from '../test-support/fake-shell.js';
 
-interface PostedMessage {
-  msg: any;
-  targetOrigin: string;
-}
-
-let postedMessages: PostedMessage[];
+let shell: FakeShell;
 let uuidCounter: number;
 let originalCryptoDescriptor: PropertyDescriptor | undefined;
 
 beforeEach(() => {
-  postedMessages = [];
   uuidCounter = 0;
   originalCryptoDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'crypto');
 
@@ -21,16 +16,7 @@ beforeEach(() => {
     },
   });
 
-  const parent = {
-    postMessage(msg: unknown, targetOrigin: string) {
-      postedMessages.push({ msg, targetOrigin });
-    },
-  };
-
-  Object.defineProperty(globalThis, 'window', {
-    configurable: true,
-    value: { parent },
-  });
+  shell = installFakeShell();
 
   vi.resetModules();
 });
@@ -42,12 +28,12 @@ afterEach(() => {
   } else {
     Reflect.deleteProperty(globalThis, 'crypto');
   }
-  Reflect.deleteProperty(globalThis, 'window');
+  vi.unstubAllGlobals();
 });
 
 function lastPosted(type: string): any {
-  for (let i = postedMessages.length - 1; i >= 0; i--) {
-    if (postedMessages[i].msg?.type === type) return postedMessages[i].msg;
+  for (let i = shell.sent.length - 1; i >= 0; i--) {
+    if (shell.sent[i]?.type === type) return shell.sent[i];
   }
   throw new Error(`no posted message of type ${type}`);
 }
@@ -88,6 +74,7 @@ describe('@napplet/nap/count shim', () => {
     const { query } = await import('./shim.js');
 
     await expect(query([])).rejects.toThrow('count.query requires at least one filter');
-    expect(postedMessages).toHaveLength(0);
+    expect(shell.sent).toHaveLength(0);
+    expect(shell.windowMessages).toHaveLength(0);
   });
 });

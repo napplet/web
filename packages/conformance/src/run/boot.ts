@@ -2,21 +2,24 @@
  * @napplet/conformance -- Browser-side boot harness.
  *
  * {@link bootAndCollect} loads a napplet into a real `sandbox="allow-scripts"`
- * iframe, injects the NIP-5D runtime namespace before subject scripts, attaches
- * a {@link createReferenceShell reference runtime}, and records host-observable
- * postMessage envelopes.
+ * iframe, injects the maintained `@napplet/shim` prelude before subject scripts,
+ * acts as a NIP-5D shell (binds the `napplet.hello` port, answers over it, and
+ * tears the frame down on any sign the verified document was replaced), and
+ * records host-observable envelopes and transport violations.
  *
- * The injected namespace is harness plumbing, not protocol surface. It exists so
- * conformance can test the current NIP-5D boundary: runtime-provided domain
- * properties are present before napplet code runs, and wire traffic after boot is
- * regular NAP domain traffic.
+ * The host supplies the shim IIFE source. The harness only appends the explicit
+ * domain allowlist call, so the napplet sees exactly the bindings the maintained
+ * runtime installs for a shell that exposes those domains. The injected namespace
+ * is harness plumbing, not protocol surface. It exists so conformance can test the
+ * current NIP-5D boundary: runtime-provided domain properties are present before
+ * napplet code runs, and wire traffic after boot is regular NAP domain traffic.
  *
  * @packageDocumentation
  */
 
-import { TORRENT_PRELUDE_SOURCE } from './torrent-prelude.js';
-import { NAP_DOMAINS } from '@napplet/core';
+import { NAP_DOMAINS, selectNapDomains, type NapDomain, type NapMaturityPolicy } from '@napplet/core';
 import { createReferenceShell, type RecordedEnvelope } from '../shell/reference-shell.js';
+import { bindNappletPort, type TransportViolation } from '../shell/port-binding.js';
 import type { BootObservation } from './context.js';
 
 const INTERNAL_BOOT_ERROR = '__nappletConformance.error';
@@ -30,6 +33,8 @@ export interface BootCollection {
   bootError: string | null;
   /** Envelopes emitted under a fully-capable runtime. */
   emitted: RecordedEnvelope[];
+  /** NIP-5D transport violations from the primary boot (window-level messages, a second hello or load). */
+  transportViolations: TransportViolation[];
   /** Observation from the no-domain degraded boot, or `null`. */
   degraded: BootObservation | null;
 }
@@ -38,6 +43,10 @@ export interface BootCollection {
 export interface BootOptions {
   /** The napplet URL to load. */
   url: string;
+  /** Explicit host candidates; defaults to all domains for conformance coverage. */
+  domains?: readonly NapDomain[];
+  /** Optional local maturity policy; omitted during full-domain conformance testing. */
+  maturity?: NapMaturityPolicy;
   /** Already loaded artifact text. Hosts can supply the exact snapshot they verified instead of fetching again. */
   html?: string;
   /** Milliseconds to await iframe load before declaring boot failure. Default 5000. */
@@ -46,8 +55,8 @@ export interface BootOptions {
   settleMs?: number;
   /** Also run a no-domain degraded boot. Default true. */
   runDegraded?: boolean;
-  /** Host-supplied maintained shim IIFE. Without it, only the embedded RESOURCE/GAMEPAD/TORRENT fixtures are available. */
-  runtimePreludeSource?: string;
+  /** The maintained `@napplet/shim` prelude IIFE source (`@napplet/shim/prelude.global`). */
+  runtimePreludeSource: string;
   /** Debug only: also grant `allow-same-origin` (a conformant load must NOT need it). Default false. */
   allowSameOrigin?: boolean;
   /** Document to create the iframe in. Defaults to the global `document`. */
@@ -60,6 +69,7 @@ interface SingleBoot {
   installedGlobal: boolean;
   bootError: string | null;
   emitted: RecordedEnvelope[];
+  transportViolations: TransportViolation[];
 }
 
 function sleep(ms: number): Promise<void> {
@@ -74,41 +84,6 @@ function escapeHtmlAttr(value: string): string {
     .replace(/>/g, '&gt;');
 }
 
-/**
- * NAP-GAMEPAD snapshot validation and copying, written as literal browser source.
- * The prelude must not embed `Function.prototype.toString()` output: bundler and
- * coverage transforms can add helper references that do not exist in the iframe.
- * `gamepad.test.ts` keeps this source equivalent to `@napplet/nap/gamepad`.
- */
-export const GAMEPAD_STATE_TOOLS_SOURCE = `(() => {
-  const record = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
-  const numberIn = (value, min, max) => typeof value === 'number' && Number.isFinite(value) && value >= min && value <= max;
-  const isGamepadState = (value) => {
-    if (!record(value) || typeof value.available !== 'boolean' || typeof value.focused !== 'boolean' || !Array.isArray(value.pads)) return false;
-    if (value.available) {
-      if (value.reason !== undefined) return false;
-    } else if (value.focused || (value.reason !== 'blocked' && value.reason !== 'unavailable')) return false;
-    return Array.from(value.pads).every((pad) => {
-      if (pad === null) return true;
-      if (!record(pad) || !Number.isInteger(pad.index) || pad.index < 0 || typeof pad.id !== 'string' || typeof pad.mapping !== 'string' || pad.connected !== true) return false;
-      if (typeof pad.timestamp !== 'number' || !Number.isFinite(pad.timestamp) || !Array.isArray(pad.axes) || !Array.isArray(pad.buttons)) return false;
-      if (!value.focused && pad.timestamp !== 0) return false;
-      if (!Array.from(pad.axes).every((axis) => numberIn(axis, -1, 1) && (value.focused || axis === 0))) return false;
-      return Array.from(pad.buttons).every((button) => record(button) && numberIn(button.value, 0, 1) && typeof button.pressed === 'boolean' && typeof button.touched === 'boolean' && (value.focused || (button.value === 0 && !button.pressed && !button.touched)));
-    });
-  };
-  const copyGamepadState = (state) => {
-    const copy = { available: state.available, focused: state.focused };
-    if (state.reason !== undefined) copy.reason = state.reason;
-    copy.pads = state.pads.map((pad) => pad === null ? null : {
-      index: pad.index, id: pad.id, mapping: pad.mapping, connected: pad.connected,
-      timestamp: pad.timestamp, axes: pad.axes.slice(), buttons: pad.buttons.map((button) => ({ value: button.value, pressed: button.pressed, touched: button.touched })),
-    });
-    return copy;
-  };
-  return { isGamepadState, copyGamepadState };
-})()`;
-
 function errorObserver(): string {
   return `(() => {
     const report = (reason) => {
@@ -120,147 +95,16 @@ function errorObserver(): string {
   })();`;
 }
 
-const FALLBACK_RUNTIME_OPEN = `
-(() => {
-  const domains = `;
-
-const FALLBACK_RUNTIME_BEFORE_GAMEPAD_TOOLS = `;
-  const napplet = {};
-  for (const domain of domains) {
-    if (domain === 'resource' || domain === 'gamepad') napplet[domain] = {};
-  }
-  const gamepadTools = `;
-
-const FALLBACK_RUNTIME_AFTER_GAMEPAD_TOOLS = `;
-  let gamepadState = { available: true, focused: false, pads: [] };
-  const gamepadHandlers = new Set();
-  // Subscribe on first use, like the nap binding, so napplets that never touch
-  // gamepad emit no gamepad traffic for checks to attribute to them.
-  let gamepadSubscribed = false;
-  const gamepadSubscribe = () => {
-    if (gamepadSubscribed) return;
-    gamepadSubscribed = true;
-    window.parent.postMessage({ type: 'gamepad.subscribe' }, '*');
-  };
-  const pending = new Map();
-  let seq = 0;
-  const nextId = () => {
-    try {
-      if (window.crypto && typeof window.crypto.randomUUID === 'function') return window.crypto.randomUUID();
-    } catch {}
-    seq += 1;
-    return 'conformance-' + Date.now().toString(36) + '-' + seq.toString(36);
-  };
-  const request = (message, resultType, errorType, timeoutMs = 5000, details = {}) => {
-    const id = message.id || nextId();
-    const promise = new Promise((resolve, reject) => {
-      const timeout = window.setTimeout(() => {
-        pending.delete(id);
-        reject(new Error(message.type + ' timed out'));
-      }, timeoutMs);
-      pending.set(id, { resolve, reject, resultType, errorType, timeout, ...details });
-      try { window.parent.postMessage({ ...message, id }, '*'); }
-      catch (error) { pending.delete(id); window.clearTimeout(timeout); reject(error); }
-    });
-    Object.defineProperty(promise, 'requestId', { value: id });
-    return promise;
-  };
-  window.addEventListener('message', (event) => {
-    if (event.source !== window.parent) return;
-    const msg = event.data;
-    if (gamepadSubscribed && msg && msg.type === 'gamepad.state' && !('id' in msg) && gamepadTools.isGamepadState(msg)) {
-      gamepadState = gamepadTools.copyGamepadState(msg);
-      const recipients = Array.from(gamepadHandlers);
-      for (const entry of recipients) {
-        if (!gamepadHandlers.has(entry)) continue;
-        try { entry.handler(gamepadTools.copyGamepadState(gamepadState)); }
-        catch (error) { queueMicrotask(() => { throw error; }); }
-      }
-      return;
-    }
-    if (!msg || typeof msg !== 'object' || typeof msg.id !== 'string') return;
-    const slot = pending.get(msg.id);
-    if (!slot) return;
-    if (msg.type !== slot.resultType && (!slot.errorType || msg.type !== slot.errorType)) return;
-    pending.delete(msg.id);
-    window.clearTimeout(slot.timeout);
-    if (slot.cancelTargetId && msg.result && msg.result.ok === true && msg.result.cancelled === true) {
-      const target = pending.get(slot.cancelTargetId);
-      if (target && target.cancellable) {
-        pending.delete(slot.cancelTargetId);
-        window.clearTimeout(target.timeout);
-        target.resolve({ type: target.resultType, id: slot.cancelTargetId, result: { ok: false, error: 'cancelled' } });
-      }
-    }
-    if (slot.errorType && msg.type === slot.errorType) {
-      slot.reject(new Error(msg.message ? msg.error + ': ' + msg.message : String(msg.error || 'request failed')));
-      return;
-    }
-    slot.resolve(msg);
-  });
-  if (napplet.gamepad) {
-    napplet.gamepad = {
-      get available() { gamepadSubscribe(); return gamepadState.available; },
-      get focused() { gamepadSubscribe(); return gamepadState.focused; },
-      getGamepads() { gamepadSubscribe(); return gamepadTools.copyGamepadState(gamepadState).pads; },
-      onChange(handler) {
-        const entry = { handler };
-        gamepadHandlers.add(entry);
-        gamepadSubscribe();
-        return { close() { gamepadHandlers.delete(entry); } };
-      },
-    };
-  }
-  if (napplet.resource) {
-    napplet.resource.info = () =>
-      request({ type: 'resource.info' }, 'resource.info.result', 'resource.info.error')
-        .then((msg) => msg.info);
-    napplet.resource.bytes = (url, options) => {
-      const message = { type: 'resource.bytes', url: String(url) };
-      if (options && options.servers !== undefined) message.servers = options.servers;
-      return request(message, 'resource.bytes.result', 'resource.bytes.error')
-        .then((msg) => msg.blob);
-    };
-    napplet.resource.bytesMany = (requests) =>
-      request({ type: 'resource.bytesMany', requests: Array.from(requests || []) }, 'resource.bytesMany.result', 'resource.bytesMany.error')
-        .then((msg) => msg.items);
-    napplet.resource.bytesAsObjectURL = (url) => {
-      const handle = { url: '', revoke: () => {} };
-      let objectUrl = '';
-      let revoked = false;
-      const ready = napplet.resource.bytes(url).then((blob) => {
-        if (revoked) return;
-        objectUrl = URL.createObjectURL(blob);
-        handle.url = objectUrl;
-        return objectUrl;
-      });
-      handle.revoke = () => {
-        if (revoked) return;
-        revoked = true;
-        if (objectUrl) URL.revokeObjectURL(objectUrl);
-      };
-      Object.defineProperty(handle, 'ready', { value: ready, enumerable: false });
-      return handle;
-    };
-  }
-  ${TORRENT_PRELUDE_SOURCE}
-  window.napplet = napplet;
-  `;
-
-const FALLBACK_RUNTIME_CLOSE = `
-})();
-`;
-
-export function runtimePrelude(domains: readonly string[], runtimePreludeSource?: string): string {
+/**
+ * Render the runtime prelude script: the maintained shim IIFE, the explicit
+ * domain allowlist call, and the harness installation probe.
+ */
+export function runtimePrelude(domains: readonly string[], runtimePreludeSource: string): string {
   const installed = `window.parent.postMessage({ type: '${INTERNAL_INSTALLED}', installed: !!window.napplet }, '*');`;
-  if (runtimePreludeSource !== undefined) {
-    return `${runtimePreludeSource}\n;globalThis.NappletShimPrelude.install(${JSON.stringify({ domains })});\n${installed}`;
-  }
-  return FALLBACK_RUNTIME_OPEN + JSON.stringify(domains) + FALLBACK_RUNTIME_BEFORE_GAMEPAD_TOOLS
-    + GAMEPAD_STATE_TOOLS_SOURCE + FALLBACK_RUNTIME_AFTER_GAMEPAD_TOOLS + installed + FALLBACK_RUNTIME_CLOSE;
+  return `${runtimePreludeSource}\n;globalThis.NappletShimPrelude.install(${JSON.stringify({ domains })});\n${installed}`;
 }
 
-function injectRuntime(html: string, url: string, domains: readonly string[], runtimePreludeSource?: string): string {
+function injectRuntime(html: string, url: string, domains: readonly string[], runtimePreludeSource: string): string {
   const base = `<base href="${escapeHtmlAttr(url)}">`;
   const source = runtimePrelude(domains, runtimePreludeSource).replace(/<\/script/gi, '<\\/script');
   const script = `<script>${errorObserver()}</script><script>${source}</script>`;
@@ -294,11 +138,11 @@ async function loadHtml(url: string): Promise<string> {
 /** Boot the napplet once with the given injected domain set and collect what's observable. */
 async function bootOnce(
   domains: readonly string[],
-  opts: Required<Pick<BootOptions, 'url' | 'readyTimeoutMs' | 'settleMs' | 'allowSameOrigin'>> & Pick<BootOptions, 'runtimePreludeSource' | 'html'>,
+  opts: Required<Pick<BootOptions, 'url' | 'readyTimeoutMs' | 'settleMs' | 'allowSameOrigin' | 'runtimePreludeSource'>> & Pick<BootOptions, 'html'>,
   doc: Document,
   win: Window,
 ): Promise<SingleBoot> {
-  const shell = createReferenceShell();
+  const shell = createReferenceShell({ domains });
   const iframe = doc.createElement('iframe');
   iframe.setAttribute('sandbox', opts.allowSameOrigin ? 'allow-scripts allow-same-origin' : 'allow-scripts');
   // NAP-GAMEPAD Web Projection Guidance: deny the native API with Permissions-Policy.
@@ -312,31 +156,52 @@ async function bootOnce(
 
   let bootError: string | null = null;
   let installedGlobal = false;
-  const listener = (event: MessageEvent): void => {
-    if (event.source !== iframe.contentWindow) return;
-    const data = event.data as { type?: unknown; reason?: unknown; installed?: unknown } | null;
-    if (data && typeof data === 'object' && data.type === INTERNAL_INSTALLED) {
-      installedGlobal = data.installed === true;
-      return;
+  const removeFrame = (): void => {
+    try {
+      iframe.remove();
+    } catch {
+      /* best-effort cleanup */
     }
-    if (data && typeof data === 'object' && data.type === INTERNAL_BOOT_ERROR) {
-      bootError = `napplet boot error: ${String(data.reason ?? 'unknown error')}`;
-      return;
-    }
-    const responses = shell.handle(event.data);
-    const source = event.source as Window | null;
-    for (const response of responses) source?.postMessage(response, '*');
   };
+
+  // The harness's own injected probes report over window messages; they are shell code, not napplet traffic.
+  const internal = (data: unknown): boolean => {
+    const message = data as { type?: unknown; reason?: unknown; installed?: unknown } | null;
+    if (!message || typeof message !== 'object') return false;
+    if (message.type === INTERNAL_INSTALLED) {
+      installedGlobal = message.installed === true;
+      return true;
+    }
+    if (message.type === INTERNAL_BOOT_ERROR) {
+      bootError = `napplet boot error: ${String(message.reason ?? 'unknown error')}`;
+      return true;
+    }
+    return false;
+  };
+
+  // NIP-5D Identity: the binding lives only as long as the verified document.
+  const binding = bindNappletPort({
+    host: win,
+    get source() {
+      return iframe.contentWindow;
+    },
+    onMessage: (envelope) => shell.handle(envelope),
+    onRevoke: removeFrame,
+    isInternal: internal,
+  });
 
   let loaded = false;
   const loadPromise = new Promise<void>((resolve) => {
     iframe.addEventListener('load', () => {
+      if (loaded) {
+        binding.revoke({ kind: 'second-load', detail: 'The frame loaded a second document (navigation or reload)' });
+        return;
+      }
       loaded = true;
       resolve();
-    }, { once: true });
+    });
   });
 
-  win.addEventListener('message', listener);
 
   try {
     const html = opts.html ?? await loadHtml(opts.url);
@@ -356,14 +221,10 @@ async function bootOnce(
     }
   }
 
-  win.removeEventListener('message', listener);
-  try {
-    iframe.remove();
-  } catch {
-    /* best-effort cleanup */
-  }
+  binding.detach();
+  removeFrame();
 
-  return { installedGlobal, bootError, emitted: [...shell.records] };
+  return { installedGlobal, bootError, emitted: [...shell.records], transportViolations: [...binding.violations] };
 }
 
 /**
@@ -381,18 +242,23 @@ export async function bootAndCollect(options: BootOptions): Promise<BootCollecti
     runtimePreludeSource: options.runtimePreludeSource,
   };
 
-  const primary = await bootOnce(NAP_DOMAINS, resolved, doc, win);
+  const candidates = options.domains ?? NAP_DOMAINS;
+  const domains = options.maturity
+    ? selectNapDomains({ ...options.maturity, candidates }).domains
+    : candidates;
+  const primary = await bootOnce(domains, resolved, doc, win);
 
   let degraded: BootObservation | null = null;
   if (options.runDegraded ?? true) {
     const d = await bootOnce([], resolved, doc, win);
-    degraded = { bootError: d.bootError, emitted: d.emitted };
+    degraded = { bootError: d.bootError, emitted: d.emitted, transportViolations: d.transportViolations };
   }
 
   return {
     installedGlobal: primary.installedGlobal,
     bootError: primary.bootError,
     emitted: primary.emitted,
+    transportViolations: primary.transportViolations,
     degraded,
   };
 }

@@ -7,7 +7,7 @@
  * @module
  */
 
-import { SimplePool } from "nostr-tools/pool";
+import { networkRelayPool } from "./network.ts";
 
 export const NIP66_RELAY_DISCOVERY_KIND = 30166;
 export const BLOSSOM_SERVER_LIST_KIND = 10063;
@@ -160,7 +160,7 @@ async function querySuggestions(
   parse: (events: readonly unknown[]) => string[],
 ): Promise<string[]> {
   const relays = options.relays?.length ? options.relays : [...fallbackRelays];
-  const pool = options.pool ?? new SimplePool() as QueryPool;
+  const pool = options.pool ?? networkRelayPool() as QueryPool;
   try {
     const events = await pool.querySync(relays, filter, {
       maxWait: options.maxWait ?? 1500,

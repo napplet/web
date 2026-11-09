@@ -11,6 +11,8 @@
 #     BUNNY_STORAGE_ENDPOINT  Bunny storage host (bare, no scheme), e.g. storage.bunnycdn.com
 #     BUNNY_PULLZONE_ID       Bunny Pull Zone numeric id (for cache purge)
 #     BUNNY_API_KEY           Bunny account API key (for cache purge)
+#     BUNNY_EDGE_SCRIPT_ID    Markdown negotiation Edge Script id (optional, see edge/README.md)
+#     BUNNY_EDGE_DEPLOY_KEY   Deploy key for that Edge Script (optional)
 #   Variables (non-sensitive, optional — Enter to keep defaults):
 #     NSITE_RELAYS            newline/space separated relay URIs
 #     NSITE_SERVERS           newline/space separated Blossom server URIs
@@ -131,8 +133,16 @@ dim "   API key: dashboard → Account Settings → API → Account API Key."
 set_secret BUNNY_API_KEY "BUNNY_API_KEY (account API key)"
 echo
 
+# ─── Bunny edge script ────────────────────────────────────────────────────────
+bold "4. Bunny — Markdown negotiation Edge Script (optional)"
+dim "   Create a Middleware script linked to the pull zone and enable 'Run script before cache'"
+dim "   (see edge/README.md). Script → Deployments → Settings shows both values."
+set_secret BUNNY_EDGE_SCRIPT_ID "BUNNY_EDGE_SCRIPT_ID (numeric)"
+set_secret BUNNY_EDGE_DEPLOY_KEY "BUNNY_EDGE_DEPLOY_KEY (deploy key)"
+echo
+
 # ─── nsite targets (variables) ────────────────────────────────────────────────
-bold "4. nsite relays & Blossom servers (non-secret, optional)"
+bold "5. nsite relays & Blossom servers (non-secret, optional)"
 set_var NSITE_RELAYS "Relays (space or newline separated)" "$DEFAULT_RELAYS"
 set_var NSITE_SERVERS "Blossom servers" "$DEFAULT_SERVERS"
 echo

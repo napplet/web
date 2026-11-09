@@ -1,0 +1,16 @@
+{
+  "name": "@napplet/lab",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Tooling for probing napplets and the shells that host them: lab napplets (starting with Security Lab) and the harnesses that drive them.",
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/napplet/web.git",
+    "directory": "packages/lab"
+  },
+  "scripts": {
+    "test:paja": "pnpm -r --filter './napplets/*' test:paja"
+  }
+}

@@ -1,16 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { installFakeShell, type FakeShell } from '../test-support/fake-shell.js';
 
-interface PostedMessage {
-  msg: unknown;
-  targetOrigin: string;
-}
-
-let postedMessages: PostedMessage[];
+let shell: FakeShell;
 let uuidCounter: number;
 let originalCryptoDescriptor: PropertyDescriptor | undefined;
 
 beforeEach(() => {
-  postedMessages = [];
   uuidCounter = 0;
   originalCryptoDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'crypto');
 
@@ -21,16 +16,7 @@ beforeEach(() => {
     },
   });
 
-  Object.defineProperty(globalThis, 'window', {
-    configurable: true,
-    value: {
-      parent: {
-        postMessage(msg: unknown, targetOrigin: string) {
-          postedMessages.push({ msg, targetOrigin });
-        },
-      },
-    },
-  });
+  shell = installFakeShell();
 
   vi.resetModules();
 });
@@ -42,7 +28,7 @@ afterEach(() => {
   } else {
     Reflect.deleteProperty(globalThis, 'crypto');
   }
-  Reflect.deleteProperty(globalThis, 'window');
+  vi.unstubAllGlobals();
 });
 
 describe('@napplet/nap/media shim', () => {
@@ -71,32 +57,29 @@ describe('@napplet/nap/media shim', () => {
       live: true,
     });
 
-    expect(postedMessages).toEqual([
+    expect(shell.sent).toEqual([
       {
-        msg: {
-          type: 'media.session.create',
-          id: 'media-test-1',
-          owner: 'shell',
-          source: { url: 'https://example.com/live.mp3', mimeType: 'audio/mpeg' },
-          metadata: { title: 'Live Set' },
-          context: {
-            label: 'Live queue',
-            detail: 'Main stage',
-            index: 0,
-            total: 1,
-            links: [
-              {
-                rel: 'live-chat',
-                title: 'Live chat',
-                nostr: { address: '30311:pubkey:d-tag' },
-              },
-            ],
-          },
-          capabilities: ['play', 'pause'],
-          autoplay: true,
-          live: true,
+        type: 'media.session.create',
+        id: 'media-test-1',
+        owner: 'shell',
+        source: { url: 'https://example.com/live.mp3', mimeType: 'audio/mpeg' },
+        metadata: { title: 'Live Set' },
+        context: {
+          label: 'Live queue',
+          detail: 'Main stage',
+          index: 0,
+          total: 1,
+          links: [
+            {
+              rel: 'live-chat',
+              title: 'Live chat',
+              nostr: { address: '30311:pubkey:d-tag' },
+            },
+          ],
         },
-        targetOrigin: '*',
+        capabilities: ['play', 'pause'],
+        autoplay: true,
+        live: true,
       },
     ]);
 
@@ -133,25 +116,20 @@ describe('@napplet/nap/media shim', () => {
     sendCommand('shell-session-7', 'seek', 42);
     sendCommand('shell-session-7', 'pause');
 
-    expect(postedMessages).toEqual([
+    expect(shell.sent).toEqual([
       {
-        msg: {
-          type: 'media.command',
-          sessionId: 'shell-session-7',
-          action: 'seek',
-          value: 42,
-        },
-        targetOrigin: '*',
+        type: 'media.command',
+        sessionId: 'shell-session-7',
+        action: 'seek',
+        value: 42,
       },
       {
-        msg: {
-          type: 'media.command',
-          sessionId: 'shell-session-7',
-          action: 'pause',
-        },
-        targetOrigin: '*',
+        type: 'media.command',
+        sessionId: 'shell-session-7',
+        action: 'pause',
       },
     ]);
+    expect(shell.windowMessages).toEqual([]);
   });
 
   it('dispatches shell controls only to handlers for the matching session', async () => {

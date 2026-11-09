@@ -22,6 +22,7 @@ const NAP_DOMAINS = [
   'cvm',
   'outbox',
   'upload',
+  'blossom',
   'intent',
   'ble',
   'webrtc',
@@ -33,6 +34,8 @@ const NAP_DOMAINS = [
   'common',
   'dm',
   'gamepad',
+  'llm',
+  'catalog',
   'torrent',
 ] as const;
 

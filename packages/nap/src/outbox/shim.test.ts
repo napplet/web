@@ -1,17 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { installFakeShell, type FakeShell } from '../test-support/fake-shell.js';
 import { readFileSync } from 'node:fs';
 
-interface PostedMessage {
-  msg: any;
-  targetOrigin: string;
-}
-
-let postedMessages: PostedMessage[];
+let shell: FakeShell;
 let uuidCounter: number;
 let originalCryptoDescriptor: PropertyDescriptor | undefined;
 
 beforeEach(() => {
-  postedMessages = [];
   uuidCounter = 0;
   originalCryptoDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'crypto');
 
@@ -22,16 +17,7 @@ beforeEach(() => {
     },
   });
 
-  Object.defineProperty(globalThis, 'window', {
-    configurable: true,
-    value: {
-      parent: {
-        postMessage(msg: unknown, targetOrigin: string) {
-          postedMessages.push({ msg, targetOrigin });
-        },
-      },
-    },
-  });
+  shell = installFakeShell();
 
   vi.resetModules();
 });
@@ -43,13 +29,13 @@ afterEach(() => {
   } else {
     Reflect.deleteProperty(globalThis, 'crypto');
   }
-  Reflect.deleteProperty(globalThis, 'window');
+  vi.unstubAllGlobals();
 });
 
 /** Find the most recent posted message of a given type. */
 function lastPosted(type: string): any {
-  for (let i = postedMessages.length - 1; i >= 0; i--) {
-    if (postedMessages[i].msg?.type === type) return postedMessages[i].msg;
+  for (let i = shell.sent.length - 1; i >= 0; i--) {
+    if (shell.sent[i]?.type === type) return shell.sent[i];
   }
   throw new Error(`no posted message of type ${type}`);
 }
@@ -178,7 +164,7 @@ describe('@napplet/nap/outbox shim', () => {
 
     const hydrated = await bytes(RESOURCE_URL);
     await expect(hydrated.text()).resolves.toBe('from outbox');
-    expect(postedMessages.some((posted) => posted.msg?.type === 'resource.bytes')).toBe(false);
+    expect(shell.sent.some((posted) => posted.type === 'resource.bytes')).toBe(false);
   });
 
   it('carries incomplete and inline error through query results without rejecting', async () => {

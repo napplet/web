@@ -193,7 +193,7 @@ back — **do not wait to be told to push or open a PR**:
 6. atomic commits made
 7. `git push -u origin <branch>`
 8. `gh pr create` with a clear body: what, why, any surfaced decision, verification
-   output, and out-of-scope notes.
+   output, and out-of-scope notes (see "Writing issues, PRs, and reviews").
 
 `/gsd:ship` performs steps 6–8 (PR + review) inside a GSD flow. Outward-facing actions
 (push, PR, publish) are authorized as the closing step of the task you were given — you
@@ -212,6 +212,34 @@ Publishing runs from GitHub Actions on push to `main`; do not `pnpm publish-*` l
 3. Commit, push, open the release PR. Merging to `main` runs the **Publish** (npm) and
    **Publish to JSR** workflows; `pnpm publish -r` skips already-published versions.
 
+## Writing issues, PRs, and reviews
+
+Issues, PR bodies, review comments, and replies on GitHub use a casual, collegial voice. Write like a peer leaving notes for someone you work with, not like a spec or an audit report. The content stays precise and verifiable; only the tone relaxes.
+
+- Open with what works before what doesn't ("Nice work, this gets us most of the way.").
+- Use contractions and short sentences. Ask rather than order: "Could we pin down where the results go?", "Mind dropping it from this PR?", "Did you mean positive?"
+- Name the concrete problem in a sentence or two, then suggest a fix. When there are several reasonable fixes, offer them as short bullets and say "either works".
+- Label small things as `Nit:` and keep them to one line.
+- Keep normative words (MUST, SHOULD) for quoting or proposing spec text, not for talking to people.
+- Stay neutral about vendors and implementations. A generic contract such as a NAP is argued from the contract, using patterns ("several providers return opaque reasoning state"), not from what one product, shell, or runtime does.
+- For a review, put each point inline on the line it concerns. Keep the review body for the summary and for points that don't sit on a changed line.
+- A PR body says what changed, why, which NIP-5D or NAP text it relies on (for protocol-touching work), the verification output, and known gaps. Say plainly what was not run or not proven.
+
+Example inline review comment:
+
+> This only works in one direction. Providers aren't consistent about the stop reason when a turn contains tool calls, so could we also say that any result containing a `toolCall` part has `finish: "toolUse"`, whatever the provider reported?
+
+### Filing an issue in another repository
+
+When the root cause is in a dependency, a runtime that consumes these packages, or the spec (NAP text in `napplet/naps`, NIP-5D in `nostr-protocol/nips`), don't hide it with a local workaround. Distill the failure into that project's own public API, CLI, protocol contract, or a minimal fixture, then file it there. Spec gaps still follow protocol-fidelity rule 2: propose them on the NAPs track rather than inventing surface here.
+
+- The issue must make sense in isolation to a maintainer who has never seen this repo and won't open its branches, issues, PRs, planning notes, or logs.
+- Don't reference this repo's PR numbers, issue numbers, branch names, or internal package context unless the maintainer asks for that background later.
+- Frame it around the other project only: affected package and version, public API or command, protocol field or contract, expected behavior, actual behavior, exact error or output, environment, and a minimal reproduction that runs without this repo.
+- Don't ask the maintainer to read a PR here, clone this repo, or infer the bug from this repo's behavior.
+
+Keep coordination here. Once the issue exists, open a tracking issue in `napplet/web` that links to it, summarizes the local impact, names any workaround, and states the condition for removing that workaround. A workaround is allowed only when the user asks for one or work here is otherwise blocked; keep it narrow, documented, tested, and tied to the external issue for removal.
+
 ## Project Overview
 
 This is the **napplet** monorepo — npm packages for the napplet protocol. Napplets are Nostr-native sandboxed iframe apps that communicate with a host shell over postMessage using a JSON envelope wire format defined by NIP-5D.
@@ -224,7 +252,8 @@ This is the **napplet** monorepo — npm packages for the napplet protocol. Napp
 - `packages/vite-plugin` — **@napplet/vite-plugin** — NIP-5D manifest generation at build time
 - `packages/nap` — **@napplet/nap** — NAP domain subpaths (`@napplet/nap/relay`, `@napplet/nap/identity`, etc.)
 - `packages/boilerplate` — **@napplet/boilerplate** — Interactive `npx` generator for the `github.com/napplet/boilerplate` template
-- `skills/` — the `napplet-*` agent skills (`SKILL.md` per skill), installed with the skills.sh CLI (`npx skills add napplet/napplet`); not an npm package
+- `packages/lab` — **@napplet/lab** (private) — Tooling for probing napplets and shells; holds lab napplets under `napplets/*` (first: `@napplet/lab-security`, the Security Lab). Lab napplets are apps, not SDK packages: the zero-framework rule below applies to published packages, and a lab napplet may use a UI framework.
+- `skills/` — the `napplet-*` agent skills (`SKILL.md` per skill), installed with the skills.sh CLI (`npx skills add napplet/web`); not an npm package
 
 ## Tech Stack
 
@@ -239,7 +268,7 @@ This is the **napplet** monorepo — npm packages for the napplet protocol. Napp
 
 - **JSON Envelope**: All messages use `{ type: "domain.action", ...payload }` format via postMessage. NIP-5D defines the envelope; NAP specs define message types per domain.
 - **NAPs**: Napplet Unified Blueprints — modular interface specs (relay, identity, storage, inc, theme, keys, media, notify). Each NAP owns a message domain. Shells implement the NAPs they support.
-- **Identity**: Shell identifies napplets via unforgeable `MessageEvent.source` at iframe creation. No handshake needed.
+- **Identity**: The runtime hands the shell one `MessagePort` in `napplet.hello` before napplet code runs; the shell binds `(dTag, artifactHash)` to that port and revokes it if the frame's document is replaced (NIP-5D §Transport, §Identity).
 - **ACL**: Consult current NIP-5D and NAPs for capability identity and authorization. Current manifests use the artifact hash; historical aggregate hashes belong to legacy formats.
 - **Storage scoping**: Follow the current NAP-STORAGE specification for storage identity and isolation.
 - **Sandbox**: `allow-scripts` only — no `allow-same-origin`. Everything is proxied via the shell.
@@ -384,7 +413,7 @@ A portable SDK for the napplet protocol — sandboxed Nostr mini-apps that run i
 
 - Framework-agnostic (no Svelte, React, Vue dependencies)
 - JSON envelope wire format: `{ type: "domain.action", ...payload }` via postMessage
-- Identity via unforgeable `MessageEvent.source` at iframe creation — no handshake
+- Identity bound to the per-document `MessagePort` handed over in `napplet.hello`; all NAP traffic rides that port
 - Modular NAP architecture: each NAP owns a message domain (relay, identity, storage, inc, theme, keys, media, notify)
 - Core dispatch: `registerNap(domain, handler)` routes messages by domain prefix
 - Capability identity and storage isolation follow current NIP-5D and NAP-STORAGE; historical aggregate-hash descriptions are not current protocol guidance.

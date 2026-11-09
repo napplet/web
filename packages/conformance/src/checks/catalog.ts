@@ -119,6 +119,19 @@ export const CHECKS: Check[] = [
       return result.fail(`${bad.length}/${ctx.emitted.length} emitted envelope(s) invalid`, diag);
     },
   },
+  // NIP-5D Transport: the napplet.hello handoff is the only window-level message a napplet sends, and all NAP
+  // messages MUST be carried over the port. https://github.com/nostr-protocol/nips/pull/2303
+  {
+    id: 'wire/port-only',
+    area: 'wire',
+    severity: 'error',
+    title: 'Sends NAP messages only over the napplet.hello port',
+    run: (ctx) => {
+      const bad = ctx.transportViolations.filter((v) => v.kind === 'window-message' || v.kind === 'invalid-hello');
+      if (bad.length === 0) return result.pass();
+      return result.fail(`${bad[0].detail}; a NIP-5D shell revokes the napplet and removes its frame`, bad);
+    },
+  },
   // ── degradation ───────────────────────────────────────────────────────────────
   {
     id: 'degrade/domain-absence',
@@ -134,6 +147,20 @@ export const CHECKS: Check[] = [
   },
 
   // ── lifecycle ─────────────────────────────────────────────────────────────────
+  // NIP-5D Identity: a second load or hello means the verified document was replaced, so the shell revokes and removes the frame.
+  // NIP-5D does not forbid navigating, so this is an advisory. https://github.com/nostr-protocol/nips/pull/2303
+  {
+    id: 'lifecycle/keeps-verified-document',
+    area: 'lifecycle',
+    severity: 'warning',
+    title: 'Keeps its verified document (no navigation or reload)',
+    run: (ctx) => {
+      // A reload re-runs the bootstrap, so its second hello can arrive before the second load event.
+      const replaced = ctx.transportViolations.filter((v) => v.kind === 'second-load' || v.kind === 'second-hello' || v.kind === 'port-closed');
+      if (replaced.length === 0) return result.pass();
+      return result.fail(`${replaced[0].detail}; a NIP-5D shell revokes the napplet's identity and grants and removes its frame`, replaced);
+    },
+  },
   {
     id: 'lifecycle/clean-teardown',
     area: 'lifecycle',

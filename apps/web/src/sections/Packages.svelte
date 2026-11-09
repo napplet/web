@@ -61,7 +61,7 @@
           boundary, the SDK surface, and the applet UI contract. Install them with the
           open skills CLI:
         </p>
-        <pre><code>npx skills add napplet/napplet</code></pre>
+        <pre><code>npx skills add napplet/web</code></pre>
         <a class="skills-link" href="/docs/guide/agent-skills.html">Skill reference ↗</a>
       </div>
     </aside>

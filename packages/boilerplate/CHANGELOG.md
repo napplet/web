@@ -1,5 +1,12 @@
 # @napplet/boilerplate
 
+## 0.4.2
+
+### Patch Changes
+
+- fb5bdaf: Point repository links and the `npx skills add` command at
+  `napplet/web`, the repository's current name.
+
 ## 0.4.1
 
 ### Patch Changes

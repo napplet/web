@@ -39,9 +39,11 @@ interface PendingRequest {
   cancelTarget?: string;
 }
 const pending = new Map<string, PendingRequest>();
-const stateHandlers = new Set<(event: TorrentStateEvent) => void>();
-const progressHandlers = new Set<(event: TorrentProgressEvent) => void>();
-const errorHandlers = new Set<(event: TorrentErrorEvent) => void>();
+/** One subscription; a distinct object per call keeps duplicate registrations independent. */
+interface ListenerEntry<T> { readonly handler: (event: T) => void }
+const stateHandlers = new Set<ListenerEntry<TorrentStateEvent>>();
+const progressHandlers = new Set<ListenerEntry<TorrentProgressEvent>>();
+const errorHandlers = new Set<ListenerEntry<TorrentErrorEvent>>();
 const CANCELLABLE_RESULTS = new Set(['torrent.read.result', 'torrent.exportMetainfo.result', 'torrent.saveFile.result']);
 let installed = false;
 
@@ -107,10 +109,10 @@ function isJobState(value: unknown): value is TorrentJobState {
   return typeof value === 'string' && JOB_STATES.includes(value);
 }
 
-function notifyListeners<T>(handlers: Set<(event: T) => void>, event: T): void {
-  for (const handler of Array.from(handlers)) {
-    if (!handlers.has(handler)) continue;
-    try { handler(event); }
+function notifyListeners<T>(handlers: Set<ListenerEntry<T>>, event: T): void {
+  for (const entry of Array.from(handlers)) {
+    if (!handlers.has(entry)) continue;
+    try { entry.handler(event); }
     catch (error) { queueMicrotask(() => { throw error; }); }
   }
 }
@@ -327,9 +329,9 @@ export function update(request: TorrentUpdateRequest): Promise<TorrentSettingsRe
  * @example const subscription = onState(event => console.log(event.jobId));
  */
 export function onState(handler: (event: TorrentStateEvent) => void): Subscription {
-  const listener = (event: TorrentStateEvent) => handler(event);
-  stateHandlers.add(listener);
-  return { close: () => { stateHandlers.delete(listener); } };
+  const entry = { handler };
+  stateHandlers.add(entry);
+  return { close: () => { stateHandlers.delete(entry); } };
 }
 
 /** Listen for torrent job progress notifications.
@@ -338,9 +340,9 @@ export function onState(handler: (event: TorrentStateEvent) => void): Subscripti
  * @example const subscription = onProgress(event => console.log(event.jobId));
  */
 export function onProgress(handler: (event: TorrentProgressEvent) => void): Subscription {
-  const listener = (event: TorrentProgressEvent) => handler(event);
-  progressHandlers.add(listener);
-  return { close: () => { progressHandlers.delete(listener); } };
+  const entry = { handler };
+  progressHandlers.add(entry);
+  return { close: () => { progressHandlers.delete(entry); } };
 }
 
 /** Listen for torrent job error notifications.
@@ -349,9 +351,9 @@ export function onProgress(handler: (event: TorrentProgressEvent) => void): Subs
  * @example const subscription = onError(event => console.log(event.jobId));
  */
 export function onError(handler: (event: TorrentErrorEvent) => void): Subscription {
-  const listener = (event: TorrentErrorEvent) => handler(event);
-  errorHandlers.add(listener);
-  return { close: () => { errorHandlers.delete(listener); } };
+  const entry = { handler };
+  errorHandlers.add(entry);
+  return { close: () => { errorHandlers.delete(entry); } };
 }
 
 /** Install the torrent transport without issuing requests.

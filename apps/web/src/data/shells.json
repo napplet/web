@@ -1,0 +1,124 @@
+[
+  {
+    "id": "amethyst",
+    "name": "Amethyst",
+    "category": "Social, with room for apps",
+    "description": "A social client with a built-in napplet host, on your phone and your desktop.",
+    "href": "https://amethyst.social/",
+    "source": "https://github.com/vitorpamplona/amethyst",
+    "platforms": [
+      "Android",
+      "macOS",
+      "Linux",
+      "Windows"
+    ],
+    "status": "Active development"
+  },
+  {
+    "id": "myco",
+    "name": "Myco",
+    "category": "Apps, hand to hand",
+    "description": "Pass apps between nearby phones. Keep opening the apps you have, even without an internet connection.",
+    "href": "https://github.com/Origami74/myco",
+    "source": "https://github.com/Origami74/myco",
+    "platforms": [
+      "Android",
+      "Android TV"
+    ],
+    "status": "Available"
+  },
+  {
+    "id": "nostrudel",
+    "name": "noStrudel",
+    "category": "Your social sandbox",
+    "description": "Discover apps on profiles and open napplets alongside your social world.",
+    "href": "https://nostrudel.ninja/",
+    "source": "https://github.com/hzrd149/nostrudel",
+    "platforms": [
+      "Web"
+    ],
+    "status": "Active development"
+  },
+  {
+    "id": "grimoire",
+    "name": "Grimoire",
+    "category": "A workspace for the curious",
+    "description": "A tiling workspace for feeds, profiles, protocol exploration, and napplets.",
+    "href": "https://grimoire.rocks/",
+    "source": "https://github.com/purrgrammer/grimoire",
+    "platforms": [
+      "Web"
+    ],
+    "status": "Active development"
+  },
+  {
+    "id": "soy",
+    "name": "napplet.soy",
+    "category": "Play & discover",
+    "description": "A playground for tiny games, digital experiments, and things people made just because they could.",
+    "href": "https://napplet.soy/",
+    "source": "https://github.com/zeSchlausKwab/napplet-soy",
+    "platforms": [
+      "Web"
+    ],
+    "status": "Available",
+    "image": "/showcase/images/shell-soy.webp",
+    "launch": {
+      "url": "https://napplet.soy/n/{address}",
+      "pointers": [
+        "naddr"
+      ]
+    }
+  },
+  {
+    "id": "paja",
+    "name": "Paja",
+    "category": "Develop & inspect",
+    "description": "Kehto’s developer shell. Load a published app and inspect its behavior.",
+    "href": "https://kehto.github.io/web/paja/",
+    "source": "https://github.com/kehto/web/tree/main/packages/paja",
+    "platforms": [
+      "Web"
+    ],
+    "status": "Developer preview",
+    "image": "/showcase/images/shell-paja.webp",
+    "launch": {
+      "url": "https://kehto.github.io/web/paja/?pointer={address}",
+      "pointers": [
+        "naddr",
+        "nevent"
+      ]
+    }
+  },
+  {
+    "id": "nostrapps",
+    "name": "nostrapps",
+    "category": "Every kind of app, one launcher",
+    "description": "A browser launcher that fetches nsites, napps and napplets, caches them, and runs each in its own sandboxed window.",
+    "href": "https://nostrapps.com/",
+    "source": "https://github.com/eskema/nostrapps",
+    "platforms": [
+      "Web"
+    ],
+    "status": "Work in progress"
+  },
+  {
+    "id": "applesauce-examples",
+    "name": "Applesauce loader",
+    "category": "Reference host",
+    "description": "The applesauce napplet loader example: a browser host built on the applesauce libraries, with the store and browser examples beside it.",
+    "href": "https://applesauce.build/examples/#/example/napplet/loader",
+    "source": "https://github.com/hzrd149/applesauce/tree/master/apps/examples",
+    "platforms": [
+      "Web"
+    ],
+    "status": "Example",
+    "launch": {
+      "url": "https://applesauce.build/examples/#/example/napplet/loader?pointer={address}",
+      "pointers": [
+        "naddr",
+        "nevent"
+      ]
+    }
+  }
+]

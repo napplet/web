@@ -1,5 +1,5 @@
 /** Reference INTENT acceptance and lifecycle-independent delivery. */
-import type { IntentAvailability } from '@napplet/core';
+import type { IntentAvailability, IntentCandidate } from '@napplet/core';
 import { catalogAvailability, type CatalogManifest } from './intent-catalog.js';
 import { REFERENCE_HANDLER, REFERENCE_MANIFEST, ok, type ReferenceEndpoint } from './reference-responses.js';
 
@@ -7,6 +7,11 @@ export interface IntentHandlers {
   handleInvoke(endpoint: ReferenceEndpoint, env: Record<string, unknown>): unknown[];
   availability(archetype: unknown): IntentAvailability;
   handlers(): IntentAvailability[];
+  currentHandler(archetype: string): string | null;
+}
+
+function implicitCandidate(candidates: IntentCandidate[]): IntentCandidate | undefined {
+  return candidates.find(item => item.isDefault) ?? candidates[0];
 }
 
 /** Create fixture handlers from installed verified metadata. */
@@ -19,6 +24,7 @@ export function createIntentHandlers(
     catalogAvailability(manifests, String(archetype), defaults[String(archetype)]);
   return {
     availability,
+    currentHandler: archetype => implicitCandidate(availability(archetype).candidates)?.id ?? null,
     handlers: () => [...new Set(manifests.flatMap((manifest) => manifest.tags.filter((tag) => tag[0] === 'z').map((tag) => tag[1])))].map(availability),
     handleInvoke(endpoint, env) {
       const request = env.request as { archetype: string; action: string; convention: string; payload?: unknown; handler?: string };
@@ -27,7 +33,7 @@ export function createIntentHandlers(
       // This fixture declines interactive selection and ignores optional recommendations under its policy.
       const candidate = request.handler === 'choose' ? undefined : explicit
         ? candidates.find((item) => item.id === request.handler)
-        : candidates.find((item) => item.isDefault) ?? candidates[0];
+        : implicitCandidate(candidates);
       if (!candidate) return ok({ type: 'intent.invoke.result', id: env.id, result: { ok: false, error: 'no handler' } });
       const { archetype, action, convention } = request;
       queueDelivery(candidate.id, structuredClone({

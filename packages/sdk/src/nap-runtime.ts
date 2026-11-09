@@ -232,3 +232,35 @@ export {
   torrentOnProgress,
   torrentOnError,
 } from '@napplet/nap/torrent';
+
+export {
+  DOMAIN as LLM_DOMAIN,
+  LLM_ERROR_CODES,
+  installLlmShim,
+  isLlmFailure,
+  llmSelect,
+  llmDescribe,
+  llmGenerate,
+  llmCancel,
+  llmText,
+  llmToolCalls,
+} from '@napplet/nap/llm';
+export { DOMAIN as BLOSSOM_DOMAIN, installBlossomShim } from '@napplet/nap/blossom';
+export {
+  blossomCheck,
+  blossomGet,
+  blossomCheckUpload,
+  blossomUpload,
+  blossomMirror,
+  blossomCheckMedia,
+  blossomMedia,
+  blossomList,
+  blossomDelete,
+  blossomServers,
+  blossomAddServer,
+  blossomRemoveServer,
+  blossomReorderServers,
+  blossomParseUri,
+  blossomFormatUri,
+} from '@napplet/nap/blossom/sdk';
+export { DOMAIN as CATALOG_DOMAIN, installCatalogShim, catalogGet } from '@napplet/nap/catalog';
