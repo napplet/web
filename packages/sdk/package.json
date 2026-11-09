@@ -22,6 +22,10 @@
     "./blossom": {
       "types": "./dist/blossom.d.ts",
       "import": "./dist/blossom.js"
+    },
+    "./catalog": {
+      "types": "./dist/catalog.d.ts",
+      "import": "./dist/catalog.js"
     }
   },
   "files": [

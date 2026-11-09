@@ -238,3 +238,4 @@ export {
   blossomParseUri,
   blossomFormatUri,
 } from '@napplet/nap/blossom/sdk';
+export { DOMAIN as CATALOG_DOMAIN, installCatalogShim, catalogGet } from '@napplet/nap/catalog';

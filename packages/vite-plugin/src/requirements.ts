@@ -35,6 +35,7 @@ const NAP_DOMAINS = [
   'dm',
   'gamepad',
   'llm',
+  'catalog',
 ] as const;
 
 const NAP_DOMAIN_SET = new Set<string>(NAP_DOMAINS);

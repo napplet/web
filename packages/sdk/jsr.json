@@ -6,7 +6,8 @@
     ".": "./src/index.ts",
     "./gamepad": "./src/gamepad.ts",
     "./llm": "./src/llm.ts",
-    "./blossom": "./src/blossom.ts"
+    "./blossom": "./src/blossom.ts",
+    "./catalog": "./src/catalog.ts"
   },
   "imports": {
     "@napplet/core": "jsr:@napplet/core@^0.39.0",

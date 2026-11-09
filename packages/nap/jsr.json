@@ -115,7 +115,11 @@
     "./blossom": "./src/blossom/index.ts",
     "./blossom/types": "./src/blossom/types.ts",
     "./blossom/shim": "./src/blossom/shim.ts",
-    "./blossom/sdk": "./src/blossom/sdk.ts"
+    "./blossom/sdk": "./src/blossom/sdk.ts",
+    "./catalog": "./src/catalog/index.ts",
+    "./catalog/types": "./src/catalog/types.ts",
+    "./catalog/shim": "./src/catalog/shim.ts",
+    "./catalog/sdk": "./src/catalog/sdk.ts"
   },
   "imports": {
     "@napplet/core": "jsr:@napplet/core@^0.39.0",

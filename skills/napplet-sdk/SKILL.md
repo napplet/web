@@ -9,7 +9,7 @@ Napplet implementation code is **SDK-first**: import typed wrappers from `@nappl
 
 ## Domains shipped by the current packages
 
-`shell`, `relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `ble`, `webrtc`, `link`, `count`, `lists`, `serial`, `fs`, `common`, `dm`, `gamepad`, `llm`, `blossom`.
+`shell`, `relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `ble`, `webrtc`, `link`, `count`, `lists`, `serial`, `fs`, `common`, `dm`, `gamepad`, `llm`, `blossom`, `catalog`.
 
 `ifc` is a deprecated INC alias. If a NAP is not in this list, do not implement against it even when a spec PR exists — flag the package/spec gap. `shell` is optional environment information only (see below); there is no `discoverServices()` or `hasService()`, and no domain waits on `shell.ready()`. A missing optional domain simply means "unavailable for this load".
 
@@ -26,6 +26,7 @@ Napplet implementation code is **SDK-first**: import typed wrappers from `@nappl
 | Shell-mediated upload of user files/blobs | `upload` |
 | Explicit Blossom servers, blob operations, BUD-03 server lists and BUD-10 URI helpers | `blossom` |
 | Open an external URL under shell policy | `link` |
+| Discover available napplets and current handler selectors | `catalog` (read-only) |
 | Talk to other napplets | `inc`, `intent` (see `napplet-interop`) |
 | User-configurable settings | `config` |
 | Match host colors/fonts | `theme` |
@@ -252,3 +253,7 @@ Selection does not authorize disclosure: the runtime obtains consent before each
 ## Blossom
 
 This non-normative guidance defers to the living [NAP-BLOSSOM proposal](https://github.com/napplet/naps/pull/71). Import `blossom` from `@napplet/sdk/blossom`; check `window.napplet?.blossom` for optional features. Use it for explicit server-directed blob operations and ordered BUD-03 server-list helpers. `parseUri` and `formatUri` are local BUD-10 helpers. Keep generic fetching on `resource` and runtime-selected uploads on `upload`. Pass `Blob` or `ArrayBuffer` unchanged; handle typed `ok: false` results separately from rejected promises. The runtime owns auth tokens, signing, integrity verification and network policy. Reference conformance returns typed unavailable results without network access.
+
+## Catalog discovery
+
+Non-normative package guidance for the [NAP-CATALOG draft](https://github.com/napplet/naps/pull/95): feature-gate `window.napplet?.catalog`, then call `catalog.get()` from `@napplet/sdk` or `@napplet/sdk/catalog`. The snapshot contains available napplets and current handler selectors, not running-instance state. Treat titles and descriptions as text. Preserve each opaque `id` unchanged; never derive it from `dTag`. A user-authorized intent invocation can use that selector when `intent` is also exposed. Discovery grants no launch permission, does not change preferences, and works without intent. Parameter metadata contains names only; validate actual payloads against the convention.

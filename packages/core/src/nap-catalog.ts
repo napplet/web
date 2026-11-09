@@ -204,6 +204,12 @@ export const NAP_IMPLEMENTATIONS: Readonly<Record<NapDomain, NapImplementationMe
     rationale: "Binding and validator tests cover the wire contract, but the reference host only returns typed unavailable results; live endpoint, authentication, and integrity behavior are unproven.",
     evidence: ["packages/nap/src/blossom/shim.test.ts", "packages/conformance/src/validators/blossom.test.ts", "packages/conformance-cli/src/browser.test.ts"],
   },
+  catalog: {
+    proposal: { url: "https://github.com/napplet/naps/pull/95", status: "in-review", checkedAt: "2026-11-09" },
+    maturity: "experimental",
+    rationale: "Binding, reference-shell snapshot, and envelope-validator tests cover read-only discovery; snapshot contents depend on each host's verified manifests and are not established by those tests.",
+    evidence: ["packages/nap/src/catalog/shim.test.ts", "packages/conformance/src/shell/reference-catalog.test.ts", "packages/conformance/src/validators/catalog.test.ts"],
+  },
 };
 
 // Protect release metadata against accidental consumer mutation.

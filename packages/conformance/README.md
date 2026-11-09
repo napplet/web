@@ -130,3 +130,7 @@ NAP-LLM validation checks the four request schemas (exact API-row parameters, st
 ## BLOSSOM coverage
 
 The reference shell answers the thirteen [NAP-BLOSSOM](https://github.com/napplet/naps/pull/71) wire operations with typed unavailable results (`unsupported`, `not-signed-in` or `server-list-unavailable`). Local URI helpers are available through the injected binding. These fixtures exercise request handling without network access or signing and do not establish live server availability, deletion, integrity verification or host network-policy conformance.
+
+## Catalog integration
+
+Envelope validation recognizes `catalog.get` with a string correlation `id`, and rejects napplet-emitted `catalog.get.result` as inbound-only traffic. `createReferenceShell` builds catalog snapshots from supplied host-verified, loadable manifest fixtures and shares selectors with intent discovery. The host checks each complete required-domain set before supplying a manifest; the caller's own domain grants are not the target napplet's compatibility set. Use `catalogFilter` to omit entries for a caller and `intentResolver: false` to exercise discovery without a resolver. It includes role-less entries and omits incomplete descriptors. The reference fixture is not a signature or artifact verifier. Use the maintained runtime prelude for browser catalog exercises. This non-normative guidance defers to the living [NAP-CATALOG draft](https://github.com/napplet/naps/pull/95).

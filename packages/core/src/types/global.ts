@@ -1,4 +1,5 @@
 import type { BlossomApi } from './blossom.js';
+import type { CatalogApi } from './catalog.js';
 import type { GamepadApi } from './gamepad.js';
 import type { LlmApi } from './llm.js';
 import type { ShellApi } from './shell.js';
@@ -56,6 +57,8 @@ export interface NappletGlobal {
   llm?: LlmApi;
   /** Optional low-level Blossom blob endpoints and server-list helpers. */
   blossom?: BlossomApi;
+  /** Optional read-only discovery of available napplets. */
+  catalog?: CatalogApi;
   /** Optional shell-mediated controller input, scoped to this napplet’s focus. */
   gamepad?: GamepadApi;
   /** Optional shell environment; other domains work without it. */

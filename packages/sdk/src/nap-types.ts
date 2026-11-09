@@ -13,6 +13,13 @@ export type { ShellApi, ShellCapabilities, ShellEnvironment } from '@napplet/cor
 export type * from '@napplet/nap/gamepad/types';
 
 export type {
+  CatalogApi, CatalogSnapshot, NappletIdentity, NappletDescriptor,
+  ArchetypeDescriptor, IntentDescriptor, ArchetypeHandler,
+  CatalogGetMessage, CatalogGetResultMessage, CatalogRequestMessage,
+  CatalogResultMessage, CatalogNapMessage,
+} from '@napplet/nap/catalog/types';
+
+export type {
   LlmApi,
   LlmDelta,
   LlmErrorCode,

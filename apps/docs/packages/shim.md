@@ -174,3 +174,7 @@ Select `llm` in `installNappletGlobal({ domains: ['llm'] })` or the equivalent r
 ## Optional BLOSSOM binding
 
 Include `blossom` in the host's explicit domain allowlist to inject `window.napplet.blossom`. The binding correlates the draft's request/result messages, preserves structured-clone bytes and provides local BUD-10 URI helpers. Host code supplies the Blossom endpoint backend, authentication, integrity checks and network policy. See the living [NAP-BLOSSOM proposal](https://github.com/napplet/naps/pull/71) and non-normative [BLOSSOM guide](https://napplet.run/docs/naps/blossom.html).
+
+## Catalog support
+
+Add `catalog` to the runtime allowlist to inject `window.napplet.catalog.get()`. The host supplies catalog snapshots; the shim handles request correlation and parent message routing. This implements the [NAP-CATALOG draft](https://github.com/napplet/naps/pull/95). See the [non-normative catalog guide](/naps/catalog) for types, layered exports, SDK usage, runtime injection, and selector handling.

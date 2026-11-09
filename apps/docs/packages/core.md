@@ -49,7 +49,7 @@ import {
 - **`NappletMessage`** — base interface for every message: `{ type: string }` in
   `domain.action` format. Concrete message types extend it with payload fields.
 - **`NapDomain`** — string literal union of the NAP capability domains
-  (`'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'cvm' | 'outbox' | 'upload' | 'intent' | 'ble' | 'webrtc' | 'link' | 'count' | 'lists' | 'serial' | 'fs' | 'common' | 'dm' | 'shell' | 'gamepad' | 'llm' | 'blossom'`).
+  (`'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'cvm' | 'outbox' | 'upload' | 'intent' | 'ble' | 'webrtc' | 'link' | 'count' | 'lists' | 'serial' | 'fs' | 'common' | 'dm' | 'shell' | 'gamepad' | 'llm' | 'blossom' | 'catalog'`).
 - **`NappletGlobal`** — the runtime-injected `window.napplet` namespace with
   optional domain properties.
 - **`NAP_DOMAINS`** — runtime constant array of all domain strings, for iteration
@@ -167,3 +167,7 @@ The runtime binding retains deliveries until a listener registers. Discovery can
 ## LLM types
 
 `LlmApi` and the LLM records describe `NappletGlobal.llm`, an optional domain for user-selected, runtime-mediated language model inference: connection selection and revalidation, stateless generation with tool definitions, content parts, and optional block-lifecycle deltas, and cancellation. `LlmErrorCode` lists the specification categories while staying open, because unknown codes remain failures. See the non-normative [LLM guide](/naps/llm) and living [NAP-LLM proposal](https://github.com/napplet/naps/pull/134).
+
+## Catalog support
+
+`NappletGlobal.catalog` is optional; `CatalogApi`, `CatalogSnapshot`, and the descriptor types are exported from the core root. This implements the [NAP-CATALOG draft](https://github.com/napplet/naps/pull/95). See the [non-normative catalog guide](/naps/catalog) for types, layered exports, SDK usage, runtime injection, and selector handling.
