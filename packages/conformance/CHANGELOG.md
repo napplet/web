@@ -1,5 +1,56 @@
 # @napplet/conformance
 
+## 0.27.0
+
+### Minor Changes
+
+- 6039389: Support the NAP-NAVIGATION draft with typed report/get APIs, runtime
+  injection, SDK and NAP subpaths, manifest requirement inference, and
+  endpoint-scoped reference history. The conformance runtime validates
+  advertised invocation parameters, preserves revision ordering, and revisits
+  retained entries through correlated intent deliveries. Browser and CLI
+  conformance runs bind navigation eligibility to the host-verified manifest.
+  Navigation is cataloged as exploratory, so hosts using `selectNapDomains` need
+  a named opt-in.
+
+  Implement the companion NAP-INTENT delivery draft: `IntentDelivery.id` is now
+  required and `sender` accepts `null` for shell-originated requests. Runtime
+  integrations must assign a non-reused delivery ID within each target endpoint
+  lifetime, preserve it on retries, and derive sender provenance themselves.
+  This is a breaking pre-1.0 contract change.
+
+  These interfaces follow the published drafts in napplet/naps#126 and
+  napplet/naps#128; they remain subject to upstream revision.
+- 926959f: Support the proposed NAP-CATALOG read-only discovery contract. Add
+  typed snapshots, catalog SDK and layered NAP exports, allowlisted runtime
+  injection, reference-shell discovery and envelope validation, and catalog
+  capability inference. Catalog queries work independently of intent dispatch
+  and shell readiness. See https://github.com/napplet/naps/pull/95 for the
+  living draft.
+- cc27254: Add the draft NAP-SOULSEEK contract (napplet/naps#135) across types,
+  domain helpers, runtime injection, SDK, manifest inference, and conformance
+  tooling. The `soulseek` domain exposes the fourteen request/result operations
+  for runtime-mediated search, peer browsing, paginated immutable snapshots,
+  endpoint-owned transfers, bounded base64 reads, user-mediated saving, and
+  release. Failures reject with the specification error code; 64-bit byte counts
+  travel as canonical decimal text. Accounts, peer networking, storage, content
+  disclosure, and saving remain owned by the host runtime.
+- fd715ac: Add the transfer-only draft NAP-TORRENT contract across types, domain
+  helpers, runtime injection, SDK, manifest inference, and conformance tooling.
+  Support full v1/v2/hybrid identities, bounded verified reads, metadata export,
+  separate file disclosure actions, cancellation, revisioned settings, and
+  retention/recovery schemas. Discovery, Nostr event conversion, publishing, and
+  comments remain outside the torrent domain. Torrent engines, consent, storage,
+  and network policy remain owned by the host runtime.
+
+### Patch Changes
+
+- Updated dependencies [6039389]
+- Updated dependencies [926959f]
+- Updated dependencies [cc27254]
+- Updated dependencies [fd715ac]
+  - @napplet/core@0.40.0
+
 ## 0.26.0
 
 ### Minor Changes
