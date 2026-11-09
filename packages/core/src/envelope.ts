@@ -64,6 +64,7 @@ export interface NappletMessage {
  * | `common`   | Common social actions                              |
  * | `dm`       | Runtime-mediated direct messages                  |
  * | `llm`      | User-selected, runtime-mediated language model inference |
+ * | `blossom`  | Server-directed Blossom blob operations and server lists |
  *
  * @example
  * ```ts
@@ -71,7 +72,7 @@ export interface NappletMessage {
  * const isValid = NAP_DOMAINS.includes(domain); // true
  * ```
  */
-export type NapDomain = 'shell' | 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'cvm' | 'outbox' | 'upload' | 'intent' | 'navigation' | 'ble' | 'webrtc' | 'link' | 'count' | 'lists' | 'serial' | 'fs' | 'common' | 'dm' | 'gamepad' | 'llm';
+export type NapDomain = 'shell' | 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'cvm' | 'outbox' | 'upload' | 'intent' | 'navigation' | 'ble' | 'webrtc' | 'link' | 'count' | 'lists' | 'serial' | 'fs' | 'common' | 'dm' | 'gamepad' | 'llm' | 'blossom' | 'catalog' | 'torrent';
 
 /**
  * Runtime-accessible constant array of all NAP domain names.
@@ -82,4 +83,4 @@ export type NapDomain = 'shell' | 'relay' | 'identity' | 'storage' | 'inc' | 'th
  * const selected = NAP_DOMAINS.filter((domain) => domain !== 'ble');
  * ```
  */
-export const NAP_DOMAINS: readonly NapDomain[] = ['shell', 'relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent', 'navigation', 'ble', 'webrtc', 'link', 'count', 'lists', 'serial', 'fs', 'common', 'dm', 'gamepad', 'llm'] as const;
+export const NAP_DOMAINS: readonly NapDomain[] = ['shell', 'relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent', 'navigation', 'ble', 'webrtc', 'link', 'count', 'lists', 'serial', 'fs', 'common', 'dm', 'gamepad', 'llm', 'blossom', 'catalog', 'torrent'] as const;

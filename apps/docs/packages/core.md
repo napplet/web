@@ -49,7 +49,7 @@ import {
 - **`NappletMessage`** — base interface for every message: `{ type: string }` in
   `domain.action` format. Concrete message types extend it with payload fields.
 - **`NapDomain`** — string literal union of the NAP capability domains
-  (`'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'cvm' | 'outbox' | 'upload' | 'intent' | 'navigation' | 'ble' | 'webrtc' | 'link' | 'count' | 'lists' | 'serial' | 'fs' | 'common' | 'dm' | 'shell' | 'gamepad' | 'llm'`).
+  (`'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'cvm' | 'outbox' | 'upload' | 'intent' | 'navigation' | 'ble' | 'webrtc' | 'link' | 'count' | 'lists' | 'serial' | 'fs' | 'common' | 'dm' | 'shell' | 'gamepad' | 'llm' | 'blossom' | 'catalog' | 'torrent'`).
 - **`NappletGlobal`** — the runtime-injected `window.napplet` namespace with
   optional domain properties.
 - **`NAP_DOMAINS`** — runtime constant array of all domain strings, for iteration
@@ -171,3 +171,13 @@ Core exports the `NavigationApi`, JSON location/report/view/result types, and th
 ## LLM types
 
 `LlmApi` and the LLM records describe `NappletGlobal.llm`, an optional domain for user-selected, runtime-mediated language model inference: connection selection and revalidation, stateless generation with tool definitions, content parts, and optional block-lifecycle deltas, and cancellation. `LlmErrorCode` lists the specification categories while staying open, because unknown codes remain failures. See the non-normative [LLM guide](/naps/llm) and living [NAP-LLM proposal](https://github.com/napplet/naps/pull/134).
+
+## Catalog support
+
+`NappletGlobal.catalog` is optional; `CatalogApi`, `CatalogSnapshot`, and the descriptor types are exported from the core root. This implements the [NAP-CATALOG draft](https://github.com/napplet/naps/pull/95). See the [non-normative catalog guide](/naps/catalog) for types, layered exports, SDK usage, runtime injection, and selector handling.
+
+The runtime binding retains deliveries until a listener registers. Discovery candidates expose opaque catalog `id` values and `contracts` with parameter names. INC peers instead use identifiers for running authenticated endpoints. A NAP-INTENT URI may append a bare `#naddr1…` recommendation; the binding sends its coordinate and relay hints as `handlerHint`, outside convention identity and payload. An applicable user default takes precedence. INC URI operations reject fragments. See the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md) and [web projection](https://github.com/napplet/naps/blob/master/projections/web.md).
+
+## Torrent types
+
+`TorrentApi` and the torrent records describe `NappletGlobal.torrent`, an optional transfer domain with v1/v2/hybrid identities, verified reads, metadata export, file actions, revisioned settings, and retention. Discovery and Nostr event schemas belong outside this domain. See the non-normative [TORRENT guide](/naps/torrent) and living [NAP-TORRENT proposal](https://github.com/napplet/naps/blob/nap-torrent/naps/NAP-TORRENT.md).

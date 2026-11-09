@@ -22,6 +22,7 @@ const NAP_DOMAINS = [
   'cvm',
   'outbox',
   'upload',
+  'blossom',
   'intent',
   'navigation',
   'ble',
@@ -35,6 +36,8 @@ const NAP_DOMAINS = [
   'dm',
   'gamepad',
   'llm',
+  'catalog',
+  'torrent',
 ] as const;
 
 const NAP_DOMAIN_SET = new Set<string>(NAP_DOMAINS);

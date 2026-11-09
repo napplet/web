@@ -138,3 +138,13 @@ The requirement scanner recognizes `@napplet/sdk/navigation`, `@napplet/nap/navi
 ### LLM declarations
 
 Requirement inference recognizes static `@napplet/nap/llm` and `@napplet/sdk/llm` imports and direct `window.napplet.llm` access. Root SDK namespace imports are not inferred; declare their domain explicitly. Use `requires: ['llm']` when inference is the napplet's core task, or `optional: ['llm']` with a presence check for an enhancement. Manifest declarations configure no connection and grant no consent. See the living [NAP-LLM proposal](https://github.com/napplet/naps/pull/134).
+
+BLOSSOM requirement inference recognizes `@napplet/nap/blossom`, `@napplet/sdk/blossom` and direct `window.napplet.blossom` reads. Use `optional: ['blossom']` when the core task has a fallback; explicit optional declarations remain optional during inference. See the living [NAP-BLOSSOM proposal](https://github.com/napplet/naps/pull/71).
+
+## Catalog requirements
+
+Requirement inference recognizes `@napplet/nap/catalog` subpaths, `@napplet/sdk/catalog`, and direct `window.napplet.catalog` access. Declare `optional: ['catalog']` for optional discovery or `requires: ['catalog']` when essential. This does not add an `intent` requirement or grant access. See the living [NAP-CATALOG draft](https://github.com/napplet/naps/pull/95) for the read-only discovery contract.
+
+### Torrent declarations
+
+Requirement inference recognizes static `@napplet/nap/torrent` and `@napplet/sdk/torrent` imports and direct `window.napplet.torrent` access. Root SDK namespace imports are not inferred; declare their domain explicitly. Use `requires: ['torrent']` when transfers are the napplet's core task, or `optional: ['torrent']` with a presence check for an enhancement. Manifest declarations do not start jobs or grant consent. See the living [NAP-TORRENT proposal](https://github.com/napplet/naps/blob/nap-torrent/naps/NAP-TORRENT.md).

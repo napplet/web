@@ -88,6 +88,7 @@ export const NAP_DOC_GROUPS: readonly NapDocGroup[] = [
       inc: 'Topic-based publish/subscribe between running napplets.',
       intent: 'URI-addressed intents routed to a handler napplet.',
       navigation: 'Runtime-maintained history of committed intent locations.',
+      catalog: 'Read-only discovery of available napplets and their handler selectors.',
     },
   },
   {
@@ -97,6 +98,8 @@ export const NAP_DOC_GROUPS: readonly NapDocGroup[] = [
       fs: 'Virtual filesystem — pickers, reads, writes, and change events.',
       resource: 'Sandboxed byte fetching over https, blossom, nostr, and data URIs.',
       upload: 'File and blob upload over NIP-96 and Blossom rails.',
+      blossom: 'Server-directed Blossom blob operations and ordered user server lists.',
+      torrent: 'Runtime-owned torrent transfer jobs and verified file access.',
       cvm: 'ContextVM bridge — MCP tools and resources over Nostr.',
     },
   },

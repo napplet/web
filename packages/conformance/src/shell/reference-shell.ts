@@ -16,7 +16,8 @@ import {
 import { createIntentHandlers } from './reference-intents.js';
 import { createEndpointRegistry } from './reference-endpoints.js';
 import { createReferenceNavigation, type ReferenceNavigationOptions } from './reference-navigation.js';
-import type { IntentDelivery, IntentRequest, NavigationResult, NavigationView } from '@napplet/core';
+import { referenceCatalog } from './reference-catalog.js';
+import type { IntentDelivery, IntentRequest, NappletDescriptor, NavigationResult, NavigationView } from '@napplet/core';
 import { bindNappletPort, type MessageWindowLike, type PortBinding, type TransportViolation } from './port-binding.js';
 
 export { bindNappletPort, NAPPLET_HELLO } from './port-binding.js';
@@ -32,12 +33,16 @@ export interface ReferenceShellOptions {
   now?: () => number;
   /** Host domain ceiling. Use the same resolved set as the injected prelude. Omit for all-domain conformance. */
   domains?: readonly string[];
-  /** Already verified installed metadata for catalog tests. */
+  /** Already verified, loadable metadata; the host checks each complete R set before supplying it. */
   manifests?: readonly import('./intent-catalog.js').CatalogManifest[];
   /** User preferences, keyed by role. */
   defaults?: Readonly<Record<string, string>>;
   /** Reference history limits and shell policy. */
   navigation?: ReferenceNavigationOptions;
+  /** Disable the runtime intent resolver while retaining catalog metadata. */
+  intentResolver?: boolean;
+  /** Caller policy; false omits the entire entry without replacing its handler. */
+  catalogFilter?: (napplet: NappletDescriptor, endpoint: ReferenceEndpoint) => boolean;
 }
 
 /** A reference shell instance for transport-agnostic conformance tests. */
@@ -92,9 +97,11 @@ export interface ReferenceShell {
 export function createReferenceShell(options: ReferenceShellOptions = {}): ReferenceShell {
   const records: RecordedEnvelope[] = [];
   const deliveries = createDeliveryQueue();
-  const endpoints = createEndpointRegistry(options.manifests ?? [REFERENCE_MANIFEST], options.domains);
-  const intents = createIntentHandlers(deliveries.queue, endpoints, options.manifests, options.defaults);
+  const manifests = options.manifests ?? [REFERENCE_MANIFEST];
+  const endpoints = createEndpointRegistry(manifests, options.domains);
+  const intents = createIntentHandlers(deliveries.queue, endpoints, manifests, options.defaults);
   const navigation = createReferenceNavigation(endpoints, intents, options.now ?? Date.now, options.navigation);
+  const intentResolver = options.intentResolver !== false;
   const handler = createReferenceHandler({
     now: options.now ?? Date.now,
     records,
@@ -102,6 +109,8 @@ export function createReferenceShell(options: ReferenceShellOptions = {}): Refer
     queueDelivery: deliveries.queue,
     intents,
     navigation,
+    intentResolver,
+    catalog: endpoint => referenceCatalog(manifests, endpoint, intentResolver ? intents : undefined, options.catalogFilter),
   });
   const handleFrom = (endpoint: ReferenceEndpoint, envelope: unknown): unknown[] => {
     const bound = endpoints.register(endpoint);

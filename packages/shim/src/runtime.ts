@@ -1,4 +1,7 @@
 import { installLlmShim, handleLlmMessage } from '@napplet/nap/llm/shim';
+import { installBlossomShim, handleBlossomMessage } from '@napplet/nap/blossom/shim';
+import { installCatalogShim, handleCatalogMessage } from '@napplet/nap/catalog/shim';
+import { installTorrentShim, handleTorrentMessage } from '@napplet/nap/torrent/shim';
 import { installGamepadShim, handleGamepadMessage } from '@napplet/nap/gamepad/shim';
 import { installNavigationShim, handleNavigationMessage } from '@napplet/nap/navigation/shim';
 import { handleShellMessage, installShellShim } from '@napplet/nap/shell/shim';
@@ -103,6 +106,9 @@ let messageListenerInstalled = false;
 
 const DOMAIN_ROUTERS: ReadonlyArray<readonly [string, DomainHandler]> = [
   ['llm.', handleLlmMessage],
+  ['blossom.', handleBlossomMessage],
+  ['catalog.', handleCatalogMessage],
+  ['torrent.', handleTorrentMessage],
   ['gamepad.', handleGamepadMessage],
   ['shell.', handleShellMessage],
   ['keys.', handleKeysMessage],
@@ -145,92 +151,44 @@ function normalizeDomains(domains?: readonly NapDomain[]): Set<NapDomain> {
   return new Set(domains.filter((domain) => DEFAULT_DOMAINS.has(domain)));
 }
 
+/** Per-domain shim installers; `relay` needs no installer beyond the shared router. */
+const DOMAIN_SHIM_INSTALLERS: Readonly<Record<NapDomain, () => void>> = {
+  llm: () => { installLlmShim(); },
+  blossom: () => { installBlossomShim(); },
+  catalog: () => { installCatalogShim(); },
+  torrent: () => { installTorrentShim(); },
+  gamepad: () => { installGamepadShim(); },
+  shell: () => { installShellShim(); },
+  relay: () => undefined,
+  inc: () => { installIncShim(); },
+  storage: () => { installStorageShim(); },
+  keys: () => { installKeysShim(); },
+  media: () => { mediaShim.installMediaShim(); },
+  notify: () => { installNotifyShim(); },
+  identity: () => { identityShim.installIdentityShim(); },
+  theme: () => { themeShim.installThemeShim(); },
+  config: () => { installConfigShim(); },
+  resource: () => { installResourceShim(); },
+  cvm: () => { installCvmShim(); },
+  outbox: () => { installOutboxShim(); },
+  upload: () => { installUploadShim(); },
+  intent: () => { installIntentShim(); },
+  navigation: () => { installNavigationShim(); },
+  ble: () => { installBleShim(); },
+  webrtc: () => { installWebrtcShim(); },
+  link: () => { installLinkShim(); },
+  count: () => { installCountShim(); },
+  lists: () => { installListsShim(); },
+  serial: () => { installSerialShim(); },
+  fs: () => { installFsShim(); },
+  common: () => { installCommonShim(); },
+  dm: () => { installDmShim(); },
+};
+
 function installDomainShim(domain: NapDomain): void {
   if (installedDomainShims.has(domain)) return;
   installedDomainShims.add(domain);
-
-  switch (domain) {
-    case 'llm':
-      installLlmShim();
-      return;
-    case 'gamepad':
-      installGamepadShim();
-      return;
-    case 'shell':
-      installShellShim();
-      return;
-    case 'relay':
-      return;
-    case 'inc':
-      installIncShim();
-      return;
-    case 'storage':
-      installStorageShim();
-      return;
-    case 'keys':
-      installKeysShim();
-      return;
-    case 'media':
-      mediaShim.installMediaShim();
-      return;
-    case 'notify':
-      installNotifyShim();
-      return;
-    case 'identity':
-      identityShim.installIdentityShim();
-      return;
-    case 'theme':
-      themeShim.installThemeShim();
-      return;
-    case 'config':
-      installConfigShim();
-      return;
-    case 'resource':
-      installResourceShim();
-      return;
-    case 'cvm':
-      installCvmShim();
-      return;
-    case 'outbox':
-      installOutboxShim();
-      return;
-    case 'upload':
-      installUploadShim();
-      return;
-    case 'intent':
-      installIntentShim();
-      return;
-    case 'navigation':
-      installNavigationShim();
-      return;
-    case 'ble':
-      installBleShim();
-      return;
-    case 'webrtc':
-      installWebrtcShim();
-      return;
-    case 'link':
-      installLinkShim();
-      return;
-    case 'count':
-      installCountShim();
-      return;
-    case 'lists':
-      installListsShim();
-      return;
-    case 'serial':
-      installSerialShim();
-      return;
-    case 'fs':
-      installFsShim();
-      return;
-    case 'common':
-      installCommonShim();
-      return;
-    case 'dm':
-      installDmShim();
-      return;
-  }
+  DOMAIN_SHIM_INSTALLERS[domain]();
 }
 
 /**

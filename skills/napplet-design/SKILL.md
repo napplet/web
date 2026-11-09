@@ -43,6 +43,7 @@ Use only domains the current `@napplet/sdk` exports (`napplet-sdk` lists them). 
 | App state | `storage` | `localStorage` |
 | Avatars, images, JSON, media bytes | `resource` | `fetch`, `<img src=https://…>` |
 | Language model inference | `llm` (user-selected connection) | Bundled provider SDKs, API keys, direct provider calls |
+| Torrent download/seed jobs and verified content access | `torrent` | Bundled torrent engines, direct trackers/DHT, local file paths |
 | Uploads, external links | `upload`, `link` | Direct network / `window.open` |
 | Settings, host look | `config`, `theme` | App-owned settings pages |
 | Keyboard-bound actions, shortcuts, game controls | `keys` action registration | App-owned key capture as the only integration path |
@@ -105,3 +106,7 @@ This non-normative guidance defers to the living [NAP-GAMEPAD proposal](https://
 ## Navigation design
 
 For shell-managed Back/Forward, use the [NAP-NAVIGATION draft](https://github.com/napplet/naps/pull/126) with its required [NAP-INTENT delivery draft](https://github.com/napplet/naps/pull/128). Define which committed views have advertised conventions and parameter-name lists, which views report `null`, and how guards serialize with reports. Keep history optional when the core task works without it; declare and guard both `navigation` and `intent`. The runtime owns visits, indices, retention, and traversal delivery. Plan stable monotonic report revisions and recovery after rejections; do not model browser History API interception or a napplet-submitted snapshot.
+
+## Blossom boundary
+
+For explicit Blossom server operations, use the optional `blossom` SDK domain defined by the living [NAP-BLOSSOM proposal](https://github.com/napplet/naps/pull/71). Keep generic byte retrieval on `resource` and runtime-selected storage on `upload`. The host owns endpoint access, authorization, signing and server-list publication. This guidance is non-normative; check the proposal for operation contracts.

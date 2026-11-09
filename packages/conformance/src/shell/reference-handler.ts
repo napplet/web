@@ -1,5 +1,6 @@
 import { createLlmHandlers } from './reference-llm.js';
-import { NAP_DOMAINS } from '@napplet/core';
+import { createTorrentHandlers } from './reference-torrents.js';
+import { NAP_DOMAINS, type CatalogSnapshot } from '@napplet/core';
 import { validateEnvelope, type EnvelopeVerdict } from '../validators/envelope.js';
 import {
   REFERENCE_CONVENTION,
@@ -28,6 +29,8 @@ export interface ReferenceHandlerOptions {
   queueDelivery(target: string, delivery: unknown): void;
   intents: IntentHandlers;
   navigation: ReferenceNavigation;
+  catalog(endpoint: ReferenceEndpoint): CatalogSnapshot;
+  intentResolver: boolean;
 }
 
 /** Create the pure request handler for the reference shell. */
@@ -35,6 +38,7 @@ export function createReferenceHandler(options: ReferenceHandlerOptions) {
   const initialized = new Set<string>();
   const hostDomains = options.domains ? new Set(options.domains) : null;
   const llm = createLlmHandlers();
+  const torrents = createTorrentHandlers();
   const handle = (endpoint: ReferenceEndpoint, envelope: unknown): unknown[] => {
     const type = getEnvelopeType(envelope);
     const verdict = validateEnvelope(envelope);
@@ -49,17 +53,29 @@ export function createReferenceHandler(options: ReferenceHandlerOptions) {
       return ok({ type: `${type}.result`, id: env.id, result });
     }
     if (!type) return [];
-    const candidates = endpoint.domains ?? NAP_DOMAINS;
+    const candidates = (endpoint.domains ?? NAP_DOMAINS).filter(domain => domain !== 'intent' || options.intentResolver);
     const domains = hostDomains ? candidates.filter(domain => hostDomains.has(domain)) : candidates;
     if (!domains.includes(type.slice(0, type.indexOf('.')))) return [];
-    if (!verdict.ok) return llmInvalidRequest(type, envelope as Record<string, unknown>, verdict);
+    if (!verdict.ok) {
+      const env = envelope as Record<string, unknown>;
+      return type.startsWith('blossom.') ? blossomInvalidRequest(type, env) : llmInvalidRequest(type, env, verdict);
+    }
     if (type === 'shell.ready') {
       if (initialized.has(endpoint.id)) return [];
       initialized.add(endpoint.id);
       return ok({ type: 'shell.init', capabilities: { domains: [...domains] }, services: [] });
     }
     const env = envelope as Record<string, unknown>;
+    if (type === 'catalog.get') {
+      try {
+        return ok({ type: 'catalog.get.result', id: env.id, snapshot: options.catalog(endpoint) });
+      } catch {
+        return ok({ type: 'catalog.get.result', id: env.id, error: 'catalog unavailable' });
+      }
+    }
+    if (type.startsWith('intent.') && !options.intentResolver) return [];
     if (type.startsWith('llm.')) return llm.handle(endpoint, env);
+    if (type.startsWith('torrent.')) return torrents.handle(endpoint, env);
     if (type === 'intent.invoke') return options.intents.handleInvoke(endpoint, env);
     if (type === 'intent.available') {
       return ok({ type: 'intent.available.result', id: env.id, availability: options.intents.availability(env.archetype) });
@@ -72,7 +88,7 @@ export function createReferenceHandler(options: ReferenceHandlerOptions) {
     const responder = RESPONDERS[type];
     return responder ? responder(env) : [];
   };
-  return Object.assign(handle, { reset() { llm.reset(); } });
+  return Object.assign(handle, { reset() { llm.reset(); torrents.reset(); } });
 }
 
 /** NAP-LLM request types; each has a `.result` terminal type. */
@@ -88,6 +104,17 @@ function llmInvalidRequest(type: string, envelope: Record<string, unknown>, verd
   if (!LLM_REQUESTS.has(type) || typeof envelope.id !== 'string' || !envelope.id) return [];
   const reason = verdict.errors[0]?.message ?? 'Malformed request';
   return [{ type: `${type}.result`, id: envelope.id, error: { code: 'invalid-request', message: reason } }];
+}
+
+/**
+ * NAP-BLOSSOM Shell Behavior: the shell responds to every request with a result
+ * carrying the same `id`; the top-level `error` is reserved for malformed envelopes
+ * where no typed result can be constructed (https://github.com/napplet/naps/pull/71).
+ * Uncorrelated envelopes and napplet-emitted results stay discarded.
+ */
+function blossomInvalidRequest(type: string, envelope: Record<string, unknown>): unknown[] {
+  if (!RESPONDERS[type] || typeof envelope.id !== 'string' || !envelope.id) return [];
+  return [{ type: `${type}.result`, id: envelope.id, error: 'invalid-request' }];
 }
 
 function getEnvelopeType(envelope: unknown): string | undefined {

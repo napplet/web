@@ -41,3 +41,6 @@ export type * from './types/shell.js';
 export type * from './types/gamepad.js';
 
 export type * from './types/llm.js';
+export type * from './types/blossom.js';
+export type * from './types/catalog.js';
+export type * from './types/torrent.js';

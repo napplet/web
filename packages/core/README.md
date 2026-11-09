@@ -76,14 +76,14 @@ interface RelaySubscribe extends NappletMessage {
 }
 ```
 
-The `type` field domain prefix (`relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `navigation`, `ble`, `webrtc`, `link`, `count`, `lists`, `serial`, `fs`, `common`, `dm`, `shell`, `gamepad`, `llm`) routes messages to the correct NAP handler via `dispatch()`.
+The `type` field domain prefix (`relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `navigation`, `ble`, `webrtc`, `link`, `count`, `lists`, `serial`, `fs`, `common`, `dm`, `shell`, `gamepad`, `llm`, `blossom`, `catalog`, `torrent`) routes messages to the correct NAP handler via `dispatch()`.
 
 #### `NapDomain`
 
 String literal union of the NAP capability domains.
 
 ```ts
-type NapDomain = 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'cvm' | 'outbox' | 'upload' | 'intent' | 'navigation' | 'ble' | 'webrtc' | 'link' | 'count' | 'lists' | 'serial' | 'fs' | 'common' | 'dm' | 'shell' | 'gamepad' | 'llm';
+type NapDomain = 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'cvm' | 'outbox' | 'upload' | 'intent' | 'navigation' | 'ble' | 'webrtc' | 'link' | 'count' | 'lists' | 'serial' | 'fs' | 'common' | 'dm' | 'shell' | 'gamepad' | 'llm' | 'blossom' | 'catalog' | 'torrent';
 ```
 
 | Domain    | Scope                                    |
@@ -112,13 +112,14 @@ type NapDomain = 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | '
 | `common`  | Shell-mediated common social actions |
 | `dm`  | Runtime-mediated direct messages |
 | `llm` | User-selected, runtime-mediated language model inference |
+| `torrent` | Runtime-owned torrent transfers and verified content access |
 
 #### `NAP_DOMAINS`
 
 Runtime constant array of all NAP domain strings. Useful for iteration and validation.
 
 ```ts
-const NAP_DOMAINS: readonly NapDomain[] = ['shell', 'relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent', 'navigation', 'ble', 'webrtc', 'link', 'count', 'lists', 'serial', 'common', 'dm'];
+const NAP_DOMAINS: readonly NapDomain[] = ['shell', 'relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent', 'navigation', 'ble', 'webrtc', 'link', 'count', 'lists', 'serial', 'fs', 'common', 'dm', 'gamepad', 'llm', 'blossom', 'catalog', 'torrent'];
 
 for (const domain of NAP_DOMAINS) {
   console.log(`Checking support for: ${domain}`);
@@ -451,3 +452,11 @@ This non-normative type guide follows the [NAP-NAVIGATION draft](https://github.
 ### LLM types
 
 `LlmApi`, the LLM records (`LlmRequirements`, `LlmModel`, `LlmGenerationRequest`, `LlmMessage`, `LlmPart`, `LlmTool`, `LlmToolChoice`, `LlmToolCallPart`, `LlmThinkingPart`, `LlmGeneration`, `LlmDelta`, `LlmFailure`), and the `llm` domain describe the optional `NappletGlobal.llm` binding for user-selected, runtime-mediated inference. `LlmErrorCode` names the specification categories while staying open, because unknown codes remain failures. This non-normative type guide defers to the living [NAP-LLM proposal](https://github.com/napplet/naps/pull/134).
+
+## Catalog types
+
+`CatalogApi`, `CatalogSnapshot`, `NappletIdentity`, `NappletDescriptor`, `ArchetypeDescriptor`, `IntentDescriptor`, and `ArchetypeHandler` describe the [NAP-CATALOG draft](https://github.com/napplet/naps/pull/95). `NappletGlobal.catalog` is optional; `NapDomain` and `NAP_DOMAINS` include `catalog`. This is non-normative package guidance.
+
+### Torrent types
+
+`TorrentApi`, torrent record types, and the `torrent` domain describe the optional `NappletGlobal.torrent` transfer binding. Types include v1/v2/hybrid hashes, verified read results, metadata exports, revisioned settings, and job retention; they do not import Nostr event or relay result schemas. This non-normative type guide defers to the living [NAP-TORRENT proposal](https://github.com/napplet/naps/blob/nap-torrent/naps/NAP-TORRENT.md).

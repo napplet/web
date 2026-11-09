@@ -392,6 +392,18 @@
         }
       ],
       "registryStatuses": []
+    },
+    "blossom": {
+      "url": "https://github.com/napplet/naps/pull/71",
+      "status": "in-review",
+      "headRevision": "5e74daa4808290a3efb8de117502d52ba2e0d2a5",
+      "specFiles": [
+        {
+          "path": "naps/NAP-BLOSSOM.md",
+          "revision": "d7fa4ed6914051d33edb622bb8cf6b787903eaa0"
+        }
+      ],
+      "registryStatuses": []
     }
   }
 }

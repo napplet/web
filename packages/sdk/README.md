@@ -422,6 +422,7 @@ These are discriminated union types covering all messages in each NAP domain. Us
 | `CommonNapMessage` | `@napplet/nap/common` | Discriminated union of all common domain messages |
 | `GamepadNapMessage` | `@napplet/nap/gamepad` | Subscribe, unsubscribe, and state envelopes without correlation ids |
 | `LlmNapMessage` | `@napplet/nap/llm` | Four request/result pairs plus the unsolicited `llm.delta`; results carry exactly one of their success field or `error` |
+| `TorrentNapMessage` | `@napplet/nap/torrent` | Request, result, and job push envelopes |
 | `SerialNapMessage` | `@napplet/nap/serial` | Discriminated union of all serial domain messages |
 
 Individual message types (e.g., `RelaySubscribeMessage`, `IdentityGetPublicKeyMessage`) are also re-exported from `@napplet/sdk` for fine-grained typing.
@@ -431,8 +432,8 @@ Individual message types (e.g., `RelaySubscribeMessage`, `IdentityGetPublicKeyMe
 Each NAP domain has a string constant re-exported from its package:
 
 ```ts
-import { RELAY_DOMAIN, IDENTITY_DOMAIN, STORAGE_DOMAIN, INC_DOMAIN, THEME_DOMAIN, KEYS_DOMAIN, MEDIA_DOMAIN, NOTIFY_DOMAIN, CONFIG_DOMAIN, RESOURCE_DOMAIN, CVM_DOMAIN, OUTBOX_DOMAIN, UPLOAD_DOMAIN, INTENT_DOMAIN, BLE_DOMAIN, WEBRTC_DOMAIN, LINK_DOMAIN, COUNT_DOMAIN, LISTS_DOMAIN, COMMON_DOMAIN, SERIAL_DOMAIN, DM_DOMAIN, LLM_DOMAIN } from '@napplet/sdk';
-// Values: 'relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent', 'ble', 'webrtc', 'link', 'count', 'lists', 'common', 'serial', 'fs', 'dm', 'shell', 'gamepad', 'llm'
+import { RELAY_DOMAIN, IDENTITY_DOMAIN, STORAGE_DOMAIN, INC_DOMAIN, THEME_DOMAIN, KEYS_DOMAIN, MEDIA_DOMAIN, NOTIFY_DOMAIN, CONFIG_DOMAIN, RESOURCE_DOMAIN, CVM_DOMAIN, OUTBOX_DOMAIN, UPLOAD_DOMAIN, INTENT_DOMAIN, BLE_DOMAIN, WEBRTC_DOMAIN, LINK_DOMAIN, COUNT_DOMAIN, LISTS_DOMAIN, COMMON_DOMAIN, SERIAL_DOMAIN, DM_DOMAIN, LLM_DOMAIN, BLOSSOM_DOMAIN, CATALOG_DOMAIN, TORRENT_DOMAIN } from '@napplet/sdk';
+// Values: 'relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent', 'ble', 'webrtc', 'link', 'count', 'lists', 'common', 'serial', 'fs', 'dm', 'shell', 'gamepad', 'llm', 'blossom', 'catalog', 'torrent'
 ```
 
 These constants are re-exported from the individual domain packages. Use property presence for type-safe conditional logic:
@@ -572,3 +573,35 @@ if (window.napplet?.llm) {
 ```
 
 Selection does not authorize disclosure: the runtime obtains consent before each generation and may answer `user-cancelled`. Only `finish: "stop"` is complete output. Tool calls are requests the napplet validates and executes itself, if at all, through separately authorized capabilities; the runtime never executes them, and tool results re-enter the conversation as untrusted input. Handles are endpoint-scoped and expire when the connection, account, or endpoint changes. The runtime owns connections, credentials, consent, and provider access; model output is untrusted data.
+
+## Blossom blob access
+
+The SDK exposes `blossom` from `@napplet/sdk` and `@napplet/sdk/blossom` for server-directed blob operations, ordered BUD-03 server-list helpers and local BUD-10 URI parsing/formatting. Check `window.napplet?.blossom` before optional use. Binary fields remain `Blob` or `ArrayBuffer`; endpoint failures resolve with `ok: false`, while malformed-envelope errors and transport failures reject. Use `resource` for generic retrieval and `upload` when the runtime should choose storage. See the non-normative [BLOSSOM guide](https://napplet.run/docs/naps/blossom.html) and living [NAP-BLOSSOM proposal](https://github.com/napplet/naps/pull/71).
+
+## Catalog discovery
+
+Import `catalog` or `catalogGet` from `@napplet/sdk`, or `catalog` / `get` from `@napplet/sdk/catalog`. After checking `window.napplet?.catalog`, call `await catalog.get()` to read a `CatalogSnapshot`. The domain is independent of `intent` and `shell` readiness. Empty snapshots succeed; runtime errors and timeouts reject. Preserve opaque selectors exactly and render metadata as text. This non-normative guidance defers to the [NAP-CATALOG draft](https://github.com/napplet/naps/pull/95); see the [catalog guide](../../apps/docs/naps/catalog.md).
+
+### Torrent transfers and content
+
+This non-normative guide follows the living [NAP-TORRENT proposal](https://github.com/napplet/naps/blob/nap-torrent/naps/NAP-TORRENT.md). Import `torrent` from `@napplet/sdk` or `@napplet/sdk/torrent`; root exports include prefixed helpers such as `torrentAdd` and `torrentRead`. The dedicated subpath also provides bare aliases such as `add` and `read`.
+
+The API exposes `capabilities`, `pickFiles`, `add`, `status`, `jobs`, `files`, `selectFiles`, `pause`, `resume`, `remove`, `metadata`, `read`, `exportMetainfo`, `saveFile`, `openFile`, `cancel`, and `update`. Listen with `onState`, `onProgress`, and `onError`; close subscriptions when their owning view is disposed. Typed `ok: false` refusals resolve as results; top-level errors and request timeouts reject.
+
+```ts
+import { torrent } from '@napplet/sdk/torrent';
+
+if (window.napplet?.torrent) {
+  const ack = await torrent.add({
+    source: {
+      sourceType: 'infohash',
+      hashes: { v1: '0123456789abcdef0123456789abcdef01234567' },
+    },
+    options: { mode: 'download', startPaused: true },
+  });
+  if (!ack.ok) console.error(ack.error, ack.reason);
+  else console.log(await torrent.status(ack.jobId));
+}
+```
+
+`add` acknowledges job creation, not completion. The runtime owns the engine, consent, storage, and network policy. A file-picker grant authorizes seeding only; reading, saving, or opening that data needs separate authorization. Discovery, Nostr event conversion, publishing, and comments belong to other capabilities or napplet libraries, outside `torrent`.

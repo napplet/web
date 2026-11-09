@@ -1,5 +1,5 @@
 /** Reference INTENT acceptance and endpoint-bound delivery (NAP-INTENT #128). */
-import type { IntentAvailability, IntentDelivery, IntentRequest } from '@napplet/core';
+import type { IntentAvailability, IntentCandidate, IntentDelivery, IntentRequest } from '@napplet/core';
 import { catalogAvailability, type CatalogManifest } from './intent-catalog.js';
 import { REFERENCE_HANDLER, REFERENCE_MANIFEST, ok, type ReferenceEndpoint } from './reference-responses.js';
 import type { EndpointRegistry } from './reference-endpoints.js';
@@ -11,6 +11,11 @@ export interface IntentHandlers {
   deliver(endpointId: string, request: IntentRequest, sender?: string | null): IntentDelivery | undefined;
   emit(endpointId: string, delivery: IntentDelivery): void;
   retry(endpointId: string, deliveryId: string): boolean;
+  currentHandler(archetype: string): string | null;
+}
+
+function implicitCandidate(candidates: IntentCandidate[]): IntentCandidate | undefined {
+  return candidates.find(item => item.isDefault) ?? candidates[0];
 }
 
 /** Create fixture handlers from installed verified metadata. */
@@ -36,6 +41,7 @@ export function createIntentHandlers(
   };
   return {
     availability, deliver, emit,
+    currentHandler: archetype => implicitCandidate(availability(archetype).candidates)?.id ?? null,
     retry(target, id) {
       const delivery = endpoints.get(target)?.deliveries.get(id);
       if (!delivery || !endpoints.hasDomain(target, 'intent')) return false;
@@ -49,7 +55,7 @@ export function createIntentHandlers(
       const explicit = request.handler && !['default', 'choose'].includes(request.handler);
       const candidate = request.handler === 'choose' ? undefined : explicit
         ? candidates.find((item) => item.id === request.handler)
-        : candidates.find((item) => item.isDefault) ?? candidates[0];
+        : implicitCandidate(candidates);
       const rejected = () => ok({ type: 'intent.invoke.result', id: env.id, result: { ok: false, error: 'no handler' } });
       if (!candidate) return rejected();
       // The canned catalog target is materialized only for ordinary invocation.

@@ -1,5 +1,7 @@
+import { validateBlossomFields } from './blossom-validation.js';
 import { navigationReportError } from './navigation.js';
 import { validateLlmRequest } from './llm.js';
+import { validateTorrentRequest } from './torrent.js';
 import { NAP_DOMAINS } from '@napplet/core';
 import { ENVELOPE_SPECS } from './envelope-specs.js';
 import type {
@@ -220,6 +222,13 @@ export function validateEnvelope(message: unknown): EnvelopeVerdict {
     }
   }
 
+  validateDomainRequest(type, domain, record, errors);
+
+  return { ok: errors.length === 0, type, domain, direction: 'out', errors };
+}
+
+/** Apply per-domain request schemas after the generic envelope checks. */
+function validateDomainRequest(type: string, domain: string, record: Record<string, unknown>, errors: EnvelopeError[]): void {
   if (type === 'navigation.report' || type === 'navigation.get') {
     if (record.id === '') errors.push({ code: 'wrong-type', message: 'Navigation request id must be non-empty', field: 'id' });
     if (type === 'navigation.report') {
@@ -229,6 +238,8 @@ export function validateEnvelope(message: unknown): EnvelopeVerdict {
   }
 
   if (domain === 'llm') validateLlmRequest(type, record, errors);
+  if (domain === 'blossom') validateBlossomFields(record, errors);
+  if (domain === 'torrent') validateTorrentRequest(type, record, errors);
 
   if (type === 'intent.invoke') {
     validateIntentInvokeRequest(record.request, errors);
@@ -239,8 +250,6 @@ export function validateEnvelope(message: unknown): EnvelopeVerdict {
   if (type === 'resource.bytesMany') {
     validateResourceBytesManyRequests(record.requests, errors);
   }
-
-  return { ok: errors.length === 0, type, domain, direction: 'out', errors };
 }
 
 /** Every envelope `type` known to the validator. */

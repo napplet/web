@@ -9,7 +9,7 @@ Napplet implementation code is **SDK-first**: import typed wrappers from `@nappl
 
 ## Domains shipped by the current packages
 
-`shell`, `relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `navigation`, `ble`, `webrtc`, `link`, `count`, `lists`, `serial`, `fs`, `common`, `dm`, `llm`.
+`shell`, `relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `navigation`, `ble`, `webrtc`, `link`, `count`, `lists`, `serial`, `fs`, `common`, `dm`, `gamepad`, `llm`, `blossom`, `catalog`, `torrent`.
 
 `ifc` is a deprecated INC alias. If a NAP is not in this list, do not implement against it even when a spec PR exists — flag the package/spec gap. `shell` is optional environment information only (see below); there is no `discoverServices()` or `hasService()`, and no domain waits on `shell.ready()`. A missing optional domain simply means "unavailable for this load".
 
@@ -24,7 +24,9 @@ Napplet implementation code is **SDK-first**: import typed wrappers from `@nappl
 | Persist app state | `storage` |
 | External bytes (images, avatars, JSON, WASM side files, media) | `resource` |
 | Shell-mediated upload of user files/blobs | `upload` |
+| Explicit Blossom servers, blob operations, BUD-03 server lists and BUD-10 URI helpers | `blossom` |
 | Open an external URL under shell policy | `link` |
+| Discover available napplets and current handler selectors | `catalog` (read-only) |
 | Talk to other napplets | `inc`, `intent` (see `napplet-interop`) |
 | Report committed views for shell Back/Forward history | `navigation` with `intent` |
 | User-configurable settings | `config` |
@@ -221,7 +223,6 @@ Theme updates reach napplets with the exposed `theme` domain, independently of m
 ## Optional controller input
 
 This non-normative guidance defers to the living [NAP-GAMEPAD proposal](https://github.com/napplet/naps/pull/108). Check injected `gamepad` presence and call the SDK namespace from `@napplet/sdk/gamepad`. Its cached API exposes `getGamepads()`, `available`, `focused`, and `onChange(handler)`; close listeners on disposal. Keep keyboard or pointer fallbacks, ignore gameplay edges while unfocused, reset held-button baselines on regained focus, preserve null slots, and route controllers by `index`. Use an optional manifest domain when the core task remains usable without controllers. Native controller access belongs to the runtime. Do not add haptics, raw HID access, a correlation id, or a prerequisite SHELL readiness exchange. Reference-mock conformance reports unavailable controllers; verify live focus isolation in a GAMEPAD-capable runtime.
-
 ### Language model inference
 
 This non-normative guide follows the living [NAP-LLM proposal](https://github.com/napplet/naps/pull/134). Import `llm` from `@napplet/sdk` or `@napplet/sdk/llm`; root exports include prefixed helpers such as `llmSelect` and `llmGenerate`. The dedicated subpath also provides bare aliases such as `select` and `generate`.
@@ -252,3 +253,35 @@ Selection does not authorize disclosure: the runtime obtains consent before each
 ## Navigation history
 
 This non-normative guidance targets the [NAP-NAVIGATION draft](https://github.com/napplet/naps/pull/126) and [NAP-INTENT delivery draft](https://github.com/napplet/naps/pull/128). Import `navigation` from `@napplet/sdk/navigation` (or the SDK root). Guard both `window.napplet?.navigation` and `window.napplet?.intent`; declare both domains as optional when history is an enhancement. `navigation.report(report)` reports the initial and each subsequent committed view; `navigation.get()` returns the runtime's retained view. Reports contain a monotonically increasing positive `revision` and `location` (an advertised queryless convention plus a JSON payload map using advertised parameter names, or `null`). Serialize transitions and reports; include the responsible intent `delivery.id` as `deliveryId`, never a global last-delivered ID. Inspect `result.ok` and `result.error.code`; recovery uses a newer report of actual state. Only an identical retry reuses a revision. History lists, indices, visit IDs, listeners, and traversal outcomes are not caller controls. Native routing APIs do not report history automatically. See `napplet-interop` for intent correlation.
+
+## Blossom
+
+This non-normative guidance defers to the living [NAP-BLOSSOM proposal](https://github.com/napplet/naps/pull/71). Import `blossom` from `@napplet/sdk/blossom`; check `window.napplet?.blossom` for optional features. Use it for explicit server-directed blob operations and ordered BUD-03 server-list helpers. `parseUri` and `formatUri` are local BUD-10 helpers. Keep generic fetching on `resource` and runtime-selected uploads on `upload`. Pass `Blob` or `ArrayBuffer` unchanged; handle typed `ok: false` results separately from rejected promises. The runtime owns auth tokens, signing, integrity verification and network policy. Reference conformance returns typed unavailable results without network access.
+
+## Catalog discovery
+
+Non-normative package guidance for the [NAP-CATALOG draft](https://github.com/napplet/naps/pull/95): feature-gate `window.napplet?.catalog`, then call `catalog.get()` from `@napplet/sdk` or `@napplet/sdk/catalog`. The snapshot contains available napplets and current handler selectors, not running-instance state. Treat titles and descriptions as text. Preserve each opaque `id` unchanged; never derive it from `dTag`. A user-authorized intent invocation can use that selector when `intent` is also exposed. Discovery grants no launch permission, does not change preferences, and works without intent. Parameter metadata contains names only; validate actual payloads against the convention.
+
+### Torrent transfers and content
+
+This non-normative guide follows the living [NAP-TORRENT proposal](https://github.com/napplet/naps/blob/nap-torrent/naps/NAP-TORRENT.md). Import `torrent` from `@napplet/sdk` or `@napplet/sdk/torrent`; root exports include prefixed helpers such as `torrentAdd` and `torrentRead`. The dedicated subpath also provides bare aliases such as `add` and `read`.
+
+The API exposes `capabilities`, `pickFiles`, `add`, `status`, `jobs`, `files`, `selectFiles`, `pause`, `resume`, `remove`, `metadata`, `read`, `exportMetainfo`, `saveFile`, `openFile`, `cancel`, and `update`. Listen with `onState`, `onProgress`, and `onError`; close subscriptions when their owning view is disposed. Typed `ok: false` refusals resolve as results; top-level errors and request timeouts reject.
+
+```ts
+import { torrent } from '@napplet/sdk/torrent';
+
+if (window.napplet?.torrent) {
+  const ack = await torrent.add({
+    source: {
+      sourceType: 'infohash',
+      hashes: { v1: '0123456789abcdef0123456789abcdef01234567' },
+    },
+    options: { mode: 'download', startPaused: true },
+  });
+  if (!ack.ok) console.error(ack.error, ack.reason);
+  else console.log(await torrent.status(ack.jobId));
+}
+```
+
+`add` acknowledges job creation, not completion. The runtime owns the engine, consent, storage, and network policy. A file-picker grant authorizes seeding only; reading, saving, or opening that data needs separate authorization. Discovery, Nostr event conversion, publishing, and comments belong to other capabilities or napplet libraries, outside `torrent`.
