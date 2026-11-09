@@ -687,7 +687,6 @@ The runtime binding retains deliveries until a listener registers. Discovery can
 ### GAMEPAD integration
 
 The selected `gamepad` runtime binding installs the cached API, subscribes without SHELL readiness, validates parent state, and unsubscribes during cleanup. See the proposed [NAP-GAMEPAD](https://github.com/napplet/naps/pull/108). The native browser Gamepad API is left untouched pending clarification of the proposal’s optional replacement and NIP-5D’s namespace-only injection rule.
-
 ### LLM runtime binding
 
 Select `llm` in `installNappletGlobal({ domains: ['llm'] })` or the equivalent runtime prelude options to expose `window.napplet.llm`. The binding forwards `select`, `describe`, `generate`, and `cancel`, correlates each result by `id` and type, routes `llm.delta` only to the generation that owns its `requestId`, drops deltas that do not match the Delta schema (`start` / `delta` / `end` events, `text` only on `delta`, `toolCallId` and `name` only on a `toolCall` start), stops provisional delivery on a sequence gap, rejects an `Error` record as an `LlmError` carrying the specification code, and maps an abort signal to `llm.cancel`. Installing the binding supplies no connection, consent, or provider: the host provides policy-bound handlers, endpoint-scoped handles, and prompts. See the living [NAP-LLM proposal](https://github.com/napplet/naps/pull/134).
@@ -699,3 +698,7 @@ Include `blossom` in the host's explicit domain allowlist to inject `window.napp
 ## Catalog injection
 
 Include `catalog` in the prelude or installer domain allowlist to expose `window.napplet.catalog.get()`. Requests use `catalog.get` and responses use `catalog.get.result`, correlated by `id`. The shim transports the snapshot; the host supplies verified manifest metadata and caller policy. No `intent` or `shell` domain is required. This non-normative guidance defers to the [NAP-CATALOG draft](https://github.com/napplet/naps/pull/95).
+
+### Torrent runtime binding
+
+Select `torrent` in `installNappletGlobal({ domains: ['torrent'] })` or the equivalent runtime prelude options to expose `window.napplet.torrent`. The binding forwards all 17 operations and routes `torrent.state`, `torrent.progress`, and `torrent.error` to local listeners. Requests correlate by `id`; pushes identify jobs by `jobId`. Installing the binding does not install a torrent engine or grant permission: the host supplies policy-bound handlers, scoped jobs, storage, and user consent. See the living [NAP-TORRENT proposal](https://github.com/napplet/naps/blob/nap-torrent/naps/NAP-TORRENT.md).

@@ -119,7 +119,11 @@
     "./catalog": "./src/catalog/index.ts",
     "./catalog/types": "./src/catalog/types.ts",
     "./catalog/shim": "./src/catalog/shim.ts",
-    "./catalog/sdk": "./src/catalog/sdk.ts"
+    "./catalog/sdk": "./src/catalog/sdk.ts",
+    "./torrent": "./src/torrent/index.ts",
+    "./torrent/types": "./src/torrent/types.ts",
+    "./torrent/shim": "./src/torrent/shim.ts",
+    "./torrent/sdk": "./src/torrent/sdk.ts"
   },
   "imports": {
     "@napplet/core": "jsr:@napplet/core@^0.39.0",

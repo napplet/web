@@ -1,6 +1,7 @@
 import { installLlmShim, handleLlmMessage } from '@napplet/nap/llm/shim';
 import { installBlossomShim, handleBlossomMessage } from '@napplet/nap/blossom/shim';
 import { installCatalogShim, handleCatalogMessage } from '@napplet/nap/catalog/shim';
+import { installTorrentShim, handleTorrentMessage } from '@napplet/nap/torrent/shim';
 import { installGamepadShim, handleGamepadMessage } from '@napplet/nap/gamepad/shim';
 import { handleShellMessage, installShellShim } from '@napplet/nap/shell/shim';
 import {
@@ -106,6 +107,7 @@ const DOMAIN_ROUTERS: ReadonlyArray<readonly [string, DomainHandler]> = [
   ['llm.', handleLlmMessage],
   ['blossom.', handleBlossomMessage],
   ['catalog.', handleCatalogMessage],
+  ['torrent.', handleTorrentMessage],
   ['gamepad.', handleGamepadMessage],
   ['shell.', handleShellMessage],
   ['keys.', handleKeysMessage],
@@ -152,6 +154,7 @@ const DOMAIN_SHIM_INSTALLERS: Readonly<Record<NapDomain, () => void>> = {
   llm: () => { installLlmShim(); },
   blossom: () => { installBlossomShim(); },
   catalog: () => { installCatalogShim(); },
+  torrent: () => { installTorrentShim(); },
   gamepad: () => { installGamepadShim(); },
   shell: () => { installShellShim(); },
   relay: () => undefined,

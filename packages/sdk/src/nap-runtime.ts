@@ -209,6 +209,31 @@ export { shellReady, shellSupports, shellOnReady, installShellShim, DOMAIN as SH
 export { DOMAIN as GAMEPAD_DOMAIN, installGamepadShim, gamepadGetGamepads, gamepadAvailable, gamepadFocused, gamepadOnChange } from '@napplet/nap/gamepad';
 
 export {
+  DOMAIN as TORRENT_DOMAIN,
+  installTorrentShim,
+  torrentCapabilities,
+  torrentPickFiles,
+  torrentAdd,
+  torrentStatus,
+  torrentJobs,
+  torrentFiles,
+  torrentSelectFiles,
+  torrentPause,
+  torrentResume,
+  torrentRemove,
+  torrentMetadata,
+  torrentRead,
+  torrentExportMetainfo,
+  torrentSaveFile,
+  torrentOpenFile,
+  torrentCancel,
+  torrentUpdate,
+  torrentOnState,
+  torrentOnProgress,
+  torrentOnError,
+} from '@napplet/nap/torrent';
+
+export {
   DOMAIN as LLM_DOMAIN,
   LLM_ERROR_CODES,
   installLlmShim,

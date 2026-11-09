@@ -1,7 +1,7 @@
 {
   "name": "@napplet/nap",
   "version": "0.38.0",
-  "description": "The active napplet NAP domains (relay, storage, inc, keys, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent, ble, webrtc, link, count, lists, serial, fs, common, dm, shell, gamepad, llm, blossom, catalog) as layered subpath exports",
+  "description": "The active napplet NAP domains (relay, storage, inc, keys, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent, ble, webrtc, link, count, lists, serial, fs, common, dm, shell, gamepad, llm, blossom, catalog, torrent) as layered subpath exports",
   "type": "module",
   "exports": {
     "./boundary": {
@@ -471,6 +471,22 @@
     "./catalog/sdk": {
       "types": "./dist/catalog/sdk.d.ts",
       "import": "./dist/catalog/sdk.js"
+    },
+    "./torrent": {
+      "types": "./dist/torrent/index.d.ts",
+      "import": "./dist/torrent/index.js"
+    },
+    "./torrent/types": {
+      "types": "./dist/torrent/types.d.ts",
+      "import": "./dist/torrent/types.js"
+    },
+    "./torrent/shim": {
+      "types": "./dist/torrent/shim.d.ts",
+      "import": "./dist/torrent/shim.js"
+    },
+    "./torrent/sdk": {
+      "types": "./dist/torrent/sdk.d.ts",
+      "import": "./dist/torrent/sdk.js"
     }
   },
   "files": [

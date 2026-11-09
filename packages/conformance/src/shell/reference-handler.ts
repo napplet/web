@@ -1,4 +1,5 @@
 import { createLlmHandlers } from './reference-llm.js';
+import { createTorrentHandlers } from './reference-torrents.js';
 import { NAP_DOMAINS, type CatalogSnapshot } from '@napplet/core';
 import { validateEnvelope, type EnvelopeVerdict } from '../validators/envelope.js';
 import {
@@ -35,6 +36,7 @@ export function createReferenceHandler(options: ReferenceHandlerOptions) {
   const initialized = new Set<string>();
   const hostDomains = options.domains ? new Set(options.domains) : null;
   const llm = createLlmHandlers();
+  const torrents = createTorrentHandlers();
   const handle = (endpoint: ReferenceEndpoint, envelope: unknown): unknown[] => {
     const type = getEnvelopeType(envelope);
     const verdict = validateEnvelope(envelope);
@@ -63,6 +65,7 @@ export function createReferenceHandler(options: ReferenceHandlerOptions) {
     }
     if (type.startsWith('intent.') && !options.intentResolver) return [];
     if (type.startsWith('llm.')) return llm.handle(endpoint, env);
+    if (type.startsWith('torrent.')) return torrents.handle(endpoint, env);
     if (type === 'intent.invoke') return options.intents.handleInvoke(endpoint, env);
     if (type === 'intent.available') {
       return ok({ type: 'intent.available.result', id: env.id, availability: options.intents.availability(env.archetype) });
@@ -75,7 +78,7 @@ export function createReferenceHandler(options: ReferenceHandlerOptions) {
     const responder = RESPONDERS[type];
     return responder ? responder(env) : [];
   };
-  return Object.assign(handle, { reset() { llm.reset(); } });
+  return Object.assign(handle, { reset() { llm.reset(); torrents.reset(); } });
 }
 
 /** NAP-LLM request types; each has a `.result` terminal type. */

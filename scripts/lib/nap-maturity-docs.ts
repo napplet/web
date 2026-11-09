@@ -98,6 +98,7 @@ export const NAP_DOC_GROUPS: readonly NapDocGroup[] = [
       resource: 'Sandboxed byte fetching over https, blossom, nostr, and data URIs.',
       upload: 'File and blob upload over NIP-96 and Blossom rails.',
       blossom: 'Server-directed Blossom blob operations and ordered user server lists.',
+      torrent: 'Runtime-owned torrent transfer jobs and verified file access.',
       cvm: 'ContextVM bridge — MCP tools and resources over Nostr.',
     },
   },

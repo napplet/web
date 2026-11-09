@@ -35,6 +35,7 @@ Top-level namespaced objects that mirror `window.napplet`:
 - **`notify`** — `send`, `badge`, `onAction`, …
 - **`config`** — `get`, `subscribe`, `openSettings`, `registerSchema`, `schema`
 - **`llm`** — User-selected, runtime-mediated language model inference: `select`, `describe`, `generate`, `cancel`
+- **`torrent`** — Runtime transfer jobs, verified content access, and job event listeners
 - **`resource`** — `info`, `bytes`, `bytesMany`, `bytesAsObjectURL`
 
 `identity` is exported as a top-level object and through bare-name helpers:
@@ -176,7 +177,6 @@ if (window.napplet?.gamepad) {
 ```
 
 Declare `gamepad` as optional (`O`) when other controls fulfill the core task. Use a hard requirement (`R`) only when the core task needs controller input. The runtime owns controller access and focus isolation; app code does not call native `navigator.getGamepads()` or open raw HID devices. Haptics and remapping are outside this proposal.
-
 ### Language model inference
 
 This non-normative guide follows the living [NAP-LLM proposal](https://github.com/napplet/naps/pull/134). Import `llm` from `@napplet/sdk` or `@napplet/sdk/llm`; root exports include prefixed helpers such as `llmSelect` and `llmGenerate`. The dedicated subpath also provides bare aliases such as `select` and `generate`.
@@ -211,3 +211,27 @@ The SDK exposes `blossom` from `@napplet/sdk` and `@napplet/sdk/blossom` for ser
 ## Catalog support
 
 Import `catalog` or `catalogGet` from the SDK root, or `catalog` / `get` from `@napplet/sdk/catalog`. Call `catalog.get()` after checking optional domain presence. This implements the [NAP-CATALOG draft](https://github.com/napplet/naps/pull/95). See the [non-normative catalog guide](/naps/catalog) for types, layered exports, SDK usage, runtime injection, and selector handling.
+
+### Torrent transfers and content
+
+This non-normative guide follows the living [NAP-TORRENT proposal](https://github.com/napplet/naps/blob/nap-torrent/naps/NAP-TORRENT.md). Import `torrent` from `@napplet/sdk` or `@napplet/sdk/torrent`; root exports include prefixed helpers such as `torrentAdd` and `torrentRead`. The dedicated subpath also provides bare aliases such as `add` and `read`.
+
+The API exposes `capabilities`, `pickFiles`, `add`, `status`, `jobs`, `files`, `selectFiles`, `pause`, `resume`, `remove`, `metadata`, `read`, `exportMetainfo`, `saveFile`, `openFile`, `cancel`, and `update`. Listen with `onState`, `onProgress`, and `onError`; close subscriptions when their owning view is disposed. Typed `ok: false` refusals resolve as results; top-level errors and request timeouts reject.
+
+```ts
+import { torrent } from '@napplet/sdk/torrent';
+
+if (window.napplet?.torrent) {
+  const ack = await torrent.add({
+    source: {
+      sourceType: 'infohash',
+      hashes: { v1: '0123456789abcdef0123456789abcdef01234567' },
+    },
+    options: { mode: 'download', startPaused: true },
+  });
+  if (!ack.ok) console.error(ack.error, ack.reason);
+  else console.log(await torrent.status(ack.jobId));
+}
+```
+
+`add` acknowledges job creation, not completion. The runtime owns the engine, consent, storage, and network policy. A file-picker grant authorizes seeding only; reading, saving, or opening that data needs separate authorization. Discovery, Nostr event conversion, publishing, and comments belong to other capabilities or napplet libraries, outside `torrent`.

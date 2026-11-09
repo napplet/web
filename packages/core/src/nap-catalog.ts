@@ -210,6 +210,12 @@ export const NAP_IMPLEMENTATIONS: Readonly<Record<NapDomain, NapImplementationMe
     rationale: "Binding, reference-shell snapshot, and envelope-validator tests cover read-only discovery; snapshot contents depend on each host's verified manifests and are not established by those tests.",
     evidence: ["packages/nap/src/catalog/shim.test.ts", "packages/conformance/src/shell/reference-catalog.test.ts", "packages/conformance/src/validators/catalog.test.ts"],
   },
+  torrent: {
+    proposal: { url: "https://github.com/napplet/naps/pull/72", status: "in-review", checkedAt: "2026-11-09" },
+    maturity: "exploratory",
+    rationale: "Binding, validator, and real-iframe tests run against a reference shell without a torrent engine; live transfer, seeding, and content verification behavior are unproven.",
+    evidence: ["packages/nap/src/torrent/shim.test.ts", "packages/conformance/src/validators/torrent.test.ts", "packages/conformance-cli/src/browser.test.ts"],
+  },
 };
 
 // Protect release metadata against accidental consumer mutation.

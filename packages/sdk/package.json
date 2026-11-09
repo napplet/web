@@ -26,6 +26,10 @@
     "./catalog": {
       "types": "./dist/catalog.d.ts",
       "import": "./dist/catalog.js"
+    },
+    "./torrent": {
+      "types": "./dist/torrent.d.ts",
+      "import": "./dist/torrent.js"
     }
   },
   "files": [

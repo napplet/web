@@ -1,5 +1,6 @@
 import type { BlossomApi } from './blossom.js';
 import type { CatalogApi } from './catalog.js';
+import type { TorrentApi } from './torrent.js';
 import type { GamepadApi } from './gamepad.js';
 import type { LlmApi } from './llm.js';
 import type { ShellApi } from './shell.js';
@@ -59,6 +60,8 @@ export interface NappletGlobal {
   blossom?: BlossomApi;
   /** Optional read-only discovery of available napplets. */
   catalog?: CatalogApi;
+  /** Runtime-mediated transfers and authorized content access (NAP-TORRENT). */
+  torrent?: TorrentApi;
   /** Optional shell-mediated controller input, scoped to this napplet’s focus. */
   gamepad?: GamepadApi;
   /** Optional shell environment; other domains work without it. */

@@ -1,6 +1,6 @@
 # @napplet/nap
 
-> Every active napplet NAP domain (relay, storage, inc, keys, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent, ble, webrtc, link, count, lists, serial, fs, common, dm, shell, gamepad, llm, blossom, catalog) as layered subpath exports. The package name remains `@napplet/nap` for compatibility.
+> Every active napplet NAP domain (relay, storage, inc, keys, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent, ble, webrtc, link, count, lists, serial, fs, common, dm, shell, gamepad, llm, blossom, catalog, torrent) as layered subpath exports. The package name remains `@napplet/nap` for compatibility.
 
 NAP proposal status and shipped implementation maturity are separate. All capabilities can change. Inspect `NAP_IMPLEMENTATIONS` from `@napplet/core` and use `selectNapDomains` for local host opt-in policy. See [maturity and opt-in guidance](https://napplet.run/docs/naps/maturity.html).
 
@@ -87,6 +87,7 @@ Each domain is an independent subpath. Barrel imports bundle types + shim instal
 | llm | `@napplet/nap/llm` | `@napplet/nap/llm/types` | `@napplet/nap/llm/shim` | `@napplet/nap/llm/sdk` | User-selected, runtime-mediated language model inference — `select`/`describe`/`generate`/`cancel`; generations are stateless, may stream ordered `llm.delta` text, and expose `requestId`; shell owns connections, credentials, consent, and provider access |
 | dm | `@napplet/nap/dm` | `@napplet/nap/dm/types` | `@napplet/nap/dm/shim` | `@napplet/nap/dm/sdk` | Runtime-mediated direct messages — `status`/`conversations`/`messages`/`send`/`subscribe`/`unsubscribe`/`onMessage`; shell owns signing, encryption, relay routing, storage, and policy |
 | catalog | `@napplet/nap/catalog` | `@napplet/nap/catalog/types` | `@napplet/nap/catalog/shim` | `@napplet/nap/catalog/sdk` | Read-only available napplets and current handler selectors |
+| torrent | `@napplet/nap/torrent` | `@napplet/nap/torrent/types` | `@napplet/nap/torrent/shim` | `@napplet/nap/torrent/sdk` | Runtime-owned download/seed jobs, verified file reads, metadata export, settings, and job listeners |
 
 ### NAP-FS byte transfer
 
@@ -149,12 +150,12 @@ Each domain exposes up to three patterns (four including the barrel). Pick the s
 - Every subpath in the `exports` map is a discrete entry point; a bundler importing only `@napplet/nap/relay/types` produces zero bytes from unrelated domains
 - Verified end-to-end in Phase 121 with a minimal-consumer smoke test
 
-The `exports` map in `package.json` declares 92 entry points:
+The `exports` map in `package.json` declares the available entry points:
 
-- 22 domain barrels (`@napplet/nap/<domain>`)
-- 22 granular types entries (`@napplet/nap/<domain>/types`)
-- 22 granular shim entries (`@napplet/nap/<domain>/shim`)
-- 22 granular sdk entries (`@napplet/nap/<domain>/sdk`)
+- Domain barrels (`@napplet/nap/<domain>`)
+- Granular types entries (`@napplet/nap/<domain>/types`)
+- Granular shim entries (`@napplet/nap/<domain>/shim`)
+- Granular SDK entries (`@napplet/nap/<domain>/sdk`)
 - 1 deprecated compatibility wrapper (`ifc`) with matching `types`, `shim`, and `sdk` entries
 
 Each entry maps to its own pre-built `.js` + `.d.ts` pair under `dist/<domain>/<surface>.{js,d.ts}`. No root `.` key exists, and there is no top-level `main`/`module`/`types` field — attempting `import '@napplet/nap'` fails with `ERR_PACKAGE_PATH_NOT_EXPORTED` by design.
@@ -305,7 +306,6 @@ if (window.napplet?.gamepad) {
 ```
 
 Declare `gamepad` as optional (`O`) when other controls fulfill the core task. Use a hard requirement (`R`) only when the core task needs controller input. The runtime owns controller access and focus isolation; app code does not call native `navigator.getGamepads()` or open raw HID devices. Haptics and remapping are outside this proposal.
-
 ### Language model inference
 
 `@napplet/nap/llm` provides the barrel, `types`, `shim`, and `sdk` subpaths for the four NAP-LLM operations. SDK helpers use the `llm` prefix (`llmSelect`, `llmDescribe`, `llmGenerate`, `llmCancel`); `isLlmFailure` recognizes rejections that carry a specification error code, and `LLM_ERROR_CODES` lists the known codes; `llmText` concatenates a generation's text parts and `llmToolCalls` returns tool calls only from a `toolUse` result. `generate` exposes the generation's `requestId`, delivers ordered block-lifecycle deltas to an `onDelta` listener, and maps an abort signal to `llm.cancel`; the generation still settles through its own result. Selection does not authorize disclosure, and handles are endpoint-scoped. This non-normative guidance defers to the living [NAP-LLM proposal](https://github.com/napplet/naps/pull/134).
@@ -317,3 +317,7 @@ The SDK exposes `blossom` from `@napplet/sdk` and `@napplet/sdk/blossom` for ser
 ## Catalog discovery
 
 The [NAP-CATALOG draft](https://github.com/napplet/naps/pull/95) is available at `@napplet/nap/catalog`, with `/types`, `/shim`, and `/sdk` layers on npm and JSR. Consumer helpers `catalogGet()` and its `/sdk` alias `get()` read `CatalogSnapshot`; runtime helpers install and route `catalog.get` / `catalog.get.result`. See the [non-normative guide](../../apps/docs/naps/catalog.md).
+
+### Runtime-owned torrent jobs
+
+`@napplet/nap/torrent` provides the barrel, `types`, `shim`, and `sdk` subpaths for all 17 NAP-TORRENT operations. SDK helpers use the `torrent` prefix, such as `torrentAdd`, `torrentRead`, and `torrentUpdate`. `torrentOnState`, `torrentOnProgress`, and `torrentOnError` return independently closable subscriptions. A job acknowledgment does not mean a transfer completed. The runtime owns the engine and selected file bytes; `runtimeFileSetId` is an opaque handle, not a path. This non-normative guidance defers to [NAP-TORRENT](https://github.com/napplet/naps/blob/nap-torrent/naps/NAP-TORRENT.md).

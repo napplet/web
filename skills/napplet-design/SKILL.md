@@ -43,6 +43,7 @@ Use only domains the current `@napplet/sdk` exports (`napplet-sdk` lists them). 
 | App state | `storage` | `localStorage` |
 | Avatars, images, JSON, media bytes | `resource` | `fetch`, `<img src=https://…>` |
 | Language model inference | `llm` (user-selected connection) | Bundled provider SDKs, API keys, direct provider calls |
+| Torrent download/seed jobs and verified content access | `torrent` | Bundled torrent engines, direct trackers/DHT, local file paths |
 | Uploads, external links | `upload`, `link` | Direct network / `window.open` |
 | Settings, host look | `config`, `theme` | App-owned settings pages |
 | Keyboard-bound actions, shortcuts, game controls | `keys` action registration | App-owned key capture as the only integration path |

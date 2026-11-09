@@ -43,3 +43,4 @@ export { gamepad } from './gamepad.js';
 export { llm } from './llm.js';
 export { blossom } from './blossom.js';
 export { catalog } from './catalog.js';
+export { torrent } from './torrent.js';

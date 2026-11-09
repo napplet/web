@@ -15,6 +15,11 @@ export default defineConfig({
     'catalog/types': 'src/catalog/types.ts',
     'catalog/shim': 'src/catalog/shim.ts',
     'catalog/sdk': 'src/catalog/sdk.ts',
+    'torrent/index': 'src/torrent/index.ts',
+    'torrent/types': 'src/torrent/types.ts',
+    'torrent/shim': 'src/torrent/shim.ts',
+    'torrent/sdk': 'src/torrent/sdk.ts',
+
     'gamepad/index': 'src/gamepad/index.ts',
     'gamepad/types': 'src/gamepad/types.ts',
     'gamepad/shim': 'src/gamepad/shim.ts',

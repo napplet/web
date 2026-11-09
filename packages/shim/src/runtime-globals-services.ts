@@ -1,5 +1,6 @@
 import * as llmShim from '@napplet/nap/llm/shim';
 import * as blossom from '@napplet/nap/blossom/shim';
+import * as torrentShim from '@napplet/nap/torrent/shim';
 import type { NapDomain, NappletGlobal } from '@napplet/core';
 import {
   info as resourceInfo,
@@ -114,6 +115,30 @@ import {
 
 
 export function installServiceDomains(domains: ReadonlySet<NapDomain>, napplet: Partial<NappletGlobal>): void {
+  if (domains.has('torrent')) {
+    napplet.torrent = {
+      capabilities: torrentShim.capabilities,
+      pickFiles: torrentShim.pickFiles,
+      add: torrentShim.add,
+      status: torrentShim.status,
+      jobs: torrentShim.jobs,
+      files: torrentShim.files,
+      selectFiles: torrentShim.selectFiles,
+      pause: torrentShim.pause,
+      resume: torrentShim.resume,
+      remove: torrentShim.remove,
+      metadata: torrentShim.metadata,
+      read: torrentShim.read,
+      exportMetainfo: torrentShim.exportMetainfo,
+      saveFile: torrentShim.saveFile,
+      openFile: torrentShim.openFile,
+      cancel: torrentShim.cancel,
+      update: torrentShim.update,
+      onState: torrentShim.onState,
+      onProgress: torrentShim.onProgress,
+      onError: torrentShim.onError,
+    };
+  }
   if (domains.has('llm')) {
     napplet.llm = {
       select: llmShim.select,
