@@ -2,6 +2,25 @@
 
 > Runtime injection helper for napplet iframes. It installs selected `window.napplet` domain objects. No cryptographic dependencies -- the shim sends JSON envelope messages and the shell handles identity.
 
+## Maturity-controlled injection
+
+Use the side-effect-free `@napplet/shim/prelude` entrypoint for policy-controlled hosts. The legacy root `@napplet/shim` import still installs every bundled domain for compatibility.
+
+```ts
+import { selectNapDomains } from '@napplet/core';
+import { renderNappletRuntimePreludeCall } from '@napplet/shim/prelude';
+
+const selection = selectNapDomains({
+  candidates: ['storage', 'llm', 'ble'],
+  optIn: ['llm'],
+});
+const activate = renderNappletRuntimePreludeCall({ domains: selection.domains });
+```
+
+Inline the maintained prelude artifact followed by `activate` before napplet scripts run. Enforce the same `selection.domains` set in host dispatch: hiding a shim object is not an authorization check. The prelude opens the NIP-5D channel when it installs: one `napplet.hello` hands the shell a `MessagePort`, and every envelope then travels over that port, so bind the napplet's identity to the port and tear the frame down on a second hello, any other window-level message or a second `load`. Candidates must already be implemented and authorized for the napplet.
+
+Prelude helpers also accept `maturity: {}` for supported-only filtering or `maturity: { optIn: ['llm'] }` for a named exception. Omitting `maturity` preserves existing explicit allowlist behavior. An explicit install replaces an earlier legacy namespace but cannot undo earlier calls; finish host setup before napplet code executes. See the [maturity guide](https://napplet.run/docs/naps/maturity.html) for classifications, required/optional domain handling, and provenance limits.
+
 ## Getting Started
 
 ### Prerequisites
@@ -668,6 +687,14 @@ The runtime binding retains deliveries until a listener registers. Discovery can
 ### GAMEPAD integration
 
 The selected `gamepad` runtime binding installs the cached API, subscribes without SHELL readiness, validates parent state, and unsubscribes during cleanup. See the proposed [NAP-GAMEPAD](https://github.com/napplet/naps/pull/108). The native browser Gamepad API is left untouched pending clarification of the proposal’s optional replacement and NIP-5D’s namespace-only injection rule.
+
+### LLM runtime binding
+
+Select `llm` in `installNappletGlobal({ domains: ['llm'] })` or the equivalent runtime prelude options to expose `window.napplet.llm`. The binding forwards `select`, `describe`, `generate`, and `cancel`, correlates each result by `id` and type, routes `llm.delta` only to the generation that owns its `requestId`, drops deltas that do not match the Delta schema (`start` / `delta` / `end` events, `text` only on `delta`, `toolCallId` and `name` only on a `toolCall` start), stops provisional delivery on a sequence gap, rejects an `Error` record as an `LlmError` carrying the specification code, and maps an abort signal to `llm.cancel`. Installing the binding supplies no connection, consent, or provider: the host provides policy-bound handlers, endpoint-scoped handles, and prompts. See the living [NAP-LLM proposal](https://github.com/napplet/naps/pull/134).
+
+## Optional BLOSSOM binding
+
+Include `blossom` in the host's explicit domain allowlist to inject `window.napplet.blossom`. The binding correlates the draft's request/result messages, preserves structured-clone bytes and provides local BUD-10 URI helpers. Host code supplies the Blossom endpoint backend, authentication, integrity checks and network policy. See the living [NAP-BLOSSOM proposal](https://github.com/napplet/naps/pull/71) and non-normative [BLOSSOM guide](https://napplet.run/docs/naps/blossom.html).
 
 ## Catalog injection
 

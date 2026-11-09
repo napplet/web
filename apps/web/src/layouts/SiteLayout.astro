@@ -1,0 +1,58 @@
+---
+import { FRAME_POLICY } from '../lib/player/frame-policy';
+interface Props {
+  title?: string;
+  description?: string;
+}
+const {
+  title = 'napplet — Apps that travel.',
+  description = 'Try real apps, explore shells, and find your place in an open app ecosystem.',
+} = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const image = new URL('/og.png', Astro.site);
+// Build-time Markdown copy of this page (scripts/assemble-site.mjs); see /docs/guide/agent-access.html.
+const markdown = Astro.url.pathname.endsWith('/') ? `${Astro.url.pathname}index.md` : Astro.url.pathname.replace(/(\.html)?$/, '.md');
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Locks the napplet preview frame to its verified srcdoc document: every navigation of a child frame, including one
+         the napplet starts before its first load (which no NIP-5D replacement signal can observe), is checked against this
+         page's frame-src. srcdoc is not fetched, so it still loads. The player refuses to run without this policy. -->
+    <meta http-equiv="Content-Security-Policy" content={FRAME_POLICY} />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#120820" />
+    <link rel="icon" type="image/png" href="/icon.png" />
+    <link rel="canonical" href={canonical} />
+    <link rel="alternate" type="text/markdown" href={markdown} />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="napplet" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={image} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="napplet — Apps that travel." />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={image} />
+    <script type="application/ld+json" set:html={JSON.stringify({
+      '@context': 'https://schema.org', '@type': 'WebSite',
+      name: 'napplet', url: 'https://napplet.run/', description,
+      sameAs: ['https://github.com/napplet/web', 'https://github.com/napplet/naps'],
+    }).replace(/</g, '\\u003c')} />
+  </head>
+  <body>
+    <slot />
+    <script>
+      // WebMCP tools for agents in the visitor's browser; a no-op where the browser has no ModelContext.
+      import { registerAgentToolsWhenReady } from '../lib/agent-tools';
+      registerAgentToolsWhenReady();
+    </script>
+  </body>
+</html>

@@ -144,7 +144,7 @@ test('the SDK reference lists every shipped domain and no skill imports the runt
   for (const domain of [
     'shell', 'relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource',
     'cvm', 'outbox', 'upload', 'intent', 'ble', 'webrtc', 'link', 'count', 'lists', 'serial', 'fs',
-    'common', 'dm',
+    'common', 'dm', 'gamepad', 'blossom',
   ]) {
     assert.match(sdk, new RegExp(`\`${domain}\``), `napplet-sdk must list ${domain}`);
   }
@@ -170,7 +170,7 @@ test('docs and website point at the skills.sh install command and the new skill 
   ];
   for (const file of files) {
     const source = await readFile(path.join(root, file), 'utf8');
-    assert.match(source, /npx skills add napplet\/napplet/, file);
+    assert.match(source, /npx skills add napplet\/web/, file);
     assert.doesNotMatch(source, /napplet skills (?:install|list|print)|@napplet\/skills/, file);
   }
   const reference = await readFile(path.join(root, 'apps/docs/guide/agent-skills.md'), 'utf8');

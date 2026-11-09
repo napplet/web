@@ -47,7 +47,7 @@ Keep one focused napplet for a focused NAPP. If the source is a monolith, propos
 
 ## 3. Build the destination and replace the host boundary
 
-Use `napplet-design` to turn the ledger into the build spec, `napplet-ui` for markup/layout, `napplet-build` for tooling, and `napplet-test` for conformance and preview. Use `napplet-interop` when actions cross napplet boundaries. Load these companion skills if installed; otherwise read their maintained sources under [napplet/napplet/skills](https://github.com/napplet/napplet/tree/main/skills) and the package documentation. Missing skill installation alone does not block the port.
+Use `napplet-design` to turn the ledger into the build spec, `napplet-ui` for markup/layout, `napplet-build` for tooling, and `napplet-test` for conformance and preview. Use `napplet-interop` when actions cross napplet boundaries. Load these companion skills if installed; otherwise read their maintained sources under [napplet/web/skills](https://github.com/napplet/web/tree/main/skills) and the package documentation. Missing skill installation alone does not block the port.
 
 Prefer a sibling destination or the user's chosen worktree. Keep the source runnable for comparison. For a fresh destination, use the maintained CLI scaffold:
 

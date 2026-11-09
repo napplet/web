@@ -26,8 +26,8 @@ set -eu
 test "$1" = '-fsSL'
 test "$3" = '-o'
 case "$2" in
-  https://github.com/napplet/napplet/releases/download/napplet-cli/napplet-linux-x86_64) name=napplet-linux-x86_64 ;;
-  https://github.com/napplet/napplet/releases/download/napplet-cli/SHA256SUMS) name=SHA256SUMS ;;
+  https://github.com/napplet/web/releases/download/napplet-cli/napplet-linux-x86_64) name=napplet-linux-x86_64 ;;
+  https://github.com/napplet/web/releases/download/napplet-cli/SHA256SUMS) name=SHA256SUMS ;;
   *) printf 'Unexpected download URL: %s\\n' "$2" >&2; exit 1 ;;
 esac
 cp "$INSTALLER_FIXTURE_RELEASE/$name" "$4"
@@ -98,7 +98,7 @@ cp "$INSTALLER_FIXTURE_RELEASE/$name" "$4"
 
   const shell = await readFile(path.join(root, 'scripts/install-napplet-cli.sh'), 'utf8');
   const powershell = await readFile(path.join(root, 'scripts/install-napplet-cli.ps1'), 'utf8');
-  assert.match(powershell, /else \{ 'https:\/\/github\.com\/napplet\/napplet\/releases\/download\/napplet-cli' \}/);
+  assert.match(powershell, /else \{ 'https:\/\/github\.com\/napplet\/web\/releases\/download\/napplet-cli' \}/);
   assert.equal(await readFile(path.join(root, 'apps/web/public/install.sh'), 'utf8'), shell);
   assert.equal(await readFile(path.join(root, 'apps/web/public/install.ps1'), 'utf8'), powershell);
   assert.match(shell, /\\033\[1;36mtry running/);

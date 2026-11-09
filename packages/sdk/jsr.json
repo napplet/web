@@ -1,15 +1,17 @@
 {
   "name": "@napplet/sdk",
-  "version": "0.31.0",
+  "version": "0.33.0",
   "license": "MIT",
   "exports": {
     ".": "./src/index.ts",
     "./gamepad": "./src/gamepad.ts",
+    "./llm": "./src/llm.ts",
+    "./blossom": "./src/blossom.ts",
     "./catalog": "./src/catalog.ts"
   },
   "imports": {
-    "@napplet/core": "jsr:@napplet/core@^0.35.0",
-    "@napplet/nap": "jsr:@napplet/nap@^0.35.0"
+    "@napplet/core": "jsr:@napplet/core@^0.39.0",
+    "@napplet/nap": "jsr:@napplet/nap@^0.38.0"
   },
   "publish": {
     "include": [

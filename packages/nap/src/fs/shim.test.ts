@@ -1,16 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { installFakeShell, type FakeShell } from '../test-support/fake-shell.js';
 
-interface PostedMessage {
-  msg: unknown;
-  targetOrigin: string;
-}
-
-let postedMessages: PostedMessage[];
+let shell: FakeShell;
 let uuidCounter: number;
 let originalCryptoDescriptor: PropertyDescriptor | undefined;
 
 beforeEach(() => {
-  postedMessages = [];
   uuidCounter = 0;
   originalCryptoDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'crypto');
 
@@ -21,16 +16,7 @@ beforeEach(() => {
     },
   });
 
-  Object.defineProperty(globalThis, 'window', {
-    configurable: true,
-    value: {
-      parent: {
-        postMessage(msg: unknown, targetOrigin: string) {
-          postedMessages.push({ msg, targetOrigin });
-        },
-      },
-    },
-  });
+  shell = installFakeShell();
 
   vi.resetModules();
 });
@@ -42,7 +28,7 @@ afterEach(() => {
   } else {
     Reflect.deleteProperty(globalThis, 'crypto');
   }
-  Reflect.deleteProperty(globalThis, 'window');
+  vi.unstubAllGlobals();
 });
 
 describe('@napplet/nap/fs shim', () => {
@@ -51,9 +37,10 @@ describe('@napplet/nap/fs shim', () => {
 
     const result = info();
 
-    expect(postedMessages).toEqual([
-      { msg: { type: 'fs.info', id: 'fs-test-1' }, targetOrigin: '*' },
+    expect(shell.sent).toEqual([
+      { type: 'fs.info', id: 'fs-test-1' },
     ]);
+    expect(shell.windowMessages).toEqual([]);
 
     handleFsMessage({
       type: 'fs.info.result',
@@ -79,18 +66,15 @@ describe('@napplet/nap/fs shim', () => {
       description: 'Choose a text file',
     });
 
-    expect(postedMessages).toEqual([
+    expect(shell.sent).toEqual([
       {
-        msg: {
-          type: 'fs.pickFile',
-          id: 'fs-test-1',
-          options: {
-            permissions: ['read'],
-            accept: [{ mime: 'text/plain' }, { extension: '.md' }],
-            description: 'Choose a text file',
-          },
+        type: 'fs.pickFile',
+        id: 'fs-test-1',
+        options: {
+          permissions: ['read'],
+          accept: [{ mime: 'text/plain' }, { extension: '.md' }],
+          description: 'Choose a text file',
         },
-        targetOrigin: '*',
       },
     ]);
 
@@ -124,8 +108,8 @@ describe('@napplet/nap/fs shim', () => {
 
     const result = pickFiles();
 
-    expect(postedMessages).toEqual([
-      { msg: { type: 'fs.pickFiles', id: 'fs-test-1' }, targetOrigin: '*' },
+    expect(shell.sent).toEqual([
+      { type: 'fs.pickFiles', id: 'fs-test-1' },
     ]);
 
     handleFsMessage({
@@ -152,14 +136,11 @@ describe('@napplet/nap/fs shim', () => {
 
     const result = pickDirectory({ permissions: ['read', 'list', 'watch'] });
 
-    expect(postedMessages).toEqual([
+    expect(shell.sent).toEqual([
       {
-        msg: {
-          type: 'fs.pickDirectory',
-          id: 'fs-test-1',
-          options: { permissions: ['read', 'list', 'watch'] },
-        },
-        targetOrigin: '*',
+        type: 'fs.pickDirectory',
+        id: 'fs-test-1',
+        options: { permissions: ['read', 'list', 'watch'] },
       },
     ]);
 
@@ -195,18 +176,15 @@ describe('@napplet/nap/fs shim', () => {
       accept: [{ mime: 'application/json' }],
     });
 
-    expect(postedMessages).toEqual([
+    expect(shell.sent).toEqual([
       {
-        msg: {
-          type: 'fs.pickSaveFile',
-          id: 'fs-test-1',
-          options: {
-            permissions: ['write', 'create'],
-            suggestedName: 'export.json',
-            accept: [{ mime: 'application/json' }],
-          },
+        type: 'fs.pickSaveFile',
+        id: 'fs-test-1',
+        options: {
+          permissions: ['write', 'create'],
+          suggestedName: 'export.json',
+          accept: [{ mime: 'application/json' }],
         },
-        targetOrigin: '*',
       },
     ]);
 
@@ -248,8 +226,8 @@ describe('@napplet/nap/fs shim', () => {
 
     const result = stat('/shared/note.txt');
 
-    expect(postedMessages).toEqual([
-      { msg: { type: 'fs.stat', id: 'fs-test-1', path: '/shared/note.txt' }, targetOrigin: '*' },
+    expect(shell.sent).toEqual([
+      { type: 'fs.stat', id: 'fs-test-1', path: '/shared/note.txt' },
     ]);
 
     handleFsMessage({
@@ -266,8 +244,8 @@ describe('@napplet/nap/fs shim', () => {
 
     const result = list('/shared');
 
-    expect(postedMessages).toEqual([
-      { msg: { type: 'fs.list', id: 'fs-test-1', path: '/shared' }, targetOrigin: '*' },
+    expect(shell.sent).toEqual([
+      { type: 'fs.list', id: 'fs-test-1', path: '/shared' },
     ]);
 
     handleFsMessage({
@@ -286,15 +264,12 @@ describe('@napplet/nap/fs shim', () => {
 
     const result = read('/shared/video.bin', { offset: 1048576, length: 65536 });
 
-    expect(postedMessages).toEqual([
+    expect(shell.sent).toEqual([
       {
-        msg: {
-          type: 'fs.read',
-          id: 'fs-test-1',
-          path: '/shared/video.bin',
-          options: { offset: 1048576, length: 65536 },
-        },
-        targetOrigin: '*',
+        type: 'fs.read',
+        id: 'fs-test-1',
+        path: '/shared/video.bin',
+        options: { offset: 1048576, length: 65536 },
       },
     ]);
 
@@ -324,8 +299,8 @@ describe('@napplet/nap/fs shim', () => {
 
     const result = read('/shared/note.txt');
 
-    expect(postedMessages).toEqual([
-      { msg: { type: 'fs.read', id: 'fs-test-1', path: '/shared/note.txt' }, targetOrigin: '*' },
+    expect(shell.sent).toEqual([
+      { type: 'fs.read', id: 'fs-test-1', path: '/shared/note.txt' },
     ]);
 
     handleFsMessage({
@@ -342,16 +317,13 @@ describe('@napplet/nap/fs shim', () => {
 
     const result = write('/shared/db.bin', 'AAECAw==', { mode: 'patch', offset: 4096 });
 
-    expect(postedMessages).toEqual([
+    expect(shell.sent).toEqual([
       {
-        msg: {
-          type: 'fs.write',
-          id: 'fs-test-1',
-          path: '/shared/db.bin',
-          data: 'AAECAw==',
-          options: { mode: 'patch', offset: 4096 },
-        },
-        targetOrigin: '*',
+        type: 'fs.write',
+        id: 'fs-test-1',
+        path: '/shared/db.bin',
+        data: 'AAECAw==',
+        options: { mode: 'patch', offset: 4096 },
       },
     ]);
 
@@ -369,15 +341,12 @@ describe('@napplet/nap/fs shim', () => {
 
     const result = write('/shared/note.txt', 'SGVsbG8gd29ybGQh');
 
-    expect(postedMessages).toEqual([
+    expect(shell.sent).toEqual([
       {
-        msg: {
-          type: 'fs.write',
-          id: 'fs-test-1',
-          path: '/shared/note.txt',
-          data: 'SGVsbG8gd29ybGQh',
-        },
-        targetOrigin: '*',
+        type: 'fs.write',
+        id: 'fs-test-1',
+        path: '/shared/note.txt',
+        data: 'SGVsbG8gd29ybGQh',
       },
     ]);
 
@@ -395,15 +364,12 @@ describe('@napplet/nap/fs shim', () => {
 
     const result = mkdir('/shared/projects/new', { recursive: true });
 
-    expect(postedMessages).toEqual([
+    expect(shell.sent).toEqual([
       {
-        msg: {
-          type: 'fs.mkdir',
-          id: 'fs-test-1',
-          path: '/shared/projects/new',
-          options: { recursive: true },
-        },
-        targetOrigin: '*',
+        type: 'fs.mkdir',
+        id: 'fs-test-1',
+        path: '/shared/projects/new',
+        options: { recursive: true },
       },
     ]);
 
@@ -417,8 +383,8 @@ describe('@napplet/nap/fs shim', () => {
 
     const result = mkdir('/shared/projects');
 
-    expect(postedMessages).toEqual([
-      { msg: { type: 'fs.mkdir', id: 'fs-test-1', path: '/shared/projects' }, targetOrigin: '*' },
+    expect(shell.sent).toEqual([
+      { type: 'fs.mkdir', id: 'fs-test-1', path: '/shared/projects' },
     ]);
 
     handleFsMessage({ type: 'fs.mkdir.result', id: 'fs-test-1' });
@@ -431,19 +397,16 @@ describe('@napplet/nap/fs shim', () => {
 
     const result = remove('/shared/projects', true);
 
-    expect(postedMessages).toEqual([
+    expect(shell.sent).toEqual([
       {
-        msg: {
-          type: 'fs.remove',
-          id: 'fs-test-1',
-          path: '/shared/projects',
-          recursive: true,
-        },
-        targetOrigin: '*',
+        type: 'fs.remove',
+        id: 'fs-test-1',
+        path: '/shared/projects',
+        recursive: true,
       },
     ]);
 
-    const posted = postedMessages[0]?.msg as Record<string, unknown>;
+    const posted = shell.sent[0] as Record<string, unknown>;
     expect(Object.keys(posted)).toContain('recursive');
     expect(Object.keys(posted)).not.toContain('options');
 
@@ -457,15 +420,12 @@ describe('@napplet/nap/fs shim', () => {
 
     const result = move('/shared/a.txt', '/shared/b.txt');
 
-    expect(postedMessages).toEqual([
+    expect(shell.sent).toEqual([
       {
-        msg: {
-          type: 'fs.move',
-          id: 'fs-test-1',
-          fromPath: '/shared/a.txt',
-          toPath: '/shared/b.txt',
-        },
-        targetOrigin: '*',
+        type: 'fs.move',
+        id: 'fs-test-1',
+        fromPath: '/shared/a.txt',
+        toPath: '/shared/b.txt',
       },
     ]);
 
@@ -479,15 +439,12 @@ describe('@napplet/nap/fs shim', () => {
 
     const result = watch('/shared', { recursive: true });
 
-    expect(postedMessages).toEqual([
+    expect(shell.sent).toEqual([
       {
-        msg: {
-          type: 'fs.watch',
-          id: 'fs-test-1',
-          path: '/shared',
-          options: { recursive: true },
-        },
-        targetOrigin: '*',
+        type: 'fs.watch',
+        id: 'fs-test-1',
+        path: '/shared',
+        options: { recursive: true },
       },
     ]);
 
@@ -501,8 +458,8 @@ describe('@napplet/nap/fs shim', () => {
 
     const result = unwatch('watch-1');
 
-    expect(postedMessages).toEqual([
-      { msg: { type: 'fs.unwatch', id: 'fs-test-1', watchId: 'watch-1' }, targetOrigin: '*' },
+    expect(shell.sent).toEqual([
+      { type: 'fs.unwatch', id: 'fs-test-1', watchId: 'watch-1' },
     ]);
 
     handleFsMessage({ type: 'fs.unwatch.result', id: 'fs-test-1' });

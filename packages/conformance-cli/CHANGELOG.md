@@ -1,10 +1,122 @@
 # @napplet/conformance-cli
 
+## 0.6.2
+
+### Patch Changes
+
+- ad26f5b: Add support for the proposed NAP-BLOSSOM domain: typed blob
+  operations, ordered BUD-03 server-list helpers, local BUD-10 URI helpers,
+  optional runtime injection and SDK subpath exports. Conformance validates
+  Blossom request envelopes and provides deterministic unavailable responses
+  without network or signing access. Vite requirement inference recognizes
+  Blossom imports while preserving explicit optional declarations.
+- Updated dependencies [ad26f5b]
+  - @napplet/core@0.39.0
+  - @napplet/nap@0.38.0
+  - @napplet/shim@0.37.0
+  - @napplet/conformance@0.26.0
+
+## 0.6.1
+
+### Patch Changes
+
+- a975c13: The reference shell now answers a malformed but correlated NAP-LLM
+  request with its `.result` carrying an `invalid-request` error, instead of
+  silently discarding it. Uncorrelated envelopes, napplet-emitted results, and
+  ungranted domains are still discarded.
+- Updated dependencies [a975c13]
+  - @napplet/conformance@0.25.1
+
+## 0.6.0
+
+### Minor Changes
+
+- bf4c649: Follow the living NAP-LLM draft (napplet/naps#134 with the merged
+  tool-use revision #138). Breaking: `LlmGeneration.text` is replaced by
+  `content` parts (`text`, `thinking`, `toolCall`), and `llm.delta` now carries
+  `start` / `delta` / `end` block events with `block` and `blockIndex`. Added:
+  tool definitions and `toolChoice`, `toolCall` and `thinking` parts, the
+  `toolResult` role with `isError`, `maxTokens` and `temperature`,
+  `finish: "toolUse"`, cache and reasoning usage counts, and `tools` /
+  `toolChoiceModes` on requirements and models. The SDK adds `llmText` and
+  `llmToolCalls`. Conformance validates tool requests and result adjacency, and
+  the reference shell streams block lifecycles and returns tool calls on request
+  without executing them.
+
+### Patch Changes
+
+- Updated dependencies [bf4c649]
+  - @napplet/core@0.38.0
+  - @napplet/nap@0.37.0
+  - @napplet/shim@0.36.0
+  - @napplet/conformance@0.25.0
+
+## 0.5.0
+
+### Minor Changes
+
+- 180297b: Follow NIP-5D port-bound identity
+  ([nostr-protocol/nips#2303](https://github.com/nostr-protocol/nips/pull/2303),
+  from dskvr/nips#14). The runtime now creates a `MessageChannel` before any
+  napplet script runs, keeps one port private, and hands the other to the shell
+  once with `window.parent.postMessage({ type: "napplet.hello" }, '*', [port])`.
+  Every NAP envelope in both directions travels over that port, and window-level
+  messages no longer reach the shims. Shells must bind the napplet's
+  `(dTag, artifactHash)` to that port, answer only over it, and revoke the
+  napplet and remove its frame on a second hello, any other window-level
+  message, a second `load` or the port closing. Shells that key sessions on the
+  iframe `Window` or reply with `iframeWindow.postMessage` must move to the
+  port.
+
+  - `@napplet/core`: adds `sendPortEnvelope` and `EnvelopePort` with the same
+    clone-mode handling as `sendEnvelope`.
+  - `@napplet/nap`: adds the `@napplet/nap/boundary` subpath (`connectShell`,
+    `postToShell`, `onShellMessage`). The relay and storage shims listen on the
+    port.
+  - `@napplet/shim`: `installNappletGlobal` and the prelude open the channel and
+    send the single `napplet.hello` before installing domains.
+  - `@napplet/conformance`: the boot harness and `attachReferenceShell` bind the
+    hello port (`attachReferenceShell` now takes `{ host, expectedSource }`,
+    returns a `PortBinding`, and no longer takes `target`). Adds
+    `bindNappletPort`, `transportViolations` on boot results and contexts, the
+    `wire/port-only` check and the `lifecycle/keeps-verified-document` advisory.
+  - `@napplet/conformance-cli`: bundles the new harness, so napplets that post
+    at window level now fail `wire/port-only`.
+
+### Patch Changes
+
+- Updated dependencies [180297b]
+  - @napplet/core@0.37.0
+  - @napplet/nap@0.36.0
+  - @napplet/shim@0.35.0
+  - @napplet/conformance@0.24.0
+
+## 0.4.3
+
+### Patch Changes
+
+- Add optional NAP maturity policy to the reference host, applying the same
+  resolved domain set to runtime injection and dispatch. Preserve normal
+  conformance coverage and explicit allowlist compatibility. Mirror the policy
+  in the conformance CLI browser-host configuration.
+- Updated dependencies
+  - @napplet/conformance@0.23.0
+  - @napplet/core@0.36.0
+  - @napplet/shim@0.34.0
+  - @napplet/nap@0.35.1
+
+## 0.4.2
+
+### Patch Changes
+
+- Updated dependencies [932a596]
+  - @napplet/conformance@0.22.0
+
 ## 0.4.1
 
 ### Patch Changes
 
-- Updated dependencies
+- Updated dependencies [237c681]
   - @napplet/core@0.35.0
   - @napplet/nap@0.35.0
   - @napplet/shim@0.33.0

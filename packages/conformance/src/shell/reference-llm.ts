@@ -1,0 +1,195 @@
+import type { ReferenceEndpoint } from './reference-responses.js';
+
+/**
+ * Deterministic NAP-LLM reference handlers. Living proposal:
+ * https://github.com/napplet/naps/pull/134 (Shell Behavior, Error Handling).
+ *
+ * This fixture has no provider, credentials, or consent dialog. It models one
+ * user-configured connection and treats disclosure consent as granted, so napplets
+ * can exercise endpoint-scoped handles, requirement matching, stateless
+ * generation with block-lifecycle deltas, tool calls, the cancellation race, and
+ * the error codes. Fixture markers in the last user text part steer deterministic
+ * outcomes: `[[stall]]` leaves the generation active until `llm.cancel`,
+ * `[[decline]]` models a declined consent prompt, `[[refuse]]` models a provider
+ * refusal, `[[think]]` adds a display-only thinking block, and `[[tool]]` asks
+ * for a call to the first supplied tool (as do `required` and named choices).
+ * The fixture provider has no native tool-error flag, so a `toolResult` with
+ * `isError: true` is echoed with the specified `Tool execution failed.` prefix.
+ * It never executes a tool call. Passing it proves protocol shape, not live
+ * inference support.
+ */
+
+type RecordValue = Record<string, unknown>;
+type Failure = { code: string; message: string };
+type Outcome = { model: unknown } | { result: unknown } | { cancelled: boolean } | { error: Failure };
+
+interface Session {
+  handles: Set<string>;
+  /** Active generations by request id, with the queued envelopes released on cancel. */
+  active: Map<string, RecordValue>;
+  /** Request ids still active for any operation (only stalled generations persist here). */
+  sequence: number;
+}
+
+/** The only connection this fixture offers. */
+export const REFERENCE_LLM_CONNECTION = {
+  name: 'Reference connection',
+  model: 'reference-model',
+  route: 'Reference shell → reference provider (no network)',
+  images: true,
+  json: true,
+  tools: true,
+  toolChoiceModes: ['auto', 'none', 'required', 'tool'],
+} as const;
+
+const fail = (code: string, message: string): Outcome => ({ error: { code, message } });
+const object = (value: unknown): RecordValue =>
+  typeof value === 'object' && value !== null && !Array.isArray(value) ? value as RecordValue : {};
+
+function sessionFor(sessions: Map<string, Session>, endpoint: ReferenceEndpoint): Session {
+  let session = sessions.get(endpoint.id);
+  if (!session) {
+    session = { handles: new Set(), active: new Map(), sequence: 0 };
+    sessions.set(endpoint.id, session);
+  }
+  return session;
+}
+
+function modelFor(handle: string): RecordValue {
+  return { handle, ...REFERENCE_LLM_CONNECTION, toolChoiceModes: [...REFERENCE_LLM_CONNECTION.toolChoiceModes] };
+}
+
+function select(session: Session, envelope: RecordValue): Outcome {
+  const requirements = object(envelope.requirements);
+  if (requirements.model !== undefined && requirements.model !== REFERENCE_LLM_CONNECTION.model) {
+    return fail('unsupported', 'No connection offers the requested model');
+  }
+  session.sequence += 1;
+  const handle = `reference-llm-h${session.sequence}`;
+  session.handles.add(handle);
+  return { model: modelFor(handle) };
+}
+
+function describe(session: Session, envelope: RecordValue): Outcome {
+  const handle = String(envelope.handle);
+  if (!session.handles.has(handle)) return fail('selection-expired', 'Select a model again');
+  return { model: modelFor(handle) };
+}
+
+const texts = (content: unknown): string =>
+  (Array.isArray(content) ? content : []).map((part) => {
+    const item = object(part);
+    return item.type === 'text' && typeof item.text === 'string' ? item.text : '';
+  }).join('');
+
+function lastUserText(request: RecordValue): string {
+  const messages = Array.isArray(request.messages) ? request.messages : [];
+  let text = '';
+  for (const message of messages) {
+    const record = object(message);
+    if (record.role !== 'user' || !Array.isArray(record.content)) continue;
+    for (const part of record.content) {
+      const item = object(part);
+      if (item.type === 'text' && typeof item.text === 'string') text = item.text;
+    }
+  }
+  return text;
+}
+
+/** Trailing tool results as the fixture provider sees them: no native error flag, so failures carry the specified prefix. */
+function trailingToolResults(request: RecordValue): string[] {
+  const messages = (Array.isArray(request.messages) ? request.messages : []).map(object);
+  const results: string[] = [];
+  for (let index = messages.length - 1; index >= 0 && messages[index].role === 'toolResult'; index -= 1) {
+    const result = messages[index];
+    results.unshift(`${result.toolName}: ${result.isError === true ? 'Tool execution failed.' : ''}${texts(result.content)}`);
+  }
+  return results;
+}
+
+/** The tool the fixture model calls, or `undefined` when the request does not ask for one. */
+function chosenTool(request: RecordValue, prompt: string): string | undefined {
+  const tools = Array.isArray(request.tools) ? request.tools.map(object) : [];
+  if (!tools.length || request.toolChoice === 'none') return undefined;
+  const choice = request.toolChoice;
+  if (typeof choice === 'object' && choice !== null) return String(object(choice).name);
+  if (choice === 'required' || prompt.includes('[[tool]]')) return String(tools[0].name);
+  return undefined;
+}
+
+/** Block-lifecycle deltas for completed content, one fragment per block (NAP-LLM Delta). */
+function deltasFor(id: string, content: RecordValue[]): RecordValue[] {
+  const events: RecordValue[] = [];
+  const push = (event: RecordValue): void => { events.push({ type: 'llm.delta', requestId: id, sequence: events.length, ...event }); };
+  content.forEach((part, blockIndex) => {
+    const block = String(part.type);
+    push(block === 'toolCall'
+      ? { event: 'start', block, blockIndex, toolCallId: part.toolCallId, name: part.name }
+      : { event: 'start', block, blockIndex });
+    push({ event: 'delta', block, blockIndex, text: block === 'toolCall' ? JSON.stringify(part.arguments) : part.text });
+    push({ event: 'end', block, blockIndex });
+  });
+  return events;
+}
+
+function generate(session: Session, id: string, envelope: RecordValue): unknown[] {
+  const reply = (outcome: Outcome): unknown[] => [{ type: 'llm.generate.result', id, ...outcome }];
+  if (session.active.has(id)) return reply(fail('invalid-request', 'Request id is still active'));
+  const request = object(envelope.request);
+  if (!session.handles.has(String(request.handle))) return reply(fail('selection-expired', 'Select a model again'));
+  const prompt = lastUserText(request);
+  if (prompt.includes('[[decline]]')) return reply(fail('user-cancelled', 'The user declined disclosure'));
+  if (prompt.includes('[[stall]]')) {
+    session.active.set(id, envelope);
+    return [];
+  }
+  if (prompt.includes('[[refuse]]')) return reply({ result: { content: [], finish: 'refusal' } });
+  const content: RecordValue[] = [];
+  if (prompt.includes('[[think]]')) content.push({ type: 'thinking', text: 'Reference reasoning.' });
+  const tool = chosenTool(request, prompt);
+  const results = trailingToolResults(request);
+  let finish = 'stop';
+  if (tool !== undefined) {
+    session.sequence += 1;
+    content.push({ type: 'toolCall', toolCallId: `reference-call-${session.sequence}`, name: tool, arguments: {} });
+    finish = 'toolUse';
+  } else {
+    const echo = results.length ? `Tool results: ${results.join('; ')}` : prompt;
+    content.push({ type: 'text', text: request.format === 'json' ? JSON.stringify({ echo }) : `Echo: ${echo}` });
+  }
+  const output = JSON.stringify(content);
+  const usage = { inputTokens: JSON.stringify(request.messages).length, outputTokens: output.length };
+  // Streamed block lifecycle, then the authoritative terminal result (NAP-LLM Wire Protocol).
+  return [...deltasFor(id, content), ...reply({ result: { content, finish, usage } })];
+}
+
+function cancel(session: Session, id: string, envelope: RecordValue): unknown[] {
+  const requestId = String(envelope.requestId);
+  if (!session.active.delete(requestId)) return [{ type: 'llm.cancel.result', id, cancelled: false }];
+  return [
+    { type: 'llm.generate.result', id: requestId, error: { code: 'cancelled', message: 'Generation cancelled; provider charges may still apply.' } },
+    { type: 'llm.cancel.result', id, cancelled: true },
+  ];
+}
+
+function handle(sessions: Map<string, Session>, endpoint: ReferenceEndpoint, envelope: RecordValue): unknown[] {
+  const type = String(envelope.type);
+  const id = String(envelope.id);
+  const session = sessionFor(sessions, endpoint);
+  switch (type) {
+    case 'llm.select': return [{ type: 'llm.select.result', id, ...select(session, envelope) }];
+    case 'llm.describe': return [{ type: 'llm.describe.result', id, ...describe(session, envelope) }];
+    case 'llm.generate': return structuredClone(generate(session, id, envelope));
+    case 'llm.cancel': return cancel(session, id, envelope);
+    default: return [{ type: `${type}.result`, id, error: { code: 'invalid-request', message: `Unknown operation ${type}` } }];
+  }
+}
+
+/** Create per-endpoint LLM sessions for the reference shell. */
+export function createLlmHandlers() {
+  const sessions = new Map<string, Session>();
+  return {
+    handle: (endpoint: ReferenceEndpoint, envelope: RecordValue) => handle(sessions, endpoint, envelope),
+    reset() { sessions.clear(); },
+  };
+}

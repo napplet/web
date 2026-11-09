@@ -6,7 +6,24 @@
 
 - **npm:** [`@napplet/core`](https://www.npmjs.com/package/@napplet/core)
 - **JSR:** [`@napplet/core`](https://jsr.io/@napplet/core)
-- **Source:** [packages/core](https://github.com/napplet/napplet/tree/main/packages/core)
+- **Source:** [packages/core](https://github.com/napplet/web/tree/main/packages/core)
+
+## Implementation maturity
+
+NAP implementation maturity and upstream proposal status are separate release-time signals. All capabilities remain subject to change; supported does not mean frozen, and experimental does not waive conformance requirements. Read the [maturity and opt-in guide](https://napplet.run/docs/naps/maturity.html).
+
+```ts
+import { NAP_IMPLEMENTATIONS, selectNapDomains } from '@napplet/core';
+
+console.log(NAP_IMPLEMENTATIONS.llm.maturity); // exploratory
+const selection = selectNapDomains({
+  candidates: ['storage', 'llm', 'ble'], // already implemented and authorized by the host
+  optIn: ['llm'],
+});
+// selection.domains: ['storage', 'llm']; selection.excluded explains omissions.
+```
+
+Metadata describes the installed package, not a remote shell's protocol revision. Use the selected domains for both runtime injection and host dispatch. Unknown or unclassified candidates remain excluded, including explicit opt-ins. The catalog does not grant permissions or implement missing host support.
 
 ## Install
 
@@ -32,7 +49,7 @@ import {
 - **`NappletMessage`** — base interface for every message: `{ type: string }` in
   `domain.action` format. Concrete message types extend it with payload fields.
 - **`NapDomain`** — string literal union of the NAP capability domains
-  (`'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'cvm' | 'outbox' | 'upload' | 'intent' | 'ble' | 'webrtc' | 'link' | 'count' | 'lists' | 'serial' | 'fs' | 'common' | 'dm' | 'shell' | 'gamepad' | 'catalog'`).
+  (`'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'cvm' | 'outbox' | 'upload' | 'intent' | 'ble' | 'webrtc' | 'link' | 'count' | 'lists' | 'serial' | 'fs' | 'common' | 'dm' | 'shell' | 'gamepad' | 'llm' | 'blossom' | 'catalog'`).
 - **`NappletGlobal`** — the runtime-injected `window.napplet` namespace with
   optional domain properties.
 - **`NAP_DOMAINS`** — runtime constant array of all domain strings, for iteration
@@ -146,6 +163,10 @@ await intent.invoke('napplet:profile/open?pubkey=abc123');
 ```
 
 The runtime binding retains deliveries until a listener registers. Discovery candidates expose opaque catalog `id` values and `contracts` with parameter names. INC peers instead use identifiers for running authenticated endpoints. A NAP-INTENT URI may append a bare `#naddr1…` recommendation; the binding sends its coordinate and relay hints as `handlerHint`, outside convention identity and payload. An applicable user default takes precedence. INC URI operations reject fragments. See the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md) and [web projection](https://github.com/napplet/naps/blob/master/projections/web.md).
+
+## LLM types
+
+`LlmApi` and the LLM records describe `NappletGlobal.llm`, an optional domain for user-selected, runtime-mediated language model inference: connection selection and revalidation, stateless generation with tool definitions, content parts, and optional block-lifecycle deltas, and cancellation. `LlmErrorCode` lists the specification categories while staying open, because unknown codes remain failures. See the non-normative [LLM guide](/naps/llm) and living [NAP-LLM proposal](https://github.com/napplet/naps/pull/134).
 
 ## Catalog support
 

@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { installFakeShell, type FakeShell } from '../test-support/fake-shell.js';
 import { get, handleCatalogMessage, installCatalogShim } from './shim.js';
 
 const snapshot = {
@@ -12,12 +13,13 @@ const snapshot = {
 };
 const empty = { napplets: [], handlers: [] };
 let cleanup: () => void;
+let shell: FakeShell;
 let posted: { type: string; id: string }[];
 
 beforeEach(() => {
   vi.useFakeTimers();
-  posted = [];
-  vi.stubGlobal('window', { parent: { postMessage: (message: { type: string; id: string }) => posted.push(message) } });
+  shell = installFakeShell();
+  posted = shell.sent as { type: string; id: string }[];
   cleanup = installCatalogShim();
 });
 afterEach(() => { cleanup(); vi.useRealTimers(); vi.unstubAllGlobals(); });
@@ -82,7 +84,7 @@ describe('catalog request lifecycle', () => {
   });
 
   it('clears pending work if transport throws', async () => {
-    window.parent.postMessage = () => { throw new Error('transport failed'); };
+    shell.onSend(() => { throw new Error('transport failed'); });
     await expect(get()).rejects.toThrow('transport failed');
     expect(vi.getTimerCount()).toBe(0);
   });

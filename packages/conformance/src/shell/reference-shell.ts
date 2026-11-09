@@ -16,6 +16,10 @@ import {
 import { createIntentHandlers } from './reference-intents.js';
 import { referenceCatalog } from './reference-catalog.js';
 import type { NappletDescriptor } from '@napplet/core';
+import { bindNappletPort, type MessageWindowLike, type PortBinding, type TransportViolation } from './port-binding.js';
+
+export { bindNappletPort, NAPPLET_HELLO } from './port-binding.js';
+export type { MessageWindowLike, PortBinding, PortBindingOptions, TransportViolation } from './port-binding.js';
 
 export { REFERENCE_PUBKEY, REFERENCE_ENDPOINT } from './reference-responses.js';
 export type { ReferenceEndpoint } from './reference-responses.js';
@@ -25,6 +29,8 @@ export type { RecordedEnvelope } from './reference-handler.js';
 export interface ReferenceShellOptions {
   /** Injectable clock for deterministic tests. Defaults to `Date.now`. */
   now?: () => number;
+  /** Host domain ceiling. Use the same resolved set as the injected prelude. Omit for all-domain conformance. */
+  domains?: readonly string[];
   /** Already verified, loadable metadata; the host checks each complete R set before supplying it. */
   manifests?: readonly import('./intent-catalog.js').CatalogManifest[];
   /** User preferences, keyed by role. */
@@ -77,6 +83,7 @@ export function createReferenceShell(options: ReferenceShellOptions = {}): Refer
   const handleFrom = createReferenceHandler({
     now: options.now ?? Date.now,
     records,
+    domains: options.domains,
     queueDelivery: deliveries.queue,
     intents,
     intentResolver,
@@ -92,6 +99,7 @@ export function createReferenceShell(options: ReferenceShellOptions = {}): Refer
     takeDeliveries: deliveries.take,
     reset() {
       records.length = 0;
+      handleFrom.reset();
       deliveries.clear();
     },
   };
@@ -116,37 +124,36 @@ function createDeliveryQueue() {
   };
 }
 
-/** Minimal window surface {@link attachReferenceShell} needs (eases testing). */
-export interface MessageWindowLike {
-  addEventListener(type: 'message', listener: (event: MessageEvent) => void): void;
-  removeEventListener(type: 'message', listener: (event: MessageEvent) => void): void;
-}
-
-/** Minimal target surface the shell posts responses to. */
-export interface PostTargetLike {
-  postMessage(message: unknown, targetOrigin: string): void;
-}
-
 /** Options for {@link attachReferenceShell}. */
 export interface AttachOptions {
-  /** Window that receives message events. */
+  /** Window that receives the frame's window-level messages (the `napplet.hello` handoff). */
   host: MessageWindowLike;
-  /** Target that receives the reference shell's responses. */
-  target: PostTargetLike;
-  /** Optional message source guard. */
-  expectedSource?: unknown;
+  /** The `contentWindow` of the iframe the shell created. */
+  expectedSource: unknown;
   /** Authenticated endpoint for accepted messages. */
   endpoint?: ReferenceEndpoint;
+  /** Called when the binding is revoked; remove the frame here. */
+  onRevoke?(violation: TransportViolation): void;
 }
 
-/** Bind a {@link ReferenceShell} to a real postMessage channel. */
-export function attachReferenceShell(shell: ReferenceShell, options: AttachOptions): () => void {
-  const listener = (event: MessageEvent): void => {
-    if (options.expectedSource !== undefined && event.source !== options.expectedSource) return;
-    for (const response of shell.handleFrom(options.endpoint ?? REFERENCE_ENDPOINT, event.data)) {
-      options.target.postMessage(response, '*');
-    }
-  };
-  options.host.addEventListener('message', listener);
-  return () => options.host.removeEventListener('message', listener);
+/**
+ * Bind a {@link ReferenceShell} to a napplet frame the NIP-5D way: accept one
+ * `napplet.hello` from `expectedSource`, answer NAP messages over its port, and
+ * revoke on a second hello, any other window-level message or the port closing.
+ * Report a second frame `load` with the returned binding's `revoke`.
+ * @param shell The reference shell.
+ * @param options Host window, frame source and endpoint.
+ * @returns The live port binding; call `detach()` to stop.
+ * @example
+ * ```ts
+ * const binding = attachReferenceShell(shell, { host: window, expectedSource: iframe.contentWindow, onRevoke: () => iframe.remove() });
+ * ```
+ */
+export function attachReferenceShell(shell: ReferenceShell, options: AttachOptions): PortBinding {
+  return bindNappletPort({
+    host: options.host,
+    source: options.expectedSource,
+    onMessage: (envelope) => shell.handleFrom(options.endpoint ?? REFERENCE_ENDPOINT, envelope),
+    onRevoke: options.onRevoke,
+  });
 }

@@ -7,6 +7,46 @@ const ID = { id: 'string' } as const;
  * NAP domains, with its direction and (for outbound) required fields.
  */
 export const ENVELOPE_SPECS: Record<string, EnvelopeSpec> = {
+  // NAP-LLM Wire Protocol: four request/result pairs plus the unsolicited delta.
+  // https://github.com/napplet/naps/pull/134
+  'llm.select': { dir: 'out', fields: { ...ID } },
+  'llm.select.result': { dir: 'in', fields: { ...ID } },
+  'llm.describe': { dir: 'out', fields: { ...ID, handle: 'string' } },
+  'llm.describe.result': { dir: 'in', fields: { ...ID } },
+  'llm.generate': { dir: 'out', fields: { ...ID, request: 'object' } },
+  'llm.generate.result': { dir: 'in', fields: { ...ID } },
+  'llm.delta': { dir: 'in', fields: { requestId: 'string', sequence: 'number', event: 'string', block: 'string', blockIndex: 'number' } },
+  'llm.cancel': { dir: 'out', fields: { ...ID, requestId: 'string' } },
+  'llm.cancel.result': { dir: 'in', fields: { ...ID } },
+
+  // NAP-BLOSSOM Wire Protocol: https://github.com/napplet/naps/pull/71
+  'blossom.check': { dir: 'out', fields: { ...ID, request: 'object' } },
+  'blossom.check.result': { dir: 'in', fields: { ...ID } },
+  'blossom.get': { dir: 'out', fields: { ...ID, request: 'object' } },
+  'blossom.get.result': { dir: 'in', fields: { ...ID } },
+  'blossom.checkUpload': { dir: 'out', fields: { ...ID, request: 'object' } },
+  'blossom.checkUpload.result': { dir: 'in', fields: { ...ID } },
+  'blossom.upload': { dir: 'out', fields: { ...ID, request: 'object' } },
+  'blossom.upload.result': { dir: 'in', fields: { ...ID } },
+  'blossom.mirror': { dir: 'out', fields: { ...ID, request: 'object' } },
+  'blossom.mirror.result': { dir: 'in', fields: { ...ID } },
+  'blossom.checkMedia': { dir: 'out', fields: { ...ID, request: 'object' } },
+  'blossom.checkMedia.result': { dir: 'in', fields: { ...ID } },
+  'blossom.media': { dir: 'out', fields: { ...ID, request: 'object' } },
+  'blossom.media.result': { dir: 'in', fields: { ...ID } },
+  'blossom.list': { dir: 'out', fields: { ...ID, request: 'object' } },
+  'blossom.list.result': { dir: 'in', fields: { ...ID } },
+  'blossom.delete': { dir: 'out', fields: { ...ID, request: 'object' } },
+  'blossom.delete.result': { dir: 'in', fields: { ...ID } },
+  'blossom.servers': { dir: 'out', fields: { ...ID } },
+  'blossom.servers.result': { dir: 'in', fields: { ...ID } },
+  'blossom.addServer': { dir: 'out', fields: { ...ID, request: 'object' } },
+  'blossom.addServer.result': { dir: 'in', fields: { ...ID } },
+  'blossom.removeServer': { dir: 'out', fields: { ...ID, server: 'string' } },
+  'blossom.removeServer.result': { dir: 'in', fields: { ...ID } },
+  'blossom.reorderServers': { dir: 'out', fields: { ...ID, servers: 'array' } },
+  'blossom.reorderServers.result': { dir: 'in', fields: { ...ID } },
+
   // NAP-CATALOG Wire Protocol: https://github.com/napplet/naps/pull/95
   'catalog.get': { dir: 'out', fields: ID },
   'catalog.get.result': { dir: 'in' },

@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-  [string]$ReleaseBase = $(if ($env:NAPPLET_CLI_RELEASE_BASE) { $env:NAPPLET_CLI_RELEASE_BASE } else { 'https://github.com/napplet/napplet/releases/download/napplet-cli' }),
+  [string]$ReleaseBase = $(if ($env:NAPPLET_CLI_RELEASE_BASE) { $env:NAPPLET_CLI_RELEASE_BASE } else { 'https://github.com/napplet/web/releases/download/napplet-cli' }),
   [string]$InstallDir = $(if ($env:NAPPLET_CLI_INSTALL_DIR) { $env:NAPPLET_CLI_INSTALL_DIR } else { Join-Path $HOME '.local\bin' })
 )
 

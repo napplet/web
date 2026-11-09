@@ -1,0 +1,252 @@
+// Exercise the production catalog, signed previews, and discovery boundaries.
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import { createRequire } from 'node:module';
+import { createHash } from 'node:crypto';
+import { chromium } from 'playwright';
+const require = createRequire(new URL('../apps/web/package.json', import.meta.url));
+const { finalizeEvent, generateSecretKey } = require('nostr-tools/pure');
+const { npubEncode } = require('nostr-tools/nip19');
+const base = process.argv[2] ?? 'http://127.0.0.1:8107';
+const config = JSON.parse(await readFile(new URL('../apps/web/src/data/discovery.json', import.meta.url)));
+const apps = JSON.parse(await readFile(new URL('../apps/web/src/data/apps.json', import.meta.url)));
+const secret = generateSecretKey();
+// The injected release is a real self-contained artifact served by a routed Blossom origin, so it can run here.
+const artifact = Buffer.from('<!doctype html><title>Injected</title><button id="play">Start</button><canvas width="8" height="8"></canvas><script>document.querySelector("#play").addEventListener("click", () => { document.title = "played"; });</script>');
+const artifactHash = createHash('sha256').update(artifact).digest('hex');
+const injected = finalizeEvent({ kind: 35129, created_at: Math.floor(Date.now() / 1000), content: '<img src=x onerror="window.catalogXss=true"> is publisher text', tags: [['d', 'catalog-browser-vector'], ['title', '<script>not markup</script>'], ['x', artifactHash], ['server', 'https://blossom.example']] }, secret);
+// A release that requires a shell service cannot run in this player and only links out.
+const demanding = finalizeEvent({ kind: 35129, created_at: Math.floor(Date.now() / 1000) - 1, content: 'Needs identity to work', tags: [['d', 'catalog-browser-demanding'], ['title', 'Demanding release'], ['x', 'b'.repeat(64)], ['server', 'https://blossom.example'], ['R', 'identity']] }, secret);
+// A Software Applications listing from the same publisher that names the release supplies fallback art by URL.
+const listing = finalizeEvent({ kind: 32267, created_at: Math.floor(Date.now() / 1000), content: '# markdown stays out', tags: [['d', 'catalog-browser-vector-0123456789abcdef'], ['name', 'Listing name'], ['latest', `35129:${injected.pubkey}:catalog-browser-vector`], ['image', 'https://listing.example/art.png'], ['icon', 'javascript:alert(1)']] }, secret);
+// The same publisher's kind 0 profile names the key on the card; its content is escaped and only https pictures are shown.
+const profile = finalizeEvent({ kind: 0, created_at: Math.floor(Date.now() / 1000), content: JSON.stringify({ name: 'vector', display_name: 'Vector <b>Publisher</b>', picture: 'https://avatar.example/vector.png', about: 'ignored' }), tags: [] }, secret);
+const manifestKinds = [5129, 15129, 35129];
+// The saved snapshot drives coverage assertions; nothing is pinned to a specific release, label or capture,
+// so the check survives snapshot refreshes. The deterministic label scenarios run in
+// scripts/check-app-store-napshot.mjs against fixture data built by that script.
+const snapshot = JSON.parse(await readFile(new URL('../apps/web/src/data/discovered-apps.json', import.meta.url)));
+const savedIds = new Set(snapshot.events.map(event => event.id));
+// A label for the demanding release (no other art) from a key the site does not trust; live discovery must ignore it.
+const fillerHash = 'c'.repeat(64);
+const untrustedLabel = finalizeEvent({ kind: 1985, created_at: Math.floor(Date.now() / 1000), content: 'untrusted', tags: [['L', '#screenshot'], ['l', fillerHash, '#screenshot'], ['e', demanding.id], ['a', `35129:${demanding.pubkey}:catalog-browser-demanding`], ['p', demanding.pubkey], ['screenshot', `x ${fillerHash}`, 'm image/png', 'dim 1200x750', 'size 4096'], ['server', 'https://napshot-blossom.example']] }, generateSecretKey());
+const [negentropyRelay] = config.relays;
+const browser = await chromium.launch();
+const errors = [];
+
+/** Serve saved profile pictures from a routed 1×1 PNG: the origins come from the snapshot, so nothing is pinned and no real avatar host is contacted. */
+async function routeProfilePictures(page) {
+  const origins = new Set((snapshot.profiles ?? []).flatMap(event => { try { return [new URL(JSON.parse(event.content).picture).origin]; } catch { return []; } }));
+  await page.route(url => origins.has(url.origin), route => route.fulfill({ status: 200, contentType: 'image/png', body: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=', 'base64') }));
+}
+
+/** Serve deterministic NIP-11 documents: the first configured relay advertises NIP-77, the others do not. */
+async function routeInformation(page) {
+  for (const relay of config.relays) {
+    const origin = new URL(relay).origin.replace(/^ws/, 'http');
+    await page.route(url => url.origin === origin, route => route.fulfill({ status: 200, contentType: 'application/nostr+json', headers: { 'access-control-allow-origin': '*' }, body: JSON.stringify({ name: 'test relay', supported_nips: relay === negentropyRelay ? [1, 77] : [1] }) }));
+  }
+}
+
+const shown = page => page.evaluate(() => document.querySelectorAll('#discovered-grid article:not([hidden])').length);
+/** Scroll to the end until the note says the collection is complete; relays are reached on the way. */
+async function scrollToTheEnd(page) {
+  for (let step = 0; step < 60 && !/everything we found/.test(await page.locator('#store-more-note').textContent()); step++) {
+    const count = await shown(page);
+    await page.locator('#store-more').scrollIntoViewIfNeeded();
+    await page.waitForFunction(previous => document.querySelectorAll('#discovered-grid article:not([hidden])').length > previous || /everything we found|did not finish|Looking on/.test(document.querySelector('#store-more-note')?.textContent ?? ''), count, { timeout: 15000 });
+    await page.waitForFunction(() => !/Looking on/.test(document.querySelector('#store-more-note')?.textContent ?? ''), undefined, { timeout: config.timeoutMs * 4 });
+  }
+}
+
+try {
+  const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce' });
+  page.on('pageerror', error => errors.push(error.message));
+  await page.route('https://listing.example/**', route => route.fulfill({ status: 200, contentType: 'image/png', body: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=', 'base64') }));
+  await page.route('https://avatar.example/**', route => route.fulfill({ status: 200, contentType: 'image/png', body: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=', 'base64') }));
+  await routeProfilePictures(page);
+  await page.route('https://blossom.example/**', route => route.fulfill(new URL(route.request().url()).pathname === `/${artifactHash}` ? { status: 200, contentType: 'text/html', headers: { 'access-control-allow-origin': '*' }, body: artifact } : { status: 404, headers: { 'access-control-allow-origin': '*' } }));
+  await routeInformation(page);
+  const cors = { 'access-control-allow-origin': '*' };
+  // Real saved labels stay routed offline here; their bytes are exercised deterministically in
+  // check-app-store-napshot.mjs. The origins come from the snapshot, so nothing is pinned.
+  const mirrorOrigins = new Set((snapshot.labels ?? []).flatMap(label => label.tags.filter(tag => tag[0] === 'server' && tag[1]).map(tag => new URL(tag[1]).origin)));
+  await page.route(url => mirrorOrigins.has(url.origin), route => route.fulfill({ status: 404, headers: cors }));
+  const contacted = new Set();
+  let negotiations = 0;
+  const requested = [];
+  for (const relay of config.relays) await page.routeWebSocket(relay, socket => {
+    contacted.add(relay);
+    socket.onMessage(data => {
+      const [type, id, filter] = JSON.parse(data);
+      if (type === 'NEG-OPEN') {
+        // The negotiation is declined so the request fallback can be exercised with plain frames.
+        negotiations++;
+        assert.equal(relay, negentropyRelay, 'negentropy is only attempted on relays that advertise NIP-77');
+        socket.send(JSON.stringify(['NEG-ERR', id, 'blocked: test relay']));
+        return;
+      }
+      if (type !== 'REQ') return;
+      requested.push(filter);
+      if (filter.kinds.length === 1 && filter.kinds[0] === 1985) {
+        assert.deepEqual(filter.authors, config.screenshotLabelers, 'labels are requested only from trusted signers');
+        assert.deepEqual(filter['#L'], ['#screenshot']);
+        assert.ok(filter['#e'].length <= 50, 'label targets are batched');
+        socket.send(JSON.stringify(['EVENT', id, untrustedLabel]));
+      } else if (filter.kinds.includes(32267)) {
+        assert.ok(filter.authors?.includes(injected.pubkey), 'listings are requested for discovered publishers');
+        assert.ok(filter.kinds.includes(0), 'the publishers’ profiles are requested with their listings');
+        socket.send(JSON.stringify(['EVENT', id, listing]));
+        socket.send(JSON.stringify(['EVENT', id, profile]));
+      } else {
+        assert.deepEqual(filter.kinds, manifestKinds);
+        if (filter.until === undefined) {
+          socket.send(JSON.stringify(['EVENT', id, { ...injected, content: 'invalid signature' }]));
+          socket.send(JSON.stringify(['EVENT', id, injected]));
+          socket.send(JSON.stringify(['EVENT', id, demanding]));
+        }
+      }
+      socket.send(JSON.stringify(['EOSE', id]));
+    });
+  });
+  await page.goto(`${base}/apps/`, { waitUntil: 'networkidle' });
+  // Visible cards with no publisher artwork and no saved preview ask the relays for a trusted label; nothing else is
+  // requested before the end of the saved collection. The snapshot decides how many such cards are on screen.
+  const artless = () => page.locator('#discovered-grid article:not([hidden])').evaluateAll(cards => cards.filter(card => {
+    const media = JSON.parse(card.dataset.media ?? '{}');
+    return !card.querySelector('[data-listing-art]') && !media.screenshots?.length && !media.napshot;
+  }).length);
+  const onlyLabels = (moment) => {
+    assert.ok(requested.every(filter => filter.kinds.length === 1 && filter.kinds[0] === 1985), `${moment} asks relays only for trusted labels`);
+    assert.equal(negotiations, 0, `${moment} starts no manifest reconciliation`);
+  };
+  if (await artless() > 0) for (let waited = 0; !requested.length && waited < 10_000; waited += 100) await page.waitForTimeout(100);
+  onlyLabels('visiting the catalog');
+  assert.equal(await page.locator('[data-launch]').count(), apps.length);
+  const cards = page.locator('#discovered-grid article');
+  const saved = await cards.count();
+  assert.ok(saved > 20, 'real saved discoveries are present');
+  assert.equal(await page.locator('#discovered-grid a[href*="napplet.soy/n/nevent"]').count(), 0, 'snapshot pointers do not use a shell route that rejects them');
+  assert.ok(await page.locator('#discovered-grid [data-listing-art]').count() > 5, 'saved listings supply fallback art without JavaScript verification');
+  assert.equal(await page.locator('#discovered-grid .release-author a[href^="https://nostr.at/npub1"]').count(), saved, 'every saved release links its publisher key to a profile page');
+  assert.ok(await page.locator('#discovered-grid .release-author img.author-picture[src^="https://"]').count() > 0, 'saved profiles supply publisher names and pictures');
+  assert.equal(await page.locator('#discovered-grid img[src^="http:"], #discovered-grid img[src^="javascript:"]').count(), 0);
+  assert.equal(await page.locator('#store-more button').count(), 0, 'paging has no button; scrolling drives it');
+  // Label-driven rendering, mirror behaviour and capture modes run in check-app-store-napshot.mjs
+  // against dedicated fixtures, so this check no longer pins real snapshot entries.
+  // Infinite scroll: twelve cards at first, then another page each time the end comes into view.
+  assert.equal(await shown(page), 12);
+  await page.locator('#store-more').scrollIntoViewIfNeeded();
+  await page.waitForFunction(() => document.querySelectorAll('#discovered-grid article:not([hidden])').length >= 24);
+  onlyLabels('paging the saved collection');
+  for (const app of apps) {
+    await page.locator(`[data-launch="${app.id}"]`).scrollIntoViewIfNeeded();
+    await page.locator(`[data-launch="${app.id}"]`).click();
+    await page.locator('#player-status').filter({ hasText: 'Ready to play' }).waitFor();
+    const iframe = page.locator('#player-stage iframe');
+    const frame = await (await iframe.elementHandle()).contentFrame();
+    assert.equal(await iframe.getAttribute('sandbox'), 'allow-scripts');
+    assert.deepEqual(await frame.evaluate(() => Object.keys(window.napplet)), []);
+    if (app.id === 'stick-brawl') await frame.getByRole('button', { name: 'Fight!', exact: true }).click();
+    if (app.id === 'freeze-frame-response') await frame.getByRole('button', { name: 'Begin inspection', exact: true }).click();
+    if (app.id === 'poly-dogfight') await frame.getByRole('button', { name: 'Fly', exact: true }).click();
+    assert.ok(await frame.locator('canvas').count() > 0);
+    await page.getByRole('button', { name: 'Close preview' }).click();
+    assert.equal(await page.locator(`[data-launch="${app.id}"]`).evaluate(el => el === document.activeElement), true);
+  }
+  await page.getByRole('searchbox', { name: 'Search apps' }).fill('no-app-matches-this-vector');
+  assert.equal(await page.locator('[data-app-card]:visible').count(), 0);
+  assert.ok(await page.locator('#store-empty').isVisible());
+  await page.getByLabel('Curated', { exact: true }).check();
+  assert.ok(await page.locator('#store-empty').isVisible(), 'empty state survives collection changes');
+  await page.getByRole('searchbox', { name: 'Search apps' }).fill('');
+  assert.equal(await page.locator('[data-app-card]:visible').count(), apps.length);
+  await page.getByLabel('Discovered', { exact: true }).check();
+  // Scrolling past the saved collection reconciles with NIP-77 where offered, falls back to requests elsewhere, and pages on.
+  await scrollToTheEnd(page);
+  assert.deepEqual([...contacted].sort(), [...config.relays].sort(), 'every configured relay was contacted once the saved collection ran out');
+  assert.ok(negotiations >= 1, 'NIP-77 negotiation was attempted on the relay that advertises it');
+  assert.ok(requested.some(filter => filter.kinds.includes(32267)), 'listings were requested after new publishers appeared');
+  assert.ok(requested.some(filter => typeof filter.until === 'number'), 'relays on the request path were paged with until');
+  const card = page.locator('.discovered-card').filter({ hasText: '<script>not markup</script>' });
+  assert.equal(await card.count(), 1, 'duplicate signed addresses deduplicate');
+  assert.equal(await card.locator('script').count(), 0, 'publisher metadata remains plain text');
+  assert.equal(await card.locator('[data-listing-art]').getAttribute('src'), 'https://listing.example/art.png', 'the matching listing supplies art');
+  // The publisher line links the key to its profile and shows the profile's name and picture, escaped.
+  const author = card.locator('.release-author a');
+  assert.equal(await author.getAttribute('href'), `https://nostr.at/${npubEncode(injected.pubkey)}`, 'the publisher links to the key’s profile');
+  assert.equal(await author.locator('span').textContent(), 'Vector <b>Publisher</b>', 'the profile name is shown as text');
+  assert.equal(await author.locator('b').count(), 0, 'profile markup is never rendered');
+  assert.equal(await author.locator('img.author-picture').getAttribute('src'), 'https://avatar.example/vector.png', 'the profile picture is shown');
+  assert.equal(await card.locator('[data-listing-icon]').count(), 0, 'non-https listing icons are dropped');
+  // Label targeting: unchanged saved releases and newly discovered releases are both targets, batched small.
+  // Exhaustive coverage over every eligible release is proven deterministically in check-app-store-napshot.mjs;
+  // the production snapshot's catalog acceptance cannot be replicated in this plain-JS check.
+  const labelFilters = requested.filter(filter => filter.kinds.length === 1 && filter.kinds[0] === 1985);
+  assert.ok(labelFilters.length >= 1, 'Napshot labels were requested for discovered releases');
+  const covered = new Set(labelFilters.flatMap(filter => filter['#e']));
+  for (const id of covered) assert.ok(savedIds.has(id) || id === injected.id || id === demanding.id, 'every label target is a manifest the store knows');
+  assert.ok([...covered].some(id => savedIds.has(id)), 'unchanged saved releases are still label targets');
+  assert.ok(covered.has(demanding.id), 'a newly discovered release is a label target');
+  assert.equal(await page.locator('.discovered-card').filter({ hasText: 'Demanding release' }).locator('img[data-napshot]').count(), 0, 'a label from an untrusted signer is ignored');
+  assert.equal(await page.evaluate(() => window.catalogXss), undefined);
+  assert.equal(await page.locator('text=invalid signature').count(), 0);
+  assert.equal(await shown(page), await cards.count(), 'every release was revealed by scrolling');
+  assert.ok(await cards.count() > saved, 'the discovered release joined the collection');
+  // Releases run here first when this player can satisfy their requirements; every release links to web shells.
+  const openIn = await card.locator('.release-links a').allTextContents();
+  assert.deepEqual(openIn.slice(0, 3), ['napplet.soy ↗', 'Paja ↗', 'Applesauce loader ↗']);
+  assert.ok((await card.locator('.release-links a').nth(1).getAttribute('href')).startsWith('https://kehto.github.io/web/paja/?pointer=naddr1'));
+  const demandingCard = page.locator('.discovered-card').filter({ hasText: 'Demanding release' });
+  assert.equal(await demandingCard.locator('[data-launch-release]').count(), 0, 'a release that requires a service does not run here');
+  assert.match(await demandingCard.locator('.run-unavailable').textContent(), /Needs identity/);
+  assert.ok(await page.locator('[data-launch-release]').count() > 10, 'releases without requirements can run here');
+  await card.locator('[data-launch-release]').scrollIntoViewIfNeeded();
+  await card.locator('[data-launch-release]').click();
+  await page.locator('#player-status').filter({ hasText: 'Ready to play' }).waitFor();
+  const released = page.locator('#player-stage iframe');
+  assert.equal(await released.getAttribute('sandbox'), 'allow-scripts');
+  const releasedFrame = await (await released.elementHandle()).contentFrame();
+  assert.deepEqual(await releasedFrame.evaluate(() => Object.keys(window.napplet)), []);
+  await releasedFrame.getByRole('button', { name: 'Start' }).click();
+  assert.equal(await releasedFrame.evaluate(() => document.title), 'played');
+  assert.match(await page.locator('#player-original').textContent(), /Open in napplet.soy/);
+  await page.getByRole('button', { name: 'Close preview' }).click();
+  assert.equal(await card.locator('[data-launch-release]').evaluate(el => el === document.activeElement), true, 'focus returns to the Run link');
+  await page.getByRole('button', { name: 'Check again' }).click();
+  await page.locator('#discovery-status').filter({ hasText: `Checked ${config.relays.length}/${config.relays.length}` }).waitFor();
+  await page.screenshot({ path: '/tmp/napplet-store-desktop.png', fullPage: true });
+  await page.close();
+
+  const offline = await browser.newPage();
+  await routeInformation(offline);
+  await routeProfilePictures(offline);
+  for (const relay of config.relays) await offline.routeWebSocket(relay, socket => socket.close());
+  await offline.goto(`${base}/apps/`);
+  await offline.getByRole('button', { name: 'Check for new apps' }).click();
+  await offline.locator('#discovery-status').filter({ hasText: 'saved collection is still here' }).waitFor({ timeout: config.timeoutMs * 4 });
+  assert.ok(await offline.locator('#discovered-grid article').count() > 20);
+  assert.ok(await offline.getByRole('button', { name: /Try again/ }).isEnabled());
+  await offline.close();
+
+  for (const width of [390, 320]) {
+    const mobile = await browser.newPage({ viewport: { width, height: 844 } });
+    await routeProfilePictures(mobile);
+    await mobile.goto(`${base}/apps/`);
+    assert.ok(await mobile.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+    await mobile.getByLabel('Discovered', { exact: true }).check();
+    assert.ok(await mobile.locator('#discovered-title').isVisible());
+    await mobile.screenshot({ path: `/tmp/napplet-store-${width}.png` });
+    await mobile.close();
+  }
+  const noJs = await browser.newPage({ javaScriptEnabled: false });
+  // Without scripting, Chromium loads every lazy image eagerly, so the whole collection's avatars must come from the route.
+  await routeProfilePictures(noJs);
+  await noJs.goto(`${base}/apps/`);
+  assert.equal(await noJs.locator('[data-launch]').count(), apps.length);
+  assert.ok(await noJs.locator('#discovered-grid a').count() > 20);
+  assert.equal(await noJs.locator('#discovered-grid article:visible').count(), await noJs.locator('#discovered-grid article').count(), 'the whole saved collection is readable without JavaScript');
+  assert.equal(await noJs.locator('#discover-apps').isVisible(), false);
+  assert.deepEqual(errors, []);
+  console.log('App store: six previews, gameplay, filters, scroll paging, NIP-77 attempt with request fallback, listing art, batched label targeting with untrusted-label rejection, XSS, running a discovered release here, shell links, label-only relay contact before the end, offline retry, mobile and no-JS passed.');
+} finally { await browser.close(); }

@@ -1825,11 +1825,16 @@
   "workspace": {
     "packageJson": {
       "dependencies": [
+        "npm:@bunny.net/edgescript-sdk@0.13.0",
         "npm:@changesets/cli@^3.0.3",
         "npm:@types/node@^22.15.0",
+        "npm:esbuild@~0.28.1",
         "npm:happy-dom@^21.0.4",
+        "npm:linkedom@0.18",
         "npm:playwright@^1.59.1",
         "npm:turbo@^2.9.14",
+        "npm:turndown-plugin-gfm@1",
+        "npm:turndown@7",
         "npm:typescript@^5.9.3",
         "npm:vite@^6.4.5",
         "npm:vitest@^4.1.12"
@@ -1863,6 +1868,7 @@
           "npm:fflate@0.8.3",
           "npm:nostr-tools@^2.23.3",
           "npm:parse5@^7.3.0",
+          "npm:rxjs@^7.8.1",
           "npm:yaml@2.9.1"
         ],
         "packageJson": {
@@ -1874,6 +1880,7 @@
             "npm:fflate@0.8.3",
             "npm:nostr-tools@^2.23.3",
             "npm:parse5@^7.3.0",
+            "npm:rxjs@^7.8.1",
             "npm:yaml@2.9.1"
           ]
         }

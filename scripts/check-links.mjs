@@ -1,13 +1,7 @@
 // scripts/check-links.mjs
 //
-// Crawls the assembled site (marketing SPA at /, VitePress docs at /docs) the
-// way the static host serves it and fails if any internal link 404s.
-//
-// Why a browser: apps/web is a client-rendered Svelte SPA — its /docs/* links
-// are injected at runtime and are NOT in the static HTML, so a static-HTML link
-// checker can't see them (that's how the /docs/packages/<name> 404s shipped).
-// Rendering each page with headless Chromium checks the SPA's real links and the
-// static docs uniformly.
+// Crawls the assembled Astro homepage, preserved Svelte explainer and docs.
+// A browser checks both static links and links added during hydration.
 //
 // Why python http.server in CI: it serves literal files + directory index.html
 // with NO extensionless ".html" rewrite — matching Bunny CDN storage + nsite.

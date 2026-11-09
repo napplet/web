@@ -226,7 +226,7 @@ describe('createReferenceShell — record + respond', () => {
 });
 
 describe('attachReferenceShell', () => {
-  it('wires message events to responses and honors the source guard', () => {
+  it('answers over the napplet.hello port and ignores other sources', async () => {
     let listener: ((e: MessageEvent) => void) | undefined;
     const host: MessageWindowLike = {
       addEventListener: (_t, l) => {
@@ -236,21 +236,29 @@ describe('attachReferenceShell', () => {
         listener = undefined;
       },
     };
-    const posted: unknown[] = [];
-    const target = { postMessage: (m: unknown) => posted.push(m) };
     const nappletWindow = {};
+    const channel = new MessageChannel();
+    const replies: unknown[] = [];
+    const reply = new Promise<void>((resolve) => {
+      channel.port1.onmessage = (event) => {
+        replies.push(event.data);
+        resolve();
+      };
+    });
 
     const shell = createReferenceShell();
-    const detach = attachReferenceShell(shell, { host, target, expectedSource: nappletWindow });
-    expect(typeof listener).toBe('function');
+    const binding = attachReferenceShell(shell, { host, expectedSource: nappletWindow });
+    listener!({ source: {}, data: { type: 'napplet.hello' }, ports: [channel.port2] } as unknown as MessageEvent);
+    expect(binding.bound).toBe(false);
 
-    listener!({ source: {}, data: { type: 'storage.get', id: '1', key: 'k' } } as unknown as MessageEvent);
-    expect(posted).toHaveLength(0);
+    listener!({ source: nappletWindow, data: { type: 'napplet.hello' }, ports: [channel.port2] } as unknown as MessageEvent);
+    expect(binding.bound).toBe(true);
+    channel.port1.postMessage({ type: 'storage.get', id: '1', key: 'k' });
+    await reply;
+    expect(replies).toEqual([{ type: 'storage.get.result', id: '1', value: null }]);
 
-    listener!({ source: nappletWindow, data: { type: 'storage.get', id: '1', key: 'k' } } as unknown as MessageEvent);
-    expect(posted).toEqual([{ type: 'storage.get.result', id: '1', value: null }]);
-
-    detach();
+    binding.detach();
+    channel.port1.close();
     expect(listener).toBeUndefined();
   });
 });

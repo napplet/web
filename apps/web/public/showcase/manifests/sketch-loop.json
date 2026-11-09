@@ -1,0 +1,69 @@
+{
+  "kind": 35129,
+  "id": "14966bba4a2af0328fc69cd6b894d38237ef154f9dcb59c641aec7a5bc09b1ba",
+  "pubkey": "99d1d395c7be96c77766e4124164ce3a2443d486e146644f762d29832f7faf25",
+  "created_at": 1789544288,
+  "tags": [
+    [
+      "path",
+      "/index.html",
+      "3e4939f95fbe1954d1f637930e3d74f08f2ad71d0575f9896d246a060218b17b"
+    ],
+    [
+      "x",
+      "f354b81e8f336e49baf93673c283f65625f9c1db10bb65afbd5d8fc0e78d3ce7",
+      "aggregate"
+    ],
+    [
+      "title",
+      "Sketch Loop"
+    ],
+    [
+      "app",
+      "32267:99d1d395c7be96c77766e4124164ce3a2443d486e146644f762d29832f7faf25:n-929bc2a88cb-6c5865b59de25aec",
+      "wss://relay.napplet.soy/"
+    ],
+    [
+      "description",
+      "Paste a 2D p5-style sketch, watch it animate, and export a GIF with your own duration, frame rate and size."
+    ],
+    [
+      "server",
+      "https://blossom.napplet.soy"
+    ],
+    [
+      "t",
+      "creative-coding"
+    ],
+    [
+      "t",
+      "generative-art"
+    ],
+    [
+      "t",
+      "gif"
+    ],
+    [
+      "t",
+      "p5js"
+    ],
+    [
+      "source",
+      "nostr://npub1n8ga89w8h6tvwamxusfyzexw8gjy84yxu9rxgnmk955cxtml4ujswzxydd/wss%3A%2F%2Fgit.napplet.soy%2F/n-929bc2a88cb"
+    ],
+    [
+      "source-commit",
+      "e68361295d81a3f230990ea9fd35f2f425b166f9"
+    ],
+    [
+      "source-archive",
+      "https://blossom.napplet.soy/5e0385e3c08f944f6c2023a3952c87649229fe2f5fd24c07c35d547a7897cc37"
+    ],
+    [
+      "d",
+      "n-929bc2a88cb"
+    ]
+  ],
+  "content": "",
+  "sig": "ab4a57ffe6e0cb1b5d6f9c8a559cc7f060e150f99396feee464941e8d31f53cf90110233589e6317876729c3621bcf6d8fa04cf4abd7f41701549e89e9c194c2"
+}

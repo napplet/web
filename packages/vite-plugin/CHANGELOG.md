@@ -1,10 +1,35 @@
 # @napplet/vite-plugin
 
+## 0.16.5
+
+### Patch Changes
+
+- ad26f5b: Add support for the proposed NAP-BLOSSOM domain: typed blob
+  operations, ordered BUD-03 server-list helpers, local BUD-10 URI helpers,
+  optional runtime injection and SDK subpath exports. Conformance validates
+  Blossom request envelopes and provides deterministic unavailable responses
+  without network or signing access. Vite requirement inference recognizes
+  Blossom imports while preserving explicit optional declarations.
+
+## 0.16.4
+
+### Patch Changes
+
+- 9d84822: Refresh the JSR dependency pin to the NAP package released alongside
+  the maturity catalog. Runtime manifest behavior is unchanged.
+
 ## 0.16.3
 
 ### Patch Changes
 
-- Support the proposed NAP-CATALOG read-only discovery contract. Add typed snapshots, catalog SDK and layered NAP exports, allowlisted runtime injection, reference-shell discovery and envelope validation, and catalog capability inference. Catalog queries work independently of intent dispatch and shell readiness. See https://github.com/napplet/naps/pull/95 for the living draft.
+- 237c681: Add the draft NAP-LLM contract (napplet/naps#134) across types,
+  domain helpers, runtime injection, SDK, manifest inference, and conformance
+  tooling. The `llm` domain exposes `select`, `describe`, `generate`, and
+  `cancel` for user-selected, runtime-mediated language model inference, with
+  optional ordered `llm.delta` streaming, an exposed generation `requestId`, and
+  abort-signal cancellation. Failures reject with the specification error code;
+  unknown codes remain failures. Connections, credentials, disclosure consent,
+  and provider access stay owned by the host runtime.
 
 ## 0.16.2
 

@@ -59,7 +59,7 @@ describe('scanForbiddenGlobals', () => {
   it('returns empty for clean napplet sources', async () => {
     const dir = await fixtureDir();
     await writeFile(join(dir, 'index.html'), '<!doctype html><script type="module" src="./main.js"></script>');
-    await writeFile(join(dir, 'main.js'), 'if (window.napplet?.relay) window.parent.postMessage({ type: "relay.query", id: "q", filters: [] }, "*");');
+    await writeFile(join(dir, 'main.js'), 'if (window.napplet?.relay) window.napplet.relay.query([{ kinds: [1] }]);');
     expect(await scanForbiddenGlobals(dir)).toEqual([]);
   });
 

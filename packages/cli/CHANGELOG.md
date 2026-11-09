@@ -1,5 +1,39 @@
 # @napplet/cli
 
+## 0.14.2
+
+### Patch Changes
+
+- 1d09afc: `napplet deploy` now moves on to the next Blossom auth token when an upload gets HTTP
+  502, 503 or 504. A CDN in front of a server can turn an early auth rejection into one of these
+  statuses on larger uploads, which used to fail the deploy before the unscoped token was tried.
+  Other 5xx responses still fail without a retry.
+
+## 0.14.1
+
+### Patch Changes
+
+- fb5bdaf: Point repository links and the `npx skills add` command at `napplet/web`, the
+  repository's current name.
+- Updated dependencies [fb5bdaf]
+  - @napplet/boilerplate@0.4.2
+
+## 0.14.0
+
+### Minor Changes
+
+- 00d10c8: Add `--proxy <url>` to `deploy`, `init` and `keys connect`, routing Blossom uploads,
+  relay publishing, `init` suggestions and remote-signer (NIP-46) relay sessions, including their
+  relay information documents, through an `http://`, `https://`, `socks5://` or `socks5h://` proxy.
+  Embedded proxy credentials are never printed, the deploy plan names the proxy in use, and other
+  commands reject the flag.
+
+### Patch Changes
+
+- 00d10c8: Report a relay that deploy could not connect to as a failed publish. nostr-tools resolves
+  unreachable relays with a `connection failure` reason instead of rejecting, which the deploy
+  report previously counted as published.
+
 ## 0.13.1
 
 ### Patch Changes

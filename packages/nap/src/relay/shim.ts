@@ -5,9 +5,9 @@
  */
 
 // @napplet/nap/relay -- Relay NAP shim
-// JSON envelope wire format over postMessage to the shell.
+// JSON envelope wire format over the NIP-5D port to the shell.
 
-import { postToShell } from '../boundary.js';
+import { onShellMessage, postToShell, type ShellMessage } from '../boundary.js';
 import type { NostrEvent, NostrFilter, Subscription, EventTemplate } from '@napplet/core';
 import type {
   RelayEventResult,
@@ -19,8 +19,6 @@ import type {
   RelayPublishEncryptedResultMessage,
   RelayQueryMessage,
   RelayEventMessage,
-  RelayEoseMessage,
-  RelayClosedMessage,
   RelayQueryResultMessage,
 } from './types.js';
 import { hydrateResourceCache } from '../resource/shim.js';
@@ -28,7 +26,7 @@ import { hydrateResourceCache } from '../resource/shim.js';
 /**
  * Open a live relay subscription through the shell's relay pool.
  *
- * Sends a `relay.subscribe` envelope message via postMessage to the parent shell.
+ * Sends a `relay.subscribe` envelope message to the shell over the NIP-5D port.
  * The shell queries its local cache and connected relays, streaming
  * matching events back via `relay.event` messages.
  *
@@ -57,27 +55,23 @@ export function subscribe(
   const normalizedFilters = Array.isArray(filters) ? filters : [filters];
   const subId = crypto.randomUUID();
 
-  function handleMessage(msgEvent: MessageEvent): void {
-    if (msgEvent.source !== window.parent) return;
-    const msg = msgEvent.data;
-    if (typeof msg !== 'object' || msg === null || typeof msg.type !== 'string') return;
+  function handleMessage(msg: ShellMessage): void {
     if (!msg.type.startsWith('relay.')) return;
 
-    const typedMsg = msg as RelayEventMessage | RelayEoseMessage | RelayClosedMessage;
-    if (!('subId' in typedMsg) || typedMsg.subId !== subId) return;
+    if (msg.subId !== subId) return;
 
     if (msg.type === 'relay.event') {
-      const eventMsg = msg as RelayEventMessage;
-      hydrateResourceCache(eventMsg.result.sidecar?.resources);
-      onEvent(eventMsg.result);
+      const result = msg.result as RelayEventMessage['result'];
+      hydrateResourceCache(result.sidecar?.resources);
+      onEvent(result);
     } else if (msg.type === 'relay.eose') {
       onEose();
     } else if (msg.type === 'relay.closed') {
-      window.removeEventListener('message', handleMessage);
+      off();
     }
   }
 
-  window.addEventListener('message', handleMessage);
+  const off = onShellMessage(handleMessage);
 
   // Send relay.subscribe envelope (handles both standard and scoped relay)
   const subscribeMsg: RelaySubscribeMessage = {
@@ -97,7 +91,7 @@ export function subscribe(
         subId,
       };
       postToShell(closeMsg);
-      window.removeEventListener('message', handleMessage);
+      off();
     },
   };
 }
@@ -131,16 +125,13 @@ export function publish(
   const publishId = crypto.randomUUID();
 
   return new Promise((resolve, reject) => {
-    function handleMessage(msgEvent: MessageEvent): void {
-      if (msgEvent.source !== window.parent) return;
-      const msg = msgEvent.data;
-      if (typeof msg !== 'object' || msg === null || typeof msg.type !== 'string') return;
+    function handleMessage(msg: ShellMessage): void {
       if (msg.type !== 'relay.publish.result' && msg.type !== 'relay.publish.error') return;
 
-      const result = msg as RelayPublishResultMessage;
+      const result = msg as ShellMessage & Partial<Omit<RelayPublishResultMessage, 'type'>>;
       if (result.id !== publishId) return;
 
-      window.removeEventListener('message', handleMessage);
+      off();
       if (result.error || msg.type === 'relay.publish.error') {
         reject(new Error(result.error || 'relay:write denied'));
       } else if (!result.event) {
@@ -150,7 +141,7 @@ export function publish(
       }
     }
 
-    window.addEventListener('message', handleMessage);
+    const off = onShellMessage(handleMessage);
 
     const publishMsg: RelayPublishMessage = {
       type: 'relay.publish',
@@ -190,16 +181,13 @@ export function publishEncrypted(
   const requestId = crypto.randomUUID();
 
   return new Promise((resolve, reject) => {
-    function handleMessage(msgEvent: MessageEvent): void {
-      if (msgEvent.source !== window.parent) return;
-      const msg = msgEvent.data;
-      if (typeof msg !== 'object' || msg === null || typeof msg.type !== 'string') return;
+    function handleMessage(msg: ShellMessage): void {
       if (msg.type !== 'relay.publishEncrypted.result') return;
 
-      const result = msg as RelayPublishEncryptedResultMessage;
+      const result = msg as ShellMessage & Partial<Omit<RelayPublishEncryptedResultMessage, 'type'>>;
       if (result.id !== requestId) return;
 
-      window.removeEventListener('message', handleMessage);
+      off();
       if (result.error) {
         reject(new Error(result.error));
       } else if (!result.event) {
@@ -209,7 +197,7 @@ export function publishEncrypted(
       }
     }
 
-    window.addEventListener('message', handleMessage);
+    const off = onShellMessage(handleMessage);
 
     const msg: RelayPublishEncryptedMessage = {
       type: 'relay.publishEncrypted',
@@ -241,16 +229,13 @@ export function query(filters: NostrFilter | NostrFilter[]): Promise<RelayEventR
   const queryId = crypto.randomUUID();
 
   return new Promise((resolve, reject) => {
-    function handleMessage(msgEvent: MessageEvent): void {
-      if (msgEvent.source !== window.parent) return;
-      const msg = msgEvent.data;
-      if (typeof msg !== 'object' || msg === null || typeof msg.type !== 'string') return;
+    function handleMessage(msg: ShellMessage): void {
       if (msg.type !== 'relay.query.result') return;
 
-      const result = msg as RelayQueryResultMessage;
+      const result = msg as ShellMessage & Partial<Omit<RelayQueryResultMessage, 'type'>>;
       if (result.id !== queryId) return;
 
-      window.removeEventListener('message', handleMessage);
+      off();
       if (result.error) {
         reject(new Error(result.error));
       } else {
@@ -260,7 +245,7 @@ export function query(filters: NostrFilter | NostrFilter[]): Promise<RelayEventR
       }
     }
 
-    window.addEventListener('message', handleMessage);
+    const off = onShellMessage(handleMessage);
 
     const queryMsg: RelayQueryMessage = {
       type: 'relay.query',

@@ -23,7 +23,7 @@ export function renderGuide(): string {
    CLI docs: ${DOCS_BASE}/packages/cli.html
 
 4. Equip your agent
-   npx skills add napplet/napplet
+   npx skills add napplet/web
    Skills docs: ${DOCS_BASE}/guide/agent-skills.html
 
 5. Build and verify

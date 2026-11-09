@@ -1,6 +1,7 @@
 import { base64urlnopad } from "@scure/base";
 import { contentType } from "@std/media-types";
 import { extname } from "@std/path";
+import { networkFetch } from "./network.ts";
 import { joinPath } from "./path.ts";
 import type { NappletSigner } from "./signing.ts";
 import type { DeployManifestTemplate, ManifestFileMapping, SignedNostrEvent } from "./types.ts";
@@ -70,7 +71,7 @@ export async function uploadFilesToServers(
   signer: NappletSigner,
   options: UploadFilesToServersOptions = {},
 ): Promise<ServerUploadResult[]> {
-  const fetcher = options.fetch ?? fetch;
+  const fetcher = options.fetch ?? networkFetch;
   const blobSha256s = [...new Set(files.map((file) => file.sha256))];
   const results: ServerUploadResult[] = [];
   const totalUploads = files.length * servers.length;
@@ -78,7 +79,8 @@ export async function uploadFilesToServers(
     // BUD-11: scope each token to the target server so a leaked header cannot be
     // replayed against other Blossom servers before it expires. Some deployed
     // Blossom servers reject either scoped tokens or base64url auth, so retries
-    // below intentionally fall back only after an auth-shaped failure.
+    // below fall back only after an auth-shaped failure or a gateway status that
+    // can hide one.
     const authAttempts: UploadAuthorizationAttempt[] = [
       {
         create: once(() =>
@@ -190,7 +192,7 @@ async function uploadFileToServer(
     );
     if (result.success) return { result, authAttemptIndex: index };
     lastFailure = result;
-    if (!isRetryableAuthFailure(result)) return { result };
+    if (!shouldTryNextAuthAttempt(result)) return { result };
   }
   return { result: lastFailure ?? failure(server, file, `PUT ${uploadUrl} did not run`) };
 }
@@ -236,10 +238,15 @@ async function putFileToServer(
   };
 }
 
-function isRetryableAuthFailure(result: ServerUploadResult): boolean {
+function shouldTryNextAuthAttempt(result: ServerUploadResult): boolean {
   if (result.success) return false;
   const error = result.error ?? "";
-  if (!/\bHTTP (400|401)\b/.test(error)) return false;
+  const status = Number(/^PUT \S+ returned HTTP (\d{3})\b/.exec(error)?.[1]);
+  // A CDN or gateway can report 502/503/504 when the origin rejects a large upload
+  // before reading the whole body, which hides the auth failure, so these statuses
+  // move on to the next token.
+  if (status === 502 || status === 503 || status === 504) return true;
+  if (status !== 400 && status !== 401) return false;
   return /auth|authorization|token|server url mismatch|server .*scope|invalid auth string|signature|base64/i
     .test(error);
 }

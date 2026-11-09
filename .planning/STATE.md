@@ -6,9 +6,9 @@ current_phase: 164
 current_phase_name: cli-terminal-usability
 status: completed
 stopped_at: Phase 164 verified locally and shipped in PR 248 with terminal recordings
-last_updated: "2026-10-26T13:07:06+00:00"
-last_activity: 2026-10-30
-last_activity_desc: Completed quick task 261030-9r6; NIP-5D presentation media and source pins in PR 272
+last_updated: "2026-10-30T14:30:00+00:00"
+last_activity: 2026-11-05
+last_activity_desc: Removed DinOS from the napplet.run shell directory
 progress:
   total_phases: 9
   completed_phases: 4
@@ -18,6 +18,23 @@ progress:
 ---
 
 # Project State
+
+## Website communications redesign — COMPLETE
+
+Website redesign delivered on PR #221 in `/Users/sandwich/Develop/napplet-showcase`, branch `feat/astro-ecosystem-showcase`. Research and execution contract: `.planning/quick/261019-bsw-rethink-website-communications-and-scrol/PLAN.md`. Implementation, motion, archived-preview disclosure, current protocol directory, social artwork and local verification are complete and pushed to PR #221. All four hosted checks passed on c0f588eb; the branch is mergeable and pushed. See VERIFICATION.md in the task directory for requirement-by-requirement evidence. Do not treat earlier showcase completion entries as completion of this new goal.
+
+
+## Quick task 261003-tih — COMPLETE
+
+NAP detail pages now render complete upstream specifications, replacing excerpts and outlines at the user’s request. All 38 documents, source links, code examples, responsive layouts and workspace checks pass. Preview is rebuilt on port 8101; PR #222 contains the correction. Evidence: `.planning/quick/261003-tih-render-complete-upstream-nap-specificati/SUMMARY.md`.
+
+## Quick task 261003-sof — COMPLETE
+
+Generated protocol directory, per-NAP pages, contribution guide and daily refresh/deploy workflow implemented on `feat/protocol-directory`. Local gates, all 38 routes, responsive/no-JS browser checks, hosted generation and link checks pass. PR #222 is stacked on #221. Evidence: `.planning/quick/261003-sof-generated-protocol-directory-with-nap-de/SUMMARY.md`.
+
+## Quick task 261003-isf — COMPLETE
+
+Astro ecosystem showcase implemented on `feat/astro-ecosystem-showcase`. Local build, type, unit, tutorial, browser, links, SEO/accessibility, and Bunny artifact checks pass. PR #221 is open and mergeable; hosted CI, conformance, link/browser, and AI-slop checks pass. Evidence: `.planning/quick/261003-isf-astro-ecosystem-showcase-with-extracted-/SUMMARY.md`.
 
 ## Project Reference
 
@@ -48,7 +65,7 @@ Branch `feat/cli-terminal-usability` ships guided missing-value recovery, `-i` p
 Phase: 164 (cli-terminal-usability) — verified and shipped
 Plan: 3 of 3
 Status: [PR #248](https://github.com/napplet/web/pull/248) open with six actual terminal screenshots
-Last activity: 2026-10-30 - Completed quick task 261030-pog: NAP-CATALOG support, verified and opened PR #275
+Last activity: 2026-11-04 - Completed quick task 261104-iwc: Blossom upload auth fallback survives gateway errors (web#269)
 
 See phase 163 VERIFICATION.md and COVERAGE.md for evidence and disclosed release/specification/baseline limits. Earlier phase and quick-task records below are historical.
 
@@ -398,7 +415,7 @@ Status: M1+M2+M3+M4 COMPLETE. Final gate green: build(11), type-check(14), test:
 - NOTE FOR USER: README on main already had a `v0.32.0 — Read-Only NAP-IDENTITY` changelog entry (pre-existing) that collides with this milestone's v0.32.0 label. Left it untouched; added conformance additively. Milestone version label may need reconciliation (this work could be v0.33.0). Surfaced in PR.
 - NOTE: aislop's 1 error = vite (high, upgrade 6.4.3+) + 1 warn = js-yaml — both environmental dependency advisories, not introduced here; out of scope (separate dep-bump like v0.31.0).
 
-Last activity: 2026-06-16 — Phase 150 (b7a7f7e) CLI+fixtures+e2e+CI; Phase 151 apps/conformance web runtime verified live (CONFORMANT, 2 envelopes, manifest inspector) + deploy wiring at /conformance
+Last activity: 2026-11-04 - Completed quick task 261104-iwc: Blossom upload auth fallback survives gateway errors (web#269)
 
 ### Phase 150 record (CLI-01..06) — COMPLETE (b7a7f7e)
 
@@ -553,12 +570,41 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 
 | Quick ID | Task | Date | Commit | Artifacts |
 |----------|------|------|--------|-----------|
+| 261105-rds | Remove DinOS from the napplet.run shell directory | 2026-11-05 | — | — |
+| 261103-rsl | Point every napplet/napplet repository reference (docs, READMEs, skills, CLI, installers, package metadata) at napplet/web | 2026-11-03 | — | [261103-rsl](./quick/261103-rsl-repo-slug-napplet-web/) |
+| 261102-wmc | napplet.run WebMCP tools (list_pages, search_docs, read_page, search_napplets, list_agent_skills, open_page) and /apps/catalog.json | 2026-11-02 | — | [261102-wmc](./quick/261102-wmc-site-webmcp-tools/) |
+| 261101-wei | napplet.run player frame locked to its verified document with page frame-src 'none' (closes navigation-before-first-load) | 2026-11-01 | — | [261101-wei](./quick/261101-wei-player-frame-navigation-lock/) |
+| 261101-vx0 | napplet.run player: NIP-5D napplet.hello bootstrap and document binding (frame removed on navigation, reload or window-level messages) | 2026-11-01 | — | [261101-vx0](./quick/261101-vx0-player-port-bound-identity/) |
+| 261101-tbe | NIP-5D port-bound identity: napplet.hello MessagePort transport in core/nap/shim, conformance port binding and replacement checks | 2026-11-01 | 9c9620c1 | [261101-tbe](./quick/261101-tbe-nip5d-port-bound-identity/) |
+| 261101-nuz | Agent-readable napplet.run: Markdown copies, llms.txt, agent-skills index, Content-Signal, Bunny Accept: text/markdown edge script | 2026-11-01 | 700115fd | [261101-nuz](./quick/261101-nuz-agent-readable-napplet-run-site/) |
+| 261101-n69 | --proxy for HTTP and SOCKS5 proxies on CLI Blossom and relay commands, plus unreachable-relay publish fix | 2026-11-01 | ebd22ec3 | [261101-n69](./quick/261101-n69-add-proxy-for-http-and-socks5-proxies-to/) |
+| 261101-k4q | Five-relay app store discovery pool and an exhaustive refresh pager | 2026-11-01 | fd8ad95a | [261101-k4q](./quick/261101-k4q-expand-the-app-store-discovery-relay-poo/) |
+| 261101-ia5 | Publisher profile name, picture and nostr.at link on app store cards | 2026-11-01 | d34bf184 | [261101-ia5](./quick/261101-ia5-show-publisher-profile-name-picture-and-/) |
+| 261101-hp2 | On-visit Napshot label lookups for saved releases without publisher artwork | 2026-11-01 | fa702345 | [261101-hp2](./quick/261101-hp2-look-up-napshot-labels-at-runtime-for-re/) |
+| 261101-ew8 | PR #292 inline review: independent relay pagination, incomplete-batch retries, isolated fixture builds and CI execution | 2026-11-01 | d39acea6 | [261101-ew8](./quick/261101-ew8-resolve-all-five-inline-review-threads-o/) |
+| 261101-e9i | Add Napshot NIP-05 relay hints from its signed NIP-65 event | 2026-11-01 | ad002741 | [261101-e9i](./quick/261101-e9i-add-napshot-nip-05-relay-hints-from-its-/) |
+| 261101-de9 | NIP-05 nostr.json on napplet.run for napshot | 2026-11-01 | — | [261101-de9](./quick/261101-de9-napplet-run-nip-05-for-napshot/) |
+| 261101-crf | Address the Copilot review on PR #289: refuse mirror redirects before following, share screenshot eligibility, batch and exhaust label discovery, capture-mode wording, refresh-proof tests and a deterministic fixture browser check | 2026-11-01 | fcca9786 | [261101-crf](./quick/261101-crf-address-copilot-review-comments-on-pr-289/) |
+| 261101-cyx | Napshot screenshot fallbacks for app-store releases without screenshots | 2026-11-01 | 331dbf1a | [261101-cyx](./quick/261101-cyx-napshot-screenshot-fallbacks-in-app-stor/) |
+| 261031-go3 | NAP maturity catalog, policy selection, host enforcement and generated docs (PR #288) | 2026-10-31 | 18d636cf | [261031-go3](./quick/261031-go3-implement-nap-maturity-catalog-policy-se/) |
+| 261031-cbd | Add DinOS to the website shell directory | 2026-10-31 | b7bf6c66 | [261031-cbd](./quick/261031-cbd-add-dinos-to-the-website-shell-list/) |
+| 261031-er3 | Require runtimePreludeSource and delete the conformance fallback runtime fixture | 2026-10-31 | e68eddc4 | [261031-er3](./quick/261031-er3-require-runtimepreludesource-and-delete-/) |
+| 261030-ppe | Add NAP-BLOSSOM across packages and docs | 2026-10-30 | d4147798 / PR #276 | [261030-ppe](./quick/261030-ppe-add-nap-blossom-support/) |
 | 261030-pog | Add NAP-CATALOG across packages and docs | 2026-10-30 | b1933bd0 / PR #275 | [261030-pog](./quick/261030-pog-add-nap-catalog-support-across-relevant-/) |
 | 261030-9r6 | Chase NIP-5D presentation media and source pin tags | 2026-10-30 | 0bae4ebe / PR #272 | [261030-9r6](./quick/261030-9r6-chase-nip-5d-presentation-media-and-sour/) |
+| 261030-jgm | App store: manifest media, listing fallback, applesauce discovery, infinite scroll | 2026-10-30 | 9ac7d606 / PR #221 | [261030-jgm](./quick/261030-jgm-improve-the-apps-directory-with-nip-5d-m/) |
+| 261030-ixc | Tell each homepage section's story with GSAP and a three.js frame field | 2026-10-30 | e2c9fb0b / PR #221 | [261030-ixc](./quick/261030-ixc-tell-each-splash-section-s-story-with-gs/) |
+| 261028-bvy | Section-integrated app motion, six public shells and curated/discovered app store | 2026-10-28 | PR #221 | [261028-bvy](./quick/261028-bvy-develop-the-traveling-app-into-section-s/) |
 | 261028-c9t | Complete NAPP-to-napplet porting skill | 2026-10-28 | 5ac63f25 / PR #270 | [261028-c9t](./quick/261028-c9t-write-a-thorough-napp-to-napplet-porting/) |
 | 261026-jeu | Clear the pinned AI-slop scan findings | 2026-10-26 | 8e811a29 | [261026-jeu](./quick/261026-jeu-reach-100-out-of-100-on-the-pinned-ai-sl/) |
 | 261026-iwr | Default deploy screenshots and Zapstore events with opt-out flags | 2026-10-26 | ee144357 | [261026-iwr](./quick/261026-iwr-use-screenshots-and-zapstore-events-by-d/) |
 | 261015-aen | Use nsyte-style filled CLI progress bars and refresh terminal proof | 2026-10-15 | 5e165056 | [261015-aen](./quick/261015-aen-use-nsyte-filled-progress-bars-in-cli-an/) |
+| 261022-8da | Apply supplied duck icon to PR 221 replacement site | 2026-10-22 | PR #221 | [261022-8da](./quick/261022-8da-apply-the-supplied-duck-icon-to-the-repl/) |
+| 261003-uwf | Simplify Develop to skills and Kehto in one viewport | 2026-10-03 | PR #222 | [261003-uwf-simplify-develop-section-to-napplet-skil](./quick/261003-uwf-simplify-develop-section-to-napplet-skil/) |
+| 261003-ukp | Split final Build section into napplet and shell paths | 2026-10-03 | PR #222 | [261003-ukp-split-final-build-section-into-napplet-a](./quick/261003-ukp-split-final-build-section-into-napplet-a/) |
+| 261003-uii | Sort NAP directory by Merged, Open PR, Draft PR | 2026-10-03 | PR #222 | [261003-uii-sort-nap-directory-by-merged-open-and-dr](./quick/261003-uii-sort-nap-directory-by-merged-open-and-dr/) |
+| 261003-tih | Render full upstream specifications on NAP detail pages | 2026-10-03 | PR #222 | [261003-tih-render-complete-upstream-nap-specificati](./quick/261003-tih-render-complete-upstream-nap-specificati/) |
+| 261003-sof | Generated protocol directory, NAP detail pages, contribution guide and daily refresh/deploy | 2026-10-03 | 9d4a1420 | [261003-sof-generated-protocol-directory-with-nap-de](./quick/261003-sof-generated-protocol-directory-with-nap-de/) |
 | 261017-jqc | Preserve extension tags and validate defined manifest fields | 2026-10-17 | 9ff56c20 / PR #256 | [261017-jqc](./quick/261017-jqc-preserve-nostr-extension-tags-in-cli-pub/) |
 | 261015-bbu | Use QuickJS and dependency pruning for released CLI binaries | 2026-10-15 | PR #249 | [261015-bbu-use-quickjs-and-dependency-pruning-for-r](./quick/261015-bbu-use-quickjs-and-dependency-pruning-for-r/) |
 | 261015-asj | Add CLI compile experiments for QuickJS, pruning, bundling, and minification | 2026-10-15 | be8e27a9 | [261015-asj-add-cli-compile-experiments-for-quickjs-](./quick/261015-asj-add-cli-compile-experiments-for-quickjs-/) |
@@ -687,6 +733,8 @@ Surfaced by research (informational — each belongs to a specific phase plan):
 
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
+| 261104-iwc | Try the next Blossom auth token after a gateway error (web#269) | 2026-11-04 | 26e2e391 | [261104-iwc](./quick/261104-iwc-fix-blossom-upload-auth-fallback-masked-/) |
+| 261031-hbe | Schedule reviewed NAP proposal metadata refreshes in PR #288 | 2026-10-31 | c72dd849 | [261031-hbe](./quick/261031-hbe-automate-daily-nap-proposal-metadata-rev/) |
 | 261010-3v2 | Add napplet.run client attribution to CLI publications | 2026-10-10 | 678fb834 | [261010-3v2](./quick/261010-3v2-add-napplet-run-client-attribution-to-cl/) |
 | 261010-3fr | Propose NIP-5D application references and link CLI screenshot metadata | 2026-10-10 | eb6b87e2 | [261010-3fr](./quick/261010-3fr-propose-application-descriptor-links-and/) |
 | 261010-gap | Close PR #228 completeness gaps: handlerHint validation, stale intent/shell docs and skills | 2026-10-10 | 82c54ed3 | [261010-gap-close-pr-228-intent-cascade-gaps](./quick/261010-gap-close-pr-228-intent-cascade-gaps/) |

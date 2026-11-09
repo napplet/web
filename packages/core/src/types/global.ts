@@ -1,5 +1,7 @@
+import type { BlossomApi } from './blossom.js';
 import type { CatalogApi } from './catalog.js';
 import type { GamepadApi } from './gamepad.js';
+import type { LlmApi } from './llm.js';
 import type { ShellApi } from './shell.js';
 import type { RelayApi, IncApi, StorageApi, KeysApi } from './global/nostr-api.js';
 
@@ -51,6 +53,10 @@ import type {
  * domain to the napplet; absence means the domain is unavailable.
  */
 export interface NappletGlobal {
+  /** Optional user-selected, runtime-mediated language model inference (NAP-LLM). */
+  llm?: LlmApi;
+  /** Optional low-level Blossom blob endpoints and server-list helpers. */
+  blossom?: BlossomApi;
   /** Optional read-only discovery of available napplets. */
   catalog?: CatalogApi;
   /** Optional shell-mediated controller input, scoped to this napplet’s focus. */
@@ -200,10 +206,9 @@ export interface NappletGlobal {
    */
   config?: ConfigApi;
   /**
-   * Browser-enforced resource fetching: napplets request bytes by URL,
-   * shell fetches and returns a Blob. The strict-CSP iframe sandbox
-   * blocks all napplet-side network access, so this is the canonical
-   * (and only) byte-fetching primitive available inside a napplet.
+   * Generic resource fetching: napplets request bytes by URL and the shell
+   * fetches and returns a Blob. For low-level Blossom endpoint operations,
+   * use the optional blossom domain.
    *
    * URL space is scheme-pluggable: shells register handlers per scheme.
    * Canonical schemes include `data:` (decoded in-shim, no round-trip),

@@ -1,37 +1,47 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { catalog, catalogGet } from '@napplet/sdk';
 import { get } from '@napplet/sdk/catalog';
 import { installNappletRuntimePrelude, renderNappletRuntimePreludeCall } from './prelude.js';
+import { installFakeShell } from '../../nap/src/test-support/fake-shell.js';
 
-function deliver(data: unknown, source: MessageEventSource | null = window.parent): void {
-  window.dispatchEvent(new MessageEvent('message', { data, source }));
+/** A window-level message, even one whose source is the parent: NIP-5D shells speak NAP only over the port. */
+function deliverAtWindowLevel(data: unknown): void {
+  window.dispatchEvent(new MessageEvent('message', { data, source: window.parent }));
 }
 
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.restoreAllMocks();
+});
+
 describe('runtime-injected CATALOG', () => {
-  it('serves SDK calls without shell or intent and rejects forged result sources', async () => {
+  it('serves SDK calls without shell or intent and accepts results only over the port', async () => {
     const snapshot = { napplets: [], handlers: [] };
-    let requestId = '';
-    const post = vi.spyOn(window.parent, 'postMessage').mockImplementation((message) => { requestId = message.id; });
-    try {
-      const installed = installNappletRuntimePrelude({ domains: ['catalog'] });
-      expect(Object.keys(installed)).toEqual(['catalog']);
-      expect(post).not.toHaveBeenCalled();
-      expect(renderNappletRuntimePreludeCall({ domains: ['catalog'] })).toContain('"domains":["catalog"]');
-      const request = catalog.get();
-      let settled = false;
-      void request.then(() => { settled = true; });
-      expect(post).toHaveBeenCalledExactlyOnceWith({ type: 'catalog.get', id: requestId }, '*');
-      deliver({ type: 'catalog.get.result', id: requestId, snapshot }, {} as MessageEventSource);
-      await Promise.resolve();
-      expect(settled).toBe(false);
-      deliver({ type: 'catalog.get.result', id: requestId, snapshot });
-      await expect(request).resolves.toEqual(snapshot);
-      post.mockImplementation((message) => deliver({ type: 'catalog.get.result', id: message.id, snapshot }));
-      await expect(get()).resolves.toEqual(snapshot);
-      await expect(catalogGet()).resolves.toEqual(snapshot);
-      installNappletRuntimePrelude({ domains: [] });
-      expect(() => catalog.get()).toThrow('catalog');
-      expect(() => get()).toThrow('catalog');
-    } finally { post.mockRestore(); }
+    const shell = installFakeShell();
+    const installed = installNappletRuntimePrelude({ domains: ['catalog'] });
+    expect(Object.keys(installed)).toEqual(['catalog']);
+    expect(shell.sent).toEqual([]);
+    expect(renderNappletRuntimePreludeCall({ domains: ['catalog'] })).toContain('"domains":["catalog"]');
+
+    const request = catalog.get();
+    expect(shell.sent).toHaveLength(1);
+    const message = shell.sent[0] as { type: string; id: string };
+    expect(message).toEqual({ type: 'catalog.get', id: expect.any(String) });
+    let settled = false;
+    void request.then(() => { settled = true; });
+    deliverAtWindowLevel({ type: 'catalog.get.result', id: message.id, snapshot });
+    await Promise.resolve();
+    expect(settled).toBe(false);
+    shell.deliver({ type: 'catalog.get.result', id: message.id, snapshot });
+    await expect(request).resolves.toEqual(snapshot);
+
+    shell.onSend((sent) => shell.deliver({ type: 'catalog.get.result', id: sent.id, snapshot }));
+    await expect(get()).resolves.toEqual(snapshot);
+    await expect(catalogGet()).resolves.toEqual(snapshot);
+    expect(shell.windowMessages).toEqual([]);
+
+    installNappletRuntimePrelude({ domains: [] });
+    expect(() => catalog.get()).toThrow('catalog');
+    expect(() => get()).toThrow('catalog');
   });
 });

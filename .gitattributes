@@ -1,0 +1,2 @@
+# Published artifacts are immutable signed bytes; never normalize or text-diff them.
+apps/web/public/showcase/blobs/*.bin binary
