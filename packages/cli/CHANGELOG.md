@@ -1,5 +1,16 @@
 # @napplet/cli
 
+## 0.14.3
+
+### Patch Changes
+
+- fd715ac: Add the transfer-only draft NAP-TORRENT contract across types, domain helpers, runtime
+  injection, SDK, manifest inference, and conformance tooling. Support full v1/v2/hybrid identities,
+  bounded verified reads, metadata export, separate file disclosure actions, cancellation,
+  revisioned settings, and retention/recovery schemas. Discovery, Nostr event conversion,
+  publishing, and comments remain outside the torrent domain. Torrent engines, consent, storage, and
+  network policy remain owned by the host runtime.
+
 ## 0.14.2
 
 ### Patch Changes

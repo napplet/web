@@ -1,6 +1,6 @@
 {
   "name": "@napplet/nap",
-  "version": "0.38.0",
+  "version": "0.39.0",
   "license": "MIT",
   "exports": {
     "./boundary": "./src/boundary.ts",
@@ -134,7 +134,7 @@
     "./soulseek/sdk": "./src/soulseek/sdk.ts"
   },
   "imports": {
-    "@napplet/core": "jsr:@napplet/core@^0.39.0",
+    "@napplet/core": "jsr:@napplet/core@^0.40.0",
     "nostr-tools/nip19": "npm:nostr-tools@^2.23.3/nip19"
   },
   "publish": {
