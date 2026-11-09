@@ -697,7 +697,6 @@ The runtime binding retains deliveries until a listener registers. Discovery can
 ### GAMEPAD integration
 
 The selected `gamepad` runtime binding installs the cached API, subscribes without SHELL readiness, validates parent state, and unsubscribes during cleanup. See the proposed [NAP-GAMEPAD](https://github.com/napplet/naps/pull/108). The native browser Gamepad API is left untouched pending clarification of the proposal’s optional replacement and NIP-5D’s namespace-only injection rule.
-
 ### `window.napplet.navigation`
 
 When both `navigation` and `intent` are selected, the runtime binding exposes `report(report)` and `get()`, routes `navigation.report.result` / `navigation.get.result`, and correlates responses arriving over the `napplet.hello` port. Runtime history remains outside the iframe binding. Expose both `navigation` and its required `intent` domain explicitly; selecting navigation never grants another domain automatically. Neither domain waits for a SHELL handshake.
@@ -725,3 +724,7 @@ Include `catalog` in the prelude or installer domain allowlist to expose `window
 ### Torrent runtime binding
 
 Select `torrent` in `installNappletGlobal({ domains: ['torrent'] })` or the equivalent runtime prelude options to expose `window.napplet.torrent`. The binding forwards all 17 operations and routes `torrent.state`, `torrent.progress`, and `torrent.error` to local listeners. Requests correlate by `id`; pushes identify jobs by `jobId`. Installing the binding does not install a torrent engine or grant permission: the host supplies policy-bound handlers, scoped jobs, storage, and user consent. See the living [NAP-TORRENT proposal](https://github.com/napplet/naps/blob/nap-torrent/naps/NAP-TORRENT.md).
+
+### Soulseek runtime binding
+
+Select `soulseek` in `installNappletGlobal({ domains: ['soulseek'] })` or the equivalent runtime prelude options to expose `window.napplet.soulseek`. The binding forwards all 14 operations, correlates each result by `id` and type, and rejects a `Failure` as a `SoulseekError` carrying the specification code. NAP-SOULSEEK defines no unsolicited messages, so nothing is pushed and no listeners exist. Installing the binding supplies no account, backend, or consent: the host provides policy-bound handlers, endpoint-scoped handles, storage, and prompts. See the living [NAP-SOULSEEK proposal](https://github.com/napplet/naps/pull/135).

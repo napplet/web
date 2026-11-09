@@ -76,14 +76,14 @@ interface RelaySubscribe extends NappletMessage {
 }
 ```
 
-The `type` field domain prefix (`relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `navigation`, `ble`, `webrtc`, `link`, `count`, `lists`, `serial`, `fs`, `common`, `dm`, `shell`, `gamepad`, `llm`, `blossom`, `catalog`, `torrent`) routes messages to the correct NAP handler via `dispatch()`.
+The `type` field domain prefix (`relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `navigation`, `ble`, `webrtc`, `link`, `count`, `lists`, `serial`, `fs`, `common`, `dm`, `shell`, `gamepad`, `llm`, `blossom`, `catalog`, `torrent`, `soulseek`) routes messages to the correct NAP handler via `dispatch()`.
 
 #### `NapDomain`
 
 String literal union of the NAP capability domains.
 
 ```ts
-type NapDomain = 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'cvm' | 'outbox' | 'upload' | 'intent' | 'navigation' | 'ble' | 'webrtc' | 'link' | 'count' | 'lists' | 'serial' | 'fs' | 'common' | 'dm' | 'shell' | 'gamepad' | 'llm' | 'blossom' | 'catalog' | 'torrent';
+type NapDomain = 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'cvm' | 'outbox' | 'upload' | 'intent' | 'navigation' | 'ble' | 'webrtc' | 'link' | 'count' | 'lists' | 'serial' | 'fs' | 'common' | 'dm' | 'shell' | 'gamepad' | 'llm' | 'blossom' | 'catalog' | 'torrent' | 'soulseek';
 ```
 
 | Domain    | Scope                                    |
@@ -113,13 +113,14 @@ type NapDomain = 'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | '
 | `dm`  | Runtime-mediated direct messages |
 | `llm` | User-selected, runtime-mediated language model inference |
 | `torrent` | Runtime-owned torrent transfers and verified content access |
+| `soulseek` | Runtime-mediated Soulseek discovery and downloads |
 
 #### `NAP_DOMAINS`
 
 Runtime constant array of all NAP domain strings. Useful for iteration and validation.
 
 ```ts
-const NAP_DOMAINS: readonly NapDomain[] = ['shell', 'relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent', 'navigation', 'ble', 'webrtc', 'link', 'count', 'lists', 'serial', 'fs', 'common', 'dm', 'gamepad', 'llm', 'blossom', 'catalog', 'torrent'];
+const NAP_DOMAINS: readonly NapDomain[] = ['shell', 'relay', 'identity', 'storage', 'inc', 'theme', 'keys', 'media', 'notify', 'config', 'resource', 'cvm', 'outbox', 'upload', 'intent', 'navigation', 'ble', 'webrtc', 'link', 'count', 'lists', 'serial', 'fs', 'common', 'dm', 'gamepad', 'llm', 'blossom', 'catalog', 'torrent', 'soulseek'];
 
 for (const domain of NAP_DOMAINS) {
   console.log(`Checking support for: ${domain}`);
@@ -442,7 +443,6 @@ The runtime binding retains deliveries until a listener registers. Discovery can
 ### GAMEPAD integration
 
 `GamepadState`, `Gamepad`, `GamepadButton`, `GamepadSlot`, `GamepadApi`, and the `gamepad` domain are exported for the proposed [NAP-GAMEPAD](https://github.com/napplet/naps/pull/108). Its fire-and-forget envelopes carry no correlation id.
-
 ### Navigation types
 
 `NapDomain` and `NAP_DOMAINS` include `navigation`; `NappletGlobal.navigation` is an optional `NavigationApi` with `report(report): Promise<NavigationResult>` and `get(): Promise<NavigationResult>`. Core exports `NavigationJsonValue`, `NavigationLocation`, `NavigationReport`, `NavigationEntry`, `NavigationView`, `NavigationError`, and `NavigationResult`. Reports describe one committed location; entries and the current index are runtime-owned result fields. `NavigationResult` distinguishes accepted results from structured rejection codes while carrying the retained view in either case.
@@ -460,3 +460,7 @@ This non-normative type guide follows the [NAP-NAVIGATION draft](https://github.
 ### Torrent types
 
 `TorrentApi`, torrent record types, and the `torrent` domain describe the optional `NappletGlobal.torrent` transfer binding. Types include v1/v2/hybrid hashes, verified read results, metadata exports, revisioned settings, and job retention; they do not import Nostr event or relay result schemas. This non-normative type guide defers to the living [NAP-TORRENT proposal](https://github.com/napplet/naps/blob/nap-torrent/naps/NAP-TORRENT.md).
+
+### Soulseek types
+
+`SoulseekApi`, the Soulseek records (`SoulseekInfo`, `SoulseekQuery`, `SoulseekFile`, `SoulseekQueryPage`, `SoulseekTransfer`, `SoulseekChunk`, `SoulseekFailure`), and the `soulseek` domain describe the optional `NappletGlobal.soulseek` binding. Byte counts are canonical decimal text and failures use the closed `SoulseekErrorCode` set. This non-normative type guide defers to the living [NAP-SOULSEEK proposal](https://github.com/napplet/naps/pull/135).

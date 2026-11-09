@@ -250,3 +250,5 @@ export type * from './types/llm.js';
 export type * from './types/blossom.js';
 export type * from './types/catalog.js';
 export type * from './types/torrent.js';
+
+export type * from './types/soulseek.js';

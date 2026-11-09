@@ -58,6 +58,8 @@ describe('@napplet/core exports', () => {
       expect(NAP_DOMAINS).toContain('catalog');
       const torrent: NapDomain = 'torrent';
       expect(NAP_DOMAINS).toContain(torrent);
+      const soulseek: NapDomain = 'soulseek';
+      expect(NAP_DOMAINS).toContain(soulseek);
     });
 
     it('NappletGlobal represents domain availability by property presence', () => {

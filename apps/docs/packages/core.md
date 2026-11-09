@@ -49,7 +49,7 @@ import {
 - **`NappletMessage`** — base interface for every message: `{ type: string }` in
   `domain.action` format. Concrete message types extend it with payload fields.
 - **`NapDomain`** — string literal union of the NAP capability domains
-  (`'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'cvm' | 'outbox' | 'upload' | 'intent' | 'navigation' | 'ble' | 'webrtc' | 'link' | 'count' | 'lists' | 'serial' | 'fs' | 'common' | 'dm' | 'shell' | 'gamepad' | 'llm' | 'blossom' | 'catalog' | 'torrent'`).
+  (`'relay' | 'identity' | 'storage' | 'inc' | 'theme' | 'keys' | 'media' | 'notify' | 'config' | 'resource' | 'cvm' | 'outbox' | 'upload' | 'intent' | 'navigation' | 'ble' | 'webrtc' | 'link' | 'count' | 'lists' | 'serial' | 'fs' | 'common' | 'dm' | 'shell' | 'gamepad' | 'llm' | 'blossom' | 'catalog' | 'torrent' | 'soulseek'`).
 - **`NappletGlobal`** — the runtime-injected `window.napplet` namespace with
   optional domain properties.
 - **`NAP_DOMAINS`** — runtime constant array of all domain strings, for iteration
@@ -181,3 +181,7 @@ The runtime binding retains deliveries until a listener registers. Discovery can
 ## Torrent types
 
 `TorrentApi` and the torrent records describe `NappletGlobal.torrent`, an optional transfer domain with v1/v2/hybrid identities, verified reads, metadata export, file actions, revisioned settings, and retention. Discovery and Nostr event schemas belong outside this domain. See the non-normative [TORRENT guide](/naps/torrent) and living [NAP-TORRENT proposal](https://github.com/napplet/naps/blob/nap-torrent/naps/NAP-TORRENT.md).
+
+## Soulseek types
+
+`SoulseekApi` and the Soulseek records describe `NappletGlobal.soulseek`, an optional domain for runtime-mediated search, peer browsing, paginated query snapshots, endpoint-owned transfers, bounded reads, saving, and release. Byte counts are canonical decimal text and failures use the closed `SoulseekErrorCode` set. See the non-normative [SOULSEEK guide](/naps/soulseek) and living [NAP-SOULSEEK proposal](https://github.com/napplet/naps/pull/135).

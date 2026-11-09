@@ -24,6 +24,10 @@ export default defineConfig({
     'torrent/shim': 'src/torrent/shim.ts',
     'torrent/sdk': 'src/torrent/sdk.ts',
 
+    'soulseek/index': 'src/soulseek/index.ts',
+    'soulseek/types': 'src/soulseek/types.ts',
+    'soulseek/shim': 'src/soulseek/shim.ts',
+    'soulseek/sdk': 'src/soulseek/sdk.ts',
     'gamepad/index': 'src/gamepad/index.ts',
     'gamepad/types': 'src/gamepad/types.ts',
     'gamepad/shim': 'src/gamepad/shim.ts',

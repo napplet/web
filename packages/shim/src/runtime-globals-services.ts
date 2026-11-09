@@ -1,6 +1,7 @@
 import * as llmShim from '@napplet/nap/llm/shim';
 import * as blossom from '@napplet/nap/blossom/shim';
 import * as torrentShim from '@napplet/nap/torrent/shim';
+import * as soulseekShim from '@napplet/nap/soulseek/shim';
 import type { NapDomain, NappletGlobal } from '@napplet/core';
 import { report as navigationReport, get as navigationGet } from '@napplet/nap/navigation/shim';
 import {
@@ -116,6 +117,24 @@ import {
 
 
 export function installServiceDomains(domains: ReadonlySet<NapDomain>, napplet: Partial<NappletGlobal>): void {
+  if (domains.has('soulseek')) {
+    napplet.soulseek = {
+      info: soulseekShim.info,
+      search: soulseekShim.search,
+      browse: soulseekShim.browse,
+      results: soulseekShim.results,
+      stop: soulseekShim.stop,
+      download: soulseekShim.download,
+      transfers: soulseekShim.transfers,
+      status: soulseekShim.status,
+      pause: soulseekShim.pause,
+      resume: soulseekShim.resume,
+      cancel: soulseekShim.cancel,
+      read: soulseekShim.read,
+      save: soulseekShim.save,
+      release: soulseekShim.release,
+    };
+  }
   if (domains.has('torrent')) {
     napplet.torrent = {
       capabilities: torrentShim.capabilities,

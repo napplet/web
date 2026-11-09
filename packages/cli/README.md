@@ -607,3 +607,7 @@ BLOSSOM capability declarations use the bare `blossom` domain in required (`R`) 
 ### Torrent capabilities
 
 Use the bare `torrent` domain in required or optional deployment metadata. A transfer-focused napplet can declare `R torrent`; an optional torrent integration uses `O torrent` and checks runtime presence. Build and deployment support do not imply that the preview shell has a torrent engine. See the living [NAP-TORRENT proposal](https://github.com/napplet/naps/blob/nap-torrent/naps/NAP-TORRENT.md).
+
+### Soulseek capabilities
+
+Use the bare `soulseek` domain in required or optional deployment metadata. A discovery-focused napplet can declare `R soulseek`; an optional integration uses `O soulseek` and checks runtime presence. Build and deployment support do not imply that the preview shell has a Soulseek account or backend. See the living [NAP-SOULSEEK proposal](https://github.com/napplet/naps/pull/135).

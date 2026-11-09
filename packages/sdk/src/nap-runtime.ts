@@ -265,3 +265,24 @@ export {
   blossomFormatUri,
 } from '@napplet/nap/blossom/sdk';
 export { DOMAIN as CATALOG_DOMAIN, installCatalogShim, catalogGet } from '@napplet/nap/catalog';
+
+export {
+  DOMAIN as SOULSEEK_DOMAIN,
+  SOULSEEK_ERROR_CODES,
+  installSoulseekShim,
+  isSoulseekFailure,
+  soulseekInfo,
+  soulseekSearch,
+  soulseekBrowse,
+  soulseekResults,
+  soulseekStop,
+  soulseekDownload,
+  soulseekTransfers,
+  soulseekStatus,
+  soulseekPause,
+  soulseekResume,
+  soulseekCancel,
+  soulseekRead,
+  soulseekSave,
+  soulseekRelease,
+} from '@napplet/nap/soulseek';

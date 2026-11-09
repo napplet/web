@@ -127,7 +127,11 @@
     "./torrent": "./src/torrent/index.ts",
     "./torrent/types": "./src/torrent/types.ts",
     "./torrent/shim": "./src/torrent/shim.ts",
-    "./torrent/sdk": "./src/torrent/sdk.ts"
+    "./torrent/sdk": "./src/torrent/sdk.ts",
+    "./soulseek": "./src/soulseek/index.ts",
+    "./soulseek/types": "./src/soulseek/types.ts",
+    "./soulseek/shim": "./src/soulseek/shim.ts",
+    "./soulseek/sdk": "./src/soulseek/sdk.ts"
   },
   "imports": {
     "@napplet/core": "jsr:@napplet/core@^0.39.0",

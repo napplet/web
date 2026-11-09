@@ -222,6 +222,13 @@ export const NAP_IMPLEMENTATIONS: Readonly<Record<NapDomain, NapImplementationMe
     rationale: "Binding, validator, and real-iframe tests run against a reference shell without a torrent engine; live transfer, seeding, and content verification behavior are unproven.",
     evidence: ["packages/nap/src/torrent/shim.test.ts", "packages/conformance/src/validators/torrent.test.ts", "packages/conformance-cli/src/browser.test.ts"],
   },
+  soulseek: {
+    proposal: { url: "https://github.com/napplet/naps/pull/135", status: "in-review", checkedAt: "2026-11-09" },
+    maturity: "exploratory",
+    rationale: "Binding, validator, and real-iframe tests run against a reference shell without a Soulseek client; live search, peer transfer, and saving behavior are unproven.",
+    evidence: ["packages/nap/src/soulseek/shim.test.ts", "packages/conformance/src/validators/soulseek.test.ts", "packages/conformance-cli/src/browser.test.ts"],
+  },
+
 };
 
 // Protect release metadata against accidental consumer mutation.

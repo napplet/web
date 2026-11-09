@@ -100,6 +100,7 @@ export const NAP_DOC_GROUPS: readonly NapDocGroup[] = [
       upload: 'File and blob upload over NIP-96 and Blossom rails.',
       blossom: 'Server-directed Blossom blob operations and ordered user server lists.',
       torrent: 'Runtime-owned torrent transfer jobs and verified file access.',
+      soulseek: 'Runtime-mediated Soulseek search, peer browsing, and downloads.',
       cvm: 'ContextVM bridge — MCP tools and resources over Nostr.',
     },
   },

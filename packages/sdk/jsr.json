@@ -9,7 +9,8 @@
     "./blossom": "./src/blossom.ts",
     "./catalog": "./src/catalog.ts",
     "./torrent": "./src/torrent.ts",
-    "./navigation": "./src/navigation.ts"
+    "./navigation": "./src/navigation.ts",
+    "./soulseek": "./src/soulseek.ts"
   },
   "imports": {
     "@napplet/core": "jsr:@napplet/core@^0.39.0",

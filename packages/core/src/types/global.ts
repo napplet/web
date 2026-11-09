@@ -4,6 +4,7 @@ import type { TorrentApi } from './torrent.js';
 import type { GamepadApi } from './gamepad.js';
 import type { NavigationApi } from './navigation.js';
 import type { LlmApi } from './llm.js';
+import type { SoulseekApi } from './soulseek.js';
 import type { ShellApi } from './shell.js';
 import type { RelayApi, IncApi, StorageApi, KeysApi } from './global/nostr-api.js';
 
@@ -63,6 +64,8 @@ export interface NappletGlobal {
   catalog?: CatalogApi;
   /** Runtime-mediated transfers and authorized content access (NAP-TORRENT). */
   torrent?: TorrentApi;
+  /** Optional runtime-mediated Soulseek discovery and downloads (NAP-SOULSEEK). */
+  soulseek?: SoulseekApi;
   /** Optional shell-mediated controller input, scoped to this napplet’s focus. */
   gamepad?: GamepadApi;
   /** Optional shell environment; other domains work without it. */

@@ -1,6 +1,6 @@
 # @napplet/nap
 
-> Every active napplet NAP domain (relay, storage, inc, keys, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent, navigation, ble, webrtc, link, count, lists, serial, fs, common, dm, shell, gamepad, llm, blossom, catalog, torrent) as layered subpath exports. The package name remains `@napplet/nap` for compatibility.
+> Every active napplet NAP domain (relay, storage, inc, keys, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent, navigation, ble, webrtc, link, count, lists, serial, fs, common, dm, shell, gamepad, llm, blossom, catalog, torrent, soulseek) as layered subpath exports. The package name remains `@napplet/nap` for compatibility.
 
 NAP proposal status and shipped implementation maturity are separate. All capabilities can change. Inspect `NAP_IMPLEMENTATIONS` from `@napplet/core` and use `selectNapDomains` for local host opt-in policy. See [maturity and opt-in guidance](https://napplet.run/docs/naps/maturity.html).
 
@@ -86,6 +86,7 @@ Each domain is an independent subpath. Barrel imports bundle types + shim instal
 | serial | `@napplet/nap/serial` | `@napplet/nap/serial/types` | `@napplet/nap/serial/shim` | `@napplet/nap/serial/sdk` | Runtime-mediated serial device access — `open`/`write`/`close`/`onEvent`; shell owns permissions, port handles, streams, and lifecycle |
 | fs | `@napplet/nap/fs` | `@napplet/nap/fs/types` | `@napplet/nap/fs/shim` | `@napplet/nap/fs/sdk` | Shell-mediated virtual filesystem access — `info`/`pickFile`/`pickFiles`/`pickDirectory`/`pickSaveFile`/`stat`/`list`/`read`/`write`/`mkdir`/`remove`/`move`/`watch`/`unwatch`/`onChanged`; runtime owns host paths, mounts, backing store, policy, and authorization. Byte payloads use standard padded base64 text on the JSON wire |
 | llm | `@napplet/nap/llm` | `@napplet/nap/llm/types` | `@napplet/nap/llm/shim` | `@napplet/nap/llm/sdk` | User-selected, runtime-mediated language model inference — `select`/`describe`/`generate`/`cancel`; generations are stateless, may stream ordered `llm.delta` text, and expose `requestId`; shell owns connections, credentials, consent, and provider access |
+| soulseek | `@napplet/nap/soulseek` | `@napplet/nap/soulseek/types` | `@napplet/nap/soulseek/shim` | `@napplet/nap/soulseek/sdk` | Runtime-mediated Soulseek discovery and downloads — `info`/`search`/`browse`/`results`/`stop`/`download`/`transfers`/`status`/`pause`/`resume`/`cancel`/`read`/`save`/`release`; shell owns the account, peers, storage, content disclosure, and saving. Byte counts are canonical decimal text |
 | dm | `@napplet/nap/dm` | `@napplet/nap/dm/types` | `@napplet/nap/dm/shim` | `@napplet/nap/dm/sdk` | Runtime-mediated direct messages — `status`/`conversations`/`messages`/`send`/`subscribe`/`unsubscribe`/`onMessage`; shell owns signing, encryption, relay routing, storage, and policy |
 | catalog | `@napplet/nap/catalog` | `@napplet/nap/catalog/types` | `@napplet/nap/catalog/shim` | `@napplet/nap/catalog/sdk` | Read-only available napplets and current handler selectors |
 | torrent | `@napplet/nap/torrent` | `@napplet/nap/torrent/types` | `@napplet/nap/torrent/shim` | `@napplet/nap/torrent/sdk` | Runtime-owned download/seed jobs, verified file reads, metadata export, settings, and job listeners |
@@ -234,7 +235,7 @@ import { mediaCreateSession } from '@napplet/nap/media/sdk';
 import type { MediaNapMessage } from '@napplet/nap/media/types';
 ```
 
-Domain barrels are also available at `@napplet/nap/relay`, `@napplet/nap/storage`, `@napplet/nap/inc`, `@napplet/nap/keys`, `@napplet/nap/theme`, `@napplet/nap/media`, `@napplet/nap/notify`, `@napplet/nap/identity`, `@napplet/nap/config`, `@napplet/nap/resource`, `@napplet/nap/cvm`, `@napplet/nap/outbox`, `@napplet/nap/upload`, `@napplet/nap/intent`, `@napplet/nap/ble`, `@napplet/nap/webrtc`, `@napplet/nap/link`, `@napplet/nap/count`, `@napplet/nap/lists`, `@napplet/nap/common`, `@napplet/nap/serial`, `@napplet/nap/fs`, `@napplet/nap/dm`, `@napplet/nap/shell`, `@napplet/nap/gamepad`, `@napplet/nap/llm`, and `@napplet/nap/catalog`.
+Domain barrels are also available at `@napplet/nap/relay`, `@napplet/nap/storage`, `@napplet/nap/inc`, `@napplet/nap/keys`, `@napplet/nap/theme`, `@napplet/nap/media`, `@napplet/nap/notify`, `@napplet/nap/identity`, `@napplet/nap/config`, `@napplet/nap/resource`, `@napplet/nap/cvm`, `@napplet/nap/outbox`, `@napplet/nap/upload`, `@napplet/nap/intent`, `@napplet/nap/ble`, `@napplet/nap/webrtc`, `@napplet/nap/link`, `@napplet/nap/count`, `@napplet/nap/lists`, `@napplet/nap/common`, `@napplet/nap/serial`, `@napplet/nap/fs`, `@napplet/nap/dm`, `@napplet/nap/shell`, `@napplet/nap/gamepad`, `@napplet/nap/llm`, `@napplet/nap/catalog`, and `@napplet/nap/soulseek`.
 
 ## Optional Peer Dependency
 
@@ -307,7 +308,6 @@ if (window.napplet?.gamepad) {
 ```
 
 Declare `gamepad` as optional (`O`) when other controls fulfill the core task. Use a hard requirement (`R`) only when the core task needs controller input. The runtime owns controller access and focus isolation; app code does not call native `navigator.getGamepads()` or open raw HID devices. Haptics and remapping are outside this proposal.
-
 ### Navigation helpers
 
 `@napplet/nap/navigation` and `@napplet/nap/navigation/sdk` export `navigationReport` and `navigationGet`, with `report` and `get` aliases. They call the injected domain; application code does not install its own binding. Runtime authors use `installNavigationShim` and `handleNavigationMessage` from `@napplet/nap/navigation/shim`. Wire types are available from `@napplet/nap/navigation/types`.
@@ -340,3 +340,7 @@ The [NAP-CATALOG draft](https://github.com/napplet/naps/pull/95) is available at
 ### Runtime-owned torrent jobs
 
 `@napplet/nap/torrent` provides the barrel, `types`, `shim`, and `sdk` subpaths for all 17 NAP-TORRENT operations. SDK helpers use the `torrent` prefix, such as `torrentAdd`, `torrentRead`, and `torrentUpdate`. `torrentOnState`, `torrentOnProgress`, and `torrentOnError` return independently closable subscriptions. A job acknowledgment does not mean a transfer completed. The runtime owns the engine and selected file bytes; `runtimeFileSetId` is an opaque handle, not a path. This non-normative guidance defers to [NAP-TORRENT](https://github.com/napplet/naps/blob/nap-torrent/naps/NAP-TORRENT.md).
+
+### Runtime-mediated Soulseek
+
+`@napplet/nap/soulseek` provides the barrel, `types`, `shim`, and `sdk` subpaths for all 14 NAP-SOULSEEK operations. SDK helpers use the `soulseek` prefix, such as `soulseekSearch`, `soulseekResults`, and `soulseekRead`; `isSoulseekFailure` recognizes rejections that carry a specification error code, and `SOULSEEK_ERROR_CODES` lists the closed set. Search and browse acknowledgments mean admission, not completion; `download` admits a transfer against a frozen file handle the runtime issued. Handles are endpoint-scoped and never survive a reload. This non-normative guidance defers to the living [NAP-SOULSEEK proposal](https://github.com/napplet/naps/pull/135).

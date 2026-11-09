@@ -38,6 +38,7 @@ const NAP_DOMAINS = [
   'llm',
   'catalog',
   'torrent',
+  'soulseek',
 ] as const;
 
 const NAP_DOMAIN_SET = new Set<string>(NAP_DOMAINS);
