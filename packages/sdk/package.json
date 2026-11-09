@@ -15,6 +15,10 @@
       "types": "./dist/gamepad.d.ts",
       "import": "./dist/gamepad.js"
     },
+    "./navigation": {
+      "types": "./dist/navigation.d.ts",
+      "import": "./dist/navigation.js"
+    },
     "./llm": {
       "types": "./dist/llm.d.ts",
       "import": "./dist/llm.js"

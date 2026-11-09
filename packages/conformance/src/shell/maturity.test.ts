@@ -20,7 +20,7 @@ describe('host domain policy', () => {
     const shell = createReferenceShell({ domains });
     domains.push('llm');
     expect(shell.handleFrom({ ...REFERENCE_ENDPOINT, domains: ['llm'] }, request)).toEqual([]);
-    expect(shell.handleFrom({ ...REFERENCE_ENDPOINT, domains: [] }, { type: 'storage.get', id: 'read', key: 'theme' })).toEqual([]);
+    expect(shell.handleFrom({ ...REFERENCE_ENDPOINT, id: 'no-grants', domains: [] }, { type: 'storage.get', id: 'read', key: 'theme' })).toEqual([]);
   });
 
   it('permits an explicitly selected experiment and preserves all-domain conformance fixtures', () => {

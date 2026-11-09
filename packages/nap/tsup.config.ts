@@ -2,6 +2,10 @@ import { defineConfig } from 'tsup';
 
 export default defineConfig({
   entry: {
+    'navigation/index': 'src/navigation/index.ts',
+    'navigation/types': 'src/navigation/types.ts',
+    'navigation/shim': 'src/navigation/shim.ts',
+    'navigation/sdk': 'src/navigation/sdk.ts',
     boundary: 'src/boundary.ts',
     'llm/index': 'src/llm/index.ts',
     'llm/types': 'src/llm/types.ts',

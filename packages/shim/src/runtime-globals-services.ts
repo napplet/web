@@ -2,6 +2,7 @@ import * as llmShim from '@napplet/nap/llm/shim';
 import * as blossom from '@napplet/nap/blossom/shim';
 import * as torrentShim from '@napplet/nap/torrent/shim';
 import type { NapDomain, NappletGlobal } from '@napplet/core';
+import { report as navigationReport, get as navigationGet } from '@napplet/nap/navigation/shim';
 import {
   info as resourceInfo,
   bytes as resourceBytes,
@@ -147,9 +148,28 @@ export function installServiceDomains(domains: ReadonlySet<NapDomain>, napplet: 
       cancel: llmShim.cancel,
     };
   }
+  installIntentDomains(domains, napplet);
   installNetworkDomains(domains, napplet);
   installDeviceDomains(domains, napplet);
   installFilesystemDomains(domains, napplet);
+}
+
+function installIntentDomains(domains: ReadonlySet<NapDomain>, napplet: Partial<NappletGlobal>): void {
+  if (domains.has('intent')) {
+    napplet.intent = {
+      invoke: intentInvoke,
+      open: intentOpen,
+      available: intentAvailable,
+      handlers: intentHandlers,
+      onChanged: intentOnChanged,
+      onDelivery: intentOnDelivery,
+    };
+  }
+
+  // NAP-NAVIGATION's required layering dependency never grants another domain.
+  if (domains.has('navigation') && domains.has('intent')) {
+    napplet.navigation = { report: navigationReport, get: navigationGet };
+  }
 }
 
 function installNetworkDomains(domains: ReadonlySet<NapDomain>, napplet: Partial<NappletGlobal>): void {
@@ -217,17 +237,6 @@ function installNetworkDomains(domains: ReadonlySet<NapDomain>, napplet: Partial
       upload: uploadUpload,
       status: uploadStatusFn,
       onStatus: uploadOnStatus,
-    };
-  }
-
-  if (domains.has('intent')) {
-    napplet.intent = {
-      invoke: intentInvoke,
-      open: intentOpen,
-      available: intentAvailable,
-      handlers: intentHandlers,
-      onChanged: intentOnChanged,
-      onDelivery: intentOnDelivery,
     };
   }
 

@@ -28,7 +28,8 @@ Top-level namespaced objects that mirror `window.napplet`:
 - **`dm`** — shell-mediated encrypted direct-message helpers
 - **`relay`** — low-level explicit relay proxy; use only for relay-local escape hatches
 - **`inc`** — `emit`, `on` (plus deprecated `ifc*` migration aliases)
-- **`intent`** — `invoke`, `open`, `available`, `handlers`, `onChanged`
+- **`intent`** — `invoke`, `open`, `available`, `handlers`, `onChanged`, `onDelivery`
+- **`navigation`** — `report`, `get` (runtime-owned history; requires INTENT)
 - **`storage`** — `getItem`, `setItem`, `removeItem`, `keys`, plus `storage.instance.*` (per-instance scope)
 - **`keys`** — `registerAction`, `unregisterAction`, `onAction`
 - **`media`** — `createSession`, `reportState`, `onCommand`, …
@@ -106,7 +107,7 @@ const result = await intent.open('napplet:profile/open', { payload: { pubkey: 'a
 if (!result.ok) throw new Error(result.error);
 ```
 
-Intent calls derive archetype and action from the URI. An `ok: true` result means the runtime accepted delivery responsibility and includes the normalized identity and handler catalog identifier; an `ok: false` result includes `error`. Targets receive runtime-attested `IntentDelivery` values through `onDelivery`, including deliveries retained before registration. Behavior hints are `focus` and `reuse`. This non-normative guidance defers to the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md).
+Intent calls derive archetype and action from the URI. An `ok: true` result means the runtime accepted delivery responsibility and includes the normalized identity and handler catalog identifier; an `ok: false` result includes `error`. Targets receive runtime-attested `IntentDelivery` values through `onDelivery`, including deliveries retained before registration. Each delivery has a runtime-assigned `id`; `sender` is the source catalog identifier, or `null` for a shell-originated request. These fields follow the [NAP-INTENT delivery draft](https://github.com/napplet/naps/pull/128). Behavior hints are `focus` and `reuse`. This non-normative guidance defers to the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md).
 
 These APIs defer to the living [NAP-INC](https://github.com/napplet/naps/blob/master/naps/NAP-INC.md) and [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md) documents.
 
@@ -149,8 +150,8 @@ The runtime may expose `shell` for environment information. `shell.supports(doma
 ```ts
 import { intent } from '@napplet/sdk';
 
-intent.onDelivery(({ sender, convention, payload }) => {
-  console.log(sender, convention, payload);
+intent.onDelivery(({ id, sender, convention, payload }) => {
+  console.log(id, sender, convention, payload);
 });
 await intent.invoke('napplet:profile/open?pubkey=abc123');
 ```
@@ -203,6 +204,10 @@ if (window.napplet?.llm) {
 ```
 
 Selection does not authorize disclosure: the runtime obtains consent before each generation and may answer `user-cancelled`. Only `finish: "stop"` is complete output. Tool calls are requests the napplet validates and executes itself, if at all, through separately authorized capabilities; the runtime never executes them, and tool results re-enter the conversation as untrusted input. Handles are endpoint-scoped and expire when the connection, account, or endpoint changes. The runtime owns connections, credentials, consent, and provider access; model output is untrusted data.
+
+## Navigation history
+
+The `navigation` object is exported by the root and `@napplet/sdk/navigation`. Call `navigation.report(report)` or `navigation.get()`; both return a structured `NavigationResult`. Named `navigationReport` / `navigationGet` helpers are also available, with `report` / `get` aliases on the subpath. This non-normative guidance targets the [NAP-NAVIGATION draft](https://github.com/napplet/naps/pull/126) and [NAP-INTENT delivery draft](https://github.com/napplet/naps/pull/128). See [Navigation](/naps/navigation) for runtime availability, manifest declarations, serialized reporting, and recovery.
 
 ## Blossom blob access
 

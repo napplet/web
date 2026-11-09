@@ -87,6 +87,7 @@ export const NAP_DOC_GROUPS: readonly NapDocGroup[] = [
     domains: {
       inc: 'Topic-based publish/subscribe between running napplets.',
       intent: 'URI-addressed intents routed to a handler napplet.',
+      navigation: 'Runtime-maintained history of committed intent locations.',
       catalog: 'Read-only discovery of available napplets and their handler selectors.',
     },
   },

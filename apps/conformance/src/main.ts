@@ -170,7 +170,7 @@ async function run(target: string): Promise<void> {
     resolved = await resolveTarget(target);
     const forbidden = FORBIDDEN_RE.test(resolved.html) ? ['window.nostr'] : [];
     setStatus('Booting napplet in a sandboxed iframe …');
-    const boot = await bootAndCollect({ url: resolved.bootUrl, html: resolved.html, readyTimeoutMs: 5000, settleMs: 800, runDegraded: true, runtimePreludeSource });
+    const boot = await bootAndCollect({ url: resolved.bootUrl, html: resolved.html, verifiedManifest: resolved.manifestEvent ?? undefined, readyTimeoutMs: 5000, settleMs: 800, runDegraded: true, runtimePreludeSource });
     const ctx = buildContext({
       manifestHtml: resolved.html,
       manifestEvent: resolved.manifestEvent,

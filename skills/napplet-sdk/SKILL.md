@@ -9,7 +9,7 @@ Napplet implementation code is **SDK-first**: import typed wrappers from `@nappl
 
 ## Domains shipped by the current packages
 
-`shell`, `relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `ble`, `webrtc`, `link`, `count`, `lists`, `serial`, `fs`, `common`, `dm`, `gamepad`, `llm`, `blossom`, `catalog`, `torrent`.
+`shell`, `relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `navigation`, `ble`, `webrtc`, `link`, `count`, `lists`, `serial`, `fs`, `common`, `dm`, `gamepad`, `llm`, `blossom`, `catalog`, `torrent`.
 
 `ifc` is a deprecated INC alias. If a NAP is not in this list, do not implement against it even when a spec PR exists — flag the package/spec gap. `shell` is optional environment information only (see below); there is no `discoverServices()` or `hasService()`, and no domain waits on `shell.ready()`. A missing optional domain simply means "unavailable for this load".
 
@@ -28,6 +28,7 @@ Napplet implementation code is **SDK-first**: import typed wrappers from `@nappl
 | Open an external URL under shell policy | `link` |
 | Discover available napplets and current handler selectors | `catalog` (read-only) |
 | Talk to other napplets | `inc`, `intent` (see `napplet-interop`) |
+| Report committed views for shell Back/Forward history | `navigation` with `intent` |
 | User-configurable settings | `config` |
 | Match host colors/fonts | `theme` |
 | Shortcuts, forwarded keys, action keybindings | `keys` |
@@ -248,6 +249,10 @@ if (window.napplet?.llm) {
 ```
 
 Selection does not authorize disclosure: the runtime obtains consent before each generation and may answer `user-cancelled`. Only `finish: "stop"` is complete output. Tool calls are requests the napplet validates and executes itself, if at all, through separately authorized capabilities; the runtime never executes them, and tool results re-enter the conversation as untrusted input. Handles are endpoint-scoped and expire when the connection, account, or endpoint changes. The runtime owns connections, credentials, consent, and provider access; model output is untrusted data.
+
+## Navigation history
+
+This non-normative guidance targets the [NAP-NAVIGATION draft](https://github.com/napplet/naps/pull/126) and [NAP-INTENT delivery draft](https://github.com/napplet/naps/pull/128). Import `navigation` from `@napplet/sdk/navigation` (or the SDK root). Guard both `window.napplet?.navigation` and `window.napplet?.intent`; declare both domains as optional when history is an enhancement. `navigation.report(report)` reports the initial and each subsequent committed view; `navigation.get()` returns the runtime's retained view. Reports contain a monotonically increasing positive `revision` and `location` (an advertised queryless convention plus a JSON payload map using advertised parameter names, or `null`). Serialize transitions and reports; include the responsible intent `delivery.id` as `deliveryId`, never a global last-delivered ID. Inspect `result.ok` and `result.error.code`; recovery uses a newer report of actual state. Only an identical retry reuses a revision. History lists, indices, visit IDs, listeners, and traversal outcomes are not caller controls. Native routing APIs do not report history automatically. See `napplet-interop` for intent correlation.
 
 ## Blossom
 

@@ -10,6 +10,7 @@ import {
   type ReferenceEndpoint,
 } from './reference-responses.js';
 import type { IntentHandlers } from './reference-intents.js';
+import type { ReferenceNavigation } from './reference-navigation.js';
 
 /** One recorded napplet envelope and its validation verdict. */
 export interface RecordedEnvelope {
@@ -27,6 +28,7 @@ export interface ReferenceHandlerOptions {
   domains?: readonly string[];
   queueDelivery(target: string, delivery: unknown): void;
   intents: IntentHandlers;
+  navigation: ReferenceNavigation;
   catalog(endpoint: ReferenceEndpoint): CatalogSnapshot;
   intentResolver: boolean;
 }
@@ -42,6 +44,14 @@ export function createReferenceHandler(options: ReferenceHandlerOptions) {
     const verdict = validateEnvelope(envelope);
     options.records.push({ envelope, verdict, timestamp: options.now() });
 
+    if (type === 'navigation.report' || type === 'navigation.get') {
+      const env = envelope as Record<string, unknown>;
+      if (typeof env.id !== 'string' || !env.id) return [];
+      const result = type === 'navigation.report'
+        ? options.navigation.report(endpoint.id, env.report)
+        : options.navigation.get(endpoint.id);
+      return ok({ type: `${type}.result`, id: env.id, result });
+    }
     if (!type) return [];
     const candidates = (endpoint.domains ?? NAP_DOMAINS).filter(domain => domain !== 'intent' || options.intentResolver);
     const domains = hostDomains ? candidates.filter(domain => hostDomains.has(domain)) : candidates;

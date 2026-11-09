@@ -1,6 +1,6 @@
 # @napplet/nap
 
-> Every active napplet NAP domain (relay, storage, inc, keys, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent, ble, webrtc, link, count, lists, serial, fs, common, dm, shell, gamepad, llm, blossom, catalog, torrent) as layered subpath exports. The package name remains `@napplet/nap` for compatibility.
+> Every active napplet NAP domain (relay, storage, inc, keys, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent, navigation, ble, webrtc, link, count, lists, serial, fs, common, dm, shell, gamepad, llm, blossom, catalog, torrent) as layered subpath exports. The package name remains `@napplet/nap` for compatibility.
 
 NAP proposal status and shipped implementation maturity are separate. All capabilities can change. Inspect `NAP_IMPLEMENTATIONS` from `@napplet/core` and use `selectNapDomains` for local host opt-in policy. See [maturity and opt-in guidance](https://napplet.run/docs/naps/maturity.html).
 
@@ -76,6 +76,7 @@ Each domain is an independent subpath. Barrel imports bundle types + shim instal
 | blossom | `@napplet/nap/blossom` | `@napplet/nap/blossom/types` | `@napplet/nap/blossom/shim` | `@napplet/nap/blossom/sdk` | Server-directed Blossom blob operations, BUD-03 server lists and local BUD-10 URI helpers |
 | upload | `@napplet/nap/upload` | `@napplet/nap/upload/types` | `@napplet/nap/upload/shim` | `@napplet/nap/upload/sdk` | Shell-mediated file/blob upload — `info`/`upload`/`status`/`onStatus` over NIP-96 + Blossom rails; shell signs auth, returns NIP-94 metadata |
 | intent | `@napplet/nap/intent` | `@napplet/nap/intent/types` | `@napplet/nap/intent/shim` | `@napplet/nap/intent/sdk` | Archetype intent dispatch — `invoke`/`open`/`available`/`handlers`/`onChanged`; invoke another napplet by role, shell resolves the default handler |
+| navigation | `@napplet/nap/navigation` | `@napplet/nap/navigation/types` | `@napplet/nap/navigation/shim` | `@napplet/nap/navigation/sdk` | Report committed intent locations and read runtime-owned instance history; requires INTENT |
 | ble | `@napplet/nap/ble` | `@napplet/nap/ble/types` | `@napplet/nap/ble/shim` | `@napplet/nap/ble/sdk` | Runtime-mediated Bluetooth LE/GATT sessions — `open`/`services`/`read`/`write`/`subscribe`/`unsubscribe`/`close`/`onEvent`; shell owns chooser UI, permissions, device handles, and lifecycle |
 | webrtc | `@napplet/nap/webrtc` | `@napplet/nap/webrtc/types` | `@napplet/nap/webrtc/shim` | `@napplet/nap/webrtc/sdk` | Runtime-mediated WebRTC data sessions — `open`/`send`/`close`/`onEvent`; shell owns signaling, SDP, ICE, and peer-connection lifecycle |
 | link | `@napplet/nap/link` | `@napplet/nap/link/types` | `@napplet/nap/link/shim` | `@napplet/nap/link/sdk` | Shell-mediated external link opening — `open(url, options?)`; shell owns navigation, policy, prompting, and opener isolation |
@@ -112,7 +113,7 @@ const result = await intentOpen('napplet:profile/open', { payload: { pubkey: 'ab
 if (!result.ok) throw new Error(result.error);
 ```
 
-Intent calls derive archetype and action from the URI. An `ok: true` result means the runtime accepted delivery responsibility and includes the normalized identity and handler catalog identifier; an `ok: false` result includes `error`. Targets receive runtime-attested `IntentDelivery` values through `onDelivery`, including deliveries retained before registration. Behavior hints are `focus` and `reuse`. This non-normative guidance defers to the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md).
+Intent calls derive archetype and action from the URI. An `ok: true` result means the runtime accepted delivery responsibility and includes the normalized identity and handler catalog identifier; an `ok: false` result includes `error`. Targets receive runtime-attested `IntentDelivery` values through `onDelivery`, including deliveries retained before registration. Each delivery has a runtime-assigned `id`; `sender` is the source catalog identifier, or `null` for a shell-originated request. These fields follow the [NAP-INTENT delivery draft](https://github.com/napplet/naps/pull/128). Behavior hints are `focus` and `reuse`. This non-normative guidance defers to the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md).
 
 NAP-INC topics use the same opaque-string boundary. Use the current advisory open names such as `napplet:note/open`, `napplet:profile/open`, and `napplet:dm/open` when they fit the receiving napplet's documented local choice.
 
@@ -279,8 +280,8 @@ The runtime may expose `shell` for environment information. `shell.supports(doma
 ```ts
 import { intent } from '@napplet/sdk';
 
-intent.onDelivery(({ sender, convention, payload }) => {
-  console.log(sender, convention, payload);
+intent.onDelivery(({ id, sender, convention, payload }) => {
+  console.log(id, sender, convention, payload);
 });
 await intent.invoke('napplet:profile/open?pubkey=abc123');
 ```
@@ -306,6 +307,24 @@ if (window.napplet?.gamepad) {
 ```
 
 Declare `gamepad` as optional (`O`) when other controls fulfill the core task. Use a hard requirement (`R`) only when the core task needs controller input. The runtime owns controller access and focus isolation; app code does not call native `navigator.getGamepads()` or open raw HID devices. Haptics and remapping are outside this proposal.
+
+### Navigation helpers
+
+`@napplet/nap/navigation` and `@napplet/nap/navigation/sdk` export `navigationReport` and `navigationGet`, with `report` and `get` aliases. They call the injected domain; application code does not install its own binding. Runtime authors use `installNavigationShim` and `handleNavigationMessage` from `@napplet/nap/navigation/shim`. Wire types are available from `@napplet/nap/navigation/types`.
+
+```ts
+import { report, get } from '@napplet/nap/navigation/sdk';
+
+if (window.napplet?.navigation && window.napplet?.intent) {
+  const result = await report({ revision: 1, location: null });
+  if (!result.ok) console.error(result.error.code);
+  const latest = await get();
+  console.log(latest.view.status);
+}
+```
+
+This non-normative example follows the [NAP-NAVIGATION draft](https://github.com/napplet/naps/pull/126) and [NAP-INTENT delivery draft](https://github.com/napplet/naps/pull/128). Use a fresh increasing revision for each new committed-state report, including recovery after rejection. Reuse a revision only to retry identical report content. Read the [navigation guide](../../apps/docs/naps/navigation.md) before connecting a router.
+
 ### Language model inference
 
 `@napplet/nap/llm` provides the barrel, `types`, `shim`, and `sdk` subpaths for the four NAP-LLM operations. SDK helpers use the `llm` prefix (`llmSelect`, `llmDescribe`, `llmGenerate`, `llmCancel`); `isLlmFailure` recognizes rejections that carry a specification error code, and `LLM_ERROR_CODES` lists the known codes; `llmText` concatenates a generation's text parts and `llmToolCalls` returns tool calls only from a `toolUse` result. `generate` exposes the generation's `requestId`, delivers ordered block-lifecycle deltas to an `onDelta` listener, and maps an abort signal to `llm.cancel`; the generation still settles through its own result. Selection does not authorize disclosure, and handles are endpoint-scoped. This non-normative guidance defers to the living [NAP-LLM proposal](https://github.com/napplet/naps/pull/134).

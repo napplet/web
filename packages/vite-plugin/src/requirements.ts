@@ -24,6 +24,7 @@ const NAP_DOMAINS = [
   'upload',
   'blossom',
   'intent',
+  'navigation',
   'ble',
   'webrtc',
   'link',

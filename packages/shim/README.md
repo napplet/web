@@ -231,6 +231,8 @@ Messages are posted to the shell through `@napplet/core`'s clone-safe `sendEnvel
 { type: 'inc.unsubscribe', topic: string }
 
 { type: 'intent.invoke', id: string, request: { archetype: string, action: string, convention: string, payload?: unknown } }
+{ type: 'navigation.report', id: string, report: NavigationReport }
+{ type: 'navigation.get', id: string }
 
 { type: 'storage.get', id: string, key: string, scope?: 'shared' | 'instance' }
 { type: 'storage.set', id: string, key: string, value: string, scope?: 'shared' | 'instance' }
@@ -299,6 +301,9 @@ Messages received via `window.addEventListener('message', ...)`:
 { type: 'inc.channel.opened', channelId: string, peer: string }
 
 { type: 'intent.invoke.result', id: string, result: { ok: true, archetype: string, action: string, convention: string, handler: string } | { ok: false, error: string } }
+{ type: 'intent.deliver', delivery: IntentDelivery } // delivery.id; sender: string | null
+{ type: 'navigation.report.result', id: string, result: NavigationResult }
+{ type: 'navigation.get.result', id: string, result: NavigationResult }
 
 { type: 'storage.get.result', id: string, value?: string | null, error?: string }
 { type: 'storage.set.result', id: string, error?: string }
@@ -369,6 +374,11 @@ window.napplet = {
     available(archetype): Promise<IntentAvailability>;
     handlers(): Promise<IntentAvailability[]>;
     onChanged(callback): { close(): void };
+    onDelivery(callback): { close(): void };
+  },
+  navigation: {
+    report(report: NavigationReport): Promise<NavigationResult>;
+    get(): Promise<NavigationResult>;
   },
   storage: {
     getItem(key): Promise<string | null>;
@@ -495,7 +505,7 @@ const result = await window.napplet.intent.open('napplet:profile/open', { payloa
 if (!result.ok) throw new Error(result.error);
 ```
 
-Intent calls derive archetype and action from the URI. An `ok: true` result means the runtime accepted delivery responsibility and includes the normalized identity and handler catalog identifier; an `ok: false` result includes `error`. Targets receive runtime-attested `IntentDelivery` values through `onDelivery`, including deliveries retained before registration. Behavior hints are `focus` and `reuse`. This non-normative guidance defers to the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md).
+Intent calls derive archetype and action from the URI. An `ok: true` result means the runtime accepted delivery responsibility and includes the normalized identity and handler catalog identifier; an `ok: false` result includes `error`. Targets receive runtime-attested `IntentDelivery` values through `onDelivery`, including deliveries retained before registration. Each delivery has a runtime-assigned `id`; `sender` is the source catalog identifier, or `null` for a shell-originated request. These fields follow the [NAP-INTENT delivery draft](https://github.com/napplet/naps/pull/128). Behavior hints are `focus` and `reuse`. This non-normative guidance defers to the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md).
 
 ### `window.napplet.storage`
 
@@ -676,8 +686,8 @@ The runtime may expose `shell` for environment information. `shell.supports(doma
 ```ts
 import { intent } from '@napplet/sdk';
 
-intent.onDelivery(({ sender, convention, payload }) => {
-  console.log(sender, convention, payload);
+intent.onDelivery(({ id, sender, convention, payload }) => {
+  console.log(id, sender, convention, payload);
 });
 await intent.invoke('napplet:profile/open?pubkey=abc123');
 ```
@@ -687,6 +697,19 @@ The runtime binding retains deliveries until a listener registers. Discovery can
 ### GAMEPAD integration
 
 The selected `gamepad` runtime binding installs the cached API, subscribes without SHELL readiness, validates parent state, and unsubscribes during cleanup. See the proposed [NAP-GAMEPAD](https://github.com/napplet/naps/pull/108). The native browser Gamepad API is left untouched pending clarification of the proposal’s optional replacement and NIP-5D’s namespace-only injection rule.
+
+### `window.napplet.navigation`
+
+When both `navigation` and `intent` are selected, the runtime binding exposes `report(report)` and `get()`, routes `navigation.report.result` / `navigation.get.result`, and correlates responses arriving over the `napplet.hello` port. Runtime history remains outside the iframe binding. Expose both `navigation` and its required `intent` domain explicitly; selecting navigation never grants another domain automatically. Neither domain waits for a SHELL handshake.
+
+```ts
+import { installNappletRuntimePrelude } from '@napplet/shim/prelude';
+
+installNappletRuntimePrelude({ domains: ['intent', 'navigation'] });
+```
+
+Application code consumes this namespace through the SDK. The binding does not intercept native History API calls, assign report revisions, or invent a navigation listener. This non-normative guide follows the [NAP-NAVIGATION draft](https://github.com/napplet/naps/pull/126) and [NAP-INTENT delivery draft](https://github.com/napplet/naps/pull/128); the [navigation guide](../../apps/docs/naps/navigation.md) covers committed reports and delivery correlation.
+
 ### LLM runtime binding
 
 Select `llm` in `installNappletGlobal({ domains: ['llm'] })` or the equivalent runtime prelude options to expose `window.napplet.llm`. The binding forwards `select`, `describe`, `generate`, and `cancel`, correlates each result by `id` and type, routes `llm.delta` only to the generation that owns its `requestId`, drops deltas that do not match the Delta schema (`start` / `delta` / `end` events, `text` only on `delta`, `toolCallId` and `name` only on a `toolCall` start), stops provisional delivery on a sequence gap, rejects an `Error` record as an `LlmError` carrying the specification code, and maps an abort signal to `llm.cancel`. Installing the binding supplies no connection, consent, or provider: the host provides policy-bound handlers, endpoint-scoped handles, and prompts. See the living [NAP-LLM proposal](https://github.com/napplet/naps/pull/134).

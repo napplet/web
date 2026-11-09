@@ -20,7 +20,7 @@ These release-time labels describe our shipped implementation, separately from u
 
 ## Core domain union
 
-[`@napplet/core`](/packages/core) exports a `NapDomain` string union for the foundational domains — `shell`, `relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `ble`, `webrtc`, `link`, `count`, `lists`, `serial`, `fs`, `common`, `dm`, `gamepad`, `llm`, `blossom`, `catalog`, `torrent` — used as the discriminant for envelope routing and domain presence.
+[`@napplet/core`](/packages/core) exports a `NapDomain` string union for the foundational domains — `shell`, `relay`, `identity`, `storage`, `inc`, `theme`, `keys`, `media`, `notify`, `config`, `resource`, `cvm`, `outbox`, `upload`, `intent`, `navigation`, `ble`, `webrtc`, `link`, `count`, `lists`, `serial`, `fs`, `common`, `dm`, `gamepad`, `llm`, `blossom`, `catalog`, `torrent` — used as the discriminant for envelope routing and domain presence.
 
 ## Where to go next
 

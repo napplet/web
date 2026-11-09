@@ -3,6 +3,7 @@ import { installBlossomShim, handleBlossomMessage } from '@napplet/nap/blossom/s
 import { installCatalogShim, handleCatalogMessage } from '@napplet/nap/catalog/shim';
 import { installTorrentShim, handleTorrentMessage } from '@napplet/nap/torrent/shim';
 import { installGamepadShim, handleGamepadMessage } from '@napplet/nap/gamepad/shim';
+import { installNavigationShim, handleNavigationMessage } from '@napplet/nap/navigation/shim';
 import { handleShellMessage, installShellShim } from '@napplet/nap/shell/shim';
 import {
   NAP_DOMAINS,
@@ -118,6 +119,7 @@ const DOMAIN_ROUTERS: ReadonlyArray<readonly [string, DomainHandler]> = [
   ['outbox.', handleOutboxMessage],
   ['upload.', handleUploadMessage],
   ['intent.', handleIntentMessage],
+  ['navigation.', handleNavigationMessage],
   ['inc.', handleIncMessage],
   ['ble.', handleBleMessage],
   ['webrtc.', handleWebrtcMessage],
@@ -171,6 +173,7 @@ const DOMAIN_SHIM_INSTALLERS: Readonly<Record<NapDomain, () => void>> = {
   outbox: () => { installOutboxShim(); },
   upload: () => { installUploadShim(); },
   intent: () => { installIntentShim(); },
+  navigation: () => { installNavigationShim(); },
   ble: () => { installBleShim(); },
   webrtc: () => { installWebrtcShim(); },
   link: () => { installLinkShim(); },

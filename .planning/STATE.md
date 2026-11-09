@@ -65,7 +65,7 @@ Branch `feat/cli-terminal-usability` ships guided missing-value recovery, `-i` p
 Phase: 164 (cli-terminal-usability) — verified and shipped
 Plan: 3 of 3
 Status: [PR #248](https://github.com/napplet/web/pull/248) open with six actual terminal screenshots
-Last activity: 2026-11-04 - Completed quick task 261104-iwc: Blossom upload auth fallback survives gateway errors (web#269)
+Last activity: 2026-11-04 - Completed quick task 261104-kdn: merged main into PR #280 and resolved its conflicts
 
 See phase 163 VERIFICATION.md and COVERAGE.md for evidence and disclosed release/specification/baseline limits. Earlier phase and quick-task records below are historical.
 
@@ -415,7 +415,7 @@ Status: M1+M2+M3+M4 COMPLETE. Final gate green: build(11), type-check(14), test:
 - NOTE FOR USER: README on main already had a `v0.32.0 — Read-Only NAP-IDENTITY` changelog entry (pre-existing) that collides with this milestone's v0.32.0 label. Left it untouched; added conformance additively. Milestone version label may need reconciliation (this work could be v0.33.0). Surfaced in PR.
 - NOTE: aislop's 1 error = vite (high, upgrade 6.4.3+) + 1 warn = js-yaml — both environmental dependency advisories, not introduced here; out of scope (separate dep-bump like v0.31.0).
 
-Last activity: 2026-11-04 - Completed quick task 261104-iwc: Blossom upload auth fallback survives gateway errors (web#269)
+Last activity: 2026-11-04 - Completed quick task 261104-kdn: merged main into PR #280 and resolved its conflicts
 
 ### Phase 150 record (CLI-01..06) — COMPLETE (b7a7f7e)
 
@@ -591,6 +591,7 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 | 261031-er3 | Require runtimePreludeSource and delete the conformance fallback runtime fixture | 2026-10-31 | e68eddc4 | [261031-er3](./quick/261031-er3-require-runtimepreludesource-and-delete-/) |
 | 261030-ppe | Add NAP-BLOSSOM across packages and docs | 2026-10-30 | d4147798 / PR #276 | [261030-ppe](./quick/261030-ppe-add-nap-blossom-support/) |
 | 261030-pog | Add NAP-CATALOG across packages and docs | 2026-10-30 | b1933bd0 / PR #275 | [261030-pog](./quick/261030-pog-add-nap-catalog-support-across-relevant-/) |
+| 261030-pnj | Add draft NAP-NAVIGATION and correlated INTENT delivery support | 2026-10-30 | 88cf543f / PR #280 | [261030-pnj](./quick/261030-pnj-add-nap-navigation-across-relevant-packa/) |
 | 261030-9r6 | Chase NIP-5D presentation media and source pin tags | 2026-10-30 | 0bae4ebe / PR #272 | [261030-9r6](./quick/261030-9r6-chase-nip-5d-presentation-media-and-sour/) |
 | 261030-jgm | App store: manifest media, listing fallback, applesauce discovery, infinite scroll | 2026-10-30 | 9ac7d606 / PR #221 | [261030-jgm](./quick/261030-jgm-improve-the-apps-directory-with-nip-5d-m/) |
 | 261030-ixc | Tell each homepage section's story with GSAP and a three.js frame field | 2026-10-30 | e2c9fb0b / PR #221 | [261030-ixc](./quick/261030-ixc-tell-each-splash-section-s-story-with-gs/) |
@@ -733,6 +734,7 @@ Surfaced by research (informational — each belongs to a specific phase plan):
 
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
+| 261104-kdn | Merge main into PR #280 (NAP-NAVIGATION) and resolve conflicts | 2026-11-04 | 5d7d2116 | [261104-kdn](./quick/261104-kdn-resolve-pr-280-merge-conflicts-with-main/) |
 | 261104-iwc | Try the next Blossom auth token after a gateway error (web#269) | 2026-11-04 | 26e2e391 | [261104-iwc](./quick/261104-iwc-fix-blossom-upload-auth-fallback-masked-/) |
 | 261031-hbe | Schedule reviewed NAP proposal metadata refreshes in PR #288 | 2026-10-31 | c72dd849 | [261031-hbe](./quick/261031-hbe-automate-daily-nap-proposal-metadata-rev/) |
 | 261010-3v2 | Add napplet.run client attribution to CLI publications | 2026-10-10 | 678fb834 | [261010-3v2](./quick/261010-3v2-add-napplet-run-client-attribution-to-cl/) |

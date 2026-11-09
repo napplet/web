@@ -244,6 +244,7 @@ export {
 export type { ShellApi, ShellCapabilities, ShellEnvironment } from './types/shell.js';
 
 export type * from './types/gamepad.js';
+export type * from './types/navigation.js';
 
 export type * from './types/llm.js';
 export type * from './types/blossom.js';
