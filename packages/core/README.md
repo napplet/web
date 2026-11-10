@@ -139,7 +139,7 @@ if (window.napplet?.relay) {
 
 #### `IntentApi`
 
-Intent calls derive archetype and action from the URI. An `ok: true` result means the runtime accepted delivery responsibility and includes the normalized identity and handler catalog identifier; an `ok: false` result includes `error`. Targets receive runtime-attested `IntentDelivery` values through `onDelivery`, including deliveries retained before registration. Each delivery has a runtime-assigned `id`; `sender` is the source catalog identifier, or `null` for a shell-originated request. These fields follow the [NAP-INTENT delivery draft](https://github.com/napplet/naps/pull/128). Behavior hints are `focus` and `reuse`. This non-normative guidance defers to the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md).
+Intent calls derive archetype and action from the URI. An `ok: true` result means the runtime accepted delivery responsibility and includes the normalized identity and handler catalog identifier; an `ok: false` result includes `error`. Targets receive runtime-attested `IntentDelivery` values through `onDelivery`, including deliveries retained before registration. `sender` is the runtime-attested source catalog identifier. A shell replay to a selected instance is an ordinary delivery whose `sender` is the target's own catalog identifier. Deliveries carry no `id`. This follows the [NAP-INTENT selected-instance delivery draft](https://github.com/napplet/naps/pull/128). Behavior hints are `focus` and `reuse`. This non-normative guidance defers to the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md).
 
 ```ts
 const result = await window.napplet.intent?.open('napplet:profile/open', { payload: { pubkey: 'abc123' }, behavior: { reuse: false } });
@@ -150,7 +150,7 @@ if (result?.ok) {
 }
 ```
 
-Intent calls derive archetype and action from the URI. An `ok: true` result means the runtime accepted delivery responsibility and includes the normalized identity and handler catalog identifier; an `ok: false` result includes `error`. Targets receive runtime-attested `IntentDelivery` values through `onDelivery`, including deliveries retained before registration. Each delivery has a runtime-assigned `id`; `sender` is the source catalog identifier, or `null` for a shell-originated request. These fields follow the [NAP-INTENT delivery draft](https://github.com/napplet/naps/pull/128). Behavior hints are `focus` and `reuse`. This non-normative guidance defers to the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md).
+Intent calls derive archetype and action from the URI. An `ok: true` result means the runtime accepted delivery responsibility and includes the normalized identity and handler catalog identifier; an `ok: false` result includes `error`. Targets receive runtime-attested `IntentDelivery` values through `onDelivery`, including deliveries retained before registration. `sender` is the runtime-attested source catalog identifier. A shell replay to a selected instance is an ordinary delivery whose `sender` is the target's own catalog identifier. Deliveries carry no `id`. This follows the [NAP-INTENT selected-instance delivery draft](https://github.com/napplet/naps/pull/128). Behavior hints are `focus` and `reuse`. This non-normative guidance defers to the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md).
 
 ---
 
@@ -447,7 +447,7 @@ The runtime binding retains deliveries until a listener registers. Discovery can
 
 `NapDomain` and `NAP_DOMAINS` include `navigation`; `NappletGlobal.navigation` is an optional `NavigationApi` with `report(report): Promise<NavigationResult>` and `get(): Promise<NavigationResult>`. Core exports `NavigationJsonValue`, `NavigationLocation`, `NavigationReport`, `NavigationEntry`, `NavigationView`, `NavigationError`, and `NavigationResult`. Reports describe one committed location; entries and the current index are runtime-owned result fields. `NavigationResult` distinguishes accepted results from structured rejection codes while carrying the retained view in either case.
 
-This non-normative type guide follows the [NAP-NAVIGATION draft](https://github.com/napplet/naps/pull/126) and [NAP-INTENT delivery draft](https://github.com/napplet/naps/pull/128). `IntentDelivery.id` identifies one delivery to a live endpoint; `sender: null` denotes a shell request. Neither field grants authority or proves completion.
+This non-normative type guide follows the [NAP-NAVIGATION draft](https://github.com/napplet/naps/pull/126) and [NAP-INTENT delivery draft](https://github.com/napplet/naps/pull/128). `IntentDelivery` has no `id`, and `sender` is always a catalog identifier; a history revisit arrives as an ordinary delivery whose `sender` is the target's own. `sender` grants no authority and a delivery doesn't prove completion.
 
 ### LLM types
 

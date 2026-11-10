@@ -301,7 +301,7 @@ Messages received via `window.addEventListener('message', ...)`:
 { type: 'inc.channel.opened', channelId: string, peer: string }
 
 { type: 'intent.invoke.result', id: string, result: { ok: true, archetype: string, action: string, convention: string, handler: string } | { ok: false, error: string } }
-{ type: 'intent.deliver', delivery: IntentDelivery } // delivery.id; sender: string | null
+{ type: 'intent.deliver', delivery: IntentDelivery } // sender: string; no delivery id
 { type: 'navigation.report.result', id: string, result: NavigationResult }
 { type: 'navigation.get.result', id: string, result: NavigationResult }
 
@@ -505,7 +505,7 @@ const result = await window.napplet.intent.open('napplet:profile/open', { payloa
 if (!result.ok) throw new Error(result.error);
 ```
 
-Intent calls derive archetype and action from the URI. An `ok: true` result means the runtime accepted delivery responsibility and includes the normalized identity and handler catalog identifier; an `ok: false` result includes `error`. Targets receive runtime-attested `IntentDelivery` values through `onDelivery`, including deliveries retained before registration. Each delivery has a runtime-assigned `id`; `sender` is the source catalog identifier, or `null` for a shell-originated request. These fields follow the [NAP-INTENT delivery draft](https://github.com/napplet/naps/pull/128). Behavior hints are `focus` and `reuse`. This non-normative guidance defers to the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md).
+Intent calls derive archetype and action from the URI. An `ok: true` result means the runtime accepted delivery responsibility and includes the normalized identity and handler catalog identifier; an `ok: false` result includes `error`. Targets receive runtime-attested `IntentDelivery` values through `onDelivery`, including deliveries retained before registration. `sender` is the runtime-attested source catalog identifier. A shell replay to a selected instance is an ordinary delivery whose `sender` is the target's own catalog identifier. Deliveries carry no `id`. This follows the [NAP-INTENT selected-instance delivery draft](https://github.com/napplet/naps/pull/128). Behavior hints are `focus` and `reuse`. This non-normative guidance defers to the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md).
 
 ### `window.napplet.storage`
 

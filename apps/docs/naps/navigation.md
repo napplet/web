@@ -37,14 +37,10 @@ import type { NavigationLocation, NavigationReport } from '@napplet/core';
 
 let revision = 0; // Keep this counter for the entire instance lifetime.
 
-async function reportCommitted(location: NavigationLocation | null, deliveryId?: string) {
-  const details = {
-    revision: ++revision,
-    ...(deliveryId === undefined ? {} : { deliveryId }),
-  };
+async function reportCommitted(location: NavigationLocation | null) {
   const report: NavigationReport = location === null
-    ? { ...details, location: null }
-    : { ...details, location };
+    ? { revision: ++revision, location: null }
+    : { revision: ++revision, location };
   const result = await navigation.report(report);
   if (!result.ok) {
     // Repair the report from actual state, then submit a newer revision.
@@ -69,11 +65,11 @@ Use `mode: 'replace'` on a non-null report to update the selected visit without 
 
 ## Handle a history revisit
 
-Use `intent.onDelivery` and the normal payload validation and navigation guard. The target receives a runtime-assigned delivery `id`, separate from request-envelope IDs and visit IDs. `sender` is a catalog identifier for another napplet, or `null` for a shell-originated request. Neither value grants authority or proves the payload is safe.
+Use `intent.onDelivery` and the normal payload validation and navigation guard. A revisit is an ordinary delivery: no `id`, no history fields, and `sender` set to your own catalog identifier. Handle it like any other delivery; `sender` grants no authority and doesn't prove the payload is safe. You don't need to know whether it was Back, Forward, or a menu selection.
 
-Keep the delivery object attached to its own serialized transition. After that transition commits, pass `delivery.id` to `reportCommitted(actualLocation, delivery.id)`. Do not store a global "last delivery" value: unrelated or delayed work could then claim the wrong transition. No navigation fields belong in the convention payload.
+After the transition commits, call `reportCommitted(actualLocation)` as for any other navigation. No navigation fields belong in the convention payload.
 
-A matching correlated report selects the exact existing visit and preserves forward history, even when multiple visits have equal invocation values. A redirect reports the actual resulting location. If a guard declines, it may reaffirm the unchanged location using a newer `replace` report without the declined delivery ID. Cancel superseded asynchronous transitions where possible; if a late transition commits, report its actual state. A settled old delivery cannot retroactively select its earlier visit.
+The runtime settles the revisit with the first accepted report above the revision it recorded at dispatch. If that report matches the selected entry, the runtime selects that exact visit and preserves forward history, even when several visits have equal invocation values. A redirect reports the actual resulting location. If a guard declines, it may reaffirm the unchanged location with a newer `replace` report. Cancel superseded asynchronous transitions where possible; if a late transition commits, report its actual state. A settled old delivery cannot retroactively select its earlier visit.
 
 ## Read and recover
 
