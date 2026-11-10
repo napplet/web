@@ -98,10 +98,8 @@ export type IntentResult = {
 
 /** Runtime-attested delivery, independent of the source's lifecycle. */
 export interface IntentDelivery {
-  /** Runtime-assigned logical delivery id, scoped to the target endpoint lifetime. */
-  id: string;
-  /** Runtime-attested source catalog identifier, or null for shell-originated delivery. */
-  sender: string | null;
+  /** Runtime-attested source catalog identifier; a selected-instance replay carries the target's own. */
+  sender: string;
   archetype: string;
   action: string;
   convention: string;

@@ -37,8 +37,7 @@ export function usableRevision(value: unknown): value is number {
 export function navigationReportError(value: unknown): string | undefined {
   if (!isRecord(value)) return 'report must be a map';
   if (!usableRevision(value.revision)) return 'revision must be a positive integer';
-  if (Object.keys(value).some((key) => !['revision', 'location', 'mode', 'deliveryId'].includes(key))) return 'unsupported report field';
-  if ('deliveryId' in value && (typeof value.deliveryId !== 'string' || !value.deliveryId)) return 'deliveryId must be non-empty text';
+  if (Object.keys(value).some((key) => !['revision', 'location', 'mode'].includes(key))) return 'unsupported report field';
   try {
     if (!isJson(value)) return 'report must contain only JSON values';
   } catch {

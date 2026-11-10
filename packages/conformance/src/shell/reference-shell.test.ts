@@ -95,7 +95,7 @@ describe('createReferenceShell — record + respond', () => {
     ]);
     expect(shell.takeDeliveries(REFERENCE_HANDLER)).toEqual([{
       type: 'intent.deliver',
-      delivery: { id: expect.any(String), sender: 'source-at-acceptance', archetype: 'note', action: 'open', convention: 'napplet:note/open', payload: { event: 'abc123' } },
+      delivery: { sender: 'source-at-acceptance', archetype: 'note', action: 'open', convention: 'napplet:note/open', payload: { event: 'abc123' } },
     }]);
   });
 

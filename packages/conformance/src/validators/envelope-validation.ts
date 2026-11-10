@@ -61,7 +61,7 @@ function validateIntentInvokeRequest(request: unknown, errors: EnvelopeError[]):
   }
   if (intent.handlerHint !== undefined) validateIntentHandlerHint(intent.handlerHint, errors);
 
-  for (const field of ['sender', 'id', 'deliveryId', 'instance', 'instanceId', 'endpointId']) {
+  for (const field of ['sender', 'id', 'instance', 'instanceId', 'endpointId']) {
     if (field in intent) {
       errors.push({
         code: 'forbidden-field',

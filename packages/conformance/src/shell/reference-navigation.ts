@@ -3,7 +3,7 @@ import type { IntentRequest, NavigationError, NavigationResult, NavigationView }
 import { equalJson, isNavigationReport, isRecord, navigationReportError, usableRevision } from '../validators/navigation.js';
 import type { EndpointRegistry } from './reference-endpoints.js';
 import type { IntentHandlers } from './reference-intents.js';
-import { emptyView, nextView, pruneView, settle, uncertain, type NavigationState } from './navigation-state.js';
+import { emptyView, nextView, pruneView, settle, uncertain, type NavigationState, type PendingVisit } from './navigation-state.js';
 
 /** Reference retention and traversal policy; these defaults are not protocol limits. */
 export interface ReferenceNavigationOptions {
@@ -45,7 +45,6 @@ export function createReferenceNavigation(endpoints: EndpointRegistry, intents: 
     if (!isNavigationReport(value)) return reject(state, 'invalid', navigationReportError(value)!);
     const bound = endpoints.get(id);
     if (!bound || !endpoints.hasDomain(id, 'navigation') || !endpoints.hasDomain(id, 'intent') || options.canReport?.(id) === false) return reject(state, 'denied', 'navigation unavailable or denied');
-    if (value.deliveryId && !bound.deliveries.has(value.deliveryId)) return reject(state, 'invalid', 'unknown delivery identifier');
     if (value.location) {
       const location = value.location;
       const names = Object.keys(location.payload ?? {});
@@ -69,12 +68,15 @@ export function createReferenceNavigation(endpoints: EndpointRegistry, intents: 
     const location = state.view.entries[index].location;
     const match = /^napplet:([^/?#]+)\/([^/?#]+)$/.exec(location.convention)!;
     const request: IntentRequest = { archetype: match[1], action: match[2], convention: location.convention, ...('payload' in location ? { payload: location.payload } : {}) };
-    const delivery = intents.deliver(id, request);
+    const delivery = intents.replay(id, request);
     if (!delivery) return reject(state, 'denied', 'target cannot receive the intent', false);
     state.view.status = 'pending';
-    const timer = setTimeout(() => { if (state.pending?.deliveryId === delivery.id) uncertain(state); }, timeoutMs);
-    state.pending = { deliveryId: delivery.id, entryId, deadline: now() + timeoutMs, timer };
-    intents.emit(id, delivery);
+    const pending: PendingVisit = {
+      entryId, revision: state.highestRevision, envelope: undefined, deadline: now() + timeoutMs,
+      timer: setTimeout(() => { if (state.pending === pending) uncertain(state); }, timeoutMs),
+    };
+    state.pending = pending;
+    pending.envelope = intents.emit(id, delivery);
     return result(state);
   }
   return {
@@ -86,10 +88,13 @@ export function createReferenceNavigation(endpoints: EndpointRegistry, intents: 
     },
     view(id: string): NavigationView { return structuredClone(stateFor(id).view); },
     prune(id: string, keepIds: readonly string[]): NavigationView { return pruneView(stateFor(id), keepIds); },
-    deliveryFailed(id: string, deliveryId: string, definite: boolean): void {
+    /** End the pending revisit after a failed dispatch; returns its queued envelope, if any. */
+    deliveryFailed(id: string, definite: boolean): unknown {
       const state = states.get(id);
-      if (!state || state.pending?.deliveryId !== deliveryId) return;
+      const envelope = state?.pending?.envelope;
+      if (!state?.pending) return undefined;
       if (definite) { settle(state); state.view.status = 'current'; } else uncertain(state);
+      return envelope;
     },
     terminate(id: string): void { const state = states.get(id); if (state) settle(state); states.delete(id); },
     clearPending(): void { for (const state of states.values()) if (state.pending) uncertain(state); },
