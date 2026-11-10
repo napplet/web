@@ -243,9 +243,6 @@ importers:
 
   packages/conformance-cli:
     dependencies:
-      '@kehto/paja':
-        specifier: '>=0.21.0 <0.22.0'
-        version: 0.21.0(@napplet/core@packages+core)(@napplet/nap@packages+nap)(nostr-tools@2.23.3(typescript@5.9.3))
       '@napplet/conformance':
         specifier: workspace:^
         version: link:../conformance
@@ -265,6 +262,9 @@ importers:
         specifier: ^1.59.1
         version: 1.61.0
     devDependencies:
+      '@kehto/paja':
+        specifier: '>=0.21.0 <0.22.0'
+        version: 0.21.0(@napplet/core@packages+core)(@napplet/nap@packages+nap)(nostr-tools@2.23.3(typescript@5.9.3))
       '@napplet/conformance-web':
         specifier: workspace:*
         version: link:../../apps/conformance

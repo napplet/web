@@ -3,8 +3,31 @@ import { createServer } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { readFile, realpath } from 'node:fs/promises';
 import { dirname, resolve, sep } from 'node:path';
-import { startPajaServer } from '@kehto/paja';
 import { sendFile, setCors } from './static.js';
+
+type StartPajaServer = typeof import('@kehto/paja').startPajaServer;
+
+/**
+ * Load Paja on demand. It is an optional peer so installing this CLI never
+ * drags in a second core/NAP generation (napplet/web#324); only local
+ * screenshot previews need it.
+ * @param load Module loader; tests substitute a failing one.
+ * @returns Paja's server entry point.
+ * @example const start = await loadPaja();
+ */
+export async function loadPaja(
+  load: () => Promise<{ startPajaServer: StartPajaServer }> = () => import('@kehto/paja'),
+): Promise<StartPajaServer> {
+  try {
+    return (await load()).startPajaServer;
+  } catch (error) {
+    if ((error as { code?: string }).code !== 'ERR_MODULE_NOT_FOUND') throw error;
+    throw new Error(
+      'Local screenshot previews need the optional peer @kehto/paja. Install a release whose peers accept your @napplet/core and @napplet/nap versions, or pass a preview URL instead of a directory.',
+      { cause: error },
+    );
+  }
+}
 
 /**
  * Host a built artifact in Paja on ephemeral loopback ports.
@@ -13,6 +36,7 @@ import { sendFile, setCors } from './static.js';
  * @example const preview = await startScreenshotPreview('/project/dist/index.html');
  */
 export async function startScreenshotPreview(artifact: string): Promise<{ url: string; close(): Promise<void> }> {
+  const startPajaServer = await loadPaja();
   const index = await realpath(artifact);
   const root = dirname(index);
   const html = await readFile(index);

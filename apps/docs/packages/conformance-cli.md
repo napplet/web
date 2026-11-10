@@ -57,7 +57,7 @@ source edits rebuild and re-check automatically.
 
 The browser runner also supports `npx @napplet/conformance-cli@0.3.3 screenshot [directory|preview-url] --output preview.png`, exposed as `napplet screenshot` by the standalone CLI. See [screenshots and application metadata](./cli.md#screenshots-and-zapstore-metadata) for browser setup, iframe selection, and publication options.
 
-Conformance CLI 0.3.4 requires the published Paja 0.21.x line for GAMEPAD screenshots and compatibility with core/NAP 0.34.0. Paja 0.20.x is excluded because its peer range does not accept those core/NAP versions. Publish this package after its core/NAP dependencies; the standalone CLI runner update follows conformance CLI publication.
+`@kehto/paja` is an optional peer dependency. Conformance runs and `screenshot <preview-url>` don't use it, so installing the CLI never brings in a second, older core/NAP generation for Paja. Local previews (`screenshot` with a directory or a built `index.html`) need it. Install a Paja release whose peer range accepts the `@napplet/core` and `@napplet/nap` versions this CLI pins, or pass a preview URL. Until a Paja release accepts core 0.40 and NAP 0.39 ([kehto/web#416](https://github.com/kehto/web/issues/416)), pass a preview URL from a compatible shell. The standalone `napplet screenshot` command provisions its own pinned runner and is unaffected. Publish this package after its core/NAP dependencies; the standalone CLI runner update follows conformance CLI publication.
 
 ## Signed manifests and runtime bindings
 

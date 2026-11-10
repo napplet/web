@@ -65,13 +65,13 @@ Exit codes: `0` conformant, `1` non-conformant, `2` usage/runtime error.
 
 ## Capture a preview screenshot
 
-The CLI also provides the browser runner for `napplet screenshot`. Run `npx @napplet/conformance-cli@0.3.3 screenshot --output preview.png` from a built project; it prefers `dist/index.html` and starts a temporary Kehto Paja preview automatically. Supply a project directory or an HTTP(S) shell URL to override the target. Use `--selector` to select one iframe, `--ready-selector` to wait for an element inside it, and `--width`, `--height`, or `--delay` to adjust the default 1200 × 750 capture after 1500 ms. Existing output files are preserved. Chromium is installed automatically on first use. Local previews use Paja's development identity and live relays, and close after capture or failure.
+The CLI also provides the browser runner for `napplet screenshot`. Run `npx @napplet/conformance-cli@0.3.3 screenshot --output preview.png` from a built project; it prefers `dist/index.html` and starts a temporary Kehto Paja preview automatically when the optional `@kehto/paja` peer is installed (see below). Supply a project directory or an HTTP(S) shell URL to override the target. Use `--selector` to select one iframe, `--ready-selector` to wait for an element inside it, and `--width`, `--height`, or `--delay` to adjust the default 1200 × 750 capture after 1500 ms. Existing output files are preserved. Chromium is installed automatically on first use. Local previews use Paja's development identity and live relays, and close after capture or failure.
 
 ### GAMEPAD integration
 
 Controller artifacts use the engine’s GAMEPAD envelope validation and injected cached API. The reference mock reports unavailable controllers; validate live focus isolation in a compatible runtime. See the proposed [NAP-GAMEPAD](https://github.com/napplet/naps/pull/108).
 
-Conformance CLI 0.3.4 requires the published Paja 0.21.x line for GAMEPAD screenshots and compatibility with core/NAP 0.34.0. Paja 0.20.x is excluded because its peer range does not accept those core/NAP versions. Publish this package after its core/NAP dependencies; the standalone CLI runner update follows conformance CLI publication.
+`@kehto/paja` is an optional peer dependency. Conformance runs and `screenshot <preview-url>` don't use it, so installing the CLI never brings in a second, older core/NAP generation for Paja. Local previews (`screenshot` with a directory or a built `index.html`) need it. Install a Paja release whose peer range accepts the `@napplet/core` and `@napplet/nap` versions this CLI pins, or pass a preview URL. Until a Paja release accepts core 0.40 and NAP 0.39 ([kehto/web#416](https://github.com/kehto/web/issues/416)), pass a preview URL from a compatible shell. The standalone `napplet screenshot` command provisions its own pinned runner and is unaffected. Publish this package after its core/NAP dependencies; the standalone CLI runner update follows conformance CLI publication.
 
 ## Signed manifests and runtime bindings
 

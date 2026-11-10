@@ -14,7 +14,6 @@
     "access": "public"
   },
   "dependencies": {
-    "@kehto/paja": ">=0.21.0 <0.22.0",
     "@napplet/conformance": "workspace:^",
     "@napplet/core": "workspace:*",
     "@napplet/nap": "workspace:*",
@@ -22,7 +21,16 @@
     "nostr-tools": "^2.23.3",
     "playwright": "^1.59.1"
   },
+  "peerDependencies": {
+    "@kehto/paja": ">=0.21.0"
+  },
+  "peerDependenciesMeta": {
+    "@kehto/paja": {
+      "optional": true
+    }
+  },
   "devDependencies": {
+    "@kehto/paja": ">=0.21.0 <0.22.0",
     "@napplet/conformance-web": "workspace:*",
     "@types/node": "^22.15.0",
     "tsup": "^8.5.0",
