@@ -2,7 +2,8 @@
 import type { NavigationEntry, NavigationLocation, NavigationReport, NavigationView } from '@napplet/core';
 import { equalJson } from '../validators/navigation.js';
 
-export interface PendingVisit { deliveryId: string; entryId: string; deadline: number; timer: ReturnType<typeof setTimeout> }
+/** A dispatched revisit; the first accepted report above `revision` settles it (NAP-NAVIGATION #126). */
+export interface PendingVisit { entryId: string; revision: number; envelope: unknown; deadline: number; timer: ReturnType<typeof setTimeout> }
 export interface NavigationState {
   view: NavigationView;
   highestRevision: number;
@@ -29,8 +30,8 @@ export function sameInvocation(left: NavigationLocation, right: NavigationLocati
 export function nextView(state: NavigationState, report: NavigationReport, newId: () => string): NavigationView {
   const entries: NavigationEntry[] = structuredClone(state.view.entries);
   let index = state.view.index;
-  const target = state.pending && report.deliveryId === state.pending.deliveryId
-    ? entries.findIndex((entry) => entry.id === state.pending!.entryId) : -1;
+  const pending = state.pending && report.revision > state.pending.revision ? state.pending : undefined;
+  const target = pending ? entries.findIndex((entry) => entry.id === pending.entryId) : -1;
   if (report.location === null) index = null;
   else if (target >= 0 && sameInvocation(report.location, entries[target].location)) {
     index = target;

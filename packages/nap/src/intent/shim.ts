@@ -70,8 +70,7 @@ function isIntentResult(value: unknown): value is IntentResult {
 function isIntentDelivery(value: unknown): value is IntentDelivery {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) return false;
   const delivery = value as Record<string, unknown>;
-  if (typeof delivery.id !== 'string' || !delivery.id) return false;
-  if (delivery.sender !== null && typeof delivery.sender !== 'string') return false;
+  if (typeof delivery.sender !== 'string' || !delivery.sender) return false;
   const match = typeof delivery.convention === 'string' ? /^napplet:([^/?#]+)\/([^/?#]+)$/.exec(delivery.convention) : null;
   return !!match && match[1] === delivery.archetype && match[2] === delivery.action;
 }

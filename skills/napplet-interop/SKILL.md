@@ -82,13 +82,13 @@ intent dispatch: <none | invoke/open request + how acceptance and onDelivery dri
 - Subscribing to a queried topic (`inc.on('napplet:profile/open?pubkey=…')`) — never matches; subscribe to the queryless identity.
 - Treating a topic as a schema (`if (topic.endsWith('/open')) payload.pubkey…`) — validate the payload itself.
 - Adding `inc` or `intent` to manifest `requires` for an optional handoff — gate on `window.napplet?.inc` / `?.intent` and hide the affordance when absent.
-- Assigning delivery identifiers in napplet code or inventing acknowledgement lifecycles and version negotiation. The runtime assigns `IntentDelivery.id` under the [delivery draft](https://github.com/napplet/naps/pull/128); the invoking napplet receives acceptance, not a completion receipt.
+- Inventing delivery identifiers, acknowledgement lifecycles or version negotiation. `IntentDelivery` has no `id` under the [delivery draft](https://github.com/napplet/naps/pull/128); the invoking napplet receives acceptance, not a completion receipt.
 
 ## NAP-NAVIGATION — report committed views
 
-The [NAP-NAVIGATION draft](https://github.com/napplet/naps/pull/126) depends on the [NAP-INTENT delivery draft](https://github.com/napplet/naps/pull/128). A delivery carries runtime-assigned `id`; `sender` is an authenticated source catalog ID or `null` for shell-originated delivery. The ID is endpoint-scoped correlation, not authority. When that delivery causes a committed transition, report its ID as `deliveryId` through `navigation.report`. Keep it attached to that transition's serialized work, never global "last intent" state or payload fields.
+The [NAP-NAVIGATION draft](https://github.com/napplet/naps/pull/126) depends on the [NAP-INTENT delivery draft](https://github.com/napplet/naps/pull/128). A delivery has no `id`; `sender` is always an authenticated catalog ID, and a history revisit carries the target's own. When a delivery causes a committed transition, report the actual location through `navigation.report` like any other navigation. Never add history fields to the payload.
 
-Advertise each retained convention and its parameter names. Report only one committed `location`, not an index or history list; use `null` for a view that cannot be represented. The runtime chooses the exact retained visit for Back/Forward, including duplicate invocations. A guard that declines may reaffirm unchanged state with a newer `replace` report without the declined delivery ID. Handle redirects and late commits by reporting actual state. New reports always advance revision, including after rejection; retries preserve revision and content. Do not replay irreversible actions as history locations.
+Advertise each retained convention and its parameter names. Report only one committed `location`, not an index or history list; use `null` for a view that cannot be represented. The runtime chooses the exact retained visit for Back/Forward, including duplicate invocations. A guard that declines may reaffirm unchanged state with a newer `replace` report. Handle redirects and late commits by reporting actual state. New reports always advance revision, including after rejection; retries preserve revision and content. Do not replay irreversible actions as history locations.
 
 ## Catalog discovery
 

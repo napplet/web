@@ -19,8 +19,6 @@ export interface NavigationLocation {
 export type NavigationReport = {
   /** Positive increasing revision; identical retries reuse their revision. */
   revision: number;
-  /** Intent delivery responsible for this transition, omitted for local changes. */
-  deliveryId?: string;
 } & ({ location: NavigationLocation; mode?: 'push' | 'replace' } | { location: null; mode?: never });
 
 /** One runtime-assigned visit, including repeated visits to the same location. */

@@ -8,9 +8,12 @@ export interface IntentHandlers {
   handleInvoke(endpoint: ReferenceEndpoint, env: Record<string, unknown>): unknown[];
   availability(archetype: unknown): IntentAvailability;
   handlers(): IntentAvailability[];
-  deliver(endpointId: string, request: IntentRequest, sender?: string | null): IntentDelivery | undefined;
-  emit(endpointId: string, delivery: IntentDelivery): void;
-  retry(endpointId: string, deliveryId: string): boolean;
+  /** Build an ordinary delivery to one live endpoint; `sender` is the runtime-attested source. */
+  deliver(endpointId: string, request: IntentRequest, sender: string): IntentDelivery | undefined;
+  /** Selected-instance replay: the sender is the target's own catalog identifier. */
+  replay(endpointId: string, request: IntentRequest): IntentDelivery | undefined;
+  /** Queue an `intent.deliver` push and return the queued envelope. */
+  emit(endpointId: string, delivery: IntentDelivery): unknown;
   currentHandler(archetype: string): string | null;
 }
 
@@ -27,27 +30,27 @@ export function createIntentHandlers(
 ): IntentHandlers {
   const availability = (archetype: unknown): IntentAvailability =>
     catalogAvailability(manifests, String(archetype), defaults[String(archetype)]);
-  const emit = (target: string, delivery: IntentDelivery): void => queueDelivery(target, { type: 'intent.deliver', delivery: structuredClone(delivery) });
-  const deliver = (target: string, request: IntentRequest, sender: string | null = null): IntentDelivery | undefined => {
+  const emit = (target: string, delivery: IntentDelivery): unknown => {
+    const envelope = { type: 'intent.deliver', delivery: structuredClone(delivery) };
+    queueDelivery(target, envelope);
+    return envelope;
+  };
+  const deliver = (target: string, request: IntentRequest, sender: string): IntentDelivery | undefined => {
     const bound = endpoints.get(target);
     if (!bound || !endpoints.hasDomain(target, 'intent')) return undefined;
     const match = /^napplet:([^/?#]+)\/([^/?#]+)$/.exec(request.convention);
     if (!match || match[1] !== request.archetype || match[2] !== request.action) return undefined;
     if (!bound.contracts.some((contract) => contract.convention === request.convention)) return undefined;
-    return endpoints.issue(target, {
+    if (!sender) return undefined;
+    return structuredClone({
       sender, archetype: request.archetype, action: request.action, convention: request.convention,
       ...('payload' in request ? { payload: request.payload } : {}),
     });
   };
   return {
     availability, deliver, emit,
+    replay: (target, request) => deliver(target, request, endpoints.get(target)?.endpoint.catalogId ?? ''),
     currentHandler: archetype => implicitCandidate(availability(archetype).candidates)?.id ?? null,
-    retry(target, id) {
-      const delivery = endpoints.get(target)?.deliveries.get(id);
-      if (!delivery || !endpoints.hasDomain(target, 'intent')) return false;
-      emit(target, delivery);
-      return true;
-    },
     handlers: () => [...new Set(manifests.flatMap((manifest) => manifest.tags.filter((tag) => tag[0] === 'z').map((tag) => tag[1])))].map(availability),
     handleInvoke(endpoint, env) {
       const request = env.request as IntentRequest;

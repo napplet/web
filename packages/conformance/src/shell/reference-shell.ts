@@ -66,10 +66,8 @@ export interface ReferenceShell {
   takeDeliveries(target: string): unknown[];
   /** Bind already authenticated endpoint metadata; a terminated id cannot be reused. */
   registerEndpoint(endpoint: ReferenceEndpoint): boolean;
-  /** Deliver a normalized shell intent to this live endpoint only. */
+  /** Replay a normalized invocation the endpoint produced to that live endpoint only; `sender` is its own catalog identifier. */
   deliverIntent(endpointId: string, request: IntentRequest): IntentDelivery | undefined;
-  /** Retry an issued logical delivery without changing its id or content. */
-  retryIntent(endpointId: string, deliveryId: string): boolean;
   /** Request a retained visit; this is shell control, not a wire operation. */
   revisit(endpointId: string, entryId: string): NavigationResult;
   /** Read runtime history for shell UI. */
@@ -77,7 +75,7 @@ export interface ReferenceShell {
   /** Retain selected visits under shell policy, explicitly clearing removed positions. */
   pruneNavigation(endpointId: string, keepIds: readonly string[]): NavigationView;
   /** Resolve a failed dispatch; definite means no delivery could have occurred. */
-  failNavigationDelivery(endpointId: string, deliveryId: string, definite?: boolean): void;
+  failNavigationDelivery(endpointId: string, definite?: boolean): void;
   /** End live authority and discard retained deliveries and history. */
   terminateEndpoint(endpointId: string): void;
   /** Clear recorded envelopes. */
@@ -124,17 +122,16 @@ export function createReferenceShell(options: ReferenceShellOptions = {}): Refer
     takeDeliveries: deliveries.take,
     registerEndpoint: (endpoint) => !!endpoints.register(endpoint),
     deliverIntent(endpointId, request) {
-      const delivery = intents.deliver(endpointId, request);
+      const delivery = intents.replay(endpointId, request);
       if (delivery) intents.emit(endpointId, delivery);
       return delivery;
     },
-    retryIntent: intents.retry,
     revisit: navigation.revisit,
     navigationView: navigation.view,
     pruneNavigation: navigation.prune,
-    failNavigationDelivery(endpointId, deliveryId, definite = false) {
-      deliveries.remove(endpointId, deliveryId);
-      navigation.deliveryFailed(endpointId, deliveryId, definite);
+    failNavigationDelivery(endpointId, definite = false) {
+      const envelope = navigation.deliveryFailed(endpointId, definite);
+      if (envelope) deliveries.remove(endpointId, envelope);
     },
     terminateEndpoint(endpointId) {
       endpoints.terminate(endpointId);
@@ -163,9 +160,9 @@ function createDeliveryQueue() {
       queues.delete(target);
       return queue;
     },
-    remove(target: string, deliveryId: string): void {
+    remove(target: string, envelope: unknown): void {
       const queue = queues.get(target);
-      if (queue) queues.set(target, queue.filter((envelope) => (envelope as { delivery?: { id?: string } }).delivery?.id !== deliveryId));
+      if (queue) queues.set(target, queue.filter((item) => item !== envelope));
     },
     clear(): void {
       queues.clear();

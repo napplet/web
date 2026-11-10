@@ -24,7 +24,7 @@ describe('runtime-owned navigation history', () => {
     expect(second.view.entries[0].id).toBe(first.view.entries[0].id);
     expect(second.view.entries[1].id).not.toBe(first.view.entries[0].id);
   });
-  it('selects the exact retained visit only after a correlated report', () => {
+  it('selects the exact retained visit when the next report reaches it', () => {
     const shell = fixture();
     const first = report(shell, 1);
     report(shell, 2, location('bob'));
@@ -32,8 +32,8 @@ describe('runtime-owned navigation history', () => {
     expect(result.ok).toBe(true);
     expect(shell.navigationView(endpoint.id).index).toBe(1);
     const delivery = (shell.takeDeliveries(endpoint.id)[0] as any).delivery;
-    expect(delivery.sender).toBeNull();
-    const revisited = report(shell, 3, location(), { deliveryId: delivery.id });
+    expect(delivery).toEqual({ sender: REFERENCE_HANDLER, archetype: 'note', action: 'open', convention: 'napplet:note/open', payload: { event: 'alice' } });
+    const revisited = report(shell, 3, location());
     expect(revisited.view.index).toBe(0);
     expect(revisited.view.entries).toHaveLength(2);
   });
@@ -62,7 +62,7 @@ function back(shell: ReturnType<typeof fixture>) {
   const first = report(shell, 1);
   report(shell, 2, location('bob'));
   shell.revisit(endpoint.id, first.view.entries[0].id);
-  return (shell.takeDeliveries(endpoint.id)[0] as { delivery: { id: string } }).delivery.id;
+  return (shell.takeDeliveries(endpoint.id)[0] as { delivery: Record<string, unknown> }).delivery;
 }
 
 describe('NAVIGATION report conformance', () => {
@@ -86,8 +86,8 @@ describe('NAVIGATION report conformance', () => {
   });
   it('push discards forward history, while null preserves retained visits', () => {
     const shell = fixture();
-    const id = back(shell);
-    report(shell, 3, location(), { deliveryId: id });
+    back(shell);
+    report(shell, 3, location());
     const pushed = report(shell, 4, location('charlie'));
     expect(pushed.view.entries.map((entry: { location: { payload: { event: string } } }) => entry.location.payload.event)).toEqual(['alice', 'charlie']);
     const detached = report(shell, 5, null);
@@ -206,27 +206,31 @@ describe('NAVIGATION report conformance', () => {
 });
 
 describe('NAVIGATION traversal conformance', () => {
-  it('keeps duplicate invocation visits distinct, using only the delivery association', () => {
+  it('keeps duplicate invocation visits distinct, selecting the recorded visit', () => {
     const shell = fixture();
     const first = report(shell, 1);
     report(shell, 2, location('bob'));
     report(shell, 3);
     report(shell, 4, location('charlie'));
     shell.revisit(endpoint.id, first.view.entries[0].id);
-    const deliveryId = (shell.takeDeliveries(endpoint.id)[0] as { delivery: { id: string } }).delivery.id;
-    const result = report(shell, 5, { ...location(), title: 'New title' }, { deliveryId, mode: 'push' });
+    const result = report(shell, 5, { ...location(), title: 'New title' }, { mode: 'push' });
     expect(result.view.index).toBe(0);
     expect(result.view.entries).toHaveLength(4);
     expect(result.view.entries[0].location.title).toBe('New title');
   });
-  it('does not correlate equal invocations without the pending delivery id', () => {
+  it('settles by value: reaching the target through local navigation completes the revisit', () => {
     const shell = fixture(); back(shell);
-    const result = report(shell, 3);
-    expect(result.view.index).toBe(2);
-    expect(result.view.entries).toHaveLength(3);
+    const result = report(shell, 3, location(), { mode: 'push' });
+    expect(result.view.index).toBe(0);
+    expect(result.view.entries).toHaveLength(2);
     expect(result.view.status).toBe('current');
   });
-  it('declined guard may reaffirm current state with replace and no delivery id', () => {
+  it('only a report above the revision recorded at dispatch settles the revisit', () => {
+    const shell = fixture(); back(shell);
+    expect(report(shell, 2, location('bob')).view.status).toBe('pending');
+    expect(report(shell, 3).view.index).toBe(0);
+  });
+  it('declined guard may reaffirm current state with replace', () => {
     const shell = fixture(); back(shell);
     const before = shell.navigationView(endpoint.id);
     const reaffirmed = report(shell, 3, location('bob'), { mode: 'replace' });
@@ -234,16 +238,16 @@ describe('NAVIGATION traversal conformance', () => {
     expect(reaffirmed.view.index).toBe(1);
     expect(reaffirmed.view.status).toBe('current');
   });
-  it.each([location('redirect'), null])('records correlated redirects normally: %j', (value) => {
-    const shell = fixture(); const deliveryId = back(shell);
-    const result = report(shell, 3, value, { deliveryId });
+  it.each([location('redirect'), null])('records a settling redirect normally: %j', (value) => {
+    const shell = fixture(); back(shell);
+    const result = report(shell, 3, value);
     expect(result.view.index).toBe(value === null ? null : 2);
     expect(result.view.entries).toHaveLength(value === null ? 2 : 3);
   });
   it('local navigation supersedes a revisit; a late report creates a new visit', () => {
-    const shell = fixture(); const deliveryId = back(shell);
+    const shell = fixture(); back(shell);
     report(shell, 3, location('charlie'));
-    const late = report(shell, 4, location(), { deliveryId });
+    const late = report(shell, 4, location());
     expect(late.view.index).toBe(3);
     expect(late.view.entries).toHaveLength(4);
     expect(late.view.entries[3].id).not.toBe(late.view.entries[0].id);
@@ -251,11 +255,11 @@ describe('NAVIGATION traversal conformance', () => {
   it('finite timeout leaves uncertainty, and late handlers cannot complete old requests', () => {
     vi.useFakeTimers();
     const shell = setup({ navigation: { timeoutMs: 20 } });
-    const deliveryId = back(shell);
+    back(shell);
     vi.advanceTimersByTime(21);
     expect(shell.navigationView(endpoint.id).status).toBe('uncertain');
     expect(shell.navigationView(endpoint.id).index).toBe(1);
-    const late = report(shell, 3, location(), { deliveryId });
+    const late = report(shell, 3, location());
     expect(late.view.index).toBe(2);
     expect(late.view.entries).toHaveLength(3);
   });
@@ -273,38 +277,37 @@ describe('NAVIGATION traversal conformance', () => {
       const shell = fixture();
       report(shell, 1); report(shell, 2, location('bob'));
       shell.revisit(endpoint.id, shell.navigationView(endpoint.id).entries[0].id);
-      const deliveryId = (shell.takeDeliveries(endpoint.id)[0] as { delivery: { id: string } }).delivery.id;
-      shell.failNavigationDelivery(endpoint.id, deliveryId, definite);
+      shell.failNavigationDelivery(endpoint.id, definite);
+      expect(shell.takeDeliveries(endpoint.id)).toEqual([]);
       expect(shell.navigationView(endpoint.id).status).toBe(definite ? 'current' : 'uncertain');
-      expect(report(shell, 3, location(), { deliveryId }).view.index).toBe(2);
+      expect(report(shell, 3, location()).view.index).toBe(2);
     }
   });
-  it('rejects unknown/foreign delivery ids without allowing cross-instance correlation', () => {
-    const shell = fixture();
-    const deliveryId = back(shell);
-    expect(report(shell, 3, location(), { deliveryId: 'unknown' }).error.code).toBe('invalid');
+  it('rejects caller-supplied delivery ids, and another instance cannot settle a revisit', () => {
+    const shell = fixture(); back(shell);
     const other = { ...endpoint, id: 'other-viewer' };
-    const rejected = shell.handleFrom(other, { type: 'navigation.report', id: 'other', report: { revision: 1, location: location(), deliveryId } })[0] as { result: NavigationResult };
-    expect(rejected.result).toMatchObject({ ok: false, error: { code: 'invalid' }, view: { entries: [], status: 'unreported' } });
+    const accepted = shell.handleFrom(other, { type: 'navigation.report', id: 'other', report: { revision: 3, location: location() } })[0] as { result: NavigationResult };
+    expect(accepted.result).toMatchObject({ ok: true, view: { index: 0, status: 'current' } });
+    expect(shell.navigationView(endpoint.id).status).toBe('pending');
+    expect(report(shell, 3, location(), { deliveryId: 'delivery-1' }).error.code).toBe('invalid');
   });
   it('prunes unrelated history without changing revision or current/pending target identity', () => {
     const shell = fixture();
     report(shell, 1); report(shell, 2, location('bob')); report(shell, 3, location('charlie'));
     const before = shell.navigationView(endpoint.id);
     shell.revisit(endpoint.id, before.entries[0].id);
-    const deliveryId = (shell.takeDeliveries(endpoint.id)[0] as { delivery: { id: string } }).delivery.id;
     const pruned = shell.pruneNavigation(endpoint.id, [before.entries[0].id, before.entries[2].id]);
     expect(pruned.reportRevision).toBe(3);
     expect(pruned.status).toBe('pending');
     expect(pruned.index).toBe(1);
-    expect(report(shell, 4, location(), { deliveryId }).view.index).toBe(0);
+    expect(report(shell, 4, location()).view.index).toBe(0);
   });
   it('explicitly clears current/pending references removed by shell retention policy', () => {
-    const shell = fixture(); const deliveryId = back(shell);
+    const shell = fixture(); back(shell);
     const view = shell.navigationView(endpoint.id);
     const pruned = shell.pruneNavigation(endpoint.id, [view.entries[1].id]);
     expect(pruned.status).toBe('uncertain');
-    expect(report(shell, 3, location(), { deliveryId }).view.index).toBe(1);
+    expect(report(shell, 3, location()).view.index).toBe(1);
     const empty = shell.pruneNavigation(endpoint.id, []);
     expect(empty.index).toBeNull();
     expect(empty.entries).toEqual([]);
@@ -322,11 +325,11 @@ describe('NAVIGATION traversal conformance', () => {
     expect(shell.revisit(noIntent.id, 'visit')).toMatchObject({ ok: false, error: { code: 'denied' } });
   });
   it('terminates authority without revival or silent history transfer', () => {
-    const shell = fixture(); const deliveryId = back(shell);
+    const shell = fixture(); const delivery = back(shell);
     shell.terminateEndpoint(endpoint.id);
     expect(shell.registerEndpoint(endpoint)).toBe(false);
     expect(shell.handleFrom(endpoint, { type: 'navigation.get', id: 'after-close' })).toEqual([]);
-    expect(shell.retryIntent(endpoint.id, deliveryId)).toBe(false);
+    expect(shell.deliverIntent(endpoint.id, delivery as never)).toBeUndefined();
     expect(shell.revisit(endpoint.id, 'visit-1').ok).toBe(false);
     expect(shell.navigationView(endpoint.id).status).toBe('unreported');
     const replacement = { ...endpoint, id: 'replacement' };
@@ -373,20 +376,15 @@ describe('host domain ceiling', () => {
   });
 });
 
-describe('INTENT delivery identity and provenance', () => {
+describe('INTENT selected-instance delivery and provenance', () => {
   const request = { archetype: 'note', action: 'open', convention: 'napplet:note/open', payload: { event: 'alice' } };
-  it('targets only the selected live instance, retaining ids/content on retry', () => {
+  it('replays only to the selected live instance as an ordinary delivery from its own catalog id', () => {
     const shell = fixture();
     const other = { ...endpoint, id: 'other' }; shell.registerEndpoint(other);
     const first = shell.deliverIntent(other.id, request)!;
-    expect(first.sender).toBeNull();
-    expect(first.id).toBeTruthy();
+    expect(first).toEqual({ sender: other.catalogId, ...request });
     expect(shell.takeDeliveries(endpoint.id)).toEqual([]);
     expect(shell.takeDeliveries(other.id)).toEqual([{ type: 'intent.deliver', delivery: first }]);
-    expect(shell.retryIntent(other.id, first.id)).toBe(true);
-    expect(shell.takeDeliveries(other.id)).toEqual([{ type: 'intent.deliver', delivery: first }]);
-    expect(shell.deliverIntent(other.id, request)!.id).not.toBe(first.id);
-    expect(shell.retryIntent(endpoint.id, first.id)).toBe(false);
   });
   it('never substitutes unsupported, unavailable, terminated, or missing endpoints', () => {
     const shell = fixture();
@@ -397,33 +395,32 @@ describe('INTENT delivery identity and provenance', () => {
     shell.terminateEndpoint(endpoint.id);
     expect(shell.deliverIntent(endpoint.id, request)).toBeUndefined();
   });
-  it('ordinary invocation keeps authenticated provenance and exposes no delivery completion id', () => {
+  it('ordinary invocation keeps authenticated provenance and exposes no delivery id', () => {
     const shell = fixture(); const first = report(shell, 1);
     const source = { id: 'source', catalogId: 'source-catalog' };
     const response = shell.handleFrom(source, { type: 'intent.invoke', id: 'invoke', request })[0] as { result: Record<string, unknown> };
     expect(response.result.ok).toBe(true);
     expect(response.result).not.toHaveProperty('id');
-    const delivery = (shell.takeDeliveries(endpoint.id)[0] as { delivery: { sender: string; id: string } }).delivery;
-    expect(delivery.sender).toBe(source.catalogId);
-    expect(delivery.id).toBeTruthy();
+    const delivery = (shell.takeDeliveries(endpoint.id)[0] as { delivery: Record<string, unknown> }).delivery;
+    expect(delivery).toEqual({ sender: source.catalogId, ...request });
     expect(shell.navigationView(endpoint.id)).toEqual(first.view);
-    for (const forgery of [{ sender: null }, { deliveryId: 'forged' }, { instanceId: endpoint.id }]) {
+    for (const forgery of [{ sender: null }, { sender: endpoint.catalogId }, { instanceId: endpoint.id }]) {
       expect(shell.handleFrom(source, { type: 'intent.invoke', id: 'forged', request: { ...request, ...forgery } })).toEqual([]);
     }
-    expect(report(shell, 2, location('bob'), { deliveryId: delivery.id }).ok).toBe(true);
+    expect(report(shell, 2, location('bob')).ok).toBe(true);
   });
   it('does not narrow ordinary payloads to history parameter allowlists', () => {
     const shell = fixture();
     const delivery = shell.deliverIntent(endpoint.id, { ...request, payload: { arbitrary: 'intent-data' } });
     expect(delivery).toBeDefined();
-    expect(report(shell, 1, { convention: request.convention, payload: { arbitrary: 'intent-data' } }, { deliveryId: delivery!.id }).error.code).toBe('unsupported');
+    expect(report(shell, 1, { convention: request.convention, payload: { arbitrary: 'intent-data' } }).error.code).toBe('unsupported');
   });
 });
 
 describe('reference recording reset', () => {
   it('preserves live endpoint authority/history and ends dropped pending deliveries uncertain', () => {
     const shell = fixture();
-    const deliveryId = back(shell);
+    back(shell);
     const before = shell.navigationView(endpoint.id);
     shell.reset();
     expect(shell.records).toEqual([]);
@@ -432,7 +429,6 @@ describe('reference recording reset', () => {
     expect(shell.handle({ type: 'storage.get', id: 'before', key: 'setting' })).toHaveLength(1);
     shell.reset();
     expect(shell.handle({ type: 'storage.get', id: 'after', key: 'setting' })).toHaveLength(1);
-    expect(shell.retryIntent(endpoint.id, deliveryId)).toBe(true);
-    expect(report(shell, 4, location(), { deliveryId }).view.index).toBe(3);
+    expect(report(shell, 4, location()).view.index).toBe(3);
   });
 });

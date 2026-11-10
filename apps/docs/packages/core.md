@@ -121,7 +121,7 @@ const result = await napplet.intent.open('napplet:profile/open', { payload: { pu
 if (!result.ok) throw new Error(result.error);
 ```
 
-Intent calls derive archetype and action from the URI. An `ok: true` result means the runtime accepted delivery responsibility and includes the normalized identity and handler catalog identifier; an `ok: false` result includes `error`. Targets receive runtime-attested `IntentDelivery` values through `onDelivery`, including deliveries retained before registration. Each delivery has a runtime-assigned `id`; `sender` is the source catalog identifier, or `null` for a shell-originated request. These fields follow the [NAP-INTENT delivery draft](https://github.com/napplet/naps/pull/128). Behavior hints are `focus` and `reuse`. This non-normative guidance defers to the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md).
+Intent calls derive archetype and action from the URI. An `ok: true` result means the runtime accepted delivery responsibility and includes the normalized identity and handler catalog identifier; an `ok: false` result includes `error`. Targets receive runtime-attested `IntentDelivery` values through `onDelivery`, including deliveries retained before registration. `sender` is the runtime-attested source catalog identifier. A shell replay to a selected instance is an ordinary delivery whose `sender` is the target's own catalog identifier. Deliveries carry no `id`. This follows the [NAP-INTENT selected-instance delivery draft](https://github.com/napplet/naps/pull/128). Behavior hints are `focus` and `reuse`. This non-normative guidance defers to the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md).
 
 This package defers to the living [NAP-INC](https://github.com/napplet/naps/blob/master/naps/NAP-INC.md) and [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md) documents.
 
@@ -166,7 +166,7 @@ The runtime binding retains deliveries until a listener registers. Discovery can
 
 ## Navigation history
 
-Core exports the `NavigationApi`, JSON location/report/view/result types, and the `navigation` domain name. `NappletGlobal.navigation` remains optional. `IntentDelivery` includes a target-scoped runtime `id` and a nullable `sender` for shell-originated requests. This non-normative guidance targets the [NAP-NAVIGATION draft](https://github.com/napplet/naps/pull/126) and [NAP-INTENT delivery draft](https://github.com/napplet/naps/pull/128). See [Navigation](/naps/navigation) for runtime availability, manifest declarations, serialized reporting, and recovery.
+Core exports the `NavigationApi`, JSON location/report/view/result types, and the `navigation` domain name. `NappletGlobal.navigation` remains optional. `IntentDelivery` has no `id`, and its `sender` is always a catalog identifier. This non-normative guidance targets the [NAP-NAVIGATION draft](https://github.com/napplet/naps/pull/126) and [NAP-INTENT delivery draft](https://github.com/napplet/naps/pull/128). See [Navigation](/naps/navigation) for runtime availability, manifest declarations, serialized reporting, and recovery.
 
 ## LLM types
 

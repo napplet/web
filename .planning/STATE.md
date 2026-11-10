@@ -735,6 +735,7 @@ Surfaced by research (informational — each belongs to a specific phase plan):
 
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
+| 261110-vep | Drop withdrawn intent delivery ids and null sender (web#328) | 2026-11-10 | 3d605a11 | [261110-vep](./quick/261110-vep-intent-delivery-no-id-328/) |
 | 261110-g3f | Make @kehto/paja an optional conformance-cli peer (web#324) | 2026-11-10 | 26ddb4d5 | [261110-g3f](./quick/261110-g3f-conformance-cli-optional-paja-peer-324/) |
 | 261104-kdn | Merge main into PR #280 (NAP-NAVIGATION) and resolve conflicts | 2026-11-04 | 5d7d2116 | [261104-kdn](./quick/261104-kdn-resolve-pr-280-merge-conflicts-with-main/) |
 | 261104-iwc | Try the next Blossom auth token after a gateway error (web#269) | 2026-11-04 | 26e2e391 | [261104-iwc](./quick/261104-iwc-fix-blossom-upload-auth-fallback-masked-/) |
