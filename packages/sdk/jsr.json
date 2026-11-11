@@ -1,6 +1,6 @@
 {
   "name": "@napplet/sdk",
-  "version": "0.34.0",
+  "version": "0.34.1",
   "license": "MIT",
   "exports": {
     ".": "./src/index.ts",
@@ -13,8 +13,8 @@
     "./soulseek": "./src/soulseek.ts"
   },
   "imports": {
-    "@napplet/core": "jsr:@napplet/core@^0.40.0",
-    "@napplet/nap": "jsr:@napplet/nap@^0.39.0"
+    "@napplet/core": "jsr:@napplet/core@^0.41.0",
+    "@napplet/nap": "jsr:@napplet/nap@^0.40.0"
   },
   "publish": {
     "include": [

@@ -1,10 +1,10 @@
 {
   "name": "@napplet/conformance",
-  "version": "0.27.0",
+  "version": "0.28.0",
   "license": "MIT",
   "exports": "./src/index.ts",
   "imports": {
-    "@napplet/core": "jsr:@napplet/core@^0.40.0"
+    "@napplet/core": "jsr:@napplet/core@^0.41.0"
   },
   "publish": {
     "include": [
