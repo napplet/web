@@ -160,8 +160,8 @@ The runtime may expose `shell` for environment information. `shell.supports(doma
 ```ts
 import { intent } from '@napplet/sdk';
 
-intent.onDelivery(({ id, sender, convention, payload }) => {
-  console.log(id, sender, convention, payload);
+intent.onDelivery(({ sender, convention, payload }) => {
+  console.log(sender, convention, payload);
 });
 await intent.invoke('napplet:profile/open?pubkey=abc123');
 ```
