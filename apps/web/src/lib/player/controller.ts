@@ -11,7 +11,16 @@ const REPLACED: Record<Replacement, string> = {
   'second-hello': `This napplet restarted outside its verified release, ${REPLACED_NOTE}`,
   'window-message': `This napplet sent messages outside its verified channel, ${REPLACED_NOTE}`,
   'invalid-hello': `This napplet did not open its verified channel correctly, ${REPLACED_NOTE}`,
+  'nested-frame': `This napplet opened a frame inside the preview, which could carry traffic past its network lock, ${REPLACED_NOTE}`,
 };
+
+/**
+ * The srcdoc nested-context lock relies on Trusted Types to close HTML string sinks. A browser without them ignores
+ * `require-trusted-types-for`, so a napplet could create an unswept grandchild realm through `innerHTML`.
+ */
+function supportsTrustedTypes(): boolean {
+  return typeof (window as Window & { trustedTypes?: unknown }).trustedTypes === 'object';
+}
 
 /** Anything the player can load: a curated preview or a discovered release fetched from its publisher's servers. */
 interface Playable {
@@ -128,6 +137,8 @@ export function setupPlayer(): void {
     try {
       // Fail closed: without the page's frame-src lock a napplet could navigate its frame before the first load undetected.
       if (!hasFramePolicy(window.document)) throw new Error('This page cannot lock the preview to its verified release, so it will not run here.');
+      // Fail closed: without Trusted Types the preview cannot stop a napplet from opening frames that bypass its network lock.
+      if (!supportsTrustedTypes()) throw new Error('This browser cannot stop a napplet from opening hidden network channels, so the preview will not run here. Update your browser or open the napplet in its full shell.');
       const { PLAYER_SANDBOX } = await import('./verify');
       const signal = request.signal;
       const document = await item.load(signal);

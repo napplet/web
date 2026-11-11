@@ -91,3 +91,46 @@ describe('bindPlayerFrame', () => {
     t.cleanup();
   });
 });
+
+describe('nested browsing context detection', () => {
+  function framed(length: () => number) {
+    let onLoad: (() => void) | undefined;
+    const frame: FrameLike = {
+      contentWindow: { get length() { return length(); } },
+      addEventListener: (_type, listener) => { onLoad = listener; },
+      removeEventListener: () => { onLoad = undefined; },
+    };
+    const host: HostLike = { addEventListener: () => {}, removeEventListener: () => {} };
+    const reasons: Replacement[] = [];
+    const binding = bindPlayerFrame(frame, host, reason => reasons.push(reason), 5);
+    return { binding, reasons, load: () => onLoad?.() };
+  }
+
+  it('drops the frame when it already holds a nested context at its first load', () => {
+    const t = framed(() => 1);
+    t.load();
+    expect(t.reasons).toEqual(['nested-frame']);
+    expect(t.binding.bound).toBe(false);
+  });
+
+  it('drops the frame when a nested context appears after load', async () => {
+    let frames = 0;
+    const t = framed(() => frames);
+    t.load();
+    await t.binding.loaded;
+    expect(t.reasons).toEqual([]);
+    frames = 1;
+    await new Promise(resolve => setTimeout(resolve, 30));
+    expect(t.reasons).toEqual(['nested-frame']);
+  });
+
+  it('stops checking once released', async () => {
+    let frames = 0;
+    const t = framed(() => frames);
+    t.load();
+    t.binding.release();
+    frames = 1;
+    await new Promise(resolve => setTimeout(resolve, 30));
+    expect(t.reasons).toEqual([]);
+  });
+});
