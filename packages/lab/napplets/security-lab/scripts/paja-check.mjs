@@ -39,7 +39,9 @@ if (cspMetas.length !== 0 || heads.length !== 1) {
 
 const config = createPajaRuntimeHostConfig({
   maxWaitMs: 2000,
-  simulation: { relay: { mode: 'memory' }, storage: { mode: 'memory' } },
+  // Paja 0.34 offers relay only in live mode and storage only in local mode. Point live relay traffic at a closed
+  // loopback port so the check never reaches a public relay; a fresh browser context keeps storage ephemeral.
+  simulation: { relay: { mode: 'live', urls: ['ws://127.0.0.1:9'] }, storage: { mode: 'local' } },
 });
 let html = renderPajaHtml(config);
 const hostHasLock = /<meta[^>]*Content-Security-Policy[^>]*frame-src[^>]*'none'/i.test(html.slice(0, html.indexOf('</head>')));
@@ -47,6 +49,11 @@ if (HOST_FRAME_LOCK && !hostHasLock) html = html.replace(/<head>/i, `<head><meta
 console.log(`Paja host page frame-src lock: ${hostHasLock ? 'present (kehto/web#382)' : HOST_FRAME_LOCK ? 'emulated via LAB_HOST_FRAME_LOCK' : 'absent'}`);
 const server = createServer((req, res) => {
   const path = new URL(req.url, 'http://x').pathname;
+  if (path === '/__kehto/config.json') {
+    res.setHeader('content-type', 'application/json; charset=utf-8');
+    res.end(JSON.stringify(config));
+    return;
+  }
   if (path.startsWith('/__kehto/')) {
     try {
       res.setHeader('content-type', 'text/javascript; charset=utf-8');
@@ -65,6 +72,24 @@ const url = `http://127.0.0.1:${server.address().port}/`;
 
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1800, height: 1100 } });
+// Paja's Firewall asks before launch (kehto/web#336). Stand in for the user and allow each prompt for the session,
+// the same driver Kehto's own browser tests use.
+await page.addInitScript(() => {
+  window.addEventListener('DOMContentLoaded', () => {
+    const approve = () => {
+      const dialog = document.querySelector('.kehto-approval-ui dialog[open]');
+      const lifetime = dialog?.querySelector('select');
+      if (!lifetime || ![...lifetime.options].some((option) => option.value === 'session')) return;
+      const allow = [...dialog.querySelectorAll('button')].find((button) => button.textContent === 'Allow');
+      if (!allow) return;
+      lifetime.value = 'session';
+      lifetime.dispatchEvent(new Event('change', { bubbles: true }));
+      allow.click();
+    };
+    new MutationObserver(approve).observe(document, { childList: true, subtree: true, attributes: true, attributeFilter: ['open'] });
+    approve();
+  }, { once: true });
+});
 let exitCode = 0;
 const problem = (message) => { exitCode = 1; console.error(`PROBLEM: ${message}`); };
 

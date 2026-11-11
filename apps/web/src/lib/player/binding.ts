@@ -7,10 +7,18 @@
  * port from the frame it created, and removes the frame on a second hello, any other window-level message, a second
  * `load`, or the port closing. The player exposes no NAP domains, so nothing arriving on the port is answered.
  * https://github.com/nostr-protocol/nips/pull/2303
+ *
+ * The player also removes the frame if the napplet ever holds a nested browsing context. The srcdoc's
+ * nested-context lock should make that impossible, so this is detection behind the prevention: an `about:srcdoc`
+ * grandchild is a fresh realm with a working `RTCPeerConnection` that no CSP reaches. `contentWindow.length` is
+ * readable across the opaque-origin boundary. This is player policy, not protocol surface.
  */
 
 /** Why the player stopped trusting the frame. */
-export type Replacement = 'second-hello' | 'window-message' | 'invalid-hello' | 'second-load' | 'port-closed';
+export type Replacement = 'second-hello' | 'window-message' | 'invalid-hello' | 'second-load' | 'port-closed' | 'nested-frame';
+
+/** How often the player checks the frame for nested browsing contexts. */
+export const NESTED_FRAME_CHECK_MS = 100;
 
 /** Minimal frame surface the binding needs (eases testing). */
 export interface FrameLike {
@@ -50,11 +58,13 @@ function handoff(event: MessageEvent, alreadyBound: boolean): MessagePort | Repl
  * @param frame The iframe the player created.
  * @param host The player's window.
  * @param onReplaced Called once with the reason; remove the frame here.
+ * @param checkMs Interval for the nested-frame check.
  * @returns The live binding.
  * @example const binding = bindPlayerFrame(frame, window, reason => frame.remove());
  */
-export function bindPlayerFrame(frame: FrameLike, host: HostLike, onReplaced: (reason: Replacement) => void): DocumentBinding {
+export function bindPlayerFrame(frame: FrameLike, host: HostLike, onReplaced: (reason: Replacement) => void, checkMs = NESTED_FRAME_CHECK_MS): DocumentBinding {
   let port: MessagePort | null = null;
+  let watch: ReturnType<typeof setInterval> | undefined;
   let loads = 0;
   let ended = false;
   let markLoaded!: () => void;
@@ -64,6 +74,8 @@ export function bindPlayerFrame(frame: FrameLike, host: HostLike, onReplaced: (r
     ended = true;
     host.removeEventListener('message', onMessage);
     frame.removeEventListener('load', onLoad);
+    if (watch !== undefined) clearInterval(watch);
+    watch = undefined;
     if (port) { port.onmessage = null; port.close(); }
     port = null;
   };
@@ -84,14 +96,22 @@ export function bindPlayerFrame(frame: FrameLike, host: HostLike, onReplaced: (r
     outcome.start();
   }
 
+  function checkNested() {
+    const frames = (frame.contentWindow as { length?: unknown } | null)?.length;
+    if (typeof frames === 'number' && frames > 0) replaced('nested-frame');
+  }
+
   function onLoad() {
     loads += 1;
+    checkNested();
+    if (ended) return;
     if (loads === 1) markLoaded();
     else replaced('second-load');
   }
 
   host.addEventListener('message', onMessage);
   frame.addEventListener('load', onLoad);
+  watch = setInterval(checkNested, checkMs);
   return {
     get bound() { return port !== null && !ended; },
     loaded,

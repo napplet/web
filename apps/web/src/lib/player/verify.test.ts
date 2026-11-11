@@ -2,7 +2,10 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { finalizeEvent, generateSecretKey } from 'nostr-tools/pure';
 import { NAPPLETS } from '../showcase';
-import { PLAYER_BOOTSTRAP, verifyArchivedRelease, verifyRelease, verifiedDocument, sha256 } from './verify';
+import { verifyArchivedRelease, verifyRelease, verifiedDocument, sha256 } from './verify';
+
+const TRUSTED_TYPES = "require-trusted-types-for 'script'; trusted-types default";
+const PRELUDE = '<script data-kehto-nip5d-injection>';
 
 const root = new URL('../../../', import.meta.url);
 function fixture(path: string) { return readFileSync(new URL(`public${path}`, root)); }
@@ -16,9 +19,11 @@ describe('the selected signed releases', () => {
       const bytes = fixture(entry.artifact);
       expect(await sha256(bytes)).toBe(identity.artifactHash);
       const doc = await verifiedDocument(bytes, identity.artifactHash);
-      expect(doc.endsWith(bytes.toString())).toBe(true);
-      expect(doc.indexOf(`<script>${PLAYER_BOOTSTRAP}</script>`)).toBeLessThan(doc.indexOf(bytes.toString()));
+      const firstAuthoredScript = doc.indexOf('<script', doc.indexOf(PRELUDE) + PRELUDE.length);
+      expect(doc.indexOf('http-equiv="Content-Security-Policy"')).toBeLessThan(doc.indexOf(PRELUDE));
+      if (firstAuthoredScript !== -1) expect(doc.indexOf(PRELUDE)).toBeLessThan(firstAuthoredScript);
       expect(doc).toContain("connect-src 'none'");
+      expect(doc).toContain(TRUSTED_TYPES);
     });
   }
 
@@ -59,6 +64,37 @@ describe('the selected signed releases', () => {
   });
 });
 
+
+describe('the WebRTC exfiltration hardening', () => {
+  async function prepared(markup: string) {
+    const bytes = new TextEncoder().encode(markup);
+    return verifiedDocument(bytes, await sha256(bytes));
+  }
+
+  it('prepends the Kehto CSP and prelude with the nested-context lock on by default', async () => {
+    const doc = await prepared('<!doctype html><html><head><title>t</title></head><body><script>run()</script></body></html>');
+    expect(doc.startsWith('<!doctype html>')).toBe(true);
+    expect(doc).toContain("frame-src 'none'");
+    expect(doc).toContain("child-src 'none'");
+    expect(doc).toContain(TRUSTED_TYPES);
+    // The prelude removes the RTC* constructor surface and installs the frame lock before authored scripts.
+    expect(doc).toContain('webkitRTCPeerConnection');
+    expect(doc).toMatch(/createPolicy\(['"]default['"]/);
+    expect(doc).toContain('napplets may not create nested browsing contexts');
+    expect(doc.indexOf(PRELUDE)).toBeLessThan(doc.indexOf('<script>run()'));
+  });
+
+  it('keeps standards mode for an artifact without a doctype', async () => {
+    expect((await prepared('<h1>Plain app</h1>')).startsWith('<!doctype html>')).toBe(true);
+  });
+
+  it.each(['<iframe srcdoc="x"></iframe>', '<object data="x"></object>', '<embed src="x">', '<template><frame></template>'])(
+    'rejects static frame markup before load: %s',
+    async markup => {
+      await expect(prepared(`<!doctype html><body>${markup}</body>`)).rejects.toThrow('embeds its own frames');
+    },
+  );
+});
 
 describe('current release identity', () => {
   it('rejects legacy aggregates through the current path', async () => {

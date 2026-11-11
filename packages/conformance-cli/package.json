@@ -30,7 +30,7 @@
     }
   },
   "devDependencies": {
-    "@kehto/paja": ">=0.21.0 <0.22.0",
+    "@kehto/paja": "^0.34.0",
     "@napplet/conformance-web": "workspace:*",
     "@types/node": "^22.15.0",
     "tsup": "^8.5.0",

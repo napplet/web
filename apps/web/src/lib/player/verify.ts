@@ -8,9 +8,17 @@
 import { validateEvent, verifyEvent, type Event } from 'nostr-tools/pure';
 import { catalogApp } from '../catalog';
 import { normalizeBlossomServer } from 'applesauce-common/helpers';
+import { assertNappletHasNoFrame, prepareNappletSrcdoc } from '@kehto/shell';
 
 export const PLAYER_SANDBOX = 'allow-scripts';
-export const PLAYER_CSP = "default-src 'none'; script-src 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; connect-src 'none'; worker-src 'none'; child-src 'none'; frame-src 'none'; media-src 'none'; object-src 'none'; manifest-src 'none'; base-uri 'none'; form-action 'none'";
+/**
+ * Kehto's srcdoc options for every preview. No NAP domains are exposed. The nested-browsing-context lock is a Kehto
+ * experimental policy that is off by default; napplet.run turns it on for every napplet because no CSP directive
+ * covers WebRTC, and an `about:srcdoc` grandchild frame is a fresh realm the prelude's RTC sweep never reaches. The
+ * lock adds Trusted Types to the napplet CSP and pins the element factories so no nested frame can be created.
+ * This is host policy, not napplet protocol surface: https://github.com/nostr-protocol/nips/pull/2303
+ */
+export const PLAYER_SRCDOC_OPTIONS = { domains: [], experimental: { nestedContextLock: true } } as const;
 // A size limit for this preview UI, not a protocol or artifact requirement.
 const MAX_PREVIEW_BYTES = 5 * 1024 * 1024;
 
@@ -69,18 +77,24 @@ export async function verifyRelease(input: unknown, eventId: string, format: str
 }
 
 /**
- * NIP-5D Transport bootstrap, run before any napplet script: open a MessageChannel, keep one port private (a listener
- * keeps it alive for the document's lifetime) and hand the other to the shell once in `napplet.hello`. The player
- * exposes no NAP domains, so the namespace is empty. https://github.com/nostr-protocol/nips/pull/2303
+ * Verify the original bytes, then prepend Kehto's shell policy and bootstrap before any authored content.
+ * Kehto's prelude follows NIP-5D Transport (one `napplet.hello` carrying a `MessagePort`), removes every RTC*
+ * constructor from the napplet realm and, with the lock on, blocks nested-frame creation. Static frame markup is
+ * rejected here, in the trusted page, because the HTML parser is not a Trusted Types sink.
+ * @param bytes The downloaded artifact.
+ * @param expectedHash The signed artifact hash.
+ * @returns The srcdoc document for the sandboxed preview frame.
+ * @example frame.srcdoc = await verifiedDocument(bytes, identity.artifactHash);
  */
-export const PLAYER_BOOTSTRAP = "(()=>{const c=new MessageChannel();c.port1.onmessage=()=>{};window.parent.postMessage({type:'napplet.hello'},'*',[c.port2]);window.napplet=Object.freeze({});})();";
-
-/** Adapted from soy's verifiedDocument: verify first, then prepend shell policy and the bootstrap. */
 export async function verifiedDocument(bytes: Uint8Array, expectedHash: string): Promise<string> {
   if (bytes.length > MAX_PREVIEW_BYTES) throw new Error('This release is too large for the quick preview.');
   if (await sha256(bytes) !== expectedHash) throw new Error('The downloaded napplet does not match its signed hash.');
   const html = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
-  return `<!doctype html><meta http-equiv="Content-Security-Policy" content="${PLAYER_CSP}"><meta name="referrer" content="no-referrer"><script>${PLAYER_BOOTSTRAP}</script>${html}`;
+  try { assertNappletHasNoFrame(html); }
+  catch { throw new Error('This napplet embeds its own frames, which this preview does not allow. Open it in its full shell.'); }
+  const document = prepareNappletSrcdoc(html, PLAYER_SRCDOC_OPTIONS);
+  // Keep standards mode for artifacts that omit a doctype; a later duplicate doctype is ignored by the parser.
+  return /^\s*<!doctype/i.test(document) ? document : `<!doctype html>${document}`;
 }
 
 /** Read bounded responses so a failed CDN response cannot consume unbounded memory. */
