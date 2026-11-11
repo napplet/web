@@ -56,8 +56,10 @@ The three original previews remain explicitly archived releases with a private h
 ```bash
 node scripts/refresh-showcase-apps.mjs
 pnpm --filter @napplet/web test:unit
-pnpm --filter @napplet/web build
+pnpm --filter "@napplet/web..." build
 ```
+
+The trailing `...` builds the workspace packages the site imports (`@napplet/core` and `@napplet/nap`, which `@kehto/shell` resolves from their `dist/`) before the site itself; a bare `--filter @napplet/web build` on a clean checkout fails to resolve `@napplet/core`.
 
 The refresh pages each relay independently backwards with an inclusive `until` until a page comes back empty (up to `maxEvents`, default 2000; a page shorter than `limit` is not treated as the end, because oversized frames are dropped and relays may return fewer events than asked, and a boundary second that adds nothing is stepped past; see `scripts/lib/manifest-pager.mjs`), then requests kind 32267 Software Applications listings from the same publishers and Napshot screenshot labels for the root and named releases, and preserves the original signed events in `src/data/discovered-apps.json` under `events`, `applications` and `labels`; a failed relay pass leaves the snapshot intact. Ordinary site builds need no network. The catalog selects NIP-5D's own kinds (5129, 15129, 35129) with the `applesauce-common` manifest helpers, checks signatures and direct `x` hashes, treats descriptions as plain text, and deduplicates replaceable addresses. It does not use NIP-5A schemas or aggregate identities. Snapshots remain independent releases. This is display selection, not full conformance certification or code review.
 
