@@ -29,8 +29,8 @@
     "svelte": "^5.57.3"
   },
   "devDependencies": {
-    "@kehto/cli": "0.5.13",
-    "@kehto/paja": "0.28.1",
+    "@kehto/cli": "0.7.0",
+    "@kehto/paja": "0.34.0",
     "@napplet/conformance": "workspace:*",
     "@napplet/conformance-cli": "workspace:*",
     "@napplet/vite-plugin": "workspace:*",
