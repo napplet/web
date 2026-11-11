@@ -1,5 +1,13 @@
 # @napplet/cli
 
+## 0.14.4
+
+### Patch Changes
+
+- d68a2df: `napplet paja` now runs the managed `@kehto/cli@0.7.0` (Paja 0.34), which carries Kehto's
+  WebRTC egress sweep, the frame-src navigation lock and the opt-in nested-browsing-context lock
+  (`--nested-context-lock on|off|auto`).
+
 ## 0.14.3
 
 ### Patch Changes
