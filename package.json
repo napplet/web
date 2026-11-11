@@ -6,7 +6,7 @@
     "build": "turbo run build",
     "dev:site": "node scripts/dev-site.mjs",
     "refresh:protocol": "node scripts/generate-protocol.mjs",
-    "generate:protocol": "pnpm refresh:protocol && pnpm --filter @napplet/web build",
+    "generate:protocol": "pnpm refresh:protocol && pnpm --filter \"@napplet/web...\" build",
     "test:protocol": "node --test scripts/generate-protocol.test.mjs",
     "refresh:nap-maturity": "node scripts/refresh-nap-maturity.mjs",
     "test:nap-maturity": "node --test scripts/refresh-nap-maturity.test.mjs",
