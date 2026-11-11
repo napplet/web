@@ -1,21 +1,32 @@
-> napplet is **alpha**. The specification is experimental and a moving target. There **will most certainly be drift** between packages and the specification. Things **will most certainly change**. **For adventurers only.**
+<div align="center">
 
 # napplet
 
-[![CI](https://github.com/napplet/web/actions/workflows/ci.yml/badge.svg)](https://github.com/napplet/web/actions/workflows/ci.yml)
-[![AI Slop Score](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fnapplet%2Fweb%2Fbadges%2Faislop-score.json)](https://github.com/napplet/web/actions/workflows/ai-slop.yml)
-[![Publish](https://github.com/napplet/web/actions/workflows/publish.yml/badge.svg)](https://github.com/napplet/web/actions/workflows/publish.yml)
-[![Publish to JSR](https://github.com/napplet/web/actions/workflows/publish-jsr.yml/badge.svg)](https://github.com/napplet/web/actions/workflows/publish-jsr.yml)
+TypeScript SDK and tooling for NIP-5D napplets: sandboxed Nostr web apps that delegate signing, storage, and relay access to a host shell.
 
-Monorepo for the **napplet** SDK -- libraries for building NIP-5D Nostr Web Applets - "napplets"
+[![CI](https://img.shields.io/github/actions/workflow/status/napplet/web/ci.yml?branch=main&style=for-the-badge&label=CI)](https://github.com/napplet/web/actions/workflows/ci.yml)
+[![Conformance](https://img.shields.io/github/actions/workflow/status/napplet/web/conformance.yml?branch=main&style=for-the-badge&label=conformance)](https://github.com/napplet/web/actions/workflows/conformance.yml)
+[![AI Slop Score](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fnapplet%2Fweb%2Fbadges%2Faislop-score.json&style=for-the-badge)](https://github.com/napplet/web/actions/workflows/ai-slop.yml)
+[![npm](https://img.shields.io/npm/v/%40napplet%2Fsdk?style=for-the-badge&label=%40napplet%2Fsdk)](https://www.npmjs.com/package/@napplet/sdk)
+[![License](https://img.shields.io/github/license/napplet/web?style=for-the-badge)](LICENSE)
+[![Stars](https://img.shields.io/github/stars/napplet/web?style=for-the-badge)](https://github.com/napplet/web/stargazers)
 
-A **napplet** is a sandboxed web app that runs inside a **shell**. The shell and napplet communicate over a `MessagePort` that the injected runtime hands to the shell in a single `napplet.hello`, using a JSON envelope format (`{ type, ...payload }`) defined by NIP-5D. The napplet never touches `localStorage`, relay connections, or signing keys directly -- the shell proxies everything through NAP interfaces. [Read about napplets in NIP-5D possiblity](https://github.com/nostr-protocol/nips/pull/2303/changes)
+[Website](https://napplet.run) · [Docs](https://napplet.run/docs/) · [NIP-5D](https://github.com/nostr-protocol/nips/pull/2303) · [NAPs track](https://github.com/napplet/naps)
 
-NAP proposal status and shipped implementation maturity are separate. All capabilities can change. Inspect `NAP_IMPLEMENTATIONS` from `@napplet/core` and use `selectNapDomains` for local host opt-in policy. See [maturity and opt-in guidance](https://napplet.run/docs/naps/maturity.html).
+</div>
 
-## Build a napplet
+> [!WARNING]
+> napplet is **alpha**. The specification is experimental and a moving target. There **will most certainly be drift** between packages and the specification. Things **will most certainly change**. **For adventurers only.**
 
-Install the standalone CLI; Deno is not required:
+## What is this?
+
+A **napplet** is a small, single-purpose web app that runs inside a sandboxed iframe hosted by a **shell**. The napplet never touches `localStorage`, relay connections, or signing keys directly. The runtime hands the shell a `MessagePort` in a single `napplet.hello`, and every request after that is a JSON envelope (`{ type, ...payload }`) proxied through a NAP capability domain.
+
+This monorepo holds the napplet-side packages, the build plugin, the CLI, the conformance tooling, the agent skills, and the [napplet.run](https://napplet.run) site. The protocol itself lives outside this repo: [NIP-5D](https://github.com/nostr-protocol/nips/pull/2303) defines the napplet ⇄ shell contract and the [NAPs track](https://github.com/napplet/naps) defines each capability domain. Everything here is non-normative and defers to those living documents.
+
+## Quick start
+
+Install the standalone CLI. Deno is not required:
 
 ```bash
 # macOS or Linux
@@ -41,48 +52,49 @@ napplet deploy
 
 `napplet create` downloads the maintained Vite + TypeScript starter. `napplet init` owns deployment name, title, description, archetype roles and conventions, relays, and Blossom servers in `.napplet/config.yaml`. The standalone CLI provisions its own cached tooling for screenshots, conformance, and Paja, so no host Node.js, npm, npx, Deno, Git, or Kehto installation is required. Node.js 20+ is needed by the generated Vite project and the optional skills.sh CLI.
 
-The CLI supports `napplet screenshot --output preview.png`. `napplet deploy` captures a screenshot and publishes a separate Zapstore application event by default; use `--no-screenshot` and/or `--no-zapstore` to opt out. See the [CLI guide](packages/cli/README.md#screenshots-and-zapstore-metadata) for configuration, browser setup, and dry-run examples.
+`napplet deploy` captures a screenshot (also available as `napplet screenshot --output preview.png`) and publishes a separate Zapstore application event by default; use `--no-screenshot` and/or `--no-zapstore` to opt out. See the [CLI guide](packages/cli/README.md#screenshots-and-zapstore-metadata) for configuration, browser setup, and dry-run examples.
 
-Use the [`napplet-icon` skill](skills/napplet-icon/SKILL.md) to design, generate, and refine an app icon, check it at small sizes, and prepare it for NIP-5D integration. Install it with `npx skills add napplet/web --skill napplet-icon`; see the [agent skills guide](apps/docs/guide/agent-skills.md) for the complete workflow.
+### Agent skills
 
-Use [`napplet-port-napp`](skills/napplet-port-napp/SKILL.md) to port an [eskema/nostrapps NAPP](https://github.com/eskema/nostrapps/blob/main/NAPP.md) through bridge replacement, implementation and behavior verification. Install it with `npx skills add napplet/web --skill napplet-port-napp`.
+`npx skills add napplet/web` installs the `napplet-*` skills from [`skills/`](skills). Two are worth calling out:
 
-## Event schema compatibility
+- [`napplet-icon`](skills/napplet-icon/SKILL.md) designs, generates, and refines an app icon, checks it at small sizes, and prepares it for NIP-5D integration: `npx skills add napplet/web --skill napplet-icon`.
+- [`napplet-port-napp`](skills/napplet-port-napp/SKILL.md) ports an [eskema/nostrapps NAPP](https://github.com/eskema/nostrapps/blob/main/NAPP.md) through bridge replacement, implementation, and behavior verification: `npx skills add napplet/web --skill napplet-port-napp`.
 
-Current event defaults begin at **CLI 0.7.0**, **Vite plugin 0.15.0**, **conformance 0.18.0**, and **conformance-cli 0.3.0**. Earlier release series use legacy path/aggregate manifests. The event kinds remain 5129/15129/35129; current events use the artifact SHA-256 in `x`, a description in `content`, and `R`/`O` plus `z`/`i` metadata. CLI deployments offer temporary `--format legacy` support; unattended deployments default to current. See the [migration guide](apps/docs/guide/event-migration.md) for event conversion, legacy pointers and shell storage/ACL implications.
+The [agent skills guide](apps/docs/guide/agent-skills.md) covers the complete set and workflow.
 
 ## Packages
 
 | Package | npm | JSR | Description |
 |---------|-----|-----|-------------|
-| [@napplet/core](packages/core) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fcore?label=npm)](https://www.npmjs.com/package/@napplet/core) | [![JSR](https://jsr.io/badges/@napplet/core)](https://jsr.io/@napplet/core) | JSON envelope types (`NappletMessage`, `NapDomain`), NAP dispatch infrastructure (`registerNap`, `dispatch`), protocol constants and Nostr types. Imported by all other packages. |
-| [@napplet/shim](packages/shim) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fshim?label=npm)](https://www.npmjs.com/package/@napplet/shim) | [![JSR](https://jsr.io/badges/@napplet/shim)](https://jsr.io/@napplet/shim) | Runtime-side helper for injecting selected `window.napplet.<domain>` objects before napplet code runs. Sends JSON envelope messages via postMessage. |
-| [@napplet/sdk](packages/sdk) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fsdk?label=npm)](https://www.npmjs.com/package/@napplet/sdk) | [![JSR](https://jsr.io/badges/@napplet/sdk)](https://jsr.io/@napplet/sdk) | Named TypeScript exports wrapping `window.napplet` for bundler consumers. Provides domain wrapper objects and NAP message type re-exports, including `relay`, `inc`, `storage`, `cvm`, `outbox`, `upload`, `intent`, `navigation`, `ble`, `webrtc`, `link`, `count`, `lists`, `common`, `serial`, `fs`, `dm`, `llm`, `catalog`, `torrent`, and `soulseek`. |
-| [@napplet/nap](packages/nap) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fnap?label=npm)](https://www.npmjs.com/package/@napplet/nap) | [![JSR](https://jsr.io/badges/@napplet/nap)](https://jsr.io/@napplet/nap) | Compatibility package for active NAP domain subpaths (shell, relay, storage, inc, ifc, keys, theme, media, notify, identity, config, resource, cvm, outbox, upload, intent, navigation, ble, webrtc, link, count, lists, common, serial, fs, dm, llm, catalog, soulseek) with barrel + granular (types/shim/sdk) exports. Tree-shakable (`sideEffects: false`). Includes ownership-aware `media` and `resource`, the ContextVM `cvm` bridge with registry helpers, outbox-aware `outbox` relay routing, shell-mediated `upload`, archetype `intent` dispatch, runtime-mediated BLE/WebRTC, link opening, event counts, list mutations, common social actions, serial device access, shell-mediated virtual filesystem access, direct messages, user-selected language model inference, torrent jobs, runtime-mediated Soulseek discovery and downloads, and read-only `identity` helpers. See [packages/nap/README.md](packages/nap/README.md) for the full subpath reference. |
-| [@napplet/vite-plugin](packages/vite-plugin) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fvite-plugin?label=npm)](https://www.npmjs.com/package/@napplet/vite-plugin) | [![JSR](https://jsr.io/badges/@napplet/vite-plugin)](https://jsr.io/@napplet/vite-plugin) | Vite plugin for current NIP-5D manifests: hashes the final index.html artifact, emits description content and capability/intent metadata, and defaults to single-file output. |
+| [@napplet/core](packages/core) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fcore?label=npm)](https://www.npmjs.com/package/@napplet/core) | [![JSR](https://jsr.io/badges/@napplet/core)](https://jsr.io/@napplet/core) | JSON envelope types (`NappletMessage`, `NapDomain`), NAP dispatch (`registerNap`, `dispatch`), protocol constants, and Nostr types. Imported by every other package. |
+| [@napplet/shim](packages/shim) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fshim?label=npm)](https://www.npmjs.com/package/@napplet/shim) | [![JSR](https://jsr.io/badges/@napplet/shim)](https://jsr.io/@napplet/shim) | Runtime-side helper that injects selected `window.napplet.<domain>` objects before napplet code runs. |
+| [@napplet/sdk](packages/sdk) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fsdk?label=npm)](https://www.npmjs.com/package/@napplet/sdk) | [![JSR](https://jsr.io/badges/@napplet/sdk)](https://jsr.io/@napplet/sdk) | Named TypeScript exports wrapping `window.napplet` for bundler consumers, with a domain wrapper and NAP message types per domain (`relay`, `storage`, `intent`, `navigation`, `llm`, …). |
+| [@napplet/nap](packages/nap) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fnap?label=npm)](https://www.npmjs.com/package/@napplet/nap) | [![JSR](https://jsr.io/badges/@napplet/nap)](https://jsr.io/@napplet/nap) | One subpath per active NAP domain, each with barrel plus granular `types` / `shim` / `sdk` exports. Tree-shakable (`sideEffects: false`). See the [subpath reference](packages/nap/README.md). |
+| [@napplet/vite-plugin](packages/vite-plugin) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fvite-plugin?label=npm)](https://www.npmjs.com/package/@napplet/vite-plugin) | [![JSR](https://jsr.io/badges/@napplet/vite-plugin)](https://jsr.io/@napplet/vite-plugin) | Builds current NIP-5D manifests: hashes the final `index.html` artifact, emits description content and capability/intent metadata, and defaults to single-file output. |
 | [@napplet/cli](packages/cli) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fcli?label=npm)](https://www.npmjs.com/package/@napplet/cli) | [![JSR](https://jsr.io/badges/@napplet/cli)](https://jsr.io/@napplet/cli) | Standalone CLI for creating projects, owning deploy metadata, discovering builds, and deploying signed manifests. JSR/Deno remains an alternative install route. |
-| [@napplet/boilerplate](packages/boilerplate) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fboilerplate?label=npm)](https://www.npmjs.com/package/@napplet/boilerplate) | — | Project-only generator behind `napplet create`; clones the maintained Vite + TypeScript starter and derives its package name without setting deployment metadata. |
-| [@napplet/conformance](packages/conformance) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fconformance?label=npm)](https://www.npmjs.com/package/@napplet/conformance) | [![JSR](https://jsr.io/badges/@napplet/conformance)](https://jsr.io/@napplet/conformance) | Framework-agnostic conformance engine: hand-written envelope validators for the active NAP wire domains, a signed manifest-event validator, a scriptable reference mock shell, the zero-config check catalog, and pretty/JSON/JUnit reporters. Browser-safe; reused by both the CLI and the web runtime. |
-| [@napplet/conformance-cli](packages/conformance-cli) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fconformance-cli?label=npm)](https://www.npmjs.com/package/@napplet/conformance-cli) | — | Headless `napplet-conformance` runner. Drives the engine against a napplet in real Chromium (Playwright) and sets a CI exit code — wire it up as `test:conformance`. npm-only (Playwright dependency). |
-| [@napplet/conformance-web](apps/conformance) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fconformance-web?label=npm)](https://www.npmjs.com/package/@napplet/conformance-web) | — | Browser conformance runtime deployed at `/conformance` and bundled into `napplet-conformance --ui`. Runs the conformance engine live in the page with a check tree, envelope log, and manifest inspector. |
-| [@napplet/lab](packages/lab) | — | — | Private tooling for probing napplets and the shells that host them. Ships lab napplets under `packages/lab/napplets/*`, starting with the Security Lab (`@napplet/lab-security`): a napplet that probes the sandbox, CSP, namespace, runtime and identity-revocation boundaries of whatever shell loads it, plus a headless Kehto Paja harness. Published as NIP-5D manifests, not to npm. |
+| [@napplet/boilerplate](packages/boilerplate) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fboilerplate?label=npm)](https://www.npmjs.com/package/@napplet/boilerplate) | — | Project-only generator behind `napplet create`. Clones the maintained Vite + TypeScript starter without setting deployment metadata. |
+| [@napplet/conformance](packages/conformance) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fconformance?label=npm)](https://www.npmjs.com/package/@napplet/conformance) | [![JSR](https://jsr.io/badges/@napplet/conformance)](https://jsr.io/@napplet/conformance) | Browser-safe conformance engine: envelope validators for the active NAP domains, a signed manifest-event validator, a reference mock shell, the zero-config check catalog, and pretty/JSON/JUnit reporters. |
+| [@napplet/conformance-cli](packages/conformance-cli) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fconformance-cli?label=npm)](https://www.npmjs.com/package/@napplet/conformance-cli) | — | Headless `napplet-conformance` runner. Drives the engine against a napplet in real Chromium (Playwright) and sets a CI exit code. npm-only. |
+| [@napplet/conformance-web](apps/conformance) | [![npm](https://img.shields.io/npm/v/%40napplet%2Fconformance-web?label=npm)](https://www.npmjs.com/package/@napplet/conformance-web) | — | Browser conformance runtime deployed at `/conformance` and bundled into `napplet-conformance --ui`, with a check tree, envelope log, and manifest inspector. |
+| [@napplet/lab](packages/lab) | — | — | Private tooling for probing napplets and shells. Holds lab napplets under `packages/lab/napplets/*`, starting with the Security Lab, which probes the sandbox, CSP, namespace, runtime, and identity-revocation boundaries of whatever shell loads it. Published as NIP-5D manifests, not to npm. |
+
+Release notes live in each package's `CHANGELOG.md`.
 
 ## Conformance testing
 
-Napplets can verify they conform to the NAP protocol **before** publishing, in two scopes that share one engine:
+Napplets can check NAP protocol conformance **before** publishing, in two scopes that share one engine:
 
 ```bash
-# Headless / CI — exits non-zero on any error-severity failure:
+# Headless / CI: exits non-zero on any error-severity failure
 npx napplet-conformance ./dist
-```
 
-```bash
-# App variant — opens the live web runtime and re-runs on every change (like vitest --ui):
+# Live UI: opens the web runtime and re-runs on every change (like vitest --ui)
 npx napplet-conformance --ui . --exec "vite build --watch"
 ```
 
 ```jsonc
-// package.json — works with pnpm / npm / yarn / bun:
+// package.json (works with pnpm / npm / yarn / bun)
 {
   "scripts": {
     "test:conformance": "napplet-conformance ./dist",
@@ -91,52 +103,44 @@ npx napplet-conformance --ui . --exec "vite build --watch"
 }
 ```
 
-The same web runtime ships standalone (`apps/conformance`, deployed at `/conformance`) and runs the checks live in the browser with a visual report. v1 is zero-config protocol conformance: signed manifest-event validity, boots under `sandbox="allow-scripts"`, receives a runtime-injected `window.napplet`, every emitted envelope is well-formed, graceful degradation when a domain is absent, and no forbidden globals.
+The same web runtime ships standalone at [napplet.run/conformance](https://napplet.run/conformance/). v1 is zero-config protocol conformance: signed manifest-event validity, boots under `sandbox="allow-scripts"`, receives a runtime-injected `window.napplet`, every emitted envelope is well-formed, graceful degradation when a domain is absent, and no forbidden globals.
 
-## Changelog
-
-- **Conformance tooling** — new `@napplet/conformance` engine + `@napplet/conformance-cli` runner + standalone `apps/conformance` web runtime let a napplet self-verify NAP protocol conformance headlessly (CI) and live in the browser. Hand-written per-NAP envelope validators (drift-guarded against `@napplet/nap`), manifest checks, a reference mock shell, and a `test:conformance`-ready CLI.
-- **v0.32.0 — Read-Only NAP-IDENTITY** — `identity.getPublicKey()` is a snapshot that resolves to a hex pubkey or `""` when no user is connected, and `identity.onChanged(handler)` receives shell-pushed `identity.changed` updates. Identity no longer exposes decrypt, encrypt, or signing operations.
 ## Architecture
 
-### Package Dependency Graph
-
-```
-@napplet/shim ──► @napplet/nap ──► @napplet/core
-@napplet/sdk  ──► @napplet/core
-
-@napplet/vite-plugin  (build-time only, depends on nostr-tools)
-@napplet/cli          (Deno deploy and diagnostics tool)
-
-@napplet/boilerplate  (CLI generator, clones github.com/napplet/boilerplate)
-@napplet/conformance-cli ──► @napplet/conformance + @napplet/conformance-web
-@napplet/conformance-web ──► @napplet/conformance
+```mermaid
+flowchart LR
+  shim["@napplet/shim"] --> nap["@napplet/nap"] --> core["@napplet/core"]
+  sdk["@napplet/sdk"] --> core
+  ccli["@napplet/conformance-cli"] --> conf["@napplet/conformance"]
+  ccli --> cweb["@napplet/conformance-web"] --> conf
+  cli["@napplet/cli"] -. napplet create .-> bp["@napplet/boilerplate"]
+  vite["@napplet/vite-plugin"] -. build time .-> manifest[("NIP-5D manifest")]
 ```
 
-### Runtime Injection And Napplet-Side Communication
+At runtime the shell injects the domains it supports, then the napplet talks to it over one port:
 
 ```
-Shell runtime                              @napplet/shim
-  ShellBridge                                window.napplet.outbox (query/subscribe/publish)
-  ├── JSON envelope message routing          window.napplet.inc   (topics/channels)
-  ├── Identity bound to the hello port       window.napplet.storage (get/set/remove)
-  ├── ACL enforcement                        window.napplet.resource (bytes/bytesMany/bytesAsObjectURL)
-  ├── NAP dispatch (outbox/relay/storage)    window.napplet.domain presence
-  └── INC routing
+Shell runtime                              Napplet (sandboxed iframe)
+  ├── JSON envelope routing                  window.napplet.outbox   (query/subscribe/publish)
+  ├── identity bound to the hello port       window.napplet.inc      (topics/channels)
+  ├── ACL enforcement                        window.napplet.storage  (get/set/remove)
+  ├── NAP dispatch (outbox/storage/…)        window.napplet.resource (bytes/bytesMany/…)
+  └── INC routing                            absent domain = unavailable
 
 ◄────────── window: { type: 'napplet.hello' } + one MessagePort (once) ─────►
 ◄────────── port:   { type: 'outbox.subscribe', id, filters }       ─────────►
 ◄────────── port:   { type: 'outbox.event', subId, result }         ─────────►
-
-@napplet/vite-plugin (build time)
-  └── NIP-5D manifest generation + R/O capability advertisements
 ```
 
-The iframe uses `sandbox="allow-scripts"`, without `allow-same-origin`, as specified by [NIP-5D Transport](https://github.com/dskvr/nips/blob/nip/5d/5D.md#transport). Napplets cannot access the host shell's DOM, cookies, localStorage, or service workers. All persistent state goes through the shell's proxies.
+The iframe uses `sandbox="allow-scripts"` without `allow-same-origin`, per the Transport section of [NIP-5D](https://github.com/nostr-protocol/nips/pull/2303). Napplets can't reach the shell's DOM, cookies, `localStorage`, or service workers; all persistent state goes through the shell's proxies.
 
-### Intent dispatch
+### Event schema compatibility
 
-NAP-INTENT accepts convention URIs through `invoke(uri, options?)` and `open(uri, options?)`. The binding derives the role, action, and stable convention identity before dispatch.
+Current event defaults begin at **CLI 0.7.0**, **Vite plugin 0.15.0**, **conformance 0.18.0**, and **conformance-cli 0.3.0**. Earlier release series use legacy path/aggregate manifests. The event kinds remain 5129/15129/35129; current events use the artifact SHA-256 in `x`, a description in `content`, and `R`/`O` plus `z`/`i` metadata. CLI deployments offer temporary `--format legacy` support; unattended deployments default to current. See the [migration guide](apps/docs/guide/event-migration.md) for event conversion, legacy pointers, and shell storage/ACL implications.
+
+## NAP domains
+
+Shells implement any subset of NAPs and inject only the domains they support, so feature-gate with `window.napplet?.<domain>` before use. Proposal status and our shipped implementation maturity are tracked separately, and every capability can change: inspect `NAP_IMPLEMENTATIONS` from `@napplet/core` and use `selectNapDomains` for local host opt-in policy. See [maturity and opt-in guidance](https://napplet.run/docs/naps/maturity.html) and the full [NAP domain reference](apps/docs/naps/index.md).
 
 ```ts
 const result = await window.napplet.intent?.open('napplet:profile/open', {
@@ -144,43 +148,77 @@ const result = await window.napplet.intent?.open('napplet:profile/open', {
   behavior: { focus: true, reuse: false },
 });
 if (!result?.ok) throw new Error(result?.error ?? 'intent not accepted');
-window.napplet.intent?.onDelivery(({ id, sender, convention, payload }) => {
-  console.log(id, sender, convention, payload);
+
+window.napplet.intent?.onDelivery(({ sender, convention, payload }) => {
+  console.log(sender, convention, payload);
 });
 ```
 
-Acceptance transfers delivery responsibility to the runtime; target delivery is retained until `onDelivery` registration and does not depend on the source remaining alive. Candidates expose opaque catalog identifiers and manifest-derived parameter contracts. NAP-SHELL provides optional environment information without gating other domains. This non-normative orientation defers to the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md) and [NAP-SHELL](https://github.com/napplet/naps/blob/master/naps/NAP-SHELL.md).
+Some domains with notable recent work (each guide is non-normative and defers to the linked proposal):
 
-## Origin
+| Domain | What it does | Guide | Proposal |
+|--------|--------------|-------|----------|
+| `intent` | URI-based `invoke` / `open` dispatch. Acceptance transfers delivery to the runtime, which retains deliveries until `onDelivery` registers. | [intent](apps/docs/naps/intent.md) | [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md) |
+| `shell` | Optional environment information; never gates other domains. | [shell](apps/docs/naps/shell.md) | [NAP-SHELL](https://github.com/napplet/naps/blob/master/naps/NAP-SHELL.md) |
+| `navigation` | `report()` committed locations and `get()` runtime-owned history. Back/Forward arrives as an ordinary intent delivery. | [navigation](apps/docs/naps/navigation.md) | [draft](https://github.com/napplet/naps/pull/126) |
+| `gamepad` | Cached controller snapshots, `available` / `focused`, and `onChange`. Keep keyboard or pointer controls as a fallback. | [gamepad](apps/docs/naps/gamepad.md) | [draft](https://github.com/napplet/naps/pull/108) |
+| `llm` | User-selected model connections, stateless generations with optional napplet-executed tools, streamed deltas, and cancel. | [llm](apps/docs/naps/llm.md) | [draft](https://github.com/napplet/naps/pull/134) |
+| `blossom` | Server-directed blob operations, BUD-03 server lists, and BUD-10 URI helpers. | [blossom](apps/docs/naps/blossom.md) | [draft](https://github.com/napplet/naps/pull/71) |
+| `catalog` | Read-only, caller-scoped snapshot of runnable napplets via `catalog.get()`. | [catalog](apps/docs/naps/catalog.md) | [draft](https://github.com/napplet/naps/pull/95) |
+| `torrent` | Runtime-owned download/seed jobs, verified reads, metadata export, and live settings. | [torrent](apps/docs/naps/torrent.md) | [draft](https://github.com/napplet/naps/blob/nap-torrent/naps/NAP-TORRENT.md) |
+| `soulseek` | Network search, peer share browsing, paged result snapshots, and endpoint-owned downloads. | [soulseek](apps/docs/naps/soulseek.md) | [draft](https://github.com/napplet/naps/pull/135) |
 
-The napplet protocol is defined by the living [NIP-5D specification](https://github.com/nostr-protocol/nips/pull/2303); the NAP capability domains are defined on the [NAPs track](https://github.com/napplet/naps). Any shell can host napplets by injecting `window.napplet` before napplet scripts run. Napplet application code consumes injected domains directly or through `@napplet/sdk`.
+## Project structure
+
+```
+apps/
+├── conformance/     # standalone conformance web runtime (/conformance)
+├── docs/            # VitePress documentation (/docs)
+└── web/             # Astro showcase, protocol directory, explainer (/)
+docs/                # internal design notes
+edge/                # Bunny edge script for Markdown negotiation
+packages/
+├── boilerplate/     # generator behind `napplet create`
+├── cli/             # standalone `napplet` CLI
+├── conformance/     # conformance engine
+├── conformance-cli/ # headless `napplet-conformance` runner
+├── core/            # envelope types, dispatch, constants
+├── lab/             # private probing tools and lab napplets
+├── nap/             # per-domain NAP subpaths
+├── sdk/             # named exports over window.napplet
+├── shim/            # runtime-side domain installer
+└── vite-plugin/     # NIP-5D manifest generation
+scripts/             # repo tooling: site assembly, link checks, release sync
+skills/              # napplet-* agent skills (skills.sh)
+specs/               # shell resource policy notes
+tests/               # e2e harness and fixture napplets
+AGENTS.md            # contributor and agent rules (CLAUDE.md symlinks here)
+```
+
+## Documentation
+
+| Resource | Description |
+|----------|-------------|
+| [Getting started](apps/docs/guide/getting-started.md) | Install the CLI and ship a first napplet |
+| [Core concepts](apps/docs/guide/concepts.md) | Shells, napplets, domain presence, identity |
+| [NIP-5D orientation](apps/docs/guide/nip-5d.md) | Non-normative tour of the protocol |
+| [NAP domain reference](apps/docs/naps/index.md) | One page per domain with examples and maturity |
+| [Agent skills](apps/docs/guide/agent-skills.md) | Building napplets with coding agents |
+| [Event migration](apps/docs/guide/event-migration.md) | Moving from legacy manifests to current events |
+| [Agent access](apps/docs/guide/agent-access.md) | Markdown copies, `llms.txt`, and the skills index on napplet.run |
+| [Website development](apps/web/README.md) | Running and verifying the showcase site |
 
 ## Development
 
 ```bash
 pnpm install
-pnpm build        # Build all packages via turborepo
-pnpm type-check   # TypeScript validation
-napplet create my-napplet # Scaffold a new napplet from the template repo
+pnpm build          # build all packages via turborepo
+pnpm type-check     # TypeScript validation
+pnpm test:unit      # unit tests across the workspace
+pnpm dev:site       # website + docs together on OS-chosen ports
 ```
 
-### Publishing
-
-Publishing runs from GitHub Actions. Prepare release metadata locally, then merge the release changes into `main`. Every push to `main` runs the JSR publisher, which skips versions already present in the registry and publishes missing versions regardless of the commit title. Manual dispatch remains available to retry a failed release. npm publishing runs through Changesets; the Deno CLI is distributed through JSR and standalone GitHub release binaries.
-
-```bash
-pnpm version-packages   # Apply changesets, bump versions
-```
-
-## Website
-
-Run `pnpm dev:site` to start the website and documentation together. Each launch chooses open ports through the OS and prints both URLs. The website uses its paired documentation server's actual address; concurrent launches can run side by side. Ctrl+C stops the servers started by that command. Standalone website and documentation commands also select open ports.
-
-The informational site and package documentation live in `apps/`:
-
-- `apps/web` -- Astro ecosystem showcase with runnable napplets, shells, and developer tools; `/protocol/` lists merged NAPs and open proposals with detail pages and contribution guidance. The original Svelte explainer lives at `/explainer/`. Run `pnpm generate:protocol` to refresh the NAP directory and build the website; the deployment workflow also refreshes it daily. See [website development and verification](apps/web/README.md).
-- `apps/docs` -- VitePress documentation, served under `/docs`.
-- `apps/conformance` -- the standalone conformance web runtime, served under `/conformance`.
+`pnpm dev:site` prints both URLs and wires the website to its paired docs server, so concurrent launches can run side by side. To run one app on its own:
 
 ```bash
 pnpm --filter @napplet/web dev             # showcase and explainer
@@ -188,58 +226,30 @@ pnpm --filter @napplet/docs dev            # documentation
 pnpm --filter @napplet/conformance-web dev # conformance runtime
 ```
 
-Documentation development prebundling uses the same `esnext` target as production builds and source transforms. Keep `optimizeDeps.esbuildOptions.target` aligned with the other docs Vite targets when updating the toolchain.
+`pnpm generate:protocol` refreshes the `/protocol/` NAP directory and rebuilds the website; the deploy workflow also refreshes it daily. Docs dev prebundling uses the same `esnext` target as production builds, so keep `optimizeDeps.esbuildOptions.target` aligned with the other docs Vite targets when updating the toolchain.
 
-`scripts/assemble-site.mjs` creates the same static artifact for link checks and `.github/workflows/deploy-site.yml`: showcase at `/`, original explainer at `/explainer/`, docs at `/docs/`, and conformance at `/conformance/`, plus Markdown copies of every page, `/llms.txt` and the `/.well-known/agent-skills/` index for agents ([Agent access](apps/docs/guide/agent-access.md)). Bunny is the canonical deployment target, with `Accept: text/markdown` negotiation in the [`edge/`](edge/README.md) script; nsite is an optional mirror. Configure deploy secrets with `scripts/setup-site-secrets.sh`.
+`scripts/assemble-site.mjs` produces the static artifact used by link checks and `.github/workflows/deploy-site.yml`: showcase at `/`, original explainer at `/explainer/`, docs at `/docs/`, and conformance at `/conformance/`, plus Markdown copies of every page, `/llms.txt`, and the `/.well-known/agent-skills/` index. Bunny is the canonical deployment target, with `Accept: text/markdown` negotiation in the [`edge/`](edge/README.md) script; nsite is an optional mirror. Configure deploy secrets with `scripts/setup-site-secrets.sh`.
 
-## Related
+### Publishing
 
-- **[NIP-5D](https://github.com/nostr-protocol/nips/pull/2303)** -- the living napplet-shell protocol specification (source of truth)
-- **[NAPs track](https://github.com/napplet/naps)** -- where every NAP capability domain is proposed and defined
+Publishing runs from GitHub Actions, never locally. Add changesets, run `pnpm version-packages` to bump versions and sync JSR metadata, and merge the release PR into `main`. npm publishing runs through Changesets. Every push to `main` also runs the JSR publisher, which skips versions already in the registry; manual dispatch can retry a failed release. The CLI is distributed through JSR and standalone GitHub release binaries.
+
+## Contributing
+
+Read [AGENTS.md](AGENTS.md) first. It covers protocol fidelity (never invent protocol surface; spec gaps go to the [NAPs track](https://github.com/napplet/naps)), branching, changesets, and what "done" means for a PR.
+
+<a href="https://github.com/napplet/web/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=napplet/web" alt="Contributors" />
+</a>
 
 ## License
 
-MIT
+[MIT](LICENSE)
 
-### Controller snapshots
+---
 
-This non-normative guidance defers to [NAP-GAMEPAD](https://github.com/napplet/naps/pull/108). When the runtime exposes `window.napplet.gamepad`, the SDK provides cached `getGamepads()`, read-only `available` and `focused`, and `onChange(handler)` with an independently closable listener. Keep keyboard or pointer controls available when the domain or native controllers are unavailable. Ignore gameplay edges while unfocused, and reset the button baseline on regained focus. Preserve null slots and route controllers by their `index`.
+<div align="center">
 
-```ts
-import { gamepad } from '@napplet/sdk/gamepad';
+[![Star History Chart](https://api.star-history.com/svg?repos=napplet/web&type=Date)](https://star-history.com/#napplet/web&Date)
 
-if (window.napplet?.gamepad) {
-  const subscription = gamepad.onChange(state => {
-    if (!state.available || !state.focused) return;
-    for (const pad of state.pads) {
-      if (pad) console.log(pad.index, pad.axes);
-    }
-  });
-  // Call subscription.close() when the owning view is disposed, not right away.
-}
-```
-
-Declare `gamepad` as optional (`O`) when other controls fulfill the core task. Use a hard requirement (`R`) only when the core task needs controller input. The runtime owns controller access and focus isolation; app code does not call native `navigator.getGamepads()` or open raw HID devices. Haptics and remapping are outside this proposal.
-## Runtime-owned navigation history
-
-The SDK exposes `navigation.report()` and `navigation.get()` through `@napplet/sdk` and `@napplet/sdk/navigation`. A napplet reports its committed advertised intent location; the runtime owns visits, position, and retention. Back/Forward arrives through ordinary intent delivery, and the resulting report carries that delivery's `id`. This implementation targets the [NAP-NAVIGATION draft](https://github.com/napplet/naps/pull/126) and companion [NAP-INTENT delivery draft](https://github.com/napplet/naps/pull/128); neither is presented here as a final protocol. See the [navigation guide](apps/docs/naps/navigation.md) for availability, declarations, serialization, and rejection handling.
-
-## Language model support
-
-The packages expose the proposed [NAP-LLM](https://github.com/napplet/naps/pull/134) through `window.napplet.llm`, `@napplet/sdk`, `@napplet/sdk/llm`, and the layered `@napplet/nap/llm` subpaths. Napplets ask the user to select a model connection, submit stateless generations (optionally with tool definitions the napplet itself executes) with optional streamed deltas, and cancel them; the runtime supplies the connections, credentials, disclosure consent, and provider access. See the non-normative [LLM guide](apps/docs/naps/llm.md).
-
-## Blossom blob access
-
-The SDK exposes `blossom` from `@napplet/sdk` and `@napplet/sdk/blossom` for server-directed blob operations, ordered BUD-03 server-list helpers and local BUD-10 URI parsing/formatting. Check `window.napplet?.blossom` before optional use. Binary fields remain `Blob` or `ArrayBuffer`; endpoint failures resolve with `ok: false`, while malformed-envelope errors and transport failures reject. Use `resource` for generic retrieval and `upload` when the runtime should choose storage. See the non-normative [BLOSSOM guide](https://napplet.run/docs/naps/blossom.html) and living [NAP-BLOSSOM proposal](https://github.com/napplet/naps/pull/71).
-
-## Runtime napplet discovery
-
-The packages support the [NAP-CATALOG draft](https://github.com/napplet/naps/pull/95): read a caller-scoped snapshot with `catalog.get()` from `@napplet/sdk` or `@napplet/sdk/catalog`. Check `window.napplet?.catalog` first. Discovery is read-only and independent of intent dispatch. See the [non-normative catalog guide](apps/docs/naps/catalog.md).
-
-## Torrent support
-
-The packages expose the proposed [NAP-TORRENT](https://github.com/napplet/naps/blob/nap-torrent/naps/NAP-TORRENT.md) through `window.napplet.torrent`, `@napplet/sdk`, `@napplet/sdk/torrent`, and the layered `@napplet/nap/torrent` subpaths. Napplets request runtime-owned download or seed jobs, verified content reads, metadata export, file actions, and live settings. The runtime supplies the engine, consent, storage, and network policy; discovery and Nostr operations stay outside the torrent domain. See the non-normative [TORRENT guide](apps/docs/naps/torrent.md).
-
-## Soulseek support
-
-The packages expose the proposed [NAP-SOULSEEK](https://github.com/napplet/naps/pull/135) through `window.napplet.soulseek`, `@napplet/sdk`, `@napplet/sdk/soulseek`, and the layered `@napplet/nap/soulseek` subpaths. Napplets search the network, browse a peer's shares, page immutable result snapshots, and control endpoint-owned downloads with bounded reads and user-mediated saving. The runtime supplies the account, peer networking, storage, content disclosure, and export policy. See the non-normative [SOULSEEK guide](apps/docs/naps/soulseek.md).
+</div>
