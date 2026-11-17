@@ -1,6 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { installFakeShell, type FakeShell } from '../test-support/fake-shell.js';
 
+// CEP-15 SHA-256 of JCS({ inputSchema: { type: 'object' }, name: 'search_profiles' }).
+const schemaHash = '088b807239ac8fc469b9228025cb93269cfc3e40c7522141014ac66e348a138f';
+
 let shell: FakeShell;
 let uuidCounter: number;
 let originalCryptoDescriptor: PropertyDescriptor | undefined;
@@ -167,14 +170,14 @@ describe('@napplet/nap/cvm shim', () => {
   it('registry.list posts cvm.registry.list and resolves returned entries', async () => {
     const { registryList, handleCvmMessage } = await import('./shim.js');
 
-    const promise = registryList({ family: 'relatr', limit: 1 });
+    const promise = registryList({ family: 'relatr', schemaHash, category: 'profiles', limit: 1 });
     const sent = lastPosted('cvm.registry.list');
-    expect(sent.query).toEqual({ family: 'relatr', limit: 1 });
+    expect(sent.query).toEqual({ family: 'relatr', schemaHash, category: 'profiles', limit: 1 });
 
     const entries = [
       {
-        family: 'relatr',
-        tools: [{ name: 'search_profiles', inputSchema: { type: 'object' } }],
+        schemaHashes: [schemaHash],
+        tools: [{ name: 'search_profiles', inputSchema: { type: 'object' }, schemaHash }],
       },
     ];
     handleCvmMessage({ type: 'cvm.registry.list.result', id: sent.id, entries });
@@ -185,10 +188,9 @@ describe('@napplet/nap/cvm shim', () => {
   it('registry.has posts cvm.registry.has and resolves availability', async () => {
     const { registryHas, handleCvmMessage } = await import('./shim.js');
 
-    const promise = registryHas('relatr', { schemaHash: 'abc123' });
+    const promise = registryHas({ family: 'relatr', schemaHash });
     const sent = lastPosted('cvm.registry.has');
-    expect(sent.family).toBe('relatr');
-    expect(sent.options).toEqual({ schemaHash: 'abc123' });
+    expect(sent).toEqual({ type: 'cvm.registry.has', id: expect.any(String), selector: { family: 'relatr', schemaHash } });
 
     handleCvmMessage({ type: 'cvm.registry.has.result', id: sent.id, has: true });
     await expect(promise).resolves.toBe(true);
@@ -197,7 +199,7 @@ describe('@napplet/nap/cvm shim', () => {
   it('registry.describe rejects when the shell omits entry without an error', async () => {
     const { registryDescribe, handleCvmMessage } = await import('./shim.js');
 
-    const promise = registryDescribe('relatr');
+    const promise = registryDescribe({ family: 'relatr' });
     const sent = lastPosted('cvm.registry.describe');
     handleCvmMessage({ type: 'cvm.registry.describe.result', id: sent.id });
 
@@ -207,9 +209,10 @@ describe('@napplet/nap/cvm shim', () => {
   it('registry.call posts cvm.registry.call and resolves MCP tool results', async () => {
     const { registryCall, handleCvmMessage } = await import('./shim.js');
 
-    const promise = registryCall('relatr', 'search_profiles', { q: 'jack' }, { cache: 'reload' });
+    const promise = registryCall({ schemaHash }, 'search_profiles', { q: 'jack' }, { cache: 'reload' });
     const sent = lastPosted('cvm.registry.call');
-    expect(sent.family).toBe('relatr');
+    expect(sent.selector).toEqual({ schemaHash });
+    expect(sent).not.toHaveProperty('family');
     expect(sent.tool).toBe('search_profiles');
     expect(sent.args).toEqual({ q: 'jack' });
     expect(sent.options).toEqual({ cache: 'reload' });

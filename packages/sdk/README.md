@@ -310,6 +310,10 @@ const items = await resourceBytesMany(['https://example.com/a.png']);
 const handle = resourceBytesAsObjectURL('blossom:<sha256>.png');
 ```
 
+### `cvm.registry`
+
+Use `cvm.registry.has({ family: 'relatr' })`, `describe({ family: 'relatr' })`, or `call({ schemaHash: tool.schemaHash }, tool.name, args)` to select registry tools. The named `cvmRegistryHas`, `cvmRegistryDescribe`, and `cvmRegistryCall` helpers take the same selector objects. String-family arguments and `options.schemaHash` have been replaced by `CvmRegistrySelector`; returned entries carry `schemaHashes`, required tool hashes, and an optional local family label. See the [CVM guide](https://napplet.run/docs/naps/cvm) for migration examples and the living [NAP-CVM proposal](https://github.com/napplet/naps/pull/31) for the protocol contract.
+
 ### `keys`
 
 Keyboard forwarding and action keybindings. Mirrors `window.napplet.keys`.

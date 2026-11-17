@@ -67,6 +67,7 @@ export type {
   JsonObject,
   JsonSchema,
   CvmRegistryQuery,
+  CvmRegistrySelector,
   CvmRegistryOptions,
   CvmRegistryCallOptions,
   CvmRegistryTool,

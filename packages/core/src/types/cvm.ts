@@ -99,17 +99,26 @@ export type JsonObject = Record<string, unknown>;
 /** JSON Schema object advertised by a ContextVM registry tool. */
 export type JsonSchema = Record<string, unknown>;
 
-/** Query for shell-curated ContextVM registry families. */
+/** Query for ContextVM registry tools and shell-local families. */
 export interface CvmRegistryQuery {
   search?: string;
   family?: string;
   schemaHash?: string;
+  category?: string;
   limit?: number;
 }
 
-/** Selection constraints for a ContextVM registry family. */
+/**
+ * Select by CEP-15 tool hash or a nonempty shell-local family label.
+ * A supplied hash is authoritative and is a 64-character lowercase hex digest.
+ * See NAP-CVM's API Surface and Registry sections: https://github.com/napplet/naps/pull/31.
+ */
+export type CvmRegistrySelector =
+  | { schemaHash: string; family?: string }
+  | { family: string; schemaHash?: string };
+
+/** Provider constraint for a ContextVM registry selection. */
 export interface CvmRegistryOptions {
-  schemaHash?: string;
   server?: CvmServerRef;
 }
 
@@ -127,14 +136,15 @@ export interface CvmRegistryTool {
   description?: string;
   inputSchema: JsonSchema;
   outputSchema?: JsonSchema;
-  schemaHash?: string;
+  schemaHash: string;
 }
 
-/** A shell-curated ContextVM tool family and its candidate providers. */
+/** A verified ContextVM tool set and its candidate providers. */
 export interface CvmRegistryEntry {
-  family: string;
+  family?: string;
   description?: string;
-  schemaHash?: string;
+  /** Distinct CEP-15 hashes of the tools in this entry; order has no meaning. */
+  schemaHashes: string[];
   selected?: CvmServerRef;
   providers?: CvmServerRef[];
   tools: CvmRegistryTool[];

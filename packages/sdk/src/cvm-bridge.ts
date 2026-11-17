@@ -4,6 +4,7 @@ import type {
   CvmRegistryEntry,
   CvmRegistryOptions,
   CvmRegistryQuery,
+  CvmRegistrySelector,
   CvmRequestOptions,
   CvmServer,
   CvmServerRef,
@@ -128,47 +129,47 @@ export const cvm: SdkDomain<'cvm'> = {
   registry: {
     /**
      * List registry families known to the shell.
-     * @param query  Optional family/search/schema filter
+     * @param query  Optional family/search/schema/category filter
      */
     list(query?: CvmRegistryQuery): Promise<CvmRegistryEntry[]> {
       return requireDomain('cvm').registry.list(query);
     },
 
     /**
-     * Test whether the shell can call a registry family.
-     * @param family   Registry family name
-     * @param options  Optional schema/provider constraints
+     * Test whether the shell has a provider matching the selector.
+     * @param selector Tool hash or shell-local family label
+     * @param options  Optional provider constraint
      */
-    has(family: string, options?: CvmRegistryOptions): Promise<boolean> {
-      return requireDomain('cvm').registry.has(family, options);
+    has(selector: CvmRegistrySelector, options?: CvmRegistryOptions): Promise<boolean> {
+      return requireDomain('cvm').registry.has(selector, options);
     },
 
     /**
-     * Describe the shell-selected registry family entry.
-     * @param family   Registry family name
-     * @param options  Optional schema/provider constraints
+     * Describe the tool set matching the selector.
+     * @param selector Tool hash or shell-local family label
+     * @param options  Optional provider constraint
      */
     describe(
-      family: string,
+      selector: CvmRegistrySelector,
       options?: CvmRegistryOptions,
     ): Promise<CvmRegistryEntry> {
-      return requireDomain('cvm').registry.describe(family, options);
+      return requireDomain('cvm').registry.describe(selector, options);
     },
 
     /**
-     * Call a tool on the shell-selected provider for a registry family.
-     * @param family   Registry family name
-     * @param tool     Tool name inside the family
+     * Call a tool on the provider selected by the shell.
+     * @param selector Tool hash or shell-local family label
+     * @param tool     Tool name in the selected set
      * @param args     Tool arguments
-     * @param options  Optional schema/provider/cache/payment constraints
+     * @param options  Optional provider/cache/payment constraints
      */
     call(
-      family: string,
+      selector: CvmRegistrySelector,
       tool: string,
       args?: JsonObject,
       options?: CvmRegistryCallOptions,
     ): Promise<McpToolResult> {
-      return requireDomain('cvm').registry.call(family, tool, args, options);
+      return requireDomain('cvm').registry.call(selector, tool, args, options);
     },
   },
 };
