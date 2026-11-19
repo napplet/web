@@ -3,6 +3,7 @@ import type {
   McpToolResult,
   JsonObject,
   CvmRegistryQuery,
+  CvmRegistrySelector,
   CvmRegistryOptions,
   CvmRegistryCallOptions,
   CvmRegistryEntry,
@@ -184,14 +185,14 @@ export interface CvmRegistryListResultMessage extends CvmMessage {
   error?: string;
 }
 
-/** Test whether the shell can call a registry family. */
+/** Test whether the shell has a provider matching the selector. */
 export interface CvmRegistryHasMessage extends CvmMessage {
   type: 'cvm.registry.has';
   /** Correlation ID for this request. */
   id: string;
-  /** Registry family name. */
-  family: string;
-  /** Optional schema/provider constraints. */
+  /** Tool hash or shell-local family label. */
+  selector: CvmRegistrySelector;
+  /** Optional provider constraint. */
   options?: CvmRegistryOptions;
 }
 
@@ -200,20 +201,20 @@ export interface CvmRegistryHasResultMessage extends CvmMessage {
   type: 'cvm.registry.has.result';
   /** Correlation ID matching the original request. */
   id: string;
-  /** Whether the shell can call this family under the requested constraints. */
+  /** Whether a provider satisfies the selector and provider constraint. */
   has?: boolean;
   /** Error reason when the registry lookup failed. */
   error?: string;
 }
 
-/** Describe the shell-selected registry family entry. */
+/** Describe the tool set matching the selector. */
 export interface CvmRegistryDescribeMessage extends CvmMessage {
   type: 'cvm.registry.describe';
   /** Correlation ID for this request. */
   id: string;
-  /** Registry family name. */
-  family: string;
-  /** Optional schema/provider constraints. */
+  /** Tool hash or shell-local family label. */
+  selector: CvmRegistrySelector;
+  /** Optional provider constraint. */
   options?: CvmRegistryOptions;
 }
 
@@ -224,7 +225,7 @@ export interface CvmRegistryDescribeResultMessage extends CvmMessage {
   id: string;
   /** Shell-selected registry entry. */
   entry?: CvmRegistryEntry;
-  /** Error reason when the family could not be described. */
+  /** Error reason when the selected tool set could not be described. */
   error?: string;
 }
 
@@ -233,13 +234,13 @@ export interface CvmRegistryCallMessage extends CvmMessage {
   type: 'cvm.registry.call';
   /** Correlation ID for this request. */
   id: string;
-  /** Registry family name. */
-  family: string;
-  /** Tool name within the family. */
+  /** Tool hash or shell-local family label. */
+  selector: CvmRegistrySelector;
+  /** Tool name within the selected set. */
   tool: string;
   /** Optional tool arguments. */
   args?: JsonObject;
-  /** Optional schema/provider/cache/payment constraints. */
+  /** Optional provider/cache/payment constraints. */
   options?: CvmRegistryCallOptions;
 }
 

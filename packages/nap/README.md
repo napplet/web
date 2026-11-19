@@ -55,6 +55,10 @@ sub.on('event', (result) => console.log('new note', result.event));
 sub.close();
 ```
 
+## CVM registry selectors
+
+The CVM registry helpers accept `{ family }`, `{ schemaHash }`, or both, with the hash taking precedence. For example, use `cvmRegistryHas({ family: 'relatr' })` and `cvmRegistryCall({ schemaHash: tool.schemaHash }, tool.name, args)`. Import `CvmRegistrySelector` from `@napplet/nap/cvm/types`. String-family calls and hash pins in options have been replaced; entries now carry `schemaHashes` and required per-tool hashes, with an optional family label. This package guidance is non-normative; see the living [NAP-CVM proposal](https://github.com/napplet/naps/pull/31) and [CVM migration guide](https://napplet.run/docs/naps/cvm).
+
 ## Active Domains
 
 Each domain is an independent subpath. Barrel imports bundle types + shim installer + SDK helpers; granular subpaths isolate each surface.

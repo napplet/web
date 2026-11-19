@@ -14,6 +14,7 @@ import type {
   CvmRegistryEntry,
   CvmRegistryOptions,
   CvmRegistryQuery,
+  CvmRegistrySelector,
 } from '../cvm.js';
 
 /**
@@ -100,30 +101,30 @@ export interface CvmApi {
   registry: {
     /**
      * List registry families known to the shell.
-     * @param query  Optional family/search/schema filter
+     * @param query  Optional family/search/schema/category filter
      */
     list(query?: CvmRegistryQuery): Promise<CvmRegistryEntry[]>;
     /**
-     * Test whether the shell can call a registry family.
-     * @param family   Registry family name
-     * @param options  Optional schema/provider constraints
+     * Test whether the shell has a provider matching the selector.
+     * @param selector Tool hash or shell-local family label
+     * @param options  Optional provider constraint
      */
-    has(family: string, options?: CvmRegistryOptions): Promise<boolean>;
+    has(selector: CvmRegistrySelector, options?: CvmRegistryOptions): Promise<boolean>;
     /**
-     * Describe the shell-selected registry family entry.
-     * @param family   Registry family name
-     * @param options  Optional schema/provider constraints
+     * Describe the tool set matching the selector.
+     * @param selector Tool hash or shell-local family label
+     * @param options  Optional provider constraint
      */
-    describe(family: string, options?: CvmRegistryOptions): Promise<CvmRegistryEntry>;
+    describe(selector: CvmRegistrySelector, options?: CvmRegistryOptions): Promise<CvmRegistryEntry>;
     /**
-     * Call a tool on the shell-selected provider for a registry family.
-     * @param family   Registry family name
-     * @param tool     Tool name inside the family
+     * Call a tool on the provider selected by the shell.
+     * @param selector Tool hash or shell-local family label
+     * @param tool     Tool name in the selected set
      * @param args     Tool arguments
-     * @param options  Optional schema/provider/cache/payment constraints
+     * @param options  Optional provider/cache/payment constraints
      */
     call(
-      family: string,
+      selector: CvmRegistrySelector,
       tool: string,
       args?: JsonObject,
       options?: CvmRegistryCallOptions,

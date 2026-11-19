@@ -8,6 +8,7 @@ import type {
   CvmRegistryListMessage,
   CvmRegistryOptions,
   CvmRegistryQuery,
+  CvmRegistrySelector,
   JsonObject,
   McpToolResult,
 } from './types.js';
@@ -22,8 +23,12 @@ import {
 /**
  * List shell-curated ContextVM registry families.
  *
- * @param query  Optional search/family/schema filter
+ * @param query  Optional search/family/schema/category filter
  * @returns Promise resolving to registry entries
+ * @example
+ * ```ts
+ * await registryList({ category: 'profiles' });
+ * ```
  */
 export function registryList(query?: CvmRegistryQuery): Promise<CvmRegistryEntry[]> {
   const id = crypto.randomUUID();
@@ -43,14 +48,18 @@ export function registryList(query?: CvmRegistryQuery): Promise<CvmRegistryEntry
 }
 
 /**
- * Test whether the shell can call a ContextVM registry family.
+ * Test whether the shell has a provider matching the selector.
  *
- * @param family   Registry family name
- * @param options  Optional schema/provider constraints
+ * @param selector Tool hash or shell-local family label
+ * @param options  Optional provider constraint
  * @returns Promise resolving to availability
+ * @example
+ * ```ts
+ * await registryHas({ family: 'relatr' });
+ * ```
  */
 export function registryHas(
-  family: string,
+  selector: CvmRegistrySelector,
   options?: CvmRegistryOptions,
 ): Promise<boolean> {
   const id = crypto.randomUUID();
@@ -63,7 +72,7 @@ export function registryHas(
     const msg: CvmRegistryHasMessage = {
       type: 'cvm.registry.has',
       id,
-      family,
+      selector,
       ...(options === undefined ? {} : { options }),
     };
     postToShell(msg);
@@ -71,14 +80,18 @@ export function registryHas(
 }
 
 /**
- * Describe a shell-selected ContextVM registry family.
+ * Describe the tool set matching the selector.
  *
- * @param family   Registry family name
- * @param options  Optional schema/provider constraints
+ * @param selector Tool hash or shell-local family label
+ * @param options  Optional provider constraint
  * @returns Promise resolving to the selected registry entry
+ * @example
+ * ```ts
+ * await registryDescribe({ family: 'relatr' });
+ * ```
  */
 export function registryDescribe(
-  family: string,
+  selector: CvmRegistrySelector,
   options?: CvmRegistryOptions,
 ): Promise<CvmRegistryEntry> {
   const id = crypto.randomUUID();
@@ -91,7 +104,7 @@ export function registryDescribe(
     const msg: CvmRegistryDescribeMessage = {
       type: 'cvm.registry.describe',
       id,
-      family,
+      selector,
       ...(options === undefined ? {} : { options }),
     };
     postToShell(msg);
@@ -99,16 +112,20 @@ export function registryDescribe(
 }
 
 /**
- * Call a tool on the shell-selected provider for a ContextVM registry family.
+ * Call a tool on the provider selected by the shell.
  *
- * @param family   Registry family name
- * @param tool     Tool name inside the family
+ * @param selector Tool hash or shell-local family label
+ * @param tool     Tool name in the selected set
  * @param args     Optional tool arguments
- * @param options  Optional schema/provider/cache/payment constraints
+ * @param options  Optional provider/cache/payment constraints
  * @returns Promise resolving to the MCP tool result
+ * @example
+ * ```ts
+ * await registryCall({ family: 'relatr' }, 'search_profiles', { q: 'jack' });
+ * ```
  */
 export function registryCall(
-  family: string,
+  selector: CvmRegistrySelector,
   tool: string,
   args?: JsonObject,
   options?: CvmRegistryCallOptions,
@@ -124,7 +141,7 @@ export function registryCall(
     const msg: CvmRegistryCallMessage = {
       type: 'cvm.registry.call',
       id,
-      family,
+      selector,
       tool,
       ...(args === undefined ? {} : { args }),
       ...(options === undefined ? {} : { options }),

@@ -24,6 +24,7 @@ import type {
   McpResourceContent,
   JsonObject,
   CvmRegistryQuery,
+  CvmRegistrySelector,
   CvmRegistryOptions,
   CvmRegistryCallOptions,
   CvmRegistryEntry,
@@ -166,55 +167,71 @@ export function cvmOnEvent(
 /**
  * List shell-curated ContextVM registry families.
  *
- * @param query  Optional search/family/schema filter
+ * @param query  Optional search/family/schema/category filter
  * @returns Promise resolving to registry entries
+ * @example
+ * ```ts
+ * await cvmRegistryList({ category: 'profiles' });
+ * ```
  */
 export function cvmRegistryList(query?: CvmRegistryQuery): Promise<CvmRegistryEntry[]> {
   return requireCvm().registry.list(query);
 }
 
 /**
- * Test whether the shell can call a ContextVM registry family.
+ * Test whether the shell has a provider matching the selector.
  *
- * @param family   Registry family name
- * @param options  Optional schema/provider constraints
+ * @param selector Tool hash or shell-local family label
+ * @param options  Optional provider constraint
  * @returns Promise resolving to availability
+ * @example
+ * ```ts
+ * await cvmRegistryHas({ family: 'relatr' });
+ * ```
  */
 export function cvmRegistryHas(
-  family: string,
+  selector: CvmRegistrySelector,
   options?: CvmRegistryOptions,
 ): Promise<boolean> {
-  return requireCvm().registry.has(family, options);
+  return requireCvm().registry.has(selector, options);
 }
 
 /**
- * Describe a shell-selected ContextVM registry family.
+ * Describe the tool set matching the selector.
  *
- * @param family   Registry family name
- * @param options  Optional schema/provider constraints
+ * @param selector Tool hash or shell-local family label
+ * @param options  Optional provider constraint
  * @returns Promise resolving to the selected registry entry
+ * @example
+ * ```ts
+ * await cvmRegistryDescribe({ family: 'relatr' });
+ * ```
  */
 export function cvmRegistryDescribe(
-  family: string,
+  selector: CvmRegistrySelector,
   options?: CvmRegistryOptions,
 ): Promise<CvmRegistryEntry> {
-  return requireCvm().registry.describe(family, options);
+  return requireCvm().registry.describe(selector, options);
 }
 
 /**
- * Call a tool on the shell-selected provider for a ContextVM registry family.
+ * Call a tool on the provider selected by the shell.
  *
- * @param family   Registry family name
- * @param tool     Tool name inside the family
+ * @param selector Tool hash or shell-local family label
+ * @param tool     Tool name in the selected set
  * @param args     Optional tool arguments
- * @param options  Optional schema/provider/cache/payment constraints
+ * @param options  Optional provider/cache/payment constraints
  * @returns Promise resolving to the MCP tool result
+ * @example
+ * ```ts
+ * await cvmRegistryCall({ family: 'relatr' }, 'search_profiles', { q: 'jack' });
+ * ```
  */
 export function cvmRegistryCall(
-  family: string,
+  selector: CvmRegistrySelector,
   tool: string,
   args?: JsonObject,
   options?: CvmRegistryCallOptions,
 ): Promise<McpToolResult> {
-  return requireCvm().registry.call(family, tool, args, options);
+  return requireCvm().registry.call(selector, tool, args, options);
 }

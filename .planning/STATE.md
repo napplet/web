@@ -65,7 +65,7 @@ Branch `feat/cli-terminal-usability` ships guided missing-value recovery, `-i` p
 Phase: 164 (cli-terminal-usability) — verified and shipped
 Plan: 3 of 3
 Status: [PR #248](https://github.com/napplet/web/pull/248) open with six actual terminal screenshots
-Last activity: 2026-11-04 - Completed quick task 261104-kdn: merged main into PR #280 and resolved its conflicts
+Last activity: 2026-11-17 - Completed quick task 261117-lx9: align CVM registry selectors (#336)
 
 See phase 163 VERIFICATION.md and COVERAGE.md for evidence and disclosed release/specification/baseline limits. Earlier phase and quick-task records below are historical.
 
@@ -570,6 +570,7 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 
 | Quick ID | Task | Date | Commit | Artifacts |
 |----------|------|------|--------|-----------|
+| 261117-lx9 | Align CVM registry selectors (#336); local build/types/1,593 units pass | 2026-11-17 | ebfd0d80 | [261117-lx9](./quick/261117-lx9-align-cvm-registry-selectors-for-issue-3/) |
 | 261105-rds | Remove DinOS from the napplet.run shell directory | 2026-11-05 | — | — |
 | 261103-rsl | Point every napplet/napplet repository reference (docs, READMEs, skills, CLI, installers, package metadata) at napplet/web | 2026-11-03 | — | [261103-rsl](./quick/261103-rsl-repo-slug-napplet-web/) |
 | 261102-wmc | napplet.run WebMCP tools (list_pages, search_docs, read_page, search_napplets, list_agent_skills, open_page) and /apps/catalog.json | 2026-11-02 | — | [261102-wmc](./quick/261102-wmc-site-webmcp-tools/) |

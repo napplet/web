@@ -16,6 +16,7 @@ export type {
   CvmRegistryEntry,
   CvmRegistryOptions,
   CvmRegistryQuery,
+  CvmRegistrySelector,
   CvmRegistryTool,
 } from './cvm-mcp-types.js';
 export type {

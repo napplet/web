@@ -1,5 +1,17 @@
 # @napplet/sdk
 
+## 0.35.0
+
+### Minor Changes
+
+- Align CVM registry bindings with the selector-based NAP-CVM draft. Pass `{ family }` or `{ schemaHash }` to `registry.has`, `describe`, and `call` (including named helpers), replacing string-family arguments. Move `options.schemaHash` into the selector; `options.server` remains the provider pin. Registry entries now require `schemaHashes` and per-tool `schemaHash`, with an optional family label. Add the `category` query hint and accept selector envelopes in conformance validation.
+
+### Patch Changes
+
+- Updated dependencies
+  - @napplet/core@0.42.0
+  - @napplet/nap@0.41.0
+
 ## 0.34.1
 
 ### Patch Changes

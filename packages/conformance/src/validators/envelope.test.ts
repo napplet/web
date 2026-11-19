@@ -198,7 +198,7 @@ describe('validateEnvelope — outbound field checks', () => {
       notify: { type: 'notify.badge', count: 3 },
       config: { type: 'config.get', id: 'a' },
       resource: { type: 'resource.bytesMany', id: 'a', requests: [{ url: 'https://x/y' }] },
-      cvm: { type: 'cvm.registry.call', id: 'a', family: 'relatr', tool: 'search_profiles' },
+      cvm: { type: 'cvm.registry.call', id: 'a', selector: { family: 'relatr' }, tool: 'search_profiles' },
       outbox: { type: 'outbox.close', id: 'a', subId: 's' },
       upload: { type: 'upload.status', id: 'a', uploadId: 'u' },
       intent: { type: 'intent.handlers', id: 'a' },
@@ -256,5 +256,25 @@ describe('ENVELOPE_SPECS invariants', () => {
       dir: 'in',
       fields: { channelId: 'string', peer: 'string' },
     });
+  });
+});
+
+// NAP-CVM #31, API Surface / Wire Protocol: registry requests carry a selector object.
+describe('CVM registry selector envelopes', () => {
+  const schemaHash = '088b807239ac8fc469b9228025cb93269cfc3e40c7522141014ac66e348a138f';
+  it.each(['has', 'describe', 'call'])('accepts canonical %s selectors', (action) => {
+    for (const selector of [{ family: 'relatr' }, { schemaHash }, { family: 'another-label', schemaHash }]) {
+      expect(validateEnvelope({
+        type: `cvm.registry.${action}`, id: 'probe', selector,
+        ...(action === 'call' ? { tool: 'search_profiles' } : {}),
+      }).ok).toBe(true);
+    }
+  });
+  it.each(['has', 'describe', 'call'])('rejects obsolete %s family carriers and non-object selectors', (action) => {
+    const message = { type: `cvm.registry.${action}`, id: 'probe', family: 'relatr', tool: 'search_profiles' };
+    expect(validateEnvelope(message).errors).toContainEqual(expect.objectContaining({ code: 'missing-field', field: 'selector' }));
+    for (const selector of ['relatr', null, []]) {
+      expect(validateEnvelope({ ...message, selector }).errors).toContainEqual(expect.objectContaining({ code: 'wrong-type', field: 'selector' }));
+    }
   });
 });
