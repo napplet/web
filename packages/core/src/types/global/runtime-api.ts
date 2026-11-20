@@ -272,7 +272,7 @@ export interface ResourceInfo {
  * (and only) byte-fetching primitive available inside a napplet.
  *
  * URL space is scheme-pluggable: shells register handlers per scheme.
- * Canonical schemes include `data:` (decoded in-shim, no round-trip),
+ * Canonical schemes include `data:` (runtime-decoded under policy),
  * `https:` (shell-side network with policy), `blossom:<sha256>.<ext>`
  * (BUD-10 Blossom URI to bytes), `htree:` (Hashtree-verified bytes), and `nostr:` (NIP-19 single-hop
  * resolution).
@@ -310,7 +310,8 @@ export interface ResourceApi {
    * Fetch the bytes referenced by `url` through the shell's resource pipeline.
    * The shell selects a scheme handler, applies its resource policy
    * (private-IP blocks, size caps, timeouts, MIME classification), and
-   * returns the bytes as a single Blob. No streaming, no chunking.
+   * returns the bytes as a single Blob decoded from the base64 wire
+   * encoding and typed with the sniffed MIME. No streaming, no chunking.
    * @param url  URL identifying the resource (any registered scheme)
    * @param opts  Optional AbortController signal
    * @returns Promise resolving to the fetched bytes as a Blob

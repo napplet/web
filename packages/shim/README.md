@@ -333,9 +333,9 @@ Messages received via `window.addEventListener('message', ...)`:
 
 { type: 'resource.info.result', id: string, info: ResourceInfo }
 { type: 'resource.info.error', id: string, error: string, message?: string }
-{ type: 'resource.bytes.result', id: string, blob: Blob, mime: string }
+{ type: 'resource.bytes.result', id: string, blob: ResourceBytes, mime: string } // blob: canonical padded base64
 { type: 'resource.bytes.error', id: string, error: 'invalid-request' | 'not-found' | 'blocked-by-policy' | 'timeout' | 'too-large' | 'unsupported-scheme' | 'decode-failed' | 'network-error' | 'quota-exceeded', message?: string }
-{ type: 'resource.bytesMany.result', id: string, items: ResourceBytesItem[] }
+{ type: 'resource.bytesMany.result', id: string, items: ResourceBytesWireItem[] } // ok items carry base64 blob
 { type: 'resource.bytesMany.error', id: string, error: 'invalid-request' | 'not-found' | 'blocked-by-policy' | 'timeout' | 'too-large' | 'unsupported-scheme' | 'decode-failed' | 'network-error' | 'quota-exceeded', message?: string }
 
 { type: 'link.open.result', id: string, status: 'opened' | 'denied', error?: string }
@@ -596,7 +596,7 @@ Sandboxed byte fetching through the runtime-provided NAP-RESOURCE surface. Use `
 | `bytesMany(urls, opts?)` | `Promise<ResourceBytesItem[]>` | Fetch many URLs through one envelope. Items preserve input order and length. |
 | `bytesAsObjectURL(url)` | `{ url: string; revoke: () => void }` | Synchronous handle whose `url` resolves to a blob URL once the underlying fetch completes. Caller MUST `revoke()` when done. |
 
-Canonical schemes: `data:` (decoded in-shim), `https:` (shell-side network with policy), `blossom:<sha256>.<ext>` ([BUD-10](https://github.com/hzrd149/blossom/blob/master/buds/10.md), hash-verified), `htree:` (Hashtree-verified), `nostr:<bech32>` (single-hop NIP-19 resolution).
+Canonical schemes: `data:` (runtime-decoded under policy), `https:` (shell-side network with policy), `blossom:<sha256>.<ext>` ([BUD-10](https://github.com/hzrd149/blossom/blob/master/buds/10.md), hash-verified), `htree:` / `hashtree:` (Hashtree-verified), `nostr:<bech32>` (single-hop NIP-19 resolution). The shim strictly validates the base64 `ResourceBytes` wire encoding and decodes it into a `Blob` typed with the runtime-classified MIME; a non-canonical encoding rejects the call.
 
 Errors use the NAP-RESOURCE vocabulary: `invalid-request`, `not-found`, `blocked-by-policy`, `timeout`, `too-large`, `unsupported-scheme`, `decode-failed`, `network-error`, or `quota-exceeded`.
 
