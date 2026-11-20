@@ -225,7 +225,6 @@ export type {
   ResourceBytesOkItem,
   ResourceBytesErrorItem,
   ResourceBytesItem,
-  ResourceBytesRequest,
   ResourceSidecarEntry,
 } from './types.js';
 
