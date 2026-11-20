@@ -159,4 +159,38 @@ describe('@napplet/nap/intent URI binding', () => {
     handleIntentMessage({ type: 'intent.changed', availability });
     expect(callback).toHaveBeenCalledExactlyOnceWith(availability);
   });
+
+  // NAP-INTENT (napplet/naps master @ 377bf939) §Wire Protocol:
+  // `intent.available.result` carries `id`, `availability`, `error`?;
+  // `intent.handlers.result` carries `id`, `handlers`, `error`?.
+  it('rejects availability and handlers queries when the runtime reports an error', async () => {
+    const { available, handlers, handleIntentMessage } = await import('./shim.js');
+    const unavailable = { archetype: 'note', available: false, candidates: [], hasDefault: false };
+    const query = available('note');
+    handleIntentMessage({ type: 'intent.available.result', id: lastPosted('intent.available').id, availability: unavailable, error: 'policy denied' });
+    await expect(query).rejects.toThrow('policy denied');
+    const catalog = handlers();
+    handleIntentMessage({ type: 'intent.handlers.result', id: lastPosted('intent.handlers').id, handlers: [], error: 'policy denied' });
+    await expect(catalog).rejects.toThrow('policy denied');
+  });
+
+  it('rejects malformed results that omit the required payload', async () => {
+    const { available, handlers, handleIntentMessage } = await import('./shim.js');
+    const query = available('note');
+    handleIntentMessage({ type: 'intent.available.result', id: lastPosted('intent.available').id });
+    await expect(query).rejects.toThrow('intent.available.result missing availability');
+    const catalog = handlers();
+    handleIntentMessage({ type: 'intent.handlers.result', id: lastPosted('intent.handlers').id });
+    await expect(catalog).rejects.toThrow('intent.handlers.result missing handlers');
+  });
+
+  it('types availability and handlers as required result fields', () => {
+    type Available = import('./types.js').IntentAvailableResultMessage;
+    type Handlers = import('./types.js').IntentHandlersResultMessage;
+    // @ts-expect-error availability is required
+    const a: Available = { type: 'intent.available.result', id: 'a1', error: 'policy denied' };
+    // @ts-expect-error handlers is required
+    const h: Handlers = { type: 'intent.handlers.result', id: 'h1', error: 'policy denied' };
+    expect([a, h]).toHaveLength(2);
+  });
 });

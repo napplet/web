@@ -258,7 +258,9 @@ export const ENVELOPE_SPECS: Record<string, EnvelopeSpec> = {
   'cvm.registry.has': { dir: 'out', fields: { ...ID, selector: 'object' } },
   'cvm.registry.describe': { dir: 'out', fields: { ...ID, selector: 'object' } },
   'cvm.registry.call': { dir: 'out', fields: { ...ID, selector: 'object', tool: 'string' } },
-  'cvm.discover.result': { dir: 'in' },
+  // NAP-CVM (napplet/naps#31 @ 28cf1bdb) §Error Handling: `servers` is required on
+  // success and omitted on a shell error, so only `id` is required on every result.
+  'cvm.discover.result': { dir: 'in', fields: { ...ID } },
   'cvm.request.result': { dir: 'in' },
   'cvm.close.result': { dir: 'in' },
   'cvm.event': { dir: 'in' },
@@ -300,8 +302,9 @@ export const ENVELOPE_SPECS: Record<string, EnvelopeSpec> = {
   'intent.available': { dir: 'out', fields: { ...ID, archetype: 'string' } },
   'intent.handlers': { dir: 'out', fields: { ...ID } },
   'intent.invoke.result': { dir: 'in', fields: { ...ID, result: 'object' } },
-  'intent.available.result': { dir: 'in' },
-  'intent.handlers.result': { dir: 'in' },
+  // NAP-INTENT (napplet/naps master @ 377bf939) §Wire Protocol: payloads are required; `error` is optional.
+  'intent.available.result': { dir: 'in', fields: { ...ID, availability: 'object' } },
+  'intent.handlers.result': { dir: 'in', fields: { ...ID, handlers: 'array' } },
   'intent.deliver': { dir: 'in', fields: { delivery: 'object' } },
   'intent.changed': { dir: 'in' },
 

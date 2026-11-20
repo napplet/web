@@ -12,6 +12,8 @@ if (window.napplet?.intent) {
 }
 ```
 
+`available()` and `handlers()` reject with the runtime's top-level `error` when one is present, even if the result also carries an availability payload, and reject a result that omits its payload.
+
 This non-normative guide defers to the living [NAP-INTENT proposal](https://github.com/napplet/naps/pull/91). Feature-gate with `if (window.napplet?.intent)` before use; the runtime injects only available domains. Typed helpers ship from [`@napplet/nap/intent`](/packages/nap) and [`@napplet/sdk`](/packages/sdk).
 
 ## Delivery and recommendations

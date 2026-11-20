@@ -30,6 +30,8 @@ export type {
   CvmCloseResultMessage,
   CvmDiscoverMessage,
   CvmDiscoverResultMessage,
+  CvmDiscoverSuccessResultMessage,
+  CvmDiscoverErrorResultMessage,
   CvmEventMessage,
   CvmInboundMessage,
   CvmMessage,

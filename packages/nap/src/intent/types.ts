@@ -61,8 +61,8 @@ export interface IntentAvailableResultMessage extends IntentMessage {
   type: 'intent.available.result';
   /** Correlation identifier matching the request. */
   id: string;
-  /** Installed-catalog availability. */
-  availability?: IntentAvailability;
+  /** Installed-catalog availability (required by the NAP-INTENT wire table). */
+  availability: IntentAvailability;
   /** Top-level processing error. */
   error?: string;
 }
@@ -79,8 +79,8 @@ export interface IntentHandlersResultMessage extends IntentMessage {
   type: 'intent.handlers.result';
   /** Correlation identifier matching the request. */
   id: string;
-  /** Availability records. */
-  handlers?: IntentAvailability[];
+  /** Availability records (required by the NAP-INTENT wire table). */
+  handlers: IntentAvailability[];
   /** Top-level processing error. */
   error?: string;
 }

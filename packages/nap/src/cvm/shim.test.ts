@@ -59,6 +59,50 @@ describe('@napplet/nap/cvm shim', () => {
     await expect(promise).resolves.toEqual([{ pubkey: '65a334', name: 'RelayVM' }]);
   });
 
+  // NAP-CVM (napplet/naps#31 @ 28cf1bdb) §Error Handling: "On a shell error,
+  // success payload fields MUST be omitted. On success, the operation's payload
+  // is required."
+  it('rejects cvm.discover with the top-level error and no servers', async () => {
+    const { discover, handleCvmMessage } = await import('./shim.js');
+
+    const promise = discover({ kinds: [99999] });
+    const sent = lastPosted('cvm.discover');
+    handleCvmMessage({ type: 'cvm.discover.result', id: sent.id, error: 'unsupported kind' });
+
+    await expect(promise).rejects.toThrow('unsupported kind');
+  });
+
+  it('resolves an explicit empty servers list as success', async () => {
+    const { discover, handleCvmMessage } = await import('./shim.js');
+
+    const promise = discover({ kinds: [] });
+    const sent = lastPosted('cvm.discover');
+    handleCvmMessage({ type: 'cvm.discover.result', id: sent.id, servers: [] });
+
+    await expect(promise).resolves.toEqual([]);
+  });
+
+  it('rejects a cvm.discover.result that carries neither servers nor error', async () => {
+    const { discover, handleCvmMessage } = await import('./shim.js');
+
+    const promise = discover();
+    const sent = lastPosted('cvm.discover');
+    handleCvmMessage({ type: 'cvm.discover.result', id: sent.id });
+
+    await expect(promise).rejects.toThrow('cvm.discover.result missing servers');
+  });
+
+  it('types cvm.discover.result as a success/error union', () => {
+    type Result = import('./types.js').CvmDiscoverResultMessage;
+    const success: Result = { type: 'cvm.discover.result', id: 'd1', servers: [] };
+    const failure: Result = { type: 'cvm.discover.result', id: 'd2', error: 'policy denied' };
+    // @ts-expect-error success requires servers
+    const missing: Result = { type: 'cvm.discover.result', id: 'd3' };
+    // @ts-expect-error servers is omitted on a shell error
+    const both: Result = { type: 'cvm.discover.result', id: 'd4', servers: [], error: 'policy denied' };
+    expect([success, failure, missing, both]).toHaveLength(4);
+  });
+
   it('correlates cvm.request with cvm.request.result and resolves the MCP message', async () => {
     const { request, handleCvmMessage } = await import('./shim.js');
 

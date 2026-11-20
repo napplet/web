@@ -46,17 +46,51 @@ export interface CvmDiscoverMessage extends CvmMessage {
 }
 
 /**
- * Result of a `cvm.discover` request: the servers the shell resolved.
+ * Successful `cvm.discover.result`: the servers the shell resolved.
+ *
+ * NAP-CVM §Error Handling: "On success, the operation's payload is required."
  */
-export interface CvmDiscoverResultMessage extends CvmMessage {
+export interface CvmDiscoverSuccessResultMessage extends CvmMessage {
   type: 'cvm.discover.result';
   /** Correlation ID matching the original request. */
   id: string;
-  /** Discovered ContextVM servers. */
+  /** Discovered ContextVM servers (possibly empty). */
   servers: CvmServer[];
-  /** Shell/transport-level error when discovery failed. */
-  error?: string;
+  /** Absent on success. */
+  error?: never;
 }
+
+/**
+ * Failed `cvm.discover.result`.
+ *
+ * NAP-CVM §Error Handling: "On a shell error, success payload fields MUST be
+ * omitted."
+ */
+export interface CvmDiscoverErrorResultMessage extends CvmMessage {
+  type: 'cvm.discover.result';
+  /** Correlation ID matching the original request. */
+  id: string;
+  /** Omitted on a shell error. */
+  servers?: never;
+  /** Shell/transport-level error text, e.g. `"unsupported kind"` or `"policy denied"`. */
+  error: string;
+}
+
+/**
+ * Result of a `cvm.discover` request. The wire table lists `servers?` and
+ * `error?`; NAP-CVM §Error Handling makes them mutually exclusive, so this is
+ * a union of a success shape (`servers` required) and an error shape
+ * (`servers` omitted).
+ *
+ * @example
+ * ```ts
+ * function serversOf(msg: CvmDiscoverResultMessage): CvmServer[] {
+ *   if (msg.error !== undefined) throw new Error(msg.error);
+ *   return msg.servers;
+ * }
+ * ```
+ */
+export type CvmDiscoverResultMessage = CvmDiscoverSuccessResultMessage | CvmDiscoverErrorResultMessage;
 
 /**
  * Send a raw MCP JSON-RPC message to a ContextVM server. The shell wraps the

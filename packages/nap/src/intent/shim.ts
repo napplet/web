@@ -92,11 +92,19 @@ function handleAvailableResult(msg: IntentAvailableResultMessage): void {
   if (!pending) return;
   pendingAvailable.delete(msg.id);
   clearTimeout(pending.timeout);
-  if (msg.availability !== undefined) {
-    pending.resolve(msg.availability);
+  // The NAP-INTENT wire table requires `availability` and allows `error?`
+  // alongside it. A top-level `error` reports a processing failure, so it wins
+  // over whatever placeholder availability accompanies it. Wire input is
+  // untrusted, so a missing payload still rejects.
+  if (msg.error !== undefined) {
+    pending.reject(new Error(msg.error));
     return;
   }
-  pending.reject(new Error(msg.error ?? 'intent availability unavailable'));
+  if (msg.availability === undefined) {
+    pending.reject(new Error('intent.available.result missing availability'));
+    return;
+  }
+  pending.resolve(msg.availability);
 }
 
 function handleHandlersResult(msg: IntentHandlersResultMessage): void {
@@ -104,11 +112,16 @@ function handleHandlersResult(msg: IntentHandlersResultMessage): void {
   if (!pending) return;
   pendingHandlers.delete(msg.id);
   clearTimeout(pending.timeout);
-  if (msg.handlers !== undefined) {
-    pending.resolve(msg.handlers);
+  // Same rule as handleAvailableResult: `error` wins, a missing list rejects.
+  if (msg.error !== undefined) {
+    pending.reject(new Error(msg.error));
     return;
   }
-  pending.reject(new Error(msg.error ?? 'intent handlers unavailable'));
+  if (!Array.isArray(msg.handlers)) {
+    pending.reject(new Error('intent.handlers.result missing handlers'));
+    return;
+  }
+  pending.resolve(msg.handlers);
 }
 
 function handleChanged(msg: IntentChangedMessage): void {
