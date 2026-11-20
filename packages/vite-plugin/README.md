@@ -74,7 +74,7 @@ nip5aManifest({
 
 ## Migration
 
-New builds emit only the current schema. For a legacy-only shell, use CLI 0.7.0+ with `napplet deploy --format legacy` during the compatibility window. That serializer is isolated in the CLI and can be removed without changing current readers. Existing immutable event pointers and shell ACL/storage keys need separate rollout planning; rebuilding does not migrate saved data.
+New builds emit only the current schema, and CLI 0.15.0 removed its temporary `--format legacy` deploy output, so a legacy-only shell needs updating to read current events. Existing immutable event pointers and shell ACL/storage keys need separate rollout planning; rebuilding does not migrate saved data.
 
 See the [event migration guide](https://napplet.run/docs/guide/event-migration).
 

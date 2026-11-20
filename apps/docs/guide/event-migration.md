@@ -8,7 +8,7 @@ Packages have independent versions. The following releases switch their default 
 
 | Package | Last legacy default series | First current-schema release |
 | --- | --- | --- |
-| `@napplet/cli` | `0.6.x` | `0.7.0` |
+| `@napplet/cli` | `0.6.x` | `0.7.0` (legacy output removed in `0.15.0`) |
 | `@napplet/vite-plugin` | `0.14.x` | `0.15.0` |
 | `@napplet/conformance` | `0.17.x` | `0.18.0` |
 | `@napplet/conformance-cli` | `0.2.x` | `0.3.0` |
@@ -39,16 +39,9 @@ napplet deploy --dry-run --format current
 napplet deploy --format current
 ```
 
-An interactive deploy asks for `current` or `legacy`, defaulting to `current`. Unattended or JSON-output runs use `current` unless `--format legacy` is supplied. Review the dry-run event content, tags and artifact hash before publishing.
+Deploy always writes the current schema. Review the dry-run event content, tags and artifact hash before publishing.
 
-For a shell still expecting the old schema:
-
-```sh
-napplet deploy --dry-run --format legacy
-napplet deploy --format legacy
-```
-
-Legacy output is temporary and CLI-only. It emits path tags, the historical aggregate, description and requires/archetype tags. Optional domains become legacy requirements because that schema cannot express optionality; intent parameter advertisements are not representable. Do not choose legacy when those distinctions are needed. Independent intent advertisements with multiple or no roles require explicit `metadata.archetypes` pairs for legacy deployment; the CLI will not invent pairings. No removal release is scheduled here; a future breaking CLI release can remove the isolated serializer and format choice.
+CLI `0.7.0` through `0.14.x` also offered a temporary `--format legacy` writer for shells still expecting the old schema. CLI `0.15.0` removed it: it signed path tags and an aggregate `x` hash under the NIP-5D kinds, and current NIP-5D requires one `x` tag for a single self-contained `/index.html` with the description in `content`. `--format legacy` now fails with a pointer to single-file builds and `napplet migrate`. A shell that only reads the old schema needs updating; pinning an older CLI only keeps producing events that current readers reject.
 
 ## Prepare an event migration
 

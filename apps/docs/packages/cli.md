@@ -89,7 +89,7 @@ napplet deploy
   relays such as `wss://relaypag.es`, and suggests Blossom servers from kind
   `10063` server-list events.
 - `npx skills add napplet/web` installs the `napplet-*` agent skills for whichever coding agents you use; it is the skills.sh CLI, not a `napplet` subcommand.
-- `napplet debug` prints resolved config, discovered napplets, deploy targets, manifest templates, and signing readiness without network writes. Manifest template failures (for example a missing description, or built files a current deploy would drop) are reported in `manifests.error` instead of aborting, and `--format current|legacy` selects the event format inspected.
+- `napplet debug` prints resolved config, discovered napplets, deploy targets, manifest templates, and signing readiness without network writes. Manifest template failures (for example a missing description, or built files a current deploy would drop) are reported in `manifests.error` instead of aborting, and `--format current` is accepted for symmetry with deploy.
 - `napplet deploy --dry-run` builds the same deploy plan and signed manifest
   events without uploading or publishing.
 - `napplet deploy` uploads files to configured Blossom servers and publishes
@@ -108,8 +108,8 @@ napplet guide
 napplet create <directory> [--template <path-or-url>] [--force]
 napplet init [--force] [--root] [--source-dir <dir>] [--name <dtag>] [--title <title>] [--description <text>] [--archetype <napplet:archetype/intent>] [--relay <url>] [--server <url>] [--proxy <url>]
 napplet discover [--config <file>] [--all]
-napplet debug [--format current|legacy] [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>]
-napplet deploy [--format current|legacy] [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>] [--prompt-sec] [--zapstore | --no-zapstore] [--no-screenshot] [--screenshot [<preview-url>]] [--proxy <url>] [--dry-run]
+napplet debug [--format current] [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>]
+napplet deploy [--format current] [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>] [--prompt-sec] [--zapstore | --no-zapstore] [--no-screenshot] [--screenshot [<preview-url>]] [--proxy <url>] [--dry-run]
 napplet keys store --name <ref> [--sec <secret> | --prompt-sec]
 napplet keys connect --name <ref> [--relay <url> ...] [--proxy <url>] [--config <file>]
 napplet keys use --name <ref> [--config <file>]
@@ -174,13 +174,12 @@ This non-normative guide follows the living [NAP-INTENT manifest catalog contrac
   napplet before deploying.
 
 
-## Current and legacy event formats
+## Event format
 
-From CLI **0.7.0**, deployments default to the current NIP-5D artifact-hash schema. Interactive deploys ask for `current` or `legacy`; scripts can choose with `--format current|legacy`. A non-empty description is required for current event content. Legacy output remains isolated in a temporary serializer; 0.6.x and earlier defaulted to legacy events. Current deploys upload only `/index.html` plus the blobs referenced by `icon`, `screenshot` and `preview` tags; any other built file in the deploy directory makes deploy fail with the list of those files (build a single-file artifact or use `--format legacy`). When config metadata or the Vite plugin sidecar lists a domain as both required and optional, it is emitted only as `O`, matching the Vite plugin.
+From CLI **0.7.0**, deployments use the current NIP-5D artifact-hash schema. CLI **0.15.0** retired the temporary `--format legacy` output: it put NIP-5A-style path tags and an aggregate `x` hash under NIP-5D kinds, which current NIP-5D rejects. `--format current` is still accepted for scripts, and `--format legacy` now fails with a pointer to single-file builds and `napplet migrate`. A non-empty description is required for event content. Deploys upload only `/index.html` plus the blobs referenced by `icon`, `screenshot` and `preview` tags; any other built file in the deploy directory makes deploy fail with the list of those files, so build a single-file artifact. When config metadata or the Vite plugin sidecar lists a domain as both required and optional, it is emitted only as `O`, matching the Vite plugin.
 
 ```sh
 napplet deploy --dry-run --format current
-napplet deploy --format legacy
 napplet migrate signed-event.json --optional theme --output migration-preview.json
 ```
 
@@ -188,7 +187,7 @@ napplet migrate signed-event.json --optional theme --output migration-preview.js
 
 ## Repository source metadata
 
-For current-format deploys, the CLI adds one `source` tag from the Git `origin` of the repository containing each selected build when neither config, the Vite sidecar, nor HTML already supplies it. Nested builds and Git worktrees are supported. HTTPS, HTTP, `ssh://`, and scp-style clone URLs are converted to HTTP(S) repository URLs; inferred URLs omit credentials, query strings, fragments, and the `.git` suffix. SSH remotes use HTTPS without the SSH port. Git is queried locally; no remote is contacted. If Git, a repository, or a usable origin is unavailable, the tag is omitted. Other remotes are not selected, and SSH host aliases are not expanded; configure their public source URL explicitly.
+On deploy, the CLI adds one `source` tag from the Git `origin` of the repository containing each selected build when neither config, the Vite sidecar, nor HTML already supplies it. Nested builds and Git worktrees are supported. HTTPS, HTTP, `ssh://`, and scp-style clone URLs are converted to HTTP(S) repository URLs; inferred URLs omit credentials, query strings, fragments, and the `.git` suffix. SSH remotes use HTTPS without the SSH port. Git is queried locally; no remote is contacted. If Git, a repository, or a usable origin is unavailable, the tag is omitted. Other remotes are not selected, and SSH host aliases are not expanded; configure their public source URL explicitly.
 
 Set `metadata.source` in `.napplet/config.yaml` to override every inferred or embedded source:
 
@@ -197,7 +196,7 @@ metadata:
   source: https://github.com/example/my-napplet
 ```
 
-Use `source: false` in that object to omit the tag, including any sidecar or HTML source. A source override must be one absolute HTTP(S) URL without credentials or a NIP-34 `nostr://` clone URL; arrays are not accepted. The precedence is config → sidecar → HTML → Git origin. Root, named, and companion snapshot events retain the resolved source. This follows the current [NIP-5D manifest table](https://github.com/dskvr/nips/blob/nip/5d/5D.md#manifest), which permits zero or one `source` tag. Automatic Git inference does not apply to `--format legacy`; an explicit config override still does. These are CLI defaults, not additional protocol requirements.
+Use `source: false` in that object to omit the tag, including any sidecar or HTML source. A source override must be one absolute HTTP(S) URL without credentials or a NIP-34 `nostr://` clone URL; arrays are not accepted. The precedence is config → sidecar → HTML → Git origin. Root, named, and companion snapshot events retain the resolved source. This follows the current [NIP-5D manifest table](https://github.com/dskvr/nips/blob/nip/5d/5D.md#manifest), which permits zero or one `source` tag. These are CLI defaults, not additional protocol requirements.
 
 [NIP-5D §Source](https://github.com/nostr-protocol/nips/pull/2303) also allows one `source-commit` pin and one `source-archive`. Set them explicitly; the CLI never infers a commit, because a dirty or unpushed tree would pin a revision nobody can fetch:
 
