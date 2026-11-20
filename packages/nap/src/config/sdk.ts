@@ -134,8 +134,8 @@ export function registerSchema(
 }
 
 /**
- * Listen for schema-registration errors pushed by the shell (manifest parse
- * failure, subscribe-before-schema, etc.).
+ * Listen for schema-registration errors pushed by the shell (asynchronous
+ * schema rejection, subscribe-before-schema, etc.).
  *
  * @param cb  Called with { code, error } on every config.schemaError push.
  * @returns A teardown function that detaches the listener.

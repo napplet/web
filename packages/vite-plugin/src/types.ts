@@ -10,7 +10,6 @@
  * @module
  */
 
-import type { NappletConfigSchema } from '@napplet/nap/config/types';
 
 /**
  * NIP-5D napplet manifest kinds. Deliberately distinct from NIP-5A's nsite
@@ -119,8 +118,6 @@ export interface Nip5aManifestOptions {
   description?: string;
   /** Defaults to single-file: inline JS/CSS before hashing the final index.html bytes. */
   artifactMode?: Nip5aArtifactMode;
-  /** NAP-CONFIG schema or project-relative path; otherwise discover config.schema.json or napplet.config.*. */
-  configSchema?: NappletConfigSchema | string;
   /** Authoring alias for independent z roles and i intents with advertised parameter names. */
   archetypes?: Array<{ slug: string; convention: string; params?: string[] }>;
 }
@@ -131,8 +128,6 @@ export interface ManifestPluginState {
   projectRoot: string;
   base: string;
   artifactMode: Nip5aArtifactMode;
-  resolvedSchema: NappletConfigSchema | null;
-  resolvedSchemaSource: string | null;
   inferredRequires: Set<string>;
   reportedRequirementWarnings: Set<string>;
 }

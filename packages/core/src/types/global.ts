@@ -196,7 +196,7 @@ export interface NappletGlobal {
    *
    * @example
    * ```ts
-   * // Register a schema at runtime (escape hatch; prefer manifest-declared):
+   * // Register the schema before reading values (NAP-CONFIG has no manifest schema field):
    * await window.napplet.config.registerSchema({
    *   type: 'object',
    *   properties: { theme: { type: 'string', enum: ['light', 'dark'], default: 'dark' } },

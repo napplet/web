@@ -69,7 +69,7 @@ let installed = false;
  * Routes three shell->napplet message types:
  * - `config.registerSchema.result` -- positive-ACK for registerSchema (correlated by id)
  * - `config.values` -- dual-use: correlated response to config.get (with id) OR subscription push (without id)
- * - `config.schemaError` -- uncorrelated error push (e.g., no-schema, manifest parse failure)
+ * - `config.schemaError` -- uncorrelated error push (e.g., no-schema, asynchronous schema rejection)
  *
  * @param msg  A parsed envelope object with at least a `type` string field
  */
@@ -135,7 +135,7 @@ function handleValues(msg: ConfigValuesMessage): void {
 /**
  * Handle config.schemaError: fan out to every registered onSchemaError listener.
  * These pushes are uncorrelated (no id); they surface background failures such as
- * manifest schema parse errors or subscribe-before-schema.
+ * asynchronous schema rejection or subscribe-before-schema.
  */
 function handleSchemaError(msg: ConfigSchemaErrorMessage): void {
   const payload = { code: msg.code, error: msg.error };
@@ -279,7 +279,7 @@ export function openSettings(options?: { section?: string }): void {
  * Listen for schema-registration errors pushed by the shell.
  *
  * Fires on every `config.schemaError` push (no correlation id); typical
- * triggers are manifest schema parse failures at napplet load time and
+ * triggers are an asynchronous schema rejection and
  * `no-schema` when a subscribe/get arrives before any schema has been
  * registered.
  *
