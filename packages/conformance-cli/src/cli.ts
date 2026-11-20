@@ -43,6 +43,7 @@ interface CliOptions {
   settleMs: number;
   runDegraded: boolean;
   allowSameOrigin: boolean;
+  strict: boolean;
   ui: boolean;
   port?: number;
   open: boolean;
@@ -70,6 +71,7 @@ Options:
   --settle <ms>            Envelope-collection window after boot (default: 600)
   --no-degraded            Skip the no-capability graceful-degradation pass
   --allow-same-origin      Debug: also grant allow-same-origin (a conformant napplet must not need it)
+  --strict                 Fail the run on advisory warnings too (e.g. message types no known NAP defines)
 
 UI / watch mode (--ui):
   --port <n>               Port for the UI server (default: random)
@@ -88,6 +90,7 @@ function parseArgs(argv: string[]): CliOptions {
     settleMs: 600,
     runDegraded: true,
     allowSameOrigin: false,
+    strict: false,
     ui: false,
     open: true,
     help: false,
@@ -131,6 +134,9 @@ function parseArgs(argv: string[]): CliOptions {
         break;
       case '--allow-same-origin':
         opts.allowSameOrigin = true;
+        break;
+      case '--strict':
+        opts.strict = true;
         break;
       case '--ui':
         opts.ui = true;
@@ -215,7 +221,7 @@ async function runUiMode(opts: CliOptions): Promise<number> {
     return 2;
   }
 
-  const server = await startUiServer({ appDir, nappletDir: resolved.dir, port: opts.port });
+  const server = await startUiServer({ appDir, nappletDir: resolved.dir, port: opts.port, strict: opts.strict });
 
   const child = opts.exec ? spawn(opts.exec, { cwd: resolve(opts.target), shell: true, stdio: 'inherit' }) : null;
 
@@ -315,7 +321,7 @@ async function main(argv: string[]): Promise<number> {
   }
 
   const context = buildContext({ manifestHtml, manifestEvent, boot, forbiddenGlobals, sandbox: { allowScripts: true, allowSameOrigin: opts.allowSameOrigin } });
-  const run = runConformance(context);
+  const run = runConformance(context, { strict: opts.strict });
   const output = report(run, opts.reporter);
 
   if (opts.out) {

@@ -31,6 +31,8 @@ export interface UiServerOptions {
   port?: number;
   /** Debounce window (ms) for coalescing file-change bursts. Default 120. */
   debounceMs?: number;
+  /** Open the app with `strict=1` so advisory warnings fail the run. */
+  strict?: boolean;
 }
 
 /** A running `--ui` server. */
@@ -126,7 +128,7 @@ export async function startUiServer(options: UiServerOptions): Promise<UiServer>
   await new Promise<void>((r) => server.listen(options.port ?? 0, '127.0.0.1', r));
   const { port } = server.address() as AddressInfo;
   const origin = `http://127.0.0.1:${port}`;
-  const appUrl = `${origin}/?url=${encodeURIComponent(NAPPLET_PREFIX)}&live=1`;
+  const appUrl = `${origin}/?url=${encodeURIComponent(NAPPLET_PREFIX)}&live=1${options.strict ? '&strict=1' : ''}`;
   const watcher = startWatcher(nappletDir, options.debounceMs ?? 120, broadcast);
 
   return {

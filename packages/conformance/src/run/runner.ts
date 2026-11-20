@@ -51,8 +51,10 @@ export interface ConformanceRun {
   checks: CheckOutcome[];
   /** Aggregate counts. */
   summary: RunSummary;
-  /** True when no error-severity check failed. */
+  /** True when no error-severity check failed (and, in strict mode, no warning either). */
   ok: boolean;
+  /** True when the run treated failed warnings as failures. */
+  strict: boolean;
 }
 
 /** Options for {@link runConformance}. */
@@ -61,6 +63,12 @@ export interface RunOptions {
   checks?: Check[];
   /** Injectable clock for deterministic output. Defaults to `Date.now`. */
   now?: () => number;
+  /**
+   * Treat every failed warning-severity (advisory) check as a run failure. Off by
+   * default: advisories cover things NIP-5D does not forbid, such as message
+   * types no known NAP defines yet, which is how new capabilities get prototyped.
+   */
+  strict?: boolean;
 }
 
 /**
@@ -107,6 +115,7 @@ export function runConformance(context: ConformanceContext, options: RunOptions 
     finishedAt: now(),
     checks: outcomes,
     summary,
-    ok: summary.errors === 0,
+    ok: summary.errors === 0 && (!options.strict || summary.warnings === 0),
+    strict: options.strict ?? false,
   };
 }

@@ -46,8 +46,14 @@ export function toPretty(run: ConformanceRun): string {
   lines.push(`  ${s.passed} passed, ${s.failed} failed, ${s.skipped} skipped (${s.total} checks)`);
   if (s.warnings > 0) lines.push(`  ${s.warnings} warning(s)`);
   lines.push('');
-  lines.push(run.ok ? '  RESULT: CONFORMANT' : `  RESULT: NON-CONFORMANT (${s.errors} error-severity failure(s))`);
+  lines.push(run.ok ? `  RESULT: CONFORMANT${run.strict ? ' (strict)' : ''}` : `  RESULT: NON-CONFORMANT (${nonConformantReason(run)})`);
   return lines.join('\n');
+}
+
+function nonConformantReason(run: ConformanceRun): string {
+  const s = run.summary;
+  const errors = `${s.errors} error-severity failure(s)`;
+  return run.strict && s.warnings > 0 ? `${errors}, ${s.warnings} warning(s) under --strict` : errors;
 }
 
 function xmlEscape(value: string): string {
@@ -63,7 +69,9 @@ function xmlEscape(value: string): string {
 export function toJUnit(run: ConformanceRun): string {
   const name = run.napplet ? `napplet-conformance:${run.napplet}` : 'napplet-conformance';
   const timeSec = ((run.finishedAt - run.startedAt) / 1000).toFixed(3);
-  const failures = run.summary.errors;
+  // Under strict, failed warnings fail the run, so JUnit counts them as failures too.
+  const fatal = (c: CheckOutcome): boolean => c.status === 'fail' && (c.severity === 'error' || run.strict);
+  const failures = run.checks.filter(fatal).length;
   const skipped = run.summary.skipped;
 
   const cases = run.checks.map((c) => {
@@ -72,7 +80,7 @@ export function toJUnit(run: ConformanceRun): string {
     if (c.status === 'skip') {
       return `    <testcase classname="${classname}" name="${caseName}"><skipped message="${xmlEscape(c.detail ?? 'skipped')}"/></testcase>`;
     }
-    if (c.status === 'fail' && c.severity === 'error') {
+    if (fatal(c)) {
       return `    <testcase classname="${classname}" name="${caseName}"><failure message="${xmlEscape(c.detail ?? 'failed')}"/></testcase>`;
     }
     if (c.status === 'fail') {

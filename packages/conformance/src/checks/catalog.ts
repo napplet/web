@@ -11,8 +11,16 @@
  */
 
 import { validateManifestEvent, type ManifestError } from '../validators/manifest.js';
+import type { EnvelopeVerdict } from '../validators/envelope-types.js';
 import type { Check } from './types.js';
 import { result } from './types.js';
+
+
+/** True when an envelope's only problem is a domain or type no known NAP defines. */
+function isUnrecognizedType(verdict: EnvelopeVerdict): boolean {
+  return !verdict.ok && verdict.errors.length > 0
+    && verdict.errors.every((e) => e.code === 'unknown-domain' || e.code === 'unknown-type');
+}
 
 /** Findings (errors and advisories) that fail a given manifest check. */
 function manifestErrors(ctx: Parameters<Check['run']>[0], codes: ManifestError['code'][]): ManifestError[] {
@@ -113,10 +121,29 @@ export const CHECKS: Check[] = [
     title: 'Every emitted envelope is well-formed',
     run: (ctx) => {
       if (ctx.emitted.length === 0) return result.skip('Napplet emitted no envelopes');
-      const bad = ctx.emitted.filter((r) => !r.verdict.ok);
+      // Unrecognized types are not malformed: NIP-5D shells ignore them (see wire/known-message-types).
+      const bad = ctx.emitted.filter((r) => !r.verdict.ok && !isUnrecognizedType(r.verdict));
       if (bad.length === 0) return result.pass(`${ctx.emitted.length} envelope(s) valid`);
       const diag = bad.map((r) => ({ envelope: r.envelope, errors: r.verdict.errors }));
       return result.fail(`${bad.length}/${ctx.emitted.length} emitted envelope(s) invalid`, diag);
+    },
+  },
+  // NIP-5D §Wire Format: "Messages with an unrecognized `type` MUST be silently ignored. This allows forward
+  // compatibility as new NAPs are defined." Sending one is not a napplet violation, so this only warns.
+  // https://github.com/nostr-protocol/nips/pull/2303
+  {
+    id: 'wire/known-message-types',
+    area: 'wire',
+    severity: 'warning',
+    title: 'Emitted message types are defined by a known NAP (advisory)',
+    run: (ctx) => {
+      if (ctx.emitted.length === 0) return result.skip('Napplet emitted no envelopes');
+      const unknown = [...new Set(ctx.emitted.filter((r) => isUnrecognizedType(r.verdict)).map((r) => r.verdict.type ?? ''))];
+      if (unknown.length === 0) return result.pass();
+      return result.fail(
+        `${unknown.length} message type(s) not defined by a NAP this toolchain knows; NIP-5D shells silently ignore them: ${unknown.join(', ')}`,
+        unknown,
+      );
     },
   },
   // NIP-5D Transport: the napplet.hello handoff is the only window-level message a napplet sends, and all NAP
