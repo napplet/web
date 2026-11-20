@@ -103,7 +103,7 @@ Deno.test("signDeployManifestTemplates signs only built templates", async () => 
     {
       item: { candidate, target: "root", kind: NAPPLET_KIND_ROOT },
       files: [{ path: "/index.html", sha256: "a".repeat(64) }],
-      aggregateHash: "b".repeat(64),
+      artifactHash: "a".repeat(64),
       template: {
         kind: NAPPLET_KIND_ROOT,
         created_at: 123,
@@ -114,7 +114,7 @@ Deno.test("signDeployManifestTemplates signs only built templates", async () => 
     {
       item: { candidate, target: "snapshot", kind: NAPPLET_KIND_SNAPSHOT },
       files: [{ path: "/index.html", sha256: "a".repeat(64) }],
-      aggregateHash: "b".repeat(64),
+      artifactHash: "a".repeat(64),
       skippedReason: "needs pubkey",
     },
   ], createPrivateKeySigner(privateKeyHex));

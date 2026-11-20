@@ -19,31 +19,29 @@ const extensions = [
 ];
 const extensionNames = new Set(extensions.map((tag) => tag[0]));
 
-for (const format of ["current", "legacy"] as const) {
-  Deno.test(`${format} publishing and snapshots preserve extension tags through signing`, async () => {
-    await withTempDir(async (dir) => {
-      await Deno.writeTextFile(`${dir}/index.html`, '<!doctype html><meta name="description" content="HTML fallback">');
-      const metadata = { content: "Source description", tags: [["title", "Source title"], ...extensions] };
-      const original = JSON.stringify(metadata);
-      const manifestPath = `${dir}/.nip5a-manifest.json`;
-      await Deno.writeTextFile(manifestPath, original);
-      const candidate = { name: "notes", dir, indexHtml: `${dir}/index.html`, manifestPath };
-      const config = defaultConfig({ named: ["notes"], metadata: { title: "Configured title", description: "Configured description" } });
-      const plan = createDeployPlan(config, [candidate], { root: true, names: ["notes"], snapshot: true });
-      const manifests = await createDeployManifestTemplates(plan, config, { format, sourcePubkey: signer.pubkey });
-      assertEquals(manifests.length, 4);
-      for (const manifest of manifests) {
-        assert(manifest.template);
-        assertEquals(manifest.template.tags.filter((tag) => extensionNames.has(tag[0])), extensions);
-        const event = await signer.sign(manifest.template);
-        assert(verifyEvent(event));
-        assertEquals(event.tags.filter((tag) => extensionNames.has(tag[0])), extensions);
-        assertEquals(event.tags.filter((tag) => tag[0] === "title"), [["title", "Configured title"]]);
-      }
-      assertEquals(await Deno.readTextFile(manifestPath), original);
-    });
+Deno.test("publishing and snapshots preserve extension tags through signing", async () => {
+  await withTempDir(async (dir) => {
+    await Deno.writeTextFile(`${dir}/index.html`, '<!doctype html><meta name="description" content="HTML fallback">');
+    const metadata = { content: "Source description", tags: [["title", "Source title"], ...extensions] };
+    const original = JSON.stringify(metadata);
+    const manifestPath = `${dir}/.nip5a-manifest.json`;
+    await Deno.writeTextFile(manifestPath, original);
+    const candidate = { name: "notes", dir, indexHtml: `${dir}/index.html`, manifestPath };
+    const config = defaultConfig({ named: ["notes"], metadata: { title: "Configured title", description: "Configured description" } });
+    const plan = createDeployPlan(config, [candidate], { root: true, names: ["notes"], snapshot: true });
+    const manifests = await createDeployManifestTemplates(plan, config, { sourcePubkey: signer.pubkey });
+    assertEquals(manifests.length, 4);
+    for (const manifest of manifests) {
+      assert(manifest.template);
+      assertEquals(manifest.template.tags.filter((tag) => extensionNames.has(tag[0])), extensions);
+      const event = await signer.sign(manifest.template);
+      assert(verifyEvent(event));
+      assertEquals(event.tags.filter((tag) => extensionNames.has(tag[0])), extensions);
+      assertEquals(event.tags.filter((tag) => tag[0] === "title"), [["title", "Configured title"]]);
+    }
+    assertEquals(await Deno.readTextFile(manifestPath), original);
   });
-}
+});
 
 Deno.test("current sidecars retain historical-looking extension names independently of content", async () => {
   await withTempDir(async (dir) => {

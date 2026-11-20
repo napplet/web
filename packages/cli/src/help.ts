@@ -90,7 +90,7 @@ Missing values are requested in an interactive terminal.`,
   --snapshot             Also create an immutable snapshot
   --all                  Discover builds recursively; without a config here,
                          deploy every subdirectory napplet with its own config
-  --format current|legacy  Event format (default: current)
+  --format current       Event format (current NIP-5D; the default)
   --sec <secret>         Use a signing key or bunker session
   --prompt-sec           Read a hidden secret, or explicit piped input
   --zapstore             Publish application metadata even if config disabled it
@@ -137,7 +137,7 @@ Example: napplet paja -- pnpm vite --host 127.0.0.1`,
   debug: `Usage: napplet debug [--config <file>] [--all] [--name <name>]
 
 Prints JSON describing builds, signing configuration, and event templates.
-Supports --format current|legacy, --root, --snapshot and --sec.
+Supports --format current, --root, --snapshot and --sec.
 Does not prompt, upload, or publish.`,
   discover: `Usage: napplet discover [--config <file>] [--all]
 

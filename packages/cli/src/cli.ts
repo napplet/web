@@ -185,7 +185,7 @@ async function commandDiscover(argv: string[]): Promise<number> {
 async function commandDebug(argv: string[]): Promise<number> {
   const flags = collectFlags(argv);
   // Debug emits JSON non-interactively: never prompt; reject bad values before config load.
-  const format = await selectManifestFormat(first(flags.values.get("format")), false);
+  const format = selectManifestFormat(first(flags.values.get("format")));
   const config = await loadProjectConfig(flags);
   const selection: Partial<DeploySelection> = {
     root: flags.boolean.has("root") ? true : undefined,

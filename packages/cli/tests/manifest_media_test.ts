@@ -465,27 +465,6 @@ Deno.test("configured media and source pins replace sidecar categories and uploa
   });
 });
 
-Deno.test("legacy output leaves configured media and source pins alone", async () => {
-  await withTempDir(async (dir) => {
-    await Deno.writeTextFile(`${dir}/index.html`, html);
-    await Deno.writeFile(`${dir}/one.png`, bytes("image/png"));
-    const config = normalizeConfig({
-      metadata: { screenshots: [`${dir}/one.png`], sourceCommit: "a".repeat(40) },
-    });
-    const candidate = { name: "notes", dir, indexHtml: `${dir}/index.html` };
-    const plan = createDeployPlan(config, [candidate], { root: true });
-    const [manifest] = await createDeployManifestTemplates(plan, config, {
-      createdAt: 1,
-      format: "legacy",
-    });
-    assertEquals(manifest.template!.tags.some((t) => t[0] === "screenshot"), false);
-    assertEquals(manifest.template!.tags.filter((t) => t[0] === "source-commit"), [[
-      "source-commit",
-      "a".repeat(40),
-    ]]);
-  });
-});
-
 Deno.test("captured screenshots join each previewed artifact's current manifests before signing", async () => {
   await withTempDir(async (dir) => {
     const png = bytes("image/png");
@@ -521,12 +500,6 @@ Deno.test("captured screenshots join each previewed artifact's current manifests
       {
         item: item("one", "named"),
         files: [...files],
-        format: "legacy" as const,
-        template: await template("named"),
-      },
-      {
-        item: item("one", "named"),
-        files: [...files],
         format: "current" as const,
         skippedReason: "no source",
       },
@@ -554,8 +527,7 @@ Deno.test("captured screenshots join each previewed artifact's current manifests
       ]);
     }
     assertEquals(templates[2].template!.tags.some((t) => t[0] === "screenshot"), false);
-    assertEquals(templates[3].template!.tags.some((t) => t[0] === "screenshot"), false);
-    assertEquals(templates[4].files.length, 1);
+    assertEquals(templates[3].files.length, 1);
 
     // A URL capture names no artifact, so it previews every current manifest; repeats dedupe.
     await attachCapturedScreenshots(templates, {

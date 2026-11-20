@@ -1,8 +1,6 @@
 import { withClientTag } from "./client-tag.ts";
 import { readHtmlPublishingFile } from "./html-metadata.ts";
-import { buildLegacyManifestFields, computeAggregateHash } from "./manifest-legacy.ts";
 import type { ManifestFormat } from "./manifest-format.ts";
-export { computeAggregateHash } from "./manifest-legacy.ts";
 import { joinPath } from "./path.ts";
 import { readManifestMetadata, type ManifestMetadata } from "./manifest-metadata.ts";
 import { mediaUploadPath, presentationMediaHashes, validateMediaAndSourceTags } from "./manifest-media.ts";
@@ -57,17 +55,14 @@ export async function createSiteManifestTemplate(
   if (item.target === "snapshot") {
     throw new Error("Use createSnapshotManifestTemplate for snapshot manifests");
   }
-  const format = options.format ?? "current";
   const metadataTags = options.metadataTags ?? [];
   const content = options.content ?? metadataTags.find((tag) => tag[0] === "description")?.[1] ??
     "";
-  const fields = format === "legacy"
-    ? await buildLegacyManifestFields(files, metadataTags, content)
-    : buildCurrentManifestFields(
-      files,
-      options.content === undefined ? metadataTags.filter((tag) => tag[0] !== "description") : metadataTags,
-      content,
-    );
+  const fields = buildCurrentManifestFields(
+    files,
+    options.content === undefined ? metadataTags.filter((tag) => tag[0] !== "description") : metadataTags,
+    content,
+  );
   const tags: string[][] = [];
   if (item.target === "named") tags.push(["d", normalizeDTag(item.dTag)]);
   tags.push(...fields.tags);
@@ -134,7 +129,6 @@ export async function createDeployManifestTemplates(
         options.descriptions?.has(item.candidate.dir)
           ? { ...config, metadata: { ...config.metadata, description: options.descriptions.get(item.candidate.dir) } }
           : config,
-        options.format,
       );
     metadataByDir.set(item.candidate.dir, metadata);
     const metadataTags = metadata.tags;
@@ -142,28 +136,23 @@ export async function createDeployManifestTemplates(
     const index = files.find((file) => file.path === "/index.html");
     if (!index) throw new Error("NIP-5D requires /index.html");
     const artifactHash = index.sha256;
-    const aggregateHash = format === "legacy" ? await computeAggregateHash(files) : undefined;
-    const uploadFiles = format === "legacy"
-      ? files
-      : selectCurrentUploadFiles(item.candidate.dir, files, metadataTags);
-    if (format === "current") {
-      const { icon } = await readHtmlPublishingFile(item.candidate.indexHtml);
-      if (
-        icon && metadataTags.some((t) =>
-          t[0] === "icon" && t[1] === icon.sha256 && t[2] === icon.mimeType
-        ) && !uploadFiles.some((f) =>
-          f.sha256 === icon.sha256
-        )
-      ) {
-        uploadFiles.push({ path: `/icon-${icon.sha256}.${icon.mimeType.split("/")[1]}`, ...icon });
-      }
-      // Configured screenshots and preview are read from outside the build directory.
-      const referenced = presentationMediaHashes(metadataTags);
-      for (const blob of metadata.blobs) {
-        if (!referenced.has(blob.sha256) || uploadFiles.some((f) => f.sha256 === blob.sha256)) continue;
-        const kind = metadataTags.some((t) => t[0] === "preview" && t[1] === `x ${blob.sha256}`) ? "preview" : "screenshot";
-        uploadFiles.push({ path: mediaUploadPath(kind, blob), ...blob });
-      }
+    const uploadFiles = selectCurrentUploadFiles(item.candidate.dir, files, metadataTags);
+    const { icon } = await readHtmlPublishingFile(item.candidate.indexHtml);
+    if (
+      icon && metadataTags.some((t) =>
+        t[0] === "icon" && t[1] === icon.sha256 && t[2] === icon.mimeType
+      ) && !uploadFiles.some((f) =>
+        f.sha256 === icon.sha256
+      )
+    ) {
+      uploadFiles.push({ path: `/icon-${icon.sha256}.${icon.mimeType.split("/")[1]}`, ...icon });
+    }
+    // Configured screenshots and preview are read from outside the build directory.
+    const referenced = presentationMediaHashes(metadataTags);
+    for (const blob of metadata.blobs) {
+      if (!referenced.has(blob.sha256) || uploadFiles.some((f) => f.sha256 === blob.sha256)) continue;
+      const kind = metadataTags.some((t) => t[0] === "preview" && t[1] === `x ${blob.sha256}`) ? "preview" : "screenshot";
+      uploadFiles.push({ path: mediaUploadPath(kind, blob), ...blob });
     }
     if (item.target === "snapshot") {
       const snapshot = createDeploySnapshotTemplate(item, sourceTemplates, options);
@@ -172,7 +161,6 @@ export async function createDeployManifestTemplates(
         files: uploadFiles,
         format,
         artifactHash,
-        aggregateHash,
         ...snapshot,
       });
       continue;
@@ -182,7 +170,6 @@ export async function createDeployManifestTemplates(
       servers: config.blossomServers.length ? config.blossomServers : undefined,
       metadataTags,
       content: metadata.content,
-      format,
     });
     sourceTemplates.set(
       deploySourceKey(item.candidate.dir, {
@@ -197,7 +184,6 @@ export async function createDeployManifestTemplates(
       files: uploadFiles,
       format,
       artifactHash,
-      aggregateHash,
       template,
     });
   }
@@ -208,8 +194,7 @@ export async function createDeployManifestTemplates(
  * NIP-5D §Manifest: "A napplet is a single self-contained /index.html", so current deploys
  * publish only /index.html plus the blobs the icon, screenshot and preview tags reference
  * (NIP-5D §Icon, §Presentation media). Any other collected file would be silently dropped,
- * so fail loudly instead. `.well-known` files count too because legacy deploys would
- * publish them and current events cannot carry them.
+ * so fail loudly instead. `.well-known` files count too because current events cannot carry them.
  */
 function selectCurrentUploadFiles(
   dir: string,
@@ -228,7 +213,7 @@ function selectCurrentUploadFiles(
     throw new Error([
       `Current NIP-5D deploys publish one self-contained /index.html (plus its icon, screenshot and preview blobs); these built files in ${dir} would not be deployed:`,
       ...dropped.map((path) => `  - ${path}`),
-      "Build a single-file artifact (the @napplet/vite-plugin default artifactMode: 'single-file') or deploy with --format legacy.",
+      "Build a single-file artifact (the @napplet/vite-plugin default artifactMode: 'single-file'); a NIP-5D napplet is one self-contained /index.html.",
     ].join("\n"));
   }
   return kept;

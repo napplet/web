@@ -87,7 +87,7 @@ export function renderDeployReport(report: DeployReport): string {
     lines.push(`- ${describeManifest(manifest)}`);
     pushField(lines, "  Files", String(manifest.files.length));
     pushField(lines, "  Format", manifest.format ?? "current");
-    pushField(lines, manifest.format === "legacy" ? "  Aggregate" : "  Artifact", short(manifest.aggregateHash ?? manifest.artifactHash ?? "", 12));
+    pushField(lines, "  Artifact", short(manifest.artifactHash ?? "", 12));
     if (manifest.skippedReason) {
       pushField(lines, "  Status", `skipped: ${manifest.skippedReason}`);
       continue;

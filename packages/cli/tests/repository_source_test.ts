@@ -51,9 +51,6 @@ Deno.test("source precedence is config, sidecar, HTML, then the build repository
     assertEquals(await sources(), [["source", "https://sidecar.example/repo"]]);
     assertEquals(await sources("https://config.example/archive"), [["source", "https://config.example/archive"]]);
     assertEquals(await sources(false), []);
-    await Deno.remove(sidecar);
-    await Deno.writeTextFile(index, '<meta name="description" content="Test app">');
-    assertEquals((await readManifestMetadataTags(index, undefined, {}, "legacy")).filter((tag) => tag[0] === "source"), []);
   });
 });
 

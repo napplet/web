@@ -65,20 +65,6 @@ Deno.test("createDebugReport records current manifest errors instead of throwing
   });
 });
 
-Deno.test("createDebugReport inspects legacy manifests when requested", async () => {
-  await withTempDir(async (dir) => {
-    await Deno.mkdir(`${dir}/dist`, { recursive: true });
-    await Deno.writeTextFile(`${dir}/dist/index.html`, "<!doctype html>");
-    const config = defaultConfig({ sourceDir: "dist" });
-
-    const report = await createDebugReport(config, { cwd: dir, format: "legacy" });
-
-    assertEquals(report.manifests.format, "legacy");
-    assertEquals(report.manifests.error, undefined);
-    assert(report.manifests.buildable >= 1);
-  });
-});
-
 Deno.test("createDebugReport reports built files a current deploy would drop", async () => {
   await withTempDir(async (dir) => {
     await Deno.mkdir(`${dir}/dist`, { recursive: true });
@@ -91,9 +77,6 @@ Deno.test("createDebugReport reports built files a current deploy would drop", a
 
     const current = await createDebugReport(config, { cwd: dir });
     assert(current.manifests.error?.includes("/app.js"), current.manifests.error);
-
-    const legacy = await createDebugReport(config, { cwd: dir, format: "legacy" });
-    assertEquals(legacy.manifests.error, undefined);
   });
 });
 

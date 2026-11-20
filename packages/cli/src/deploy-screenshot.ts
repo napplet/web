@@ -99,7 +99,7 @@ export async function attachCapturedScreenshots(
     const data = await Deno.readFile(capture.path);
     const { tag, blob } = await buildMediaTag("screenshot", data, { label: "captured screenshot" });
     for (const manifest of templates) {
-      if (!manifest.template || manifest.format === "legacy") continue;
+      if (!manifest.template) continue;
       if (capture.indexHtml && manifest.item.candidate.indexHtml !== capture.indexHtml) continue;
       if (!manifest.template.tags.some((t) => t[0] === "screenshot" && t[1] === `x ${blob.sha256}`)) {
         manifest.template.tags.push(tag);

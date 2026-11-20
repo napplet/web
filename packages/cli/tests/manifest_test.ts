@@ -2,9 +2,8 @@ import { defaultConfig } from "../src/config.ts";
 import { createDeployPlan } from "../src/deploy-plan.ts";
 import {
   collectManifestFiles,
-  computeAggregateHash,
-  createDeployManifestTemplates as buildDeploy,
-  createSiteManifestTemplate as buildSite,
+  createDeployManifestTemplates,
+  createSiteManifestTemplate,
   createSnapshotManifestTemplate,
   siteAddress,
 } from "../src/manifest.ts";
@@ -17,10 +16,6 @@ import {
 } from "../src/types.ts";
 import { assert, assertEquals, withTempDir } from "./assert.ts";
 
-// Historical vectors deliberately exercise the removable legacy writer.
-const createSiteManifestTemplate: typeof buildSite = (item, files, options) => buildSite(item, files, { ...options, format: "legacy" });
-const createDeployManifestTemplates: typeof buildDeploy = (plan, config, options) => buildDeploy(plan, config, { ...options, format: "legacy" });
-
 const indexHash = "1bc04b5291c26a46d918139138b992d2de976d6851d0893b0476b85bfbdfc6e6";
 const assetHash = "a172cedcae47474b615c54d510a5d84a8dea3032e958587430b413538be3f333";
 const pubkey = "a".repeat(64);
@@ -30,7 +25,7 @@ const files: ManifestFileMapping[] = [
   { path: "/assets/app.js", sha256: assetHash },
 ];
 
-Deno.test("legacy: collectManifestFiles hashes dist files and excludes generated manifests", async () => {
+Deno.test("collectManifestFiles hashes dist files and excludes generated manifests", async () => {
   await withTempDir(async (dir) => {
     await Deno.mkdir(`${dir}/assets`, { recursive: true });
     await Deno.writeTextFile(`${dir}/index.html`, "index");
@@ -44,7 +39,7 @@ Deno.test("legacy: collectManifestFiles hashes dist files and excludes generated
   });
 });
 
-Deno.test("legacy: collectManifestFiles skips local control paths but keeps well-known", async () => {
+Deno.test("collectManifestFiles skips local control paths but keeps well-known", async () => {
   await withTempDir(async (dir) => {
     await Deno.mkdir(`${dir}/.git`, { recursive: true });
     await Deno.mkdir(`${dir}/.napplet`, { recursive: true });
@@ -64,14 +59,7 @@ Deno.test("legacy: collectManifestFiles skips local control paths but keeps well
   });
 });
 
-Deno.test("legacy: computeAggregateHash is order-independent and uses only path mappings", async () => {
-  const first = await computeAggregateHash(files);
-  const second = await computeAggregateHash([...files].reverse());
-  assertEquals(first, second);
-  assertEquals(first.length, 64);
-});
-
-Deno.test("legacy: createSiteManifestTemplate builds NIP-5D named and root manifests", async () => {
+Deno.test("createSiteManifestTemplate builds NIP-5D named and root manifests", async () => {
   const candidate: NappletCandidate = {
     name: "feed",
     dir: "/tmp/feed/dist",
@@ -80,24 +68,25 @@ Deno.test("legacy: createSiteManifestTemplate builds NIP-5D named and root manif
   const named = await createSiteManifestTemplate(
     { candidate, target: "named", dTag: "feed", kind: NAPPLET_KIND_NAMED },
     files,
-    { createdAt: 123, servers: ["https://cdn.example"] },
+    { createdAt: 123, servers: ["https://cdn.example"], content: "A feed" },
   );
   assertEquals(named.kind, NAPPLET_KIND_NAMED);
   assertEquals(named.created_at, 123);
   assertEquals(named.tags[0], ["d", "feed"]);
-  assertEquals(named.tags.filter((tag) => tag[0] === "x").length, 1);
+  assertEquals(named.tags.filter((tag) => tag[0] === "x"), [["x", indexHash]]);
+  assertEquals(named.content, "A feed");
   assert(named.tags.some((tag) => tag[0] === "server" && tag[1] === "https://cdn.example"));
 
   const root = await createSiteManifestTemplate(
     { candidate, target: "root", kind: NAPPLET_KIND_ROOT },
     files,
-    { createdAt: 123 },
+    { createdAt: 123, content: "A feed" },
   );
   assertEquals(root.kind, NAPPLET_KIND_ROOT);
   assertEquals(root.tags.some((tag) => tag[0] === "d"), false);
 });
 
-Deno.test("legacy: createSiteManifestTemplate rejects invalid named d tags", async () => {
+Deno.test("createSiteManifestTemplate rejects invalid named d tags", async () => {
   let message = "";
   try {
     await createSiteManifestTemplate(
@@ -108,6 +97,7 @@ Deno.test("legacy: createSiteManifestTemplate rejects invalid named d tags", asy
         kind: NAPPLET_KIND_NAMED,
       },
       files,
+      { content: "A feed" },
     );
   } catch (error) {
     message = error instanceof Error ? error.message : String(error);
@@ -115,7 +105,7 @@ Deno.test("legacy: createSiteManifestTemplate rejects invalid named d tags", asy
   assert(message.includes("Named napplet d tag"));
 });
 
-Deno.test("legacy: createSiteManifestTemplate accepts named d tags longer than 13 characters", async () => {
+Deno.test("createSiteManifestTemplate accepts named d tags longer than 13 characters", async () => {
   const dTag = "my-very-long-napplet-name";
   const named = await createSiteManifestTemplate(
     {
@@ -125,11 +115,12 @@ Deno.test("legacy: createSiteManifestTemplate accepts named d tags longer than 1
       kind: NAPPLET_KIND_NAMED,
     },
     files,
+    { content: "A feed" },
   );
   assertEquals(named.tags[0], ["d", dTag]);
 });
 
-Deno.test("legacy: createSnapshotManifestTemplate copies source paths and exact aggregate", async () => {
+Deno.test("createSnapshotManifestTemplate copies the source artifact hash and content", async () => {
   const source = await createSiteManifestTemplate(
     {
       candidate: { name: "feed", dir: "/tmp/feed", indexHtml: "/tmp/feed/index.html" },
@@ -138,7 +129,7 @@ Deno.test("legacy: createSnapshotManifestTemplate copies source paths and exact 
       kind: NAPPLET_KIND_NAMED,
     },
     files,
-    { createdAt: 123, servers: ["https://cdn.example"] },
+    { createdAt: 123, servers: ["https://cdn.example"], content: "A feed" },
   );
   const snapshot = createSnapshotManifestTemplate(
     source,
@@ -152,9 +143,10 @@ Deno.test("legacy: createSnapshotManifestTemplate copies source paths and exact 
     snapshot.tags.find((tag) => tag[0] === "x"),
     source.tags.find((tag) => tag[0] === "x"),
   );
+  assertEquals(snapshot.content, "A feed");
 });
 
-Deno.test("legacy: createDeployManifestTemplates builds dry-run templates and flags snapshots", async () => {
+Deno.test("createDeployManifestTemplates builds dry-run templates and flags snapshots", async () => {
   await withTempDir(async (dir) => {
     await Deno.writeTextFile(`${dir}/index.html`, "index");
     const candidate: NappletCandidate = {
@@ -162,7 +154,7 @@ Deno.test("legacy: createDeployManifestTemplates builds dry-run templates and fl
       dir,
       indexHtml: `${dir}/index.html`,
     };
-    const config = defaultConfig({ blossomServers: ["https://cdn.example"] });
+    const config = defaultConfig({ blossomServers: ["https://cdn.example"], metadata: { description: "A feed" } });
     const plan = createDeployPlan(config, [candidate], { root: true, snapshot: true });
     const manifests = await createDeployManifestTemplates(plan, config, { createdAt: 123 });
     assertEquals(manifests.length, 2);
@@ -172,7 +164,7 @@ Deno.test("legacy: createDeployManifestTemplates builds dry-run templates and fl
   });
 });
 
-Deno.test("legacy: createDeployManifestTemplates builds snapshot templates with a signer pubkey", async () => {
+Deno.test("createDeployManifestTemplates builds snapshot templates with a signer pubkey", async () => {
   await withTempDir(async (dir) => {
     await Deno.writeTextFile(`${dir}/index.html`, "index");
     const candidate: NappletCandidate = {
@@ -180,7 +172,7 @@ Deno.test("legacy: createDeployManifestTemplates builds snapshot templates with 
       dir,
       indexHtml: `${dir}/index.html`,
     };
-    const config = defaultConfig({ named: ["feed"] });
+    const config = defaultConfig({ named: ["feed"], metadata: { description: "A feed" } });
     const plan = createDeployPlan(config, [candidate], { snapshot: true });
     const manifests = await createDeployManifestTemplates(plan, config, {
       createdAt: 123,
@@ -197,7 +189,7 @@ Deno.test("legacy: createDeployManifestTemplates builds snapshot templates with 
   });
 });
 
-Deno.test("legacy: createDeployManifestTemplates preserves plugin-emitted requires tags", async () => {
+Deno.test("createDeployManifestTemplates converts legacy plugin sidecar requires tags to R", async () => {
   await withTempDir(async (dir) => {
     await Deno.writeTextFile(`${dir}/index.html`, "index");
     await Deno.writeTextFile(
@@ -207,7 +199,6 @@ Deno.test("legacy: createDeployManifestTemplates preserves plugin-emitted requir
           ["requires", "relay"],
           ["requires", "storage"],
           ["requires", "count"],
-          ["server", "https://ignored.example"],
         ],
       }),
     );
@@ -217,7 +208,7 @@ Deno.test("legacy: createDeployManifestTemplates preserves plugin-emitted requir
       indexHtml: `${dir}/index.html`,
       manifestPath: `${dir}/.nip5a-manifest.json`,
     };
-    const config = defaultConfig({ named: ["feed"] });
+    const config = defaultConfig({ named: ["feed"], metadata: { description: "A feed" } });
     const plan = createDeployPlan(config, [candidate], {
       root: true,
       names: ["feed"],
@@ -230,47 +221,39 @@ Deno.test("legacy: createDeployManifestTemplates preserves plugin-emitted requir
 
     assertEquals(manifests.length, 4);
     for (const manifest of manifests) {
-      assertEquals(manifest.template?.tags.filter((tag) => tag[0] === "requires"), [
-        ["requires", "relay"],
-        ["requires", "storage"],
-        ["requires", "count"],
+      assertEquals(manifest.template?.tags.filter((tag) => tag[0] === "R"), [
+        ["R", "relay"],
+        ["R", "storage"],
+        ["R", "count"],
       ]);
-      assertEquals(
-        manifest.template?.tags.some((tag) =>
-          tag[0] === "server" && tag[1] === "https://ignored.example"
-        ),
-        false,
-      );
+      assertEquals(manifest.template?.tags.some((tag) => tag[0] === "requires"), false);
     }
   });
 });
 
-for (const format of ["current", "legacy"] as const) {
-  Deno.test(`${format}: deploy keeps unknown domains from legacy sidecars`, async () => {
-    await withTempDir(async (dir) => {
-      await Deno.writeTextFile(`${dir}/index.html`, "index");
-      await Deno.writeTextFile(
-        `${dir}/.nip5a-manifest.json`,
-        JSON.stringify({ tags: [["requires", "mesh"], ["requires", " relay "], ["requires", ""]] }),
-      );
-      const candidate: NappletCandidate = {
-        name: "dingdong",
-        dir,
-        indexHtml: `${dir}/index.html`,
-        manifestPath: `${dir}/.nip5a-manifest.json`,
-      };
-      const config = defaultConfig({ named: ["dingdong"], metadata: { description: "An example napplet" } });
-      const plan = createDeployPlan(config, [candidate], {});
-      const manifests = await buildDeploy(plan, config, { createdAt: 123, format });
+Deno.test("deploy keeps unknown domains from legacy sidecars", async () => {
+  await withTempDir(async (dir) => {
+    await Deno.writeTextFile(`${dir}/index.html`, "index");
+    await Deno.writeTextFile(
+      `${dir}/.nip5a-manifest.json`,
+      JSON.stringify({ tags: [["requires", "mesh"], ["requires", " relay "], ["requires", ""]] }),
+    );
+    const candidate: NappletCandidate = {
+      name: "dingdong",
+      dir,
+      indexHtml: `${dir}/index.html`,
+      manifestPath: `${dir}/.nip5a-manifest.json`,
+    };
+    const config = defaultConfig({ named: ["dingdong"], metadata: { description: "An example napplet" } });
+    const plan = createDeployPlan(config, [candidate], {});
+    const manifests = await createDeployManifestTemplates(plan, config, { createdAt: 123 });
 
-      const requiredTag = format === "current" ? "R" : "requires";
-      assertEquals(manifests[0].template?.tags.filter((tag) => tag[0] === requiredTag), [
-        [requiredTag, "mesh"],
-        [requiredTag, "relay"],
-      ]);
-    });
+    assertEquals(manifests[0].template?.tags.filter((tag) => tag[0] === "R"), [
+      ["R", "mesh"],
+      ["R", "relay"],
+    ]);
   });
-}
+});
 
 Deno.test("current: deploy preserves required and optional Blossom declarations", async () => {
   for (const declaration of ["R", "O"]) {
@@ -287,9 +270,8 @@ Deno.test("current: deploy preserves required and optional Blossom declarations"
         manifestPath: `${dir}/.nip5a-manifest.json`,
       };
       const config = defaultConfig({ named: ["blob-browser"], metadata: { description: "Browse blobs" } });
-      const manifests = await buildDeploy(createDeployPlan(config, [candidate], {}), config, {
+      const manifests = await createDeployManifestTemplates(createDeployPlan(config, [candidate], {}), config, {
         createdAt: 123,
-        format: "current",
       });
       assertEquals(
         manifests[0].template?.tags.filter((tag) => tag[0] === "R" || tag[0] === "O"),
@@ -299,7 +281,7 @@ Deno.test("current: deploy preserves required and optional Blossom declarations"
   }
 });
 
-Deno.test("legacy: plugin manifest requirements cover every active @napplet/nap domain", async () => {
+Deno.test("plugin manifest requirements cover every active @napplet/nap domain", async () => {
   await withTempDir(async (dir) => {
     const napPackage = JSON.parse(
       await Deno.readTextFile(new URL("../../nap/package.json", import.meta.url)),
@@ -319,13 +301,13 @@ Deno.test("legacy: plugin manifest requirements cover every active @napplet/nap 
       indexHtml: `${dir}/index.html`,
       manifestPath: `${dir}/.nip5a-manifest.json`,
     };
-    const config = defaultConfig({ named: ["domain-audit"] });
+    const config = defaultConfig({ named: ["domain-audit"], metadata: { description: "Domain audit" } });
     const plan = createDeployPlan(config, [candidate], {});
     const manifests = await createDeployManifestTemplates(plan, config, { createdAt: 123 });
 
     assertEquals(
       manifests[0].template?.tags
-        .filter((tag) => tag[0] === "requires")
+        .filter((tag) => tag[0] === "R")
         .map((tag) => tag[1])
         .sort(),
       activeDomains,
@@ -333,13 +315,13 @@ Deno.test("legacy: plugin manifest requirements cover every active @napplet/nap 
   });
 });
 
-Deno.test("legacy: createDeployManifestTemplates emits trimmed title/description tags from index.html", async () => {
+Deno.test("createDeployManifestTemplates emits the HTML title tag and description content", async () => {
   await withTempDir(async (dir) => {
     await Deno.writeTextFile(
       `${dir}/index.html`,
       [
         "<!doctype html><html><head>",
-        "<title>  Feed  </title>",
+        "<title>Feed</title>",
         '<meta name="description" content="A feed napplet">',
         "</head><body></body></html>",
       ].join(""),
@@ -357,36 +339,36 @@ Deno.test("legacy: createDeployManifestTemplates emits trimmed title/description
     });
 
     assertEquals(manifests.length, 4);
-    // Title/description are trimmed and propagate to root, named, AND snapshots.
+    // NIP-5D §Manifest: the description is event content, never a tag, on every kind.
     for (const manifest of manifests) {
       assertEquals(manifest.template?.tags.filter((tag) => tag[0] === "title"), [[
         "title",
         "Feed",
       ]]);
-      assertEquals(manifest.template?.tags.filter((tag) => tag[0] === "description"), [
-        ["description", "A feed napplet"],
-      ]);
+      assertEquals(manifest.template?.tags.some((tag) => tag[0] === "description"), false);
+      assertEquals(manifest.template?.content, "A feed napplet");
     }
   });
 });
 
-Deno.test("legacy: createDeployManifestTemplates omits title/description when missing or empty", async () => {
+Deno.test("createDeployManifestTemplates omits the title tag when the HTML title is empty", async () => {
   await withTempDir(async (dir) => {
     await Deno.writeTextFile(
       `${dir}/index.html`,
       '<!doctype html><html><head><title>   </title><meta name="description" content=""></head><body></body></html>',
     );
     const candidate: NappletCandidate = { name: "feed", dir, indexHtml: `${dir}/index.html` };
-    const config = defaultConfig({ named: ["feed"] });
+    const config = defaultConfig({ named: ["feed"], metadata: { description: "A feed" } });
     const plan = createDeployPlan(config, [candidate], { root: true });
     const manifests = await createDeployManifestTemplates(plan, config, { createdAt: 123 });
 
     assertEquals(manifests[0].template?.tags.some((tag) => tag[0] === "title"), false);
     assertEquals(manifests[0].template?.tags.some((tag) => tag[0] === "description"), false);
+    assertEquals(manifests[0].template?.content, "A feed");
   });
 });
 
-Deno.test("legacy: createDeployManifestTemplates dedupes title/description and coexists with requires", async () => {
+Deno.test("createDeployManifestTemplates dedupes the title and keeps description content beside R tags", async () => {
   await withTempDir(async (dir) => {
     await Deno.writeTextFile(
       `${dir}/index.html`,
@@ -421,21 +403,19 @@ Deno.test("legacy: createDeployManifestTemplates dedupes title/description and c
 
     assertEquals(manifests.length, 4);
     for (const manifest of manifests) {
-      // First non-empty title wins; entity-decoded description; requires coexist.
+      // First non-empty title wins; entity-decoded description content; R coexists.
       assertEquals(manifest.template?.tags.filter((tag) => tag[0] === "title"), [
         ["title", "First"],
       ]);
-      assertEquals(manifest.template?.tags.filter((tag) => tag[0] === "description"), [
-        ["description", "Desc & more"],
-      ]);
-      assertEquals(manifest.template?.tags.filter((tag) => tag[0] === "requires"), [
-        ["requires", "relay"],
+      assertEquals(manifest.template?.content, "Desc & more");
+      assertEquals(manifest.template?.tags.filter((tag) => tag[0] === "R"), [
+        ["R", "relay"],
       ]);
     }
   });
 });
 
-Deno.test("legacy: config metadata overrides template archetype metadata", async () => {
+Deno.test("config metadata overrides template archetype metadata", async () => {
   await withTempDir(async (dir) => {
     await Deno.writeTextFile(
       `${dir}/index.html`,
@@ -476,64 +456,16 @@ Deno.test("legacy: config metadata overrides template archetype metadata", async
 
     assertEquals(tags.filter((tag) => tag[0] === "d"), [["d", "notes"]]);
     assertEquals(tags.filter((tag) => tag[0] === "title"), [["title", "Notes"]]);
-    assertEquals(tags.filter((tag) => tag[0] === "description"), [[
-      "description",
-      "CLI-owned description",
-    ]]);
-    assertEquals(tags.filter((tag) => tag[0] === "archetype"), [[
-      "archetype",
-      "note",
-      "napplet:note/open",
-    ]]);
+    assertEquals(manifests[0].template?.content, "CLI-owned description");
+    assertEquals(tags.filter((tag) => tag[0] === "z" || tag[0] === "i"), [
+      ["z", "note"],
+      ["i", "napplet:note/open"],
+    ]);
     assertEquals(tags.filter((tag) => tag[0] === "type"), [["type", "invented"]]);
   });
 });
 
-Deno.test("legacy: template metadata preserves opaque archetype payloads", async () => {
-  await withTempDir(async (dir) => {
-    await Deno.writeTextFile(`${dir}/index.html`, "<html></html>");
-    await Deno.writeTextFile(
-      `${dir}/.nip5a-manifest.json`,
-      JSON.stringify({
-        tags: [
-          ["archetype", "note", "napplet:note/open"],
-          ["archetype", "profile", "napplet:profile/open"],
-          ["archetype", "profile", "napplet:note/open"],
-          ["archetype", "note", "napplet:note/open?kind=1", "kind:1"],
-          ["archetype", "note", "napplet:note/open", "kind:-1"],
-          ["archetype", "note", "napplet:note/open", "kind:1.5"],
-          ["archetype", "note", "napplet:note/open", "event:1"],
-          ["archetype", "profile", "napplet:note/open", "kind:0"],
-        ],
-      }),
-    );
-    const candidate: NappletCandidate = {
-      name: "notes",
-      dir,
-      indexHtml: `${dir}/index.html`,
-      manifestPath: `${dir}/.nip5a-manifest.json`,
-    };
-    const config = defaultConfig({ named: ["notes"] });
-    const plan = createDeployPlan(config, [candidate], {});
-    const manifests = await createDeployManifestTemplates(plan, config, { createdAt: 123 });
-
-    assertEquals(
-      manifests[0].template?.tags.filter((tag) => tag[0] === "archetype"),
-      [
-        ["archetype", "note", "napplet:note/open"],
-        ["archetype", "profile", "napplet:profile/open"],
-        ["archetype", "profile", "napplet:note/open"],
-        ["archetype", "note", "napplet:note/open?kind=1", "kind:1"],
-        ["archetype", "note", "napplet:note/open", "kind:-1"],
-        ["archetype", "note", "napplet:note/open", "kind:1.5"],
-        ["archetype", "note", "napplet:note/open", "event:1"],
-        ["archetype", "profile", "napplet:note/open", "kind:0"],
-      ],
-    );
-  });
-});
-
-Deno.test("legacy: siteAddress renders root and named NIP-5D addresses", () => {
+Deno.test("siteAddress renders root and named NIP-5D addresses", () => {
   assertEquals(siteAddress({ kind: NAPPLET_KIND_ROOT, pubkey }), `${NAPPLET_KIND_ROOT}:${pubkey}:`);
   assertEquals(
     siteAddress({ kind: NAPPLET_KIND_NAMED, pubkey, dTag: "feed" }),
