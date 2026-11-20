@@ -265,6 +265,7 @@ export const RESPONDERS: Record<string, Responder> = {
     },
   }),
   'webrtc.send': (e) => ok({ type: 'webrtc.send.result', id: e.id }),
+  'webrtc.sendBytes': (e) => ok({ type: 'webrtc.sendBytes.result', id: e.id }),
   'webrtc.close': (e) => ok({ type: 'webrtc.close.result', id: e.id }),
   // link
   'link.open': (e) => ok({ type: 'link.open.result', id: e.id, status: 'opened' }),

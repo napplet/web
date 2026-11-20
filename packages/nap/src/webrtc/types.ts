@@ -14,6 +14,7 @@
 
 import type {
   NappletMessage,
+  WebrtcBytes,
   WebrtcEvent,
   WebrtcOpenRequest,
   WebrtcOpenResult,
@@ -24,6 +25,8 @@ export const DOMAIN = 'webrtc' as const;
 
 export type {
   WebrtcApi,
+  WebrtcBytes,
+  WebrtcBytesEvent,
   WebrtcClosedEvent,
   WebrtcDirectScope,
   WebrtcEvent,
@@ -36,6 +39,7 @@ export type {
   WebrtcSession,
   WebrtcState,
   WebrtcStateEvent,
+  WebrtcStatsEvent,
 } from '@napplet/core';
 
 /** Base interface for all WebRTC NAP messages. */
@@ -73,6 +77,34 @@ export interface WebrtcSendResultMessage extends WebrtcMessage {
   error?: string;
 }
 
+/**
+ * Send one opaque byte sequence over a session. `bytes` is canonical padded
+ * base64 text; the shell delivers the decoded bytes as one binary payload.
+ *
+ * @example
+ * ```ts
+ * const msg: WebrtcSendBytesMessage = {
+ *   type: 'webrtc.sendBytes',
+ *   id: 's2',
+ *   sessionId: 'sess-2',
+ *   bytes: 'AAEC/w==',
+ * };
+ * ```
+ */
+export interface WebrtcSendBytesMessage extends WebrtcMessage {
+  type: 'webrtc.sendBytes';
+  id: string;
+  sessionId: string;
+  bytes: WebrtcBytes;
+}
+
+/** Result of `webrtc.sendBytes`. `error` is `unsupported` when the shell lacks byte payloads. */
+export interface WebrtcSendBytesResultMessage extends WebrtcMessage {
+  type: 'webrtc.sendBytes.result';
+  id: string;
+  error?: string;
+}
+
 /** Close a WebRTC session. */
 export interface WebrtcCloseMessage extends WebrtcMessage {
   type: 'webrtc.close';
@@ -98,12 +130,14 @@ export interface WebrtcEventMessage extends WebrtcMessage {
 export type WebrtcOutboundMessage =
   | WebrtcOpenMessage
   | WebrtcSendMessage
+  | WebrtcSendBytesMessage
   | WebrtcCloseMessage;
 
 /** Runtime -> napplet WebRTC messages. */
 export type WebrtcInboundMessage =
   | WebrtcOpenResultMessage
   | WebrtcSendResultMessage
+  | WebrtcSendBytesResultMessage
   | WebrtcCloseResultMessage
   | WebrtcEventMessage;
 

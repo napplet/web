@@ -167,6 +167,7 @@ export {
 export {
   webrtcOpen,
   webrtcSend,
+  webrtcSendBytes,
   webrtcClose,
   webrtcOnEvent,
 } from '@napplet/nap/webrtc';

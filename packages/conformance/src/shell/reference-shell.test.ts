@@ -29,6 +29,13 @@ describe('createReferenceShell — record + respond', () => {
     expect(shell.records[0].verdict.ok).toBe(false);
   });
 
+  it('acknowledges webrtc.sendBytes with a correlated result', () => {
+    const shell = createReferenceShell();
+    expect(shell.handle({ type: 'webrtc.sendBytes', id: 's2', sessionId: 'sess-2', bytes: 'AAEC/w==' })).toEqual([
+      { type: 'webrtc.sendBytes.result', id: 's2' },
+    ]);
+  });
+
   it('produces correlated, spec-valid responses', () => {
     const shell = createReferenceShell();
     expect(shell.handle({ type: 'storage.get', id: 'X', key: 'k' })).toEqual([

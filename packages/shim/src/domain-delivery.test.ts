@@ -65,4 +65,15 @@ describe('domain exposure and lifecycle-independent delivery', () => {
     expect(shell.sent).toEqual([{ type: 'shell.ready' }]);
     expect(shell.windowMessages).toEqual([]);
   });
+
+  // NAP-WEBRTC (napplet/naps#59 @ fb4dd6f0): window.napplet.webrtc.sendBytes over the port.
+  it('exposes window.napplet.webrtc.sendBytes and resolves its port result', async () => {
+    const installed = installNappletGlobal({ domains: ['webrtc'] });
+    const pending = installed.webrtc!.sendBytes('sess-2', 'AAEC/w==');
+    const sent = shell.sent.find((message) => message.type === 'webrtc.sendBytes');
+    expect(sent).toMatchObject({ sessionId: 'sess-2', bytes: 'AAEC/w==' });
+    deliver({ type: 'webrtc.sendBytes.result', id: sent!.id });
+    await expect(pending).resolves.toBeUndefined();
+  });
 });
+

@@ -111,6 +111,7 @@ imgEl.src = handle.url;
 // Open a shell-mediated WebRTC data session
 const { session } = await webrtc.open({ scope: { type: 'direct', pubkey: 'abc123...' } });
 await webrtc.send(session.id, { body: 'hello' });
+await webrtc.sendBytes(session.id, 'AAEC/w=='); // canonical padded base64; peers get a `bytes` event
 // Open a shell-mediated BLE session and inspect exposed services
 const { session: bleSession } = await ble.open({ acceptAllDevices: true });
 const bleServices = await ble.services(bleSession.id);
