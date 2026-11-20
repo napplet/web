@@ -122,14 +122,15 @@ export function hasDomainExtension(domain: string): boolean {
  * @param napplet The namespace being installed.
  * @returns The experimental domains that were mounted.
  */
-export function installExperimentalDomains(domains: Iterable<string>, napplet: Record<string, unknown>): string[] {
+export function installExperimentalDomains(domains: Iterable<string>, napplet: object): string[] {
+  const target = napplet as Record<string, unknown>;
   exposed.clear();
   const mounted: string[] = [];
   for (const domain of domains) {
     const extension = extensions.get(domain);
     if (!extension) continue;
     if (!apis.has(domain)) apis.set(domain, extension.create(channelFor(domain)));
-    napplet[domain] = apis.get(domain);
+    target[domain] = apis.get(domain);
     exposed.add(domain);
     mounted.push(domain);
   }

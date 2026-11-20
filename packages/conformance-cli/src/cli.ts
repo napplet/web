@@ -27,7 +27,7 @@ import {
   type ReporterFormat,
 } from '@napplet/conformance';
 import { normalizeExperimentalDomains } from '@napplet/core';
-import { startHarnessServer } from './server.js';
+import { startHarnessServer, type BootConfig } from './server.js';
 import { startUiServer } from './ui-server.js';
 import { scanForbiddenGlobals } from './scan.js';
 import { resolveNappletDir } from './resolve-napplet.js';
@@ -173,6 +173,12 @@ function parseArgs(argv: string[]): CliOptions {
   }
   opts.experimentalDomains = normalizeExperimentalDomains(opts.experimentalDomains);
   return opts;
+}
+
+/** Experimental-domain allowlist and optional extension script for the headless boot. */
+async function experimentalBootConfig(opts: CliOptions): Promise<Pick<BootConfig, 'experimentalDomains' | 'extensionSource'>> {
+  if (!opts.extension) return { experimentalDomains: opts.experimentalDomains };
+  return { experimentalDomains: opts.experimentalDomains, extensionSource: await readFile(resolve(opts.extension), 'utf8') };
 }
 
 async function collectBoot(hostUrl: string, totalTimeoutMs: number): Promise<BootCollection> {
@@ -333,8 +339,7 @@ async function main(argv: string[]): Promise<number> {
       runDegraded: opts.runDegraded,
       runtimePreludeSource,
       allowSameOrigin: opts.allowSameOrigin,
-      experimentalDomains: opts.experimentalDomains,
-      ...(opts.extension ? { extensionSource: await readFile(resolve(opts.extension), 'utf8') } : {}),
+      ...await experimentalBootConfig(opts),
     },
   });
 

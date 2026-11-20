@@ -226,7 +226,7 @@ export function installNappletGlobal(options: NappletShimInstallOptions = {}): N
   const domains = normalizeDomains(options.domains);
   const napplet = createNappletGlobal(domains);
   // Experimental domains are only ever mounted from an explicit list, never by the install-all default.
-  installExperimentalDomains(options.domains ?? [], napplet as unknown as Record<string, unknown>);
+  installExperimentalDomains(options.domains ?? [], napplet);
 
   (window as Window & typeof globalThis & { napplet: NappletGlobal }).napplet = napplet;
 
