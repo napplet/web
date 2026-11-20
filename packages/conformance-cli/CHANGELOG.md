@@ -1,5 +1,19 @@
 # @napplet/conformance-cli
 
+## 0.7.4
+
+### Patch Changes
+
+- b16959e: Point the npm `repository` metadata at the public repository,
+  `https://github.com/napplet/web`. The previous URL returned 404, so the
+  repository link on npm and in tooling that follows package metadata was
+  broken.
+- Updated dependencies [b16959e]
+  - @napplet/conformance@0.29.1
+  - @napplet/core@0.43.1
+  - @napplet/nap@0.42.1
+  - @napplet/shim@0.40.1
+
 ## 0.7.3
 
 ### Patch Changes

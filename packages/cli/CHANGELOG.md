@@ -1,5 +1,13 @@
 # @napplet/cli
 
+## 0.14.6
+
+### Patch Changes
+
+- b16959e: Point the npm `repository` metadata at the public repository,
+  `https://github.com/napplet/web`. The previous URL returned 404, so the repository link on npm and
+  in tooling that follows package metadata was broken.
+
 ## 0.14.5
 
 ### Patch Changes
