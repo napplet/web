@@ -146,6 +146,30 @@ describe('wire checks', () => {
     expect(Array.isArray(r.diagnostics)).toBe(true);
   });
 
+  // NIP-5D §Wire Format: unrecognized types are silently ignored, so they are advisory, not malformed.
+  it.each([
+    ['an unknown domain', { type: 'mesh.publish', id: '1' }],
+    ['an unknown action in a known domain', { type: 'relay.teleport', id: '1' }],
+  ])('warns instead of failing well-formedness for %s', (_label, envelope) => {
+    const ctx = makeContext({ emitted: [rec({ type: 'storage.get', id: '1', key: 'k' }), rec(envelope)] });
+    expect(run('wire/envelope-well-formed', ctx).status).toBe('pass');
+    const known = run('wire/known-message-types', ctx);
+    expect(known.status).toBe('fail');
+    expect(known.detail).toContain(envelope.type);
+    expect(CHECKS.find((c) => c.id === 'wire/known-message-types')?.severity).toBe('warning');
+  });
+
+  it('still fails well-formedness for a malformed type alongside an unknown one', () => {
+    const ctx = makeContext({ emitted: [rec({ type: 'mesh.publish' }), rec({ type: 'no-dot' })] });
+    expect(run('wire/envelope-well-formed', ctx).status).toBe('fail');
+  });
+
+  it('passes known-message-types when every type is defined', () => {
+    const ctx = makeContext({ emitted: [rec({ type: 'storage.get', id: '1', key: 'k' })] });
+    expect(run('wire/known-message-types', ctx).status).toBe('pass');
+    expect(run('wire/known-message-types', makeContext()).status).toBe('skip');
+  });
+
   it('fails when an emitted intent request forges its sender', () => {
     const r = run('wire/envelope-well-formed', makeContext({
       emitted: [rec({

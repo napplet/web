@@ -54,6 +54,7 @@ napplet-conformance --ui . --exec "vite build --watch"
 --settle <ms>          Envelope-collection window after boot (default: 600)
 --no-degraded          Skip the graceful-degradation pass
 --allow-same-origin    Debug only (a conformant napplet must not need it)
+--strict               Also fail on advisory warnings (unknown message types, CSP-blocked requests, …)
 -h, --help             Show help
 ```
 

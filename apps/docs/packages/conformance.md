@@ -16,6 +16,8 @@ under `sandbox="allow-scripts"`, receives a runtime-injected `window.napplet`,
 every emitted postMessage envelope validates against the per-NAP validators,
 graceful degradation when a domain is absent, and no forbidden globals.
 
+Message types no known NAP defines are advisory, not errors. NIP-5D says shells "MUST silently ignore" an unrecognized `type`, and that's how new capabilities get prototyped before they're proposed, so `wire/envelope-well-formed` only fails on malformed envelopes and `wire/known-message-types` warns about the rest. Pass `{ strict: true }` to `runConformance` (or `napplet-conformance --strict`, or `?strict=1` in the web runtime) to fail the run on every advisory warning instead.
+
 The harness acts as a NIP-5D shell for the [port-bound identity](https://github.com/nostr-protocol/nips/pull/2303) model: it binds the `MessagePort` from the first valid `napplet.hello`, answers only over that port, and revokes the napplet and removes its frame on a second hello, any other window-level message, a second `load` or the port closing. `wire/port-only` fails a napplet that posts messages at window level instead of through `window.napplet`; `lifecycle/keeps-verified-document` is an advisory for a napplet that navigates or reloads its own frame. `attachReferenceShell(shell, { host, expectedSource })` and `bindNappletPort` give custom harnesses the same binding.
 
 - **npm:** [`@napplet/conformance`](https://www.npmjs.com/package/@napplet/conformance)

@@ -29,6 +29,8 @@ const SSE_PATH = '/__conformance__/events';
 
 const params = new URLSearchParams(location.search);
 const LIVE = params.get('live') === '1';
+/** `?strict=1`: fail the run on advisory warnings too, matching `napplet-conformance --strict`. */
+const STRICT = params.get('strict') === '1';
 
 function esc(value: unknown): string {
   return String(value)
@@ -177,7 +179,7 @@ async function run(target: string): Promise<void> {
       boot,
       forbiddenGlobals: forbidden,
     });
-    const result = runConformance(ctx);
+    const result = runConformance(ctx, { strict: STRICT });
     runCount += 1;
     setStatus(result.ok ? 'Done — conformant.' : 'Done — non-conformant.', result.ok ? 'info' : 'error');
     render(result, boot.emitted, resolved);

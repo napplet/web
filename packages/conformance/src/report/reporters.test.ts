@@ -14,6 +14,7 @@ function makeRun(overrides: Partial<ConformanceRun> = {}): ConformanceRun {
     ],
     summary: { total: 3, passed: 1, failed: 1, skipped: 1, errors: 0, warnings: 1 },
     ok: true,
+    strict: false,
   };
   return { ...base, ...overrides };
 }
@@ -67,6 +68,14 @@ describe('toJUnit', () => {
     expect((xml.match(/<failure /g) ?? [])).toHaveLength(1); // only the error-severity fail
     expect(xml).toContain('<system-out>'); // the warning fail
     expect(xml).toContain('&lt;listener&gt;'); // escaped
+  });
+
+  it('counts failed warnings as failures under strict', () => {
+    const run = makeRun({ ok: false, strict: true });
+    expect(toPretty(run)).toContain('RESULT: NON-CONFORMANT (0 error-severity failure(s), 1 warning(s) under --strict)');
+    const xml = toJUnit(run);
+    expect(xml).toContain('failures="1"');
+    expect(xml).toContain('<failure message="listener leak"/>');
   });
 
   it('emits skipped elements', () => {

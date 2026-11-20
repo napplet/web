@@ -32,7 +32,8 @@ describe('runConformance', () => {
     expect(run.summary.errors).toBe(0);
     expect(run.startedAt).toBe(1);
     expect(run.finishedAt).toBeGreaterThan(run.startedAt);
-    expect(run.checks.length).toBe(14);
+    expect(run.checks.length).toBe(15);
+    expect(run.strict).toBe(false);
   });
 
   it('is not ok when an error-severity check fails', () => {
@@ -53,6 +54,21 @@ describe('runConformance', () => {
     expect(run.checks.find((check) => check.id === 'manifest/requires-known')).toMatchObject({
       status: 'fail', severity: 'warning',
     });
+  });
+
+  it('fails a run with only advisory warnings under strict', () => {
+    const ctx = makeContext({
+      manifestEvent: { ...goodEvent, tags: [...goodEvent.tags, ['R', 'mesh']] },
+      emitted: [{ envelope: { type: 'mesh.publish', id: '1' }, verdict: validateEnvelope({ type: 'mesh.publish', id: '1' }), timestamp: 0 }],
+    });
+    const lenient = runConformance(ctx);
+    expect(lenient.ok).toBe(true);
+    expect(lenient.summary.warnings).toBe(2);
+
+    const strict = runConformance(ctx, { strict: true });
+    expect(strict.ok).toBe(false);
+    expect(strict.strict).toBe(true);
+    expect(strict.summary.errors).toBe(0);
   });
 
   it('produces a JSON-serializable run', () => {
