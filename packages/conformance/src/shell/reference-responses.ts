@@ -172,11 +172,8 @@ export const RESPONDERS: Record<string, Responder> = {
   'resource.bytesMany': (e) => ok({
     type: 'resource.bytesMany.result',
     id: e.id,
-    items: Array.isArray(e.requests)
-      ? e.requests.map((request) => {
-        const url = typeof request === 'object' && request !== null && !Array.isArray(request)
-          ? (request as Record<string, unknown>).url
-          : undefined;
+    items: Array.isArray(e.urls)
+      ? e.urls.map((url: unknown) => {
         const decoded = dataUrlToBlob(url);
         return {
           url: typeof url === 'string' ? url : '',
@@ -195,7 +192,6 @@ export const RESPONDERS: Record<string, Responder> = {
         { scheme: 'data', enabled: true },
         { scheme: 'https', enabled: true },
       ],
-      maxServers: 8,
     },
   }),
   'resource.cancel': none,

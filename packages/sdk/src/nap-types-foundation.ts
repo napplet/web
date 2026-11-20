@@ -239,7 +239,6 @@ export type {
   ResourceBytesOkItem,
   ResourceBytesErrorItem,
   ResourceBytesItem,
-  ResourceBytesRequest,
   ResourceBytesManyResultMessage,
   ResourceBytesManyErrorMessage,
   ResourceSidecarEntry,

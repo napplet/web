@@ -12,7 +12,6 @@ import type {
   ResourceBytesMessage,
   ResourceBytesManyMessage,
   ResourceBytesItem,
-  ResourceBytesRequest,
   ResourceBytesManyResultMessage,
   ResourceBytesManyErrorMessage,
   ResourceBytesResultMessage,
@@ -133,7 +132,7 @@ export function sendInfoRequest(id: string): Promise<ResourceInfo> {
  * Wires into pending Map + installs a timeout. Cancellation is handled by the caller
  * (bytes()) via signal listener -- this helper does not own the AbortSignal.
  */
-export function sendBytesRequest(url: string, id: string, servers?: string[]): Promise<Blob> {
+export function sendBytesRequest(url: string, id: string): Promise<Blob> {
   return new Promise<Blob>((resolve, reject) => {
     const timeout = setTimeout(() => {
       if (pendingBytes.delete(id)) {
@@ -146,20 +145,19 @@ export function sendBytesRequest(url: string, id: string, servers?: string[]): P
       type: 'resource.bytes',
       id,
       url,
-      ...(servers === undefined ? {} : { servers }),
     };
     postToShell(msg);
   });
 }
 
 /**
- * Send a resource.bytesMany request envelope and return ordered per-resource items.
+ * Send a resource.bytesMany request envelope and return ordered per-URL items.
  */
-export function sendBytesManyRequest(requests: ResourceBytesRequest[], id: string): Promise<ResourceBytesItem[]> {
+export function sendBytesManyRequest(urls: string[], id: string): Promise<ResourceBytesItem[]> {
   return new Promise<ResourceBytesItem[]>((resolve, reject) => {
     const timeout = setTimeout(() => {
       if (pendingMany.delete(id)) {
-        reject(new Error(`resource.bytesMany timed out for ${requests.length} requests`));
+        reject(new Error(`resource.bytesMany timed out for ${urls.length} URLs`));
       }
     }, REQUEST_TIMEOUT_MS);
     pendingMany.set(id, { resolve, reject, timeout });
@@ -167,7 +165,7 @@ export function sendBytesManyRequest(requests: ResourceBytesRequest[], id: strin
     const msg: ResourceBytesManyMessage = {
       type: 'resource.bytesMany',
       id,
-      requests,
+      urls,
     };
     postToShell(msg);
   });

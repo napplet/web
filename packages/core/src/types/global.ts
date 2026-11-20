@@ -227,16 +227,14 @@ export interface NappletGlobal {
    *
    * @example
    * ```ts
-   * // Fetch raw bytes with advisory Blossom server locations:
-   * const blob = await window.napplet.resource.bytes('blossom:<sha256>.png', {
-   *   servers: ['https://cdn.hzrd149.com'],
-   * });
+   * // Fetch raw bytes; BUD-10 discovery hints ride inside the URI:
+   * const blob = await window.napplet.resource.bytes('blossom:<sha256>.png?xs=cdn.hzrd149.com');
    *
-   * // Fetch many resources in one envelope:
+   * // Fetch many URLs in one envelope:
    * const items = await window.napplet.resource.bytesMany([
-   *   { url: 'https://example.com/avatar.png' },
-   *   { url: 'blossom:<sha256>.png', servers: ['https://cdn.hzrd149.com'] },
-   *   { url: 'htree://example-root/path' },
+   *   'https://example.com/avatar.png',
+   *   'blossom:<sha256>.png?xs=cdn.hzrd149.com',
+   *   'htree://example-root/path',
    * ]);
    *
    * // Get a managed object URL (revoke when done to free memory):
