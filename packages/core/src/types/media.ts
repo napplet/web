@@ -54,6 +54,19 @@ export interface MediaState {
   position?: number;
   duration?: number;
   volume?: number;
+  /**
+   * Cause of this transition, such as `user`, `ended`, `error`, or `focus-lost`.
+   * Missing or unrecognized reasons are unspecified causes.
+   */
+  reason?: string;
+}
+
+/** Terminal retirement record delivered by `media.session.ended`. */
+export interface MediaSessionEnded {
+  /** Canonical identifier of the retired session. */
+  sessionId: string;
+  /** Why the shell retired the session, such as `destroyed`, `preempted`, or `policy`. */
+  reason: string;
 }
 
 /** Media action supported by a session or requested by a controller. */

@@ -29,6 +29,14 @@ describe('createReferenceShell — record + respond', () => {
     expect(shell.records[0].verdict.ok).toBe(false);
   });
 
+  // NAP-MEDIA (napplet/naps#10 @ 7806f438): destroy yields one terminal media.session.ended.
+  it('retires a destroyed media session with media.session.ended', () => {
+    const shell = createReferenceShell();
+    expect(shell.handle({ type: 'media.session.destroy', sessionId: 's1' })).toEqual([
+      { type: 'media.session.ended', sessionId: 's1', reason: 'destroyed' },
+    ]);
+  });
+
   it('produces correlated, spec-valid responses', () => {
     const shell = createReferenceShell();
     expect(shell.handle({ type: 'storage.get', id: 'X', key: 'k' })).toEqual([

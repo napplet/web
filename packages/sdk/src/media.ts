@@ -11,6 +11,7 @@ import type {
   MediaMetadata,
   MediaState,
   MediaAction,
+  MediaSessionEnded,
 } from '@napplet/nap/media';
 export type {
   MediaContextLink,
@@ -87,20 +88,21 @@ export const media: SdkDomain<'media'> = {
    * @param sessionId  The session to control
    * @param action     The media action to request
    * @param value      Optional value for seek/volume
+   * @param reason     Optional cause of the command, such as `user`
    */
-  sendCommand(sessionId: string, action: MediaAction, value?: number): void {
-    requireDomain('media').sendCommand(sessionId, action, value);
+  sendCommand(sessionId: string, action: MediaAction, value?: number, reason?: string): void {
+    requireDomain('media').sendCommand(sessionId, action, value, reason);
   },
 
   /**
    * Listen for media commands from the shell.
    * @param sessionId  The session to listen for commands on
-   * @param callback   Called with (action, value?) when a command is received
+   * @param callback   Called with (action, value?, reason?) when a command is received
    * @returns A Subscription with `close()` to stop listening
    */
   onCommand(
     sessionId: string,
-    callback: (action: MediaAction, value?: number) => void,
+    callback: (action: MediaAction, value?: number, reason?: string) => void,
   ): Subscription {
     return requireDomain('media').onCommand(sessionId, callback);
   },
@@ -142,6 +144,20 @@ export const media: SdkDomain<'media'> = {
     callback: (controls: MediaAction[]) => void,
   ): Subscription {
     return requireDomain('media').onControls(sessionId, callback);
+  },
+
+  /**
+   * Listen for terminal retirement of a session (`media.session.ended`).
+   * A handler registered after retirement still receives the record once.
+   * @param sessionId  The session to watch for retirement
+   * @param callback   Called once with the retirement record
+   * @returns A Subscription with `close()` to stop listening
+   */
+  onEnded(
+    sessionId: string,
+    callback: (ended: MediaSessionEnded) => void,
+  ): Subscription {
+    return requireDomain('media').onEnded(sessionId, callback);
   },
 };
 

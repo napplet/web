@@ -18,6 +18,7 @@ import type {
   MediaMetadata,
   MediaState,
   MediaAction,
+  MediaSessionEnded,
 } from './types.js';
 
 interface MediaApi {
@@ -26,11 +27,15 @@ interface MediaApi {
   destroySession(sessionId: string): void;
   reportState(sessionId: string, state: MediaState): void;
   reportCapabilities(sessionId: string, actions: MediaAction[]): void;
-  sendCommand(sessionId: string, action: MediaAction, value?: number): void;
-  onCommand(sessionId: string, callback: (action: MediaAction, value?: number) => void): Subscription;
+  sendCommand(sessionId: string, action: MediaAction, value?: number, reason?: string): void;
+  onCommand(
+    sessionId: string,
+    callback: (action: MediaAction, value?: number, reason?: string) => void,
+  ): Subscription;
   onState(sessionId: string, callback: (state: MediaState) => void): Subscription;
   onCapabilities(sessionId: string, callback: (actions: MediaAction[]) => void): Subscription;
   onControls(sessionId: string, callback: (controls: MediaAction[]) => void): Subscription;
+  onEnded(sessionId: string, callback: (ended: MediaSessionEnded) => void): Subscription;
 }
 
 function requireMedia(): MediaApi {
@@ -142,39 +147,46 @@ export function mediaReportCapabilities(sessionId: string, actions: MediaAction[
  * @param sessionId  The session to control
  * @param action     The media action to request
  * @param value      Optional value for seek/volume
+ * @param reason     Optional cause of the command, such as `user`
  *
  * @example
  * ```ts
  * import { mediaSendCommand } from '@napplet/nap/media';
  *
- * mediaSendCommand('shell-session', 'pause');
+ * mediaSendCommand('shell-session', 'pause', undefined, 'user');
  * ```
  */
-export function mediaSendCommand(sessionId: string, action: MediaAction, value?: number): void {
-  requireMedia().sendCommand(sessionId, action, value);
+export function mediaSendCommand(
+  sessionId: string,
+  action: MediaAction,
+  value?: number,
+  reason?: string,
+): void {
+  requireMedia().sendCommand(sessionId, action, value, reason);
 }
 
 /**
  * Listen for media commands from the shell.
  *
  * @param sessionId  The session to listen for commands on
- * @param callback   Called with (action, value?) when a command is received
+ * @param callback   Called with (action, value?, reason?) when a command is received
  * @returns A Subscription with `close()` to stop listening
  *
  * @example
  * ```ts
  * import { mediaOnCommand } from '@napplet/nap/media';
  *
- * const sub = mediaOnCommand('s1', (action, value) => {
+ * const sub = mediaOnCommand('s1', (action, value, reason) => {
  *   if (action === 'seek') player.seekTo(value);
  *   if (action === 'pause') player.pause();
+ *   if (action === 'play' && reason === 'focus-gained') player.play();
  * });
  * // Later: sub.close();
  * ```
  */
 export function mediaOnCommand(
   sessionId: string,
-  callback: (action: MediaAction, value?: number) => void,
+  callback: (action: MediaAction, value?: number, reason?: string) => void,
 ): Subscription {
   return requireMedia().onCommand(sessionId, callback);
 }
@@ -229,4 +241,29 @@ export function mediaOnControls(
   callback: (controls: MediaAction[]) => void,
 ): Subscription {
   return requireMedia().onControls(sessionId, callback);
+}
+
+/**
+ * Listen for terminal retirement of a session (`media.session.ended`).
+ * A handler registered after retirement still receives the retained record once.
+ *
+ * @param sessionId  The session to watch for retirement
+ * @param callback   Called once with the retirement record
+ * @returns A Subscription with `close()` to stop listening
+ *
+ * @example
+ * ```ts
+ * import { mediaOnEnded } from '@napplet/nap/media';
+ *
+ * mediaOnEnded('s1', ({ reason }) => {
+ *   player.stop();
+ *   if (reason === 'preempted') showReplacedNotice();
+ * });
+ * ```
+ */
+export function mediaOnEnded(
+  sessionId: string,
+  callback: (ended: MediaSessionEnded) => void,
+): Subscription {
+  return requireMedia().onEnded(sessionId, callback);
 }

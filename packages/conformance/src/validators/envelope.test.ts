@@ -237,14 +237,25 @@ describe('validateEnvelope — optional shell domain', () => {
   });
 });
 
+describe('validateEnvelope — media retirement', () => {
+  it('treats media.session.ended as shell -> napplet only', () => {
+    expect(ENVELOPE_SPECS['media.session.ended']).toEqual({
+      dir: 'in',
+      fields: { sessionId: 'string', reason: 'string' },
+    });
+    const v = validateEnvelope({ type: 'media.session.ended', sessionId: 's1', reason: 'destroyed' });
+    expect(v.errors[0].code).toBe('inbound-type-emitted');
+  });
+});
+
 describe('ENVELOPE_SPECS invariants', () => {
-  it('has 349 discriminants split 168 outbound / 181 inbound', () => {
+  it('has 350 discriminants split 168 outbound / 182 inbound', () => {
     const all = knownEnvelopeTypes();
-    expect(all).toHaveLength(349);
+    expect(all).toHaveLength(350);
     const out = all.filter((t) => ENVELOPE_SPECS[t].dir === 'out');
     const inbound = all.filter((t) => ENVELOPE_SPECS[t].dir === 'in');
     expect(out).toHaveLength(168);
-    expect(inbound).toHaveLength(181);
+    expect(inbound).toHaveLength(182);
   });
 
   it('declares canonical inbound INC carrier fields', () => {

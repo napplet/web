@@ -52,6 +52,7 @@ export type {
   MediaAction,
   MediaSessionCreate,
   MediaSessionResult,
+  MediaSessionEnded,
   McpMessage,
   McpTool,
   McpContentBlock,
