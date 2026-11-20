@@ -10,6 +10,8 @@ if (window.napplet?.cvm) {
 }
 ```
 
+`discover()` resolves with the shell's `servers` list, which may be empty, and rejects with the shell's top-level `error` (for example `"unsupported kind"`). A result carrying neither is treated as malformed and rejects.
+
 This non-normative guide defers to the living [NAP-CVM proposal](https://github.com/napplet/naps/pull/31). Feature-gate with `if (window.napplet?.cvm)` before use; the runtime injects only available domains. Typed helpers ship from [`@napplet/nap/cvm`](/packages/nap) and [`@napplet/sdk`](/packages/sdk).
 
 Registry helpers accept a selector object in both `window.napplet.cvm.registry` and `cvm.registry` from `@napplet/sdk`. The named `cvmRegistryHas`, `cvmRegistryDescribe`, and `cvmRegistryCall` helpers use the same arguments.
