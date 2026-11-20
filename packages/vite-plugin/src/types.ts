@@ -96,6 +96,13 @@ export interface Nip5aManifestOptions {
   requires?: Nip5aRequiresOption;
   /** Optional NAP integrations, emitted as O tags and excluded from inferred requirements. */
   optional?: string[];
+  /**
+   * Experimental (non-NAP) domains this napplet prototypes. They are inferred
+   * from `window.napplet.<domain>` reads like NAP domains and emitted in R/O
+   * without the unknown-domain warning. They stay non-standard until proposed
+   * on the NAPs track (https://github.com/napplet/naps).
+   */
+  experimentalDomains?: string[];
   /** Accepted queryless intent identities and advertised parameter names. */
   intents?: Array<{ intent: string; params?: string[] }>;
   /** Source repository or archive location (NIP-5D §Source). */
@@ -129,6 +136,8 @@ export interface ManifestPluginState {
   base: string;
   artifactMode: Nip5aArtifactMode;
   inferredRequires: Set<string>;
+  /** Validated experimental domain allowlist from the plugin options. */
+  experimentalDomains: ReadonlySet<string>;
   reportedRequirementWarnings: Set<string>;
 }
 

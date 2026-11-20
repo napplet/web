@@ -15,7 +15,7 @@ import { inlineSingleFileBuildAssets, listLocalArtifactAssets } from './html.js'
 import { readPublishingMetadata, renderPublishingMetadata, replaceHeadMetadata } from './publishing-metadata.js';
 import { resolvePublishingIcon } from './publishing-icon.js';
 import { blobExtension, resolvePresentationMedia, type PresentationBlob } from './publishing-media.js';
-import { resolvedRequirements, reportRequirementDiagnostics } from './requirements.js';
+import { resolvedRequirements, reportExperimentalDomains, reportRequirementDiagnostics } from './requirements.js';
 
 /**
  * Resolve all per-build plugin state in the `configResolved` hook: out dir,
@@ -127,6 +127,7 @@ function embedManifestMetadata(
   const requires = options.requires ?? values('R').map((t) => t[1]);
   reportRequirementDiagnostics(requires, state, warn, optional);
   const required = resolvedRequirements(requires, state).filter((name) => !optional.includes(name));
+  reportExperimentalDomains(state, [...required, ...optional], warn);
   const title = options.title ?? values('title')[0]?.[1];
   const icon = resolvePublishingIcon(options.icon, metadata.icons);
   const source = options.source ?? values('source')[0]?.[1];

@@ -422,6 +422,9 @@ importers:
         specifier: ^7.3.0
         version: 7.3.0
     devDependencies:
+      '@napplet/core':
+        specifier: workspace:*
+        version: link:../core
       '@types/node':
         specifier: ^22.15.0
         version: 22.19.15

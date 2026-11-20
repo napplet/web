@@ -5,6 +5,8 @@ import * as os from 'os';
 import * as path from 'path';
 import type { IndexHtmlTransformResult } from 'vite';
 import { nip5aManifest, NAPPLET_KIND_NAMED, type Nip5aManifestOptions } from './index';
+import { KNOWN_NAP_DOMAINS } from './requirements';
+import { NAP_DOMAINS } from '@napplet/core';
 
 const TEST_PRIVKEY = '01'.repeat(32);
 const tempRoots: string[] = [];
@@ -631,6 +633,38 @@ describe('nip5aManifest artifact modes', () => {
     expect(result.warnings.filter((warning) => warning.includes('not in the known NAP list'))).toEqual([
       '[nip5a-manifest] requires domain(s) not in the known NAP list, emitted as declared: mesh',
     ]);
+  });
+
+  it('emits allowlisted experimental domains without the unknown-domain warning and flags them as non-NAP', async () => {
+    const fixture = makeFixture();
+    fs.writeFileSync(path.join(fixture.dist, 'index.html'), '<!doctype html>');
+
+    const result = await runCloseBundle(
+      { nappletType: 'experimental', requires: { infer: true, explicit: ['relay'] }, optional: ['mesh'], experimentalDomains: ['mesh', 'proto'] },
+      fixture,
+      {},
+      [{ id: path.join(fixture.root, 'src/main.ts'), code: 'window.napplet.relay.query([]);\nwindow.napplet.proto.ping();\nwindow.napplet.mesh?.publish();' }],
+    );
+
+    const tags = readManifest(fixture.dist).tags;
+    expect(tags.filter((tag) => tag[0] === 'O')).toEqual([['O', 'mesh']]);
+    expect(tags.filter((tag) => tag[0] === 'R')).toEqual([['R', 'proto'], ['R', 'relay']]);
+    expect(result.warnings.some((warning) => warning.includes('not in the known NAP list'))).toBe(false);
+    expect(result.warnings).toContain(
+      '[nip5a-manifest] experimental domain(s) declared in R/O are not defined by any NAP: mesh, proto. Propose them on the NAPs track (https://github.com/napplet/naps) before relying on them.',
+    );
+  });
+
+  it.each([
+    ['a NAP domain', 'relay', 'is a NAP domain'],
+    ['a non-bare name', 'mesh.v2', 'bare domain'],
+    ['a prototype member', 'constructor', 'cannot be used'],
+  ])('rejects %s in experimentalDomains', (_label, name, message) => {
+    expect(() => nip5aManifest({ nappletType: 'bad', experimentalDomains: [name] })).toThrow(message);
+  });
+
+  it('keeps its NAP domain list in sync with @napplet/core', () => {
+    expect([...KNOWN_NAP_DOMAINS].sort()).toEqual([...NAP_DOMAINS].sort());
   });
 
   it('does not infer requirements from window.napplet reads outside the known NAP list', async () => {
