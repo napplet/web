@@ -100,21 +100,21 @@ export interface IncEventMessage extends IncMessage {
   type: 'inc.event';
   /** Stable opaque topic emitted by the shell after any client-side transposition. */
   topic: string;
-  /** Identity of the sending napplet. */
+  /** Runtime-attested opaque endpoint identifier of the sender. Never a manifest `d` tag. */
   sender: string;
   /** Optional opaque payload; receiving handlers validate their local convention. */
   payload?: unknown;
 }
 
 /**
- * Open a point-to-point channel with a target napplet.
+ * Open a point-to-point channel with a target endpoint.
  * ACL is checked at open time only -- subsequent messages on the channel are not re-checked.
  */
 export interface IncChannelOpenMessage extends IncMessage {
   type: 'inc.channel.open';
   /** Correlation ID. */
   id: string;
-  /** Target napplet identifier. */
+  /** Runtime-assigned opaque endpoint identifier of the target. Never a manifest `d` tag. */
   target: string;
 }
 
@@ -127,7 +127,7 @@ export interface IncChannelOpenResultMessage extends IncMessage {
   id: string;
   /** Opaque channel identifier (present on success). */
   channelId?: string;
-  /** Identity of the peer napplet. */
+  /** Runtime-attested opaque endpoint identifier of the peer. */
   peer?: string;
   /** Error message if channel open failed. */
   error?: string;
@@ -161,7 +161,7 @@ export interface IncChannelEventMessage extends IncMessage {
   type: 'inc.channel.event';
   /** Opaque channel identifier. */
   channelId: string;
-  /** Identity of the sending napplet. */
+  /** Runtime-attested opaque endpoint identifier of the sender. Never a manifest `d` tag. */
   sender: string;
   /** Optional payload data. */
   payload?: unknown;
@@ -192,7 +192,7 @@ export interface IncChannelListResultMessage extends IncMessage {
   type: 'inc.channel.list.result';
   /** Correlation ID matching the original request. */
   id: string;
-  /** Array of open channels with their IDs and peer identities. */
+  /** Open channels with their IDs and runtime-attested peer endpoint identifiers. */
   channels: Array<{ id: string; peer: string }>;
 }
 
