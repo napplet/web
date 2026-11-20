@@ -194,7 +194,21 @@ export type ResourceErrorCode =
   | 'network-error'
   | 'quota-exceeded';
 
-/** Successful per-URL item returned by `resource.bytesMany`. */
+/**
+ * NAP-RESOURCE `ResourceBytes`: canonical padded base64 text (RFC 4648 §4).
+ *
+ * Every wire `blob` field uses this encoding: single results, bulk items, and
+ * sidecar entries. Host byte objects and integer arrays never appear on the
+ * wire; the web binding decodes this text into a `Blob`.
+ *
+ * @example
+ * ```ts
+ * const bytes: ResourceBytes = 'AAEC/w=='; // octets 00 01 02 ff
+ * ```
+ */
+export type ResourceBytes = string;
+
+/** Successful per-URL item returned by `window.napplet.resource.bytesMany`, decoded to a `Blob`. */
 export interface ResourceBytesOkItem {
   url: string;
   ok: true;
@@ -212,13 +226,29 @@ export interface ResourceBytesErrorItem {
   blob?: never;
 }
 
-/** Ordered per-URL item returned by `resource.bytesMany`. */
+/** Ordered per-URL item returned by `window.napplet.resource.bytesMany`. */
 export type ResourceBytesItem = ResourceBytesOkItem | ResourceBytesErrorItem;
 
-/** Pre-resolved resource bytes carried by another NAP's event sidecar. */
+/** Successful per-URL item as carried on the wire in `resource.bytesMany.result`. */
+export interface ResourceBytesWireOkItem {
+  url: string;
+  ok: true;
+  blob: ResourceBytes;
+  mime: string;
+  message?: string;
+}
+
+/** Ordered per-URL item as carried on the wire in `resource.bytesMany.result`. */
+export type ResourceBytesWireItem = ResourceBytesWireOkItem | ResourceBytesErrorItem;
+
+/**
+ * Pre-resolved resource bytes carried by another NAP's event sidecar
+ * (for example NAP-RELAY `RelayEventResult.sidecar.resources`). `blob` is
+ * wire `ResourceBytes`; the shim decodes it before cache hydration.
+ */
 export interface ResourceSidecarEntry {
   url: string;
-  blob: Blob;
+  blob: ResourceBytes;
   mime: string;
 }
 

@@ -5,13 +5,15 @@
  */
 
 // @napplet/nap/resource -- Resource NAP shim (byte-fetching primitives)
-// Single-flight cache, AbortSignal cancellation, data: scheme decoded inline (zero shell round-trip).
+// Single-flight cache, AbortSignal cancellation, and strict decoding of the
+// canonical base64 `ResourceBytes` wire encoding into Blobs.
 
 import { postToShell } from '../boundary.js';
 import type {
   ResourceBytesMessage,
   ResourceBytesManyMessage,
   ResourceBytesItem,
+  ResourceBytesWireItem,
   ResourceBytesManyResultMessage,
   ResourceBytesManyErrorMessage,
   ResourceBytesResultMessage,
@@ -46,11 +48,86 @@ const pendingBytes = new Map<string, Pending<Blob>>();
 /** Pending `resource.info` wire requests. */
 const pendingInfo = new Map<string, Pending<ResourceInfo>>();
 
-/** Pending `resource.bytesMany` wire requests. */
-const pendingMany = new Map<string, Pending<ResourceBytesItem[]>>();
+/** Pending `resource.bytesMany` wire requests, with the number of URLs sent. */
+const pendingMany = new Map<string, Pending<ResourceBytesItem[]> & { count: number }>();
 
 /** Guard against double-install. */
 let installed = false;
+
+// ─── ResourceBytes decoding ─────────────────────────────────────────────────
+
+/** RFC 4648 §4 standard alphabet with required `=` padding, no whitespace. */
+const CANONICAL_BASE64 = /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/;
+
+/**
+ * Decode NAP-RESOURCE `ResourceBytes` (canonical padded base64) into a Blob
+ * whose media type is the runtime-classified `mime`.
+ *
+ * Rejects anything that is not canonical text: host byte objects (Blob,
+ * ArrayBuffer, integer arrays), whitespace, missing padding, the URL-safe
+ * alphabet, data-URL prefixes, and non-zero pad bits.
+ *
+ * @param value  Wire `blob` field value.
+ * @param mime   Runtime-classified MIME type for the resulting Blob.
+ * @returns The decoded Blob.
+ * @throws Error when `value` is not canonical `ResourceBytes` or `mime` is not text.
+ *
+ * @example
+ * ```ts
+ * const blob = decodeResourceBytes('AAEC/w==', 'application/octet-stream');
+ * // blob.size === 4, bytes 00 01 02 ff
+ * ```
+ */
+export function decodeResourceBytes(value: unknown, mime: unknown): Blob {
+  if (typeof value !== 'string') {
+    throw new Error('invalid ResourceBytes: wire blob must be base64 text');
+  }
+  if (typeof mime !== 'string') {
+    throw new Error('invalid ResourceBytes: mime must be text');
+  }
+  if (!CANONICAL_BASE64.test(value)) {
+    throw new Error('invalid ResourceBytes: not canonical padded base64');
+  }
+  const binary = atob(value);
+  // Re-encoding catches non-zero pad bits, which the alphabet check allows.
+  if (btoa(binary) !== value) {
+    throw new Error('invalid ResourceBytes: non-zero pad bits');
+  }
+  const octets = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) {
+    octets[i] = binary.charCodeAt(i);
+  }
+  return new Blob([octets.buffer], { type: mime });
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+/** Decode one wire `resource.bytesMany.result` item, or throw on a malformed item. */
+function decodeManyItem(item: unknown): ResourceBytesItem {
+  if (!isRecord(item) || typeof item.url !== 'string' || typeof item.ok !== 'boolean') {
+    throw new Error('invalid resource.bytesMany.result item: url and ok are required');
+  }
+  const wire = item as unknown as ResourceBytesWireItem;
+  if (wire.ok) {
+    const decoded: ResourceBytesItem = {
+      url: wire.url,
+      ok: true,
+      blob: decodeResourceBytes(wire.blob, wire.mime),
+      mime: wire.mime,
+    };
+    if (typeof wire.message === 'string') decoded.message = wire.message;
+    return decoded;
+  }
+  if ('blob' in item) {
+    throw new Error('invalid resource.bytesMany.result item: failed items carry no blob');
+  }
+  if (typeof wire.error !== 'string') {
+    throw new Error('invalid resource.bytesMany.result item: failed items require error');
+  }
+  return wire;
+}
 
 function isMessageType<T extends { type: string }>(
   msg: { type: string },
@@ -84,7 +161,14 @@ export function handleResourceMessage(msg: { type: string; [key: string]: unknow
     if (!p) return;
     pendingBytes.delete(result.id);
     clearTimeout(p.timeout);
-    p.resolve(result.blob);
+    let blob: Blob;
+    try {
+      blob = decodeResourceBytes(result.blob, result.mime);
+    } catch (error) {
+      p.reject(error as Error);
+      return;
+    }
+    p.resolve(blob);
   } else if (isMessageType<ResourceBytesErrorMessage>(msg, 'resource.bytes.error')) {
     const err = msg;
     const p = pendingBytes.get(err.id);
@@ -98,7 +182,17 @@ export function handleResourceMessage(msg: { type: string; [key: string]: unknow
     if (!p) return;
     pendingMany.delete(result.id);
     clearTimeout(p.timeout);
-    p.resolve(result.items);
+    let items: ResourceBytesItem[];
+    try {
+      if (!Array.isArray(result.items) || result.items.length !== p.count) {
+        throw new Error('invalid resource.bytesMany.result: items must match the request order and length');
+      }
+      items = result.items.map(decodeManyItem);
+    } catch (error) {
+      p.reject(error as Error);
+      return;
+    }
+    p.resolve(items);
   } else if (isMessageType<ResourceBytesManyErrorMessage>(msg, 'resource.bytesMany.error')) {
     const err = msg;
     const p = pendingMany.get(err.id);
@@ -160,7 +254,7 @@ export function sendBytesManyRequest(urls: string[], id: string): Promise<Resour
         reject(new Error(`resource.bytesMany timed out for ${urls.length} URLs`));
       }
     }, REQUEST_TIMEOUT_MS);
-    pendingMany.set(id, { resolve, reject, timeout });
+    pendingMany.set(id, { resolve, reject, timeout, count: urls.length });
 
     const msg: ResourceBytesManyMessage = {
       type: 'resource.bytesMany',
@@ -180,76 +274,6 @@ function sendCancel(id: string): void {
     id,
   };
   postToShell(msg);
-}
-
-function isHexByte(value: string): boolean {
-  return /^[0-9a-fA-F]{2}$/.test(value);
-}
-
-function percentDecodeToBytes(value: string): Uint8Array {
-  const bytes: number[] = [];
-  const encoder = new TextEncoder();
-  for (let i = 0; i < value.length; i += 1) {
-    const char = value[i];
-    if (char === '%' && isHexByte(value.slice(i + 1, i + 3))) {
-      bytes.push(Number.parseInt(value.slice(i + 1, i + 3), 16));
-      i += 2;
-      continue;
-    }
-    bytes.push(...encoder.encode(char));
-  }
-  return new Uint8Array(bytes);
-}
-
-function percentDecodeToString(value: string): string {
-  let output = '';
-  for (let i = 0; i < value.length; i += 1) {
-    const char = value[i];
-    if (char === '%' && isHexByte(value.slice(i + 1, i + 3))) {
-      output += String.fromCharCode(Number.parseInt(value.slice(i + 1, i + 3), 16));
-      i += 2;
-      continue;
-    }
-    output += char;
-  }
-  return output;
-}
-
-function base64ToBytes(value: string): Uint8Array {
-  const decoded = atob(percentDecodeToString(value).replace(/\s/g, ''));
-  const bytes = new Uint8Array(decoded.length);
-  for (let i = 0; i < decoded.length; i += 1) {
-    bytes[i] = decoded.charCodeAt(i);
-  }
-  return bytes;
-}
-
-function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
-  const buffer = new ArrayBuffer(bytes.byteLength);
-  new Uint8Array(buffer).set(bytes);
-  return buffer;
-}
-
-/**
- * Decode a `data:` URI in-shim without browser network primitives.
- * Zero postMessage round-trip. Used by bytes() when the URL scheme is `data:`.
- */
-export function decodeDataUrl(url: string): Promise<Blob> {
-  const comma = url.indexOf(',');
-  if (comma < 0) return Promise.reject(new Error('invalid data URL'));
-
-  const metadata = url.slice('data:'.length, comma);
-  const data = url.slice(comma + 1);
-  const parts = metadata.split(';').filter((part) => part.length > 0);
-  const isBase64 = parts.some((part) => part.toLowerCase() === 'base64');
-  const type = parts.filter((part) => part.toLowerCase() !== 'base64').join(';');
-
-  try {
-    const bytes = isBase64 ? base64ToBytes(data) : percentDecodeToBytes(data);
-    return Promise.resolve(new Blob([toArrayBuffer(bytes)], { type }));
-  } catch (error) {
-    return Promise.reject(error instanceof Error ? error : new Error('invalid data URL'));
-  }
 }
 
 /**

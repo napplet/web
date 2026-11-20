@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { installFakeShell, type FakeShell } from '../test-support/fake-shell.js';
-import type { ResourceBytesItem, ResourceInfo } from './types.js';
+import type { ResourceBytesWireItem, ResourceInfo } from './types.js';
 
 let shell: FakeShell;
 let uuidCounter = 0;
@@ -85,23 +85,84 @@ describe('@napplet/nap/resource shim', () => {
     await expect(promise).rejects.toThrow('policy-denied: redacted');
   });
 
-  it('decodes data URLs without browser fetch or shell messages', async () => {
+  // NAP-RESOURCE §Schemes `data:` row: wherever a data: URL is decoded it must be size-limited,
+  // MIME-sniffed, and SVG-rasterized. The shim does none of that, so data: goes to the runtime.
+  it('routes data URLs to the runtime instead of decoding them in the shim', async () => {
     const fetchSpy = vi.fn(() => {
-      throw new Error('fetch should not be used for data URLs');
+      throw new Error('fetch must not be used');
     });
     Object.defineProperty(globalThis, 'fetch', {
       configurable: true,
       value: fetchSpy,
     });
 
+    const { bytes, handleResourceMessage } = await import('./shim.js');
+
+    const url = 'data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%2F%3E';
+    const promise = bytes(url);
+    const sent = lastPosted('resource.bytes');
+    expect(sent).toEqual({ type: 'resource.bytes', id: 'resource-test-1', url });
+
+    // The runtime answers with rasterized PNG bytes; the declared SVG type is never trusted.
+    handleResourceMessage({ type: 'resource.bytes.result', id: sent.id, blob: 'iVBORw0KGgo=', mime: 'image/png' });
+
+    const blob = await promise;
+    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(blob.type).toBe('image/png');
+    expect([...new Uint8Array(await blob.arrayBuffer())]).toEqual([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+  });
+
+  // NAP-RESOURCE §Hashtree references: a bare nhash is an accepted alias the runtime dispatches,
+  // and malformed URLs are the runtime's `invalid-request`, so the shim does not pre-parse URLs.
+  it.each(['nhash1qqsexamplewithoutascheme', 'not a url'])('forwards %s to the runtime unparsed', async (url) => {
     const { bytes } = await import('./shim.js');
 
-    const blob = await bytes('data:text/plain;base64,aGk=');
+    const promise = bytes(url);
+    expect(lastPosted('resource.bytes')).toEqual({ type: 'resource.bytes', id: 'resource-test-1', url });
+    promise.catch(() => undefined);
+  });
 
-    expect(fetchSpy).not.toHaveBeenCalled();
-    expect(shell.sent).toHaveLength(0);
-    expect(blob.type).toBe('text/plain');
-    await expect(blob.text()).resolves.toBe('hi');
+  // NAP-RESOURCE §Byte encoding: the spec vector `00 01 02 ff` <-> "AAEC/w==", plus RFC 4648 §10.
+  it.each([
+    ['', []],
+    ['Zg==', [0x66]],
+    ['Zm8=', [0x66, 0x6f]],
+    ['Zm9v', [0x66, 0x6f, 0x6f]],
+    ['Zm9vYg==', [0x66, 0x6f, 0x6f, 0x62]],
+    ['Zm9vYmE=', [0x66, 0x6f, 0x6f, 0x62, 0x61]],
+    ['Zm9vYmFy', [0x66, 0x6f, 0x6f, 0x62, 0x61, 0x72]],
+    ['AAEC/w==', [0x00, 0x01, 0x02, 0xff]],
+  ])('decodes canonical ResourceBytes %j into a Blob typed with mime', async (wire, octets) => {
+    const { bytes, handleResourceMessage } = await import('./shim.js');
+
+    const promise = bytes('https://example.com/r.bin');
+    const sent = lastPosted('resource.bytes');
+    handleResourceMessage({ type: 'resource.bytes.result', id: sent.id, blob: wire, mime: 'application/octet-stream' });
+
+    const blob = await promise;
+    expect(blob.type).toBe('application/octet-stream');
+    expect([...new Uint8Array(await blob.arrayBuffer())]).toEqual(octets);
+  });
+
+  // NAP-RESOURCE §Byte encoding: receivers MUST reject non-canonical encodings and host byte objects;
+  // web projection §Resource binding: invalid encoding MUST NOT reach a success callback.
+  it.each([
+    ['unpadded', 'Zg'],
+    ['whitespace', 'Zm9v\nYmFy'],
+    ['non-zero pad bits', 'Zh=='],
+    ['URL-safe alphabet', 'AAEC_w=='],
+    ['data-URL prefix', 'data:application/octet-stream;base64,AAEC/w=='],
+    ['Blob', new Blob(['hi'])],
+    ['integer array', [0, 1, 2, 255]],
+    ['ArrayBuffer', new ArrayBuffer(4)],
+  ])('rejects a %s wire blob', async (_label, wire) => {
+    const { bytes, handleResourceMessage } = await import('./shim.js');
+
+    const promise = bytes('https://example.com/r.bin');
+    const sent = lastPosted('resource.bytes');
+    handleResourceMessage({ type: 'resource.bytes.result', id: sent.id, blob: wire, mime: 'application/octet-stream' });
+
+    await expect(promise).rejects.toThrow('invalid ResourceBytes');
   });
 
   // NAP-RESOURCE (napplet/naps#80 @ ae5b9c64): resource.bytes carries only `id`, `url`;
@@ -120,11 +181,13 @@ describe('@napplet/nap/resource shim', () => {
     handleResourceMessage({
       type: 'resource.bytes.result',
       id: sent.id,
-      blob: new Blob(['ok']),
+      blob: 'b2s=',
       mime: 'application/octet-stream',
     });
 
-    await expect(promise).resolves.toBeInstanceOf(Blob);
+    const blob = await promise;
+    expect(blob).toBeInstanceOf(Blob);
+    await expect(blob.text()).resolves.toBe('ok');
   });
 
   // NAP-RESOURCE (napplet/naps#80 @ ae5b9c64) §Wire Protocol: resource.bytesMany carries `id`, `urls`.
@@ -141,9 +204,8 @@ describe('@napplet/nap/resource shim', () => {
     });
     expect(sent).not.toHaveProperty('requests');
 
-    const okBlob = new Blob(['a'], { type: 'image/png' });
-    const items: ResourceBytesItem[] = [
-      { url: 'blossom:abc123.bin?xs=cdn.example', ok: true, blob: okBlob, mime: 'image/png' },
+    const items: ResourceBytesWireItem[] = [
+      { url: 'blossom:abc123.bin?xs=cdn.example', ok: true, blob: 'AAEC/w==', mime: 'image/png' },
       {
         url: 'https://example.com/missing.png',
         ok: false,
@@ -154,7 +216,51 @@ describe('@napplet/nap/resource shim', () => {
 
     handleResourceMessage({ type: 'resource.bytesMany.result', id: sent.id, items });
 
-    await expect(promise).resolves.toEqual(items);
+    const [ok, failed] = await promise;
+    expect(ok.ok).toBe(true);
+    if (!ok.ok) throw new Error('expected ok item');
+    expect(ok.url).toBe('blossom:abc123.bin?xs=cdn.example');
+    expect(ok.mime).toBe('image/png');
+    expect(ok.blob.type).toBe('image/png');
+    expect([...new Uint8Array(await ok.blob.arrayBuffer())]).toEqual([0x00, 0x01, 0x02, 0xff]);
+    expect(failed).toEqual(items[1]);
+  });
+
+  // Web projection §Resource binding: invalid encoding is a protocol failure, so the whole call
+  // rejects rather than inventing a runtime-attributed item error.
+  it.each([
+    ['a non-canonical item blob', [{ url: 'https://example.com/a.png', ok: true, blob: 'Zg', mime: 'image/png' }]],
+    ['a Blob item blob', [{ url: 'https://example.com/a.png', ok: true, blob: new Blob(['a']), mime: 'image/png' }]],
+    ['a failed item carrying blob', [{ url: 'https://example.com/a.png', ok: false, error: 'not-found', blob: 'Zg==' }]],
+    ['a length mismatch', []],
+  ])('rejects bytesMany when the result has %s', async (_label, items) => {
+    const { bytesMany, handleResourceMessage } = await import('./shim.js');
+
+    const promise = bytesMany(['https://example.com/a.png']);
+    const sent = lastPosted('resource.bytesMany');
+    handleResourceMessage({ type: 'resource.bytesMany.result', id: sent.id, items });
+
+    await expect(promise).rejects.toThrow(/invalid/);
+  });
+
+  // NAP-RESOURCE §Sidecar Pre-Resolution + web projection: sidecar blobs are ResourceBytes and are
+  // decoded before cache hydration; invalid entries never reach the cache.
+  it('hydrates decoded sidecar entries and skips invalid encodings', async () => {
+    const { bytes, hydrateResourceCache } = await import('./shim.js');
+
+    hydrateResourceCache([
+      { url: 'https://example.com/good.png', blob: 'AAEC/w==', mime: 'image/png' },
+      { url: 'https://example.com/bad.png', blob: 'Zg', mime: 'image/png' },
+    ]);
+
+    const good = await bytes('https://example.com/good.png');
+    expect(good.type).toBe('image/png');
+    expect([...new Uint8Array(await good.arrayBuffer())]).toEqual([0x00, 0x01, 0x02, 0xff]);
+    expect(shell.sent).toHaveLength(0);
+
+    const bad = bytes('https://example.com/bad.png');
+    expect(lastPosted('resource.bytes')).toMatchObject({ url: 'https://example.com/bad.png' });
+    bad.catch(() => undefined);
   });
 
   it('rejects top-level resource.bytesMany errors', async () => {
@@ -207,7 +313,7 @@ describe('@napplet/nap/resource shim', () => {
         {
           url: 'https://example.com/a.png',
           ok: true,
-          blob: new Blob(['late']),
+          blob: 'bGF0ZQ==',
           mime: 'text/plain',
         },
       ],
