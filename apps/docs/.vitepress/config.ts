@@ -32,6 +32,7 @@ const sidebar = [
       },
       { text: 'Agent skills', link: '/guide/agent-skills' },
       { text: 'Agent access to napplet.run', link: '/guide/agent-access' },
+      { text: 'Experimental domains', link: '/guide/experimental-domains' },
     ],
   },
   {

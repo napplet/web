@@ -185,3 +185,7 @@ The runtime binding retains deliveries until a listener registers. Discovery can
 ## Soulseek types
 
 `SoulseekApi` and the Soulseek records describe `NappletGlobal.soulseek`, an optional domain for runtime-mediated search, peer browsing, paginated query snapshots, endpoint-owned transfers, bounded reads, saving, and release. Byte counts are canonical decimal text and failures use the closed `SoulseekErrorCode` set. See the non-normative [SOULSEEK guide](/naps/soulseek) and living [NAP-SOULSEEK proposal](https://github.com/napplet/naps/pull/135).
+
+## Experimental domains
+
+`isBareDomainName()`, `isRegistryDomain()`, and `normalizeExperimentalDomains()` validate experimental domain allowlists. See [Experimental domains](/guide/experimental-domains).

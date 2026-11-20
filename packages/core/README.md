@@ -127,6 +127,9 @@ for (const domain of NAP_DOMAINS) {
 }
 ```
 
+
+`isBareDomainName()`, `isRegistryDomain()`, and `normalizeExperimentalDomains()` validate a caller-supplied allowlist of experimental (non-NAP) domains. Names must be bare, can't reuse a NAP domain, and can't shadow an `Object.prototype` member. See [Experimental domains](https://napplet.run/docs/guide/experimental-domains).
+
 #### `NappletGlobal`
 
 Type for the runtime-injected `window.napplet` namespace. Domain properties are optional: presence means the runtime exposes that NAP, absence means it is unavailable.

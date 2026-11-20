@@ -55,6 +55,8 @@ napplet-conformance --ui . --exec "vite build --watch"
 --no-degraded          Skip the graceful-degradation pass
 --allow-same-origin    Debug only (a conformant napplet must not need it)
 --strict               Also fail on advisory warnings (unknown message types, CSP-blocked requests, …)
+--experimental-domain <name>  Allowlist a non-NAP domain you're prototyping (repeatable)
+--extension <file.js>  Register that domain's window.napplet object before activation (headless)
 -h, --help             Show help
 ```
 

@@ -22,6 +22,7 @@ Conformance runs against `./dist` (prefers `dist/index.html`). Never test source
 
 - **Boot failure** — the runtime did not inject `window.napplet` before app code ran, or a top-level throw blocked boot.
 - **Malformed envelope** — a message that is not a valid `{ type: "domain.action", … }` for its NAP; re-check the SDK call arguments.
+- **Unknown message type** (`wire/known-message-types`, advisory) — a domain or action no known NAP defines. NIP-5D shells ignore these, so it warns; `--strict` fails it. If you're deliberately prototyping a domain, allowlist it with `--experimental-domain <name>` (and `--extension <file.js>` to inject its object), and propose it on the NAPs track before shipping.
 - **Manifest problem** — missing/invalid signed manifest tags. Confirm current NIP-5D kind/d cardinality, one direct artifact `x` hash, non-empty description content, and `R`/`O` domains. Legacy path/aggregate events need explicit migration; see `napplet-migrate`. The advisory `manifest/media-usable` check means an icon, screenshot, preview or `source-commit` would be ignored by clients; fix the tag or drop it, it never fails the run.
 - **Forbidden global** — the bundle references `fetch`, `localStorage`, `window.nostr`, `XMLHttpRequest`, `WebSocket`, … (static scan; unreachable references flag too). Replace with `resource` / `storage` / `outbox`, or prove and document a tooling false positive.
 

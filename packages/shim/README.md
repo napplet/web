@@ -66,6 +66,10 @@ const srcdoc = html.replace(
 
 The global artifact exposes `globalThis.NappletShimPrelude.install({ domains })`. The global is single-use: the first `install()` call deletes `globalThis.NappletShimPrelude` before installing, so napplet scripts that run afterwards can't find it or re-run it with more domains. Run the activation call before any napplet script. `@napplet/shim/prelude` also exports `installNappletRuntimePrelude()` for bundled host runtimes that can import ESM directly. JSR publishes the source ESM helpers under `@napplet/shim/prelude`; the generated `prelude.global` artifact is npm-only.
 
+### Experimental domains
+
+A shell prototyping a capability that no NAP defines yet can register an extension and list its domain in `domains`. `window.napplet.<domain>` appears only when both are true. The extension gets a channel limited to `<domain>.*` envelopes over the bound port, bundled NAP domains can't be replaced, and the install-all default never mounts one. With the browser artifact, call `NappletShimPrelude.registerExtension({ domain, create })` after the prelude and before `install()`. ESM hosts use `registerNappletRuntimeExtension()` or `installNappletRuntimePrelude({ domains, extensions })`. These domains are non-standard until proposed on the [NAPs track](https://github.com/napplet/naps). See [Experimental domains](https://napplet.run/docs/guide/experimental-domains).
+
 ### Module import compatibility
 
 The root `@napplet/shim` entry still keeps the older side-effect behavior for tests and runtimes that already bundle the shim module.

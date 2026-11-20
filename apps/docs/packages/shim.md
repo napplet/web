@@ -193,3 +193,7 @@ Select `torrent` in `installNappletGlobal({ domains: ['torrent'] })` or the equi
 ### Soulseek runtime binding
 
 Select `soulseek` in `installNappletGlobal({ domains: ['soulseek'] })` or the equivalent runtime prelude options to expose `window.napplet.soulseek`. The binding forwards all 14 operations, correlates each result by `id` and type, and rejects a `Failure` as an error carrying the specification code. NAP-SOULSEEK defines no unsolicited messages, so nothing is pushed. Installing the binding supplies no account, backend, or consent: the host provides policy-bound handlers, endpoint-scoped handles, storage, and prompts. See the living [NAP-SOULSEEK proposal](https://github.com/napplet/naps/pull/135).
+
+## Experimental domains
+
+Shells can also expose experimental, non-NAP domains through registered extensions (`registerNappletRuntimeExtension`, or `NappletShimPrelude.registerExtension` before `install()`). See [Experimental domains](/guide/experimental-domains).

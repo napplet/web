@@ -47,6 +47,7 @@ Without `VITE_DEV_PRIVKEY_HEX`, the sidecar is unsigned. With a development key,
 | `requires?: string[]` | Required domains, serialized as `R` tags. |
 | `requires?: { infer?, explicit?, mode? }` | Opt-in inference from static SDK/NAP imports and direct namespace access. `mode` is `warn` or `error` for missing explicit declarations. |
 | `optional?: string[]` | Optional integrations, serialized as `O` tags and excluded from inferred required domains. |
+| `experimentalDomains?: string[]` | Non-NAP domains you're prototyping. They're inferred from `window.napplet.<domain>` reads and emitted in `R`/`O` without the unknown-domain warning, and the build warns once that they aren't NAP-defined. See [Experimental domains](https://napplet.run/docs/guide/experimental-domains). |
 | `archetypes?: Array<{ slug, convention, params? }>` | Existing ergonomic option; emits independent `z` role and `i` intent tags. `params` names advertised intent parameters. |
 | `intents?: Array<{ intent, params? }>` | Advertise intents without coupling them to a role option. |
 | `source?: string` | Source URL metadata. |
