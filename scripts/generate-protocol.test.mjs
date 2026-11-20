@@ -80,16 +80,16 @@ test('repository merge state, document marker and registry status remain indepen
   assert.deepEqual(data.contribution.prSections, ['Summary', 'Changes', 'Downstream']);
 });
 
-test('open proposals absent from README, amendments and proposed removals get distinct routes', () => {
+test('new proposals and proposed removals get distinct routes; amendments to merged NAPs are omitted', () => {
   const proposals = [
     { number: 62, draft: false, revision: 'ble-head', files: [{ path: 'naps/NAP-BLE.md', content: ble, status: 'added' }] },
     { number: 12, draft: true, revision: 'identity-head', files: [{ path: 'naps/NAP-IDENTITY.md', content: identity, status: 'modified' }] },
     { number: 98, draft: false, revision: 'removal-head', files: [{ path: 'naps/NAP-IDENTITY.md', content: identity, status: 'removed' }] },
   ];
   const data = buildProtocolData({ ...base, proposals });
-  assert.equal(data.entries.length, 4);
+  assert.equal(data.entries.length, 3);
   assert.equal(data.entries.find(entry => entry.pr === 62).registryStatus, null);
-  assert.equal(data.entries.find(entry => entry.pr === 12).change, 'amendment');
+  assert.equal(data.entries.some(entry => entry.pr === 12), false, 'amendments to merged NAPs are not listed');
   assert.equal(data.entries.find(entry => entry.pr === 98).change, 'removal');
   assert.equal(data.entries.find(entry => entry.pr === 62).discussionUrl, 'https://github.com/napplet/naps/pull/62');
   assert.equal(buildProtocolData(base).entries.some(entry => entry.pr), false, 'closed proposals disappear on refresh');

@@ -107,10 +107,12 @@ export function buildProtocolData(input) {
   for (const proposal of proposals) {
     for (const file of proposal.files) {
       const meta = parseNap(file.content, file.path, registry);
+      // Amendments to a merged NAP are not listed; the merged text stands until they land.
+      if (file.status !== 'removed' && mergedIds.has(meta.id)) continue;
       entries.push({
         ...meta, slug: `${meta.id.toLowerCase()}-pr-${proposal.number}`,
         state: proposal.draft ? 'draft' : 'open',
-        change: file.status === 'removed' ? 'removal' : mergedIds.has(meta.id) ? 'amendment' : 'new',
+        change: file.status === 'removed' ? 'removal' : 'new',
         pr: proposal.number, prTitle: proposal.title, updatedAt: proposal.updatedAt,
         path: file.path, revision: proposal.revision,
         sourceUrl: `${NAPS_REPOSITORY}/pull/${proposal.number}/files`,
