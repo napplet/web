@@ -22,10 +22,18 @@ import type {
   MediaSessionCreateResultMessage,
   MediaCommandMessage,
   MediaControlsMessage,
-  MediaSessionEnded,
   MediaSessionEndedMessage,
 } from './types.js';
 import type { Subscription } from '@napplet/core';
+import {
+  addSessionHandler,
+  clearRetirements,
+  isRetired,
+  retire,
+  type SessionHandlerMap,
+} from './session-handlers.js';
+
+export { onEnded } from './session-handlers.js';
 
 /** Pending session create requests: correlation id -> { resolve, reject }. */
 const pendingCreates = new Map<string, {
@@ -34,28 +42,25 @@ const pendingCreates = new Map<string, {
   timeout: ReturnType<typeof setTimeout>;
 }>();
 
-/** Command handlers per session: sessionId -> Set of callbacks. */
-const commandHandlers = new Map<string, Set<(action: MediaAction, value?: number, reason?: string) => void>>();
+/** Command handlers per session. */
+const commandHandlers: SessionHandlerMap<(action: MediaAction, value?: number, reason?: string) => void> = new Map();
 
-/** Controls handlers per session: sessionId -> Set of callbacks. */
-const controlsHandlers = new Map<string, Set<(controls: MediaAction[]) => void>>();
+/** Controls handlers per session. */
+const controlsHandlers: SessionHandlerMap<(controls: MediaAction[]) => void> = new Map();
 
-/** State handlers per session: sessionId -> Set of callbacks. */
-const stateHandlers = new Map<string, Set<(state: MediaState) => void>>();
+/** State handlers per session. */
+const stateHandlers: SessionHandlerMap<(state: MediaState) => void> = new Map();
 
-/** Capabilities handlers per session: sessionId -> Set of callbacks. */
-const capabilitiesHandlers = new Map<string, Set<(actions: MediaAction[]) => void>>();
+/** Capabilities handlers per session. */
+const capabilitiesHandlers: SessionHandlerMap<(actions: MediaAction[]) => void> = new Map();
 
-/** Retirement handlers per session: sessionId -> Set of callbacks. */
-const endedHandlers = new Map<string, Set<(ended: MediaSessionEnded) => void>>();
-
-/**
- * Retained terminal records: sessionId -> retirement. NAP-MEDIA requires the
- * binding to keep these until the napplet endpoint is destroyed so late
- * `onEnded` handlers still receive them, and to discard later messages for
- * retired sessions.
- */
-const endedSessions = new Map<string, MediaSessionEnded>();
+/** Drop every non-retirement callback registered for a session. */
+function clearSessionHandlers(sessionId: string): void {
+  commandHandlers.delete(sessionId);
+  controlsHandlers.delete(sessionId);
+  stateHandlers.delete(sessionId);
+  capabilitiesHandlers.delete(sessionId);
+}
 
 /** Guard against double-install. */
 let installed = false;
@@ -89,7 +94,7 @@ function handleCreateResult(msg: MediaSessionCreateResultMessage): void {
  * Dispatches to registered command handlers for the session.
  */
 function handleCommand(msg: MediaCommandMessage): void {
-  if (endedSessions.has(msg.sessionId)) return;
+  if (isRetired(msg.sessionId)) return;
   const handlers = commandHandlers.get(msg.sessionId);
   if (!handlers) return;
   for (const cb of handlers) {
@@ -102,7 +107,7 @@ function handleCommand(msg: MediaCommandMessage): void {
  * Dispatches to registered controls handlers.
  */
 function handleControls(msg: MediaControlsMessage): void {
-  if (endedSessions.has(msg.sessionId)) return;
+  if (isRetired(msg.sessionId)) return;
   const handlers = controlsHandlers.get(msg.sessionId);
   if (!handlers) return;
   for (const cb of handlers) {
@@ -114,7 +119,7 @@ function handleControls(msg: MediaControlsMessage): void {
  * Handle media.state from the shell for shell-owned playback.
  */
 function handleState(msg: MediaStateMessage): void {
-  if (endedSessions.has(msg.sessionId)) return;
+  if (isRetired(msg.sessionId)) return;
   const handlers = stateHandlers.get(msg.sessionId);
   if (!handlers) return;
   const state: MediaState = {
@@ -133,7 +138,7 @@ function handleState(msg: MediaStateMessage): void {
  * Handle media.capabilities from the shell for shell-owned playback.
  */
 function handleCapabilities(msg: MediaCapabilitiesMessage): void {
-  if (endedSessions.has(msg.sessionId)) return;
+  if (isRetired(msg.sessionId)) return;
   const handlers = capabilitiesHandlers.get(msg.sessionId);
   if (!handlers) return;
   for (const cb of handlers) {
@@ -149,21 +154,9 @@ function handleCapabilities(msg: MediaCapabilitiesMessage): void {
  * unspecified cause but still retires the session.
  */
 function handleSessionEnded(msg: MediaSessionEndedMessage): void {
-  if (typeof msg.sessionId !== 'string' || endedSessions.has(msg.sessionId)) return;
-  const ended: MediaSessionEnded = { sessionId: msg.sessionId, reason: msg.reason };
-  endedSessions.set(msg.sessionId, ended);
-
-  commandHandlers.delete(msg.sessionId);
-  controlsHandlers.delete(msg.sessionId);
-  stateHandlers.delete(msg.sessionId);
-  capabilitiesHandlers.delete(msg.sessionId);
-
-  const handlers = endedHandlers.get(msg.sessionId);
-  endedHandlers.delete(msg.sessionId);
-  if (!handlers) return;
-  for (const cb of handlers) {
-    cb(ended);
-  }
+  if (typeof msg.sessionId !== 'string' || isRetired(msg.sessionId)) return;
+  clearSessionHandlers(msg.sessionId);
+  retire({ sessionId: msg.sessionId, reason: msg.reason });
 }
 
 /**
@@ -242,11 +235,7 @@ export function destroySession(sessionId: string): void {
     sessionId,
   };
   postToShell(msg);
-
-  commandHandlers.delete(sessionId);
-  controlsHandlers.delete(sessionId);
-  stateHandlers.delete(sessionId);
-  capabilitiesHandlers.delete(sessionId);
+  clearSessionHandlers(sessionId);
 }
 
 /**
@@ -321,20 +310,7 @@ export function onCommand(
   sessionId: string,
   callback: (action: MediaAction, value?: number, reason?: string) => void,
 ): Subscription {
-  if (!commandHandlers.has(sessionId)) {
-    commandHandlers.set(sessionId, new Set());
-  }
-  commandHandlers.get(sessionId)!.add(callback);
-
-  return {
-    close(): void {
-      const handlers = commandHandlers.get(sessionId);
-      if (handlers) {
-        handlers.delete(callback);
-        if (handlers.size === 0) commandHandlers.delete(sessionId);
-      }
-    },
-  };
+  return addSessionHandler(commandHandlers, sessionId, callback);
 }
 
 /**
@@ -349,20 +325,7 @@ export function onState(
   sessionId: string,
   callback: (state: MediaState) => void,
 ): Subscription {
-  if (!stateHandlers.has(sessionId)) {
-    stateHandlers.set(sessionId, new Set());
-  }
-  stateHandlers.get(sessionId)!.add(callback);
-
-  return {
-    close(): void {
-      const handlers = stateHandlers.get(sessionId);
-      if (handlers) {
-        handlers.delete(callback);
-        if (handlers.size === 0) stateHandlers.delete(sessionId);
-      }
-    },
-  };
+  return addSessionHandler(stateHandlers, sessionId, callback);
 }
 
 /**
@@ -377,20 +340,7 @@ export function onCapabilities(
   sessionId: string,
   callback: (actions: MediaAction[]) => void,
 ): Subscription {
-  if (!capabilitiesHandlers.has(sessionId)) {
-    capabilitiesHandlers.set(sessionId, new Set());
-  }
-  capabilitiesHandlers.get(sessionId)!.add(callback);
-
-  return {
-    close(): void {
-      const handlers = capabilitiesHandlers.get(sessionId);
-      if (handlers) {
-        handlers.delete(callback);
-        if (handlers.size === 0) capabilitiesHandlers.delete(sessionId);
-      }
-    },
-  };
+  return addSessionHandler(capabilitiesHandlers, sessionId, callback);
 }
 
 /**
@@ -405,62 +355,7 @@ export function onControls(
   sessionId: string,
   callback: (controls: MediaAction[]) => void,
 ): Subscription {
-  if (!controlsHandlers.has(sessionId)) {
-    controlsHandlers.set(sessionId, new Set());
-  }
-  controlsHandlers.get(sessionId)!.add(callback);
-
-  return {
-    close(): void {
-      const handlers = controlsHandlers.get(sessionId);
-      if (handlers) {
-        handlers.delete(callback);
-        if (handlers.size === 0) controlsHandlers.delete(sessionId);
-      }
-    },
-  };
-}
-
-/**
- * Listen for terminal retirement of a session (`media.session.ended`).
- * If the session already retired, the retained record is delivered once on a
- * microtask, so the caller can still close the subscription first.
- *
- * @param sessionId  The session to watch for retirement
- * @param callback   Called once with the retirement record
- * @returns A Subscription with `close()` to unsubscribe
- */
-export function onEnded(
-  sessionId: string,
-  callback: (ended: MediaSessionEnded) => void,
-): Subscription {
-  const retired = endedSessions.get(sessionId);
-  if (retired) {
-    let open = true;
-    queueMicrotask(() => {
-      if (open) callback(retired);
-    });
-    return {
-      close(): void {
-        open = false;
-      },
-    };
-  }
-
-  if (!endedHandlers.has(sessionId)) {
-    endedHandlers.set(sessionId, new Set());
-  }
-  endedHandlers.get(sessionId)!.add(callback);
-
-  return {
-    close(): void {
-      const handlers = endedHandlers.get(sessionId);
-      if (handlers) {
-        handlers.delete(callback);
-        if (handlers.size === 0) endedHandlers.delete(sessionId);
-      }
-    },
-  };
+  return addSessionHandler(controlsHandlers, sessionId, callback);
 }
 
 /**
@@ -485,8 +380,7 @@ export function installMediaShim(): () => void {
     controlsHandlers.clear();
     stateHandlers.clear();
     capabilitiesHandlers.clear();
-    endedHandlers.clear();
-    endedSessions.clear();
+    clearRetirements();
     installed = false;
   };
 }
