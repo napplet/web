@@ -188,7 +188,7 @@ This non-normative guide defers to the living [NAP-INTENT](https://github.com/na
 
 Prints JSON for napplets the CLI can deploy. Without `--all`, discovery checks the configured `sourceDir`. With `--all`, it walks `discover.roots`.
 
-Run from a directory with no `.napplet` config, such as a monorepo root, `discover` searches the subdirectories for napplet projects (directories with their own `.napplet/config.yaml`) and resolves each build from that project's own `sourceDir`. Each entry also carries `project` and `configPath`. Projects without a build are listed on stderr.
+Run from a directory with no `.napplet` config, such as a monorepo root, `discover` searches the subdirectories for napplet projects (directories with their own `.napplet/config.yaml`) and resolves each build from that project's own `sourceDir`. Each entry also carries `project` and `configPath`. Projects without a build, and projects whose config can't be read, are reported on stderr without hiding the others. An unreadable config makes the command exit `1`.
 
 ```sh
 napplet discover
@@ -369,6 +369,7 @@ napplet deploy --all --name napplet2 --sec nsec1...
 - Other flags (`--dry-run`, `--sec`, `--format`, `--relay`, ...) apply to every napplet. The event format is asked once. `--config` and `--source-dir` are rejected because each napplet has its own.
 - A failed napplet doesn't stop the rest. The command exits `1` if any failed. With `--json`, it prints one array of `{ project, configPath, code, report | error }`.
 - Without `--sec`, each napplet resolves its own signer, so an interactive run may ask once per napplet.
+- A napplet that still has a legacy `.napplet/config.json` fails here until it's migrated. Run `napplet deploy --migrate-config` inside that napplet first.
 
 ## Conformance And Paja
 

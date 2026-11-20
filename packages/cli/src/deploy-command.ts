@@ -46,7 +46,10 @@ export async function commandDeploy(
       "No napplet config in this directory. Search subdirectories for napplets?",
       false,
     );
-    if (search) return await commandDeployProjects([...argv, "--all"], runScreenshot, options.deployProject);
+    if (search && (await findNappletProjects()).length) {
+      return await commandDeployProjects([...argv, "--all"], runScreenshot, options.deployProject);
+    }
+    if (search) console.error("No napplets with their own .napplet config were found in subdirectories.");
   }
   const { code, report, jsonOutput } = await runDeploy(argv, runScreenshot);
   console.log(jsonOutput ? renderJson(report) : renderDeployReport(report));

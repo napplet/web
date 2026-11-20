@@ -168,12 +168,13 @@ async function commandDiscover(argv: string[]): Promise<number> {
     if (!projects.length) {
       throw new Error("No .napplet config here or in any subdirectory. Run: napplet init");
     }
-    const { candidates, unbuilt } = await discoverProjectNapplets(projects);
+    const { candidates, unbuilt, errors } = await discoverProjectNapplets(projects);
     for (const project of unbuilt) {
       console.error(`${project.configPath}: no built index.html in its sourceDir; build it first.`);
     }
+    for (const error of errors) console.error(error);
     console.log(JSON.stringify(candidates, null, 2));
-    return 0;
+    return errors.length ? 1 : 0;
   }
   const config = await loadProjectConfig(flags);
   const candidates = await discoverNapplets(config, { traverse: flags.boolean.has("all") });

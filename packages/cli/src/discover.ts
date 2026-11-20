@@ -87,17 +87,25 @@ export async function findNappletProjects(cwd: string = Deno.cwd()): Promise<Nap
  * Resolve each project's build candidates from that project's own configuration.
  * @param projects Projects returned by `findNappletProjects`.
  * @param cwd Search root used for relative project names.
- * @returns Candidates annotated with their project and configuration path, plus projects without a build.
+ * @returns Candidates annotated with their project and configuration path, projects without a build, and
+ *   per-project configuration errors (one unreadable config does not hide its siblings).
  * @example await discoverProjectNapplets(await findNappletProjects())
  */
 export async function discoverProjectNapplets(
   projects: NappletProject[],
   cwd: string = Deno.cwd(),
-): Promise<{ candidates: NappletProjectCandidate[]; unbuilt: NappletProject[] }> {
+): Promise<{ candidates: NappletProjectCandidate[]; unbuilt: NappletProject[]; errors: string[] }> {
   const candidates: NappletProjectCandidate[] = [];
   const unbuilt: NappletProject[] = [];
+  const errors: string[] = [];
   for (const project of projects) {
-    const config = await readProjectConfig(project);
+    let config: NappletConfig;
+    try {
+      config = await readProjectConfig(project);
+    } catch (error) {
+      errors.push(error instanceof Error ? error.message : String(error));
+      continue;
+    }
     const found = await discoverNapplets(config, { cwd: project.dir });
     if (!found.length) unbuilt.push(project);
     const name = relativePath(cwd, project.dir);
@@ -106,7 +114,7 @@ export async function discoverProjectNapplets(
       candidates.push({ ...candidate, name: project.name, project: name, configPath: project.configPath });
     }
   }
-  return { candidates, unbuilt };
+  return { candidates, unbuilt, errors };
 }
 
 /**

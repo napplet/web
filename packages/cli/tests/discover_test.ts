@@ -64,3 +64,16 @@ Deno.test("discoverProjectNapplets resolves builds from each project's own sourc
     assertEquals(unbuilt.map((project) => project.name), ["unbuilt"]);
   });
 });
+
+Deno.test("discoverProjectNapplets reports a broken project config without hiding its siblings", async () => {
+  await withTempDir(async (dir) => {
+    await writeProject(dir, "napplets/good", "good");
+    await writeProject(dir, "napplets/broken", "broken");
+    await Deno.writeTextFile(joinPath(dir, "napplets", "broken", ".napplet", "config.yaml"), "version: 9\n");
+
+    const { candidates, errors } = await discoverProjectNapplets(await findNappletProjects(dir), dir);
+    assertEquals(candidates.map((candidate) => candidate.name), ["good"]);
+    assertEquals(errors.length, 1);
+    assertEquals(errors[0].startsWith(joinPath(dir, "napplets", "broken", ".napplet", "config.yaml")), true);
+  });
+});

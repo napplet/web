@@ -120,3 +120,17 @@ Deno.test("bare deploy in a config-less root falls back to setup when the search
     assert(message.includes("napplet deploy --all"), message);
   });
 });
+
+Deno.test("bare deploy falls back to setup when the search finds nothing", async () => {
+  await withTempDir(async (dir) => {
+    const { calls, deployOne } = recorder();
+    let message = "";
+    await inDir(dir, () => quiet(() => commandDeploy(["--dry-run", "--json"], undefined, {
+      interactive: true,
+      confirmSearch: () => Promise.resolve(true),
+      deployProject: deployOne,
+    })).catch((error) => { message = error.message; }));
+    assertEquals(calls.length, 0);
+    assert(message.includes("Run: napplet init"), message);
+  });
+});
