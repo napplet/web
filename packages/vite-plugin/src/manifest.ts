@@ -1,18 +1,16 @@
 /**
  * @napplet/vite-plugin — manifest resolution and bundle writing.
  *
- * Wires together schema discovery/validation and the build-time napplet manifest
+ * Wires together the build-time napplet manifest
  * pipeline (artifact hashing, NIP-5D kind `35129` signing, and
  * artifact rewrites).
  */
 
-import type { NappletConfigSchema } from '@napplet/nap/config/types';
 import * as fs from 'fs';
 import * as path from 'path';
 import type { ManifestPluginState, ManifestTemplate, Nip5aManifestOptions } from './types.js';
 import { NAPPLET_KIND_NAMED } from './types.js';
 import { sha256File } from './hashing.js';
-import { discoverConfigSchema, validateConfigSchema } from './config-schema.js';
 import { inlineSingleFileBuildAssets, listLocalArtifactAssets } from './html.js';
 import { readPublishingMetadata, renderPublishingMetadata, replaceHeadMetadata } from './publishing-metadata.js';
 import { resolvePublishingIcon } from './publishing-icon.js';
@@ -21,7 +19,7 @@ import { resolvedRequirements, reportRequirementDiagnostics } from './requiremen
 
 /**
  * Resolve all per-build plugin state in the `configResolved` hook: out dir,
- * project root, base, and config schema (discovered + validated).
+ * project root, and base.
  *
  * @param options - the plugin options as authored in `vite.config.ts`.
  * @param state - mutable plugin state, populated in place.
@@ -35,21 +33,20 @@ export async function resolvePluginConfig(
   state.outDir = config.build?.outDir ?? 'dist';
   state.projectRoot = config.root;
   state.base = config.base ?? '/';
-  const result = await discoverConfigSchema(options, state.projectRoot);
-  state.resolvedSchema = result.schema;
-  state.resolvedSchemaSource = result.source;
-  validateResolvedSchema(state.resolvedSchema, state.resolvedSchemaSource);
+  warnRetiredConfigSchema(options);
 }
 
-function validateResolvedSchema(schema: NappletConfigSchema | null, source: string | null): void {
-  if (schema === null) return;
-
-  const validation = validateConfigSchema(schema);
-  if (!validation.ok) {
-    const header = `[nip5a-manifest] configSchema validation failed (source: ${source ?? 'unknown'})`;
-    const body = validation.errors.map((e) => `  - ${e}`).join('\n');
-    throw new Error(`${header}\n${body}`);
-  }
+/**
+ * NAP-CONFIG defines no manifest schema field ("callers MUST register a schema
+ * before requesting values"), and NIP-5D defines no `config` manifest tag, so
+ * the plugin no longer reads or embeds a config schema.
+ */
+function warnRetiredConfigSchema(options: Nip5aManifestOptions): void {
+  if (!Object.prototype.hasOwnProperty.call(options, 'configSchema')) return;
+  console.warn(
+    '[nip5a-manifest] configSchema is no longer supported and was ignored: NIP-5D defines no `config` manifest tag. '
+      + 'Register the schema at runtime with window.napplet.config.registerSchema(schema).',
+  );
 }
 
 /**
@@ -146,7 +143,6 @@ function embedManifestMetadata(
       ...(options.servers ?? values('server').map((t) => t[1])).map((server) => ['server', server]),
       ...(icon ? [['icon', icon.sha256, icon.mimeType]] : []),
       ...media.tags,
-      ...(state.resolvedSchema !== null ? [['config', JSON.stringify(state.resolvedSchema)]] : []),
       ...required.map((name) => ['R', name]),
       ...optional.map((name) => ['O', name]),
       ...(options.archetypes === undefined ? values('z') : buildArchetypeTags(options.archetypes)),

@@ -307,55 +307,44 @@ describe('nip5aManifest artifact modes', () => {
     expect(messages.some((message) => message.includes('[nip5a-manifest]'))).toBe(false);
   });
 
-  it('keeps the non-embedded config schema outside artifact bytes', async () => {
-    // NIP-5D §HTML Metadata for Publishing does not define a config-schema meta.
+  it('ignores a retired configSchema option and never emits a config tag', async () => {
+    // NIP-5D §Manifest defines no `config` tag, and NAP-CONFIG (napplet/naps#14 @ bed9cb5b) says
+    // "The current napplet manifest has no configuration schema field; callers MUST register a schema".
     const baseFixture = makeFixture();
     const configFixture = makeFixture();
     const html = '<!doctype html><script type="module" src="./assets/index.js"></script>';
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
 
     for (const fixture of [baseFixture, configFixture]) {
       fs.writeFileSync(path.join(fixture.dist, 'index.html'), html);
       fs.writeFileSync(path.join(fixture.dist, 'assets', 'index.js'), 'console.log("same");');
+      fs.writeFileSync(path.join(fixture.root, 'config.schema.json'), JSON.stringify({ type: 'object' }));
     }
 
-    await runCloseBundle(
-      { nappletType: 'synthetic', artifactMode: 'single-file' },
-      baseFixture,
-    );
+    await runCloseBundle({ nappletType: 'synthetic', artifactMode: 'single-file' }, baseFixture);
     await runCloseBundle(
       {
         nappletType: 'synthetic',
         artifactMode: 'single-file',
-        configSchema: {
-          type: 'object',
-          properties: { theme: { type: 'string', default: 'dark' } },
-        },
-      },
+        configSchema: { type: 'object', properties: { theme: { type: 'string', default: 'dark' } } },
+      } as Parameters<typeof runCloseBundle>[0],
       configFixture,
     );
 
     const base = readManifest(baseFixture.dist);
     const withConfig = readManifest(configFixture.dist);
 
-    // With the same embedded metadata, a sidecar-only schema leaves bytes unchanged.
     expect(withConfig.artifactHash).toBe(base.artifactHash);
-
-    // Capability tags are still present on the manifest.
-    expect(withConfig.tags.some((tag) => tag[0] === 'config')).toBe(true);
-
-    // Each x tag is the hash of the final HTML artifact.
     for (const manifest of [base, withConfig]) {
-      expect(manifest.tags.filter((tag) => tag[0] === 'x')).toEqual([
-        ['x', manifest.artifactHash],
-      ]);
-      expect(manifest.tags.some((tag) => tag[1] === 'config:schema')).toBe(false);
+      expect(manifest.tags.some((tag) => tag[0] === 'config')).toBe(false);
+      expect(manifest.tags.filter((tag) => tag[0] === 'x')).toEqual([['x', manifest.artifactHash]]);
     }
+    expect(warn.mock.calls.map((call) => String(call[0])).some((m) => m.includes('configSchema is no longer supported'))).toBe(true);
   });
 
   it('emits exactly one queryless archetype contract without optional event kinds', async () => {
     // NAAT (napplet/naps ARCHETYPES.md): a napplet declares each fulfilled
-    // role with one convention. Per NIP-5D §Identity these tags are excluded
-    // from the aggregate `x` hash (same as `config`).
+    // role with one convention. Manifest tags are not part of the hashed artifact.
     const baseFixture = makeFixture();
     const archetypeFixture = makeFixture();
     const html = '<!doctype html><script type="module" src="./assets/index.js"></script>';
