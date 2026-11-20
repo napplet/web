@@ -198,10 +198,10 @@ handle.revoke();
 
 Canonical schemes are defined in the spec:
 
-- `data:` — RFC 2397, decoded inside the napplet shim with zero shell round-trip
+- `data:` — RFC 2397, decoded by the runtime under the same size cap, MIME sniffing, and SVG rasterization as other schemes
 - `https:` — shell-side network fetch under the default resource policy (private-IP block list at DNS time, MIME byte-sniffing, size cap, timeout, rate limit, redirect cap)
 - `blossom:<sha256>.<ext>` — [BUD-10](https://github.com/hzrd149/blossom/blob/master/buds/10.md) Blossom URI → bytes; shell verifies hash before delivery
-- `htree:` — Hashtree reference; shell verifies every Hashtree hash before delivery
+- `htree:` / `hashtree:` — Hashtree reference (a bare `nhash` is an accepted alias); shell verifies every Hashtree hash before delivery
 - `nostr:<bech32>` — single-hop NIP-19 resolution against the shell's relay pool
 
 Errors arrive as one of 8 typed codes: `not-found`, `blocked-by-policy`, `timeout`, `too-large`, `unsupported-scheme`, `decode-failed`, `network-error`, `quota-exceeded`.

@@ -139,7 +139,8 @@ describe('@napplet/nap/outbox shim', () => {
   it('hydrates resource sidecars from query results before resolving', async () => {
     const { query, handleOutboxMessage } = await import('./shim.js');
     const { bytes } = await import('../resource/shim.js');
-    const resourceBlob = new Blob(['from outbox'], { type: 'text/plain' });
+    // NAP-RESOURCE §Byte encoding: sidecar `blob` is canonical base64 ResourceBytes ("from outbox").
+    const resourceBlob = 'ZnJvbSBvdXRib3g=';
     const sidecarResult = {
       event: {
         ...EV,
@@ -164,6 +165,7 @@ describe('@napplet/nap/outbox shim', () => {
 
     const hydrated = await bytes(RESOURCE_URL);
     await expect(hydrated.text()).resolves.toBe('from outbox');
+    expect(hydrated.type).toBe('text/plain');
     expect(shell.sent.some((posted) => posted.type === 'resource.bytes')).toBe(false);
   });
 

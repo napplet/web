@@ -194,7 +194,21 @@ export type ResourceErrorCode =
   | 'network-error'
   | 'quota-exceeded';
 
-/** Successful per-URL item returned by `resource.bytesMany`. */
+/**
+ * NAP-RESOURCE `ResourceBytes`: canonical padded base64 text (RFC 4648 §4).
+ *
+ * Every wire `blob` field uses this encoding: single results, bulk items, and
+ * sidecar entries. Host byte objects and integer arrays never appear on the
+ * wire; the web binding decodes this text into a `Blob`.
+ *
+ * @example
+ * ```ts
+ * const bytes: ResourceBytes = 'AAEC/w=='; // octets 00 01 02 ff
+ * ```
+ */
+export type ResourceBytes = string;
+
+/** Successful per-URL item returned by `window.napplet.resource.bytesMany`, decoded to a `Blob`. */
 export interface ResourceBytesOkItem {
   url: string;
   ok: true;
@@ -212,13 +226,29 @@ export interface ResourceBytesErrorItem {
   blob?: never;
 }
 
-/** Ordered per-URL item returned by `resource.bytesMany`. */
+/** Ordered per-URL item returned by `window.napplet.resource.bytesMany`. */
 export type ResourceBytesItem = ResourceBytesOkItem | ResourceBytesErrorItem;
 
-/** Pre-resolved resource bytes carried by another NAP's event sidecar. */
+/** Successful per-URL item as carried on the wire in `resource.bytesMany.result`. */
+export interface ResourceBytesWireOkItem {
+  url: string;
+  ok: true;
+  blob: ResourceBytes;
+  mime: string;
+  message?: string;
+}
+
+/** Ordered per-URL item as carried on the wire in `resource.bytesMany.result`. */
+export type ResourceBytesWireItem = ResourceBytesWireOkItem | ResourceBytesErrorItem;
+
+/**
+ * Pre-resolved resource bytes carried by another NAP's event sidecar
+ * (for example NAP-RELAY `RelayEventResult.sidecar.resources`). `blob` is
+ * wire `ResourceBytes`; the shim decodes it before cache hydration.
+ */
 export interface ResourceSidecarEntry {
   url: string;
-  blob: Blob;
+  blob: ResourceBytes;
   mime: string;
 }
 
@@ -242,7 +272,7 @@ export interface ResourceInfo {
  * (and only) byte-fetching primitive available inside a napplet.
  *
  * URL space is scheme-pluggable: shells register handlers per scheme.
- * Canonical schemes include `data:` (decoded in-shim, no round-trip),
+ * Canonical schemes include `data:` (runtime-decoded under policy),
  * `https:` (shell-side network with policy), `blossom:<sha256>.<ext>`
  * (BUD-10 Blossom URI to bytes), `htree:` (Hashtree-verified bytes), and `nostr:` (NIP-19 single-hop
  * resolution).
@@ -280,7 +310,8 @@ export interface ResourceApi {
    * Fetch the bytes referenced by `url` through the shell's resource pipeline.
    * The shell selects a scheme handler, applies its resource policy
    * (private-IP blocks, size caps, timeouts, MIME classification), and
-   * returns the bytes as a single Blob. No streaming, no chunking.
+   * returns the bytes as a single Blob decoded from the base64 wire
+   * encoding and typed with the sniffed MIME. No streaming, no chunking.
    * @param url  URL identifying the resource (any registered scheme)
    * @param opts  Optional AbortController signal
    * @returns Promise resolving to the fetched bytes as a Blob

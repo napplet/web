@@ -34,7 +34,7 @@ import type {
   OutboxPublishResultMessage,
   OutboxResolveRelaysResultMessage,
 } from './types.js';
-import { hydrateResourceCache } from '../resource/shim.js';
+import { hydrateEventSidecar } from '../resource/shim.js';
 
 /** Default timeout for outbox requests (30 seconds; aligns with other NAPs). */
 const REQUEST_TIMEOUT_MS = 30_000;
@@ -93,8 +93,7 @@ function handleGetEventResult(msg: OutboxGetEventResultMessage): void {
   clearTimeout(p.timeout);
   const result: OutboxEventResult = {};
   if (msg.result !== undefined) {
-    hydrateResourceCache(msg.result.sidecar?.resources);
-    result.result = msg.result;
+    result.result = hydrateEventSidecar(msg.result);
   }
   if (msg.incomplete !== undefined) result.incomplete = msg.incomplete;
   if (msg.error !== undefined) result.error = msg.error;
@@ -107,7 +106,7 @@ function handleQueryResult(msg: OutboxQueryResultMessage): void {
   pendingQuery.delete(msg.id);
   clearTimeout(p.timeout);
   const events = Array.isArray(msg.events) ? msg.events : [];
-  for (const item of events) hydrateResourceCache(item.sidecar?.resources);
+  for (const item of events) hydrateEventSidecar(item);
   const result: OutboxResult = {
     events,
   };
@@ -148,7 +147,7 @@ function handleResolveResult(msg: OutboxResolveRelaysResultMessage): void {
 function handleSubEvent(msg: OutboxEventMessage): void {
   const sub = subscriptions.get(msg.subId);
   if (!sub) return;
-  hydrateResourceCache(msg.result.sidecar?.resources);
+  hydrateEventSidecar(msg.result);
   for (const cb of sub.event) cb(msg.result);
 }
 
