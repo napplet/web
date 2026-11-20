@@ -1,6 +1,6 @@
 {
   "name": "@napplet/nap",
-  "version": "0.44.0",
+  "version": "0.45.0",
   "license": "MIT",
   "exports": {
     "./boundary": "./src/boundary.ts",
