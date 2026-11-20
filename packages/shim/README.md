@@ -64,7 +64,7 @@ const srcdoc = html.replace(
 );
 ```
 
-The global artifact exposes `globalThis.NappletShimPrelude.install({ domains })`. `@napplet/shim/prelude` also exports `installNappletRuntimePrelude()` for bundled host runtimes that can import ESM directly. JSR publishes the source ESM helpers under `@napplet/shim/prelude`; the generated `prelude.global` artifact is npm-only.
+The global artifact exposes `globalThis.NappletShimPrelude.install({ domains })`. The global is single-use: the first `install()` call deletes `globalThis.NappletShimPrelude` before installing, so napplet scripts that run afterwards can't find it or re-run it with more domains. Run the activation call before any napplet script. `@napplet/shim/prelude` also exports `installNappletRuntimePrelude()` for bundled host runtimes that can import ESM directly. JSR publishes the source ESM helpers under `@napplet/shim/prelude`; the generated `prelude.global` artifact is npm-only.
 
 ### Module import compatibility
 
