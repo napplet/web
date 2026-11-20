@@ -253,7 +253,7 @@ Per-napplet declarative configuration (NAP-CONFIG). Mirrors `window.napplet.conf
 | `get()` | `Promise<Record<string, unknown>>` | One-shot snapshot of validated + defaulted config values |
 | `subscribe(callback)` | `{ close(): void }` | Live push stream (initial snapshot + updates on change) |
 | `openSettings(options?)` | `void` | Open shell's settings UI, optionally deep-linked to `x-napplet-section` |
-| `registerSchema(schema, version?)` | `Promise<void>` | Runtime schema registration (escape hatch; prefer vite-plugin configSchema) |
+| `registerSchema(schema, version?)` | `Promise<void>` | Declare the configuration schema. Call it before `get()` or `subscribe()`; NAP-CONFIG has no manifest schema field. |
 | `onSchemaError(callback)` | `() => void` | Listen for `config.schemaError` pushes (returns plain teardown fn) |
 | `schema` (accessor) | `Record<string, unknown> \| null` | Readonly current schema |
 
