@@ -157,6 +157,28 @@ describe('validateEnvelope — outbound field checks', () => {
     });
   });
 
+  // NAP-INTENT (napplet/naps master @ 377bf939) §Wire Protocol.
+  it('declares the required NAP-INTENT availability and handlers result fields', () => {
+    expect(ENVELOPE_SPECS['intent.available.result']).toEqual({
+      dir: 'in',
+      fields: { id: 'string', availability: 'object' },
+    });
+    expect(ENVELOPE_SPECS['intent.handlers.result']).toEqual({
+      dir: 'in',
+      fields: { id: 'string', handlers: 'array' },
+    });
+    const missing = validateEnvelope({ type: 'intent.handlers.result', id: 'h1', error: 'policy denied' });
+    expect(missing.errors).toContainEqual(expect.objectContaining({ code: 'missing-field', field: 'handlers' }));
+  });
+
+  // NAP-CVM (napplet/naps#31 @ 28cf1bdb) §Error Handling: success payload fields
+  // are omitted on a shell error, so `servers` is not a required carrier field.
+  it('requires only id on cvm.discover.result', () => {
+    expect(ENVELOPE_SPECS['cvm.discover.result']).toEqual({ dir: 'in', fields: { id: 'string' } });
+    const failure = validateEnvelope({ type: 'cvm.discover.result', id: 'd1', error: 'policy denied' });
+    expect(failure.errors.map((e) => e.code)).toEqual(['inbound-type-emitted']);
+  });
+
   it('treats `present` fields as required-but-untyped (outbox.query filters union)', () => {
     expect(validateEnvelope({ type: 'outbox.query', id: 'a', filters: { kinds: [1] } }).ok).toBe(true);
     expect(validateEnvelope({ type: 'outbox.query', id: 'a', filters: [{ kinds: [1] }] }).ok).toBe(true);
