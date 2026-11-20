@@ -47,3 +47,5 @@ export { catalog } from './catalog.js';
 export { torrent } from './torrent.js';
 
 export { soulseek } from './soulseek.js';
+
+export { experimentalDomain } from './experimental.js';
