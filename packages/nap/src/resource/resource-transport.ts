@@ -13,12 +13,12 @@ import type {
   ResourceBytesMessage,
   ResourceBytesManyMessage,
   ResourceBytesItem,
-  ResourceBytesWireItem,
   ResourceBytesManyResultMessage,
   ResourceBytesManyErrorMessage,
   ResourceBytesResultMessage,
   ResourceBytesErrorMessage,
   ResourceCancelMessage,
+  ResourceErrorCode,
   ResourceInfo,
   ResourceInfoMessage,
   ResourceInfoResultMessage,
@@ -53,8 +53,6 @@ const pendingMany = new Map<string, Pending<ResourceBytesItem[]> & { count: numb
 
 /** Guard against double-install. */
 let installed = false;
-
-// ─── ResourceBytes decoding ─────────────────────────────────────────────────
 
 /** RFC 4648 §4 standard alphabet with required `=` padding, no whitespace. */
 const CANONICAL_BASE64 = /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/;
@@ -109,24 +107,19 @@ function decodeManyItem(item: unknown): ResourceBytesItem {
   if (!isRecord(item) || typeof item.url !== 'string' || typeof item.ok !== 'boolean') {
     throw new Error('invalid resource.bytesMany.result item: url and ok are required');
   }
-  const wire = item as unknown as ResourceBytesWireItem;
-  if (wire.ok) {
-    const decoded: ResourceBytesItem = {
-      url: wire.url,
-      ok: true,
-      blob: decodeResourceBytes(wire.blob, wire.mime),
-      mime: wire.mime,
-    };
-    if (typeof wire.message === 'string') decoded.message = wire.message;
-    return decoded;
+  const message = typeof item.message === 'string' ? { message: item.message } : {};
+  if (item.ok) {
+    const blob = decodeResourceBytes(item.blob, item.mime);
+    // decodeResourceBytes has verified mime is text.
+    return { url: item.url, ok: true, blob, mime: item.mime as string, ...message };
   }
   if ('blob' in item) {
     throw new Error('invalid resource.bytesMany.result item: failed items carry no blob');
   }
-  if (typeof wire.error !== 'string') {
+  if (typeof item.error !== 'string') {
     throw new Error('invalid resource.bytesMany.result item: failed items require error');
   }
-  return wire;
+  return { url: item.url, ok: false, error: item.error as ResourceErrorCode, ...message };
 }
 
 function isMessageType<T extends { type: string }>(
