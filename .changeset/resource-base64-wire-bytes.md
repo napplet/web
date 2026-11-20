@@ -13,3 +13,5 @@ Every wire `blob` (`resource.bytes.result`, `resource.bytesMany.result` items, a
 `data:` URLs, bare `nhash` aliases, and malformed URLs now go to the runtime, which applies the size cap, MIME sniffing, and SVG rasterization NAP-RESOURCE requires and answers with `invalid-request` where needed. `ResourceScheme` gains `hashtree`, and the conformance reference shell answers with base64.
 
 Migration for shells: send `blob: btoa(binary)`-style canonical base64 instead of a `Blob`, for example `{ type: 'resource.bytes.result', id, blob: 'AAEC/w==', mime: 'application/octet-stream' }`.
+
+Napplets reading `RelayEventResult.sidecar.resources` directly now see base64 text in `blob`, and entries that failed decoding are removed from the result. Call `window.napplet.resource.bytes(url)` instead: hydrated URLs resolve from cache as Blobs without a round-trip.

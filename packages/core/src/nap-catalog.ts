@@ -100,11 +100,11 @@ export const NAP_IMPLEMENTATIONS: Readonly<Record<NapDomain, NapImplementationMe
     evidence: ["packages/nap/src/config/shim.test.ts"],
   },
   resource: {
-    proposal: { url: "https://github.com/napplet/naps/pull/80", status: "in-review", checkedAt: "2026-10-31" },
+    proposal: { url: "https://github.com/napplet/naps/pull/80", status: "in-review", checkedAt: "2026-11-20" },
     maturity: "supported",
     rationale: "Resource fetching has focused shim and type tests; the reverted merge and reopened proposal do not change that implementation assessment.",
     evidence: ["packages/nap/src/resource/shim.test.ts"],
-    implementationReference: { revision: "8e75eadf317d7fe809415e4755cd48f63cfb63f3", evidence: ".planning/quick/260703-ghg-align-napplet-packages-with-nap-relayeve/260703-ghg-SUMMARY.md", scope: "Shared ResourceSidecarEntry types during the sidecar migration; subsequent resource changes are not covered." },
+    implementationReference: { revision: "ae5b9c64ab8a4d8909f288829a01e99d6bd713bc", evidence: ".planning/quick/261120-k4r-resource-base64-wire/261120-k4r-SUMMARY.md", scope: "Wire shapes (urls, base64 ResourceBytes), shim decoding, data: routing, and sidecar hydration; runtime fetch policy is shell-owned and not covered." },
   },
   cvm: {
     proposal: { url: "https://github.com/napplet/naps/pull/31", status: "in-review", checkedAt: "2026-10-31" },
