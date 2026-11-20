@@ -63,6 +63,8 @@ export {
   bytesMany,
   bytesAsObjectURL,
   hydrateResourceCache,
+  hydrateEventSidecar,
+  decodeResourceBytes,
 } from './shim.js';
 
 export {

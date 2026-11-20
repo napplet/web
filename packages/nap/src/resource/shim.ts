@@ -4,6 +4,7 @@
  * @module
  */
 
+import type { RelayEventResult } from '@napplet/core';
 import type {
   ResourceBytesItem,
   ResourceInfo,
@@ -202,6 +203,7 @@ export function bytesAsObjectURL(url: string): { url: string; revoke: () => void
  * there is no separate long-lived blob cache.
  *
  * @param entries  Pre-resolved resource entries from an event sidecar
+ * @returns The entries that decoded and were cached
  *
  * @example
  * ```ts
@@ -211,8 +213,9 @@ export function bytesAsObjectURL(url: string): { url: string; revoke: () => void
  * // Subsequent bytes('https://example.com/a.png') resolves from cache.
  * ```
  */
-export function hydrateResourceCache(entries?: ResourceSidecarEntry[]): void {
-  if (!Array.isArray(entries) || entries.length === 0) return;
+export function hydrateResourceCache(entries?: ResourceSidecarEntry[]): ResourceSidecarEntry[] {
+  const accepted: ResourceSidecarEntry[] = [];
+  if (!Array.isArray(entries)) return accepted;
   for (const entry of entries) {
     if (typeof entry !== 'object' || entry === null || typeof entry.url !== 'string') continue;
     let blob: Blob;
@@ -222,5 +225,33 @@ export function hydrateResourceCache(entries?: ResourceSidecarEntry[]): void {
       continue; // invalid encoding is a protocol failure: never cache it
     }
     inflight.set(entry.url, Promise.resolve(blob));
+    accepted.push(entry);
   }
+  return accepted;
+}
+
+/**
+ * Hydrate the resource cache from a `RelayEventResult` sidecar and drop any
+ * entry that failed decoding from the result, so an invalid encoding reaches
+ * neither the cache nor the napplet's event handler. Relay and outbox shims
+ * call this before handing the result to the napplet.
+ *
+ * @param result  Event result whose `sidecar.resources` is filtered in place
+ * @returns The same result object
+ *
+ * @example
+ * ```ts
+ * onEvent(hydrateEventSidecar(msg.result));
+ * ```
+ */
+export function hydrateEventSidecar<T extends RelayEventResult>(result: T): T {
+  const sidecar = result?.sidecar;
+  if (!sidecar || !('resources' in sidecar)) return result;
+  const accepted = hydrateResourceCache(sidecar.resources);
+  if (accepted.length > 0) {
+    sidecar.resources = accepted;
+  } else {
+    delete sidecar.resources;
+  }
+  return result;
 }
