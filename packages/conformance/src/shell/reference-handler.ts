@@ -2,7 +2,7 @@ import { createLlmHandlers } from './reference-llm.js';
 import { createTorrentHandlers } from './reference-torrents.js';
 import { createSoulseekHandlers } from './reference-soulseek.js';
 import { NAP_DOMAINS, type CatalogSnapshot } from '@napplet/core';
-import { validateEnvelope, type EnvelopeVerdict } from '../validators/envelope.js';
+import { validateEnvelope, type EnvelopeVerdict, type ValidateEnvelopeOptions } from '../validators/envelope.js';
 import {
   REFERENCE_CONVENTION,
   REFERENCE_SUBSCRIBER,
@@ -32,6 +32,8 @@ export interface ReferenceHandlerOptions {
   navigation: ReferenceNavigation;
   catalog(endpoint: ReferenceEndpoint): CatalogSnapshot;
   intentResolver: boolean;
+  /** Experimental domain allowlist (and specs) applied when validating recorded envelopes. */
+  validation?: ValidateEnvelopeOptions;
 }
 
 /** Create the pure request handler for the reference shell. */
@@ -43,7 +45,7 @@ export function createReferenceHandler(options: ReferenceHandlerOptions) {
   const soulseek = createSoulseekHandlers();
   const handle = (endpoint: ReferenceEndpoint, envelope: unknown): unknown[] => {
     const type = getEnvelopeType(envelope);
-    const verdict = validateEnvelope(envelope);
+    const verdict = validateEnvelope(envelope, options.validation);
     options.records.push({ envelope, verdict, timestamp: options.now() });
 
     if (type === 'navigation.report' || type === 'navigation.get') {

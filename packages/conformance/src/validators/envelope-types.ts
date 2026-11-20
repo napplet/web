@@ -9,6 +9,21 @@ export type EnvelopeDirection = 'out' | 'in';
 export type FieldKind = 'string' | 'number' | 'boolean' | 'array' | 'object' | 'present';
 
 /** Specification for a single wire envelope `type`. */
+/**
+ * Options for validating envelopes in an experimental (non-NAP) domain.
+ *
+ * NIP-5D lets a NAP named `foo` own every `foo.*` type, and nothing limits
+ * domains to this toolchain's registry, so an operator prototyping a domain
+ * can allowlist it. Allowlisted domains are accepted; bundled NAP domains are
+ * always validated against their own specs and cannot be overridden.
+ */
+export interface ValidateEnvelopeOptions {
+  /** Experimental domain names whose `<domain>.*` envelopes are accepted. */
+  experimentalDomains?: readonly string[];
+  /** Optional field specs for experimental message types, keyed by `domain.action`. */
+  experimentalEnvelopeSpecs?: Readonly<Record<string, EnvelopeSpec>>;
+}
+
 export interface EnvelopeSpec {
   /** `out` = sent by the napplet to the shell; `in` = sent by the shell to the napplet. */
   dir: EnvelopeDirection;

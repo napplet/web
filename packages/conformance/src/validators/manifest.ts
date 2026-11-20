@@ -73,7 +73,13 @@ export interface ManifestVerdict {
 }
 
 /** Options for {@link validateManifest}. Reserved for compatibility. */
-export interface ValidateManifestOptions {}
+export interface ValidateManifestOptions {
+  /**
+   * Experimental (non-NAP) domains the operator allowlisted. `R`/`O` tags naming
+   * them skip the unknown-registry advisory; every other check is unchanged.
+   */
+  experimentalDomains?: readonly string[];
+}
 
 /** One usable `screenshot` or `preview` entry (NIP-5D §Presentation media). */
 export interface PresentationMedia {
@@ -218,9 +224,13 @@ function parseMediaTag(tag: string[], warnings: ManifestError[]): PresentationMe
  * Validate a NIP-5D napplet manifest event.
  *
  * @param event - The resolved Nostr manifest event.
+ * @param options - Experimental domains the operator allowlisted.
  * @returns A {@link ManifestVerdict}.
  */
-export function validateManifestEvent(event?: NappletManifestEvent | null): ManifestVerdict {
+export function validateManifestEvent(
+  event?: NappletManifestEvent | null,
+  options: ValidateManifestOptions = {},
+): ManifestVerdict {
   const errors: ManifestError[] = [];
   const warnings: ManifestError[] = [];
 
@@ -259,7 +269,7 @@ export function validateManifestEvent(event?: NappletManifestEvent | null): Mani
     errors.push({ code: 'missing-description', message: 'Manifest content must contain a non-empty plain-text description' });
   }
 
-  validateCapabilities(event, errors, warnings);
+  validateCapabilities(event, errors, warnings, options.experimentalDomains ?? []);
   validateMetadata(event, errors, warnings);
 
   return {
@@ -290,12 +300,17 @@ export function validateManifest(_html: string, _options: ValidateManifestOption
 
 // NIP-5D §Required and Optional Capabilities: registry knowledge is not a grant
 // or a complete list of independently specified NAP domains.
-function validateCapabilities(event: NappletManifestEvent, errors: ManifestError[], warnings: ManifestError[]): void {
+function validateCapabilities(
+  event: NappletManifestEvent,
+  errors: ManifestError[],
+  warnings: ManifestError[],
+  experimental: readonly string[],
+): void {
   for (const tag of event.tags.filter((tag) => tag[0] === 'R' || tag[0] === 'O')) {
     const domain = tag[1];
     if (tag.length !== 2 || !domain || /[.:\s]/.test(domain) || domain.startsWith('NAP-')) {
       errors.push({ code: tag[0] === 'R' ? 'invalid-required-nap' : 'invalid-optional-nap', message: `${tag[0]} must name one bare NAP domain` });
-    } else if (!(NAP_DOMAINS as readonly string[]).includes(domain)) {
+    } else if (!(NAP_DOMAINS as readonly string[]).includes(domain) && !experimental.some((name) => name.trim() === domain)) {
       warnings.push({ code: 'unknown-required-nap', message: `Domain "${domain}" is not in this tool's registry; check its NAP and runtime availability` });
     }
   }

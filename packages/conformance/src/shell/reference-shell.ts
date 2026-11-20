@@ -43,6 +43,12 @@ export interface ReferenceShellOptions {
   intentResolver?: boolean;
   /** Caller policy; false omits the entire entry without replacing its handler. */
   catalogFilter?: (napplet: NappletDescriptor, endpoint: ReferenceEndpoint) => boolean;
+  /**
+   * Experimental (non-NAP) domains to accept, plus optional specs for their
+   * message types. List them in `domains` too so they count as exposed; the
+   * reference shell has no responders for them, so requests get no reply.
+   */
+  validation?: import('../validators/envelope.js').ValidateEnvelopeOptions;
 }
 
 /** A reference shell instance for transport-agnostic conformance tests. */
@@ -108,6 +114,7 @@ export function createReferenceShell(options: ReferenceShellOptions = {}): Refer
     intents,
     navigation,
     intentResolver,
+    validation: options.validation,
     catalog: endpoint => referenceCatalog(manifests, endpoint, intentResolver ? intents : undefined, options.catalogFilter),
   });
   const handleFrom = (endpoint: ReferenceEndpoint, envelope: unknown): unknown[] => {

@@ -363,3 +363,17 @@ describe('presentation media', () => {
     expect(v.warnings.every((w) => w.code === 'invalid-presentation-media')).toBe(true);
   });
 });
+
+describe('experimental domains', () => {
+  it('skips the unknown-registry advisory for allowlisted R/O domains only', () => {
+    const custom = event({ tags: [['d', 'demo'], ['x', 'c'.repeat(64)], ['R', 'mesh'], ['O', 'proto']] });
+    const lenient = validateManifestEvent(custom);
+    expect(lenient.warnings.filter((w) => w.code === 'unknown-required-nap')).toHaveLength(2);
+
+    const allowlisted = validateManifestEvent(custom, { experimentalDomains: ['mesh'] });
+    expect(allowlisted.ok).toBe(true);
+    expect(allowlisted.warnings.filter((w) => w.code === 'unknown-required-nap').map((w) => w.message)).toEqual([
+      expect.stringContaining('"proto"'),
+    ]);
+  });
+});

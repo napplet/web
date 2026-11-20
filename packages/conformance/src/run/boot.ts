@@ -22,6 +22,7 @@ import { createReferenceShell, REFERENCE_ENDPOINT, type RecordedEnvelope } from 
 import { bindNappletPort, type TransportViolation } from '../shell/port-binding.js';
 import { catalogId, type CatalogManifest } from '../shell/intent-catalog.js';
 import type { NappletManifestEvent } from '../validators/manifest.js';
+import type { ValidateEnvelopeOptions } from '../validators/envelope.js';
 import type { BootObservation } from './context.js';
 
 const INTERNAL_BOOT_ERROR = '__nappletConformance.error';
@@ -63,6 +64,20 @@ export interface BootOptions {
   runtimePreludeSource: string;
   /** Debug only: also grant `allow-same-origin` (a conformant load must NOT need it). Default false. */
   allowSameOrigin?: boolean;
+  /**
+   * Experimental (non-NAP) domains to expose during the primary boot and accept
+   * when validating envelopes. The degraded boot never exposes them.
+   */
+  experimentalDomains?: readonly string[];
+  /** Optional field specs for experimental message types, keyed by `domain.action`. */
+  experimentalEnvelopeSpecs?: ValidateEnvelopeOptions['experimentalEnvelopeSpecs'];
+  /**
+   * Script that registers experimental domain implementations, run after the
+   * shim prelude and before its activation call, e.g.
+   * `NappletShimPrelude.registerExtension({ domain: 'mesh', create: (channel) => ({ ... }) })`.
+   * Without it, an allowlisted domain is accepted on the wire but has no `window.napplet` object.
+   */
+  extensionSource?: string;
   /** Document to create the iframe in. Defaults to the global `document`. */
   document?: Document;
   /** Window to listen on. Defaults to the global `window`. */
@@ -103,14 +118,22 @@ function errorObserver(): string {
  * Render the runtime prelude script: the maintained shim IIFE, the explicit
  * domain allowlist call, and the harness installation probe.
  */
-export function runtimePrelude(domains: readonly string[], runtimePreludeSource: string): string {
+export function runtimePrelude(domains: readonly string[], runtimePreludeSource: string, extensionSource = ''): string {
   const installed = `window.parent.postMessage({ type: '${INTERNAL_INSTALLED}', installed: !!window.napplet }, '*');`;
-  return `${runtimePreludeSource}\n;globalThis.NappletShimPrelude.install(${JSON.stringify({ domains })});\n${installed}`;
+  // Order: shim prelude, experimental extension registrations, activation (removes the global), probe.
+  const extensions = extensionSource ? `\n;${extensionSource}\n` : '\n';
+  return `${runtimePreludeSource}${extensions};globalThis.NappletShimPrelude.install(${JSON.stringify({ domains })});\n${installed}`;
 }
 
-function injectRuntime(html: string, url: string, domains: readonly string[], runtimePreludeSource: string): string {
+function injectRuntime(
+  html: string,
+  url: string,
+  domains: readonly string[],
+  runtimePreludeSource: string,
+  extensionSource: string,
+): string {
   const base = `<base href="${escapeHtmlAttr(url)}">`;
-  const source = runtimePrelude(domains, runtimePreludeSource).replace(/<\/script/gi, '<\\/script');
+  const source = runtimePrelude(domains, runtimePreludeSource, extensionSource).replace(/<\/script/gi, '<\\/script');
   const script = `<script>${errorObserver()}</script><script>${source}</script>`;
   const headOpen = /<head(?:\s[^>]*)?>/i.exec(html);
   if (headOpen) {
@@ -142,11 +165,13 @@ async function loadHtml(url: string): Promise<string> {
 /** Boot the napplet once with the given injected domain set and collect what's observable. */
 async function bootOnce(
   domains: readonly string[],
-  opts: Required<Pick<BootOptions, 'url' | 'readyTimeoutMs' | 'settleMs' | 'allowSameOrigin' | 'runtimePreludeSource'>> & Pick<BootOptions, 'html' | 'verifiedManifest'>,
+  opts: Required<Pick<BootOptions, 'url' | 'readyTimeoutMs' | 'settleMs' | 'allowSameOrigin' | 'runtimePreludeSource' | 'extensionSource'>>
+    & Pick<BootOptions, 'html' | 'verifiedManifest'>
+    & { validation: ValidateEnvelopeOptions },
   doc: Document,
   win: Window,
 ): Promise<SingleBoot> {
-  const shell = createReferenceShell({ domains });
+  const shell = createReferenceShell({ domains, validation: opts.validation });
   const manifest = opts.verifiedManifest;
   if (manifest && (![5129, 15129, 35129].includes(manifest.kind) || !manifest.id || !manifest.pubkey)) {
     throw new Error('Boot requires a complete host-verified napplet manifest');
@@ -219,7 +244,7 @@ async function bootOnce(
 
   try {
     const html = opts.html ?? await loadHtml(opts.url);
-    iframe.srcdoc = injectRuntime(html, opts.url, domains, opts.runtimePreludeSource);
+    iframe.srcdoc = injectRuntime(html, opts.url, domains, opts.runtimePreludeSource, opts.extensionSource);
     (doc.body ?? doc.documentElement).appendChild(iframe);
   } catch (error) {
     bootError = error instanceof Error ? error.message : String(error);
@@ -256,13 +281,18 @@ export async function bootAndCollect(options: BootOptions): Promise<BootCollecti
     settleMs: options.settleMs ?? 600,
     allowSameOrigin: options.allowSameOrigin ?? false,
     runtimePreludeSource: options.runtimePreludeSource,
+    extensionSource: options.extensionSource ?? '',
+    validation: {
+      experimentalDomains: options.experimentalDomains ?? [],
+      experimentalEnvelopeSpecs: options.experimentalEnvelopeSpecs,
+    },
   };
 
   const candidates = options.domains ?? NAP_DOMAINS;
   const domains = options.maturity
     ? selectNapDomains({ ...options.maturity, candidates }).domains
     : candidates;
-  const primary = await bootOnce(domains, resolved, doc, win);
+  const primary = await bootOnce([...domains, ...(options.experimentalDomains ?? [])], resolved, doc, win);
 
   let degraded: BootObservation | null = null;
   if (options.runDegraded ?? true) {
