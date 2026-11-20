@@ -14,3 +14,9 @@ playwright-report/
 # Local benchmark outputs
 /benchmark.json
 /benchmark.md
+
+# Local tooling output
+.codebase-memory/
+.planning/research/.cache/
+/packages/cli/dist-bin/
+.nsite/
