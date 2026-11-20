@@ -10,6 +10,7 @@
  * time the napplet changes — the watch loop, the way `vitest --ui` re-runs on save.
  */
 
+import { normalizeExperimentalDomains } from '@napplet/core';
 import {
   bootAndCollect,
   buildContext,
@@ -31,6 +32,8 @@ const params = new URLSearchParams(location.search);
 const LIVE = params.get('live') === '1';
 /** `?strict=1`: fail the run on advisory warnings too, matching `napplet-conformance --strict`. */
 const STRICT = params.get('strict') === '1';
+/** `?experimental=a,b`: allowlist experimental (non-NAP) domains, matching `--experimental-domain`. Names only; no extension injection. */
+const EXPERIMENTAL = normalizeExperimentalDomains((params.get('experimental') ?? '').split(',').filter((name) => name.trim()));
 
 function esc(value: unknown): string {
   return String(value)
@@ -172,12 +175,13 @@ async function run(target: string): Promise<void> {
     resolved = await resolveTarget(target);
     const forbidden = FORBIDDEN_RE.test(resolved.html) ? ['window.nostr'] : [];
     setStatus('Booting napplet in a sandboxed iframe …');
-    const boot = await bootAndCollect({ url: resolved.bootUrl, html: resolved.html, verifiedManifest: resolved.manifestEvent ?? undefined, readyTimeoutMs: 5000, settleMs: 800, runDegraded: true, runtimePreludeSource });
+    const boot = await bootAndCollect({ url: resolved.bootUrl, html: resolved.html, verifiedManifest: resolved.manifestEvent ?? undefined, readyTimeoutMs: 5000, settleMs: 800, runDegraded: true, runtimePreludeSource, experimentalDomains: EXPERIMENTAL });
     const ctx = buildContext({
       manifestHtml: resolved.html,
       manifestEvent: resolved.manifestEvent,
       boot,
       forbiddenGlobals: forbidden,
+      experimentalDomains: EXPERIMENTAL,
     });
     const result = runConformance(ctx, { strict: STRICT });
     runCount += 1;

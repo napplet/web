@@ -50,6 +50,35 @@ describe('napplet-conformance CLI e2e', () => {
     ]));
   });
 
+  // NIP-5D: a NAP named `foo` owns `foo.*`, and presence of window.napplet.<domain> is the availability signal.
+  it('exposes an allowlisted experimental domain and accepts its traffic under --strict', async () => {
+    const extension = join(ROOT, 'tests', 'fixtures', 'extensions', 'mesh.js');
+    const { code, stdout } = await runCli([
+      fixture('experimental-domain'), '--reporter', 'json', '--strict', '--experimental-domain', 'mesh', '--extension', extension,
+    ]);
+    const report = JSON.parse(stdout);
+    expect(code).toBe(0);
+    expect(report).toMatchObject({ ok: true, strict: true });
+    const check = (id: string) => report.checks.find((c: { id: string }) => c.id === id);
+    expect(check('wire/envelope-well-formed')).toMatchObject({ status: 'pass', detail: '2 envelope(s) valid' });
+    expect(check('wire/known-message-types')).toMatchObject({ status: 'pass' });
+    expect(check('degrade/domain-absence')).toMatchObject({ status: 'pass' });
+  });
+
+  it('does not expose an experimental domain that is not allowlisted', async () => {
+    const extension = join(ROOT, 'tests', 'fixtures', 'extensions', 'mesh.js');
+    const { code, stdout } = await runCli([fixture('experimental-domain'), '--reporter', 'json', '--extension', extension]);
+    const report = JSON.parse(stdout);
+    expect(code).toBe(0);
+    expect(report.checks.find((c: { id: string }) => c.id === 'wire/envelope-well-formed').detail).toBe('1 envelope(s) valid');
+  });
+
+  it('rejects a NAP domain passed as experimental', async () => {
+    const { code, stderr } = await runCli([fixture('experimental-domain'), '--experimental-domain', 'relay']);
+    expect(code).toBe(2);
+    expect(stderr).toContain('"relay" is a NAP domain');
+  });
+
   it('fails the broken fixture with exit 1', async () => {
     const { code, stdout } = await runCli([fixture('broken')]);
     expect(stdout).toContain('RESULT: NON-CONFORMANT');

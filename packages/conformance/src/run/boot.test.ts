@@ -70,4 +70,14 @@ describe('bootAndCollect — DOM wiring', () => {
     expect(script).toContain("type: '__nappletConformance.installed', installed: !!window.napplet");
     expect(script).not.toContain('resource.bytes');
   });
+
+  it('registers experimental extensions after the prelude and before the activation call', () => {
+    const script = runtimePrelude(['relay', 'mesh'], '/* shim */', 'NappletShimPrelude.registerExtension(ext);');
+    const register = script.indexOf('registerExtension(ext)');
+    const activate = script.indexOf('NappletShimPrelude.install(');
+    expect(script.indexOf('/* shim */')).toBe(0);
+    expect(register).toBeGreaterThan(0);
+    expect(activate).toBeGreaterThan(register);
+    expect(script).toContain('"domains":["relay","mesh"]');
+  });
 });

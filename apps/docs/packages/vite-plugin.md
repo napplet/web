@@ -131,3 +131,7 @@ BLOSSOM requirement inference recognizes `@napplet/nap/blossom`, `@napplet/sdk/b
 ## Catalog requirements
 
 Requirement inference recognizes `@napplet/nap/catalog` subpaths, `@napplet/sdk/catalog`, and direct `window.napplet.catalog` access. Declare `optional: ['catalog']` for optional discovery or `requires: ['catalog']` when essential. This does not add an `intent` requirement or grant access. See the living [NAP-CATALOG draft](https://github.com/napplet/naps/pull/95) for the read-only discovery contract.
+
+## Experimental domains
+
+`experimentalDomains: ['mesh']` allowlists non-NAP domains you're prototyping for inference and `R`/`O` output. See [Experimental domains](/guide/experimental-domains).

@@ -9,6 +9,7 @@
 import type { ManifestPluginState, Nip5aRequiresOption } from './types.js';
 
 const NAP_DOMAINS = [
+  'shell',
   'relay',
   'identity',
   'storage',
@@ -45,7 +46,11 @@ const NAP_DOMAIN_SET = new Set<string>(NAP_DOMAINS);
 const IMPORT_RE = /\bimport\s+(type\s+)?(?:(?:[^'";]+?\s+from\s+)?['"]([^'"]+)['"])/g;
 const WINDOW_DOMAIN_RE = /\bwindow\s*\.\s*napplet\s*\.\s*([A-Za-z_$][\w$]*)/g;
 
-export function inferRequirementsFromSource(code: string, id: string): string[] {
+export function inferRequirementsFromSource(
+  code: string,
+  id: string,
+  experimentalDomains: ReadonlySet<string> = new Set(),
+): string[] {
   if (!isSourceFile(id)) return [];
 
   const domains = new Set<string>();
@@ -56,7 +61,7 @@ export function inferRequirementsFromSource(code: string, id: string): string[] 
   }
   for (const match of code.matchAll(WINDOW_DOMAIN_RE)) {
     const domain = match[1];
-    if (NAP_DOMAIN_SET.has(domain)) domains.add(domain);
+    if (NAP_DOMAIN_SET.has(domain) || experimentalDomains.has(domain)) domains.add(domain);
   }
   return [...domains].sort();
 }
@@ -84,7 +89,8 @@ export function reportRequirementDiagnostics(
   // written. The shell decides at load whether it provides each domain, so a
   // domain this plugin does not know (a drafted or runtime-specific NAP) is
   // passed through with a warning rather than dropped.
-  const unknown = dedupeRequirements(explicitRequirements(option)).filter((domain) => !NAP_DOMAIN_SET.has(domain));
+  const unknown = dedupeRequirements(explicitRequirements(option))
+    .filter((domain) => !NAP_DOMAIN_SET.has(domain) && !state.experimentalDomains.has(domain));
   if (unknown.length > 0) {
     warnOnce(state, warn, `[nip5a-manifest] requires domain(s) not in the known NAP list, emitted as declared: ${unknown.join(', ')}`);
   }
@@ -99,6 +105,47 @@ export function reportRequirementDiagnostics(
   if (option.mode === 'error') throw new Error(message);
   warnOnce(state, warn, message);
 }
+
+/**
+ * Warn once when experimental domains end up in the manifest's R/O tags.
+ *
+ * @param state Plugin state holding the experimental allowlist.
+ * @param declared Domains emitted as R or O.
+ * @param warn Build warning sink.
+ */
+export function reportExperimentalDomains(
+  state: ManifestPluginState,
+  declared: readonly string[],
+  warn: (message: string) => void,
+): void {
+  const used = [...new Set(declared.filter((domain) => state.experimentalDomains.has(domain)))].sort();
+  if (used.length === 0) return;
+  warnOnce(state, warn, `[nip5a-manifest] experimental domain(s) declared in R/O are not defined by any NAP: ${used.join(', ')}. Propose them on the NAPs track (https://github.com/napplet/naps) before relying on them.`);
+}
+
+/**
+ * Validate the experimental domain allowlist from the plugin options.
+ *
+ * @param names Experimental domain names.
+ * @returns The trimmed, deduplicated allowlist.
+ * @throws Error for a non-bare name, a NAP domain, or an `Object.prototype` member.
+ */
+export function normalizeExperimentalDomains(names: readonly string[] | undefined): ReadonlySet<string> {
+  const result = new Set<string>();
+  for (const raw of names ?? []) {
+    const name = String(raw).trim();
+    assertBareNapDomain(name);
+    if (NAP_DOMAIN_SET.has(name)) throw new Error(`[nip5a-manifest] experimentalDomains: "${name}" is a NAP domain`);
+    if (Object.getOwnPropertyNames(Object.prototype).includes(name)) {
+      throw new Error(`[nip5a-manifest] experimentalDomains: "${name}" cannot be used as a domain name`);
+    }
+    result.add(name);
+  }
+  return result;
+}
+
+/** The NAP domain names this plugin recognizes, for drift tests against `@napplet/core`. */
+export const KNOWN_NAP_DOMAINS: readonly string[] = NAP_DOMAINS;
 
 function warnOnce(state: ManifestPluginState, warn: (message: string) => void, message: string): void {
   if (state.reportedRequirementWarnings.has(message)) return;

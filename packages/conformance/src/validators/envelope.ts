@@ -12,4 +12,5 @@ export type {
   EnvelopeSpec,
   EnvelopeVerdict,
   FieldKind,
+  ValidateEnvelopeOptions,
 } from './envelope-types.js';

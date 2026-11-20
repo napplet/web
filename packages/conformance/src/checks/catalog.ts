@@ -24,7 +24,7 @@ function isUnrecognizedType(verdict: EnvelopeVerdict): boolean {
 
 /** Findings (errors and advisories) that fail a given manifest check. */
 function manifestErrors(ctx: Parameters<Check['run']>[0], codes: ManifestError['code'][]): ManifestError[] {
-  const verdict = validateManifestEvent(ctx.manifestEvent);
+  const verdict = validateManifestEvent(ctx.manifestEvent, { experimentalDomains: ctx.experimentalDomains });
   return [...verdict.errors, ...verdict.warnings].filter((e) => codes.includes(e.code));
 }
 

@@ -34,6 +34,35 @@ describe('validateEnvelope — structural guards', () => {
   });
 });
 
+// NIP-5D §Wire Format: "a NAP named `foo` owns all `foo.*` types"; nothing limits domains to this registry.
+describe('validateEnvelope — experimental domains', () => {
+  it('accepts an allowlisted experimental domain', () => {
+    const v = validateEnvelope({ type: 'mesh.publish', topic: 't' }, { experimentalDomains: ['mesh'] });
+    expect(v).toMatchObject({ ok: true, domain: 'mesh', direction: 'out' });
+  });
+
+  it('checks experimental fields when the operator supplies a spec', () => {
+    const options = {
+      experimentalDomains: ['mesh'],
+      experimentalEnvelopeSpecs: { 'mesh.publish': { dir: 'out' as const, fields: { topic: 'string' as const } } },
+    };
+    expect(validateEnvelope({ type: 'mesh.publish', topic: 't' }, options).ok).toBe(true);
+    expect(validateEnvelope({ type: 'mesh.publish', topic: 1 }, options).errors[0].code).toBe('wrong-type');
+  });
+
+  it('never lets an allowlist or spec override a bundled NAP domain', () => {
+    const v = validateEnvelope(
+      { type: 'relay.teleport', id: 'x' },
+      { experimentalDomains: ['relay'], experimentalEnvelopeSpecs: { 'relay.teleport': { dir: 'out' } } },
+    );
+    expect(v.errors[0].code).toBe('unknown-type');
+  });
+
+  it('still rejects domains that are not allowlisted', () => {
+    expect(validateEnvelope({ type: 'other.thing' }, { experimentalDomains: ['mesh'] }).errors[0].code).toBe('unknown-domain');
+  });
+});
+
 describe('validateEnvelope — direction enforcement', () => {
   it('rejects a napplet emitting a shell→napplet (inbound) type', () => {
     const v = validateEnvelope({ type: 'relay.event', subId: 's', result: { event: {} } });

@@ -71,6 +71,17 @@ describe('runConformance', () => {
     expect(strict.summary.errors).toBe(0);
   });
 
+  it('passes strict when the unknown domain is an allowlisted experimental one', () => {
+    const verdict = validateEnvelope({ type: 'mesh.publish', id: '1' }, { experimentalDomains: ['mesh'] });
+    const run = runConformance(makeContext({
+      manifestEvent: { ...goodEvent, tags: [...goodEvent.tags, ['R', 'mesh']] },
+      emitted: [{ envelope: { type: 'mesh.publish', id: '1' }, verdict, timestamp: 0 }],
+      experimentalDomains: ['mesh'],
+    }), { strict: true });
+    expect(run.ok).toBe(true);
+    expect(run.summary.warnings).toBe(0);
+  });
+
   it('produces a JSON-serializable run', () => {
     const run = runConformance(makeContext({ manifestHtml: goodHtml, manifestEvent: goodEvent }));
     const round = JSON.parse(toJson(run));

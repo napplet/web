@@ -23,6 +23,7 @@ export type {
   EnvelopeSpec,
   EnvelopeError,
   EnvelopeVerdict,
+  ValidateEnvelopeOptions,
 } from './validators/envelope.js';
 
 export {

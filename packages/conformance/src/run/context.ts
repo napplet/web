@@ -51,6 +51,8 @@ export interface ConformanceContext {
   emitted: RecordedEnvelope[];
   /** NIP-5D transport violations during the primary boot: window-level messages, a second hello, a second load. */
   transportViolations: TransportViolation[];
+  /** Experimental (non-NAP) domains the operator allowlisted for this run. */
+  experimentalDomains: string[];
   /** Forbidden globals the napplet tried to access, e.g. `['window.nostr']`. */
   forbiddenGlobals: string[];
   /**
@@ -83,6 +85,8 @@ export interface BuildContextInput {
   boot: BootCollectionLike;
   /** Forbidden globals found by static analysis (e.g. `['window.nostr']`). */
   forbiddenGlobals?: string[];
+  /** Experimental (non-NAP) domains the operator allowlisted for this run. */
+  experimentalDomains?: readonly string[];
   /** Sandbox attributes the host used. Defaults to the conformant `allow-scripts` only. */
   sandbox?: SandboxState;
   /** Best-effort lifecycle observation. */
@@ -102,6 +106,7 @@ export function buildContext(input: BuildContextInput): ConformanceContext {
     bootError: input.boot.bootError,
     emitted: input.boot.emitted,
     transportViolations: input.boot.transportViolations ?? [],
+    experimentalDomains: [...(input.experimentalDomains ?? [])],
     forbiddenGlobals: input.forbiddenGlobals ?? [],
     degraded: input.boot.degraded,
     lifecycle: input.lifecycle ?? null,
@@ -121,6 +126,7 @@ export function makeContext(overrides: Partial<ConformanceContext> = {}): Confor
     bootError: null,
     emitted: [],
     transportViolations: [],
+    experimentalDomains: [],
     forbiddenGlobals: [],
     degraded: null,
     lifecycle: null,

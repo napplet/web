@@ -1,0 +1,7 @@
+{
+  "name": "@napplet-fixture/experimental-domain",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Experimental (non-NAP) domain fixture for @napplet/conformance e2e",
+  "type": "module"
+}

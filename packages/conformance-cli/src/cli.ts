@@ -26,7 +26,8 @@ import {
   type BootCollection,
   type ReporterFormat,
 } from '@napplet/conformance';
-import { startHarnessServer } from './server.js';
+import { normalizeExperimentalDomains } from '@napplet/core';
+import { startHarnessServer, type BootConfig } from './server.js';
 import { startUiServer } from './ui-server.js';
 import { scanForbiddenGlobals } from './scan.js';
 import { resolveNappletDir } from './resolve-napplet.js';
@@ -44,6 +45,8 @@ interface CliOptions {
   runDegraded: boolean;
   allowSameOrigin: boolean;
   strict: boolean;
+  experimentalDomains: string[];
+  extension?: string;
   ui: boolean;
   port?: number;
   open: boolean;
@@ -72,6 +75,11 @@ Options:
   --no-degraded            Skip the no-capability graceful-degradation pass
   --allow-same-origin      Debug: also grant allow-same-origin (a conformant napplet must not need it)
   --strict                 Fail the run on advisory warnings too (e.g. message types no known NAP defines)
+  --experimental-domain <name>
+                           Allowlist a non-NAP domain you are prototyping (repeatable); its messages and
+                           R/O tags are accepted even under --strict. Propose it at github.com/napplet/naps
+  --extension <file.js>    Script registering experimental domain objects via
+                           NappletShimPrelude.registerExtension(...) before activation (headless)
 
 UI / watch mode (--ui):
   --port <n>               Port for the UI server (default: random)
@@ -91,6 +99,7 @@ function parseArgs(argv: string[]): CliOptions {
     runDegraded: true,
     allowSameOrigin: false,
     strict: false,
+    experimentalDomains: [],
     ui: false,
     open: true,
     help: false,
@@ -138,6 +147,12 @@ function parseArgs(argv: string[]): CliOptions {
       case '--strict':
         opts.strict = true;
         break;
+      case '--experimental-domain':
+        opts.experimentalDomains.push(value());
+        break;
+      case '--extension':
+        opts.extension = value();
+        break;
       case '--ui':
         opts.ui = true;
         break;
@@ -156,7 +171,14 @@ function parseArgs(argv: string[]): CliOptions {
         opts.target = arg;
     }
   }
+  opts.experimentalDomains = normalizeExperimentalDomains(opts.experimentalDomains);
   return opts;
+}
+
+/** Experimental-domain allowlist and optional extension script for the headless boot. */
+async function experimentalBootConfig(opts: CliOptions): Promise<Pick<BootConfig, 'experimentalDomains' | 'extensionSource'>> {
+  if (!opts.extension) return { experimentalDomains: opts.experimentalDomains };
+  return { experimentalDomains: opts.experimentalDomains, extensionSource: await readFile(resolve(opts.extension), 'utf8') };
 }
 
 async function collectBoot(hostUrl: string, totalTimeoutMs: number): Promise<BootCollection> {
@@ -213,6 +235,10 @@ async function runUiMode(opts: CliOptions): Promise<number> {
     process.stderr.write(`Provide a napplet directory.\n\n${HELP}`);
     return 2;
   }
+  if (opts.extension) {
+    process.stderr.write('--extension is supported in headless mode; the web runtime accepts experimental domain names only.\n');
+    return 2;
+  }
   const resolved = await resolveNappletDir(opts.target);
   const here = dirname(fileURLToPath(import.meta.url));
   const appDir = join(here, 'ui');
@@ -221,7 +247,13 @@ async function runUiMode(opts: CliOptions): Promise<number> {
     return 2;
   }
 
-  const server = await startUiServer({ appDir, nappletDir: resolved.dir, port: opts.port, strict: opts.strict });
+  const server = await startUiServer({
+    appDir,
+    nappletDir: resolved.dir,
+    port: opts.port,
+    strict: opts.strict,
+    experimentalDomains: opts.experimentalDomains,
+  });
 
   const child = opts.exec ? spawn(opts.exec, { cwd: resolve(opts.target), shell: true, stdio: 'inherit' }) : null;
 
@@ -307,6 +339,7 @@ async function main(argv: string[]): Promise<number> {
       runDegraded: opts.runDegraded,
       runtimePreludeSource,
       allowSameOrigin: opts.allowSameOrigin,
+      ...await experimentalBootConfig(opts),
     },
   });
 
@@ -320,7 +353,7 @@ async function main(argv: string[]): Promise<number> {
     await server.close();
   }
 
-  const context = buildContext({ manifestHtml, manifestEvent, boot, forbiddenGlobals, sandbox: { allowScripts: true, allowSameOrigin: opts.allowSameOrigin } });
+  const context = buildContext({ manifestHtml, manifestEvent, boot, forbiddenGlobals, experimentalDomains: opts.experimentalDomains, sandbox: { allowScripts: true, allowSameOrigin: opts.allowSameOrigin } });
   const run = runConformance(context, { strict: opts.strict });
   const output = report(run, opts.reporter);
 

@@ -25,6 +25,7 @@ export type {
   NapDomain,
 } from './envelope.js';
 export { NAP_DOMAINS } from './envelope.js';
+export { isBareDomainName, isRegistryDomain, normalizeExperimentalDomains } from './experimental-domains.js';
 
 export { NAP_IMPLEMENTATIONS } from './nap-catalog.js';
 export type { NapMaturity, NapProposalStatus, NapImplementationMetadata } from './nap-catalog.js';

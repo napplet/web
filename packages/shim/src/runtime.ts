@@ -93,10 +93,27 @@ import {
 } from '@napplet/nap/dm/shim';
 import { connectShell, onShellMessage, type ShellMessage } from '@napplet/nap/boundary';
 import { createNappletGlobal } from './runtime-globals.js';
+import {
+  installExperimentalDomains,
+  registerNappletDomainExtension,
+  type NappletDomainExtension,
+} from './experimental.js';
+
+/**
+ * A domain name the runtime can expose: a bundled NAP domain, or an
+ * experimental domain with a registered extension.
+ */
+export type NappletRuntimeDomain = NapDomain | (string & {});
 
 export interface NappletShimInstallOptions {
-  /** Domains the runtime exposes to this napplet. Omit to install every bundled domain. */
-  domains?: readonly NapDomain[];
+  /**
+   * Domains the runtime exposes to this napplet. Omit to install every bundled
+   * NAP domain. Experimental names are mounted only when an extension is
+   * registered for them (here or via `registerNappletDomainExtension`).
+   */
+  domains?: readonly NappletRuntimeDomain[];
+  /** Experimental domain extensions to register before installing. */
+  extensions?: readonly NappletDomainExtension[];
 }
 
 type DomainHandler = (msg: { type: string; [key: string]: unknown }) => void;
@@ -148,9 +165,9 @@ function handleEnvelopeMessage(typed: ShellMessage): void {
   }
 }
 
-function normalizeDomains(domains?: readonly NapDomain[]): Set<NapDomain> {
+function normalizeDomains(domains?: readonly NappletRuntimeDomain[]): Set<NapDomain> {
   if (!domains) return new Set(DEFAULT_DOMAINS);
-  return new Set(domains.filter((domain) => DEFAULT_DOMAINS.has(domain)));
+  return new Set(domains.filter((domain): domain is NapDomain => DEFAULT_DOMAINS.has(domain as NapDomain)));
 }
 
 /** Per-domain shim installers; `relay` needs no installer beyond the shared router. */
@@ -205,8 +222,11 @@ function installDomainShim(domain: NapDomain): void {
  */
 export function installNappletGlobal(options: NappletShimInstallOptions = {}): NappletGlobal {
   connectShell();
+  for (const extension of options.extensions ?? []) registerNappletDomainExtension(extension);
   const domains = normalizeDomains(options.domains);
   const napplet = createNappletGlobal(domains);
+  // Experimental domains are only ever mounted from an explicit list, never by the install-all default.
+  installExperimentalDomains(options.domains ?? [], napplet);
 
   (window as Window & typeof globalThis & { napplet: NappletGlobal }).napplet = napplet;
 

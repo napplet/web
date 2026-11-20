@@ -9,6 +9,7 @@ import type {
   EnvelopeError,
   EnvelopeVerdict,
   FieldKind,
+  ValidateEnvelopeOptions,
 } from './envelope-types.js';
 
 function kindOf(value: unknown): FieldKind | 'undefined' | 'null' {
@@ -123,6 +124,7 @@ function validateResourceBytesManyUrls(urls: unknown, errors: EnvelopeError[]): 
  * that put malformed or illegal traffic on the wire.
  *
  * @param message - The raw `MessageEvent.data` value the napplet posted.
+ * @param options - Experimental domains (and optional specs) the operator allowlisted.
  * @returns A structured {@link EnvelopeVerdict}.
  *
  * @example
@@ -132,7 +134,7 @@ function validateResourceBytesManyUrls(urls: unknown, errors: EnvelopeError[]): 
  * validateEnvelope({ type: 'relay.event', subId: 'b' }).ok;  // false (inbound type emitted)
  * ```
  */
-export function validateEnvelope(message: unknown): EnvelopeVerdict {
+export function validateEnvelope(message: unknown, options: ValidateEnvelopeOptions = {}): EnvelopeVerdict {
   const errors: EnvelopeError[] = [];
 
   if (typeof message !== 'object' || message === null || Array.isArray(message)) {
@@ -152,11 +154,15 @@ export function validateEnvelope(message: unknown): EnvelopeVerdict {
 
   const domain = type.slice(0, dotIndex);
   const isKnownDomain = (NAP_DOMAINS as readonly string[]).includes(domain);
-  if (!isKnownDomain) {
+  const isExperimental = !isKnownDomain
+    && (options.experimentalDomains ?? []).some((name) => name.trim() === domain);
+  if (!isKnownDomain && !isExperimental) {
     return { ok: false, type, domain, errors: [{ code: 'unknown-domain', message: `"${domain}" is not a known NAP domain` }] };
   }
 
-  const spec = ENVELOPE_SPECS[type];
+  const spec = isExperimental ? options.experimentalEnvelopeSpecs?.[type] : ENVELOPE_SPECS[type];
+  // An allowlisted experimental domain has no NAP to check against unless the operator supplied a spec.
+  if (!spec && isExperimental) return { ok: true, type, domain, direction: 'out', errors };
   if (!spec) {
     return { ok: false, type, domain, errors: [{ code: 'unknown-type', message: `"${type}" is not a known ${domain} message type` }] };
   }

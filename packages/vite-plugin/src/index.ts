@@ -53,6 +53,7 @@ import {
 import {
   addInferredRequirements,
   inferRequirementsFromSource,
+  normalizeExperimentalDomains,
 } from './requirements.js';
 
 export { NAPPLET_KIND_NAMED, NAPPLET_KIND_ROOT, NAPPLET_KIND_SNAPSHOT } from './types.js';
@@ -90,6 +91,7 @@ export function nip5aManifest(options: Nip5aManifestOptions): Plugin {
     artifactMode: options.artifactMode ?? 'single-file',
     inferredRequires: new Set(),
     reportedRequirementWarnings: new Set(),
+    experimentalDomains: normalizeExperimentalDomains(options.experimentalDomains),
   };
 
   return {
@@ -105,7 +107,7 @@ export function nip5aManifest(options: Nip5aManifestOptions): Plugin {
     },
 
     transform(code: string, id: string) {
-      addInferredRequirements(state, inferRequirementsFromSource(code, id));
+      addInferredRequirements(state, inferRequirementsFromSource(code, id, state.experimentalDomains));
       return null;
     },
 

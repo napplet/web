@@ -266,3 +266,7 @@ if (window.napplet?.soulseek) {
 ```
 
 Queries are admitted as `collecting` and settle on later polls; `download` acknowledges admission, not completion. File sizes, received counts, and read offsets are canonical decimal text, never numbers. Handles are endpoint-scoped and never survive a reload. The runtime owns the account, peer networking, storage, content disclosure (`read` needs a separate grant), and saving; peer names and paths are untrusted text.
+
+## Experimental domains
+
+`experimentalDomain<T>(name)` reads a runtime-exposed experimental domain, or `undefined` when it's absent. See [Experimental domains](/guide/experimental-domains).

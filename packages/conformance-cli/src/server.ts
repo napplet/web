@@ -29,6 +29,8 @@ export interface BootConfig {
   allowSameOrigin?: boolean;
   domains?: BootOptions['domains'];
   maturity?: BootOptions['maturity'];
+  experimentalDomains?: BootOptions['experimentalDomains'];
+  extensionSource?: BootOptions['extensionSource'];
 }
 
 /** Options for {@link startHarnessServer}. */

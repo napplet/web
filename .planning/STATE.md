@@ -570,6 +570,7 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 
 | Quick ID | Task | Date | Commit | Artifacts |
 |----------|------|------|--------|-----------|
+| 261120-x2d | Experimental (non-NAP) domains across shim/sdk/vite-plugin/conformance (revives #187) | 2026-11-20 | feat/experimental-domains | [261120-x2d](./quick/261120-x2d-experimental-domains/) |
 | 261120-s8k | Unknown message types advisory + conformance --strict | 2026-11-20 | feat/conformance-strict-unknown-types | [261120-s8k](./quick/261120-s8k-conformance-strict-unknown-types/) |
 | 261120-c7t | Retire vite-plugin `config` manifest tag and build-time schema discovery | 2026-11-20 | fix/vite-plugin-drop-config-tag | [261120-c7t](./quick/261120-c7t-vite-plugin-drop-config-tag/) |
 | 261120-k4r | NAP-RESOURCE canonical base64 wire bytes, runtime-resolved data: URLs; build/types/units pass | 2026-11-20 | db7caeb8 | [261120-k4r](./quick/261120-k4r-resource-base64-wire/) |

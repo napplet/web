@@ -4,29 +4,37 @@
  * @module
  */
 
-import { NAP_DOMAINS, selectNapDomains } from '@napplet/core';
+import { isRegistryDomain, normalizeExperimentalDomains, selectNapDomains } from '@napplet/core';
 import type { NapDomain, NappletGlobal, NapMaturityPolicy } from '@napplet/core';
-import { installNappletGlobal } from './runtime.js';
+import { installNappletGlobal, type NappletRuntimeDomain } from './runtime.js';
+import { registerNappletDomainExtension, type NappletDomainExtension } from './experimental.js';
 
 /** Options for installing a constrained `window.napplet` runtime prelude. */
 export interface NappletRuntimePreludeOptions {
-  /** Explicit NAP domain allowlist the shell exposes to this napplet. */
-  domains: readonly NapDomain[];
-  /** Optional local maturity policy. Omit to preserve the explicit allowlist unchanged. */
+  /**
+   * Explicit domain allowlist the shell exposes to this napplet. Bundled NAP
+   * domains are installed directly; experimental names are mounted only when
+   * an extension is registered for them.
+   */
+  domains: readonly NappletRuntimeDomain[];
+  /** Optional local maturity policy for bundled NAP domains. Experimental domains bypass it: they are already opt-in. */
   maturity?: NapMaturityPolicy;
+  /** Experimental domain extensions to register before installing (ESM hosts only; not serializable). */
+  extensions?: readonly NappletDomainExtension[];
 }
 
-const KNOWN_DOMAINS = new Set<string>(NAP_DOMAINS);
-
-function normalizePreludeDomains(options: NappletRuntimePreludeOptions): NapDomain[] {
+function normalizePreludeDomains(options: NappletRuntimePreludeOptions): string[] {
   if (!options || !Array.isArray(options.domains)) {
     throw new TypeError('Napplet runtime prelude requires an explicit domains array');
   }
 
-  if (options.maturity) {
-    return [...selectNapDomains({ ...options.maturity, candidates: options.domains }).domains];
-  }
-  return options.domains.filter((domain): domain is NapDomain => KNOWN_DOMAINS.has(domain));
+  const names = options.domains.map((domain) => String(domain).trim());
+  const registry = names.filter((domain): domain is NapDomain => isRegistryDomain(domain));
+  const experimental = normalizeExperimentalDomains(names.filter((domain) => !isRegistryDomain(domain)));
+  const selected = options.maturity
+    ? [...selectNapDomains({ ...options.maturity, candidates: registry }).domains]
+    : registry;
+  return [...selected, ...experimental];
 }
 
 /**
@@ -46,7 +54,7 @@ function normalizePreludeDomains(options: NappletRuntimePreludeOptions): NapDoma
  * ```
  */
 export function installNappletRuntimePrelude(options: NappletRuntimePreludeOptions): NappletGlobal {
-  return installNappletGlobal({ domains: normalizePreludeDomains(options) });
+  return installNappletGlobal({ domains: normalizePreludeDomains(options), extensions: options?.extensions });
 }
 
 /**
@@ -88,4 +96,25 @@ export function renderNappletRuntimePreludeScript(options: NappletRuntimePrelude
 
 /** Alias for {@link installNappletRuntimePrelude}. */
 export const install: typeof installNappletRuntimePrelude = installNappletRuntimePrelude;
-export type { NapDomain, NappletGlobal };
+
+/**
+ * Register an experimental domain implementation before the prelude installs.
+ *
+ * Browser IIFE hosts call `globalThis.NappletShimPrelude.registerExtension(...)`
+ * from a script placed after the prelude artifact and before the activation call.
+ *
+ * @param extension Domain name and API factory.
+ * @example
+ * ```ts
+ * registerNappletRuntimeExtension({ domain: 'mesh', create: (channel) => ({ ping: () => channel.send({ type: 'mesh.ping' }) }) });
+ * installNappletRuntimePrelude({ domains: ['relay', 'mesh'] });
+ * ```
+ */
+export function registerNappletRuntimeExtension(extension: NappletDomainExtension): void {
+  registerNappletDomainExtension(extension);
+}
+
+/** Alias for {@link registerNappletRuntimeExtension}. */
+export const registerExtension: typeof registerNappletRuntimeExtension = registerNappletRuntimeExtension;
+export type { NapDomain, NappletGlobal, NappletDomainExtension, NappletRuntimeDomain };
+export type { ExperimentalDomainChannel } from './experimental.js';
