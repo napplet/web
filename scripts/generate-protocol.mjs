@@ -39,7 +39,7 @@ async function mapLimited(items, mapper) {
   return results;
 }
 
-/** Fetch current merged specs and every open proposal, including fork PRs and amendments. */
+/** Fetch current merged specs and every open proposal, including fork PRs. */
 export async function collectProtocol(client, checkedAt = new Date().toISOString()) {
   const { default_branch: branch } = await client.get(repository);
   const { sha: commit } = await client.get(`${repository}/commits/${encodeURIComponent(branch)}`);
