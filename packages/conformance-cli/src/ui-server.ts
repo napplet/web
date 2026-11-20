@@ -33,6 +33,8 @@ export interface UiServerOptions {
   debounceMs?: number;
   /** Open the app with `strict=1` so advisory warnings fail the run. */
   strict?: boolean;
+  /** Experimental domain names passed to the app as `experimental=a,b`. */
+  experimentalDomains?: readonly string[];
 }
 
 /** A running `--ui` server. */
@@ -128,7 +130,10 @@ export async function startUiServer(options: UiServerOptions): Promise<UiServer>
   await new Promise<void>((r) => server.listen(options.port ?? 0, '127.0.0.1', r));
   const { port } = server.address() as AddressInfo;
   const origin = `http://127.0.0.1:${port}`;
-  const appUrl = `${origin}/?url=${encodeURIComponent(NAPPLET_PREFIX)}&live=1${options.strict ? '&strict=1' : ''}`;
+  const experimental = options.experimentalDomains?.length
+    ? `&experimental=${encodeURIComponent(options.experimentalDomains.join(','))}`
+    : '';
+  const appUrl = `${origin}/?url=${encodeURIComponent(NAPPLET_PREFIX)}&live=1${options.strict ? '&strict=1' : ''}${experimental}`;
   const watcher = startWatcher(nappletDir, options.debounceMs ?? 120, broadcast);
 
   return {

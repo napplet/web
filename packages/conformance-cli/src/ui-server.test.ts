@@ -21,6 +21,13 @@ async function makeDirs(): Promise<{ app: string; nap: string }> {
 }
 
 describe('startUiServer', () => {
+  it('carries --strict and experimental domains into the app URL', async () => {
+    const { app, nap } = await makeDirs();
+    server = await startUiServer({ appDir: app, nappletDir: nap, strict: true, experimentalDomains: ['mesh', 'proto'] });
+    expect(server.appUrl).toContain('&strict=1');
+    expect(server.appUrl).toContain(`&experimental=${encodeURIComponent('mesh,proto')}`);
+  });
+
   it('serves the app at /, the napplet under /__napplet__/, with CORS + a live appUrl', async () => {
     const { app, nap } = await makeDirs();
     server = await startUiServer({ appDir: app, nappletDir: nap });

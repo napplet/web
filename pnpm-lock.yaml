@@ -65,6 +65,9 @@ importers:
       '@napplet/conformance':
         specifier: workspace:^
         version: link:../../packages/conformance
+      '@napplet/core':
+        specifier: workspace:*
+        version: link:../../packages/core
       '@napplet/shim':
         specifier: workspace:*
         version: link:../../packages/shim
@@ -453,6 +456,8 @@ importers:
   tests/fixtures/napplets/broken: {}
 
   tests/fixtures/napplets/conformant: {}
+
+  tests/fixtures/napplets/experimental-domain: {}
 
   tests/fixtures/napplets/resource-data: {}
 
