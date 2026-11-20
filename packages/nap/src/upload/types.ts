@@ -142,8 +142,11 @@ export interface UploadInfoResultMessage extends UploadMessage {
   type: 'upload.info.result';
   /** Correlation ID matching the original request. */
   id: string;
-  /** Advisory upload capability and policy limits. */
-  info?: UploadInfo;
+  /**
+   * Advisory upload capability and policy limits (required by the NAP-UPLOAD
+   * wire table). A shell that discloses nothing can send `{ rails: [] }`.
+   */
+  info: UploadInfo;
   /** Error when info cannot be disclosed. */
   error?: string;
 }
@@ -196,8 +199,8 @@ export interface UploadStatusResultMessage extends UploadMessage {
   type: 'upload.status.result';
   /** Correlation ID matching the original request. */
   id: string;
-  /** The latest status. */
-  status?: UploadStatus;
+  /** The latest status (required by the NAP-UPLOAD wire table). */
+  status: UploadStatus;
   /** Error when the status could not be resolved. */
   error?: string;
 }

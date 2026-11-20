@@ -287,9 +287,12 @@ export const ENVELOPE_SPECS: Record<string, EnvelopeSpec> = {
   'upload.info': { dir: 'out', fields: { ...ID } },
   'upload.upload': { dir: 'out', fields: { ...ID, request: 'object' } },
   'upload.status': { dir: 'out', fields: { ...ID, uploadId: 'string' } },
-  'upload.info.result': { dir: 'in' },
+  // NAP-UPLOAD (napplet/naps#33 @ f5cc981e) wire table: `info` and `status` are
+  // required on their results; `error` is optional. `upload.upload.result` is left
+  // untyped on purpose: its table row and §Error Handling prose disagree upstream.
+  'upload.info.result': { dir: 'in', fields: { ...ID, info: 'object' } },
   'upload.upload.result': { dir: 'in' },
-  'upload.status.result': { dir: 'in' },
+  'upload.status.result': { dir: 'in', fields: { ...ID, status: 'object' } },
   'upload.status.changed': { dir: 'in' },
 
   // NAP-NAVIGATION #126 Wire Protocol: two request/result pairs.

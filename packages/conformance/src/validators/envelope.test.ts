@@ -171,6 +171,22 @@ describe('validateEnvelope — outbound field checks', () => {
     expect(missing.errors).toContainEqual(expect.objectContaining({ code: 'missing-field', field: 'handlers' }));
   });
 
+  // NAP-UPLOAD (napplet/naps#33 @ f5cc981e) wire table.
+  it('declares the required NAP-UPLOAD info and status result fields', () => {
+    expect(ENVELOPE_SPECS['upload.info.result']).toEqual({
+      dir: 'in',
+      fields: { id: 'string', info: 'object' },
+    });
+    expect(ENVELOPE_SPECS['upload.status.result']).toEqual({
+      dir: 'in',
+      fields: { id: 'string', status: 'object' },
+    });
+    const missingInfo = validateEnvelope({ type: 'upload.info.result', id: 'i1', error: 'policy denied' });
+    expect(missingInfo.errors).toContainEqual(expect.objectContaining({ code: 'missing-field', field: 'info' }));
+    const missingStatus = validateEnvelope({ type: 'upload.status.result', id: 's1', error: 'policy denied' });
+    expect(missingStatus.errors).toContainEqual(expect.objectContaining({ code: 'missing-field', field: 'status' }));
+  });
+
   // NAP-CVM (napplet/naps#31 @ 28cf1bdb) §Error Handling: success payload fields
   // are omitted on a shell error, so `servers` is not a required carrier field.
   it('requires only id on cvm.discover.result', () => {
