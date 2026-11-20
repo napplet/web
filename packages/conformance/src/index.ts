@@ -73,10 +73,11 @@ export type {
   BootObservation,
   BootCollectionLike,
   BuildContextInput,
+  PolicyViolation,
 } from './run/context.js';
 
 // ── boot harness (browser-safe) ──────────────────────────────────────────────
-export { bootAndCollect } from './run/boot.js';
+export { bootAndCollect, harnessContentSecurityPolicy } from './run/boot.js';
 export type { BootCollection, BootOptions } from './run/boot.js';
 
 // ── checks ───────────────────────────────────────────────────────────────────

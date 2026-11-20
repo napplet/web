@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { describe, it, expect } from 'vitest';
-import { bootAndCollect, runtimePrelude } from './boot.js';
+import { bootAndCollect, harnessContentSecurityPolicy, runtimePrelude } from './boot.js';
 
 // happy-dom does not execute srcdoc scripts, so these DOM-wiring tests never run
 // the prelude. `bindings.test.ts` executes the maintained shim source for real.
@@ -69,5 +69,24 @@ describe('bootAndCollect — DOM wiring', () => {
     expect(script).toContain('globalThis.NappletShimPrelude.install({"domains":["resource"]});');
     expect(script).toContain("type: '__nappletConformance.installed', installed: !!window.napplet");
     expect(script).not.toContain('resource.bytes');
+  });
+
+  // NIP-5D §Security CSP advisory baseline, verbatim when the subject has no http(s) origin.
+  it('renders the exact NIP-5D baseline CSP for a subject without an http(s) origin', () => {
+    expect(harnessContentSecurityPolicy(null)).toBe(
+      "default-src 'none'; script-src 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; connect-src 'none'; worker-src 'none'; child-src 'none'; frame-src 'none'; media-src 'none'; object-src 'none'; manifest-src 'none'; base-uri 'none'; form-action 'none'",
+    );
+  });
+
+  it('adds only the subject origin for its own script, style, image, font, and base loads', () => {
+    const policy = harnessContentSecurityPolicy('http://127.0.0.1:4173');
+    expect(policy).toContain("script-src 'unsafe-inline' 'wasm-unsafe-eval' http://127.0.0.1:4173");
+    expect(policy).toContain("style-src 'unsafe-inline' http://127.0.0.1:4173");
+    expect(policy).toContain('img-src data: blob: http://127.0.0.1:4173');
+    expect(policy).toContain('font-src data: http://127.0.0.1:4173');
+    expect(policy).toContain('base-uri http://127.0.0.1:4173');
+    expect(policy).toContain("connect-src 'none'");
+    expect(policy).toContain("worker-src 'none'");
+    expect(policy).toContain("default-src 'none'");
   });
 });

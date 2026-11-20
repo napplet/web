@@ -50,6 +50,20 @@ describe('napplet-conformance CLI e2e', () => {
     ]));
   });
 
+  // NIP-5D §Security CSP advisory: shells SHOULD block direct network and external subresources.
+  // The harness boots under the baseline policy and reports blocked requests as an advisory warning.
+  it('warns about requests the baseline CSP blocked without failing the run', async () => {
+    const { code, stdout } = await runCli([fixture('direct-network'), '--reporter', 'json']);
+    const report = JSON.parse(stdout);
+    expect(code).toBe(0);
+    expect(report.ok).toBe(true);
+    const csp = report.checks.find((check: { id: string }) => check.id === 'boot/csp-baseline');
+    expect(csp).toMatchObject({ status: 'fail', severity: 'warning' });
+    expect(csp.detail).toContain('connect-src https://api.example.invalid/data');
+    expect(csp.detail).toContain('connect-src wss://relay.example.invalid');
+    expect(csp.detail).toContain('img-src https://images.example.invalid/pixel.png');
+  });
+
   it('fails the broken fixture with exit 1', async () => {
     const { code, stdout } = await runCli([fixture('broken')]);
     expect(stdout).toContain('RESULT: NON-CONFORMANT');

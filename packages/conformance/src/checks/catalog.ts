@@ -94,15 +94,23 @@ export const CHECKS: Check[] = [
     title: 'Boots without an uncaught error',
     run: (ctx) => (ctx.bootError ? result.fail(ctx.bootError) : result.pass()),
   },
+  // NIP-5D §Security, Content Security Policy advisory: shells SHOULD inject a baseline CSP that blocks
+  // direct network, workers, frames, and external subresources, so anything it blocks will not work in
+  // such a shell. A SHOULD-level advisory, so this warns. https://github.com/nostr-protocol/nips/pull/2303
   {
-    id: 'boot/no-forbidden-globals',
+    id: 'boot/csp-baseline',
     area: 'boot',
-    severity: 'error',
-    title: 'Does not access forbidden browser authority surfaces',
-    run: (ctx) =>
-      ctx.forbiddenGlobals.length
-        ? result.fail(`Accessed forbidden surface(s): ${ctx.forbiddenGlobals.join(', ')}`, ctx.forbiddenGlobals)
-        : result.pass(),
+    severity: 'warning',
+    title: 'Runs under the NIP-5D baseline CSP without blocked requests (advisory)',
+    run: (ctx) => {
+      if (ctx.bootError) return result.skip('Napplet did not boot');
+      if (ctx.policyViolations.length === 0) return result.pass();
+      const summary = ctx.policyViolations.map((v) => `${v.directive} ${v.blockedUri || '(unknown)'}`).join(', ');
+      return result.fail(
+        `${ctx.policyViolations.length} request(s) blocked by the baseline CSP; shells following NIP-5D's CSP advisory will block them too: ${summary}`,
+        ctx.policyViolations,
+      );
+    },
   },
 
   // ── wire ─────────────────────────────────────────────────────────────────────

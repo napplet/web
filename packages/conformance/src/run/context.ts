@@ -22,6 +22,14 @@ export interface SandboxState {
   allowSameOrigin: boolean;
 }
 
+/** A request the NIP-5D baseline Content Security Policy blocked during boot. */
+export interface PolicyViolation {
+  /** The CSP directive that blocked it, e.g. `connect-src`. */
+  directive: string;
+  /** The blocked URL as the browser reports it, e.g. `https://example.com`, `inline`, or `eval`. */
+  blockedUri: string;
+}
+
 /** Observations from a single boot of the napplet. */
 export interface BootObservation {
   /** Uncaught error captured during boot, or `null`. */
@@ -30,6 +38,8 @@ export interface BootObservation {
   emitted: RecordedEnvelope[];
   /** NIP-5D transport violations during this boot. Omitted by hosts that predate the port model. */
   transportViolations?: TransportViolation[];
+  /** Requests the baseline CSP blocked during this boot. Omitted by hosts that inject no CSP. */
+  policyViolations?: PolicyViolation[];
 }
 
 /**
@@ -51,8 +61,8 @@ export interface ConformanceContext {
   emitted: RecordedEnvelope[];
   /** NIP-5D transport violations during the primary boot: window-level messages, a second hello, a second load. */
   transportViolations: TransportViolation[];
-  /** Forbidden globals the napplet tried to access, e.g. `['window.nostr']`. */
-  forbiddenGlobals: string[];
+  /** Requests the NIP-5D baseline CSP blocked during the primary boot. */
+  policyViolations: PolicyViolation[];
   /**
    * Observation from a second boot with no domains injected. `null` when the
    * host did not run the degraded pass.
@@ -70,6 +80,7 @@ export interface BootCollectionLike {
   bootError: string | null;
   emitted: RecordedEnvelope[];
   transportViolations?: TransportViolation[];
+  policyViolations?: PolicyViolation[];
   degraded: BootObservation | null;
 }
 
@@ -81,8 +92,6 @@ export interface BuildContextInput {
   manifestEvent?: NappletManifestEvent | null;
   /** The browser-observable boot result. */
   boot: BootCollectionLike;
-  /** Forbidden globals found by static analysis (e.g. `['window.nostr']`). */
-  forbiddenGlobals?: string[];
   /** Sandbox attributes the host used. Defaults to the conformant `allow-scripts` only. */
   sandbox?: SandboxState;
   /** Best-effort lifecycle observation. */
@@ -91,7 +100,7 @@ export interface BuildContextInput {
 
 /**
  * Assemble a full {@link ConformanceContext} from a boot collection plus the
- * host-side pieces (manifest HTML, static-analysis findings, sandbox config).
+ * host-side pieces (manifest HTML, sandbox config).
  */
 export function buildContext(input: BuildContextInput): ConformanceContext {
   return {
@@ -102,7 +111,7 @@ export function buildContext(input: BuildContextInput): ConformanceContext {
     bootError: input.boot.bootError,
     emitted: input.boot.emitted,
     transportViolations: input.boot.transportViolations ?? [],
-    forbiddenGlobals: input.forbiddenGlobals ?? [],
+    policyViolations: input.boot.policyViolations ?? [],
     degraded: input.boot.degraded,
     lifecycle: input.lifecycle ?? null,
   };
@@ -121,7 +130,7 @@ export function makeContext(overrides: Partial<ConformanceContext> = {}): Confor
     bootError: null,
     emitted: [],
     transportViolations: [],
-    forbiddenGlobals: [],
+    policyViolations: [],
     degraded: null,
     lifecycle: null,
     ...overrides,

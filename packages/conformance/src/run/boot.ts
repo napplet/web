@@ -5,7 +5,8 @@
  * iframe, injects the maintained `@napplet/shim` prelude before subject scripts,
  * acts as a NIP-5D shell (binds the `napplet.hello` port, answers over it, and
  * tears the frame down on any sign the verified document was replaced), and
- * records host-observable envelopes and transport violations.
+ * records host-observable envelopes, transport violations, and requests the
+ * NIP-5D baseline Content Security Policy blocked.
  *
  * The host supplies the shim IIFE source. The harness only appends the explicit
  * domain allowlist call, so the napplet sees exactly the bindings the maintained
@@ -22,10 +23,64 @@ import { createReferenceShell, REFERENCE_ENDPOINT, type RecordedEnvelope } from 
 import { bindNappletPort, type TransportViolation } from '../shell/port-binding.js';
 import { catalogId, type CatalogManifest } from '../shell/intent-catalog.js';
 import type { NappletManifestEvent } from '../validators/manifest.js';
-import type { BootObservation } from './context.js';
+import type { BootObservation, PolicyViolation } from './context.js';
 
 const INTERNAL_BOOT_ERROR = '__nappletConformance.error';
 const INTERNAL_INSTALLED = '__nappletConformance.installed';
+const INTERNAL_POLICY_VIOLATION = '__nappletConformance.policyViolation';
+
+/**
+ * NIP-5D §Security, Content Security Policy advisory: the conservative baseline
+ * a shell SHOULD inject as the first element in `head`.
+ * https://github.com/nostr-protocol/nips/pull/2303
+ */
+const BASELINE_CSP: ReadonlyArray<readonly [string, readonly string[]]> = [
+  ['default-src', ["'none'"]],
+  ['script-src', ["'unsafe-inline'", "'wasm-unsafe-eval'"]],
+  ['style-src', ["'unsafe-inline'"]],
+  ['img-src', ['data:', 'blob:']],
+  ['font-src', ['data:']],
+  ['connect-src', ["'none'"]],
+  ['worker-src', ["'none'"]],
+  ['child-src', ["'none'"]],
+  ['frame-src', ["'none'"]],
+  ['media-src', ["'none'"]],
+  ['object-src', ["'none'"]],
+  ['manifest-src', ["'none'"]],
+  ['base-uri', ["'none'"]],
+  ['form-action', ["'none'"]],
+];
+
+/** Directives that load the subject's own unbundled files when the harness serves a napplet directory. */
+const SUBJECT_ASSET_DIRECTIVES = new Set(['script-src', 'style-src', 'img-src', 'font-src', 'base-uri']);
+
+/**
+ * Render the CSP the harness boots under: the NIP-5D baseline, plus the
+ * subject's own http(s) origin for its script, style, image, font, and base
+ * loads so unbundled napplet directories still run. Network (`connect-src`),
+ * workers, frames, media, and every other host stay exactly as the baseline.
+ * A single-file artifact needs none of the allowance, so this never fails a
+ * napplet that the baseline would let run.
+ *
+ * @param subjectOrigin The http(s) origin serving the napplet, or `null`.
+ * @returns CSP `content` value.
+ */
+export function harnessContentSecurityPolicy(subjectOrigin: string | null): string {
+  return BASELINE_CSP.map(([directive, sources]) => {
+    const extra = subjectOrigin && SUBJECT_ASSET_DIRECTIVES.has(directive) ? [subjectOrigin] : [];
+    const list = extra.length && sources.includes("'none'") ? extra : [...sources, ...extra];
+    return `${directive} ${list.join(' ')}`;
+  }).join('; ');
+}
+
+function subjectOriginOf(url: string, win: Window): string | null {
+  try {
+    const parsed = new URL(url, win.location.href);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:' ? parsed.origin : null;
+  } catch {
+    return null;
+  }
+}
 
 /** What a host can observe by booting the napplet. */
 export interface BootCollection {
@@ -37,6 +92,8 @@ export interface BootCollection {
   emitted: RecordedEnvelope[];
   /** NIP-5D transport violations from the primary boot (window-level messages, a second hello or load). */
   transportViolations: TransportViolation[];
+  /** Requests the NIP-5D baseline CSP blocked during the primary boot. */
+  policyViolations: PolicyViolation[];
   /** Observation from the no-domain degraded boot, or `null`. */
   degraded: BootObservation | null;
 }
@@ -74,6 +131,7 @@ interface SingleBoot {
   bootError: string | null;
   emitted: RecordedEnvelope[];
   transportViolations: TransportViolation[];
+  policyViolations: PolicyViolation[];
 }
 
 function sleep(ms: number): Promise<void> {
@@ -96,6 +154,15 @@ function errorObserver(): string {
     };
     window.addEventListener('error', (event) => report(event.error || event.message));
     window.addEventListener('unhandledrejection', (event) => report(event.reason));
+    document.addEventListener('securitypolicyviolation', (event) => {
+      try {
+        window.parent.postMessage({
+          type: '${INTERNAL_POLICY_VIOLATION}',
+          directive: String(event.effectiveDirective || event.violatedDirective || ''),
+          blockedUri: String(event.blockedURI || ''),
+        }, '*');
+      } catch {}
+    });
   })();`;
 }
 
@@ -108,8 +175,16 @@ export function runtimePrelude(domains: readonly string[], runtimePreludeSource:
   return `${runtimePreludeSource}\n;globalThis.NappletShimPrelude.install(${JSON.stringify({ domains })});\n${installed}`;
 }
 
-function injectRuntime(html: string, url: string, domains: readonly string[], runtimePreludeSource: string): string {
-  const base = `<base href="${escapeHtmlAttr(url)}">`;
+function injectRuntime(
+  html: string,
+  url: string,
+  domains: readonly string[],
+  runtimePreludeSource: string,
+  subjectOrigin: string | null,
+): string {
+  // NIP-5D CSP advisory: the policy is the first element in head, before any napplet-controlled content.
+  const csp = `<meta http-equiv="Content-Security-Policy" content="${escapeHtmlAttr(harnessContentSecurityPolicy(subjectOrigin))}">`;
+  const base = `${csp}<base href="${escapeHtmlAttr(url)}">`;
   const source = runtimePrelude(domains, runtimePreludeSource).replace(/<\/script/gi, '<\\/script');
   const script = `<script>${errorObserver()}</script><script>${source}</script>`;
   const headOpen = /<head(?:\s[^>]*)?>/i.exec(html);
@@ -167,6 +242,7 @@ async function bootOnce(
 
   let bootError: string | null = null;
   let installedGlobal = false;
+  const policyViolations: PolicyViolation[] = [];
   const removeFrame = (): void => {
     try {
       iframe.remove();
@@ -185,6 +261,14 @@ async function bootOnce(
     }
     if (message.type === INTERNAL_BOOT_ERROR) {
       bootError = `napplet boot error: ${String(message.reason ?? 'unknown error')}`;
+      return true;
+    }
+    if (message.type === INTERNAL_POLICY_VIOLATION) {
+      const violation = message as { directive?: unknown; blockedUri?: unknown };
+      const entry = { directive: String(violation.directive ?? ''), blockedUri: String(violation.blockedUri ?? '') };
+      if (!policyViolations.some((v) => v.directive === entry.directive && v.blockedUri === entry.blockedUri)) {
+        policyViolations.push(entry);
+      }
       return true;
     }
     return false;
@@ -219,7 +303,7 @@ async function bootOnce(
 
   try {
     const html = opts.html ?? await loadHtml(opts.url);
-    iframe.srcdoc = injectRuntime(html, opts.url, domains, opts.runtimePreludeSource);
+    iframe.srcdoc = injectRuntime(html, opts.url, domains, opts.runtimePreludeSource, subjectOriginOf(opts.url, win));
     (doc.body ?? doc.documentElement).appendChild(iframe);
   } catch (error) {
     bootError = error instanceof Error ? error.message : String(error);
@@ -239,7 +323,13 @@ async function bootOnce(
   shell.terminateEndpoint(endpoint.id);
   removeFrame();
 
-  return { installedGlobal, bootError, emitted: [...shell.records], transportViolations: [...binding.violations] };
+  return {
+    installedGlobal,
+    bootError,
+    emitted: [...shell.records],
+    transportViolations: [...binding.violations],
+    policyViolations: [...policyViolations],
+  };
 }
 
 /**
@@ -267,7 +357,12 @@ export async function bootAndCollect(options: BootOptions): Promise<BootCollecti
   let degraded: BootObservation | null = null;
   if (options.runDegraded ?? true) {
     const d = await bootOnce([], resolved, doc, win);
-    degraded = { bootError: d.bootError, emitted: d.emitted, transportViolations: d.transportViolations };
+    degraded = {
+      bootError: d.bootError,
+      emitted: d.emitted,
+      transportViolations: d.transportViolations,
+      policyViolations: d.policyViolations,
+    };
   }
 
   return {
@@ -275,6 +370,7 @@ export async function bootAndCollect(options: BootOptions): Promise<BootCollecti
     bootError: primary.bootError,
     emitted: primary.emitted,
     transportViolations: primary.transportViolations,
+    policyViolations: primary.policyViolations,
     degraded,
   };
 }

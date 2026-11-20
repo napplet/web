@@ -112,7 +112,7 @@ describe('boot checks', () => {
     expect(run('boot/sandbox-allow-scripts', ctx).status).toBe('pass');
     expect(run('boot/installs-global', ctx).status).toBe('pass');
     expect(run('boot/no-boot-error', ctx).status).toBe('pass');
-    expect(run('boot/no-forbidden-globals', ctx).status).toBe('pass');
+    expect(run('boot/csp-baseline', ctx).status).toBe('pass');
   });
 
   it('fails when allow-same-origin was required', () => {
@@ -120,10 +120,26 @@ describe('boot checks', () => {
     expect(run('boot/sandbox-allow-scripts', ctx).status).toBe('fail');
   });
 
-  it('fails on missing global, boot error, or forbidden global access', () => {
+  it('fails on missing global or boot error', () => {
     expect(run('boot/installs-global', makeContext({ installedGlobal: false })).status).toBe('fail');
     expect(run('boot/no-boot-error', makeContext({ bootError: 'ReferenceError: x' })).status).toBe('fail');
-    expect(run('boot/no-forbidden-globals', makeContext({ forbiddenGlobals: ['window.nostr'] })).status).toBe('fail');
+  });
+
+  // NIP-5D §Security CSP advisory: shells SHOULD block these, so a blocked request is an advisory warning.
+  it('warns, without failing conformance, when the baseline CSP blocked requests', () => {
+    const ctx = makeContext({
+      manifestHtml: manifest(),
+      policyViolations: [{ directive: 'connect-src', blockedUri: 'https://relay.example' }],
+    });
+    const check = run('boot/csp-baseline', ctx);
+    expect(check.status).toBe('fail');
+    expect(check.detail).toContain('connect-src https://relay.example');
+    expect(CHECKS.find((c) => c.id === 'boot/csp-baseline')?.severity).toBe('warning');
+  });
+
+  it('skips the CSP check when the napplet did not boot', () => {
+    const ctx = makeContext({ bootError: 'timeout', policyViolations: [{ directive: 'connect-src', blockedUri: 'x' }] });
+    expect(run('boot/csp-baseline', ctx).status).toBe('skip');
   });
 });
 

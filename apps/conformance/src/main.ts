@@ -23,7 +23,6 @@ import { resolveTarget, type ResolvedTarget } from './target.js';
 import runtimePreludeSource from '@napplet/shim/prelude.global?raw';
 import './app.css';
 
-const FORBIDDEN_RE = /\bwindow\s*\.\s*nostr\b|\bglobalThis\s*\.\s*nostr\b/;
 /** SSE endpoint the `--ui` CLI server exposes; relative to the app origin. */
 const SSE_PATH = '/__conformance__/events';
 
@@ -168,14 +167,12 @@ async function run(target: string): Promise<void> {
   try {
     setStatus(`Resolving ${target} …`);
     resolved = await resolveTarget(target);
-    const forbidden = FORBIDDEN_RE.test(resolved.html) ? ['window.nostr'] : [];
     setStatus('Booting napplet in a sandboxed iframe …');
     const boot = await bootAndCollect({ url: resolved.bootUrl, html: resolved.html, verifiedManifest: resolved.manifestEvent ?? undefined, readyTimeoutMs: 5000, settleMs: 800, runDegraded: true, runtimePreludeSource });
     const ctx = buildContext({
       manifestHtml: resolved.html,
       manifestEvent: resolved.manifestEvent,
       boot,
-      forbiddenGlobals: forbidden,
     });
     const result = runConformance(ctx);
     runCount += 1;

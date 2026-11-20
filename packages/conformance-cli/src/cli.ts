@@ -28,7 +28,6 @@ import {
 } from '@napplet/conformance';
 import { startHarnessServer } from './server.js';
 import { startUiServer } from './ui-server.js';
-import { scanForbiddenGlobals } from './scan.js';
 import { resolveNappletDir } from './resolve-napplet.js';
 import { captureScreenshot, parseScreenshotArgs } from './screenshot.js';
 import { verifyManifestArtifact } from './manifest.js';
@@ -260,7 +259,6 @@ async function main(argv: string[]): Promise<number> {
   // Resolve the subject: local dir or remote URL.
   let nappletDir: string | null = null;
   let artifact: Uint8Array;
-  let forbiddenGlobals: string[] = [];
   let bootUrl: string;
 
   if (opts.url) {
@@ -276,7 +274,6 @@ async function main(argv: string[]): Promise<number> {
     const resolved = await resolveNappletDir(opts.target);
     nappletDir = resolved.dir;
     artifact = await readFile(resolved.indexHtml);
-    forbiddenGlobals = await scanForbiddenGlobals(resolved.dir);
     bootUrl = '/';
   }
 
@@ -314,7 +311,7 @@ async function main(argv: string[]): Promise<number> {
     await server.close();
   }
 
-  const context = buildContext({ manifestHtml, manifestEvent, boot, forbiddenGlobals, sandbox: { allowScripts: true, allowSameOrigin: opts.allowSameOrigin } });
+  const context = buildContext({ manifestHtml, manifestEvent, boot, sandbox: { allowScripts: true, allowSameOrigin: opts.allowSameOrigin } });
   const run = runConformance(context);
   const output = report(run, opts.reporter);
 
