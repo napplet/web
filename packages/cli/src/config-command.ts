@@ -139,7 +139,9 @@ export async function loadDeployConfig(
   if (config) return config;
   const terminalInput = options.isTerminalInput ?? canPrompt;
   if (jsonOutput || flags.boolean.has("non-interactive") || !terminalInput()) {
-    throw new Error(`No .napplet config found${path ? ` at ${path}` : ""}. Run: napplet init`);
+    throw new Error(path
+      ? `No .napplet config found at ${path}. Run: napplet init`
+      : "No .napplet config found. Run: napplet init, or napplet deploy --all to deploy the napplets in subdirectories");
   }
   if (path && !await (options.confirmCreate ?? confirm)(`No config found at ${path}. Create it?`, false)) {
     throw new Error(`No .napplet config found at ${path}. Run: napplet init --config ${path}`);

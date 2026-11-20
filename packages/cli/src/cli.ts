@@ -9,7 +9,7 @@
 import type { ConfigMigrationOptions } from "./config-migration.ts";
 import { migrateCommandConfig, parseCommand, type ParsedArgs } from "./cli-args.ts";
 import { createDebugReport } from "./debug.ts";
-import { discoverNapplets } from "./discover.ts";
+import { discoverNapplets, discoverProjectNapplets, findNappletProjects, hasNappletConfig } from "./discover.ts";
 import { collectFlags, first } from "./flags.ts";
 import { commandGuide } from "./guide.ts";
 import { commandKeys } from "./keys-command.ts";
@@ -162,6 +162,19 @@ async function route(parsed: ParsedArgs, options: CliMainOptions): Promise<numbe
 
 async function commandDiscover(argv: string[]): Promise<number> {
   const flags = collectFlags(argv);
+  if (!flags.values.has("config") && !await hasNappletConfig()) {
+    // No project here: list every project below, each resolved from its own config.
+    const projects = await findNappletProjects();
+    if (!projects.length) {
+      throw new Error("No .napplet config here or in any subdirectory. Run: napplet init");
+    }
+    const { candidates, unbuilt } = await discoverProjectNapplets(projects);
+    for (const project of unbuilt) {
+      console.error(`${project.configPath}: no built index.html in its sourceDir; build it first.`);
+    }
+    console.log(JSON.stringify(candidates, null, 2));
+    return 0;
+  }
   const config = await loadProjectConfig(flags);
   const candidates = await discoverNapplets(config, { traverse: flags.boolean.has("all") });
   console.log(JSON.stringify(candidates, null, 2));
