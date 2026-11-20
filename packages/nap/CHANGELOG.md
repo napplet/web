@@ -1,10 +1,70 @@
 # @napplet/nap
 
+## 0.42.0
+
+### Minor Changes
+
+- 91a044f: Support NAP-MEDIA session retirement and transition reasons.
+
+  - `@napplet/nap/media/types` adds `MediaSessionEndedMessage`
+    (`media.session.ended`, shell -> napplet, `sessionId`, `reason`) to
+    `MediaResultMessage`, and an optional `reason` on `media.state` and
+    `media.command`. `@napplet/core` exports `MediaSessionEnded` and adds
+    `reason?` to `MediaState`.
+  - `window.napplet.media.onEnded(sessionId, callback)`, `media.onEnded` in
+    `@napplet/sdk`, and `mediaOnEnded` in `@napplet/nap/media` deliver the
+    retirement once. The binding retains the record until teardown, so a handler
+    registered after retirement still receives it, and it drops later state,
+    capability, control, and command messages for that session.
+  - `destroySession` keeps `onEnded` handlers registered until the shell's
+    `media.session.ended` arrives.
+  - `sendCommand` takes an optional `reason`, `onCommand` callbacks receive
+    `(action, value?, reason?)`, and `onState` passes `reason` through.
+  - The conformance validator knows `media.session.ended` as an inbound
+    envelope, and the reference shell answers `media.session.destroy` with
+    `media.session.ended` (`reason: "destroyed"`).
+- df6095f: Align NAP-RESOURCE bulk reads and Blossom hints with the current
+  draft: `resource.bytesMany` carries `urls`, and server hints ride inside
+  BUD-10 `blossom:` URIs.
+
+  **Breaking:**
+
+  - `ResourceBytesManyMessage` carries `urls: string[]` instead of `requests`,
+    and `bytesMany(urls, opts?)` takes URL strings in `window.napplet.resource`,
+    `@napplet/sdk`, and `@napplet/nap/resource`. Passing request objects now
+    rejects with `invalid-request` before anything is posted.
+  - The out-of-band Blossom server list is retired.
+    `ResourceBytesMessage.servers`, the `servers` option on `bytes(url, opts?)`,
+    `ResourceBytesRequest`, and `ResourceInfo.maxServers` are removed. Put
+    BUD-10 `xs` / `as` / `sz` hints in the `blossom:<sha256>.<ext>` URI instead.
+  - The conformance validator requires a non-empty `urls` list of strings on
+    `resource.bytesMany`, so a `requests` envelope fails with `missing-field`.
+    The reference shell answers from `urls` and no longer reports `maxServers`.
+
+  Migration:
+  `bytesMany([{ url: a }, { url: b, servers: ['https://cdn.example'] }])`
+  becomes `bytesMany([a, 'blossom:<sha256>.<ext>?xs=cdn.example'])`.
+
+### Patch Changes
+
+- 645fc4a: Describe INC `sender`, `target` and `peer` as runtime-attested opaque
+  endpoint identifiers in the type docs, matching NAP-INC. No type shape
+  changes.
+- Updated dependencies [91a044f]
+- Updated dependencies [df6095f]
+  - @napplet/core@0.43.0
+
 ## 0.41.0
 
 ### Minor Changes
 
-- Align CVM registry bindings with the selector-based NAP-CVM draft. Pass `{ family }` or `{ schemaHash }` to `registry.has`, `describe`, and `call` (including named helpers), replacing string-family arguments. Move `options.schemaHash` into the selector; `options.server` remains the provider pin. Registry entries now require `schemaHashes` and per-tool `schemaHash`, with an optional family label. Add the `category` query hint and accept selector envelopes in conformance validation.
+- Align CVM registry bindings with the selector-based NAP-CVM draft. Pass
+  `{ family }` or `{ schemaHash }` to `registry.has`, `describe`, and `call`
+  (including named helpers), replacing string-family arguments. Move
+  `options.schemaHash` into the selector; `options.server` remains the provider
+  pin. Registry entries now require `schemaHashes` and per-tool `schemaHash`,
+  with an optional family label. Add the `category` query hint and accept
+  selector envelopes in conformance validation.
 
 ### Patch Changes
 
