@@ -35,7 +35,13 @@ function handleDiscoverResult(msg: CvmDiscoverResultMessage): void {
     p.reject(new Error(msg.error));
     return;
   }
-  p.resolve(Array.isArray(msg.servers) ? msg.servers : []);
+  // NAP-CVM §Error Handling: on success the payload is required, so a result
+  // with neither `error` nor a `servers` list is malformed, not an empty list.
+  if (!Array.isArray(msg.servers)) {
+    p.reject(new Error('cvm.discover.result missing servers'));
+    return;
+  }
+  p.resolve(msg.servers);
 }
 
 function handleRequestResult(msg: CvmRequestResultMessage): void {
