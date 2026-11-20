@@ -193,33 +193,36 @@ describe('createReferenceShell — record + respond', () => {
     expect(shell.takeDeliveries('reference-subscriber')).toEqual([]);
   });
 
-  it('decodes data URLs for resource.bytes responses without fetch', async () => {
+  // NAP-RESOURCE (napplet/naps#80 @ ae5b9c64) §Byte encoding: every wire blob is canonical padded base64.
+  it('answers data URLs for resource.bytes with base64 ResourceBytes and no fetch', () => {
     const shell = createReferenceShell();
     const [response] = shell.handle({
       type: 'resource.bytes',
       id: 'R',
       url: 'data:text/plain;base64,aGk=',
-    }) as Array<{ type: string; id: string; blob: Blob; mime: string }>;
+    }) as Array<{ type: string; id: string; blob: unknown; mime: string }>;
 
     expect(response.type).toBe('resource.bytes.result');
     expect(response.id).toBe('R');
     expect(response.mime).toBe('text/plain');
-    expect(await response.blob.text()).toBe('hi');
+    expect(response.blob).toBe('aGk=');
   });
 
-  it('answers resource.bytesMany urls in order', async () => {
+  it('answers resource.bytesMany urls in order with base64 item blobs', () => {
     const shell = createReferenceShell();
     const [response] = shell.handle({
       type: 'resource.bytesMany',
       id: 'R',
-      urls: ['data:text/plain;base64,aGk='],
-    }) as Array<{ type: string; id: string; items: Array<{ url: string; blob: Blob; mime: string }> }>;
+      urls: ['data:text/plain;base64,aGk=', 'data:,%00%01%02%FF'],
+    }) as Array<{ type: string; id: string; items: Array<{ url: string; blob: unknown; mime: string }> }>;
 
     expect(response.type).toBe('resource.bytesMany.result');
     expect(response.id).toBe('R');
     expect(response.items[0].url).toBe('data:text/plain;base64,aGk=');
     expect(response.items[0].mime).toBe('text/plain');
-    expect(await response.items[0].blob.text()).toBe('hi');
+    expect(response.items[0].blob).toBe('aGk=');
+    expect(response.items[1].url).toBe('data:,%00%01%02%FF');
+    expect(response.items[1].blob).toBe('AAEC/w==');
   });
 
   it('returns no response for fire-and-forget and unknown messages', () => {

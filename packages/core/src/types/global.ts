@@ -218,7 +218,7 @@ export interface NappletGlobal {
    * use the optional blossom domain.
    *
    * URL space is scheme-pluggable: shells register handlers per scheme.
-   * Canonical schemes include `data:` (decoded in-shim, no round-trip),
+   * Canonical schemes include `data:` (runtime-decoded under policy),
    * `https:` (shell-side network with policy), `blossom:<sha256>.<ext>`
    * (BUD-10 Blossom URI to bytes), `htree:` (Hashtree-verified bytes), and `nostr:` (NIP-19
    * single-hop resolution).

@@ -1,5 +1,12 @@
 # @napplet/conformance-cli
 
+## 0.7.6
+
+### Patch Changes
+
+- Updated dependencies [534b9ca]
+  - @napplet/shim@0.41.1
+
 ## 0.7.5
 
 ### Patch Changes

@@ -17,7 +17,8 @@
 
 import type {
   NappletMessage,
-  ResourceBytesItem,
+  ResourceBytes,
+  ResourceBytesWireItem,
   ResourceErrorCode,
   ResourceInfo,
 } from '@napplet/core';
@@ -26,6 +27,9 @@ export type {
   ResourceBytesOkItem,
   ResourceBytesErrorItem,
   ResourceBytesItem,
+  ResourceBytes,
+  ResourceBytesWireOkItem,
+  ResourceBytesWireItem,
   ResourceErrorCode,
   ResourceSchemeInfo,
   ResourceInfo,
@@ -36,9 +40,10 @@ export type {
 export const DOMAIN = 'resource' as const;
 
 /**
- * Canonical URL schemes currently listed by NAP-RESOURCE.
+ * Canonical URL schemes currently listed by NAP-RESOURCE. Hashtree support
+ * uses both `htree` and `hashtree`; a bare `nhash` is an alias, not a scheme.
  */
-export type ResourceScheme = 'data' | 'https' | 'blossom' | 'htree' | 'nostr';
+export type ResourceScheme = 'data' | 'https' | 'blossom' | 'htree' | 'hashtree' | 'nostr';
 
 /**
  * Base interface for all resource NAP messages.
@@ -77,7 +82,7 @@ export interface ResourceInfoErrorMessage extends ResourceMessage {
 }
 
 /**
- * Request bytes for a URL. The shell selects a scheme handler, applies
+ * Request bytes for a URL. The runtime selects a scheme handler, applies
  * its resource policy, and replies with `resource.bytes.result` (success)
  * or `resource.bytes.error` (typed failure).
  *
@@ -145,21 +150,20 @@ export interface ResourceCancelMessage extends ResourceMessage {
 }
 
 /**
- * Successful result for a `resource.bytes` request. Carries the
- * fetched bytes as a single Blob plus the shell-classified MIME
- * (byte-sniffed; NEVER upstream Content-Type per RES-04).
+ * Successful result for a `resource.bytes` request. Carries the complete
+ * byte sequence as canonical padded base64 (`ResourceBytes`) plus the
+ * runtime-classified MIME (byte-sniffed, never the upstream Content-Type).
+ * The shim decodes `blob` into a `Blob` typed with `mime`.
  *
- * Single-Blob contract (RES-07): no segmentation, streaming, or range
- * fields exist anywhere in the result union. Streaming delivery is
- * reserved for a future audio/video milestone.
+ * No streaming, chunk, range, or progress fields exist in the result union.
  *
  * @example
  * ```ts
  * const msg: ResourceBytesResultMessage = {
  *   type: 'resource.bytes.result',
  *   id: 'q1',
- *   blob: new Blob([...]),
- *   mime: 'image/png',
+ *   blob: 'AAEC/w==', // octets 00 01 02 ff
+ *   mime: 'application/octet-stream',
  * };
  * ```
  */
@@ -167,8 +171,8 @@ export interface ResourceBytesResultMessage extends ResourceMessage {
   type: 'resource.bytes.result';
   /** Correlation ID matching the original request. */
   id: string;
-  /** Fetched bytes as a single Blob. */
-  blob: Blob;
+  /** Complete resource bytes as canonical padded base64. */
+  blob: ResourceBytes;
   /** Shell-classified MIME type (byte-sniffed). */
   mime: string;
 }
@@ -181,8 +185,8 @@ export interface ResourceBytesManyResultMessage extends ResourceMessage {
   type: 'resource.bytesMany.result';
   /** Correlation ID matching the original request. */
   id: string;
-  /** Ordered one-item-per-input-URL result list. */
-  items: ResourceBytesItem[];
+  /** Ordered one-item-per-input-URL result list; successful items carry base64 `blob`. */
+  items: ResourceBytesWireItem[];
 }
 
 /**

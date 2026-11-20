@@ -21,7 +21,7 @@ import type {
   RelayEventMessage,
   RelayQueryResultMessage,
 } from './types.js';
-import { hydrateResourceCache } from '../resource/shim.js';
+import { hydrateEventSidecar } from '../resource/shim.js';
 
 /**
  * Open a live relay subscription through the shell's relay pool.
@@ -62,8 +62,7 @@ export function subscribe(
 
     if (msg.type === 'relay.event') {
       const result = msg.result as RelayEventMessage['result'];
-      hydrateResourceCache(result.sidecar?.resources);
-      onEvent(result);
+      onEvent(hydrateEventSidecar(result));
     } else if (msg.type === 'relay.eose') {
       onEose();
     } else if (msg.type === 'relay.closed') {
@@ -240,7 +239,7 @@ export function query(filters: NostrFilter | NostrFilter[]): Promise<RelayEventR
         reject(new Error(result.error));
       } else {
         const events = Array.isArray(result.events) ? result.events : [];
-        for (const item of events) hydrateResourceCache(item.sidecar?.resources);
+        for (const item of events) hydrateEventSidecar(item);
         resolve(events);
       }
     }

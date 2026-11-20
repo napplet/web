@@ -297,7 +297,7 @@ Sandboxed byte fetching (NAP-RESOURCE). Mirrors `window.napplet.resource`; loadi
 | `bytesMany(urls, opts?)` | `Promise<ResourceBytesItem[]>` | Fetch many URLs through one envelope. Items preserve input order and length. |
 | `bytesAsObjectURL(url)` | `{ url: string; revoke: () => void }` | Synchronous handle whose `url` resolves to a blob URL once the fetch completes. |
 
-Canonical schemes: `data:` (in-shim), `https:` (shell-side under policy), `blossom:<sha256>.<ext>` ([BUD-10](https://github.com/hzrd149/blossom/blob/master/buds/10.md), hash-verified), `htree:` (Hashtree-verified), `nostr:<bech32>` (single-hop NIP-19).
+Canonical schemes: `data:` (runtime-decoded under policy), `https:` (shell-side under policy), `blossom:<sha256>.<ext>` ([BUD-10](https://github.com/hzrd149/blossom/blob/master/buds/10.md), hash-verified), `htree:` / `hashtree:` (Hashtree-verified), `nostr:<bech32>` (single-hop NIP-19). Every URL goes to the runtime; the shim decodes the base64 wire bytes into a `Blob` typed with the sniffed MIME.
 
 Bare helper aliases are also re-exported for consumers that prefer functional imports:
 
