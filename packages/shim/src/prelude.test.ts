@@ -27,13 +27,23 @@ describe('@napplet/shim/prelude', () => {
     expect((window as Window & { napplet?: typeof installed }).napplet).toBe(installed);
   });
 
-  it('filters unknown domains out of rendered activation calls', () => {
+  it('renders experimental domain names after the bundled ones', () => {
     const call = renderNappletRuntimePreludeCall({
-      domains: ['identity', 'not-real' as never, 'storage'],
+      domains: ['identity', 'mesh', 'storage'],
     });
 
     expect(call).toBe(
-      'globalThis.NappletShimPrelude.install({"domains":["identity","storage"]});',
+      'globalThis.NappletShimPrelude.install({"domains":["identity","storage","mesh"]});',
+    );
+  });
+
+  it('rejects domain names that are not bare', () => {
+    expect(() => renderNappletRuntimePreludeCall({ domains: ['identity', 'mesh.publish'] })).toThrow('not a bare domain');
+  });
+
+  it('keeps experimental domains out of the maturity policy', () => {
+    expect(renderNappletRuntimePreludeCall({ domains: ['storage', 'ble', 'mesh'], maturity: {} })).toBe(
+      'globalThis.NappletShimPrelude.install({"domains":["storage","mesh"]});',
     );
   });
 

@@ -12,7 +12,11 @@
  */
 
 import type { NappletGlobal } from '@napplet/core';
-import { installNappletRuntimePrelude, type NappletRuntimePreludeOptions } from './prelude.js';
+import {
+  installNappletRuntimePrelude,
+  registerNappletRuntimeExtension,
+  type NappletRuntimePreludeOptions,
+} from './prelude.js';
 
 const GLOBAL_NAME = 'NappletShimPrelude';
 
@@ -36,5 +40,6 @@ Object.defineProperty(globalThis, GLOBAL_NAME, {
   configurable: true,
   enumerable: false,
   writable: false,
-  value: Object.freeze({ install }),
+  // registerExtension runs before install; install() then removes the whole global.
+  value: Object.freeze({ install, registerExtension: registerNappletRuntimeExtension }),
 });

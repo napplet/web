@@ -34,8 +34,10 @@
  * @packageDocumentation
  */
 
-export type { NappletShimInstallOptions } from './runtime.js';
+export type { NappletShimInstallOptions, NappletRuntimeDomain } from './runtime.js';
 export { installNappletGlobal } from './runtime.js';
+export type { ExperimentalDomainChannel, NappletDomainExtension } from './experimental.js';
+export { registerNappletDomainExtension } from './experimental.js';
 
 import { installNappletGlobal } from './runtime.js';
 
