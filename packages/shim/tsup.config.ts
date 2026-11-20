@@ -9,11 +9,12 @@ export default defineConfig([
     clean: true,
   },
   {
-    entry: { prelude: 'src/prelude.ts' },
+    // No globalName: a top-level `var` would be a non-deletable global. The
+    // entry defines a configurable NappletShimPrelude that install() removes.
+    entry: { prelude: 'src/prelude-global.ts' },
     format: ['iife'],
     platform: 'browser',
     target: 'es2022',
-    globalName: 'NappletShimPrelude',
     noExternal: [/@napplet\//],
     esbuildOptions(options) {
       options.ignoreAnnotations = true;
