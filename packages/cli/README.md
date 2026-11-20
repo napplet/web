@@ -188,6 +188,8 @@ This non-normative guide defers to the living [NAP-INTENT](https://github.com/na
 
 Prints JSON for napplets the CLI can deploy. Without `--all`, discovery checks the configured `sourceDir`. With `--all`, it walks `discover.roots`.
 
+Run from a directory with no `.napplet` config, such as a monorepo root, `discover` searches the subdirectories for napplet projects (directories with their own `.napplet/config.yaml`) and resolves each build from that project's own `sourceDir`. Each entry also carries `project` and `configPath`. Projects without a build, and projects whose config can't be read, are reported on stderr without hiding the others. An unreadable config makes the command exit `1`.
+
 ```sh
 napplet discover
 napplet discover --all
@@ -213,6 +215,8 @@ napplet deploy --name feed --snapshot --sec nsec1...
 napplet deploy --all --sec nsec1...
 napplet deploy --json --dry-run --sec nsec1...
 ```
+
+Run from a directory with no `.napplet` config, `napplet deploy --all` deploys every napplet project in its subdirectories. See [Many Napplets, Each With Its Own Config](#many-napplets-each-with-its-own-config). A bare `napplet deploy` there asks whether to search the subdirectories (the default is no). Yes runs `--all`; no starts guided setup for this directory.
 
 Signing can come from:
 
@@ -339,6 +343,34 @@ Notes for workspace mode:
 - Discovery skips `.git`, `.napplet`, `.turbo`, `node_modules`, and `coverage`.
 - `--root` is usually the wrong target for `--all` because the root site is singular per pubkey.
 
+### Many Napplets, Each With Its Own Config
+
+When each napplet carries its own `.napplet/config.yaml` and the parent directory has none, run the commands from the parent. Discovery treats every directory with a `.napplet/config.yaml` as one napplet and doesn't descend further into it.
+
+```text
+my-monorepo/
+└── napplets/
+    ├── napplet1/
+    │   ├── .napplet/config.yaml
+    │   └── dist/index.html
+    └── napplet2/
+        ├── .napplet/config.yaml
+        └── dist/index.html
+```
+
+```sh
+napplet discover
+napplet deploy --all --dry-run --sec nsec1...
+napplet deploy --all --name napplet2 --sec nsec1...
+```
+
+- Each napplet deploys from its own directory with its own config: `sourceDir`, relays, Blossom servers, name, metadata, and signer.
+- `--name` selects napplets by folder name or relative path (`napplet2` or `napplets/napplet2`). It doesn't override their configured names.
+- Other flags (`--dry-run`, `--sec`, `--format`, `--relay`, ...) apply to every napplet. The event format is asked once. `--config` and `--source-dir` are rejected because each napplet has its own.
+- A failed napplet doesn't stop the rest. The command exits `1` if any failed. With `--json`, it prints one array of `{ project, configPath, code, report | error }`.
+- Without `--sec`, each napplet resolves its own signer, so an interactive run may ask once per napplet.
+- A napplet that still has a legacy `.napplet/config.json` fails here until it's migrated. Run `napplet deploy --migrate-config` inside that napplet first.
+
 ## Conformance And Paja
 
 `napplet conformance` runs the configured conformance command for each discovered napplet:
@@ -366,7 +398,7 @@ The default provisions `@kehto/cli@0.5.4` privately and runs its `kehto paja` co
 - Use `--prompt-sec` when you need an ad-hoc key without echoing it in shell history; press Enter to submit the hidden prompt. If `.napplet` is configured for another pubkey, interactive deploys warn before continuing and non-interactive prompt input fails closed.
 - Use `--json` when another program needs to parse `deploy` output.
 - Use `--dry-run` before network deploys; it signs the same manifest events without uploading files or publishing to relays.
-- If `discover --all` finds too much or too little, check `discover.roots` and the built `dist/index.html` paths.
+- If `discover --all` finds too much or too little, check `discover.roots` and the built `dist/index.html` paths. From a directory without a `.napplet` config, discovery looks for `.napplet/config.yaml` in subdirectories instead.
 
 ## Development
 

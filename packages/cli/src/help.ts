@@ -88,7 +88,8 @@ Missing values are requested in an interactive terminal.`,
   --name <name>          Select a named target (repeatable)
   --root                 Publish the root target
   --snapshot             Also create an immutable snapshot
-  --all                  Discover builds recursively
+  --all                  Discover builds recursively; without a config here,
+                         deploy every subdirectory napplet with its own config
   --format current|legacy  Event format (default: current)
   --sec <secret>         Use a signing key or bunker session
   --prompt-sec           Read a hidden secret, or explicit piped input
@@ -140,7 +141,8 @@ Supports --format current|legacy, --root, --snapshot and --sec.
 Does not prompt, upload, or publish.`,
   discover: `Usage: napplet discover [--config <file>] [--all]
 
-Prints discovered build directories as JSON. Use --all to search recursively.`,
+Prints discovered build directories as JSON. Use --all to search recursively.
+Without a .napplet config here, lists every subdirectory napplet that has its own config.`,
   migrate: `Usage: napplet migrate <signed-event.json> [options]
 
   --description <text>  Supply the new manifest description

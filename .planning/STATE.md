@@ -570,6 +570,7 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 
 | Quick ID | Task | Date | Commit | Artifacts |
 |----------|------|------|--------|-----------|
+| 261120-cdr | CLI discover/deploy --all from a config-less root; build/types/units pass | 2026-11-20 | 3324d389 | [261120-cdr](./quick/261120-cdr-cli-discover-config-less-root/) |
 | 261117-lx9 | Align CVM registry selectors (#336); local build/types/1,593 units pass | 2026-11-17 | ebfd0d80 | [261117-lx9](./quick/261117-lx9-align-cvm-registry-selectors-for-issue-3/) |
 | 261105-rds | Remove DinOS from the napplet.run shell directory | 2026-11-05 | — | — |
 | 261103-rsl | Point every napplet/napplet repository reference (docs, READMEs, skills, CLI, installers, package metadata) at napplet/web | 2026-11-03 | — | [261103-rsl](./quick/261103-rsl-repo-slug-napplet-web/) |

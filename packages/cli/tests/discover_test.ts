@@ -1,5 +1,5 @@
 import { defaultConfig } from "../src/config.ts";
-import { discoverNapplets } from "../src/discover.ts";
+import { discoverNapplets, discoverProjectNapplets, findNappletProjects, hasNappletConfig } from "../src/discover.ts";
 import { joinPath } from "../src/path.ts";
 import { assertEquals, withTempDir } from "./assert.ts";
 
@@ -24,5 +24,56 @@ Deno.test("discoverNapplets traverses configured roots and stages each napplet o
 
     const candidates = await discoverNapplets(defaultConfig(), { cwd: dir, traverse: true });
     assertEquals(candidates.map((candidate) => candidate.name), ["one", "two"]);
+  });
+});
+
+async function writeProject(root: string, path: string, name: string, build = true): Promise<void> {
+  const dir = joinPath(root, path);
+  await Deno.mkdir(joinPath(dir, ".napplet"), { recursive: true });
+  await Deno.writeTextFile(joinPath(dir, ".napplet", "config.yaml"), `version: 1\nsourceDir: dist\nnamed: [${name}]\n`);
+  if (build) {
+    await Deno.mkdir(joinPath(dir, "dist"), { recursive: true });
+    await Deno.writeTextFile(joinPath(dir, "dist", "index.html"), `<title>${name}</title>`);
+  }
+}
+
+Deno.test("findNappletProjects finds per-napplet configs below a config-less root", async () => {
+  await withTempDir(async (dir) => {
+    await writeProject(dir, "napplets/napplet1", "napplet1");
+    await writeProject(dir, "napplets/napplet2", "napplet2");
+    await writeProject(dir, "napplets/napplet1/nested", "nested");
+    await writeProject(dir, "node_modules/dep", "dep");
+    await Deno.writeTextFile(joinPath(dir, "index.html"), "stray root page");
+
+    assertEquals(await hasNappletConfig(dir), false);
+    const projects = await findNappletProjects(dir);
+    assertEquals(projects.map((project) => project.name), ["napplet1", "napplet2"]);
+    assertEquals(projects[0].configPath, joinPath(dir, "napplets", "napplet1", ".napplet", "config.yaml"));
+  });
+});
+
+Deno.test("discoverProjectNapplets resolves builds from each project's own sourceDir", async () => {
+  await withTempDir(async (dir) => {
+    await writeProject(dir, "napplets/napplet1", "napplet1");
+    await writeProject(dir, "napplets/unbuilt", "unbuilt", false);
+
+    const { candidates, unbuilt } = await discoverProjectNapplets(await findNappletProjects(dir), dir);
+    assertEquals(candidates.map(({ name, project, dir: build }) => ({ name, project, build })), [
+      { name: "napplet1", project: "napplets/napplet1", build: joinPath(dir, "napplets", "napplet1", "dist") },
+    ]);
+    assertEquals(unbuilt.map((project) => project.name), ["unbuilt"]);
+  });
+});
+
+Deno.test("discoverProjectNapplets reports a broken project config without hiding its siblings", async () => {
+  await withTempDir(async (dir) => {
+    await writeProject(dir, "napplets/good", "good");
+    await writeProject(dir, "napplets/broken", "broken");
+    await Deno.writeTextFile(joinPath(dir, "napplets", "broken", ".napplet", "config.yaml"), "version: 9\n");
+
+    const { candidates, errors } = await discoverProjectNapplets(await findNappletProjects(dir), dir);
+    assertEquals(candidates.map((candidate) => candidate.name), ["good"]);
+    assertEquals(errors.length, 1);
+    assertEquals(errors[0].startsWith(joinPath(dir, "napplets", "broken", ".napplet", "config.yaml")), true);
   });
 });
