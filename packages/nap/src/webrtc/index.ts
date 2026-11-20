@@ -15,6 +15,8 @@
 export { DOMAIN } from './types.js';
 export type {
   WebrtcApi,
+  WebrtcBytes,
+  WebrtcBytesEvent,
   WebrtcClosedEvent,
   WebrtcDirectScope,
   WebrtcEvent,
@@ -27,11 +29,14 @@ export type {
   WebrtcSession,
   WebrtcState,
   WebrtcStateEvent,
+  WebrtcStatsEvent,
   WebrtcMessage,
   WebrtcOpenMessage,
   WebrtcOpenResultMessage,
   WebrtcSendMessage,
   WebrtcSendResultMessage,
+  WebrtcSendBytesMessage,
+  WebrtcSendBytesResultMessage,
   WebrtcCloseMessage,
   WebrtcCloseResultMessage,
   WebrtcEventMessage,
@@ -44,12 +49,14 @@ export {
   handleWebrtcMessage,
   open,
   send,
+  sendBytes,
   close,
   onEvent,
 } from './shim.js';
 export {
   webrtcOpen,
   webrtcSend,
+  webrtcSendBytes,
   webrtcClose,
   webrtcOnEvent,
 } from './sdk.js';

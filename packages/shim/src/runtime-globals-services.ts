@@ -48,6 +48,7 @@ import {
 import {
   open as webrtcOpen,
   send as webrtcSend,
+  sendBytes as webrtcSendBytes,
   close as webrtcClose,
   onEvent as webrtcOnEvent,
 } from '@napplet/nap/webrtc/shim';
@@ -263,6 +264,7 @@ function installNetworkDomains(domains: ReadonlySet<NapDomain>, napplet: Partial
     napplet.webrtc = {
       open: webrtcOpen,
       send: webrtcSend,
+      sendBytes: webrtcSendBytes,
       close: webrtcClose,
       onEvent: webrtcOnEvent,
     };

@@ -1,5 +1,6 @@
 import type {
   Subscription,
+  WebrtcBytes,
   WebrtcEvent,
   WebrtcOpenRequest,
   WebrtcOpenResult,
@@ -37,6 +38,15 @@ export const webrtc: SdkDomain<'webrtc'> = {
    */
   send(sessionId: string, payload: unknown): Promise<void> {
     return requireDomain('webrtc').send(sessionId, payload);
+  },
+
+  /**
+   * Send one opaque byte sequence over a session; peers receive a `bytes` event.
+   * @param sessionId  WebRTC session id
+   * @param bytes      Canonical padded base64 text (RFC 4648 section 4)
+   */
+  sendBytes(sessionId: string, bytes: WebrtcBytes): Promise<void> {
+    return requireDomain('webrtc').sendBytes(sessionId, bytes);
   },
 
   /**

@@ -343,9 +343,11 @@ export const ENVELOPE_SPECS: Record<string, EnvelopeSpec> = {
   // ── webrtc ────────────────────────────────────────────────────────────────
   'webrtc.open': { dir: 'out', fields: { ...ID, request: 'object' } },
   'webrtc.send': { dir: 'out', fields: { ...ID, sessionId: 'string', payload: 'present' } },
+  'webrtc.sendBytes': { dir: 'out', fields: { ...ID, sessionId: 'string', bytes: 'string' } },
   'webrtc.close': { dir: 'out', fields: { ...ID, sessionId: 'string' } },
   'webrtc.open.result': { dir: 'in' },
   'webrtc.send.result': { dir: 'in' },
+  'webrtc.sendBytes.result': { dir: 'in' },
   'webrtc.close.result': { dir: 'in' },
   'webrtc.event': { dir: 'in' },
   // ── link ─────────────────────────────────────────────────────────────────

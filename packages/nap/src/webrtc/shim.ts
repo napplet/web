@@ -10,6 +10,7 @@
 import { postToShell } from '../boundary.js';
 import type { Subscription } from '@napplet/core';
 import type {
+  WebrtcBytes,
   WebrtcEvent,
   WebrtcInboundMessage,
   WebrtcNapMessage,
@@ -37,6 +38,8 @@ const WEBRTC_MESSAGE_TYPES = new Set<string>([
   'webrtc.open.result',
   'webrtc.send',
   'webrtc.send.result',
+  'webrtc.sendBytes',
+  'webrtc.sendBytes.result',
   'webrtc.close',
   'webrtc.close.result',
   'webrtc.event',
@@ -134,6 +137,27 @@ export function send(sessionId: string, payload: unknown): Promise<void> {
     (msg) => {
       if (msg.type === 'webrtc.send.result' && !msg.error) return undefined;
       rejectResult(msg, 'webrtc send failed');
+    },
+  );
+}
+
+/**
+ * Send one opaque byte sequence over a WebRTC session. Peers receive it as a
+ * `bytes` event, never as `message`. A shell without byte payloads rejects
+ * with `unsupported`; one that predates the operation never answers, so the
+ * request times out and callers can fall back to `send`.
+ *
+ * @param sessionId  WebRTC session id
+ * @param bytes      Canonical padded base64 text (RFC 4648 section 4)
+ * @returns Promise resolving when the runtime accepts the send
+ */
+export function sendBytes(sessionId: string, bytes: WebrtcBytes): Promise<void> {
+  return request(
+    { type: 'webrtc.sendBytes', id: crypto.randomUUID(), sessionId, bytes },
+    'webrtc.sendBytes.result',
+    (msg) => {
+      if (msg.type === 'webrtc.sendBytes.result' && !msg.error) return undefined;
+      rejectResult(msg, 'webrtc sendBytes failed');
     },
   );
 }

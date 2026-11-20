@@ -125,4 +125,51 @@ describe('webrtc shim', () => {
     handleWebrtcMessage({ type: 'webrtc.event', event: { type: 'closed', sessionId: 'sess-1' } });
     expect(handler).toHaveBeenCalledTimes(1);
   });
+
+  // NAP-WEBRTC (napplet/naps#59 @ fb4dd6f0) examples: "Send and receive bytes 00 01 02 ff".
+  it('sends bytes and routes the peer bytes event', async () => {
+    const { handleWebrtcMessage, onEvent, sendBytes } = await import('./shim.js');
+    const handler = vi.fn();
+    onEvent(handler);
+
+    const promise = sendBytes('sess-2', 'AAEC/w==');
+    expect(shell.sent[0]).toEqual({ type: 'webrtc.sendBytes', id: 'id-1', sessionId: 'sess-2', bytes: 'AAEC/w==' });
+    handleWebrtcMessage({ type: 'webrtc.sendBytes.result', id: 'id-1' });
+    await expect(promise).resolves.toBeUndefined();
+
+    const bytesEvent = { type: 'bytes', sessionId: 'sess-2', from: 'abc123', bytes: 'AAEC/w==' };
+    const statsEvent = { type: 'stats', sessionId: 'sess-2', pubkey: 'abc123', rttMs: 42, lossRatio: 0.01 };
+    handleWebrtcMessage({ type: 'webrtc.event', event: bytesEvent });
+    handleWebrtcMessage({ type: 'webrtc.event', event: statsEvent });
+    expect(handler).toHaveBeenNthCalledWith(1, bytesEvent);
+    expect(handler).toHaveBeenNthCalledWith(2, statsEvent);
+  });
+
+  it('rejects sendBytes with the shell error, such as unsupported', async () => {
+    const { handleWebrtcMessage, sendBytes } = await import('./shim.js');
+
+    const promise = sendBytes('sess-2', '');
+    handleWebrtcMessage({ type: 'webrtc.send.result', id: 'id-1' });
+    handleWebrtcMessage({ type: 'webrtc.sendBytes.result', id: 'id-1', error: 'unsupported' });
+    await expect(promise).rejects.toThrow('unsupported');
+  });
+
+  it('passes requested delivery semantics through and returns the established ones', async () => {
+    const { handleWebrtcMessage, open } = await import('./shim.js');
+    const request = { scope: { type: 'room' as const, room: 'k3f9...' }, channel: 'state', ordered: false, maxRetransmits: 0 };
+    const session = {
+      id: 'sess-2',
+      scope: { type: 'room' as const, room: 'k3f9...' },
+      channel: 'state',
+      state: 'connecting' as const,
+      ordered: false,
+      maxRetransmits: 0,
+      maxPayloadBytes: 16384,
+    };
+
+    const promise = open(request);
+    expect(shell.sent[0]).toEqual({ type: 'webrtc.open', id: 'id-1', request });
+    handleWebrtcMessage({ type: 'webrtc.open.result', id: 'id-1', session });
+    await expect(promise).resolves.toEqual({ session });
+  });
 });

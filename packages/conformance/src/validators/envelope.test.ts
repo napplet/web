@@ -239,6 +239,15 @@ describe('validateEnvelope — optional shell domain', () => {
   });
 });
 
+describe('validateEnvelope — webrtc byte payloads', () => {
+  // NAP-WEBRTC (napplet/naps#59 @ fb4dd6f0) §Wire Protocol.
+  it('accepts webrtc.sendBytes with base64 bytes and requires the bytes field', () => {
+    expect(validateEnvelope({ type: 'webrtc.sendBytes', id: 's2', sessionId: 'sess-2', bytes: 'AAEC/w==' }).ok).toBe(true);
+    expect(validateEnvelope({ type: 'webrtc.sendBytes', id: 's2', sessionId: 'sess-2' }).ok).toBe(false);
+    expect(validateEnvelope({ type: 'webrtc.sendBytes.result', id: 's2' }).errors[0].code).toBe('inbound-type-emitted');
+  });
+});
+
 describe('validateEnvelope — media retirement', () => {
   it('treats media.session.ended as shell -> napplet only', () => {
     expect(ENVELOPE_SPECS['media.session.ended']).toEqual({
@@ -251,13 +260,13 @@ describe('validateEnvelope — media retirement', () => {
 });
 
 describe('ENVELOPE_SPECS invariants', () => {
-  it('has 350 discriminants split 168 outbound / 182 inbound', () => {
+  it('has 352 discriminants split 169 outbound / 183 inbound', () => {
     const all = knownEnvelopeTypes();
-    expect(all).toHaveLength(350);
+    expect(all).toHaveLength(352);
     const out = all.filter((t) => ENVELOPE_SPECS[t].dir === 'out');
     const inbound = all.filter((t) => ENVELOPE_SPECS[t].dir === 'in');
-    expect(out).toHaveLength(168);
-    expect(inbound).toHaveLength(182);
+    expect(out).toHaveLength(169);
+    expect(inbound).toHaveLength(183);
   });
 
   it('declares canonical inbound INC carrier fields', () => {

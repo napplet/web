@@ -170,6 +170,7 @@ const { session } = await window.napplet.webrtc.open({
   scope: { type: 'direct', pubkey: 'abc123...' },
 });
 await window.napplet.webrtc.send(session.id, { body: 'hello' });
+await window.napplet.webrtc.sendBytes(session.id, 'AAEC/w=='); // canonical padded base64
 // Open a shell-mediated BLE session
 const { session: bleSession } = await window.napplet.ble.open({ acceptAllDevices: true });
 const bleServices = await window.napplet.ble.services(bleSession.id);
