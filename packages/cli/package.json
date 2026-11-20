@@ -48,7 +48,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/sandwichfarm/napplet.git",
+    "url": "git+https://github.com/napplet/web.git",
     "directory": "packages/cli"
   },
   "keywords": [
