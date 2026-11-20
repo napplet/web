@@ -14,7 +14,8 @@ the napplet sandbox at runtime. One engine drives two scopes:
 v1 is **zero-config protocol conformance**: NIP-5D manifest-event validity, boots
 under `sandbox="allow-scripts"`, receives a runtime-injected `window.napplet`,
 every emitted postMessage envelope validates against the per-NAP validators,
-graceful degradation when a domain is absent, and no forbidden globals.
+graceful degradation when a domain is absent, and an advisory warning for any
+request the NIP-5D baseline Content Security Policy blocked.
 
 The harness acts as a NIP-5D shell for the [port-bound identity](https://github.com/nostr-protocol/nips/pull/2303) model: it binds the `MessagePort` from the first valid `napplet.hello`, answers only over that port, and revokes the napplet and removes its frame on a second hello, any other window-level message, a second `load` or the port closing. `wire/port-only` fails a napplet that posts messages at window level instead of through `window.napplet`; `lifecycle/keeps-verified-document` is an advisory for a napplet that navigates or reloads its own frame. `attachReferenceShell(shell, { host, expectedSource })` and `bindNappletPort` give custom harnesses the same binding.
 

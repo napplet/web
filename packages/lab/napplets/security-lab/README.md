@@ -88,10 +88,7 @@ CSP rows report warnings and network probes read "Denied without CSP". That is
 Paja's dev-mode policy, not a lab bug; the production path above is the one to
 trust.
 
-`napplet-conformance` reports `boot/no-forbidden-globals` as a failure for this
-napplet by design: the lab touches `fetch`, `WebSocket`, `localStorage`, the
-NIP-07 global and friends precisely to prove they are blocked. Every other
-check passes; treat that one as expected for this artifact.
+`napplet-conformance` reports a `boot/csp-baseline` warning for this napplet by design: the lab fires direct network and subresource probes precisely to prove the baseline CSP blocks them. It's advisory and doesn't fail the run.
 
 ## Publishing
 

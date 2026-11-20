@@ -5,7 +5,7 @@ Framework-agnostic conformance engine for the napplet protocol. It lets a napple
 - **Headless / CI** — driven by the `napplet-conformance` Playwright CLI.
 - **Standalone web runtime** — the single-window `apps/conformance` app.
 
-v1 is **zero-config protocol conformance**: NIP-5D manifest-event validity, boots under `sandbox="allow-scripts"`, receives runtime-injected `window.napplet`, every emitted postMessage envelope validates against the per-NAP validators, graceful degradation when domains are absent, and no forbidden globals.
+v1 is **zero-config protocol conformance**: NIP-5D manifest-event validity, boots under `sandbox="allow-scripts"`, receives runtime-injected `window.napplet`, every emitted postMessage envelope validates against the per-NAP validators, graceful degradation when domains are absent, plus an advisory warning for any request the NIP-5D baseline Content Security Policy blocked. The harness boots every napplet under that baseline, adding only the subject's own http(s) origin for its scripts, styles, images, fonts, and `<base>` so unbundled directories still load; network, workers, frames, and other hosts stay blocked.
 
 The harness acts as a NIP-5D shell for the [port-bound identity](https://github.com/nostr-protocol/nips/pull/2303) model: it binds the `MessagePort` from the first valid `napplet.hello`, answers only over that port, and revokes the napplet and removes its frame on a second hello, any other window-level message, a second `load` or the port closing. `wire/port-only` fails a napplet that posts messages at window level instead of through `window.napplet`; `lifecycle/keeps-verified-document` is an advisory for a napplet that navigates or reloads its own frame.
 
