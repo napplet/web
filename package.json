@@ -14,7 +14,7 @@
     "test": "pnpm check:jsr && pnpm test:protocol && pnpm test:nap-maturity && pnpm test:showcase-refresh && pnpm test:release-tooling && pnpm test:skills-contracts && pnpm test:agent-output && turbo run test:unit && pnpm test:tutorial",
     "test:unit": "turbo run test:unit",
     "test:tutorial": "node --test scripts/tutorial-package-versions.test.mjs && node scripts/test-tutorial.mjs",
-    "test:release-tooling": "node --test scripts/sync-jsr-versions.test.mjs scripts/sync-tutorial-package-versions.test.mjs scripts/jsr-workspace-membership.test.mjs",
+    "test:release-tooling": "node --test scripts/sync-jsr-versions.test.mjs scripts/sync-tutorial-package-versions.test.mjs scripts/jsr-workspace-membership.test.mjs scripts/package-repository-metadata.test.mjs",
     "test:e2e": "turbo run test:e2e",
     "test:installers": "node scripts/test-install-napplet-cli.mjs",
     "test:onboarding-contracts": "node --test scripts/onboarding-contracts.test.mjs",

@@ -271,7 +271,7 @@ configSubscribe<FromSchema<typeof schema>>((values) => {
 
 MIT
 
-Repository: [github.com/sandwichfarm/napplet](https://github.com/sandwichfarm/napplet)
+Repository: [github.com/napplet/web](https://github.com/napplet/web)
 
 
 ### Optional shell environment
