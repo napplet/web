@@ -52,6 +52,7 @@ export type {
   MediaAction,
   MediaSessionCreate,
   MediaSessionResult,
+  MediaSessionEnded,
   McpMessage,
   McpTool,
   McpContentBlock,
@@ -228,7 +229,6 @@ export type {
   ResourceBytesOkItem,
   ResourceBytesErrorItem,
   ResourceBytesItem,
-  ResourceBytesRequest,
   ResourceSidecarEntry,
 } from './types.js';
 

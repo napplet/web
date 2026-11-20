@@ -22,8 +22,18 @@ import type {
   MediaSessionCreateResultMessage,
   MediaCommandMessage,
   MediaControlsMessage,
+  MediaSessionEndedMessage,
 } from './types.js';
 import type { Subscription } from '@napplet/core';
+import {
+  addSessionHandler,
+  clearRetirements,
+  isRetired,
+  retire,
+  type SessionHandlerMap,
+} from './session-handlers.js';
+
+export { onEnded } from './session-handlers.js';
 
 /** Pending session create requests: correlation id -> { resolve, reject }. */
 const pendingCreates = new Map<string, {
@@ -32,17 +42,25 @@ const pendingCreates = new Map<string, {
   timeout: ReturnType<typeof setTimeout>;
 }>();
 
-/** Command handlers per session: sessionId -> Set of callbacks. */
-const commandHandlers = new Map<string, Set<(action: MediaAction, value?: number) => void>>();
+/** Command handlers per session. */
+const commandHandlers: SessionHandlerMap<(action: MediaAction, value?: number, reason?: string) => void> = new Map();
 
-/** Controls handlers per session: sessionId -> Set of callbacks. */
-const controlsHandlers = new Map<string, Set<(controls: MediaAction[]) => void>>();
+/** Controls handlers per session. */
+const controlsHandlers: SessionHandlerMap<(controls: MediaAction[]) => void> = new Map();
 
-/** State handlers per session: sessionId -> Set of callbacks. */
-const stateHandlers = new Map<string, Set<(state: MediaState) => void>>();
+/** State handlers per session. */
+const stateHandlers: SessionHandlerMap<(state: MediaState) => void> = new Map();
 
-/** Capabilities handlers per session: sessionId -> Set of callbacks. */
-const capabilitiesHandlers = new Map<string, Set<(actions: MediaAction[]) => void>>();
+/** Capabilities handlers per session. */
+const capabilitiesHandlers: SessionHandlerMap<(actions: MediaAction[]) => void> = new Map();
+
+/** Drop every non-retirement callback registered for a session. */
+function clearSessionHandlers(sessionId: string): void {
+  commandHandlers.delete(sessionId);
+  controlsHandlers.delete(sessionId);
+  stateHandlers.delete(sessionId);
+  capabilitiesHandlers.delete(sessionId);
+}
 
 /** Guard against double-install. */
 let installed = false;
@@ -76,10 +94,11 @@ function handleCreateResult(msg: MediaSessionCreateResultMessage): void {
  * Dispatches to registered command handlers for the session.
  */
 function handleCommand(msg: MediaCommandMessage): void {
+  if (isRetired(msg.sessionId)) return;
   const handlers = commandHandlers.get(msg.sessionId);
   if (!handlers) return;
   for (const cb of handlers) {
-    cb(msg.action, msg.value);
+    cb(msg.action, msg.value, msg.reason);
   }
 }
 
@@ -88,6 +107,7 @@ function handleCommand(msg: MediaCommandMessage): void {
  * Dispatches to registered controls handlers.
  */
 function handleControls(msg: MediaControlsMessage): void {
+  if (isRetired(msg.sessionId)) return;
   const handlers = controlsHandlers.get(msg.sessionId);
   if (!handlers) return;
   for (const cb of handlers) {
@@ -99,6 +119,7 @@ function handleControls(msg: MediaControlsMessage): void {
  * Handle media.state from the shell for shell-owned playback.
  */
 function handleState(msg: MediaStateMessage): void {
+  if (isRetired(msg.sessionId)) return;
   const handlers = stateHandlers.get(msg.sessionId);
   if (!handlers) return;
   const state: MediaState = {
@@ -107,6 +128,7 @@ function handleState(msg: MediaStateMessage): void {
     duration: msg.duration,
     volume: msg.volume,
   };
+  if (msg.reason !== undefined) state.reason = msg.reason;
   for (const cb of handlers) {
     cb(state);
   }
@@ -116,11 +138,25 @@ function handleState(msg: MediaStateMessage): void {
  * Handle media.capabilities from the shell for shell-owned playback.
  */
 function handleCapabilities(msg: MediaCapabilitiesMessage): void {
+  if (isRetired(msg.sessionId)) return;
   const handlers = capabilitiesHandlers.get(msg.sessionId);
   if (!handlers) return;
   for (const cb of handlers) {
     cb(msg.actions);
   }
+}
+
+/**
+ * Handle media.session.ended from the shell.
+ * Retires the session exactly once: retains the terminal record, stops every
+ * other per-session callback, and notifies registered retirement handlers.
+ * The reason is passed through as received; an unrecognized reason is an
+ * unspecified cause but still retires the session.
+ */
+function handleSessionEnded(msg: MediaSessionEndedMessage): void {
+  if (typeof msg.sessionId !== 'string' || isRetired(msg.sessionId)) return;
+  clearSessionHandlers(msg.sessionId);
+  retire({ sessionId: msg.sessionId, reason: msg.reason });
 }
 
 /**
@@ -137,6 +173,8 @@ export function handleMediaMessage(msg: { type: string; [key: string]: unknown }
     handleState(msg);
   } else if (isMessageType<MediaCapabilitiesMessage>(msg, 'media.capabilities')) {
     handleCapabilities(msg);
+  } else if (isMessageType<MediaSessionEndedMessage>(msg, 'media.session.ended')) {
+    handleSessionEnded(msg);
   }
 }
 
@@ -185,8 +223,9 @@ export function updateSession(sessionId: string, metadata: Partial<MediaMetadata
 }
 
 /**
- * Destroy a media session.
- * Fire-and-forget -- no response expected.
+ * Request retirement of a media session.
+ * Fire-and-forget. The shell answers with `media.session.ended` (reason
+ * `destroyed`), so `onEnded` handlers stay registered until it arrives.
  *
  * @param sessionId  The session to destroy
  */
@@ -196,11 +235,7 @@ export function destroySession(sessionId: string): void {
     sessionId,
   };
   postToShell(msg);
-
-  commandHandlers.delete(sessionId);
-  controlsHandlers.delete(sessionId);
-  stateHandlers.delete(sessionId);
-  capabilitiesHandlers.delete(sessionId);
+  clearSessionHandlers(sessionId);
 }
 
 /**
@@ -245,13 +280,20 @@ export function reportCapabilities(sessionId: string, actions: MediaAction[]): v
  * @param sessionId  The session to control
  * @param action     The media action to request
  * @param value      Optional value for seek/volume
+ * @param reason     Optional cause of the command, such as `user`
  */
-export function sendCommand(sessionId: string, action: MediaAction, value?: number): void {
+export function sendCommand(
+  sessionId: string,
+  action: MediaAction,
+  value?: number,
+  reason?: string,
+): void {
   const msg: MediaCommandMessage = {
     type: 'media.command',
     sessionId,
     action,
     ...(value === undefined ? {} : { value }),
+    ...(reason === undefined ? {} : { reason }),
   };
   postToShell(msg);
 }
@@ -261,27 +303,14 @@ export function sendCommand(sessionId: string, action: MediaAction, value?: numb
  * Returns a Subscription with close() to stop listening.
  *
  * @param sessionId  The session to listen for commands on
- * @param callback   Called with (action, value?) when a command is received
+ * @param callback   Called with (action, value?, reason?) when a command is received
  * @returns A Subscription with `close()` to unsubscribe
  */
 export function onCommand(
   sessionId: string,
-  callback: (action: MediaAction, value?: number) => void,
+  callback: (action: MediaAction, value?: number, reason?: string) => void,
 ): Subscription {
-  if (!commandHandlers.has(sessionId)) {
-    commandHandlers.set(sessionId, new Set());
-  }
-  commandHandlers.get(sessionId)!.add(callback);
-
-  return {
-    close(): void {
-      const handlers = commandHandlers.get(sessionId);
-      if (handlers) {
-        handlers.delete(callback);
-        if (handlers.size === 0) commandHandlers.delete(sessionId);
-      }
-    },
-  };
+  return addSessionHandler(commandHandlers, sessionId, callback);
 }
 
 /**
@@ -296,20 +325,7 @@ export function onState(
   sessionId: string,
   callback: (state: MediaState) => void,
 ): Subscription {
-  if (!stateHandlers.has(sessionId)) {
-    stateHandlers.set(sessionId, new Set());
-  }
-  stateHandlers.get(sessionId)!.add(callback);
-
-  return {
-    close(): void {
-      const handlers = stateHandlers.get(sessionId);
-      if (handlers) {
-        handlers.delete(callback);
-        if (handlers.size === 0) stateHandlers.delete(sessionId);
-      }
-    },
-  };
+  return addSessionHandler(stateHandlers, sessionId, callback);
 }
 
 /**
@@ -324,20 +340,7 @@ export function onCapabilities(
   sessionId: string,
   callback: (actions: MediaAction[]) => void,
 ): Subscription {
-  if (!capabilitiesHandlers.has(sessionId)) {
-    capabilitiesHandlers.set(sessionId, new Set());
-  }
-  capabilitiesHandlers.get(sessionId)!.add(callback);
-
-  return {
-    close(): void {
-      const handlers = capabilitiesHandlers.get(sessionId);
-      if (handlers) {
-        handlers.delete(callback);
-        if (handlers.size === 0) capabilitiesHandlers.delete(sessionId);
-      }
-    },
-  };
+  return addSessionHandler(capabilitiesHandlers, sessionId, callback);
 }
 
 /**
@@ -352,20 +355,7 @@ export function onControls(
   sessionId: string,
   callback: (controls: MediaAction[]) => void,
 ): Subscription {
-  if (!controlsHandlers.has(sessionId)) {
-    controlsHandlers.set(sessionId, new Set());
-  }
-  controlsHandlers.get(sessionId)!.add(callback);
-
-  return {
-    close(): void {
-      const handlers = controlsHandlers.get(sessionId);
-      if (handlers) {
-        handlers.delete(callback);
-        if (handlers.size === 0) controlsHandlers.delete(sessionId);
-      }
-    },
-  };
+  return addSessionHandler(controlsHandlers, sessionId, callback);
 }
 
 /**
@@ -390,6 +380,7 @@ export function installMediaShim(): () => void {
     controlsHandlers.clear();
     stateHandlers.clear();
     capabilitiesHandlers.clear();
+    clearRetirements();
     installed = false;
   };
 }

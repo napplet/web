@@ -26,6 +26,7 @@ export type {
   MediaSessionContext,
   MediaSessionCreate,
   MediaSessionResult,
+  MediaSessionEnded,
   MediaState,
   MediaAction,
   MediaMessage,
@@ -37,6 +38,7 @@ export type {
   MediaCapabilitiesMessage,
   MediaCommandMessage,
   MediaControlsMessage,
+  MediaSessionEndedMessage,
   MediaRequestMessage,
   MediaResultMessage,
   MediaNapMessage,
@@ -55,6 +57,7 @@ export {
   onState,
   onCapabilities,
   onControls,
+  onEnded,
 } from './shim.js';
 
 export {
@@ -68,6 +71,7 @@ export {
   mediaOnState,
   mediaOnCapabilities,
   mediaOnControls,
+  mediaOnEnded,
 } from './sdk.js';
 
 import { registerNap } from '@napplet/core';

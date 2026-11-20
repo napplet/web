@@ -163,26 +163,28 @@ describe('validateEnvelope — outbound field checks', () => {
     expect(validateEnvelope({ type: 'outbox.query', id: 'a' }).ok).toBe(false);
   });
 
-  it('validates per-resource requests and optional server hints', () => {
-    expect(validateEnvelope({
-      type: 'resource.bytes',
-      id: 'single',
-      url: 'blossom:abc.bin',
-      servers: ['https://cdn.example'],
-    }).ok).toBe(true);
+  // NAP-RESOURCE (napplet/naps#80 @ ae5b9c64) §Wire Protocol: resource.bytesMany carries `id`, `urls`.
+  it('validates resource.bytesMany urls', () => {
+    expect(validateEnvelope({ type: 'resource.bytes', id: 'single', url: 'blossom:abc.bin' }).ok).toBe(true);
     expect(validateEnvelope({
       type: 'resource.bytesMany',
       id: 'a',
-      requests: [{ url: 'https://x/y' }, { url: 'blossom:abc.bin', servers: ['https://cdn.example'] }],
+      urls: ['https://x/y', 'blossom:abc.bin?xs=cdn.example'],
     }).ok).toBe(true);
     expect(validateEnvelope({ type: 'resource.bytesMany', id: 'a' }).errors[0].code).toBe('missing-field');
-    expect(validateEnvelope({ type: 'resource.bytesMany', id: 'a', requests: 'https://x/y' }).errors[0].code).toBe('wrong-type');
-    expect(validateEnvelope({ type: 'resource.bytesMany', id: 'a', requests: [] }).errors[0].code).toBe('invalid-resource-request');
-    expect(validateEnvelope({
-      type: 'resource.bytesMany',
-      id: 'a',
-      requests: [{ url: 'https://x/y', servers: ['https://cdn.example', 1] }],
-    }).errors[0].code).toBe('wrong-type');
+    expect(validateEnvelope({ type: 'resource.bytesMany', id: 'a', urls: 'https://x/y' }).errors[0].code).toBe('wrong-type');
+    expect(validateEnvelope({ type: 'resource.bytesMany', id: 'a', urls: [] }).errors[0].code).toBe('invalid-resource-request');
+    expect(validateEnvelope({ type: 'resource.bytesMany', id: 'a', urls: ['https://x/y', 1] }).errors[0]).toMatchObject({
+      code: 'wrong-type',
+      field: 'urls[1]',
+    });
+  });
+
+  it('rejects the retired per-resource requests shape', () => {
+    const legacy = validateEnvelope({ type: 'resource.bytesMany', id: 'a', requests: [{ url: 'https://x/y' }] });
+    expect(legacy.ok).toBe(false);
+    expect(legacy.errors[0]).toMatchObject({ code: 'missing-field', field: 'urls' });
+    expect(validateEnvelope({ type: 'resource.bytesMany', id: 'a', urls: [{ url: 'https://x/y' }] }).errors[0].code).toBe('wrong-type');
   });
 
   it('validates a representative outbound message from every NAP that has one', () => {
@@ -197,7 +199,7 @@ describe('validateEnvelope — outbound field checks', () => {
       media: { type: 'media.session.destroy', sessionId: 's' },
       notify: { type: 'notify.badge', count: 3 },
       config: { type: 'config.get', id: 'a' },
-      resource: { type: 'resource.bytesMany', id: 'a', requests: [{ url: 'https://x/y' }] },
+      resource: { type: 'resource.bytesMany', id: 'a', urls: ['https://x/y'] },
       cvm: { type: 'cvm.registry.call', id: 'a', selector: { family: 'relatr' }, tool: 'search_profiles' },
       outbox: { type: 'outbox.close', id: 'a', subId: 's' },
       upload: { type: 'upload.status', id: 'a', uploadId: 'u' },
@@ -246,14 +248,25 @@ describe('validateEnvelope — webrtc byte payloads', () => {
   });
 });
 
+describe('validateEnvelope — media retirement', () => {
+  it('treats media.session.ended as shell -> napplet only', () => {
+    expect(ENVELOPE_SPECS['media.session.ended']).toEqual({
+      dir: 'in',
+      fields: { sessionId: 'string', reason: 'string' },
+    });
+    const v = validateEnvelope({ type: 'media.session.ended', sessionId: 's1', reason: 'destroyed' });
+    expect(v.errors[0].code).toBe('inbound-type-emitted');
+  });
+});
+
 describe('ENVELOPE_SPECS invariants', () => {
-  it('has 351 discriminants split 169 outbound / 182 inbound', () => {
+  it('has 352 discriminants split 169 outbound / 183 inbound', () => {
     const all = knownEnvelopeTypes();
-    expect(all).toHaveLength(351);
+    expect(all).toHaveLength(352);
     const out = all.filter((t) => ENVELOPE_SPECS[t].dir === 'out');
     const inbound = all.filter((t) => ENVELOPE_SPECS[t].dir === 'in');
     expect(out).toHaveLength(169);
-    expect(inbound).toHaveLength(182);
+    expect(inbound).toHaveLength(183);
   });
 
   it('declares canonical inbound INC carrier fields', () => {

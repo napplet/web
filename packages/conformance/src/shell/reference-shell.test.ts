@@ -36,6 +36,14 @@ describe('createReferenceShell — record + respond', () => {
     ]);
   });
 
+  // NAP-MEDIA (napplet/naps#10 @ 7806f438): destroy yields one terminal media.session.ended.
+  it('retires a destroyed media session with media.session.ended', () => {
+    const shell = createReferenceShell();
+    expect(shell.handle({ type: 'media.session.destroy', sessionId: 's1' })).toEqual([
+      { type: 'media.session.ended', sessionId: 's1', reason: 'destroyed' },
+    ]);
+  });
+
   it('produces correlated, spec-valid responses', () => {
     const shell = createReferenceShell();
     expect(shell.handle({ type: 'storage.get', id: 'X', key: 'k' })).toEqual([
@@ -199,15 +207,12 @@ describe('createReferenceShell — record + respond', () => {
     expect(await response.blob.text()).toBe('hi');
   });
 
-  it('accepts per-resource server hints for resource.bytesMany', async () => {
+  it('answers resource.bytesMany urls in order', async () => {
     const shell = createReferenceShell();
     const [response] = shell.handle({
       type: 'resource.bytesMany',
       id: 'R',
-      requests: [{
-        url: 'data:text/plain;base64,aGk=',
-        servers: ['https://cdn.example'],
-      }],
+      urls: ['data:text/plain;base64,aGk='],
     }) as Array<{ type: string; id: string; items: Array<{ url: string; blob: Blob; mime: string }> }>;
 
     expect(response.type).toBe('resource.bytesMany.result');

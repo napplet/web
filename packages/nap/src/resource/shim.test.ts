@@ -64,7 +64,6 @@ describe('@napplet/nap/resource shim', () => {
       ],
       maxBytes: 10_485_760,
       maxUrls: 100,
-      maxServers: 8,
     };
     handleResourceMessage({ type: 'resource.info.result', id: sent.id, info: runtimeInfo });
 
@@ -105,18 +104,17 @@ describe('@napplet/nap/resource shim', () => {
     await expect(blob.text()).resolves.toBe('hi');
   });
 
-  it('posts resource.bytes with advisory Blossom server hints', async () => {
+  // NAP-RESOURCE (napplet/naps#80 @ ae5b9c64): resource.bytes carries only `id`, `url`;
+  // BUD-10 discovery hints ride inside the blossom: URI.
+  it('posts resource.bytes with the BUD-10 URI and no out-of-band server list', async () => {
     const { bytes, handleResourceMessage } = await import('./shim.js');
 
-    const promise = bytes('blossom:abc123.bin', {
-      servers: ['https://cdn.example', 'https://mirror.example'],
-    });
+    const promise = bytes('blossom:abc123.bin?xs=cdn.example&xs=mirror.example');
     const sent = lastPosted('resource.bytes');
     expect(sent).toEqual({
       type: 'resource.bytes',
       id: 'resource-test-1',
-      url: 'blossom:abc123.bin',
-      servers: ['https://cdn.example', 'https://mirror.example'],
+      url: 'blossom:abc123.bin?xs=cdn.example&xs=mirror.example',
     });
 
     handleResourceMessage({
@@ -129,24 +127,23 @@ describe('@napplet/nap/resource shim', () => {
     await expect(promise).resolves.toBeInstanceOf(Blob);
   });
 
-  it('posts resource.bytesMany with per-resource advisory Blossom server hints', async () => {
+  // NAP-RESOURCE (napplet/naps#80 @ ae5b9c64) §Wire Protocol: resource.bytesMany carries `id`, `urls`.
+  it('posts resource.bytesMany with a urls list', async () => {
     const { bytesMany, handleResourceMessage } = await import('./shim.js');
 
-    const requests = [
-      { url: 'blossom:abc123.bin', servers: ['https://cdn.example'] },
-      { url: 'https://example.com/missing.png' },
-    ];
-    const promise = bytesMany(requests);
+    const urls = ['blossom:abc123.bin?xs=cdn.example', 'https://example.com/missing.png'];
+    const promise = bytesMany(urls);
     const sent = lastPosted('resource.bytesMany');
     expect(sent).toEqual({
       type: 'resource.bytesMany',
       id: 'resource-test-1',
-      requests,
+      urls,
     });
+    expect(sent).not.toHaveProperty('requests');
 
     const okBlob = new Blob(['a'], { type: 'image/png' });
     const items: ResourceBytesItem[] = [
-      { url: 'blossom:abc123.bin', ok: true, blob: okBlob, mime: 'image/png' },
+      { url: 'blossom:abc123.bin?xs=cdn.example', ok: true, blob: okBlob, mime: 'image/png' },
       {
         url: 'https://example.com/missing.png',
         ok: false,
@@ -163,7 +160,7 @@ describe('@napplet/nap/resource shim', () => {
   it('rejects top-level resource.bytesMany errors', async () => {
     const { bytesMany, handleResourceMessage } = await import('./shim.js');
 
-    const promise = bytesMany([{ url: 'https://example.com/a.png' }]);
+    const promise = bytesMany(['https://example.com/a.png']);
     const sent = lastPosted('resource.bytesMany');
     handleResourceMessage({
       type: 'resource.bytesMany.error',
@@ -182,11 +179,19 @@ describe('@napplet/nap/resource shim', () => {
     expect(shell.sent).toHaveLength(0);
   });
 
+  it('rejects the retired request-object input without posting an envelope', async () => {
+    const { bytesMany } = await import('./shim.js');
+    const legacy = [{ url: 'https://example.com/a.png' }] as unknown as string[];
+
+    await expect(bytesMany(legacy)).rejects.toThrow('bytesMany takes URL strings, not request objects');
+    expect(shell.sent).toHaveLength(0);
+  });
+
   it('sends resource.cancel on bytesMany abort and drops late results', async () => {
     const { bytesMany, handleResourceMessage } = await import('./shim.js');
     const controller = new AbortController();
 
-    const promise = bytesMany([{ url: 'https://example.com/a.png' }], { signal: controller.signal });
+    const promise = bytesMany(['https://example.com/a.png'], { signal: controller.signal });
     const sent = lastPosted('resource.bytesMany');
 
     controller.abort();

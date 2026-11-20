@@ -156,12 +156,10 @@ const configSub = window.napplet.config.subscribe((values) => {
 window.napplet.config.openSettings({ section: 'appearance' });
 
 // Fetch external bytes through the runtime's NAP-RESOURCE surface
-const avatarBlob = await window.napplet.resource.bytes('blossom:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.bin', {
-  servers: ['https://cdn.hzrd149.com'],
-});
+const avatarBlob = await window.napplet.resource.bytes('blossom:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.bin?xs=cdn.hzrd149.com');
 const resourceItems = await window.napplet.resource.bytesMany([
-  { url: 'https://example.com/avatar.png' },
-  { url: 'blossom:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.bin', servers: ['https://cdn.hzrd149.com'] },
+  'https://example.com/avatar.png',
+  'blossom:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.bin?xs=cdn.hzrd149.com',
 ]);
 const handle = window.napplet.resource.bytesAsObjectURL('blossom:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.bin');
 imgEl.src = handle.url;
@@ -264,8 +262,8 @@ Messages are posted to the shell through `@napplet/core`'s clone-safe `sendEnvel
 { type: 'config.openSettings', section?: string }
 
 { type: 'resource.info', id: string }
-{ type: 'resource.bytes', id: string, url: string, servers?: string[] }
-{ type: 'resource.bytesMany', id: string, requests: Array<{ url: string, servers?: string[] }> }
+{ type: 'resource.bytes', id: string, url: string }
+{ type: 'resource.bytesMany', id: string, urls: string[] }
 { type: 'resource.cancel', id: string }
 
 { type: 'link.open', id: string, url: string, options?: { label?: string } }
@@ -316,9 +314,10 @@ Messages received via `window.addEventListener('message', ...)`:
 { type: 'keys.action', actionId: string }
 
 { type: 'media.session.create.result', id: string, sessionId?: string, owner?: 'shell' | 'napplet', error?: string }
-{ type: 'media.state', sessionId: string, status: string, position?: number, duration?: number, volume?: number }
+{ type: 'media.session.ended', sessionId: string, reason: string }
+{ type: 'media.state', sessionId: string, status: string, position?: number, duration?: number, volume?: number, reason?: string }
 { type: 'media.capabilities', sessionId: string, actions: string[] }
-{ type: 'media.command', sessionId: string, action: string, value?: number }
+{ type: 'media.command', sessionId: string, action: string, value?: number, reason?: string }
 { type: 'media.controls', sessionId: string, controls: string[] }
 
 { type: 'notify.send.result', id: string, notificationId?: string, error?: string }
@@ -404,11 +403,12 @@ window.napplet = {
     destroySession(sessionId): void;
     reportState(sessionId, state): void;
     reportCapabilities(sessionId, actions): void;
-    sendCommand(sessionId, action, value?): void;
+    sendCommand(sessionId, action, value?, reason?): void;
     onCommand(sessionId, callback): { close(): void };
     onState(sessionId, callback): { close(): void };
     onCapabilities(sessionId, callback): { close(): void };
     onControls(sessionId, callback): { close(): void };
+    onEnded(sessionId, callback): { close(): void };
   },
   notify: {
     send(notification): Promise<{ notificationId: string }>;
@@ -444,7 +444,7 @@ window.napplet = {
   resource: {
     info(): Promise<ResourceInfo>;
     bytes(url, opts?): Promise<Blob>;
-    bytesMany(requests, opts?): Promise<ResourceBytesItem[]>;
+    bytesMany(urls, opts?): Promise<ResourceBytesItem[]>;
     bytesAsObjectURL(url): { url: string; revoke: () => void };
   },
   link: {
@@ -546,14 +546,15 @@ Ownership-aware media session control. Napplet-owned sessions report playback st
 |--------|---------|-------------|
 | `createSession(options)` | `Promise<{ sessionId?, owner?, error? }>` | Create a napplet- or shell-owned media session. |
 | `updateSession(sessionId, metadata)` | `void` | Update metadata for an existing session. Fire-and-forget. |
-| `destroySession(sessionId)` | `void` | Destroy a session. Fire-and-forget. |
-| `reportState(sessionId, state)` | `void` | Report playback state (status, position, duration, volume). |
+| `destroySession(sessionId)` | `void` | Request session retirement. Fire-and-forget; the shell answers with `media.session.ended`. |
+| `reportState(sessionId, state)` | `void` | Report playback state (status, position, duration, volume, optional transition `reason`). |
 | `reportCapabilities(sessionId, actions)` | `void` | Declare supported media actions (dynamic). |
-| `sendCommand(sessionId, action, value?)` | `void` | Request a control action from the current playback owner. |
-| `onCommand(sessionId, callback)` | `{ close(): void }` | Listen for shell media commands (play, pause, seek, volume, etc.). |
+| `sendCommand(sessionId, action, value?, reason?)` | `void` | Request a control action from the current playback owner. |
+| `onCommand(sessionId, callback)` | `{ close(): void }` | Listen for shell media commands (play, pause, seek, volume, etc.) with an optional `reason`. |
 | `onState(sessionId, callback)` | `{ close(): void }` | Listen for shell-reported state on shell-owned sessions. |
 | `onCapabilities(sessionId, callback)` | `{ close(): void }` | Listen for shell-reported capabilities on shell-owned sessions. |
 | `onControls(sessionId, callback)` | `{ close(): void }` | Listen for the shell's session-scoped supported control list. |
+| `onEnded(sessionId, callback)` | `{ close(): void }` | Receive terminal `media.session.ended` retirement once. The record is retained, so late handlers still get it; retirement stops the session's other callbacks. |
 
 ### `window.napplet.notify`
 
@@ -586,13 +587,13 @@ Per-napplet declarative configuration (NAP-CONFIG). The shell is the sole writer
 
 ### `window.napplet.resource`
 
-Sandboxed byte fetching through the runtime-provided NAP-RESOURCE surface. Use `resource.bytes(url, opts?)` or `resource.bytesMany(requests, opts?)`; loading and transport requirements remain defined by NIP-5D and NAP-RESOURCE rather than by this package.
+Sandboxed byte fetching through the runtime-provided NAP-RESOURCE surface. Use `resource.bytes(url, opts?)` or `resource.bytesMany(urls, opts?)`; loading and transport requirements remain defined by NIP-5D and NAP-RESOURCE rather than by this package.
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| `info()` | `Promise<ResourceInfo>` | Inspect advisory schemes and coarse policy limits, including optional `maxServers`. A preflight is not required. |
-| `bytes(url, opts?)` | `Promise<Blob>` | Fetch bytes for a URL via the shell. `opts.servers` carries advisory Blossom locations and `opts.signal` accepts an `AbortSignal`. |
-| `bytesMany(requests, opts?)` | `Promise<ResourceBytesItem[]>` | Fetch many per-resource requests through one envelope. Each request may carry advisory Blossom `servers`; items preserve input order and length. |
+| `info()` | `Promise<ResourceInfo>` | Inspect advisory schemes and coarse policy limits (`maxBytes`, `maxUrls`). A preflight is not required. |
+| `bytes(url, opts?)` | `Promise<Blob>` | Fetch bytes for a URL via the shell. `opts.signal` accepts an `AbortSignal`. Blossom discovery hints ride in the BUD-10 URI (`?xs=…`). |
+| `bytesMany(urls, opts?)` | `Promise<ResourceBytesItem[]>` | Fetch many URLs through one envelope. Items preserve input order and length. |
 | `bytesAsObjectURL(url)` | `{ url: string; revoke: () => void }` | Synchronous handle whose `url` resolves to a blob URL once the underlying fetch completes. Caller MUST `revoke()` when done. |
 
 Canonical schemes: `data:` (decoded in-shim), `https:` (shell-side network with policy), `blossom:<sha256>.<ext>` ([BUD-10](https://github.com/hzrd149/blossom/blob/master/buds/10.md), hash-verified), `htree:` (Hashtree-verified), `nostr:<bech32>` (single-hop NIP-19 resolution).

@@ -213,6 +213,7 @@ export const ENVELOPE_SPECS: Record<string, EnvelopeSpec> = {
   'media.session.create.result': { dir: 'in' },
   'media.command': { dir: 'in' },
   'media.controls': { dir: 'in' },
+  'media.session.ended': { dir: 'in', fields: { sessionId: 'string', reason: 'string' } },
 
   // ── notify ───────────────────────────────────────────────────────────────
   'notify.send': { dir: 'out', fields: { ...ID, title: 'string' } },
@@ -240,7 +241,7 @@ export const ENVELOPE_SPECS: Record<string, EnvelopeSpec> = {
   // ── resource ─────────────────────────────────────────────────────────────
   'resource.info': { dir: 'out', fields: { ...ID } },
   'resource.bytes': { dir: 'out', fields: { ...ID, url: 'string' } },
-  'resource.bytesMany': { dir: 'out', fields: { ...ID, requests: 'array' } },
+  'resource.bytesMany': { dir: 'out', fields: { ...ID, urls: 'array' } },
   'resource.cancel': { dir: 'out', fields: { ...ID } },
   'resource.info.result': { dir: 'in' },
   'resource.info.error': { dir: 'in' },

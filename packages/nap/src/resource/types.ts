@@ -18,7 +18,6 @@
 import type {
   NappletMessage,
   ResourceBytesItem,
-  ResourceBytesRequest,
   ResourceErrorCode,
   ResourceInfo,
 } from '@napplet/core';
@@ -27,7 +26,6 @@ export type {
   ResourceBytesOkItem,
   ResourceBytesErrorItem,
   ResourceBytesItem,
-  ResourceBytesRequest,
   ResourceErrorCode,
   ResourceSchemeInfo,
   ResourceInfo,
@@ -93,8 +91,7 @@ export interface ResourceInfoErrorMessage extends ResourceMessage {
  * const msg: ResourceBytesMessage = {
  *   type: 'resource.bytes',
  *   id: crypto.randomUUID(),
- *   url: 'blossom:<sha256>.png',
- *   servers: ['https://cdn.hzrd149.com'],
+ *   url: 'blossom:<sha256>.png?xs=cdn.hzrd149.com',
  * };
  * ```
  */
@@ -104,22 +101,28 @@ export interface ResourceBytesMessage extends ResourceMessage {
   id: string;
   /** URL identifying the resource (any registered scheme). */
   url: string;
-  /** Advisory Blossom server locations. Ignored by the runtime for other schemes. */
-  servers?: string[];
 }
 
 /**
- * Request bytes for many resources in one envelope. The shell processes each
- * request as if it were an independent `resource.bytes` request, but returns
- * one ordered result array so one failed resource does not discard successful
- * siblings.
+ * Request bytes for many URLs in one envelope. The shell processes each URL
+ * as if it were an independent `resource.bytes` request, but returns one
+ * ordered result array so one failed URL does not discard successful siblings.
+ *
+ * @example
+ * ```ts
+ * const msg: ResourceBytesManyMessage = {
+ *   type: 'resource.bytesMany',
+ *   id: crypto.randomUUID(),
+ *   urls: ['https://example.com/a.png', 'blossom:<sha256>.png'],
+ * };
+ * ```
  */
 export interface ResourceBytesManyMessage extends ResourceMessage {
   type: 'resource.bytesMany';
   /** Correlation ID. */
   id: string;
-  /** Non-empty resource request list. Result items preserve this order and length. */
-  requests: ResourceBytesRequest[];
+  /** Non-empty URL list. Result items preserve this order and length. */
+  urls: string[];
 }
 
 /**

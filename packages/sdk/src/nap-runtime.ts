@@ -94,7 +94,7 @@ export { incEmit, incOn } from '@napplet/nap/inc';
  */
 export { ifcEmit, ifcOn } from '@napplet/nap/ifc';
 export { keysRegisterAction, keysUnregisterAction, keysOnAction, keysRegister } from '@napplet/nap/keys';
-export { mediaCreateSession, mediaUpdateSession, mediaDestroySession, mediaReportState, mediaReportCapabilities, mediaSendCommand, mediaOnCommand, mediaOnState, mediaOnCapabilities, mediaOnControls } from '@napplet/nap/media';
+export { mediaCreateSession, mediaUpdateSession, mediaDestroySession, mediaReportState, mediaReportCapabilities, mediaSendCommand, mediaOnCommand, mediaOnState, mediaOnCapabilities, mediaOnControls, mediaOnEnded } from '@napplet/nap/media';
 export { notifySend, notifyDismiss, notifyBadge, notifyRegisterChannel, notifyRequestPermission, notifyOnAction, notifyOnClicked, notifyOnDismissed, notifyOnControls } from '@napplet/nap/notify';
 export {
   resourceInfo,

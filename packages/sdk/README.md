@@ -97,12 +97,10 @@ const configSub = config.subscribe((v) => {
 config.openSettings({ section: 'appearance' });
 
 // Fetch external bytes through the runtime's NAP-RESOURCE surface
-const avatarBlob = await resource.bytes('blossom:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.bin', {
-  servers: ['https://cdn.hzrd149.com'],
-});
+const avatarBlob = await resource.bytes('blossom:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.bin?xs=cdn.hzrd149.com');
 const resourceItems = await resource.bytesMany([
-  { url: 'https://example.com/avatar.png' },
-  { url: 'blossom:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.bin', servers: ['https://cdn.hzrd149.com'] },
+  'https://example.com/avatar.png',
+  'blossom:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.bin?xs=cdn.hzrd149.com',
 ]);
 const handle = resource.bytesAsObjectURL('blossom:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.bin');
 imgEl.src = handle.url;
@@ -220,14 +218,15 @@ Ownership-aware media sessions. Napplet-owned sessions let your app play media a
 |--------|---------|-------------|
 | `createSession(options)` | `Promise<{ sessionId?, owner?, error? }>` | Create a napplet- or shell-owned media session |
 | `updateSession(sessionId, metadata)` | `void` | Update metadata for an existing session |
-| `destroySession(sessionId)` | `void` | Destroy a session |
+| `destroySession(sessionId)` | `void` | Request session retirement; the shell answers with `media.session.ended` |
 | `reportState(sessionId, state)` | `void` | Report playback state |
 | `reportCapabilities(sessionId, actions)` | `void` | Declare supported media actions |
-| `sendCommand(sessionId, action, value?)` | `void` | Request a control action from the current playback owner |
-| `onCommand(sessionId, callback)` | `{ close(): void }` | Listen for shell media commands |
+| `sendCommand(sessionId, action, value?, reason?)` | `void` | Request a control action from the current playback owner |
+| `onCommand(sessionId, callback)` | `{ close(): void }` | Listen for shell media commands; the callback receives `(action, value?, reason?)` |
 | `onState(sessionId, callback)` | `{ close(): void }` | Listen for shell-reported state on shell-owned sessions |
 | `onCapabilities(sessionId, callback)` | `{ close(): void }` | Listen for shell-reported capabilities on shell-owned sessions |
 | `onControls(sessionId, callback)` | `{ close(): void }` | Listen for the shell's supported control list |
+| `onEnded(sessionId, callback)` | `{ close(): void }` | Receive the session's terminal `{ sessionId, reason }` retirement once, even when registered after it arrived |
 
 ### `notify`
 
@@ -294,8 +293,8 @@ Sandboxed byte fetching (NAP-RESOURCE). Mirrors `window.napplet.resource`; loadi
 | Method | Returns | Description |
 |--------|---------|-------------|
 | `info()` | `Promise<ResourceInfo>` | Inspect advisory schemes and coarse policy limits. Not required before fetching. |
-| `bytes(url, opts?)` | `Promise<Blob>` | Fetch bytes through the shell. `opts.servers` carries advisory Blossom locations and `opts.signal` accepts an `AbortSignal`. |
-| `bytesMany(requests, opts?)` | `Promise<ResourceBytesItem[]>` | Fetch many per-resource requests through one envelope. Each request may carry advisory Blossom `servers`; items preserve input order and length. |
+| `bytes(url, opts?)` | `Promise<Blob>` | Fetch bytes through the shell. `opts.signal` accepts an `AbortSignal`. Blossom discovery hints ride in the BUD-10 URI (`?xs=…`). |
+| `bytesMany(urls, opts?)` | `Promise<ResourceBytesItem[]>` | Fetch many URLs through one envelope. Items preserve input order and length. |
 | `bytesAsObjectURL(url)` | `{ url: string; revoke: () => void }` | Synchronous handle whose `url` resolves to a blob URL once the fetch completes. |
 
 Canonical schemes: `data:` (in-shim), `https:` (shell-side under policy), `blossom:<sha256>.<ext>` ([BUD-10](https://github.com/hzrd149/blossom/blob/master/buds/10.md), hash-verified), `htree:` (Hashtree-verified), `nostr:<bech32>` (single-hop NIP-19).

@@ -75,5 +75,18 @@ describe('domain exposure and lifecycle-independent delivery', () => {
     deliver({ type: 'webrtc.sendBytes.result', id: sent!.id });
     await expect(pending).resolves.toBeUndefined();
   });
+
+  // NAP-MEDIA (napplet/naps#10 @ 7806f438): window.napplet.media.onEnded over the port.
+  it('routes media.session.ended from the port to window.napplet.media.onEnded', () => {
+    const installed = installNappletGlobal({ domains: ['media'] });
+    const ended = vi.fn();
+    const state = vi.fn();
+    installed.media!.onEnded('shell-7', ended);
+    installed.media!.onState('shell-7', state);
+    deliver({ type: 'media.session.ended', sessionId: 'shell-7', reason: 'preempted' });
+    deliver({ type: 'media.state', sessionId: 'shell-7', status: 'playing' });
+    expect(ended).toHaveBeenCalledExactlyOnceWith({ sessionId: 'shell-7', reason: 'preempted' });
+    expect(state).not.toHaveBeenCalled();
+  });
 });
 

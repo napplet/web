@@ -142,7 +142,8 @@ export const RESPONDERS: Record<string, Responder> = {
   // media
   'media.session.create': (e) => ok({ type: 'media.session.create.result', id: e.id, sessionId: `session-${String(e.id)}`, owner: e.owner }),
   'media.session.update': none,
-  'media.session.destroy': none,
+  // NAP-MEDIA: destroy is answered by exactly one terminal media.session.ended.
+  'media.session.destroy': (e) => ok({ type: 'media.session.ended', sessionId: e.sessionId, reason: 'destroyed' }),
   'media.state': none,
   'media.capabilities': none,
 
@@ -171,11 +172,8 @@ export const RESPONDERS: Record<string, Responder> = {
   'resource.bytesMany': (e) => ok({
     type: 'resource.bytesMany.result',
     id: e.id,
-    items: Array.isArray(e.requests)
-      ? e.requests.map((request) => {
-        const url = typeof request === 'object' && request !== null && !Array.isArray(request)
-          ? (request as Record<string, unknown>).url
-          : undefined;
+    items: Array.isArray(e.urls)
+      ? e.urls.map((url: unknown) => {
         const decoded = dataUrlToBlob(url);
         return {
           url: typeof url === 'string' ? url : '',
@@ -194,7 +192,6 @@ export const RESPONDERS: Record<string, Responder> = {
         { scheme: 'data', enabled: true },
         { scheme: 'https', enabled: true },
       ],
-      maxServers: 8,
     },
   }),
   'resource.cancel': none,

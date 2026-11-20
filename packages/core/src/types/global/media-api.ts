@@ -3,6 +3,7 @@ import type {
   MediaAction,
   MediaMetadata,
   MediaSessionCreate,
+  MediaSessionEnded,
   MediaSessionResult,
   MediaState,
 } from '../media.js';
@@ -65,15 +66,19 @@ export interface MediaApi {
    * @param sessionId  The session to control
    * @param action     The media action to request
    * @param value      Optional value for seek/volume
+   * @param reason     Optional cause of the command, such as `user`
    */
-  sendCommand(sessionId: string, action: MediaAction, value?: number): void;
+  sendCommand(sessionId: string, action: MediaAction, value?: number, reason?: string): void;
   /**
    * Listen for media commands from the shell.
    * @param sessionId  The session to listen for commands on
-   * @param callback   Called with (action, value?) when a command is received
+   * @param callback   Called with (action, value?, reason?) when a command is received
    * @returns A Subscription with `close()` to stop listening
    */
-  onCommand(sessionId: string, callback: (action: MediaAction, value?: number) => void): Subscription;
+  onCommand(
+    sessionId: string,
+    callback: (action: MediaAction, value?: number, reason?: string) => void,
+  ): Subscription;
   /**
    * Listen for shell-reported playback state for shell-owned sessions.
    * @param sessionId  The session to listen for state on
@@ -95,6 +100,16 @@ export interface MediaApi {
    * @returns A Subscription with `close()` to stop listening
    */
   onControls(sessionId: string, callback: (controls: MediaAction[]) => void): Subscription;
+  /**
+   * Listen for terminal retirement of a session (`media.session.ended`).
+   * The record is retained, so a handler registered after retirement still
+   * receives it once. Retirement stops further state, capability, control, and
+   * command callbacks for that session.
+   * @param sessionId  The session to watch for retirement
+   * @param callback   Called once with the retirement record
+   * @returns A Subscription with `close()` to stop listening
+   */
+  onEnded(sessionId: string, callback: (ended: MediaSessionEnded) => void): Subscription;
 }
 
 /**
