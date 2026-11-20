@@ -216,4 +216,103 @@ describe('@napplet/nap/media shim', () => {
     expect(stateSeen).not.toHaveBeenCalled();
     expect(capabilitiesSeen).not.toHaveBeenCalled();
   });
+
+  // NAP-MEDIA (napplet/naps#10 @ 7806f438) §Session retirement and preemption.
+  it('delivers destroy retirement to onEnded after the destroy request', async () => {
+    const { destroySession, handleMediaMessage, onEnded } = await import('./shim.js');
+    const ended = vi.fn();
+
+    onEnded('s1', ended);
+    destroySession('s1');
+    handleMediaMessage({ type: 'media.session.ended', sessionId: 's1', reason: 'destroyed' });
+
+    expect(shell.sent).toEqual([{ type: 'media.session.destroy', sessionId: 's1' }]);
+    expect(ended).toHaveBeenCalledTimes(1);
+    expect(ended).toHaveBeenCalledWith({ sessionId: 's1', reason: 'destroyed' });
+  });
+
+  it('retires a session once and discards later per-session messages', async () => {
+    const { handleMediaMessage, onCapabilities, onCommand, onControls, onEnded, onState } =
+      await import('./shim.js');
+    const stateSeen = vi.fn();
+    const capabilitiesSeen = vi.fn();
+    const commandSeen = vi.fn();
+    const controlsSeen = vi.fn();
+    const ended = vi.fn();
+
+    onState('shell-7', stateSeen);
+    onCapabilities('shell-7', capabilitiesSeen);
+    onCommand('shell-7', commandSeen);
+    onControls('shell-7', controlsSeen);
+    onEnded('shell-7', ended);
+
+    handleMediaMessage({ type: 'media.session.ended', sessionId: 'shell-7', reason: 'preempted' });
+    handleMediaMessage({ type: 'media.session.ended', sessionId: 'shell-7', reason: 'policy' });
+    handleMediaMessage({ type: 'media.state', sessionId: 'shell-7', status: 'playing' });
+    handleMediaMessage({ type: 'media.capabilities', sessionId: 'shell-7', actions: ['play'] });
+    handleMediaMessage({ type: 'media.command', sessionId: 'shell-7', action: 'play' });
+    handleMediaMessage({ type: 'media.controls', sessionId: 'shell-7', controls: ['play'] });
+
+    expect(ended).toHaveBeenCalledTimes(1);
+    expect(ended).toHaveBeenCalledWith({ sessionId: 'shell-7', reason: 'preempted' });
+    expect(stateSeen).not.toHaveBeenCalled();
+    expect(capabilitiesSeen).not.toHaveBeenCalled();
+    expect(commandSeen).not.toHaveBeenCalled();
+    expect(controlsSeen).not.toHaveBeenCalled();
+  });
+
+  it('replays the retained retirement once to a handler registered afterwards', async () => {
+    const { handleMediaMessage, onEnded } = await import('./shim.js');
+    const late = vi.fn();
+    const closedEarly = vi.fn();
+
+    handleMediaMessage({ type: 'media.session.ended', sessionId: 's1', reason: 'destroyed' });
+    onEnded('s1', late);
+    onEnded('s1', closedEarly).close();
+    await Promise.resolve();
+
+    expect(late).toHaveBeenCalledTimes(1);
+    expect(late).toHaveBeenCalledWith({ sessionId: 's1', reason: 'destroyed' });
+    expect(closedEarly).not.toHaveBeenCalled();
+  });
+
+  it('forgets retained retirements when the shim is torn down', async () => {
+    const { handleMediaMessage, installMediaShim, onEnded } = await import('./shim.js');
+    const cleanup = installMediaShim();
+    const late = vi.fn();
+
+    handleMediaMessage({ type: 'media.session.ended', sessionId: 's1', reason: 'destroyed' });
+    cleanup();
+    onEnded('s1', late);
+    await Promise.resolve();
+
+    expect(late).not.toHaveBeenCalled();
+  });
+
+  // NAP-MEDIA (napplet/naps#10 @ 7806f438) §Transition reasons.
+  it('carries transition reasons on state and commands in both directions', async () => {
+    const { handleMediaMessage, onCommand, onState, reportState, sendCommand } = await import('./shim.js');
+    const stateSeen = vi.fn();
+    const commandSeen = vi.fn();
+
+    onState('shell-7', stateSeen);
+    onCommand('s1', commandSeen);
+    handleMediaMessage({ type: 'media.state', sessionId: 'shell-7', status: 'stopped', reason: 'ended' });
+    handleMediaMessage({ type: 'media.command', sessionId: 's1', action: 'pause', reason: 'focus-lost' });
+    reportState('s1', { status: 'paused', reason: 'focus-lost' });
+    sendCommand('shell-7', 'play', undefined, 'user');
+
+    expect(stateSeen).toHaveBeenCalledWith({
+      status: 'stopped',
+      position: undefined,
+      duration: undefined,
+      volume: undefined,
+      reason: 'ended',
+    });
+    expect(commandSeen).toHaveBeenCalledWith('pause', undefined, 'focus-lost');
+    expect(shell.sent).toEqual([
+      { type: 'media.state', sessionId: 's1', status: 'paused', reason: 'focus-lost' },
+      { type: 'media.command', sessionId: 'shell-7', action: 'play', reason: 'user' },
+    ]);
+  });
 });

@@ -219,14 +219,15 @@ Ownership-aware media sessions. Napplet-owned sessions let your app play media a
 |--------|---------|-------------|
 | `createSession(options)` | `Promise<{ sessionId?, owner?, error? }>` | Create a napplet- or shell-owned media session |
 | `updateSession(sessionId, metadata)` | `void` | Update metadata for an existing session |
-| `destroySession(sessionId)` | `void` | Destroy a session |
+| `destroySession(sessionId)` | `void` | Request session retirement; the shell answers with `media.session.ended` |
 | `reportState(sessionId, state)` | `void` | Report playback state |
 | `reportCapabilities(sessionId, actions)` | `void` | Declare supported media actions |
-| `sendCommand(sessionId, action, value?)` | `void` | Request a control action from the current playback owner |
-| `onCommand(sessionId, callback)` | `{ close(): void }` | Listen for shell media commands |
+| `sendCommand(sessionId, action, value?, reason?)` | `void` | Request a control action from the current playback owner |
+| `onCommand(sessionId, callback)` | `{ close(): void }` | Listen for shell media commands; the callback receives `(action, value?, reason?)` |
 | `onState(sessionId, callback)` | `{ close(): void }` | Listen for shell-reported state on shell-owned sessions |
 | `onCapabilities(sessionId, callback)` | `{ close(): void }` | Listen for shell-reported capabilities on shell-owned sessions |
 | `onControls(sessionId, callback)` | `{ close(): void }` | Listen for the shell's supported control list |
+| `onEnded(sessionId, callback)` | `{ close(): void }` | Receive the session's terminal `{ sessionId, reason }` retirement once, even when registered after it arrived |
 
 ### `notify`
 

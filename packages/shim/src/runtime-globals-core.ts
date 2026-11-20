@@ -105,6 +105,7 @@ function installFoundationDomains(domains: ReadonlySet<NapDomain>, napplet: Part
       onState: mediaShim.onState,
       onCapabilities: mediaShim.onCapabilities,
       onControls: mediaShim.onControls,
+      onEnded: mediaShim.onEnded,
     };
   }
 

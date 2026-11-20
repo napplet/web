@@ -213,6 +213,7 @@ export const ENVELOPE_SPECS: Record<string, EnvelopeSpec> = {
   'media.session.create.result': { dir: 'in' },
   'media.command': { dir: 'in' },
   'media.controls': { dir: 'in' },
+  'media.session.ended': { dir: 'in', fields: { sessionId: 'string', reason: 'string' } },
 
   // ── notify ───────────────────────────────────────────────────────────────
   'notify.send': { dir: 'out', fields: { ...ID, title: 'string' } },

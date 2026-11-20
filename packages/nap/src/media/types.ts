@@ -8,11 +8,11 @@
  * @napplet/nap/media -- Media session control message types
  * for the JSON envelope wire protocol.
  *
- * Defines 8 message types for media session management:
+ * Defines 9 message types for media session management:
  * - Napplet -> Shell: session.create, session.update, session.destroy
  * - Owner -> Peer: state, capabilities
  * - Controller -> Owner: command
- * - Shell -> Napplet: session.create.result, controls
+ * - Shell -> Napplet: session.create.result, session.ended, controls
  *
  * All types form a discriminated union on the `type` field.
  * Media sessions support napplet-owned and shell-owned playback.
@@ -23,6 +23,7 @@ import type {
   MediaPlaybackOwner,
   MediaAction,
   MediaSessionCreate,
+  MediaSessionEnded,
 } from '@napplet/core';
 
 /** The NAP domain name for media messages. */
@@ -153,6 +154,8 @@ export interface MediaState {
   duration?: number;
   /** Napplet-side volume (0.0 to 1.0). Shell volume is separate. */
   volume?: number;
+  /** Cause of this transition, such as `user`, `ended`, `error`, or `focus-lost`. */
+  reason?: string;
 }
 
 /**
@@ -166,6 +169,9 @@ export type { MediaAction };
  * Shell-owned sessions require a source because the shell owns fetching/playback.
  */
 export type { MediaSessionCreate };
+
+/** Terminal retirement record carried by `media.session.ended`. */
+export type { MediaSessionEnded };
 
 /** Result of a create-session request. */
 export interface MediaSessionResult {
@@ -291,6 +297,8 @@ export interface MediaStateMessage extends MediaMessage {
   duration?: number;
   /** Napplet-side volume (0.0 to 1.0). */
   volume?: number;
+  /** Cause of this transition. Missing or unrecognized reasons are unspecified causes. */
+  reason?: string;
 }
 
 /**
@@ -363,6 +371,30 @@ export interface MediaCommandMessage extends MediaMessage {
   action: MediaAction;
   /** Optional value for seek (position in seconds) or volume (0.0 to 1.0). */
   value?: number;
+  /** Cause of the command, such as `user` or `focus-lost`. Does not grant authority. */
+  reason?: string;
+}
+
+/**
+ * Shell-initiated terminal notification that retires a session. Has no `id`
+ * correlation. The shell sends exactly one per retired session; later
+ * messages for that session are discarded.
+ *
+ * @example
+ * ```ts
+ * const msg: MediaSessionEndedMessage = {
+ *   type: 'media.session.ended',
+ *   sessionId: 's1',
+ *   reason: 'destroyed',
+ * };
+ * ```
+ */
+export interface MediaSessionEndedMessage extends MediaMessage {
+  type: 'media.session.ended';
+  /** Canonical identifier of the retired session. */
+  sessionId: string;
+  /** Why the shell retired the session. */
+  reason: string;
 }
 
 /**
@@ -398,6 +430,7 @@ export type MediaRequestMessage =
 /** Shell -> Napplet media result/push messages. */
 export type MediaResultMessage =
   | MediaSessionCreateResultMessage
+  | MediaSessionEndedMessage
   | MediaStateMessage
   | MediaCapabilitiesMessage
   | MediaCommandMessage
