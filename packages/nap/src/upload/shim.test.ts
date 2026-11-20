@@ -157,4 +157,46 @@ describe('@napplet/nap/upload shim', () => {
     expect(() => handleUploadMessage({ type: 'upload.upload.result', id: 'no-such-id' })).not.toThrow();
     expect(() => handleUploadMessage({ type: 'upload.status.changed' })).not.toThrow();
   });
+
+  // NAP-UPLOAD (napplet/naps#33 @ f5cc981e) wire table:
+  // `upload.info.result` carries `id`, `info`, `error?`;
+  // `upload.status.result` carries `id`, `status`, `error?`.
+  it('rejects info and status queries when the runtime reports an error alongside the payload', async () => {
+    const { info, status, handleUploadMessage } = await import('./shim.js');
+
+    const infoQuery = info();
+    handleUploadMessage({ type: 'upload.info.result', id: lastPosted('upload.info').id, info: { rails: [] }, error: 'policy denied' });
+    await expect(infoQuery).rejects.toThrow('policy denied');
+
+    const statusQuery = status('upload-1');
+    handleUploadMessage({
+      type: 'upload.status.result',
+      id: lastPosted('upload.status').id,
+      status: { ok: false, uploadId: 'upload-1', status: 'failed', rail: 'nip96', updatedAt: 123 },
+      error: 'policy denied',
+    });
+    await expect(statusQuery).rejects.toThrow('policy denied');
+  });
+
+  it('rejects malformed results that omit the required payload', async () => {
+    const { info, status, handleUploadMessage } = await import('./shim.js');
+
+    const infoQuery = info();
+    handleUploadMessage({ type: 'upload.info.result', id: lastPosted('upload.info').id });
+    await expect(infoQuery).rejects.toThrow('upload.info.result missing info');
+
+    const statusQuery = status('upload-1');
+    handleUploadMessage({ type: 'upload.status.result', id: lastPosted('upload.status').id });
+    await expect(statusQuery).rejects.toThrow('upload.status.result missing status');
+  });
+
+  it('types info and status as required result fields', () => {
+    type InfoResult = import('./types.js').UploadInfoResultMessage;
+    type StatusResult = import('./types.js').UploadStatusResultMessage;
+    // @ts-expect-error info is required
+    const i: InfoResult = { type: 'upload.info.result', id: 'i1', error: 'policy denied' };
+    // @ts-expect-error status is required
+    const s: StatusResult = { type: 'upload.status.result', id: 's1', error: 'policy denied' };
+    expect([i, s]).toHaveLength(2);
+  });
 });

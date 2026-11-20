@@ -66,11 +66,19 @@ function handleInfoResult(msg: UploadInfoResultMessage): void {
   if (!p) return;
   pendingInfo.delete(msg.id);
   clearTimeout(p.timeout);
-  if (msg.info !== undefined) {
-    p.resolve(msg.info);
+  // The NAP-UPLOAD wire table requires `info` and allows `error?` alongside it.
+  // A top-level `error` reports a processing failure, so it wins over whatever
+  // placeholder info accompanies it. Wire input is untrusted, so a missing
+  // payload still rejects.
+  if (msg.error !== undefined) {
+    p.reject(new Error(msg.error));
     return;
   }
-  p.reject(new Error(msg.error ?? 'upload info unavailable'));
+  if (msg.info === undefined) {
+    p.reject(new Error('upload.info.result missing info'));
+    return;
+  }
+  p.resolve(msg.info);
 }
 
 function handleUploadResult(msg: UploadUploadResultMessage): void {
@@ -90,11 +98,16 @@ function handleStatusResult(msg: UploadStatusResultMessage): void {
   if (!p) return;
   pendingStatus.delete(msg.id);
   clearTimeout(p.timeout);
-  if (msg.status !== undefined) {
-    p.resolve(msg.status);
+  // Same rule as handleInfoResult: `error` wins, a missing status rejects.
+  if (msg.error !== undefined) {
+    p.reject(new Error(msg.error));
     return;
   }
-  p.reject(new Error(msg.error ?? 'upload status unavailable'));
+  if (msg.status === undefined) {
+    p.reject(new Error('upload.status.result missing status'));
+    return;
+  }
+  p.resolve(msg.status);
 }
 
 function handleStatusChanged(msg: UploadStatusChangedMessage): void {
@@ -104,7 +117,8 @@ function handleStatusChanged(msg: UploadStatusChangedMessage): void {
 
 /**
  * Handle upload.* messages from the shell via the central message listener.
- * Covers upload.upload.result, upload.status.result, and upload.status.changed.
+ * Covers upload.info.result, upload.upload.result, upload.status.result, and
+ * upload.status.changed.
  */
 export function handleUploadMessage(msg: { type: string; [key: string]: unknown }): void {
   if (isMessageType<UploadInfoResultMessage>(msg, 'upload.info.result')) {
