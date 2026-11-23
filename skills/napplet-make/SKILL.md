@@ -80,7 +80,7 @@ If Kehto/Paja is unavailable, continue build and conformance work and report the
 - `pnpm verify` and `pnpm test:conformance` pass in the project (or the retrofit equivalents).
 - Boundary audit from `napplet-test` is clean; every `relay` use has a written reason.
 - `napplet-ui` four-frame check (`200×160`, `320×560`, `900×600`, largest available) in dark and light: no title header, no overflow, frame filled, minimum notice correct if declared.
-- Manifest `requires` matches the spec's hard list; `.napplet/config.yaml` still owns deployment metadata.
+- Manifest `requires` matches the spec's hard list; `.napplet/config.yaml` still owns deployment metadata, including the spec's discovery `topics` (`t` tags) and a description that says what the napplet does.
 - Paja preview URL reported, or Paja explicitly reported unavailable.
 - Any protocol/package gap listed as a gap, not papered over.
 

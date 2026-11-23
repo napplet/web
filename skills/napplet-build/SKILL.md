@@ -16,9 +16,11 @@ Rewrite the plan before coding if it needs any of these in napplet code: `fetch`
 ```bash
 napplet create my-napplet
 cd my-napplet
-napplet init            # d-tag, title, description, archetype metadata → .napplet/config.yaml
+napplet init            # d-tag, title, description, archetype, topic metadata → .napplet/config.yaml
 pnpm install
 ```
+
+Pass the spec's topics non-interactively with one `--topic` per entry (`napplet init --topic nostr --topic notes`), or answer the wizard's topic prompt. Each becomes a `["t", "<topic>"]` hashtag tag on the manifest so clients can find the napplet. Pick a few lowercase single words that say what it does and who it's for (`notes`, `music`, `chess`, `zaps`), not the napplet's name or filler like `app` or `napplet`. Topics are optional discovery metadata, not NIP-5D protocol, so clients may ignore them.
 
 `create` clones the maintained `github.com/napplet/boilerplate` template (package manager pin, Vite config, single-file build, scripts, conformance wiring, docs layout). `init` owns deployment metadata. Do not recreate `package.json`, `pnpm-lock.yaml`, `vite.config.ts`, `tsconfig`, or the scripts by hand; edit the generated project. If `napplet` is missing, tell the user to install the standalone CLI — do not pretend the commands ran. Use manual wiring only for an explicit retrofit into an existing app, mirroring the boilerplate's shape.
 
@@ -59,6 +61,7 @@ export default defineConfig({
       requires: ['outbox', 'storage'],  // hard requirements only, bare domain names
       optional: ['theme', 'keys'],      // integrations with a usable fallback
       // archetypes: [{ slug: 'note', convention: 'napplet:note/open' }],  // see napplet-interop
+      // topics: ['notes', 'reader'],  // build-local t tags; .napplet/config.yaml metadata.topics wins at deploy
     }),
   ],
 });

@@ -104,7 +104,7 @@ napplet deploy
 What each step does:
 
 - `napplet create` delegates to `@napplet/boilerplate` and creates the starter only.
-- `napplet init` owns deployment name, title, description, archetype roles and conventions, relays, and Blossom servers in `.napplet/config.yaml`; scripts can pass the same fields explicitly.
+- `napplet init` owns deployment name, title, description, archetype roles and conventions, discovery topics, relays, and Blossom servers in `.napplet/config.yaml`; scripts can pass the same fields explicitly.
 - `npx skills add napplet/web` installs the `napplet-*` agent skills through the skills.sh CLI (Claude Code, Codex, Cursor, and 70+ other agents); it is not a `napplet` subcommand.
 - `napplet debug` prints resolved config, discovered napplets, deploy targets, manifest templates, and signing readiness without uploading or publishing. Manifest template failures (for example a missing description, or built files a current deploy would drop) are reported in `manifests.error` instead of aborting, and `--format current|legacy` selects the event format inspected.
 - `napplet deploy --dry-run` builds the same deploy plan and signed manifest events without network writes. Interactive terminals get a readable report with copyable NIP-19 pointers.
@@ -131,7 +131,7 @@ Deploy accepts `--source-dir`, `--description`, repeated `--relay`, and repeated
 ```sh
 napplet guide
 napplet create <directory> [--template <path-or-url>] [--force]
-napplet init [--force] [--root] [--source-dir <dir>] [--name <dtag>] [--title <title>] [--description <text>] [--archetype <napplet:archetype/intent>] [--relay <url>] [--server <url>] [--proxy <url>]
+napplet init [--force] [--root] [--source-dir <dir>] [--name <dtag>] [--title <title>] [--description <text>] [--archetype <napplet:archetype/intent>] [--topic <word>] [--relay <url>] [--server <url>] [--proxy <url>]
 napplet discover [--config <file>] [--all]
 napplet debug [--format current|legacy] [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>]
 napplet deploy [--format current|legacy] [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>] [--prompt-sec] [--zapstore | --no-zapstore] [--no-screenshot] [--screenshot [<preview-url>]] [--proxy <url>] [--dry-run] [--json]
@@ -151,11 +151,11 @@ Creates `.napplet/config.yaml` unless it already exists. Use `--force` to overwr
 
 The `--archetype` flag and interactive wizard accept convention URIs directly. YAML `metadata.archetypes` entries also accept URI strings, such as `["napplet:note/open"]`, and normalize them to the object form below. Existing object configs and older role-prefixed CLI inputs remain supported. Use object entries with `params` to advertise parameter names; these are not event-kind restrictions.
 
-In an interactive terminal, `napplet init` guides setup for source directory, root-vs-named target, name, title, optional description, archetype roles and conventions, relays, and Blossom servers. Relay suggestions come from best-effort [NIP-66](https://nips.nostr.com/66) discovery events on relay discovery relays such as `wss://relaypag.es`; curated general-purpose relays are completed first, followed by live discoveries. Blossom suggestions come from best-effort [NIP-B7](https://nips.nostr.com/b7) kind `10063` server-list events, with bundled defaults when live discovery is unavailable. Suggestions are advisory Tab-completion candidates; the written config contains only the values you accept or type.
+In an interactive terminal, `napplet init` guides setup for source directory, root-vs-named target, name, title, optional description, archetype roles and conventions, optional discovery topics, relays, and Blossom servers. Relay suggestions come from best-effort [NIP-66](https://nips.nostr.com/66) discovery events on relay discovery relays such as `wss://relaypag.es`; curated general-purpose relays are completed first, followed by live discoveries. Blossom suggestions come from best-effort [NIP-B7](https://nips.nostr.com/b7) kind `10063` server-list events, with bundled defaults when live discovery is unavailable. Suggestions are advisory Tab-completion candidates; the written config contains only the values you accept or type.
 
 ```sh
 napplet init
-napplet init --source-dir . --name feed --title Feed --archetype napplet:note/open --relay wss://relay.example --server https://blossom.example
+napplet init --source-dir . --name feed --title Feed --archetype napplet:note/open --topic nostr --topic notes --relay wss://relay.example --server https://blossom.example
 napplet init --root --relay wss://relay.example --server https://blossom.example
 ```
 
@@ -178,9 +178,12 @@ metadata:
   archetypes:
     - slug: note
       convention: napplet:note/open
+  topics:
+    - nostr
+    - notes
 ```
 
-Valid config metadata takes precedence over title/description/archetype defaults found in built HTML or the Vite plugin sidecar. Legacy configs without `metadata` retain their existing fallback behavior. Each object emits independent current tags: `["z", "note"]` and `["i", "napplet:note/open"]`; optional `params` lists advertised parameter names. Under [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md#manifest-catalog-contract), a convention is eligible for dispatch only when its archetype segment matches a `z` role on the same manifest. A metadata-free template keeps its canonical archetype tags; providing `metadata.archetypes` replaces those tags with the configured objects. A domain listed as both required and optional is emitted only as `O`, matching the Vite plugin.
+Valid config metadata takes precedence over title/description/archetype defaults found in built HTML or the Vite plugin sidecar. Legacy configs without `metadata` retain their existing fallback behavior. Each object emits independent current tags: `["z", "note"]` and `["i", "napplet:note/open"]`; optional `params` lists advertised parameter names. Under [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md#manifest-catalog-contract), a convention is eligible for dispatch only when its archetype segment matches a `z` role on the same manifest. A metadata-free template keeps its canonical archetype tags; providing `metadata.archetypes` replaces those tags with the configured objects. A domain listed as both required and optional is emitted only as `O`, matching the Vite plugin. Each `metadata.topics` entry is emitted as a `["t", "<topic>"]` hashtag tag after trimming, dropping a leading `#`, lowercasing, and deduplicating; empty or multi-word topics are rejected. Configured topics replace sidecar `t` tags, and sidecar `t` tags pass through when `metadata.topics` is absent. NIP-5D doesn't define topics, so clients may use them for discovery or ignore them.
 
 This non-normative guide defers to the living [NAP-INTENT](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md) specification. Manifest convention identities are queryless and fragment-free; parameter values belong to invocation payloads.
 
