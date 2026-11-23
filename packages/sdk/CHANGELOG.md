@@ -1,5 +1,69 @@
 # @napplet/sdk
 
+## 0.39.0
+
+### Minor Changes
+
+- 56205ad: Match `cvm.discover.result`, `intent.available.result`, and
+  `intent.handlers.result` field optionality to the NAP text.
+
+  `CvmDiscoverResultMessage` is now a union of `CvmDiscoverSuccessResultMessage`
+  (`servers` required, no `error`) and `CvmDiscoverErrorResultMessage` (`error`,
+  no `servers`), following NAP-CVM §Error Handling: "On a shell error, success
+  payload fields MUST be omitted. On success, the operation's payload is
+  required." `cvm.discover()` now rejects a result that has neither field
+  instead of resolving `[]`.
+
+  `IntentAvailableResultMessage.availability` and
+  `IntentHandlersResultMessage.handlers` are now required, matching the
+  NAP-INTENT wire table (`id`, `availability`, `error`? and `id`, `handlers`,
+  `error`?). `intent.available()` and `intent.handlers()` now reject with the
+  top-level `error` when it is present, even if a payload accompanies it, and
+  still reject a result that omits its payload.
+
+  The conformance envelope specs require `availability` (object) and `handlers`
+  (array) on the intent query results and only `id` on `cvm.discover.result`.
+
+### Patch Changes
+
+- Updated dependencies [56205ad]
+  - @napplet/nap@0.45.0
+
+## 0.38.0
+
+### Minor Changes
+
+- 0d9a9fa: Follow NAP-RESOURCE canonical base64 wire bytes and stop decoding
+  `data:` URLs in the shim.
+
+  Every wire `blob` (`resource.bytes.result`, `resource.bytesMany.result` items,
+  and `ResourceSidecarEntry`) is now canonical padded base64 text
+  (`ResourceBytes`). The shim strictly validates it and decodes it into a `Blob`
+  typed with the runtime-classified `mime`, so `window.napplet.resource.bytes()`
+  / `bytesMany()` still return Blobs. A non-canonical encoding, a `Blob`, an
+  `ArrayBuffer`, or an integer array on the wire rejects the call, and bad
+  sidecar entries are skipped instead of cached.
+
+  `data:` URLs, bare `nhash` aliases, and malformed URLs now go to the runtime,
+  which applies the size cap, MIME sniffing, and SVG rasterization NAP-RESOURCE
+  requires and answers with `invalid-request` where needed. `ResourceScheme`
+  gains `hashtree`, and the conformance reference shell answers with base64.
+
+  Migration for shells: send `blob: btoa(binary)`-style canonical base64 instead
+  of a `Blob`, for example
+  `{ type: 'resource.bytes.result', id, blob: 'AAEC/w==', mime: 'application/octet-stream' }`.
+
+  Napplets reading `RelayEventResult.sidecar.resources` directly now see base64
+  text in `blob`, and entries that failed decoding are removed from the result.
+  Call `window.napplet.resource.bytes(url)` instead: hydrated URLs resolve from
+  cache as Blobs without a round-trip.
+
+### Patch Changes
+
+- Updated dependencies [0d9a9fa]
+  - @napplet/core@0.45.0
+  - @napplet/nap@0.44.0
+
 ## 0.37.0
 
 ### Minor Changes

@@ -316,8 +316,7 @@ export interface ConfigValuesMessage extends ConfigMessage {
 }
 
 /**
- * Pushed when the shell rejects a `config.registerSchema` call asynchronously
- * (e.g., manifest schema cannot be parsed at napplet load time), OR when
+ * Pushed when the shell rejects a `config.registerSchema` call asynchronously, OR when
  * `config.subscribe` / `config.get` arrives before any schema is registered
  * (`code: 'no-schema'`).
  *

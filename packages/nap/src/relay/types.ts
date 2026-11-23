@@ -183,7 +183,7 @@ export interface RelayPublishEncryptedResultMessage extends RelayMessage {
  *
  * The optional `result.sidecar.resources` sidecar lets a shell pre-resolve resources
  * referenced by the event (e.g., avatar / picture URLs in a kind:0 metadata
- * event); the relay shim calls `hydrateResourceCache(result.sidecar.resources)` before
+ * event); the relay shim calls `hydrateEventSidecar(result)` (decoding entries and dropping invalid ones) before
  * delivering this event to the napplet's `onEvent` callback so subsequent
  * `napplet.resource.bytes(url)` calls for sidecar-pre-populated URLs
  * resolve from cache without a postMessage round-trip.

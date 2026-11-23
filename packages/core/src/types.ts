@@ -32,6 +32,9 @@ export type {
   ResourceBytesOkItem,
   ResourceBytesErrorItem,
   ResourceBytesItem,
+  ResourceBytes,
+  ResourceBytesWireOkItem,
+  ResourceBytesWireItem,
   ResourceSidecarEntry,
 } from './types/global/runtime-api.js';
 

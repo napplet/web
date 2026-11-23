@@ -56,12 +56,11 @@ Without `VITE_DEV_PRIVKEY_HEX`, the sidecar is unsigned. With a development key,
 | `preview?: { data?, sha256?, mimeType?, dim?, size?, duration?, alt? }` | The single `preview` video tag (WebM or MP4 bytes, or a hash). |
 | `sourceCommit?: string` | Full lowercase-hex Git commit ID emitted as `source-commit`; clients ignore it without a repository `source`. |
 | `sourceArchive?: { url, sha256, mimeType }` | Independently downloadable source archive emitted as `source-archive` (HTTPS URL without credentials or fragment). |
-| `configSchema?: NappletConfigSchema \| string` | Inline NAP-CONFIG schema or project-relative schema file. Discovery falls back to `config.schema.json`, then `napplet.config.ts`/`.js`/`.mjs`. |
 | `artifactMode?: 'single-file' \| 'external-assets'` | `single-file` is the default. The explicit external-assets option preserves Vite output for existing tooling; external runtime assets need rebundling before deployment as a self-contained napplet. External-assets builds warn that the manifest `x` hash covers only `index.html` and list the remaining local assets. Builds without `dist/index.html` fail with a `[nip5a-manifest]` error. |
 
 Known-domain inference is best effort. Explicit required domains are retained with a build warning when absent from this package's registry; they still need a published NAP contract and support from the target shell. An `R` or `O` declaration never grants authority. Runtime code checks `window.napplet?.<domain>` and handles missing domains.
 
-Config schema discovery and validation remain package features. A resolved schema is carried in its NAP-defined `config` tag and is not folded into `x`. See the [NAP track](https://github.com/napplet/naps) for schema semantics.
+The plugin doesn't put configuration schemas in the manifest: NIP-5D defines no `config` tag, and [NAP-CONFIG](https://github.com/napplet/naps/pull/14) has no manifest schema field. Register the schema at runtime with `window.napplet.config.registerSchema(schema)`. A leftover `configSchema` option is ignored with a warning, and `config.schema.json` / `napplet.config.*` files are no longer read.
 
 ```ts
 nip5aManifest({
@@ -103,7 +102,7 @@ nip5aManifest({
 
 The hash covers decoded image bytes, not the data URL. If `sha256` is supplied alongside `data`, it is checked against those bytes. An existing supported head icon data URL can supply the bytes instead. Hash-only input retains its manifest tag; when no matching head image exists the plugin warns and omits the HTML icon, because a hash cannot recover an image. Unsupported, remote, empty, or malformed author icon URLs supply no embedded icon. Consumers still verify image decoding before display as specified by NIP-5D.
 
-Metadata and JS/CSS inlining finish before the plugin hashes `index.html`. Changing an embedded declaration or icon changes the artifact hash. The NAP-CONFIG schema remains in the sidecar: NIP-5D defines no HTML mapping for that extension. `napplet deploy` can recover the specified publishing fields and icon bytes from the built HTML without the sidecar.
+Metadata and JS/CSS inlining finish before the plugin hashes `index.html`. Changing an embedded declaration or icon changes the artifact hash. `napplet deploy` can recover the specified publishing fields and icon bytes from the built HTML without the sidecar.
 
 ## Presentation media and source pins
 

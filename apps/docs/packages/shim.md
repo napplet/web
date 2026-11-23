@@ -55,7 +55,7 @@ const srcdoc = html.replace(
 );
 ```
 
-The IIFE artifact exposes `globalThis.NappletShimPrelude.install({ domains })` and installs only the requested known NAP domains. JSR exposes the source ESM helpers under `@napplet/shim/prelude`; the generated `prelude.global` artifact is npm-only.
+The IIFE artifact exposes `globalThis.NappletShimPrelude.install({ domains })` and installs only the requested known NAP domains. The global is single-use: the first `install()` call deletes `globalThis.NappletShimPrelude` before installing, so napplet scripts that run afterwards can't find it or re-run it with more domains. Run the activation call before any napplet script. JSR exposes the source ESM helpers under `@napplet/shim/prelude`; the generated `prelude.global` artifact is npm-only.
 
 ## The `window.napplet` shape
 

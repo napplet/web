@@ -4,6 +4,7 @@
  * @module
  */
 
+import type { RelayEventResult } from '@napplet/core';
 import type {
   ResourceBytesItem,
   ResourceInfo,
@@ -11,7 +12,7 @@ import type {
 } from './types.js';
 import {
   cancelBytes,
-  decodeDataUrl,
+  decodeResourceBytes,
   inflight,
   sendBytesManyRequest,
   sendBytesRequest,
@@ -20,7 +21,7 @@ import {
   wireSignal,
 } from './resource-transport.js';
 
-export { handleResourceMessage, installResourceShim } from './resource-transport.js';
+export { decodeResourceBytes, handleResourceMessage, installResourceShim } from './resource-transport.js';
 
 /**
  * Inspect resource schemes and coarse policy limits disclosed by the shell.
@@ -37,14 +38,18 @@ export function info(): Promise<ResourceInfo> {
 /**
  * Fetch bytes for a URL through the shell's resource pipeline.
  *
- * - `data:` URLs are decoded inline (no postMessage round-trip).
- * - All other schemes route through the shell via a `resource.bytes` envelope.
+ * - Every URL, including `data:` and bare `nhash` aliases, routes through the
+ *   runtime via a `resource.bytes` envelope. The runtime owns scheme dispatch,
+ *   URL validation (`invalid-request`), size caps, MIME sniffing, and SVG
+ *   rasterization.
+ * - The base64 `ResourceBytes` result is strictly decoded into a Blob typed
+ *   with the runtime-classified MIME; a non-canonical encoding rejects.
  * - Concurrent calls for the same URL share a single in-flight Promise (single-flight cache).
  * - Aborted signals are honored synchronously and via cancel envelope.
  *
  * @param url   URL identifying the resource (any registered scheme)
  * @param opts  Optional `{ signal }` for cancellation
- * @returns Promise resolving to the fetched bytes as a Blob
+ * @returns Promise resolving to the decoded bytes as a Blob
  *
  * @example
  * ```ts
@@ -68,21 +73,9 @@ export function bytes(url: string, opts?: { signal?: AbortSignal }): Promise<Blo
     return wireSignal(cached, opts?.signal);
   }
 
-  // Determine work strategy: data: inline, otherwise shell round-trip.
-  let work: Promise<Blob>;
-  let cancelId: string | null = null;
-
-  try {
-    const protocol = new URL(url).protocol; // 'data:', 'https:', 'blossom:', 'htree:', 'nostr:', ...
-    if (protocol === 'data:') {
-      work = decodeDataUrl(url);
-    } else {
-      cancelId = crypto.randomUUID();
-      work = sendBytesRequest(url, cancelId);
-    }
-  } catch {
-    return Promise.reject(new Error(`invalid URL: ${url}`));
-  }
+  // Every URL goes to the runtime: it owns scheme dispatch and URL validation.
+  const cancelId = crypto.randomUUID();
+  let work = sendBytesRequest(url, cancelId);
 
   // Cleanup inflight entry on settle (success or failure).
   work = work.finally(() => {
@@ -96,7 +89,7 @@ export function bytes(url: string, opts?: { signal?: AbortSignal }): Promise<Blo
     work,
     opts?.signal,
     cancelId,
-    cancelId ? (reason) => cancelBytes(cancelId, reason) : undefined,
+    (reason) => cancelBytes(cancelId, reason),
   );
 }
 
@@ -197,28 +190,68 @@ export function bytesAsObjectURL(url: string): { url: string; revoke: () => void
 }
 
 /**
- * Pre-populate the single-flight cache from sidecar entries (consumed by
- * Phase 127 NAP-RELAY sidecar amendment). After this call, subsequent
- * bytes(entry.url) for hydrated URLs resolves synchronously from cache.
+ * Pre-populate the single-flight cache from resource sidecar entries carried
+ * by an importing NAP (NAP-RELAY / NAP-OUTBOX `RelayEventResult.sidecar.resources`).
+ * Relay and outbox shims call this before invoking the napplet's event handler.
+ * After this call, `bytes(entry.url)` for a hydrated URL resolves from cache.
  *
- * Note: hydrated entries live in the inflight map until the first consumer
- * settles them; v0.28.0 has no long-lived blob cache (deferred).
+ * Each entry's `blob` is wire `ResourceBytes` (canonical padded base64) and is
+ * decoded into a Blob typed with `entry.mime`. Entries with an invalid
+ * encoding or shape are skipped and never cached.
  *
- * @param entries  Pre-resolved resource entries from a relay event sidecar
+ * Hydrated entries stay in the in-flight map until the shim is torn down;
+ * there is no separate long-lived blob cache.
+ *
+ * @param entries  Pre-resolved resource entries from an event sidecar
+ * @returns The entries that decoded and were cached
  *
  * @example
  * ```ts
  * hydrateResourceCache([
- *   { url: 'https://example.com/a.png', blob: aBlob, mime: 'image/png' },
- *   { url: 'blossom:def456.jpg', blob: bBlob, mime: 'image/jpeg' },
+ *   { url: 'https://example.com/a.png', blob: 'iVBORw0KGgo=', mime: 'image/png' },
  * ]);
  * // Subsequent bytes('https://example.com/a.png') resolves from cache.
  * ```
  */
-export function hydrateResourceCache(entries?: ResourceSidecarEntry[]): void {
-  if (!entries || entries.length === 0) return;
+export function hydrateResourceCache(entries?: ResourceSidecarEntry[]): ResourceSidecarEntry[] {
+  const accepted: ResourceSidecarEntry[] = [];
+  if (!Array.isArray(entries)) return accepted;
   for (const entry of entries) {
-    // Resolve immediately; finally() will delete after first consumer settles.
-    inflight.set(entry.url, Promise.resolve(entry.blob));
+    if (typeof entry !== 'object' || entry === null || typeof entry.url !== 'string') continue;
+    let blob: Blob;
+    try {
+      blob = decodeResourceBytes(entry.blob, entry.mime);
+    } catch {
+      continue; // invalid encoding is a protocol failure: never cache it
+    }
+    inflight.set(entry.url, Promise.resolve(blob));
+    accepted.push(entry);
   }
+  return accepted;
+}
+
+/**
+ * Hydrate the resource cache from a `RelayEventResult` sidecar and drop any
+ * entry that failed decoding from the result, so an invalid encoding reaches
+ * neither the cache nor the napplet's event handler. Relay and outbox shims
+ * call this before handing the result to the napplet.
+ *
+ * @param result  Event result whose `sidecar.resources` is filtered in place
+ * @returns The same result object
+ *
+ * @example
+ * ```ts
+ * onEvent(hydrateEventSidecar(msg.result));
+ * ```
+ */
+export function hydrateEventSidecar<T extends RelayEventResult>(result: T): T {
+  const sidecar = result?.sidecar;
+  if (!sidecar || !('resources' in sidecar)) return result;
+  const accepted = hydrateResourceCache(sidecar.resources);
+  if (accepted.length > 0) {
+    sidecar.resources = accepted;
+  } else {
+    delete sidecar.resources;
+  }
+  return result;
 }

@@ -46,12 +46,39 @@ type Responder = (env: Record<string, unknown>) => unknown[];
 export const ok = <T extends Record<string, unknown>>(v: T): T[] => [v];
 const none: Responder = () => [];
 
-function dataUrlToBlob(url: unknown): { blob: Blob; mime: string } | null {
+/** Encode octets as NAP-RESOURCE `ResourceBytes` (canonical padded base64, RFC 4648 §4). */
+function toResourceBytes(octets: Uint8Array): string {
+  let binary = '';
+  for (const octet of octets) binary += String.fromCharCode(octet);
+  return globalThis.btoa(binary);
+}
+
+/** Percent-decode a non-base64 `data:` body to raw octets (RFC 2397). */
+function percentDecodeOctets(body: string): Uint8Array {
+  const octets: number[] = [];
+  const encoder = new TextEncoder();
+  for (let i = 0; i < body.length; i += 1) {
+    const escape = body.slice(i + 1, i + 3);
+    if (body[i] === '%' && /^[0-9a-fA-F]{2}$/.test(escape)) {
+      octets.push(Number.parseInt(escape, 16));
+      i += 2;
+    } else {
+      octets.push(...encoder.encode(body[i]));
+    }
+  }
+  return Uint8Array.from(octets);
+}
+
+/**
+ * Decode a `data:` URL into wire `ResourceBytes` for the reference shell.
+ * Non-`data:` URLs return null; the reference shell does no network fetch.
+ */
+function dataUrlToResourceBytes(url: unknown): { blob: string; mime: string } | null {
   if (typeof url !== 'string' || !url.startsWith('data:')) return null;
 
   const comma = url.indexOf(',');
   if (comma < 0) {
-    return { blob: new Blob([], { type: 'text/plain' }), mime: 'text/plain' };
+    return { blob: '', mime: 'text/plain' };
   }
 
   const meta = url.slice('data:'.length, comma);
@@ -61,12 +88,10 @@ function dataUrlToBlob(url: unknown): { blob: Blob; mime: string } | null {
   const mime = parts.find((part) => part.includes('/')) ?? 'text/plain';
 
   try {
-    if (base64) {
-      const binary = globalThis.atob(body);
-      const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
-      return { blob: new Blob([bytes], { type: mime }), mime };
-    }
-    return { blob: new Blob([decodeURIComponent(body)], { type: mime }), mime };
+    const octets = base64
+      ? Uint8Array.from(globalThis.atob(body), (char) => char.charCodeAt(0))
+      : percentDecodeOctets(body);
+    return { blob: toResourceBytes(octets), mime };
   } catch {
     return null;
   }
@@ -163,9 +188,9 @@ export const RESPONDERS: Record<string, Responder> = {
 
   // resource
   'resource.bytes': (e) => {
-    const decoded = dataUrlToBlob(e.url);
+    const decoded = dataUrlToResourceBytes(e.url);
     if (!decoded) {
-      return ok({ type: 'resource.bytes.result', id: e.id, blob: new Blob([]), mime: 'application/octet-stream' });
+      return ok({ type: 'resource.bytes.result', id: e.id, blob: '', mime: 'application/octet-stream' });
     }
     return ok({ type: 'resource.bytes.result', id: e.id, blob: decoded.blob, mime: decoded.mime });
   },
@@ -174,11 +199,11 @@ export const RESPONDERS: Record<string, Responder> = {
     id: e.id,
     items: Array.isArray(e.urls)
       ? e.urls.map((url: unknown) => {
-        const decoded = dataUrlToBlob(url);
+        const decoded = dataUrlToResourceBytes(url);
         return {
           url: typeof url === 'string' ? url : '',
           ok: true,
-          blob: decoded?.blob ?? new Blob([]),
+          blob: decoded?.blob ?? '',
           mime: decoded?.mime ?? 'application/octet-stream',
         };
       })

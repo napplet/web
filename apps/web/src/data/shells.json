@@ -28,6 +28,18 @@
     "status": "Available"
   },
   {
+    "id": "hypergolic",
+    "name": "Hypergolic",
+    "category": "A native home for napplets",
+    "description": "Find and open napplets in one workspace on your phone. Bring your own identity, choose how you sign, and pin favorites to Home.",
+    "href": "https://hypergolic.sh/",
+    "source": "https://github.com/nostrocket/hypergolic",
+    "platforms": [
+      "Android"
+    ],
+    "status": "Available"
+  },
+  {
     "id": "nostrudel",
     "name": "noStrudel",
     "category": "Your social sandbox",
