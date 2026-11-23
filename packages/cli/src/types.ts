@@ -152,8 +152,6 @@ export interface ManifestFileMapping {
 export interface DeployManifestTemplate {
   item: DeployPlanItem;
   files: ManifestFileMapping[];
-  /** Only populated for explicitly legacy output. */
-  aggregateHash?: string;
   artifactHash?: string;
   format?: import("./manifest-format.ts").ManifestFormat;
   template?: NostrEventTemplate;

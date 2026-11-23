@@ -5,7 +5,6 @@ import { first, type FlagBag } from "./flags.ts";
 import { canPrompt } from "./interaction.ts";
 import { normalizeNamedDTags } from "./init-wizard.ts";
 import { readManifestMetadataTags } from "./manifest-metadata.ts";
-import type { ManifestFormat } from "./manifest-format.ts";
 import { promptLine } from "./prompt.ts";
 import { isAllowedUrl, parseUrlListInput } from "./url-prompt.ts";
 import { resolveDeployServers } from "./deploy-network.ts";
@@ -24,15 +23,13 @@ export interface DeployInputOptions {
  * Recover missing artifact, metadata, and destination settings without replacing valid values.
  * @param original Existing configuration.
  * @param flags Invocation overrides.
- * @param format Selected event format.
  * @param options Prompt, discovery, and persistence hooks.
  * @returns Completed configuration, candidates, and per-artifact description overrides.
- * @example await completeDeployInputs(config, flags, "current")
+ * @example await completeDeployInputs(config, flags)
  */
 export async function completeDeployInputs(
   original: NappletConfig,
   flags: FlagBag,
-  format: ManifestFormat,
   options: DeployInputOptions = {},
 ): Promise<{ config: NappletConfig; candidates: NappletCandidate[]; descriptions: Map<string, string> }> {
   const config = structuredClone(original);
@@ -70,19 +67,17 @@ export async function completeDeployInputs(
     candidates = await discover(config, { traverse: false });
   }
   const tags = await Promise.all(candidates.map((candidate) =>
-    readManifestMetadataTags(candidate.indexHtml, candidate.manifestPath, config, format)
+    readManifestMetadataTags(candidate.indexHtml, candidate.manifestPath, config)
   ));
   const descriptions = new Map<string, string>();
-  if (format === "current") {
-    for (let i = 0; i < candidates.length; i++) {
-      if (tags[i].some((tag) => tag[0] === "description" && tag[1]?.trim())) continue;
-      const value = await required(
-        `Description for ${candidates.length === 1 ? config.metadata?.title ?? candidates[i].name : candidates[i].name}`,
-        `Add metadata.description, an HTML description, or --description <text> (${candidates[i].name}).`,
-      );
-      if (value && candidates.length === 1) config.metadata = { ...config.metadata, description: value };
-      else if (value) descriptions.set(candidates[i].dir, value);
-    }
+  for (let i = 0; i < candidates.length; i++) {
+    if (tags[i].some((tag) => tag[0] === "description" && tag[1]?.trim())) continue;
+    const value = await required(
+      `Description for ${candidates.length === 1 ? config.metadata?.title ?? candidates[i].name : candidates[i].name}`,
+      `Add metadata.description, an HTML description, or --description <text> (${candidates[i].name}).`,
+    );
+    if (value && candidates.length === 1) config.metadata = { ...config.metadata, description: value };
+    else if (value) descriptions.set(candidates[i].dir, value);
   }
   if (!flags.boolean.has("dry-run")) {
     if (!config.relays.length) {

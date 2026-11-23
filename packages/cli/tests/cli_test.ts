@@ -230,7 +230,7 @@ Deno.test("debug validates --format before loading config", async () => {
   } finally {
     console.error = original;
   }
-  assert(errors.some((line) => line.includes("--format must be current or legacy")));
+  assert(errors.some((line) => line.includes("--format must be current")));
 });
 
 Deno.test("published CLI entrypoint excludes standalone-only workspace imports", async () => {

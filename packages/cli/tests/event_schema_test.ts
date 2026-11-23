@@ -34,26 +34,34 @@ Deno.test("URI metadata emits a matching role and intent without a redundant pre
   });
 });
 
-Deno.test("current is the unattended and interactive deployment default; legacy is explicit", async () => {
-  assertEquals(await selectManifestFormat(undefined, false), "current");
-  let prompted = false;
-  assertEquals(
-    await selectManifestFormat(undefined, true, (options) => {
-      prompted = true;
-      assertEquals(options.defaultValue, "current");
-      return Promise.resolve("current");
-    }),
-    "current",
-  );
-  assert(prompted);
-  assertEquals(await selectManifestFormat("legacy", false), "legacy");
-  let rejected = false;
-  try {
-    await selectManifestFormat("invalid", false);
-  } catch {
-    rejected = true;
+Deno.test("current is the only deployment format; --format legacy is retired", () => {
+  assertEquals(selectManifestFormat(undefined), "current");
+  assertEquals(selectManifestFormat("current"), "current");
+  const rejection = (value: string) => {
+    try {
+      selectManifestFormat(value);
+    } catch (error) {
+      return error instanceof Error ? error.message : String(error);
+    }
+    return "";
+  };
+  const legacy = rejection("legacy");
+  for (const hint of ["--format legacy was retired", "single-file artifact", "napplet migrate"]) {
+    assert(legacy.includes(hint), legacy);
   }
-  assert(rejected);
+  assert(rejection("invalid").includes("--format must be current"));
+});
+
+Deno.test("deploy rejects --format legacy before loading config", async () => {
+  const errors: string[] = [];
+  const originalError = console.error;
+  console.error = (...args: unknown[]) => errors.push(args.join(" "));
+  try {
+    assert(await main(["deploy", "--format", "legacy", "--dry-run", "--config", "/nonexistent/napplet.yaml"]) !== 0);
+  } finally {
+    console.error = originalError;
+  }
+  assert(errors.some((line) => line.includes("--format legacy was retired")), errors.join("\n"));
 });
 
 Deno.test("current deploy hashes index bytes and preserves plugin metadata in snapshots", async () => {
@@ -84,7 +92,6 @@ Deno.test("current deploy hashes index bytes and preserves plugin metadata in sn
     for (const manifest of deployed) {
       assertEquals(manifest.format, "current");
       assertEquals(manifest.artifactHash, hash);
-      assertEquals(manifest.aggregateHash, undefined);
       assertEquals(manifest.files, [{ path: "/index.html", sha256: hash }]);
       assertEquals(manifest.template?.content, "Read & write notes");
       assert(
@@ -124,7 +131,7 @@ Deno.test("current root output has no identifier and rejects empty descriptions"
   assert(rejected);
 });
 
-async function rootDeploy(dir: string, format?: "current" | "legacy") {
+async function rootDeploy(dir: string) {
   const candidate = {
     name: "notes",
     dir,
@@ -133,7 +140,7 @@ async function rootDeploy(dir: string, format?: "current" | "legacy") {
   };
   const config = defaultConfig();
   const plan = createDeployPlan(config, [candidate], { root: true });
-  return await createDeployManifestTemplates(plan, config, { createdAt: 1, format });
+  return await createDeployManifestTemplates(plan, config, { createdAt: 1 });
 }
 
 async function writeExtraFiles(dir: string): Promise<void> {
@@ -161,18 +168,11 @@ Deno.test("current deploy fails instead of dropping built files", async () => {
     assert(message.includes("/assets/app.js"), message);
     assert(message.includes("/robots.txt"), message);
     assert(message.includes("/.well-known/nostr.json"), message);
-    assert(message.includes("--format legacy"), message);
+    assert(message.includes("single-file artifact"), message);
+    assert(!message.includes("--format legacy"), message);
     assert(!message.includes(".env"), message);
     assert(!message.includes("node_modules"), message);
     assert(!message.includes(".nip5a-manifest.json"), message);
-  });
-});
-
-Deno.test("legacy deploy still uploads every collected file", async () => {
-  await withTempDir(async (dir) => {
-    await writeExtraFiles(dir);
-    const [manifest] = await rootDeploy(dir, "legacy");
-    assert(manifest.files.some((file) => file.path === "/assets/app.js"));
   });
 });
 
@@ -223,7 +223,6 @@ Deno.test("metadata merge lets sidecar optional domains win over config requirem
       `${dir}/index.html`,
       `${dir}/.nip5a-manifest.json`,
       config,
-      "current",
     );
     assertEquals(domainTags(tags, "R"), [["R", "relay"]]);
     assertEquals(domainTags(tags, "O"), [["O", "theme"]]);
@@ -236,7 +235,7 @@ Deno.test("metadata merge emits a domain listed as required and optional only as
     const config = defaultConfig({
       metadata: { description: "Notes", requires: ["theme"], optional: ["theme"] },
     });
-    const tags = await readManifestMetadataTags(`${dir}/index.html`, undefined, config, "current");
+    const tags = await readManifestMetadataTags(`${dir}/index.html`, undefined, config);
     assertEquals(domainTags(tags, "R"), []);
     assertEquals(domainTags(tags, "O"), [["O", "theme"]]);
   });
@@ -253,7 +252,6 @@ Deno.test("metadata merge drops sidecar R duplicates of O without config metadat
       `${dir}/index.html`,
       `${dir}/.nip5a-manifest.json`,
       defaultConfig(),
-      "current",
     );
     assertEquals(domainTags(tags, "R"), []);
     assertEquals(domainTags(tags, "O"), [["O", "theme"]]);
@@ -352,36 +350,6 @@ Deno.test("migration command writes a preview, preserves input and refuses overw
     assertEquals(await Deno.readTextFile(source), original);
     assertEquals(await Deno.readTextFile(output), previewText);
   });
-});
-
-Deno.test("legacy deployment requires explicit pairs for ambiguous z/i metadata", async () => {
-  const item = {
-    candidate: { name: "notes", dir: "/tmp", indexHtml: "/tmp/index.html" },
-    target: "root" as const,
-    kind: 15129,
-  };
-  let message = "";
-  try {
-    await createSiteManifestTemplate(item, [{ path: "/index.html", sha256: hash }], {
-      format: "legacy",
-      content: "Notes",
-      metadataTags: [
-        ["z", "note"],
-        ["z", "profile"],
-        ["i", "napplet:note/open"],
-        ["i", "napplet:profile/edit"],
-      ],
-    });
-  } catch (error) {
-    message = String(error);
-  }
-  assert(message.includes("explicit metadata.archetypes"));
-  const legacy = await createSiteManifestTemplate(item, [{ path: "/index.html", sha256: hash }], {
-    format: "legacy",
-    content: "Notes",
-    metadataTags: [["archetype", "note", "napplet:note/open"]],
-  });
-  assert(legacy.tags.some((tag) => tag[0] === "archetype" && tag[1] === "note"));
 });
 
 Deno.test("current deployment and migration reject query-bearing intent advertisements", async () => {

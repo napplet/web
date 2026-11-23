@@ -15,7 +15,7 @@ Deno.test("partial configuration prompts for missing inputs and preserves existi
     const original = defaultConfig({ sourceDir: dir, named: ["notes"], metadata: { title: "Keep title", source: false }, signing: { mode: "interactive", keyReference: "keep-key" } });
     const answers = ["Private notes", ",", "not a relay", "wss://relay.example", "https://blossom.example/path", "https://blossom.example", "maybe", "yes"];
     const saved: NappletConfig[] = [];
-    const result = await completeDeployInputs(original, collectFlags([]), "current", {
+    const result = await completeDeployInputs(original, collectFlags([]), {
       interactive: true, ask: async () => answers.shift()!, print() {},
       save: async (config) => { saved.push(config); },
     });
@@ -37,7 +37,7 @@ Deno.test("per-build descriptions preserve valid neighboring artifact metadata",
     await Deno.writeTextFile(`${dir}/clock/index.html`, '<!doctype html><title>Clock</title>');
     const answers = ["A clock"];
     const original = defaultConfig({ sourceDir: dir, discover: { enabled: true, roots: [dir] } });
-    const result = await completeDeployInputs(original, collectFlags(["--all", "--dry-run"]), "current", {
+    const result = await completeDeployInputs(original, collectFlags(["--all", "--dry-run"]), {
       interactive: true, ask: async () => answers.shift()!, print() {},
       save: () => { throw new Error("per-build metadata must not overwrite shared config"); },
     });
@@ -54,7 +54,7 @@ Deno.test("Zapstore metadata can be inferred without prompts or config writes", 
   await withTempDir(async (dir) => {
     await Deno.writeTextFile(`${dir}/index.html`, '<!doctype html><meta name="description" content="Notes">');
     const config = defaultConfig({ sourceDir: dir, named: ["notes"] });
-    const result = await completeDeployInputs(config, collectFlags(["--dry-run"]), "current", {
+    const result = await completeDeployInputs(config, collectFlags(["--dry-run"]), {
       interactive: true, ask: () => { throw new Error("unexpected prompt"); }, print() {},
       save: () => { throw new Error("unexpected save"); },
     });
@@ -69,7 +69,7 @@ Deno.test("canceling deployment setup leaves configuration untouched", async () 
     const original = defaultConfig({ sourceDir: dir });
     let canceled = false;
     try {
-      await completeDeployInputs(original, collectFlags([]), "current", {
+      await completeDeployInputs(original, collectFlags([]), {
         interactive: true, ask: () => { throw new PromptCancelledError(); },
         save: () => { throw new Error("unexpected save"); },
       });
@@ -100,7 +100,7 @@ Deno.test("-i reports all missing deployment inputs without asking or saving", a
     await Deno.writeTextFile(`${dir}/index.html`, "<!doctype html><title>Notes</title>");
     let error = "";
     try {
-      await completeDeployInputs(defaultConfig({ sourceDir: dir }), collectFlags(["-i"]), "current", {
+      await completeDeployInputs(defaultConfig({ sourceDir: dir }), collectFlags(["-i"]), {
         interactive: true, ask: () => { throw new Error("unexpected prompt"); },
         save: () => { throw new Error("unexpected write"); },
       });
@@ -113,7 +113,7 @@ Deno.test("-i reports all missing deployment inputs without asking or saving", a
 Deno.test("dry runs honor artifact metadata and do not demand network destinations", async () => {
   await withTempDir(async (dir) => {
     await Deno.writeTextFile(`${dir}/index.html`, '<!doctype html><meta name="description" content="Artifact description">');
-    const result = await completeDeployInputs(defaultConfig({ sourceDir: dir, named: ["notes"] }), collectFlags(["--dry-run"]), "current", {
+    const result = await completeDeployInputs(defaultConfig({ sourceDir: dir, named: ["notes"] }), collectFlags(["--dry-run"]), {
       interactive: true, ask: () => { throw new Error("unexpected prompt"); },
     });
     assertEquals(result.config.relays, []);
@@ -125,7 +125,7 @@ Deno.test("correcting a build directory continues discovery and can remain unsav
   await withTempDir(async (dir) => {
     await Deno.writeTextFile(`${dir}/index.html`, '<!doctype html><meta name="description" content="Artifact description">');
     const answers = [dir, "no"];
-    const result = await completeDeployInputs(defaultConfig({ sourceDir: `${dir}/missing`, named: ["notes"] }), collectFlags(["--dry-run"]), "current", {
+    const result = await completeDeployInputs(defaultConfig({ sourceDir: `${dir}/missing`, named: ["notes"] }), collectFlags(["--dry-run"]), {
       interactive: true, ask: async () => answers.shift()!, print() {},
       save: () => { throw new Error("unexpected write"); },
     });

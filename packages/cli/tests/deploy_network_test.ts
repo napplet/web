@@ -7,7 +7,6 @@ import {
   publishEventWithSimplePool,
   type RelayPublishResult,
 } from "../src/deploy-network.ts";
-import { computeAggregateHash } from "../src/manifest.ts";
 import { createPrivateKeySigner } from "../src/signing.ts";
 import {
   type DeployManifestTemplate,
@@ -619,32 +618,27 @@ Deno.test("executeNetworkDeploy skips publish when uploads are split across inco
   });
 });
 
+// Current NIP-5D events: x holds the /index.html hash; extra files stand in for referenced blobs.
 async function manifestsFor(
   dir: string,
   files: ManifestFileMapping[] = [{ path: "/index.html", sha256 }],
 ): Promise<DeployManifestTemplate[]> {
-  const aggregateHash = await computeAggregateHash(files);
-  const pathTags = files.map((file) => ["path", file.path, file.sha256]);
-  const aggregateTag = ["x", aggregateHash, "aggregate"];
+  const artifactHash = files.find((file) => file.path === "/index.html")!.sha256;
   const root = await signer.sign({
     kind: NAPPLET_KIND_ROOT,
     created_at: 123,
-    tags: [...pathTags, aggregateTag],
-    content: "",
+    tags: [["x", artifactHash]],
+    content: "Feed",
   });
   const snapshot = await signer.sign({
     kind: NAPPLET_KIND_SNAPSHOT,
     created_at: 123,
-    tags: [
-      ...pathTags,
-      aggregateTag,
-      ["a", `${NAPPLET_KIND_ROOT}:${signer.pubkey}:`],
-    ],
-    content: "",
+    tags: [["a", `${NAPPLET_KIND_ROOT}:${signer.pubkey}:`], ["x", artifactHash]],
+    content: "Feed",
   });
   return [
-    manifest(dir, NAPPLET_KIND_ROOT, root, files, aggregateHash),
-    manifest(dir, NAPPLET_KIND_SNAPSHOT, snapshot, files, aggregateHash),
+    manifest(dir, NAPPLET_KIND_ROOT, root, files, artifactHash),
+    manifest(dir, NAPPLET_KIND_SNAPSHOT, snapshot, files, artifactHash),
   ];
 }
 
@@ -653,7 +647,7 @@ function manifest(
   kind: typeof NAPPLET_KIND_ROOT | typeof NAPPLET_KIND_SNAPSHOT,
   signedEvent: SignedNostrEvent,
   files: ManifestFileMapping[],
-  aggregateHash: string,
+  artifactHash: string,
 ): DeployManifestTemplate {
   return {
     item: {
@@ -662,7 +656,8 @@ function manifest(
       kind,
     },
     files: files.map((file) => ({ ...file })),
-    aggregateHash,
+    format: "current",
+    artifactHash,
     template: signedEvent,
     signedEvent,
   };

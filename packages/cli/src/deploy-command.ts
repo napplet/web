@@ -80,6 +80,8 @@ export async function commandDeployProjects(
   deployOne: typeof runDeploy = runDeploy,
 ): Promise<number> {
   const flags = collectFlags(argv);
+  // Reject a retired --format once, before any project is visited.
+  selectManifestFormat(first(flags.values.get("format")));
   for (const flag of ["config", "source-dir"]) {
     if (flags.values.has(flag)) {
       throw new Error(`--${flag} cannot be combined with --all when this directory has no .napplet config; each napplet uses its own.`);
@@ -97,9 +99,7 @@ export async function commandDeployProjects(
   }
   if (!found.length) throw new Error(`No .napplet config found in ${root} or any subdirectory. Run: napplet init`);
   if (!projects.length) throw new Error(`No napplet project matched --name ${names?.join(", ")}. Found: ${found.map((p) => p.name).join(", ")}`);
-  // Ask the event format once for the whole run instead of once per napplet.
-  const format = await selectManifestFormat(first(flags.values.get("format")), canPrompt() && !jsonOutput && !flags.boolean.has("non-interactive"));
-  const inner = [...withoutProjectSelection(argv), ...(flags.values.has("format") ? [] : ["--format", format])];
+  const inner = withoutProjectSelection(argv);
   const results: { project: string; configPath: string; code: number; report?: DeployReport; error?: string }[] = [];
   if (!jsonOutput) console.error(paint(`\nDeploying ${projects.length} napplet${projects.length === 1 ? "" : "s"}: ${projects.map((p) => relativePath(root, p.dir)).join(", ")}`, "heading"));
   for (const project of projects) {
@@ -229,10 +229,11 @@ async function prepareDeploy(argv: string[]) {
   if (flags.boolean.has("zapstore") && flags.boolean.has("no-zapstore")) {
     throw new Error("Choose either --zapstore or --no-zapstore");
   }
+  // Validate --format before config loading can prompt for anything.
+  const format = selectManifestFormat(first(flags.values.get("format")));
   const jsonOutput = flags.boolean.has("json") || !isTerminalOutput();
   const loaded = await loadDeployConfig(flags, jsonOutput);
-  const format = await selectManifestFormat(first(flags.values.get("format")), canPrompt() && !jsonOutput);
-  const { config, candidates, descriptions } = await completeDeployInputs(loaded, flags, format);
+  const { config, candidates, descriptions } = await completeDeployInputs(loaded, flags);
   const selection: Partial<DeploySelection> = {
     root: flags.boolean.has("root") ? true : undefined,
     names: flags.values.get("name"),

@@ -61,7 +61,7 @@ Deno.test("renderDeployReport shows deploy summary and copyable pointers", async
   const manifest: DeployManifestTemplate = {
     item,
     files: [{ path: "/index.html", sha256: "a".repeat(64) }],
-    aggregateHash: "b".repeat(64),
+    artifactHash: "a".repeat(64),
     template: {
       kind: NAPPLET_KIND_NAMED,
       created_at: 123,
@@ -126,7 +126,7 @@ Deno.test("renderDeployReport replaces placeholder candidate names with a readab
     manifests: [{
       item,
       files: [{ path: "/index.html", sha256: "a".repeat(64) }],
-      aggregateHash: "b".repeat(64),
+      artifactHash: "a".repeat(64),
       template: {
         kind: NAPPLET_KIND_NAMED,
         created_at: 123,
@@ -244,7 +244,7 @@ async function createNetworkDeployReport(): Promise<{
       manifests: [{
         item,
         files: [{ path: "/index.html", sha256: "a".repeat(64) }],
-        aggregateHash: "b".repeat(64),
+        artifactHash: "a".repeat(64),
         template: signedEvent,
         signedEvent,
       }],

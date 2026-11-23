@@ -2,7 +2,6 @@ import { dirname, resolvePath } from "./path.ts";
 import { buildMediaTag, type MediaBlob } from "./manifest-media.ts";
 import { inferRepositorySource, normalizeSourceOverride } from "./repository-source.ts";
 import { readHtmlPublishingFile } from "./html-metadata.ts";
-import type { ManifestFormat } from "./manifest-format.ts";
 import type { NappletConfig } from "./types.ts";
 
 export interface ManifestMetadata {
@@ -16,7 +15,7 @@ export interface ManifestMetadata {
  * @param indexHtmlPath Built artifact providing optional publishing hints.
  * @param manifestPath Optional signed or unsigned sidecar.
  * @param config Explicit publishing metadata overrides.
- * @param format Requested output format.
+ * @param options Working directory for configured media paths.
  * @returns Event tags and plain-text content with normal precedence applied.
  * @example await readManifestMetadata("dist/index.html", undefined, {})
  */
@@ -24,25 +23,19 @@ export async function readManifestMetadata(
   indexHtmlPath: string | undefined,
   manifestPath: string | undefined,
   config: Pick<NappletConfig, "metadata">,
-  format: ManifestFormat = "current",
   options: { cwd?: string } = {},
 ): Promise<ManifestMetadata> {
   const html = (await readHtmlPublishingFile(indexHtmlPath)).tags;
   const description = html.find((tag) => tag[0] === "description")?.[1];
-  const htmlContent = format === "legacy" ? description?.trim() : description;
-  const htmlTags = html.filter((tag) => tag[0] !== "description" &&
-    (format === "current" || tag[0] === "title"))
-    .map((tag) => format === "legacy" ? [tag[0], tag[1].trim()] : tag);
-  const sidecar = await readPluginManifestMetadata(manifestPath, format);
-  const tags = preferOptionalDomains(mergeConfigMetadataTags(
-    overlayTags(htmlTags, sidecar.tags), config, format,
-  ));
-  if (format === "current" && indexHtmlPath && config.metadata?.source !== false && !tags.some((tag) => tag[0] === "source")) {
+  const htmlTags = html.filter((tag) => tag[0] !== "description");
+  const sidecar = await readPluginManifestMetadata(manifestPath);
+  const tags = preferOptionalDomains(mergeConfigMetadataTags(overlayTags(htmlTags, sidecar.tags), config));
+  if (indexHtmlPath && config.metadata?.source !== false && !tags.some((tag) => tag[0] === "source")) {
     const source = await inferRepositorySource(dirname(indexHtmlPath));
     if (source) tags.push(["source", source]);
   }
-  const blobs = format === "current" ? await mergeConfiguredMedia(tags, config, options.cwd ?? Deno.cwd()) : [];
-  return { tags, content: config.metadata?.description ?? sidecar.content ?? htmlContent ?? "", blobs };
+  const blobs = await mergeConfiguredMedia(tags, config, options.cwd ?? Deno.cwd());
+  return { tags, content: config.metadata?.description ?? sidecar.content ?? description ?? "", blobs };
 }
 
 /**
@@ -91,7 +84,6 @@ async function readMediaFile(path: string, label: string): Promise<Uint8Array> {
  * @param indexHtmlPath Built artifact.
  * @param manifestPath Optional sidecar.
  * @param config Explicit publishing metadata.
- * @param format Requested output format.
  * @returns Resolved tags, preceded by the description hint when present.
  * @example await readManifestMetadataTags("dist/index.html", undefined, {})
  */
@@ -99,9 +91,8 @@ export async function readManifestMetadataTags(
   indexHtmlPath: string | undefined,
   manifestPath: string | undefined,
   config: Pick<NappletConfig, "metadata">,
-  format: ManifestFormat = "current",
 ): Promise<string[][]> {
-  const metadata = await readManifestMetadata(indexHtmlPath, manifestPath, config, format);
+  const metadata = await readManifestMetadata(indexHtmlPath, manifestPath, config);
   return [...(metadata.content ? [["description", metadata.content]] : []), ...metadata.tags];
 }
 
@@ -117,7 +108,6 @@ function preferOptionalDomains(tags: readonly string[][]): string[][] {
 
 async function readPluginManifestMetadata(
   manifestPath: string | undefined,
-  format: ManifestFormat,
 ): Promise<{ tags: string[][]; content?: string }> {
   if (!manifestPath) return { tags: [] };
   try {
@@ -130,15 +120,13 @@ async function readPluginManifestMetadata(
     const current = content !== undefined || input.some((tag) => tag[0] === "x" && tag.length === 2);
     const tags: string[][] = [];
     for (const tag of input) {
-      if (format === "legacy" && ["d", "server", "a", "A"].includes(tag[0])) continue;
       if (!current && tag[0] === "description") content = tag[1];
       else if (!current && ["path", "x"].includes(tag[0])) continue;
       else if (!current && tag[0] === "requires") {
         const domain = tag[1]?.trim();
         if (domain) tags.push(["R", domain]);
       } else if (!current && isCanonicalArchetypeTag(tag)) {
-        if (format === "legacy") tags.push([...tag]);
-        else tags.push(["z", tag[1]], ["i", tag[2]]);
+        tags.push(["z", tag[1]], ["i", tag[2]]);
       } else tags.push([...tag]);
     }
     return { tags: dedupeTags(tags), content };
@@ -151,7 +139,6 @@ async function readPluginManifestMetadata(
 function mergeConfigMetadataTags(
   tags: readonly string[][],
   config: Pick<NappletConfig, "metadata">,
-  format: ManifestFormat,
 ): string[][] {
   const metadata = config.metadata;
   if (!metadata) return dedupeTags(tags);
@@ -164,7 +151,6 @@ function mergeConfigMetadataTags(
   if (metadata.archetypes !== undefined) {
     replaced.add("z");
     replaced.add("i");
-    if (format === "legacy") replaced.add("archetype");
   }
   if (metadata.requires !== undefined) replaced.add("R");
   if (metadata.optional !== undefined) replaced.add("O");
@@ -177,12 +163,7 @@ function mergeConfigMetadataTags(
   }
   if (metadata.title) result.push(["title", metadata.title]);
   for (const convention of metadata.archetypes ?? []) {
-    if (format === "legacy") result.push(["archetype", convention.slug, convention.convention]);
-    else {result.push(["z", convention.slug], [
-        "i",
-        convention.convention,
-        ...(convention.params ?? []),
-      ]);}
+    result.push(["z", convention.slug], ["i", convention.convention, ...(convention.params ?? [])]);
   }
   for (const domain of metadata.requires ?? []) result.push(["R", domain]);
   for (const domain of metadata.optional ?? []) result.push(["O", domain]);

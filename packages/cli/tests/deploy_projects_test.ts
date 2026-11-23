@@ -48,7 +48,7 @@ Deno.test("deploy --all without a root config deploys each project from its own 
       joinPath(root, "napplets", "napplet1"),
       joinPath(root, "napplets", "napplet2"),
     ]);
-    assertEquals(calls[0].argv, ["--dry-run", "--json", "--sec", "nsec1x", "--format", "current"]);
+    assertEquals(calls[0].argv, ["--dry-run", "--json", "--sec", "nsec1x"]);
   });
 });
 
@@ -57,11 +57,26 @@ Deno.test("deploy --all --name selects projects without overriding their d tags"
     await workspace(dir);
     const { calls, deployOne } = recorder();
     await inDir(dir, () => quiet(() =>
-      commandDeployProjects(["--all", "--name", "napplet2", "--json", "--format", "legacy"], undefined, deployOne)
+      commandDeployProjects(["--all", "--name", "napplet2", "--json", "--format", "current"], undefined, deployOne)
     ));
     assertEquals(calls.length, 1);
     assert(calls[0].cwd.endsWith("napplet2"));
-    assertEquals(calls[0].argv, ["--json", "--format", "legacy"]);
+    assertEquals(calls[0].argv, ["--json", "--format", "current"]);
+  });
+});
+
+Deno.test("deploy --all rejects --format legacy once, before visiting any project", async () => {
+  await withTempDir(async (dir) => {
+    await workspace(dir);
+    const { calls, deployOne } = recorder();
+    let message = "";
+    try {
+      await inDir(dir, () => quiet(() => commandDeployProjects(["--all", "--json", "--format", "legacy"], undefined, deployOne)));
+    } catch (error) {
+      message = error instanceof Error ? error.message : String(error);
+    }
+    assert(message.includes("--format legacy was retired"), message);
+    assertEquals(calls.length, 0);
   });
 });
 

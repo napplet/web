@@ -53,7 +53,6 @@ export interface DebugReport {
       kind: number;
       dTag?: string;
       fileCount: number;
-      aggregateHash?: string;
       artifactHash?: string;
       hasTemplate: boolean;
       skippedReason?: string;
@@ -170,7 +169,6 @@ export async function createDebugReport(
         kind: manifest.item.kind,
         dTag: manifest.item.dTag,
         fileCount: manifest.files.length,
-        aggregateHash: manifest.aggregateHash,
         artifactHash: manifest.artifactHash,
         hasTemplate: manifest.template !== undefined,
         skippedReason: manifest.skippedReason,

@@ -1,6 +1,6 @@
 ---
 name: napplet-migrate
-description: Migrate legacy NIP-5D manifest events or deployment projects to the current artifact-hash schema, review CLI format choices, and explain event-pointer and shell identity compatibility.
+description: Migrate legacy NIP-5D manifest events or deployment projects to the current artifact-hash schema, and explain event-pointer and shell identity compatibility.
 ---
 
 # Migrate napplet events
@@ -15,6 +15,6 @@ For a signed event file, run `napplet migrate source.json --output preview.json`
 
 Never reuse a legacy aggregate as the artifact hash. Current x comes from the final artifact bytes; legacy conversion extracts the signed /index.html path hash. Keep intent identities queryless and put advertised parameter names in separate i-tag elements. Treat descriptions as text. Unknown extensions need their own specification; do not fabricate mappings for ambiguous tags.
 
-Legacy-only shells can temporarily use `napplet deploy --format legacy`. The CLI isolates this serializer for removal. Legacy output loses optional-domain distinctions and intent parameter advertisements. Do not silently choose legacy to make a current conformance check pass.
+CLI 0.15.0 removed `napplet deploy --format legacy`; the flag now fails. Do not pin an older CLI to emit legacy events for a legacy-only shell: those events put path tags and an aggregate hash under NIP-5D kinds and fail current readers. Update the shell instead, and use `napplet migrate` for existing signed events.
 
 Flag downstream work: artifact identity changes can affect shell ACL/storage keys; snapshots need new event pointers; publishing under another author changes addresses; catalog filters must follow the current tags. Do not silently transfer permissions or saved data. See the [migration guide](https://napplet.run/docs/guide/event-migration) for the package workflow and limitations.

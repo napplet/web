@@ -136,7 +136,7 @@ The iframe uses `sandbox="allow-scripts"` without `allow-same-origin`, per the T
 
 ### Event schema compatibility
 
-Current event defaults begin at **CLI 0.7.0**, **Vite plugin 0.15.0**, **conformance 0.18.0**, and **conformance-cli 0.3.0**. Earlier release series use legacy path/aggregate manifests. The event kinds remain 5129/15129/35129; current events use the artifact SHA-256 in `x`, a description in `content`, and `R`/`O` plus `z`/`i` metadata. CLI deployments offer temporary `--format legacy` support; unattended deployments default to current. See the [migration guide](apps/docs/guide/event-migration.md) for event conversion, legacy pointers, and shell storage/ACL implications.
+Current event defaults begin at **CLI 0.7.0**, **Vite plugin 0.15.0**, **conformance 0.18.0**, and **conformance-cli 0.3.0**. Earlier release series use legacy path/aggregate manifests. The event kinds remain 5129/15129/35129; current events use the artifact SHA-256 in `x`, a description in `content`, and `R`/`O` plus `z`/`i` metadata. CLI 0.15.0 removed the temporary `--format legacy` deploy output; use `napplet migrate` for old signed events. See the [migration guide](apps/docs/guide/event-migration.md) for event conversion, legacy pointers, and shell storage/ACL implications.
 
 ## NAP domains
 
