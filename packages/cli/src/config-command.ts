@@ -1,5 +1,5 @@
 /** Guided project configuration for CLI commands. */
-import { configPath, defaultConfig, initConfig, parseArchetypeConventions, writeConfig } from "./config.ts";
+import { configPath, defaultConfig, initConfig, normalizeTopics, parseArchetypeConventions, writeConfig } from "./config.ts";
 import { collectFlags, first, type FlagBag } from "./flags.ts";
 import { type InitWizardResult, normalizeNamedDTags, promptInitWizard, titleFromName } from "./init-wizard.ts";
 import { type InitReport, renderInitReport } from "./output.ts";
@@ -49,6 +49,7 @@ export async function runInitFromFlags(flags: FlagBag, existing?: NappletConfig)
     title: first(flags.values.get("title")) ?? existing?.metadata?.title,
     description: first(flags.values.get("description")) ?? existing?.metadata?.description,
     archetypes: flags.values.get("archetype") ?? existing?.metadata?.archetypes?.map((a) => `${a.slug}:${a.convention}`) ?? [],
+    topics: flags.values.get("topic") ?? existing?.metadata?.topics ?? [],
     root: flags.boolean.has("root") || existing?.defaultTarget === "root",
   };
   let options: InitWizardResult;
@@ -80,6 +81,7 @@ export async function runInitFromFlags(flags: FlagBag, existing?: NappletConfig)
       title: seed.title ?? titleFromName(seed.named[0] ?? "default"),
       description: seed.description?.trim() || undefined,
       archetypes: parseArchetypeConventions(seed.archetypes),
+      topics: normalizeTopics(seed.topics),
       defaultTarget: seed.root ? "root" as const : "named" as const,
     };
   }
@@ -87,6 +89,7 @@ export async function runInitFromFlags(flags: FlagBag, existing?: NappletConfig)
     const config = defaultConfig({ ...existing, sourceDir: options.sourceDir, relays: options.relays, blossomServers: options.blossomServers, named: options.named, defaultTarget: options.defaultTarget, metadata: {
       ...existing.metadata, title: options.title, description: options.description,
       archetypes: existing.metadata?.archetypes ?? options.archetypes,
+      topics: options.topics.length > 0 ? options.topics : existing.metadata?.topics,
     } });
     if (existing.defaultTarget === "snapshot") config.defaultTarget = "snapshot";
     const path = first(flags.values.get("config")) ?? configPath();
@@ -106,6 +109,7 @@ export async function runInitFromFlags(flags: FlagBag, existing?: NappletConfig)
       title: options.title,
       description: options.description,
       archetypes: options.archetypes,
+      topics: options.topics.length > 0 ? options.topics : undefined,
     },
   });
   return result;

@@ -166,6 +166,7 @@ function mergeConfigMetadataTags(
     replaced.add("i");
     if (format === "legacy") replaced.add("archetype");
   }
+  if (metadata.topics !== undefined) replaced.add("t");
   if (metadata.requires !== undefined) replaced.add("R");
   if (metadata.optional !== undefined) replaced.add("O");
   const result = tags.filter((tag) => !replaced.has(tag[0]));
@@ -184,6 +185,7 @@ function mergeConfigMetadataTags(
         ...(convention.params ?? []),
       ]);}
   }
+  for (const topic of metadata.topics ?? []) result.push(["t", topic]);
   for (const domain of metadata.requires ?? []) result.push(["R", domain]);
   for (const domain of metadata.optional ?? []) result.push(["O", domain]);
   return dedupeTags(result);

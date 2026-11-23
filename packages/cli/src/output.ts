@@ -180,6 +180,7 @@ export function renderInitReport(report: InitReport): string {
       ) ?? [],
     ),
   );
+  pushField(lines, "Topics", formatCountedList(report.config.metadata?.topics?.map((topic) => `#${topic}`) ?? []));
   pushField(lines, "Relays", formatCountedList(report.config.relays));
   pushField(lines, "Blossom servers", formatCountedList(report.config.blossomServers));
   lines.push("");

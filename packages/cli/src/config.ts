@@ -47,6 +47,7 @@ export function defaultConfig(overrides: Partial<NappletConfig> = {}): NappletCo
     ? {
       ...overrides.metadata,
       archetypes: overrides.metadata.archetypes?.map((convention) => ({ ...convention })),
+      topics: overrides.metadata.topics ? [...overrides.metadata.topics] : undefined,
       screenshots: overrides.metadata.screenshots?.map((entry) => ({ ...entry })),
       preview: overrides.metadata.preview ? { ...overrides.metadata.preview } : undefined,
     }
@@ -213,6 +214,25 @@ export function parseArchetypeConventions(values: readonly string[]): NappletArc
   });
 }
 
+/**
+ * Normalize topic hashtags for `t` tags: trim, drop a leading `#`, lowercase, and deduplicate.
+ * @param values Topic strings from config, flags, or the init wizard.
+ * @param field Field name used in validation errors.
+ * @returns Ordered, unique, lowercase topics.
+ * @example normalizeTopics(["#Nostr", "notes", "nostr"]) // ["nostr", "notes"]
+ */
+export function normalizeTopics(values: readonly string[], field = "topic"): string[] {
+  const topics: string[] = [];
+  for (const value of values) {
+    const topic = value.trim().replace(/^#/, "").toLowerCase();
+    if (topic === "" || /\s/.test(topic)) {
+      throw new Error(`${field} entries must be non-empty single words (got ${JSON.stringify(value)})`);
+    }
+    if (!topics.includes(topic)) topics.push(topic);
+  }
+  return topics;
+}
+
 function normalizeMetadata(value: unknown): NappletDeployMetadata | undefined {
   if (value === undefined) return undefined;
   if (!value || typeof value !== "object" || Array.isArray(value)) {
@@ -240,6 +260,9 @@ function normalizeMetadata(value: unknown): NappletDeployMetadata | undefined {
     sourceCommit: normalizeSourceCommit(metadata.sourceCommit),
     sourceArchive: normalizeSourceArchive(metadata.sourceArchive),
     archetypes,
+    topics: metadata.topics === undefined
+      ? undefined
+      : normalizeTopics(stringArray(metadata.topics, "metadata.topics"), "metadata.topics"),
     requires: metadata.requires === undefined ? undefined : stringArray(metadata.requires, "metadata.requires"),
     optional: metadata.optional === undefined ? undefined : stringArray(metadata.optional, "metadata.optional"),
     screenshots: normalizeScreenshotConfigs(metadata.screenshots, "metadata.screenshots"),
