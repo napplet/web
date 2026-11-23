@@ -120,6 +120,12 @@ export interface Nip5aManifestOptions {
   artifactMode?: Nip5aArtifactMode;
   /** Authoring alias for independent z roles and i intents with advertised parameter names. */
   archetypes?: Array<{ slug: string; convention: string; params?: string[] }>;
+  /**
+   * Discovery topics emitted as `["t", topic]` hashtag tags. Values are trimmed,
+   * a leading `#` is dropped, and they are lowercased and deduplicated. Topics
+   * have no HTML head mapping and stay in the manifest sidecar only.
+   */
+  topics?: string[];
 }
 
 /** Internal: resolved per-plugin-instance build state shared across hooks. */

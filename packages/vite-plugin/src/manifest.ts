@@ -147,6 +147,7 @@ function embedManifestMetadata(
       ...optional.map((name) => ['O', name]),
       ...(options.archetypes === undefined ? values('z') : buildArchetypeTags(options.archetypes)),
       ...(options.intents !== undefined ? buildIntentTags(options.intents) : options.archetypes === undefined ? values('i') : []),
+      ...buildTopicTags(options.topics),
     ],
     content: description,
   };
@@ -230,6 +231,23 @@ function buildIntentTags(intents: Nip5aManifestOptions['intents']): string[][] {
     }
     return ['i', entry.intent, ...(entry.params ?? [])];
   });
+}
+
+// `t` is the general Nostr hashtag tag with lowercase values; NIP-5D neither
+// defines nor forbids it, so topics are optional discovery metadata only.
+function buildTopicTags(topics: Nip5aManifestOptions['topics']): string[][] {
+  const seen = new Set<string>();
+  const tags: string[][] = [];
+  for (const value of topics ?? []) {
+    const topic = value.trim().replace(/^#/, '').toLowerCase();
+    if (topic === '' || /\s/.test(topic)) {
+      throw new Error(`[nip5a-manifest] topics must be non-empty single words (got ${JSON.stringify(value)})`);
+    }
+    if (seen.has(topic)) continue;
+    seen.add(topic);
+    tags.push(['t', topic]);
+  }
+  return tags;
 }
 
 async function writeManifestFile(
