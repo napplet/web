@@ -570,6 +570,7 @@ Full decision log in PROJECT.md Key Decisions table. Recent decisions affecting 
 
 | Quick ID | Task | Date | Commit | Artifacts |
 |----------|------|------|--------|-----------|
+| 261125-fa5 | archetypes.napplet.run site + relay-scoring indexer with SQLite store; build/types/units pass | 2026-11-25 | feat/archetypes-site | [261125-fa5](./quick/261125-fa5-archetypes-site-and-indexer/) |
 | 261120-l9x | Retire CLI `--format legacy` manifest output; build/types/units/jsr/skills/agent-output pass | 2026-11-20 | 1e7b10b1 | [261120-l9x](./quick/261120-l9x-cli-retire-legacy-format/) |
 | 261120-c7t | Retire vite-plugin `config` manifest tag and build-time schema discovery | 2026-11-20 | fix/vite-plugin-drop-config-tag | [261120-c7t](./quick/261120-c7t-vite-plugin-drop-config-tag/) |
 | 261120-k4r | NAP-RESOURCE canonical base64 wire bytes, runtime-resolved data: URLs; build/types/units pass | 2026-11-20 | db7caeb8 | [261120-k4r](./quick/261120-k4r-resource-base64-wire/) |
