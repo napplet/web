@@ -1,8 +1,0 @@
-**/node_modules
-**/dist
-**/.astro
-**/.turbo
-**/coverage
-.git
-site
-apps/archetypes-indexer/data
