@@ -6,6 +6,7 @@ import { connect } from 'node:net';
 import { SocksProxyAgent } from 'socks-proxy-agent';
 import { HttpsProxyAgent } from 'https-proxy-agent';
 import { WebSocket as WsWebSocket } from 'ws';
+import type { SocketConstructor } from './relay-client.ts';
 
 /**
  * An agent that tunnels connections through the proxy.
@@ -14,7 +15,7 @@ import { WebSocket as WsWebSocket } from 'ws';
  * @example proxyAgent('socks5h://127.0.0.1:1080')
  */
 export function proxyAgent(url: string): Agent {
-  return /^socks/.test(url) ? new SocksProxyAgent(url) : new HttpsProxyAgent(url);
+  return url.startsWith('socks') ? new SocksProxyAgent(url) : new HttpsProxyAgent(url);
 }
 
 /**
@@ -23,13 +24,12 @@ export function proxyAgent(url: string): Agent {
  * @returns Constructor usable wherever the platform WebSocket is.
  * @example const Impl = proxiedWebSocket(proxyAgent(url)); new Impl('wss://relay.example');
  */
-export function proxiedWebSocket(agent: Agent): typeof WebSocket {
-  class ProxiedWebSocket extends WsWebSocket {
-    constructor(address: string | URL) {
+export function proxiedWebSocket(agent: Agent): SocketConstructor {
+  return class ProxiedWebSocket extends WsWebSocket {
+    constructor(address: string) {
       super(address, { agent, handshakeTimeout: 15_000 });
     }
-  }
-  return ProxiedWebSocket as unknown as typeof WebSocket;
+  };
 }
 
 /**

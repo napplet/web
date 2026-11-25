@@ -1,11 +1,27 @@
 import { validateEvent, verifyEvent, type Event } from 'nostr-tools/pure';
 import type { Filter } from 'nostr-tools/filter';
 
+/** The part of the WebSocket API the client uses; the platform WebSocket and the `ws` package both provide it. */
+export interface RelaySocket {
+  readonly readyState: number;
+  send(data: string): void;
+  close(): void;
+  onopen: Handler<unknown> | null;
+  onerror: Handler<unknown> | null;
+  onclose: Handler<unknown> | null;
+  onmessage: Handler<{ data: unknown }> | null;
+}
+
+/** Event handler slot typed bivariantly (method syntax), so implementations with richer event types fit. */
+type Handler<E> = { handle(event: E): void }['handle'];
+
+export type SocketConstructor = new (url: string) => RelaySocket;
+
 export interface QueryOptions {
   timeoutMs: number;
   maxFrameBytes: number;
   /** Injected for tests; defaults to the platform WebSocket. */
-  WebSocketImpl?: typeof WebSocket;
+  WebSocketImpl?: SocketConstructor;
 }
 
 export interface QueryResult {
@@ -54,7 +70,7 @@ export function queryRelay(url: string, filter: Filter, options: QueryOptions): 
     const subId = `q${Math.random().toString(36).slice(2, 10)}`;
     let connected = false;
     let settled = false;
-    let socket: WebSocket;
+    let socket: RelaySocket;
     const finish = (ok: boolean, error?: string) => {
       if (settled) return;
       settled = true;
