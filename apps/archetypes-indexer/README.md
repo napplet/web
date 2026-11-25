@@ -41,11 +41,16 @@ Every setting is optional; the defaults are a complete deployment. [`archetypes.
 | `ARCHETYPES_YAML` | YAML text; wins over the file |
 | `ARCHETYPES_CONFIG` | Path to a YAML file (the image looks at `/config/archetypes.yaml`) |
 | `ARCHETYPES_DATA_DIR` | Data directory (the image uses `/data`) |
+| `ARCHETYPES_PROXY` | Outbound proxy, e.g. `socks5h://proxy.internal:1080`; overrides `proxy.url` |
 | `BUNNY_STORAGE_ZONE`, `BUNNY_STORAGE_ENDPOINT`, `BUNNY_PULLZONE_ID` | Bunny identifiers; override the file |
 | `BUNNY_STORAGE_PASSWORD` | Storage zone password. Without it nothing is deployed. |
 | `BUNNY_API_KEY` | Account API key, used only to purge the pull zone |
 
 Unknown keys and wrong types are rejected at start-up rather than ignored.
+
+### Proxy
+
+Set `proxy.url` (or `ARCHETYPES_PROXY`) to send relay WebSockets and Bunny uploads through a SOCKS5, SOCKS4 or HTTP(S) proxy; `proxy.relays` and `proxy.deploy` turn each on or off. Use `socks5h://` to resolve relay names at the proxy. Before each tick the indexer checks that the proxy accepts a connection and skips the tick if it does not. Separately, if every relay in a pass of `crawl.outageMinRelays` or more fails to connect, the pass is treated as a local outage and relay states are left unchanged, so a dead proxy or network can never get the whole relay set removed as offline.
 
 ## Data
 

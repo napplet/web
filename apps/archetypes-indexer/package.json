@@ -16,14 +16,16 @@
   },
   "dependencies": {
     "nostr-tools": "^2.23.3",
-    "yaml": "^2.8.3"
+    "yaml": "^2.8.3",
+    "socks-proxy-agent": "^10.1.0",
+    "https-proxy-agent": "^9.1.0",
+    "ws": "^8.21.0"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
     "@types/ws": "^8.18.1",
     "typescript": "^5.9.3",
     "vitest": "^4.1.12",
-    "ws": "^8.21.0",
     "@vitest/coverage-v8": "^4.1.12"
   }
 }

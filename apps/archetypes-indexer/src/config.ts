@@ -36,6 +36,21 @@ export interface Config {
     pointsPerNapplet: number;
     maxFrameBytes: number;
     allowPrivateHosts: boolean;
+    /**
+     * A crawl in which this many or more due relays all fail to connect is treated as a local
+     * network outage: relay states are left as they were instead of counting failures.
+     */
+    outageMinRelays: number;
+  };
+  proxy: {
+    /** Outbound proxy: `socks5h://`, `socks5://`, `socks4://`, `http://` or `https://`. Empty means direct. ARCHETYPES_PROXY overrides it. */
+    url: string;
+    /** Route relay WebSockets (discovery and crawling) through the proxy. */
+    relays: boolean;
+    /** Route Bunny Storage uploads through the proxy. */
+    deploy: boolean;
+    /** Skip a tick's network work when the proxy does not accept a connection within this many milliseconds. */
+    preflightTimeoutMs: number;
   };
   build: {
     enabled: boolean;
@@ -96,7 +111,9 @@ export const DEFAULTS: Config = {
     pointsPerNapplet: 1,
     maxFrameBytes: 512 * 1024,
     allowPrivateHosts: false,
+    outageMinRelays: 5,
   },
+  proxy: { url: '', relays: true, deploy: true, preflightTimeoutMs: 5000 },
   build: {
     enabled: true,
     at: '05:30',
@@ -157,6 +174,7 @@ export function validate(config: Config): Config {
     ['crawl.timeoutSeconds', config.crawl.timeoutSeconds], ['crawl.tickMinutes', config.crawl.tickMinutes],
     ['crawl.maxFrameBytes', config.crawl.maxFrameBytes], ['build.runtimeTimeoutMs', config.build.runtimeTimeoutMs],
     ['build.timeoutMinutes', config.build.timeoutMinutes], ['deploy.bunny.concurrency', config.deploy.bunny.concurrency],
+    ['crawl.outageMinRelays', config.crawl.outageMinRelays], ['proxy.preflightTimeoutMs', config.proxy.preflightTimeoutMs],
   ];
   for (const [name, value] of positive) {
     if (!Number.isFinite(value) || value <= 0) throw new Error(`Config ${name} must be a positive number`);
@@ -169,6 +187,9 @@ export function validate(config: Config): Config {
   }
   if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(config.build.at)) throw new Error('Config build.at must be HH:MM (UTC)');
   if (!config.build.siteUrl.startsWith('https://')) throw new Error('Config build.siteUrl must be an https URL');
+  if (config.proxy.url && !/^(socks5h?|socks4a?|https?):\/\/[^\s/]+(:\d+)?\/?$/.test(config.proxy.url)) {
+    throw new Error('Config proxy.url must look like socks5h://host:port, socks5://, socks4://, http:// or https://');
+  }
   return config;
 }
 
@@ -185,7 +206,7 @@ const PACKAGE_DIR = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 export function parseConfig(source: string, base: string): Config {
   const raw: unknown = parse(source) ?? {};
   if (!isPlain(raw)) throw new Error('Config file must contain a mapping');
-  const merged = merge(DEFAULTS, raw, '');
+  const merged = merge(structuredClone(DEFAULTS), raw, '');
   const build = isPlain(raw.build) ? raw.build : {};
   merged.dataDir = resolve('dataDir' in raw ? base : PACKAGE_DIR, merged.dataDir);
   merged.build.siteDir = resolve('siteDir' in build ? base : PACKAGE_DIR, merged.build.siteDir);
@@ -215,7 +236,8 @@ export function loadConfig(path?: string): Config {
 export function configFromEnv(env: NodeJS.ProcessEnv): Config {
   const config = env.ARCHETYPES_YAML?.trim() ? parseConfig(env.ARCHETYPES_YAML, process.cwd()) : loadConfig(env.ARCHETYPES_CONFIG || undefined);
   if (env.ARCHETYPES_DATA_DIR) config.dataDir = resolve(env.ARCHETYPES_DATA_DIR);
-  return config;
+  if (env.ARCHETYPES_PROXY !== undefined) config.proxy.url = env.ARCHETYPES_PROXY.trim();
+  return validate(config);
 }
 
 /**

@@ -43,6 +43,18 @@ describe('tick', () => {
     expect(await tick(deps)).toMatchObject({ discovered: true, built: true });
   });
 
+  it('skips all network work when the preflight says so', async () => {
+    const store = new EventStore(':memory:');
+    const config = testConfig();
+    config.discovery.seedRelays = ['wss://seed.example'];
+    let queried = 0;
+    const query: Query = async () => { queried++; return { events: [], ok: true, connected: true }; };
+    const result = await tick({ store, query, config, secrets: {}, log: () => {}, now: () => 50, preflight: async () => 'proxy unreachable; skipped this tick' });
+    expect(result).toEqual({ discovered: false, crawled: 0, built: false, error: 'proxy unreachable; skipped this tick' });
+    expect(queried).toBe(0);
+    expect(store.getMeta('lastError')).toBe('50 proxy unreachable; skipped this tick');
+  });
+
   it('records an error instead of throwing', async () => {
     const store = new EventStore(':memory:');
     const config = testConfig();

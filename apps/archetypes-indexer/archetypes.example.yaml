@@ -35,6 +35,18 @@ crawl:
   tickMinutes: 5
   maxFrameBytes: 524288
   allowPrivateHosts: false  # accept ws://, LAN and .local relays (tests, private networks)
+  # When at least this many due relays all fail to connect in one pass, treat it as a local
+  # network (or proxy) outage and leave their states alone instead of counting failures.
+  outageMinRelays: 5
+
+proxy:
+  # Outbound proxy for relay WebSockets and Bunny uploads. Empty means direct.
+  # socks5h:// resolves names at the proxy; socks5://, socks4://, http:// and https:// also work.
+  # ARCHETYPES_PROXY overrides this.
+  url: ""
+  relays: true
+  deploy: true
+  preflightTimeoutMs: 5000  # a tick is skipped when the proxy does not accept a connection
 
 build:
   enabled: true

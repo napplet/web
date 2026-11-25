@@ -55,6 +55,27 @@ describe('configFromEnv', () => {
     expect(configFromEnv({ ARCHETYPES_CONFIG: file }).crawl.concurrency).toBe(3);
     expect(configFromEnv({}).crawl.concurrency).toBe(DEFAULTS.crawl.concurrency);
   });
+
+  it('takes the proxy from ARCHETYPES_PROXY and validates it', () => {
+    expect(configFromEnv({}).proxy.url).toBe('');
+    expect(configFromEnv({ ARCHETYPES_PROXY: ' socks5h://10.0.0.2:1080 ' }).proxy.url).toBe('socks5h://10.0.0.2:1080');
+    expect(configFromEnv({ ARCHETYPES_YAML: 'proxy:\n  url: http://proxy.example:3128\n  deploy: false\n' }).proxy).toMatchObject({ url: 'http://proxy.example:3128', deploy: false, relays: true });
+    expect(() => configFromEnv({ ARCHETYPES_PROXY: 'ftp://proxy.example' })).toThrow(/proxy.url/);
+    expect(() => configFromEnv({ ARCHETYPES_PROXY: 'socks5h://host:1080/path' })).toThrow(/proxy.url/);
+  });
+});
+
+describe('defaults isolation', () => {
+  it('never lets one loaded config change the defaults another sees', () => {
+    const first = loadConfig();
+    first.proxy.url = 'socks5h://changed:1';
+    first.deploy.bunny.storageZone = 'changed';
+    first.crawl.backoffHours.push(1);
+    const second = loadConfig();
+    expect(second.proxy.url).toBe('');
+    expect(second.deploy.bunny.storageZone).toBe('');
+    expect(second.crawl.backoffHours).toEqual([24, 72, 168, 336, 720]);
+  });
 });
 
 describe('secretsFromEnv', () => {

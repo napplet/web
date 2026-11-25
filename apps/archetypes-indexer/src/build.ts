@@ -51,10 +51,11 @@ function run(command: string, args: string[], cwd: string, env: NodeJS.ProcessEn
  * @param secrets Deployment credentials.
  * @param now Unix seconds.
  * @param log Logger.
+ * @param fetchImpl HTTP client for the deploy (proxied when configured).
  * @returns Where the site was built and whether it was deployed.
  * @example await runBuild(store, config, secrets, now, log)
  */
-export async function runBuild(store: EventStore, config: Config, secrets: Secrets, now: number, log: Log): Promise<{ outDir: string; deployed: boolean }> {
+export async function runBuild(store: EventStore, config: Config, secrets: Secrets, now: number, log: Log, fetchImpl: typeof fetch = fetch): Promise<{ outDir: string; deployed: boolean }> {
   const snapshotPath = join(config.dataDir, 'snapshot.json');
   // Inside the site package: Astro moves files with rename(), which fails across volumes (EXDEV).
   const outDir = join(config.build.siteDir, 'dist');
@@ -77,7 +78,7 @@ export async function runBuild(store: EventStore, config: Config, secrets: Secre
       ...(secrets.bunnyApiKey ? { apiKey: secrets.bunnyApiKey } : {}),
       concurrency: bunny.concurrency,
       deleteStale: bunny.deleteStale,
-    }, log);
+    }, log, fetchImpl);
     deployed = true;
   } else {
     log('deploy-skipped', { reason: 'BUNNY_STORAGE_ZONE or BUNNY_STORAGE_PASSWORD not set' });

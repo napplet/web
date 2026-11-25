@@ -106,6 +106,24 @@ export async function crawlRelay(state: RelayState, store: EventStore, query: Qu
 }
 
 /**
+ * When every relay in a large enough batch failed to connect, the problem is our network (or proxy),
+ * not the relays: put their states back so an outage cannot remove the whole relay set.
+ * @param before Relay states before the batch.
+ * @param results Batch results.
+ * @param store Event store.
+ * @param config Configuration.
+ * @param log Logger.
+ * @returns True when the batch was treated as an outage.
+ * @example undoOutage(due, results, store, config, log)
+ */
+export function undoOutage(before: RelayState[], results: Array<{ state: RelayState }>, store: EventStore, config: Config, log: Log): boolean {
+  if (before.length < config.crawl.outageMinRelays || results.some(result => result.state.failures === 0)) return false;
+  store.saveRelays(before);
+  log('outage', { relays: before.length, reason: 'no relay accepted a connection; relay states left unchanged' });
+  return true;
+}
+
+/**
  * Crawl every relay that has served napplets, due or not, so a build includes everything published up to it.
  * @param store Event store.
  * @param query Relay query function.
@@ -118,6 +136,7 @@ export async function crawlRelay(state: RelayState, store: EventStore, query: Qu
 export async function crawlScored(store: EventStore, query: Query, config: Config, now: number, log: Log): Promise<{ crawled: number; fresh: number }> {
   const scored = [...store.relays().values()].filter(state => state.removedAt === undefined && state.points > 0);
   const results = await pool(scored, config.crawl.concurrency, state => crawlRelay(state, store, query, config, now));
+  if (undoOutage(scored, results, store, config, log)) throw new Error('network outage: no scored relay accepted a connection');
   const fresh = results.reduce((sum, result) => sum + result.fresh, 0);
   log('pre-build-crawl', { crawled: scored.length, fresh });
   return { crawled: scored.length, fresh };
@@ -137,6 +156,7 @@ export async function crawlDue(store: EventStore, query: Query, config: Config, 
   const due = dueRelays(store.relays().values(), now);
   if (!due.length) return { crawled: 0, fresh: 0, removed: 0 };
   const results = await pool(due, config.crawl.concurrency, state => crawlRelay(state, store, query, config, now));
+  if (undoOutage(due, results, store, config, log)) return { crawled: 0, fresh: 0, removed: 0 };
   const fresh = results.reduce((sum, result) => sum + result.fresh, 0);
   const removed = results.filter(result => result.state.removedAt !== undefined).length;
   log('crawl', { crawled: due.length, fresh, removed, stored: store.eventCount() });

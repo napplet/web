@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { crawlDue, crawlRelay, crawlScored, ensureSeeds, pool, runDiscovery } from '../src/crawl.ts';
+import { crawlDue, crawlRelay, crawlScored, ensureSeeds, pool, runDiscovery, undoOutage } from '../src/crawl.ts';
 import { discoverRelays, relaysFromDiscovery } from '../src/nip66.ts';
 import { queryRelay, type Query } from '../src/relay-client.ts';
 import { newRelay } from '../src/schedule.ts';
@@ -102,6 +102,26 @@ describe('crawl cycle', () => {
     expect(await crawlScored(store, query, config, now, log)).toEqual({ crawled: 1, fresh: 1 });
     expect(empty.requests).toHaveLength(0);
     expect(store.eventCount()).toBe(1);
+  });
+
+  it('leaves relay states alone when a whole batch fails to connect (local outage)', async () => {
+    const config = testConfig();
+    const store = new EventStore(':memory:');
+    const dead = Array.from({ length: 5 }, (_, i) => ({ ...newRelay(`ws://127.0.0.1:${i + 1}`, 'nip66' as const, now), points: 2 }));
+    store.saveRelays(dead);
+    expect(await crawlDue(store, query, config, now, log)).toEqual({ crawled: 0, fresh: 0, removed: 0 });
+    for (const state of dead) expect(store.relays().get(state.url)).toEqual(state);
+    await expect(crawlScored(store, query, config, now, log)).rejects.toThrow(/outage/);
+    expect(store.relays().get(dead[0].url)?.failures).toBe(0);
+  });
+
+  it('counts failures normally when the batch is small or something connected', () => {
+    const config = testConfig();
+    const store = new EventStore(':memory:');
+    const before = [newRelay('ws://a', 'nip66', now)];
+    expect(undoOutage(before, [{ state: { ...before[0], failures: 1 } }], store, config, log)).toBe(false);
+    const many = Array.from({ length: 6 }, (_, i) => newRelay(`ws://r${i}`, 'nip66', now));
+    expect(undoOutage(many, many.map((state, i) => ({ state: { ...state, failures: i === 0 ? 0 : 1 } })), store, config, log)).toBe(false);
   });
 
   it('removes a relay that keeps refusing connections', async () => {

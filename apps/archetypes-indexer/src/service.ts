@@ -13,6 +13,10 @@ export interface ServiceDeps {
   log: Log;
   now?: () => number;
   build?: typeof runBuild;
+  /** Resolves to a reason when the tick's network work must be skipped (e.g. the proxy is down). */
+  preflight?: () => Promise<string | undefined>;
+  /** HTTP client for deploys (proxied when configured). */
+  fetchImpl?: typeof fetch;
 }
 
 export interface TickResult { discovered: boolean; crawled: number; built: boolean; error?: string }
@@ -33,6 +37,14 @@ export async function tick(deps: ServiceDeps): Promise<TickResult> {
   const { store, config } = deps;
   const result: TickResult = { discovered: false, crawled: 0, built: false };
   try {
+    const blocked = await deps.preflight?.();
+    if (blocked) {
+      result.error = blocked;
+      store.setMeta('lastError', `${now} ${blocked}`);
+      deps.log('skipped', { reason: blocked });
+      store.setMeta('lastTickAt', String(now));
+      return result;
+    }
     const lastDiscovery = metaNumber(store, 'lastDiscoveryAt');
     if (lastDiscovery === undefined || now - lastDiscovery >= config.discovery.intervalHours * 3600) {
       await runDiscovery(store, deps.query, config, now, deps.log);
@@ -42,7 +54,7 @@ export async function tick(deps: ServiceDeps): Promise<TickResult> {
     if (config.build.enabled && buildDue(now, config.build.at, metaNumber(store, 'lastBuildAt'), config.build.buildOnStart)) {
       // Browsers only ask relays for manifests newer than the build, so the build must not miss anything older.
       await crawlScored(store, deps.query, config, now, deps.log);
-      await (deps.build ?? runBuild)(store, config, deps.secrets, now, deps.log);
+      await (deps.build ?? runBuild)(store, config, deps.secrets, now, deps.log, deps.fetchImpl);
       result.built = true;
     }
   } catch (error) {
