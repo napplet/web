@@ -1,0 +1,52 @@
+---
+import Base from '../../layouts/Base.astro';
+import { loadSiteData } from '../../lib/data';
+import { intentPath, plural } from '../../lib/format';
+
+const { index, snapshot } = loadSiteData();
+const site = snapshot.siteUrl;
+const top = index.verbs[0]?.archetypes.length ?? 1;
+const shared = index.verbs.filter(verb => verb.archetypes.length > 1);
+const single = index.verbs.filter(verb => verb.archetypes.length === 1);
+const jsonLd = [{
+  '@context': 'https://schema.org', '@type': 'DefinedTermSet', '@id': `${site}/intents/#intents`, name: 'Napplet intents',
+  description: 'Convention identities napplets accept, advertised with NIP-5D i tags.',
+  hasDefinedTerm: index.intents.map(intent => ({ '@type': 'DefinedTerm', name: intent.uri, termCode: intent.uri, url: `${site}${intentPath(intent.uri)}` })),
+}];
+---
+<Base title="Intents" description={`All ${index.intents.length} napplet intents observed on Nostr, with the verbs that are becoming shared vocabulary across archetypes.`} jsonLd={jsonLd} nav="intents">
+  <h1 style="margin: 0 0 8px; font-size: 36px;">Intents</h1>
+  <p class="lede">An intent is a queryless convention identity, <code>napplet:&lt;archetype&gt;/&lt;verb&gt;</code>, that a napplet accepts. The parameter names after it are only what implementers chose to advertise.</p>
+  <div class="split">
+    <aside class="side card" aria-labelledby="verbs-h" style="background: var(--bg-soft);">
+      <h2 id="verbs-h" style="font-size: 16px; margin: 0 0 4px;">Verbs across archetypes</h2>
+      <p class="small dim" style="margin: 0 0 14px;">The part after the slash, counted per archetype: which actions are becoming shared vocabulary.</p>
+      <ul style="list-style: none; margin: 0; padding: 0; display: grid; gap: 6px;" class="mono">
+        {shared.map(verb => (
+          <li style="display: flex; align-items: center; gap: 10px; font-size: 14px;">
+            <span style="flex: 1;">{verb.verb}</span>
+            <span aria-hidden="true" style={`display: block; height: 6px; border-radius: 3px; background: var(--accent); width: ${Math.max(8, Math.round((verb.archetypes.length / top) * 90))}px;`}></span>
+            <span style="width: 28px; text-align: right;">{verb.archetypes.length}</span>
+          </li>
+        ))}
+      </ul>
+      {single.length > 0 && <p class="small dim" style="margin: 14px 0 0;">Used by one archetype each: <span class="mono">{single.map(verb => verb.verb).join(', ')}</span>.</p>}
+    </aside>
+    <div class="main">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th scope="col">Intent</th><th scope="col">Handlers</th><th scope="col">Parameter names</th></tr></thead>
+          <tbody>
+            {index.intents.map(intent => (
+              <tr>
+                <td><a class="mono" href={intentPath(intent.uri)}>{intent.uri}</a></td>
+                <td>{intent.handlers.length}<span class="dim small"> · {plural(intent.publishers, 'publisher')}</span></td>
+                <td class="mono small">{intent.params.length ? intent.params.map(param => param.name).join(' ') : <span class="dim">none</span>}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</Base>

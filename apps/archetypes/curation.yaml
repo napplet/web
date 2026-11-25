@@ -1,0 +1,51 @@
+# Editorial notes on observed napplet archetypes.
+#
+# Archetypes and intents are ad hoc: NIP-5D lets every napplet name its own, and
+# there is no registry. This file records human decisions about how the names
+# people actually publish relate to each other. It is site data for
+# archetypes.napplet.run, changed by pull request. It never changes what a
+# manifest means and is never published to relays.
+#
+# Every section is optional. See apps/archetypes/README.md for the full format.
+
+# Tune the synonym-candidate heuristics. Defaults are shown; delete to use them.
+# similarity:
+#   threshold: 0.5
+#   descriptionOverlap: 0.2
+#   spellingRatio: 0.85
+#   weights:
+#     sameTokens: 0.9
+#     containment: 0.6
+#     spelling: 0.6
+#     samePublisher: 0.2
+#     sharedVerb: 0.1
+#     sharedParams: 0.2
+#     description: 0.3
+
+# Notes on single archetypes. `status: diverse` marks a name that legitimately
+# covers many different kinds of napplet and does not need to coalesce.
+archetypes:
+  game:
+    status: diverse
+    note: Many different games share this name, and only some accept an intent. Treat it as a family, not one contract.
+    reviewed: 2026-11-25
+  note:
+    status: diverse
+    note: Note readers, long-form readers, a feed and recipe cards all accept napplet:note/open and render a note their own way.
+    reviewed: 2026-11-25
+
+# Decisions about groups of archetypes. Outcomes:
+#   coalesce  - the names mean the same thing; `preferred` leads in listings and search finds every member
+#   distinct  - similar but deliberately different; the group stops being suggested
+#   diverse   - each member legitimately covers many shapes; the group stops being suggested
+# `params` lines up parameter names that mean the same thing across members.
+#
+# clusters:
+#   - members: [3d-model, cad-viewer]
+#     outcome: coalesce
+#     preferred: 3d-model
+#     params:
+#       - same: [model, url]
+#         note: cad-viewer names a model; 3d-model takes a blob url with sha256 and servers
+#     reviewed: 2026-11-25
+clusters: []

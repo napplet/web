@@ -1,0 +1,32 @@
+{
+  "name": "@napplet/archetypes",
+  "version": "0.0.0",
+  "private": true,
+  "description": "archetypes.napplet.run: a searchable, agent-readable field guide to napplet archetypes and intents.",
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview --host 127.0.0.1",
+    "type-check": "astro check",
+    "test:unit": "vitest run",
+    "seed": "node scripts/seed-snapshot.mjs",
+    "check:site": "node scripts/check-site.mjs dist",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "nostr-tools": "^2.23.3",
+    "yaml": "^2.8.3"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.10",
+    "@astrojs/sitemap": "^3.7.4",
+    "astro": "^7.3.5",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.12",
+    "@types/node": "^24.0.0",
+    "@types/ws": "^8.18.1",
+    "ws": "^8.21.0",
+    "@vitest/coverage-v8": "^4.1.12"
+  }
+}

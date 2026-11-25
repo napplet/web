@@ -1,0 +1,82 @@
+---
+import Base from '../../../../layouts/Base.astro';
+import { loadSiteData } from '../../../../lib/data';
+import { day, plural, shortNpub } from '../../../../lib/format';
+import type { IntentEntry } from '../../../../lib/model';
+
+export function getStaticPaths() {
+  return loadSiteData().index.intents.map(intent => ({ params: { archetype: intent.archetype, verb: intent.verb }, props: { intent } }));
+}
+
+const { intent } = Astro.props as { intent: IntentEntry };
+const { index, snapshot } = loadSiteData();
+const site = snapshot.siteUrl;
+const archetype = index.archetypes.find(entry => entry.slug === intent.archetype);
+const verb = index.verbs.find(entry => entry.verb === intent.verb);
+const siblings = (verb?.archetypes ?? []).filter(slug => slug !== intent.archetype);
+const agreement = { single: 'one handler', unanimous: 'all handlers agree', mixed: 'handlers differ' }[intent.agreement];
+const description = `${intent.uri}: a napplet intent accepted by ${plural(intent.handlers.length, 'napplet')} from ${plural(intent.publishers, 'publisher')}${intent.params.length ? `, with parameter names ${intent.params.map(param => param.name).join(', ')}` : ''}.`;
+const jsonLd = [{
+  '@context': 'https://schema.org', '@type': 'DefinedTerm', name: intent.uri, termCode: intent.uri, description,
+  url: `${site}/intents/${intent.archetype}/${intent.verb}/`, inDefinedTermSet: `${site}/intents/#intents`,
+}];
+---
+<Base title={intent.uri} description={description.slice(0, 158)} jsonLd={jsonLd} nav="intents">
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="/intents/">Intents</a> / <a href={`/archetypes/${intent.archetype}/`}>{intent.archetype}</a> / {intent.verb}</nav>
+  <h1 class="mono" style="margin: 0 0 8px; font-weight: 500; font-size: 34px; overflow-wrap: anywhere;">{intent.uri}</h1>
+  <p class="lede">Accepted by {plural(intent.handlers.length, 'napplet')} from {plural(intent.publishers, 'publisher')}. A queryless identity; the parameters below are only names implementers chose to advertise.</p>
+  <dl class="stats" style="margin-bottom: 28px;">
+    <div><dt>Handlers</dt><dd>{intent.handlers.length}</dd></div>
+    <div><dt>Parameter names</dt><dd>{intent.params.length}</dd></div>
+    <div><dt>Agreement</dt><dd style="font-size: 16px; padding-top: 6px; color: var(--cyan);">{agreement}</dd></div>
+  </dl>
+
+  <section class="section" aria-labelledby="params-h">
+    <h2 id="params-h">Parameter usage</h2>
+    {intent.params.length ? (
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th scope="col">Napplet</th>{intent.params.map(param => <th scope="col" class="mono">{param.name}</th>)}</tr></thead>
+          <tbody>
+            {intent.handlers.map(handler => (
+              <tr>
+                <th scope="row" style="font-weight: 500;">{handler.napplet.title}</th>
+                {intent.params.map(param => <td>{handler.params.includes(param.name) ? <span style="color: var(--accent);" aria-label="advertised">●</span> : <span class="dim" aria-label="not advertised">—</span>}</td>)}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    ) : (
+      <p class="empty" style="text-align: left; padding: 20px;">No handler advertises parameters for this intent. A shell dispatching it should expect each napplet to choose what to show.</p>
+    )}
+  </section>
+
+  <section class="section" aria-labelledby="call-h">
+    <h2 id="call-h">Dispatch it</h2>
+    <pre class="code"><code>{`import { intent } from '@napplet/sdk'
+
+if (window.napplet?.intent) {
+  const { available } = await intent.available('${intent.archetype}')
+  if (available) await intent.invoke('${intent.uri}')
+}`}</code></pre>
+    <p class="small dim">Non-normative example. Dispatch behaviour is defined by <a href="https://github.com/napplet/naps">NAP-INTENT</a>; see the <a href="https://napplet.run/docs/naps/intent">intent guide</a>.</p>
+  </section>
+
+  <section class="section" aria-labelledby="hist-h">
+    <h2 id="hist-h">Adoption</h2>
+    <ol style="list-style: none; margin: 0; padding: 0; border-left: 2px solid var(--border); display: grid; gap: 14px; font-size: 14px;">
+      {intent.handlers.map(handler => (
+        <li style="padding-left: 16px;"><span class="mono dim">{day(handler.since)}</span> {handler.napplet.title} <span class="dim">({shortNpub(handler.napplet.pubkey)})</span>{!handler.advertisesArchetype && <span class="small dim"> · manifest lacks <code>["z", "{intent.archetype}"]</code></span>}</li>
+      ))}
+    </ol>
+  </section>
+
+  {siblings.length > 0 && (
+    <section class="section" aria-labelledby="sib-h">
+      <h2 id="sib-h">Same verb elsewhere</h2>
+      <div class="chips">{siblings.map(slug => <a class="chip" href={`/intents/${slug}/${intent.verb}/`}>{slug}/{intent.verb}</a>)}</div>
+    </section>
+  )}
+  {archetype && <p class="small"><a href={`/archetypes/${archetype.slug}/`}>← All about the {archetype.slug} archetype</a></p>}
+</Base>

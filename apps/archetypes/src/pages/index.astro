@@ -1,0 +1,153 @@
+---
+import Base from '../layouts/Base.astro';
+import LiveBanner from '../components/LiveBanner.astro';
+import { loadSiteData } from '../lib/data';
+import { clip, plural, STATUS_LABEL } from '../lib/format';
+import { haystack } from '../lib/search';
+
+const { index, snapshot } = loadSiteData();
+const site = snapshot.siteUrl;
+const counts = {
+  all: index.archetypes.length,
+  candidate: index.archetypes.filter(entry => entry.status === 'candidate').length,
+  diverse: index.archetypes.filter(entry => entry.status === 'diverse').length,
+  coalesced: index.archetypes.filter(entry => entry.status === 'coalesced').length,
+  observed: index.archetypes.filter(entry => entry.status === 'observed').length,
+};
+const filters: Array<[keyof typeof counts, string]> = [['all', 'All'], ['candidate', 'Synonym candidates'], ['diverse', 'Diverse by design'], ['coalesced', 'Coalesced'], ['observed', 'Observed']];
+const paramsOf = (uris: string[]) => uris.flatMap(uri => index.intents.find(intent => intent.uri === uri)?.params.map(param => param.name) ?? []);
+const intentLabel = (uri: string) => {
+  const intent = index.intents.find(other => other.uri === uri);
+  const tail = uri.slice('napplet:'.length);
+  return intent?.params.length ? `${tail} ${intent.params.map(param => param.name).join(' ')}` : tail;
+};
+const summary = (slug: string) => {
+  const entry = index.archetypes.find(other => other.slug === slug)!;
+  if (entry.note) return clip(entry.note, 110);
+  if (entry.preferred) return `Coalesced into ${entry.preferred}.`;
+  if (entry.status === 'candidate') {
+    const others = index.clusters.filter(cluster => cluster.status === 'candidate' && cluster.members.includes(slug)).flatMap(cluster => cluster.members).filter(member => member !== slug);
+    return `Possible synonym of ${[...new Set(others)].join(', ')}.`;
+  }
+  if (!entry.intents.length) return 'Advertised without intents: listed, but not addressable by intent.';
+  if (!entry.napplets.length) return 'Reached only through an intent; no napplet advertises the z tag.';
+  return entry.napplets.length > 1 ? `${plural(entry.napplets.length, 'napplet')} from ${plural(entry.publishers, 'publisher')}.` : clip(entry.napplets[0].title, 80);
+};
+const termSet = {
+  '@context': 'https://schema.org',
+  '@type': 'DefinedTermSet',
+  '@id': `${site}/#archetypes`,
+  name: 'Napplet archetypes',
+  description: 'Archetype names napplets advertise with NIP-5D z tags, as observed on public relays.',
+  hasDefinedTerm: index.archetypes.map(entry => ({ '@type': 'DefinedTerm', name: entry.slug, termCode: entry.slug, url: `${site}/archetypes/${entry.slug}/` })),
+};
+const live = {
+  generatedAt: snapshot.generatedAt,
+  relays: snapshot.runtime.relays,
+  timeoutMs: snapshot.runtime.timeoutMs,
+  known: Object.fromEntries(index.archetypes.map(entry => [entry.slug, entry.napplets.map(napplet => napplet.key)])),
+  intents: index.intents.map(intent => intent.uri),
+};
+---
+<Base title="Napplet archetypes" description={`Browse and search the ${index.archetypes.length} archetypes and ${index.intents.length} intents napplets advertise on Nostr: which names developers use, which intents they accept, and where names are converging.`} markdown="/index.md" jsonLd={[termSet]} nav="archetypes">
+  <p class="eyebrow">z + i tags, observed on public relays</p>
+  <h1 style="margin: 0 0 12px; font-size: 44px; max-width: 780px;">What napplets say they do, and what you can ask them to do.</h1>
+  <p class="lede">A field guide to napplet archetypes and intents as developers actually publish them. Nothing here is a registry: names are ad hoc, and this page reports usage and where it is converging.</p>
+
+  <form role="search" action="/" method="get" style="margin-bottom: 16px;" toolname="search_archetypes" tooldescription="Search napplet archetypes, intents and parameter names" data-search-form>
+    <label class="sr-only" for="q">Search archetypes, intents and parameters</label>
+    <div class="search-big">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9688b3" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-4-4"></path></svg>
+      <input id="q" name="q" type="search" placeholder="Try “editor”, “open”, “route” or “3d”" autocomplete="off" />
+      <button class="button" type="submit">Search</button>
+    </div>
+  </form>
+
+  <div class="pills" role="group" aria-label="Filter by status" style="margin-bottom: 24px;">
+    {filters.map(([id, label]) => (
+      <button class="pill" type="button" data-filter={id} aria-pressed={id === 'all' ? 'true' : 'false'}>{label} <span class="dim">{counts[id]}</span></button>
+    ))}
+    <button class="pill" type="button" data-filter="new" aria-pressed="false" hidden>New since build <span class="dim" data-new-count>0</span></button>
+  </div>
+
+  <LiveBanner context={live} />
+
+  <div class="toolbar">
+    <span role="status" data-count>{index.archetypes.length} archetypes · {index.intents.length} intents · {index.napplets} napplets from {index.publishers} publishers</span>
+    <span>{index.silent} more napplets advertise no archetype.</span>
+  </div>
+
+  <h2 class="sr-only">Archetypes</h2>
+  <ul class="rows" data-rows>
+    {index.archetypes.map(entry => (
+      <li class="row" data-slug={entry.slug} data-status={entry.status} data-search={haystack({ ...entry, napplets: entry.napplets.length, params: paramsOf(entry.intents) })}>
+        <div style="min-width: 0;">
+          <div class="row-title">
+            <a href={`/archetypes/${entry.slug}/`}>{entry.slug}</a>
+            <span class={`status status-${entry.status}`}>{STATUS_LABEL[entry.status]}</span>
+            <span class="badge-new" data-new hidden>new</span>
+          </div>
+          <div class="row-note">{summary(entry.slug)}</div>
+        </div>
+        <div class="chips" style="min-width: 0;">
+          {entry.intents.slice(0, 4).map(uri => <a class="chip" href={`/intents/${uri.slice(8)}/`}>{intentLabel(uri)}</a>)}
+          {entry.intents.length > 4 && <span class="chip">+{entry.intents.length - 4} more</span>}
+          {!entry.intents.length && <span class="dim small">no intents</span>}
+        </div>
+        <div class="row-count">
+          <div><strong data-napplets>{entry.napplets.length}</strong> <span data-napplets-word>{entry.napplets.length === 1 ? 'napplet' : 'napplets'}</span></div>
+          <div>{plural(entry.publishers, 'publisher')}</div>
+        </div>
+      </li>
+    ))}
+  </ul>
+  <div class="empty" data-empty hidden>
+    <p style="margin: 0 0 8px; color: var(--text); font-weight: 600;">No archetype matches “<span data-empty-query></span>” yet.</p>
+    <p style="margin: 0;">That name is free to use. Archetypes need no registration: add <code>["z", "<span data-empty-query></span>"]</code> to your manifest and it appears here after the next crawl.</p>
+  </div>
+</Base>
+
+<script>
+  import { searchArchetypes } from '../lib/search';
+
+  const rows = [...document.querySelectorAll<HTMLElement>('[data-rows] > li')];
+  const input = document.querySelector<HTMLInputElement>('#q')!;
+  const count = document.querySelector<HTMLElement>('[data-count]')!;
+  const empty = document.querySelector<HTMLElement>('[data-empty]')!;
+  const total = count.textContent ?? '';
+  const pills = [...document.querySelectorAll<HTMLButtonElement>('[data-filter]')];
+  const params = new URLSearchParams(location.search);
+  let status = params.get('status') ?? 'all';
+  input.value = params.get('q') ?? '';
+
+  let entries = rows.map(row => ({ row, slug: row.dataset.slug ?? '', status: row.dataset.status ?? '', text: row.dataset.search ?? '' }));
+  const isNew = (row: HTMLElement) => row.querySelector('[data-new]')?.hasAttribute('hidden') === false;
+  function apply() {
+    entries = [...document.querySelectorAll<HTMLElement>('[data-rows] > li')].map(row => ({ row, slug: row.dataset.slug ?? '', status: row.dataset.status ?? '', text: row.dataset.search ?? '' }));
+    const query = input.value.trim();
+    const matched = new Set(searchArchetypes(entries.map(entry => ({ slug: entry.slug, status: entry.status, intents: [entry.text], aliases: [], napplets: 0, entry })), query).map(match => match.entry));
+    let shown = 0;
+    for (const entry of entries) {
+      const visible = matched.has(entry) && (status === 'all' || (status === 'new' ? isNew(entry.row) : entry.status === status));
+      entry.row.hidden = !visible;
+      if (visible) shown++;
+    }
+    for (const pill of pills) pill.setAttribute('aria-pressed', String(pill.dataset.filter === status));
+    count.textContent = query || status !== 'all' ? `${shown} of ${entries.length} archetypes shown` : total;
+    empty.hidden = shown > 0 || !query;
+    document.querySelectorAll('[data-empty-query]').forEach(node => { node.textContent = query; });
+    const url = new URL(location.href);
+    if (query) url.searchParams.set('q', query); else url.searchParams.delete('q');
+    if (status !== 'all') url.searchParams.set('status', status); else url.searchParams.delete('status');
+    history.replaceState(null, '', url);
+  }
+  input.addEventListener('input', apply);
+  document.querySelector('[data-search-form]')?.addEventListener('submit', event => { event.preventDefault(); apply(); });
+  for (const pill of pills) pill.addEventListener('click', () => { status = pill.dataset.filter ?? 'all'; apply(); });
+  if (status === 'new') status = 'all';
+  document.addEventListener('archetypes:live', apply);
+  document.addEventListener('keydown', event => {
+    if (event.key === '/' && document.activeElement?.tagName !== 'INPUT') { event.preventDefault(); input.focus(); }
+  });
+  apply();
+</script>

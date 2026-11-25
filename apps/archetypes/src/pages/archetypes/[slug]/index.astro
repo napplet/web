@@ -1,0 +1,156 @@
+---
+import Base from '../../../layouts/Base.astro';
+import LiveBanner from '../../../components/LiveBanner.astro';
+import { loadSiteData } from '../../../lib/data';
+import { clip, day, intentPath, kindLabel, plural, pointer, shortNpub, STATUS_LABEL } from '../../../lib/format';
+import type { ArchetypeEntry } from '../../../lib/model';
+
+export function getStaticPaths() {
+  return loadSiteData().index.archetypes.map(entry => ({ params: { slug: entry.slug }, props: { entry } }));
+}
+
+const { entry } = Astro.props as { entry: ArchetypeEntry };
+const { index, snapshot } = loadSiteData();
+const site = snapshot.siteUrl;
+const intents = entry.intents.map(uri => index.intents.find(intent => intent.uri === uri)!).filter(Boolean);
+const clusters = index.clusters.filter(cluster => cluster.members.includes(entry.slug));
+const paramNames = (uri: string) => index.intents.find(intent => intent.uri === uri)?.params.map(param => param.name) ?? [];
+// Napplet × intent matrix: every napplet that advertises the archetype or handles one of its intents.
+const napplets = [...new Map([...entry.napplets, ...intents.flatMap(intent => intent.handlers.map(handler => handler.napplet))].map(napplet => [napplet.key, napplet])).values()];
+const handles = (key: string, uri: string) => intents.find(intent => intent.uri === uri)?.handlers.find(handler => handler.napplet.key === key);
+const description = `${entry.slug}: a napplet archetype advertised by ${plural(entry.napplets.length, 'napplet')} from ${plural(entry.publishers, 'publisher')}${intents.length ? `, accepting ${intents.map(intent => intent.uri).join(', ')}` : ''}.`;
+const example = intents[0];
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'DefinedTerm',
+    name: entry.slug,
+    termCode: entry.slug,
+    description: clip(description, 300),
+    url: `${site}/archetypes/${entry.slug}/`,
+    inDefinedTermSet: `${site}/#archetypes`,
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Archetypes', item: `${site}/` },
+      { '@type': 'ListItem', position: 2, name: entry.slug, item: `${site}/archetypes/${entry.slug}/` },
+    ],
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: `Napplets advertising ${entry.slug}`,
+    itemListElement: entry.napplets.slice(0, 50).map((napplet, position) => ({
+      '@type': 'ListItem', position: position + 1,
+      item: { '@type': 'SoftwareApplication', name: napplet.title, description: clip(napplet.description, 200), applicationCategory: 'WebApplication', operatingSystem: 'Web (napplet shell)', identifier: `nostr:${pointer(napplet)}` },
+    })),
+  },
+];
+const live = {
+  generatedAt: snapshot.generatedAt,
+  relays: snapshot.runtime.relays,
+  timeoutMs: snapshot.runtime.timeoutMs,
+  known: { [entry.slug]: entry.napplets.map(napplet => napplet.key) },
+  intents: index.intents.map(intent => intent.uri),
+};
+---
+<Base title={`${entry.slug} archetype`} description={clip(description, 158)} markdown={`/archetypes/${entry.slug}.md`} jsonLd={jsonLd} nav="archetypes">
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="/">Archetypes</a> / {entry.slug}</nav>
+  <div class="split" style="margin-bottom: 32px;">
+    <div class="main">
+      <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 8px;">
+        <h1 class="mono" style="margin: 0; font-weight: 500; font-size: 44px;">{entry.slug}</h1>
+        <span class={`status status-${entry.status}`}>{STATUS_LABEL[entry.status]}</span>
+      </div>
+      <p class="lede" style="margin-bottom: 16px;">Napplets that advertise <code>["z", "{entry.slug}"]</code> in their manifest.{entry.napplets.length > 1 && <> {plural(entry.napplets.length, 'napplet')} from {plural(entry.publishers, 'publisher')} use the name.</>}{!entry.napplets.length && <> No napplet advertises the tag itself; the name is only reached through an intent.</>}</p>
+      {entry.preferred && <p class="note"><strong>Coalesced.</strong> Listed under <a href={`/archetypes/${entry.preferred}/`} class="mono">{entry.preferred}</a>; search for either finds both.</p>}
+      {!entry.preferred && entry.aliases.length > 0 && <p class="note"><strong>Also published as</strong> {entry.aliases.map((alias, i) => <>{i > 0 && ', '}<a href={`/archetypes/${alias}/`} class="mono">{alias}</a></>)}.</p>}
+      {entry.note && (
+        <div class="note" style="margin-top: 12px;">
+          <strong>Curator note.</strong> {entry.note}
+          <div class="small dim" style="margin-top: 6px;">From <a href="https://github.com/napplet/web/blob/main/apps/archetypes/curation.yaml">curation.yaml</a>{entry.reviewed && <> · reviewed {entry.reviewed}</>} · edit by pull request</div>
+        </div>
+      )}
+      {entry.status === 'candidate' && clusters.filter(cluster => cluster.status === 'candidate').map(cluster => (
+        <p class="note" style="border-color: #6b5420; background: #1f180b; margin-top: 12px;"><strong style="color: var(--amber);">Possible synonym.</strong> Grouped with {cluster.members.filter(member => member !== entry.slug).join(', ')}. <a href={`/clusters/${cluster.id}/`}>Review the cluster</a>.</p>
+      ))}
+    </div>
+    <dl class="stats side">
+      <div><dt>Napplets</dt><dd>{entry.napplets.length}</dd></div>
+      <div><dt>Publishers</dt><dd>{entry.publishers}</dd></div>
+      <div><dt>Intents</dt><dd>{intents.length}</dd></div>
+      <div><dt>Last seen</dt><dd style="font-size: 17px; padding-top: 6px;">{entry.lastSeen ? day(entry.lastSeen) : '—'}</dd></div>
+    </dl>
+  </div>
+
+  <LiveBanner context={live} slug={entry.slug} />
+
+  <section class="section" aria-labelledby="intents-h">
+    <h2 id="intents-h">Intents accepted</h2>
+    {intents.length ? (
+      <>
+        <p class="muted">A filled dot means the napplet lists the intent in an <code>i</code> tag; the names after it are the parameter names it advertises. Names only: no types, no validation.</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">Napplet</th>{intents.map(intent => <th scope="col" class="mono"><a href={intentPath(intent.uri)}>{intent.verb}</a></th>)}</tr></thead>
+            <tbody>
+              {napplets.map(napplet => (
+                <tr>
+                  <th scope="row" style="font-weight: 500;">{napplet.title}{!entry.napplets.some(other => other.key === napplet.key) && <div class="small dim">no matching z tag</div>}</th>
+                  {intents.map(intent => {
+                    const handler = handles(napplet.key, intent.uri);
+                    return <td>{handler ? <><span style="color: var(--accent);" aria-label="accepts">●</span> <span class="mono small dim">{handler.params.join(' ') || 'no params'}</span></> : <span class="dim" aria-label="does not accept">—</span>}</td>;
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </>
+    ) : (
+      <p class="empty" style="text-align: left; padding: 20px;">No intents advertised. Napplets that only carry a <code>z</code> tag can be listed by shells but not addressed by intent.</p>
+    )}
+  </section>
+
+  <section class="section" aria-labelledby="impl-h">
+    <h2 id="impl-h">Implementations</h2>
+    <p class="muted">Snapshots are folded into the napplet they pin. Addresses open in any napplet shell.</p>
+    <div class="grid-cards">
+      {entry.napplets.map(napplet => (
+        <article class="card">
+          <h3 style="margin: 0 0 2px; font-size: 16px;">{napplet.title}</h3>
+          <p class="small dim mono" style="margin: 0 0 8px;">{shortNpub(napplet.pubkey)} · {kindLabel(napplet.kind)}{napplet.versions > 0 && <> · {plural(napplet.versions, 'snapshot')}</>} · {day(napplet.createdAt)}</p>
+          <p class="small muted" style="margin: 0 0 10px;">{clip(napplet.description, 180)}</p>
+          <p class="small dim" style="margin: 0 0 6px;">{napplet.requires.length ? `Requires ${napplet.requires.join(', ')}` : 'No required NAP domains'}</p>
+          {napplet.archetypes.length > 1 && <p class="small dim" style="margin: 0 0 6px;">Also: {napplet.archetypes.filter(other => other !== entry.slug).map((other, i) => <>{i > 0 && ', '}<a href={`/archetypes/${other}/`} class="mono">{other}</a></>)}</p>}
+          <details class="small"><summary style="cursor: pointer; color: var(--accent-bright);">Address</summary><code style="display: block; margin-top: 6px; word-break: break-all;">{pointer(napplet)}</code></details>
+        </article>
+      ))}
+    </div>
+  </section>
+
+  <section class="split" aria-label="Related archetypes and usage">
+    <div class="card main" style="flex-basis: 420px;">
+      <h2 style="font-size: 18px; margin: 0 0 12px;">Nearby archetypes</h2>
+      {entry.related.length ? (
+        <ul style="list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; font-size: 14px;">
+          {entry.related.map(related => <li><a class="mono" href={`/archetypes/${related.slug}/`}>{related.slug}</a> <span class="dim">— {related.detail}</span></li>)}
+        </ul>
+      ) : <p class="small dim" style="margin: 0;">No similar names observed.</p>}
+      <p class="small dim" style="margin: 12px 0 0;">Suggested from names, publishers, parameters and descriptions. Not equivalence.</p>
+    </div>
+    <div class="card side" style="flex-basis: 420px; background: var(--bg-soft);">
+      <h2 style="font-size: 18px; margin: 0 0 12px;">Use it</h2>
+      <pre class="code"><code>{`// manifest tags
+["z", "${entry.slug}"]${example ? `\n${JSON.stringify(['i', example.uri, ...paramNames(example.uri)])}` : ''}${example ? `
+
+// caller, behind a feature gate
+if (window.napplet?.intent) {
+  await napplet.intent.open('${example.uri}')
+}` : ''}`}</code></pre>
+      <p class="small dim" style="margin: 10px 0 0;">Machine-readable: <a href={`/archetypes/${entry.slug}.md`} class="mono">/archetypes/{entry.slug}.md</a> · <a href="/archetypes.json" class="mono">/archetypes.json</a></p>
+    </div>
+  </section>
+</Base>

@@ -1,0 +1,58 @@
+---
+import Base from '../../layouts/Base.astro';
+import { loadSiteData } from '../../lib/data';
+import { stamp } from '../../lib/format';
+
+const { index, snapshot } = loadSiteData();
+const example = index.archetypes.find(entry => entry.intents.length && entry.napplets.length) ?? index.archetypes[0];
+const endpoints: Array<[string, string]> = [
+  ['/llms.txt', 'Index of every archetype, one line each'],
+  ['/llms-full.txt', 'Every archetype page in one Markdown file'],
+  ['/archetypes.json', 'Counts, intents, parameters, clusters and curation'],
+  ['/archetypes/<slug>.md', 'Markdown twin of each archetype page'],
+  ['/index.md', 'Markdown twin of the front page'],
+  ['/relays.json', 'Relays the live check uses, with crawler scores'],
+  ['/sitemap-index.xml', 'Every page'],
+];
+---
+<Base title="For agents and tools" description="Machine-readable napplet archetype data: llms.txt, JSON, Markdown twins, JSON-LD, WebMCP tools, and how the data is collected." nav="agents" markdown="/llms.txt">
+  <h1 style="margin: 0 0 8px; font-size: 36px;">For agents and tools</h1>
+  <p class="lede">Every page has a Markdown or JSON twin, so an agent choosing an archetype for a new napplet reads the same data a person sees, without running JavaScript.</p>
+  <div class="split" style="margin-bottom: 40px;">
+    <section class="main" aria-labelledby="ep-h" style="flex-basis: 460px;">
+      <h2 id="ep-h" style="font-size: 20px; margin: 0 0 12px;">Endpoints</h2>
+      <ul style="list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; font-size: 14px;">
+        {endpoints.map(([path, what]) => (
+          <li class="card" style="display: flex; flex-wrap: wrap; gap: 4px 14px; padding: 12px 14px;">
+            {path.includes('<') ? <code style="min-width: 200px;">{path}</code> : <a class="mono" style="min-width: 200px;" href={path}>{path}</a>}
+            <span class="muted">{what}</span>
+          </li>
+        ))}
+      </ul>
+      <p class="small dim" style="margin-top: 12px;">Pages carry JSON-LD (<code>DefinedTermSet</code>, <code>DefinedTerm</code>, <code>ItemList</code>) and a <code>link rel="alternate" type="text/markdown"</code>. Browsers that expose WebMCP get two tools, <code>search_archetypes</code> and <code>get_archetype</code>. AI crawlers are welcome in <a href="/robots.txt">robots.txt</a>.</p>
+    </section>
+    <section class="side" aria-labelledby="md-h" style="flex-basis: 460px;">
+      <h2 id="md-h" style="font-size: 16px; margin: 0 0 12px;" class="mono">curl {snapshot.siteUrl}/archetypes/{example?.slug}.md</h2>
+      <pre class="code"><code>{`# ${example?.slug}
+
+Observed archetype (non-normative) …
+
+## Manifest tags
+["z", "${example?.slug}"]
+…`}</code></pre>
+    </section>
+  </div>
+
+  <section class="section" aria-labelledby="flow-h">
+    <h2 id="flow-h">Where the data comes from</h2>
+    <p class="muted">Every tunable number has a default in one YAML file, so a minimal deployment needs no configuration.</p>
+    <ol class="grid-cards" style="list-style: none; padding: 0; margin: 0;">
+      <li class="card"><div class="small mono" style="color: var(--cyan);">1 · discover</div><strong>NIP-66 relays</strong><p class="small muted" style="margin: 4px 0 0;">Relay monitors’ kind 30166 events list relays; URLs are normalised and de-duplicated.</p></li>
+      <li class="card"><div class="small mono" style="color: var(--cyan);">2 · crawl</div><strong>Scored crawler</strong><p class="small muted" style="margin: 4px 0 0;">A relay earns a point per napplet it serves. A relay with none backs off: daily, then 3, 7, 14 and 30 days. Relays that stay unreachable are dropped.</p></li>
+      <li class="card"><div class="small mono" style="color: var(--cyan);">3 · store</div><strong>Event store</strong><p class="small muted" style="margin: 4px 0 0;">Signed manifests of kinds 5129, 15129 and 35129, verified and kept exactly as received.</p></li>
+      <li class="card"><div class="small mono" style="color: var(--cyan);">4 · build</div><strong>Daily static build</strong><p class="small muted" style="margin: 4px 0 0;">Reads the store, applies curation, and renders pages, Markdown and JSON. This build: {stamp(snapshot.generatedAt)}.</p></li>
+      <li class="card"><div class="small mono" style="color: var(--cyan);">5 · live</div><strong>Browser top-up</strong><p class="small muted" style="margin: 4px 0 0;">Pages ask the {snapshot.runtime.relays.length} best-scored and pinned relays for anything newer than the build.</p></li>
+    </ol>
+  </section>
+  <p class="small dim">Source: <a href="https://github.com/napplet/web/tree/main/apps/archetypes">apps/archetypes</a> (site) and <a href="https://github.com/napplet/web/tree/main/apps/archetypes-indexer">apps/archetypes-indexer</a> (crawler).</p>
+</Base>

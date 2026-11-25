@@ -1,0 +1,39 @@
+---
+import Base from '../../layouts/Base.astro';
+import { loadSiteData } from '../../lib/data';
+import { STATUS_LABEL } from '../../lib/format';
+
+const { index } = loadSiteData();
+const open = index.clusters.filter(cluster => cluster.status === 'candidate');
+const decided = index.clusters.filter(cluster => cluster.status !== 'candidate');
+---
+<Base title="Synonym clusters" description={`Napplet archetypes that may name the same thing: ${open.length} open clusters for human review, ${decided.length} decided.`} nav="clusters">
+  <h1 style="margin: 0 0 8px; font-size: 36px;">Synonym clusters</h1>
+  <p class="lede">Groups of archetype names that may mean the same thing. The site suggests them from names, publishers, parameters and descriptions; only a reviewed edit to <a href="https://github.com/napplet/web/blob/main/apps/archetypes/curation.yaml">curation.yaml</a> settles one. A napplet advertising two names marks them as different facets, so such pairs are never suggested.</p>
+  <section class="section" aria-labelledby="open-h">
+    <h2 id="open-h">Needs review ({open.length})</h2>
+    {open.length ? (
+      <ul class="rows">
+        {open.map(cluster => (
+          <li class="row" style="grid-template-columns: minmax(0, 1.2fr) minmax(0, 2fr);">
+            <div class="row-title"><a href={`/clusters/${cluster.id}/`}>{cluster.members.join(' ≈ ')}</a></div>
+            <div class="row-note" style="margin: 0;">{cluster.signals.map(signal => signal.detail).join(' · ')}</div>
+          </li>
+        ))}
+      </ul>
+    ) : <p class="empty" style="text-align: left; padding: 20px;">Nothing waiting for review.</p>}
+  </section>
+  <section class="section" aria-labelledby="done-h">
+    <h2 id="done-h">Decided ({decided.length})</h2>
+    {decided.length ? (
+      <ul class="rows">
+        {decided.map(cluster => (
+          <li class="row" style="grid-template-columns: minmax(0, 1.2fr) minmax(0, 2fr);">
+            <div class="row-title"><a href={`/clusters/${cluster.id}/`}>{cluster.members.join(' ≈ ')}</a><span class={`status status-${cluster.status}`}>{STATUS_LABEL[cluster.status === 'candidate' ? 'candidate' : cluster.status]}</span></div>
+            <div class="row-note" style="margin: 0;">{cluster.note ?? (cluster.preferred ? `Listed under ${cluster.preferred}.` : '')}</div>
+          </li>
+        ))}
+      </ul>
+    ) : <p class="muted small">No decisions recorded yet. The first one is a pull request away.</p>}
+  </section>
+</Base>

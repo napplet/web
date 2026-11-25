@@ -4,12 +4,15 @@
   "private": true,
   "description": "Relay-scoring crawler and SQLite event store that feeds the archetypes.napplet.run static build.",
   "type": "module",
-  "engines": { "node": ">=24" },
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "start": "node src/main.ts",
     "once": "node src/main.ts --once",
     "type-check": "tsc --noEmit",
-    "test:unit": "vitest run"
+    "test:unit": "vitest run",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "nostr-tools": "^2.23.3",
@@ -20,6 +23,7 @@
     "@types/ws": "^8.18.1",
     "typescript": "^5.9.3",
     "vitest": "^4.1.12",
-    "ws": "^8.21.0"
+    "ws": "^8.21.0",
+    "@vitest/coverage-v8": "^4.1.12"
   }
 }

@@ -1,0 +1,120 @@
+---
+import type { LiveContext } from '../lib/live';
+import { stamp } from '../lib/format';
+
+interface Props {
+  context: LiveContext;
+  /** On an archetype page: only report additions to this archetype. */
+  slug?: string;
+}
+const { context, slug } = Astro.props;
+const json = JSON.stringify({ ...context, slug: slug ?? null }).replace(/</g, '\\u003c');
+---
+<div class="live" role="status" aria-live="polite" data-live hidden>
+  <span class="dot" aria-hidden="true"></span>
+  <span data-live-text>Checking {context.relays.length} relays for manifests published since {stamp(context.generatedAt)}…</span>
+  <ul data-live-list class="small" style="flex-basis: 100%; margin: 4px 0 0; padding-left: 20px;" hidden></ul>
+</div>
+<script type="application/json" data-live-context set:html={json} />
+
+<script>
+  import { diffLive, fetchLive, type LiveContext } from '../lib/live';
+
+  const banner = document.querySelector<HTMLElement>('[data-live]');
+  const raw = document.querySelector('[data-live-context]')?.textContent;
+  if (banner && raw) {
+    const context = JSON.parse(raw) as LiveContext & { slug: string | null };
+    const text = banner.querySelector<HTMLElement>('[data-live-text]')!;
+    const list = banner.querySelector<HTMLUListElement>('[data-live-list]')!;
+    const built = `${new Date(context.generatedAt * 1000).toISOString().slice(0, 16).replace('T', ' ')}`;
+    if (context.relays.length && 'WebSocket' in window) {
+      banner.hidden = false;
+      fetchLive(context.relays, context.generatedAt, context.timeoutMs).then(({ events, answered }) => {
+        const diff = diffLive(context, events);
+        const scoped = context.slug ? diff.archetypes[context.slug]?.added ?? [] : diff.napplets;
+        if (!answered) {
+          text.textContent = 'Could not reach the live relays; showing today’s build.';
+          return;
+        }
+        if (!scoped.length) {
+          text.textContent = `Up to date: ${answered} of ${context.relays.length} relays report nothing new since the ${built} UTC build.`;
+          return;
+        }
+        text.textContent = context.slug
+          ? `${scoped.length} napplet${scoped.length === 1 ? '' : 's'} added this archetype since the ${built} UTC build (live from ${answered} relays; included in tomorrow’s pages):`
+          : `${diff.releases} manifest${diff.releases === 1 ? '' : 's'} published since the ${built} UTC build, merged in live from ${answered} relays and marked new until the next rebuild.`;
+        if (context.slug) {
+          list.hidden = false;
+          for (const napplet of scoped) {
+            const item = document.createElement('li');
+            item.textContent = `${napplet.title} — ${napplet.intents.join(', ') || 'no intents'}`;
+            list.append(item);
+          }
+          return;
+        }
+        const rows = document.querySelector('[data-rows]');
+        for (const [slug, change] of Object.entries(diff.archetypes)) {
+          let row = document.querySelector<HTMLElement>(`[data-rows] > li[data-slug="${CSS.escape(slug)}"]`);
+          if (!row && rows) {
+            row = document.createElement('li');
+            row.className = 'row';
+            row.dataset.slug = slug;
+            row.dataset.status = 'observed';
+            row.dataset.search = [slug, ...change.added.flatMap(napplet => napplet.intents)].join(' ').toLowerCase();
+            const title = document.createElement('div');
+            title.className = 'row-title';
+            const name = document.createElement('span');
+            name.className = 'mono';
+            name.style.fontSize = '18px';
+            name.textContent = slug;
+            const badge = document.createElement('span');
+            badge.className = 'badge-new';
+            badge.dataset.new = '';
+            badge.textContent = 'new';
+            title.append(name, badge);
+            const note = document.createElement('div');
+            note.className = 'row-note';
+            note.textContent = `First seen after the last build: ${change.added.map(napplet => napplet.title).join(', ')}. Gets its own page at the next rebuild.`;
+            const left = document.createElement('div');
+            left.append(title, note);
+            const chips = document.createElement('div');
+            chips.className = 'chips';
+            for (const uri of new Set(change.added.flatMap(napplet => napplet.intents))) {
+              const chip = document.createElement('span');
+              chip.className = 'chip';
+              chip.textContent = uri.slice('napplet:'.length);
+              chips.append(chip);
+            }
+            const count = document.createElement('div');
+            count.className = 'row-count';
+            const strong = document.createElement('strong');
+            strong.dataset.napplets = '';
+            strong.textContent = '0';
+            const word = document.createElement('span');
+            word.dataset.nappletsWord = '';
+            const countLine = document.createElement('div');
+            countLine.append(strong, ' ', word);
+            count.append(countLine);
+            row.append(left, chips, count);
+            rows.append(row);
+          }
+          if (!row) continue;
+          row.querySelector<HTMLElement>('[data-new]')?.removeAttribute('hidden');
+          const counter = row.querySelector<HTMLElement>('[data-napplets]');
+          const total = Number(counter?.textContent ?? 0) + change.added.length;
+          if (counter) counter.textContent = String(total);
+          const word = row.querySelector<HTMLElement>('[data-napplets-word]');
+          if (word) word.textContent = total === 1 ? 'napplet' : 'napplets';
+        }
+        const pill = document.querySelector<HTMLElement>('[data-filter="new"]');
+        const fresh = Object.keys(diff.archetypes).length;
+        if (pill && fresh) {
+          pill.hidden = false;
+          const count = pill.querySelector('[data-new-count]');
+          if (count) count.textContent = String(fresh);
+        }
+        document.dispatchEvent(new CustomEvent('archetypes:live'));
+      }).catch(() => { text.textContent = 'Live check failed; showing today’s build.'; });
+    }
+  }
+</script>

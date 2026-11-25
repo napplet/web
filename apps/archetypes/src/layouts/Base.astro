@@ -1,0 +1,93 @@
+---
+import '../styles/global.css';
+import { loadSiteData } from '../lib/data';
+import { day } from '../lib/format';
+
+interface Props {
+  title: string;
+  description: string;
+  /** Path of this page's Markdown twin, if it has one. */
+  markdown?: string;
+  /** JSON-LD objects for this page. */
+  jsonLd?: object[];
+  nav?: 'archetypes' | 'intents' | 'clusters' | 'agents';
+  query?: string;
+}
+
+const { title, description, markdown, jsonLd = [], nav, query = '' } = Astro.props;
+const { index, snapshot } = loadSiteData();
+const site = snapshot.siteUrl;
+const canonical = new URL(Astro.url.pathname, site).href;
+const fullTitle = title === 'Napplet archetypes' ? 'Napplet archetypes and intents' : `${title} · Napplet archetypes`;
+const website = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'Napplet archetypes',
+  url: `${site}/`,
+  description: 'A searchable field guide to the archetypes and intents napplet manifests advertise on Nostr relays.',
+  potentialAction: { '@type': 'SearchAction', target: { '@type': 'EntryPoint', urlTemplate: `${site}/?q={search_term_string}` }, 'query-input': 'required name=search_term_string' },
+};
+const ld = (value: object) => JSON.stringify(value).replace(/</g, '\\u003c');
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#120820" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Napplet archetypes" />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta name="twitter:card" content="summary" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    {markdown && <link rel="alternate" type="text/markdown" href={markdown} title="Markdown version" />}
+    <link rel="alternate" type="application/json" href="/archetypes.json" title="All archetypes as JSON" />
+    <link rel="help" href="/llms.txt" type="text/plain" />
+    <script type="application/ld+json" set:html={ld(website)} />
+    {jsonLd.map(value => <script type="application/ld+json" set:html={ld(value)} />)}
+  </head>
+  <body>
+    <a class="skip" href="#content">Skip to content</a>
+    <header class="site-header">
+      <div class="wrap">
+        <a class="brand" href="/" aria-label="Napplet archetypes home">
+          <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><rect x="2" y="2" width="22" height="22" rx="6" fill="none" stroke="#b06bff" stroke-width="2"></rect><rect x="8" y="8" width="10" height="10" rx="3" fill="#b06bff"></rect></svg>
+          napplet <span>/ archetypes</span>
+        </a>
+        <nav class="nav" aria-label="Primary">
+          <a href="/" aria-current={nav === 'archetypes' ? 'page' : undefined}>Archetypes</a>
+          <a href="/intents/" aria-current={nav === 'intents' ? 'page' : undefined}>Intents</a>
+          <a href="/clusters/" aria-current={nav === 'clusters' ? 'page' : undefined}>Clusters</a>
+          <a href="/agents/" aria-current={nav === 'agents' ? 'page' : undefined}>For agents</a>
+        </nav>
+        {nav !== 'archetypes' && (
+          <form class="header-search" role="search" action="/" method="get" toolname="search_archetypes" tooldescription="Search napplet archetypes, intents and parameter names">
+            <label class="sr-only" for="header-q">Search archetypes, intents and parameters</label>
+            <input id="header-q" name="q" type="search" placeholder="Search archetypes, intents, parameters" value={query} />
+          </form>
+        )}
+      </div>
+    </header>
+    <main id="content">
+      <div class="wrap">
+        <slot />
+      </div>
+    </main>
+    <footer class="site-footer">
+      <div class="wrap">
+        <p>Non-normative. Archetypes (<code>z</code>) and intents (<code>i</code>) are tags in <a href="https://github.com/nostr-protocol/nips/pull/2303">NIP-5D</a> napplet manifests (kinds 5129, 15129, 35129); intent dispatch follows <a href="https://github.com/napplet/naps">NAP-INTENT</a>. Names are ad hoc and nothing here is a registry. Curation labels are editorial notes kept in <a href="https://github.com/napplet/web/blob/main/apps/archetypes/curation.yaml">this site’s repository</a>.</p>
+        <p>Built {day(index.generatedAt)} from {index.releases} signed manifests. <a href="/llms.txt">llms.txt</a> · <a href="/archetypes.json">archetypes.json</a> · <a href="/relays.json">relays.json</a> · <a href="https://napplet.run/">napplet.run</a> · <a href="https://github.com/napplet/web/tree/main/apps/archetypes">source</a></p>
+      </div>
+    </footer>
+    <script>
+      import '../scripts/webmcp';
+    </script>
+  </body>
+</html>

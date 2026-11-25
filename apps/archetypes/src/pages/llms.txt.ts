@@ -1,0 +1,8 @@
+import type { APIRoute } from 'astro';
+import { loadSiteData } from '../lib/data';
+import { llmsTxt } from '../lib/agents';
+
+export const GET: APIRoute = () => {
+  const { index, snapshot } = loadSiteData();
+  return new Response(llmsTxt(index, snapshot.siteUrl), { headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
+};

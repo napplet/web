@@ -1,0 +1,103 @@
+---
+import Base from '../../../layouts/Base.astro';
+import { loadSiteData } from '../../../lib/data';
+import { clip, plural, shortNpub, STATUS_LABEL } from '../../../lib/format';
+import type { ClusterEntry } from '../../../lib/model';
+
+export function getStaticPaths() {
+  return loadSiteData().index.clusters.map(cluster => ({ params: { id: cluster.id }, props: { cluster } }));
+}
+
+const { cluster } = Astro.props as { cluster: ClusterEntry };
+const { index } = loadSiteData();
+const members = cluster.members.map(slug => index.archetypes.find(entry => entry.slug === slug)).filter(entry => entry !== undefined);
+const label = cluster.status === 'candidate' ? 'synonym candidate · needs a human' : STATUS_LABEL[cluster.status];
+const today = new Date(index.generatedAt * 1000).toISOString().slice(0, 10);
+const allParams = (slug: string) => [...new Set(index.intents.filter(intent => intent.archetype === slug).flatMap(intent => intent.params.map(param => param.name)))];
+const draft = [
+  '# apps/archetypes/curation.yaml',
+  'clusters:',
+  `  - members: [${cluster.members.join(', ')}]`,
+  `    outcome: coalesce   # or: distinct, diverse`,
+  `    preferred: ${cluster.preferred ?? members.slice().sort((a, b) => b.napplets.length - a.napplets.length)[0]?.slug ?? cluster.members[0]}`,
+  ...(members.filter(member => allParams(member.slug).length).length > 1 ? [
+    '    # params:            # optional: names from different members that mean the same thing',
+    `    #   - same: [${members.map(member => allParams(member.slug)[0]).filter(Boolean).join(', ')}]`,
+    '    #     note: why they line up',
+  ] : []),
+  `    note: one line on the decision`,
+  `    reviewed: ${today}`,
+].join('\n');
+const issueTitle = encodeURIComponent(`archetypes: review ${cluster.members.join(' ≈ ')}`);
+const issueBody = encodeURIComponent(`Cluster: https://archetypes.napplet.run/clusters/${cluster.id}/\n\nProposed outcome (coalesce / distinct / diverse):\n\nWhy:\n`);
+const editUrl = 'https://github.com/napplet/web/edit/main/apps/archetypes/curation.yaml';
+---
+<Base title={`${cluster.members.join(' ≈ ')} cluster`} description={clip(`Do ${cluster.members.join(' and ')} name the same napplet archetype? Evidence: ${cluster.signals.map(signal => signal.detail).join('; ')}.`, 158)} nav="clusters">
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="/clusters/">Clusters</a> / {cluster.members.join(' ≈ ')}</nav>
+  <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 8px;">
+    <h1 style="margin: 0; font-size: 36px;">{cluster.members.map((slug, i) => <>{i > 0 && <span class="dim"> ≈ </span>}<span class="mono" style="font-weight: 500;">{slug}</span></>)}</h1>
+    <span class={`status status-${cluster.status}`}>{label}</span>
+  </div>
+  <p class="lede">{cluster.note ?? (cluster.status === 'candidate' ? 'These names may mean the same thing. The site will not merge them on its own: a curator decides, by pull request.' : '')}</p>
+
+  <section class="section" aria-labelledby="why-h">
+    <h2 id="why-h">Why these were grouped</h2>
+    <div class="grid-cards">
+      {cluster.signals.length ? cluster.signals.map(signal => <div class="card"><div class="small dim">{({ sameTokens: 'Same words', containment: 'Name inside name', spelling: 'Similar spelling', samePublisher: 'Same publisher', sharedVerb: 'Shared verb', sharedParams: 'Shared parameter', description: 'Description overlap' } as Record<string, string>)[signal.kind]}</div><div style="margin-top: 2px;">{signal.detail}</div></div>) : <p class="muted small">Grouped by a curator rather than by the heuristics.</p>}
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="members-h">
+    <h2 id="members-h">Members</h2>
+    <div class="grid-cards">
+      {members.map(member => (
+        <article class="card">
+          <h3 style="margin: 0 0 4px;"><a class="mono" href={`/archetypes/${member.slug}/`}>{member.slug}</a></h3>
+          <p class="small dim" style="margin: 0 0 8px;">{plural(member.napplets.length, 'napplet')} · {plural(member.publishers, 'publisher')}</p>
+          {member.napplets.slice(0, 3).map(napplet => <p class="small muted" style="margin: 0 0 6px;"><strong style="color: var(--text);">{napplet.title}</strong> <span class="dim mono">{shortNpub(napplet.pubkey)}</span><br />{clip(napplet.description, 140)}</p>)}
+        </article>
+      ))}
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="diff-h">
+    <h2 id="diff-h">Parameter alignment</h2>
+    <p class="muted">Rows are parameter names from the members’ <code>i</code> tags. Names a curator says mean the same thing share a row; the site never infers that.</p>
+    {cluster.paramRows.length ? (
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th scope="col">Meaning</th>{cluster.members.map(slug => <th scope="col" class="mono">{slug}</th>)}<th scope="col">Status</th></tr></thead>
+          <tbody>
+            {cluster.paramRows.map(row => {
+              const present = cluster.members.filter(slug => row.names[slug]?.length);
+              const status = row.aligned ? 'curator: same meaning' : present.length === cluster.members.length ? 'identical' : `only in ${present.join(', ')}`;
+              return (
+                <tr>
+                  <td>{row.note ?? (row.aligned ? 'aligned' : row.names[present[0]]?.[0])}</td>
+                  {cluster.members.map(slug => <td class="mono">{row.names[slug]?.length ? row.names[slug].join(', ') : <span class="dim">—</span>}</td>)}
+                  <td style={`color: ${row.aligned ? 'var(--amber)' : present.length === cluster.members.length ? 'var(--cyan)' : 'var(--text-muted)'};`}>{status}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    ) : <p class="muted small">No member advertises parameter names.</p>}
+  </section>
+
+  <section class="section" aria-labelledby="decide-h">
+    <h2 id="decide-h">{cluster.status === 'candidate' ? 'Resolve this cluster' : 'Change this decision'}</h2>
+    <p class="muted">Curation lives in a YAML file in the site’s repository. A reviewed pull request makes a decision visible after the next daily build. Nothing is written to relays.</p>
+    <div class="grid-cards" style="margin-bottom: 16px;">
+      <div class="card"><strong>Coalesce</strong><p class="small muted" style="margin: 4px 0 0;">List all members under one preferred name. Search for any finds all; detail pages say “also published as”.</p></div>
+      <div class="card"><strong>Keep distinct</strong><p class="small muted" style="margin: 4px 0 0;">Similar but deliberately different. The group stops being suggested.</p></div>
+      <div class="card"><strong>Diverse by design</strong><p class="small muted" style="margin: 4px 0 0;">Each name legitimately covers many shapes, like <span class="mono">game</span>.</p></div>
+    </div>
+    <label for="draft" class="small dim">Draft entry</label>
+    <pre class="code" id="draft"><code>{draft}</code></pre>
+    <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px;">
+      <a class="button" href={editUrl}>Edit curation.yaml on GitHub</a>
+      <a class="button secondary" href={`https://github.com/napplet/web/issues/new?title=${issueTitle}&body=${issueBody}`}>Discuss in an issue</a>
+    </div>
+  </section>
+</Base>
