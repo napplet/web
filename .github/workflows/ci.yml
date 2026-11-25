@@ -23,6 +23,7 @@ jobs:
       - run: pnpm test:workflow-contracts
       - run: pnpm type-check
       - run: pnpm build
+      - run: pnpm --filter @napplet/archetypes check:site
       - name: Resolve Playwright version
         id: pw
         run: echo "version=$(node -p "require('playwright/package.json').version")" >> "$GITHUB_OUTPUT"

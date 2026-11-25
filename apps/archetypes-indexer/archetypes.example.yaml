@@ -1,0 +1,58 @@
+# Every key is optional. Values shown are the built-in defaults, so an empty file
+# (or no file at all) is a complete configuration. Point ARCHETYPES_CONFIG at a
+# copy, or put the YAML itself in ARCHETYPES_YAML. Secrets never go in this file.
+
+# SQLite database, the build snapshot and the built site live here.
+# ARCHETYPES_DATA_DIR overrides it.
+dataDir: ./data
+
+http:
+  host: 0.0.0.0
+  port: 8080          # /healthz and /status
+
+discovery:
+  # Relays that carry NIP-66 kind 30166 relay discovery events.
+  monitorRelays: [wss://relay.nostr.watch, wss://relaypag.es, wss://monitorlizard.nostr1.com]
+  # Always crawled; never removed as offline (they back off instead).
+  seedRelays: [wss://relay.napplet.soy, wss://relay.damus.io, wss://relay.ditto.pub, wss://relay.primal.net, wss://relay.nostr.com, wss://nos.lol]
+  intervalHours: 24
+  lookbackDays: 7     # only discovery events this recent count as evidence a relay exists
+  pageLimit: 500
+  maxEvents: 20000
+
+crawl:
+  # Wait before the next check, by consecutive checks that found no napplet on a
+  # relay that has never served one: 1 day, 3 days, 7 days, 2 weeks, 1 month.
+  # A relay that has served napplets is checked on the first step's cadence.
+  backoffHours: [24, 72, 168, 336, 720]
+  offlineAfterFailures: 3   # consecutive failed connections before a relay is removed
+  pointsPerNapplet: 1       # score per distinct napplet manifest a relay serves
+  concurrency: 8
+  pageLimit: 500
+  maxEventsPerRelay: 5000
+  timeoutSeconds: 15
+  overlapHours: 24          # incremental crawls re-read this much history
+  tickMinutes: 5
+  maxFrameBytes: 524288
+  allowPrivateHosts: false  # accept ws://, LAN and .local relays (tests, private networks)
+
+build:
+  enabled: true
+  at: "05:30"               # daily build time, UTC
+  siteDir: ../archetypes    # the Astro site package
+  siteUrl: https://archetypes.napplet.run
+  runtimeTopRelays: 6       # best-scored relays browsers ask for newer manifests
+  runtimePinnedRelays: []   # always handed to browsers as well
+  runtimeTimeoutMs: 8000
+  buildOnStart: true        # build right away when there has never been a build
+  timeoutMinutes: 15
+
+deploy:
+  bunny:
+    # Deploys run only when a storage zone and BUNNY_STORAGE_PASSWORD are set.
+    storageZone: ""         # or BUNNY_STORAGE_ZONE
+    storageEndpoint: storage.bunnycdn.com   # or BUNNY_STORAGE_ENDPOINT
+    apiBase: https://api.bunny.net
+    pullZoneId: ""          # or BUNNY_PULLZONE_ID; purged after a deploy when BUNNY_API_KEY is set
+    concurrency: 8
+    deleteStale: true       # remove files the new build no longer has
