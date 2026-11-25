@@ -30,7 +30,7 @@ docker build -f apps/archetypes-indexer/Dockerfile -t archetypes-indexer .
 docker run -v archetypes-data:/data -e BUNNY_STORAGE_ZONE=… -e BUNNY_STORAGE_PASSWORD=… archetypes-indexer
 ```
 
-[`compose.yaml`](compose.yaml) runs the same image with a named data volume. The container listens on port 8080: `/healthz` returns 200 while ticks keep finishing, and `/status` reports counts, timings and the top-scored relays.
+[`compose.yaml`](compose.yaml) runs the same image with a named data volume. Its build context defaults to the repository root as seen from this directory (`../..`); a deployment tool that runs compose with `--project-directory` at the repository root should set `ARCHETYPES_BUILD_CONTEXT=.` at build time. The container listens on port 8080: `/healthz` returns 200 while ticks keep finishing, and `/status` reports counts, timings and the top-scored relays.
 
 ## Configure
 

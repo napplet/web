@@ -3,7 +3,9 @@
 services:
   archetypes-indexer:
     build:
-      context: ../..
+      # The repository root. Tools that run compose with --project-directory set to the
+      # repository root (rather than this directory) set ARCHETYPES_BUILD_CONTEXT=. instead.
+      context: ${ARCHETYPES_BUILD_CONTEXT:-../..}
       dockerfile: apps/archetypes-indexer/Dockerfile
     restart: unless-stopped
     environment:
