@@ -67,6 +67,7 @@ Example: napplet create my-napplet -i`,
   --title <text>          Display title
   --description <text>    Description for manifest publication
   --archetype <URI>       Convention such as napplet:note/open
+  --topic <word>          Discovery topic, published as a t tag (repeatable)
   --relay <url>           Publishing relay (repeatable)
   --server <origin>       Blossom server (repeatable)
   --proxy <url>           Route suggestion lookups through an HTTP or SOCKS5 proxy

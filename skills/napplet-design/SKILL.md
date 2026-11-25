@@ -82,6 +82,7 @@ Decide these now; `napplet-ui` has the rules and defaults:
 ```
 nappletType: <kebab d-tag, e.g. "note-feed">
 purpose: <one line, one job>
+topics: <2–5 lowercase single-word discovery hashtags, e.g. nostr, notes, reader>
 NAPs used: outbox (req), storage (req), identity (opt), common (opt), resource (opt), keys (opt)
 requires: [outbox, storage]        # hard only
 optional: [identity, common, resource, keys]

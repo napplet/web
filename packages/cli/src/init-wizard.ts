@@ -5,7 +5,7 @@
  */
 
 import { NAMED_SITE_D_TAG_PATTERN } from "./manifest.ts";
-import { parseArchetypeConventions } from "./config.ts";
+import { normalizeTopics, parseArchetypeConventions } from "./config.ts";
 import { type PromptInput, promptLine, type PromptOutput } from "./prompt.ts";
 import type { DeployTargetKind, NappletArchetypeConvention } from "./types.ts";
 import { promptUrlList, unique } from "./url-prompt.ts";
@@ -18,6 +18,7 @@ export interface InitWizardSeed {
   title?: string;
   description?: string;
   archetypes: string[];
+  topics: string[];
   root: boolean;
 }
 
@@ -34,6 +35,7 @@ export interface InitWizardResult {
   title?: string;
   description?: string;
   archetypes: NappletArchetypeConvention[];
+  topics: string[];
   defaultTarget: DeployTargetKind;
 }
 
@@ -79,6 +81,9 @@ export async function promptInitWizard(options: InitWizardOptions): Promise<Init
   const archetypes = options.seed.archetypes.length > 0
     ? parseArchetypeConventions(options.seed.archetypes)
     : await promptArchetypes(options);
+  const topics = options.seed.topics.length > 0
+    ? normalizeTopics(options.seed.topics)
+    : await promptTopics(options);
   const relays = options.seed.relays.length > 0
     ? unique(options.seed.relays)
     : await promptUrlList({
@@ -106,6 +111,7 @@ export async function promptInitWizard(options: InitWizardOptions): Promise<Init
     title: title.trim() || undefined,
     description: description.trim() || undefined,
     archetypes,
+    topics,
     defaultTarget,
   };
 }
@@ -120,6 +126,22 @@ async function promptArchetypes(options: InitWizardOptions): Promise<NappletArch
     if (value.trim() === "") return [];
     try {
       return parseArchetypeConventions(splitEntries(value));
+    } catch (error) {
+      writeLine(options.output, error instanceof Error ? error.message : String(error));
+    }
+  }
+}
+
+async function promptTopics(options: InitWizardOptions): Promise<string[]> {
+  for (;;) {
+    const value = await promptLine({
+      message: "Topics for discovery (t tags, comma separated, optional)",
+      input: options.input,
+      output: options.output,
+    });
+    if (value.trim() === "") return [];
+    try {
+      return normalizeTopics(splitEntries(value));
     } catch (error) {
       writeLine(options.output, error instanceof Error ? error.message : String(error));
     }

@@ -32,6 +32,8 @@ export interface NappletDeployMetadata {
   title?: string;
   description?: string;
   archetypes?: NappletArchetypeConvention[];
+  /** Lowercase topic hashtags published as `["t", topic]` tags so clients can discover the napplet. */
+  topics?: string[];
   requires?: string[];
   optional?: string[];
   /** Local PNG/JPEG/WebP files published as `screenshot` tags, in order (NIP-5D §Presentation media). */

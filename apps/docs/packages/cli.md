@@ -84,7 +84,7 @@ napplet deploy
 ```
 
 - `napplet create` delegates to the maintained starter generator without setting deploy metadata.
-- `napplet init` owns name, title, optional description, canonical archetype conventions, and network
+- `napplet init` owns name, title, optional description, canonical archetype conventions, discovery topics, and network
   targets in `.napplet/config.yaml`. In an interactive terminal it guides setup and shows live suggestions from
   relays such as `wss://relaypag.es`, and suggests Blossom servers from kind
   `10063` server-list events.
@@ -106,7 +106,7 @@ napplet deploy
 ```bash
 napplet guide
 napplet create <directory> [--template <path-or-url>] [--force]
-napplet init [--force] [--root] [--source-dir <dir>] [--name <dtag>] [--title <title>] [--description <text>] [--archetype <napplet:archetype/intent>] [--relay <url>] [--server <url>] [--proxy <url>]
+napplet init [--force] [--root] [--source-dir <dir>] [--name <dtag>] [--title <title>] [--description <text>] [--archetype <napplet:archetype/intent>] [--topic <word>] [--relay <url>] [--server <url>] [--proxy <url>]
 napplet discover [--config <file>] [--all]
 napplet debug [--format current] [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>]
 napplet deploy [--format current] [--config <file>] [--all] [--root] [--name <dtag>] [--snapshot] [--sec <secret>] [--prompt-sec] [--zapstore | --no-zapstore] [--no-screenshot] [--screenshot [<preview-url>]] [--proxy <url>] [--dry-run]
@@ -163,6 +163,19 @@ This example emits the independent advertisements:
 ```
 
 This non-normative guide follows the living [NAP-INTENT manifest catalog contract](https://github.com/napplet/naps/blob/master/naps/NAP-INTENT.md#manifest-catalog-contract). A convention is eligible for dispatch when its archetype segment matches a `z` role on the same manifest. Metadata convention identities are queryless and fragment-free. Trailing `i` values advertise parameter names, not event-kind restrictions or parameter values.
+
+## Topics
+
+Topics are optional discovery hashtags. Pass `--topic` once per topic, answer the wizard's topic prompt, or list them under `metadata.topics`:
+
+```yaml
+metadata:
+  topics:
+    - nostr
+    - notes
+```
+
+Each topic becomes a `["t", "<topic>"]` tag on the deployed manifest event. The CLI trims each value, drops a leading `#`, lowercases it, and removes duplicates. Empty or multi-word topics are rejected. When `metadata.topics` is set, it replaces any `t` tags from the Vite plugin sidecar. When it's absent, sidecar `t` tags pass through unchanged. NIP-5D doesn't define topics. They're the general Nostr hashtag tag, so clients can use them for search and browsing or ignore them.
 
 ## See also
 

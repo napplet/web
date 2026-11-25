@@ -373,6 +373,29 @@ describe('nip5aManifest artifact modes', () => {
     expect(archetypeTags).toEqual([['z', 'note'], ['i', 'napplet:note/open']]);
   });
 
+  it('emits normalized topics as t tags without mirroring them into HTML', async () => {
+    const fixture = makeFixture();
+    fs.writeFileSync(path.join(fixture.dist, 'index.html'), '<!doctype html><html><head><meta name="description" content="Notes"></head><body></body></html>');
+
+    await runCloseBundle(
+      { nappletType: 'topics', artifactMode: 'single-file', topics: [' #Nostr ', 'notes', 'NOSTR'] },
+      fixture,
+    );
+
+    const manifest = readManifest(fixture.dist);
+    expect(manifest.tags.filter((tag) => tag[0] === 't')).toEqual([['t', 'nostr'], ['t', 'notes']]);
+    expect(fs.readFileSync(path.join(fixture.dist, 'index.html'), 'utf-8')).not.toContain('nostr');
+  });
+
+  it('rejects empty or multi-word topics', async () => {
+    const fixture = makeFixture();
+    fs.writeFileSync(path.join(fixture.dist, 'index.html'), '<!doctype html><meta name="description" content="Notes">');
+
+    await expect(
+      runCloseBundle({ nappletType: 'bad-topics', artifactMode: 'single-file', topics: ['two words'] }, fixture),
+    ).rejects.toThrow('topics must be non-empty single words');
+  });
+
   it('rejects numbered convention identifiers before writing a manifest', async () => {
     const fixture = makeFixture();
     fs.writeFileSync(path.join(fixture.dist, 'index.html'), '<!doctype html>');

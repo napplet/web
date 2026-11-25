@@ -42,7 +42,7 @@ const suggestions = {
 
 Deno.test("promptInitWizard fills missing fields with URL autocomplete", async () => {
   const input = new FakeTerminalInput(
-    "\n\nfeed\n\nA focused feed\nnapplet:note/open\nwss://relay-o\t\nwss://relay-t\t\n\nhttps://cdn-o\t\n\n",
+    "\n\nfeed\n\nA focused feed\nnapplet:note/open\n#Nostr, notes nostr\nwss://relay-o\t\nwss://relay-t\t\n\nhttps://cdn-o\t\n\n",
   );
   const output = new FakeOutput();
 
@@ -55,6 +55,7 @@ Deno.test("promptInitWizard fills missing fields with URL autocomplete", async (
       title: undefined,
       description: undefined,
       archetypes: [],
+      topics: [],
       root: false,
     },
     suggestions,
@@ -70,8 +71,10 @@ Deno.test("promptInitWizard fills missing fields with URL autocomplete", async (
     title: "Feed",
     description: "A focused feed",
     archetypes: [{ slug: "note", convention: "napplet:note/open" }],
+    topics: ["nostr", "notes"],
     defaultTarget: "named",
   });
+  assert(output.text.includes("Topics for discovery"));
   assert(output.text.includes("Relay URLs"));
   assert(!output.text.includes("1. wss://relay-one.example"));
   assert(output.text.includes("wss://relay-one.example"));
@@ -87,6 +90,7 @@ Deno.test("promptInitWizard preserves flagged values and root target", async () 
       title: "Root App",
       description: "Root description",
       archetypes: ["napplet:feed/open"],
+      topics: ["Feeds"],
       root: true,
     },
     suggestions,
@@ -102,8 +106,24 @@ Deno.test("promptInitWizard preserves flagged values and root target", async () 
     title: "Root App",
     description: "Root description",
     archetypes: [{ slug: "feed", convention: "napplet:feed/open" }],
+    topics: ["feeds"],
     defaultTarget: "root",
   });
+});
+
+Deno.test("promptInitWizard re-asks after an invalid topic", async () => {
+  const output = new FakeOutput();
+  const result = await promptInitWizard({
+    seed: {
+      sourceDir: ".", relays: ["wss://r.example"], blossomServers: ["https://b.example"], named: ["feed"],
+      title: "Feed", description: "", archetypes: ["napplet:feed/open"], topics: [], root: false,
+    },
+    suggestions,
+    input: new FakeTerminalInput("#\n\n"),
+    output,
+  });
+  assertEquals(result.topics, []);
+  assert(output.text.includes("entries must be non-empty single words"));
 });
 
 Deno.test("normalizeNamedDTags validates NIP-5A d tag shape", () => {
