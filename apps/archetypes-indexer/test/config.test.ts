@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { DEFAULTS, loadConfig, secretsFromEnv } from '../src/config.ts';
+import { configFromEnv, DEFAULTS, loadConfig, secretsFromEnv } from '../src/config.ts';
 
 const write = (body: string) => {
   const dir = mkdtempSync(join(tmpdir(), 'arch-config-'));
@@ -42,6 +42,18 @@ describe('loadConfig', () => {
     expect(() => loadConfig(write('crawl:\n  concurrency: 0\n').file)).toThrow(/positive/);
     expect(() => loadConfig(write('- a list\n').file)).toThrow(/mapping/);
     expect(() => loadConfig('/nonexistent/config.yaml')).toThrow(/not found/);
+  });
+});
+
+describe('configFromEnv', () => {
+  it('prefers inline YAML, honours the data dir override, and resolves default paths from the package', () => {
+    const { file } = write('crawl:\n  concurrency: 3\n');
+    const config = configFromEnv({ ARCHETYPES_YAML: 'crawl:\n  concurrency: 5\n', ARCHETYPES_CONFIG: file, ARCHETYPES_DATA_DIR: '/tmp/arch-data' });
+    expect(config.crawl.concurrency).toBe(5);
+    expect(config.dataDir).toBe('/tmp/arch-data');
+    expect(config.build.siteDir).toMatch(/apps\/archetypes$/);
+    expect(configFromEnv({ ARCHETYPES_CONFIG: file }).crawl.concurrency).toBe(3);
+    expect(configFromEnv({}).crawl.concurrency).toBe(DEFAULTS.crawl.concurrency);
   });
 });
 

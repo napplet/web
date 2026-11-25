@@ -1,0 +1,23 @@
+# Generic deployment: one container, one data volume. Deploy-specific settings
+# (Bunny credentials, a custom config file) come from the environment.
+services:
+  archetypes-indexer:
+    build:
+      context: ../..
+      dockerfile: apps/archetypes-indexer/Dockerfile
+    restart: unless-stopped
+    environment:
+      ARCHETYPES_CONFIG: ${ARCHETYPES_CONFIG:-/config/archetypes.yaml}
+      ARCHETYPES_YAML: ${ARCHETYPES_YAML:-}
+      BUNNY_STORAGE_ZONE: ${BUNNY_STORAGE_ZONE:-}
+      BUNNY_STORAGE_ENDPOINT: ${BUNNY_STORAGE_ENDPOINT:-storage.bunnycdn.com}
+      BUNNY_STORAGE_PASSWORD: ${BUNNY_STORAGE_PASSWORD:-}
+      BUNNY_PULLZONE_ID: ${BUNNY_PULLZONE_ID:-}
+      BUNNY_API_KEY: ${BUNNY_API_KEY:-}
+    volumes:
+      - archetypes-data:/data
+    expose:
+      - "8080"
+
+volumes:
+  archetypes-data:

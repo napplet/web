@@ -5,6 +5,7 @@
 
 import { readFileSync, existsSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { parse } from 'yaml';
 
 export interface Config {
@@ -163,26 +164,50 @@ export function validate(config: Config): Config {
   return config;
 }
 
+/** The indexer package directory; default paths are relative to it. */
+const PACKAGE_DIR = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+
 /**
- * Load the YAML config, merged over the defaults. Relative paths resolve against the file's directory.
- * @param path Config file path; when missing or absent, the defaults are used as-is.
+ * Merge YAML text over the defaults. Paths set in the YAML resolve against `base`; default paths against the package.
+ * @param source YAML text (may be empty).
+ * @param base Directory relative paths in the YAML resolve against.
  * @returns The validated configuration.
- * @example const config = loadConfig(process.env.ARCHETYPES_CONFIG);
+ * @example parseConfig('crawl:\n  concurrency: 4\n', process.cwd())
  */
-export function loadConfig(path?: string): Config {
-  let raw: unknown = {};
-  let base = process.cwd();
-  if (path) {
-    const file = resolve(path);
-    if (!existsSync(file)) throw new Error(`Config file not found: ${file}`);
-    raw = parse(readFileSync(file, 'utf8')) ?? {};
-    base = dirname(file);
-  }
+export function parseConfig(source: string, base: string): Config {
+  const raw: unknown = parse(source) ?? {};
   if (!isPlain(raw)) throw new Error('Config file must contain a mapping');
   const merged = merge(DEFAULTS as unknown as Plain, raw, '') as unknown as Config;
-  merged.dataDir = resolve(base, merged.dataDir);
-  merged.build.siteDir = resolve(base, merged.build.siteDir);
+  const build = isPlain(raw.build) ? raw.build : {};
+  merged.dataDir = resolve('dataDir' in raw ? base : PACKAGE_DIR, merged.dataDir);
+  merged.build.siteDir = resolve('siteDir' in build ? base : PACKAGE_DIR, merged.build.siteDir);
   return validate(merged);
+}
+
+/**
+ * Load the YAML config file, merged over the defaults.
+ * @param path Config file path; when absent, the defaults are used as-is.
+ * @returns The validated configuration.
+ * @example const config = loadConfig('/config/archetypes.yaml');
+ */
+export function loadConfig(path?: string): Config {
+  if (!path) return parseConfig('', process.cwd());
+  const file = resolve(path);
+  if (!existsSync(file)) throw new Error(`Config file not found: ${file}`);
+  return parseConfig(readFileSync(file, 'utf8'), dirname(file));
+}
+
+/**
+ * Load configuration the way the service does: inline `ARCHETYPES_YAML` wins over the
+ * `ARCHETYPES_CONFIG` file, and `ARCHETYPES_DATA_DIR` overrides the data directory.
+ * @param env Process environment.
+ * @returns The validated configuration.
+ * @example const config = configFromEnv(process.env);
+ */
+export function configFromEnv(env: NodeJS.ProcessEnv): Config {
+  const config = env.ARCHETYPES_YAML?.trim() ? parseConfig(env.ARCHETYPES_YAML, process.cwd()) : loadConfig(env.ARCHETYPES_CONFIG || undefined);
+  if (env.ARCHETYPES_DATA_DIR) config.dataDir = resolve(env.ARCHETYPES_DATA_DIR);
+  return config;
 }
 
 /**
