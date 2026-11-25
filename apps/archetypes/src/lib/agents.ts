@@ -252,3 +252,31 @@ export function clustersMarkdown(index: SiteIndex, site: string): string {
     ...(index.irregular.length ? ['## Spellings this site cannot route', '', ...index.irregular.map(entry => `- ${entry.tag}: ${line(entry.value)} (${plural(entry.napplets, 'napplet')})`), ''] : []),
   ].join('\n');
 }
+
+/**
+ * Agent skill (SKILL.md) for choosing an archetype and intent from observed usage.
+ * @param index Site index.
+ * @param site Site origin.
+ * @returns SKILL.md text with frontmatter.
+ * @example skillMarkdown(index, site)
+ */
+export function skillMarkdown(index: SiteIndex, site: string): string {
+  const top = index.archetypes.slice(0, 8).map(entry => `${entry.slug} (${plural(entry.napplets.length, 'napplet')})`).join(', ');
+  return `---
+name: napplet-archetypes
+description: Use when choosing the z (archetype) and i (intent) manifest tags for a napplet, or when looking for napplets that accept an intent. Looks up what names other napplets already publish on Nostr relays so a new napplet reuses common vocabulary instead of inventing a near-synonym.
+---
+
+# Choosing napplet archetypes and intents
+
+Archetypes and intents are ad hoc names (NIP-5D, https://github.com/nostr-protocol/nips/pull/2303). There is no registry, so prefer names other napplets already use.
+
+1. Fetch ${site}/archetypes.json (or ${site}/llms.txt for a short list). Each archetype has its napplet count, intents with advertised parameter names, status and aliases.
+2. Search for the closest existing archetype. Prefer one with more napplets and publishers. Status \`coalesced\` means a curator grouped names: use the \`preferred\` one. \`diverse\` means the name legitimately covers many shapes; \`candidate\` means a possible synonym that is still unresolved.
+3. Reuse an existing intent URI (\`napplet:<archetype>/<verb>\`) and its parameter names when your napplet does the same thing. \`open\` is the most widely shared verb.
+4. Only if nothing fits, pick a new lower-case name (letters, digits, \`.\`, \`_\`, \`-\`) and check ${site}/clusters/ for near-duplicates first.
+5. Advertise them in the manifest: \`["z", "<archetype>"]\` and \`["i", "napplet:<archetype>/<verb>", "<param>", ...]\`. Intent dispatch semantics are defined by NAP-INTENT (https://github.com/napplet/naps); this data is observed usage, not normative.
+
+Most used right now: ${top}.
+`;
+}

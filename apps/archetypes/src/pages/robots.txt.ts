@@ -9,6 +9,8 @@ export const GET: APIRoute = () => {
   const body = [
     'User-agent: *',
     'Allow: /',
+    '# Content Signals (https://contentsignals.org/): search and agent input yes, model training no.',
+    'Content-Signal: search=yes, ai-input=yes, ai-train=no',
     '',
     ...AGENTS.flatMap(agent => [`User-agent: ${agent}`, 'Allow: /', '']),
     `Sitemap: ${snapshot.siteUrl}/sitemap-index.xml`,

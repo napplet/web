@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { archetypeMarkdown, archetypesJson, clusterMarkdown, clustersMarkdown, indexMarkdown, intentMarkdown, intentsMarkdown, llmsFullTxt, llmsTxt } from './agents';
+import { skillMarkdown, archetypeMarkdown, archetypesJson, clusterMarkdown, clustersMarkdown, indexMarkdown, intentMarkdown, intentsMarkdown, llmsFullTxt, llmsTxt } from './agents';
 import { buildIndex } from './model';
 import { readSnapshot } from './data';
 import { named } from '../test/fixtures';
@@ -60,6 +60,15 @@ describe('intent and cluster twins', () => {
     expect(md).toContain('# a ≈ b');
     expect(md).toContain('- a: url; b: —');
     expect(clustersMarkdown({ ...index, clusters: [cluster] }, site)).toContain('[a ≈ b](https://archetypes.example/clusters/a~b/)');
+  });
+});
+
+describe('agent skill', () => {
+  it('is a SKILL.md with frontmatter and current top archetypes', () => {
+    const md = skillMarkdown(index, site);
+    expect(md).toMatch(/^---\nname: napplet-archetypes\ndescription: Use when/);
+    expect(md).toContain('https://archetypes.example/archetypes.json');
+    expect(md).toContain('Most used right now: ');
   });
 });
 
