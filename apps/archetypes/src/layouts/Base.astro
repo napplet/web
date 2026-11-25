@@ -70,7 +70,7 @@ const ld = (value: object) => JSON.stringify(value).replace(/</g, '\\u003c');
         {nav !== 'archetypes' && (
           <form class="header-search" role="search" action="/" method="get" toolname="search_archetypes" tooldescription="Search napplet archetypes, intents and parameter names">
             <label class="sr-only" for="header-q">Search archetypes, intents and parameters</label>
-            <input id="header-q" name="q" type="search" placeholder="Search archetypes, intents, parameters" value={query} />
+            <input id="header-q" name="q" type="search" placeholder="Search archetypes, intents, parameters" value={query} required />
           </form>
         )}
       </div>
@@ -86,8 +86,6 @@ const ld = (value: object) => JSON.stringify(value).replace(/</g, '\\u003c');
         <p>Built {day(index.generatedAt)} from {index.releases} signed manifests. <a href="/llms.txt">llms.txt</a> · <a href="/archetypes.json">archetypes.json</a> · <a href="/relays.json">relays.json</a> · <a href="https://napplet.run/">napplet.run</a> · <a href="https://github.com/napplet/web/tree/main/apps/archetypes">source</a></p>
       </div>
     </footer>
-    <script>
-      import '../scripts/webmcp';
-    </script>
+    <script is:inline>if (navigator.modelContext) { const s = document.createElement('script'); s.src = '/webmcp.js'; document.head.append(s); }</script>
   </body>
 </html>

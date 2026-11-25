@@ -41,6 +41,26 @@ const termSet = {
   description: 'Archetype names napplets advertise with NIP-5D z tags, as observed on public relays.',
   hasDefinedTerm: index.archetypes.map(entry => ({ '@type': 'DefinedTerm', name: entry.slug, termCode: entry.slug, url: `${site}/archetypes/${entry.slug}/` })),
 };
+const faq: Array<[string, string]> = [
+  ['Is this a registry of napplet archetypes?', 'No. NIP-5D lets every napplet name its own archetypes (z tags) and intents (i tags), and the archetype registry was deprecated. This site only reports which names developers actually publish and where they are converging.'],
+  ['How do I add my archetype?', 'Publish it. Add ["z", "your-archetype"] and any ["i", "napplet:your-archetype/verb", ...params] tags to your napplet manifest. The crawler finds it on public relays and it appears here after the next daily build, or right away in the live banner.'],
+  ['What is a synonym cluster?', 'Two or more archetype names that may mean the same thing, suggested from their names and parameters. A person decides whether they coalesce, stay distinct or are diverse by design, by editing curation.yaml in a pull request.'],
+  ['How much does it cost, and can agents use the data?', 'It is free. Every page has a Markdown copy, and llms.txt, archetypes.json and relays.json need no account or API key.'],
+];
+const faqLd = {
+  '@context': 'https://schema.org', '@type': 'FAQPage',
+  mainEntity: faq.map(([name, text]) => ({ '@type': 'Question', name, acceptedAnswer: { '@type': 'Answer', text } })),
+};
+const datasetLd = {
+  '@context': 'https://schema.org', '@type': 'Dataset', name: 'Napplet archetypes and intents',
+  description: 'Archetype (z) and intent (i) tags from signed NIP-5D napplet manifests on public Nostr relays, with napplet counts, parameter names and synonym clusters. Rebuilt daily.',
+  url: `${site}/`, isAccessibleForFree: true, dateModified: new Date(index.generatedAt * 1000).toISOString(),
+  distribution: [
+    { '@type': 'DataDownload', encodingFormat: 'application/json', contentUrl: `${site}/archetypes.json` },
+    { '@type': 'DataDownload', encodingFormat: 'text/markdown', contentUrl: `${site}/llms-full.txt` },
+  ],
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD', availability: 'https://schema.org/InStock', description: 'Free, no account or API key' },
+};
 const live = {
   generatedAt: snapshot.generatedAt,
   relays: snapshot.runtime.relays,
@@ -49,7 +69,7 @@ const live = {
   intents: index.intents.map(intent => intent.uri),
 };
 ---
-<Base title="Napplet archetypes" description={`Browse and search the ${index.archetypes.length} archetypes and ${index.intents.length} intents napplets advertise on Nostr: which names developers use, which intents they accept, and where names are converging.`} markdown="/index.md" jsonLd={[termSet]} nav="archetypes">
+<Base title="Napplet archetypes" description={`Browse and search the ${index.archetypes.length} archetypes and ${index.intents.length} intents napplets advertise on Nostr: which names developers use, which intents they accept, and where names are converging.`} markdown="/index.md" jsonLd={[termSet, datasetLd, faqLd]} nav="archetypes">
   <p class="eyebrow">z + i tags, observed on public relays</p>
   <h1 style="margin: 0 0 12px; font-size: 44px; max-width: 780px;">What napplets say they do, and what you can ask them to do.</h1>
   <p class="lede">A field guide to napplet archetypes and intents as developers actually publish them. Nothing here is a registry: names are ad hoc, and this page reports usage and where it is converging.</p>
@@ -58,7 +78,7 @@ const live = {
     <label class="sr-only" for="q">Search archetypes, intents and parameters</label>
     <div class="search-big">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9688b3" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-4-4"></path></svg>
-      <input id="q" name="q" type="search" placeholder="Try “editor”, “open”, “route” or “3d”" autocomplete="off" />
+      <input id="q" name="q" type="search" placeholder="Try “editor”, “open”, “route” or “3d”" autocomplete="off" required />
       <button class="button" type="submit">Search</button>
     </div>
   </form>
@@ -105,6 +125,18 @@ const live = {
     <p style="margin: 0 0 8px; color: var(--text); font-weight: 600;">No archetype matches “<span data-empty-query></span>” yet.</p>
     <p style="margin: 0;">That name is free to use. Archetypes need no registration: add <code>["z", "<span data-empty-query></span>"]</code> to your manifest and it appears here after the next crawl.</p>
   </div>
+
+  <section class="section" aria-labelledby="faq-h" style="margin-top: 48px;">
+    <h2 id="faq-h">Questions</h2>
+    <div class="grid-cards">
+      {faq.map(([question, answer]) => (
+        <div class="card">
+          <h3 style="margin: 0 0 6px; font-size: 16px;">{question}</h3>
+          <p class="small muted" style="margin: 0;">{answer}</p>
+        </div>
+      ))}
+    </div>
+  </section>
 </Base>
 
 <script>
