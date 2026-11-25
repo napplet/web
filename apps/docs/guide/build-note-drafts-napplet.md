@@ -42,7 +42,7 @@ napplet init --name notedrafts --title "Note Drafts" \
   --archetype napplet:note/open
 pnpm init
 pnpm add @napplet/sdk@^0.39.0
-pnpm add -D @napplet/vite-plugin@^0.18.0 @napplet/conformance-cli@^0.7.0 @kehto/cli@^0.2.11 typescript@^5.9.3 vite@^6.4.5
+pnpm add -D @napplet/vite-plugin@^0.19.0 @napplet/conformance-cli@^0.7.0 @kehto/cli@^0.2.11 typescript@^5.9.3 vite@^6.4.5
 ```
 
 Replace the generated `package.json` with this:
@@ -67,7 +67,7 @@ Replace the generated `package.json` with this:
   "devDependencies": {
     "@kehto/cli": "^0.2.11",
     "@napplet/conformance-cli": "^0.7.0",
-    "@napplet/vite-plugin": "^0.18.0",
+    "@napplet/vite-plugin": "^0.19.0",
     "typescript": "^5.9.3",
     "vite": "^6.4.5"
   }
