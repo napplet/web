@@ -14,7 +14,7 @@ const jsonLd = [{
   hasDefinedTerm: index.intents.map(intent => ({ '@type': 'DefinedTerm', name: intent.uri, termCode: intent.uri, url: `${site}${intentPath(intent.uri)}` })),
 }];
 ---
-<Base title="Intents" description={`All ${index.intents.length} napplet intents observed on Nostr, with the verbs that are becoming shared vocabulary across archetypes.`} jsonLd={jsonLd} nav="intents">
+<Base title="Intents" description={`All ${index.intents.length} napplet intents observed on Nostr, with the verbs that are becoming shared vocabulary across archetypes.`} jsonLd={jsonLd} nav="intents" markdown="/intents/index.md">
   <h1 style="margin: 0 0 8px; font-size: 36px;">Intents</h1>
   <p class="lede">An intent is a queryless convention identity, <code>napplet:&lt;archetype&gt;/&lt;verb&gt;</code>, that a napplet accepts. The parameter names after it are only what implementers chose to advertise.</p>
   <div class="split">

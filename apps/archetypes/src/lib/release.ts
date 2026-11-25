@@ -36,6 +36,8 @@ export interface Release {
   parent?: string;
   root?: string;
   relays: string[];
+  /** `z` and `i` values this site cannot route (e.g. `Note`, `napplet:note/open?x=1`), kept so they can be counted. */
+  irregular: Array<{ tag: 'z' | 'i'; value: string }>;
 }
 
 /** Archetype and verb spelling this site can route to. Other spellings are counted, not shown. */
@@ -96,6 +98,10 @@ export function parseRelease(event: NostrEvent, relays: string[] = []): Release 
   if (!Number.isSafeInteger(event.created_at) || event.created_at < 0) return null;
 
   const archetypes = unique(event.tags.filter(tag => tag[0] === 'z' && SLUG.test(tag[1] ?? '')).map(tag => tag[1])).slice(0, 32);
+  const irregular: Release['irregular'] = [
+    ...unique(event.tags.filter(tag => tag[0] === 'z' && tag[1] && !SLUG.test(tag[1])).map(tag => tag[1])).map(value => ({ tag: 'z' as const, value })),
+    ...unique(event.tags.filter(tag => tag[0] === 'i' && tag[1] && !parseIntentUri(tag[1])).map(tag => tag[1])).map(value => ({ tag: 'i' as const, value })),
+  ].map(entry => ({ ...entry, value: entry.value.slice(0, 120) })).slice(0, 32);
   const intents: Intent[] = [];
   const seen = new Set<string>();
   for (const tag of event.tags) {
@@ -127,5 +133,6 @@ export function parseRelease(event: NostrEvent, relays: string[] = []): Release 
       ...(coordinate(event.tags.find(tag => tag[0] === 'A')) ? { root: coordinate(event.tags.find(tag => tag[0] === 'A')) } : {}),
     } : {}),
     relays: unique(relays).slice(0, 3),
+    irregular,
   };
 }

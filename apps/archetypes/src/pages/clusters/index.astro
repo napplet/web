@@ -7,7 +7,7 @@ const { index } = loadSiteData();
 const open = index.clusters.filter(cluster => cluster.status === 'candidate');
 const decided = index.clusters.filter(cluster => cluster.status !== 'candidate');
 ---
-<Base title="Synonym clusters" description={`Napplet archetypes that may name the same thing: ${open.length} open clusters for human review, ${decided.length} decided.`} nav="clusters">
+<Base title="Synonym clusters" description={`Napplet archetypes that may name the same thing: ${open.length} open clusters for human review, ${decided.length} decided.`} nav="clusters" markdown="/clusters/index.md">
   <h1 style="margin: 0 0 8px; font-size: 36px;">Synonym clusters</h1>
   <p class="lede">Groups of archetype names that may mean the same thing. The site suggests them from names, publishers, parameters and descriptions; only a reviewed edit to <a href="https://github.com/napplet/web/blob/main/apps/archetypes/curation.yaml">curation.yaml</a> settles one. A napplet advertising two names marks them as different facets, so such pairs are never suggested.</p>
   <section class="section" aria-labelledby="open-h">
@@ -36,4 +36,16 @@ const decided = index.clusters.filter(cluster => cluster.status !== 'candidate')
       </ul>
     ) : <p class="muted small">No decisions recorded yet. The first one is a pull request away.</p>}
   </section>
+  {index.irregular.length > 0 && (
+    <section class="section" aria-labelledby="odd-h">
+      <h2 id="odd-h">Spellings this site cannot route ({index.irregular.length})</h2>
+      <p class="muted">Tag values with capitals, spaces, queries or other characters outside lower-case letters, digits, <code>.</code>, <code>_</code> and <code>-</code>. They may be valid manifests; they are listed here so a near-duplicate of a common name is not missed.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th scope="col">Tag</th><th scope="col">Value</th><th scope="col">Napplets</th></tr></thead>
+          <tbody>{index.irregular.map(entry => <tr><td class="mono">{entry.tag}</td><td class="mono">{entry.value}</td><td>{entry.napplets}</td></tr>)}</tbody>
+        </table>
+      </div>
+    </section>
+  )}
 </Base>

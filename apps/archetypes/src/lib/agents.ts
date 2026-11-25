@@ -148,6 +148,107 @@ export function archetypesJson(index: SiteIndex, snapshot: Snapshot) {
     })),
     verbs: index.verbs,
     clusters: index.clusters.map(clusterJson),
+    irregular: index.irregular,
     live: { relays: snapshot.runtime.relays, since: snapshot.generatedAt },
   };
+}
+
+/**
+ * Markdown for one intent page.
+ * @param intent Intent.
+ * @param site Site origin.
+ * @returns Markdown document.
+ * @example intentMarkdown(intent, site)
+ */
+export function intentMarkdown(intent: IntentEntry, site: string): string {
+  const out = [
+    `# ${intent.uri}`,
+    '',
+    `Observed intent. ${plural(intent.handlers.length, 'handler')} from ${plural(intent.publishers, 'publisher')}; parameter agreement: ${intent.agreement}.`,
+    '',
+    '## Parameter names',
+    '',
+    ...(intent.params.length ? intent.params.map(param => `- ${param.name}: advertised by ${param.count}`) : ['None advertised.']),
+    '',
+    '## Handlers',
+    '',
+    ...intent.handlers.map(handler => `- ${line(handler.napplet.title)} since ${day(handler.since)}; params: ${handler.params.join(', ') || 'none'}${handler.advertisesArchetype ? '' : `; manifest lacks ["z", "${intent.archetype}"]`} — nostr:${pointer(handler.napplet)}`),
+    '',
+    `Archetype: ${site}/archetypes/${intent.archetype}/`,
+    '',
+    '---',
+    '',
+    NON_NORMATIVE,
+  ];
+  return `${out.join('\n')}\n`;
+}
+
+/**
+ * Markdown for the intents index.
+ * @param index Site index.
+ * @param site Site origin.
+ * @returns Markdown document.
+ * @example intentsMarkdown(index, site)
+ */
+export function intentsMarkdown(index: SiteIndex, site: string): string {
+  return [
+    '# Napplet intents',
+    '',
+    '## Verbs across archetypes',
+    '',
+    ...index.verbs.map(verb => `- ${verb.verb}: ${verb.archetypes.join(', ')}`),
+    '',
+    '## Intents',
+    '',
+    ...index.intents.map(intent => `- [${intent.uri}](${site}${intentPath(intent.uri)}): ${plural(intent.handlers.length, 'handler')}; params: ${intent.params.map(param => param.name).join(', ') || 'none'}`),
+    '',
+    NON_NORMATIVE,
+    '',
+  ].join('\n');
+}
+
+/**
+ * Markdown for one cluster page.
+ * @param cluster Cluster.
+ * @param site Site origin.
+ * @returns Markdown document.
+ * @example clusterMarkdown(cluster, site)
+ */
+export function clusterMarkdown(cluster: ClusterEntry, site: string): string {
+  const out = [
+    `# ${cluster.members.join(' ≈ ')}`,
+    '',
+    `Status: ${STATUS_LABEL[cluster.status === 'candidate' ? 'candidate' : cluster.status]}.${cluster.preferred ? ` Preferred name: ${cluster.preferred}.` : ''}${cluster.note ? ` ${line(cluster.note)}` : ''}`,
+    '',
+    '## Evidence',
+    '',
+    ...(cluster.signals.length ? cluster.signals.map(signal => `- ${line(signal.detail)}`) : ['- Grouped by a curator.']),
+    '',
+    '## Parameter alignment',
+    '',
+    ...cluster.paramRows.map(row => `- ${cluster.members.map(member => `${member}: ${row.names[member]?.join(', ') || '—'}`).join('; ')}${row.aligned ? ' (curator: same meaning)' : ''}`),
+    '',
+    ...cluster.members.map(member => `- ${site}/archetypes/${member}/`),
+    '',
+    'Decisions are recorded in apps/archetypes/curation.yaml in the napplet/web repository.',
+    '',
+  ];
+  return out.join('\n');
+}
+
+/**
+ * Markdown for the clusters index.
+ * @param index Site index.
+ * @param site Site origin.
+ * @returns Markdown document.
+ * @example clustersMarkdown(index, site)
+ */
+export function clustersMarkdown(index: SiteIndex, site: string): string {
+  return [
+    '# Synonym clusters',
+    '',
+    ...index.clusters.map(cluster => `- [${cluster.members.join(' ≈ ')}](${site}/clusters/${cluster.id}/): ${STATUS_LABEL[cluster.status === 'candidate' ? 'candidate' : cluster.status]}`),
+    '',
+    ...(index.irregular.length ? ['## Spellings this site cannot route', '', ...index.irregular.map(entry => `- ${entry.tag}: ${line(entry.value)} (${plural(entry.napplets, 'napplet')})`), ''] : []),
+  ].join('\n');
 }

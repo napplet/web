@@ -32,7 +32,7 @@ const issueTitle = encodeURIComponent(`archetypes: review ${cluster.members.join
 const issueBody = encodeURIComponent(`Cluster: https://archetypes.napplet.run/clusters/${cluster.id}/\n\nProposed outcome (coalesce / distinct / diverse):\n\nWhy:\n`);
 const editUrl = 'https://github.com/napplet/web/edit/main/apps/archetypes/curation.yaml';
 ---
-<Base title={`${cluster.members.join(' ≈ ')} cluster`} description={clip(`Do ${cluster.members.join(' and ')} name the same napplet archetype? Evidence: ${cluster.signals.map(signal => signal.detail).join('; ')}.`, 158)} nav="clusters">
+<Base title={`${cluster.members.join(' ≈ ')} cluster`} description={clip(`Do ${cluster.members.join(' and ')} name the same napplet archetype? Evidence: ${cluster.signals.map(signal => signal.detail).join('; ')}.`, 158)} nav="clusters" markdown={`/clusters/${cluster.id}/index.md`}>
   <nav class="crumbs" aria-label="Breadcrumb"><a href="/clusters/">Clusters</a> / {cluster.members.join(' ≈ ')}</nav>
   <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 8px;">
     <h1 style="margin: 0; font-size: 36px;">{cluster.members.map((slug, i) => <>{i > 0 && <span class="dim"> ≈ </span>}<span class="mono" style="font-weight: 500;">{slug}</span></>)}</h1>

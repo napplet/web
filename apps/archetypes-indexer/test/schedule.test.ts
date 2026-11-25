@@ -39,10 +39,11 @@ describe('backoff', () => {
     expect(state.points).toBe(20);
   });
 
-  it('does not count an incomplete answer as an empty relay', () => {
-    const state = applyCrawl(newRelay('wss://r.example', 'nip66', now), { at: now, connected: true, ok: false, totalNapplets: 0, error: 'timeout' }, config);
-    expect(state.zeroStreak).toBe(0);
-    expect(state.lastError).toBe('timeout');
+  it('backs off a zero-point relay that answers incompletely, without recording a good crawl', () => {
+    const state = applyCrawl(newRelay('wss://r.example', 'nip66', now), { at: now, connected: true, ok: false, totalNapplets: 0, error: 'closed: auth-required' }, config);
+    expect(state.zeroStreak).toBe(1);
+    expect(state.nextCheckAt - now).toBe(3 * DAY);
+    expect(state.lastError).toBe('closed: auth-required');
     expect(state.lastOkAt).toBeUndefined();
   });
 });

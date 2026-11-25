@@ -88,11 +88,9 @@ export function applyCrawl(state: RelayState, outcome: CrawlOutcome, config: Sch
   next.failures = 0;
   if (outcome.ok) next.lastOkAt = outcome.at;
   next.points = Math.max(state.points, outcome.totalNapplets * config.pointsPerNapplet);
-  if (next.points > 0) {
-    next.zeroStreak = 0;
-  } else if (outcome.ok) {
-    next.zeroStreak = state.zeroStreak + 1;
-  }
+  // Zero points backs off whether the relay answered completely or not (auth-required, slow):
+  // either way it has not served a napplet.
+  next.zeroStreak = next.points > 0 ? 0 : state.zeroStreak + 1;
   next.nextCheckAt = outcome.at + backoffSeconds(next.zeroStreak, config.backoffHours);
   return next;
 }

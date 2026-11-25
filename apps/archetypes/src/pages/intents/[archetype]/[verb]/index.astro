@@ -21,7 +21,7 @@ const jsonLd = [{
   url: `${site}/intents/${intent.archetype}/${intent.verb}/`, inDefinedTermSet: `${site}/intents/#intents`,
 }];
 ---
-<Base title={intent.uri} description={description.slice(0, 158)} jsonLd={jsonLd} nav="intents">
+<Base title={intent.uri} description={description.slice(0, 158)} jsonLd={jsonLd} nav="intents" markdown={`/intents/${intent.archetype}/${intent.verb}/index.md`}>
   <nav class="crumbs" aria-label="Breadcrumb"><a href="/intents/">Intents</a> / <a href={`/archetypes/${intent.archetype}/`}>{intent.archetype}</a> / {intent.verb}</nav>
   <h1 class="mono" style="margin: 0 0 8px; font-weight: 500; font-size: 34px; overflow-wrap: anywhere;">{intent.uri}</h1>
   <p class="lede">Accepted by {plural(intent.handlers.length, 'napplet')} from {plural(intent.publishers, 'publisher')}. A queryless identity; the parameters below are only names implementers chose to advertise.</p>

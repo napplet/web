@@ -1,6 +1,6 @@
 import { createServer, type Server } from 'node:http';
 import type { Config, Secrets } from './config.ts';
-import { crawlDue, runDiscovery, type Log } from './crawl.ts';
+import { crawlDue, crawlScored, runDiscovery, type Log } from './crawl.ts';
 import { buildDue, runBuild } from './build.ts';
 import type { Query } from './relay-client.ts';
 import type { EventStore } from './store.ts';
@@ -40,6 +40,8 @@ export async function tick(deps: ServiceDeps): Promise<TickResult> {
     }
     result.crawled = (await crawlDue(store, deps.query, config, now, deps.log)).crawled;
     if (config.build.enabled && buildDue(now, config.build.at, metaNumber(store, 'lastBuildAt'), config.build.buildOnStart)) {
+      // Browsers only ask relays for manifests newer than the build, so the build must not miss anything older.
+      await crawlScored(store, deps.query, config, now, deps.log);
       await (deps.build ?? runBuild)(store, config, deps.secrets, now, deps.log);
       result.built = true;
     }

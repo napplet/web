@@ -85,6 +85,8 @@ export interface SiteIndex {
   verbs: VerbEntry[];
   /** Napplets that advertise nothing addressable. */
   silent: number;
+  /** Tag values that are not routable spellings, with how many napplets use each. */
+  irregular: Array<{ tag: 'z' | 'i'; value: string; napplets: number }>;
 }
 
 const PRECEDENCE: Record<number, number> = { 15129: 0, 35129: 1, 5129: 2 };
@@ -372,7 +374,21 @@ export function buildIndex(events: NostrEvent[], options: { relayHints?: Record<
     clusters,
     verbs,
     silent: refs.filter(family => !family.head.archetypes.length && !family.head.intents.length).length,
+    irregular: countIrregular(refs),
   };
+}
+
+function countIrregular(families: Family[]): SiteIndex['irregular'] {
+  const counts = new Map<string, { tag: 'z' | 'i'; value: string; napplets: number }>();
+  for (const family of families) {
+    for (const entry of family.head.irregular) {
+      const key = `${entry.tag}\u0000${entry.value}`;
+      const current = counts.get(key) ?? { ...entry, napplets: 0 };
+      current.napplets++;
+      counts.set(key, current);
+    }
+  }
+  return [...counts.values()].sort((a, b) => b.napplets - a.napplets || a.value.localeCompare(b.value));
 }
 
 /** @param slug Archetype. @returns Whether the site can route to it. @example isRoutable('note') */

@@ -55,6 +55,11 @@ export function checkSite(dist) {
     const slug = page.split('/')[1];
     if (!has(`archetypes/${slug}.md`)) problems.push(`archetypes/${slug}.md missing`);
   }
+  // Every page except the 404 has a Markdown copy where Accept: text/markdown negotiation looks for it.
+  for (const page of pages.filter(file => file !== '404.html')) {
+    const twin = page.replace(/\.html$/, '.md');
+    if (!has(twin)) problems.push(`${twin} missing`);
+  }
   const sitemap = files.filter(file => /^sitemap-\d+\.xml$/.test(file)).map(file => readFileSync(join(dist, file), 'utf8')).join('');
   const listed = (sitemap.match(/<loc>/g) ?? []).length;
   if (listed < pages.length - 1) problems.push(`sitemap lists ${listed} URLs for ${pages.length} pages`);

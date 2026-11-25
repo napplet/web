@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { archetypeMarkdown, archetypesJson, indexMarkdown, llmsFullTxt, llmsTxt } from './agents';
+import { archetypeMarkdown, archetypesJson, clusterMarkdown, clustersMarkdown, indexMarkdown, intentMarkdown, intentsMarkdown, llmsFullTxt, llmsTxt } from './agents';
 import { buildIndex } from './model';
 import { readSnapshot } from './data';
 import { named } from '../test/fixtures';
@@ -43,6 +43,23 @@ describe('Markdown twins', () => {
     expect(llmsTxt(index, site)).toContain('- [3d-model](https://archetypes.example/archetypes/3d-model.md): 1 napplet; intents: napplet:3d-model/open');
     expect(indexMarkdown(index, site)).toContain('2 archetypes, 1 intents');
     expect(llmsFullTxt(index, site).split('# ').length).toBeGreaterThan(3);
+  });
+});
+
+describe('intent and cluster twins', () => {
+  it('renders intents, the intents index, clusters and unroutable spellings', () => {
+    const intent = index.intents[0];
+    expect(intentMarkdown(intent, site)).toContain('# napplet:3d-model/open');
+    expect(intentMarkdown(intent, site)).toContain('- route: advertised by 1');
+    expect(intentsMarkdown(index, site)).toContain('- open: 3d-model');
+    const odd = buildIndex([...events, named('odd', [['z', 'Note'], ['i', 'napplet:note/open?x=1']])], { generatedAt: 1 });
+    expect(odd.irregular).toEqual([{ tag: 'i', value: 'napplet:note/open?x=1', napplets: 1 }, { tag: 'z', value: 'Note', napplets: 1 }]);
+    expect(clustersMarkdown(odd, site)).toContain('- z: Note (1 napplet)');
+    const cluster = { id: 'a~b', members: ['a', 'b'], score: 0.6, signals: [{ kind: 'containment' as const, detail: '“a” is part of “a-b”' }], status: 'candidate' as const, params: [], paramRows: [{ names: { a: ['url'], b: [] }, aligned: false }] };
+    const md = clusterMarkdown(cluster, site);
+    expect(md).toContain('# a ≈ b');
+    expect(md).toContain('- a: url; b: —');
+    expect(clustersMarkdown({ ...index, clusters: [cluster] }, site)).toContain('[a ≈ b](https://archetypes.example/clusters/a~b/)');
   });
 });
 

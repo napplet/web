@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { crawlDue, crawlRelay, ensureSeeds, pool, runDiscovery } from '../src/crawl.ts';
+import { crawlDue, crawlRelay, crawlScored, ensureSeeds, pool, runDiscovery } from '../src/crawl.ts';
 import { discoverRelays, relaysFromDiscovery } from '../src/nip66.ts';
 import { queryRelay, type Query } from '../src/relay-client.ts';
 import { newRelay } from '../src/schedule.ts';
@@ -86,6 +86,22 @@ describe('crawl cycle', () => {
     const blank = { ...newRelay(relay.url, 'nip66' as const, now) };
     await crawlRelay(blank, store, query, config, now);
     expect(relay.requests.at(-1)?.since).toBeUndefined();
+  });
+
+  it('re-crawls every scored relay before a build, even when not due, and skips empty or removed ones', async () => {
+    const scored = await fakeRelay([manifest(35129, 'late', [], now - 10)]);
+    const empty = await fakeRelay([]);
+    relays.push(scored, empty);
+    const config = testConfig();
+    const store = new EventStore(':memory:');
+    store.saveRelays([
+      { ...newRelay(scored.url, 'nip66', now), points: 2, lastOkAt: now - 3600, nextCheckAt: now + DAY },
+      { ...newRelay(empty.url, 'nip66', now), nextCheckAt: now + DAY },
+      { ...newRelay('ws://127.0.0.1:1', 'nip66', now), points: 5, removedAt: now - 1 },
+    ]);
+    expect(await crawlScored(store, query, config, now, log)).toEqual({ crawled: 1, fresh: 1 });
+    expect(empty.requests).toHaveLength(0);
+    expect(store.eventCount()).toBe(1);
   });
 
   it('removes a relay that keeps refusing connections', async () => {

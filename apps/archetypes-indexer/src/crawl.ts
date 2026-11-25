@@ -106,6 +106,24 @@ export async function crawlRelay(state: RelayState, store: EventStore, query: Qu
 }
 
 /**
+ * Crawl every relay that has served napplets, due or not, so a build includes everything published up to it.
+ * @param store Event store.
+ * @param query Relay query function.
+ * @param config Configuration.
+ * @param now Unix seconds.
+ * @param log Logger.
+ * @returns Totals for the pass.
+ * @example await crawlScored(store, query, config, now, log)
+ */
+export async function crawlScored(store: EventStore, query: Query, config: Config, now: number, log: Log): Promise<{ crawled: number; fresh: number }> {
+  const scored = [...store.relays().values()].filter(state => state.removedAt === undefined && state.points > 0);
+  const results = await pool(scored, config.crawl.concurrency, state => crawlRelay(state, store, query, config, now));
+  const fresh = results.reduce((sum, result) => sum + result.fresh, 0);
+  log('pre-build-crawl', { crawled: scored.length, fresh });
+  return { crawled: scored.length, fresh };
+}
+
+/**
  * Crawl every relay that is due, a bounded number at a time.
  * @param store Event store.
  * @param query Relay query function.
