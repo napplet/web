@@ -33,7 +33,7 @@ Possible synonyms are suggested from:
 - shared publishers, verbs and parameter names
 - distinctive words the descriptions have in common
 
-A napplet that advertises two names treats them as different facets, so such a pair is never suggested. Suggestions never merge anything.
+A napplet that advertises two names treats them as different facets, so such a pair is never suggested. A pair also needs a name or parameter signal: a shared publisher and similar descriptions alone usually mark sibling napplets from one suite (`printable-create`, `printable-edit`). Suggestions never merge anything.
 
 Human decisions live in [`curation.yaml`](curation.yaml) and change by pull request:
 

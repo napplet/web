@@ -29,6 +29,7 @@ clusters:
         note: same idea
 `);
     expect(curation.similarity.threshold).toBe(0.7);
+    expect(curation.similarity.requireOneOf).toEqual(DEFAULT_SIMILARITY.requireOneOf);
     expect(curation.similarity.weights.containment).toBe(0.4);
     expect(curation.similarity.weights.samePublisher).toBe(DEFAULT_SIMILARITY.weights.samePublisher);
     expect(curation.archetypes.note).toEqual({ status: 'diverse', note: 'Many shapes.', reviewed: '2026-11-25' });
@@ -48,6 +49,7 @@ clusters:
     ['clusters: [{ members: [a, b], outcome: coalesce, preferred: a }, { members: [b, c], outcome: coalesce, preferred: c }]', /coalesced in both/],
     ['similarity: { weights: { bogus: 1 } }', /unknown key similarity.weights.bogus/],
     ['similarity: { threshold: -1 }', /non-negative/],
+    ['similarity: { requireOneOf: [vibes] }', /requireOneOf/],
     ['- list', /must be a mapping/],
   ])('rejects %s', (source, error) => expect(() => parseCuration(source)).toThrow(error));
 });

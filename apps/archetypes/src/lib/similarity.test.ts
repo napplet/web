@@ -49,6 +49,12 @@ describe('scorePair', () => {
 });
 
 describe('candidatePairs', () => {
+  it('ignores sibling napplets from one suite that share only a publisher and description words', () => {
+    const suite = (slug: string) => profile(slug, { publishers: new Set(['p']), words: new Set(['printable', 'project', 'parts']) });
+    expect(candidatePairs([suite('printable-create'), suite('printable-edit')], DEFAULT_SIMILARITY)).toEqual([]);
+    expect(candidatePairs([suite('printable-create'), suite('printable-edit')], { ...DEFAULT_SIMILARITY, requireOneOf: ['samePublisher'] })).toHaveLength(1);
+  });
+
   it('returns pairs above the threshold, strongest first', () => {
     const pairs = candidatePairs([profile('text-editor'), profile('editor'), profile('incident', { publishers: new Set(['p']) }), profile('incident-command', { publishers: new Set(['p']) }), profile('feed')], DEFAULT_SIMILARITY);
     expect(pairs.map(pair => `${pair.a}+${pair.b}`)).toEqual(['incident+incident-command', 'editor+text-editor']);

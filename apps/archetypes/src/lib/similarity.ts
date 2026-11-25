@@ -21,6 +21,11 @@ export interface SimilarityConfig {
   descriptionOverlap: number;
   /** Minimum spelling similarity (0–1) for the spelling signal. */
   spellingRatio: number;
+  /**
+   * A pair is only a candidate when one of these signals fired. Publisher and description overlap alone
+   * describe sibling napplets from one suite (`printable-create`, `printable-edit`), not synonyms.
+   */
+  requireOneOf: Array<keyof SimilarityConfig['weights']>;
 }
 
 export const DEFAULT_SIMILARITY: SimilarityConfig = {
@@ -28,6 +33,7 @@ export const DEFAULT_SIMILARITY: SimilarityConfig = {
   weights: { sameTokens: 0.9, containment: 0.6, spelling: 0.6, samePublisher: 0.2, sharedVerb: 0.1, sharedParams: 0.2, description: 0.3 },
   descriptionOverlap: 0.2,
   spellingRatio: 0.85,
+  requireOneOf: ['sameTokens', 'containment', 'spelling', 'sharedParams'],
 };
 
 /** What the heuristics know about one archetype. */
@@ -146,7 +152,7 @@ export function candidatePairs(profiles: ArchetypeProfile[], config: SimilarityC
   for (let i = 0; i < sorted.length; i++) {
     for (let j = i + 1; j < sorted.length; j++) {
       const pair = scorePair(sorted[i], sorted[j], config, commonVerb);
-      if (pair.score >= config.threshold) out.push(pair);
+      if (pair.score >= config.threshold && pair.signals.some(signal => config.requireOneOf.includes(signal.kind))) out.push(pair);
     }
   }
   return out.sort((x, y) => y.score - x.score || x.a.localeCompare(y.a) || x.b.localeCompare(y.b));

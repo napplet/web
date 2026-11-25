@@ -13,6 +13,8 @@
 #   threshold: 0.5
 #   descriptionOverlap: 0.2
 #   spellingRatio: 0.85
+#   # A pair needs one of these signals; publisher and description overlap alone mark sibling apps, not synonyms.
+#   requireOneOf: [sameTokens, containment, spelling, sharedParams]
 #   weights:
 #     sameTokens: 0.9
 #     containment: 0.6

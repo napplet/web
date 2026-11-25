@@ -50,8 +50,15 @@ function slug(value: unknown, where: string): string {
 function similarity(raw: unknown): SimilarityConfig {
   if (raw === undefined || raw === null) return DEFAULT_SIMILARITY;
   if (!isPlain(raw)) throw new Error('curation: similarity must be a mapping');
-  keys(raw, ['threshold', 'weights', 'descriptionOverlap', 'spellingRatio'], 'similarity');
-  const out: SimilarityConfig = { ...DEFAULT_SIMILARITY, weights: { ...DEFAULT_SIMILARITY.weights } };
+  keys(raw, ['threshold', 'weights', 'descriptionOverlap', 'spellingRatio', 'requireOneOf'], 'similarity');
+  const out: SimilarityConfig = { ...DEFAULT_SIMILARITY, weights: { ...DEFAULT_SIMILARITY.weights }, requireOneOf: [...DEFAULT_SIMILARITY.requireOneOf] };
+  if (raw.requireOneOf !== undefined) {
+    const allowed = Object.keys(DEFAULT_SIMILARITY.weights);
+    if (!Array.isArray(raw.requireOneOf) || raw.requireOneOf.some(kind => !allowed.includes(String(kind)))) {
+      throw new Error(`curation: similarity.requireOneOf must list signals from: ${allowed.join(', ')}`);
+    }
+    out.requireOneOf = raw.requireOneOf as SimilarityConfig['requireOneOf'];
+  }
   const number = (value: unknown, where: string) => {
     if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) throw new Error(`curation: ${where} must be a non-negative number`);
     return value;
