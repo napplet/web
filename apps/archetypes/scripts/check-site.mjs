@@ -20,7 +20,7 @@ export function checkSite(dist) {
   };
   walk(dist);
   const has = path => files.includes(path);
-  for (const required of ['index.html', 'index.md', '404.html', 'llms.txt', 'llms-full.txt', 'archetypes.json', 'relays.json', 'robots.txt', 'sitemap-index.xml', 'favicon.svg']) {
+  for (const required of ['index.html', 'index.md', '404.html', 'llms.txt', 'llms-full.txt', 'archetypes.json', 'relays.json', 'robots.txt', 'sitemap-index.xml', 'icon.png']) {
     if (!has(required)) problems.push(`missing ${required}`);
   }
   const pages = files.filter(file => file.endsWith('.html'));

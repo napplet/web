@@ -45,7 +45,7 @@ const ld = (value: object) => JSON.stringify(value).replace(/</g, '\\u003c');
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
     <meta name="twitter:card" content="summary" />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" type="image/png" href="/icon.png" />
     <link rel="sitemap" href="/sitemap-index.xml" />
     {markdown && <link rel="alternate" type="text/markdown" href={markdown} title="Markdown version" />}
     <link rel="alternate" type="application/json" href="/archetypes.json" title="All archetypes as JSON" />
@@ -58,7 +58,7 @@ const ld = (value: object) => JSON.stringify(value).replace(/</g, '\\u003c');
     <header class="site-header">
       <div class="wrap">
         <a class="brand" href="/" aria-label="Napplet archetypes home">
-          <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><rect x="2" y="2" width="22" height="22" rx="6" fill="none" stroke="#b06bff" stroke-width="2"></rect><rect x="8" y="8" width="10" height="10" rx="3" fill="#b06bff"></rect></svg>
+          <img src="/icon.png" width="26" height="26" alt="" aria-hidden="true" />
           napplet <span>/ archetypes</span>
         </a>
         <nav class="nav" aria-label="Primary">

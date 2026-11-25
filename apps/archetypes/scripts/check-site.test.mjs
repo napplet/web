@@ -11,7 +11,7 @@ function site(files) {
   const base = {
     'index.html': page('<a href="/archetypes/note/">note</a>'), 'index.md': '#', '404.html': page(), 'llms.txt': '#', 'llms-full.txt': '#',
     'archetypes.json': '{}', 'relays.json': '{}', 'robots.txt': 'Sitemap: https://archetypes.example/sitemap-index.xml', 'sitemap-index.xml': '',
-    'favicon.svg': '', 'sitemap-0.xml': '<loc>a</loc><loc>b</loc>', 'archetypes/note/index.html': page('<link rel="alternate" type="text/markdown" href="/archetypes/note.md">'),
+    'icon.png': '', 'sitemap-0.xml': '<loc>a</loc><loc>b</loc>', 'archetypes/note/index.html': page('<link rel="alternate" type="text/markdown" href="/archetypes/note.md">'),
     'archetypes/note.md': '#', 'archetypes/note/index.md': '#',
   };
   for (const [path, body] of Object.entries({ ...base, ...files })) {
