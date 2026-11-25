@@ -56,7 +56,8 @@ function run(command: string, args: string[], cwd: string, env: NodeJS.ProcessEn
  */
 export async function runBuild(store: EventStore, config: Config, secrets: Secrets, now: number, log: Log): Promise<{ outDir: string; deployed: boolean }> {
   const snapshotPath = join(config.dataDir, 'snapshot.json');
-  const outDir = join(config.dataDir, 'site');
+  // Inside the site package: Astro moves files with rename(), which fails across volumes (EXDEV).
+  const outDir = join(config.build.siteDir, 'dist');
   mkdirSync(config.dataDir, { recursive: true });
   writeFileSync(snapshotPath, JSON.stringify(buildSnapshot(store, config, now)));
   rmSync(outDir, { recursive: true, force: true });
