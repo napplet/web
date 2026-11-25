@@ -1,13 +1,4 @@
-// ─── Relay scoring and backoff ──────────────────────────────────────────────
-// Pure state transitions, so every rule is testable without a clock or a socket.
-//
-// - A relay's points are the distinct napplet manifests it has ever served, times
-//   `pointsPerNapplet`. A relay with points is checked on the normal cadence.
-// - A reachable relay with zero points backs off along `backoffHours`
-//   (default 1 day → 3 days → 7 days → 14 days → 30 days, then stays at 30 days).
-// - A relay that cannot be reached `offlineAfterFailures` times in a row is removed.
-//   Configured seed relays are never removed; they back off instead.
-// - A removed relay comes back only when a monitor reports it again after removal.
+/** Relay scoring: points per napplet served; zero-point relays back off along `backoffHours`; unreachable relays are removed. */
 
 export type RelaySource = 'seed' | 'nip66';
 

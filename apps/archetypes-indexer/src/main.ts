@@ -1,10 +1,4 @@
-// ─── Entry point ────────────────────────────────────────────────────────────
-// `node src/main.ts [--once] [--build]`
-//   (no flags)  run forever: discovery, crawl, daily build + deploy
-//   --once      run a single iteration and exit
-//   --build     export, build and deploy now, then exit
-// Config: ARCHETYPES_YAML (inline) or ARCHETYPES_CONFIG (file), both optional; ARCHETYPES_DATA_DIR overrides
-// the data directory. Secrets: BUNNY_* environment variables.
+/** No flags: run forever. `--once`: one iteration. `--build`: export, build and deploy now. */
 
 import { join } from 'node:path';
 import { configFromEnv, secretsFromEnv } from './config.ts';

@@ -1,6 +1,3 @@
-// ─── Machine-readable surfaces ──────────────────────────────────────────────
-// Markdown twins, llms.txt and JSON exports. Same data as the HTML pages, no JavaScript needed.
-
 import type { ArchetypeEntry, ClusterEntry, IntentEntry, SiteIndex } from './model';
 import { day, intentPath, kindLabel, plural, pointer, STATUS_LABEL } from './format';
 import type { Snapshot } from './data';

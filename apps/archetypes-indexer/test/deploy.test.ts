@@ -38,7 +38,7 @@ function fakeBunny(remote: Record<string, string>) {
   return { calls, fetchImpl };
 }
 
-const target = { storageZone: 'zone', storageEndpoint: 'storage.example', storagePassword: 'pw', pullZoneId: '7', apiKey: 'key', concurrency: 2, deleteStale: true };
+const target = { storageZone: 'zone', storageEndpoint: 'storage.example', apiBase: 'https://api.bunny.net', storagePassword: 'pw', pullZoneId: '7', apiKey: 'key', concurrency: 2, deleteStale: true };
 
 describe('localFiles', () => {
   it('lists files with forward-slash paths and upper-case SHA-256', () => {

@@ -1,7 +1,3 @@
-// ─── Archetype and intent index ─────────────────────────────────────────────
-// Turns signed manifests into what the site shows: archetypes, intents, verbs,
-// synonym clusters. Shared by the static build and the browser's live top-up.
-
 import { parseRelease, SLUG, type NostrEvent, type Release } from './release';
 import { candidatePairs, scorePair, words, type ArchetypeProfile, type Signal } from './similarity';
 import { EMPTY_CURATION, type ClusterOutcome, type Curation, type ParamAlignment } from './curation';
@@ -145,46 +141,38 @@ function ref(head: Release, members: Release[], firstSeen: number): NappletRef {
   };
 }
 
-/**
- * Build the whole site index from signed manifests and curation.
- * @param events Manifest events (signatures already verified).
- * @param options Relay hints per event id, curation and the build time.
- * @returns The index every page renders from.
- * @example buildIndex(snapshot.events, { relayHints: snapshot.relayHints, curation, generatedAt: snapshot.generatedAt })
- */
-export function buildIndex(events: NostrEvent[], options: { relayHints?: Record<string, string[]>; curation?: Curation; generatedAt?: number } = {}): SiteIndex {
-  const curation = options.curation ?? EMPTY_CURATION;
-  const releases = events.map(event => parseRelease(event, options.relayHints?.[event.id] ?? [])).filter((release): release is Release => release !== null);
-  const fams = families(releases);
-  const refs = fams.map(family => ({ ...family, ref: ref(family.head, family.members, family.firstSeen) }));
+type Family = { head: Release; members: Release[]; firstSeen: number; ref: NappletRef };
+type Advertised = Map<string, Array<{ ref: NappletRef; since: number }>>;
+type Profiles = Map<string, ArchetypeProfile>;
 
-  // When each napplet first advertised an archetype or intent, across its whole history.
+/** Which napplets advertise each archetype and accept each intent, with when each first did. */
+function collectAdvertising(families: Family[], releases: Release[]): { archetypeNapplets: Advertised; intentHandlers: Map<string, Handler[]> } {
   const byKey = new Map<string, Release[]>();
   for (const release of releases) byKey.set(release.key, [...(byKey.get(release.key) ?? []), release]);
-  const firstAdvertised = (family: { members: Release[] }, test: (release: Release) => boolean, fallback: number) => {
+  const firstAdvertised = (family: Family, test: (release: Release) => boolean) => {
     const times = family.members.flatMap(member => byKey.get(member.key) ?? []).filter(test).map(release => release.createdAt);
-    return times.length ? Math.min(...times) : fallback;
+    return times.length ? Math.min(...times) : family.ref.createdAt;
   };
-
-  const archetypeNapplets = new Map<string, Array<{ ref: NappletRef; since: number }>>();
+  const archetypeNapplets: Advertised = new Map();
   const intentHandlers = new Map<string, Handler[]>();
-  for (const family of refs) {
+  for (const family of families) {
     for (const slug of family.head.archetypes) {
-      const since = firstAdvertised(family, release => release.archetypes.includes(slug), family.ref.createdAt);
+      const since = firstAdvertised(family, release => release.archetypes.includes(slug));
       archetypeNapplets.set(slug, [...(archetypeNapplets.get(slug) ?? []), { ref: family.ref, since }]);
     }
     for (const intent of family.head.intents) {
-      const since = firstAdvertised(family, release => release.intents.some(other => other.uri === intent.uri), family.ref.createdAt);
+      const since = firstAdvertised(family, release => release.intents.some(other => other.uri === intent.uri));
       intentHandlers.set(intent.uri, [...(intentHandlers.get(intent.uri) ?? []), {
         napplet: family.ref, params: intent.params, advertisesArchetype: family.head.archetypes.includes(intent.archetype), since,
       }]);
     }
   }
+  return { archetypeNapplets, intentHandlers };
+}
 
-  // Intents.
-  const intents: IntentEntry[] = [...intentHandlers].map(([uri, handlers]) => {
-    const [, path] = uri.split(':');
-    const [archetype, verb] = path.split('/');
+function buildIntents(intentHandlers: Map<string, Handler[]>): IntentEntry[] {
+  return [...intentHandlers].map(([uri, handlers]) => {
+    const [archetype, verb] = uri.slice('napplet:'.length).split('/');
     const counts = new Map<string, number>();
     for (const handler of handlers) for (const param of handler.params) counts.set(param, (counts.get(param) ?? 0) + 1);
     const signatures = new Set(handlers.map(handler => [...handler.params].sort().join(' ')));
@@ -196,11 +184,9 @@ export function buildIndex(events: NostrEvent[], options: { relayHints?: Record<
       publishers: new Set(handlers.map(handler => handler.napplet.pubkey)).size,
     } satisfies IntentEntry;
   }).sort((a, b) => b.handlers.length - a.handlers.length || a.uri.localeCompare(b.uri));
+}
 
-  // Archetype slugs: anything advertised by `z`, plus archetypes only reachable through an intent.
-  const slugs = new Set([...archetypeNapplets.keys(), ...intents.map(intent => intent.archetype)]);
-
-  // Verbs across archetypes.
+function buildVerbs(intents: IntentEntry[]): VerbEntry[] {
   const verbMap = new Map<string, { archetypes: Set<string>; handlers: number }>();
   for (const intent of intents) {
     const entry = verbMap.get(intent.verb) ?? { archetypes: new Set<string>(), handlers: 0 };
@@ -208,41 +194,42 @@ export function buildIndex(events: NostrEvent[], options: { relayHints?: Record<
     entry.handlers += intent.handlers.length;
     verbMap.set(intent.verb, entry);
   }
-  const verbs: VerbEntry[] = [...verbMap].map(([verb, entry]) => ({ verb, archetypes: [...entry.archetypes].sort(), handlers: entry.handlers }))
+  return [...verbMap].map(([verb, entry]) => ({ verb, archetypes: [...entry.archetypes].sort(), handlers: entry.handlers }))
     .sort((a, b) => b.archetypes.length - a.archetypes.length || b.handlers - a.handlers || a.verb.localeCompare(b.verb));
-  const commonVerb = verbs[0]?.verb ?? 'open';
+}
 
-  // Similarity profiles.
-  const profiles = new Map<string, ArchetypeProfile>();
+function buildProfiles(slugs: Set<string>, archetypeNapplets: Advertised, intents: IntentEntry[]): Profiles {
+  const profiles: Profiles = new Map();
   for (const slug of slugs) {
     const napplets = archetypeNapplets.get(slug) ?? [];
     const own = intents.filter(intent => intent.archetype === slug);
-    const text = napplets.map(entry => entry.ref.description).join(' ');
     profiles.set(slug, {
       slug,
       napplets: new Set([...napplets.map(entry => entry.ref.key), ...own.flatMap(intent => intent.handlers.filter(handler => handler.advertisesArchetype).map(handler => handler.napplet.key))]),
       publishers: new Set([...napplets.map(entry => entry.ref.pubkey), ...own.flatMap(intent => intent.handlers.map(handler => handler.napplet.pubkey))]),
       verbs: new Set(own.map(intent => intent.verb)),
       params: new Set(own.flatMap(intent => intent.params.map(param => param.name))),
-      words: words(text),
+      words: words(napplets.map(entry => entry.ref.description).join(' ')),
     });
   }
+  return profiles;
+}
 
-  // Clusters: detected candidates, then curator decisions on top.
-  const pairs = candidatePairs([...profiles.values()], curation.similarity, commonVerb);
-  const curatedKey = (members: string[]) => [...members].sort().join('+');
+/** Connected groups of candidate pairs, leaving out pairs a curator already decided. */
+function detectGroups(profiles: Profiles, curation: Curation, commonVerb: string): string[][] {
+  const pairKey = (a: string, b: string) => [a, b].sort().join('+');
   const decided = new Set<string>();
   for (const cluster of curation.clusters) {
-    for (let i = 0; i < cluster.members.length; i++) for (let j = i + 1; j < cluster.members.length; j++) decided.add(curatedKey([cluster.members[i], cluster.members[j]]));
+    for (let i = 0; i < cluster.members.length; i++) for (let j = i + 1; j < cluster.members.length; j++) decided.add(pairKey(cluster.members[i], cluster.members[j]));
   }
   const adjacency = new Map<string, Set<string>>();
-  for (const pair of pairs) {
-    if (decided.has(curatedKey([pair.a, pair.b]))) continue;
+  for (const pair of candidatePairs([...profiles.values()], curation.similarity, commonVerb)) {
+    if (decided.has(pairKey(pair.a, pair.b))) continue;
     adjacency.set(pair.a, (adjacency.get(pair.a) ?? new Set()).add(pair.b));
     adjacency.set(pair.b, (adjacency.get(pair.b) ?? new Set()).add(pair.a));
   }
   const visited = new Set<string>();
-  const detected: string[][] = [];
+  const groups: string[][] = [];
   for (const start of [...adjacency.keys()].sort()) {
     if (visited.has(start)) continue;
     const component: string[] = [];
@@ -254,103 +241,127 @@ export function buildIndex(events: NostrEvent[], options: { relayHints?: Record<
       component.push(node);
       for (const next of adjacency.get(node) ?? []) if (!visited.has(next)) stack.push(next);
     }
-    detected.push(component.sort());
+    groups.push(component.sort());
   }
-  const paramRows = (members: string[], alignments: ParamAlignment[]) => {
-    const rows: ClusterEntry['paramRows'] = [];
-    const used = new Set<string>();
-    for (const alignment of alignments) {
-      const names: Record<string, string[]> = {};
-      for (const member of members) {
-        const own = profiles.get(member)?.params ?? new Set<string>();
-        names[member] = alignment.same.filter(name => own.has(name));
-        names[member].forEach(name => used.add(`${member}:${name}`));
-      }
-      rows.push({ names, ...(alignment.note ? { note: alignment.note } : {}), aligned: true });
-    }
-    const all = new Set(members.flatMap(member => [...(profiles.get(member)?.params ?? [])]));
-    for (const name of [...all].sort()) {
-      const names: Record<string, string[]> = {};
-      let any = false;
-      for (const member of members) {
-        const has = profiles.get(member)?.params.has(name) && !used.has(`${member}:${name}`);
-        names[member] = has ? [name] : [];
-        any ||= Boolean(has);
-      }
-      if (any) rows.push({ names, aligned: false });
-    }
-    return rows;
-  };
-  const pairSignals = (members: string[]) => {
-    const signals: Signal[] = [];
-    let best = 0;
-    for (let i = 0; i < members.length; i++) for (let j = i + 1; j < members.length; j++) {
-      const a = profiles.get(members[i]);
-      const b = profiles.get(members[j]);
-      if (!a || !b) continue;
-      const pair = scorePair(a, b, curation.similarity, commonVerb);
-      best = Math.max(best, pair.score);
-      for (const signal of pair.signals) if (!signals.some(s => s.kind === signal.kind && s.detail === signal.detail)) signals.push(signal);
-    }
-    return { signals, score: best };
-  };
-  const clusters: ClusterEntry[] = [
-    ...curation.clusters.map(cluster => {
-      const { signals, score } = pairSignals(cluster.members);
-      return {
-        id: cluster.members.join('~'), members: cluster.members, score, signals, status: cluster.outcome,
-        ...(cluster.preferred ? { preferred: cluster.preferred } : {}), params: cluster.params,
-        ...(cluster.note ? { note: cluster.note } : {}), ...(cluster.reviewed ? { reviewed: cluster.reviewed } : {}),
-        paramRows: paramRows(cluster.members, cluster.params),
-      } satisfies ClusterEntry;
-    }),
-    ...detected.map(members => {
-      const { signals, score } = pairSignals(members);
-      return { id: members.join('~'), members, score, signals, status: 'candidate' as const, params: [], paramRows: paramRows(members, []) };
-    }),
-  ].sort((a, b) => Number(a.status !== 'candidate') - Number(b.status !== 'candidate') || (b.score ?? 0) - (a.score ?? 0) || a.id.localeCompare(b.id));
+  return groups;
+}
 
-  // Archetype entries.
-  const archetypes: ArchetypeEntry[] = [...slugs].map(slug => {
-    const napplets = (archetypeNapplets.get(slug) ?? []).map(entry => entry.ref).sort(byNewest);
-    const since = (archetypeNapplets.get(slug) ?? []).map(entry => entry.since);
-    const own = intents.filter(intent => intent.archetype === slug);
-    const fallbackTimes = own.flatMap(intent => intent.handlers.map(handler => handler.since));
-    const memberOf = clusters.filter(cluster => cluster.members.includes(slug));
-    const coalesced = memberOf.find(cluster => cluster.status === 'coalesce');
-    const note = curation.archetypes[slug];
-    let status: Status = 'observed';
-    if (note?.status === 'diverse' || memberOf.some(cluster => cluster.status === 'diverse')) status = 'diverse';
-    if (coalesced) status = 'coalesced';
-    else if (memberOf.some(cluster => cluster.status === 'candidate') && status !== 'diverse') status = 'candidate';
-    const profile = profiles.get(slug) as ArchetypeProfile;
-    const related = [...profiles.values()]
-      .filter(other => other.slug !== slug)
-      .map(other => scorePair(profile, other, curation.similarity, commonVerb))
-      .filter(pair => pair.together || (pair.signals.length && pair.score >= curation.similarity.threshold / 2))
-      .sort((a, b) => b.together - a.together || b.score - a.score || a.b.localeCompare(b.b))
-      .slice(0, 6)
-      .map(pair => ({
-        slug: pair.a === slug ? pair.b : pair.a,
-        detail: pair.together ? `advertised together by ${pair.together} napplet${pair.together === 1 ? '' : 's'}` : pair.signals.map(signal => signal.detail).join('; '),
-      }));
-    const times = [...since, ...fallbackTimes];
-    return {
-      slug, napplets,
-      publishers: new Set([...napplets.map(napplet => napplet.pubkey), ...own.flatMap(intent => intent.handlers.map(handler => handler.napplet.pubkey))]).size,
-      intents: own.map(intent => intent.uri),
-      firstSeen: times.length ? Math.min(...times) : 0,
-      lastSeen: Math.max(0, ...napplets.map(napplet => napplet.createdAt), ...own.flatMap(intent => intent.handlers.map(handler => handler.napplet.createdAt))),
-      status,
-      ...(note?.note ? { note: note.note } : {}),
-      ...(note?.reviewed ? { reviewed: note.reviewed } : {}),
-      ...(coalesced?.preferred && coalesced.preferred !== slug ? { preferred: coalesced.preferred } : {}),
-      aliases: coalesced ? coalesced.members.filter(member => member !== slug) : [],
-      clusters: memberOf.map(cluster => cluster.id),
-      related,
-    } satisfies ArchetypeEntry;
-  }).sort((a, b) => b.napplets.length - a.napplets.length || b.publishers - a.publishers || b.intents.length - a.intents.length || a.slug.localeCompare(b.slug));
+/** Parameter table rows: curator-aligned names first, then every other advertised name on its own row. */
+function paramRows(profiles: Profiles, members: string[], alignments: ParamAlignment[]): ClusterEntry['paramRows'] {
+  const rows: ClusterEntry['paramRows'] = [];
+  const used = new Set<string>();
+  for (const alignment of alignments) {
+    const names: Record<string, string[]> = {};
+    for (const member of members) {
+      const own = profiles.get(member)?.params ?? new Set<string>();
+      names[member] = alignment.same.filter(name => own.has(name));
+      names[member].forEach(name => used.add(`${member}:${name}`));
+    }
+    rows.push({ names, ...(alignment.note ? { note: alignment.note } : {}), aligned: true });
+  }
+  const all = new Set(members.flatMap(member => [...(profiles.get(member)?.params ?? [])]));
+  for (const name of [...all].sort()) {
+    const names: Record<string, string[]> = {};
+    for (const member of members) names[member] = profiles.get(member)?.params.has(name) && !used.has(`${member}:${name}`) ? [name] : [];
+    if (members.some(member => names[member].length)) rows.push({ names, aligned: false });
+  }
+  return rows;
+}
 
+function groupSignals(profiles: Profiles, members: string[], curation: Curation, commonVerb: string): { signals: Signal[]; score: number } {
+  const signals: Signal[] = [];
+  let score = 0;
+  for (let i = 0; i < members.length; i++) for (let j = i + 1; j < members.length; j++) {
+    const a = profiles.get(members[i]);
+    const b = profiles.get(members[j]);
+    if (!a || !b) continue;
+    const pair = scorePair(a, b, curation.similarity, commonVerb);
+    score = Math.max(score, pair.score);
+    for (const signal of pair.signals) if (!signals.some(s => s.kind === signal.kind && s.detail === signal.detail)) signals.push(signal);
+  }
+  return { signals, score };
+}
+
+function buildClusters(profiles: Profiles, curation: Curation, commonVerb: string): ClusterEntry[] {
+  const curated = curation.clusters.map(cluster => ({
+    id: cluster.members.join('~'), members: cluster.members, ...groupSignals(profiles, cluster.members, curation, commonVerb), status: cluster.outcome,
+    ...(cluster.preferred ? { preferred: cluster.preferred } : {}), params: cluster.params,
+    ...(cluster.note ? { note: cluster.note } : {}), ...(cluster.reviewed ? { reviewed: cluster.reviewed } : {}),
+    paramRows: paramRows(profiles, cluster.members, cluster.params),
+  } satisfies ClusterEntry));
+  const detected = detectGroups(profiles, curation, commonVerb).map(members => ({
+    id: members.join('~'), members, ...groupSignals(profiles, members, curation, commonVerb), status: 'candidate' as const, params: [], paramRows: paramRows(profiles, members, []),
+  } satisfies ClusterEntry));
+  return [...curated, ...detected].sort((a, b) => Number(a.status !== 'candidate') - Number(b.status !== 'candidate') || (b.score ?? 0) - (a.score ?? 0) || a.id.localeCompare(b.id));
+}
+
+function relatedTo(slug: string, profiles: Profiles, curation: Curation, commonVerb: string): ArchetypeEntry['related'] {
+  const profile = profiles.get(slug) as ArchetypeProfile;
+  return [...profiles.values()]
+    .filter(other => other.slug !== slug)
+    .map(other => scorePair(profile, other, curation.similarity, commonVerb))
+    .filter(pair => pair.together || (pair.signals.length && pair.score >= curation.similarity.threshold / 2))
+    .sort((a, b) => b.together - a.together || b.score - a.score || a.b.localeCompare(b.b))
+    .slice(0, 6)
+    .map(pair => ({
+      slug: pair.a === slug ? pair.b : pair.a,
+      detail: pair.together ? `advertised together by ${pair.together} napplet${pair.together === 1 ? '' : 's'}` : pair.signals.map(signal => signal.detail).join('; '),
+    }));
+}
+
+function statusOf(slug: string, memberOf: ClusterEntry[], curation: Curation): Status {
+  if (memberOf.some(cluster => cluster.status === 'coalesce')) return 'coalesced';
+  if (curation.archetypes[slug]?.status === 'diverse' || memberOf.some(cluster => cluster.status === 'diverse')) return 'diverse';
+  return memberOf.some(cluster => cluster.status === 'candidate') ? 'candidate' : 'observed';
+}
+
+function buildArchetype(slug: string, context: { archetypeNapplets: Advertised; intents: IntentEntry[]; clusters: ClusterEntry[]; profiles: Profiles; curation: Curation; commonVerb: string }): ArchetypeEntry {
+  const advertised = context.archetypeNapplets.get(slug) ?? [];
+  const napplets = advertised.map(entry => entry.ref).sort(byNewest);
+  const own = context.intents.filter(intent => intent.archetype === slug);
+  const handlers = own.flatMap(intent => intent.handlers);
+  const memberOf = context.clusters.filter(cluster => cluster.members.includes(slug));
+  const coalesced = memberOf.find(cluster => cluster.status === 'coalesce');
+  const note = context.curation.archetypes[slug];
+  const times = [...advertised.map(entry => entry.since), ...handlers.map(handler => handler.since)];
+  return {
+    slug, napplets,
+    publishers: new Set([...napplets.map(napplet => napplet.pubkey), ...handlers.map(handler => handler.napplet.pubkey)]).size,
+    intents: own.map(intent => intent.uri),
+    firstSeen: times.length ? Math.min(...times) : 0,
+    lastSeen: Math.max(0, ...napplets.map(napplet => napplet.createdAt), ...handlers.map(handler => handler.napplet.createdAt)),
+    status: statusOf(slug, memberOf, context.curation),
+    ...(note?.note ? { note: note.note } : {}),
+    ...(note?.reviewed ? { reviewed: note.reviewed } : {}),
+    ...(coalesced?.preferred && coalesced.preferred !== slug ? { preferred: coalesced.preferred } : {}),
+    aliases: coalesced ? coalesced.members.filter(member => member !== slug) : [],
+    clusters: memberOf.map(cluster => cluster.id),
+    related: relatedTo(slug, context.profiles, context.curation, context.commonVerb),
+  };
+}
+
+/**
+ * Build the whole site index from signed manifests and curation.
+ * @param events Manifest events (signatures already verified).
+ * @param options Relay hints per event id, curation and the build time.
+ * @returns The index every page renders from.
+ * @example buildIndex(snapshot.events, { relayHints: snapshot.relayHints, curation, generatedAt: snapshot.generatedAt })
+ */
+export function buildIndex(events: NostrEvent[], options: { relayHints?: Record<string, string[]>; curation?: Curation; generatedAt?: number } = {}): SiteIndex {
+  const curation = options.curation ?? EMPTY_CURATION;
+  const releases = events.map(event => parseRelease(event, options.relayHints?.[event.id] ?? [])).filter((release): release is Release => release !== null);
+  const refs: Family[] = families(releases).map(family => ({ ...family, ref: ref(family.head, family.members, family.firstSeen) }));
+  const { archetypeNapplets, intentHandlers } = collectAdvertising(refs, releases);
+  const intents = buildIntents(intentHandlers);
+  // Archetypes advertised by `z`, plus archetypes only reachable through an intent.
+  const slugs = new Set([...archetypeNapplets.keys(), ...intents.map(intent => intent.archetype)]);
+  const verbs = buildVerbs(intents);
+  const commonVerb = verbs[0]?.verb ?? 'open';
+  const profiles = buildProfiles(slugs, archetypeNapplets, intents);
+  const clusters = buildClusters(profiles, curation, commonVerb);
+  const context = { archetypeNapplets, intents, clusters, profiles, curation, commonVerb };
+  const archetypes = [...slugs].map(slug => buildArchetype(slug, context))
+    .sort((a, b) => b.napplets.length - a.napplets.length || b.publishers - a.publishers || b.intents.length - a.intents.length || a.slug.localeCompare(b.slug));
   return {
     generatedAt: options.generatedAt ?? Math.max(0, ...releases.map(release => release.createdAt)),
     releases: releases.length,

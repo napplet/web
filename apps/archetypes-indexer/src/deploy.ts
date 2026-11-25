@@ -1,7 +1,3 @@
-// ─── Bunny Storage deploy ───────────────────────────────────────────────────
-// Upload changed files, delete files the new build no longer has, purge the
-// pull zone. Unchanged files are skipped by comparing SHA-256 checksums.
-
 import { createHash } from 'node:crypto';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative, sep, extname } from 'node:path';
@@ -13,6 +9,8 @@ export interface BunnyTarget {
   storagePassword: string;
   pullZoneId?: string;
   apiKey?: string;
+  /** Bunny account API origin. */
+  apiBase: string;
   concurrency: number;
   deleteStale: boolean;
 }
@@ -108,7 +106,7 @@ export async function deployToBunny(root: string, target: BunnyTarget, log: Log,
     deleted = stale.length;
   }
   if (target.pullZoneId && target.apiKey && (uploads.length || deleted)) {
-    const response = await fetchImpl(`https://api.bunny.net/pullzone/${encodeURIComponent(target.pullZoneId)}/purgeCache`, { method: 'POST', headers: { AccessKey: target.apiKey } });
+    const response = await fetchImpl(`${target.apiBase}/pullzone/${encodeURIComponent(target.pullZoneId)}/purgeCache`, { method: 'POST', headers: { AccessKey: target.apiKey } });
     if (!response.ok) throw new Error(`Bunny purge failed: ${response.status}`);
   }
   const result = { uploaded: uploads.length, skipped: local.size - uploads.length, deleted };

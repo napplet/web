@@ -1,5 +1,3 @@
-// ─── Daily static build ─────────────────────────────────────────────────────
-
 import { spawn } from 'node:child_process';
 import { mkdirSync, rmSync, writeFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
@@ -72,6 +70,7 @@ export async function runBuild(store: EventStore, config: Config, secrets: Secre
     await deployToBunny(outDir, {
       storageZone: bunny.storageZone,
       storageEndpoint: bunny.storageEndpoint,
+      apiBase: bunny.apiBase,
       storagePassword: secrets.bunnyStoragePassword,
       ...(bunny.pullZoneId ? { pullZoneId: bunny.pullZoneId } : {}),
       ...(secrets.bunnyApiKey ? { apiKey: secrets.bunnyApiKey } : {}),

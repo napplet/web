@@ -1,8 +1,3 @@
-// ─── Build-time data ────────────────────────────────────────────────────────
-// The indexer hands the build a snapshot through ARCHETYPES_SNAPSHOT. Without it,
-// the checked-in seed snapshot is used so development and CI need no network.
-// Paths resolve from the site package directory, where Astro runs.
-
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { parseCuration, type Curation } from './curation';

@@ -1,7 +1,3 @@
-// ─── Long-running service ───────────────────────────────────────────────────
-// One loop: discovery when due, crawl due relays, build when the daily slot passes.
-// A tiny HTTP server reports health and relay state to operators.
-
 import { createServer, type Server } from 'node:http';
 import type { Config, Secrets } from './config.ts';
 import { crawlDue, runDiscovery, type Log } from './crawl.ts';
@@ -16,7 +12,6 @@ export interface ServiceDeps {
   secrets: Secrets;
   log: Log;
   now?: () => number;
-  /** Replaces the real build, for tests. */
   build?: typeof runBuild;
 }
 

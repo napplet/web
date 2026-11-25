@@ -1,7 +1,3 @@
-// ─── Minimal relay client ───────────────────────────────────────────────────
-// One REQ per socket, closed on EOSE, CLOSED or timeout. Events are signature-checked
-// and filtered against the requested kinds before they leave this module.
-
 import { validateEvent, verifyEvent, type Event } from 'nostr-tools/pure';
 import type { Filter } from 'nostr-tools/filter';
 

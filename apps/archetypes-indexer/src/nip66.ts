@@ -1,7 +1,3 @@
-// ─── NIP-66 relay discovery ─────────────────────────────────────────────────
-// Relay monitors publish one addressable kind 30166 event per relay they check;
-// its `d` tag is the relay URL. Only recent events count as evidence the relay exists.
-
 import type { Event } from 'nostr-tools/pure';
 import { pageRelay, type Query } from './relay-client.ts';
 import { normalizeRelayUrl } from './relay-url.ts';

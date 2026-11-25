@@ -1,7 +1,3 @@
-// ─── Synonym candidate heuristics ───────────────────────────────────────────
-// Suggests archetypes that may name the same thing. A suggestion is never a
-// merge: only a curator's entry in curation.yaml changes how archetypes group.
-
 export interface SimilarityConfig {
   /** Pairs scoring at or above this become candidates. */
   threshold: number;

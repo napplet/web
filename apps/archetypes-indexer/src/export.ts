@@ -1,7 +1,3 @@
-// ─── Site snapshot export ───────────────────────────────────────────────────
-// The static build reads this JSON instead of scraping relays itself. It carries
-// the signed events untouched; all archetype analysis happens in the site.
-
 import type { Event } from 'nostr-tools/pure';
 import type { Config } from './config.ts';
 import { runtimeRelays, type RelayState } from './schedule.ts';

@@ -1,8 +1,3 @@
-// ─── Live top-up ────────────────────────────────────────────────────────────
-// Pages are built once a day. In the browser, the relays the build ranked best
-// are asked for manifests newer than the build, so new archetypes and napplets
-// show up before the next rebuild. Static content stays correct without this.
-
 import { verifyEvent, type Event } from 'nostr-tools/pure';
 import { MANIFEST_KINDS, parseRelease, type NostrEvent, type Release } from './release';
 

@@ -1,7 +1,3 @@
-// ─── SQLite event store ─────────────────────────────────────────────────────
-// Holds every verified napplet manifest (kinds 5129, 15129, 35129) exactly as
-// signed, which relays served it, and the crawler's per-relay state.
-
 import { DatabaseSync } from 'node:sqlite';
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';

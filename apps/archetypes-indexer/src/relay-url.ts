@@ -1,7 +1,3 @@
-// ─── Relay URL normalisation ────────────────────────────────────────────────
-// NIP-66 monitors and manifests spell the same relay many ways (`wss://Relay.x/`,
-// `wss://relay.x:443`). One canonical spelling keeps scores and backoff per relay.
-
 import { isIP } from 'node:net';
 
 export interface NormalizeOptions {

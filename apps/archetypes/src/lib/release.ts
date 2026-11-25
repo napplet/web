@@ -1,17 +1,9 @@
-// ─── Manifest → release ─────────────────────────────────────────────────────
-// Reads the NIP-5D manifest fields this site needs. Presentation only: this is not
-// a conformance validator, and the living NIP-5D text governs manifests.
-// https://github.com/nostr-protocol/nips/pull/2303 (§Manifest, §Archetypes and Intents)
+/** Presentation-only reader for NIP-5D manifests (nostr-protocol/nips#2303, Manifest section); not a conformance validator. */
 
-export interface NostrEvent {
-  id: string;
-  pubkey: string;
-  created_at: number;
-  kind: number;
-  tags: string[][];
-  content: string;
-  sig: string;
-}
+import type { Event } from 'nostr-tools/pure';
+
+/** A signed Nostr event as relays deliver it. */
+export type NostrEvent = Event;
 
 /** NIP-5D manifest kinds: snapshot, root, named. */
 export const MANIFEST_KINDS = [5129, 15129, 35129] as const;

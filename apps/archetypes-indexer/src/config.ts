@@ -1,7 +1,4 @@
-// ─── Indexer configuration ──────────────────────────────────────────────────
-// One YAML file holds every tunable. Every key is optional: an empty file (or
-// none at all) is a working minimal deployment. Secrets never live in the file;
-// they come from the environment (see `secretsFromEnv`).
+/** One optional YAML file with a default for every key; secrets come only from the environment. */
 
 import { readFileSync, existsSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
@@ -61,6 +58,8 @@ export interface Config {
     bunny: {
       storageZone: string;
       storageEndpoint: string;
+      /** Bunny account API, used to purge the pull zone after a deploy. */
+      apiBase: string;
       pullZoneId: string;
       concurrency: number;
       deleteStale: boolean;
@@ -110,7 +109,15 @@ export const DEFAULTS: Config = {
     timeoutMinutes: 15,
   },
   deploy: {
-    bunny: { storageZone: '', storageEndpoint: 'storage.bunnycdn.com', pullZoneId: '', concurrency: 8, deleteStale: true },
+    bunny: {
+      storageZone: '',
+      storageEndpoint: 'storage.bunnycdn.com',
+      // aislop-ignore-next-line ai-slop/hardcoded-url -- Bunny's public account API is the documented default; overridable in YAML.
+      apiBase: 'https://api.bunny.net',
+      pullZoneId: '',
+      concurrency: 8,
+      deleteStale: true,
+    },
   },
 };
 
@@ -118,12 +125,13 @@ type Plain = Record<string, unknown>;
 const isPlain = (value: unknown): value is Plain => typeof value === 'object' && value !== null && !Array.isArray(value);
 
 /** Deep-merge `override` onto `base`; arrays and scalars replace, unknown keys are rejected. */
-function merge(base: Plain, override: Plain, path: string): Plain {
-  const out: Plain = { ...base };
+function merge<T extends object>(base: T, override: Plain, path: string): T {
+  const source: Plain = Object.fromEntries(Object.entries(base));
+  const out: Plain = { ...source };
   for (const [key, value] of Object.entries(override)) {
     const where = path ? `${path}.${key}` : key;
-    if (!(key in base)) throw new Error(`Unknown config key: ${where}`);
-    const current = base[key];
+    if (!(key in source)) throw new Error(`Unknown config key: ${where}`);
+    const current = source[key];
     if (value === null || value === undefined) continue;
     if (isPlain(current)) {
       if (!isPlain(value)) throw new Error(`Config key ${where} must be a mapping`);
@@ -136,7 +144,7 @@ function merge(base: Plain, override: Plain, path: string): Plain {
       out[key] = value;
     }
   }
-  return out;
+  return out as T;
 }
 
 /** Reject values that would make the service misbehave instead of failing later. */
@@ -160,7 +168,7 @@ export function validate(config: Config): Config {
     throw new Error('Config crawl.backoffHours must be a non-empty list of positive hours');
   }
   if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(config.build.at)) throw new Error('Config build.at must be HH:MM (UTC)');
-  if (!/^https:\/\//.test(config.build.siteUrl)) throw new Error('Config build.siteUrl must be an https URL');
+  if (!config.build.siteUrl.startsWith('https://')) throw new Error('Config build.siteUrl must be an https URL');
   return config;
 }
 
@@ -177,7 +185,7 @@ const PACKAGE_DIR = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 export function parseConfig(source: string, base: string): Config {
   const raw: unknown = parse(source) ?? {};
   if (!isPlain(raw)) throw new Error('Config file must contain a mapping');
-  const merged = merge(DEFAULTS as unknown as Plain, raw, '') as unknown as Config;
+  const merged = merge(DEFAULTS, raw, '');
   const build = isPlain(raw.build) ? raw.build : {};
   merged.dataDir = resolve('dataDir' in raw ? base : PACKAGE_DIR, merged.dataDir);
   merged.build.siteDir = resolve('siteDir' in build ? base : PACKAGE_DIR, merged.build.siteDir);

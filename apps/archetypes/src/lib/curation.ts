@@ -1,7 +1,4 @@
-// ─── Editorial curation ─────────────────────────────────────────────────────
-// curation.yaml records human decisions about how observed archetypes relate.
-// It is site data, changed by pull request. It never changes what a manifest
-// means and is never published to relays.
+/** curation.yaml: editorial site data changed by pull request; never protocol, never published to relays. */
 
 import { parse } from 'yaml';
 import { DEFAULT_SIMILARITY, type SimilarityConfig } from './similarity';

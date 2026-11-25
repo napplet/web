@@ -1,5 +1,3 @@
-// ─── Display helpers ────────────────────────────────────────────────────────
-
 import { naddrEncode, neventEncode, npubEncode } from 'nostr-tools/nip19';
 import type { NappletRef, Status } from './model';
 

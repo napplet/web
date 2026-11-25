@@ -1,6 +1,3 @@
-// ─── Search ─────────────────────────────────────────────────────────────────
-// One matcher for the page filter, WebMCP and tests.
-
 export interface SearchableArchetype {
   slug: string;
   status: string;

@@ -1,5 +1,3 @@
-// ─── Discovery and crawl cycles ─────────────────────────────────────────────
-
 import type { Config } from './config.ts';
 import { discoverRelays } from './nip66.ts';
 import { pageRelay, type Query } from './relay-client.ts';
@@ -18,7 +16,7 @@ export type Log = (message: string, fields?: Record<string, unknown>) => void;
  * @example await pool([1, 2, 3], 2, async n => n * 2)
  */
 export async function pool<T, R>(items: T[], limit: number, worker: (item: T) => Promise<R>): Promise<R[]> {
-  const results: R[] = new Array(items.length);
+  const results: R[] = Array.from({ length: items.length });
   let next = 0;
   const run = async () => {
     while (next < items.length) {
